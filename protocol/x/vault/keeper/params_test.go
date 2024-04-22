@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
@@ -19,12 +20,13 @@ func TestGetSetParams(t *testing.T) {
 
 	// Set new params and get.
 	newParams := types.Params{
-		Layers:                 3,
-		SpreadMinPpm:           4_000,
-		SpreadBufferPpm:        2_000,
-		SkewFactorPpm:          999_999,
-		OrderSizePctPpm:        200_000,
-		OrderExpirationSeconds: 10,
+		Layers:                           3,
+		SpreadMinPpm:                     4_000,
+		SpreadBufferPpm:                  2_000,
+		SkewFactorPpm:                    999_999,
+		OrderSizePctPpm:                  200_000,
+		OrderExpirationSeconds:           10,
+		ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 	}
 	err := k.SetParams(ctx, newParams)
 	require.NoError(t, err)
@@ -32,12 +34,13 @@ func TestGetSetParams(t *testing.T) {
 
 	// Set invalid params and get.
 	invalidParams := types.Params{
-		Layers:                 3,
-		SpreadMinPpm:           4_000,
-		SpreadBufferPpm:        2_000,
-		SkewFactorPpm:          1_000_000,
-		OrderSizePctPpm:        200_000,
-		OrderExpirationSeconds: 0, // invalid
+		Layers:                           3,
+		SpreadMinPpm:                     4_000,
+		SpreadBufferPpm:                  2_000,
+		SkewFactorPpm:                    1_000_000,
+		OrderSizePctPpm:                  200_000,
+		OrderExpirationSeconds:           0, // invalid
+		ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 	}
 	err = k.SetParams(ctx, invalidParams)
 	require.Error(t, err)

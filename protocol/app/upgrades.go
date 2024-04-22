@@ -34,6 +34,7 @@ func (app *App) setupUpgradeHandlers() {
 			app.ClobKeeper,
 			app.SubaccountsKeeper,
 			app.ConsensusParamsKeeper,
+			app.VaultKeeper,
 		),
 	)
 }

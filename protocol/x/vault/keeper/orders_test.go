@@ -24,8 +24,12 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 		vaultIds []vaulttypes.VaultId
 		// Total Shares of each vault ID above.
 		totalShares []*big.Int
+		// Asset quantums of each vault ID above.
+		assetQuantums []*big.Int
+		// Activation threshold (quote quantums) of vaults.
+		activationThresholdQuoteQuantums *big.Int
 	}{
-		"Two Vaults, Both Positive Shares": {
+		"Two Vaults, Both Positive Shares, Both above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
@@ -34,8 +38,13 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				big.NewInt(1_000),
 				big.NewInt(200),
 			},
+			assetQuantums: []*big.Int{
+				big.NewInt(1_000_000_000), // 1,000 USDC
+				big.NewInt(1_000_000_001),
+			},
+			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
 		},
-		"Two Vaults, One Positive Shares, One Zero Shares": {
+		"Two Vaults, One Positive Shares, One Zero Shares, Both above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
@@ -44,8 +53,13 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				big.NewInt(1_000),
 				big.NewInt(0),
 			},
+			assetQuantums: []*big.Int{
+				big.NewInt(1_000_000_000), // 1,000 USDC
+				big.NewInt(1_000_000_001),
+			},
+			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
 		},
-		"Two Vaults, Both Zero Shares": {
+		"Two Vaults, Both Zero Shares, Both above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
@@ -54,6 +68,41 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				big.NewInt(0),
 				big.NewInt(0),
 			},
+			assetQuantums: []*big.Int{
+				big.NewInt(1_000_000_000), // 1,000 USDC
+				big.NewInt(1_000_000_001),
+			},
+			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
+		},
+		"Two Vaults, Both Positive Shares, Only One above Activation Threshold": {
+			vaultIds: []vaulttypes.VaultId{
+				constants.Vault_Clob_0,
+				constants.Vault_Clob_1,
+			},
+			totalShares: []*big.Int{
+				big.NewInt(1_000),
+				big.NewInt(200),
+			},
+			assetQuantums: []*big.Int{
+				big.NewInt(1_000_000_000),
+				big.NewInt(999_999_999),
+			},
+			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
+		},
+		"Two Vaults, Both Positive Shares, Both below Activation Threshold": {
+			vaultIds: []vaulttypes.VaultId{
+				constants.Vault_Clob_0,
+				constants.Vault_Clob_1,
+			},
+			totalShares: []*big.Int{
+				big.NewInt(1_000),
+				big.NewInt(200),
+			},
+			assetQuantums: []*big.Int{
+				big.NewInt(123_456_788),
+				big.NewInt(123_456_787),
+			},
+			activationThresholdQuoteQuantums: big.NewInt(123_456_789),
 		},
 	}
 
@@ -73,12 +122,22 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 								AssetPositions: []*satypes.AssetPosition{
 									{
 										AssetId:  assettypes.AssetUsdc.Id,
-										Quantums: dtypes.NewInt(1_000_000_000), // 1,000 USDC
+										Quantums: dtypes.NewIntFromBigInt(tc.assetQuantums[i]),
 									},
 								},
 							}
 						}
 						genesisState.Subaccounts = subaccounts
+					},
+				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *vaulttypes.GenesisState) {
+						vaultParams := genesisState.Params
+						vaultParams.ActivationThresholdQuoteQuantums = dtypes.NewIntFromBigInt(
+							tc.activationThresholdQuoteQuantums,
+						)
+						genesisState.Params = vaultParams
 					},
 				)
 				return genesis
@@ -102,7 +161,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			// Simulate vault orders placed in last block.
 			numPreviousOrders := 0
 			for i, vaultId := range tc.vaultIds {
-				if tc.totalShares[i].Sign() > 0 {
+				if tc.totalShares[i].Sign() > 0 && tc.assetQuantums[i].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
 					orders, err := tApp.App.VaultKeeper.GetVaultClobOrders(
 						ctx.WithBlockHeight(ctx.BlockHeight()-1),
 						vaultId,
@@ -125,7 +184,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			numExpectedOrders := 0
 			allExpectedOrderIds := make(map[clobtypes.OrderId]bool)
 			for i, vaultId := range tc.vaultIds {
-				if tc.totalShares[i].Sign() > 0 {
+				if tc.totalShares[i].Sign() > 0 && tc.assetQuantums[i].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
 					expectedOrders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, vaultId)
 					require.NoError(t, err)
 					numExpectedOrders += len(expectedOrders)
@@ -247,12 +306,13 @@ func TestGetVaultClobOrders(t *testing.T) {
 	}{
 		"Success - Get orders from Vault for Clob Pair 0": {
 			vaultParams: vaulttypes.Params{
-				Layers:                 2,       // 2 layers
-				SpreadMinPpm:           3_000,   // 30 bps
-				SpreadBufferPpm:        1_500,   // 15 bps
-				SkewFactorPpm:          500_000, // 0.5
-				OrderSizePctPpm:        100_000, // 10%
-				OrderExpirationSeconds: 2,       // 2 seconds
+				Layers:                           2,       // 2 layers
+				SpreadMinPpm:                     3_000,   // 30 bps
+				SpreadBufferPpm:                  1_500,   // 15 bps
+				SkewFactorPpm:                    500_000, // 0.5
+				OrderSizePctPpm:                  100_000, // 10%
+				OrderExpirationSeconds:           2,       // 2 seconds
+				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 			},
 			vaultId:                    constants.Vault_Clob_0,
 			vaultAssetQuoteQuantums:    big.NewInt(1_000_000_000), // 1,000 USDC
@@ -266,8 +326,8 @@ func TestGetVaultClobOrders(t *testing.T) {
 			// 2. leverage = open_notional / equity
 			// 3. leverage_i = leverage +/- i * order_size_pct (- for ask and + for bid)
 			// 4. skew_i = -leverage_i * spread * skew_factor
-			// 5. a_i = oracle_price * (1 + skew_i) * (1 + spread)^{i+1}
-			//    b_i = oracle_price * (1 + skew_i) / (1 + spread)^{i+1}
+			// 5. a_i = max(oracle_price * (1 + skew_i) * (1 + spread)^{i+1}, oracle_price)
+			//    b_i = min(oracle_price * (1 + skew_i) / (1 + spread)^{i+1}, oracle_price)
 			// 6. subticks needs to be a multiple of subticks_per_tick (round up for asks, round down for bids)
 			// To calculate size of each order
 			// 1. `order_size_pct_ppm * equity / oracle_price`.
@@ -303,14 +363,15 @@ func TestGetVaultClobOrders(t *testing.T) {
 				20_000_000,
 			},
 		},
-		"Success - Get orders from Vault for Clob Pair 1": {
+		"Success - Get orders from Vault for Clob Pair 1, bids bounded by oracle price.": {
 			vaultParams: vaulttypes.Params{
-				Layers:                 3,       // 3 layers
-				SpreadMinPpm:           3_000,   // 30 bps
-				SpreadBufferPpm:        8_500,   // 85 bps
-				SkewFactorPpm:          900_000, // 0.9
-				OrderSizePctPpm:        200_000, // 20%
-				OrderExpirationSeconds: 4,       // 4 seconds
+				Layers:                           3,       // 3 layers
+				SpreadMinPpm:                     3_000,   // 30 bps
+				SpreadBufferPpm:                  8_500,   // 85 bps
+				SkewFactorPpm:                    900_000, // 0.9
+				OrderSizePctPpm:                  200_000, // 20%
+				OrderExpirationSeconds:           4,       // 4 seconds
+				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 			},
 			vaultId:                    constants.Vault_Clob_1,
 			vaultAssetQuoteQuantums:    big.NewInt(2_000_000_000), // 2,000 USDC
@@ -324,8 +385,8 @@ func TestGetVaultClobOrders(t *testing.T) {
 			// 2. leverage = open_notional / equity
 			// 3. leverage_i = leverage +/- i * order_size_pct (- for ask and + for bid)
 			// 4. skew_i = -leverage_i * spread * skew_factor
-			// 5. a_i = oracle_price * (1 + skew_i) * (1 + spread)^{i+1}
-			//    b_i = oracle_price * (1 + skew_i) / (1 + spread)^{i+1}
+			// 5. a_i = max(oracle_price * (1 + skew_i) * (1 + spread)^{i+1}, oracle_price)
+			//    b_i = min(oracle_price * (1 + skew_i) / (1 + spread)^{i+1}, oracle_price)
 			// 6. subticks needs to be a multiple of subticks_per_tick (round up for asks, round down for bids)
 			// To calculate size of each order
 			// 1. `order_size_pct_ppm * equity / oracle_price`.
@@ -338,29 +399,35 @@ func TestGetVaultClobOrders(t *testing.T) {
 				// leverage_0 = leverage - 0 * 0.2 = -3
 				// skew_0 = 3 * 0.00855 * 0.9
 				// a_0 = 3 * 10^9 * (1 + skew_0) * (1 + 0.00855)^1 = 3_095_497_130.25
+				// a_0 = max(a_0, oracle_price) = max(3_095_497_130.25, 3_000_000_000) = 3_095_497_130.25
 				// round up to nearest multiple of subticks_per_tick=1_000.
 				3_095_498_000,
 				// b_0 = 3 * 10^9 * (1 + skew_0) / (1 + 0.00855)^1 ~= 3_043_235_337.86
+				// b_0 = min(b_0, oracle_price) = min(3_043_235_337.86, 3_000_000_000) = 3_000_000_000
 				// round down to nearest multiple of subticks_per_tick=1_000.
-				3_043_235_000,
+				3_000_000_000,
 				// leverage_1 = leverage - 1 * 0.2
 				// skew_1 = -leverage_1 * 0.00855 * 0.9
 				// a_1 = 3 * 10^9 * (1 + skew_1) * (1 + 0.00855)^2 ~= 3_126_659_918.93
+				// a_1 = max(a_1, oracle_price) = max(3_126_659_918.93, 3_000_000_000) = 3_126_659_918.93
 				// round up to nearest multiple of subticks_per_tick=1_000.
 				3_126_660_000,
 				// leverage_1 = leverage + 1 * 0.2
 				// skew_1 = -leverage_1 * 0.00855 * 0.9
 				// b_1 = 3 * 10^9 * (1 + skew_1) / (1 + 0.00855)^2 ~= 3_012_897_207.43
+				// b_1 = min(b_1, oracle_price) = min(3_012_897_207.43, 3_000_000_000) = 3_000_000_000
 				// round down to nearest multiple of subticks_per_tick=5.
-				3_012_897_000,
+				3_000_000_000,
 				// leverage_2 = leverage - 2 * 0.2
 				// skew_2 = -leverage_2 * 0.00855 * 0.9
 				// a_2 = 3 * 10^9 * (1 + skew_2) * (1 + 0.00855)^3 ~= 3_158_129_302.71
+				// a_2 = max(a_2, oracle_price) = max(3_158_129_302.71, 3_000_000_000) = 3_158_129_302.71
 				// round up to nearest multiple of subticks_per_tick=1_000.
 				3_158_130_000,
 				// leverage_2 = leverage + 2 * 0.2
 				// skew_2 = -leverage_2 * 0.00855 * 0.9
 				// b_2 = 3 * 10^9 * (1 + skew_2) / (1 + 0.00855)^3 ~= 2_982_854_748.91
+				// b_2 = min(b_2, oracle_price) = min(2_982_854_748.91, 3_000_000_000) = 2_982_854_748.91
 				// round down to nearest multiple of subticks_per_tick=1_000.
 				2_982_854_000,
 			},
@@ -376,14 +443,81 @@ func TestGetVaultClobOrders(t *testing.T) {
 				33_333_000,
 			},
 		},
+		"Success - Get orders from Vault for Clob Pair 1, asks bounded by oracle price.": {
+			vaultParams: vaulttypes.Params{
+				Layers:                           2,         // 2 layers
+				SpreadMinPpm:                     3_000,     // 30 bps
+				SpreadBufferPpm:                  1_500,     // 15 bps
+				SkewFactorPpm:                    500_000,   // 0.5
+				OrderSizePctPpm:                  1_000_000, // 100%
+				OrderExpirationSeconds:           4,         // 4 seconds
+				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
+			},
+			vaultId:                    constants.Vault_Clob_1,
+			vaultAssetQuoteQuantums:    big.NewInt(-2_000_000_000), // -2,000 USDC
+			vaultInventoryBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
+			clobPair:                   constants.ClobPair_Eth,
+			marketParam:                constants.TestMarketParams[1],
+			marketPrice:                constants.TestMarketPrices[1],
+			perpetual:                  constants.EthUsd_0DefaultFunding_9AtomicResolution,
+			// To calculate order subticks:
+			// 1. spread = max(spread_min, spread_buffer + min_price_change)
+			// 2. leverage = open_notional / equity
+			// 3. leverage_i = leverage +/- i * order_size_pct (- for ask and + for bid)
+			// 4. skew_i = -leverage_i * spread * skew_factor
+			// 5. a_i = max(oracle_price * (1 + skew_i) * (1 + spread)^{i+1}, oracle_price)
+			//    b_i = min(oracle_price * (1 + skew_i) / (1 + spread)^{i+1}, oracle_price)
+			// 6. subticks needs to be a multiple of subticks_per_tick (round up for asks, round down for bids)
+			// To calculate size of each order
+			// 1. `order_size_pct_ppm * equity / oracle_price`.
+			expectedOrderSubticks: []uint64{
+				// spreadPpm = max(3_000, 1_500 + 50) = 3_000
+				// spread = 0.003
+				// open_notional = 1_000_000_000 * 10^-9 * 3_000 * 10^6 = 3_000_000_000
+				// leverage = 3_000_000_000 / (-2_000_000_000 + 3_000_000_000) = 3
+				// oracleSubticks = 3_000_000_000 * 10^(-6 - (-9) + (-9) - (-6)) = 3 * 10^9
+				// leverage_0 = leverage - 0 * 1 = 3
+				// skew_0 = -3 * 0.003 * 0.5
+				// a_0 = 3 * 10^9 * (1 + skew_0) * (1 + 0.003)^1 = 2_995_459_500
+				// a_0 = max(a_0, oracle_price) = max(2_995_459_500, 3_000_000_000) = 3_000_000_000
+				// round up to nearest multiple of subticks_per_tick=1_000.
+				3_000_000_000,
+				// b_0 = 3 * 10^9 * (1 + skew_0) / (1 + 0.003)^1 ~= 2_977_567_298.11
+				// b_0 = min(b_0, oracle_price) = min(2_977_567_298.11, 3_000_000_000) = 2_977_567_298.11
+				// round down to nearest multiple of subticks_per_tick=1_000.
+				2_977_567_000,
+				// leverage_1 = leverage - 1 * 1 = 2
+				// skew_1 = -2 * 0.003 * .5
+				// a_1 = 3 * 10^9 * (1 + skew_1) * (1 + 0.003)^2 ~= 3_008_972_919
+				// a_1 = max(a_1, oracle_price) = max(3_008_972_919, 3_000_000_000) = 3_008_972_919
+				// round up to nearest multiple of subticks_per_tick=1_000.
+				3_008_973_000,
+				// leverage_1 = leverage + 1 * 1 = 4
+				// skew_1 = -4 * 0.003 * .5
+				// b_1 = 3 * 10^9 * (1 + skew_1) / (1 + 0.003)^2 ~= 2_964_188_193.15
+				// b_1 = min(b_1, oracle_price) = min(2_964_188_193.15, 3_000_000_000) = 2_964_188_193.15
+				// round down to nearest multiple of subticks_per_tick=5.
+				2_964_188_000,
+			},
+			// order_size = 100% * 1000 / 3000 ~= 0.333333333
+			// order_size_base_quantums = 0.333333333 * 10^9 ~= 333_333_333.33
+			// round down to nearest multiple of step_base_quantums=1_000.
+			expectedOrderQuantums: []uint64{
+				333_333_000,
+				333_333_000,
+				333_333_000,
+				333_333_000,
+			},
+		},
 		"Success - Get orders from Vault for Clob Pair 1, No Orders due to Zero Order Size": {
 			vaultParams: vaulttypes.Params{
-				Layers:                 2,       // 2 layers
-				SpreadMinPpm:           3_000,   // 30 bps
-				SpreadBufferPpm:        1_500,   // 15 bps
-				SkewFactorPpm:          500_000, // 0.5
-				OrderSizePctPpm:        1_000,   // 0.1%
-				OrderExpirationSeconds: 2,       // 2 seconds
+				Layers:                           2,       // 2 layers
+				SpreadMinPpm:                     3_000,   // 30 bps
+				SpreadBufferPpm:                  1_500,   // 15 bps
+				SkewFactorPpm:                    500_000, // 0.5
+				OrderSizePctPpm:                  1_000,   // 0.1%
+				OrderExpirationSeconds:           2,       // 2 seconds
+				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 			},
 			vaultId:                    constants.Vault_Clob_1,
 			vaultAssetQuoteQuantums:    big.NewInt(1_000_000), // 1 USDC

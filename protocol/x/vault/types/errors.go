@@ -65,4 +65,9 @@ var (
 		12,
 		"Cannot mint zero shares",
 	)
+	ErrInvalidActivationThresholdQuoteQuantums = errorsmod.Register(
+		ModuleName,
+		13,
+		"ActivationThresholdQuoteQuantums must be non-negative",
+	)
 )

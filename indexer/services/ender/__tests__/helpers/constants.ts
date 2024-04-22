@@ -19,6 +19,7 @@ import {
   IndexerSubaccountId,
   LiquidationOrderV1,
   LiquidityTierUpsertEventV1,
+  LiquidityTierUpsertEventV2,
   MarketBaseEventV1,
   MarketEventV1,
   OrderFillEventV1,
@@ -156,14 +157,22 @@ export const defaultPerpetualMarketCreateEventV2: PerpetualMarketCreateEventV2 =
   marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED,
 };
 
-export const defaultLiquidityTierUpsertEvent: LiquidityTierUpsertEventV1 = {
+export const defaultLiquidityTierUpsertEventV2: LiquidityTierUpsertEventV2 = {
   id: 0,
   name: 'Large-Cap',
   initialMarginPpm: 50000,  // 5%
   maintenanceFractionPpm: 600000,  // 60% of IM = 3%
   basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 USDC
   openInterestLowerCap: Long.fromValue(0, true),
-  openInterestUpperCap: Long.fromValue(1_000_000_000, true),
+  openInterestUpperCap: Long.fromValue(1_000_000_000_000, true),
+};
+
+export const defaultLiquidityTierUpsertEventV1: LiquidityTierUpsertEventV1 = {
+  id: 0,
+  name: 'Large-Cap',
+  initialMarginPpm: 50000,  // 5%
+  maintenanceFractionPpm: 600000,  // 60% of IM = 3%
+  basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 USDC
 };
 
 export const defaultUpdatePerpetualEvent: UpdatePerpetualEventV1 = {
