@@ -106,3 +106,15 @@ func MergeAllMapsMustHaveDistinctKeys[K comparable, V any](maps ...map[K]V) map[
 	}
 	return combinedMap
 }
+
+// MergeMaps merges all the maps into a single map.
+// Does not require maps to have distinct keys.
+func MergeMaps[K comparable, V any](maps ...map[K]V) map[K]V {
+	combinedMap := make(map[K]V)
+	for _, m := range maps {
+		for k, v := range m {
+			combinedMap[k] = v
+		}
+	}
+	return combinedMap
+}
