@@ -263,11 +263,21 @@ func (k Keeper) GetVaultClobOrders(
 				orderSubticks,
 				spreadMultipler,
 			)
+
+			// Ensure the ask is greater than or equal to the oracle price.
+			if orderSubticks.Cmp(oracleSubticks) < 0 {
+				orderSubticks.Set(oracleSubticks)
+			}
 		} else {
 			orderSubticks = orderSubticks.Quo(
 				orderSubticks,
 				spreadMultipler,
 			)
+
+			// Ensure the bid is less than or equal to the oracle price.
+			if orderSubticks.Cmp(oracleSubticks) > 0 {
+				orderSubticks.Set(oracleSubticks)
+			}
 		}
 
 		return &clobtypes.Order{
