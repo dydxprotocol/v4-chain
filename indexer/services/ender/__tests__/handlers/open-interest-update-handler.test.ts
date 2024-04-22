@@ -78,7 +78,8 @@ describe('openInterestUpdateHandler', () => {
       PerpetualMarketFromDatabase = perpetualMarketRefresher.getPerpetualMarketFromId(
         openInterestUpdate.perpetualId.toString())!;
       expect(perpetualMarket.baseOpenInterest).toEqual(
-        quantumsToHumanFixedString(bytesToBigInt(openInterestUpdate.openInterest).toString(), perpetualMarket.atomicResolution)),
+        quantumsToHumanFixedString(bytesToBigInt(openInterestUpdate.openInterest).toString(),
+          perpetualMarket.atomicResolution));
       perpetualMarketsFromDB.push(perpetualMarket);
     }
     expectMarketKafkaMessage({
