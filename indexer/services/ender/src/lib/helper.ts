@@ -17,6 +17,7 @@ import {
   FundingEventV1,
   AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
+  PerpetualMarketCreateEventV2,
   LiquidityTierUpsertEventV1,
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
@@ -150,13 +151,30 @@ export function indexerTendermintEventToEventProtoWithType(
       };
     }
     case (DydxIndexerSubtypes.PERPETUAL_MARKET.toString()): {
-      return {
-        type: DydxIndexerSubtypes.PERPETUAL_MARKET,
-        eventProto: PerpetualMarketCreateEventV1.decode(eventDataBinary),
-        indexerTendermintEvent: event,
-        version,
-        blockEventIndex,
-      };
+      if (version === 1) {
+        return {
+          type: DydxIndexerSubtypes.PERPETUAL_MARKET,
+          eventProto: PerpetualMarketCreateEventV1.decode(eventDataBinary),
+          indexerTendermintEvent: event,
+          version,
+          blockEventIndex,
+        };
+      } else if (version === 2) {
+        return {
+          type: DydxIndexerSubtypes.PERPETUAL_MARKET,
+          eventProto: PerpetualMarketCreateEventV2.decode(eventDataBinary),
+          indexerTendermintEvent: event,
+          version,
+          blockEventIndex,
+        };
+      } else {
+        const message: string = `Invalid version for perpetual market event: ${version}`;
+        logger.error({
+          at: 'helpers#indexerTendermintEventToEventWithType',
+          message,
+        });
+        return undefined;
+      }
     }
     case (DydxIndexerSubtypes.LIQUIDITY_TIER.toString()): {
       return {

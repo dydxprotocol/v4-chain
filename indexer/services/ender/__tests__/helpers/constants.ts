@@ -24,6 +24,7 @@ import {
   OrderFillEventV1,
   OrderRemovalReason,
   PerpetualMarketCreateEventV1,
+  PerpetualMarketCreateEventV2,
   PerpetualMarketType,
   StatefulOrderEventV1,
   SubaccountMessage,
@@ -128,7 +129,7 @@ export const defaultMarketModify: MarketEventV1 = {
   },
 };
 
-export const defaultPerpetualMarketCreateEvent: PerpetualMarketCreateEventV1 = {
+export const defaultPerpetualMarketCreateEventV1: PerpetualMarketCreateEventV1 = {
   id: 0,
   clobPairId: 1,
   ticker: 'BTC-USD',
@@ -139,7 +140,20 @@ export const defaultPerpetualMarketCreateEvent: PerpetualMarketCreateEventV1 = {
   subticksPerTick: 100,
   stepBaseQuantums: Long.fromValue(10, true),
   liquidityTier: 0,
-  marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS,
+};
+
+export const defaultPerpetualMarketCreateEventV2: PerpetualMarketCreateEventV2 = {
+  id: 0,
+  clobPairId: 1,
+  ticker: 'BTC-USD',
+  marketId: 0,
+  status: ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING,
+  quantumConversionExponent: -8,
+  atomicResolution: -10,
+  subticksPerTick: 100,
+  stepBaseQuantums: Long.fromValue(10, true),
+  liquidityTier: 0,
+  marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED,
 };
 
 export const defaultLiquidityTierUpsertEvent: LiquidityTierUpsertEventV1 = {

@@ -43,6 +43,7 @@ const HANDLER_SCRIPTS: string[] = [
   'dydx_transfer_handler.sql',
   'dydx_update_clob_pair_handler.sql',
   'dydx_update_perpetual_handler.sql',
+  'dydx_perpetual_market_v2_handler.sql',
 ];
 
 const DB_SETUP_SCRIPTS: string[] = [

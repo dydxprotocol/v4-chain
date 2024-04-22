@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_perpetual_market_handler(event_data jsonb) RETURNS jsonb AS $$
+CREATE OR REPLACE FUNCTION dydx_perpetual_market_v2_handler(event_data jsonb) RETURNS jsonb AS $$
 /**
   Parameters:
     - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)
@@ -26,7 +26,7 @@ BEGIN
     perpetual_market_record."subticksPerTick" = (event_data->'subticksPerTick')::integer;
     perpetual_market_record."stepBaseQuantums" = dydx_from_jsonlib_long(event_data->'stepBaseQuantums');
     perpetual_market_record."liquidityTierId" = (event_data->'liquidityTier')::integer;
-    perpetual_market_record."marketType" = 'CROSS';
+    perpetual_market_record."marketType" = dydx_protocol_market_type_to_perpetual_market_type(event_data->'marketType');
 
     INSERT INTO perpetual_markets VALUES (perpetual_market_record.*) RETURNING * INTO perpetual_market_record;
 

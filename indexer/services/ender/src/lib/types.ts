@@ -6,6 +6,7 @@ import {
   SubaccountMessageContents,
 } from '@dydxprotocol-indexer/postgres';
 import {
+  PerpetualMarketCreateEventV2,
   StatefulOrderEventV1,
   IndexerTendermintEvent,
   CandleMessage,
@@ -142,7 +143,13 @@ export type EventProtoWithTypeAndVersion = {
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
-});
+}) | {
+  type: DydxIndexerSubtypes.PERPETUAL_MARKET,
+  eventProto: PerpetualMarketCreateEventV2,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+  blockEventIndex: number,
+};
 
 // Events grouped into events block events and events for each transactionIndex
 export interface GroupedEvents {
