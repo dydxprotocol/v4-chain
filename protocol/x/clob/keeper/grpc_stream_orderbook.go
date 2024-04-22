@@ -2,10 +2,12 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	v1types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/client"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 func (k Keeper) StreamOrderbookUpdates(
@@ -136,6 +138,47 @@ func (k Keeper) CompareMemclobOrderbookWithLocalOrderbook(
 				"actual_orders", actualOrders,
 				"expected_remaining_amounts", expectedRemainingAmounts,
 				"actual_remaining_amounts", actualRemainingAmounts,
+			)
+		}
+	}
+
+	// Compare Fills in State with fills on the locally constructed orderbook from
+	// grpc stream.
+	allFillStates := k.GetAllOrderFillStates(ctx)
+	for _, fillState := range allFillStates {
+		orderFillAmount := fillState.FillAmount
+		orderId := fillState.OrderId
+
+		indexerOrderId := v1.OrderIdToIndexerOrderId(orderId)
+		localOrderbookFillAmount := localOrderbook.FillAmounts[indexerOrderId]
+
+		if orderFillAmount != localOrderbookFillAmount {
+			logger.Error(
+				"Fill Amount Mismatch",
+				"orderId", orderId,
+				"state_fill_amt", orderFillAmount,
+				"local_fill_amt", localOrderbookFillAmount,
+			)
+		}
+	}
+	// Check if the locally constructed orderbook has extraneous order ids in the fill amounts
+	// when compared to state.
+	for indexerOrderId, localFillAmount := range localOrderbook.FillAmounts {
+		clobOrderId := types.OrderId{
+			SubaccountId: satypes.SubaccountId{
+				Owner:  indexerOrderId.SubaccountId.Owner,
+				Number: indexerOrderId.SubaccountId.Number,
+			},
+			ClientId:   indexerOrderId.ClientId,
+			OrderFlags: indexerOrderId.OrderFlags,
+			ClobPairId: indexerOrderId.ClobPairId,
+		}
+		exists, _, _ := k.GetOrderFillAmount(ctx, clobOrderId)
+		if !exists {
+			logger.Error(
+				"Fill amount exists in local orderbook but not in state",
+				"orderId", indexerOrderId,
+				"local_fill_amt", localFillAmount,
 			)
 		}
 	}
