@@ -109,12 +109,12 @@ func isAllowedExecutionMode(
 func EmitTelemetryWithLabelsForExecMode(
 	ctx sdk.Context,
 	allowedModes []sdk.ExecMode,
-	telemtryFuncWithLabels TelemetryEmitWithLabelsFunc,
+	telemetryFuncWithLabels TelemetryEmitWithLabelsFunc,
 	key string,
 	val float32,
 	labels ...gometrics.Label,
 ) {
 	if isAllowedExecutionMode(ctx, allowedModes) {
-		telemtryFuncWithLabels(key, val, labels...)
+		telemetryFuncWithLabels(key, val, labels...)
 	}
 }
