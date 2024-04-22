@@ -399,29 +399,35 @@ func TestGetVaultClobOrders(t *testing.T) {
 				// leverage_0 = leverage - 0 * 0.2 = -3
 				// skew_0 = 3 * 0.00855 * 0.9
 				// a_0 = 3 * 10^9 * (1 + skew_0) * (1 + 0.00855)^1 = 3_095_497_130.25
+				// a_0 = max(a_0, oracle_price) = max(3_095_497_130.25, 3_000_000_000) = 3_095_497_130.25
 				// round up to nearest multiple of subticks_per_tick=1_000.
 				3_095_498_000,
 				// b_0 = 3 * 10^9 * (1 + skew_0) / (1 + 0.00855)^1 ~= 3_043_235_337.86
+				// b_0 = min(b_0, oracle_price) = min(3_043_235_337.86, 3_000_000_000) = 3_000_000_000
 				// round down to nearest multiple of subticks_per_tick=1_000.
-				3_043_235_000,
+				3_000_000_000,
 				// leverage_1 = leverage - 1 * 0.2
 				// skew_1 = -leverage_1 * 0.00855 * 0.9
 				// a_1 = 3 * 10^9 * (1 + skew_1) * (1 + 0.00855)^2 ~= 3_126_659_918.93
+				// a_1 = max(a_1, oracle_price) = max(3_126_659_918.93, 3_000_000_000) = 3_126_659_918.93
 				// round up to nearest multiple of subticks_per_tick=1_000.
 				3_126_660_000,
 				// leverage_1 = leverage + 1 * 0.2
 				// skew_1 = -leverage_1 * 0.00855 * 0.9
 				// b_1 = 3 * 10^9 * (1 + skew_1) / (1 + 0.00855)^2 ~= 3_012_897_207.43
+				// b_1 = min(b_1, oracle_price) = min(3_012_897_207.43, 3_000_000_000) = 3_000_000_000
 				// round down to nearest multiple of subticks_per_tick=5.
-				3_012_897_000,
+				3_000_000_000,
 				// leverage_2 = leverage - 2 * 0.2
 				// skew_2 = -leverage_2 * 0.00855 * 0.9
 				// a_2 = 3 * 10^9 * (1 + skew_2) * (1 + 0.00855)^3 ~= 3_158_129_302.71
+				// a_2 = max(a_2, oracle_price) = max(3_158_129_302.71, 3_000_000_000) = 3_158_129_302.71
 				// round up to nearest multiple of subticks_per_tick=1_000.
 				3_158_130_000,
 				// leverage_2 = leverage + 2 * 0.2
 				// skew_2 = -leverage_2 * 0.00855 * 0.9
 				// b_2 = 3 * 10^9 * (1 + skew_2) / (1 + 0.00855)^3 ~= 2_982_854_748.91
+				// b_2 = min(b_2, oracle_price) = min(2_982_854_748.91, 3_000_000_000) = 2_982_854_748.91
 				// round down to nearest multiple of subticks_per_tick=1_000.
 				2_982_854_000,
 			},
