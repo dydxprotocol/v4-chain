@@ -152,14 +152,6 @@ func (k Keeper) ModifyPerpetual(
 	perpetual.Params.DefaultFundingPpm = defaultFundingPpm
 	perpetual.Params.LiquidityTier = liquidityTier
 
-	// Validate updates to perpetual.
-	if err = k.validatePerpetual(
-		ctx,
-		&perpetual,
-	); err != nil {
-		return perpetual, err
-	}
-
 	// Store the modified perpetual.
 	if err := k.ValidateAndSetPerpetual(ctx, perpetual); err != nil {
 		return types.Perpetual{}, err
