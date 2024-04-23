@@ -19,6 +19,7 @@ import (
 func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 	// Iterate through all vaults.
 	params := k.GetParams(ctx)
+	numActiveVaults := 0
 	totalSharesIterator := k.getTotalSharesIterator(ctx)
 	defer totalSharesIterator.Close()
 	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
@@ -43,6 +44,9 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 			}
 		}
 
+		// Count current vault as active.
+		numActiveVaults++
+
 		// Refresh orders depending on vault type.
 		// Currently only supported vault type is CLOB.
 		switch vaultId.Type {
@@ -55,6 +59,12 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 			log.ErrorLog(ctx, "Failed to refresh vault orders: unknown vault type", "vaultId", *vaultId)
 		}
 	}
+
+	// Emit metric on number of active vaults.
+	metrics.SetGauge(
+		metrics.NumActiveVaults,
+		float32(numActiveVaults),
+	)
 }
 
 // RefreshVaultClobOrders refreshes orders of a CLOB vault.
