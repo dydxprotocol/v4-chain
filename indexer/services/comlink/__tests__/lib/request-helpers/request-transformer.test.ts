@@ -80,6 +80,7 @@ describe('request-transformer', () => {
           marketType: perpetualMarket.marketType,
           openInterestLowerCap: liquidityTier.openInterestLowerCap,
           openInterestUpperCap: liquidityTier.openInterestUpperCap,
+          baseOpenInterest: perpetualMarket.baseOpenInterest,
         },
       );
     });

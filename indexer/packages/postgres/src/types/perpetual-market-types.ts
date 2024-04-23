@@ -17,6 +17,7 @@ export interface PerpetualMarketCreateObject {
   stepBaseQuantums: number;
   liquidityTierId: number;
   marketType: PerpetualMarketType;
+  baseOpenInterest: string;
 }
 
 export interface PerpetualMarketUpdateObject {
