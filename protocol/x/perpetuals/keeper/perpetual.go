@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -1277,7 +1278,14 @@ func (k Keeper) ModifyOpenInterest(
 	perpetual.OpenInterest = dtypes.NewIntFromBigInt(bigOpenInterest)
 	k.SetPerpetual(ctx, perpetual)
 
-	// TODO(OTE-247): add indexer update logic for open interest change.
+	if ctx.ExecMode() == sdk.ExecModeFinalize {
+		updatedOIStore := prefix.NewStore(ctx.TransientStore(k.transientStoreKey), []byte(types.UpdatedOIKeyPrefix))
+		openInterestInBytes, err := perpetual.OpenInterest.Marshal()
+		if err != nil {
+			return err
+		}
+		updatedOIStore.Set(lib.Uint32ToKey(perpetualId), openInterestInBytes)
+	}
 	return nil
 }
 
@@ -1659,4 +1667,40 @@ func (k Keeper) IsPositionUpdatable(
 		return false, nil
 	}
 	return true, nil
+}
+
+func (k Keeper) SendOIUpdatesToIndexer(ctx sdk.Context) {
+	updatedOIStore := prefix.NewStore(ctx.TransientStore(k.transientStoreKey), []byte(types.UpdatedOIKeyPrefix))
+	iterator := updatedOIStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	OIMessageArray := make([]*indexerevents.OpenInterestUpdate, 0)
+
+	for ; iterator.Valid(); iterator.Next() {
+		openInterestSerializableInt := dtypes.SerializableInt{}
+		if err := openInterestSerializableInt.Unmarshal(iterator.Value()); err != nil {
+			panic(errorsmod.Wrap(err, "failed to unmarshal open interest"))
+		}
+		OIMessage := indexerevents.OpenInterestUpdate{
+			PerpetualId:  binary.BigEndian.Uint32(iterator.Key()),
+			OpenInterest: openInterestSerializableInt,
+		}
+		OIMessageArray = append(OIMessageArray, &OIMessage)
+	}
+
+	if len(OIMessageArray) == 0 {
+		return
+	}
+
+	k.GetIndexerEventManager().AddBlockEvent(
+		ctx,
+		indexerevents.SubtypeOpenInterestUpdate,
+		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+		indexerevents.OpenInterestUpdateVersion,
+		indexer_manager.GetBytes(
+			&indexerevents.OpenInterestUpdateEventV1{
+				OpenInterestUpdates: OIMessageArray,
+			},
+		),
+	)
 }

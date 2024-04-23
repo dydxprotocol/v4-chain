@@ -15,4 +15,5 @@ func EndBlocker(ctx sdk.Context, k types.PerpetualsKeeper) {
 	// first so that new samples are processed in `MaybeProcessNewFundingTickEpoch`.
 	k.MaybeProcessNewFundingSampleEpoch(ctx)
 	k.MaybeProcessNewFundingTickEpoch(ctx)
+	k.SendOIUpdatesToIndexer(ctx)
 }

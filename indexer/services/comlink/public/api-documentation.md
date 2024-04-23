@@ -1925,7 +1925,8 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "subticksPerTick": 0,
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
-      "openInterestUpperCap": "string"
+      "openInterestUpperCap": "string",
+      "baseOpenInterest": "string"
     },
     "property2": {
       "clobPairId": "string",
@@ -1947,7 +1948,8 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "subticksPerTick": 0,
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
-      "openInterestUpperCap": "string"
+      "openInterestUpperCap": "string",
+      "baseOpenInterest": "string"
     }
   }
 }
@@ -4096,7 +4098,8 @@ or
   "subticksPerTick": 0,
   "marketType": "CROSS",
   "openInterestLowerCap": "string",
-  "openInterestUpperCap": "string"
+  "openInterestUpperCap": "string",
+  "baseOpenInterest": "string"
 }
 
 ```
@@ -4125,6 +4128,7 @@ or
 |marketType|[PerpetualMarketType](#schemaperpetualmarkettype)|true|none|none|
 |openInterestLowerCap|string|false|none|none|
 |openInterestUpperCap|string|false|none|none|
+|baseOpenInterest|string|true|none|none|
 
 ## PerpetualMarketResponse
 
@@ -4156,7 +4160,8 @@ or
       "subticksPerTick": 0,
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
-      "openInterestUpperCap": "string"
+      "openInterestUpperCap": "string",
+      "baseOpenInterest": "string"
     },
     "property2": {
       "clobPairId": "string",
@@ -4178,7 +4183,8 @@ or
       "subticksPerTick": 0,
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
-      "openInterestUpperCap": "string"
+      "openInterestUpperCap": "string",
+      "baseOpenInterest": "string"
     }
   }
 }

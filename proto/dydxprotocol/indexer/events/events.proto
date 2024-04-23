@@ -519,6 +519,25 @@ message AddressTradingReward {
   ];
 }
 
+// OpenInterestUpdateEventV1 is used for open interest update events
+message OpenInterestUpdateEventV1 {
+  // The list of all open interest updates in the block.
+  repeated OpenInterestUpdate open_interest_updates = 1;
+}
+
+// OpenInterestUpdate contains a single open interest update for a perpetual
+message OpenInterestUpdate {
+  // The ID of the perpetual market.
+  uint32 perpetual_id = 1;
+
+  // The new open interest value for the perpetual market.
+  bytes open_interest = 2 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}
+
 // LiquidationEventV2 message contains all the information needed to update
 // the liquidity tiers. It contains all the fields from V1 along with the
 // open interest caps.

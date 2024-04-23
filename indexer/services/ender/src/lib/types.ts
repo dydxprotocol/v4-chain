@@ -34,6 +34,7 @@ import {
   UpdateClobPairEventV1,
   DeleveragingEventV1,
   TradingRewardsEventV1,
+  OpenInterestUpdateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import { IHeaders } from 'kafkajs';
 import Long from 'long';
@@ -54,6 +55,7 @@ export enum DydxIndexerSubtypes {
   UPDATE_CLOB_PAIR = 'update_clob_pair',
   DELEVERAGING = 'deleveraging',
   TRADING_REWARD = 'trading_reward',
+  OPEN_INTEREST_UPDATE = 'open_interest_update',
 }
 
 // Generic interface used for creating the Handler objects
@@ -115,6 +117,12 @@ export type EventProtoWithTypeAndVersion = {
   version: number,
   blockEventIndex: number,
 } | {
+  type: DydxIndexerSubtypes.PERPETUAL_MARKET,
+  eventProto: PerpetualMarketCreateEventV2,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+  blockEventIndex: number,
+} | {
   type: DydxIndexerSubtypes.LIQUIDITY_TIER,
   eventProto: LiquidityTierUpsertEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
@@ -150,13 +158,13 @@ export type EventProtoWithTypeAndVersion = {
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
-}) | {
-  type: DydxIndexerSubtypes.PERPETUAL_MARKET,
-  eventProto: PerpetualMarketCreateEventV2,
+} | {
+  type: DydxIndexerSubtypes.OPEN_INTEREST_UPDATE,
+  eventProto: OpenInterestUpdateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
-};
+});
 
 // Events grouped into events block events and events for each transactionIndex
 export interface GroupedEvents {
