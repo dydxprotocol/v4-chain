@@ -32,6 +32,7 @@ func (sm *NoopGrpcStreamingManager) SubscribeTestClient(client *client.GrpcClien
 }
 
 func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
+	ctx sdk.Context,
 	updates *clobtypes.OffchainUpdates,
 	snapshot bool,
 	blockHeight uint32,
@@ -40,6 +41,7 @@ func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
 }
 
 func (sm *NoopGrpcStreamingManager) SendOrderbookMatchFillUpdates(
+	ctx sdk.Context,
 	matches []clobtypes.OrderBookMatchFill,
 	blockHeight uint32,
 	execMode sdk.ExecMode,

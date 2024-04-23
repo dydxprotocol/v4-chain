@@ -1,13 +1,13 @@
 package grpc
 
 import (
-	"fmt"
 	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/client"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -90,9 +90,10 @@ func (sm *GrpcStreamingManagerImpl) SubscribeTestClient(client *client.GrpcClien
 	sm.nextSubscriptionId++
 }
 
-// SendOrderbookUpdates groups updates by their clob pair ids and
+// SendOrderbookMatchFillUpdates groups updates by their clob pair ids and
 // sends messages to the subscribers.
 func (sm *GrpcStreamingManagerImpl) SendOrderbookMatchFillUpdates(
+	ctx sdk.Context,
 	matches []clobtypes.OrderBookMatchFill,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
@@ -115,7 +116,10 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookMatchFillUpdates(
 
 	// Send updates to subscribers.
 	idsToRemove := make([]uint32, 0)
-	for id, subscription := range sm.orderbookSubscriptions {
+	if ctx.BlockHeight()%10 == 0 {
+		log.InfoLog(ctx, "orderbook subscriptions", "subscriptions", sm.orderbookSubscriptions)
+	}
+	for _, subscription := range sm.orderbookSubscriptions {
 		matchFillsToSend := make([]clobtypes.OrderBookMatchFill, 0)
 		for _, clobPairId := range subscription.clobPairIds {
 			if matchFills, ok := matchFillsByClobPairId[clobPairId]; ok {
@@ -131,8 +135,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookMatchFillUpdates(
 					},
 				},
 			}
-			fmt.Printf("sending out an order fill update: %+v\n\n", orderbookUpdate)
-			if err := subscription.srv.Send(
+			subscription.client.Update(
 				&clobtypes.StreamOrderbookUpdatesResponse{
 					Updates: []clobtypes.StreamOrderbookUpdate{
 						orderbookUpdate,
@@ -140,9 +143,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookMatchFillUpdates(
 					BlockHeight: blockHeight,
 					ExecMode:    uint32(execMode),
 				},
-			); err != nil {
-				idsToRemove = append(idsToRemove, id)
-			}
+			)
 		}
 	}
 
@@ -156,6 +157,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookMatchFillUpdates(
 // SendOrderbookUpdates groups updates by their clob pair ids and
 // sends messages to the subscribers.
 func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
+	ctx sdk.Context,
 	offchainUpdates *clobtypes.OffchainUpdates,
 	snapshot bool,
 	blockHeight uint32,
@@ -194,7 +196,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 			}
 		}
 
-		if len(updatesToSend) > 0 {
+		if len(updatesToSend) > 0 || snapshot {
 			orderbookUpdate := clobtypes.StreamOrderbookUpdate{
 				UpdateMessage: &clobtypes.StreamOrderbookUpdate_OrderPlace{
 					OrderPlace: &clobtypes.StreamOrderbookUpdatesOrderPlacement{
@@ -203,7 +205,6 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 					},
 				},
 			}
-			fmt.Printf("sending out an order place update: %+v, snapshot: %+v\n\n", orderbookUpdate, snapshot)
 			subscription.client.Update(
 				&clobtypes.StreamOrderbookUpdatesResponse{
 					Updates: []clobtypes.StreamOrderbookUpdate{

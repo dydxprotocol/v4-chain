@@ -13,7 +13,6 @@ import (
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	v4logger "github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 	flags "github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
@@ -233,11 +232,10 @@ func (k Keeper) InitializeNewGrpcStreams(ctx sdk.Context) {
 
 		allUpdates.Append(update)
 	}
-	len := len(uninitializedClobPairIds)
-	v4logger.InfoLog(ctx, fmt.Sprintf("Initializing orderbook updates: %+v", uninitializedClobPairIds),
-		"len_uninitialized_clob_pairs", len)
-
-	k.SendOrderbookUpdates(ctx, allUpdates, true)
+	length_of_clobpairid := len(uninitializedClobPairIds)
+	if length_of_clobpairid > 0 {
+		k.SendOrderbookUpdates(ctx, allUpdates, true)
+	}
 }
 
 // SendOrderbookUpdates sends the offchain updates to the gRPC streaming manager.
@@ -246,15 +244,14 @@ func (k Keeper) SendOrderbookUpdates(
 	offchainUpdates *types.OffchainUpdates,
 	snapshot bool,
 ) {
-	if len(offchainUpdates.Messages) == 0 {
-		v4logger.InfoLog(ctx, "send orderbook update empty")
+	if !snapshot && len(offchainUpdates.Messages) == 0 {
 		return
 	}
 	if snapshot {
-		v4logger.InfoLog(ctx, "Sending orderbook updates", "snapshot", snapshot)
 	}
 
 	k.GetGrpcStreamingManager().SendOrderbookUpdates(
+		ctx,
 		offchainUpdates,
 		snapshot,
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
@@ -268,6 +265,7 @@ func (k Keeper) SendOrderbookMatchFillUpdates(
 	matches []types.OrderBookMatchFill,
 ) {
 	k.GetGrpcStreamingManager().SendOrderbookMatchFillUpdates(
+		ctx,
 		matches,
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),

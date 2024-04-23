@@ -55,6 +55,7 @@ func (k Keeper) ProcessProposerOperations(
 
 	// If grpc streams are on, send absolute fill amounts from local + proposed opqueue to the grpc stream.
 	if streamingManager := k.GetGrpcStreamingManager(); streamingManager.Enabled() {
+		log.InfoLog(ctx, "sending absolute fill amounts start")
 		localValidatorOperationsQueue, _ := k.MemClob.GetOperationsToReplay(ctx)
 		orderIdSetToUpdate := fetchOrdersInvolvedInMatchesFromOpQueue(
 			append(
@@ -66,9 +67,17 @@ func (k Keeper) ProcessProposerOperations(
 		// Send updates with absolute fill amounts.
 		allUpdates := types.NewOffchainUpdates()
 		for orderId := range orderIdSetToUpdate {
-			if _, exists := k.MemClob.GetOrder(ctx, orderId); exists {
-				orderbookUpdate := k.MemClob.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
-				allUpdates.Append(orderbookUpdate)
+			orderbookUpdate := k.MemClob.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
+			allUpdates.Append(orderbookUpdate)
+
+			// Get the current fill amount of the order.
+			fillAmount := k.MemClob.GetOrderFilledAmount(ctx, orderId)
+			if orderId.ClobPairId == 0 || orderId.ClobPairId == 1 {
+				log.InfoLog(
+					ctx,
+					fmt.Sprintf("real orderbook updated to, %+v", fillAmount),
+					"orderId", orderId.String(),
+				)
 			}
 		}
 		k.SendOrderbookUpdates(ctx, allUpdates, false)
@@ -566,6 +575,7 @@ func (k Keeper) PersistMatchOrdersToState(
 			makerOrders,
 		)
 		streamingManager.SendOrderbookMatchFillUpdates(
+			ctx,
 			[]types.OrderBookMatchFill{
 				orderbookMatchFill,
 			},
@@ -676,6 +686,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 			makerOrders,
 		)
 		streamingManager.SendOrderbookMatchFillUpdates(
+			ctx,
 			[]types.OrderBookMatchFill{
 				orderbookMatchFill,
 			},

@@ -1980,8 +1980,12 @@ func (m *MemClobPriceTimePriority) mustRemoveOrder(
 
 	if m.generateOrderbookUpdates {
 		// Send an orderbook update to grpc streams.
-		orderbookUpdate := m.GetOrderbookUpdatesForOrderRemoval(ctx, order.OrderId)
-		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
+		allUpdates := types.NewOffchainUpdates()
+		orderbookRemovalUpdate := m.GetOrderbookUpdatesForOrderRemoval(ctx, order.OrderId)
+		allUpdates.Append(orderbookRemovalUpdate)
+		// orderUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, order.OrderId)
+		// allUpdates.Append(orderUpdate)
+		m.clobKeeper.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 }
 

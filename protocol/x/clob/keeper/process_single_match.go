@@ -532,6 +532,22 @@ func (k Keeper) setOrderFillAmountsAndPruning(
 		k.AddOrdersForPruning(ctx, []types.OrderId{order.OrderId}, pruneableBlockHeight)
 	}
 
+	// log out pre and post
+	_, prevOrderAmount, _ := k.GetOrderFillAmount(
+		ctx,
+		order.OrderId,
+	)
+	if order.OrderId.ClobPairId == 0 || order.OrderId.ClobPairId == 1 {
+		log.InfoLog(
+			ctx,
+			fmt.Sprintf("real orderbook updated to, %+v->%+v", prevOrderAmount, newTotalFillAmount),
+			"orderId", order.OrderId.String(),
+			"order", order.String(),
+			"prevAmt", prevOrderAmount,
+			"newAmt", newTotalFillAmount,
+		)
+	}
+
 	// Update the state with the new `fillAmount` for this `orderId`.
 	// TODO(DEC-1219): Determine whether we should use `OrderFillState` proto for stateful order fill amounts.
 	k.SetOrderFillAmount(

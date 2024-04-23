@@ -21,12 +21,14 @@ type GrpcStreamingManager interface {
 	)
 	GetUninitializedClobPairIds() []uint32
 	SendOrderbookUpdates(
+		ctx sdk.Context,
 		offchainUpdates *clobtypes.OffchainUpdates,
 		snapshot bool,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
 	SendOrderbookMatchFillUpdates(
+		ctx sdk.Context,
 		matches []clobtypes.OrderBookMatchFill,
 		blockHeight uint32,
 		execMode sdk.ExecMode,

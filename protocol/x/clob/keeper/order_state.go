@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -268,6 +269,7 @@ func (k Keeper) RemoveOrderFillAmount(ctx sdk.Context, orderId types.OrderId) {
 		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 
+	_, prevAmt, _ := k.GetOrderFillAmount(ctx, orderId)
 	orderAmountFilledStore.Delete(orderId.ToStateKey())
 
 	// Delete the fill amount from the mem store.
@@ -276,6 +278,26 @@ func (k Keeper) RemoveOrderFillAmount(ctx sdk.Context, orderId types.OrderId) {
 		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 	memStore.Delete(orderId.ToStateKey())
+
+	// Send a 0-fill orderbook update since fill amount has been deleted
+	if k.GetGrpcStreamingManager().Enabled() {
+		log.InfoLog(
+			ctx,
+			fmt.Sprintf("real orderbook updated to, %+v", 0),
+			"orderId", orderId.String(),
+			"removal", true,
+			"prevAmpt", prevAmt,
+		)
+		allUpdates := types.NewOffchainUpdates()
+		if message, success := off_chain_updates.CreateOrderUpdateMessage(
+			ctx,
+			orderId,
+			0, // Total filled quantums is zero because fill amount has been removed.
+		); success {
+			allUpdates.AddUpdateMessage(orderId, message)
+		}
+		k.SendOrderbookUpdates(ctx, allUpdates, false)
+	}
 }
 
 // PruneStateFillAmountsForShortTermOrders prunes Short-Term order fill amounts from state that are pruneable
@@ -297,14 +319,12 @@ func (k Keeper) PruneStateFillAmountsForShortTermOrders(
 	if k.GetGrpcStreamingManager().Enabled() {
 		allUpdates := types.NewOffchainUpdates()
 		for _, orderId := range prunedOrderIds {
-			if _, exists := k.MemClob.GetOrder(ctx, orderId); exists {
-				if message, success := off_chain_updates.CreateOrderUpdateMessage(
-					ctx,
-					orderId,
-					0, // Total filled quantums is zero because it's been pruned from state.
-				); success {
-					allUpdates.AddUpdateMessage(orderId, message)
-				}
+			if message, success := off_chain_updates.CreateOrderUpdateMessage(
+				ctx,
+				orderId,
+				0, // Total filled quantums is zero because it's been pruned from state.
+			); success {
+				allUpdates.AddUpdateMessage(orderId, message)
 			}
 		}
 		k.SendOrderbookUpdates(ctx, allUpdates, false)

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"sync"
 
 	"cosmossdk.io/log"
@@ -8,7 +9,9 @@ import (
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	v1types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // Example client to consume data from a gRPC server.
@@ -32,7 +35,8 @@ type LocalOrderbook struct {
 }
 
 func NewGrpcClient(appflags appflags.Flags, logger log.Logger) *GrpcClient {
-	logger = logger.With("module", "grpc-example-client")
+	logger = logger.With("module", "grpc-example-client", "initialized", "false")
+	logger.Info("creating new client")
 
 	client := &GrpcClient{
 		Logger:    logger,
@@ -88,16 +92,21 @@ func (c *GrpcClient) GetOrderbookSnapshot(pairId uint32) *LocalOrderbook {
 
 // Write method for stream orderbook updates.
 func (c *GrpcClient) Update(updates *clobtypes.StreamOrderbookUpdatesResponse) {
+	c.Logger.Info(
+		fmt.Sprintf("recieved update %+v", updates.ExecMode),
+		"length", len(updates.GetUpdates()),
+	)
 	for _, update := range updates.GetUpdates() {
 		if orderPlace := update.GetOrderPlace(); orderPlace != nil {
-			c.Logger.Info("just got an order placement", "orderPlace", orderPlace, "snapshot", orderPlace.Snapshot)
 			if orderPlace.Snapshot {
 				c.Logger.Info("Going to initialize")
 			}
 			c.ProcessOrderPlace(orderPlace)
+			if orderPlace.Snapshot {
+				c.Logger.Info("after initialization", "initializeeee", c.initialized)
+			}
 		}
 		if orderFill := update.GetOrderFill(); orderFill != nil {
-			c.Logger.Info("just got an order fill", "orderFill", orderFill, "initialized", c.initialized)
 			c.ProcessFill(orderFill)
 		}
 	}
@@ -108,33 +117,40 @@ func (c *GrpcClient) ProcessOrderPlace(orderPlace *clobtypes.StreamOrderbookUpda
 	if orderPlace.Snapshot {
 		c.Logger.Info("Received orderbook snapshot")
 		c.Orderbook = make(map[uint32]*LocalOrderbook)
+		c.initialized = true
+		c.Logger = c.Logger.With("initialized", "true")
 	}
 
 	for _, update := range orderPlace.Updates {
 		if orderPlace := update.GetOrderPlace(); orderPlace != nil {
 			order := orderPlace.GetOrder()
+			c.Logger.Info("place order", "orderId", IndexerOrderIdToOrderId(order.OrderId).String())
 			orderbook := c.GetOrderbook(order.OrderId.ClobPairId)
 			orderbook.AddOrder(*order)
+			orderbook.FillAmounts[order.OrderId] = 0
 		}
 
 		if orderRemove := update.GetOrderRemove(); orderRemove != nil {
 			orderId := orderRemove.RemovedOrderId
+			c.Logger.Info("remove order", "orderId", IndexerOrderIdToOrderId(*orderId).String())
 			orderbook := c.GetOrderbook(orderId.ClobPairId)
 			orderbook.RemoveOrder(*orderId)
 		}
 
 		if orderUpdate := update.GetOrderUpdate(); orderUpdate != nil {
+			c.Logger.Info("update order")
 			orderId := orderUpdate.OrderId
 			orderbook := c.GetOrderbook(orderId.ClobPairId)
 			orderbook.SetOrderRemainingAmount(*orderId, orderUpdate.TotalFilledQuantums)
 
+			c.Logger.Info(
+				fmt.Sprintf("local orderbook updated to, %+v", orderUpdate.TotalFilledQuantums),
+				"orderId", IndexerOrderIdToOrderId(*orderId).String(),
+				"update", true,
+			)
 			// Order updates contain the absolute amount of filled quantums.
 			orderbook.SetOrderAbsoluteFillAmount(orderId, orderUpdate.TotalFilledQuantums)
 		}
-	}
-
-	if orderPlace.Snapshot {
-		c.initialized = true
 	}
 }
 
@@ -151,10 +167,12 @@ func (c *GrpcClient) ProcessFill(orderFills *clobtypes.StreamOrderbookUpdatesOrd
 		clobMatch := fill.ClobMatch
 
 		if matchOrders := clobMatch.GetMatchOrders(); matchOrders != nil {
+			c.Logger.Info("match order")
 			c.ProcessMatchOrders(matchOrders, orderMap)
 		}
 
 		if matchPerpLiquidation := clobMatch.GetMatchPerpetualLiquidation(); matchPerpLiquidation != nil {
+			c.Logger.Info("liquidation order")
 			c.ProcessMatchPerpetualLiquidation(matchPerpLiquidation, orderMap)
 		}
 	}
@@ -183,14 +201,30 @@ func (c *GrpcClient) ProcessMatchOrders(
 	takerOrder := orderMap[takerOrderId]
 
 	for _, fill := range matchOrders.Fills {
-		c.Logger.Info("processing an order fills", "fill", fill)
 		makerOrder := orderMap[fill.MakerOrderId]
 		deltaFillAmount := fill.FillAmount
+		prevMakerOrderAmt := localOrderbook.FillAmounts[v1.OrderIdToIndexerOrderId(makerOrder.OrderId)]
+		prevTakerOrderAmt := localOrderbook.FillAmounts[v1.OrderIdToIndexerOrderId(takerOrderId)]
 		localOrderbook.AdjustOrderDeltaFillAmount(makerOrder, deltaFillAmount)
 		localOrderbook.AdjustOrderDeltaFillAmount(takerOrder, deltaFillAmount)
-		c.Logger.Info("local orderbook updated to",
-			"makerOrder", makerOrder,
-			"fillAmt", localOrderbook.FillAmounts[v1.OrderIdToIndexerOrderId(makerOrder.OrderId)],
+		makerOrderString := makerOrder.OrderId.String()
+		newMakerOrderAmt := localOrderbook.FillAmounts[v1.OrderIdToIndexerOrderId(makerOrder.OrderId)]
+		c.Logger.Info(
+			fmt.Sprintf("local orderbook updated to, %+v->%+v", prevMakerOrderAmt, newMakerOrderAmt),
+			"orderId", makerOrderString,
+			"order", makerOrder.String(),
+			"prevAmt", prevMakerOrderAmt,
+			"newAmt", newMakerOrderAmt,
+			"taker", false,
+		)
+		newTakerOrderAmt := localOrderbook.FillAmounts[v1.OrderIdToIndexerOrderId(takerOrderId)]
+		c.Logger.Info(
+			fmt.Sprintf("local orderbook updated to, %+v->%+v", prevTakerOrderAmt, newTakerOrderAmt),
+			"orderId", takerOrder.OrderId.String(),
+			"order", takerOrder.String(),
+			"prevAmt", prevTakerOrderAmt,
+			"newAmt", newTakerOrderAmt,
+			"taker", true,
 		)
 	}
 }
@@ -237,7 +271,11 @@ func (l *LocalOrderbook) SetOrderAbsoluteFillAmount(
 	l.Lock()
 	defer l.Unlock()
 
-	l.FillAmounts[*orderId] = absoluteFillAmount
+	if absoluteFillAmount == 0 {
+		delete(l.FillAmounts, *orderId)
+	} else {
+		l.FillAmounts[*orderId] = absoluteFillAmount
+	}
 }
 
 func (l *LocalOrderbook) AdjustOrderDeltaFillAmount(
@@ -325,5 +363,25 @@ func (l *LocalOrderbook) RemoveOrder(orderId v1types.IndexerOrderId) {
 
 	delete(l.OrderRemainingAmount, orderId)
 	delete(l.OrderIdToOrder, orderId)
-	delete(l.FillAmounts, orderId)
+
+	// prevAmt := l.FillAmounts[orderId]
+	// delete(l.FillAmounts, orderId)
+	// l.Logger.Info(
+	// 	"local orderbook updated to, 0",
+	// 	"orderId", IndexerOrderIdToOrderId(orderId).String(),
+	// 	"prevAmt", prevAmt,
+	// 	"removal", true,
+	// )
+}
+
+func IndexerOrderIdToOrderId(idxOrderId v1types.IndexerOrderId) *types.OrderId {
+	return &types.OrderId{
+		SubaccountId: satypes.SubaccountId{
+			Owner:  idxOrderId.SubaccountId.Owner,
+			Number: idxOrderId.SubaccountId.Number,
+		},
+		ClientId:   idxOrderId.ClientId,
+		OrderFlags: idxOrderId.OrderFlags,
+		ClobPairId: idxOrderId.ClobPairId,
+	}
 }
