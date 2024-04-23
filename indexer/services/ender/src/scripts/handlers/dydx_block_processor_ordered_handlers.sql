@@ -48,7 +48,7 @@ BEGIN
             WHEN '"perpetual_market"'::jsonb THEN
                 CASE (event_->'version')::int
                     WHEN 1 THEN
-                        rval[i] = dydx_perpetual_market_handler(event_data);
+                        rval[i] = dydx_perpetual_market_v1_handler(event_data);
                     WHEN 2 THEN
                         rval[i] = dydx_perpetual_market_v2_handler(event_data);
                     ELSE

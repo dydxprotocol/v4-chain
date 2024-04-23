@@ -1,5 +1,6 @@
-CREATE OR REPLACE FUNCTION dydx_perpetual_market_handler(event_data jsonb) RETURNS jsonb AS $$
+CREATE OR REPLACE FUNCTION dydx_perpetual_market_v1_handler(event_data jsonb) RETURNS jsonb AS $$
 /**
+  Note: This is a deprecated handler, see `dydx_perpetual_market_v2_handler` for the latest handler.
   Parameters:
     - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)
         converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
