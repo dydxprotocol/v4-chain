@@ -3516,3 +3516,29 @@ func TestIsPositionUpdatable(t *testing.T) {
 		})
 	}
 }
+
+func TestModifyOpenInterest_store(t *testing.T) {
+	pc := keepertest.PerpetualsKeepers(t)
+	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 100)
+	pc.Ctx = pc.Ctx.WithExecMode(sdk.ExecModeFinalize)
+	for _, perp := range perps {
+		openInterestDeltaBaseQuantums := big.NewInt(2_000_000 * (int64(perp.Params.Id)))
+
+		err := pc.PerpetualsKeeper.ModifyOpenInterest(
+			pc.Ctx,
+			perp.Params.Id,
+			openInterestDeltaBaseQuantums,
+		)
+		require.NoError(t, err)
+	}
+
+	transientStore := prefix.NewStore(pc.Ctx.TransientStore(pc.TransientStoreKey), []byte(types.UpdatedOIKeyPrefix))
+	for _, perp := range perps {
+		perpetualObject, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, perp.Params.Id)
+		require.NoError(t, err)
+		serializedOpenInterest := dtypes.SerializableInt{}
+		err = serializedOpenInterest.Unmarshal(transientStore.Get(lib.Uint32ToKey(perpetualObject.Params.Id)))
+		require.NoError(t, err)
+		require.Equal(t, perpetualObject.OpenInterest, serializedOpenInterest)
+	}
+}
