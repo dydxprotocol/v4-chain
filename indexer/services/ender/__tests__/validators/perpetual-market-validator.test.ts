@@ -1,11 +1,20 @@
 import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
-import { PerpetualMarketCreateEventV1, IndexerTendermintBlock, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
+import {
+  PerpetualMarketCreateEventV1,
+  PerpetualMarketCreateEventV2,
+  IndexerTendermintBlock,
+  IndexerTendermintEvent,
+} from '@dydxprotocol-indexer/v4-protos';
 import {
   dbHelpers, testMocks, perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
-  defaultPerpetualMarketCreateEvent, defaultHeight, defaultTime, defaultTxHash,
+  defaultPerpetualMarketCreateEventV1,
+  defaultPerpetualMarketCreateEventV2,
+  defaultHeight,
+  defaultTime,
+  defaultTxHash,
 } from '../helpers/constants';
 import {
   createIndexerTendermintBlock,
@@ -27,11 +36,29 @@ describe('perpetual-market-validator', () => {
     jest.clearAllMocks();
   });
 
-  describe('validate', () => {
+  describe.each([
+    [
+      'PerpetualMarketCreateEventV1',
+      1,
+      PerpetualMarketCreateEventV1.encode(defaultPerpetualMarketCreateEventV1).finish(),
+      defaultPerpetualMarketCreateEventV1,
+    ],
+    [
+      'PerpetualMarketCreateEventV2',
+      2,
+      PerpetualMarketCreateEventV2.encode(defaultPerpetualMarketCreateEventV2).finish(),
+      defaultPerpetualMarketCreateEventV2,
+    ],
+  ])('validate %s', (
+    _name: string,
+    version: number,
+    perpetualMarketCreateEventBytes: Uint8Array,
+    event: PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2,
+  ) => {
     it('does not throw error on valid perpetual market create event', () => {
       const validator: PerpetualMarketValidator = new PerpetualMarketValidator(
-        defaultPerpetualMarketCreateEvent,
-        createBlock(defaultPerpetualMarketCreateEvent),
+        event,
+        createBlock(perpetualMarketCreateEventBytes),
         0,
       );
 
@@ -42,8 +69,8 @@ describe('perpetual-market-validator', () => {
     it('throws error on existing perpetual market', async () => {
       await perpetualMarketRefresher.updatePerpetualMarkets();
       const validator: PerpetualMarketValidator = new PerpetualMarketValidator(
-        defaultPerpetualMarketCreateEvent,
-        createBlock(defaultPerpetualMarketCreateEvent),
+        event,
+        createBlock(perpetualMarketCreateEventBytes),
         0,
       );
       const message: string = 'PerpetualMarketCreateEvent id already exists';
@@ -54,31 +81,35 @@ describe('perpetual-market-validator', () => {
       [
         'throws error on perpetual market create event missing ticker',
         {
-          ...defaultPerpetualMarketCreateEvent,
+          ...event,
           ticker: '',
-        } as PerpetualMarketCreateEventV1,
+        } as PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2,
         'PerpetualMarketCreateEvent ticker is not populated',
       ],
       [
         'throws error on perpetual market create event missing subticksPerTick',
         {
-          ...defaultPerpetualMarketCreateEvent,
+          ...event,
           subticksPerTick: 0,
-        } as PerpetualMarketCreateEventV1,
+        } as PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2,
         'PerpetualMarketCreateEvent subticksPerTick is not populated',
       ],
       [
         'throws error on perpetual market create event missing stepBaseQuantums',
         {
-          ...defaultPerpetualMarketCreateEvent,
+          ...event,
           stepBaseQuantums: Long.fromValue(0, true),
-        } as PerpetualMarketCreateEventV1,
+        } as PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2,
         'PerpetualMarketCreateEvent stepBaseQuantums is not populated',
       ],
-    ])('%s', (_description: string, event: PerpetualMarketCreateEventV1, expectedMessage: string) => {
+    ])('%s', (
+      _description: string,
+      eventToTest: PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2,
+      expectedMessage: string,
+    ) => {
       const validator: PerpetualMarketValidator = new PerpetualMarketValidator(
-        event,
-        createBlock(event),
+        eventToTest,
+        createBlock(perpetualMarketCreateEventBytes),
         0,
       );
       expect(() => validator.validate()).toThrow(new ParseMessageError(expectedMessage));
@@ -87,11 +118,11 @@ describe('perpetual-market-validator', () => {
 });
 
 function createBlock(
-  perpetualMarketEvent: PerpetualMarketCreateEventV1,
+  perpetualMarketEventDataBytes: Uint8Array,
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.PERPETUAL_MARKET,
-    PerpetualMarketCreateEventV1.encode(perpetualMarketEvent).finish(),
+    perpetualMarketEventDataBytes,
     0,
     0,
   );
