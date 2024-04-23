@@ -112,9 +112,9 @@ func (k Keeper) getNegativeTncSubaccountStoreSuffix(
 		return "", err
 	}
 	if isIsolated {
-		return types.CrossCollateralSuffix, nil
-	} else {
 		return lib.UintToString(perpetualId), nil
+	} else {
+		return types.CrossCollateralSuffix, nil
 	}
 }
 
