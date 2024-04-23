@@ -49,6 +49,7 @@ import {
   OffChainUpdateV1,
   IndexerOrderId,
   PerpetualMarketCreateEventV1,
+  PerpetualMarketCreateEventV2,
   DeleveragingEventV1,
   protoTimestampToDate,
 } from '@dydxprotocol-indexer/v4-protos';
@@ -888,9 +889,30 @@ export const HARDCODED_PERPETUAL_MARKET_VALUES: Object = {
   openInterest: '0',
 };
 
-export function expectPerpetualMarket(
+export function expectPerpetualMarketV1(
   perpetualMarket: PerpetualMarketFromDatabase,
   perpetual: PerpetualMarketCreateEventV1,
+): void {
+  // TODO(IND-219): Set initialMarginFraction/maintenanceMarginFraction using LiquidityTier
+  expect(perpetualMarket).toEqual(expect.objectContaining({
+    ...HARDCODED_PERPETUAL_MARKET_VALUES,
+    id: perpetual.id.toString(),
+    status: PerpetualMarketStatus.INITIALIZING,
+    clobPairId: perpetual.clobPairId.toString(),
+    ticker: perpetual.ticker,
+    marketId: perpetual.marketId,
+    quantumConversionExponent: perpetual.quantumConversionExponent,
+    atomicResolution: perpetual.atomicResolution,
+    subticksPerTick: perpetual.subticksPerTick,
+    stepBaseQuantums: Number(perpetual.stepBaseQuantums),
+    liquidityTierId: perpetual.liquidityTier,
+    marketType: 'CROSS',
+  }));
+}
+
+export function expectPerpetualMarketV2(
+  perpetualMarket: PerpetualMarketFromDatabase,
+  perpetual: PerpetualMarketCreateEventV2,
 ): void {
   // TODO(IND-219): Set initialMarginFraction/maintenanceMarginFraction using LiquidityTier
   expect(perpetualMarket).toEqual(expect.objectContaining({
