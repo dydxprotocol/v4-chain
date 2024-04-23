@@ -123,6 +123,7 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 	) []Perpetual
 	GetAllLiquidityTiers(ctx sdk.Context) (list []LiquidityTier)
+	SendOIUpdatesToIndexer(ctx sdk.Context)
 }
 
 // OpenInterestDelta represents a (perpId, openInterestDelta) tuple.
