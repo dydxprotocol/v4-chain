@@ -24,7 +24,7 @@ func TestNewPerpetualMarketCreateEvent_Success(t *testing.T) {
 		0,
 		perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 	)
-	expectedPerpetualMarketCreateEventProto := &PerpetualMarketCreateEventV1{
+	expectedPerpetualMarketCreateEventProto := &PerpetualMarketCreateEventV2{
 		Id:                        0,
 		ClobPairId:                0,
 		Ticker:                    "BTC",

@@ -46,7 +46,7 @@ import {
   defaultFundingUpdateSampleEvent,
   defaultHeight,
   defaultMarketModify,
-  defaultPerpetualMarketCreateEvent,
+  defaultPerpetualMarketCreateEventV1,
   defaultPreviousHeight,
   defaultSubaccountMessage,
 } from '../helpers/constants';
@@ -135,7 +135,7 @@ describe('on-message', () => {
 
   const defaultPerpetualMarketEventBinary: Uint8Array = Uint8Array.from(
     PerpetualMarketCreateEventV1.encode(
-      defaultPerpetualMarketCreateEvent,
+      defaultPerpetualMarketCreateEventV1,
     ).finish(),
   );
 
@@ -309,7 +309,7 @@ describe('on-message', () => {
         orderBy: [[PerpetualMarketColumns.id, Ordering.ASC]],
       });
     expect(newPerpetualMarkets.length).toEqual(2);
-    expectPerpetualMarketMatchesEvent(defaultPerpetualMarketCreateEvent, newPerpetualMarkets[0]);
+    expectPerpetualMarketMatchesEvent(defaultPerpetualMarketCreateEventV1, newPerpetualMarkets[0]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
     expect(stats.timing).toHaveBeenCalledWith(
