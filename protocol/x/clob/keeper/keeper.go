@@ -10,6 +10,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -59,6 +60,8 @@ type (
 		placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg]
 
 		DaemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo
+
+		OrderQueue chan proto.Message
 	}
 )
 
@@ -120,6 +123,7 @@ func NewKeeper(
 		Flags:                       clobFlags,
 		placeCancelOrderRateLimiter: placeCancelOrderRateLimiter,
 		DaemonLiquidationInfo:       daemonLiquidationInfo,
+		OrderQueue:                  make(chan proto.Message, 1000),
 	}
 
 	// Provide the keeper to the MemClob.
@@ -252,4 +256,42 @@ func (k Keeper) SendOrderbookUpdates(
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
 	)
+}
+
+func (k Keeper) QueueOrder(
+	order proto.Message,
+) {
+	k.OrderQueue <- order
+}
+
+func (k Keeper) GetOrderQueue() <-chan proto.Message {
+	return k.OrderQueue
+}
+
+func (k Keeper) ProcessOrder(ctx sdk.Context, msg proto.Message) (err error) {
+	switch msg := msg.(type) {
+	case *types.MsgCancelOrder:
+		if msg.OrderId.IsStatefulOrder() {
+			return k.CancelStatefulOrder(ctx, msg)
+		} else {
+			return k.CancelShortTermOrder(ctx, msg)
+		}
+	case *types.MsgPlaceOrder:
+		if msg.Order.OrderId.IsStatefulOrder() {
+			return k.PlaceStatefulOrder(ctx, msg, false)
+		} else {
+			_, _, err = k.PlaceShortTermOrder(
+				ctx,
+				msg,
+			)
+			return err
+		}
+	case *types.MsgBatchCancel:
+		_, _, err = k.BatchCancelShortTermOrder(
+			ctx,
+			msg,
+		)
+		return err
+	}
+	return nil
 }

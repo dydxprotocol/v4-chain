@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -157,4 +158,5 @@ type ClobKeeper interface {
 		snapshot bool,
 	)
 	MigratePruneableOrders(ctx sdk.Context)
+	QueueOrder(order proto.Message)
 }

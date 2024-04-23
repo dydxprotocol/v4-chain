@@ -2,14 +2,10 @@ package ante
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	"github.com/cometbft/cometbft/crypto/tmhash"
-	cometbftlog "github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // ClobDecorator is an AnteDecorator which is responsible for:
@@ -63,89 +59,7 @@ func (cd ClobDecorator) AnteHandle(
 	msgs := tx.GetMsgs()
 	var msg = msgs[0]
 
-	switch msg := msg.(type) {
-	case *types.MsgCancelOrder:
-		if msg.OrderId.IsStatefulOrder() {
-			err = cd.clobKeeper.CancelStatefulOrder(ctx, msg)
-		} else {
-			// No need to process short term order cancelations on `ReCheckTx`.
-			if ctx.IsReCheckTx() {
-				return next(ctx, tx, simulate)
-			}
-
-			// Note that `msg.ValidateBasic` is called before the AnteHandlers.
-			// This guarantees that `MsgCancelOrder` has undergone stateless validation.
-			err = cd.clobKeeper.CancelShortTermOrder(ctx, msg)
-		}
-
-		log.DebugLog(ctx, "Received new order cancellation",
-			log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
-			log.Error, err,
-		)
-
-	case *types.MsgPlaceOrder:
-		if msg.Order.OrderId.IsStatefulOrder() {
-			err = cd.clobKeeper.PlaceStatefulOrder(ctx, msg, false)
-
-			log.DebugLog(ctx, "Received new stateful order",
-				log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
-				log.OrderHash, cometbftlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
-				log.Error, err,
-			)
-		} else {
-			// No need to process short term orders on `ReCheckTx`.
-			if ctx.IsReCheckTx() {
-				return next(ctx, tx, simulate)
-			}
-
-			var orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums
-			var status types.OrderStatus
-			// Note that `msg.ValidateBasic` is called before all AnteHandlers.
-			// This guarantees that `MsgPlaceOrder` has undergone stateless validation.
-			orderSizeOptimisticallyFilledFromMatchingQuantums, status, err = cd.clobKeeper.PlaceShortTermOrder(
-				ctx,
-				msg,
-			)
-
-			log.DebugLog(ctx, "Received new short term order",
-				log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
-				log.OrderHash, cometbftlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
-				log.OrderStatus, status,
-				log.OrderSizeOptimisticallyFilledFromMatchingQuantums, orderSizeOptimisticallyFilledFromMatchingQuantums,
-				log.Error, err,
-			)
-		}
-	case *types.MsgBatchCancel:
-		// MsgBatchCancel currently only processes short-term cancels right now.
-		// No need to process short term orders on `ReCheckTx`.
-		if ctx.IsReCheckTx() {
-			return next(ctx, tx, simulate)
-		}
-
-		success, failures, err := cd.clobKeeper.BatchCancelShortTermOrder(
-			ctx,
-			msg,
-		)
-		// If there are no successful cancellations and no validation errors,
-		// return an error indicating no cancels have succeeded.
-		if len(success) == 0 && err == nil {
-			err = errorsmod.Wrapf(
-				types.ErrBatchCancelFailed,
-				"No successful cancellations. Failures: %+v",
-				failures,
-			)
-		}
-
-		log.DebugLog(
-			ctx,
-			"Received new batch cancellation",
-			log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
-			log.Error, err,
-		)
-	}
-	if err != nil {
-		return ctx, err
-	}
+	cd.clobKeeper.QueueOrder(msg)
 
 	return next(ctx, tx, simulate)
 }

@@ -145,6 +145,11 @@ func PrepareProposalHandler(
 			}
 		}
 
+		for len(clobKeeper.GetOrderQueue()) > 0 {
+			msg := <-clobKeeper.GetOrderQueue()
+			clobKeeper.ProcessOrder(ctx, msg)
+		}
+
 		// Gather "OperationsRelated" group messages.
 		// TODO(DEC-1237): ensure ProposedOperations is within a certain size.
 		operationsTxResp, err := GetProposedOperationsTx(ctx, txConfig, clobKeeper)
