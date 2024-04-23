@@ -371,6 +371,11 @@ func (_m *PerpetualsKeeper) PerformStatefulPremiumVotesValidation(ctx types.Cont
 	return r0
 }
 
+// SendOIUpdatesToIndexer provides a mock function with given fields: ctx
+func (_m *PerpetualsKeeper) SendOIUpdatesToIndexer(ctx types.Context) {
+	_m.Called(ctx)
+}
+
 // SetLiquidityTier provides a mock function with given fields: ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional, openInterestLowerCap, openInterestUpperCap
 func (_m *PerpetualsKeeper) SetLiquidityTier(ctx types.Context, id uint32, name string, initialMarginPpm uint32, maintenanceFractionPpm uint32, impactNotional uint64, openInterestLowerCap uint64, openInterestUpperCap uint64) (perpetualstypes.LiquidityTier, error) {
 	ret := _m.Called(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional, openInterestLowerCap, openInterestUpperCap)

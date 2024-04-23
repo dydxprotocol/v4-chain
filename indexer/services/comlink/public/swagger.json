@@ -947,6 +947,9 @@
           },
           "openInterestUpperCap": {
             "type": "string"
+          },
+          "baseOpenInterest": {
+            "type": "string"
           }
         },
         "required": [
@@ -967,7 +970,8 @@
           "stepSize",
           "stepBaseQuantums",
           "subticksPerTick",
-          "marketType"
+          "marketType",
+          "baseOpenInterest"
         ],
         "type": "object",
         "additionalProperties": false
