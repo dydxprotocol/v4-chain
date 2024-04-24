@@ -25,6 +25,11 @@ import _ from 'lodash';
 
 import config from './config';
 
+import yargs from 'yargs';
+
+import { validatePnl, validatePnlForSubaccount } from './helpers/pnl-validation-helpers';
+import { runAsyncScript } from './helpers/util';
+
 interface VulcanMessage {
   key: Buffer,
   value: OffChainUpdateV1,
@@ -131,3 +136,7 @@ export async function sendStatefulOrderMessages() {
     });
   }
 }
+
+runAsyncScript(async () => {
+  await sendStatefulOrderMessages();
+});
