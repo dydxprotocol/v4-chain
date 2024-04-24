@@ -15,6 +15,7 @@ import {
   OrderQueryConfig,
   OrderStatus,
   OrderUpdateObject,
+  PaginationFromDatabase,
   QueryableField,
   QueryConfig,
 } from '../types';
@@ -67,10 +68,11 @@ export async function findAll(
     goodTilBlockTimeBeforeOrAt,
     clientMetadata,
     triggerPrice,
+    page,
   }: OrderQueryConfig,
   requiredFields: QueryableField[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<OrderFromDatabase[]> {
+): Promise<PaginationFromDatabase<OrderFromDatabase>> {
   verifyAllRequiredFields(
     {
       limit,
@@ -185,11 +187,41 @@ export async function findAll(
     }
   }
 
-  if (limit !== undefined) {
+  if (limit !== undefined && page === undefined) {
     baseQuery = baseQuery.limit(limit);
   }
 
-  return baseQuery.returning('*');
+  /**
+   * If a query is made using a page number, then the limit property is used as 'page limit'
+   * TODO: Improve pagination by adding a required eventId for orderBy clause
+   */
+  if (page !== undefined && limit !== undefined) {
+    /**
+     * We make sure that the page number is always >= 1
+     */
+    const currentPage: number = Math.max(1, page);
+    const offset: number = (currentPage - 1) * limit;
+
+    /**
+     * Ensure sorting is applied to maintain consistent pagination results.
+     * Also a casting of the ts type is required since the infer of the type
+     * obtained from the count is not performed.
+     */
+    const count: { count?: string } = await baseQuery.clone().clearOrder().count({ count: '*' }).first() as unknown as { count?: string };
+
+    baseQuery = baseQuery.offset(offset).limit(limit);
+
+    return {
+      results: await baseQuery.returning('*'),
+      limit,
+      offset,
+      total: parseInt(count.count ?? '0', 10),
+    };
+  }
+
+  return {
+    results: await baseQuery.returning('*'),
+  };
 }
 
 export async function create(

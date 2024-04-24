@@ -12,6 +12,7 @@ import {
   OrderStatus,
   OrderTable,
   OrderType,
+  PaginationFromDatabase,
   perpetualMarketRefresher,
   protocolTranslations,
   SubaccountTable,
@@ -112,10 +113,10 @@ async function listOrdersCommon(
     : Ordering.DESC;
   const [
     redisOrderMap,
-    postgresOrders,
+    { results: postgresOrders },
   ]: [
     RedisOrderMap,
-    OrderFromDatabase[],
+    PaginationFromDatabase<OrderFromDatabase>,
   ] = await Promise.all([
     getRedisOrderMapForSubaccountIds(
       subaccountIds,
@@ -157,11 +158,13 @@ async function listOrdersCommon(
   // then we do not want to return this order to the user as 'BEST_EFFORT_OPENED'.
   let additionalPostgresOrders: OrderFromDatabase[] = [];
   if (!_.isEmpty(postgresOrderIdsToFetch)) {
-    additionalPostgresOrders = await OrderTable.findAll({
+    const { results }: PaginationFromDatabase<OrderFromDatabase> = await OrderTable.findAll({
       id: postgresOrderIdsToFetch,
     }, [], {
       ...DEFAULT_POSTGRES_OPTIONS,
     });
+
+    additionalPostgresOrders = results;
   }
 
   const postgresOrderMap: PostgresOrderMap = _.keyBy(

@@ -545,7 +545,7 @@ async function expectNoExistingTransfers(
   subaccountIds: string[],
 ) {
   // Confirm there is no existing transfer to or from the subaccounts
-  const transfers: TransferFromDatabase[] = await TransferTable.findAllToOrFromSubaccountId(
+  const { results: transfers } = await TransferTable.findAllToOrFromSubaccountId(
     {
       subaccountId: subaccountIds,
     },
@@ -572,7 +572,7 @@ async function expectAndReturnNewTransfer(
 ): Promise<TransferFromDatabase> {
   // Confirm there is now a transfer to or from the recipient subaccount
   if (recipientSubaccountId) {
-    const newTransfersRelatedToRecipient: TransferFromDatabase[] = await
+    const { results: newTransfersRelatedToRecipient } = await
     TransferTable.findAllToOrFromSubaccountId(
       {
         subaccountId: [
@@ -588,7 +588,7 @@ async function expectAndReturnNewTransfer(
 
   if (senderSubaccountId) {
     // Confirm there is now a transfer to or from the sender subaccount
-    const newTransfersRelatedToSender: TransferFromDatabase[] = await
+    const { results: newTransfersRelatedToSender } = await
     TransferTable.findAllToOrFromSubaccountId(
       {
         subaccountId: [
