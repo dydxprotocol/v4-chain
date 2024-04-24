@@ -41,6 +41,7 @@ export async function sendStatefulOrderMessages() {
   try {
     const orders: OrderFromDatabase[] = await
     OrderTable.findOpenLongTermOrConditionalOrders();
+    console.log(`Found ${orders.length} open orders.`)
     await perpetualMarketRefresher.updatePerpetualMarkets();
     // order uuid -> total filled
     const idToOrderMap: _.Dictionary<OrderFromDatabase> = _.keyBy(orders, 'id');
@@ -104,7 +105,7 @@ export async function sendStatefulOrderMessages() {
         throw new Error(`Invalid offchain update: ${offChainUpdate}`);
       });
 
-    const messages: ProducerMessage[] = _.map(vulcanMessages, (message: VulcanMessage) => {
+    /*const messages: ProducerMessage[] = _.map(vulcanMessages, (message: VulcanMessage) => {
       return {
         key: message.key,
         value: Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(message.value).finish())),
@@ -120,7 +121,8 @@ export async function sendStatefulOrderMessages() {
     for (const message of messages) {
       batchProducer.addMessageAndMaybeFlush(message);
     }
-    await batchProducer.flush();
+    await batchProducer.flush();*/
+    console.log(`Will send ${vulcanMessages.length} off-chain messages.`)
   } catch (error) {
     logger.error({
       at: 'vulcan-helpers#sendStatefulOrderMessages',
