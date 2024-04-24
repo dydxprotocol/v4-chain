@@ -4,6 +4,11 @@ import {
   KafkaTopics,
   producer,
   ProducerMessage,
+  updateOnMessageFunction,
+  consumer,
+  startConsumer,
+  stopConsumer,
+  TO_ENDER_TOPIC,
 } from '@dydxprotocol-indexer/kafka';
 import {
   OrderFromDatabase,
@@ -110,7 +115,7 @@ export async function sendStatefulOrderMessages() {
         throw new Error(`Invalid offchain update: ${offChainUpdate}`);
       });
 
-    /*const messages: ProducerMessage[] = _.map(vulcanMessages, (message: VulcanMessage) => {
+    const messages: ProducerMessage[] = _.map(vulcanMessages, (message: VulcanMessage) => {
       return {
         key: message.key,
         value: Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(message.value).finish())),
@@ -126,8 +131,8 @@ export async function sendStatefulOrderMessages() {
     for (const message of messages) {
       batchProducer.addMessageAndMaybeFlush(message);
     }
-    await batchProducer.flush();*/
-    console.log(`Will send ${vulcanMessages.length} off-chain messages.`)
+    await batchProducer.flush();
+    console.log(`Sent ${vulcanMessages.length} off-chain messages.`)
   } catch (error) {
     logger.error({
       at: 'vulcan-helpers#sendStatefulOrderMessages',
@@ -137,6 +142,18 @@ export async function sendStatefulOrderMessages() {
   }
 }
 
+async function startKafka(): Promise<void> {
+  await Promise.all([
+    producer.connect(),
+  ]);
+
+  logger.info({
+    at: 'index#start',
+    message: 'Successfully started',
+  });
+}
+
 runAsyncScript(async () => {
+  await startKafka()
   await sendStatefulOrderMessages();
 });
