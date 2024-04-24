@@ -10,6 +10,7 @@ import { IsoString } from './utility-types';
 
 export enum QueryableField {
   LIMIT = 'limit',
+  PAGE = 'page',
   ID = 'id',
   ADDRESS = 'address',
   SUBACCOUNT_NUMBER = 'subaccountNumber',
@@ -88,6 +89,7 @@ export enum QueryableField {
 
 export interface QueryConfig {
   [QueryableField.LIMIT]?: number;
+  [QueryableField.PAGE]?: number;
 }
 
 export interface SubaccountQueryConfig extends QueryConfig {

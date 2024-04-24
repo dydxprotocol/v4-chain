@@ -6,6 +6,7 @@ import {
   DEFAULT_POSTGRES_OPTIONS,
   IsoString,
   Ordering,
+  PaginationFromDatabase,
   QueryableField,
   SubaccountColumns,
   SubaccountFromDatabase,
@@ -64,12 +65,7 @@ class TransfersController extends Controller {
     const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
 
     // TODO(DEC-656): Change to a cache in Redis similar to Librarian instead of querying DB.
-    const [subaccount, transfers, assets]: [
-      SubaccountFromDatabase | undefined,
-      TransferFromDatabase[],
-      AssetFromDatabase[]
-    ] = await
-    Promise.all([
+    const [subaccount, { results: transfers }, assets] = await Promise.all([
       SubaccountTable.findById(
         subaccountId,
       ),
@@ -151,9 +147,9 @@ class TransfersController extends Controller {
     );
 
     // TODO(DEC-656): Change to a cache in Redis similar to Librarian instead of querying DB.
-    const [subaccounts, transfers, assets]: [
+    const [subaccounts, { results: transfers }, assets]: [
       SubaccountFromDatabase[] | undefined,
-      TransferFromDatabase[],
+      PaginationFromDatabase<TransferFromDatabase>,
       AssetFromDatabase[]
     ] = await
     Promise.all([

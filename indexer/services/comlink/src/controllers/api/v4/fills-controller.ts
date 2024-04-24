@@ -68,7 +68,7 @@ class FillsController extends Controller {
     }
 
     const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
-    const fills: FillFromDatabase[] = await FillTable.findAll(
+    const { results: fills } = await FillTable.findAll(
       {
         subaccountId: [subaccountId],
         clobPairId,
@@ -132,7 +132,7 @@ class FillsController extends Controller {
     );
     const subaccountIds: string[] = Object.keys(childIdtoSubaccountNumber);
 
-    const fills: FillFromDatabase[] = await FillTable.findAll(
+    const { results: fills } = await FillTable.findAll(
       {
         subaccountId: subaccountIds,
         clobPairId,
