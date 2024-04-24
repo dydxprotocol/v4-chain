@@ -11,6 +11,7 @@
     "validate-pnl": "ts-node src/validate-pnl.ts",
     "print-block": "ts-node src/print-block.ts",
     "print-candle-time-boundaries": "ts-node src/print-candle-time-boundaries.ts",
+    "send-stateful-order-off-chain-updates": "ts-node src/send-stateful-order-off-chain-updates.ts",
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
