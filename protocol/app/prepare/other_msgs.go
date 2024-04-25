@@ -45,11 +45,11 @@ func RemoveDisallowMsgs(ctx sdk.Context, decoder sdk.TxDecoder, txs [][]byte) []
 	)
 
 	var filteredTxs [][]byte
-	for _, txBytes := range txs {
+	for i, txBytes := range txs {
 		// Decode tx so we can read msgs.
 		tx, err := decoder(txBytes)
 		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("RemoveDisallowMsgs: failed to decode tx: %v", err))
+			ctx.Logger().Error(fmt.Sprintf("RemoveDisallowMsgs: failed to decode tx (index %v of %v txs): %v", i, len(txs), err))
 			continue // continue to next tx.
 		}
 
