@@ -128,12 +128,12 @@ export async function sendStatefulOrderMessages() {
         console.log(`Order data string: ${JSON.stringify(orderDataString)}`);
         console.log(`New order data string: ${JSON.stringify(newKey)}`);
       }
-      if (newKey !== '') {
+      /*if (newKey !== '') {
         await setAsync({
           key: cacheKey,
           value: newKey,
         }, redisClient);
-      }
+      }*/
       check += 1;
       missingLevels += 1;
     }
