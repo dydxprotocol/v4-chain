@@ -71,6 +71,7 @@ export async function sendStatefulOrderMessages() {
     OrderTable.findOpenLongTermOrConditionalOrders();
     console.log(`Found ${orders.length} open orders.`)
     const books: any = {}
+    let check:  number = 0;
     let missingLevels: number = 0;
     await perpetualMarketRefresher.updatePerpetualMarkets();
     for (const order of orders) {
@@ -96,6 +97,10 @@ export async function sendStatefulOrderMessages() {
           continue
         }
       }
+      if (check < 10) {
+        console.log(`Order price: ${order.price}, Levels: ${side}`);
+      }
+      check += 1;
       missingLevels += 1;
     }
     console.log(`Missing levels for ${missingLevels} orders`);
