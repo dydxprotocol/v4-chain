@@ -95,7 +95,7 @@ export async function sendStatefulOrderMessages() {
       const levelPrices: string[] = [];
       for (const level of side) {
         levelPrices.push(level.humanPrice);
-        if (order.price === level.humanPrice) {
+        if (Number(order.price) == Number(level.humanPrice)) {
           continue
         }
       }
