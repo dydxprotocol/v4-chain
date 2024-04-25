@@ -111,7 +111,7 @@ export async function sendStatefulOrderMessages() {
       const orderData: OrderData | null = await OrdersDataCache.getOrderDataWithUUID(order.id, redisClient);
       if (check < 500 && check % 25 == 0) {
         console.log(`Order price: ${order.price}, Levels: ${levelPrices}`);
-        console.log(`Order data: ${orderData}`);
+        console.log(`Order data: ${JSON.stringify(orderData)}`);
       }
       check += 1;
       missingLevels += 1;
