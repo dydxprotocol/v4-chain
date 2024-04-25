@@ -94,10 +94,6 @@ func (f *Flags) Validate() error {
 		if !f.GrpcEnable {
 			return fmt.Errorf("grpc.enable must be set to true - grpc streaming requires gRPC server")
 		}
-
-		if !f.NonValidatingFullNode {
-			return fmt.Errorf("grpc-streaming-enabled can only be set to true for non-validating full nodes")
-		}
 	}
 	return nil
 }

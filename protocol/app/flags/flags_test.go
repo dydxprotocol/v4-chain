@@ -61,19 +61,18 @@ func TestValidate(t *testing.T) {
 				NonValidatingFullNode: true,
 			},
 		},
-		"failure - gRPC disabled": {
-			flags: flags.Flags{
-				GrpcEnable: false,
-			},
-			expectedErr: fmt.Errorf("grpc.enable must be set to true - validating requires gRPC server"),
-		},
-		"failure - gRPC streaming enabled for validating nodes": {
+		"success - gRPC streaming enabled for validating nodes": {
 			flags: flags.Flags{
 				NonValidatingFullNode: false,
 				GrpcEnable:            true,
 				GrpcStreamingEnabled:  true,
 			},
-			expectedErr: fmt.Errorf("grpc-streaming-enabled can only be set to true for non-validating full nodes"),
+		},
+		"failure - gRPC disabled": {
+			flags: flags.Flags{
+				GrpcEnable: false,
+			},
+			expectedErr: fmt.Errorf("grpc.enable must be set to true - validating requires gRPC server"),
 		},
 		"failure - gRPC streaming enabled with gRPC disabled": {
 			flags: flags.Flags{
