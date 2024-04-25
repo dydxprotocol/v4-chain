@@ -128,6 +128,5 @@ func NewAnteDecoratorChain(options HandlerOptions) []sdk.AnteDecorator {
 		),
 
 		clobante.NewRateLimitDecorator(options.ClobKeeper),
-		clobante.NewClobDecorator(options.ClobKeeper),
 	}
 }
