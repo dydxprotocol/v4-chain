@@ -111,15 +111,21 @@ export async function sendStatefulOrderMessages() {
         continue;
       }
       missingOrders.push(order);
+      const cacheKey: string = `${OrdersDataCache.ORDERS_DATA_CACHE_KEY_PREFIX}${order.id}`;
       const orderDataString: string | null = await await getAsync(
-        `${OrdersDataCache.ORDERS_DATA_CACHE_KEY_PREFIX}${order.id}`,
+        cacheKey,
         redisClient,
       );
       const orderData: OrderData | null = await OrdersDataCache.getOrderDataWithUUID(order.id, redisClient);
+      let newKey: string = '';
+      if (orderData !== null) {
+        newKey = `${orderData.goodTilBlock}_${orderData.totalFilledQuantums}_false`;
+      }
       if (check < 500 && check % 25 == 0) {
         console.log(`Order price: ${order.price}, Levels: ${levelPrices}`);
         console.log(`Order data: ${JSON.stringify(orderData)}`);
         console.log(`Order data string: ${JSON.stringify(orderDataString)}`);
+        console.log(`New order data string: ${JSON.stringify(newKey)}`);
       }
       check += 1;
       missingLevels += 1;
