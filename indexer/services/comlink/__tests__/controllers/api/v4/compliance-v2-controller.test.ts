@@ -17,9 +17,10 @@ import { ComplianceControllerHelper } from '../../../../src/controllers/api/v4/c
 import config from '../../../../src/config';
 import { DateTime } from 'luxon';
 import { ComplianceAction } from '../../../../src/controllers/api/v4/compliance-v2-controller';
-import { ExtendedSecp256k1Signature, Secp256k1, sha256 } from '@cosmjs/crypto';
+import { ExtendedSecp256k1Signature, Secp256k1 } from '@cosmjs/crypto';
 import { getGeoComplianceReason } from '../../../../src/helpers/compliance/compliance-utils';
 import { isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
+import { toBech32 } from '@cosmjs/encoding';
 
 jest.mock('@dydxprotocol-indexer/compliance');
 jest.mock('../../../../src/helpers/compliance/compliance-utils');
@@ -38,10 +39,15 @@ jest.mock('@cosmjs/crypto', () => ({
   },
 }));
 
+jest.mock('@cosmjs/encoding', () => ({
+  toBech32: jest.fn(),
+}));
+
 describe('ComplianceV2Controller', () => {
   const ipAddr: string = '192.168.1.1';
 
   const ipAddrMock: jest.Mock = (getIpAddr as unknown as jest.Mock);
+  const toBech32Mock: jest.Mock = (toBech32 as unknown as jest.Mock);
 
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -243,8 +249,8 @@ describe('ComplianceV2Controller', () => {
       address: testConstants.defaultAddress,
       message: 'Test message',
       action: ComplianceAction.ONBOARD,
-      signedMessage: sha256(Buffer.from('msg')),
-      pubkey: new Uint8Array([/* public key bytes */]),
+      signedMessage: 'signedmessage123',
+      pubkey: 'asdfasdf',
       timestamp: 1620000000,
     };
 
@@ -261,6 +267,7 @@ describe('ComplianceV2Controller', () => {
           fromFixedLength: jest.fn().mockResolvedValue({} as ExtendedSecp256k1Signature),
         },
       }));
+      toBech32Mock.mockReturnValue(testConstants.defaultAddress);
       jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(1620000000)); // Mock current time
     });
 
@@ -298,6 +305,17 @@ describe('ComplianceV2Controller', () => {
     it('should return 400 for invalid signature', async () => {
       // Mock verifySignature to return false for this test
       (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(false);
+
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/geoblock',
+        body,
+        expectedStatus: 400,
+      });
+    });
+
+    it('should return 400 for incorrect address', async () => {
+      toBech32Mock.mockResolvedValueOnce('invalid_address');
 
       await sendRequest({
         type: RequestMethod.POST,
