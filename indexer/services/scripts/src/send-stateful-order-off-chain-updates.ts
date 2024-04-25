@@ -41,6 +41,7 @@ import {
 } from 'redis';
 import {
   getAsync,
+  setAsync,
 } from '@dydxprotocol-indexer/redis/build/src/helpers/redis';
 
 import config from './config';
@@ -126,6 +127,12 @@ export async function sendStatefulOrderMessages() {
         console.log(`Order data: ${JSON.stringify(orderData)}`);
         console.log(`Order data string: ${JSON.stringify(orderDataString)}`);
         console.log(`New order data string: ${JSON.stringify(newKey)}`);
+      }
+      if (newKey !== '') {
+        await setAsync({
+          key: cacheKey,
+          value: newKey,
+        }, redisClient);
       }
       check += 1;
       missingLevels += 1;
