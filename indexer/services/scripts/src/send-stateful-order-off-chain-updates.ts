@@ -12,6 +12,7 @@ import {
 } from '@dydxprotocol-indexer/kafka';
 import {
   OrderFromDatabase,
+  OrderSide,
   OrderTable,
   orderTranslations,
   PerpetualMarketFromDatabase,
@@ -31,6 +32,7 @@ import {
   redis as redisLib,
   OrderbookLevelsCache,
   OrderbookLevels,
+  PriceLevel,
 } from '@dydxprotocol-indexer/redis'
 import {
   RedisClient
@@ -69,6 +71,7 @@ export async function sendStatefulOrderMessages() {
     OrderTable.findOpenLongTermOrConditionalOrders();
     console.log(`Found ${orders.length} open orders.`)
     const books: any = {}
+    let missingLevels: number = 0;
     await perpetualMarketRefresher.updatePerpetualMarkets();
     for (const order of orders) {
       const market: PerpetualMarketFromDatabase = perpetualMarketRefresher
@@ -82,7 +85,20 @@ export async function sendStatefulOrderMessages() {
         console.log(`${market.ticker} book cached`);
       }
       const book: OrderbookLevels = books[order.clobPairId];
+      let side: PriceLevel[] = [];
+      if (order.side === OrderSide.BUY) {
+        side = book.bids;
+      } else {
+        side = book.asks;
+      }
+      for (const level of side) {
+        if (order.price === level.humanPrice) {
+          continue
+        }
+      }
+      missingLevels += 1;
     }
+    console.log(`Missing levels for ${missingLevels} orders`);
     // order uuid -> total filled
     const idToOrderMap: _.Dictionary<OrderFromDatabase> = _.keyBy(orders, 'id');
     const totalFilledQuantumsMap: _.Dictionary<string> = _.mapValues(
