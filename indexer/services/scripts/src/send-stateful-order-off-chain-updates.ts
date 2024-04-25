@@ -69,11 +69,12 @@ export async function sendStatefulOrderMessages() {
     OrderTable.findOpenLongTermOrConditionalOrders();
     console.log(`Found ${orders.length} open orders.`)
     const books: any = {}
+    await perpetualMarketRefresher.updatePerpetualMarkets();
     for (const order of orders) {
       const market: PerpetualMarketFromDatabase = perpetualMarketRefresher
       .getPerpetualMarketFromClobPairId(order.clobPairId)!;
       if (books[order.clobPairId] === undefined) {
-        const book: any = OrderbookLevelsCache.getOrderBookLevels(
+        const book: any = await OrderbookLevelsCache.getOrderBookLevels(
           market.ticker,
           redisClient,
         );
@@ -82,7 +83,6 @@ export async function sendStatefulOrderMessages() {
       }
       const book: OrderbookLevels = books[order.clobPairId];
     }
-    await perpetualMarketRefresher.updatePerpetualMarkets();
     // order uuid -> total filled
     const idToOrderMap: _.Dictionary<OrderFromDatabase> = _.keyBy(orders, 'id');
     const totalFilledQuantumsMap: _.Dictionary<string> = _.mapValues(
