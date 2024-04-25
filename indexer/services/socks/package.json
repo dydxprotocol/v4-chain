@@ -46,7 +46,7 @@
     "@types/node": "^18.0.3",
     "@types/response-time": "^2.3.5",
     "@types/uuid": "^8.3.4",
-    "@types/ws": "^8.5.3",
+    "@types/ws": "^8.5.10",
     "jest": "^28.1.2",
     "ts-node": "^10.8.2",
     "tsconfig-paths": "^4.0.0",
