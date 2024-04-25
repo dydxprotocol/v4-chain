@@ -33,6 +33,9 @@ func (anteWrapper SingleMsgClobTxAnteWrapper) AnteHandle(
 	}
 
 	if isSingleClobMsgTx {
+		if ctx.IsCheckTx() || ctx.IsReCheckTx() {
+			return ctx, nil
+		}
 		return next(ctx, tx, simulate)
 	}
 
