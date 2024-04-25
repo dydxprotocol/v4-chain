@@ -92,13 +92,15 @@ export async function sendStatefulOrderMessages() {
       } else {
         side = book.asks;
       }
+      const levelPrices: string[] = [];
       for (const level of side) {
+        levelPrices.push(level.humanPrice);
         if (order.price === level.humanPrice) {
           continue
         }
       }
-      if (check < 10) {
-        console.log(`Order price: ${order.price}, Levels: ${side}`);
+      if (check < 1000 && check % 100 == 0) {
+        console.log(`Order price: ${order.price}, Levels: ${levelPrices}`);
       }
       check += 1;
       missingLevels += 1;
