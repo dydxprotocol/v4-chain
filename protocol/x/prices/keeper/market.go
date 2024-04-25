@@ -59,7 +59,13 @@ func (k Keeper) CreateMarket(
 	// add the pair to the currency-pair-id cache
 	cp, err := slinky.MarketPairToCurrencyPair(marketParam.Pair)
 	if err != nil {
-		k.Logger(ctx).Error("failed to add currency pair to cache due to failed conversion", "pair", marketParam.Pair, "err", err)
+		k.Logger(ctx).Error(
+			"failed to add currency pair to cache due to failed conversion",
+			"pair",
+			marketParam.Pair,
+			"err",
+			err,
+		)
 	} else {
 		// add the pair to the currency-pair-id cache
 		k.currencyPairIDCache.AddCurrencyPair(uint64(marketParam.Id), cp.String())
