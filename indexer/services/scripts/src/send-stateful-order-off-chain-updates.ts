@@ -33,6 +33,8 @@ import {
   OrderbookLevelsCache,
   OrderbookLevels,
   PriceLevel,
+  OrderData,
+  OrdersDataCache,
 } from '@dydxprotocol-indexer/redis'
 import {
   RedisClient
@@ -67,13 +69,14 @@ const connect = res.connect;
  */
 export async function sendStatefulOrderMessages() {
   try {
-    const orders: OrderFromDatabase[] = await
+    let orders: OrderFromDatabase[] = await
     OrderTable.findOpenLongTermOrConditionalOrders();
     console.log(`Found ${orders.length} open orders.`)
     const books: any = {}
     let check:  number = 0;
     let missingLevels: number = 0;
     await perpetualMarketRefresher.updatePerpetualMarkets();
+    const missingOrders: OrderFromDatabase[] = [];
     for (const order of orders) {
       const market: PerpetualMarketFromDatabase = perpetualMarketRefresher
       .getPerpetualMarketFromClobPairId(order.clobPairId)!;
@@ -104,13 +107,17 @@ export async function sendStatefulOrderMessages() {
       if (foundLevel) {
         continue;
       }
-      if (check < 1000 && check % 100 == 0) {
+      missingOrders.push(order);
+      const orderData: OrderData | null = await OrdersDataCache.getOrderDataWithUUID(order.id, redisClient);
+      if (check < 500 && check % 25 == 0) {
         console.log(`Order price: ${order.price}, Levels: ${levelPrices}`);
+        console.log(`Order data: ${orderData}`);
       }
       check += 1;
       missingLevels += 1;
     }
     console.log(`Missing levels for ${missingLevels} orders`);
+    orders = missingOrders;
     // order uuid -> total filled
     const idToOrderMap: _.Dictionary<OrderFromDatabase> = _.keyBy(orders, 'id');
     const totalFilledQuantumsMap: _.Dictionary<string> = _.mapValues(
