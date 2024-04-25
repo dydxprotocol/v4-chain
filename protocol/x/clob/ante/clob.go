@@ -60,6 +60,14 @@ func (cd ClobDecorator) AnteHandle(
 		return next(ctx, tx, simulate)
 	}
 
+	// Disable order placement and cancelation processing if the clob keeper is not hydrated.
+	if !cd.clobKeeper.IsHydrated() {
+		return ctx, errorsmod.Wrap(
+			types.ErrClobNotHydrated,
+			"clob keeper is not hydrated. Please wait for the next block.",
+		)
+	}
+
 	msgs := tx.GetMsgs()
 	var msg = msgs[0]
 

@@ -216,6 +216,11 @@ var (
 		46,
 		"Batch cancel has failed",
 	)
+	ErrClobNotHydrated = errorsmod.Register(
+		ModuleName,
+		47,
+		"CLOB has not been hydrated",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(

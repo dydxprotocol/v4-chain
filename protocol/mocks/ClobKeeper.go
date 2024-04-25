@@ -679,6 +679,11 @@ func (_m *ClobKeeper) HasAuthority(authority string) bool {
 	return r0
 }
 
+// Hydrate provides a mock function with given fields: ctx
+func (_m *ClobKeeper) Hydrate(ctx types.Context) {
+	_m.Called(ctx)
+}
+
 // InitializeBlockRateLimit provides a mock function with given fields: ctx, config
 func (_m *ClobKeeper) InitializeBlockRateLimit(ctx types.Context, config clobtypes.BlockRateLimitConfiguration) error {
 	ret := _m.Called(ctx, config)
@@ -718,6 +723,24 @@ func (_m *ClobKeeper) InitializeEquityTierLimit(ctx types.Context, config clobty
 // InitializeNewGrpcStreams provides a mock function with given fields: ctx
 func (_m *ClobKeeper) InitializeNewGrpcStreams(ctx types.Context) {
 	_m.Called(ctx)
+}
+
+// IsHydrated provides a mock function with given fields:
+func (_m *ClobKeeper) IsHydrated() bool {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsHydrated")
+	}
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func() bool); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
 }
 
 // IsLiquidatable provides a mock function with given fields: ctx, subaccountId

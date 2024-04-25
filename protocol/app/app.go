@@ -1165,6 +1165,7 @@ func New(
 
 	app.ModuleManager.SetOrderPreBlockers(
 		upgradetypes.ModuleName,
+		clobmoduletypes.ModuleName,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -1400,16 +1401,6 @@ func New(
 			tmos.Exit(err.Error())
 		}
 
-		// Hydrate memStores used for caching state.
-		app.hydrateMemStores()
-
-		// Hydrate the `memclob` with all ordersbooks from state,
-		// and hydrate the next `checkState` as well as the `memclob` with stateful orders.
-		app.hydrateMemclobWithOrderbooksAndStatefulOrders()
-
-		// Hydrate the keeper in-memory data structures.
-		app.hydrateKeeperInMemoryDataStructures()
-
 		// load the x/prices keeper currency-pair ID cache
 		app.loadCurrencyPairIDsForMarkets()
 	}
@@ -1627,15 +1618,6 @@ func (app *App) loadCurrencyPairIDsForMarkets() {
 	app.PricesKeeper.LoadCurrencyPairIDCache(uncachedCtx)
 }
 
-// hydrateMemStores hydrates the memStores used for caching state.
-func (app *App) hydrateMemStores() {
-	// Create an `uncachedCtx` where the underlying MultiStore is the `rootMultiStore`.
-	// We use this to hydrate the `memStore` state with values from the underlying `rootMultiStore`.
-	uncachedCtx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
-	// Initialize memstore in clobKeeper with order fill amounts and stateful orders.
-	app.ClobKeeper.InitMemStore(uncachedCtx)
-}
-
 // initializeRateLimiters initializes the rate limiters from state if the application is
 // not started from genesis.
 func (app *App) initializeRateLimiters() {
@@ -1643,37 +1625,6 @@ func (app *App) initializeRateLimiters() {
 	// We use this to hydrate the `orderRateLimiter` with values from the underlying `rootMultiStore`.
 	uncachedCtx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
 	app.ClobKeeper.InitalizeBlockRateLimitFromStateIfExists(uncachedCtx)
-}
-
-// hydrateMemclobWithOrderbooksAndStatefulOrders hydrates the memclob with orderbooks and stateful orders
-// from state.
-func (app *App) hydrateMemclobWithOrderbooksAndStatefulOrders() {
-	// Create a `checkStateCtx` where the underlying MultiStore is the `CacheMultiStore` for
-	// the `checkState`. We do this to avoid performing any state writes to the `rootMultiStore`
-	// directly.
-	checkStateCtx := app.BaseApp.NewContext(true)
-
-	// Initialize memclob in clobKeeper with orderbooks using `ClobPairs` in state.
-	app.ClobKeeper.InitMemClobOrderbooks(checkStateCtx)
-	// Initialize memclob with all existing stateful orders.
-	// TODO(DEC-1348): Emit indexer messages to indicate that application restarted.
-	app.ClobKeeper.InitStatefulOrders(checkStateCtx)
-}
-
-// hydrateKeeperInMemoryDataStructures hydrates the keeper with ClobPairId and PerpetualId mapping
-// and untriggered conditional orders from state.
-func (app *App) hydrateKeeperInMemoryDataStructures() {
-	// Create a `checkStateCtx` where the underlying MultiStore is the `CacheMultiStore` for
-	// the `checkState`. We do this to avoid performing any state writes to the `rootMultiStore`
-	// directly.
-	checkStateCtx := app.BaseApp.NewContext(true)
-
-	// Initialize the untriggered conditional orders data structure with untriggered
-	// conditional orders in state.
-	app.ClobKeeper.HydrateClobPairAndPerpetualMapping(checkStateCtx)
-	// Initialize the untriggered conditional orders data structure with untriggered
-	// conditional orders in state.
-	app.ClobKeeper.HydrateUntriggeredConditionalOrders(checkStateCtx)
 }
 
 // GetBaseApp returns the base app of the application

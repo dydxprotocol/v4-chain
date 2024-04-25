@@ -45,6 +45,7 @@ type (
 		indexerEventManager indexer_manager.IndexerEventManager
 		streamingManager    streamingtypes.GrpcStreamingManager
 
+		hydrated            *atomic.Bool
 		memStoreInitialized *atomic.Bool
 
 		Flags flags.ClobFlags
@@ -111,6 +112,7 @@ func NewKeeper(
 		indexerEventManager:          indexerEventManager,
 		streamingManager:             grpcStreamingManager,
 		memStoreInitialized:          &atomic.Bool{},
+		hydrated:                     &atomic.Bool{},
 		txDecoder:                    txDecoder,
 		mevTelemetryConfig: MevTelemetryConfig{
 			Enabled:    clobFlags.MevTelemetryEnabled,
@@ -152,6 +154,35 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
+}
+
+// IsHydrated returns whether the clob keeper has been hydrated.
+func (k Keeper) IsHydrated() bool {
+	return k.hydrated.Load()
+}
+
+// Hydrate hydrates the clob keeper with the necessary in memory data structures.
+func (k Keeper) Hydrate(ctx sdk.Context) {
+	alreadyInitialized := k.hydrated.Swap(true)
+	if alreadyInitialized {
+		return
+	}
+
+	// Initialize memstore in clobKeeper with order fill amounts and stateful orders.
+	k.InitMemStore(ctx)
+
+	// Initialize memclob in clobKeeper with orderbooks using `ClobPairs` in state.
+	k.InitMemClobOrderbooks(ctx)
+	// Initialize memclob with all existing stateful orders.
+	// TODO(DEC-1348): Emit indexer messages to indicate that application restarted.
+	k.InitStatefulOrders(ctx)
+
+	// Initialize the untriggered conditional orders data structure with untriggered
+	// conditional orders in state.
+	k.HydrateClobPairAndPerpetualMapping(ctx)
+	// Initialize the untriggered conditional orders data structure with untriggered
+	// conditional orders in state.
+	k.HydrateUntriggeredConditionalOrders(ctx)
 }
 
 // InitMemStore initializes the memstore of the `clob` keeper.

@@ -20,6 +20,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -163,6 +164,16 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 
 // ConsensusVersion implements ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// PreBlock executes all ABCI PreBlock logic respective to the clob module.
+func (am AppModule) PreBlock(ctx context.Context) error {
+	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), metrics.PreBlocker)
+	PreBlocker(
+		lib.UnwrapSDKContext(ctx, types.ModuleName),
+		am.keeper,
+	)
+	return nil
+}
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the clob module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
