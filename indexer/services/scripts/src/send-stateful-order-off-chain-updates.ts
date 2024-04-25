@@ -27,6 +27,14 @@ import {
 import { Long } from '@dydxprotocol-indexer/v4-protos/build/codegen/helpers';
 import { IHeaders } from 'kafkajs';
 import _ from 'lodash';
+import {
+  redis as redisLib,
+  OrderbookLevelsCache,
+  OrderbookLevels,
+} from '@dydxprotocol-indexer/redis'
+import {
+  RedisClient
+} from 'redis';
 
 import config from './config';
 
@@ -43,6 +51,14 @@ interface VulcanMessage {
 
 type IndexerOrderIdMap = { [orderUuid: string]: IndexerOrderId };
 
+const res: {
+  client: RedisClient,
+  connect: () => Promise<void>,
+} = redisLib.createRedisClient(config.REDIS_URL, config.REDIS_RECONNECT_TIMEOUT_MS);
+
+const redisClient: RedisClient = res.client;
+const connect = res.connect;
+
 /**
  * Sends stateful order messages to Vulcan for all open stateful orders in database.
  *
@@ -52,6 +68,20 @@ export async function sendStatefulOrderMessages() {
     const orders: OrderFromDatabase[] = await
     OrderTable.findOpenLongTermOrConditionalOrders();
     console.log(`Found ${orders.length} open orders.`)
+    const books: any = {}
+    for (const order of orders) {
+      const market: PerpetualMarketFromDatabase = perpetualMarketRefresher
+      .getPerpetualMarketFromClobPairId(order.clobPairId)!;
+      if (books[order.clobPairId] === undefined) {
+        const book: any = OrderbookLevelsCache.getOrderBookLevels(
+          market.ticker,
+          redisClient,
+        );
+        books[order.clobPairId] = book;
+        console.log(`${market.ticker} book cached`);
+      }
+      const book: OrderbookLevels = books[order.clobPairId];
+    }
     await perpetualMarketRefresher.updatePerpetualMarkets();
     // order uuid -> total filled
     const idToOrderMap: _.Dictionary<OrderFromDatabase> = _.keyBy(orders, 'id');
@@ -150,6 +180,17 @@ async function startKafka(): Promise<void> {
   logger.info({
     at: 'index#start',
     message: 'Successfully started',
+  });
+}
+
+async function startRedis(): Promise<void> {
+  await Promise.all([
+    connect(),
+  ]);
+
+  logger.info({
+    at: 'index$start',
+    message: 'Successfully connected to redis',
   });
 }
 
