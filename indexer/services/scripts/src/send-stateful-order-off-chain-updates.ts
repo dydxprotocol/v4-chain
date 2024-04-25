@@ -39,6 +39,9 @@ import {
 import {
   RedisClient
 } from 'redis';
+import {
+  getAsync,
+} from '@dydxprotocol-indexer/redis/build/src/helpers/redis';
 
 import config from './config';
 
@@ -108,10 +111,15 @@ export async function sendStatefulOrderMessages() {
         continue;
       }
       missingOrders.push(order);
+      const orderDataString: string | null = await await getAsync(
+        `${OrdersDataCache.ORDERS_DATA_CACHE_KEY_PREFIX}${order.id}`,
+        redisClient,
+      );
       const orderData: OrderData | null = await OrdersDataCache.getOrderDataWithUUID(order.id, redisClient);
       if (check < 500 && check % 25 == 0) {
         console.log(`Order price: ${order.price}, Levels: ${levelPrices}`);
         console.log(`Order data: ${JSON.stringify(orderData)}`);
+        console.log(`Order data string: ${JSON.stringify(orderDataString)}`);
       }
       check += 1;
       missingLevels += 1;
