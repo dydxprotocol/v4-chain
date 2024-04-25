@@ -164,7 +164,7 @@ export class Index {
       }
     });
 
-    // Do not attach handler for pings, as the ws library automatically responds to pings with pongs.
+    // Do not attach handler for pings. The ws library automatically responds to pings with pongs.
 
     // Attach handler for close events from the connection.
     this.connections[connectionId].ws.on(WebsocketEvents.CLOSE, (code: number, reason: Buffer) => {
