@@ -3566,7 +3566,7 @@ func TestIsIsolatedPerpetual(t *testing.T) {
 		t.Run(
 			name, func(t *testing.T) {
 				pc := keepertest.PerpetualsKeepers(t)
-				pc.PerpetualsKeeper.SetPerpetual(pc.Ctx, tc.perp)
+				pc.PerpetualsKeeper.SetPerpetualForTest(pc.Ctx, tc.perp)
 				isIsolated, err := pc.PerpetualsKeeper.IsIsolatedPerpetual(pc.Ctx, tc.perp.Params.Id)
 				require.NoError(t, err)
 				require.Equal(t, tc.expected, isIsolated)
