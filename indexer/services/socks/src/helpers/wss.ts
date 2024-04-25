@@ -19,6 +19,7 @@ export class Wss {
     this.closed = false;
     this.wss = new WebSocket.Server({
       port: config.WS_PORT,
+      autoPong: true,
     });
   }
 

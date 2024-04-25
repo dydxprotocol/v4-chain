@@ -264,7 +264,7 @@ describe('Index', () => {
         (v4 as unknown as jest.Mock).mockReturnValueOnce(connectionId);
         mockConnect(websocket, new IncomingMessage(new Socket()));
         websocket.emit(WebsocketEvents.PING);
-        expect(wsPongSpy).toHaveBeenCalledTimes(2);
+        expect(wsPongSpy).toHaveBeenCalledTimes(1);
       });
     });
 
