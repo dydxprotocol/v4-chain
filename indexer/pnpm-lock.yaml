@@ -411,6 +411,7 @@ importers:
       '@bugsnag/node': ^7.18.0
       '@bugsnag/plugin-express': ^7.18.0
       '@cosmjs/crypto': 0.32.1
+      '@cosmjs/encoding': ^0.32.3
       '@dydxprotocol-indexer/base': workspace:^0.0.1
       '@dydxprotocol-indexer/compliance': workspace:^0.0.1
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
@@ -461,6 +462,7 @@ importers:
       '@bugsnag/node': 7.18.0
       '@bugsnag/plugin-express': 7.18.0_@bugsnag+core@7.18.0
       '@cosmjs/crypto': 0.32.1
+      '@cosmjs/encoding': 0.32.3
       '@dydxprotocol-indexer/base': link:../../packages/base
       '@dydxprotocol-indexer/compliance': link:../../packages/compliance
       '@dydxprotocol-indexer/postgres': link:../../packages/postgres
@@ -4692,7 +4694,7 @@ packages:
   /@cosmjs/crypto/0.32.1:
     resolution: {integrity: sha512-AsKucEg5o8evU0wXF/lDwX+ZSwCKF4bbc57nFzraHywlp3sNu4dfPPURoMrT0r7kT7wQZAy4Pdnvmm9nnCCm/Q==}
     dependencies:
-      '@cosmjs/encoding': 0.32.1
+      '@cosmjs/encoding': 0.32.3
       '@cosmjs/math': 0.32.1
       '@cosmjs/utils': 0.32.1
       '@noble/hashes': 1.3.0
@@ -4703,6 +4705,14 @@ packages:
 
   /@cosmjs/encoding/0.32.1:
     resolution: {integrity: sha512-x60Lfds+Eq42rVV29NaoIAson3kBhATBI3zPp7X3GJTryBc5HFHQ6L/976tE1WB2DrvkfUdWS3ayCMVOY/qm1g==}
+    dependencies:
+      base64-js: 1.5.1
+      bech32: 1.1.4
+      readonly-date: 1.0.0
+    dev: false
+
+  /@cosmjs/encoding/0.32.3:
+    resolution: {integrity: sha512-p4KF7hhv8jBQX3MkB3Defuhz/W0l3PwWVYU2vkVuBJ13bJcXyhU9nJjiMkaIv+XP+W2QgRceqNNgFUC5chNR7w==}
     dependencies:
       base64-js: 1.5.1
       bech32: 1.1.4

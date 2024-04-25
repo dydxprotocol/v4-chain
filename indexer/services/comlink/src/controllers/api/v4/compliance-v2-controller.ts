@@ -1,4 +1,7 @@
-import { ExtendedSecp256k1Signature, Secp256k1, sha256 } from '@cosmjs/crypto';
+import {
+  ExtendedSecp256k1Signature, Secp256k1, ripemd160, sha256,
+} from '@cosmjs/crypto';
+import { toBech32 } from '@cosmjs/encoding';
 import { logger, stats, TooManyRequestsError } from '@dydxprotocol-indexer/base';
 import { CountryHeaders, isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
 import {
@@ -178,8 +181,8 @@ router.post(
       message: string,
       currentStatus?: string,
       action: ComplianceAction,
-      signedMessage: Uint8Array,
-      pubkey: Uint8Array,
+      signedMessage: string, // base64 encoded
+      pubkey: string, // base64 encoded
       timestamp: number,  // UNIX timestamp in seconds
     } = req.body;
 
@@ -188,6 +191,14 @@ router.post(
         return create4xxResponse(
           res,
           `Address ${address} is not a valid dYdX V4 address`,
+        );
+      }
+
+      const pubkeyArray: Uint8Array = new Uint8Array(Buffer.from(pubkey, 'base64'));
+      if (address !== generateAddress(pubkeyArray)) {
+        return create4xxResponse(
+          res,
+          `Address ${address} does not correspond to the pubkey provided ${pubkey}`,
         );
       }
 
@@ -201,14 +212,18 @@ router.post(
       }
 
       // Prepare the message for verification
-      const messageToSign: string = `${message}${action}${currentStatus || ''}${timestamp}`;
+      const messageToSign: string = `${message}:${action}"${currentStatus || ''}:${timestamp}`;
       const messageHash: Uint8Array = sha256(Buffer.from(messageToSign));
+      const signedMessageArray: Uint8Array = new Uint8Array(Buffer.from(signedMessage, 'base64'));
       const signature: ExtendedSecp256k1Signature = ExtendedSecp256k1Signature
-        .fromFixedLength(signedMessage);
+        .fromFixedLength(signedMessageArray);
 
       // Verify the signature
-      const isValidSignature: boolean = await
-      Secp256k1.verifySignature(signature, messageHash, pubkey);
+      const isValidSignature: boolean = await Secp256k1.verifySignature(
+        signature,
+        messageHash,
+        pubkeyArray,
+      );
       if (!isValidSignature) {
         return create4xxResponse(
           res,
@@ -304,6 +319,7 @@ router.post(
         error,
         params: JSON.stringify(req.params),
         query: JSON.stringify(req.query),
+        body: JSON.stringify(req.body),
       });
       return create4xxResponse(
         res,
@@ -317,6 +333,10 @@ router.post(
     }
   },
 );
+
+function generateAddress(pubkeyArray: Uint8Array): string {
+  return toBech32('dydx', ripemd160(sha256(pubkeyArray)));
+}
 
 if (config.EXPOSE_SET_COMPLIANCE_ENDPOINT) {
   router.post(
