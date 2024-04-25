@@ -43,6 +43,7 @@ func (mpd *SlinkyMarketPriceDecoder) DecodeUpdateMarketPricesTx(
 	expectedMsg := &pricestypes.MsgUpdateMarketPrices{}
 
 	// check if vote-extensions are enabled
+	// If VE are not enabled with Slinky, then there should be no price updates
 	if ve.VoteExtensionsEnabled(ctx) {
 		// if there isn't a vote-extension in the block when there should be, fail
 		if len(txs) < constants.OracleVEInjectedTxs {
