@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	"cosmossdk.io/log"
@@ -17,14 +18,15 @@ import (
 
 type (
 	Keeper struct {
-		cdc                 codec.BinaryCodec
-		storeKey            storetypes.StoreKey
-		indexPriceCache     *pricefeedtypes.MarketToExchangePrices
-		timeProvider        libtime.TimeProvider
-		indexerEventManager indexer_manager.IndexerEventManager
-		marketToCreatedAt   map[uint32]time.Time
-		authorities         map[string]struct{}
-		currencyPairIDCache *CurrencyPairIDCache
+		cdc                            codec.BinaryCodec
+		storeKey                       storetypes.StoreKey
+		indexPriceCache                *pricefeedtypes.MarketToExchangePrices
+		timeProvider                   libtime.TimeProvider
+		indexerEventManager            indexer_manager.IndexerEventManager
+		marketToCreatedAt              map[uint32]time.Time
+		authorities                    map[string]struct{}
+		currencyPairIDCache            *CurrencyPairIDCache
+		currencyPairIdCacheInitialized *atomic.Bool
 	}
 )
 
@@ -39,14 +41,15 @@ func NewKeeper(
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:                 cdc,
-		storeKey:            storeKey,
-		indexPriceCache:     indexPriceCache,
-		timeProvider:        timeProvider,
-		indexerEventManager: indexerEventManager,
-		marketToCreatedAt:   map[uint32]time.Time{},
-		authorities:         lib.UniqueSliceToSet(authorities),
-		currencyPairIDCache: NewCurrencyPairIDCache(),
+		cdc:                            cdc,
+		storeKey:                       storeKey,
+		indexPriceCache:                indexPriceCache,
+		timeProvider:                   timeProvider,
+		indexerEventManager:            indexerEventManager,
+		marketToCreatedAt:              map[uint32]time.Time{},
+		authorities:                    lib.UniqueSliceToSet(authorities),
+		currencyPairIDCache:            NewCurrencyPairIDCache(),
+		currencyPairIdCacheInitialized: &atomic.Bool{},
 	}
 }
 
@@ -64,4 +67,18 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) HasAuthority(authority string) bool {
 	_, ok := k.authorities[authority]
 	return ok
+}
+
+func (k Keeper) IsCurrencyPairIdCacheInitialized() bool {
+	return k.currencyPairIdCacheInitialized.Load()
+}
+
+func (k Keeper) InitializeCurrencyPairIdCache(ctx sdk.Context) {
+	alreadyInitialized := k.currencyPairIdCacheInitialized.Swap(true)
+	if alreadyInitialized {
+		return
+	}
+
+	// Load the currency pair IDs for the markets from the x/prices state.
+	k.LoadCurrencyPairIDCache(ctx)
 }

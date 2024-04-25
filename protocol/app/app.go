@@ -1165,6 +1165,7 @@ func New(
 
 	app.ModuleManager.SetOrderPreBlockers(
 		upgradetypes.ModuleName,
+		pricesmoduletypes.ModuleName,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -1409,9 +1410,6 @@ func New(
 
 		// Hydrate the keeper in-memory data structures.
 		app.hydrateKeeperInMemoryDataStructures()
-
-		// load the x/prices keeper currency-pair ID cache
-		app.loadCurrencyPairIDsForMarkets()
 	}
 	app.initializeRateLimiters()
 
@@ -1614,17 +1612,6 @@ func (app *App) RegisterDaemonWithHealthMonitor(
 // DisableHealthMonitorForTesting disables the health monitor for testing.
 func (app *App) DisableHealthMonitorForTesting() {
 	app.DaemonHealthMonitor.DisableForTesting()
-}
-
-// loadCurrencyPairIDsForMarkets loads the currency pair IDs for the markets from the x/prices state.
-func (app *App) loadCurrencyPairIDsForMarkets() {
-	// Create an `uncachedCtx` where the underlying MultiStore is the `rootMultiStore`.
-	// We use this to load the `currencyPairIDs` with market-params from the
-	// x/prices state according to the underlying `rootMultiStore`.
-	uncachedCtx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
-
-	// Load the currency pair IDs for the markets from the x/prices state.
-	app.PricesKeeper.LoadCurrencyPairIDCache(uncachedCtx)
 }
 
 // hydrateMemStores hydrates the memStores used for caching state.
