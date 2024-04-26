@@ -182,12 +182,12 @@ describe('transfers-controller#V4', () => {
       const responsePage1: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/transfers?address=${testConstants.defaultAddress}` +
-          `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}?page=1&limit=2`,
+          `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&page=1&limit=2`,
       });
       const responsePage2: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/transfers?address=${testConstants.defaultAddress}` +
-          `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}?page=2&limit=2`,
+          `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&page=2&limit=2`,
       });
 
       const expectedTransferResponse: TransferResponseObject = {
@@ -267,9 +267,9 @@ describe('transfers-controller#V4', () => {
         transactionHash: testConstants.defaultWithdrawal.transactionHash,
       };
 
-      expect(responsePage1.body.pageSize).toHaveLength(2);
-      expect(responsePage1.body.offset).toHaveLength(0);
-      expect(responsePage1.body.totalResults).toHaveLength(4);
+      expect(responsePage1.body.pageSize).toStrictEqual(2);
+      expect(responsePage1.body.offset).toStrictEqual(0);
+      expect(responsePage1.body.totalResults).toStrictEqual(4);
       expect(responsePage1.body.transfers).toHaveLength(2);
       expect(responsePage1.body.transfers).toEqual(
         expect.arrayContaining([
@@ -282,9 +282,9 @@ describe('transfers-controller#V4', () => {
         ]),
       );
 
-      expect(responsePage2.body.pageSize).toHaveLength(2);
-      expect(responsePage2.body.offset).toHaveLength(2);
-      expect(responsePage2.body.totalResults).toHaveLength(4);
+      expect(responsePage2.body.pageSize).toStrictEqual(2);
+      expect(responsePage2.body.offset).toStrictEqual(2);
+      expect(responsePage2.body.totalResults).toStrictEqual(4);
       expect(responsePage2.body.transfers).toHaveLength(2);
       expect(responsePage2.body.transfers).toEqual(
         expect.arrayContaining([
@@ -551,6 +551,149 @@ describe('transfers-controller#V4', () => {
           expect.objectContaining({
             ...expectedTransfer2Response,
           }),
+          expect.objectContaining({
+            ...expectedWithdrawalResponse,
+          }),
+          expect.objectContaining({
+            ...expectedDepositResponse,
+          }),
+        ]),
+      );
+    });
+
+    it('Get /transfers/parentSubaccountNumber returns transfers/deposits/withdrawals and paginated', async () => {
+      await testMocks.seedData();
+      const transfer2: TransferCreateObject = {
+        senderSubaccountId: testConstants.defaultSubaccountId2,
+        recipientSubaccountId: testConstants.defaultSubaccountId,
+        assetId: testConstants.defaultAsset2.id,
+        size: '5',
+        eventId: testConstants.defaultTendermintEventId2,
+        transactionHash: '', // TODO: Add a real transaction Hash
+        createdAt: testConstants.createdDateTime.toISO(),
+        createdAtHeight: testConstants.createdHeight,
+      };
+      await WalletTable.create({
+        address: testConstants.defaultWalletAddress,
+        totalTradingRewards: '0',
+      });
+      await Promise.all([
+        TransferTable.create(testConstants.defaultTransfer),
+        TransferTable.create(transfer2),
+        TransferTable.create(testConstants.defaultWithdrawal),
+        TransferTable.create(testConstants.defaultDeposit),
+      ]);
+
+      const responsePage1: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/transfers/parentSubaccountNumber?address=${testConstants.defaultAddress}` +
+            `&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&page=1&limit=2`,
+      });
+
+      const responsePage2: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/transfers/parentSubaccountNumber?address=${testConstants.defaultAddress}` +
+            `&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&page=2&limit=2`,
+      });
+
+      const expectedTransferResponse: ParentSubaccountTransferResponseObject = {
+        id: testConstants.defaultTransferId,
+        sender: {
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+        },
+        recipient: {
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
+        },
+        size: testConstants.defaultTransfer.size,
+        createdAt: testConstants.defaultTransfer.createdAt,
+        createdAtHeight: testConstants.defaultTransfer.createdAtHeight,
+        symbol: testConstants.defaultAsset.symbol,
+        type: TransferType.TRANSFER_OUT,
+        transactionHash: testConstants.defaultTransfer.transactionHash,
+      };
+
+      const expectedTransfer2Response: ParentSubaccountTransferResponseObject = {
+        id: TransferTable.uuid(
+          transfer2.eventId,
+          transfer2.assetId,
+          transfer2.senderSubaccountId,
+          transfer2.recipientSubaccountId,
+          transfer2.senderWalletAddress,
+          transfer2.recipientWalletAddress,
+        ),
+        sender: {
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
+        },
+        recipient: {
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+        },
+        size: transfer2.size,
+        createdAt: transfer2.createdAt,
+        createdAtHeight: transfer2.createdAtHeight,
+        symbol: testConstants.defaultAsset2.symbol,
+        type: TransferType.TRANSFER_IN,
+        transactionHash: transfer2.transactionHash,
+      };
+
+      const expectedDepositResponse: ParentSubaccountTransferResponseObject = {
+        id: testConstants.defaultDepositId,
+        sender: {
+          address: testConstants.defaultWalletAddress,
+        },
+        recipient: {
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+        },
+        size: testConstants.defaultDeposit.size,
+        createdAt: testConstants.defaultDeposit.createdAt,
+        createdAtHeight: testConstants.defaultDeposit.createdAtHeight,
+        symbol: testConstants.defaultAsset.symbol,
+        type: TransferType.DEPOSIT,
+        transactionHash: testConstants.defaultDeposit.transactionHash,
+      };
+
+      const expectedWithdrawalResponse: ParentSubaccountTransferResponseObject = {
+        id: testConstants.defaultWithdrawalId,
+        sender: {
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+        },
+        recipient: {
+          address: testConstants.defaultWalletAddress,
+        },
+        size: testConstants.defaultWithdrawal.size,
+        createdAt: testConstants.defaultWithdrawal.createdAt,
+        createdAtHeight: testConstants.defaultWithdrawal.createdAtHeight,
+        symbol: testConstants.defaultAsset.symbol,
+        type: TransferType.WITHDRAWAL,
+        transactionHash: testConstants.defaultWithdrawal.transactionHash,
+      };
+
+      expect(responsePage1.body.pageSize).toStrictEqual(2);
+      expect(responsePage1.body.offset).toStrictEqual(0);
+      expect(responsePage1.body.totalResults).toStrictEqual(4);
+      expect(responsePage1.body.transfers).toHaveLength(2);
+      expect(responsePage1.body.transfers).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...expectedTransferResponse,
+          }),
+          expect.objectContaining({
+            ...expectedTransfer2Response,
+          }),
+        ]),
+      );
+
+      expect(responsePage2.body.pageSize).toStrictEqual(2);
+      expect(responsePage2.body.offset).toStrictEqual(2);
+      expect(responsePage2.body.totalResults).toStrictEqual(4);
+      expect(responsePage2.body.transfers).toHaveLength(2);
+      expect(responsePage2.body.transfers).toEqual(
+        expect.arrayContaining([
           expect.objectContaining({
             ...expectedWithdrawalResponse,
           }),

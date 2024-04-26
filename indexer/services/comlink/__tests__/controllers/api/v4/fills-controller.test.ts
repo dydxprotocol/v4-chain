@@ -215,13 +215,13 @@ describe('fills-controller#V4', () => {
       const responsePage1: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/fills?address=${testConstants.defaultAddress}` +
-          `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}?page=1&limit=1`,
+          `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&page=1&limit=1`,
       });
 
       const responsePage2: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/fills?address=${testConstants.defaultAddress}` +
-          `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}?page=2&limit=1`,
+          `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&page=2&limit=1`,
       });
 
       const expected: Partial<FillResponseObject>[] = [
@@ -253,9 +253,9 @@ describe('fills-controller#V4', () => {
         },
       ];
 
-      expect(responsePage1.body.pageSize).toHaveLength(1);
-      expect(responsePage1.body.offset).toHaveLength(0);
-      expect(responsePage1.body.totalResults).toHaveLength(2);
+      expect(responsePage1.body.pageSize).toStrictEqual(1);
+      expect(responsePage1.body.offset).toStrictEqual(0);
+      expect(responsePage1.body.totalResults).toStrictEqual(2);
       expect(responsePage1.body.fills).toHaveLength(1);
       expect(responsePage1.body.fills).toEqual(
         expect.arrayContaining([
@@ -265,9 +265,9 @@ describe('fills-controller#V4', () => {
         ]),
       );
 
-      expect(responsePage2.body.pageSize).toHaveLength(1);
-      expect(responsePage2.body.offset).toHaveLength(1);
-      expect(responsePage2.body.totalResults).toHaveLength(2);
+      expect(responsePage2.body.pageSize).toStrictEqual(1);
+      expect(responsePage2.body.offset).toStrictEqual(1);
+      expect(responsePage2.body.totalResults).toStrictEqual(2);
       expect(responsePage2.body.fills).toHaveLength(1);
       expect(responsePage2.body.fills).toEqual(
         expect.arrayContaining([

@@ -165,9 +165,9 @@ describe('trades-controller#V4', () => {
       ];
 
       // Expect both trades, ordered by createdAtHeight in descending order
-      expect(responsePage1.body.pageSize).toHaveLength(1);
-      expect(responsePage1.body.offset).toHaveLength(0);
-      expect(responsePage1.body.totalResults).toHaveLength(2);
+      expect(responsePage1.body.pageSize).toStrictEqual(1);
+      expect(responsePage1.body.offset).toStrictEqual(0);
+      expect(responsePage1.body.totalResults).toStrictEqual(2);
       expect(responsePage1.body.trades).toHaveLength(1);
       expect(responsePage1.body.trades).toEqual(
         expect.arrayContaining([
@@ -177,9 +177,9 @@ describe('trades-controller#V4', () => {
         ]),
       );
 
-      expect(responsePage1.body.pageSize).toHaveLength(1);
-      expect(responsePage1.body.offset).toHaveLength(1);
-      expect(responsePage2.body.totalResults).toHaveLength(2);
+      expect(responsePage1.body.pageSize).toStrictEqual(1);
+      expect(responsePage1.body.offset).toStrictEqual(0);
+      expect(responsePage2.body.totalResults).toStrictEqual(2);
       expect(responsePage2.body.trades).toHaveLength(1);
       expect(responsePage2.body.trades).toEqual(
         expect.arrayContaining([
