@@ -152,7 +152,7 @@ export interface FillResponseObject {
 
 /* ------- TRANSFER TYPES ------- */
 
-export interface TransferResponse {
+export interface TransferResponse extends PaginationResponse {
   transfers: TransferResponseObject[],
 }
 

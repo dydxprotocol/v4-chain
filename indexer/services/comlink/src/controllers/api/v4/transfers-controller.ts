@@ -61,11 +61,14 @@ class TransfersController extends Controller {
       @Query() limit?: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
+      @Query() page?: number,
   ): Promise<TransferResponse> {
     const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
 
     // TODO(DEC-656): Change to a cache in Redis similar to Librarian instead of querying DB.
-    const [subaccount, { results: transfers }, assets] = await Promise.all([
+    const [subaccount, {
+      results: transfers, limit: pageSize, offset, total,
+    }, assets] = await Promise.all([
       SubaccountTable.findById(
         subaccountId,
       ),
@@ -77,6 +80,7 @@ class TransfersController extends Controller {
             ? createdBeforeOrAtHeight.toString()
             : undefined,
           createdBeforeOrAt,
+          page,
         },
         [QueryableField.LIMIT],
         {
@@ -129,6 +133,9 @@ class TransfersController extends Controller {
       transfers: transfers.map((transfer: TransferFromDatabase) => {
         return transferToResponseObject(transfer, idToAsset, idToSubaccount, subaccountId);
       }),
+      pageSize,
+      totalResults: total,
+      offset,
     };
   }
 
