@@ -23,7 +23,7 @@ import {
   handleControllerError,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { CheckLimitAndCreatedBeforeOrAtSchema } from '../../../lib/validation/schemas';
+import { CheckLimitAndCreatedBeforeOrAtSchema, CheckPaginationSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { fillToTradeResponseObject } from '../../../request-helpers/request-transformer';
@@ -88,6 +88,7 @@ router.get(
   '/perpetualMarket/:ticker',
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckLimitAndCreatedBeforeOrAtSchema,
+  ...CheckPaginationSchema,
   ...checkSchema({
     ticker: {
       in: ['params'],
@@ -107,6 +108,7 @@ router.get(
       limit,
       createdBeforeOrAtHeight,
       createdBeforeOrAt,
+      page,
     }: TradeRequest = matchedData(req) as TradeRequest;
 
     try {
@@ -116,6 +118,7 @@ router.get(
         limit,
         createdBeforeOrAtHeight,
         createdBeforeOrAt,
+        page,
       );
 
       return res.send(response);

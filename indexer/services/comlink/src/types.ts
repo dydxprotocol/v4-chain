@@ -174,7 +174,7 @@ export interface TransferResponseObject {
   transactionHash: string,
 }
 
-export interface ParentSubaccountTransferResponse {
+export interface ParentSubaccountTransferResponse extends PaginationResponse {
   transfers: TransferResponseObject[],
 }
 
@@ -358,6 +358,10 @@ export interface ParentSubaccountRequest extends AddressRequest {
   parentSubaccountNumber: number,
 }
 
+export interface PaginationRequest {
+  page?: number;
+}
+
 export interface LimitRequest {
   limit: number,
 }
@@ -395,24 +399,26 @@ export interface AssetPositionRequest extends SubaccountRequest {}
 export interface ParentSubaccountAssetPositionRequest extends ParentSubaccountRequest {
 }
 
-export interface TransferRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {}
+export interface TransferRequest
+  extends SubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest {}
 
 export interface ParentSubaccountTransferRequest
-  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest {
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest {
 }
 
-export interface FillRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {
+export interface FillRequest
+  extends SubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest {
   market: string,
   marketType: MarketType,
 }
 
 export interface ParentSubaccountFillRequest
-  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest {
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest {
   market: string,
   marketType: MarketType,
 }
 
-export interface TradeRequest extends LimitAndCreatedBeforeRequest {
+export interface TradeRequest extends LimitAndCreatedBeforeRequest, PaginationRequest {
   ticker: string,
 }
 
