@@ -835,7 +835,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		// filled or not filled at all.
 		// TODO(CLOB-267): Create more granular error types here that indicate why the order was not
 		// fully filled (i.e. undercollateralized, reduce only resized, etc).
-		matchingErr = types.ErrWouldViolateIsolatedSubaccountConstraints
+		matchingErr = types.ErrFokOrderCouldNotBeFullyFilled
 	}
 
 	// If the order is post only and it's not the rewind step, then it cannot be filled.
