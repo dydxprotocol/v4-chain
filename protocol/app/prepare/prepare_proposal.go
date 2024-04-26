@@ -77,8 +77,9 @@ func PrepareProposalHandler(
 		}
 
 		// Grab the injected VEs from the previous block.
-		// If VEs are not enabled, no tx will have been injected
 		var extCommitBzTx []byte
+		// Sanity check to ensure that there is at least 1 tx. This should never return false unless
+		// before VE are enabled, there are no tx in the block.
 		if len(req.Txs) >= constants.OracleVEInjectedTxs {
 			extCommitBzTx = req.Txs[constants.OracleInfoIndex]
 		}
