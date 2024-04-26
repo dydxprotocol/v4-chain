@@ -835,11 +835,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		// filled or not filled at all.
 		// TODO(CLOB-267): Create more granular error types here that indicate why the order was not
 		// fully filled (i.e. undercollateralized, reduce only resized, etc).
-		if takerOrderStatus.OrderStatus == types.ViolatesIsolatedSubaccountConstraints {
-			matchingErr = types.ErrWouldViolateIsolatedSubaccountConstraints
-		} else {
-			matchingErr = types.ErrFokOrderCouldNotBeFullyFilled
-		}
+		matchingErr = types.ErrWouldViolateIsolatedSubaccountConstraints
 	}
 
 	// If the order is post only and it's not the rewind step, then it cannot be filled.
@@ -851,6 +847,8 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		matchingErr = types.ErrPostOnlyWouldCrossMakerOrder
 	}
 
+	// If the order filling leads to the subaccount having an invalid state due to failing checks for
+	// isolated subaccount constraints, return an error so that the order is canceled.
 	if !order.IsLiquidation() && takerOrderStatus.OrderStatus == types.ViolatesIsolatedSubaccountConstraints {
 		matchingErr = types.ErrWouldViolateIsolatedSubaccountConstraints
 	}
