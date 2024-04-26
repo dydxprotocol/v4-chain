@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"math/big"
+
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -28,7 +30,6 @@ import (
 	oracletypes "github.com/skip-mev/slinky/pkg/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"math/big"
 )
 
 var (
@@ -384,7 +385,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 
 func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 	encodingCfg := encoding.GetTestEncodingCfg()
-
 	tests := map[string]struct {
 		txs [][]byte
 
