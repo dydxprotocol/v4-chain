@@ -49,7 +49,7 @@ func NewKeeper(
 		marketToCreatedAt:              map[uint32]time.Time{},
 		authorities:                    lib.UniqueSliceToSet(authorities),
 		currencyPairIDCache:            NewCurrencyPairIDCache(),
-		currencyPairIdCacheInitialized: &atomic.Bool{},
+		currencyPairIdCacheInitialized: &atomic.Bool{}, // Initialized to false
 	}
 }
 
@@ -67,10 +67,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) HasAuthority(authority string) bool {
 	_, ok := k.authorities[authority]
 	return ok
-}
-
-func (k Keeper) IsCurrencyPairIdCacheInitialized() bool {
-	return k.currencyPairIdCacheInitialized.Load()
 }
 
 func (k Keeper) InitializeCurrencyPairIdCache(ctx sdk.Context) {

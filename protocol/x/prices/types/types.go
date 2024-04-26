@@ -33,7 +33,6 @@ type PricesKeeper interface {
 	GetAllMarketPrices(ctx sdk.Context) (marketPrices []MarketPrice)
 	HasAuthority(authority string) bool
 
-	IsCurrencyPairIdCacheInitialized() bool
 	InitializeCurrencyPairIdCache(ctx sdk.Context)
 
 	// Validation related.
