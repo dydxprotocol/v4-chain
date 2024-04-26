@@ -343,6 +343,29 @@ func (_m *PricesKeeper) HasAuthority(authority string) bool {
 	return r0
 }
 
+// InitializeCurrencyPairIdCache provides a mock function with given fields: ctx
+func (_m *PricesKeeper) InitializeCurrencyPairIdCache(ctx types.Context) {
+	_m.Called(ctx)
+}
+
+// IsCurrencyPairIdCacheInitialized provides a mock function with given fields:
+func (_m *PricesKeeper) IsCurrencyPairIdCacheInitialized() bool {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsCurrencyPairIdCacheInitialized")
+	}
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func() bool); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
 // Logger provides a mock function with given fields: ctx
 func (_m *PricesKeeper) Logger(ctx types.Context) log.Logger {
 	ret := _m.Called(ctx)
