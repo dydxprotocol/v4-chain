@@ -1505,7 +1505,6 @@ func (app *App) createProposalHandlers(
 	// Generate the dydx handlers
 	dydxPrepareProposalHandler := prepare.PrepareProposalHandler(
 		txConfig,
-		extCommitCodec,
 		app.BridgeKeeper,
 		app.ClobKeeper,
 		app.PerpetualsKeeper,

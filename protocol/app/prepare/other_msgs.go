@@ -9,11 +9,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	gometrics "github.com/hashicorp/go-metrics"
 
-	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	compression "github.com/skip-mev/slinky/abci/strategies/codec"
-	"github.com/skip-mev/slinky/abci/ve"
 )
 
 // GetGroupMsgOther returns two separate slices of byte txs given a single slice of byte txs and max bytes.
@@ -42,7 +39,6 @@ func GetGroupMsgOther(availableTxs [][]byte, maxBytes uint64) ([][]byte, [][]byt
 func RemoveDisallowMsgs(
 	ctx sdk.Context,
 	decoder sdk.TxDecoder,
-	extCommitCodec compression.ExtendedCommitCodec,
 	txs [][]byte,
 ) [][]byte {
 	defer telemetry.ModuleMeasureSince(
@@ -54,18 +50,6 @@ func RemoveDisallowMsgs(
 
 	var filteredTxs [][]byte
 	for i, txBytes := range txs {
-		// If tx is index 0 and VE enabled, this tx is a VE tx and should be decoded with the extCommitCodec.
-		if i == constants.OracleInfoIndex && ve.VoteExtensionsEnabled(ctx) {
-			_, err := extCommitCodec.Decode(txBytes)
-			if err != nil {
-				ctx.Logger().Error(fmt.Sprintf("RemoveDisallowMsgs: failed to decode VE tx: %v", err))
-			}
-			// VE tx is excluded from `OtherMsgs` (`continue` basically skips this tx from being
-			// included in `OtherMsgs`. This is because the VE tx info is already used by price
-			// update info and that's its only purpose. VE tx should not be part of the block on its own.
-			continue
-		}
-
 		// Decode tx so we can read msgs.
 		tx, err := decoder(txBytes)
 		if err != nil {

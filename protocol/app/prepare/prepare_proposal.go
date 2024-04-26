@@ -14,7 +14,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	compression "github.com/skip-mev/slinky/abci/strategies/codec"
+	"github.com/skip-mev/slinky/abci/ve"
 )
 
 var (
@@ -54,7 +54,6 @@ type BridgeTxResponse struct {
 //   - If there are extra available bytes and there are more txs in "Other" group, add more txs from this group.
 func PrepareProposalHandler(
 	txConfig client.TxConfig,
-	extCommitCodec compression.ExtendedCommitCodec,
 	bridgeKeeper PrepareBridgeKeeper,
 	clobKeeper PrepareClobKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
@@ -137,7 +136,12 @@ func PrepareProposalHandler(
 		// Gather "Other" group messages.
 		otherBytesAllocated := txs.GetAvailableBytes() / 4 // ~25% of the remainder.
 		// filter out txs that have disallow messages.
-		txsWithoutDisallowMsgs := RemoveDisallowMsgs(ctx, txConfig.TxDecoder(), extCommitCodec, req.Txs)
+		var txsWithoutDisallowMsgs [][]byte
+		if ve.VoteExtensionsEnabled(ctx) {
+			txsWithoutDisallowMsgs = RemoveDisallowMsgs(ctx, txConfig.TxDecoder(), req.Txs[1:])
+		} else {
+			txsWithoutDisallowMsgs = RemoveDisallowMsgs(ctx, txConfig.TxDecoder(), req.Txs)
+		}
 		otherTxsToInclude, otherTxsRemainder := GetGroupMsgOther(txsWithoutDisallowMsgs, otherBytesAllocated)
 		if len(otherTxsToInclude) > 0 {
 			err := txs.AddOtherTxs(otherTxsToInclude)
