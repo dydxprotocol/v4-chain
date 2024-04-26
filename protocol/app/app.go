@@ -1164,7 +1164,7 @@ func New(
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
-		upgradetypes.ModuleName,
+		upgradetypes.ModuleName, // Must be first since upgrades may be state schema breaking.
 		clobmoduletypes.ModuleName,
 	)
 

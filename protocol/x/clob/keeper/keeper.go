@@ -45,7 +45,7 @@ type (
 		indexerEventManager indexer_manager.IndexerEventManager
 		streamingManager    streamingtypes.GrpcStreamingManager
 
-		hydrated            *atomic.Bool
+		initialized         *atomic.Bool
 		memStoreInitialized *atomic.Bool
 
 		Flags flags.ClobFlags
@@ -112,7 +112,7 @@ func NewKeeper(
 		indexerEventManager:          indexerEventManager,
 		streamingManager:             grpcStreamingManager,
 		memStoreInitialized:          &atomic.Bool{},
-		hydrated:                     &atomic.Bool{},
+		initialized:                  &atomic.Bool{},
 		txDecoder:                    txDecoder,
 		mevTelemetryConfig: MevTelemetryConfig{
 			Enabled:    clobFlags.MevTelemetryEnabled,
@@ -156,14 +156,14 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
 }
 
-// IsHydrated returns whether the clob keeper has been hydrated.
-func (k Keeper) IsHydrated() bool {
-	return k.hydrated.Load()
+// IsInitialized returns whether the clob keeper has been hydrated.
+func (k Keeper) IsInitialized() bool {
+	return k.initialized.Load()
 }
 
-// Hydrate hydrates the clob keeper with the necessary in memory data structures.
-func (k Keeper) Hydrate(ctx sdk.Context) {
-	alreadyInitialized := k.hydrated.Swap(true)
+// Initialize hydrates the clob keeper with the necessary in memory data structures.
+func (k Keeper) Initialize(ctx sdk.Context) {
+	alreadyInitialized := k.initialized.Swap(true)
 	if alreadyInitialized {
 		return
 	}
@@ -171,6 +171,11 @@ func (k Keeper) Hydrate(ctx sdk.Context) {
 	// Initialize memstore in clobKeeper with order fill amounts and stateful orders.
 	k.InitMemStore(ctx)
 
+	// Branch the context for hydration.
+	// This means that new order matches from hydration will get added to the operations
+	// queue but the corresponding state changes will be discarded.
+	// This is because we are currently in the deliver state so writing optimistic matches
+	// breaks consensus.
 	checkCtx, _ := ctx.CacheContext()
 	checkCtx = checkCtx.WithIsCheckTx(true)
 

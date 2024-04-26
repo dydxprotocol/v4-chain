@@ -679,8 +679,8 @@ func (_m *ClobKeeper) HasAuthority(authority string) bool {
 	return r0
 }
 
-// Hydrate provides a mock function with given fields: ctx
-func (_m *ClobKeeper) Hydrate(ctx types.Context) {
+// Initialize provides a mock function with given fields: ctx
+func (_m *ClobKeeper) Initialize(ctx types.Context) {
 	_m.Called(ctx)
 }
 
@@ -725,12 +725,12 @@ func (_m *ClobKeeper) InitializeNewGrpcStreams(ctx types.Context) {
 	_m.Called(ctx)
 }
 
-// IsHydrated provides a mock function with given fields:
-func (_m *ClobKeeper) IsHydrated() bool {
+// IsInitialized provides a mock function with given fields:
+func (_m *ClobKeeper) IsInitialized() bool {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for IsHydrated")
+		panic("no return value specified for IsInitialized")
 	}
 
 	var r0 bool

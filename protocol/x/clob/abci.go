@@ -21,7 +21,7 @@ func PreBlocker(
 	ctx sdk.Context,
 	keeper types.ClobKeeper,
 ) {
-	keeper.Hydrate(ctx)
+	keeper.Initialize(ctx)
 }
 
 // BeginBlocker executes all ABCI BeginBlock logic respective to the clob module.
