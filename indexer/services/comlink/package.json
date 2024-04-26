@@ -25,6 +25,7 @@
     "@bugsnag/node": "^7.18.0",
     "@bugsnag/plugin-express": "^7.18.0",
     "@cosmjs/crypto": "0.32.1",
+    "@cosmjs/encoding": "^0.32.3",
     "@dydxprotocol-indexer/base": "workspace:^0.0.1",
     "@dydxprotocol-indexer/compliance": "workspace:^0.0.1",
     "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",

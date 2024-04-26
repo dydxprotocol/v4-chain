@@ -60,6 +60,7 @@ func (mpd *SlinkyMarketPriceDecoder) DecodeUpdateMarketPricesTx(
 	}
 
 	// use the underlying decoder to get the UpdateMarketPricesTx
+	// If VE are not enabled with Slinky, then there should be no price updates
 	updateMarketPrices, err := mpd.decoder.DecodeUpdateMarketPricesTx(ctx, txs)
 	if err != nil {
 		return nil, err
