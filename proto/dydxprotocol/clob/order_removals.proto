@@ -45,6 +45,9 @@ message OrderRemoval {
     // REMOVAL_REASON_FULLY_FILLED represents a removal of an order that
     // was fully filled and should therefore be removed from state.
     REMOVAL_REASON_FULLY_FILLED = 7;
+    // REMOVAL_REASON_FULLY_FILLED represents a removal of an order that
+    //  would lead to the subaccount violating isolated subaccount constraints.
+    REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS = 8;
   }
 
   RemovalReason removal_reason = 2;

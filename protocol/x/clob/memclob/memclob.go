@@ -508,6 +508,8 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				removalReason = types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED
 			} else if errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder) {
 				removalReason = types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER
+			} else if errors.Is(err, types.ErrWouldViolateIsolatedSubaccountConstraints) {
+				removalReason = types.OrderRemoval_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS
 			}
 
 			if !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
@@ -847,6 +849,10 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		!order.IsLiquidation() &&
 		order.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_POST_ONLY {
 		matchingErr = types.ErrPostOnlyWouldCrossMakerOrder
+	}
+
+	if !order.IsLiquidation() && takerOrderStatus.OrderStatus == types.ViolatesIsolatedSubaccountConstraints {
+		matchingErr = types.ErrWouldViolateIsolatedSubaccountConstraints
 	}
 
 	// If the match is valid and placing the taker order generated valid matches, update memclob state.
