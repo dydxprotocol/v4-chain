@@ -10,5 +10,5 @@ func PreBlocker(
 	ctx sdk.Context,
 	keeper types.PricesKeeper,
 ) {
-	keeper.Hydrate(ctx)
+	keeper.InitializeCurrencyPairIdCache(ctx)
 }
