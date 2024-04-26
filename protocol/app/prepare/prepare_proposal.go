@@ -14,6 +14,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	compression "github.com/skip-mev/slinky/abci/strategies/codec"
 )
 
 var (
@@ -53,6 +54,7 @@ type BridgeTxResponse struct {
 //   - If there are extra available bytes and there are more txs in "Other" group, add more txs from this group.
 func PrepareProposalHandler(
 	txConfig client.TxConfig,
+	extCommitCodec compression.ExtendedCommitCodec,
 	bridgeKeeper PrepareBridgeKeeper,
 	clobKeeper PrepareClobKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
@@ -75,7 +77,7 @@ func PrepareProposalHandler(
 		}
 
 		// Grab the injected VEs from the previous block.
-		// If VEs are not enabled, no tx will have been injected.
+		// If VEs are not enabled,
 		var extCommitBzTx []byte
 		if len(req.Txs) >= constants.OracleVEInjectedTxs {
 			extCommitBzTx = req.Txs[constants.OracleInfoIndex]
@@ -134,7 +136,7 @@ func PrepareProposalHandler(
 		// Gather "Other" group messages.
 		otherBytesAllocated := txs.GetAvailableBytes() / 4 // ~25% of the remainder.
 		// filter out txs that have disallow messages.
-		txsWithoutDisallowMsgs := RemoveDisallowMsgs(ctx, txConfig.TxDecoder(), req.Txs)
+		txsWithoutDisallowMsgs := RemoveDisallowMsgs(ctx, txConfig.TxDecoder(), extCommitCodec, req.Txs)
 		otherTxsToInclude, otherTxsRemainder := GetGroupMsgOther(txsWithoutDisallowMsgs, otherBytesAllocated)
 		if len(otherTxsToInclude) > 0 {
 			err := txs.AddOtherTxs(otherTxsToInclude)

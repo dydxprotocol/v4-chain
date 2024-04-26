@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"math/big"
+
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -28,7 +30,6 @@ import (
 	oracletypes "github.com/skip-mev/slinky/pkg/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"math/big"
 )
 
 var (
@@ -344,6 +345,8 @@ func TestPrepareProposalHandler(t *testing.T) {
 				},
 			)
 
+			extCommitCodec := codec.NewDefaultExtendedCommitCodec()
+
 			mockPricesKeeper := mocks.PreparePricesKeeper{}
 			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
 				Return(tc.pricesResp)
@@ -364,6 +367,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 
 			handler := prepare.PrepareProposalHandler(
 				mockTxConfig,
+				extCommitCodec,
 				&mockBridgeKeeper,
 				&mockClobKeeper,
 				&mockPerpKeeper,
@@ -384,6 +388,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 
 func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 	encodingCfg := encoding.GetTestEncodingCfg()
+	extCommitCodec := codec.NewDefaultExtendedCommitCodec()
 
 	tests := map[string]struct {
 		txs [][]byte
@@ -444,6 +449,7 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 
 			handler := prepare.PrepareProposalHandler(
 				encodingCfg.TxConfig,
+				extCommitCodec,
 				&mockBridgeKeeper,
 				&mockClobKeeper,
 				&mockPerpKeeper,
@@ -465,6 +471,8 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 func TestSlinkyPrepareProposalHandler(t *testing.T) {
 	// test an empty UpdateMarketPrices tx is inserted if ves are not enabled
 	t.Run("ves not enabled", func(t *testing.T) {
+		extCommitCodec := codec.NewDefaultExtendedCommitCodec()
+
 		// mocks
 		mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
 		mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
@@ -486,6 +494,7 @@ func TestSlinkyPrepareProposalHandler(t *testing.T) {
 
 		handler := prepare.PrepareProposalHandler(
 			encoding.GetTestEncodingCfg().TxConfig,
+			extCommitCodec,
 			&mockBridgeKeeper,
 			&mockClobKeeper,
 			&mockPerpKeeper,
@@ -604,6 +613,7 @@ func TestSlinkyPrepareProposalHandler(t *testing.T) {
 
 		handler := prepare.PrepareProposalHandler(
 			encoding.GetTestEncodingCfg().TxConfig,
+			extCommitCodec,
 			&mockBridgeKeeper,
 			&mockClobKeeper,
 			&mockPerpKeeper,

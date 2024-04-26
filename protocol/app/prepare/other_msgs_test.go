@@ -1,12 +1,13 @@
 package prepare_test
 
 import (
-	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
+	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
+	"github.com/skip-mev/slinky/abci/strategies/codec"
 	"github.com/stretchr/testify/require"
 )
 
@@ -164,7 +165,8 @@ func TestRemoveDisallowMsgs(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tApp := testApp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
-			txs := prepare.RemoveDisallowMsgs(ctx, encodingCfg.TxConfig.TxDecoder(), tc.txs)
+			extCommitCodec := codec.NewDefaultExtendedCommitCodec()
+			txs := prepare.RemoveDisallowMsgs(ctx, encodingCfg.TxConfig.TxDecoder(), extCommitCodec, tc.txs)
 			require.Equal(t, tc.expectedTxs, txs)
 		})
 	}

@@ -9,8 +9,11 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	gometrics "github.com/hashicorp/go-metrics"
 
+	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	compression "github.com/skip-mev/slinky/abci/strategies/codec"
+	"github.com/skip-mev/slinky/abci/ve"
 )
 
 // GetGroupMsgOther returns two separate slices of byte txs given a single slice of byte txs and max bytes.
@@ -36,7 +39,12 @@ func GetGroupMsgOther(availableTxs [][]byte, maxBytes uint64) ([][]byte, [][]byt
 }
 
 // RemoveDisallowMsgs removes any txs that contain a disallowed msg.
-func RemoveDisallowMsgs(ctx sdk.Context, decoder sdk.TxDecoder, txs [][]byte) [][]byte {
+func RemoveDisallowMsgs(
+	ctx sdk.Context,
+	decoder sdk.TxDecoder,
+	extCommitCodec compression.ExtendedCommitCodec,
+	txs [][]byte,
+) [][]byte {
 	defer telemetry.ModuleMeasureSince(
 		ModuleName,
 		time.Now(),
@@ -46,6 +54,16 @@ func RemoveDisallowMsgs(ctx sdk.Context, decoder sdk.TxDecoder, txs [][]byte) []
 
 	var filteredTxs [][]byte
 	for i, txBytes := range txs {
+		// If tx is index 0 and VE enabled, this ts is a VE tx and should be decoded with the extCommitCodec.
+		if i == constants.OracleInfoIndex && ve.VoteExtensionsEnabled(ctx) {
+			_, err := extCommitCodec.Decode(txBytes)
+			if err != nil {
+				ctx.Logger().Error(fmt.Sprintf("RemoveDisallowMsgs: failed to decode VE tx: %v", err))
+			}
+			// VE tx should never be removed
+			continue
+		}
+
 		// Decode tx so we can read msgs.
 		tx, err := decoder(txBytes)
 		if err != nil {
@@ -54,7 +72,7 @@ func RemoveDisallowMsgs(ctx sdk.Context, decoder sdk.TxDecoder, txs [][]byte) []
 		}
 
 		// For each msg in tx, check if it is disallowed.
-		containsDisllowMsg := false
+		containsDisallowMsg := false
 		for _, msg := range tx.GetMsgs() {
 			if ante.IsDisallowExternalSubmitMsg(msg) {
 				telemetry.IncrCounterWithLabels(
@@ -62,13 +80,13 @@ func RemoveDisallowMsgs(ctx sdk.Context, decoder sdk.TxDecoder, txs [][]byte) []
 					1,
 					[]gometrics.Label{metrics.GetLabelForStringValue(metrics.Detail, proto.MessageName(msg))},
 				)
-				containsDisllowMsg = true
+				containsDisallowMsg = true
 				break // break out of loop over msgs.
 			}
 		}
 
 		// If tx contains disallowed msg, skip it.
-		if containsDisllowMsg {
+		if containsDisallowMsg {
 			ctx.Logger().Error(
 				fmt.Sprintf("RemoveDisallowMsgs: skipping tx with disallowed msg. Size: %d", len(txBytes)))
 			continue // continue to next tx.
