@@ -54,13 +54,15 @@ func RemoveDisallowMsgs(
 
 	var filteredTxs [][]byte
 	for i, txBytes := range txs {
-		// If tx is index 0 and VE enabled, this ts is a VE tx and should be decoded with the extCommitCodec.
+		// If tx is index 0 and VE enabled, this tx is a VE tx and should be decoded with the extCommitCodec.
 		if i == constants.OracleInfoIndex && ve.VoteExtensionsEnabled(ctx) {
 			_, err := extCommitCodec.Decode(txBytes)
 			if err != nil {
 				ctx.Logger().Error(fmt.Sprintf("RemoveDisallowMsgs: failed to decode VE tx: %v", err))
 			}
-			// VE tx should never be removed
+			// VE tx is excluded from `OtherMsgs` (`continue` basically skips this tx from being
+			// included in `OtherMsgs`. This is because the VE tx info is already used by price
+			// update info and that's its only purpose. VE tx should not be part of the block on its own.
 			continue
 		}
 
