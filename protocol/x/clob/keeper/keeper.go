@@ -171,18 +171,21 @@ func (k Keeper) Hydrate(ctx sdk.Context) {
 	// Initialize memstore in clobKeeper with order fill amounts and stateful orders.
 	k.InitMemStore(ctx)
 
+	checkCtx, _ := ctx.CacheContext()
+	checkCtx = checkCtx.WithIsCheckTx(true)
+
 	// Initialize memclob in clobKeeper with orderbooks using `ClobPairs` in state.
-	k.InitMemClobOrderbooks(ctx)
+	k.InitMemClobOrderbooks(checkCtx)
 	// Initialize memclob with all existing stateful orders.
 	// TODO(DEC-1348): Emit indexer messages to indicate that application restarted.
-	k.InitStatefulOrders(ctx)
+	k.InitStatefulOrders(checkCtx)
 
 	// Initialize the untriggered conditional orders data structure with untriggered
 	// conditional orders in state.
-	k.HydrateClobPairAndPerpetualMapping(ctx)
+	k.HydrateClobPairAndPerpetualMapping(checkCtx)
 	// Initialize the untriggered conditional orders data structure with untriggered
 	// conditional orders in state.
-	k.HydrateUntriggeredConditionalOrders(ctx)
+	k.HydrateUntriggeredConditionalOrders(checkCtx)
 }
 
 // InitMemStore initializes the memstore of the `clob` keeper.

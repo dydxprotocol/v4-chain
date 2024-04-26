@@ -166,13 +166,15 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // PreBlock executes all ABCI PreBlock logic respective to the clob module.
-func (am AppModule) PreBlock(ctx context.Context) error {
+func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), metrics.PreBlocker)
 	PreBlocker(
 		lib.UnwrapSDKContext(ctx, types.ModuleName),
 		am.keeper,
 	)
-	return nil
+	return sdk.ResponsePreBlock{
+		ConsensusParamsChanged: false,
+	}, nil
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the clob module.
