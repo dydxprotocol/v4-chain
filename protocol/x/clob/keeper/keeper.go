@@ -111,8 +111,8 @@ func NewKeeper(
 		rewardsKeeper:                rewardsKeeper,
 		indexerEventManager:          indexerEventManager,
 		streamingManager:             grpcStreamingManager,
-		memStoreInitialized:          &atomic.Bool{},
-		initialized:                  &atomic.Bool{},
+		memStoreInitialized:          &atomic.Bool{}, // False by default.
+		initialized:                  &atomic.Bool{}, // False by default.
 		txDecoder:                    txDecoder,
 		mevTelemetryConfig: MevTelemetryConfig{
 			Enabled:    clobFlags.MevTelemetryEnabled,
