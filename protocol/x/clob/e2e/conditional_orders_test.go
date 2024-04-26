@@ -851,6 +851,64 @@ func TestConditionalOrder(t *testing.T) {
 				},
 			},
 		},
+		`Conditional order that would violate isolated subaccount constraints can be placed, trigger, 
+		fail isolated subaccount checks and get removed from state`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+				constants.Dave_Num0_10000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
+				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+			},
+			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
+				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
+					prices.NewMarketPriceUpdate(0, 4_999_700_000),
+				},
+			},
+
+			expectedExistInState: map[clobtypes.OrderId]bool{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: false,
+			},
+			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
+				2: {constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: false},
+				3: {constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: true},
+				4: {constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: false},
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+			},
+		},
+		`Conditional FOK order that would violate isolated subaccount constraints can be placed, trigger, 
+		fail isolated subaccount checks and get removed from state`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+				constants.Dave_Num0_10000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999_FOK,
+				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+			},
+			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
+				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
+					prices.NewMarketPriceUpdate(0, 4_999_700_000),
+				},
+			},
+
+			expectedExistInState: map[clobtypes.OrderId]bool{
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999_FOK.OrderId: false,
+			},
+			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
+				2: {constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999_FOK.OrderId: false},
+				3: {constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999_FOK.OrderId: true},
+				4: {constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999_FOK.OrderId: false},
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -876,6 +934,7 @@ func TestConditionalOrder(t *testing.T) {
 						genesisState.LiquidityTiers = constants.LiquidityTiers
 						genesisState.Perpetuals = []perptypes.Perpetual{
 							constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+							constants.IsoUsd_IsolatedMarket,
 						}
 					},
 				)
