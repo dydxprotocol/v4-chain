@@ -123,6 +123,73 @@ describe('trades-controller#V4', () => {
       );
     });
 
+    it('Get /:ticker gets trades for a ticker in descending order by createdAtHeight and paginated', async () => {
+      await testMocks.seedData();
+      await perpetualMarketRefresher.updatePerpetualMarkets();
+      // Order and fill for BTC-USD (maker and taker)
+      const fills1: {
+        makerFill: FillFromDatabase,
+        takerFill: FillFromDatabase,
+      } = await createMakerTakerOrderAndFill(
+        testConstants.defaultOrder,
+        testConstants.defaultFill,
+      );
+
+      const btcSize2: string = '600';
+      const fills2: {
+        makerFill: FillFromDatabase,
+        takerFill: FillFromDatabase,
+      } = await createMakerTakerOrderAndFill(
+        testConstants.defaultOrder,
+        {
+          ...testConstants.defaultFill,
+          size: btcSize2,
+          eventId: testConstants.defaultTendermintEventId2,
+          createdAtHeight: '1',
+        },
+      );
+
+      const responsePage1: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/trades/perpetualMarket/${testConstants.defaultPerpetualMarket.ticker}?page=1&limit=1`,
+      });
+
+      const responsePage2: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/trades/perpetualMarket/${testConstants.defaultPerpetualMarket.ticker}?page=2&limit=1`,
+      });
+
+      const expected: TradeResponseObject[] = [
+        fillToTradeResponseObject(fills1.takerFill),
+        fillToTradeResponseObject(fills2.takerFill),
+      ];
+
+      // Expect both trades, ordered by createdAtHeight in descending order
+      expect(responsePage1.body.pageSize).toHaveLength(1);
+      expect(responsePage1.body.offset).toHaveLength(0);
+      expect(responsePage1.body.totalResults).toHaveLength(2);
+      expect(responsePage1.body.trades).toHaveLength(1);
+      expect(responsePage1.body.trades).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...expected[0],
+          }),
+        ]),
+      );
+
+      expect(responsePage1.body.pageSize).toHaveLength(1);
+      expect(responsePage1.body.offset).toHaveLength(1);
+      expect(responsePage2.body.totalResults).toHaveLength(2);
+      expect(responsePage2.body.trades).toHaveLength(1);
+      expect(responsePage2.body.trades).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...expected[1],
+          }),
+        ]),
+      );
+    });
+
     it('Get /:ticker for ticker with no fills', async () => {
       await testMocks.seedData();
       await perpetualMarketRefresher.updatePerpetualMarkets();
@@ -133,6 +200,21 @@ describe('trades-controller#V4', () => {
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/trades/perpetualMarket/${testConstants.defaultPerpetualMarket2.ticker}`,
+      });
+
+      expect(response.body.trades).toEqual([]);
+    });
+
+    it('Get /:ticker for ticker with no fills and paginated', async () => {
+      await testMocks.seedData();
+      await perpetualMarketRefresher.updatePerpetualMarkets();
+      // Order and fill for BTC-USD
+      await OrderTable.create(testConstants.defaultOrder);
+      await FillTable.create(testConstants.defaultFill);
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/trades/perpetualMarket/${testConstants.defaultPerpetualMarket2.ticker}?page=1&limit=1`,
       });
 
       expect(response.body.trades).toEqual([]);
