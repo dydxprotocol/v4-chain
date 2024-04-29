@@ -78,11 +78,10 @@ func perpetualsUpgrade(
 			))
 		}
 		ctx.Logger().Info(fmt.Sprintf(
-			"Successfully migrated perpetual %d: %v",
+			"Successfully migrated perpetual %d: %+v",
 			perp.GetId(),
 			perp,
 		))
-		ctx.Logger().Info(fmt.Sprintf("Perpetual %d has zero open interest at the time of upgrade", perp.GetId()))
 	}
 }
 
