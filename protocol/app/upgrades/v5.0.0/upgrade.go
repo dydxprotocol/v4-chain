@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -19,20 +20,69 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
-// Set all existing perpetuals to cross market type
+// perpetuals upgrade handler for v5.0.0
+// - 1. Set all perpetuals to cross market type
+// - 2. Initialize perpetual open interest to current OI
 func perpetualsUpgrade(
 	ctx sdk.Context,
 	perpetualsKeeper perptypes.PerpetualsKeeper,
+	subaccountsKeeper satypes.SubaccountsKeeper,
 ) {
-	// Set all perpetuals to cross market type
-	perpetuals := perpetualsKeeper.GetAllPerpetuals(ctx)
-	for _, p := range perpetuals {
-		_, err := perpetualsKeeper.SetPerpetualMarketType(
-			ctx, p.GetId(),
-			perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS)
-		if err != nil {
-			panic(fmt.Sprintf("failed to set perpetual market type for perpetual %d: %s", p.GetId(), err))
+	perpOIMap := make(map[uint32]*big.Int)
+
+	// Iterate through all subaccounts and perp positions for each subaccount.
+	// Aggregate open interest for each perpetual market.
+	subaccounts := subaccountsKeeper.GetAllSubaccount(ctx)
+	for _, sa := range subaccounts {
+		for _, perpPosition := range sa.PerpetualPositions {
+			if perpPosition.Quantums.BigInt().Sign() <= 0 {
+				// Only record positive positions for total open interest.
+				// Total negative position size should be equal to total positive position size.
+				continue
+			}
+			if openInterest, exists := perpOIMap[perpPosition.PerpetualId]; exists {
+				// Already seen this perpetual. Add to open interest.
+				openInterest.Add(
+					openInterest,
+					perpPosition.Quantums.BigInt(),
+				)
+			} else {
+				// Haven't seen this pereptual. Initialize open interest.
+				perpOIMap[perpPosition.PerpetualId] = new(big.Int).Set(
+					perpPosition.Quantums.BigInt(),
+				)
+			}
 		}
+	}
+
+	perpetuals := perpetualsKeeper.GetAllPerpetuals(ctx)
+	for _, perp := range perpetuals {
+		// 1. Set all perpetuals to cross market type
+		perp.Params.MarketType = perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
+
+		// 2. Initialize perpetual open interest to current OI
+		perpOpenInterst := big.NewInt(0)
+		if oi, exists := perpOIMap[perp.GetId()]; exists {
+			perpOpenInterst.Set(oi)
+		}
+		perp.OpenInterest = dtypes.NewIntFromBigInt(perpOpenInterst)
+		err := perpetualsKeeper.ValidateAndSetPerpetual(
+			ctx,
+			perp,
+		)
+		if err != nil {
+			panic(fmt.Sprintf(
+				"failed to modify open interest for perpetual, openInterest = %v, perpetual = %+v",
+				perpOpenInterst,
+				perp,
+			))
+		}
+		ctx.Logger().Info(fmt.Sprintf(
+			"Successfully migrated perpetual %d: %v",
+			perp.GetId(),
+			perp,
+		))
+		ctx.Logger().Info(fmt.Sprintf("Perpetual %d has zero open interest at the time of upgrade", perp.GetId()))
 	}
 }
 
@@ -238,69 +288,6 @@ func voteExtensionsUpgrade(
 	)
 }
 
-// Initialize open interest for perpetuals
-func initializePerpOpenInterest(
-	ctx sdk.Context,
-	perpetualsKeeper perptypes.PerpetualsKeeper,
-	subaccountsKeeper satypes.SubaccountsKeeper,
-) {
-	perpOIMap := make(map[uint32]*big.Int)
-
-	subaccounts := subaccountsKeeper.GetAllSubaccount(ctx)
-
-	// Iterate through all subaccounts and perp positions for each subaccount.
-	// Aggregate open interest for each perpetual market.
-	for _, sa := range subaccounts {
-		for _, perpPosition := range sa.PerpetualPositions {
-			if perpPosition.Quantums.BigInt().Sign() <= 0 {
-				// Only record positive positions for total open interest.
-				// Total negative position size should be equal to total positive position size.
-				continue
-			}
-			if openInterest, exists := perpOIMap[perpPosition.PerpetualId]; exists {
-				// Already seen this perpetual. Add to open interest.
-				openInterest.Add(
-					openInterest,
-					perpPosition.Quantums.BigInt(),
-				)
-			} else {
-				// Haven't seen this pereptual. Initialize open interest.
-				perpOIMap[perpPosition.PerpetualId] = new(big.Int).Set(
-					perpPosition.Quantums.BigInt(),
-				)
-			}
-		}
-	}
-
-	allPerps := perpetualsKeeper.GetAllPerpetuals(ctx)
-	for _, perp := range allPerps {
-		if perp.OpenInterest.BigInt().Sign() != 0 {
-			panic(fmt.Sprintf("perpetual %d has non-zero OI (%v) before upgrade", perp.GetId(), perp.OpenInterest))
-		}
-		if openInterest, exists := perpOIMap[perp.GetId()]; exists {
-			err := perpetualsKeeper.ModifyOpenInterest(
-				ctx,
-				perp.GetId(),
-				openInterest, // by default perpetual.OI = 0, so use the total open interest as delta
-			)
-			if err != nil {
-				panic(fmt.Sprintf(
-					"failed to modify open interest for perpetual, openInterest = %v, perpetual = %+v",
-					openInterest,
-					perp,
-				))
-			}
-			ctx.Logger().Info(fmt.Sprintf(
-				"Successfully initialized open interest for perpetual %d = %v",
-				perp.GetId(),
-				openInterest,
-			))
-		} else {
-			ctx.Logger().Info(fmt.Sprintf("Perpetual %d has zero open interest at the time of upgrade", perp.GetId()))
-		}
-	}
-}
-
 // Initialize vault module parameters.
 func initializeVaultModuleParams(
 	ctx sdk.Context,
@@ -331,11 +318,8 @@ func CreateUpgradeHandler(
 		clobKeeper.MigratePruneableOrders(sdkCtx)
 		sdkCtx.Logger().Info("Successfully migrated pruneable orders")
 
-		// Set all perpetuals to cross market type
-		perpetualsUpgrade(sdkCtx, perpetualsKeeper)
-
-		// Initialize open interest for all perpetuals
-		initializePerpOpenInterest(sdkCtx, perpetualsKeeper, subaccountsKeeper)
+		// Set all perpetuals to cross market type and initialize open interest
+		perpetualsUpgrade(sdkCtx, perpetualsKeeper, subaccountsKeeper)
 
 		// Set block rate limit configuration
 		blockRateLimitConfigUpdate(sdkCtx, clobKeeper)
