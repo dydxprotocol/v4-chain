@@ -7,12 +7,15 @@ import (
 	"time"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/rand"
 	"gopkg.in/typ.v4/slices"
 
@@ -26,6 +29,9 @@ import (
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	epochtypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
+	feetierstypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -311,6 +317,223 @@ var (
 		20,
 	)
 )
+
+func TestHydrationInPreBlocker(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis tmtypes.GenesisDoc) {
+		genesis = testapp.DefaultGenesis()
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *prices.GenesisState) {
+				*genesisState = constants.TestPricesGenesisState
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *perptypes.GenesisState) {
+				genesisState.Params = constants.PerpetualsGenesisParams
+				genesisState.LiquidityTiers = constants.LiquidityTiers
+				genesisState.Perpetuals = []perptypes.Perpetual{
+					constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				}
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *satypes.GenesisState) {
+				genesisState.Subaccounts = []satypes.Subaccount{
+					constants.Carl_Num0_100000USD,
+					constants.Dave_Num0_10000USD,
+				}
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *clobtypes.GenesisState) {
+				genesisState.ClobPairs = []clobtypes.ClobPair{
+					constants.ClobPair_Btc,
+				}
+				genesisState.LiquidationsConfig = clobtypes.LiquidationsConfig_Default
+			},
+		)
+		return genesis
+	}).WithNonDeterminismChecksEnabled(false).Build()
+
+	// Let's add some pre-existing orders to state.
+	// Note that the order is not added to memclob.
+	tApp.App.ClobKeeper.SetLongTermOrderPlacement(
+		tApp.App.NewUncachedContext(false, tmproto.Header{}),
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+		1,
+	)
+	tApp.App.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+		tApp.App.NewUncachedContext(false, tmproto.Header{}),
+		time.Unix(50, 0),
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
+
+	// Advance one block so that pre blocker is called and clob is hydrated.
+	_ = tApp.InitChain()
+	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+	// Order should exist in state
+	_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId)
+	require.True(t, found)
+
+	// Order should be on the orderbook
+	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(ctx, constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId)
+	require.True(t, found)
+}
+
+func TestHydrationWithMatchPreBlocker(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis tmtypes.GenesisDoc) {
+		genesis = testapp.DefaultGenesis()
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *prices.GenesisState) {
+				*genesisState = constants.TestPricesGenesisState
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *perptypes.GenesisState) {
+				genesisState.Params = constants.PerpetualsGenesisParams
+				genesisState.LiquidityTiers = constants.LiquidityTiers
+				genesisState.Perpetuals = []perptypes.Perpetual{
+					constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				}
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *satypes.GenesisState) {
+				genesisState.Subaccounts = []satypes.Subaccount{
+					constants.Carl_Num0_100000USD,
+					constants.Dave_Num0_500000USD,
+				}
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *clobtypes.GenesisState) {
+				genesisState.ClobPairs = []clobtypes.ClobPair{
+					constants.ClobPair_Btc,
+				}
+				genesisState.LiquidationsConfig = clobtypes.LiquidationsConfig_Default
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *feetierstypes.GenesisState) {
+				genesisState.Params = constants.PerpetualFeeParamsNoFee
+			},
+		)
+		return genesis
+	}).WithNonDeterminismChecksEnabled(false).Build()
+
+	// 1. Let's add some pre-existing orders to state before clob is initialized.
+	tApp.App.ClobKeeper.SetLongTermOrderPlacement(
+		tApp.App.NewUncachedContext(false, tmproto.Header{}),
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+		1,
+	)
+	tApp.App.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+		tApp.App.NewUncachedContext(false, tmproto.Header{}),
+		time.Unix(10, 0),
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
+
+	// Let's add a crossing order to state.
+	tApp.App.ClobKeeper.SetLongTermOrderPlacement(
+		tApp.App.NewUncachedContext(false, tmproto.Header{}),
+		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+		1,
+	)
+	tApp.App.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+		tApp.App.NewUncachedContext(false, tmproto.Header{}),
+		time.Unix(10, 0),
+		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+	)
+
+	// 2. Advance one block so that pre blocker is called and clob is hydrated.
+	ctx := tApp.InitChain()
+
+	// Here, PreBlocker has been called and Carl's and Dave's orders are placed against the orderbook.
+	// They should generate a match in the local operations queue, but their state changes should've been discarded since
+	// preblocker happens during deliver state and context was cached with IsCheckTx set to true.
+
+	// Make sure order still exists in state, with a fill amount of 0.
+	// Note that `ctx` is the check tx context, so need to read from the uncached cms to make sure changes are discarded.
+	uncachedCtx := tApp.App.NewUncachedContext(false, tmproto.Header{})
+	_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(uncachedCtx, constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId)
+	require.True(t, found)
+	fillAmount := tApp.App.ClobKeeper.MemClob.GetOrderFilledAmount(uncachedCtx, constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId)
+	require.Equal(t, satypes.BaseQuantums(0), fillAmount)
+
+	_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(uncachedCtx, constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId)
+	require.True(t, found)
+	fillAmount = tApp.App.ClobKeeper.MemClob.GetOrderFilledAmount(uncachedCtx, constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId)
+	require.Equal(t, satypes.BaseQuantums(0), fillAmount)
+
+	// Make sure orders are not on the orderbook.
+	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(ctx, constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId)
+	require.False(t, found)
+
+	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(ctx, constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId)
+	require.False(t, found)
+
+	// Make sure match is in the operations queue.
+	operations := tApp.App.ClobKeeper.MemClob.GetOperationsRaw(ctx)
+	require.Len(t, operations, 1)
+
+	// Advance to the next block to persist the matches.
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+	// Order should not exist in state because they are filly filled.
+	_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId)
+	require.False(t, found)
+
+	_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId)
+	require.False(t, found)
+
+	// Carl and Dave's state should get updated accordingly.
+	carl := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Carl_Num0)
+	require.Equal(t, satypes.Subaccount{
+		Id: &constants.Carl_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			{
+				AssetId:  0,
+				Quantums: dtypes.NewInt(100_000_000_000 - 50_000_000_000),
+			},
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			{
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(100_000_000),
+				FundingIndex: dtypes.NewInt(0),
+			},
+		},
+	}, carl)
+
+	dave := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Dave_Num0)
+	require.Equal(t, satypes.Subaccount{
+		Id: &constants.Dave_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			{
+				AssetId:  0,
+				Quantums: dtypes.NewInt(500_000_000_000 + 50_000_000_000),
+			},
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			{
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(-100_000_000),
+				FundingIndex: dtypes.NewInt(0),
+			},
+		},
+	}, dave)
+
+	require.Empty(t, tApp.App.ClobKeeper.MemClob.GetOperationsRaw(ctx))
+}
 
 // We place 300 orders that match and 700 orders followed by their cancellations concurrently.
 //
