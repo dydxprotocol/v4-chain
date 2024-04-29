@@ -22,6 +22,10 @@ type MemClob interface {
 		ctx sdk.Context,
 		clobPair ClobPair,
 	)
+	MaybeCreateOrderbook(
+		ctx sdk.Context,
+		clobPair ClobPair,
+	)
 	CountSubaccountShortTermOrders(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,

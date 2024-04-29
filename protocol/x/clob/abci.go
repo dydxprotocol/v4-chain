@@ -16,6 +16,14 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
+// PreBlocker executes all ABCI PreBlock logic respective to the clob module.
+func PreBlocker(
+	ctx sdk.Context,
+	keeper types.ClobKeeper,
+) {
+	keeper.Initialize(ctx)
+}
+
 // BeginBlocker executes all ABCI BeginBlock logic respective to the clob module.
 func BeginBlocker(
 	ctx sdk.Context,

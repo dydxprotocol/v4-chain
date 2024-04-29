@@ -9,7 +9,6 @@ import (
 	evidencemodule "cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -135,15 +134,6 @@ func TestAppPanicsWithGrpcDisabled(t *testing.T) {
 		flags.GrpcEnable: false,
 	}
 	require.Panics(t, func() { testapp.DefaultTestApp(customFlags) })
-}
-
-func TestClobKeeperMemStoreHasBeenInitialized(t *testing.T) {
-	dydxApp := testapp.DefaultTestApp(nil)
-	ctx := dydxApp.NewUncachedContext(true, tmproto.Header{})
-
-	// The memstore panics if initialized twice so initializing again outside of application
-	// start-up should cause a panic.
-	require.Panics(t, func() { dydxApp.ClobKeeper.InitMemStore(ctx) })
 }
 
 func TestBaseApp(t *testing.T) {
