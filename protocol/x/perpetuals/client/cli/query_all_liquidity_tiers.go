@@ -9,9 +9,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func CmdQueryLiquidityTiers() *cobra.Command {
+func CmdQueryAllLiquidityTiers() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-liquidity-tiers",
+		Use:   "get-all-liquidity-tiers",
 		Short: "get all liquidity tiers",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)

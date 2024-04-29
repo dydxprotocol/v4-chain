@@ -19,7 +19,7 @@ func TestAllLiquidityTiers(t *testing.T) {
 
 	common := []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
 
-	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryLiquidityTiers(), common)
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryAllLiquidityTiers(), common)
 	require.NoError(t, err)
 
 	var resp types.QueryAllLiquidityTiersResponse
