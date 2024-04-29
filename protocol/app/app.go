@@ -89,6 +89,7 @@ import (
 	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	antetypes "github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -1619,6 +1620,15 @@ func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
 
 // PreBlocker application updates before each begin block.
 func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	// Set gas meter to the free gas meter.
+	// This is because there is currently non-deterministic gas usage in the
+	// pre-blocker, e.g. due to hydration of in-memory data structures.
+	currentGasMeter := ctx.GasMeter()
+	ctx = ctx.WithGasMeter(antetypes.NewFreeInfiniteGasMeter())
+	defer func() {
+		ctx.WithGasMeter(currentGasMeter)
+	}()
+
 	return app.ModuleManager.PreBlock(ctx)
 }
 

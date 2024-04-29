@@ -174,8 +174,8 @@ func (k Keeper) Initialize(ctx sdk.Context) {
 	// Branch the context for hydration.
 	// This means that new order matches from hydration will get added to the operations
 	// queue but the corresponding state changes will be discarded.
-	// This is because we are currently in the deliver state so writing optimistic matches
-	// breaks consensus.
+	// This is needed because we are hydrating in memory structures in PreBlock
+	// which operates on deliver state. Writing optimistic matches breaks consensus.
 	checkCtx, _ := ctx.CacheContext()
 	checkCtx = checkCtx.WithIsCheckTx(true)
 

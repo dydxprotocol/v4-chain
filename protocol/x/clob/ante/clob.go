@@ -60,7 +60,7 @@ func (cd ClobDecorator) AnteHandle(
 		return next(ctx, tx, simulate)
 	}
 
-	// Disable order placement and cancelation processing if the clob keeper is not hydrated.
+	// Disable order placement and cancelation processing if the clob keeper is not initialized.
 	if !cd.clobKeeper.IsInitialized() {
 		return ctx, errorsmod.Wrap(
 			types.ErrClobNotInitialized,
