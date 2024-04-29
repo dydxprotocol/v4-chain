@@ -89,15 +89,6 @@ func (k Keeper) CreatePerpetual(
 		)
 	}
 
-	// Check if market type is valid
-	if marketType != types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS &&
-		marketType != types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
-		return types.Perpetual{}, errorsmod.Wrap(
-			types.ErrInvalidMarketType,
-			fmt.Sprintf("market type %v", marketType),
-		)
-	}
-
 	// Create the perpetual.
 	perpetual := types.Perpetual{
 		Params: types.PerpetualParams{
@@ -113,15 +104,10 @@ func (k Keeper) CreatePerpetual(
 		OpenInterest: dtypes.ZeroInt(),
 	}
 
-	if err := k.validatePerpetual(
-		ctx,
-		&perpetual,
-	); err != nil {
-		return perpetual, err
-	}
-
 	// Store the new perpetual.
-	k.SetPerpetual(ctx, perpetual)
+	if err := k.ValidateAndSetPerpetual(ctx, perpetual); err != nil {
+		return types.Perpetual{}, err
+	}
 
 	k.SetEmptyPremiumSamples(ctx)
 	k.SetEmptyPremiumVotes(ctx)
@@ -166,16 +152,10 @@ func (k Keeper) ModifyPerpetual(
 	perpetual.Params.DefaultFundingPpm = defaultFundingPpm
 	perpetual.Params.LiquidityTier = liquidityTier
 
-	// Validate updates to perpetual.
-	if err = k.validatePerpetual(
-		ctx,
-		&perpetual,
-	); err != nil {
-		return perpetual, err
-	}
-
 	// Store the modified perpetual.
-	k.SetPerpetual(ctx, perpetual)
+	if err := k.ValidateAndSetPerpetual(ctx, perpetual); err != nil {
+		return types.Perpetual{}, err
+	}
 
 	// Emit indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(
@@ -225,7 +205,9 @@ func (k Keeper) SetPerpetualMarketType(
 	perpetual.Params.MarketType = marketType
 
 	// Store the modified perpetual.
-	k.SetPerpetual(ctx, perpetual)
+	if err := k.ValidateAndSetPerpetual(ctx, perpetual); err != nil {
+		return types.Perpetual{}, err
+	}
 
 	return perpetual, nil
 }
@@ -1240,7 +1222,7 @@ func (k Keeper) ModifyFundingIndex(
 	bigFundingIndex.Add(bigFundingIndex, bigFundingIndexDelta)
 
 	perpetual.FundingIndex = dtypes.NewIntFromBigInt(bigFundingIndex)
-	k.SetPerpetual(ctx, perpetual)
+	k.setPerpetual(ctx, perpetual)
 	return nil
 }
 
@@ -1280,7 +1262,7 @@ func (k Keeper) ModifyOpenInterest(
 	}
 
 	perpetual.OpenInterest = dtypes.NewIntFromBigInt(bigOpenInterest)
-	k.SetPerpetual(ctx, perpetual)
+	k.setPerpetual(ctx, perpetual)
 
 	if ctx.ExecMode() == sdk.ExecModeFinalize {
 		updatedOIStore := prefix.NewStore(ctx.TransientStore(k.transientStoreKey), []byte(types.UpdatedOIKeyPrefix))
@@ -1315,13 +1297,36 @@ func (k Keeper) SetEmptyPremiumVotes(
 	)
 }
 
-func (k Keeper) SetPerpetual(
+func (k Keeper) SetPerpetualForTest(
+	ctx sdk.Context,
+	perpetual types.Perpetual,
+) {
+	k.setPerpetual(ctx, perpetual)
+}
+
+func (k Keeper) setPerpetual(
 	ctx sdk.Context,
 	perpetual types.Perpetual,
 ) {
 	b := k.cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
 	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
+}
+
+// SetPerpetual validates the perpetual object and sets it in state.
+func (k Keeper) ValidateAndSetPerpetual(
+	ctx sdk.Context,
+	perpetual types.Perpetual,
+) error {
+	if err := k.validatePerpetual(
+		ctx,
+		&perpetual,
+	); err != nil {
+		return err
+	}
+
+	k.setPerpetual(ctx, perpetual)
+	return nil
 }
 
 // GetPerpetualAndMarketPrice retrieves a Perpetual by its id and its corresponding MarketPrice.
