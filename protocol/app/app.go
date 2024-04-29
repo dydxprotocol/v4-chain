@@ -1623,12 +1623,10 @@ func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.
 	// Set gas meter to the free gas meter.
 	// This is because there is currently non-deterministic gas usage in the
 	// pre-blocker, e.g. due to hydration of in-memory data structures.
-	currentGasMeter := ctx.GasMeter()
+	//
+	// Note that we don't need to reset the gas meter after the pre-blocker
+	// because Go is pass by value.
 	ctx = ctx.WithGasMeter(antetypes.NewFreeInfiniteGasMeter())
-	defer func() {
-		ctx.WithGasMeter(currentGasMeter)
-	}()
-
 	return app.ModuleManager.PreBlock(ctx)
 }
 
