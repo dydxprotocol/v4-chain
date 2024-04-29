@@ -148,6 +148,17 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 	return offchainUpdates, nil
 }
 
+// MaybeCreateOrderbook is used for updating memclob internal data structures to mark an orderbook as created.
+func (m *MemClobPriceTimePriority) MaybeCreateOrderbook(
+	ctx sdk.Context,
+	clobPair types.ClobPair,
+) {
+	if _, exists := m.openOrders.orderbooksMap[clobPair.GetClobPairId()]; exists {
+		return
+	}
+	m.CreateOrderbook(ctx, clobPair)
+}
+
 // CreateOrderbook is used for updating memclob internal data structures to mark an orderbook as created.
 // This function will panic if `clobPairId` already exists in any of the memclob's internal data structures.
 func (m *MemClobPriceTimePriority) CreateOrderbook(
