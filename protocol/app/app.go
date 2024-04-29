@@ -89,6 +89,7 @@ import (
 	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	antetypes "github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -1163,7 +1164,8 @@ func New(
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
-		upgradetypes.ModuleName,
+		upgradetypes.ModuleName, // Must be first since upgrades may be state schema breaking.
+		clobmoduletypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 	)
 
@@ -1399,16 +1401,6 @@ func New(
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(err.Error())
 		}
-
-		// Hydrate memStores used for caching state.
-		app.hydrateMemStores()
-
-		// Hydrate the `memclob` with all ordersbooks from state,
-		// and hydrate the next `checkState` as well as the `memclob` with stateful orders.
-		app.hydrateMemclobWithOrderbooksAndStatefulOrders()
-
-		// Hydrate the keeper in-memory data structures.
-		app.hydrateKeeperInMemoryDataStructures()
 	}
 	app.initializeRateLimiters()
 
@@ -1613,15 +1605,6 @@ func (app *App) DisableHealthMonitorForTesting() {
 	app.DaemonHealthMonitor.DisableForTesting()
 }
 
-// hydrateMemStores hydrates the memStores used for caching state.
-func (app *App) hydrateMemStores() {
-	// Create an `uncachedCtx` where the underlying MultiStore is the `rootMultiStore`.
-	// We use this to hydrate the `memStore` state with values from the underlying `rootMultiStore`.
-	uncachedCtx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
-	// Initialize memstore in clobKeeper with order fill amounts and stateful orders.
-	app.ClobKeeper.InitMemStore(uncachedCtx)
-}
-
 // initializeRateLimiters initializes the rate limiters from state if the application is
 // not started from genesis.
 func (app *App) initializeRateLimiters() {
@@ -1631,42 +1614,18 @@ func (app *App) initializeRateLimiters() {
 	app.ClobKeeper.InitalizeBlockRateLimitFromStateIfExists(uncachedCtx)
 }
 
-// hydrateMemclobWithOrderbooksAndStatefulOrders hydrates the memclob with orderbooks and stateful orders
-// from state.
-func (app *App) hydrateMemclobWithOrderbooksAndStatefulOrders() {
-	// Create a `checkStateCtx` where the underlying MultiStore is the `CacheMultiStore` for
-	// the `checkState`. We do this to avoid performing any state writes to the `rootMultiStore`
-	// directly.
-	checkStateCtx := app.BaseApp.NewContext(true)
-
-	// Initialize memclob in clobKeeper with orderbooks using `ClobPairs` in state.
-	app.ClobKeeper.InitMemClobOrderbooks(checkStateCtx)
-	// Initialize memclob with all existing stateful orders.
-	// TODO(DEC-1348): Emit indexer messages to indicate that application restarted.
-	app.ClobKeeper.InitStatefulOrders(checkStateCtx)
-}
-
-// hydrateKeeperInMemoryDataStructures hydrates the keeper with ClobPairId and PerpetualId mapping
-// and untriggered conditional orders from state.
-func (app *App) hydrateKeeperInMemoryDataStructures() {
-	// Create a `checkStateCtx` where the underlying MultiStore is the `CacheMultiStore` for
-	// the `checkState`. We do this to avoid performing any state writes to the `rootMultiStore`
-	// directly.
-	checkStateCtx := app.BaseApp.NewContext(true)
-
-	// Initialize the untriggered conditional orders data structure with untriggered
-	// conditional orders in state.
-	app.ClobKeeper.HydrateClobPairAndPerpetualMapping(checkStateCtx)
-	// Initialize the untriggered conditional orders data structure with untriggered
-	// conditional orders in state.
-	app.ClobKeeper.HydrateUntriggeredConditionalOrders(checkStateCtx)
-}
-
 // GetBaseApp returns the base app of the application
 func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
 
 // PreBlocker application updates before each begin block.
 func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	// Set gas meter to the free gas meter.
+	// This is because there is currently non-deterministic gas usage in the
+	// pre-blocker, e.g. due to hydration of in-memory data structures.
+	//
+	// Note that we don't need to reset the gas meter after the pre-blocker
+	// because Go is pass by value.
+	ctx = ctx.WithGasMeter(antetypes.NewFreeInfiniteGasMeter())
 	return app.ModuleManager.PreBlock(ctx)
 }
 

@@ -442,6 +442,11 @@ func (_m *MemClob) InsertZeroFillDeleveragingIntoOperationsQueue(ctx types.Conte
 	_m.Called(ctx, subaccountId, perpetualId)
 }
 
+// MaybeCreateOrderbook provides a mock function with given fields: ctx, clobPair
+func (_m *MemClob) MaybeCreateOrderbook(ctx types.Context, clobPair clobtypes.ClobPair) {
+	_m.Called(ctx, clobPair)
+}
+
 // PlaceOrder provides a mock function with given fields: ctx, order
 func (_m *MemClob) PlaceOrder(ctx types.Context, order clobtypes.Order) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error) {
 	ret := _m.Called(ctx, order)
