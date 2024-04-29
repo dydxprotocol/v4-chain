@@ -177,16 +177,9 @@ export async function getPnlTicksCreateObjects(
         at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
         message: 'Error when getting new pnl tick',
         account,
-        transferMap: subaccountTotalTransfersMap[account],
-        openPositions: openPerpetualPositions[account],
-        netTransfers: netUsdcTransfers[account],
         pnlTicksToBeCreatedAt,
         blockHeight,
         blockTime,
-        lastUpdatedFundingIndexMap: blockHeightToFundingIndexMap[
-          idToSubaccount[account].updatedAtHeight
-        ],
-        currentFundingIndexMap,
       });
     }
   });
