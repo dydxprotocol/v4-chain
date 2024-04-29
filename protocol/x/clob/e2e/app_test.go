@@ -19,8 +19,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/rand"
 	"gopkg.in/typ.v4/slices"
 
-	"github.com/cometbft/cometbft/types"
-
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
@@ -376,11 +374,17 @@ func TestHydrationInPreBlocker(t *testing.T) {
 	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Order should exist in state
-	_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId)
+	_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(
+		ctx,
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
 	require.True(t, found)
 
 	// Order should be on the orderbook
-	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(ctx, constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId)
+	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(
+		ctx,
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
 	require.True(t, found)
 }
 
@@ -464,21 +468,39 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 	// Make sure order still exists in state, with a fill amount of 0.
 	// Note that `ctx` is the check tx context, so need to read from the uncached cms to make sure changes are discarded.
 	uncachedCtx := tApp.App.NewUncachedContext(false, tmproto.Header{})
-	_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(uncachedCtx, constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId)
+	_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(
+		uncachedCtx,
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
 	require.True(t, found)
-	fillAmount := tApp.App.ClobKeeper.MemClob.GetOrderFilledAmount(uncachedCtx, constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId)
+	fillAmount := tApp.App.ClobKeeper.MemClob.GetOrderFilledAmount(
+		uncachedCtx,
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
 	require.Equal(t, satypes.BaseQuantums(0), fillAmount)
 
-	_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(uncachedCtx, constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId)
+	_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(
+		uncachedCtx,
+		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+	)
 	require.True(t, found)
-	fillAmount = tApp.App.ClobKeeper.MemClob.GetOrderFilledAmount(uncachedCtx, constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId)
+	fillAmount = tApp.App.ClobKeeper.MemClob.GetOrderFilledAmount(
+		uncachedCtx,
+		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+	)
 	require.Equal(t, satypes.BaseQuantums(0), fillAmount)
 
 	// Make sure orders are not on the orderbook.
-	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(ctx, constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId)
+	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(
+		ctx,
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
 	require.False(t, found)
 
-	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(ctx, constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId)
+	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(
+		ctx,
+		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+	)
 	require.False(t, found)
 
 	// Make sure match is in the operations queue.
@@ -489,10 +511,16 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Order should not exist in state because they are filly filled.
-	_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId)
+	_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(
+		ctx,
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
 	require.False(t, found)
 
-	_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId)
+	_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(
+		ctx,
+		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+	)
 	require.False(t, found)
 
 	// Carl and Dave's state should get updated accordingly.
@@ -541,7 +569,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 func TestConcurrentMatchesAndCancels(t *testing.T) {
 	r := rand.NewRand()
 	simAccounts := simtypes.RandomAccounts(r, 1000)
-	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis tmtypes.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
