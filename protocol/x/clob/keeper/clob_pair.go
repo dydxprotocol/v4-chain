@@ -231,6 +231,14 @@ func (k Keeper) SetClobPairIdForPerpetual(ctx sdk.Context, clobPair types.ClobPa
 		if !exists {
 			clobPairIds = make([]types.ClobPairId, 0)
 		}
+
+		for _, clobPairId := range clobPairIds {
+			if clobPairId == clobPair.GetClobPairId() {
+				// The mapping already exists, so return.
+				return
+			}
+		}
+
 		k.PerpetualIdToClobPairId[perpetualId] = append(
 			clobPairIds,
 			clobPair.GetClobPairId(),
