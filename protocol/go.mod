@@ -374,6 +374,7 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/goleak v1.1.12 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+<<<<<<< HEAD
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20230307190834-24139beb5833 // indirect
@@ -383,6 +384,16 @@ require (
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/term v0.17.0 // indirect
+=======
+	golang.org/x/crypto v0.22.0 // indirect
+	golang.org/x/exp/typeparams v0.0.0-20240314144324-c7f7c6466f7f // indirect
+	golang.org/x/mod v0.16.0 // indirect
+	golang.org/x/net v0.24.0 // indirect
+	golang.org/x/oauth2 v0.16.0 // indirect
+	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/term v0.19.0 // indirect
+>>>>>>> 9275e814 (Upgrade to newly rebased cometbft fork (#1438))
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.18.0 // indirect
@@ -412,7 +423,11 @@ replace (
 	// should use v0.11.0. The Cosmos build fails with types/context.go:65:29: undefined: comet.BlockInfo otherwise.
 	cosmossdk.io/core => cosmossdk.io/core v0.11.0
 	// Use dYdX fork of CometBFT
+<<<<<<< HEAD
 	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20240409171441-6d0767b72c06
+=======
+	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20240426214049-c8beeeada40a
+>>>>>>> 9275e814 (Upgrade to newly rebased cometbft fork (#1438))
 	// Use dYdX fork of Cosmos SDK
 	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c
 	github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240408175732-0fca9d69cbc4
