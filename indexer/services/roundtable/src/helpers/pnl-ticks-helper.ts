@@ -154,22 +154,42 @@ export async function getPnlTicksCreateObjects(
   );
 
   const computePnlStart: number = Date.now();
-  const newTicksToCreate: PnlTicksCreateObject[] = accountsToUpdate.map(
-    (account: string) => getNewPnlTick(
-      account,
-      subaccountTotalTransfersMap,
-      markets,
-      Object.values(openPerpetualPositions[account] || {}),
-      usdcAssetPositions[account] || ZERO,
-      netUsdcTransfers[account] || ZERO,
-      pnlTicksToBeCreatedAt,
-      blockHeight,
-      blockTime,
-      mostRecentPnlTicks,
-      blockHeightToFundingIndexMap[idToSubaccount[account].updatedAtHeight],
-      currentFundingIndexMap,
-    ),
-  );
+  const newTicksToCreate: PnlTicksCreateObject[] = [];
+  accountsToUpdate.forEach((account: string) => {
+    try {
+      const newTick: PnlTicksCreateObject = getNewPnlTick(
+        account,
+        subaccountTotalTransfersMap,
+        markets,
+        Object.values(openPerpetualPositions[account] || {}),
+        usdcAssetPositions[account] || ZERO,
+        netUsdcTransfers[account] || ZERO,
+        pnlTicksToBeCreatedAt,
+        blockHeight,
+        blockTime,
+        mostRecentPnlTicks,
+        blockHeightToFundingIndexMap[idToSubaccount[account].updatedAtHeight],
+        currentFundingIndexMap,
+      );
+      newTicksToCreate.push(newTick);
+    } catch (error) {
+      logger.error({
+        at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+        message: 'Error when getting new pnl tick',
+        account,
+        transferMap: subaccountTotalTransfersMap[account],
+        openPositions: openPerpetualPositions[account],
+        netTransfers: netUsdcTransfers[account],
+        pnlTicksToBeCreatedAt,
+        blockHeight,
+        blockTime,
+        lastUpdatedFundingIndexMap: blockHeightToFundingIndexMap[
+          idToSubaccount[account].updatedAtHeight
+        ],
+        currentFundingIndexMap,
+      });
+    }
+  });
   stats.timing(
     `${config.SERVICE_NAME}_get_ticks_compute_pnl`,
     new Date().getTime() - computePnlStart,
