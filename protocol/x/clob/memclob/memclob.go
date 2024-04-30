@@ -389,8 +389,15 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 	internalOperation := m.operationsToPropose.MustAddMatchToOperationsQueue(takerOrder, makerFillWithOrders)
 	// If orderbook updates are on, send an orderbook update with the fill to grpc streams.
 	if m.generateOrderbookUpdates {
+		// Collect all maker orders.
+		makerOrders := lib.MapSlice(
+			makerFillWithOrders,
+			func(mfwo types.MakerFillWithOrder) types.Order {
+				return mfwo.Order
+			},
+		)
 		clobMatch := internalOperation.GetMatch()
-		orderbookMatchFill := m.GenerateStreamOrderbookFill(ctx, *clobMatch, takerOrder, makerFillWithOrders)
+		orderbookMatchFill := m.GenerateStreamOrderbookFill(ctx, *clobMatch, takerOrder, makerOrders)
 		m.clobKeeper.SendOrderbookFillUpdates(ctx, []types.StreamOrderbookFill{orderbookMatchFill})
 	}
 
