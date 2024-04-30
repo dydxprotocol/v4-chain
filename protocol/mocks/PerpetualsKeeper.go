@@ -450,6 +450,24 @@ func (_m *PerpetualsKeeper) SetPerpetualMarketType(ctx types.Context, id uint32,
 	return r0, r1
 }
 
+// ValidateAndSetPerpetual provides a mock function with given fields: ctx, perpetual
+func (_m *PerpetualsKeeper) ValidateAndSetPerpetual(ctx types.Context, perpetual perpetualstypes.Perpetual) error {
+	ret := _m.Called(ctx, perpetual)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ValidateAndSetPerpetual")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, perpetualstypes.Perpetual) error); ok {
+		r0 = rf(ctx, perpetual)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // NewPerpetualsKeeper creates a new instance of PerpetualsKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewPerpetualsKeeper(t interface {
