@@ -674,7 +674,11 @@ func AppStateFromGenesisFileFn(
 
 // CustomSimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
-func CustomSimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes.Config) []simtypes.WeightedOperation {
+func CustomSimulationOperations(
+	app runtime.AppI,
+	cdc codec.JSONCodec,
+	config simtypes.Config,
+) []simtypes.WeightedOperation {
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
