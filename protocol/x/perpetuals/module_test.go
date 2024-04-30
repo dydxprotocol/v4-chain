@@ -212,12 +212,12 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 	cmd := am.GetQueryCmd()
 	require.Equal(t, "perpetuals", cmd.Use)
 	require.Equal(t, 6, len(cmd.Commands()))
-	require.Equal(t, "get-params", cmd.Commands()[0].Name())
-	require.Equal(t, "get-premium-samples", cmd.Commands()[1].Name())
-	require.Equal(t, "get-premium-votes", cmd.Commands()[2].Name())
-	require.Equal(t, "list-perpetual", cmd.Commands()[3].Name())
-	require.Equal(t, "show-perpetual", cmd.Commands()[4].Name())
-	require.Equal(t, "get-all-liquidity-tiers", cmd.Commands()[5].Name())
+	require.Equal(t, "get-all-liquidity-tiers", cmd.Commands()[0].Name())
+	require.Equal(t, "get-params", cmd.Commands()[1].Name())
+	require.Equal(t, "get-premium-samples", cmd.Commands()[2].Name())
+	require.Equal(t, "get-premium-votes", cmd.Commands()[3].Name())
+	require.Equal(t, "list-perpetual", cmd.Commands()[4].Name())
+	require.Equal(t, "show-perpetual", cmd.Commands()[5].Name())
 }
 
 func TestAppModule_Name(t *testing.T) {
