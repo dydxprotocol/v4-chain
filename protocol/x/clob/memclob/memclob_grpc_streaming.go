@@ -15,27 +15,25 @@ func (m *MemClobPriceTimePriority) GenerateStreamOrderbookFill(
 	ctx sdk.Context,
 	clobMatch types.ClobMatch,
 	takerOrder types.MatchableOrder,
-	makerFillWithOrders []types.MakerFillWithOrder,
+	makerOrders []types.Order,
 ) types.StreamOrderbookFill {
-	ordersInClobMatch := []types.Order{}
 	fillAmounts := []uint32{}
 
-	for _, makerFillWithOrder := range makerFillWithOrders {
-		ordersInClobMatch = append(ordersInClobMatch, makerFillWithOrder.Order)
-		fillAmount := m.GetOrderFilledAmount(ctx, makerFillWithOrder.Order.OrderId)
+	for _, makerOrder := range makerOrders {
+		fillAmount := m.GetOrderFilledAmount(ctx, makerOrder.OrderId)
 		fillAmounts = append(fillAmounts, uint32(fillAmount))
 	}
 	// If taker order is not a liquidation order, has to be a regular
 	// taker order. Add the taker order to the orders array.
 	if !takerOrder.IsLiquidation() {
 		order := takerOrder.MustGetOrder()
-		ordersInClobMatch = append(ordersInClobMatch, order)
+		makerOrders = append(makerOrders, order)
 		fillAmount := m.GetOrderFilledAmount(ctx, order.OrderId)
 		fillAmounts = append(fillAmounts, uint32(fillAmount))
 	}
 	return types.StreamOrderbookFill{
 		ClobMatch:   &clobMatch,
-		Orders:      ordersInClobMatch,
+		Orders:      makerOrders,
 		FillAmounts: fillAmounts,
 	}
 }
