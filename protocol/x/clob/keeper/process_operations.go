@@ -462,6 +462,7 @@ func (k Keeper) PersistMatchOrdersToState(
 		}
 	}
 
+	makerOrders := make([]types.Order, 0)
 	makerFills := matchOrders.GetFills()
 	for _, makerFill := range makerFills {
 		// Fetch the maker order from either short term orders or state.
@@ -475,6 +476,7 @@ func (k Keeper) PersistMatchOrdersToState(
 			MakerOrder: &makerOrder,
 			FillAmount: satypes.BaseQuantums(makerFill.GetFillAmount()),
 		}
+		makerOrders = append(makerOrders, makerOrder)
 
 		_, _, _, _, err = k.ProcessSingleMatch(ctx, &matchWithOrders)
 		if err != nil {
@@ -518,6 +520,26 @@ func (k Keeper) PersistMatchOrdersToState(
 		)
 	}
 
+	// if GRPC streaming is on, emit a generated clob match to stream.
+	if streamingManager := k.GetGrpcStreamingManager(); streamingManager.Enabled() {
+		streamOrderbookFill := k.MemClob.GenerateStreamOrderbookFill(
+			ctx,
+			types.ClobMatch{
+				Match: &types.ClobMatch_MatchOrders{
+					MatchOrders: matchOrders,
+				},
+			},
+			&takerOrder,
+			makerOrders,
+		)
+		streamingManager.SendOrderbookFillUpdates(
+			ctx,
+			[]types.StreamOrderbookFill{
+				streamOrderbookFill,
+			},
+		)
+	}
+
 	return nil
 }
 
@@ -547,12 +569,14 @@ func (k Keeper) PersistMatchLiquidationToState(
 		return err
 	}
 
+	makerOrders := make([]types.Order, 0)
 	for _, fill := range matchLiquidation.GetFills() {
 		// Fetch the maker order from either short term orders or state.
 		makerOrder, err := k.FetchOrderFromOrderId(ctx, fill.MakerOrderId, ordersMap)
 		if err != nil {
 			return err
 		}
+		makerOrders = append(makerOrders, makerOrder)
 
 		matchWithOrders := types.MatchWithOrders{
 			MakerOrder: &makerOrder,
@@ -604,6 +628,26 @@ func (k Keeper) PersistMatchLiquidationToState(
 		matchLiquidation.Liquidated,
 		matchLiquidation.PerpetualId,
 	)
+
+	// if GRPC streaming is on, emit a generated clob match to stream.
+	if streamingManager := k.GetGrpcStreamingManager(); streamingManager.Enabled() {
+		streamOrderbookFill := k.MemClob.GenerateStreamOrderbookFill(
+			ctx,
+			types.ClobMatch{
+				Match: &types.ClobMatch_MatchPerpetualLiquidation{
+					MatchPerpetualLiquidation: matchLiquidation,
+				},
+			},
+			takerOrder,
+			makerOrders,
+		)
+		streamingManager.SendOrderbookFillUpdates(
+			ctx,
+			[]types.StreamOrderbookFill{
+				streamOrderbookFill,
+			},
+		)
+	}
 	return nil
 }
 
