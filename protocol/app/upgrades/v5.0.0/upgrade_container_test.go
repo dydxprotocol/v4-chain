@@ -21,6 +21,8 @@ import (
 
 const (
 	AliceBobBTCQuantums = 1_000_000
+	CarlDaveBTCQuantums = 2_000_000
+	CarlDaveETHQuantums = 4_000_000
 )
 
 func TestStateUpgrade(t *testing.T) {
@@ -119,6 +121,94 @@ func placeOrders(node *containertest.Node, t *testing.T) {
 		},
 		constants.BobAccAddress.String(),
 	))
+	require.NoError(t, containertest.BroadcastTx(
+		node,
+		&clobtypes.MsgPlaceOrder{
+			Order: clobtypes.Order{
+				OrderId: clobtypes.OrderId{
+					ClientId: 0,
+					SubaccountId: satypes.SubaccountId{
+						Owner:  constants.CarlAccAddress.String(),
+						Number: 0,
+					},
+					ClobPairId: 0,
+				},
+				Side:     clobtypes.Order_SIDE_BUY,
+				Quantums: CarlDaveBTCQuantums,
+				Subticks: 5_000_000,
+				GoodTilOneof: &clobtypes.Order_GoodTilBlock{
+					GoodTilBlock: 20,
+				},
+			},
+		},
+		constants.CarlAccAddress.String(),
+	))
+	require.NoError(t, containertest.BroadcastTx(
+		node,
+		&clobtypes.MsgPlaceOrder{
+			Order: clobtypes.Order{
+				OrderId: clobtypes.OrderId{
+					ClientId: 0,
+					SubaccountId: satypes.SubaccountId{
+						Owner:  constants.DaveAccAddress.String(),
+						Number: 0,
+					},
+					ClobPairId: 0,
+				},
+				Side:     clobtypes.Order_SIDE_SELL,
+				Quantums: CarlDaveBTCQuantums,
+				Subticks: 5_000_000,
+				GoodTilOneof: &clobtypes.Order_GoodTilBlock{
+					GoodTilBlock: 20,
+				},
+			},
+		},
+		constants.DaveAccAddress.String(),
+	))
+	require.NoError(t, containertest.BroadcastTx(
+		node,
+		&clobtypes.MsgPlaceOrder{
+			Order: clobtypes.Order{
+				OrderId: clobtypes.OrderId{
+					ClientId: 0,
+					SubaccountId: satypes.SubaccountId{
+						Owner:  constants.CarlAccAddress.String(),
+						Number: 0,
+					},
+					ClobPairId: 1,
+				},
+				Side:     clobtypes.Order_SIDE_BUY,
+				Quantums: CarlDaveETHQuantums,
+				Subticks: 5_000_000,
+				GoodTilOneof: &clobtypes.Order_GoodTilBlock{
+					GoodTilBlock: 20,
+				},
+			},
+		},
+		constants.CarlAccAddress.String(),
+	))
+	require.NoError(t, containertest.BroadcastTx(
+		node,
+		&clobtypes.MsgPlaceOrder{
+			Order: clobtypes.Order{
+				OrderId: clobtypes.OrderId{
+					ClientId: 0,
+					SubaccountId: satypes.SubaccountId{
+						Owner:  constants.DaveAccAddress.String(),
+						Number: 0,
+					},
+					ClobPairId: 1,
+				},
+				Side:     clobtypes.Order_SIDE_SELL,
+				Quantums: CarlDaveETHQuantums,
+				Subticks: 5_000_000,
+				GoodTilOneof: &clobtypes.Order_GoodTilBlock{
+					GoodTilBlock: 20,
+				},
+			},
+		},
+		constants.DaveAccAddress.String(),
+	))
 	err := node.Wait(2)
 	require.NoError(t, err)
 }
@@ -186,7 +276,9 @@ func postUpgradePerpetualOIs(node *containertest.Node, t *testing.T) {
 	for _, perp := range allPerpsResp.Perpetual {
 		expectedOI := 0
 		if perp.Params.Id == 0 {
-			expectedOI = AliceBobBTCQuantums
+			expectedOI = AliceBobBTCQuantums + CarlDaveBTCQuantums
+		} else if perp.Params.Id == 1 {
+			expectedOI = CarlDaveETHQuantums
 		}
 		assert.Equalf(t,
 			dtypes.NewInt(int64(expectedOI)),
