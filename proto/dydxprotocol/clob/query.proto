@@ -7,6 +7,8 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "dydxprotocol/clob/block_rate_limit_config.proto";
 import "dydxprotocol/clob/clob_pair.proto";
 import "dydxprotocol/clob/equity_tier_limit_config.proto";
+import "dydxprotocol/clob/order.proto";
+import "dydxprotocol/clob/matches.proto";
 import "dydxprotocol/clob/liquidations_config.proto";
 import "dydxprotocol/clob/mev.proto";
 import "dydxprotocol/indexer/off_chain_updates/off_chain_updates.proto";
@@ -54,7 +56,8 @@ service Query {
 
   // GRPC Streams
 
-  // Streams orderbook updates.
+  // Streams orderbook updates. Updates contain orderbook data
+  // such as order placements, updates, and fills.
   rpc StreamOrderbookUpdates(StreamOrderbookUpdatesRequest)
       returns (stream StreamOrderbookUpdatesResponse);
 }
@@ -145,6 +148,32 @@ message StreamOrderbookUpdatesRequest {
 // StreamOrderbookUpdates method.
 message StreamOrderbookUpdatesResponse {
   // Orderbook updates for the clob pair.
+  repeated StreamUpdate updates = 1 [ (gogoproto.nullable) = false ];
+
+  // ---Additional fields used to debug issues---
+  // Block height of the updates.
+  uint32 block_height = 2;
+
+  // Exec mode of the updates.
+  uint32 exec_mode = 3;
+}
+
+// StreamUpdate is an update that will be pushed through the
+// GRPC stream.
+message StreamUpdate {
+  // Contains one of an StreamOrderbookUpdate,
+  // StreamOrderbookFill.
+  oneof update_message {
+    StreamOrderbookUpdate orderbook_update = 1;
+    StreamOrderbookFill order_fill = 2;
+  }
+}
+
+// StreamOrderbookUpdate provides information on an orderbook update. Used in
+// the full node GRPC stream.
+message StreamOrderbookUpdate {
+  // Orderbook updates for the clob pair. Can contain order place, removals,
+  // or updates.
   repeated dydxprotocol.indexer.off_chain_updates.OffChainUpdateV1 updates = 1
       [ (gogoproto.nullable) = false ];
 
@@ -153,11 +182,20 @@ message StreamOrderbookUpdatesResponse {
   // Note that if the snapshot is true, then all previous entries should be
   // discarded and the orderbook should be resynced.
   bool snapshot = 2;
+}
 
-  // ---Additional fields used to debug issues---
-  // Block height of the updates.
-  uint32 block_height = 3;
 
-  // Exec mode of the updates.
-  uint32 exec_mode = 4;
+// StreamOrderbookFill provides information on an orderbook fill. Used in
+// the full node GRPC stream.
+message StreamOrderbookFill {
+  // Clob match. Provides information on which orders were matched
+  // and the type of order. Fill amounts here are relative.
+  ClobMatch clob_match = 1;
+
+  // All orders involved in the specified clob match. Used to look up
+  // price of a match through a given maker order id.
+  repeated Order orders = 2 [ (gogoproto.nullable) = false ];
+
+  // Resulting fill amounts for each order in the orders array.
+  repeated uint32 fillAmounts = 3 [ (gogoproto.nullable) = false ];
 }
