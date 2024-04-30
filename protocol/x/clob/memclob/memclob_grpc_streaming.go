@@ -9,6 +9,37 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
+// GenerateStreamOrderbookFill wraps a clob match into the `StreamOrderbookFill`
+// data structure which provides prices and fill amounts alongside clob match.
+func (m *MemClobPriceTimePriority) GenerateStreamOrderbookFill(
+	ctx sdk.Context,
+	clobMatch types.ClobMatch,
+	takerOrder types.MatchableOrder,
+	makerFillWithOrders []types.MakerFillWithOrder,
+) types.StreamOrderbookFill {
+	ordersInClobMatch := []types.Order{}
+	fillAmounts := []uint32{}
+
+	for _, makerFillWithOrder := range makerFillWithOrders {
+		ordersInClobMatch = append(ordersInClobMatch, makerFillWithOrder.Order)
+		fillAmount := m.GetOrderFilledAmount(ctx, makerFillWithOrder.Order.OrderId)
+		fillAmounts = append(fillAmounts, uint32(fillAmount))
+	}
+	// If taker order is not a liquidation order, has to be a regular
+	// taker order. Add the taker order to the orders array.
+	if !takerOrder.IsLiquidation() {
+		order := takerOrder.MustGetOrder()
+		ordersInClobMatch = append(ordersInClobMatch, order)
+		fillAmount := m.GetOrderFilledAmount(ctx, order.OrderId)
+		fillAmounts = append(fillAmounts, uint32(fillAmount))
+	}
+	return types.StreamOrderbookFill{
+		ClobMatch:   &clobMatch,
+		Orders:      ordersInClobMatch,
+		FillAmounts: fillAmounts,
+	}
+}
+
 // GetOffchainUpdatesForOrderbookSnapshot returns the offchain updates for the orderbook snapshot.
 // This is used by the gRPC streaming server to send the orderbook snapshot to the client.
 func (m *MemClobPriceTimePriority) GetOffchainUpdatesForOrderbookSnapshot(

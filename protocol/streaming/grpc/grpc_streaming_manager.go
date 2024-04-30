@@ -141,6 +141,63 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	}
 }
 
+// SendOrderbookFillUpdates groups fills by their clob pair ids and
+// sends messages to the subscribers.
+func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
+	ctx sdk.Context,
+	orderbookFills []clobtypes.StreamOrderbookFill,
+) {
+	// Group fills by clob pair id.
+	updatesByClobPairId := make(map[uint32][]clobtypes.StreamUpdate)
+	for _, orderbookFill := range orderbookFills {
+		// Fetch the clob pair id from the first order in `OrderBookMatchFill`.
+		// We can assume there must be an order, and that all orders share the same
+		// clob pair id.
+		clobPairId := orderbookFill.Orders[0].OrderId.ClobPairId
+		if _, ok := updatesByClobPairId[clobPairId]; !ok {
+			updatesByClobPairId[clobPairId] = []clobtypes.StreamUpdate{}
+		}
+		streamUpdate := clobtypes.StreamUpdate{
+			UpdateMessage: &clobtypes.StreamUpdate_OrderFill{
+				OrderFill: &orderbookFill,
+			},
+		}
+		updatesByClobPairId[clobPairId] = append(updatesByClobPairId[clobPairId], streamUpdate)
+	}
+
+	sm.Lock()
+	defer sm.Unlock()
+
+	// Send updates to subscribers.
+	idsToRemove := make([]uint32, 0)
+	for id, subscription := range sm.orderbookSubscriptions {
+		streamUpdatesForSubscription := make([]clobtypes.StreamUpdate, 0)
+		for _, clobPairId := range subscription.clobPairIds {
+			if update, ok := updatesByClobPairId[clobPairId]; ok {
+				streamUpdatesForSubscription = append(streamUpdatesForSubscription, update...)
+			}
+		}
+
+		if len(streamUpdatesForSubscription) > 0 {
+			if err := subscription.srv.Send(
+				&clobtypes.StreamOrderbookUpdatesResponse{
+					Updates:     streamUpdatesForSubscription,
+					BlockHeight: lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+					ExecMode:    uint32(ctx.ExecMode()),
+				},
+			); err != nil {
+				idsToRemove = append(idsToRemove, id)
+			}
+		}
+	}
+
+	// Clean up subscriptions that have been closed.
+	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
+	for _, id := range idsToRemove {
+		delete(sm.orderbookSubscriptions, id)
+	}
+}
+
 // GetUninitializedClobPairIds returns the clob pair ids that have not been initialized.
 func (sm *GrpcStreamingManagerImpl) GetUninitializedClobPairIds() []uint32 {
 	sm.Lock()
