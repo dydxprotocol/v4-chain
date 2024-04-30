@@ -147,8 +147,10 @@ func blockRateLimitConfigUpdate(
 		panic(fmt.Sprintf("failed to update the block rate limit configuration: %s", err))
 	}
 	ctx.Logger().Info(
-		"Successfully upgraded block rate limit configuration to: %+v\n",
-		clobKeeper.GetBlockRateLimitConfiguration(ctx),
+		fmt.Sprintf(
+			"Successfully upgraded block rate limit configuration to: %+v\n",
+			clobKeeper.GetBlockRateLimitConfiguration(ctx),
+		),
 	)
 }
 
