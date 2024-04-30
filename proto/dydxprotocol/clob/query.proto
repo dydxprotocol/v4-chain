@@ -184,7 +184,6 @@ message StreamOrderbookUpdate {
   bool snapshot = 2;
 }
 
-
 // StreamOrderbookFill provides information on an orderbook fill. Used in
 // the full node GRPC stream.
 message StreamOrderbookFill {
@@ -197,5 +196,5 @@ message StreamOrderbookFill {
   repeated Order orders = 2 [ (gogoproto.nullable) = false ];
 
   // Resulting fill amounts for each order in the orders array.
-  repeated uint32 fillAmounts = 3 [ (gogoproto.nullable) = false ];
+  repeated uint64 fill_amounts = 3 [ (gogoproto.nullable) = false ];
 }

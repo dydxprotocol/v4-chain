@@ -332,7 +332,7 @@ export interface StreamOrderbookFill {
   orders: Order[];
   /** Resulting fill amounts for each order in the orders array. */
 
-  fillAmounts: number[];
+  fillAmounts: Long[];
 }
 /**
  * StreamOrderbookFill provides information on an orderbook fill. Used in
@@ -353,7 +353,7 @@ export interface StreamOrderbookFillSDKType {
   orders: OrderSDKType[];
   /** Resulting fill amounts for each order in the orders array. */
 
-  fillAmounts: number[];
+  fill_amounts: Long[];
 }
 
 function createBaseQueryGetClobPairRequest(): QueryGetClobPairRequest {
@@ -1201,7 +1201,7 @@ export const StreamOrderbookFill = {
     writer.uint32(26).fork();
 
     for (const v of message.fillAmounts) {
-      writer.uint32(v);
+      writer.uint64(v);
     }
 
     writer.ldelim();
@@ -1230,10 +1230,10 @@ export const StreamOrderbookFill = {
             const end2 = reader.uint32() + reader.pos;
 
             while (reader.pos < end2) {
-              message.fillAmounts.push(reader.uint32());
+              message.fillAmounts.push((reader.uint64() as Long));
             }
           } else {
-            message.fillAmounts.push(reader.uint32());
+            message.fillAmounts.push((reader.uint64() as Long));
           }
 
           break;
@@ -1251,7 +1251,7 @@ export const StreamOrderbookFill = {
     const message = createBaseStreamOrderbookFill();
     message.clobMatch = object.clobMatch !== undefined && object.clobMatch !== null ? ClobMatch.fromPartial(object.clobMatch) : undefined;
     message.orders = object.orders?.map(e => Order.fromPartial(e)) || [];
-    message.fillAmounts = object.fillAmounts?.map(e => e) || [];
+    message.fillAmounts = object.fillAmounts?.map(e => Long.fromValue(e)) || [];
     return message;
   }
 
