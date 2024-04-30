@@ -27,6 +27,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
@@ -35,6 +36,7 @@ import (
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govsimulation "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -246,7 +248,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		dydxApp.GetBaseApp(),
 		AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
 		simtypes.RandomAccounts,
-		simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
+		CustomSimulationOperations(dydxApp, dydxApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		dydxApp.AppCodec(),
@@ -318,7 +320,7 @@ func TestFullAppSimulation(t *testing.T) {
 		dydxApp.GetBaseApp(),
 		AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
 		simtypes.RandomAccounts,
-		simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
+		CustomSimulationOperations(dydxApp, dydxApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		dydxApp.AppCodec(),
@@ -394,7 +396,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				dydxApp.GetBaseApp(),
 				AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
 				simtypes.RandomAccounts,
-				simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
+				CustomSimulationOperations(dydxApp, dydxApp.AppCodec(), config),
 				app.ModuleAccountAddrs(),
 				config,
 				dydxApp.AppCodec(),
@@ -668,4 +670,31 @@ func AppStateFromGenesisFileFn(
 	}
 
 	return genesis, newAccs
+}
+
+// CustomSimulationOperations initializes the custom simulation params and
+// returns all the modules weighted operations.
+func CustomSimulationOperations(
+	app runtime.AppI,
+	cdc codec.JSONCodec,
+	config simtypes.Config,
+) []simtypes.WeightedOperation {
+	simState := module.SimulationState{
+		AppParams: make(simtypes.AppParams),
+		Cdc:       cdc,
+		TxConfig:  moduletestutil.MakeTestTxConfig(),
+		BondDenom: sdk.DefaultBondDenom,
+	}
+
+	// Set the weight of MsgCancelProposal to zero.
+	b, err := json.Marshal(0)
+	if err != nil {
+		panic("Failed to marshal operation weights")
+	}
+	simState.AppParams[govsimulation.OpWeightMsgCancelProposal] = b
+
+	//nolint:staticcheck // used for legacy testing
+	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState)
+	simState.ProposalMsgs = app.SimulationManager().GetProposalMsgs(simState)
+	return app.SimulationManager().WeightedOperations(simState)
 }
