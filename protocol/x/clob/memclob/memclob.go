@@ -386,7 +386,13 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 	}
 
 	// Add the new matches to the operations queue.
-	m.operationsToPropose.MustAddMatchToOperationsQueue(takerOrder, makerFillWithOrders)
+	internalOperation := m.operationsToPropose.MustAddMatchToOperationsQueue(takerOrder, makerFillWithOrders)
+	// If orderbook updates are on, send an orderbook update with the fill to grpc streams.
+	if m.generateOrderbookUpdates {
+		clobMatch := internalOperation.GetMatch()
+		orderbookMatchFill := m.GenerateStreamOrderbookFill(ctx, *clobMatch, takerOrder, makerFillWithOrders)
+		m.clobKeeper.SendOrderbookFillUpdates(ctx, []types.StreamOrderbookFill{orderbookMatchFill})
+	}
 
 	// Build a slice of all subaccounts which had matches this matching loop, and sort them for determinism.
 	allSubaccounts := lib.GetSortedKeys[satypes.SortedSubaccountIds](subaccountTotalMatchedQuantums)
