@@ -8,6 +8,7 @@ import (
 
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	v1types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -21,10 +22,12 @@ type GrpcClient struct {
 type LocalOrderbook struct {
 	sync.Mutex
 
-	OrderIdToOrder       map[v1types.IndexerOrderId]v1types.IndexerOrder
+	OrderIdToOrder map[v1types.IndexerOrderId]v1types.IndexerOrder
+	// todo remove this since we have fills
 	OrderRemainingAmount map[v1types.IndexerOrderId]uint64
 	Bids                 map[uint64][]v1types.IndexerOrder
 	Asks                 map[uint64][]v1types.IndexerOrder
+	FillAmounts          map[v1types.IndexerOrderId]uint64
 
 	Logger log.Logger
 }
@@ -84,14 +87,26 @@ func (c *GrpcClient) GetOrderbookSnapshot(pairId uint32) *LocalOrderbook {
 	return c.GetOrderbook(pairId)
 }
 
-// Write method
+// Write method for stream orderbook updates.
 func (c *GrpcClient) Update(updates *clobtypes.StreamOrderbookUpdatesResponse) {
-	if updates.Snapshot {
+	for _, update := range updates.GetUpdates() {
+		if orderUpdate := update.GetOrderbookUpdate(); orderUpdate != nil {
+			c.ProcessOrderbookUpdate(orderUpdate)
+		}
+		if orderFill := update.GetOrderFill(); orderFill != nil {
+			c.ProcessFill(orderFill)
+		}
+	}
+}
+
+// Write method for order placement updates (indexer offchain events)
+func (c *GrpcClient) ProcessOrderbookUpdate(orderUpdate *clobtypes.StreamOrderbookUpdate) {
+	if orderUpdate.Snapshot {
 		c.Logger.Info("Received orderbook snapshot")
 		c.Orderbook = make(map[uint32]*LocalOrderbook)
 	}
 
-	for _, update := range updates.Updates {
+	for _, update := range orderUpdate.Updates {
 		if orderPlace := update.GetOrderPlace(); orderPlace != nil {
 			order := orderPlace.GetOrder()
 			orderbook := c.GetOrderbook(order.OrderId.ClobPairId)
@@ -110,6 +125,74 @@ func (c *GrpcClient) Update(updates *clobtypes.StreamOrderbookUpdatesResponse) {
 			orderbook.SetOrderRemainingAmount(*orderId, orderUpdate.TotalFilledQuantums)
 		}
 	}
+}
+
+// Write method for orderbook fills update (clob match).
+func (c *GrpcClient) ProcessFill(orderFill *clobtypes.StreamOrderbookFill) {
+	orderMap, fillAmountMap := orderListToMap(orderFill.Orders, orderFill.FillAmounts)
+	clobMatch := orderFill.ClobMatch
+
+	if matchOrders := clobMatch.GetMatchOrders(); matchOrders != nil {
+		c.ProcessMatchOrders(matchOrders, orderMap, fillAmountMap)
+	}
+
+	if matchPerpLiquidation := clobMatch.GetMatchPerpetualLiquidation(); matchPerpLiquidation != nil {
+		c.ProcessMatchPerpetualLiquidation(matchPerpLiquidation, orderMap, fillAmountMap)
+	}
+}
+
+func (c *GrpcClient) ProcessMatchPerpetualLiquidation(
+	perpLiquidation *clobtypes.MatchPerpetualLiquidation,
+	orderMap map[clobtypes.OrderId]clobtypes.Order,
+	fillAmountMap map[clobtypes.OrderId]uint64,
+) {
+	localOrderbook := c.Orderbook[perpLiquidation.ClobPairId]
+	for _, fill := range perpLiquidation.GetFills() {
+		makerOrder := orderMap[fill.MakerOrderId]
+		indexerMakerOrderId := v1.OrderIdToIndexerOrderId(makerOrder.OrderId)
+		// TODO fix protos and cast
+		localOrderbook.SetOrderFillAmount(&indexerMakerOrderId, fillAmountMap[makerOrder.OrderId])
+	}
+}
+
+func (c *GrpcClient) ProcessMatchOrders(
+	matchOrders *clobtypes.MatchOrders,
+	orderMap map[clobtypes.OrderId]clobtypes.Order,
+	fillAmountMap map[clobtypes.OrderId]uint64,
+) {
+	takerOrderId := matchOrders.TakerOrderId
+	clobPairId := takerOrderId.GetClobPairId()
+	localOrderbook := c.Orderbook[clobPairId]
+
+	indexerTakerOrder := v1.OrderIdToIndexerOrderId(takerOrderId)
+	// TODO fix protos and cast
+	localOrderbook.SetOrderFillAmount(&indexerTakerOrder, fillAmountMap[takerOrderId])
+
+	for _, fill := range matchOrders.Fills {
+		makerOrder := orderMap[fill.MakerOrderId]
+		indexerMakerOrder := v1.OrderIdToIndexerOrderId(makerOrder.OrderId)
+		// TODO fix protos and cast
+		localOrderbook.SetOrderFillAmount(&indexerMakerOrder, fillAmountMap[makerOrder.OrderId])
+	}
+}
+
+// orderListToMap generates a map from orderId to order and
+// orderId to fill amount.
+func orderListToMap(
+	orders []clobtypes.Order,
+	fillAmounts []uint64,
+) (
+	orderMap map[clobtypes.OrderId]clobtypes.Order,
+	fillAmountMap map[clobtypes.OrderId]uint64,
+) {
+	orderMap = make(map[clobtypes.OrderId]clobtypes.Order, 0)
+	fillAmountMap = make(map[clobtypes.OrderId]uint64, 0)
+
+	for idx, order := range orders {
+		orderMap[order.OrderId] = order
+		fillAmountMap[order.OrderId] = fillAmounts[idx]
+	}
+	return orderMap, fillAmountMap
 }
 
 func (c *GrpcClient) GetOrderbook(pairId uint32) *LocalOrderbook {
@@ -209,4 +292,14 @@ func (l *LocalOrderbook) RemoveOrder(orderId v1types.IndexerOrderId) {
 
 	delete(l.OrderRemainingAmount, orderId)
 	delete(l.OrderIdToOrder, orderId)
+}
+
+func (l *LocalOrderbook) SetOrderFillAmount(
+	orderId *v1types.IndexerOrderId,
+	fillAmount uint64,
+) {
+	l.Lock()
+	defer l.Unlock()
+
+	l.FillAmounts[*orderId] = fillAmount
 }
