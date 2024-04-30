@@ -200,6 +200,7 @@ func (c *GrpcClient) GetOrderbook(pairId uint32) *LocalOrderbook {
 			OrderRemainingAmount: make(map[v1types.IndexerOrderId]uint64),
 			Bids:                 make(map[uint64][]v1types.IndexerOrder),
 			Asks:                 make(map[uint64][]v1types.IndexerOrder),
+			FillAmounts:          make(map[v1types.IndexerOrderId]uint64),
 
 			Logger: c.Logger,
 		}
@@ -299,5 +300,9 @@ func (l *LocalOrderbook) SetOrderFillAmount(
 	l.Lock()
 	defer l.Unlock()
 
-	l.FillAmounts[*orderId] = fillAmount
+	if fillAmount == 0 {
+		delete(l.FillAmounts, *orderId)
+	} else {
+		l.FillAmounts[*orderId] = fillAmount
+	}
 }
