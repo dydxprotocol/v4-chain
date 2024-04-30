@@ -672,8 +672,8 @@ func AppStateFromGenesisFileFn(
 	return genesis, newAccs
 }
 
-// CustomSimulationOperations retrieves the simulation params from the provided file path
-// and returns all the modules weighted operations
+// CustomSimulationOperations initializes the custom simulation params and
+// returns all the modules weighted operations.
 func CustomSimulationOperations(
 	app runtime.AppI,
 	cdc codec.JSONCodec,
