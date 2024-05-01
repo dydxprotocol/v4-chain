@@ -10,9 +10,9 @@ import (
 func DefaultParams() Params {
 	return Params{
 		Layers:                           2,                            // 2 layers
-		SpreadMinPpm:                     10_000,                       // 30 bps
+		SpreadMinPpm:                     10_000,                       // 100 bps
 		SpreadBufferPpm:                  1_500,                        // 15 bps
-		SkewFactorPpm:                    2_000_000,                    // 0.5
+		SkewFactorPpm:                    2_000_000,                    // 2
 		OrderSizePctPpm:                  100_000,                      // 10%
 		OrderExpirationSeconds:           2,                            // 2 seconds
 		ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000), // 1_000 USDC
