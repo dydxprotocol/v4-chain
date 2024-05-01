@@ -90,6 +90,12 @@ func (c *GrpcClient) GetOrderbookSnapshot(pairId uint32) *LocalOrderbook {
 
 // Write method for stream orderbook updates.
 func (c *GrpcClient) Update(updates *clobtypes.StreamOrderbookUpdatesResponse) {
+	c.Logger.Info(
+		fmt.Sprintf("Received stream update for callback %+v", updates.ExecMode),
+		"blockHeight",
+		updates.BlockHeight,
+	)
+
 	for _, update := range updates.GetUpdates() {
 		if orderUpdate := update.GetOrderbookUpdate(); orderUpdate != nil {
 			c.ProcessOrderbookUpdate(orderUpdate)

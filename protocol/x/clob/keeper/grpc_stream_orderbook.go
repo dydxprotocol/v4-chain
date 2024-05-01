@@ -72,7 +72,8 @@ func (k Keeper) CompareMemclobOrderbookWithLocalOrderbook(
 		actualOrders := make([]v1types.IndexerOrder, 0)
 		actualRemainingAmounts := make([]uint64, 0)
 		for _, order := range localOrderbook.Bids[bid.ToUint64()] {
-			remainingAmount := localOrderbook.OrderRemainingAmount[order.OrderId]
+			// remainingAmount := localOrderbook.OrderRemainingAmount[order.OrderId]
+			remainingAmount := order.Quantums - localOrderbook.FillAmounts[order.OrderId]
 			actualAggregatedQuantity += remainingAmount
 			actualOrders = append(actualOrders, order)
 			actualRemainingAmounts = append(actualRemainingAmounts, remainingAmount)
@@ -151,7 +152,8 @@ func (k Keeper) CompareMemclobOrderbookWithLocalOrderbook(
 		actualOrders := make([]v1types.IndexerOrder, 0)
 		actualRemainingAmounts := make([]uint64, 0)
 		for _, order := range localOrderbook.Asks[ask.ToUint64()] {
-			remainingAmount := localOrderbook.OrderRemainingAmount[order.OrderId]
+			// remainingAmount := localOrderbook.OrderRemainingAmount[order.OrderId]
+			remainingAmount := order.Quantums - localOrderbook.FillAmounts[order.OrderId]
 			actualAggregatedQuantity += remainingAmount
 			actualOrders = append(actualOrders, order)
 			actualRemainingAmounts = append(actualRemainingAmounts, remainingAmount)
@@ -217,9 +219,13 @@ func (k Keeper) CompareMemclobOrderbookWithLocalOrderbook(
 		localOrderbookFillAmount := localOrderbook.FillAmounts[indexerOrderId]
 
 		if orderFillAmount != localOrderbookFillAmount {
+			order := localOrderbook.OrderIdToOrder[v1.OrderIdToIndexerOrderId(orderId)]
 			logger.Error(
 				"Fill Amount Mismatch",
 				"orderId", orderId.String(),
+				"order", order,
+				"time_in_force", order.TimeInForce,
+				"order_flags", order.OrderId.OrderFlags,
 				"state_fill_amt", orderFillAmount,
 				"local_fill_amt", localOrderbookFillAmount,
 			)
@@ -246,10 +252,13 @@ func (k Keeper) CompareMemclobOrderbookWithLocalOrderbook(
 		exists, _, _ := k.GetOrderFillAmount(ctx, clobOrderId)
 		if !exists {
 			numInOrderbookButNotState += 1
+			order := localOrderbook.OrderIdToOrder[v1.OrderIdToIndexerOrderId(clobOrderId)]
 			logger.Error(
 				"Fill amount exists in local orderbook but not in state",
 				"orderId", clobOrderId.String(),
-				"order", localOrderbook.OrderIdToOrder[v1.OrderIdToIndexerOrderId(clobOrderId)],
+				"order", order,
+				"time_in_force", order.TimeInForce,
+				"order_flags", order.OrderId.OrderFlags,
 				"local_fill_amt", localFillAmount,
 			)
 		}

@@ -290,6 +290,7 @@ func (k Keeper) RemoveOrderFillAmount(ctx sdk.Context, orderId types.OrderId) {
 	log.InfoLog(
 		ctx,
 		"real fill set to 0 (remove)",
+		"orderId", orderId.String(),
 	)
 
 	// If grpc stream is on, zero out the fill amount.
