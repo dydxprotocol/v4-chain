@@ -121,6 +121,7 @@ func (c *GrpcClient) ProcessOrderbookUpdate(orderUpdate *clobtypes.StreamOrderbo
 			orderId := orderUpdate.OrderId
 			orderbook := c.GetOrderbook(orderId.ClobPairId)
 			orderbook.SetOrderRemainingAmount(*orderId, orderUpdate.TotalFilledQuantums)
+			orderbook.SetOrderFillAmount(orderId, orderUpdate.TotalFilledQuantums)
 		}
 	}
 }
