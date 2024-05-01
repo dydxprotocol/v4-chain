@@ -220,9 +220,12 @@ func (k Keeper) CompareMemclobOrderbookWithLocalOrderbook(
 		localOrderbookFillAmount := localOrderbook.FillAmounts[indexerOrderId]
 
 		if orderFillAmount != localOrderbookFillAmount {
+			order := localOrderbook.OrderIdToOrder[v1.OrderIdToIndexerOrderId(orderId)]
 			logger.Error(
 				"Fill Amount Mismatch",
 				"orderId", orderId.String(),
+				"time_in_force", order.TimeInForce,
+				"order_flags", order.OrderId.OrderFlags,
 				"state_fill_amt", orderFillAmount,
 				"local_fill_amt", localOrderbookFillAmount,
 			)

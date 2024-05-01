@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -92,6 +93,12 @@ func (k Keeper) SetOrderFillAmount(
 	memStore.Set(
 		orderId.ToStateKey(),
 		orderFillStateBytes,
+	)
+
+	log.InfoLog(
+		ctx,
+		fmt.Sprintf("real fill set to %+v", fillAmount),
+		"orderId", orderId.String(),
 	)
 }
 
@@ -276,6 +283,12 @@ func (k Keeper) RemoveOrderFillAmount(ctx sdk.Context, orderId types.OrderId) {
 		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 	memStore.Delete(orderId.ToStateKey())
+
+	log.InfoLog(
+		ctx,
+		"real fill set to 0 (remove)",
+		"orderId", orderId.String(),
+	)
 
 	// If grpc stream is on, zero out the fill amount.
 	if k.GetGrpcStreamingManager().Enabled() {
