@@ -95,10 +95,13 @@ func (k Keeper) SetOrderFillAmount(
 		orderFillStateBytes,
 	)
 
+	order, found := k.MemClob.GetOrder(ctx, orderId)
 	log.InfoLog(
 		ctx,
 		fmt.Sprintf("real fill set to %+v", fillAmount),
 		"orderId", orderId.String(),
+		"order", order,
+		"found", found,
 	)
 }
 

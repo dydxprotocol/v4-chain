@@ -132,7 +132,7 @@ func (c *GrpcClient) ProcessOrderbookUpdate(orderUpdate *clobtypes.StreamOrderbo
 			)
 			orderbook := c.GetOrderbook(orderId.ClobPairId)
 			orderbook.SetOrderRemainingAmount(*orderId, orderUpdate.TotalFilledQuantums)
-			orderbook.SetOrderFillAmount(orderId, orderUpdate.TotalFilledQuantums)
+			orderbook.SetOrderFillAmount(orderId, orderUpdate.TotalFilledQuantums, false)
 		}
 	}
 }
@@ -164,7 +164,7 @@ func (c *GrpcClient) ProcessMatchPerpetualLiquidation(
 		makerOrder := orderMap[fill.MakerOrderId]
 		indexerMakerOrderId := v1.OrderIdToIndexerOrderId(makerOrder.OrderId)
 		// TODO fix protos and cast
-		localOrderbook.SetOrderFillAmount(&indexerMakerOrderId, fillAmountMap[makerOrder.OrderId])
+		localOrderbook.SetOrderFillAmount(&indexerMakerOrderId, fillAmountMap[makerOrder.OrderId], true)
 	}
 }
 
@@ -182,13 +182,13 @@ func (c *GrpcClient) ProcessMatchOrders(
 
 	indexerTakerOrder := v1.OrderIdToIndexerOrderId(takerOrderId)
 	// TODO fix protos and cast
-	localOrderbook.SetOrderFillAmount(&indexerTakerOrder, fillAmountMap[takerOrderId])
+	localOrderbook.SetOrderFillAmount(&indexerTakerOrder, fillAmountMap[takerOrderId], true)
 
 	for _, fill := range matchOrders.Fills {
 		makerOrder := orderMap[fill.MakerOrderId]
 		indexerMakerOrder := v1.OrderIdToIndexerOrderId(makerOrder.OrderId)
 		// TODO fix protos and cast
-		localOrderbook.SetOrderFillAmount(&indexerMakerOrder, fillAmountMap[makerOrder.OrderId])
+		localOrderbook.SetOrderFillAmount(&indexerMakerOrder, fillAmountMap[makerOrder.OrderId], true)
 	}
 }
 
@@ -319,6 +319,7 @@ func (l *LocalOrderbook) RemoveOrder(orderId v1types.IndexerOrderId) {
 func (l *LocalOrderbook) SetOrderFillAmount(
 	orderId *v1types.IndexerOrderId,
 	fillAmount uint64,
+	fromMatch bool,
 ) {
 	l.Lock()
 	defer l.Unlock()
@@ -326,6 +327,7 @@ func (l *LocalOrderbook) SetOrderFillAmount(
 	l.Logger.Info(
 		fmt.Sprintf("local fill set to %+v", fillAmount),
 		"orderId", IndexerOrderIdToOrderId(*orderId).String(),
+		"fromMatch", fromMatch,
 	)
 
 	if fillAmount == 0 {
