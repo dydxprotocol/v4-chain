@@ -1,7 +1,8 @@
 import { IndexerOrder, IndexerOrderSDKType, IndexerOrderId, IndexerOrderIdSDKType } from "../protocol/v1/clob";
+import { Timestamp } from "../../../google/protobuf/timestamp";
 import { OrderRemovalReason, OrderRemovalReasonSDKType } from "../shared/removal_reason";
 import * as _m0 from "protobufjs/minimal";
-import { DeepPartial, Long } from "../../../helpers";
+import { toTimestamp, fromTimestamp, DeepPartial, Long } from "../../../helpers";
 /**
  * OrderPlacementStatus is an enum for the resulting status after an order is
  * placed.
@@ -220,12 +221,18 @@ export function orderRemoveV1_OrderRemovalStatusToJSON(object: OrderRemoveV1_Ord
 export interface OrderPlaceV1 {
   order?: IndexerOrder;
   placementStatus: OrderPlaceV1_OrderPlacementStatus;
+  /** The timestamp of the order placement. */
+
+  timeStamp?: Date;
 }
 /** OrderPlace messages contain the order placed/replaced. */
 
 export interface OrderPlaceV1SDKType {
   order?: IndexerOrderSDKType;
   placement_status: OrderPlaceV1_OrderPlacementStatusSDKType;
+  /** The timestamp of the order placement. */
+
+  time_stamp?: Date;
 }
 /**
  * OrderRemove messages contain the id of the order removed, the reason for the
@@ -236,6 +243,9 @@ export interface OrderRemoveV1 {
   removedOrderId?: IndexerOrderId;
   reason: OrderRemovalReason;
   removalStatus: OrderRemoveV1_OrderRemovalStatus;
+  /** The timestamp of the order removal. */
+
+  timeStamp?: Date;
 }
 /**
  * OrderRemove messages contain the id of the order removed, the reason for the
@@ -246,6 +256,9 @@ export interface OrderRemoveV1SDKType {
   removed_order_id?: IndexerOrderIdSDKType;
   reason: OrderRemovalReasonSDKType;
   removal_status: OrderRemoveV1_OrderRemovalStatusSDKType;
+  /** The timestamp of the order removal. */
+
+  time_stamp?: Date;
 }
 /**
  * OrderUpdate messages contain the id of the order being updated, and the
@@ -309,7 +322,8 @@ export interface OffChainUpdateV1SDKType {
 function createBaseOrderPlaceV1(): OrderPlaceV1 {
   return {
     order: undefined,
-    placementStatus: 0
+    placementStatus: 0,
+    timeStamp: undefined
   };
 }
 
@@ -321,6 +335,10 @@ export const OrderPlaceV1 = {
 
     if (message.placementStatus !== 0) {
       writer.uint32(16).int32(message.placementStatus);
+    }
+
+    if (message.timeStamp !== undefined) {
+      Timestamp.encode(toTimestamp(message.timeStamp), writer.uint32(26).fork()).ldelim();
     }
 
     return writer;
@@ -343,6 +361,10 @@ export const OrderPlaceV1 = {
           message.placementStatus = (reader.int32() as any);
           break;
 
+        case 3:
+          message.timeStamp = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -356,6 +378,7 @@ export const OrderPlaceV1 = {
     const message = createBaseOrderPlaceV1();
     message.order = object.order !== undefined && object.order !== null ? IndexerOrder.fromPartial(object.order) : undefined;
     message.placementStatus = object.placementStatus ?? 0;
+    message.timeStamp = object.timeStamp ?? undefined;
     return message;
   }
 
@@ -365,7 +388,8 @@ function createBaseOrderRemoveV1(): OrderRemoveV1 {
   return {
     removedOrderId: undefined,
     reason: 0,
-    removalStatus: 0
+    removalStatus: 0,
+    timeStamp: undefined
   };
 }
 
@@ -381,6 +405,10 @@ export const OrderRemoveV1 = {
 
     if (message.removalStatus !== 0) {
       writer.uint32(24).int32(message.removalStatus);
+    }
+
+    if (message.timeStamp !== undefined) {
+      Timestamp.encode(toTimestamp(message.timeStamp), writer.uint32(34).fork()).ldelim();
     }
 
     return writer;
@@ -407,6 +435,10 @@ export const OrderRemoveV1 = {
           message.removalStatus = (reader.int32() as any);
           break;
 
+        case 4:
+          message.timeStamp = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -421,6 +453,7 @@ export const OrderRemoveV1 = {
     message.removedOrderId = object.removedOrderId !== undefined && object.removedOrderId !== null ? IndexerOrderId.fromPartial(object.removedOrderId) : undefined;
     message.reason = object.reason ?? 0;
     message.removalStatus = object.removalStatus ?? 0;
+    message.timeStamp = object.timeStamp ?? undefined;
     return message;
   }
 
