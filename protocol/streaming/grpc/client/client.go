@@ -291,6 +291,7 @@ func (l *LocalOrderbook) RemoveOrder(orderId v1types.IndexerOrderId) {
 
 	delete(l.OrderRemainingAmount, orderId)
 	delete(l.OrderIdToOrder, orderId)
+	delete(l.FillAmounts, orderId)
 }
 
 func (l *LocalOrderbook) SetOrderFillAmount(
