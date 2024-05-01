@@ -161,7 +161,15 @@ func PrepareCheckState(
 		log.LocalValidatorOperationsQueue, types.GetInternalOperationsQueueTextString(localValidatorOperationsQueue),
 	)
 
+	log.InfoLog(ctx,
+		"removing all operations from local opqueue",
+	)
+
 	keeper.MemClob.RemoveAndClearOperationsQueue(ctx, localValidatorOperationsQueue)
+
+	log.InfoLog(ctx,
+		"purging state from local opqueue",
+	)
 
 	// 2. Purge invalid state from the memclob.
 	offchainUpdates := types.NewOffchainUpdates()
@@ -213,6 +221,10 @@ func PrepareCheckState(
 		keeper.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 
+	log.InfoLog(ctx,
+		"place stateful order placements",
+	)
+
 	// 3. Place all stateful order placements included in the last block on the memclob.
 	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`
 	// is called within `PlaceConditionalOrdersTriggeredInLastBlock`.
@@ -240,6 +252,10 @@ func PrepareCheckState(
 		ctx,
 		processProposerMatchesEvents.ConditionalOrderIdsTriggeredInLastBlock,
 		offchainUpdates,
+	)
+
+	log.InfoLog(ctx,
+		"replay local validator operations",
 	)
 
 	// 5. Replay the local validator’s operations onto the book.

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"sync"
 
 	"cosmossdk.io/log"
@@ -8,7 +9,9 @@ import (
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	v1types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // Example client to consume data from a gRPC server.
@@ -107,18 +110,30 @@ func (c *GrpcClient) ProcessOrderbookUpdate(orderUpdate *clobtypes.StreamOrderbo
 	for _, update := range orderUpdate.Updates {
 		if orderPlace := update.GetOrderPlace(); orderPlace != nil {
 			order := orderPlace.GetOrder()
+			c.Logger.Info(
+				"place order recieved",
+				"orderId", IndexerOrderIdToOrderId(order.OrderId).String(),
+			)
 			orderbook := c.GetOrderbook(order.OrderId.ClobPairId)
 			orderbook.AddOrder(*order)
 		}
 
 		if orderRemove := update.GetOrderRemove(); orderRemove != nil {
 			orderId := orderRemove.RemovedOrderId
+			c.Logger.Info(
+				"remove order recieved",
+				"orderId", IndexerOrderIdToOrderId(*orderId).String(),
+			)
 			orderbook := c.GetOrderbook(orderId.ClobPairId)
 			orderbook.RemoveOrder(*orderId)
 		}
 
 		if orderUpdate := update.GetOrderUpdate(); orderUpdate != nil {
 			orderId := orderUpdate.OrderId
+			c.Logger.Info(
+				"update order recieved",
+				"orderId", IndexerOrderIdToOrderId(*orderId).String(),
+			)
 			orderbook := c.GetOrderbook(orderId.ClobPairId)
 			orderbook.SetOrderRemainingAmount(*orderId, orderUpdate.TotalFilledQuantums)
 			orderbook.SetOrderFillAmount(orderId, orderUpdate.TotalFilledQuantums)
@@ -145,6 +160,9 @@ func (c *GrpcClient) ProcessMatchPerpetualLiquidation(
 	orderMap map[clobtypes.OrderId]clobtypes.Order,
 	fillAmountMap map[clobtypes.OrderId]uint64,
 ) {
+	c.Logger.Info(
+		"liquidation order recieved",
+	)
 	localOrderbook := c.Orderbook[perpLiquidation.ClobPairId]
 	for _, fill := range perpLiquidation.GetFills() {
 		makerOrder := orderMap[fill.MakerOrderId]
@@ -159,6 +177,9 @@ func (c *GrpcClient) ProcessMatchOrders(
 	orderMap map[clobtypes.OrderId]clobtypes.Order,
 	fillAmountMap map[clobtypes.OrderId]uint64,
 ) {
+	c.Logger.Info(
+		"match order recieved",
+	)
 	takerOrderId := matchOrders.TakerOrderId
 	clobPairId := takerOrderId.GetClobPairId()
 	localOrderbook := c.Orderbook[clobPairId]
@@ -293,6 +314,11 @@ func (l *LocalOrderbook) RemoveOrder(orderId v1types.IndexerOrderId) {
 	delete(l.OrderRemainingAmount, orderId)
 	delete(l.OrderIdToOrder, orderId)
 	delete(l.FillAmounts, orderId)
+	l.Logger.Info(
+		fmt.Sprintf("local fill set to %+v", 0),
+		"orderId", IndexerOrderIdToOrderId(orderId).String(),
+		"remove", true,
+	)
 }
 
 func (l *LocalOrderbook) SetOrderFillAmount(
@@ -302,9 +328,26 @@ func (l *LocalOrderbook) SetOrderFillAmount(
 	l.Lock()
 	defer l.Unlock()
 
+	l.Logger.Info(
+		fmt.Sprintf("local fill set to %+v", fillAmount),
+		"orderId", IndexerOrderIdToOrderId(*orderId).String(),
+	)
+
 	if fillAmount == 0 {
 		delete(l.FillAmounts, *orderId)
 	} else {
 		l.FillAmounts[*orderId] = fillAmount
+	}
+}
+
+func IndexerOrderIdToOrderId(idxOrderId v1types.IndexerOrderId) *types.OrderId {
+	return &types.OrderId{
+		SubaccountId: satypes.SubaccountId{
+			Owner:  idxOrderId.SubaccountId.Owner,
+			Number: idxOrderId.SubaccountId.Number,
+		},
+		ClientId:   idxOrderId.ClientId,
+		OrderFlags: idxOrderId.OrderFlags,
+		ClobPairId: idxOrderId.ClobPairId,
 	}
 }
