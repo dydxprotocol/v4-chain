@@ -110,20 +110,16 @@ func (c *GrpcClient) ProcessOrderbookUpdate(orderUpdate *clobtypes.StreamOrderbo
 	for _, update := range orderUpdate.Updates {
 		if orderPlace := update.GetOrderPlace(); orderPlace != nil {
 			order := orderPlace.GetOrder()
-			c.Logger.Info(
-				"place order recieved",
-				"orderId", IndexerOrderIdToOrderId(order.OrderId).String(),
-			)
+			// c.Logger.Info(
+			// 	"place order recieved",
+			// 	"orderId", IndexerOrderIdToOrderId(order.OrderId).String(),
+			// )
 			orderbook := c.GetOrderbook(order.OrderId.ClobPairId)
 			orderbook.AddOrder(*order)
 		}
 
 		if orderRemove := update.GetOrderRemove(); orderRemove != nil {
 			orderId := orderRemove.RemovedOrderId
-			c.Logger.Info(
-				"remove order recieved",
-				"orderId", IndexerOrderIdToOrderId(*orderId).String(),
-			)
 			orderbook := c.GetOrderbook(orderId.ClobPairId)
 			orderbook.RemoveOrder(*orderId)
 		}
@@ -313,12 +309,11 @@ func (l *LocalOrderbook) RemoveOrder(orderId v1types.IndexerOrderId) {
 
 	delete(l.OrderRemainingAmount, orderId)
 	delete(l.OrderIdToOrder, orderId)
-	delete(l.FillAmounts, orderId)
-	l.Logger.Info(
-		fmt.Sprintf("local fill set to %+v", 0),
-		"orderId", IndexerOrderIdToOrderId(orderId).String(),
-		"remove", true,
-	)
+	// l.Logger.Info(
+	// 	fmt.Sprintf("local fill set to %+v", 0),
+	// 	"orderId", IndexerOrderIdToOrderId(orderId).String(),
+	// 	"remove", true,
+	// )
 }
 
 func (l *LocalOrderbook) SetOrderFillAmount(

@@ -249,6 +249,7 @@ func (k Keeper) CompareMemclobOrderbookWithLocalOrderbook(
 			logger.Error(
 				"Fill amount exists in local orderbook but not in state",
 				"orderId", clobOrderId.String(),
+				"order", localOrderbook.OrderIdToOrder[v1.OrderIdToIndexerOrderId(clobOrderId)],
 				"local_fill_amt", localFillAmount,
 			)
 		}
