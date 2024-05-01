@@ -3,6 +3,8 @@ package dydxprotocol.indexer.off_chain_updates;
 
 import "dydxprotocol/indexer/shared/removal_reason.proto";
 import "dydxprotocol/indexer/protocol/v1/clob.proto";
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types";
 
@@ -35,6 +37,10 @@ message OrderPlaceV1 {
     // out by protocol.
     ORDER_PLACEMENT_STATUS_OPENED = 2;
   }
+
+  // The timestamp of the order placement.
+  google.protobuf.Timestamp time_stamp = 3
+      [ (gogoproto.nullable) = true, (gogoproto.stdtime) = true ];
 }
 
 // OrderRemove messages contain the id of the order removed, the reason for the
@@ -69,6 +75,10 @@ message OrderRemoveV1 {
     // An order was fully-filled. Only sent by the Indexer for stateful orders.
     ORDER_REMOVAL_STATUS_FILLED = 3;
   }
+
+  // The timestamp of the order removal.
+  google.protobuf.Timestamp time_stamp = 4
+      [ (gogoproto.nullable) = true, (gogoproto.stdtime) = true ];
 }
 
 // OrderUpdate messages contain the id of the order being updated, and the
