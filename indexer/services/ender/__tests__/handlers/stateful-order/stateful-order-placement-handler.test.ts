@@ -138,18 +138,24 @@ describe('statefulOrderPlacementHandler', () => {
 
   it.each([
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
-    ['stateful order placement', defaultStatefulOrderEvent, false],
-    ['stateful long term order placement', defaultStatefulOrderLongTermEvent, false],
-    ['stateful order placement', defaultStatefulOrderEvent, true],
-    ['stateful long term order placement', defaultStatefulOrderLongTermEvent, true],
+    ['stateful order placement as txn event', defaultStatefulOrderEvent, false, 0],
+    ['stateful long term order placement as txn event', defaultStatefulOrderLongTermEvent, false, 0],
+    ['stateful order placement as txn event', defaultStatefulOrderEvent, true, 0],
+    ['stateful long term order placement as txn event', defaultStatefulOrderLongTermEvent, true, 0],
+    ['stateful order placement as block event', defaultStatefulOrderEvent, false, -1],
+    ['stateful long term order placement as block event', defaultStatefulOrderLongTermEvent, false, -1],
+    ['stateful order placement as block event', defaultStatefulOrderEvent, true, -1],
+    ['stateful long term order placement as block event', defaultStatefulOrderLongTermEvent, true, -1],
   ])('successfully places order with %s (emit subaccount websocket msg: %s)', async (
     _name: string,
     statefulOrderEvent: StatefulOrderEventV1,
     emitSubaccountMessage: boolean,
+    transactionIndex: number,
   ) => {
     config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = emitSubaccountMessage;
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       statefulOrderEvent,
+      transactionIndex,
     );
 
     await onMessage(kafkaMessage);
@@ -194,6 +200,8 @@ describe('statefulOrderPlacementHandler', () => {
         producerSendMock,
         defaultOrder.orderId!.subaccountId!,
         order!,
+        defaultHeight.toString(),
+        transactionIndex,
       );
     }
   });
