@@ -56,11 +56,7 @@ const TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorIn
 const BLOCK_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.FUNDING.toString(), 1)]: FundingValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.TRADING_REWARD.toString(), 1)]: TradingRewardsValidator,
-<<<<<<< HEAD
-=======
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.STATEFUL_ORDER.toString(), 1)]: StatefulOrderValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.OPEN_INTEREST_UPDATE.toString(), 1)]: OpenInterestUpdateValidator,
->>>>>>> fb6c113b ([CT-804] Fix stateful order removal event ordering. (#1456))
 };
 
 function serializeSubtypeAndVersion(
