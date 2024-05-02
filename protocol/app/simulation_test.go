@@ -49,7 +49,6 @@ import (
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
@@ -111,7 +110,6 @@ var genesisModuleOrder = []string{
 	authz.ModuleName,
 	capabilitytypes.ModuleName,
 	feegranttypes.ModuleName,
-	govtypes.ModuleName,
 	stakingtypes.ModuleName,
 	distributiontypes.ModuleName,
 	slashingtypes.ModuleName,

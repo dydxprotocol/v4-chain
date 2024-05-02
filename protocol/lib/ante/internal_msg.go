@@ -6,7 +6,6 @@ import (
 	clob "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	delaymsg "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	feetiers "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
-	govplus "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/types"
 	perpetuals "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimit "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
@@ -20,7 +19,6 @@ import (
 	consensus "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
@@ -51,10 +49,6 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*distribution.MsgCommunityPoolSpend,
 		*distribution.MsgUpdateParams,
 
-		// gov
-		*gov.MsgExecLegacyContent,
-		*gov.MsgUpdateParams,
-
 		// slashing
 		*slashing.MsgUpdateParams,
 
@@ -81,9 +75,6 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// feetiers
 		*feetiers.MsgUpdatePerpetualFeeParams,
-
-		// govplus
-		*govplus.MsgSlashValidator,
 
 		// perpetuals
 		*perpetuals.MsgCreatePerpetual,

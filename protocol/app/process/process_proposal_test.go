@@ -92,42 +92,6 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			},
 			expectedResponse: rejectResponse,
 		},
-		"Error: unsupported msg type is not allowed": {
-			txsBytes: [][]byte{
-				validOperationsTx,
-				testmsgs.GovBetaMsgSubmitProposalTxBytes, // invalid other txs.
-				validAddFundingTx,
-				validUpdatePriceTx,
-			},
-			expectedResponse: rejectResponse,
-		},
-		"Error: nested msg type with unsupported inner is not allowed": {
-			txsBytes: [][]byte{
-				validOperationsTx,
-				testmsgs.MsgSubmitProposalWithUnsupportedInnerTxBytes, // invalid other txs.
-				validAddFundingTx,
-				validUpdatePriceTx,
-			},
-			expectedResponse: rejectResponse,
-		},
-		"Error: nested msg type with app-injected inner is not allowed": {
-			txsBytes: [][]byte{
-				validOperationsTx,
-				testmsgs.MsgSubmitProposalWithAppInjectedInnerTxBytes, // invalid other txs.
-				validAddFundingTx,
-				validUpdatePriceTx,
-			},
-			expectedResponse: rejectResponse,
-		},
-		"Error: nested msg type with double-nested inner is not allowed": {
-			txsBytes: [][]byte{
-				validOperationsTx,
-				testmsgs.MsgSubmitProposalWithDoubleNestedInnerTxBytes, // invalid other txs.
-				validAddFundingTx,
-				validUpdatePriceTx,
-			},
-			expectedResponse: rejectResponse,
-		},
 		"Accept: Valid txs": {
 			txsBytes: [][]byte{
 				validOperationsTx,

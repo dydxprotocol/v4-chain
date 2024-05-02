@@ -1572,7 +1572,7 @@ function update_ica_host_params() {
 	dasel put -t string -f "$GENESIS" '.app_state.interchainaccounts.host_genesis_state.params.allow_messages.[]' -v "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress"
 	dasel put -t string -f "$GENESIS" '.app_state.interchainaccounts.host_genesis_state.params.allow_messages.[]' -v "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward"
 	dasel put -t string -f "$GENESIS" '.app_state.interchainaccounts.host_genesis_state.params.allow_messages.[]' -v "/cosmos.distribution.v1beta1.MsgFundCommunityPool"
-	dasel put -t string -f "$GENESIS" '.app_state.interchainaccounts.host_genesis_state.params.allow_messages.[]' -v "/cosmos.gov.v1.MsgVote"
+
 }
 
 function update_ica_controller_params() {

@@ -1214,8 +1214,7 @@
               "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation",
               "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress",
               "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
-              "/cosmos.distribution.v1beta1.MsgFundCommunityPool",
-              "/cosmos.gov.v1.MsgVote"
+              "/cosmos.distribution.v1beta1.MsgFundCommunityPool"
             ],
             "host_enabled": true
           },

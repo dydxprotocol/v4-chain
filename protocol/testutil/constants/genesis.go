@@ -790,41 +790,7 @@ const GenesisState = `{
         }
       ]
     },
-    "gov": {
-      "deposits": [],
-      "params": {
-        "burn_proposal_deposit_prevote": false,
-        "burn_vote_quorum": false,
-        "burn_vote_veto": true,
-        "max_deposit_period": "172800s",
-        "min_deposit": [
-          {
-            "amount": "10000000",
-            "denom": "adv4tnt"
-          }
-        ],
-        "min_initial_deposit_ratio": "0.000000000000000000",
-        "proposal_cancel_ratio": "1.000000000000000000",
-        "quorum": "0.334000000000000000",
-        "threshold": "0.500000000000000000",
-        "veto_threshold": "0.334000000000000000",
-		"min_deposit_ratio": "0.010000000000000000",
-        "expedited_voting_period": "86400s",
-        "expedited_threshold": "0.750000000000000000",
-        "expedited_min_deposit": [
-          {
-            "amount": "50000000",
-            "denom": "adv4tnt"
-          }
-        ],
-        "voting_period": "172800s"
-      },
-      "proposals": [],
-      "starting_proposal_id": "1",
-      "votes": []
-    },
-    "govplus": {},
-    "ibc": {
+   "ibc": {
       "channel_genesis": {
         "ack_sequences": [],
         "acknowledgements": [],

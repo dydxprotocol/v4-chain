@@ -11,8 +11,6 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govbeta "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
@@ -89,21 +87,6 @@ var (
 		"/cosmos.feegrant.v1beta1.MsgRevokeAllowance":         &feegrant.MsgRevokeAllowance{},
 		"/cosmos.feegrant.v1beta1.MsgRevokeAllowanceResponse": nil,
 		"/cosmos.feegrant.v1beta1.PeriodicAllowance":          nil,
-
-		// gov
-		"/cosmos.gov.v1.MsgDeposit":                   &gov.MsgDeposit{},
-		"/cosmos.gov.v1.MsgDepositResponse":           nil,
-		"/cosmos.gov.v1.MsgVote":                      &gov.MsgVote{},
-		"/cosmos.gov.v1.MsgVoteResponse":              nil,
-		"/cosmos.gov.v1.MsgVoteWeighted":              &gov.MsgVoteWeighted{},
-		"/cosmos.gov.v1.MsgVoteWeightedResponse":      nil,
-		"/cosmos.gov.v1beta1.MsgDeposit":              &govbeta.MsgDeposit{},
-		"/cosmos.gov.v1beta1.MsgDepositResponse":      nil,
-		"/cosmos.gov.v1beta1.MsgVote":                 &govbeta.MsgVote{},
-		"/cosmos.gov.v1beta1.MsgVoteResponse":         nil,
-		"/cosmos.gov.v1beta1.MsgVoteWeighted":         &govbeta.MsgVoteWeighted{},
-		"/cosmos.gov.v1beta1.MsgVoteWeightedResponse": nil,
-		"/cosmos.gov.v1beta1.TextProposal":            nil,
 
 		// params
 		"/cosmos.params.v1beta1.ParameterChangeProposal": nil,

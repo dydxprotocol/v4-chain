@@ -72,15 +72,9 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -144,9 +138,7 @@ import (
 	feetiersmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers"
 	feetiersmodulekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/keeper"
 	feetiersmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
-	govplusmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus"
-	govplusmodulekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/keeper"
-	govplusmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/types"
+
 	perpetualsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals"
 	perpetualsmodulekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	perpetualsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
@@ -212,6 +204,7 @@ var (
 func init() {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
+
 		panic(err)
 	}
 
@@ -248,7 +241,6 @@ type App struct {
 	StakingKeeper    *stakingkeeper.Keeper
 	SlashingKeeper   slashingkeeper.Keeper
 	DistrKeeper      distrkeeper.Keeper
-	GovKeeper        *govkeeper.Keeper
 	CrisisKeeper     *crisiskeeper.Keeper
 	UpgradeKeeper    *upgradekeeper.Keeper
 	ParamsKeeper     paramskeeper.Keeper
@@ -260,7 +252,6 @@ type App struct {
 	RatelimitKeeper       ratelimitmodulekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
-	GovPlusKeeper         govplusmodulekeeper.Keeper
 
 	PricesKeeper pricesmodulekeeper.Keeper
 
@@ -362,7 +353,6 @@ func New(
 		crisistypes.StoreKey,
 		distrtypes.StoreKey,
 		slashingtypes.StoreKey,
-		govtypes.StoreKey,
 		paramstypes.StoreKey,
 		consensusparamtypes.StoreKey,
 		upgradetypes.StoreKey,
@@ -387,7 +377,6 @@ func New(
 		sendingmoduletypes.StoreKey,
 		delaymsgmoduletypes.StoreKey,
 		epochsmoduletypes.StoreKey,
-		govplusmoduletypes.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys(
 		paramstypes.TStoreKey,
@@ -530,41 +519,6 @@ func New(
 		app.BaseApp,
 		lib.GovModuleAddress.String(),
 	)
-
-	// ... other modules keepers
-
-	// Register the proposal types
-	// Deprecated: Avoid adding new handlers, instead use the new proposal flow
-	// by granting the governance module the right to execute the message.
-	// See: https://github.com/cosmos/cosmos-sdk/blob/release/v0.46.x/x/gov/spec/01_concepts.md#proposal-messages
-	govRouter := govv1beta1.NewRouter()
-	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper))
-	govConfig := govtypes.DefaultConfig()
-	/*
-		Example of setting gov params:
-		govConfig.MaxMetadataLen = 10000
-	*/
-	govKeeper := govkeeper.NewKeeper(
-		appCodec,
-		runtime.NewKVStoreService(keys[govtypes.StoreKey]),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.StakingKeeper,
-		app.DistrKeeper,
-		app.MsgServiceRouter(),
-		govConfig,
-		lib.GovModuleAddress.String(),
-	)
-
-	app.GovKeeper = govKeeper.SetHooks(
-		govtypes.NewMultiGovHooks(
-		// register the governance hooks
-		),
-	)
-
-	// Set legacy router for backwards compatibility with gov v1beta1
-	govKeeper.SetLegacyRouter(govRouter)
 
 	// grant capabilities for the ibc, ibc-transfer, ICAHostKeeper and ratelimit modules
 
@@ -974,17 +928,6 @@ func New(
 		app.SubaccountsKeeper,
 	)
 
-	app.GovPlusKeeper = *govplusmodulekeeper.NewKeeper(
-		appCodec,
-		app.StakingKeeper,
-		keys[govplusmoduletypes.StoreKey],
-		[]string{
-			lib.GovModuleAddress.String(),
-			delaymsgmoduletypes.ModuleAddress.String(),
-		},
-	)
-	govPlusModule := govplusmodule.NewAppModule(appCodec, app.GovPlusKeeper)
-
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -1004,7 +947,6 @@ func New(
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)),
-		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.getSubspace(govtypes.ModuleName)),
 		slashing.NewAppModule(
 			appCodec,
 			app.SlashingKeeper,
@@ -1047,7 +989,6 @@ func New(
 		subaccountsModule,
 		clobModule,
 		sendingModule,
-		govPlusModule,
 		delayMsgModule,
 		epochsModule,
 		rateLimitModule,
@@ -1075,7 +1016,6 @@ func New(
 		ratelimitmoduletypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
-		govtypes.ModuleName,
 		crisistypes.ModuleName,
 		genutiltypes.ModuleName,
 		feegrant.ModuleName,
@@ -1092,7 +1032,6 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
-		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 	)
 
@@ -1102,7 +1041,6 @@ func New(
 
 	app.ModuleManager.SetOrderEndBlockers(
 		crisistypes.ModuleName,
-		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
@@ -1130,7 +1068,6 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		epochsmoduletypes.ModuleName,
-		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
@@ -1149,7 +1086,6 @@ func New(
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
-		govtypes.ModuleName,
 		crisistypes.ModuleName,
 		ibcexported.ModuleName,
 		genutiltypes.ModuleName,
@@ -1172,7 +1108,6 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
-		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
@@ -1187,7 +1122,6 @@ func New(
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
-		govtypes.ModuleName,
 		crisistypes.ModuleName,
 		ibcexported.ModuleName,
 		genutiltypes.ModuleName,
@@ -1210,10 +1144,8 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
-		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		authz.ModuleName,
-
 		// Auth must be migrated after staking.
 		authtypes.ModuleName,
 	)
@@ -1648,7 +1580,6 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(stakingtypes.ModuleName)
 	paramsKeeper.Subspace(distrtypes.ModuleName)
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
-	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable()) //nolint:staticcheck
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 
 	// register the key tables for legacy param subspaces

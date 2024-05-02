@@ -14,10 +14,7 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/ibc-go/modules/capability"
 
@@ -27,7 +24,6 @@ import (
 	clobmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob"
 	epochsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs"
 	feetiersmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers"
-	govplusmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus"
 	perpetualsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals"
 	pricesmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices"
 	ratelimitmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit"
@@ -56,11 +52,6 @@ var (
 		capability.AppModuleBasic{},
 		staking.AppModuleBasic{},
 		distr.AppModuleBasic{},
-		gov.NewAppModuleBasic(
-			[]govclient.ProposalHandler{
-				paramsclient.ProposalHandler,
-			},
-		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		custommodule.SlashingModuleBasic{},
@@ -88,6 +79,5 @@ var (
 		sendingmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},
 		ratelimitmodule.AppModuleBasic{},
-		govplusmodule.AppModuleBasic{},
 	)
 )

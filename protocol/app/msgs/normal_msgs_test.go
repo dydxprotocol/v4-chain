@@ -74,21 +74,6 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.feegrant.v1beta1.MsgRevokeAllowanceResponse",
 		"/cosmos.feegrant.v1beta1.PeriodicAllowance",
 
-		// gov
-		"/cosmos.gov.v1.MsgDeposit",
-		"/cosmos.gov.v1.MsgDepositResponse",
-		"/cosmos.gov.v1.MsgVote",
-		"/cosmos.gov.v1.MsgVoteResponse",
-		"/cosmos.gov.v1.MsgVoteWeighted",
-		"/cosmos.gov.v1.MsgVoteWeightedResponse",
-		"/cosmos.gov.v1beta1.MsgDeposit",
-		"/cosmos.gov.v1beta1.MsgDepositResponse",
-		"/cosmos.gov.v1beta1.MsgVote",
-		"/cosmos.gov.v1beta1.MsgVoteResponse",
-		"/cosmos.gov.v1beta1.MsgVoteWeighted",
-		"/cosmos.gov.v1beta1.MsgVoteWeightedResponse",
-		"/cosmos.gov.v1beta1.TextProposal",
-
 		// params
 		"/cosmos.params.v1beta1.ParameterChangeProposal",
 

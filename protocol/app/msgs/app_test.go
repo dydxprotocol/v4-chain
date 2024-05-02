@@ -39,26 +39,6 @@ var (
 		msg:       testmsgs.MsgSoftwareUpgrade,
 		multiMsgs: true,
 	}
-	nestedSingle = testCase{
-		name:      "nested, multimsgs=false",
-		msg:       testmsgs.MsgSubmitProposalWithAppInjectedInner,
-		multiMsgs: false,
-	}
-	nestedMulti = testCase{
-		name:      "nested, multimsgs=true",
-		msg:       testmsgs.MsgSubmitProposalWithAppInjectedInner,
-		multiMsgs: true,
-	}
-	unsupportedSingle = testCase{
-		name:      "unsupported, multimsgs=false",
-		msg:       testmsgs.GovBetaMsgSubmitProposal,
-		multiMsgs: false,
-	}
-	unsupportedMulti = testCase{
-		name:      "unsupported, multimsgs=true",
-		msg:       testmsgs.GovBetaMsgSubmitProposal,
-		multiMsgs: true,
-	}
 )
 
 func TestDisallowMsgs_CheckTx_Fail(t *testing.T) {
@@ -128,66 +108,6 @@ func TestDisallowMsgs_CheckTx_Fail(t *testing.T) {
 
 			expectedErrorLog: "internal msg cannot be submitted externally: invalid request",
 		},
-
-		// nested
-		{
-			name:   nestedSingle.name + ", signed=false",
-			base:   nestedSingle,
-			signTx: false,
-
-			expectedErrorLog: "Invalid nested msg: app-injected msg type: invalid request",
-		},
-		{
-			name:   nestedSingle.name + ", signed=true",
-			base:   nestedSingle,
-			signTx: true,
-
-			expectedErrorLog: "Invalid nested msg: app-injected msg type: invalid request",
-		},
-		{
-			name:   nestedMulti.name + ", signed=false",
-			base:   nestedMulti,
-			signTx: false,
-
-			expectedErrorLog: "Invalid nested msg: app-injected msg type: invalid request",
-		},
-		{
-			name:   nestedMulti.name + ", signed=true",
-			base:   nestedMulti,
-			signTx: true,
-
-			expectedErrorLog: "Invalid nested msg: app-injected msg type: invalid request",
-		},
-
-		// unsupported
-		{
-			name:   unsupportedSingle.name + ", signed=false",
-			base:   unsupportedSingle,
-			signTx: false,
-
-			expectedErrorLog: "unsupported msg: invalid request",
-		},
-		{
-			name:   unsupportedSingle.name + ", signed=true",
-			base:   unsupportedSingle,
-			signTx: true,
-
-			expectedErrorLog: "unsupported msg: invalid request",
-		},
-		{
-			name:   unsupportedMulti.name + ", signed=false",
-			base:   unsupportedMulti,
-			signTx: false,
-
-			expectedErrorLog: "unsupported msg: invalid request",
-		},
-		{
-			name:   unsupportedMulti.name + ", signed=true",
-			base:   unsupportedMulti,
-			signTx: true,
-
-			expectedErrorLog: "unsupported msg: invalid request",
-		},
 	}
 
 	for _, tc := range tests {
@@ -241,14 +161,6 @@ func TestDisallowMsgs_PrepareProposal_Filter(t *testing.T) {
 		// internal
 		internalSingle,
 		internalMulti,
-
-		// nested
-		nestedSingle,
-		nestedMulti,
-
-		// unsupported
-		unsupportedSingle,
-		unsupportedMulti,
 	}
 
 	for _, tc := range tests {
@@ -302,14 +214,6 @@ func TestDisallowMsgs_ProcessProposal_Fail(t *testing.T) {
 		// internal
 		internalSingle,
 		internalMulti,
-
-		// nested
-		nestedSingle,
-		nestedMulti,
-
-		// unsupported
-		unsupportedSingle,
-		unsupportedMulti,
 	}
 
 	for _, tc := range tests {

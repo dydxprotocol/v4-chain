@@ -43,12 +43,6 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/cosmos.distribution.v1beta1.MsgUpdateParams",
 		"/cosmos.distribution.v1beta1.MsgUpdateParamsResponse",
 
-		// gov
-		"/cosmos.gov.v1.MsgExecLegacyContent",
-		"/cosmos.gov.v1.MsgExecLegacyContentResponse",
-		"/cosmos.gov.v1.MsgUpdateParams",
-		"/cosmos.gov.v1.MsgUpdateParamsResponse",
-
 		// slashing
 		"/cosmos.slashing.v1beta1.MsgUpdateParams",
 		"/cosmos.slashing.v1beta1.MsgUpdateParamsResponse",
@@ -86,10 +80,6 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// feetiers
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",
-
-		// govplus
-		"/dydxprotocol.govplus.MsgSlashValidator",
-		"/dydxprotocol.govplus.MsgSlashValidatorResponse",
 
 		// perpeutals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual",

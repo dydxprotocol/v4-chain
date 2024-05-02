@@ -735,42 +735,6 @@
     "genutil": {
       "gen_txs": []
     },
-    "gov": {
-      "constitution": "",
-      "deposits": [],
-      "params": {
-        "burn_proposal_deposit_prevote": false,
-        "burn_vote_quorum": false,
-        "burn_vote_veto": true,
-        "expedited_min_deposit": [
-          {
-            "amount": "50000000",
-            "denom": "asample"
-          }
-        ],
-        "expedited_threshold": "0.75000",
-        "expedited_voting_period": "86400s",
-        "max_deposit_period": "172800s",
-        "min_deposit": [
-          {
-            "amount": "10000000000000000000000",
-            "denom": "asample"
-          }
-        ],
-        "min_deposit_ratio": "0.010000000000000000",
-        "min_initial_deposit_ratio": "0.20000",
-        "proposal_cancel_dest": "",
-        "proposal_cancel_ratio": "1",
-        "quorum": "0.33400",
-        "threshold": "0.50000",
-        "veto_threshold": "0.33400",
-        "voting_period": "345600s"
-      },
-      "proposals": [],
-      "starting_proposal_id": "1",
-      "votes": []
-    },
-    "govplus": {},
     "ibc": {
       "channel_genesis": {
         "ack_sequences": [],
@@ -825,8 +789,7 @@
             "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation",
             "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress",
             "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
-            "/cosmos.distribution.v1beta1.MsgFundCommunityPool",
-            "/cosmos.gov.v1.MsgVote"
+            "/cosmos.distribution.v1beta1.MsgFundCommunityPool"
           ],
           "host_enabled": true
         },

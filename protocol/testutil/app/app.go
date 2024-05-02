@@ -40,7 +40,6 @@ import (
 	delaymsgtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
 	feetiertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
-	govplus "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
@@ -60,8 +59,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	sdkproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -196,9 +193,7 @@ type GenesisStates interface {
 		epochstypes.GenesisState |
 		sendingtypes.GenesisState |
 		delaymsgtypes.GenesisState |
-		govtypesv1.GenesisState |
-		ratelimittypes.GenesisState |
-		govplus.GenesisState
+		ratelimittypes.GenesisState
 }
 
 // UpdateGenesisDocWithAppStateForModule updates the supplied genesis doc using the provided function. The function
@@ -244,12 +239,8 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = epochstypes.ModuleName
 	case sendingtypes.GenesisState:
 		moduleName = sendingtypes.ModuleName
-	case govtypesv1.GenesisState:
-		moduleName = govtypes.ModuleName
 	case ratelimittypes.GenesisState:
 		moduleName = ratelimittypes.ModuleName
-	case govplus.GenesisState:
-		moduleName = govplus.ModuleName
 	default:
 		panic(fmt.Errorf("Unsupported type %T", t))
 	}
