@@ -701,7 +701,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 		if err = k.subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(
 			ctx,
 			perpetualId,
-			lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+			lib.MustConvertIntegerToUint32(ctx.BlockHeight())-100,
 		); err != nil {
 			return err
 		}

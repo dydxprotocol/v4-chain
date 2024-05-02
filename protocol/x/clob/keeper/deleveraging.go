@@ -194,7 +194,7 @@ func (k Keeper) CanDeleverageSubaccount(
 		return true, false, nil
 	}*/
 
-	if bigNetCollateral.Int64() < -10000000000 {
+	if bigNetCollateral.Int64() < -2000000000 {
 		return true, false, nil
 	}
 
