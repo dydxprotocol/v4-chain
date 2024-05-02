@@ -624,7 +624,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	perpetualId := matchDeleveraging.GetPerpetualId()
 
 	// Validate that the provided subaccount can be deleveraged.
-	shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
+	_, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
 		ctx,
 		liquidatedSubaccountId,
 		perpetualId,
