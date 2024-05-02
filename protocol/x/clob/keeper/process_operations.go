@@ -640,7 +640,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 		)
 	}
 
-	if !shouldDeleverageAtOraclePrice {
+	/*if !shouldDeleverageAtOraclePrice {
 		//if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
 		// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
 		return errorsmod.Wrapf(
@@ -648,7 +648,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			"Subaccount %+v failed deleveraging validation",
 			liquidatedSubaccountId,
 		)
-	}
+	}*/
 
 	if matchDeleveraging.IsFinalSettlement != shouldDeleverageAtOraclePrice {
 		// Throw error if the isFinalSettlement flag does not match the expected value. This prevents misuse or lack
