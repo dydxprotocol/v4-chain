@@ -407,25 +407,6 @@ const GenesisState = `{
       ],
       "next_delayed_message_id": 1
     },
-    "distribution": {
-      "delegator_starting_infos": [],
-      "delegator_withdraw_infos": [],
-      "fee_pool": {
-        "community_pool": []
-      },
-      "outstanding_rewards": [],
-      "params": {
-        "base_proposer_reward": "0.000000000000000000",
-        "bonus_proposer_reward": "0.000000000000000000",
-        "community_tax": "0.020000000000000000",
-        "withdraw_addr_enabled": true
-      },
-      "previous_proposer": "",
-      "validator_accumulated_commissions": [],
-      "validator_current_rewards": [],
-      "validator_historical_rewards": [],
-      "validator_slash_events": []
-    },
     "epochs": {
       "epoch_info_list": [
         {

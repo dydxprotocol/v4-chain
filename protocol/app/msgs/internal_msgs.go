@@ -19,7 +19,6 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensus "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	distribution "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
@@ -59,12 +58,6 @@ var (
 		// crisis
 		"/cosmos.crisis.v1beta1.MsgUpdateParams":         &crisis.MsgUpdateParams{},
 		"/cosmos.crisis.v1beta1.MsgUpdateParamsResponse": nil,
-
-		// distribution
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpend":         &distribution.MsgCommunityPoolSpend{},
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse": nil,
-		"/cosmos.distribution.v1beta1.MsgUpdateParams":               &distribution.MsgUpdateParams{},
-		"/cosmos.distribution.v1beta1.MsgUpdateParamsResponse":       nil,
 
 		// slashing
 		"/cosmos.slashing.v1beta1.MsgUpdateParams":         &slashing.MsgUpdateParams{},

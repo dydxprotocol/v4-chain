@@ -149,20 +149,7 @@ function overwrite_genesis_public_testnet() {
 	dasel put -t int -f "$GENESIS" '.app_state.staking.params.max_entries' -v '7'
 	dasel put -t int -f "$GENESIS" '.app_state.staking.params.historical_entries' -v '10000'
 
-	# Distribution params
-	dasel put -t string -f "$GENESIS" '.app_state.distribution.params.community_tax' -v '0.0' # 0%
-	dasel put -t bool -f "$GENESIS" '.app_state.distribution.params.withdraw_addr_enabled' -v 'true'
 
-	# Governance params
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].amount' -v '1000000'
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].denom' -v "$NATIVE_TOKEN"
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '86400s' # 1 day
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_voting_period' -v '3600s' # 1 hour
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '86400s' # 1 day
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.quorum' -v '0.33400' # 33.4%
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.threshold' -v '0.50000' # 50%
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.veto_threshold' -v '0.33400' # 33.4%
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_initial_deposit_ratio' -v '0.20000' # 20%
 }
 
 create_pregenesis_file() {

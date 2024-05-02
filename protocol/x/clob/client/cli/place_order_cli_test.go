@@ -29,7 +29,6 @@ import (
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -288,12 +287,12 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 	// to the `distribution` module account, and the fees will stay in `distribution`
 	// until withdrawn. More details at:
 	// https://docs.cosmos.network/v0.45/modules/distribution/03_begin_block.html#the-distribution-scheme
-	distrModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
-		val,
-		s.network.Config.Codec,
-		distrtypes.ModuleName,
-	)
+	// distrModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
+	// 	val,
+	// 	s.network.Config.Codec,
+	// 	distrtypes.ModuleName,
+	// )
 
-	s.Require().NoError(err)
-	s.Require().Equal(makerFee+takerFee, distrModuleUSDCBalance)
+	// s.Require().NoError(err)
+	// s.Require().Equal(makerFee+takerFee, distrModuleUSDCBalance)
 }

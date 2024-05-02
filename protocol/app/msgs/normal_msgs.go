@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
@@ -58,19 +57,6 @@ var (
 		"/cosmos.crypto.secp256k1.PrivKey":          nil,
 		"/cosmos.crypto.secp256k1.PubKey":           nil,
 		"/cosmos.crypto.secp256r1.PubKey":           nil,
-
-		// distribution
-		"/cosmos.distribution.v1beta1.CommunityPoolSpendProposal":             nil,
-		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool":         &distr.MsgDepositValidatorRewardsPool{},
-		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPoolResponse": nil,
-		"/cosmos.distribution.v1beta1.MsgFundCommunityPool":                   &distr.MsgFundCommunityPool{},
-		"/cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse":           nil,
-		"/cosmos.distribution.v1beta1.MsgSetWithdrawAddress":                  &distr.MsgSetWithdrawAddress{},
-		"/cosmos.distribution.v1beta1.MsgSetWithdrawAddressResponse":          nil,
-		"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":             &distr.MsgWithdrawDelegatorReward{},
-		"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse":     nil,
-		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission":         &distr.MsgWithdrawValidatorCommission{},
-		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse": nil,
 
 		// evidence
 		"/cosmos.evidence.v1beta1.Equivocation":              nil,

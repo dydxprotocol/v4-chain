@@ -74,10 +74,6 @@ function overwrite_genesis_production() {
 	dasel put -t int -f "$GENESIS" '.app_state.staking.params.max_entries' -v '7'
 	dasel put -t int -f "$GENESIS" '.app_state.staking.params.historical_entries' -v '10000'
 
-	# Distribution params
-	dasel put -t string -f "$GENESIS" '.app_state.distribution.params.community_tax' -v '0.0' # 0%
-	dasel put -t bool -f "$GENESIS" '.app_state.distribution.params.withdraw_addr_enabled' -v 'true'
-
 	# Bank params	
 	# Set denom metadata
 	set_denom_metadata "$NATIVE_TOKEN" "$NATIVE_TOKEN_WHOLE_COIN" "$COIN_NAME"

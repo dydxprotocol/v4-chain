@@ -48,7 +48,6 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
@@ -111,7 +110,6 @@ var genesisModuleOrder = []string{
 	capabilitytypes.ModuleName,
 	feegranttypes.ModuleName,
 	stakingtypes.ModuleName,
-	distributiontypes.ModuleName,
 	slashingtypes.ModuleName,
 	paramstypes.ModuleName,
 	exportedtypes.ModuleName,

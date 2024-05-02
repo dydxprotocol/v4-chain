@@ -85,25 +85,6 @@
     "delayed_messages": [],
     "next_delayed_message_id": 0
   },
-  "distribution": {
-    "params": {
-      "community_tax": "0.020000000000000000",
-      "base_proposer_reward": "0.000000000000000000",
-      "bonus_proposer_reward": "0.000000000000000000",
-      "withdraw_addr_enabled": true
-    },
-    "fee_pool": {
-      "community_pool": []
-    },
-    "delegator_withdraw_infos": [],
-    "previous_proposer": "",
-    "outstanding_rewards": [],
-    "validator_accumulated_commissions": [],
-    "validator_historical_rewards": [],
-    "validator_current_rewards": [],
-    "delegator_starting_infos": [],
-    "validator_slash_events": []
-  },
   "epochs": {
     "epoch_info_list": [
       {

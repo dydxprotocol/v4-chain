@@ -16,9 +16,6 @@ func TestICAHostAllowMessages(t *testing.T) {
 			"/cosmos.staking.v1beta1.MsgBeginRedelegate",
 			"/cosmos.staking.v1beta1.MsgUndelegate",
 			"/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation",
-			"/cosmos.distribution.v1beta1.MsgSetWithdrawAddress",
-			"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
-			"/cosmos.distribution.v1beta1.MsgFundCommunityPool",
 		},
 		ICAHostAllowMessages,
 	)

@@ -53,23 +53,6 @@ var (
 		"/cosmos.crypto.secp256k1.PubKey":           {},
 		"/cosmos.crypto.secp256r1.PubKey":           {},
 
-		// distribution
-		"/cosmos.distribution.v1beta1.CommunityPoolSpendProposal":             {},
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpend":                  {},
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse":          {},
-		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool":         {},
-		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPoolResponse": {},
-		"/cosmos.distribution.v1beta1.MsgFundCommunityPool":                   {},
-		"/cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse":           {},
-		"/cosmos.distribution.v1beta1.MsgSetWithdrawAddress":                  {},
-		"/cosmos.distribution.v1beta1.MsgSetWithdrawAddressResponse":          {},
-		"/cosmos.distribution.v1beta1.MsgUpdateParams":                        {},
-		"/cosmos.distribution.v1beta1.MsgUpdateParamsResponse":                {},
-		"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":             {},
-		"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse":     {},
-		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission":         {},
-		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse": {},
-
 		// evidence
 		"/cosmos.evidence.v1beta1.Equivocation":              {},
 		"/cosmos.evidence.v1beta1.MsgSubmitEvidence":         {},

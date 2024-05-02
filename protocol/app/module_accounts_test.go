@@ -9,7 +9,6 @@ import (
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	vestmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
@@ -19,7 +18,6 @@ import (
 func TestModuleAccountsToAddresses(t *testing.T) {
 	expectedModuleAccToAddresses := map[string]string{
 		authtypes.FeeCollectorName:                   "dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt2",
-		distrtypes.ModuleName:                        "dydx1jv65s3grqf6v6jl3dp4t6c9t9rk99cd8wx2cfg",
 		stakingtypes.BondedPoolName:                  "dydx1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3uz8teq",
 		stakingtypes.NotBondedPoolName:               "dydx1tygms3xhhs3yv487phx3dw4a95jn7t7lgzm605",
 		ibctransfertypes.ModuleName:                  "dydx1yl6hdjhmkf37639730gffanpzndzdpmh8xcdh5",
@@ -42,7 +40,6 @@ func TestModuleAccountsToAddresses(t *testing.T) {
 func TestBlockedAddresses(t *testing.T) {
 	expectedBlockedAddresses := map[string]bool{
 		"dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt2": true,
-		"dydx1jv65s3grqf6v6jl3dp4t6c9t9rk99cd8wx2cfg": true,
 		"dydx1tygms3xhhs3yv487phx3dw4a95jn7t7lgzm605": true,
 		"dydx1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3uz8teq": true,
 		"dydx1yl6hdjhmkf37639730gffanpzndzdpmh8xcdh5": true,
@@ -55,7 +52,6 @@ func TestMaccPerms(t *testing.T) {
 	maccPerms := app.GetMaccPerms()
 	expectedMaccPerms := map[string][]string{
 		"bonded_tokens_pool":     {"burner", "staking"},
-		"distribution":           nil,
 		"fee_collector":          nil,
 		"insurance_fund":         nil,
 		"not_bonded_tokens_pool": {"burner", "staking"},
@@ -73,7 +69,6 @@ func TestMaccPerms(t *testing.T) {
 func TestModuleAccountAddrs(t *testing.T) {
 	expectedModuleAccAddresses := map[string]bool{
 		"dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt2": true, // x/auth.FeeCollector
-		"dydx1jv65s3grqf6v6jl3dp4t6c9t9rk99cd8wx2cfg": true, // x/distribution
 		"dydx1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3uz8teq": true, // x/staking.bondedPool
 		"dydx1tygms3xhhs3yv487phx3dw4a95jn7t7lgzm605": true, // x/staking.notBondedPool
 		"dydx1yl6hdjhmkf37639730gffanpzndzdpmh8xcdh5": true, // ibc transfer

@@ -18,7 +18,6 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensus "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	distribution "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
@@ -44,10 +43,6 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// crisis
 		*crisis.MsgUpdateParams,
-
-		// distribution
-		*distribution.MsgCommunityPoolSpend,
-		*distribution.MsgUpdateParams,
 
 		// slashing
 		*slashing.MsgUpdateParams,
