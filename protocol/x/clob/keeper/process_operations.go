@@ -679,7 +679,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	// liquidated or deleveraged and still has negative equity. Mark the current block number in state to indicate a
 	// negative TNC subaccount was seen.
 	if len(matchDeleveraging.GetFills()) == 0 {
-		if !shouldDeleverageAtBankruptcyPrice {
+		/*if !shouldDeleverageAtBankruptcyPrice {
 			return errorsmod.Wrapf(
 				types.ErrZeroFillDeleveragingForNonNegativeTncSubaccount,
 				fmt.Sprintf(
@@ -689,7 +689,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 					perpetualId,
 				),
 			)
-		}
+		}*/
 
 		metrics.IncrCountMetricWithLabels(
 			types.ModuleName,
