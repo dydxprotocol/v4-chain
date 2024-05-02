@@ -640,7 +640,8 @@ func (k Keeper) PersistMatchDeleveragingToState(
 		)
 	}
 
-	if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
+	if !shouldDeleverageAtOraclePrice {
+		//if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
 		// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
 		return errorsmod.Wrapf(
 			types.ErrInvalidDeleveragedSubaccount,

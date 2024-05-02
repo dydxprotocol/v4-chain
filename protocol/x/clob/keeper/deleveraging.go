@@ -190,7 +190,11 @@ func (k Keeper) CanDeleverageSubaccount(
 	}
 
 	// Negative TNC, deleverage at bankruptcy price.
-	if bigNetCollateral.Sign() == -1 {
+	/*if bigNetCollateral.Sign() == -1 {
+		return true, false, nil
+	}*/
+
+	if bigNetCollateral.Int64() < -10000000000 {
 		return true, false, nil
 	}
 
