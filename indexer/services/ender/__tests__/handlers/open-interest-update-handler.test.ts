@@ -58,7 +58,7 @@ describe('openInterestUpdateHandler', () => {
   });
 
   it('update open interest', async () => {
-    const transactionIndex: number = 0;
+    const transactionIndex: number = -1;
     const openInterestUpdateEvent: OpenInterestUpdateEventV1 = defaultOpenInterestUpdateEvent;
     const kafkaMessage: KafkaMessage = createKafkaEventForOpenInterestUpdateEvent({
       openInterestUpdateEvent,
