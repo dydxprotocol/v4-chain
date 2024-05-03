@@ -16,7 +16,7 @@ import { TOPIC_TO_CHANNEL, V4_MARKETS_ID } from '../lib/constants';
 import { InvalidForwardMessageError, InvalidTopicError } from '../lib/errors';
 import { Channel, MessageToForward, WebsocketTopics } from '../types';
 
-export function getChannel(topic: string): Channel | undefined {
+export function getChannels(topic: string): Channel[] {
   if (!Object.values(WebsocketTopics)
     .some((topicName: string) => { return topicName === topic; })) {
     throw new InvalidTopicError(topic);

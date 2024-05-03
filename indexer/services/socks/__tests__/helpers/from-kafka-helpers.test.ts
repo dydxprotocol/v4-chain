@@ -1,4 +1,4 @@
-import { getChannel, getMessageToForward } from '../../src/helpers/from-kafka-helpers';
+import { getChannels, getMessageToForward } from '../../src/helpers/from-kafka-helpers';
 import { InvalidForwardMessageError, InvalidTopicError } from '../../src/lib/errors';
 import {
   Channel,
@@ -39,17 +39,17 @@ import {
 describe('from-kafka-helpers', () => {
   describe('getChannel', () => {
     it.each([
-      [WebsocketTopics.TO_WEBSOCKETS_CANDLES, Channel.V4_CANDLES],
-      [WebsocketTopics.TO_WEBSOCKETS_MARKETS, Channel.V4_MARKETS],
-      [WebsocketTopics.TO_WEBSOCKETS_ORDERBOOKS, Channel.V4_ORDERBOOK],
-      [WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS, Channel.V4_ACCOUNTS],
-      [WebsocketTopics.TO_WEBSOCKETS_TRADES, Channel.V4_TRADES],
-    ])('gets correct channel for topic %s', (topic: WebsocketTopics, channel: Channel) => {
-      expect(getChannel(topic)).toEqual(channel);
+      [WebsocketTopics.TO_WEBSOCKETS_CANDLES, [Channel.V4_CANDLES]],
+      [WebsocketTopics.TO_WEBSOCKETS_MARKETS, [Channel.V4_MARKETS]],
+      [WebsocketTopics.TO_WEBSOCKETS_ORDERBOOKS, [Channel.V4_ORDERBOOK]],
+      [WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS, [Channel.V4_ACCOUNTS]],
+      [WebsocketTopics.TO_WEBSOCKETS_TRADES, [Channel.V4_TRADES]],
+    ])('gets correct channel for topic %s', (topic: WebsocketTopics, channels: Channel[]) => {
+      expect(getChannels(topic)).toEqual(channels);
     });
 
     it('throws InvalidTopicError for invalid topic', () => {
-      expect(() => { getChannel(invalidTopic); }).toThrow(new InvalidTopicError(invalidTopic));
+      expect(() => { getChannels(invalidTopic); }).toThrow(new InvalidTopicError(invalidTopic));
     });
   });
 

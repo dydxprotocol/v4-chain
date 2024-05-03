@@ -11,7 +11,7 @@ import _ from 'lodash';
 
 import config from '../config';
 import {
-  getChannel,
+  getChannels,
   getMessageToForward,
 } from '../helpers/from-kafka-helpers';
 import {
@@ -102,8 +102,8 @@ export class MessageForwarder {
       offset: message.offset,
     };
 
-    const channel: Channel | undefined = getChannel(topic);
-    if (channel === undefined) {
+    const channels: Channel[] = getChannels(topic);
+    if (channels.length === 0) {
       logger.error({
         ...errProps,
         at: loggerAt,
@@ -111,46 +111,48 @@ export class MessageForwarder {
       });
       return;
     }
-    errProps.channel = channel;
+    errProps.channels = channels;
 
-    let messageToForward: MessageToForward;
-    try {
-      messageToForward = getMessageToForward(channel, message);
-    } catch (error) {
-      logger.error({
-        ...errProps,
-        at: loggerAt,
-        message: 'Failed to get message to forward from kafka message',
-        kafkaMessage: safeJsonStringify(message),
-        error,
-      });
-      return;
-    }
+    for (const channel of channels) {
+      let messageToForward: MessageToForward;
+      try {
+        messageToForward = getMessageToForward(channel, message);
+      } catch (error) {
+        logger.error({
+          ...errProps,
+          at: loggerAt,
+          message: 'Failed to get message to forward from kafka message',
+          kafkaMessage: safeJsonStringify(message),
+          error,
+        });
+        return;
+      }
 
-    const startForwardMessage: number = Date.now();
-    this.forwardMessage(messageToForward);
-    const end: number = Date.now();
-    stats.timing(
-      `${config.SERVICE_NAME}.forward_message`,
-      end - startForwardMessage,
-      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
-      {
-        topic,
-        channel: String(channel),
-      },
-    );
-
-    const originalMessageTimestamp = message.headers?.message_received_timestamp;
-    if (originalMessageTimestamp !== undefined) {
+      const startForwardMessage: number = Date.now();
+      this.forwardMessage(messageToForward);
+      const end: number = Date.now();
       stats.timing(
-        `${config.SERVICE_NAME}.message_time_since_received`,
-        startForwardMessage - Number(originalMessageTimestamp),
-        STATS_NO_SAMPLING,
+        `${config.SERVICE_NAME}.forward_message`,
+        end - startForwardMessage,
+        config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
         {
           topic,
-          event_type: String(message.headers?.event_type),
+          channel: String(channel),
         },
       );
+
+      const originalMessageTimestamp = message.headers?.message_received_timestamp;
+      if (originalMessageTimestamp !== undefined) {
+        stats.timing(
+          `${config.SERVICE_NAME}.message_time_since_received`,
+          startForwardMessage - Number(originalMessageTimestamp),
+          STATS_NO_SAMPLING,
+          {
+            topic,
+            event_type: String(message.headers?.event_type),
+          },
+        );
+      }
     }
   }
 
