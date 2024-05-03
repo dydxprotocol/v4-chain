@@ -93,10 +93,6 @@ function edit_genesis() {
 	# require 75% of votes for an expedited proposal to pass
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_threshold' -v '0.75000' # 75%
 
-	# Update staking module.
-	dasel put -t string -f "$GENESIS" '.app_state.staking.params.unbonding_time' -v '1814400s' # 21 days
-	dasel put -t string -f "$GENESIS" '.app_state.staking.params.bond_denom' -v "$NATIVE_TOKEN"
-
 	# Update assets module.
 	dasel put -t int -f "$GENESIS" '.app_state.assets.assets.[0].id' -v '0'
 	dasel put -t string -f "$GENESIS" '.app_state.assets.assets.[0].symbol' -v 'USDC'
@@ -1565,10 +1561,6 @@ function update_ica_host_params() {
 	dasel put -t json -f "$GENESIS" '.app_state.interchainaccounts.host_genesis_state.params.allow_messages' -v '[]'
 	dasel put -t string -f "$GENESIS" '.app_state.interchainaccounts.host_genesis_state.params.allow_messages.[]' -v "/ibc.applications.transfer.v1.MsgTransfer"
 	dasel put -t string -f "$GENESIS" '.app_state.interchainaccounts.host_genesis_state.params.allow_messages.[]' -v "/cosmos.bank.v1beta1.MsgSend"
-	dasel put -t string -f "$GENESIS" '.app_state.interchainaccounts.host_genesis_state.params.allow_messages.[]' -v "/cosmos.staking.v1beta1.MsgDelegate"
-	dasel put -t string -f "$GENESIS" '.app_state.interchainaccounts.host_genesis_state.params.allow_messages.[]' -v "/cosmos.staking.v1beta1.MsgBeginRedelegate"
-	dasel put -t string -f "$GENESIS" '.app_state.interchainaccounts.host_genesis_state.params.allow_messages.[]' -v "/cosmos.staking.v1beta1.MsgUndelegate"
-	dasel put -t string -f "$GENESIS" '.app_state.interchainaccounts.host_genesis_state.params.allow_messages.[]' -v "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation"
 
 }
 

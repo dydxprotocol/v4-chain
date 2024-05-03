@@ -19,7 +19,6 @@ import (
 	consensus "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
@@ -46,9 +45,6 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// slashing
 		*slashing.MsgUpdateParams,
-
-		// staking
-		*staking.MsgUpdateParams,
 
 		// upgrade
 		*upgrade.MsgCancelUpgrade,

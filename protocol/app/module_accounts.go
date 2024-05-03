@@ -2,7 +2,6 @@ package app
 
 import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
@@ -11,7 +10,7 @@ import (
 	rewardsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	vestmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
-
+	ibcconsumertypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 	"golang.org/x/exp/maps"
 )
 
@@ -24,11 +23,11 @@ var (
 	// Module account permissions. Contains all module accounts on dYdX chain.
 	maccPerms = map[string][]string{
 		// -------- Native SDK module accounts --------
-		authtypes.FeeCollectorName:     nil,
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		icatypes.ModuleName:            nil,
+		authtypes.FeeCollectorName:                    nil,
+		ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
+		ibcconsumertypes.ConsumerRedistributeName:     nil,
+		ibcconsumertypes.ConsumerToSendToProviderName: nil,
+		icatypes.ModuleName:                           nil,
 		// -------- dYdX custom module accounts --------
 		// subaccounts module account holds tokens for all subaccounts.
 		satypes.ModuleName: nil,
@@ -47,11 +46,11 @@ var (
 	// By default, all non-custom modules (except for gov) are blocked. This prevents
 	// unexpected violation of invariants (for example, https://github.com/cosmos/cosmos-sdk/issues/4795)
 	blockedModuleAccounts = map[string]bool{
-		authtypes.FeeCollectorName:     true,
-		stakingtypes.BondedPoolName:    true,
-		stakingtypes.NotBondedPoolName: true,
-		ibctransfertypes.ModuleName:    true,
-		icatypes.ModuleName:            true,
+		authtypes.FeeCollectorName:                    true,
+		ibctransfertypes.ModuleName:                   true,
+		ibcconsumertypes.ConsumerRedistributeName:     true,
+		ibcconsumertypes.ConsumerToSendToProviderName: true,
+		icatypes.ModuleName:                           true,
 	}
 )
 

@@ -33,7 +33,6 @@ const ConsensusRound = sdk.ContextKey("consensus_round")
 func ProcessProposalHandler(
 	txConfig client.TxConfig,
 	clobKeeper ProcessClobKeeper,
-	stakingKeeper ProcessStakingKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
 	pricesKeeper ProcessPricesKeeper,
 ) sdk.ProcessProposalHandler {
@@ -86,9 +85,9 @@ func ProcessProposalHandler(
 		}
 
 		// Measure MEV metrics if enabled.
-		if clobKeeper.RecordMevMetricsIsEnabled() {
-			clobKeeper.RecordMevMetrics(ctx, stakingKeeper, perpetualKeeper, txs.ProposedOperationsTx.msg)
-		}
+		// if clobKeeper.RecordMevMetricsIsEnabled() {
+		// 	clobKeeper.RecordMevMetrics(ctx, stakingKeeper, perpetualKeeper, txs.ProposedOperationsTx.msg)
+		// }
 
 		// Record a success metric.
 		recordSuccessMetrics(ctx, txs, len(req.Txs))

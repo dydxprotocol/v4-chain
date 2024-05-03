@@ -15,7 +15,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
@@ -30,12 +29,6 @@ var (
 
 		// Bank messages
 		sdk.MsgTypeURL(&banktypes.MsgSend{}),
-
-		// Staking messages
-		sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}),
-		sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}),
-		sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}),
-		sdk.MsgTypeURL(&stakingtypes.MsgCancelUnbondingDelegation{}),
 	}
 	// List of module accounts to check in state.
 	// These include all dYdX custom module accounts.

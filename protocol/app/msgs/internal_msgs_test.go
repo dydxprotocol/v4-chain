@@ -41,10 +41,6 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/cosmos.slashing.v1beta1.MsgUpdateParams",
 		"/cosmos.slashing.v1beta1.MsgUpdateParamsResponse",
 
-		// staking
-		"/cosmos.staking.v1beta1.MsgUpdateParams",
-		"/cosmos.staking.v1beta1.MsgUpdateParamsResponse",
-
 		// upgrade
 		"/cosmos.upgrade.v1beta1.MsgCancelUpgrade",
 		"/cosmos.upgrade.v1beta1.MsgCancelUpgradeResponse",

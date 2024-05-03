@@ -20,7 +20,6 @@ import (
 	consensus "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
@@ -62,10 +61,6 @@ var (
 		// slashing
 		"/cosmos.slashing.v1beta1.MsgUpdateParams":         &slashing.MsgUpdateParams{},
 		"/cosmos.slashing.v1beta1.MsgUpdateParamsResponse": nil,
-
-		// staking
-		"/cosmos.staking.v1beta1.MsgUpdateParams":         &staking.MsgUpdateParams{},
-		"/cosmos.staking.v1beta1.MsgUpdateParamsResponse": nil,
 
 		// upgrade
 		"/cosmos.upgrade.v1beta1.MsgCancelUpgrade":           &upgrade.MsgCancelUpgrade{},

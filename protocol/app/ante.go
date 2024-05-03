@@ -10,6 +10,8 @@ import (
 	libante "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
 	clobante "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/ante"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	consumerkeeper "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/keeper"
 )
 
 // HandlerOptions are the options required for constructing an SDK AnteHandler.
@@ -17,7 +19,9 @@ import (
 // struct embedding to include the normal cosmos-sdk `HandlerOptions`.
 type HandlerOptions struct {
 	ante.HandlerOptions
-	ClobKeeper clobtypes.ClobKeeper
+	ClobKeeper     clobtypes.ClobKeeper
+	IBCKeeper      ibckeeper.Keeper
+	ConsumerKeeper consumerkeeper.Keeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence

@@ -12,10 +12,6 @@ func TestICAHostAllowMessages(t *testing.T) {
 		[]string{
 			"/ibc.applications.transfer.v1.MsgTransfer",
 			"/cosmos.bank.v1beta1.MsgSend",
-			"/cosmos.staking.v1beta1.MsgDelegate",
-			"/cosmos.staking.v1beta1.MsgBeginRedelegate",
-			"/cosmos.staking.v1beta1.MsgUndelegate",
-			"/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation",
 		},
 		ICAHostAllowMessages,
 	)

@@ -43,6 +43,28 @@
       ]
     }
   },
+  "ccvconsumer": {
+    "params": {
+      "enabled": false,
+      "blocks_per_distribution_transmission": "1000",
+      "distribution_transmission_channel": "",
+      "provider_fee_pool_addr_str": "",
+      "ccv_timeout_period": "2419200s", 
+      "transfer_timeout_period": "3600s",
+      "consumer_redistribution_fraction": "0.75",
+      "historical_entries": "10000",
+      "unbonding_period":  "1209600s", 
+      "reward_denoms": [],
+      "provider_reward_denoms": [],
+      "retry_delay_period":  "3600s" 
+    },
+    "new_chain": false,
+    "provider": {
+      "client_state": null,
+      "consensus_state": null,
+      "initial_val_set": []
+    }
+  },
   "capability": {
     "index": "1",
     "owners": []
@@ -209,11 +231,7 @@
       "clients_consensus": [],
       "clients_metadata": [],
       "params": {
-        "allowed_clients": [
-          "06-solomachine",
-          "07-tendermint",
-          "09-localhost"
-        ]
+        "allowed_clients": ["*"]
       },
       "create_localhost": false,
       "next_client_sequence": "0"
@@ -234,7 +252,16 @@
       "send_sequences": [],
       "recv_sequences": [],
       "ack_sequences": [],
-      "next_channel_sequence": "0"
+      "next_channel_sequence": "0",
+      "params": {
+        "upgrade_timeout": {
+          "height": {
+            "revision_number": "0",
+            "revision_height": "0"
+          },
+          "timestamp": "600000000000"
+        }
+      }
     }
   },
   "interchainaccounts": {
@@ -339,23 +366,6 @@
     },
     "signing_infos": [],
     "missed_blocks": []
-  },
-  "staking": {
-    "params": {
-      "unbonding_time": "1814400s",
-      "max_validators": 100,
-      "max_entries": 7,
-      "historical_entries": 10000,
-      "bond_denom": "stake",
-      "min_commission_rate": "0.000000000000000000"
-    },
-    "last_total_power": "0",
-    "last_validator_powers": [],
-    "validators": [],
-    "delegations": [],
-    "unbonding_delegations": [],
-    "redelegations": [],
-    "exported": false
   },
   "stats": {
     "params": {

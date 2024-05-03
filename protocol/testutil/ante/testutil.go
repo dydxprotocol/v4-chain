@@ -1,6 +1,8 @@
 package ante
 
 import (
+	"testing"
+
 	storetypes "cosmossdk.io/store/types"
 	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -13,7 +15,6 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -69,12 +70,10 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	suite.EncCfg = MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
 
 	maccPerms := map[string][]string{
-		"fee_collector":          nil,
-		"mint":                   {"minter"},
-		"bonded_tokens_pool":     {"burner", "staking"},
-		"not_bonded_tokens_pool": {"burner", "staking"},
-		"multiPerm":              {"burner", "minter", "staking"},
-		"random":                 {"random"},
+		"fee_collector": nil,
+		"mint":          {"minter"},
+		"multiPerm":     {"burner", "minter", "staking"},
+		"random":        {"random"},
 	}
 
 	suite.AccountKeeper = keeper.NewAccountKeeper(
