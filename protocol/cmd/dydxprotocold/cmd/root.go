@@ -32,7 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -41,8 +41,6 @@ import (
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	protocolflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
-
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -108,7 +106,7 @@ func NewRootCmdWithInterceptors(
 		WithTxConfig(tempApp.TxConfig()).
 		WithLegacyAmino(tempApp.LegacyAmino()).
 		WithInput(os.Stdin).
-		WithAccountRetriever(types.AccountRetriever{}).
+		WithAccountRetriever(authtypes.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastSync).
 		WithHomeDir(homeDir).
 		WithViper(EnvPrefix)
