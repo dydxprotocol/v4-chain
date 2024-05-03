@@ -86,7 +86,8 @@ func CmdModuleNameToAddress() *cobra.Command {
 		Use:   "module-name-to-address [module-name]",
 		Short: "module name to address",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println(authtypes.NewModuleAddress(args[0]))
+			address := authtypes.NewModuleAddress(args[0])
+			fmt.Println(address.String())
 			return nil
 		},
 	}
