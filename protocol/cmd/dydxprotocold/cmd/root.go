@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -41,6 +42,8 @@ import (
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	protocolflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -267,6 +270,23 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 }
 
+func CmdModuleNameToAddress() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "module-name-to-address [module-name]",
+		Short: "module name to address",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			address := authtypes.NewModuleAddress(args[0])
+			fmt.Println(address.String())
+			return nil
+		},
+	}
+
+	flags.AddPaginationFlagsToCmd(cmd, cmd.Use)
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // queryCommand adds transaction and account querying commands.
 func queryCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -283,6 +303,7 @@ func queryCommand() *cobra.Command {
 		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
+		CmdModuleNameToAddress(),
 	)
 
 	// Module specific query sub-commands are added by AutoCLI
