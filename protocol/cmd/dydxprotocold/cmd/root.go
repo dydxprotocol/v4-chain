@@ -167,7 +167,7 @@ func NewRootCmdWithInterceptors(
 	if err != nil {
 		panic(err)
 	}
-	if err := autoCliOpts(tempApp, initClientCtx).EnhanceRootCommand(rootCmd); err != nil {
+	if err := AutoCliOpts(tempApp, initClientCtx).EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
 
@@ -235,7 +235,7 @@ func initRootCmd(
 // autoCliOpts returns options based upon the modules in the dYdX v4 app.
 //
 // Creates an instance of the application that is discarded to enumerate the modules.
-func autoCliOpts(tempApp *dydxapp.App, initClientCtx client.Context) autocli.AppOptions {
+func AutoCliOpts(tempApp *dydxapp.App, initClientCtx client.Context) autocli.AppOptions {
 	modules := make(map[string]appmodule.AppModule, 0)
 	for _, m := range tempApp.ModuleManager.Modules {
 		if moduleWithName, ok := m.(module.HasName); ok {
