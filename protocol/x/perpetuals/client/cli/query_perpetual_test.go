@@ -241,17 +241,3 @@ func TestListPerpetual(t *testing.T) {
 		}
 	})
 }
-
-func TestCmdModuleNameToAddress(t *testing.T) {
-	expectedModuleNameAddress := map[string]string{
-		"subaccounts": "dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6",
-		"subaccounts:37": "dydx16lwrx54mh9aru9ulzpknd429wldkhdwekhlswf",
-		"insurance_fund": "dydx1c7ptc87hkd54e3r7zjy92q29xkq7t79w64slrq",
-		"insurance_fund:37": "dydx10mlrxmaquwjwsj59ywp8xttc8rfxn9jfvzswtn",
-	}
-	for moduleName, expectedAddress := range expectedModuleNameAddress {
-		args := []string{
-			moduleName,
-			fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-
-	}

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -275,9 +274,9 @@ func CmdModuleNameToAddress() *cobra.Command {
 		Use:   "module-name-to-address [module-name]",
 		Short: "module name to address",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
 			address := authtypes.NewModuleAddress(args[0])
-			fmt.Println(address.String())
-			return nil
+			return clientCtx.PrintString(address.String())
 		},
 	}
 
