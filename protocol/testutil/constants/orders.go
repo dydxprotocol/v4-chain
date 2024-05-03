@@ -932,6 +932,13 @@ var (
 		Subticks:     50_500_000_000,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 10},
 	}
+	Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price51500_GTB10 = clobtypes.Order{
+		OrderId:      clobtypes.OrderId{SubaccountId: Carl_Num1, ClientId: 0, ClobPairId: 0},
+		Side:         clobtypes.Order_SIDE_BUY,
+		Quantums:     100_000_000,
+		Subticks:     51_500_000_000,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 10},
+	}
 	Order_Dave_Num0_Id2_Clob0_Sell1BTC_Price49500_GTB10 = clobtypes.Order{
 		OrderId:      clobtypes.OrderId{SubaccountId: Dave_Num0, ClientId: 2, ClobPairId: 0},
 		Side:         clobtypes.Order_SIDE_SELL,
@@ -1085,6 +1092,13 @@ var (
 		Side:         clobtypes.Order_SIDE_SELL,
 		Quantums:     1_000_000_000,
 		Subticks:     3_030_000_000,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 10},
+	}
+	Order_Dave_Num1_Id0_Clob0_Sell1BTC_Price48500_GTB10 = clobtypes.Order{
+		OrderId:      clobtypes.OrderId{SubaccountId: Dave_Num1, ClientId: 0, ClobPairId: 0},
+		Side:         clobtypes.Order_SIDE_SELL,
+		Quantums:     100_000_000,
+		Subticks:     48_500_000_000,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 10},
 	}
 	Order_Dave_Num1_Id0_Clob0_Sell1BTC_Price49500_GTB10 = clobtypes.Order{
