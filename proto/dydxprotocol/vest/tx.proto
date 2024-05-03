@@ -10,6 +10,7 @@ option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/v
 
 // Msg defines the Msg service.
 service Msg {
+    option (cosmos.msg.v1.service) = true;
   // SetVestEntry sets a VestEntry in state.
   rpc SetVestEntry(MsgSetVestEntry) returns (MsgSetVestEntryResponse);
   // DeleteVestEntry deletes a VestEntry from state.

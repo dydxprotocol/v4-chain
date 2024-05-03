@@ -10,6 +10,7 @@ import "gogoproto/gogo.proto";
 
 // Msg defines the Msg service.
 service Msg {
+    option (cosmos.msg.v1.service) = true;
   // UpdatePerpetualFeeParams updates the PerpetualFeeParams in state.
   rpc UpdatePerpetualFeeParams(MsgUpdatePerpetualFeeParams)
       returns (MsgUpdatePerpetualFeeParamsResponse);

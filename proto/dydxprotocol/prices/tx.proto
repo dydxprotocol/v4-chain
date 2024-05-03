@@ -1,3 +1,4 @@
+
 syntax = "proto3";
 package dydxprotocol.prices;
 
@@ -10,6 +11,7 @@ option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/p
 
 // Msg defines the Msg service.
 service Msg {
+    option (cosmos.msg.v1.service) = true;
   // UpdateMarketPrices updates the oracle price of a market relative to
   // quoteCurrency.
   rpc UpdateMarketPrices(MsgUpdateMarketPrices)

@@ -11,6 +11,7 @@ option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/p
 
 // Msg defines the Msg service.
 service Msg {
+    option (cosmos.msg.v1.service) = true;
   // AddPremiumVotes add new samples of the funding premiums to the
   // application.
   rpc AddPremiumVotes(MsgAddPremiumVotes) returns (MsgAddPremiumVotesResponse);

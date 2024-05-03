@@ -10,6 +10,7 @@ option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/g
 
 // Msg defines the Msg service.
 service Msg {
+    option (cosmos.msg.v1.service) = true;
   // SlashValidator is exposed to allow slashing of a misbehaving validator via
   // governance.
   rpc SlashValidator(MsgSlashValidator) returns (MsgSlashValidatorResponse);

@@ -9,6 +9,7 @@ option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/d
 
 // Msg defines the Msg service.
 service Msg {
+    option (cosmos.msg.v1.service) = true;
   // DelayMessage delays the execution of a message for a given number of
   // blocks.
   rpc DelayMessage(MsgDelayMessage) returns (MsgDelayMessageResponse);
