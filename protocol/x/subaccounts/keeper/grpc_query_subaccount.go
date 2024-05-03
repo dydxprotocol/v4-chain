@@ -51,13 +51,19 @@ func (k Keeper) Subaccount(
 	}
 	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
-	val := k.GetSubaccount(
+	subaccount := k.GetSubaccount(
 		ctx,
 		types.SubaccountId{
 			Owner:  req.Owner,
 			Number: req.Number,
 		},
 	)
-
-	return &types.QuerySubaccountResponse{Subaccount: val}, nil
+	settledSubaccount, _, err := k.GetSettledSubaccount(
+		ctx,
+		subaccount,
+	)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Error settling subaccount")
+	}
+	return &types.QuerySubaccountResponse{Subaccount: settledSubaccount}, nil
 }
