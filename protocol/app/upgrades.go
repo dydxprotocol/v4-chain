@@ -39,7 +39,7 @@ func (app *App) setupUpgradeHandlers() {
 	)
 }
 
-// setUpgradeStoreLoaders sets custom store loaders to customize the rootMultiStore
+// setupUpgradeStoreLoaders sets custom store loaders to customize the rootMultiStore
 // initialization for software upgrades.
 func (app *App) setupUpgradeStoreLoaders() {
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
