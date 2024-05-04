@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/client"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -32,6 +34,9 @@ type OrderbookSubscription struct {
 
 	// Stream
 	srv clobtypes.Query_StreamOrderbookUpdatesServer
+
+	// Testing
+	client *client.GrpcClient
 }
 
 func NewGrpcStreamingManager() *GrpcStreamingManagerImpl {
@@ -72,9 +77,87 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 	return nil
 }
 
+func (sm *GrpcStreamingManagerImpl) SubscribeTestClient(client *client.GrpcClient) {
+	subscription := &OrderbookSubscription{
+		clobPairIds: []uint32{0, 1},
+		client:      client,
+	}
+
+	sm.Lock()
+	defer sm.Unlock()
+
+	sm.orderbookSubscriptions[sm.nextSubscriptionId] = subscription
+	sm.nextSubscriptionId++
+}
+
+// SendOrderbookMatchFillUpdates groups updates by their clob pair ids and
+// sends messages to the subscribers.
+func (sm *GrpcStreamingManagerImpl) SendOrderbookMatchFillUpdates(
+	ctx sdk.Context,
+	matches []clobtypes.OrderBookMatchFill,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
+	// Group fills by clob pair id.
+	matchFillsByClobPairId := make(map[uint32][]clobtypes.OrderBookMatchFill)
+	for _, match := range matches {
+		// Fetch the clob pair id from the first order in `OrderBookMatchFill`.
+		// We can assume there must be an order, and that all orders share the same
+		// clob pair id.
+		clobPairId := match.Orders[0].OrderId.ClobPairId
+		if _, ok := matchFillsByClobPairId[clobPairId]; !ok {
+			matchFillsByClobPairId[clobPairId] = []clobtypes.OrderBookMatchFill{}
+		}
+		matchFillsByClobPairId[clobPairId] = append(matchFillsByClobPairId[clobPairId], match)
+	}
+
+	sm.Lock()
+	defer sm.Unlock()
+
+	// Send updates to subscribers.
+	idsToRemove := make([]uint32, 0)
+	if ctx.BlockHeight()%10 == 0 {
+		log.InfoLog(ctx, "orderbook subscriptions", "subscriptions", sm.orderbookSubscriptions)
+	}
+	for _, subscription := range sm.orderbookSubscriptions {
+		matchFillsToSend := make([]clobtypes.OrderBookMatchFill, 0)
+		for _, clobPairId := range subscription.clobPairIds {
+			if matchFills, ok := matchFillsByClobPairId[clobPairId]; ok {
+				matchFillsToSend = append(matchFillsToSend, matchFills...)
+			}
+		}
+
+		if len(matchFillsToSend) > 0 {
+			orderbookUpdate := clobtypes.StreamOrderbookUpdate{
+				UpdateMessage: &clobtypes.StreamOrderbookUpdate_OrderFill{
+					OrderFill: &clobtypes.StreamOrderbookUpdatesOrderFills{
+						Fills: matchFillsToSend,
+					},
+				},
+			}
+			subscription.client.Update(
+				&clobtypes.StreamOrderbookUpdatesResponse{
+					Updates: []clobtypes.StreamOrderbookUpdate{
+						orderbookUpdate,
+					},
+					BlockHeight: blockHeight,
+					ExecMode:    uint32(execMode),
+				},
+			)
+		}
+	}
+
+	// Clean up subscriptions that have been closed.
+	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
+	for _, id := range idsToRemove {
+		delete(sm.orderbookSubscriptions, id)
+	}
+}
+
 // SendOrderbookUpdates groups updates by their clob pair ids and
 // sends messages to the subscribers.
 func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
+	ctx sdk.Context,
 	offchainUpdates *clobtypes.OffchainUpdates,
 	snapshot bool,
 	blockHeight uint32,
@@ -105,7 +188,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 
 	// Send updates to subscribers.
 	idsToRemove := make([]uint32, 0)
-	for id, subscription := range sm.orderbookSubscriptions {
+	for _, subscription := range sm.orderbookSubscriptions {
 		updatesToSend := make([]ocutypes.OffChainUpdateV1, 0)
 		for _, clobPairId := range subscription.clobPairIds {
 			if updates, ok := v1updates[clobPairId]; ok {
@@ -113,17 +196,24 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 			}
 		}
 
-		if len(updatesToSend) > 0 {
-			if err := subscription.srv.Send(
+		if len(updatesToSend) > 0 || snapshot {
+			orderbookUpdate := clobtypes.StreamOrderbookUpdate{
+				UpdateMessage: &clobtypes.StreamOrderbookUpdate_OrderPlace{
+					OrderPlace: &clobtypes.StreamOrderbookUpdatesOrderPlacement{
+						Updates:  updatesToSend,
+						Snapshot: snapshot,
+					},
+				},
+			}
+			subscription.client.Update(
 				&clobtypes.StreamOrderbookUpdatesResponse{
-					Updates:     updatesToSend,
-					Snapshot:    snapshot,
+					Updates: []clobtypes.StreamOrderbookUpdate{
+						orderbookUpdate,
+					},
 					BlockHeight: blockHeight,
 					ExecMode:    uint32(execMode),
 				},
-			); err != nil {
-				idsToRemove = append(idsToRemove, id)
-			}
+			)
 		}
 	}
 

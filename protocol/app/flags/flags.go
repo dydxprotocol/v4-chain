@@ -47,10 +47,11 @@ const (
 const (
 	DefaultDdAgentHost           = ""
 	DefaultDdTraceAgentPort      = 8126
-	DefaultNonValidatingFullNode = false
+	DefaultNonValidatingFullNode = true
 	DefaultDdErrorTrackingFormat = false
 
-	DefaultGrpcStreamingEnabled = false
+	// only for testing
+	DefaultGrpcStreamingEnabled = true
 	DefaultVEOracleEnabled      = true
 )
 

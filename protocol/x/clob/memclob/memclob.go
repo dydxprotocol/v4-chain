@@ -386,7 +386,21 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 	}
 
 	// Add the new matches to the operations queue.
-	m.operationsToPropose.MustAddMatchToOperationsQueue(takerOrder, makerFillWithOrders)
+	internalOperation := m.operationsToPropose.MustAddMatchToOperationsQueue(takerOrder, makerFillWithOrders)
+
+	// If orderbook updates are on, send an orderbook update with the fill to grpc streams.
+	if m.generateOrderbookUpdates {
+		// Collect all maker orders.
+		makerOrders := lib.MapSlice(
+			makerFillWithOrders,
+			func(mfwo types.MakerFillWithOrder) types.Order {
+				return mfwo.Order
+			},
+		)
+		clobMatch := internalOperation.GetMatch()
+		orderbookMatchFill := m.GenerateOrderBookMatchFill(ctx, *clobMatch, takerOrder, makerOrders)
+		m.clobKeeper.SendOrderbookMatchFillUpdates(ctx, []types.OrderBookMatchFill{orderbookMatchFill})
+	}
 
 	// Build a slice of all subaccounts which had matches this matching loop, and sort them for determinism.
 	allSubaccounts := lib.GetSortedKeys[satypes.SortedSubaccountIds](subaccountTotalMatchedQuantums)
@@ -1961,8 +1975,12 @@ func (m *MemClobPriceTimePriority) mustRemoveOrder(
 
 	if m.generateOrderbookUpdates {
 		// Send an orderbook update to grpc streams.
-		orderbookUpdate := m.GetOrderbookUpdatesForOrderRemoval(ctx, order.OrderId)
-		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
+		allUpdates := types.NewOffchainUpdates()
+		orderbookRemovalUpdate := m.GetOrderbookUpdatesForOrderRemoval(ctx, order.OrderId)
+		allUpdates.Append(orderbookRemovalUpdate)
+		// orderUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, order.OrderId)
+		// allUpdates.Append(orderUpdate)
+		m.clobKeeper.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 }
 
@@ -2487,4 +2505,8 @@ func (m *MemClobPriceTimePriority) resizeReduceOnlyMatchIfNecessary(
 	absNewMatchSize := new(big.Int).Abs(newMatchSize)
 	maxMatchSize := lib.BigMin(absPositionSize, absNewMatchSize)
 	return satypes.BaseQuantums(maxMatchSize.Uint64())
+}
+
+func (m *MemClobPriceTimePriority) GetOrderbook(ctx sdk.Context, clobPairId types.ClobPairId) types.Orderbook {
+	return *m.openOrders.mustGetOrderbook(ctx, clobPairId)
 }

@@ -174,6 +174,7 @@ func PrepareCheckState(
 		processProposerMatchesEvents.RemovedStatefulOrderIds,
 		offchainUpdates,
 	)
+	log.InfoLog(ctx, "Sending out orderbook update to grpc stream for filled orders")
 
 	// For orders that are filled in the last block, send an orderbook update to the grpc streams.
 	if keeper.GetGrpcStreamingManager().Enabled() {
@@ -213,6 +214,7 @@ func PrepareCheckState(
 		}
 		keeper.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
+	log.InfoLog(ctx, "place all stateful order placements included in the last block on the memclob")
 
 	// 3. Place all stateful order placements included in the last block on the memclob.
 	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`
@@ -243,6 +245,8 @@ func PrepareCheckState(
 		offchainUpdates,
 	)
 
+	log.InfoLog(ctx, "replay local validator operations")
+
 	// 5. Replay the local validator’s operations onto the book.
 	replayUpdates := keeper.MemClob.ReplayOperations(
 		ctx,
@@ -255,6 +259,7 @@ func PrepareCheckState(
 	if replayUpdates != nil {
 		offchainUpdates = replayUpdates
 	}
+	log.InfoLog(ctx, "liquidate")
 
 	// 6. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
 	liquidatableSubaccountIds := keeper.DaemonLiquidationInfo.GetLiquidatableSubaccountIds()
