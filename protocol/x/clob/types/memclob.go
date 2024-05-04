@@ -153,4 +153,8 @@ type MemClob interface {
 		ctx sdk.Context,
 		orderId OrderId,
 	) (offchainUpdates *OffchainUpdates)
+	GetOrderbook(
+		ctx sdk.Context,
+		clobPairId ClobPairId,
+	) Orderbook
 }
