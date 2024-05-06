@@ -910,36 +910,36 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		offchainUpdates.Append(matchOffchainUpdates)
 		writeCache()
 	} else {
-		allUpdates := types.NewOffchainUpdates()
-		// try sending updates for all things involved since state reverted
-		if order.IsLiquidation() {
-			log.InfoLog(
-				ctx,
-				"reverted state",
-				"order", order,
-				"liquidation", true,
-				"mode", ctx.ExecMode(),
-			)
-		} else {
-			normalOrder := order.MustGetOrder()
-			log.InfoLog(
-				ctx,
-				"reverted state",
-				"order", normalOrder,
-				"orderId", normalOrder.OrderId.String(),
-				"mode", ctx.ExecMode(),
-				"matching_err", matchingErr,
-				"len_maker_fills", len(newMakerFills),
-			)
-			updates := m.GetOrderbookUpdatesForOrderUpdate(ctx, normalOrder.OrderId)
-			allUpdates.Append(updates)
-		}
-		// revert all maker fills
-		for _, fill := range newMakerFills {
-			updates := m.GetOrderbookUpdatesForOrderUpdate(ctx, fill.MakerOrderId)
-			allUpdates.Append(updates)
-		}
-		m.clobKeeper.SendOrderbookUpdates(ctx, allUpdates, false)
+		// allUpdates := types.NewOffchainUpdates()
+		// // try sending updates for all things involved since state reverted
+		// if order.IsLiquidation() {
+		// 	log.InfoLog(
+		// 		ctx,
+		// 		"reverted state",
+		// 		"order", order,
+		// 		"liquidation", true,
+		// 		"mode", ctx.ExecMode(),
+		// 	)
+		// } else {
+		// 	normalOrder := order.MustGetOrder()
+		// 	log.InfoLog(
+		// 		ctx,
+		// 		"reverted state",
+		// 		"order", normalOrder,
+		// 		"orderId", normalOrder.OrderId.String(),
+		// 		"mode", ctx.ExecMode(),
+		// 		"matching_err", matchingErr,
+		// 		"len_maker_fills", len(newMakerFills),
+		// 	)
+		// 	updates := m.GetOrderbookUpdatesForOrderUpdate(ctx, normalOrder.OrderId)
+		// 	allUpdates.Append(updates)
+		// }
+		// // revert all maker fills
+		// for _, fill := range newMakerFills {
+		// 	updates := m.GetOrderbookUpdatesForOrderUpdate(ctx, fill.MakerOrderId)
+		// 	allUpdates.Append(updates)
+		// }
+		// m.clobKeeper.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 
 	return takerOrderStatus, offchainUpdates, makerOrdersToRemove, matchingErr
