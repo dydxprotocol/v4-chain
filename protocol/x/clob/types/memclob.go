@@ -153,4 +153,14 @@ type MemClob interface {
 		ctx sdk.Context,
 		orderId OrderId,
 	) (offchainUpdates *OffchainUpdates)
+	GenerateStreamOrderbookFill(
+		ctx sdk.Context,
+		clobMatch ClobMatch,
+		takerOrder MatchableOrder,
+		makerOrders []Order,
+	) StreamOrderbookFill
+	GetOrderbook(
+		ctx sdk.Context,
+		clobPairId ClobPairId,
+	) Orderbook
 }

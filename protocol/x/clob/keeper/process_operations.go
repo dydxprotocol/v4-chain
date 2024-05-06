@@ -19,6 +19,25 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+// fetchOrdersInvolvedInMatchesFromOpQueue fetches all OrderIds involved in an operations
+// queue's matches and returns them as a set.
+func fetchOrdersInvolvedInMatchesFromOpQueue(
+	operations []types.InternalOperation,
+) (orderIdSet map[types.OrderId]struct{}) {
+	orderIdSet = make(map[types.OrderId]struct{})
+	for _, operation := range operations {
+		if shortTermOrderPlacement := operation.GetShortTermOrderPlacement(); shortTermOrderPlacement != nil {
+			orderId := shortTermOrderPlacement.GetOrder().OrderId
+			orderIdSet[orderId] = struct{}{}
+		}
+		if clobMatch := operation.GetMatch(); clobMatch != nil {
+			orderIdSetForClobMatch := clobMatch.GetAllOrderIds()
+			orderIdSet = lib.MergeMaps(orderIdSet, orderIdSetForClobMatch)
+		}
+	}
+	return orderIdSet
+}
+
 // ProcessProposerOperations updates on-chain state given an []OperationRaw operations queue
 // representing matches that occurred in the previous block. It performs validation on an operations
 // queue. If all validation passes, the operations queue is written to state.
@@ -36,6 +55,25 @@ func (k Keeper) ProcessProposerOperations(
 	operations, err := types.ValidateAndTransformRawOperations(ctx, rawOperations, k.txDecoder, k.antehandler)
 	if err != nil {
 		return errorsmod.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
+	}
+
+	// If grpc streams are on, send absolute fill amounts from local + proposed opqueue to the grpc stream.
+	if streamingManager := k.GetGrpcStreamingManager(); streamingManager.Enabled() {
+		localValidatorOperationsQueue, _ := k.MemClob.GetOperationsToReplay(ctx)
+		orderIdSetToUpdate := fetchOrdersInvolvedInMatchesFromOpQueue(
+			append(
+				operations,
+				localValidatorOperationsQueue...,
+			),
+		)
+
+		// Send updates with absolute fill amounts.
+		allUpdates := types.NewOffchainUpdates()
+		for orderId := range orderIdSetToUpdate {
+			orderbookUpdate := k.MemClob.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
+			allUpdates.Append(orderbookUpdate)
+		}
+		k.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 
 	log.DebugLog(ctx, "Processing operations queue",
@@ -462,6 +500,7 @@ func (k Keeper) PersistMatchOrdersToState(
 		}
 	}
 
+	makerOrders := make([]types.Order, 0)
 	makerFills := matchOrders.GetFills()
 	for _, makerFill := range makerFills {
 		// Fetch the maker order from either short term orders or state.
@@ -475,6 +514,7 @@ func (k Keeper) PersistMatchOrdersToState(
 			MakerOrder: &makerOrder,
 			FillAmount: satypes.BaseQuantums(makerFill.GetFillAmount()),
 		}
+		makerOrders = append(makerOrders, makerOrder)
 
 		_, _, _, _, err = k.ProcessSingleMatch(ctx, &matchWithOrders)
 		if err != nil {
@@ -518,6 +558,26 @@ func (k Keeper) PersistMatchOrdersToState(
 		)
 	}
 
+	// if GRPC streaming is on, emit a generated clob match to stream.
+	if streamingManager := k.GetGrpcStreamingManager(); streamingManager.Enabled() {
+		streamOrderbookFill := k.MemClob.GenerateStreamOrderbookFill(
+			ctx,
+			types.ClobMatch{
+				Match: &types.ClobMatch_MatchOrders{
+					MatchOrders: matchOrders,
+				},
+			},
+			&takerOrder,
+			makerOrders,
+		)
+		streamingManager.SendOrderbookFillUpdates(
+			ctx,
+			[]types.StreamOrderbookFill{
+				streamOrderbookFill,
+			},
+		)
+	}
+
 	return nil
 }
 
@@ -547,12 +607,14 @@ func (k Keeper) PersistMatchLiquidationToState(
 		return err
 	}
 
+	makerOrders := make([]types.Order, 0)
 	for _, fill := range matchLiquidation.GetFills() {
 		// Fetch the maker order from either short term orders or state.
 		makerOrder, err := k.FetchOrderFromOrderId(ctx, fill.MakerOrderId, ordersMap)
 		if err != nil {
 			return err
 		}
+		makerOrders = append(makerOrders, makerOrder)
 
 		matchWithOrders := types.MatchWithOrders{
 			MakerOrder: &makerOrder,
@@ -604,6 +666,26 @@ func (k Keeper) PersistMatchLiquidationToState(
 		matchLiquidation.Liquidated,
 		matchLiquidation.PerpetualId,
 	)
+
+	// if GRPC streaming is on, emit a generated clob match to stream.
+	if streamingManager := k.GetGrpcStreamingManager(); streamingManager.Enabled() {
+		streamOrderbookFill := k.MemClob.GenerateStreamOrderbookFill(
+			ctx,
+			types.ClobMatch{
+				Match: &types.ClobMatch_MatchPerpetualLiquidation{
+					MatchPerpetualLiquidation: matchLiquidation,
+				},
+			},
+			takerOrder,
+			makerOrders,
+		)
+		streamingManager.SendOrderbookFillUpdates(
+			ctx,
+			[]types.StreamOrderbookFill{
+				streamOrderbookFill,
+			},
+		)
+	}
 	return nil
 }
 

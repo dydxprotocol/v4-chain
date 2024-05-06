@@ -103,6 +103,24 @@ func (_m *MemClob) DeleverageSubaccount(ctx types.Context, subaccountId subaccou
 	return r0, r1
 }
 
+// GenerateStreamOrderbookFill provides a mock function with given fields: ctx, clobMatch, takerOrder, makerOrders
+func (_m *MemClob) GenerateStreamOrderbookFill(ctx types.Context, clobMatch clobtypes.ClobMatch, takerOrder clobtypes.MatchableOrder, makerOrders []clobtypes.Order) clobtypes.StreamOrderbookFill {
+	ret := _m.Called(ctx, clobMatch, takerOrder, makerOrders)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GenerateStreamOrderbookFill")
+	}
+
+	var r0 clobtypes.StreamOrderbookFill
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobMatch, clobtypes.MatchableOrder, []clobtypes.Order) clobtypes.StreamOrderbookFill); ok {
+		r0 = rf(ctx, clobMatch, takerOrder, makerOrders)
+	} else {
+		r0 = ret.Get(0).(clobtypes.StreamOrderbookFill)
+	}
+
+	return r0
+}
+
 // GetCancelOrder provides a mock function with given fields: ctx, orderId
 func (_m *MemClob) GetCancelOrder(ctx types.Context, orderId clobtypes.OrderId) (uint32, bool) {
 	ret := _m.Called(ctx, orderId)
@@ -317,6 +335,24 @@ func (_m *MemClob) GetOrderRemainingAmount(ctx types.Context, order clobtypes.Or
 	}
 
 	return r0, r1
+}
+
+// GetOrderbook provides a mock function with given fields: ctx, clobPairId
+func (_m *MemClob) GetOrderbook(ctx types.Context, clobPairId clobtypes.ClobPairId) clobtypes.Orderbook {
+	ret := _m.Called(ctx, clobPairId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetOrderbook")
+	}
+
+	var r0 clobtypes.Orderbook
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId) clobtypes.Orderbook); ok {
+		r0 = rf(ctx, clobPairId)
+	} else {
+		r0 = ret.Get(0).(clobtypes.Orderbook)
+	}
+
+	return r0
 }
 
 // GetOrderbookUpdatesForOrderPlacement provides a mock function with given fields: ctx, order
