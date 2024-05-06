@@ -44,7 +44,10 @@ describe('from-kafka-helpers', () => {
       [WebsocketTopics.TO_WEBSOCKETS_CANDLES, [Channel.V4_CANDLES]],
       [WebsocketTopics.TO_WEBSOCKETS_MARKETS, [Channel.V4_MARKETS]],
       [WebsocketTopics.TO_WEBSOCKETS_ORDERBOOKS, [Channel.V4_ORDERBOOK]],
-      [WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS, [Channel.V4_ACCOUNTS]],
+      [
+        WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS,
+        [Channel.V4_ACCOUNTS, Channel.V4_PARENT_ACCOUNTS],
+      ],
       [WebsocketTopics.TO_WEBSOCKETS_TRADES, [Channel.V4_TRADES]],
     ])('gets correct channel for topic %s', (topic: WebsocketTopics, channels: Channel[]) => {
       expect(getChannels(topic)).toEqual(channels);
