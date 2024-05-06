@@ -3,6 +3,7 @@ package v_5_0_0
 import (
 	"context"
 	"fmt"
+	types2 "github.com/cometbft/cometbft/proto/tendermint/types"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -263,15 +264,17 @@ func voteExtensionsUpgrade(
 	keeper consensusparamkeeper.Keeper,
 ) {
 	currentParams, err := keeper.Params(ctx, &consensustypes.QueryParamsRequest{})
-	if err != nil {
+	if err != nil || currentParams == nil || currentParams.Params == nil {
 		panic(fmt.Sprintf("failed to retrieve existing consensus params in VE upgrade handler: %s", err))
 	}
-	if currentParams.Params.Abci.VoteExtensionsEnableHeight != 0 {
+	if currentParams.Params.Abci != nil && currentParams.Params.Abci.VoteExtensionsEnableHeight != 0 {
 		panic(fmt.Sprintf(
 			"unable to update VE Enable Height since its current value of %d is already non-zero",
 			currentParams.Params.Abci.VoteExtensionsEnableHeight))
 	}
-	currentParams.Params.Abci.VoteExtensionsEnableHeight = ctx.BlockHeight() + VEEnableHeightDelta
+	currentParams.Params.Abci = &types2.ABCIParams{
+		VoteExtensionsEnableHeight: ctx.BlockHeight() + VEEnableHeightDelta,
+	}
 	_, err = keeper.UpdateParams(ctx, &consensustypes.MsgUpdateParams{
 		Authority: keeper.GetAuthority(),
 		Block:     currentParams.Params.Block,
