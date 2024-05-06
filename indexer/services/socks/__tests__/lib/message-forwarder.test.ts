@@ -319,77 +319,67 @@ describe('message-forwarder', () => {
         done();
       }
     });
+  });
 
-    it(
-      'Batch sends subaccount messages to parent subaccounts channel', 
-      (done: jest.DoneCallback) => {
-      const channel: Channel = Channel.V4_PARENT_ACCOUNTS;
-      const id: string = `${defaultSubaccountId.owner}/${defaultSubaccountId.number}`;
-  
-      const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
-      subscriptions.start(messageForwarder.forwardToClient);
-      messageForwarder.start();
-  
-      const ws = new WebSocket(WS_HOST);
-      let connectionId: string;
-  
-      ws.on(WebsocketEvents.MESSAGE, async (message) => {
-        const msg: OutgoingMessage = JSON.parse(message.toString()) as OutgoingMessage;
-        if (msg.message_id === 0) {
-          connectionId = msg.connection_id;
-        }
-  
-        if (msg.message_id === 1) {
-          // Check that the initial message is correct.
-          checkInitialMessage(
-            msg as SubscribedMessage,
-            connectionId,
-            channel,
-            id,
-            subaccountInitialMessage,
-          );
-  
-          // await each message to ensure they are sent in order
-          for (const subaccountMessage of subaccountMessages) {
-            await producer.send({
-              topic: WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS,
-              messages: [{
-                value: Buffer.from(
-                  Uint8Array.from(
-                    SubaccountMessage.encode(subaccountMessage).finish(),
-                  ),
+  it('Batch sends subaccount messages to parent subaccount channel', (done: jest.DoneCallback) => {
+    const channel: Channel = Channel.V4_PARENT_ACCOUNTS;
+    const id: string = `${defaultSubaccountId.owner}/${defaultSubaccountId.number}`;
+
+    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
+    subscriptions.start(messageForwarder.forwardToClient);
+    messageForwarder.start();
+
+    const ws = new WebSocket(WS_HOST);
+    let connectionId: string;
+
+    ws.on(WebsocketEvents.MESSAGE, async (message) => {
+      const msg: OutgoingMessage = JSON.parse(message.toString()) as OutgoingMessage;
+      if (msg.message_id === 0) {
+        connectionId = msg.connection_id;
+      }
+
+      if (msg.message_id === 1) {
+        // Check that the initial message is correct.
+        checkInitialMessage(
+          msg as SubscribedMessage,
+          connectionId,
+          channel,
+          id,
+          subaccountInitialMessage,
+        );
+
+        // await each message to ensure they are sent in order
+        for (const subaccountMessage of subaccountMessages) {
+          await producer.send({
+            topic: WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS,
+            messages: [{
+              value: Buffer.from(
+                Uint8Array.from(
+                  SubaccountMessage.encode(subaccountMessage).finish(),
                 ),
-                partition: 0,
-                timestamp: `${Date.now()}`,
-              }],
-            });
-          }
+              ),
+              partition: 0,
+              timestamp: `${Date.now()}`,
+            }],
+          });
         }
-  
-        if (msg.message_id >= 2) {
-          const batchMsg: ChannelBatchDataMessage = JSON.parse(
-            message.toString(),
-          ) as ChannelBatchDataMessage;
-  
-          checkBatchMessage(
-            batchMsg,
-            connectionId,
-            channel,
-            id,
-            SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
-            subaccountMessages,
-          );
-          done();
-        }
-      });
+      }
 
-    ws.on('open', () => {
-      ws.send(JSON.stringify({
-        type: IncomingMessageType.SUBSCRIBE,
-        channel,
-        id,
-        batched: true,
-      }));
+      if (msg.message_id >= 2) {
+        const batchMsg: ChannelBatchDataMessage = JSON.parse(
+          message.toString(),
+        ) as ChannelBatchDataMessage;
+
+        checkBatchMessage(
+          batchMsg,
+          connectionId,
+          channel,
+          id,
+          SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+          subaccountMessages,
+        );
+        done();
+      }
     });
   });
 
