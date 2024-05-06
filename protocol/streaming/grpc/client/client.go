@@ -89,13 +89,7 @@ func (c *GrpcClient) GetOrderbookSnapshot(pairId uint32) *LocalOrderbook {
 }
 
 // Write method for stream orderbook updates.
-func (c *GrpcClient) Update(updates *clobtypes.StreamOrderbookUpdatesResponse) {
-	c.Logger.Info(
-		fmt.Sprintf("Received stream update for callback %+v", updates.ExecMode),
-		"blockHeight",
-		updates.BlockHeight,
-	)
-
+func (c *GrpcClient) Update(updates *clobtypes.StreamOrderbookUpdatesResponse) {\
 	for _, update := range updates.GetUpdates() {
 		if orderUpdate := update.GetOrderbookUpdate(); orderUpdate != nil {
 			c.ProcessOrderbookUpdate(orderUpdate)
@@ -109,17 +103,12 @@ func (c *GrpcClient) Update(updates *clobtypes.StreamOrderbookUpdatesResponse) {
 // Write method for order placement updates (indexer offchain events)
 func (c *GrpcClient) ProcessOrderbookUpdate(orderUpdate *clobtypes.StreamOrderbookUpdate) {
 	if orderUpdate.Snapshot {
-		c.Logger.Info("Received orderbook snapshot")
 		c.Orderbook = make(map[uint32]*LocalOrderbook)
 	}
 
 	for _, update := range orderUpdate.Updates {
 		if orderPlace := update.GetOrderPlace(); orderPlace != nil {
 			order := orderPlace.GetOrder()
-			// c.Logger.Info(
-			// 	"place order recieved",
-			// 	"orderId", IndexerOrderIdToOrderId(order.OrderId).String(),
-			// )
 			orderbook := c.GetOrderbook(order.OrderId.ClobPairId)
 			orderbook.AddOrder(*order)
 		}
@@ -132,10 +121,6 @@ func (c *GrpcClient) ProcessOrderbookUpdate(orderUpdate *clobtypes.StreamOrderbo
 
 		if orderUpdate := update.GetOrderUpdate(); orderUpdate != nil {
 			orderId := orderUpdate.OrderId
-			c.Logger.Info(
-				"update order recieved",
-				"orderId", IndexerOrderIdToOrderId(*orderId).String(),
-			)
 			orderbook := c.GetOrderbook(orderId.ClobPairId)
 			orderbook.SetOrderRemainingAmount(*orderId, orderUpdate.TotalFilledQuantums)
 			orderbook.SetOrderFillAmount(orderId, orderUpdate.TotalFilledQuantums, false)
@@ -162,9 +147,6 @@ func (c *GrpcClient) ProcessMatchPerpetualLiquidation(
 	orderMap map[clobtypes.OrderId]clobtypes.Order,
 	fillAmountMap map[clobtypes.OrderId]uint64,
 ) {
-	c.Logger.Info(
-		"liquidation order recieved",
-	)
 	localOrderbook := c.Orderbook[perpLiquidation.ClobPairId]
 	for _, fill := range perpLiquidation.GetFills() {
 		makerOrder := orderMap[fill.MakerOrderId]
@@ -179,9 +161,6 @@ func (c *GrpcClient) ProcessMatchOrders(
 	orderMap map[clobtypes.OrderId]clobtypes.Order,
 	fillAmountMap map[clobtypes.OrderId]uint64,
 ) {
-	c.Logger.Info(
-		"match order recieved",
-	)
 	takerOrderId := matchOrders.TakerOrderId
 	clobPairId := takerOrderId.GetClobPairId()
 	localOrderbook := c.Orderbook[clobPairId]
@@ -315,11 +294,6 @@ func (l *LocalOrderbook) RemoveOrder(orderId v1types.IndexerOrderId) {
 
 	delete(l.OrderRemainingAmount, orderId)
 	delete(l.OrderIdToOrder, orderId)
-	// l.Logger.Info(
-	// 	fmt.Sprintf("local fill set to %+v", 0),
-	// 	"orderId", IndexerOrderIdToOrderId(orderId).String(),
-	// 	"remove", true,
-	// )
 }
 
 func (l *LocalOrderbook) SetOrderFillAmount(
@@ -329,12 +303,6 @@ func (l *LocalOrderbook) SetOrderFillAmount(
 ) {
 	l.Lock()
 	defer l.Unlock()
-
-	l.Logger.Info(
-		fmt.Sprintf("local fill set to %+v", fillAmount),
-		"orderId", IndexerOrderIdToOrderId(*orderId).String(),
-		"fromMatch", fromMatch,
-	)
 
 	if fillAmount == 0 {
 		delete(l.FillAmounts, *orderId)
