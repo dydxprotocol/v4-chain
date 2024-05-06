@@ -179,7 +179,6 @@ describe('order-place-handler', () => {
           OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
       },
     };
-    const defaultTimestamp: Date = DateTime.fromISO('2021-01-01T00:00:00.000Z').toJSDate();
     const replacementMessage: KafkaMessage = createKafkaMessage(
       Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(replacementUpdate).finish())),
     );
@@ -1130,7 +1129,7 @@ describe('order-place-handler', () => {
           order: redisTestConstants.defaultOrder,
           placementStatus:
             OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
-          timeStamp: orderTimestamp
+          timeStamp: orderTimestamp,
         },
       });
 
@@ -1253,7 +1252,7 @@ function expectWebsocketMessagesSent(
           ...(isStateful && { updatedAtHeight: dbOrder.updatedAtHeight }),
           clientMetadata: redisOrder.order!.clientMetadata.toString(),
           triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
-          orderTimestamp: orderTimestamp ?? undefined
+          orderTimestamp: orderTimestamp ?? undefined,
         },
       ],
     };

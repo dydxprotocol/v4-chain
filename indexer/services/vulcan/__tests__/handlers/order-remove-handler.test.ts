@@ -111,7 +111,7 @@ describe('OrderRemoveHandler', () => {
     reason: OrderRemovalReason.ORDER_REMOVAL_REASON_EXPIRED,
     removalStatus: OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED,
     // timestamp in Date format
-    timeStamp: DateTime.fromISO('2024-01-01T00:00:00.000Z').toJSDate()
+    timeStamp: DateTime.fromISO('2024-01-01T00:00:00.000Z').toJSDate(),
   };
 
   const statefulCancelationOrderRemove: OrderRemoveV1 = {

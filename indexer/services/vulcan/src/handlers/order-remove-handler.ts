@@ -132,7 +132,8 @@ export class OrderRemoveHandler extends Handler {
     }
 
     if (this.isStatefulOrderCancelation(orderRemove)) {
-      await this.handleStatefulOrderCancelation(orderRemove, removeOrderResult, headers, orderTimestamp);
+      await this.handleStatefulOrderCancelation(orderRemove, removeOrderResult,
+        headers, orderTimestamp);
       return;
     }
 
@@ -312,7 +313,7 @@ export class OrderRemoveHandler extends Handler {
         canceledOrder,
         orderRemove,
         perpetualMarket,
-        orderTimestamp
+        orderTimestamp,
       ),
       headers,
     };
