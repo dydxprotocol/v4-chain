@@ -267,11 +267,6 @@ func voteExtensionsUpgrade(
 	if err != nil || currentParams == nil || currentParams.Params == nil {
 		panic(fmt.Sprintf("failed to retrieve existing consensus params in VE upgrade handler: %s", err))
 	}
-	if currentParams.Params.Abci != nil && currentParams.Params.Abci.VoteExtensionsEnableHeight != 0 {
-		panic(fmt.Sprintf(
-			"unable to update VE Enable Height since its current value of %d is already non-zero",
-			currentParams.Params.Abci.VoteExtensionsEnableHeight))
-	}
 	currentParams.Params.Abci = &tenderminttypes.ABCIParams{
 		VoteExtensionsEnableHeight: ctx.BlockHeight() + VEEnableHeightDelta,
 	}
