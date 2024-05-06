@@ -251,7 +251,7 @@ export function transferToParentSubaccountResponseObject(
   const recipientParentSubaccountNum = transfer.recipientWalletAddress
     ? undefined
     : parentSubaccountHelpers.getParentSubaccountNum(
-      subaccountMap[transfer.recipientSubaccountId!].subaccountNumber
+      subaccountMap[transfer.recipientSubaccountId!].subaccountNumber,
     );
 
   // Determine transfer type based on parent subaccount number.
