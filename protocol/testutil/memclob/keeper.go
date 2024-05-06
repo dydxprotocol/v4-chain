@@ -518,3 +518,9 @@ func (f *FakeMemClobKeeper) SendOrderbookUpdates(
 	snapshot bool,
 ) {
 }
+
+func (f *FakeMemClobKeeper) SendOrderbookFillUpdates(
+	ctx sdk.Context,
+	orderbookFills []types.StreamOrderbookFill,
+) {
+}
