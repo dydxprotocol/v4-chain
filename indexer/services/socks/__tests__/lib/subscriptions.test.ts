@@ -4,7 +4,7 @@ import { Subscriptions } from '../../src/lib/subscription';
 import { sendMessage, sendMessageString } from '../../src/helpers/wss';
 import { RateLimiter } from '../../src/lib/rate-limit';
 import {
-  dbHelpers, testMocks, perpetualMarketRefresher, CandleResolution,
+  dbHelpers, testMocks, perpetualMarketRefresher, CandleResolution, MAX_PARENT_SUBACCOUNTS,
 } from '@dydxprotocol-indexer/postgres';
 import { btcTicker, invalidChannel, invalidTicker } from '../constants';
 import { axiosRequest } from '../../src/lib/axios';
@@ -46,7 +46,7 @@ describe('Subscriptions', () => {
     ],
     [Channel.V4_ORDERBOOK]: [invalidTicker],
     [Channel.V4_TRADES]: [invalidTicker],
-    [Channel.V4_PARENT_ACCOUNTS]: [invalidTicker],
+    [Channel.V4_PARENT_ACCOUNTS]: [`address/${MAX_PARENT_SUBACCOUNTS}`],
   };
   const initialResponseUrlPatterns: Record<Channel, string[] | undefined> = {
     [Channel.V4_ACCOUNTS]: [
@@ -58,8 +58,8 @@ describe('Subscriptions', () => {
     [Channel.V4_ORDERBOOK]: ['/v4/orderbooks/perpetualMarket/.+'],
     [Channel.V4_TRADES]: ['/v4/trades/perpetualMarket/.+'],
     [Channel.V4_PARENT_ACCOUNTS]: [
-      '/v4/addresses/.+/subaccountNumber/.+',
-      '/v4/orders?.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED',
+      '/v4/addresses/.+/parentSubaccountNumber/.+',
+      '/v4/orders/parentSubaccountNumber?.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED',
     ]
   };
   const initialMessage: Object = { a: 'b' };
@@ -96,6 +96,7 @@ describe('Subscriptions', () => {
       [Channel.V4_MARKETS, validIds[Channel.V4_MARKETS]],
       [Channel.V4_ORDERBOOK, validIds[Channel.V4_ORDERBOOK]],
       [Channel.V4_TRADES, validIds[Channel.V4_TRADES]],
+      [Channel.V4_PARENT_ACCOUNTS, validIds[Channel.V4_PARENT_ACCOUNTS]],
     ])('handles valid subscription request to channel %s', async (
       channel: Channel,
       id: string,
@@ -142,6 +143,7 @@ describe('Subscriptions', () => {
       [Channel.V4_CANDLES, invalidIdsMap[Channel.V4_CANDLES]],
       [Channel.V4_ORDERBOOK, invalidIdsMap[Channel.V4_ORDERBOOK]],
       [Channel.V4_TRADES, invalidIdsMap[Channel.V4_TRADES]],
+      [Channel.V4_PARENT_ACCOUNTS, invalidIdsMap[Channel.V4_PARENT_ACCOUNTS]],
     ])('sends error message if invalid subscription request to channel %s', async (
       channel: Channel,
       invalidIds: string[],

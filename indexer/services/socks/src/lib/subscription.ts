@@ -3,7 +3,7 @@ import {
   logger,
   stats,
 } from '@dydxprotocol-indexer/base';
-import { CandleResolution, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+import { CandleResolution, MAX_PARENT_SUBACCOUNTS, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 import WebSocket from 'ws';
 
 import config from '../config';
@@ -377,7 +377,6 @@ export class Subscriptions {
       return false;
     }
     switch (channel) {
-      case (Channel.V4_PARENT_ACCOUNTS):
       case (Channel.V4_ACCOUNTS): {
         if (id === undefined) {
           return false;
@@ -417,6 +416,25 @@ export class Subscriptions {
         }
 
         return resolution !== undefined;
+      }
+      case (Channel.V4_PARENT_ACCOUNTS): {
+        if (id === undefined) {
+          return false;
+        }
+        const parts: string[] = id.split('/');
+        if (parts.length !== 2) {
+          return false;
+        }
+
+        if (isNaN(Number(parts[1]))) {
+          return false;
+        }
+
+        if (Number(parts[1]) >= MAX_PARENT_SUBACCOUNTS) {
+          return false;
+        }
+
+        return true
       }
       default: {
         throw new InvalidChannelError(channel);
@@ -574,7 +592,7 @@ export class Subscriptions {
       ] = await Promise.all([
         axiosRequest({
           method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/addresses/${address}/subaccountNumber/${subaccountNumber}`,
+          url: `${COMLINK_URL}/v4/addresses/${address}/parentSubaccountNumber/${subaccountNumber}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
           headers: {
             'cf-ipcountry': country,
@@ -584,7 +602,7 @@ export class Subscriptions {
         // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
         axiosRequest({
           method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED,BEST_EFFORT_OPENED`,
+          url: `${COMLINK_URL}/v4/orders/parentSubaccountNumber?address=${address}&subaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED,BEST_EFFORT_OPENED`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
           headers: {
             'cf-ipcountry': country,
@@ -650,6 +668,9 @@ export class Subscriptions {
   ): Promise<string> {
     if (channel === Channel.V4_ACCOUNTS) {
       return this.getInitialResponseForSubaccountSubscription(id, country);
+    }
+    if (channel === Channel.V4_PARENT_ACCOUNTS) {
+      return this.getInitialResponseForParentSubaccountSubscription(id, country);
     }
     const endpoint: string | undefined = this.getInitialEndpointForSubscription(channel, id);
     // If no endpoint exists, return an empty initial response.
