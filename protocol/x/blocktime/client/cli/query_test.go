@@ -3,6 +3,7 @@
 package cli_test
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -43,6 +44,10 @@ func setupNetwork(
 }
 
 func TestQueryDowntimeParams(t *testing.T) {
+
+	fmt.Println(cli.CmdQueryDowntimeParams())
+	fmt.Println(types.DefaultGenesis().Params)
+
 	net, ctx := setupNetwork(t)
 
 	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryDowntimeParams(), []string{})
@@ -51,6 +56,11 @@ func TestQueryDowntimeParams(t *testing.T) {
 	var resp types.QueryDowntimeParamsResponse
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
+
+	fmt.Println(ctx)
+	fmt.Println(cli.CmdQueryDowntimeParams())
+	fmt.Println(resp)
+	fmt.Println(resp.Params)
 }
 
 func TestQueryAllDowntimeInfo(t *testing.T) {

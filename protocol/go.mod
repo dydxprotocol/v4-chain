@@ -5,6 +5,8 @@ go 1.22
 toolchain go1.22.0
 
 require (
+
+    github.com/StreamFinance-Protocol/stream-ethos v0.0.0-20240506215158-16ca5761bbee
 	cosmossdk.io/api v0.7.4
 	cosmossdk.io/math v1.3.0
 	github.com/Shopify/sarama v1.37.2

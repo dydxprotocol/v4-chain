@@ -1,3 +1,3 @@
-[submodule "protocol/protocol/ethos"]
-	path = protocol/protocol/ethos
-	url = git@github.com:Ethos-Works/ethos.git
+[submodule "protocol/ethos"]
+	path = protocol/ethos
+	url = https://github.com/StreamFinance-Protocol/stream-ethos.git
