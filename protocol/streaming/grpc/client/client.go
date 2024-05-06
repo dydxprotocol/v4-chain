@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"sync"
 
 	"cosmossdk.io/log"
@@ -9,7 +8,6 @@ import (
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	v1types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -89,7 +87,7 @@ func (c *GrpcClient) GetOrderbookSnapshot(pairId uint32) *LocalOrderbook {
 }
 
 // Write method for stream orderbook updates.
-func (c *GrpcClient) Update(updates *clobtypes.StreamOrderbookUpdatesResponse) {\
+func (c *GrpcClient) Update(updates *clobtypes.StreamOrderbookUpdatesResponse) {
 	for _, update := range updates.GetUpdates() {
 		if orderUpdate := update.GetOrderbookUpdate(); orderUpdate != nil {
 			c.ProcessOrderbookUpdate(orderUpdate)
@@ -311,8 +309,8 @@ func (l *LocalOrderbook) SetOrderFillAmount(
 	}
 }
 
-func IndexerOrderIdToOrderId(idxOrderId v1types.IndexerOrderId) *types.OrderId {
-	return &types.OrderId{
+func IndexerOrderIdToOrderId(idxOrderId v1types.IndexerOrderId) *clobtypes.OrderId {
+	return &clobtypes.OrderId{
 		SubaccountId: satypes.SubaccountId{
 			Owner:  idxOrderId.SubaccountId.Owner,
 			Number: idxOrderId.SubaccountId.Number,

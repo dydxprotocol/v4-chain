@@ -161,15 +161,7 @@ func PrepareCheckState(
 		log.LocalValidatorOperationsQueue, types.GetInternalOperationsQueueTextString(localValidatorOperationsQueue),
 	)
 
-	log.InfoLog(ctx,
-		"removing all operations from local opqueue",
-	)
-
 	keeper.MemClob.RemoveAndClearOperationsQueue(ctx, localValidatorOperationsQueue)
-
-	log.InfoLog(ctx,
-		"purging state from local opqueue",
-	)
 
 	// 2. Purge invalid state from the memclob.
 	offchainUpdates := types.NewOffchainUpdates()
@@ -180,55 +172,6 @@ func PrepareCheckState(
 		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
 		processProposerMatchesEvents.RemovedStatefulOrderIds,
 		offchainUpdates,
-	)
-
-	// For orders that are filled in the last block, send an orderbook update to the grpc streams.
-	if keeper.GetGrpcStreamingManager().Enabled() {
-		allUpdates := types.NewOffchainUpdates()
-		orderIdsToSend := make(map[types.OrderId]bool)
-
-		// Send an update for reverted local operations.
-		for _, operation := range localValidatorOperationsQueue {
-			if orderPlacement := operation.GetShortTermOrderPlacement(); orderPlacement != nil {
-				orderIdsToSend[orderPlacement.Order.OrderId] = true
-			}
-			if orderId := operation.GetPreexistingStatefulOrder(); orderId != nil {
-				orderIdsToSend[*orderId] = true
-			}
-			if match := operation.GetMatch(); match != nil {
-				// For normal order matches, we send an update for the taker and maker orders.
-				if matchedOrders := match.GetMatchOrders(); matchedOrders != nil {
-					orderIdsToSend[matchedOrders.TakerOrderId] = true
-					for _, fill := range matchedOrders.Fills {
-						orderIdsToSend[fill.MakerOrderId] = true
-					}
-				}
-				// For liquidation matches, we send an update for the maker orders.
-				if matchedLiquidation := match.GetMatchPerpetualLiquidation(); matchedLiquidation != nil {
-					for _, fill := range matchedLiquidation.Fills {
-						orderIdsToSend[fill.MakerOrderId] = true
-					}
-				}
-			}
-		}
-
-		// Send an update for orders that were proposed.
-		for _, orderId := range processProposerMatchesEvents.OrderIdsFilledInLastBlock {
-			orderIdsToSend[orderId] = true
-		}
-
-		// Send update.
-		for orderId := range orderIdsToSend {
-			if _, exists := keeper.MemClob.GetOrder(ctx, orderId); exists {
-				orderbookUpdate := keeper.MemClob.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
-				allUpdates.Append(orderbookUpdate)
-			}
-		}
-		keeper.SendOrderbookUpdates(ctx, allUpdates, false)
-	}
-
-	log.InfoLog(ctx,
-		"place stateful order placements",
 	)
 
 	// 3. Place all stateful order placements included in the last block on the memclob.
@@ -258,10 +201,6 @@ func PrepareCheckState(
 		ctx,
 		processProposerMatchesEvents.ConditionalOrderIdsTriggeredInLastBlock,
 		offchainUpdates,
-	)
-
-	log.InfoLog(ctx,
-		"replay local validator operations",
 	)
 
 	// 5. Replay the local validator’s operations onto the book.
