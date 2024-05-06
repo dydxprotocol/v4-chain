@@ -77,6 +77,7 @@ export class OrderRemoveHandler extends Handler {
     });
     const orderRemove: OrderRemoveV1 = update.orderRemove!;
     const reason: OrderRemovalReason = orderRemove.reason;
+    const orderTimestamp: Date | undefined = orderRemove.timeStamp;
 
     this.validateOrderRemove(orderRemove);
 
@@ -131,11 +132,11 @@ export class OrderRemoveHandler extends Handler {
     }
 
     if (this.isStatefulOrderCancelation(orderRemove)) {
-      await this.handleStatefulOrderCancelation(orderRemove, removeOrderResult, headers);
+      await this.handleStatefulOrderCancelation(orderRemove, removeOrderResult, headers, orderTimestamp);
       return;
     }
 
-    await this.handleOrderRemoval(orderRemove, removeOrderResult, headers);
+    await this.handleOrderRemoval(orderRemove, removeOrderResult, headers, orderTimestamp);
   }
 
   protected validateOrderRemove(orderRemove: OrderRemoveV1): void {
@@ -194,6 +195,7 @@ export class OrderRemoveHandler extends Handler {
     orderRemove: OrderRemoveV1,
     removeOrderResult: RemoveOrderResult,
     headers: IHeaders,
+    orderTimestamp: Date | undefined,
   ): Promise<void> {
     const order: OrderFromDatabase | undefined = await runFuncWithTimingStat(
       OrderTable.findById(
@@ -230,6 +232,7 @@ export class OrderRemoveHandler extends Handler {
         order,
         orderRemove,
         perpetualMarket.ticker,
+        orderTimestamp,
       ),
       headers,
     };
@@ -262,6 +265,7 @@ export class OrderRemoveHandler extends Handler {
     orderRemove: OrderRemoveV1,
     removeOrderResult: RemoveOrderResult,
     headers: IHeaders,
+    orderTimestamp: Date | undefined,
   ): Promise<void> {
     if (!removeOrderResult.removed) {
       logger.info({
@@ -308,6 +312,7 @@ export class OrderRemoveHandler extends Handler {
         canceledOrder,
         orderRemove,
         perpetualMarket,
+        orderTimestamp
       ),
       headers,
     };
@@ -536,6 +541,7 @@ export class OrderRemoveHandler extends Handler {
     canceledOrder: OrderFromDatabase | undefined,
     orderRemove: OrderRemoveV1,
     perpetualMarket: PerpetualMarketFromDatabase,
+    orderTimestamp: Date | undefined,
   ): Buffer {
     const redisOrder: RedisOrder = removeOrderResult.removedOrder!;
     const orderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
@@ -578,6 +584,7 @@ export class OrderRemoveHandler extends Handler {
           ...(updatedAtHeight && { updatedAtHeight }),
           clientMetadata: redisOrder.order!.clientMetadata.toString(),
           triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
+          orderTimestamp: orderTimestamp ?? undefined,
         },
       ],
     };
@@ -595,6 +602,7 @@ export class OrderRemoveHandler extends Handler {
     order: OrderFromDatabase,
     orderRemove: OrderRemoveV1,
     orderTicker: string,
+    orderTimestamp: Date | undefined,
   ): Buffer {
     const contents: SubaccountMessageContents = {
       orders: [
@@ -624,6 +632,7 @@ export class OrderRemoveHandler extends Handler {
           updatedAtHeight: order.updatedAtHeight,
           clientMetadata: order.clientMetadata,
           triggerPrice: order.triggerPrice ?? undefined,
+          orderTimestamp: orderTimestamp ?? undefined,
         },
       ],
     };

@@ -64,6 +64,7 @@ import { OrderbookSide } from '../../src/lib/types';
 import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import { defaultKafkaHeaders } from '../helpers/constants';
 import config from '../../src/config';
+import { DateTime } from 'luxon';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
@@ -178,6 +179,7 @@ describe('order-place-handler', () => {
           OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
       },
     };
+    const defaultTimestamp: Date = DateTime.fromISO('2021-01-01T00:00:00.000Z').toJSDate();
     const replacementMessage: KafkaMessage = createKafkaMessage(
       Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(replacementUpdate).finish())),
     );
@@ -1117,6 +1119,33 @@ describe('order-place-handler', () => {
         message: 'Total filled of order in Redis exceeds order quantums.',
       }));
     });
+
+    it('handle order with a timestamp', async () => {
+      synchronizeWrapBackgroundTask(wrapBackgroundTask);
+      const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
+      const orderTimestamp: Date = DateTime.fromISO('2021-01-01T00:00:00.000Z').toJSDate();
+      await handleInitialOrderPlace({
+        ...redisTestConstants.orderPlace,
+        orderPlace: {
+          order: redisTestConstants.defaultOrder,
+          placementStatus:
+            OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+          timeStamp: orderTimestamp
+        },
+      });
+
+      expectWebsocketMessagesSent(
+        producerSendSpy,
+        redisTestConstants.defaultRedisOrder,
+        dbDefaultOrder,
+        testConstants.defaultPerpetualMarket,
+        APIOrderStatusEnum.BEST_EFFORT_OPENED,
+        true,
+        undefined,
+        undefined,
+        orderTimestamp,
+      );
+    });
   });
 });
 
@@ -1161,6 +1190,7 @@ function expectWebsocketMessagesSent(
   expectSubaccountMessage: boolean,
   expectedOrderbookMessage?: OrderbookMessage,
   expectedOffchainUpdate?: OffchainUpdateRecord,
+  orderTimestamp?: Date,
 ): void {
   jest.runOnlyPendingTimers();
   // expect one subaccount update message being sent
@@ -1223,6 +1253,7 @@ function expectWebsocketMessagesSent(
           ...(isStateful && { updatedAtHeight: dbOrder.updatedAtHeight }),
           clientMetadata: redisOrder.order!.clientMetadata.toString(),
           triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
+          orderTimestamp: orderTimestamp ?? undefined
         },
       ],
     };

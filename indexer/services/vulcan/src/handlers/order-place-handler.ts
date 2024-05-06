@@ -63,6 +63,7 @@ export class OrderPlaceHandler extends Handler {
     this.validateOrderPlace(update.orderPlace!);
     const order: IndexerOrder = orderPlace.order!;
     const placementStatus: OrderPlaceV1_OrderPlacementStatus = orderPlace.placementStatus;
+    const timestamp: Date | undefined  = orderPlace.timeStamp;
 
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromClobPairId(order.orderId!.clobPairId.toString());
@@ -150,6 +151,7 @@ export class OrderPlaceHandler extends Handler {
           dbOrder,
           perpetualMarket,
           placementStatus,
+          timestamp,
         ),
         headers,
       };

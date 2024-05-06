@@ -110,6 +110,8 @@ describe('OrderRemoveHandler', () => {
     removedOrderId: redisTestConstants.defaultOrderId,
     reason: OrderRemovalReason.ORDER_REMOVAL_REASON_EXPIRED,
     removalStatus: OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED,
+    // timestamp in Date format
+    timeStamp: DateTime.fromISO('2024-01-01T00:00:00.000Z').toJSDate()
   };
 
   const statefulCancelationOrderRemove: OrderRemoveV1 = {
@@ -399,6 +401,7 @@ describe('OrderRemoveHandler', () => {
             updatedAtHeight: removedOrder.updatedAtHeight,
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
             triggerPrice,
+            orderTimestamp: defaultOrderRemove.timeStamp,
           },
         ],
       };
@@ -540,6 +543,7 @@ describe('OrderRemoveHandler', () => {
             updatedAtHeight: removedOrder.updatedAtHeight,
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
             triggerPrice,
+            orderTimestamp: defaultOrderRemove.timeStamp,
           },
         ],
       };
@@ -681,6 +685,7 @@ describe('OrderRemoveHandler', () => {
             updatedAtHeight: removedOrder.updatedAtHeight,
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
             triggerPrice,
+            orderTimestamp: defaultOrderRemove.timeStamp,
           }],
         };
         expectWebsocketMessagesSent(
@@ -823,6 +828,7 @@ describe('OrderRemoveHandler', () => {
             updatedAtHeight: removedOrder.updatedAtHeight,
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
             triggerPrice,
+            orderTimestamp: defaultOrderRemove.timeStamp,
           }],
         };
         expectWebsocketMessagesSent(
