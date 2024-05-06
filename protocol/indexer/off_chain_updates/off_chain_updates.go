@@ -7,6 +7,8 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
@@ -246,12 +248,14 @@ func newOrderPlaceMessage(
 	order clobtypes.Order,
 ) ([]byte, error) {
 	indexerOrder := v1.OrderToIndexerOrder(order)
+	updateTimestamp := time.Now()
 	update := ocutypes.OffChainUpdateV1{
 		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderPlace{
 			OrderPlace: &ocutypes.OrderPlaceV1{
 				Order: &indexerOrder,
 				// Protocol will always send best effort opened messages to indexer.
 				PlacementStatus: ocutypes.OrderPlaceV1_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+				TimeStamp:       &updateTimestamp,
 			},
 		},
 	}
@@ -267,12 +271,14 @@ func newOrderRemoveMessage(
 	status ocutypes.OrderRemoveV1_OrderRemovalStatus,
 ) ([]byte, error) {
 	indexerOrderId := v1.OrderIdToIndexerOrderId(orderId)
+	updateTimestamp := time.Now()
 	update := ocutypes.OffChainUpdateV1{
 		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderRemove{
 			OrderRemove: &ocutypes.OrderRemoveV1{
 				RemovedOrderId: &indexerOrderId,
 				Reason:         reason,
 				RemovalStatus:  status,
+				TimeStamp:      &updateTimestamp,
 			},
 		},
 	}

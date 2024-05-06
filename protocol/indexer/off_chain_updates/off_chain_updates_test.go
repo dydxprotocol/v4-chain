@@ -71,13 +71,13 @@ func TestCreateOrderPlaceMessage(t *testing.T) {
 	)
 	require.True(t, success)
 
-	updateBytes, err := proto.Marshal(&offchainUpdateOrderPlace)
+	actualUpdate := &ocutypes.OffChainUpdateV1{}
+	err := proto.Unmarshal(actualMessage.Value, actualUpdate)
 	require.NoError(t, err)
-	expectedMessage := msgsender.Message{
-		Key:   orderIdHash,
-		Value: updateBytes,
-	}
-	require.Equal(t, expectedMessage, actualMessage)
+	require.Equal(t, actualMessage.Key, orderIdHash)
+	require.Equal(t, offchainUpdateOrderPlace.GetOrderPlace().Order, actualUpdate.GetOrderPlace().Order)
+	require.Equal(t, offchainUpdateOrderPlace.GetOrderPlace().PlacementStatus, actualUpdate.GetOrderPlace().PlacementStatus)
+	require.NotNil(t, actualUpdate.GetOrderPlace().TimeStamp)
 }
 
 func TestCreateOrderUpdateMessage(t *testing.T) {
@@ -107,13 +107,18 @@ func TestCreateOrderRemoveWithReason(t *testing.T) {
 	)
 	require.True(t, success)
 
-	updateBytes, err := proto.Marshal(&offchainUpdateOrderRemove)
+	orderRemoveMessage := &ocutypes.OffChainUpdateV1{}
+	err := proto.Unmarshal(actualMessage.Value, orderRemoveMessage)
 	require.NoError(t, err)
-	expectedMessage := msgsender.Message{
-		Key:   orderIdHash,
-		Value: updateBytes,
-	}
-	require.Equal(t, expectedMessage, actualMessage)
+	checkOrderRemoveMessagesEqual(t, actualMessage, orderRemoveMessage, offchainUpdateOrderRemove)
+}
+
+func checkOrderRemoveMessagesEqual(t *testing.T, actualMessage msgsender.Message, orderRemoveMessage *ocutypes.OffChainUpdateV1, offchainOrderRemoveUpdate ocutypes.OffChainUpdateV1) {
+	require.Equal(t, actualMessage.Key, orderIdHash)
+	require.Equal(t, offchainOrderRemoveUpdate.GetOrderRemove().RemovedOrderId, orderRemoveMessage.GetOrderRemove().RemovedOrderId)
+	require.Equal(t, offchainOrderRemoveUpdate.GetOrderRemove().Reason, orderRemoveMessage.GetOrderRemove().Reason)
+	require.Equal(t, offchainOrderRemoveUpdate.GetOrderRemove().RemovalStatus, orderRemoveMessage.GetOrderRemove().RemovalStatus)
+	require.NotNil(t, orderRemoveMessage.GetOrderRemove().TimeStamp)
 }
 
 func TestCreateOrderRemoveMessageWithDefaultReason_HappyPath(t *testing.T) {
@@ -135,13 +140,10 @@ func TestCreateOrderRemoveMessageWithDefaultReason_HappyPath(t *testing.T) {
 	)
 	require.True(t, success)
 
-	updateBytes, err := proto.Marshal(&offchainUpdateOrderRemove)
+	orderRemoveMessage := &ocutypes.OffChainUpdateV1{}
+	err := proto.Unmarshal(actualMessage.Value, orderRemoveMessage)
 	require.NoError(t, err)
-	expectedMessage := msgsender.Message{
-		Key:   orderIdHash,
-		Value: updateBytes,
-	}
-	require.Equal(t, expectedMessage, actualMessage)
+	checkOrderRemoveMessagesEqual(t, actualMessage, orderRemoveMessage, offchainUpdateOrderRemove)
 }
 
 func TestCreateOrderRemoveMessageWithDefaultReason_DefaultReasonReturned(t *testing.T) {
@@ -156,13 +158,10 @@ func TestCreateOrderRemoveMessageWithDefaultReason_DefaultReasonReturned(t *test
 	)
 	require.True(t, success)
 
-	updateBytes, err := proto.Marshal(&offchainUpdateOrderRemoveWithDefaultRemovalReason)
+	orderRemoveMessage := &ocutypes.OffChainUpdateV1{}
+	err := proto.Unmarshal(actualMessage.Value, orderRemoveMessage)
 	require.NoError(t, err)
-	expectedMessage := msgsender.Message{
-		Key:   orderIdHash,
-		Value: updateBytes,
-	}
-	require.Equal(t, expectedMessage, actualMessage)
+	checkOrderRemoveMessagesEqual(t, actualMessage, orderRemoveMessage, offchainUpdateOrderRemoveWithDefaultRemovalReason)
 }
 
 func TestCreateOrderRemoveMessageWithDefaultReason_InvalidDefault(t *testing.T) {
@@ -195,13 +194,10 @@ func TestCreateOrderRemoveWithReasonMessage(t *testing.T) {
 	)
 	require.True(t, success)
 
-	updateBytes, err := proto.Marshal(&offchainUpdateOrderRemove)
+	orderRemoveMessage := &ocutypes.OffChainUpdateV1{}
+	err := proto.Unmarshal(actualMessage.Value, orderRemoveMessage)
 	require.NoError(t, err)
-	expectedMessage := msgsender.Message{
-		Key:   orderIdHash,
-		Value: updateBytes,
-	}
-	require.Equal(t, expectedMessage, actualMessage)
+	checkOrderRemoveMessagesEqual(t, actualMessage, orderRemoveMessage, offchainUpdateOrderRemove)
 }
 
 func TestNewOrderPlaceMessage(t *testing.T) {
@@ -220,12 +216,10 @@ func TestNewOrderPlaceMessage(t *testing.T) {
 		err,
 		"Decoding OffchainUpdateV1 proto bytes should not result in an error.",
 	)
-	require.Equal(
-		t,
-		offchainUpdateOrderPlace,
-		*actualUpdate,
-		"Decoded OffchainUpdateV1 value should be equal to the expected OffchainUpdate proto message",
-	)
+
+	require.Equal(t, actualUpdate.GetOrderPlace().Order, offchainUpdateOrderPlace.GetOrderPlace().Order)
+	require.Equal(t, actualUpdate.GetOrderPlace().PlacementStatus, offchainUpdateOrderPlace.GetOrderPlace().PlacementStatus)
+	require.NotNil(t, actualUpdate.GetOrderPlace().TimeStamp)
 }
 
 func TestNewOrderUpdateMessage(t *testing.T) {
@@ -264,12 +258,11 @@ func TestNewOrderRemoveMessage(t *testing.T) {
 		err,
 		"Decoding OffchainUpdateV1 proto bytes should not result in an error.",
 	)
-	require.Equal(
-		t,
-		offchainUpdateOrderRemove,
-		*actualUpdate,
-		"Decoded OffchainUpdateV1 value should be equal to the expected OffchainUpdate proto message",
-	)
+
+	require.Equal(t, actualUpdate.GetOrderRemove().RemovedOrderId, offchainUpdateOrderRemove.GetOrderRemove().RemovedOrderId)
+	require.Equal(t, actualUpdate.GetOrderRemove().Reason, offchainUpdateOrderRemove.GetOrderRemove().Reason)
+	require.Equal(t, actualUpdate.GetOrderRemove().RemovalStatus, offchainUpdateOrderRemove.GetOrderRemove().RemovalStatus)
+	require.NotNil(t, actualUpdate.GetOrderRemove().TimeStamp)
 }
 
 func TestGetOrderIdHash(t *testing.T) {
