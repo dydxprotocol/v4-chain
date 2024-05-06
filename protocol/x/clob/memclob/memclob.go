@@ -889,6 +889,20 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		)
 		offchainUpdates.Append(matchOffchainUpdates)
 		writeCache()
+	} else {
+		// If state was not written to, re-send grpc stream updates for all orders
+		// involved in the match to "reset" fill amounts.
+		allUpdates := types.NewOffchainUpdates()
+		if !order.IsLiquidation() {
+			normalOrder := order.MustGetOrder()
+			updates := m.GetOrderbookUpdatesForOrderUpdate(ctx, normalOrder.OrderId)
+			allUpdates.Append(updates)
+		}
+		for _, fill := range newMakerFills {
+			updates := m.GetOrderbookUpdatesForOrderUpdate(ctx, fill.MakerOrderId)
+			allUpdates.Append(updates)
+		}
+		m.clobKeeper.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 
 	return takerOrderStatus, offchainUpdates, makerOrdersToRemove, matchingErr
@@ -1992,12 +2006,6 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 	// If the filled amount of the maker order is greater than the order size, panic to avoid silent failure.
 	if newTotalFilledAmount > makerOrderBaseQuantums {
 		panic("Total filled size of maker order greater than the order size")
-	}
-
-	// Send an orderbook update for the order's new total filled amount.
-	if m.generateOrderbookUpdates {
-		orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, makerOrder.OrderId)
-		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
 	}
 
 	// If the order is fully filled, remove it from the orderbook.
