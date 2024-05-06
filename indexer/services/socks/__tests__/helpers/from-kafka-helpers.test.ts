@@ -17,7 +17,9 @@ import {
   marketsMessage,
   orderbookMessage,
   subaccountMessage,
+  childSubaccountMessage,
   tradesMessage,
+  defaultChildAccNumber,
 } from '../constants';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage } from './kafka';
@@ -130,6 +132,22 @@ describe('from-kafka-helpers', () => {
       expect(messageToForward.channel).toEqual(Channel.V4_TRADES);
       expect(messageToForward.id).toEqual(btcTicker);
       expect(messageToForward.contents).toEqual(defaultContents);
+    });
+
+    it('gets correct MessageToForward for subaccount message for parent subaccount channel', () => {
+      const message: KafkaMessage = createKafkaMessage(
+        Buffer.from(Uint8Array.from(SubaccountMessage.encode(childSubaccountMessage).finish())),
+      );
+      const messageToForward: MessageToForward = getMessageToForward(
+        Channel.V4_PARENT_ACCOUNTS,
+        message,
+      );
+
+      expect(messageToForward.channel).toEqual(Channel.V4_PARENT_ACCOUNTS);
+      expect(messageToForward.id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
+      expect(messageToForward.contents).toEqual(defaultContents);
+      expect(messageToForward.subaccountNumber).toBeDefined();
+      expect(messageToForward.subaccountNumber).toEqual(defaultChildAccNumber);
     });
 
     it('throws InvalidForwardMessageError for empty message', () => {

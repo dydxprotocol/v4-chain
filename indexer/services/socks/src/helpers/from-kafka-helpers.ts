@@ -2,6 +2,7 @@ import { logger } from '@dydxprotocol-indexer/base';
 import {
   perpetualMarketRefresher,
   PROTO_TO_CANDLE_RESOLUTION,
+  parentSubaccountHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import {
   CandleMessage,
@@ -84,6 +85,16 @@ export function getMessageToForward(
         version: tradeMessage.version,
       };
     }
+    case Channel.V4_PARENT_ACCOUNTS: {
+      const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(messageBinary);
+      return {
+        channel,
+        id: getParentSubaccountMessageId(subaccountMessage),
+        subaccountNumber: subaccountMessage.subaccountId!.number,
+        contents: JSON.parse(subaccountMessage.contents),
+        version: subaccountMessage.version,
+      };
+    }
     default:
       throw new InvalidForwardMessageError(`Unknown channel: ${channel}`);
   }
@@ -100,6 +111,13 @@ function getTickerOrThrow(clobPairId: string): string {
 
 function getSubaccountMessageId(subaccountMessage: SubaccountMessage): string {
   return `${subaccountMessage.subaccountId!.owner}/${subaccountMessage.subaccountId!.number}`;
+}
+
+function getParentSubaccountMessageId(subaccountMessage: SubaccountMessage): string {
+  const parentSubaccountNumber: number = parentSubaccountHelpers.getParentSubaccountNum(
+    subaccountMessage.subaccountId!.number,
+  );
+  return `${subaccountMessage.subaccountId!.owner}/${parentSubaccountNumber}`;
 }
 
 function getCandleMessageId(candleMessage: CandleMessage): string {

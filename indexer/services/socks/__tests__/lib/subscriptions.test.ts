@@ -35,6 +35,7 @@ describe('Subscriptions', () => {
     [Channel.V4_MARKETS]: defaultId,
     [Channel.V4_ORDERBOOK]: btcTicker,
     [Channel.V4_TRADES]: btcTicker,
+    [Channel.V4_PARENT_ACCOUNTS]: mockSubaccountId,
   };
   const invalidIdsMap: Record<Exclude<Channel, Channel.V4_MARKETS>, string[]> = {
     [Channel.V4_ACCOUNTS]: [invalidTicker],
@@ -45,6 +46,7 @@ describe('Subscriptions', () => {
     ],
     [Channel.V4_ORDERBOOK]: [invalidTicker],
     [Channel.V4_TRADES]: [invalidTicker],
+    [Channel.V4_PARENT_ACCOUNTS]: [invalidTicker],
   };
   const initialResponseUrlPatterns: Record<Channel, string[] | undefined> = {
     [Channel.V4_ACCOUNTS]: [
@@ -55,6 +57,10 @@ describe('Subscriptions', () => {
     [Channel.V4_MARKETS]: ['/v4/perpetualMarkets'],
     [Channel.V4_ORDERBOOK]: ['/v4/orderbooks/perpetualMarket/.+'],
     [Channel.V4_TRADES]: ['/v4/trades/perpetualMarket/.+'],
+    [Channel.V4_PARENT_ACCOUNTS]: [
+      '/v4/addresses/.+/subaccountNumber/.+',
+      '/v4/orders?.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED',
+    ]
   };
   const initialMessage: Object = { a: 'b' };
   const country: string = 'AR';
