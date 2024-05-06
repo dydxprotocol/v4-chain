@@ -19,6 +19,25 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+// fetchOrdersInvolvedInOpQueue fetches all OrderIds involved in an operations
+// queue's matches + short term order placements and returns them as a set.
+func fetchOrdersInvolvedInOpQueue(
+	operations []types.InternalOperation,
+) (orderIdSet map[types.OrderId]struct{}) {
+	orderIdSet = make(map[types.OrderId]struct{})
+	for _, operation := range operations {
+		if shortTermOrderPlacement := operation.GetShortTermOrderPlacement(); shortTermOrderPlacement != nil {
+			orderId := shortTermOrderPlacement.GetOrder().OrderId
+			orderIdSet[orderId] = struct{}{}
+		}
+		if clobMatch := operation.GetMatch(); clobMatch != nil {
+			orderIdSetForClobMatch := clobMatch.GetAllOrderIds()
+			orderIdSet = lib.MergeMaps(orderIdSet, orderIdSetForClobMatch)
+		}
+	}
+	return orderIdSet
+}
+
 // ProcessProposerOperations updates on-chain state given an []OperationRaw operations queue
 // representing matches that occurred in the previous block. It performs validation on an operations
 // queue. If all validation passes, the operations queue is written to state.
@@ -36,6 +55,26 @@ func (k Keeper) ProcessProposerOperations(
 	operations, err := types.ValidateAndTransformRawOperations(ctx, rawOperations, k.txDecoder, k.antehandler)
 	if err != nil {
 		return errorsmod.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
+	}
+
+	// If grpc streams are on, send absolute fill amounts from local + proposed opqueue to the grpc stream.
+	// This must be sent out to account for checkState being discarded and deliverState being used.
+	if streamingManager := k.GetGrpcStreamingManager(); streamingManager.Enabled() {
+		localValidatorOperationsQueue, _ := k.MemClob.GetOperationsToReplay(ctx)
+		orderIdsFromProposed := fetchOrdersInvolvedInOpQueue(
+			operations,
+		)
+		orderIdsFromLocal := fetchOrdersInvolvedInOpQueue(
+			localValidatorOperationsQueue,
+		)
+		orderIdSetToUpdate := lib.MergeMaps(orderIdsFromLocal, orderIdsFromProposed)
+
+		allUpdates := types.NewOffchainUpdates()
+		for orderId := range orderIdSetToUpdate {
+			orderbookUpdate := k.MemClob.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
+			allUpdates.Append(orderbookUpdate)
+		}
+		k.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 
 	log.DebugLog(ctx, "Processing operations queue",
