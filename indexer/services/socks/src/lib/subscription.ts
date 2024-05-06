@@ -3,7 +3,9 @@ import {
   logger,
   stats,
 } from '@dydxprotocol-indexer/base';
-import { CandleResolution, MAX_PARENT_SUBACCOUNTS, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+import {
+  CHILD_SUBACCOUNT_MULTIPLIER, CandleResolution, MAX_PARENT_SUBACCOUNTS, perpetualMarketRefresher,
+} from '@dydxprotocol-indexer/postgres';
 import WebSocket from 'ws';
 
 import config from '../config';
@@ -378,17 +380,10 @@ export class Subscriptions {
     }
     switch (channel) {
       case (Channel.V4_ACCOUNTS): {
-        if (id === undefined) {
-          return false;
-        }
-        const parts: string[] = id.split('/');
-
-        // Id for subaccounts channel should be of the format {address}/{subaccountNumber}
-        if (parts.length !== 2) {
-          return false;
-        }
-
-        return true;
+        return this.validateSubaccountChannelId(
+          id,
+          MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER,
+        );
       }
       case (Channel.V4_MARKETS): {
         return true;
@@ -418,23 +413,7 @@ export class Subscriptions {
         return resolution !== undefined;
       }
       case (Channel.V4_PARENT_ACCOUNTS): {
-        if (id === undefined) {
-          return false;
-        }
-        const parts: string[] = id.split('/');
-        if (parts.length !== 2) {
-          return false;
-        }
-
-        if (isNaN(Number(parts[1]))) {
-          return false;
-        }
-
-        if (Number(parts[1]) >= MAX_PARENT_SUBACCOUNTS) {
-          return false;
-        }
-
-        return true
+        return this.validateSubaccountChannelId(id, MAX_PARENT_SUBACCOUNTS);
       }
       default: {
         throw new InvalidChannelError(channel);
@@ -451,6 +430,27 @@ export class Subscriptions {
    */
   private normalizeSubscriptionId(id?: string): string {
     return id ?? V4_MARKETS_ID;
+  }
+
+  private validateSubaccountChannelId(id?: string, maxSubaccountNumber?: number): boolean {
+    if (id === undefined) {
+      return false;
+    }
+    // Id for subaccounts channel should be of the format {address}/{subaccountNumber}
+    const parts: string[] = id.split('/');
+    if (parts.length !== 2) {
+      return false;
+    }
+
+    if (Number.isNaN(Number(parts[1]))) {
+      return false;
+    }
+
+    if (maxSubaccountNumber !== undefined && Number(Number(parts[1]) > maxSubaccountNumber)) {
+      return false;
+    }
+
+    return true;
   }
 
   /**

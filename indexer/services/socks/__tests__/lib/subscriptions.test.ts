@@ -60,7 +60,7 @@ describe('Subscriptions', () => {
     [Channel.V4_PARENT_ACCOUNTS]: [
       '/v4/addresses/.+/parentSubaccountNumber/.+',
       '/v4/orders/parentSubaccountNumber?.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED',
-    ]
+    ],
   };
   const initialMessage: Object = { a: 'b' };
   const country: string = 'AR';

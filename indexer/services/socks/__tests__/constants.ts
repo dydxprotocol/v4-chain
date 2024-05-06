@@ -6,6 +6,9 @@ import {
   TRADES_WEBSOCKET_MESSAGE_VERSION,
 } from '@dydxprotocol-indexer/kafka';
 import {
+  MAX_PARENT_SUBACCOUNTS,
+} from '@dydxprotocol-indexer/postgres';
+import {
   CandleMessage,
   CandleMessage_Resolution,
   MarketMessage,
@@ -14,9 +17,6 @@ import {
   SubaccountMessage,
   TradeMessage,
 } from '@dydxprotocol-indexer/v4-protos';
-import {
-  MAX_PARENT_SUBACCOUNTS,
-} from '@dydxprotocol-indexer/postgres'
 
 export const btcClobPairId: string = '1';
 export const ethClobPairId: string = '2';
