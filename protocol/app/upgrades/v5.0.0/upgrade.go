@@ -3,9 +3,9 @@ package v_5_0_0
 import (
 	"context"
 	"fmt"
-	types2 "github.com/cometbft/cometbft/proto/tendermint/types"
 	"math/big"
 
+	tenderminttypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
@@ -272,7 +272,7 @@ func voteExtensionsUpgrade(
 			"unable to update VE Enable Height since its current value of %d is already non-zero",
 			currentParams.Params.Abci.VoteExtensionsEnableHeight))
 	}
-	currentParams.Params.Abci = &types2.ABCIParams{
+	currentParams.Params.Abci = &tenderminttypes.ABCIParams{
 		VoteExtensionsEnableHeight: ctx.BlockHeight() + VEEnableHeightDelta,
 	}
 	_, err = keeper.UpdateParams(ctx, &consensustypes.MsgUpdateParams{
