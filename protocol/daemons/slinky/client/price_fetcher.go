@@ -74,9 +74,6 @@ func (p *PriceFetcherImpl) FetchPrices(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		p.logger.Info("turned price pair to currency pair",
-			"string", currencyPairString,
-			"currency pair", currencyPair.String())
 
 		// get the market id for the currency pair
 		id, err := p.marketPairFetcher.GetIDForPair(currencyPair)
@@ -93,7 +90,11 @@ func (p *PriceFetcherImpl) FetchPrices(ctx context.Context) error {
 			p.logger.Error("slinky client returned a price not parsable as uint64", "price", priceString)
 			continue
 		}
-		p.logger.Info("parsed update for", "market id", id, "price", price)
+		p.logger.Debug("Parsed Slinky price update",
+			"market id", id,
+			"price", price,
+			"string", currencyPairString,
+			"currency pair", currencyPair.String())
 
 		// append the update to the list of MarketPriceUpdates to be sent to the app's price-feed service
 		updates = append(updates, &api.MarketPriceUpdate{
@@ -107,6 +108,8 @@ func (p *PriceFetcherImpl) FetchPrices(ctx context.Context) error {
 			},
 		})
 	}
+
+	p.logger.Info("Slinky returned valid market price updates", "count", len(updates), "updates", updates)
 
 	// send the updates to the indexPriceCache
 	if len(updates) == 0 {
