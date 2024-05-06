@@ -446,7 +446,7 @@ export class Subscriptions {
       return false;
     }
 
-    if (maxSubaccountNumber !== undefined && Number(Number(parts[1]) > maxSubaccountNumber)) {
+    if (maxSubaccountNumber !== undefined && Number(Number(parts[1]) >= maxSubaccountNumber)) {
       return false;
     }
 
