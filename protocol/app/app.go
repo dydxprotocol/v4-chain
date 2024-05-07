@@ -46,6 +46,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -1644,6 +1645,10 @@ func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 
 // EndBlocker application updates every end block
 func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	// Measure the lag between current timestamp and the end blocker time stamp
+	// as an indicator of whether the node is lagging behind.
+	metrics.ModuleMeasureSince(telemetry.MetricKeyEndBlocker, metrics.EndBlockerLag, ctx.BlockTime())
+
 	ctx = ctx.WithExecMode(lib.ExecModeEndBlock)
 
 	// Reset the logger for middleware.
