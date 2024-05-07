@@ -45,6 +45,9 @@ func setupNetwork(
 }
 
 func TestQueryParams(t *testing.T) {
+
+	cfg := network.DefaultConfig(nil)
+
 	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "blocktime", "get-downtime-params", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -54,7 +57,7 @@ func TestQueryParams(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryDowntimeParamsResponse
-	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(out.Bytes(), &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }
 
