@@ -37,7 +37,7 @@ import {
 
 jest.mock('../../src/lib/axios');
 
-describe('message-forwarder', () => {
+describe('message-forwarder-accounts', () => {
   let wss: Wss;
   let subscriptions: Subscriptions;
   let index: Index;
@@ -259,7 +259,6 @@ describe('message-forwarder', () => {
           id,
           SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
           subaccountMessages,
-          172,
         );
         done();
       }
