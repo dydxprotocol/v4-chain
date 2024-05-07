@@ -194,6 +194,7 @@ const (
 	Unfilled                                                = "unfilled"
 	UnfilledLiquidationOrders                               = "unfilled_liquidation_orders"
 	UnknownPlaceOrders                                      = "unknown_place_orders"
+	UnverifiedStatefulOrderRemoval                          = "unverified_stateful_order_removal"
 	UpdateBlockRateLimitConfiguration                       = "update_block_rate_limit_configuration"
 	UpdateClobPair                                          = "update_clob_pair"
 	UpdateEquityTierLimitConfiguration                      = "update_equity_tier_limit_configuration"
