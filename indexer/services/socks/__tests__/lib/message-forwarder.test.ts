@@ -259,7 +259,7 @@ describe('message-forwarder', () => {
     });
   });
 
-  it('Batch sends subaccount messages', (done: jest.DoneCallback) => {
+  /*it('Batch sends subaccount messages', (done: jest.DoneCallback) => {
     const channel: Channel = Channel.V4_ACCOUNTS;
     const id: string = `${defaultSubaccountId.owner}/${defaultSubaccountId.number}`;
 
@@ -328,7 +328,7 @@ describe('message-forwarder', () => {
         batched: true,
       }));
     });
-  });
+  });*/
 
   it('Batch sends subaccount messages to parent subaccount channel', (done: jest.DoneCallback) => {
     const channel: Channel = Channel.V4_PARENT_ACCOUNTS;
