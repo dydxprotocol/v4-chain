@@ -53,7 +53,8 @@ func TestQueryPerpetualFeeParams(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryPerpetualFeeParamsResponse
-	require.NoError(t, cfg.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	data, err := out.Bytes()
+	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }
 
@@ -79,7 +80,8 @@ func TestQueryUserFeeTier(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryUserFeeTierResponse
-	require.NoError(t, cfg.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	data, err := out.Bytes()
+	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
 }
 
 // func TestQueryUserFeeTier(t *testing.T) {

@@ -68,8 +68,8 @@ func queryAndCheckVestEntry(
 
 	require.NoError(t, err)
 	var resp types.QueryVestEntryResponse
-	outBytes := out.Bytes()
-	require.NoError(t, cfg.Codec.MarshalJSON(outBytes, &resp))
+	data, err := out.Bytes()
+	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
 	require.Equal(t, types.DefaultGenesis().VestEntries[1], resp.Entry)
 }
 
