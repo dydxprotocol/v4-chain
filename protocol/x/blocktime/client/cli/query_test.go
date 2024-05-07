@@ -62,7 +62,7 @@ func TestQueryParams(t *testing.T) {
 	fmt.Println("Data from Docker command:", data)
 	fmt.Println("Data from Genesis state:", data2)
 
-	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }
 
@@ -91,7 +91,7 @@ func TestQueryAllDowntimeInfo(t *testing.T) {
 	require.NoError(t, err)
 	var resp types.QueryAllDowntimeInfoResponse
 	data := out.Bytes()
-	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 }
 
 // func TestQueryAllDowntimeInfo(t *testing.T) {
@@ -116,7 +116,7 @@ func TestQueryPreviousBlockInfo(t *testing.T) {
 	require.NoError(t, err)
 	var resp types.QueryPreviousBlockInfoResponse
 	data := out.Bytes()
-	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 }
 
 // func TestQueryPreviousBlockInfo(t *testing.T) {

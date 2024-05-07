@@ -57,7 +57,7 @@ func TestListLimiterParams(t *testing.T) {
 	require.NoError(t, err)
 	var resp types.ListLimitParamsResponse
 	data := out.Bytes()
-	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 	require.Equal(t, types.DefaultGenesis().LimitParamsList, resp.LimitParamsList)
 }
 

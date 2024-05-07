@@ -58,7 +58,7 @@ func TestQueryParams(t *testing.T) {
 	var resp types.QueryParamsResponse
 
 	data := out.Bytes()
-	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }
 
