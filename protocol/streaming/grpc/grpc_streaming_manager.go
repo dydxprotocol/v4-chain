@@ -2,11 +2,13 @@ package grpc
 
 import (
 	"sync"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -80,6 +82,12 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
+	defer metrics.ModuleMeasureSince(
+		metrics.FullNodeGrpc,
+		metrics.GrpcSendOrderbookUpdatesLatency,
+		time.Now(),
+	)
+
 	// Group updates by clob pair id.
 	updates := make(map[uint32]*clobtypes.OffchainUpdates)
 	for _, message := range offchainUpdates.Messages {
