@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"os/exec"
 	"strconv"
 	"testing"
@@ -51,7 +52,7 @@ func TestQueryPerpetualFeeParams(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryPerpetualFeeParamsResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }
 
@@ -75,7 +76,7 @@ func TestQueryUserFeeTier(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryUserFeeTierResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
 }
 
 // func TestQueryUserFeeTier(t *testing.T) {

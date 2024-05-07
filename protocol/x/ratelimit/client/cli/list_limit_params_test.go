@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strconv"
@@ -54,7 +55,7 @@ func TestListLimiterParams(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.ListLimitParamsResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
 	require.Equal(t, types.DefaultGenesis().LimitParamsList, resp.LimitParamsList)
 }
 

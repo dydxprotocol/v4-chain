@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strconv"
@@ -44,16 +45,15 @@ func setupNetwork(
 }
 
 func TestQueryVestEntry(t *testing.T) {
-	net, ctx := setupNetwork(t)
 
-	queryAndCheckVestEntry(t, ctx, net, "treausry_vester", types.DefaultGenesis().VestEntries[0])
-	queryAndCheckVestEntry(t, ctx, net, "rewards_vester", types.DefaultGenesis().VestEntries[1])
+	// net, ctx := setupNetwork(t)
+
+	queryAndCheckVestEntry(t, "treausry_vester", types.DefaultGenesis().VestEntries[0])
+	queryAndCheckVestEntry(t, "rewards_vester", types.DefaultGenesis().VestEntries[1])
 }
 
 func queryAndCheckVestEntry(
 	t *testing.T,
-	ctx client.Context,
-	net *network.Network,
 	vester_account string,
 	expectedEntry types.VestEntry,
 ) {
@@ -68,7 +68,7 @@ func queryAndCheckVestEntry(
 	require.NoError(t, err)
 	var resp types.QueryVestEntryResponse
 	outBytes := out.Bytes()
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(outBytes, &resp))
+	require.NoError(t, json.Unmarshal(outBytes, &resp))
 	require.Equal(t, types.DefaultGenesis().VestEntries[1], resp.Entry)
 }
 

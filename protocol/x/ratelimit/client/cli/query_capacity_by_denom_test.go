@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"os/exec"
@@ -32,7 +33,7 @@ func TestQueryCapacityByDenom(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryCapacityByDenomResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
 	require.Equal(t,
 		// LimiterCapacity resulting from default limiter params and 0 TVL.
 		[]types.LimiterCapacity{

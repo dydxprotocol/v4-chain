@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os/exec"
 	"testing"
@@ -25,7 +26,7 @@ func TestPendingSendPackets(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryAllPendingSendPacketsResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
 	assert.Equal(t, 0, len(resp.PendingSendPackets))
 }
 

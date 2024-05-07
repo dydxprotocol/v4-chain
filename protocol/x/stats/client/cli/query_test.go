@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"os/exec"
 	"strconv"
 	"testing"
@@ -51,7 +52,7 @@ func TestQueryParams(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryParamsResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }
 
@@ -75,7 +76,7 @@ func TestQueryStatsMetadata(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryStatsMetadataResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
 }
 
 // func TestQueryStatsMetadata(t *testing.T) {
@@ -97,7 +98,7 @@ func TestQueryGlobalStats(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryGlobalStatsResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
 }
 
 // func TestQueryGlobalStats(t *testing.T) {
@@ -119,7 +120,7 @@ func TestQueryUserStats(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryUserStatsResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
 }
 
 // func TestQueryUserStats(t *testing.T) {

@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"os/exec"
 	"strconv"
 	"testing"
@@ -50,7 +51,7 @@ func TestQueryParams(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryDowntimeParamsResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }
 
@@ -76,7 +77,7 @@ func TestQueryAllDowntimeInfo(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryAllDowntimeInfoResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
 }
 
 // func TestQueryAllDowntimeInfo(t *testing.T) {
@@ -98,7 +99,7 @@ func TestQueryPreviousBlockInfo(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryPreviousBlockInfoResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
 }
 
 // func TestQueryPreviousBlockInfo(t *testing.T) {
