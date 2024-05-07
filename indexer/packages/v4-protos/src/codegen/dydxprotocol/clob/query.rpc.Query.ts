@@ -22,10 +22,17 @@ export interface Query {
   /** Queries LiquidationsConfiguration. */
 
   liquidationsConfiguration(request?: QueryLiquidationsConfigurationRequest): Promise<QueryLiquidationsConfigurationResponse>;
+<<<<<<< HEAD
   /** Queries the stateful order for a given order id. */
 
   statefulOrder(request: QueryStatefulOrderRequest): Promise<QueryStatefulOrderResponse>;
   /** Streams orderbook updates. */
+=======
+  /**
+   * Streams orderbook updates. Updates contain orderbook data
+   * such as order placements, updates, and fills.
+   */
+>>>>>>> 7e87c2e1 (Orderbook Fills protos (#1446))
 
   streamOrderbookUpdates(request: StreamOrderbookUpdatesRequest): Promise<StreamOrderbookUpdatesResponse>;
 }
