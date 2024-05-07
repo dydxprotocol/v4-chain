@@ -30,6 +30,7 @@ import {
 } from '../../src/types';
 import { Index } from '../../src/websocket';
 import {
+  defaultChildAccNumber,
   defaultChildSubaccountId,
   defaultSubaccountId,
 } from '../constants';
@@ -258,6 +259,7 @@ describe('message-forwarder', () => {
           id,
           SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
           subaccountMessages,
+          defaultChildAccNumber,
         );
         done();
       }
@@ -295,6 +297,7 @@ function checkBatchMessage(
   id: string,
   version: string,
   expectedMessages: {contents: string}[],
+  subaccountNumber?: number,
 ): void {
   expect(batchMsg.connection_id).toBe(connectionId);
   expect(batchMsg.type).toBe(OutgoingMessageType.CHANNEL_BATCH_DATA);
@@ -302,6 +305,7 @@ function checkBatchMessage(
   expect(batchMsg.id).toBe(id);
   expect(batchMsg.contents.length).toBe(expectedMessages.length);
   expect(batchMsg.version).toBe(version);
+  expect(batchMsg.subaccountNumber).toBe(subaccountNumber);
   batchMsg.contents.forEach(
     (individualMessage: Object, idx: number) => {
       expect(individualMessage).toEqual(JSON.parse(expectedMessages[idx].contents));

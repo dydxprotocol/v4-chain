@@ -35,6 +35,7 @@ const BUFFER_KEY_SEPARATOR: string = ':';
 type VersionedContents = {
   contents: string;
   version: string;
+  subaccountNumber?: number;
 };
 
 export class MessageForwarder {
@@ -211,6 +212,7 @@ export class MessageForwarder {
       this.messageBuffer[bufferKey].push({
         contents: message.contents,
         version: message.version,
+        subaccountNumber: message.subaccountNumber,
       } as VersionedContents);
       forwardedToSubscribers = true;
     }
@@ -267,23 +269,29 @@ export class MessageForwarder {
                 batchedMessages,
                 (c) => c.version,
               );
-              _.forEach(batchedVersionedMessages, (msgs, version) => {
-                try {
-                  this.forwardToClientBatch(
-                    msgs,
-                    batchedSubscriber.connectionId,
-                    channel,
-                    id,
-                    version,
-                  );
-                } catch (error) {
-                  logger.error({
-                    at: 'message-forwarder#forwardBatchedMessages',
-                    message: error.message,
-                    connectionId: batchedSubscriber.connectionId,
-                    error,
-                  });
-                }
+              _.forEach(batchedVersionedMessages, (versionedMsgs, version) => {
+                const batchedMessagesBySubaccountNumber: _.Dictionary<VersionedContents[]> = _.groupBy(
+                  versionedMsgs,
+                  (c) => c.subaccountNumber,
+                )
+                _.forEach(batchedMessagesBySubaccountNumber, (msgs, subaccountNumber) => {
+                  try {
+                    this.forwardToClientBatch(
+                      msgs,
+                      batchedSubscriber.connectionId,
+                      channel,
+                      id,
+                      version,
+                    );
+                  } catch (error) {
+                    logger.error({
+                      at: 'message-forwarder#forwardBatchedMessages',
+                      message: error.message,
+                      connectionId: batchedSubscriber.connectionId,
+                      error,
+                    });
+                  }
+                });
               });
             },
           );
@@ -293,12 +301,53 @@ export class MessageForwarder {
     this.messageBuffer = {};
   }
 
+  private forwardBatchedVersionedMessagesBySubaccountNumber(
+    batchedMessages: VersionedContents[],
+    batchedSubscriber: SubscriptionInfo,
+    channel: Channel,
+    id: string,
+  ): void {
+    const batchedVersionedMessages: _.Dictionary<VersionedContents[]> = _.groupBy(
+      batchedMessages,
+      (c) => c.version,
+    );
+    _.forEach(batchedVersionedMessages, (versionedMsgs, version) => {
+      const batchedMessagesBySubaccountNumber: _.Dictionary<VersionedContents[]> = _.groupBy(
+        versionedMsgs,
+        (c) => c.subaccountNumber,
+      )
+      _.forEach(batchedMessagesBySubaccountNumber, (msgs, subaccountNumberKey) => {
+        const subaccountNumber: number | undefined = Number.isNaN(Number(subaccountNumberKey)) ?
+          undefined :
+          Number(subaccountNumberKey);
+        try {
+          this.forwardToClientBatch(
+            msgs,
+            batchedSubscriber.connectionId,
+            channel,
+            id,
+            version,
+            subaccountNumber,
+          );
+        } catch (error) {
+          logger.error({
+            at: 'message-forwarder#forwardBatchedMessages',
+            message: error.message,
+            connectionId: batchedSubscriber.connectionId,
+            error,
+          });
+        }
+      });
+    });
+  }
+
   public forwardToClientBatch(
     batchedMessages: VersionedContents[],
     connectionId: string,
     channel: Channel,
     id: string,
     version: string,
+    subaccountNumber?: number,
   ): void {
     const connection: Connection = this.index.connections[connectionId];
     if (!connection) {
@@ -324,6 +373,7 @@ export class MessageForwarder {
         id,
         version,
         batchedMessages.map((c) => c.contents),
+        subaccountNumber,
       ),
     );
   }
@@ -373,6 +423,7 @@ export class MessageForwarder {
         message.id,
         message.version,
         message.contents,
+        message.subaccountNumber,
       ),
     );
     return 1;

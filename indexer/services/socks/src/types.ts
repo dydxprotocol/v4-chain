@@ -86,6 +86,7 @@ export interface ChannelDataMessage extends OutgoingMessage {
   channel: Channel;
   id?: string;
   version: string;
+  subaccountNumber?: number;
 }
 
 export interface ChannelBatchDataMessage extends OutgoingMessage {
@@ -94,6 +95,7 @@ export interface ChannelBatchDataMessage extends OutgoingMessage {
   channel: Channel;
   id?: string;
   version: string;
+  subaccountNumber?: number;
 }
 
 export interface ConnectedMessage extends OutgoingMessage {}
