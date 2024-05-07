@@ -4,7 +4,6 @@ package cli_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strconv"
@@ -58,6 +57,8 @@ func queryAndCheckVestEntry(
 	expectedEntry types.VestEntry,
 ) {
 
+	cfg := network.DefaultConfig(nil)
+
 	param := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
 
 	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "vest", "vest-entry", vester_account, param, "--node", "tcp://7.7.8.4:26658", "-o json")
@@ -68,7 +69,7 @@ func queryAndCheckVestEntry(
 	require.NoError(t, err)
 	var resp types.QueryVestEntryResponse
 	outBytes := out.Bytes()
-	require.NoError(t, json.Unmarshal(outBytes, &resp))
+	require.NoError(t, cfg.Codec.MarshalJSON(outBytes, &resp))
 	require.Equal(t, types.DefaultGenesis().VestEntries[1], resp.Entry)
 }
 

@@ -4,7 +4,6 @@ package cli_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"os/exec"
@@ -12,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	ratelimitutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
@@ -24,6 +24,8 @@ var _ = strconv.IntSize
 
 func TestQueryCapacityByDenom(t *testing.T) {
 
+	cfg := network.DefaultConfig(nil)
+
 	param := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
 
 	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "ratelimit", "capacity-by-denom", param, assettypes.AssetUsdc.Denom, "--node", "tcp://7.7.8.4:26658", "-o json")
@@ -33,7 +35,7 @@ func TestQueryCapacityByDenom(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryCapacityByDenomResponse
-	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
+	require.NoError(t, cfg.Codec.MarshalJSON(out.Bytes(), &resp))
 	require.Equal(t,
 		// LimiterCapacity resulting from default limiter params and 0 TVL.
 		[]types.LimiterCapacity{

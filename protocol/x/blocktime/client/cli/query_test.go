@@ -4,7 +4,6 @@ package cli_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strconv"
@@ -76,6 +75,8 @@ func TestQueryParams(t *testing.T) {
 
 func TestQueryAllDowntimeInfo(t *testing.T) {
 
+	cfg := network.DefaultConfig(nil)
+
 	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "blocktime", "get-all-downtime-info", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -83,7 +84,7 @@ func TestQueryAllDowntimeInfo(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryAllDowntimeInfoResponse
-	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(out.Bytes(), &resp))
 }
 
 // func TestQueryAllDowntimeInfo(t *testing.T) {
@@ -98,6 +99,8 @@ func TestQueryAllDowntimeInfo(t *testing.T) {
 
 func TestQueryPreviousBlockInfo(t *testing.T) {
 
+	cfg := network.DefaultConfig(nil)
+
 	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "blocktime", "get-previous-block-info", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -105,7 +108,7 @@ func TestQueryPreviousBlockInfo(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryPreviousBlockInfoResponse
-	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(out.Bytes(), &resp))
 }
 
 // func TestQueryPreviousBlockInfo(t *testing.T) {

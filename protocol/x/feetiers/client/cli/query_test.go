@@ -4,7 +4,6 @@ package cli_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"os/exec"
 	"strconv"
 	"testing"
@@ -45,6 +44,8 @@ func setupNetwork(
 
 func TestQueryPerpetualFeeParams(t *testing.T) {
 
+	cfg := network.DefaultConfig(nil)
+
 	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "feetiers", "get-perpetual-fee-params", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -52,7 +53,7 @@ func TestQueryPerpetualFeeParams(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryPerpetualFeeParamsResponse
-	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(out.Bytes(), &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }
 
@@ -69,6 +70,8 @@ func TestQueryPerpetualFeeParams(t *testing.T) {
 
 func TestQueryUserFeeTier(t *testing.T) {
 
+	cfg := network.DefaultConfig(nil)
+
 	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "feetiers", "get-user-fee-tier", "alice", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -76,7 +79,7 @@ func TestQueryUserFeeTier(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryUserFeeTierResponse
-	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(out.Bytes(), &resp))
 }
 
 // func TestQueryUserFeeTier(t *testing.T) {

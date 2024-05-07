@@ -4,7 +4,6 @@ package cli_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strconv"
@@ -46,6 +45,8 @@ func setupNetwork(
 
 func TestListLimiterParams(t *testing.T) {
 
+	cfg := network.DefaultConfig(nil)
+
 	param := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
 
 	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "ratelimit", "list-limit-params", param, "--node", "tcp://7.7.8.4:26658", "-o json")
@@ -55,7 +56,7 @@ func TestListLimiterParams(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.ListLimitParamsResponse
-	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
+	require.NoError(t, cfg.Codec.MarshalJSON(out.Bytes(), &resp))
 	require.Equal(t, types.DefaultGenesis().LimitParamsList, resp.LimitParamsList)
 }
 

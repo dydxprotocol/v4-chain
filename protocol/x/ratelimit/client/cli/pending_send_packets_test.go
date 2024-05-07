@@ -4,11 +4,11 @@ package cli_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"os/exec"
 	"testing"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/stretchr/testify/require"
@@ -16,6 +16,8 @@ import (
 )
 
 func TestPendingSendPackets(t *testing.T) {
+
+	cfg := network.DefaultConfig(nil)
 
 	param := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
 
@@ -26,7 +28,7 @@ func TestPendingSendPackets(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryAllPendingSendPacketsResponse
-	require.NoError(t, json.Unmarshal(out.Bytes(), &resp))
+	require.NoError(t, cfg.Codec.MarshalJSON(out.Bytes(), &resp))
 	assert.Equal(t, 0, len(resp.PendingSendPackets))
 }
 
