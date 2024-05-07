@@ -1871,16 +1871,6 @@ func (m *MemClobPriceTimePriority) SetMemclobGauges(
 	// Set gauges for each orderbook.
 	for clobPairId, orderbook := range m.openOrders.orderbooksMap {
 		// Set gauge for total open orders on each orderbook.
-		telemetry.SetGaugeWithLabels(
-			[]string{
-				types.ModuleName,
-				metrics.TotalOrdersInClob,
-			},
-			float32(orderbook.TotalOpenOrders),
-			[]gometrics.Label{
-				metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId)),
-			},
-		)
 
 		// Set gauge for best bid on each orderbook.
 		telemetry.SetGaugeWithLabels(

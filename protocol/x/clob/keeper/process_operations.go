@@ -216,6 +216,7 @@ func (k Keeper) PersistMatchToState(
 
 // statUnverifiedOrderRemoval increments the unverified order removal counter
 // and the base quantums counter for the order to be removed.
+// TODO (CLOB-877)
 func (k Keeper) statUnverifiedOrderRemoval(
 	ctx sdk.Context,
 	orderRemoval types.OrderRemoval,
@@ -262,7 +263,6 @@ func (k Keeper) PersistOrderRemovalToState(
 	// Statefully validate that the removal reason is valid.
 	switch removalReason := orderRemoval.RemovalReason; removalReason {
 	case types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED:
-		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
 		// TODO (CLOB-877) - These validations are commented out because margin requirements can be non-linear.
 		// For the collateralization check, use the remaining amount of the order that is resting on the book.
 		// remainingAmount, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
@@ -299,9 +299,6 @@ func (k Keeper) PersistOrderRemovalToState(
 		// 	)
 		// }
 	case types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER:
-		// TODO (CLOB-877)
-		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
-
 		// The order should be post-only
 		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_POST_ONLY {
 			return errorsmod.Wrap(
@@ -310,12 +307,7 @@ func (k Keeper) PersistOrderRemovalToState(
 			)
 		}
 	case types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE:
-		// TODO (CLOB-877)
-		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
 	case types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED:
-		// TODO (CLOB-877)
-		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
-
 		// The order should be FOK
 		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_FILL_OR_KILL {
 			return errorsmod.Wrap(
@@ -333,9 +325,6 @@ func (k Keeper) PersistOrderRemovalToState(
 			)
 		}
 	case types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK:
-		// TODO (CLOB-877)
-		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
-
 		// The order should be IOC.
 		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_IOC {
 			return errorsmod.Wrap(
@@ -390,8 +379,6 @@ func (k Keeper) PersistOrderRemovalToState(
 	// 		)
 	// 	}
 	case types.OrderRemoval_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS:
-		// TODO (CLOB-877)
-		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
 	default:
 		return errorsmod.Wrapf(
 			types.ErrInvalidOrderRemovalReason,
