@@ -1,11 +1,3 @@
-import { Wss } from '../../src/helpers/wss';
-import { Subscriptions } from '../../src/lib/subscription';
-import config from '../../src/config';
-import {
-  connect as connectToKafka,
-  disconnect as disconnectFromKafka,
-} from '../../src/helpers/kafka/kafka-controller';
-import { Index } from '../../src/websocket';
 import {
   producer,
   WebsocketTopics,
@@ -13,8 +5,20 @@ import {
   startConsumer,
   SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
 } from '@dydxprotocol-indexer/kafka';
-import { MessageForwarder } from '../../src/lib/message-forwarder';
+import { dbHelpers, testMocks, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+import { SubaccountMessage } from '@dydxprotocol-indexer/v4-protos';
+import { Admin } from 'kafkajs';
 import WebSocket from 'ws';
+
+import config from '../../src/config';
+import {
+  connect as connectToKafka,
+  disconnect as disconnectFromKafka,
+} from '../../src/helpers/kafka/kafka-controller';
+import { Wss } from '../../src/helpers/wss';
+import { axiosRequest } from '../../src/lib/axios';
+import { MessageForwarder } from '../../src/lib/message-forwarder';
+import { Subscriptions } from '../../src/lib/subscription';
 import {
   Channel,
   ChannelBatchDataMessage,
@@ -24,15 +28,11 @@ import {
   SubscribedMessage,
   WebsocketEvents,
 } from '../../src/types';
-import { Admin } from 'kafkajs';
-import { SubaccountMessage } from '@dydxprotocol-indexer/v4-protos';
-import { dbHelpers, testMocks, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+import { Index } from '../../src/websocket';
 import {
   defaultChildSubaccountId,
   defaultSubaccountId,
 } from '../constants';
-import _ from 'lodash';
-import { axiosRequest } from '../../src/lib/axios';
 
 jest.mock('../../src/lib/axios');
 
@@ -59,7 +59,7 @@ describe('message-forwarder', () => {
     contents: '{}',
     subaccountId: defaultChildSubaccountId,
     version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
-  }
+  };
 
   const subaccountMessages: SubaccountMessage[] = [
     {
@@ -81,7 +81,7 @@ describe('message-forwarder', () => {
       ...childSubaccountMessage,
       contents: JSON.stringify({ val: '2' }),
     },
-  ]
+  ];
 
   const mockAxiosResponse: Object = { a: 'b' };
   const subaccountInitialMessage: Object = {
