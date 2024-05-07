@@ -259,7 +259,7 @@ describe('message-forwarder', () => {
           id,
           SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
           subaccountMessages,
-          defaultChildAccNumber,
+          172,
         );
         done();
       }
