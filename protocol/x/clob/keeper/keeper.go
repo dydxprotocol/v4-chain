@@ -304,5 +304,7 @@ func (k Keeper) SendOrderbookFillUpdates(
 	k.GetGrpcStreamingManager().SendOrderbookFillUpdates(
 		ctx,
 		orderbookFills,
+		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
 	)
 }

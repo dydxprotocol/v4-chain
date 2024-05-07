@@ -154,7 +154,15 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 	ctx sdk.Context,
 	orderbookFills []clobtypes.StreamOrderbookFill,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
 ) {
+	defer metrics.ModuleMeasureSince(
+		metrics.FullNodeGrpc,
+		metrics.GrpcSendOrderbookFillsLatency,
+		time.Now(),
+	)
+
 	// Group fills by clob pair id.
 	updatesByClobPairId := make(map[uint32][]clobtypes.StreamUpdate)
 	for _, orderbookFill := range orderbookFills {
@@ -190,8 +198,8 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 			if err := subscription.srv.Send(
 				&clobtypes.StreamOrderbookUpdatesResponse{
 					Updates:     streamUpdatesForSubscription,
-					BlockHeight: lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-					ExecMode:    uint32(ctx.ExecMode()),
+					BlockHeight: blockHeight,
+					ExecMode:    uint32(execMode),
 				},
 			); err != nil {
 				idsToRemove = append(idsToRemove, id)

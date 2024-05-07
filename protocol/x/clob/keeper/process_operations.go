@@ -560,7 +560,7 @@ func (k Keeper) PersistMatchOrdersToState(
 			&takerOrder,
 			makerOrders,
 		)
-		streamingManager.SendOrderbookFillUpdates(
+		k.SendOrderbookFillUpdates(
 			ctx,
 			[]types.StreamOrderbookFill{
 				streamOrderbookFill,
@@ -669,7 +669,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 			takerOrder,
 			makerOrders,
 		)
-		streamingManager.SendOrderbookFillUpdates(
+		k.SendOrderbookFillUpdates(
 			ctx,
 			[]types.StreamOrderbookFill{
 				streamOrderbookFill,
