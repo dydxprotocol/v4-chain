@@ -213,6 +213,10 @@ clean:
 include sims.mk
 include ./mocks/Makefile
 
+e2e-setup:
+	@echo "Setting up environment..."
+	@cd ethos/ethos-chain && ./e2e-setup -setup
+
 test: test-unit
 
 test-ci: test-unit-and-integration
@@ -235,10 +239,10 @@ test-race:
 test-cover:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 12m -coverprofile=coverage.out -covermode=atomic -coverpkg=github.com/dydxprotocol/v4-chain/protocol/... -tags='test_ledger_mock $(build_tags)' ./...
 
-test-exchanges:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock exchange_tests $(build_tags)' github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/handler -run "TestQueryingActualExchanges"
+test-unit-and-integration: e2e-setup
+	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...
 
-test-unit-and-integration:
+test-unit-and-integration: 
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...
 
 benchmark:
