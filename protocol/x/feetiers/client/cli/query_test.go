@@ -45,7 +45,7 @@ func setupNetwork(
 
 func TestQueryPerpetualFeeParams(t *testing.T) {
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "feetiers", "get-perpetual-fee-params", "--node", "tcp://7.7.8.4:26658")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "feetiers", "get-perpetual-fee-params", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
@@ -69,7 +69,7 @@ func TestQueryPerpetualFeeParams(t *testing.T) {
 
 func TestQueryUserFeeTier(t *testing.T) {
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "feetiers", "get-user-fee-tier", "alice", "--node", "tcp://7.7.8.4:26658")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "feetiers", "get-user-fee-tier", "alice", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()

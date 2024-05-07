@@ -5,6 +5,7 @@ package cli_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os/exec"
 	"strconv"
 	"testing"
@@ -44,10 +45,12 @@ func setupNetwork(
 }
 
 func TestQueryParams(t *testing.T) {
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "blocktime", "get-downtime-params", "--node", "tcp://7.7.8.4:26658")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "blocktime", "get-downtime-params", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
+
+	fmt.Println("Output from Docker command:", out.String())
 
 	require.NoError(t, err)
 	var resp types.QueryDowntimeParamsResponse
@@ -70,7 +73,7 @@ func TestQueryParams(t *testing.T) {
 
 func TestQueryAllDowntimeInfo(t *testing.T) {
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "blocktime", "get-all-downtime-info", "--node", "tcp://7.7.8.4:26658")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "blocktime", "get-all-downtime-info", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
@@ -92,7 +95,7 @@ func TestQueryAllDowntimeInfo(t *testing.T) {
 
 func TestQueryPreviousBlockInfo(t *testing.T) {
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "blocktime", "get-previous-block-info", "--node", "tcp://7.7.8.4:26658")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "blocktime", "get-previous-block-info", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()

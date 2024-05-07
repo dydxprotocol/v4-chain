@@ -60,7 +60,7 @@ func queryAndCheckVestEntry(
 
 	param := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "vest", "vest-entry", vester_account, param, "--node", "tcp://7.7.8.4:26658")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "vest", "vest-entry", vester_account, param, "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()

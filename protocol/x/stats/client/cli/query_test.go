@@ -45,7 +45,7 @@ func setupNetwork(
 
 func TestQueryParams(t *testing.T) {
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "stats", "get-params", "--node", "tcp://7.7.8.4:26658")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "stats", "get-params", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
@@ -69,7 +69,7 @@ func TestQueryParams(t *testing.T) {
 
 func TestQueryStatsMetadata(t *testing.T) {
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "stats", "get-stats-metadata", "--node", "tcp://7.7.8.4:26658")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "stats", "get-stats-metadata", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
@@ -91,7 +91,7 @@ func TestQueryStatsMetadata(t *testing.T) {
 
 func TestQueryGlobalStats(t *testing.T) {
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "stats", "get-global-stats", "--node", "tcp://7.7.8.4:26658")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "stats", "get-global-stats", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
@@ -113,7 +113,7 @@ func TestQueryGlobalStats(t *testing.T) {
 
 func TestQueryUserStats(t *testing.T) {
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "stats", "get-user-stats [alice]", "--node", "tcp://7.7.8.4:26658")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "stats", "get-user-stats [alice]", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
