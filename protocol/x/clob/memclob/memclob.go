@@ -1881,7 +1881,6 @@ func (m *MemClobPriceTimePriority) SetMemclobGauges(
 				metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId)),
 			},
 		)
-
 		// Set gauge for best bid on each orderbook.
 		telemetry.SetGaugeWithLabels(
 			[]string{
