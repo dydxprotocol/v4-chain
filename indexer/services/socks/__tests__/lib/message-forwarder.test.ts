@@ -319,6 +319,15 @@ describe('message-forwarder', () => {
         done();
       }
     });
+
+    ws.on('open', () => {
+      ws.send(JSON.stringify({
+        type: IncomingMessageType.SUBSCRIBE,
+        channel,
+        id,
+        batched: true,
+      }));
+    });
   });
 
   it('forwards messages', (done: jest.DoneCallback) => {
