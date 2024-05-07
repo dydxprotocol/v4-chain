@@ -199,13 +199,6 @@ describe('message-forwarder', () => {
         offset: '-1',
       }],
     });
-    await admin.deleteTopicRecords({
-      topic: WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS,
-      partitions: [{
-        partition: 0,
-        offset: '-1',
-      }],
-    });
   });
 
   afterEach(() => {
