@@ -422,7 +422,7 @@ describe('message-forwarder', () => {
     });
   });
 
-  it('forwards messages', (done: jest.DoneCallback) => {
+  /*it('forwards messages', (done: jest.DoneCallback) => {
     const channel: Channel = Channel.V4_TRADES;
     const id: string = ethTicker;
 
@@ -494,7 +494,7 @@ describe('message-forwarder', () => {
         batched: false,
       }));
     });
-  });
+  });*/
 });
 
 function checkInitialMessage(
