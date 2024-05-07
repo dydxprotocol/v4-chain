@@ -3,6 +3,7 @@
 package cli_test
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -13,6 +14,8 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
+
+	setup "github.com/ethos-works/ethos/ethos-chain/tests/e2e"
 )
 
 // Prevent strconv unused error
@@ -43,6 +46,24 @@ func setupNetwork(
 }
 
 func TestQueryParams(t *testing.T) {
+	net, ctx := setupNetwork(t)
+
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryParams(), []string{})
+
+	require.NoError(t, err)
+	var resp types.QueryParamsResponse
+	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
+}
+
+func TestQueryParams2(t *testing.T) {
+
+	fmt.Println("-----------")
+	setup.Setup()
+
+}
+
+func TestQueryParamsDocker(t *testing.T) {
 	net, ctx := setupNetwork(t)
 
 	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryParams(), []string{})
