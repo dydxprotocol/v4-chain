@@ -35,7 +35,7 @@ func TestQueryCapacityByDenom(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryCapacityByDenomResponse
-	data, err := out.Bytes()
+	data := out.Bytes()
 	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
 	require.Equal(t,
 		// LimiterCapacity resulting from default limiter params and 0 TVL.

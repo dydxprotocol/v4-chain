@@ -53,7 +53,7 @@ func TestQueryParams(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryParamsResponse
-	data, err := out.Bytes()
+	data := out.Bytes()
 	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }
@@ -80,7 +80,7 @@ func TestQueryStatsMetadata(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryStatsMetadataResponse
-	data, err := out.Bytes()
+	data := out.Bytes()
 	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
 }
 
@@ -105,7 +105,7 @@ func TestQueryGlobalStats(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryGlobalStatsResponse
-	data, err := out.Bytes()
+	data := out.Bytes()
 	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
 }
 
@@ -130,7 +130,7 @@ func TestQueryUserStats(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryUserStatsResponse
-	data, err := out.Bytes()
+	data := out.Bytes()
 	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
 }
 

@@ -56,7 +56,7 @@ func TestQueryParams(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryDowntimeParamsResponse
-	data, err := out.Bytes()
+	data := out.Bytes()
 	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }
@@ -85,7 +85,7 @@ func TestQueryAllDowntimeInfo(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryAllDowntimeInfoResponse
-	data, err := out.Bytes()
+	data := out.Bytes()
 	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
 }
 
@@ -110,7 +110,7 @@ func TestQueryPreviousBlockInfo(t *testing.T) {
 
 	require.NoError(t, err)
 	var resp types.QueryPreviousBlockInfoResponse
-	data, err := out.Bytes()
+	data := out.Bytes()
 	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
 }
 
