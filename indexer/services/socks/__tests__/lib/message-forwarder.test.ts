@@ -32,6 +32,7 @@ import { dbHelpers, testMocks, perpetualMarketRefresher } from '@dydxprotocol-in
 import {
   btcClobPairId,
   btcTicker,
+  defaultChildSubaccountId,
   defaultSubaccountId,
   ethClobPairId,
   ethTicker,
@@ -63,6 +64,15 @@ describe('message-forwarder', () => {
     subaccountId: defaultSubaccountId,
     version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
   };
+
+  const childSubaccountMessage: SubaccountMessage = {
+    blockHeight: '2',
+    transactionIndex: 2,
+    eventIndex: 2,
+    contents: '{}',
+    subaccountId: defaultChildSubaccountId,
+    version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+  }
 
   const btcTradesMessages: TradeMessage[] = [
     {
@@ -122,6 +132,17 @@ describe('message-forwarder', () => {
       contents: JSON.stringify({ val: '2' }),
     },
   ];
+
+  const childSubaccountMessages: SubaccountMessage[] = [
+    {
+      ...childSubaccountMessage,
+      contents: JSON.stringify({ val: '1' }),
+    },
+    {
+      ...childSubaccountMessage,
+      contents: JSON.stringify({ val: '2' }),
+    },
+  ]
 
   const mockAxiosResponse: Object = { a: 'b' };
   const subaccountInitialMessage: Object = {
@@ -358,7 +379,7 @@ describe('message-forwarder', () => {
         );
 
         // await each message to ensure they are sent in order
-        for (const subaccountMessage of subaccountMessages) {
+        for (const subaccountMessage of childSubaccountMessages) {
           await producer.send({
             topic: WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS,
             messages: [{
