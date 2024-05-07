@@ -265,7 +265,13 @@ export class MessageForwarder {
             .batchedSubscriptions[channelString][id];
           batchedSubscribers.forEach(
             (batchedSubscriber: SubscriptionInfo) => {
-              const batchedVersionedMessages: _.Dictionary<VersionedContents[]> = _.groupBy(
+              this.forwardBatchedVersionedMessagesBySubaccountNumber(
+                batchedMessages,
+                batchedSubscriber,
+                channel,
+                id,
+              );
+              /*const batchedVersionedMessages: _.Dictionary<VersionedContents[]> = _.groupBy(
                 batchedMessages,
                 (c) => c.version,
               );
@@ -292,7 +298,7 @@ export class MessageForwarder {
                     });
                   }
                 });
-              });
+              });*/
             },
           );
         }
@@ -327,7 +333,7 @@ export class MessageForwarder {
             channel,
             id,
             version,
-            //subaccountNumber,
+            subaccountNumber,
           );
         } catch (error) {
           logger.error({
