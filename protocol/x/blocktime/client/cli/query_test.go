@@ -57,6 +57,11 @@ func TestQueryParams(t *testing.T) {
 	require.NoError(t, err)
 	var resp types.QueryDowntimeParamsResponse
 	data := out.Bytes()
+	data2 := cfg.GenesisState[types.ModuleName]
+
+	fmt.Println("Data from Docker command:", data)
+	fmt.Println("Data from Genesis state:", data2)
+
 	require.NoError(t, cfg.Codec.MarshalJSON(data, &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }
