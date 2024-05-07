@@ -192,6 +192,20 @@ describe('message-forwarder', () => {
     subscriptions = new Subscriptions();
     index = new Index(wss, subscriptions);
     (axiosRequest as jest.Mock).mockImplementation(() => (JSON.stringify(mockAxiosResponse)));
+    await admin.deleteTopicRecords({
+      topic: WebsocketTopics.TO_WEBSOCKETS_TRADES,
+      partitions: [{
+        partition: 0,
+        offset: '-1',
+      }],
+    });
+    await admin.deleteTopicRecords({
+      topic: WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS,
+      partitions: [{
+        partition: 0,
+        offset: '-1',
+      }],
+    });
   });
 
   afterEach(() => {
@@ -422,7 +436,7 @@ describe('message-forwarder', () => {
     });
   });
 
-  /*it('forwards messages', (done: jest.DoneCallback) => {
+  it('forwards messages', (done: jest.DoneCallback) => {
     const channel: Channel = Channel.V4_TRADES;
     const id: string = ethTicker;
 
@@ -494,7 +508,7 @@ describe('message-forwarder', () => {
         batched: false,
       }));
     });
-  });*/
+  });
 });
 
 function checkInitialMessage(
