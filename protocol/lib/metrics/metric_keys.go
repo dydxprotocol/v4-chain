@@ -55,4 +55,10 @@ const (
 	DaemonGetPerpetualsPaginatedLatency               = "daemon_get_perpetuals_paginated_latency"
 	MevLatency                                        = "mev_latency"
 	GateWithdrawalsIfNegativeTncSubaccountSeenLatency = "gate_withdrawals_if_negative_tnc_subaccount_seen_latency"
+
+	// Full node grpc
+	FullNodeGrpc                    = "full_node_grpc"
+	GrpcSendOrderbookUpdatesLatency = "grpc_send_orderbook_updates_latency"
+	EndBlocker                      = "end_blocker"
+	EndBlockerLag                   = "end_blocker_lag"
 )

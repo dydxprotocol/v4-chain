@@ -1493,6 +1493,10 @@ func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 
 // EndBlocker application updates every end block
 func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	// Measure the lag between current timestamp and the end blocker time stamp
+	// as an indicator of whether the node is lagging behind.
+	metrics.ModuleMeasureSince(metrics.EndBlocker, metrics.EndBlockerLag, ctx.BlockTime())
+
 	ctx = ctx.WithExecMode(lib.ExecModeEndBlock)
 
 	// Reset the logger for middleware.
