@@ -2,11 +2,13 @@ package grpc
 
 import (
 	"sync"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -80,6 +82,12 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
+	defer metrics.ModuleMeasureSince(
+		metrics.FullNodeGrpc,
+		metrics.GrpcSendOrderbookUpdatesLatency,
+		time.Now(),
+	)
+
 	// Group updates by clob pair id.
 	updates := make(map[uint32]*clobtypes.OffchainUpdates)
 	for _, message := range offchainUpdates.Messages {
@@ -114,10 +122,17 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 		}
 
 		if len(updatesToSend) > 0 {
+			streamUpdates := clobtypes.StreamUpdate{
+				UpdateMessage: &clobtypes.StreamUpdate_OrderbookUpdate{
+					OrderbookUpdate: &clobtypes.StreamOrderbookUpdate{
+						Updates:  updatesToSend,
+						Snapshot: snapshot,
+					},
+				},
+			}
 			if err := subscription.srv.Send(
 				&clobtypes.StreamOrderbookUpdatesResponse{
-					Updates:     updatesToSend,
-					Snapshot:    snapshot,
+					Updates:     []clobtypes.StreamUpdate{streamUpdates},
 					BlockHeight: blockHeight,
 					ExecMode:    uint32(execMode),
 				},
