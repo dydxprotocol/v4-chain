@@ -217,6 +217,10 @@ e2e-setup:
 	@echo "Setting up environment..."
 	@cd ethos/ethos-chain && ./e2e-setup -setup
 
+e2e-setup-linux:
+	@echo "Setting up environment..."
+	@cd ethos/ethos-chain && ./e2e-setup-linux -setup
+
 test: test-unit
 
 test-ci: test-unit-and-integration
@@ -242,7 +246,7 @@ test-cover:
 test-unit-and-integration: e2e-setup
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...
 
-test-unit-and-integration: 
+test-unit-and-integration-linux: e2e-setup-linux 
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...
 
 benchmark:
