@@ -259,6 +259,7 @@ describe('message-forwarder-accounts', () => {
           id,
           SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
           subaccountMessages,
+          defaultChildAccNumber,
         );
         done();
       }
@@ -298,8 +299,6 @@ function checkBatchMessage(
   expectedMessages: {contents: string}[],
   subaccountNumber?: number,
 ): void {
-  console.log(JSON.stringify(batchMsg));
-  console.log(subaccountNumber);
   expect(batchMsg.connection_id).toBe(connectionId);
   expect(batchMsg.type).toBe(OutgoingMessageType.CHANNEL_BATCH_DATA);
   expect(batchMsg.channel).toBe(channel);

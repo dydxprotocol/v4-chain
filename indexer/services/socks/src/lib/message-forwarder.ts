@@ -271,34 +271,6 @@ export class MessageForwarder {
                 channel,
                 id,
               );
-              /*const batchedVersionedMessages: _.Dictionary<VersionedContents[]> = _.groupBy(
-                batchedMessages,
-                (c) => c.version,
-              );
-              _.forEach(batchedVersionedMessages, (versionedMsgs, version) => {
-                const batchedMessagesBySubaccountNumber: _.Dictionary<VersionedContents[]> = _.groupBy(
-                  versionedMsgs,
-                  (c) => c.subaccountNumber,
-                )
-                _.forEach(batchedMessagesBySubaccountNumber, (msgs, subaccountNumber) => {
-                  try {
-                    this.forwardToClientBatch(
-                      msgs,
-                      batchedSubscriber.connectionId,
-                      channel,
-                      id,
-                      version,
-                    );
-                  } catch (error) {
-                    logger.error({
-                      at: 'message-forwarder#forwardBatchedMessages',
-                      message: error.message,
-                      connectionId: batchedSubscriber.connectionId,
-                      error,
-                    });
-                  }
-                });
-              });*/
             },
           );
         }
@@ -321,11 +293,11 @@ export class MessageForwarder {
       const batchedMessagesBySubaccountNumber: _.Dictionary<VersionedContents[]> = _.groupBy(
         versionedMsgs,
         (c) => c.subaccountNumber,
-      )
+      );
       _.forEach(batchedMessagesBySubaccountNumber, (msgs, subaccountNumberKey) => {
-        const subaccountNumber: number | undefined = Number.isNaN(Number(subaccountNumberKey)) ?
-          undefined :
-          Number(subaccountNumberKey);
+        const subaccountNumber: number | undefined = Number.isNaN(Number(subaccountNumberKey))
+          ? undefined
+          : Number(subaccountNumberKey);
         try {
           this.forwardToClientBatch(
             msgs,
@@ -333,7 +305,7 @@ export class MessageForwarder {
             channel,
             id,
             version,
-            //subaccountNumber,
+            subaccountNumber,
           );
         } catch (error) {
           logger.error({
