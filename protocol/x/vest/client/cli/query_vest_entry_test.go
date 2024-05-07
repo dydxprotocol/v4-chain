@@ -3,16 +3,16 @@
 package cli_test
 
 import (
+	"bytes"
 	"fmt"
+	"os/exec"
 	"strconv"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
 )
 
@@ -57,10 +57,13 @@ func queryAndCheckVestEntry(
 	vester_account string,
 	expectedEntry types.VestEntry,
 ) {
-	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryVestEntry(), []string{
-		"rewards_vester",
-		fmt.Sprintf("--%s=json", tmcli.OutputFlag), // specify output format as json
-	})
+
+	param := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
+
+	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "vest", "vest-entry", vester_account, param, "--node", "tcp://7.7.8.4:26658")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
 
 	require.NoError(t, err)
 	var resp types.QueryVestEntryResponse
@@ -68,3 +71,22 @@ func queryAndCheckVestEntry(
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(outBytes, &resp))
 	require.Equal(t, types.DefaultGenesis().VestEntries[1], resp.Entry)
 }
+
+// func queryAndCheckVestEntry(
+// 	t *testing.T,
+// 	ctx client.Context,
+// 	net *network.Network,
+// 	vester_account string,
+// 	expectedEntry types.VestEntry,
+// ) {
+// 	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryVestEntry(), []string{
+// 		"rewards_vester",
+// 		fmt.Sprintf("--%s=json", tmcli.OutputFlag), // specify output format as json
+// 	})
+
+// 	require.NoError(t, err)
+// 	var resp types.QueryVestEntryResponse
+// 	outBytes := out.Bytes()
+// 	require.NoError(t, net.Config.Codec.UnmarshalJSON(outBytes, &resp))
+// 	require.Equal(t, types.DefaultGenesis().VestEntries[1], resp.Entry)
+// }

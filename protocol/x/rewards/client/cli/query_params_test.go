@@ -3,16 +3,16 @@
 package cli_test
 
 import (
+	"bytes"
 	"fmt"
+	"os/exec"
 	"strconv"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
 )
 
@@ -44,16 +44,31 @@ func setupNetwork(
 }
 
 func TestQueryParams(t *testing.T) {
-	net, ctx := setupNetwork(t)
 
-	out, err := clitestutil.ExecTestCLICmd(
-		ctx,
-		cli.CmdQueryParams(),
-		[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-	)
+	param := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
+
+	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "rewards", "get-params", param, "--node", "tcp://7.7.8.4:26658")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
 
 	require.NoError(t, err)
 	var resp types.QueryParamsResponse
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }
+
+// func TestQueryParams(t *testing.T) {
+// 	net, ctx := setupNetwork(t)
+
+// 	out, err := clitestutil.ExecTestCLICmd(
+// 		ctx,
+// 		cli.CmdQueryParams(),
+// 		[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+// 	)
+
+// 	require.NoError(t, err)
+// 	var resp types.QueryParamsResponse
+// 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+// 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
+// }
