@@ -47,7 +47,7 @@ func TestQueryVestEntry(t *testing.T) {
 
 	// net, ctx := setupNetwork(t)
 
-	queryAndCheckVestEntry(t, "treausry_vester", types.DefaultGenesis().VestEntries[0])
+	queryAndCheckVestEntry(t, "rewards_vester", types.DefaultGenesis().VestEntries[0])
 	queryAndCheckVestEntry(t, "rewards_vester", types.DefaultGenesis().VestEntries[1])
 }
 
