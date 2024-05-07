@@ -207,5 +207,53 @@ describe('pnlTicks-controller#V4', () => {
         ],
       });
     });
+
+    it('Get /historical-pnl/parentSubaccountNumber', async () => {
+      await testMocks.seedData();
+      const createdAt: string = '2000-05-25T00:00:00.000Z';
+      const blockHeight: string = '3';
+      const pnlTick2: PnlTicksCreateObject = {
+        ...testConstants.defaultPnlTick,
+        subaccountId: testConstants.isolatedSubaccountId,
+        createdAt,
+        blockHeight,
+      };
+      await Promise.all([
+        PnlTicksTable.create(testConstants.defaultPnlTick),
+        PnlTicksTable.create(pnlTick2),
+      ]);
+
+      const parentSubaccountNumber: number = 0;
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/historical-pnl/parentSubaccountNumber?address=${testConstants.defaultAddress}` +
+            `&parentSubaccountNumber=${parentSubaccountNumber}`,
+      });
+
+      const expectedPnlTickResponse: PnlTicksResponseObject = {
+        id: PnlTicksTable.uuid(
+          testConstants.defaultPnlTick.subaccountId,
+          testConstants.defaultPnlTick.createdAt,
+        ),
+        subaccountId: testConstants.defaultPnlTick.subaccountId,
+        equity: (parseFloat(testConstants.defaultPnlTick.equity) +
+            parseFloat(pnlTick2.equity)).toString(),
+        totalPnl: (parseFloat(testConstants.defaultPnlTick.totalPnl) +
+            parseFloat(pnlTick2.totalPnl)).toString(),
+        netTransfers: (parseFloat(testConstants.defaultPnlTick.netTransfers) +
+            parseFloat(pnlTick2.netTransfers)).toString(),
+        createdAt: testConstants.defaultPnlTick.createdAt,
+        blockHeight: testConstants.defaultPnlTick.blockHeight,
+        blockTime: testConstants.defaultPnlTick.blockTime,
+      };
+
+      expect(response.body.historicalPnl).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...expectedPnlTickResponse,
+          }),
+        ]),
+      );
+    });
   });
 });
