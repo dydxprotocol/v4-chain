@@ -256,3 +256,19 @@ func (k Keeper) SendOrderbookUpdates(
 		ctx.ExecMode(),
 	)
 }
+
+// SendOrderbookFillUpdates sends the orderbook fills to the gRPC streaming manager.
+func (k Keeper) SendOrderbookFillUpdates(
+	ctx sdk.Context,
+	orderbookFills []types.StreamOrderbookFill,
+) {
+	if len(orderbookFills) == 0 {
+		return
+	}
+	k.GetGrpcStreamingManager().SendOrderbookFillUpdates(
+		ctx,
+		orderbookFills,
+		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
+	)
+}
