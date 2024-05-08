@@ -33,7 +33,9 @@ import {
   btcClobPairId,
   btcTicker,
   defaultChildAccNumber,
+  defaultChildAccNumber2,
   defaultChildSubaccountId,
+  defaultChildSubaccountId2,
   defaultSubaccountId,
   ethClobPairId,
   ethTicker,
@@ -67,12 +69,13 @@ describe('message-forwarder', () => {
   };
 
   const childSubaccountMessage: SubaccountMessage = {
-    blockHeight: '2',
-    transactionIndex: 2,
-    eventIndex: 2,
-    contents: '{}',
+    ...baseSubaccountMessage,
     subaccountId: defaultChildSubaccountId,
-    version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+  };
+
+  const childSubaccount2Message: SubaccountMessage = {
+    ...baseSubaccountMessage,
+    subaccountId: defaultChildSubaccountId2,
   };
 
   const btcTradesMessages: TradeMessage[] = [
@@ -143,6 +146,25 @@ describe('message-forwarder', () => {
       ...childSubaccountMessage,
       contents: JSON.stringify({ val: '2' }),
     },
+  ];
+
+  const childSubaccount2Messages: SubaccountMessage[] = [
+    {
+      ...childSubaccount2Message,
+      contents: JSON.stringify({ val: '3' }),
+    },
+    {
+      ...childSubaccount2Message,
+      contents: JSON.stringify({ val: '4' }),
+    },
+  ];
+
+  // Interleave messages of different child subaccounts
+  const allChildSubaccountMessages: SubaccountMessage[] = [
+    childSubaccountMessages[0],
+    childSubaccount2Messages[0],
+    childSubaccountMessages[1],
+    childSubaccount2Messages[1],
   ];
 
   const mockAxiosResponse: Object = { a: 'b' };
@@ -380,7 +402,7 @@ describe('message-forwarder', () => {
         );
 
         // await each message to ensure they are sent in order
-        for (const subaccountMessage of childSubaccountMessages) {
+        for (const subaccountMessage of allChildSubaccountMessages) {
           await producer.send({
             topic: WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS,
             messages: [{
@@ -396,7 +418,7 @@ describe('message-forwarder', () => {
         }
       }
 
-      if (msg.message_id >= 2) {
+      if (msg.message_id === 2) {
         const batchMsg: ChannelBatchDataMessage = JSON.parse(
           message.toString(),
         ) as ChannelBatchDataMessage;
@@ -407,8 +429,24 @@ describe('message-forwarder', () => {
           channel,
           id,
           SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
-          subaccountMessages,
+          childSubaccountMessages,
           defaultChildAccNumber,
+        );
+      }
+
+      if (msg.message_id === 3) {
+        const batchMsg: ChannelBatchDataMessage = JSON.parse(
+          message.toString(),
+        ) as ChannelBatchDataMessage;
+
+        checkBatchMessage(
+          batchMsg,
+          connectionId,
+          channel,
+          id,
+          SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+          childSubaccount2Messages,
+          defaultChildAccNumber2,
         );
         done();
       }

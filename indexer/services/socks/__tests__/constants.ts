@@ -32,6 +32,7 @@ export const defaultEventIndex: number = 3;
 export const defaultOwner: string = 'owner';
 export const defaultAccNumber: number = 4;
 export const defaultChildAccNumber: number = defaultAccNumber + MAX_PARENT_SUBACCOUNTS;
+export const defaultChildAccNumber2: number = defaultAccNumber + 2 * MAX_PARENT_SUBACCOUNTS;
 export const defaultSubaccountId: SubaccountId = {
   owner: defaultOwner,
   number: defaultAccNumber,
@@ -39,6 +40,10 @@ export const defaultSubaccountId: SubaccountId = {
 export const defaultChildSubaccountId: SubaccountId = {
   owner: defaultOwner,
   number: defaultChildAccNumber,
+};
+export const defaultChildSubaccountId2: SubaccountId = {
+  owner: defaultOwner,
+  number: defaultChildAccNumber2,
 };
 export const defaultContents: Object = {
   prop: 'property',
