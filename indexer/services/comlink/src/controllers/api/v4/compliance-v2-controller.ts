@@ -82,24 +82,26 @@ class ComplianceV2Controller extends Controller {
           [],
         );
         let complianceStatusFromDatabase: ComplianceStatusFromDatabase | undefined;
+        const updatedAt: string = DateTime.utc().toISO();
         if (complianceStatus.length === 0) {
           complianceStatusFromDatabase = await ComplianceStatusTable.upsert({
             address,
             status: ComplianceStatus.BLOCKED,
             reason: ComplianceReason.COMPLIANCE_PROVIDER,
-            updatedAt: DateTime.utc().toISO(),
+            updatedAt,
           });
         } else {
           complianceStatusFromDatabase = await ComplianceStatusTable.update({
             address,
             status: ComplianceStatus.CLOSE_ONLY,
             reason: ComplianceReason.COMPLIANCE_PROVIDER,
-            updatedAt: DateTime.utc().toISO(),
+            updatedAt,
           });
         }
         return {
           status: complianceStatusFromDatabase!.status,
           reason: complianceStatusFromDatabase!.reason,
+          updatedAt,
         };
       } else {
         return {
@@ -255,6 +257,7 @@ router.post(
         [],
       );
       let complianceStatusFromDatabase: ComplianceStatusFromDatabase | undefined;
+      const updatedAt: string = DateTime.utc().toISO();
       if (complianceStatus.length === 0) {
         if (isRestrictedCountryHeaders(req.headers as CountryHeaders)) {
           if (action === ComplianceAction.ONBOARD) {
@@ -262,21 +265,21 @@ router.post(
               address,
               status: ComplianceStatus.BLOCKED,
               reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
-              updatedAt: DateTime.utc().toISO(),
+              updatedAt,
             });
           } else if (action === ComplianceAction.CONNECT) {
             complianceStatusFromDatabase = await ComplianceStatusTable.upsert({
               address,
               status: ComplianceStatus.FIRST_STRIKE,
               reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
-              updatedAt: DateTime.utc().toISO(),
+              updatedAt,
             });
           }
         } else {
           complianceStatusFromDatabase = await ComplianceStatusTable.upsert({
             address,
             status: ComplianceStatus.COMPLIANT,
-            updatedAt: DateTime.utc().toISO(),
+            updatedAt,
           });
         }
       } else {
@@ -301,7 +304,7 @@ router.post(
               address,
               status: COMPLIANCE_PROGRESSION[complianceStatus[0].status],
               reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
-              updatedAt: DateTime.utc().toISO(),
+              updatedAt,
             });
           }
         }
@@ -309,6 +312,7 @@ router.post(
       const response = {
         status: complianceStatusFromDatabase!.status,
         reason: complianceStatusFromDatabase!.reason,
+        updatedAt,
       };
 
       return res.send(response);
