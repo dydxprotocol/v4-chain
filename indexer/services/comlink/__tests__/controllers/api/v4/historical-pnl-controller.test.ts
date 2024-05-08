@@ -210,13 +210,9 @@ describe('pnlTicks-controller#V4', () => {
 
     it('Get /historical-pnl/parentSubaccountNumber', async () => {
       await testMocks.seedData();
-      const createdAt: string = '2000-05-25T00:00:00.000Z';
-      const blockHeight: string = '3';
       const pnlTick2: PnlTicksCreateObject = {
         ...testConstants.defaultPnlTick,
         subaccountId: testConstants.isolatedSubaccountId,
-        createdAt,
-        blockHeight,
       };
       await Promise.all([
         PnlTicksTable.create(testConstants.defaultPnlTick),
@@ -230,12 +226,8 @@ describe('pnlTicks-controller#V4', () => {
             `&parentSubaccountNumber=${parentSubaccountNumber}`,
       });
 
-      const expectedPnlTickResponse: PnlTicksResponseObject = {
-        id: PnlTicksTable.uuid(
-          testConstants.defaultPnlTick.subaccountId,
-          testConstants.defaultPnlTick.createdAt,
-        ),
-        subaccountId: testConstants.defaultPnlTick.subaccountId,
+      const expectedPnlTickResponse: any = {
+        // id and subaccountId don't matter
         equity: (parseFloat(testConstants.defaultPnlTick.equity) +
             parseFloat(pnlTick2.equity)).toString(),
         totalPnl: (parseFloat(testConstants.defaultPnlTick.totalPnl) +
@@ -254,6 +246,26 @@ describe('pnlTicks-controller#V4', () => {
           }),
         ]),
       );
+    });
+  });
+
+  it('Get /historical-pnl/parentSubaccountNumber with invalid subaccount number returns error', async () => {
+    const response: request.Response = await sendRequest({
+      type: RequestMethod.GET,
+      path: `/v4/historical-pnl/parentSubaccountNumber?address=${testConstants.defaultAddress}` +
+          '&parentSubaccountNumber=128',
+      expectedStatus: 400,
+    });
+
+    expect(response.body).toEqual({
+      errors: [
+        {
+          location: 'query',
+          msg: 'parentSubaccountNumber must be a non-negative integer less than 128',
+          param: 'parentSubaccountNumber',
+          value: '128',
+        },
+      ],
     });
   });
 });

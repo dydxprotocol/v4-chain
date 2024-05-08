@@ -130,6 +130,7 @@ class HistoricalPnlController extends Controller {
         },
       ),
     ]);
+
     if (subaccounts.length === 0) {
       throw new NotFoundError(
         `No subaccounts found with address ${address} and parentSubaccountNumber ${parentSubaccountNumber}`,
@@ -235,11 +236,14 @@ router.get(
       createdOnOrAfter,
     }: ParentSubaccountPnlTicksRequest = matchedData(req) as ParentSubaccountPnlTicksRequest;
 
+    // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
+    const parentSubaccountNum: number = +parentSubaccountNumber;
+
     try {
       const controllers: HistoricalPnlController = new HistoricalPnlController();
       const response: HistoricalPnlResponse = await controllers.getHistoricalPnlForParentSubaccount(
         address,
-        parentSubaccountNumber,
+        parentSubaccountNum,
         limit,
         createdBeforeOrAtHeight,
         createdBeforeOrAt,

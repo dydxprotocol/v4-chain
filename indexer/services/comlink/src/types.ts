@@ -413,7 +413,8 @@ export interface PerpetualMarketRequest extends LimitRequest, TickerRequest {}
 
 export interface PnlTicksRequest extends SubaccountRequest, LimitAndCreatedBeforeAndAfterRequest {}
 
-export interface ParentSubaccountPnlTicksRequest extends ParentSubaccountRequest, LimitAndCreatedBeforeAndAfterRequest {
+export interface ParentSubaccountPnlTicksRequest
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeAndAfterRequest {
 }
 
 export interface OrderbookRequest {
