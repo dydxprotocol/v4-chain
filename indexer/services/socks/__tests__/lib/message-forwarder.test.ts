@@ -182,14 +182,14 @@ describe('message-forwarder', () => {
     await dbHelpers.teardown();
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks();
 
     config.WS_PORT += 1;
     WS_HOST = `ws://localhost:${config.WS_PORT}`;
 
     wss = new Wss();
-    await wss.start();
+    //await wss.start();
     subscriptions = new Subscriptions();
     index = new Index(wss, subscriptions);
     (axiosRequest as jest.Mock).mockImplementation(() => (JSON.stringify(mockAxiosResponse)));
