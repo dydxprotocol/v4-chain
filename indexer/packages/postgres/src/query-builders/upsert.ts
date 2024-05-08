@@ -14,9 +14,8 @@ export default class UpsertQueryBuilder<M extends Model, R = M[]> extends QueryB
   upsert(object: any) {
     const modelClass = this.modelClass();
 
-    const idColumn: string = modelClass.idColumn as string;
-
-    const tableDefinedId = `${modelClass.tableName}.${idColumn}`;
+    const idColumn = modelClass.idColumn;
+    const idColumns: string[] = Array.isArray(idColumn) ? idColumn : [idColumn];
 
     const knex = modelClass.knex();
 
@@ -26,10 +25,15 @@ export default class UpsertQueryBuilder<M extends Model, R = M[]> extends QueryB
     const colBindings = cols.map(() => '??').join(', ');
     const valBindings = cols.map(() => '?').join(', ');
     const setBindings = cols.map(() => '?? = ?').join(', ');
+    const idConditionBindings = idColumns.map(() => '?? = ?').join(' AND ');
 
     const setValues: string[] = [];
     for (let i = 0; i < cols.length; ++i) {
       setValues.push(cols[i], values[i]);
+    }
+    const idValues: string[] = [];
+    for (let i = 0; i < idColumns.length; ++i) {
+      idValues.push(`${modelClass.tableName}.${idColumns[i]}`, object[idColumns[i]]);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,15 +44,14 @@ export default class UpsertQueryBuilder<M extends Model, R = M[]> extends QueryB
             `(${colBindings}) VALUES (${valBindings})`,
             'ON CONFLICT (??) DO',
             `UPDATE SET ${setBindings}`,
-            'WHERE ?? = ?',
+            `WHERE ${idConditionBindings}`,
           ].join(' '),
           [
             ...cols,
             ...values,
             modelClass.idColumn,
             ...setValues,
-            tableDefinedId,
-            object[idColumn],
+            ...idValues,
           ],
         ),
       );
