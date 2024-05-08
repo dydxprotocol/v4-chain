@@ -185,7 +185,7 @@ describe('message-forwarder', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    config.WS_PORT += 1;
+    config.WS_PORT += 1679;
     WS_HOST = `ws://localhost:${config.WS_PORT}`;
 
     wss = new Wss();
