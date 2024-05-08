@@ -185,11 +185,12 @@ describe('message-forwarder', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    // Increment port with a large number to ensure it's not used for any other service.
     config.WS_PORT += 1679;
     WS_HOST = `ws://localhost:${config.WS_PORT}`;
 
     wss = new Wss();
-    //await wss.start();
+    // await wss.start();
     subscriptions = new Subscriptions();
     index = new Index(wss, subscriptions);
     (axiosRequest as jest.Mock).mockImplementation(() => (JSON.stringify(mockAxiosResponse)));
@@ -198,80 +199,6 @@ describe('message-forwarder', () => {
   afterEach(() => {
     jest.clearAllMocks();
     jest.resetAllMocks();
-  });
-
-  it('forwards messages', (done: jest.DoneCallback) => {
-    const channel: Channel = Channel.V4_TRADES;
-    const id: string = ethTicker;
-
-    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
-    subscriptions.start(messageForwarder.forwardToClient);
-    messageForwarder.start();
-
-    const ws = new WebSocket(WS_HOST);
-    let connectionId: string;
-
-    ws.on(WebsocketEvents.MESSAGE, async (message) => {
-      const msg: OutgoingMessage = JSON.parse(message.toString()) as OutgoingMessage;
-      if (msg.message_id === 0) {
-        connectionId = msg.connection_id;
-      }
-
-      if (msg.message_id === 1) {
-        // Check that the initial message is correct.
-        checkInitialMessage(
-          msg as SubscribedMessage,
-          connectionId,
-          channel,
-          id,
-          mockAxiosResponse,
-        );
-
-        // Send both BTC and ETH trades messages
-        // await each message to ensure they are sent in order
-        for (const tradeMessage of _.concat(
-          ethTradesMessages,
-          btcTradesMessages,
-          ethTradesMessages,
-        )) {
-          await producer.send({
-            topic: WebsocketTopics.TO_WEBSOCKETS_TRADES,
-            messages: [{
-              value: Buffer.from(Uint8Array.from(TradeMessage.encode(tradeMessage).finish())),
-              partition: 0,
-              timestamp: `${Date.now()}`,
-            }],
-          });
-        }
-      }
-
-      if (msg.message_id >= 2) {
-        const forwardedMsg: ChannelDataMessage = JSON.parse(
-          message.toString(),
-        ) as ChannelDataMessage;
-
-        expect(forwardedMsg.connection_id).toBe(connectionId);
-        expect(forwardedMsg.type).toBe(OutgoingMessageType.CHANNEL_DATA);
-        expect(forwardedMsg.channel).toBe(channel);
-        expect(forwardedMsg.id).toBe(id);
-        // Should only receive ETH messages
-        expect(forwardedMsg.contents).toEqual(JSON.parse(ethTradesMessages[0].contents));
-        expect(forwardedMsg.version).toEqual(TRADES_WEBSOCKET_MESSAGE_VERSION);
-        // Only 2 ETH messages should be sent
-        if (msg.message_id === 3) {
-          done();
-        }
-      }
-    });
-
-    ws.on('open', () => {
-      ws.send(JSON.stringify({
-        type: IncomingMessageType.SUBSCRIBE,
-        channel,
-        id,
-        batched: false,
-      }));
-    });
   });
 
   it('Batch sends messages with different versions', (done: jest.DoneCallback) => {
@@ -494,6 +421,80 @@ describe('message-forwarder', () => {
         channel,
         id,
         batched: true,
+      }));
+    });
+  });
+
+  it('forwards messages', (done: jest.DoneCallback) => {
+    const channel: Channel = Channel.V4_TRADES;
+    const id: string = ethTicker;
+
+    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
+    subscriptions.start(messageForwarder.forwardToClient);
+    messageForwarder.start();
+
+    const ws = new WebSocket(WS_HOST);
+    let connectionId: string;
+
+    ws.on(WebsocketEvents.MESSAGE, async (message) => {
+      const msg: OutgoingMessage = JSON.parse(message.toString()) as OutgoingMessage;
+      if (msg.message_id === 0) {
+        connectionId = msg.connection_id;
+      }
+
+      if (msg.message_id === 1) {
+        // Check that the initial message is correct.
+        checkInitialMessage(
+          msg as SubscribedMessage,
+          connectionId,
+          channel,
+          id,
+          mockAxiosResponse,
+        );
+
+        // Send both BTC and ETH trades messages
+        // await each message to ensure they are sent in order
+        for (const tradeMessage of _.concat(
+          ethTradesMessages,
+          btcTradesMessages,
+          ethTradesMessages,
+        )) {
+          await producer.send({
+            topic: WebsocketTopics.TO_WEBSOCKETS_TRADES,
+            messages: [{
+              value: Buffer.from(Uint8Array.from(TradeMessage.encode(tradeMessage).finish())),
+              partition: 0,
+              timestamp: `${Date.now()}`,
+            }],
+          });
+        }
+      }
+
+      if (msg.message_id >= 2) {
+        const forwardedMsg: ChannelDataMessage = JSON.parse(
+          message.toString(),
+        ) as ChannelDataMessage;
+
+        expect(forwardedMsg.connection_id).toBe(connectionId);
+        expect(forwardedMsg.type).toBe(OutgoingMessageType.CHANNEL_DATA);
+        expect(forwardedMsg.channel).toBe(channel);
+        expect(forwardedMsg.id).toBe(id);
+        // Should only receive ETH messages
+        expect(forwardedMsg.contents).toEqual(JSON.parse(ethTradesMessages[0].contents));
+        expect(forwardedMsg.version).toEqual(TRADES_WEBSOCKET_MESSAGE_VERSION);
+        // Only 2 ETH messages should be sent
+        if (msg.message_id === 3) {
+          done();
+        }
+      }
+    });
+
+    ws.on('open', () => {
+      ws.send(JSON.stringify({
+        type: IncomingMessageType.SUBSCRIBE,
+        channel,
+        id,
+        batched: false,
       }));
     });
   });
