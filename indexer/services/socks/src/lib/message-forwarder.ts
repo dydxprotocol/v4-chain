@@ -141,6 +141,30 @@ export class MessageForwarder {
     );
 
     const originalMessageTimestamp = message.headers?.message_received_timestamp;
+
+    // TODO: Remove
+    logger.info({
+      at: loggerAt,
+      message: `Message start: ${start}`,
+      kafkaMessage: safeJsonStringify(message),
+    });
+    logger.info({
+      at: loggerAt,
+      message: `Time to forward message: ${end - startForwardMessage}`,
+    });
+    logger.info({
+      at: loggerAt,
+      message: `originalMessageTimestamp: ${originalMessageTimestamp}`,
+    });
+    logger.info({
+      at: loggerAt,
+      message: `message_time_since_received: ${startForwardMessage - Number(originalMessageTimestamp)}`,
+    });
+    logger.info({
+      at: loggerAt,
+      message: `Message time in queue: ${start - Number(message.timestamp)}`,
+    });
+
     if (originalMessageTimestamp !== undefined) {
       stats.timing(
         `${config.SERVICE_NAME}.message_time_since_received`,
