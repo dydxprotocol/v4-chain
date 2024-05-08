@@ -123,25 +123,11 @@ export async function upsert(
   complianceDataToUpsert: ComplianceDataCreateObject,
   options: Options = { txId: undefined },
 ): Promise<ComplianceDataFromDatabase> {
-  const complianceData: ComplianceDataFromDatabase | undefined = await findByAddressAndProvider(
-    complianceDataToUpsert.address,
-    complianceDataToUpsert.provider,
-  );
-  if (complianceData === undefined) {
-    return create({
-      ...complianceDataToUpsert,
-    }, options);
-  }
+  const updatedComplianceData: ComplianceDataModel[] = await ComplianceDataModel.query(
+    Transaction.get(options.txId),
+  ).upsert(complianceDataToUpsert).returning('*');
 
-  const updatedComplianceData: ComplianceDataFromDatabase | undefined = await update({
-    ...complianceDataToUpsert,
-  }, options);
-
-  if (updatedComplianceData === undefined) {
-    throw Error('order must exist after update');
-  }
-
-  return updatedComplianceData;
+  return updatedComplianceData[0];
 }
 
 export async function findByAddressAndProvider(
