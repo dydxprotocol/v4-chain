@@ -1,10 +1,9 @@
-import { Model } from 'objection';
-
 import { NumericPattern } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
 import { ComplianceProvider, IsoString } from '../types';
+import BaseModel from './base-model';
 
-export default class ComplianceDataModel extends Model {
+export default class ComplianceDataModel extends BaseModel {
   static get tableName() {
     return 'compliance_data';
   }
