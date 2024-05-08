@@ -46,7 +46,7 @@ func TestQueryParams(t *testing.T) {
 
 	cfg := network.DefaultConfig(nil)
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "stats", "get-params", "--node", "tcp://7.7.8.4:26658", "-o json")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "stats", "get-params", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
@@ -73,7 +73,7 @@ func TestQueryStatsMetadata(t *testing.T) {
 
 	cfg := network.DefaultConfig(nil)
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "stats", "get-stats-metadata", "--node", "tcp://7.7.8.4:26658", "-o json")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "stats", "get-stats-metadata", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
@@ -98,7 +98,7 @@ func TestQueryGlobalStats(t *testing.T) {
 
 	cfg := network.DefaultConfig(nil)
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "stats", "get-global-stats", "--node", "tcp://7.7.8.4:26658", "-o json")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "stats", "get-global-stats", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
@@ -123,7 +123,7 @@ func TestQueryUserStats(t *testing.T) {
 
 	cfg := network.DefaultConfig(nil)
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "stats", "get-user-stats", "alice", "--node", "tcp://7.7.8.4:26658", "-o json")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "stats", "get-user-stats", "alice", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()

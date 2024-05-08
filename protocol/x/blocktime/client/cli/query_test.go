@@ -47,7 +47,7 @@ func TestQueryParams(t *testing.T) {
 
 	cfg := network.DefaultConfig(nil)
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "blocktime", "get-downtime-params", "--node", "tcp://7.7.8.4:26658", "-o json")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "blocktime", "get-downtime-params", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
@@ -83,7 +83,7 @@ func TestQueryAllDowntimeInfo(t *testing.T) {
 
 	cfg := network.DefaultConfig(nil)
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "blocktime", "get-all-downtime-info", "--node", "tcp://7.7.8.4:26658", "-o json")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "blocktime", "get-all-downtime-info", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
@@ -108,7 +108,7 @@ func TestQueryPreviousBlockInfo(t *testing.T) {
 
 	cfg := network.DefaultConfig(nil)
 
-	cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "blocktime", "get-previous-block-info", "--node", "tcp://7.7.8.4:26658", "-o json")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "blocktime", "get-previous-block-info", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()

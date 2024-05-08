@@ -76,7 +76,7 @@ func TestQueryNextDelayedMessageId(t *testing.T) {
 
 			cfg := network.DefaultConfig(nil)
 
-			cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "delaymsg", "get-next-delayed-message-id", "--node", "tcp://7.7.8.4:26658", "-o json")
+			cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "delaymsg", "get-next-delayed-message-id", "--node", "tcp://7.7.8.4:26658", "-o json")
 			var out bytes.Buffer
 			cmd.Stdout = &out
 			err := cmd.Run()
@@ -133,7 +133,7 @@ func TestQueryMessage(t *testing.T) {
 
 			cfg := network.DefaultConfig(nil)
 
-			cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "delaymsg", "get-message", "0", "--node", "tcp://7.7.8.4:26658", "-o json")
+			cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "delaymsg", "get-message", "0", "--node", "tcp://7.7.8.4:26658", "-o json")
 			var out bytes.Buffer
 			cmd.Stdout = &out
 			err := cmd.Run()
@@ -197,7 +197,7 @@ func TestQueryBlockMessageIds(t *testing.T) {
 
 			cfg := network.DefaultConfig(nil)
 
-			cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "delaymsg", "get-block-message-ids", "10", "--node", "tcp://7.7.8.4:26658", "-o json")
+			cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "delaymsg", "get-block-message-ids", "10", "--node", "tcp://7.7.8.4:26658", "-o json")
 			var out bytes.Buffer
 			cmd.Stdout = &out
 			err := cmd.Run()
