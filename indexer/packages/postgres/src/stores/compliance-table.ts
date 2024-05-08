@@ -125,8 +125,7 @@ export async function upsert(
 ): Promise<ComplianceDataFromDatabase> {
   const updatedComplianceData: ComplianceDataModel[] = await ComplianceDataModel.query(
     Transaction.get(options.txId),
-  ).upsert
-    (complianceDataToUpsert).returning('*');
+  ).upsert(complianceDataToUpsert).returning('*');
 
   return updatedComplianceData[0];
 }

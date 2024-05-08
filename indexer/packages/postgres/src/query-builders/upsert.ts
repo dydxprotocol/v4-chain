@@ -17,9 +17,6 @@ export default class UpsertQueryBuilder<M extends Model, R = M[]> extends QueryB
     const idColumn = modelClass.idColumn;
     const idColumns: string[] = Array.isArray(idColumn) ? idColumn : [idColumn];
 
-
-    const tableDefinedId = `${modelClass.tableName}.${idColumn}`;
-
     const knex = modelClass.knex();
 
     const cols: string[] = Object.keys(object);
