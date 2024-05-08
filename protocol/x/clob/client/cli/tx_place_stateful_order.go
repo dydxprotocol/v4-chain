@@ -48,7 +48,7 @@ func CmdPlaceStatefulOrder() *cobra.Command {
 				return err
 			}
 
-			argGoodTilBlockTime, err := cast.ToUint32E(args[7])
+			argGoodTilBlockTime, err := cast.ToUint64E(args[7])
 			if err != nil {
 				return err
 			}
