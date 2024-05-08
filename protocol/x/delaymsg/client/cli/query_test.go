@@ -3,16 +3,16 @@
 package cli_test
 
 import (
+	"bytes"
+	"os/exec"
 	"strconv"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	"github.com/cosmos/cosmos-sdk/client"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
@@ -67,12 +67,26 @@ func TestQueryNextDelayedMessageId(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, ctx := setupNetwork(t, tc.state)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryNextDelayedMessageId(), []string{})
+			// _, ctx := setupNetwork(t, tc.state)
+			// out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryNextDelayedMessageId(), []string{})
+			// require.NoError(t, err)
+			// var resp types.QueryNextDelayedMessageIdResponse
+			// require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
+			// require.Equal(t, tc.state.NextDelayedMessageId, resp.NextDelayedMessageId)
+
+			cfg := network.DefaultConfig(nil)
+
+			cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "delaymsg", "get-next-delayed-message-id", "--node", "tcp://7.7.8.4:26658", "-o json")
+			var out bytes.Buffer
+			cmd.Stdout = &out
+			err := cmd.Run()
+
 			require.NoError(t, err)
 			var resp types.QueryNextDelayedMessageIdResponse
-			require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
+			data := out.Bytes()
+			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 			require.Equal(t, tc.state.NextDelayedMessageId, resp.NextDelayedMessageId)
+
 		})
 	}
 }
@@ -100,14 +114,38 @@ func TestQueryMessage(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, ctx := setupNetwork(t, tc.state)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryMessage(), []string{"0"})
+			// _, ctx := setupNetwork(t, tc.state)
+			// out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryMessage(), []string{"0"})
+			// if tc.expectedMsg == nil {
+			// 	require.ErrorContains(t, err, GrpcNotFoundError)
+			// } else {
+			// 	require.NoError(t, err)
+			// 	var resp types.QueryMessageResponse
+			// 	require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
+
+			// 	err := resp.Message.UnpackInterfaces(ctx.Codec)
+			// 	require.NoError(t, err)
+			// 	msg, err := resp.Message.GetMessage()
+			// 	require.NoError(t, err)
+
+			// 	require.Equal(t, tc.expectedMsg, msg)
+			// }
+
+			cfg := network.DefaultConfig(nil)
+
+			cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "delaymsg", "get-message", "0", "--node", "tcp://7.7.8.4:26658", "-o json")
+			var out bytes.Buffer
+			cmd.Stdout = &out
+			err := cmd.Run()
+
 			if tc.expectedMsg == nil {
 				require.ErrorContains(t, err, GrpcNotFoundError)
 			} else {
+
 				require.NoError(t, err)
 				var resp types.QueryMessageResponse
-				require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
+				data := out.Bytes()
+				require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 
 				err := resp.Message.UnpackInterfaces(ctx.Codec)
 				require.NoError(t, err)
@@ -115,7 +153,9 @@ func TestQueryMessage(t *testing.T) {
 				require.NoError(t, err)
 
 				require.Equal(t, tc.expectedMsg, msg)
+
 			}
+
 		})
 	}
 }
@@ -144,16 +184,35 @@ func TestQueryBlockMessageIds(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, ctx := setupNetwork(t, tc.state)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryBlockMessageIds(), []string{"10"})
+			// _, ctx := setupNetwork(t, tc.state)
+			// out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryBlockMessageIds(), []string{"10"})
+			// if tc.expectedBlockMessageIds == nil {
+			// 	require.ErrorContains(t, err, GrpcNotFoundError)
+			// } else {
+			// 	require.NoError(t, err)
+			// 	var resp types.QueryBlockMessageIdsResponse
+			// 	require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
+			// 	require.Equal(t, tc.expectedBlockMessageIds, resp.MessageIds)
+			// }
+
+			cfg := network.DefaultConfig(nil)
+
+			cmd := exec.Command("docker", "exec", "interchain-security-instance", "interchain-security-cd", "query", "delaymsg", "get-block-message-ids", "10", "--node", "tcp://7.7.8.4:26658", "-o json")
+			var out bytes.Buffer
+			cmd.Stdout = &out
+			err := cmd.Run()
+
 			if tc.expectedBlockMessageIds == nil {
 				require.ErrorContains(t, err, GrpcNotFoundError)
 			} else {
+
 				require.NoError(t, err)
 				var resp types.QueryBlockMessageIdsResponse
-				require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
+				data := out.Bytes()
+				require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 				require.Equal(t, tc.expectedBlockMessageIds, resp.MessageIds)
 			}
+
 		})
 	}
 }
