@@ -37,11 +37,21 @@ nvm alias default $(nvm version) # optional
 npm i -g pnpm@6
 ```
 
-Now, you can install dependencies for Indexer.
+### Installation
+
+Now, you can install dependencies for Indexer. This should also be run anytime packages are updated.
 
 ```
 pnpm install
 ```
+
+### Build
+To build all of the services and packages, run:
+
+```
+pnpm run build:all
+```
+This should be run whenever code is changed and you need to deploy or run the updated code, including running unit tests, deploying locally, or deploying to AWS.
 
 ## Adding Packages
 
@@ -78,7 +88,7 @@ Protos can be found in `proto/` [here](https://github.com/dydxprotocol/v4-chain/
 
 ## Running unit tests
 
-First build all the services and packages by running:
+First, make sure all of the services and packages are built with the latest code by running:
 
 ```
 pnpm run build:all
