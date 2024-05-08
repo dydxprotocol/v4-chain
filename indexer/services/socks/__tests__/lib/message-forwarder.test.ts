@@ -190,7 +190,6 @@ describe('message-forwarder', () => {
     WS_HOST = `ws://localhost:${config.WS_PORT}`;
 
     wss = new Wss();
-    // await wss.start();
     subscriptions = new Subscriptions();
     index = new Index(wss, subscriptions);
     (axiosRequest as jest.Mock).mockImplementation(() => (JSON.stringify(mockAxiosResponse)));
