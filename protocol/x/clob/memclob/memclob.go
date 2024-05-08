@@ -386,7 +386,20 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 	}
 
 	// Add the new matches to the operations queue.
-	m.operationsToPropose.MustAddMatchToOperationsQueue(takerOrder, makerFillWithOrders)
+	internalOperation := m.operationsToPropose.MustAddMatchToOperationsQueue(takerOrder, makerFillWithOrders)
+	// If orderbook updates are on, send an orderbook update with the fill to grpc streams.
+	if m.generateOrderbookUpdates {
+		// Collect all maker orders.
+		makerOrders := lib.MapSlice(
+			makerFillWithOrders,
+			func(mfwo types.MakerFillWithOrder) types.Order {
+				return mfwo.Order
+			},
+		)
+		clobMatch := internalOperation.GetMatch()
+		orderbookMatchFill := m.GenerateStreamOrderbookFill(ctx, *clobMatch, takerOrder, makerOrders)
+		m.clobKeeper.SendOrderbookFillUpdates(ctx, []types.StreamOrderbookFill{orderbookMatchFill})
+	}
 
 	// Build a slice of all subaccounts which had matches this matching loop, and sort them for determinism.
 	allSubaccounts := lib.GetSortedKeys[satypes.SortedSubaccountIds](subaccountTotalMatchedQuantums)
@@ -876,6 +889,20 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		)
 		offchainUpdates.Append(matchOffchainUpdates)
 		writeCache()
+	} else {
+		// If state was not written to, re-send grpc stream updates for all orders
+		// involved in the match to "reset" fill amounts.
+		allUpdates := types.NewOffchainUpdates()
+		if !order.IsLiquidation() {
+			normalOrder := order.MustGetOrder()
+			updates := m.GetOrderbookUpdatesForOrderUpdate(ctx, normalOrder.OrderId)
+			allUpdates.Append(updates)
+		}
+		for _, fill := range newMakerFills {
+			updates := m.GetOrderbookUpdatesForOrderUpdate(ctx, fill.MakerOrderId)
+			allUpdates.Append(updates)
+		}
+		m.clobKeeper.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 
 	return takerOrderStatus, offchainUpdates, makerOrdersToRemove, matchingErr
@@ -1978,12 +2005,6 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 	// If the filled amount of the maker order is greater than the order size, panic to avoid silent failure.
 	if newTotalFilledAmount > makerOrderBaseQuantums {
 		panic("Total filled size of maker order greater than the order size")
-	}
-
-	// Send an orderbook update for the order's new total filled amount.
-	if m.generateOrderbookUpdates {
-		orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, makerOrder.OrderId)
-		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
 	}
 
 	// If the order is fully filled, remove it from the orderbook.
