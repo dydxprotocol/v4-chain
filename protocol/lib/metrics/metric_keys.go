@@ -60,6 +60,7 @@ const (
 	FullNodeGrpc                    = "full_node_grpc"
 	GrpcSendOrderbookUpdatesLatency = "grpc_send_orderbook_updates_latency"
 	GrpcSendOrderbookFillsLatency   = "grpc_send_orderbook_fills_latency"
+	GrpcFlushStreamUpdatesLatency   = "grpc_flush_stream_updates_latency"
 	EndBlocker                      = "end_blocker"
 	EndBlockerLag                   = "end_blocker_lag"
 )

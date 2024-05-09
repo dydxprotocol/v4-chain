@@ -135,6 +135,10 @@ func (k Keeper) ProcessProposerOperations(
 	operationsStats := types.StatMsgProposedOperations(rawOperations)
 	operationsStats.EmitStats(metrics.DeliverTx)
 
+	if sm := k.GetGrpcStreamingManager(); sm.Enabled() {
+		sm.FlushStreamUpdates(uint32(ctx.BlockHeight()), ctx.ExecMode())
+	}
+
 	return nil
 }
 

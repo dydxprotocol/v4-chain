@@ -21,7 +21,8 @@ type Flags struct {
 	GrpcEnable  bool
 
 	// Grpc Streaming
-	GrpcStreamingEnabled bool
+	GrpcStreamingEnabled         bool
+	GrpcStreamingFlushIntervalMs uint16
 }
 
 // List of CLI flags.
@@ -36,7 +37,8 @@ const (
 	GrpcEnable  = "grpc.enable"
 
 	// Grpc Streaming
-	GrpcStreamingEnabled = "grpc-streaming-enabled"
+	GrpcStreamingEnabled         = "grpc-streaming-enabled"
+	GrpcStreamingFlushIntervalMs = "grpc-streaming-flush-interval-ms"
 )
 
 // Default values.
@@ -46,7 +48,8 @@ const (
 	DefaultNonValidatingFullNode = false
 	DefaultDdErrorTrackingFormat = false
 
-	DefaultGrpcStreamingEnabled = false
+	DefaultGrpcStreamingEnabled         = false
+	DefaultGrpcStreamingFlushIntervalMs = 10
 )
 
 // AddFlagsToCmd adds flags to app initialization.
@@ -79,6 +82,11 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		GrpcStreamingEnabled,
 		DefaultGrpcStreamingEnabled,
 		"Whether to enable grpc streaming for full nodes",
+	)
+	cmd.Flags().Uint16(
+		GrpcStreamingFlushIntervalMs,
+		DefaultGrpcStreamingFlushIntervalMs,
+		"Interval on which to flush grpc stream updates",
 	)
 }
 
@@ -114,7 +122,8 @@ func GetFlagValuesFromOptions(
 		GrpcAddress: config.DefaultGRPCAddress,
 		GrpcEnable:  true,
 
-		GrpcStreamingEnabled: DefaultGrpcStreamingEnabled,
+		GrpcStreamingEnabled:         DefaultGrpcStreamingEnabled,
+		GrpcStreamingFlushIntervalMs: DefaultGrpcStreamingFlushIntervalMs,
 	}
 
 	// Populate the flags if they exist.
@@ -157,6 +166,12 @@ func GetFlagValuesFromOptions(
 	if option := appOpts.Get(GrpcStreamingEnabled); option != nil {
 		if v, err := cast.ToBoolE(option); err == nil {
 			result.GrpcStreamingEnabled = v
+		}
+	}
+
+	if option := appOpts.Get(GrpcStreamingFlushIntervalMs); option != nil {
+		if v, err := cast.ToUint16E(option); err == nil {
+			result.GrpcStreamingFlushIntervalMs = v
 		}
 	}
 

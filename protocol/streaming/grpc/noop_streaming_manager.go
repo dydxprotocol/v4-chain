@@ -46,3 +46,12 @@ func (sm *NoopGrpcStreamingManager) SendOrderbookFillUpdates(
 func (sm *NoopGrpcStreamingManager) GetUninitializedClobPairIds() []uint32 {
 	return []uint32{}
 }
+
+func (sm *NoopGrpcStreamingManager) Stop() {
+}
+
+func (sm *NoopGrpcStreamingManager) FlushStreamUpdates(
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
+}
