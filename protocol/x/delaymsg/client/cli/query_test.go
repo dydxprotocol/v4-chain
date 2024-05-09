@@ -198,17 +198,52 @@ func TestQueryBlockMessageIds(t *testing.T) {
 
 			// fmt.Println("Starting test", types.ModuleAddress.String())
 
+			// cmd := exec.Command("bash", "-c", "cd ../../../../ && ls") // You can add arguments inside the quotes, e.g., "ls", "-la", "/some/path"
+			// var out bytes.Buffer
+			// var stderr bytes.Buffer
+			// cmd.Stdout = &out
+			// cmd.Stderr = &stderr
+			// err := cmd.Run()
+			// if err != nil {
+			// 	fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+			// 	return
+			// }
+			// fmt.Println("Command Successfully Executed")
+			// output := out.String()
+			// fmt.Println(output)
 			genesisChanges := getGenesisChanges(name)
-			setupCmd := exec.Command("sudo", "bash", "-c", "cd ethos/ethos-chain && ./e2e-setup -setup "+genesisChanges)
-			if err := setupCmd.Run(); err != nil {
-				t.Fatalf("Failed to set up environment: %v", err)
-			}
-			fmt.Println("Set up new environment")
-			cfg := network.DefaultConfig(nil)
-			cmd := exec.Command("docker", "exec", "interchain-security-instance-instance", "interchain-security-cd", "query", "delaymsg", "get-block-message-ids", "10", "--node", "tcp://7.7.8.4:26658", "-o json")
+			setupCmd := exec.Command("bash", "-c", "cd ../../../../ethos/ethos-chain && ./e2e-setup -setup "+genesisChanges)
 			var out bytes.Buffer
-			cmd.Stdout = &out
-			err := cmd.Run()
+			var stderr bytes.Buffer
+			setupCmd.Stdout = &out
+			setupCmd.Stderr = &stderr
+			err := setupCmd.Run()
+			if err != nil {
+				t.Fatalf("Failed to set up environment: %v, stdout: %s, stderr: %s", err, out.String(), stderr.String())
+			}
+			fmt.Println("Setup output:", out.String())
+
+			testCmd := exec.Command("bash", "-c", "docker ps")
+			var testOut bytes.Buffer
+			var testErr bytes.Buffer
+			testCmd.Stdout = &testOut
+			testCmd.Stderr = &testErr
+			err = testCmd.Run()
+			if err != nil {
+				t.Fatalf("Failed to list Docker containers: %v, stdout: %s, stderr: %s", err, testOut.String(), testErr.String())
+			}
+			fmt.Println("Docker containers:", testOut.String())
+			cfg := network.DefaultConfig(nil)
+			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query delaymsg get-block-message-ids 10 --node tcp://7.7.8.4:26658 -o json")
+			var queryOut bytes.Buffer
+			var stdQueryErr bytes.Buffer
+			cmd.Stdout = &queryOut
+			cmd.Stderr = &stdQueryErr
+			err = cmd.Run()
+
+			if err != nil {
+				fmt.Printf("Error running query command, stdout: %s, stderr: %s", queryOut.String(), stdQueryErr.String())
+			}
 
 			if tc.expectedBlockMessageIds == nil {
 				require.ErrorContains(t, err, GrpcNotFoundError)
@@ -216,22 +251,23 @@ func TestQueryBlockMessageIds(t *testing.T) {
 
 				require.NoError(t, err)
 				var resp types.QueryBlockMessageIdsResponse
-				data := out.Bytes()
+				data := queryOut.Bytes()
 				require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 				require.Equal(t, tc.expectedBlockMessageIds, resp.MessageIds)
 			}
 
-			stopCmd := exec.Command("docker", "stop", "--force", "interchain-security-instance")
+			stopCmd := exec.Command("bash", "-c", "docker stop interchain-security-instance")
 			if err := stopCmd.Run(); err != nil {
 				t.Fatalf("Failed to stop Docker container: %v", err)
 			}
 			fmt.Println("Stopped Docker container")
 			// Remove the Docker container
-			removeCmd := exec.Command("docker", "rm", "--force", "interchain-security-instance")
+			removeCmd := exec.Command("bash", "-c", "docker rm interchain-security-instance")
 			if err := removeCmd.Run(); err != nil {
 				t.Fatalf("Failed to remove Docker container: %v", err)
 			}
 			fmt.Println("Removed Docker container")
+
 		})
 	}
 }
@@ -239,9 +275,9 @@ func TestQueryBlockMessageIds(t *testing.T) {
 func getGenesisChanges(testCase string) string {
 	switch testCase {
 	case "Default: 0":
-		return ""
+		return `".app_state.delaymsg.delayed_messages = [] | .app_state.delaymsg.next_delayed_message_id = '0'"`
 	case "Non-zero":
-		return ".app_state.delaymsg.delayed_messages[0] = {id: '0', msg: {'@type': '/testdata.TestMsg', authority: 'dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr', funding_rate_clamp_factor_ppm: '6000000', premium_vote_clamp_factor_ppm: '60000000', min_num_votes_per_sample: '15'}, block_height: '10'} | .app_state.delaymsg.next_delayed_message_id = '20'"
+		return `".app_state.delaymsg.delayed_messages[0] = {id: '0', msg: {'@type': '/testdata.TestMsg', authority: 'dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr', funding_rate_clamp_factor_ppm: '6000000', premium_vote_clamp_factor_ppm: '60000000', min_num_votes_per_sample: '15'}, block_height: '10'} | .app_state.delaymsg.next_delayed_message_id = '20'"`
 	default:
 		panic("unknown case")
 	}
