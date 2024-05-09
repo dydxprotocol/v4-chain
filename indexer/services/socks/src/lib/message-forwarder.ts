@@ -27,6 +27,7 @@ import {
 import { Index } from '../websocket/index';
 import { MAX_TIMEOUT_INTEGER } from './constants';
 import { Subscriptions } from './subscription';
+import { STATS_NO_SAMPLING } from '@dydxprotocol-indexer/base';
 
 const BATCH_SEND_INTERVAL_MS: number = config.BATCH_SEND_INTERVAL_MS;
 const BUFFER_KEY_SEPARATOR: string = ':';
@@ -127,20 +128,6 @@ export class MessageForwarder {
         return;
       }
 
-<<<<<<< HEAD
-    const start: number = Date.now();
-    this.forwardMessage(messageToForward);
-    const end: number = Date.now();
-    stats.timing(
-      `${config.SERVICE_NAME}.forward_message`,
-      end - start,
-      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
-      {
-        topic,
-        channel: String(channel),
-      },
-    );
-=======
       const startForwardMessage: number = Date.now();
       this.forwardMessage(messageToForward);
       const end: number = Date.now();
@@ -167,7 +154,6 @@ export class MessageForwarder {
         );
       }
     }
->>>>>>> 355d9e9b ([TRA-109] Add parent subaccount websocket (#1463))
   }
 
   public forwardMessage(message: MessageToForward): void {
