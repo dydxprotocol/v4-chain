@@ -163,7 +163,6 @@ export class MessageForwarder {
       messageId: messageToForward.id,
       messageContents: messageToForward.contents,
       messageOffset: message.offset,
-      messageHeaders: util.inspect(message.headers, {depth: null}),
       channel: channel,
     });
 
@@ -235,7 +234,7 @@ export class MessageForwarder {
       this.messageBuffer[bufferKey].push({
         contents: message.contents,
         version: message.version,
-        originalMessageTS: originalMessageTimestamp,
+        originalMessageTS: Number(originalMessageTimestamp),
         ts: Date.now(),
       } as VersionedContents);
       forwardedToSubscribers = true;
