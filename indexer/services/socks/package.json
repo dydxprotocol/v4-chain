@@ -11,7 +11,7 @@
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
-    "test": "NODE_ENV=test jest --runInBand --forceExit"
+    "test": "NODE_ENV=test jest --maxWorkers 1 --forceExit"
   },
   "author": "",
   "license": "AGPL-3.0",
