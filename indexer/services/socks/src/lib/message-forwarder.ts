@@ -160,6 +160,7 @@ export class MessageForwarder {
       messageId: messageToForward.id,
       messageContents: messageToForward.contents,
       messageOffset: message.offset,
+      channel: channel,
     });
 
     if (originalMessageTimestamp !== undefined) {

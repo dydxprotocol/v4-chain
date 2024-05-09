@@ -92,6 +92,14 @@ async function sendMessages(topic: string): Promise<void> {
       messages,
     });
     success = true;
+    // TODO: remove
+    logger.info({
+      at: 'send-websocket-helper#sendMessages',
+      message: `Time to send messages: ${Date.now() - start}`,
+      topic,
+      numMessages: messages.length,
+    });
+
   } catch (error) {
     logger.error({
       at: 'send-websocket-helper#sendMessages',
