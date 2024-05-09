@@ -10,6 +10,6 @@ describe('getParentSubaccountNum', () => {
   });
 
   it('Throws an error if the child subaccount number is greater than the max child subaccount number', () => {
-    expect(() => getParentSubaccountNum(128001)).toThrowError('Child subaccount number must be less than 128000');
+    expect(() => getParentSubaccountNum(128001)).toThrowError('Child subaccount number must be less than or equal to 128000');
   });
 });
