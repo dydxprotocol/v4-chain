@@ -3,6 +3,7 @@ import {
   logger,
   InfoObject,
   safeJsonStringify,
+  STATS_NO_SAMPLING,
 } from '@dydxprotocol-indexer/base';
 import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
@@ -27,7 +28,6 @@ import {
 import { Index } from '../websocket/index';
 import { MAX_TIMEOUT_INTEGER } from './constants';
 import { Subscriptions } from './subscription';
-import { STATS_NO_SAMPLING } from '@dydxprotocol-indexer/base';
 
 const BATCH_SEND_INTERVAL_MS: number = config.BATCH_SEND_INTERVAL_MS;
 const BUFFER_KEY_SEPARATOR: string = ':';
