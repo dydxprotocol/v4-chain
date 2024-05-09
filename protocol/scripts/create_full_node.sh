@@ -1,11 +1,30 @@
 #!/bin/bash
 
+# This script is used to create a full node for the dydx protocol. 
+# It will install all the necessary dependencies, download the dydxprotocold binary, 
+# initialize the node, create a service for the node, and download a snapshot to speed up the syncing process.
+
+
+# Function which reads in y or exits if anything else is entered
+function read_yes_or_exit {
+  read -p "$1" answer
+  if [ "$answer" != "y" ]; then
+    echo "Exiting"
+    exit 1
+  fi
+}
+
 if [ $(nproc) -lt 8 ]; then
   echo "This device has less than 8 cpus, recommended to use a device with at least 8 cpus"
+  # check if user wants to continue using y/n
+  echo "Do you want to continue? (y)"
+  read_yes_or_exit
 fi
 
 if [ $(free -g | grep Mem | awk '{print $2}') -lt 64 ]; then
   echo "This device has lass than 64 gigs of ram, recommended to use a device with at least 64 gigs of ram"
+  echo "Do you want to continue? (y)"
+  read_yes_or_exit
 fi
 
 VERSION="v4.0.5"
@@ -37,14 +56,20 @@ elif [ $(uname -m) = "x86_64" ]; then
 ARCH=amd64
 else
 echo "This device is not arm64 or amd64, please use a device with arm64 or amd64 architecture"
+exit 1
 fi
 
-# Install go
-wget https://golang.org/dl/go1.22.2.linux-$ARCH.tar.gz 
-sudo tar -C /usr/local -xzf go1.22.2.linux-$ARCH.tar.gz
-rm go1.22.2.linux-$ARCH.tar.gz
-echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> $HOME/.bashrc
-eval "$(cat $HOME/.bashrc | tail -n +10)"
+# check if go is installed and install if not
+if ! command -v go &> /dev/null; then
+  echo "Go is not installed, installing go"
+  wget https://golang.org/dl/go1.22.2.linux-$ARCH.tar.gz 
+  sudo tar -C /usr/local -xzf go1.22.2.linux-$ARCH.tar.gz
+  rm go1.22.2.linux-$ARCH.tar.gz
+  echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> $HOME/.bashrc
+  eval "$(cat $HOME/.bashrc | tail -n +10)"
+else
+  echo "Go is installed"
+fi
 
 # Install Cosmovisor
 go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
@@ -109,5 +134,7 @@ wget -O "snapshot.tar.lz4" "${file_url}"
 lz4 -c -d snapshot.tar.lz4 | tar -x -C $WORKDIR
 rm snapshot.tar.lz4
 
-# Start service
-sudo systemctl start dydxprotocold
+
+echo "Full node setup complete"
+echo "To start the node run 'sudo systemctl start dydxprotocold'"
+echo "To stop the node run 'sudo systemctl stop dydxprotocold'"
