@@ -162,6 +162,7 @@ func (k Keeper) GetMarketIdToValidIndexPrice(
 ) map[uint32]types.MarketPrice {
 	allMarketParams := k.GetAllMarketParams(ctx)
 	marketIdToValidIndexPrice := k.indexPriceCache.GetValidMedianPrices(
+		k.Logger(ctx),
 		allMarketParams,
 		k.timeProvider.Now(),
 	)

@@ -4,13 +4,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
+	"cosmossdk.io/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
-	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // MarketToExchangePrices maintains price info for multiple markets. Each
@@ -58,6 +56,7 @@ func (mte *MarketToExchangePrices) UpdatePrices(
 // 1) the last update time is within a predefined threshold away from the given
 // read time.
 func (mte *MarketToExchangePrices) GetValidMedianPrices(
+	logger log.Logger,
 	marketParams []types.MarketParam,
 	readTime time.Time,
 ) map[uint32]uint64 {
@@ -71,48 +70,17 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 		exchangeToPrice, ok := mte.marketToExchangePrices[marketId]
 		if !ok {
 			// No market price info yet, skip this market.
-			telemetry.IncrCounterWithLabels(
-				[]string{
-					metrics.PricefeedServer,
-					metrics.NoMarketPrice,
-					metrics.Count,
-				},
-				1,
-				[]gometrics.Label{
-					pricefeedmetrics.GetLabelForMarketId(marketId),
-				},
-			)
+			logger.Warn("No market price info", metrics.MarketId, marketId)
 			continue
 		}
 
 		// GetValidPriceForMarket filters prices based on cutoff time.
-		validPrices := exchangeToPrice.GetValidPrices(cutoffTime)
-		telemetry.SetGaugeWithLabels(
-			[]string{
-				metrics.PricefeedServer,
-				metrics.ValidPrices,
-				metrics.Count,
-			},
-			float32(len(validPrices)),
-			[]gometrics.Label{
-				pricefeedmetrics.GetLabelForMarketId(marketId),
-			},
-		)
+		validPrices := exchangeToPrice.GetValidPrices(logger, cutoffTime)
 
 		// Calculate the median. Returns an error if the input is empty.
 		median, err := lib.Median(validPrices)
 		if err != nil {
-			telemetry.IncrCounterWithLabels(
-				[]string{
-					metrics.PricefeedServer,
-					metrics.NoValidMedianPrice,
-					metrics.Count,
-				},
-				1,
-				[]gometrics.Label{
-					pricefeedmetrics.GetLabelForMarketId(marketId),
-				},
-			)
+			logger.Error("No valid median price", metrics.MarketId, marketId, metrics.Error, err)
 			continue
 		}
 		marketIdToMedianPrice[marketId] = median

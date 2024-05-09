@@ -3,6 +3,8 @@ package types
 import (
 	"testing"
 
+	"cosmossdk.io/log"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/assert"
@@ -113,7 +115,7 @@ func TestGetValidPrices(t *testing.T) {
 			constants.Exchange1_Price1_TimeT,
 		})
 
-	r := etp.GetValidPrices(constants.TimeT)
+	r := etp.GetValidPrices(log.NewNopLogger(), constants.TimeT)
 	require.Len(t, r, 1)
 	require.Equal(t, constants.Price1, r[0])
 }
@@ -121,7 +123,7 @@ func TestGetValidPrices(t *testing.T) {
 func TestGetValidPrices_Empty(t *testing.T) {
 	etp := NewExchangeToPrice(0)
 
-	r := etp.GetValidPrices(constants.TimeT)
+	r := etp.GetValidPrices(log.NewNopLogger(), constants.TimeT)
 	require.Empty(t, r)
 }
 
@@ -134,7 +136,7 @@ func TestGetValidPrices_OldPricesEmpty(t *testing.T) {
 			constants.Exchange2_Price2_TimeT,
 		})
 
-	r := etp.GetValidPrices(constants.TimeTPlus1)
+	r := etp.GetValidPrices(log.NewNopLogger(), constants.TimeTPlus1)
 	require.Empty(t, r)
 }
 
@@ -149,7 +151,7 @@ func TestGetValidPrices_ValidAndOldPrices(t *testing.T) {
 		})
 
 	// Exchange 1's Price is before cutoff, so it's ignored
-	r := etp.GetValidPrices(constants.TimeTPlus1)
+	r := etp.GetValidPrices(log.NewNopLogger(), constants.TimeTPlus1)
 	require.Len(t, r, 2)
 
 	expected := []uint64{constants.Price3, constants.Price4}

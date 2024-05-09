@@ -371,8 +371,6 @@ const (
 	PriceUpdaterZeroPrices                  = "price_updater_zero_prices"
 
 	// Pricefeed Server.
-	GetValidPrices                = "get_valid_prices"
-	ValidPrices                   = "valid_prices"
 	NoMarketPrice                 = "no_market_price"
 	NoValidMedianPrice            = "no_valid_median_price"
 	PricefeedServer               = "pricefeed_server"

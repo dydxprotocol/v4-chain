@@ -103,7 +103,11 @@ func (k Keeper) performNonDeterministicStatefulValidation(
 		allMarketParams[i] = marketParamPrice.Param
 	}
 
-	idToIndexPrice := k.indexPriceCache.GetValidMedianPrices(allMarketParams, k.timeProvider.Now())
+	idToIndexPrice := k.indexPriceCache.GetValidMedianPrices(
+		k.Logger(ctx),
+		allMarketParams,
+		k.timeProvider.Now(),
+	)
 
 	for _, priceUpdate := range marketPriceUpdates.GetMarketPriceUpdates() {
 		// Check market exists.
