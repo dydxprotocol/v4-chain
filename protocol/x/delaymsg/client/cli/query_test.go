@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"bytes"
+	"fmt"
 	"os/exec"
 	"strconv"
 	"testing"
@@ -147,7 +148,7 @@ func TestQueryMessage(t *testing.T) {
 				data := out.Bytes()
 				require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 
-				err := resp.Message.UnpackInterfaces(ctx.Codec)
+				err := resp.Message.UnpackInterfaces(cfg.Codec)
 				require.NoError(t, err)
 				msg, err := resp.Message.GetMessage()
 				require.NoError(t, err)
@@ -195,9 +196,16 @@ func TestQueryBlockMessageIds(t *testing.T) {
 			// 	require.Equal(t, tc.expectedBlockMessageIds, resp.MessageIds)
 			// }
 
-			cfg := network.DefaultConfig(nil)
+			// fmt.Println("Starting test", types.ModuleAddress.String())
 
-			cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "delaymsg", "get-block-message-ids", "10", "--node", "tcp://7.7.8.4:26658", "-o json")
+			genesisChanges := getGenesisChanges(name)
+			setupCmd := exec.Command("sudo", "bash", "-c", "cd ethos/ethos-chain && ./e2e-setup -setup "+genesisChanges)
+			if err := setupCmd.Run(); err != nil {
+				t.Fatalf("Failed to set up environment: %v", err)
+			}
+			fmt.Println("Set up new environment")
+			cfg := network.DefaultConfig(nil)
+			cmd := exec.Command("docker", "exec", "interchain-security-instance-instance", "interchain-security-cd", "query", "delaymsg", "get-block-message-ids", "10", "--node", "tcp://7.7.8.4:26658", "-o json")
 			var out bytes.Buffer
 			cmd.Stdout = &out
 			err := cmd.Run()
@@ -213,6 +221,28 @@ func TestQueryBlockMessageIds(t *testing.T) {
 				require.Equal(t, tc.expectedBlockMessageIds, resp.MessageIds)
 			}
 
+			stopCmd := exec.Command("docker", "stop", "--force", "interchain-security-instance")
+			if err := stopCmd.Run(); err != nil {
+				t.Fatalf("Failed to stop Docker container: %v", err)
+			}
+			fmt.Println("Stopped Docker container")
+			// Remove the Docker container
+			removeCmd := exec.Command("docker", "rm", "--force", "interchain-security-instance")
+			if err := removeCmd.Run(); err != nil {
+				t.Fatalf("Failed to remove Docker container: %v", err)
+			}
+			fmt.Println("Removed Docker container")
 		})
+	}
+}
+
+func getGenesisChanges(testCase string) string {
+	switch testCase {
+	case "Default: 0":
+		return ""
+	case "Non-zero":
+		return ".app_state.delaymsg.delayed_messages[0] = {id: '0', msg: {'@type': '/testdata.TestMsg', authority: 'dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr', funding_rate_clamp_factor_ppm: '6000000', premium_vote_clamp_factor_ppm: '60000000', min_num_votes_per_sample: '15'}, block_height: '10'} | .app_state.delaymsg.next_delayed_message_id = '20'"
+	default:
+		panic("unknown case")
 	}
 }
