@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script is used to create a full node for the dydx protocol. 
+# This script is used to create a non validating full node for the dydx protocol. 
 # It will install all the necessary dependencies, download the dydxprotocold binary, 
 # initialize the node, create a service for the node, and download a snapshot to speed up the syncing process.
 
@@ -27,7 +27,7 @@ if [ $(free -g | grep Mem | awk '{print $2}') -lt 64 ]; then
   read_yes_or_exit
 fi
 
-VERSION="v4.0.5"
+VERSION="v4.1.0"
 WORKDIR=$HOME/.dydxprotocol
 CHAIN_ID="dydx-mainnet-1"
 SEED_NODES=("ade4d8bc8cbe014af6ebdf3cb7b1e9ad36f412c0@seeds.polkachu.com:23856", 
@@ -101,7 +101,7 @@ sed -i 's/seeds = ""/seeds = "'"${SEED_NODES[*]}"'"/' $WORKDIR/config/config.tom
 # Create Service
 sudo tee /etc/systemd/system/dydxprotocold.service > /dev/null << EOF
 [Unit]
-Description=osmosis node service
+Description=dydx node service
 After=network-online.target
 
 [Service]
@@ -130,8 +130,11 @@ cd $WORKDIR
 xml_content=$(curl -s "${BASE_SNAPSHOT_URL}")
 file_key=$(echo "$xml_content" | grep -oP '<Key>dydx/dydx_\d+\.tar\.lz4</Key>' | head -1 | sed 's/<[^>]*>//g')
 file_url="${BASE_SNAPSHOT_URL}${file_key}"
+cp $WORKDIR/data/priv_validator_state.json $WORKDIR/priv_validator_state.json.backup
+rm -rf $WORKDIR/data
 wget -O "snapshot.tar.lz4" "${file_url}"
 lz4 -c -d snapshot.tar.lz4 | tar -x -C $WORKDIR
+mv $WORKDIR/priv_validator_state.json.backup $WORKDIR/data/priv_validator_state.json
 rm snapshot.tar.lz4
 
 
