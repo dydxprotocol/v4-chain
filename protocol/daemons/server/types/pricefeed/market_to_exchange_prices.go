@@ -5,10 +5,13 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
+	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // MarketToExchangePrices maintains price info for multiple markets. Each
@@ -71,6 +74,17 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 		if !ok {
 			// No market price info yet, skip this market.
 			logger.Warn("No market price info", metrics.MarketId, marketId)
+			telemetry.IncrCounterWithLabels(
+				[]string{
+					metrics.PricefeedServer,
+					metrics.NoMarketPrice,
+					metrics.Count,
+				},
+				1,
+				[]gometrics.Label{
+					pricefeedmetrics.GetLabelForMarketId(marketId),
+				},
+			)
 			continue
 		}
 
@@ -81,6 +95,17 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 		median, err := lib.Median(validPrices)
 		if err != nil {
 			logger.Error("No valid median price", metrics.MarketId, marketId, metrics.Error, err)
+			telemetry.IncrCounterWithLabels(
+				[]string{
+					metrics.PricefeedServer,
+					metrics.NoValidMedianPrice,
+					metrics.Count,
+				},
+				1,
+				[]gometrics.Label{
+					pricefeedmetrics.GetLabelForMarketId(marketId),
+				},
+			)
 			continue
 		}
 		marketIdToMedianPrice[marketId] = median
