@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
@@ -58,6 +59,7 @@ func (mte *MarketToExchangePrices) UpdatePrices(
 // 1) the last update time is within a predefined threshold away from the given
 // read time.
 func (mte *MarketToExchangePrices) GetValidMedianPrices(
+	logger log.Logger,
 	marketParams []types.MarketParam,
 	readTime time.Time,
 ) map[uint32]uint64 {
@@ -71,6 +73,7 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 		exchangeToPrice, ok := mte.marketToExchangePrices[marketId]
 		if !ok {
 			// No market price info yet, skip this market.
+			logger.Warn("No market price info", metrics.MarketId, marketId)
 			telemetry.IncrCounterWithLabels(
 				[]string{
 					metrics.PricefeedServer,
@@ -86,22 +89,12 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 		}
 
 		// GetValidPriceForMarket filters prices based on cutoff time.
-		validPrices := exchangeToPrice.GetValidPrices(cutoffTime)
-		telemetry.SetGaugeWithLabels(
-			[]string{
-				metrics.PricefeedServer,
-				metrics.ValidPrices,
-				metrics.Count,
-			},
-			float32(len(validPrices)),
-			[]gometrics.Label{
-				pricefeedmetrics.GetLabelForMarketId(marketId),
-			},
-		)
+		validPrices := exchangeToPrice.GetValidPrices(logger, cutoffTime)
 
 		// Calculate the median. Returns an error if the input is empty.
 		median, err := lib.Median(validPrices)
 		if err != nil {
+			logger.Error("No valid median price", metrics.MarketId, marketId, metrics.Error, err)
 			telemetry.IncrCounterWithLabels(
 				[]string{
 					metrics.PricefeedServer,
