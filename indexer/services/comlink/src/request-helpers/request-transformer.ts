@@ -26,13 +26,13 @@ import {
   TradingRewardFromDatabase,
   TransferFromDatabase,
   TransferType,
+  parentSubaccountHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, PriceLevel } from '@dydxprotocol-indexer/redis';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 
-import { getParentSubaccountNum } from '../lib/helpers';
 import {
   AssetById,
   AssetPositionResponseObject,
@@ -244,12 +244,15 @@ export function transferToParentSubaccountResponseObject(
 
   const senderParentSubaccountNum = transfer.senderWalletAddress
     ? undefined
-    : getParentSubaccountNum(subaccountMap[transfer.senderSubaccountId!].subaccountNumber,
+    : parentSubaccountHelpers.getParentSubaccountNum(
+      subaccountMap[transfer.senderSubaccountId!].subaccountNumber,
     );
 
   const recipientParentSubaccountNum = transfer.recipientWalletAddress
     ? undefined
-    : getParentSubaccountNum(subaccountMap[transfer.recipientSubaccountId!].subaccountNumber);
+    : parentSubaccountHelpers.getParentSubaccountNum(
+      subaccountMap[transfer.recipientSubaccountId!].subaccountNumber,
+    );
 
   // Determine transfer type based on parent subaccount number.
   let transferType: TransferType = TransferType.TRANSFER_IN;
