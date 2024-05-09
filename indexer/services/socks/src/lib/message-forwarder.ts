@@ -36,6 +36,8 @@ const BUFFER_KEY_SEPARATOR: string = ':';
 type VersionedContents = {
   contents: string;
   version: string;
+  originalMessageTS: any;
+  ts: any;
 };
 
 export class MessageForwarder {
@@ -128,8 +130,10 @@ export class MessageForwarder {
       return;
     }
 
+    const originalMessageTimestamp = message.headers?.message_received_timestamp;
+
     const startForwardMessage: number = Date.now();
-    this.forwardMessage(messageToForward);
+    this.forwardMessage(messageToForward, originalMessageTimestamp);
     const end: number = Date.now();
     stats.timing(
       `${config.SERVICE_NAME}.forward_message`,
@@ -141,7 +145,6 @@ export class MessageForwarder {
       },
     );
 
-    const originalMessageTimestamp = message.headers?.message_received_timestamp;
 
     // TODO: Remove
     var logMessage = `Message start: ${start}
@@ -149,8 +152,8 @@ export class MessageForwarder {
     end: ${end}
     message timestamp: ${message.timestamp}
     originalMessageTimestamp: ${originalMessageTimestamp}
-    Number(originalMessageTimestamp): ${Number(originalMessageTimestamp)}
     Time to forward message: ${end - startForwardMessage}
+    Time to process message: ${end - start}
     Message time in queue: ${start - Number(message.timestamp)}
     message_time_since_received: ${startForwardMessage - Number(originalMessageTimestamp)}
     `
@@ -160,6 +163,7 @@ export class MessageForwarder {
       messageId: messageToForward.id,
       messageContents: messageToForward.contents,
       messageOffset: message.offset,
+      messageHeaders: util.inspect(message.headers, {depth: null}),
       channel: channel,
     });
 
@@ -176,7 +180,7 @@ export class MessageForwarder {
     }
   }
 
-  public forwardMessage(message: MessageToForward): void {
+  public forwardMessage(message: MessageToForward, originalMessageTimestamp: any): void {
     stats.increment(
       `${config.SERVICE_NAME}.message_to_forward`,
       1,
@@ -231,6 +235,8 @@ export class MessageForwarder {
       this.messageBuffer[bufferKey].push({
         contents: message.contents,
         version: message.version,
+        originalMessageTS: originalMessageTimestamp,
+        ts: Date.now(),
       } as VersionedContents);
       forwardedToSubscribers = true;
     }
@@ -278,6 +284,15 @@ export class MessageForwarder {
           if (!this.subscriptions.batchedSubscriptions[channelString]) {
             return;
           }
+
+          // # TODO: Remove
+          logger.info({
+            at: 'message-forwarder#forwardBatchedMessages',
+            message: util.inspect(batchedMessages, {depth: null}),
+            id,
+            channel,
+          });
+
           const batchedSubscribers: SubscriptionInfo[] = this
             .subscriptions
             .batchedSubscriptions[channelString][id];
