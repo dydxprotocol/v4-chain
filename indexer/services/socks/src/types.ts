@@ -21,6 +21,7 @@ export enum Channel {
   V4_TRADES = 'v4_trades',
   V4_MARKETS = 'v4_markets',
   V4_CANDLES = 'v4_candles',
+  V4_PARENT_ACCOUNTS = 'v4_parent_subaccounts',
 }
 
 export const ALL_CHANNELS = Object.values(Channel);
@@ -85,6 +86,7 @@ export interface ChannelDataMessage extends OutgoingMessage {
   channel: Channel;
   id?: string;
   version: string;
+  subaccountNumber?: number;
 }
 
 export interface ChannelBatchDataMessage extends OutgoingMessage {
@@ -93,6 +95,7 @@ export interface ChannelBatchDataMessage extends OutgoingMessage {
   channel: Channel;
   id?: string;
   version: string;
+  subaccountNumber?: number;
 }
 
 export interface ConnectedMessage extends OutgoingMessage {}
@@ -128,6 +131,7 @@ export interface MessageToForward {
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   contents: any;
   version: string;
+  subaccountNumber?: number;
 }
 
 export interface ResponseWithBody extends express.Response {
