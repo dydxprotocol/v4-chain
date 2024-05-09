@@ -28,6 +28,7 @@ import {
 import { Index } from '../websocket/index';
 import { MAX_TIMEOUT_INTEGER } from './constants';
 import { Subscriptions } from './subscription';
+import util from 'util';
 
 const BATCH_SEND_INTERVAL_MS: number = config.BATCH_SEND_INTERVAL_MS;
 const BUFFER_KEY_SEPARATOR: string = ':';
@@ -143,26 +144,20 @@ export class MessageForwarder {
     const originalMessageTimestamp = message.headers?.message_received_timestamp;
 
     // TODO: Remove
+    var logMessage = `Message start: ${start}
+    start forward message: ${startForwardMessage}
+    end: ${end}
+    message timestamp: ${message.timestamp}
+    originalMessageTimestamp: ${originalMessageTimestamp}
+    Number(originalMessageTimestamp): ${Number(originalMessageTimestamp)}
+    Time to forward message: ${end - startForwardMessage}
+    Message time in queue: ${start - Number(message.timestamp)}
+    message_time_since_received: ${startForwardMessage - Number(originalMessageTimestamp)}
+    `
     logger.info({
       at: loggerAt,
-      message: `Message start: ${start}`,
-      kafkaMessage: safeJsonStringify(message),
-    });
-    logger.info({
-      at: loggerAt,
-      message: `Time to forward message: ${end - startForwardMessage}`,
-    });
-    logger.info({
-      at: loggerAt,
-      message: `originalMessageTimestamp: ${originalMessageTimestamp}`,
-    });
-    logger.info({
-      at: loggerAt,
-      message: `message_time_since_received: ${startForwardMessage - Number(originalMessageTimestamp)}`,
-    });
-    logger.info({
-      at: loggerAt,
-      message: `Message time in queue: ${start - Number(message.timestamp)}`,
+      message: logMessage,
+      kafkaMessage: util.inspect(safeJsonStringify(message), { depth: null, breakLength: Infinity }),
     });
 
     if (originalMessageTimestamp !== undefined) {
