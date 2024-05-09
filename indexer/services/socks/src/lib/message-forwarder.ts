@@ -157,7 +157,9 @@ export class MessageForwarder {
     logger.info({
       at: loggerAt,
       message: logMessage,
-      kafkaMessage: util.inspect(message, { depth: null, breakLength: Infinity }),
+      messageId: messageToForward.id,
+      messageContents: messageToForward.contents,
+      messageOffset: message.offset,
     });
 
     if (originalMessageTimestamp !== undefined) {
@@ -262,11 +264,6 @@ export class MessageForwarder {
   }
 
   public forwardBatchedMessages(): void {
-    logger.info({
-      at: 'message-forwarder#forwardBatchedMessages',
-      message: "Start of forward batched messages",
-    });
-
     const bufferKeys: string[] = Object.keys(this.messageBuffer);
     bufferKeys.forEach(
       (bufferKey: string) => {
@@ -313,10 +310,6 @@ export class MessageForwarder {
       },
     );
     this.messageBuffer = {};
-    logger.info({
-      at: 'message-forwarder#forwardBatchedMessages',
-      message: "End of forward batched messages",
-    });
   }
 
   public forwardToClientBatch(

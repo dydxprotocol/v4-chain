@@ -118,7 +118,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
       message: `Block processing time: ${Date.now() - start}
       block_time_lag.timing: ${DateTime.now().diff(dateToDateTime(indexerTendermintBlock.time!)).toMillis()}`,
       height: blockHeight,
-      kafkaMessage: util.inspect(message, { depth: null, breakLength: Infinity })
+      messageOffset: message.offset
     });
     success = true;
   } catch (error) {
