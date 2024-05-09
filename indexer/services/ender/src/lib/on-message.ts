@@ -33,6 +33,7 @@ import {
   dateToDateTime,
 } from './helper';
 import { KafkaPublisher } from './kafka-publisher';
+import util from 'util';
 
 /**
  * @function onMessage
@@ -110,6 +111,14 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
       at: 'onMessage#onMessage',
       message: 'Successfully processed block',
       height: blockHeight,
+    });
+    // TODO: Remove
+    logger.info({
+      at: 'onMessage#onMessage',
+      message: `Block processing time: ${Date.now() - start}
+      block_time_lag.timing: ${DateTime.now().diff(dateToDateTime(indexerTendermintBlock.time!)).toMillis()}`,
+      height: blockHeight,
+      kafkaMessage: util.inspect(message, { depth: null, breakLength: Infinity })
     });
     success = true;
   } catch (error) {
