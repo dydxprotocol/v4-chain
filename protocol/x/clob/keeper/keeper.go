@@ -1,9 +1,7 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
-	"sync/atomic"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
@@ -44,9 +42,6 @@ type (
 
 		indexerEventManager indexer_manager.IndexerEventManager
 		streamingManager    streamingtypes.GrpcStreamingManager
-
-		initialized         *atomic.Bool
-		memStoreInitialized *atomic.Bool
 
 		Flags flags.ClobFlags
 
@@ -111,8 +106,6 @@ func NewKeeper(
 		rewardsKeeper:                rewardsKeeper,
 		indexerEventManager:          indexerEventManager,
 		streamingManager:             grpcStreamingManager,
-		memStoreInitialized:          &atomic.Bool{}, // False by default.
-		initialized:                  &atomic.Bool{}, // False by default.
 		txDecoder:                    txDecoder,
 		mevTelemetryConfig: MevTelemetryConfig{
 			Enabled:    clobFlags.MevTelemetryEnabled,
@@ -157,16 +150,17 @@ func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
 }
 
 // IsInitialized returns whether the clob keeper has been hydrated.
-func (k Keeper) IsInitialized() bool {
-	return k.initialized.Load()
+func (k Keeper) IsInitialized(ctx sdk.Context) bool {
+	return k.GetInitialized(ctx)
 }
 
 // Initialize hydrates the clob keeper with the necessary in memory data structures.
 func (k Keeper) Initialize(ctx sdk.Context) {
-	alreadyInitialized := k.initialized.Swap(true)
-	if alreadyInitialized {
+	if k.IsInitialized(ctx) {
 		return
 	}
+
+	k.SetInitialized(ctx)
 
 	// Initialize memstore in clobKeeper with order fill amounts and stateful orders.
 	k.InitMemStore(ctx)
@@ -193,14 +187,26 @@ func (k Keeper) Initialize(ctx sdk.Context) {
 	k.HydrateUntriggeredConditionalOrders(checkCtx)
 }
 
+// GetInitialized returns whether the clob keeper has been initialized.
+func (k Keeper) GetInitialized(ctx sdk.Context) bool {
+	store := ctx.KVStore(k.memKey)
+	return store.Has(
+		[]byte(types.Initialized),
+	)
+}
+
+// SetInitialized sets the initialized flag in the clob keeper.
+func (k Keeper) SetInitialized(ctx sdk.Context) {
+	store := ctx.KVStore(k.memKey)
+	store.Set(
+		[]byte(types.Initialized),
+		[]byte{1},
+	)
+}
+
 // InitMemStore initializes the memstore of the `clob` keeper.
 // This is called during app initialization in `app.go`, before any ABCI calls are received.
 func (k Keeper) InitMemStore(ctx sdk.Context) {
-	alreadyInitialized := k.memStoreInitialized.Swap(true)
-	if alreadyInitialized {
-		panic(errors.New("Memory store already initialized and is not intended to be invoked more then once."))
-	}
-
 	memStore := ctx.KVStore(k.memKey)
 	memStoreType := memStore.GetStoreType()
 	if memStoreType != storetypes.StoreTypeMemory {

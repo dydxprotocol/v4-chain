@@ -71,6 +71,9 @@ const (
 	// UntriggeredConditionalOrderKeyPrefix is the key to retrieve an untriggered conditional order and
 	// information about when it was placed.
 	UntriggeredConditionalOrderKeyPrefix = StatefulOrderKeyPrefix + "U:"
+
+	// Initialized is the key to determined whether clob keeper has been hydrated or not.
+	Initialized = "Initialized"
 )
 
 // Memstore

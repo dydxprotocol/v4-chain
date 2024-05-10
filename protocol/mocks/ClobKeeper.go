@@ -725,17 +725,17 @@ func (_m *ClobKeeper) InitializeNewGrpcStreams(ctx types.Context) {
 	_m.Called(ctx)
 }
 
-// IsInitialized provides a mock function with given fields:
-func (_m *ClobKeeper) IsInitialized() bool {
-	ret := _m.Called()
+// IsInitialized provides a mock function with given fields: ctx
+func (_m *ClobKeeper) IsInitialized(ctx types.Context) bool {
+	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for IsInitialized")
 	}
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func() bool); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(types.Context) bool); ok {
+		r0 = rf(ctx)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}

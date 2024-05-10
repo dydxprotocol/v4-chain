@@ -14,7 +14,7 @@ type ClobKeeper interface {
 	LiquidationsKeeper
 	LiquidationsConfigKeeper
 
-	IsInitialized() bool
+	IsInitialized(ctx sdk.Context) bool
 	Initialize(ctx sdk.Context)
 
 	AddOrderToOrderbookSubaccountUpdatesCheck(
