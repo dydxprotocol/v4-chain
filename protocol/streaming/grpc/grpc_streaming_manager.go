@@ -28,6 +28,8 @@ type GrpcStreamingManagerImpl struct {
 	done   chan bool
 	// map of clob pair id to stream updates.
 	streamUpdateCache map[uint32][]clobtypes.StreamUpdate
+
+	blockHeight uint32
 }
 
 // OrderbookSubscription represents a active subscription to the orderbook updates stream.
@@ -58,7 +60,7 @@ func NewGrpcStreamingManager(flushIntervalMs uint32) *GrpcStreamingManagerImpl {
 			select {
 			case <-grpcStreamingManager.ticker.C:
 				// fix this with values
-				grpcStreamingManager.FlushStreamUpdates(0, 0)
+				grpcStreamingManager.internalFlushStreamUpdates()
 			case <-grpcStreamingManager.done:
 				return
 			}
@@ -74,6 +76,15 @@ func (sm *GrpcStreamingManagerImpl) Enabled() bool {
 
 func (sm *GrpcStreamingManagerImpl) Stop() {
 	sm.done <- true
+}
+
+func (sm *GrpcStreamingManagerImpl) internalFlushStreamUpdates() {
+	// temporary
+	sm.FlushStreamUpdates(sm.blockHeight, 0)
+}
+
+func (sm *GrpcStreamingManagerImpl) SetBlockHeight(blockHeight uint32) {
+	sm.blockHeight = blockHeight
 }
 
 // Subscribe subscribes to the orderbook updates stream.

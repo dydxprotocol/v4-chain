@@ -50,6 +50,11 @@ func (sm *NoopGrpcStreamingManager) GetUninitializedClobPairIds() []uint32 {
 func (sm *NoopGrpcStreamingManager) Stop() {
 }
 
+func (sm *NoopGrpcStreamingManager) SetBlockHeight(
+	blockHeight uint32,
+) {
+}
+
 func (sm *NoopGrpcStreamingManager) FlushStreamUpdates(
 	blockHeight uint32,
 	execMode sdk.ExecMode,
