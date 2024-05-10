@@ -1486,6 +1486,7 @@ func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithExecMode(lib.ExecModeBeginBlock)
+	app.GrpcStreamingManager.SetBlockHeight(uint32(ctx.BlockHeight()))
 
 	// Update the proposer address in the logger for the panic logging middleware.
 	proposerAddr := sdk.ConsAddress(ctx.BlockHeader().ProposerAddress)
