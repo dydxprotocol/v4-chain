@@ -60,7 +60,7 @@ service Query {
 
   rpc PrunableOrders(QueryPrunableOrdersRequest)
       returns (QueryPrunableOrdersResponse) {
-    option (google.api.http).get = "/dydxprotocol/clob/prunable_orders";    
+    option (google.api.http).get = "/dydxprotocol/clob/prunable_orders/{block_height}";    
   }
 
   // GRPC Streams

@@ -229,19 +229,26 @@ func local_request_Query_OrderFillStates_0(ctx context.Context, marshaler runtim
 
 }
 
-var (
-	filter_Query_PrunableOrders_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
 func request_Query_PrunableOrders_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryPrunableOrdersRequest
 	var metadata runtime.ServerMetadata
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["block_height"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "block_height")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_PrunableOrders_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.BlockHeight, err = runtime.Uint32(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "block_height", err)
 	}
 
 	msg, err := client.PrunableOrders(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -253,11 +260,22 @@ func local_request_Query_PrunableOrders_0(ctx context.Context, marshaler runtime
 	var protoReq QueryPrunableOrdersRequest
 	var metadata runtime.ServerMetadata
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["block_height"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "block_height")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_PrunableOrders_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.BlockHeight, err = runtime.Uint32(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "block_height", err)
 	}
 
 	msg, err := server.PrunableOrders(ctx, &protoReq)
@@ -674,7 +692,7 @@ var (
 
 	pattern_Query_OrderFillStates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"dydxprotocol", "clob", "order_fill_states"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_PrunableOrders_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"dydxprotocol", "clob", "prunable_orders"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_PrunableOrders_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"dydxprotocol", "clob", "prunable_orders", "block_height"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
