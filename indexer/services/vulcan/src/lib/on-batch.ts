@@ -7,6 +7,7 @@ import {
 
 import config from '../config';
 import { onMessage } from './on-message';
+import util from 'util';
 
 export async function onBatch(
   payload: EachBatchPayload,
@@ -39,6 +40,7 @@ export async function onBatch(
   logger.info({
     at: 'on-batch#onBatch',
     message: 'Received batch',
+    batchMessages: util.inspect(batch.messages, { depth: null })
     ...batchInfo,
   });
   stats.timing(
