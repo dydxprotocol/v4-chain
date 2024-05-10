@@ -58,6 +58,11 @@ service Query {
     option (google.api.http).get = "/dydxprotocol/clob/order_fill_states";
   }
 
+  rpc PrunableOrders(QueryPrunableOrdersRequest)
+      returns (QueryPrunableOrdersResponse) {
+    option (google.api.http).get = "/dydxprotocol/clob/prunable_orders";    
+  }
+
   // GRPC Streams
 
   // Streams orderbook updates.
@@ -143,7 +148,15 @@ message QueryLiquidationsConfigurationResponse {
 message QueryOrderFillStatesRequest {}
 
 message QueryOrderFillStatesResponse {
-  repeated OrderIdAndFillState OrderIdFillStates = 1;
+  repeated OrderIdAndFillState OrderIdAndFillState = 1;
+}
+
+message QueryPrunableOrdersRequest {
+  uint32 block_height = 1;
+}
+
+message QueryPrunableOrdersResponse {
+  repeated OrderId prunable_orders = 1;
 }
 
 message OrderIdAndFillState {
