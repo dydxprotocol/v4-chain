@@ -47,12 +47,12 @@ pnpm install
 
 ### Build
 
-To build all of the services and packages, run:
+To build all services and packages, run:
 
 ```
 pnpm run build:all
 ```
-This should be run whenever code is changed and you need to deploy or run the updated code, including running unit tests, deploying locally, or deploying to AWS.
+This should be run whenever code is changed, and you need to deploy or run the updated code, including running unit tests, deploying locally, or deploying to AWS.
 
 ## Adding Packages
 
@@ -89,7 +89,7 @@ Protos can be found in `proto/` [here](https://github.com/dydxprotocol/v4-chain/
 
 ## Running unit tests
 
-First, make sure all of the services and packages are built with the latest code by running:
+First, make sure all services and packages are built with the latest code by running:
 
 ```
 pnpm run build:all
