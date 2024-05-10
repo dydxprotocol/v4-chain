@@ -10,6 +10,7 @@ import "dydxprotocol/clob/equity_tier_limit_config.proto";
 import "dydxprotocol/clob/liquidations_config.proto";
 import "dydxprotocol/clob/mev.proto";
 import "dydxprotocol/indexer/off_chain_updates/off_chain_updates.proto";
+import "dydxprotocol/clob/order.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
@@ -50,6 +51,11 @@ service Query {
   rpc LiquidationsConfiguration(QueryLiquidationsConfigurationRequest)
       returns (QueryLiquidationsConfigurationResponse) {
     option (google.api.http).get = "/dydxprotocol/clob/liquidations_config";
+  }
+
+  rpc OrderFillStates(QueryOrderFillStatesRequest)
+      returns (QueryOrderFillStatesResponse) {
+    option (google.api.http).get = "/dydxprotocol/clob/order_fill_states";
   }
 
   // GRPC Streams
@@ -132,6 +138,17 @@ message QueryLiquidationsConfigurationRequest {}
 // the LiquidationsConfiguration.
 message QueryLiquidationsConfigurationResponse {
   LiquidationsConfig liquidations_config = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryOrderFillStatesRequest {}
+
+message QueryOrderFillStatesResponse {
+  repeated OrderIdAndFillState OrderIdFillStates = 1;
+}
+
+message OrderIdAndFillState {
+  OrderId order_id = 1;
+  OrderFillState fill_state = 2;
 }
 
 // StreamOrderbookUpdatesRequest is a request message for the
