@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -211,8 +212,13 @@ func TestQueryBlockMessageIds(t *testing.T) {
 			// fmt.Println("Command Successfully Executed")
 			// output := out.String()
 			// fmt.Println(output)
+
+			fmt.Println(encoding.EncodeMessageToAny(t, constants.TestMsg1))
+
 			genesisChanges := getGenesisChanges(name)
 			setupCmd := exec.Command("bash", "-c", "cd ../../../../ethos/ethos-chain && ./e2e-setup -setup "+genesisChanges)
+
+			fmt.Println("Running setup command", setupCmd.String())
 			var out bytes.Buffer
 			var stderr bytes.Buffer
 			setupCmd.Stdout = &out
@@ -234,19 +240,22 @@ func TestQueryBlockMessageIds(t *testing.T) {
 			}
 			fmt.Println("Docker containers:", testOut.String())
 			cfg := network.DefaultConfig(nil)
-			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query delaymsg get-block-message-ids 10 --node tcp://7.7.8.4:26658 -o json")
+
+			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query delaymsg get-block-message-ids 1000 --node tcp://7.7.8.4:26658 -o json")
+
 			var queryOut bytes.Buffer
 			var stdQueryErr bytes.Buffer
 			cmd.Stdout = &queryOut
 			cmd.Stderr = &stdQueryErr
 			err = cmd.Run()
 
-			if err != nil {
-				fmt.Printf("Error running query command, stdout: %s, stderr: %s", queryOut.String(), stdQueryErr.String())
-			}
+			// if err != nil {
+			// 	fmt.Printf("Error running query command, stdout: %s, stderr: %s", queryOut.String(), stdQueryErr.String())
+			// }
 
-			if tc.expectedBlockMessageIds == nil {
-				require.ErrorContains(t, err, GrpcNotFoundError)
+			if name == "Default: 0" {
+				require.True(t, strings.Contains(stdQueryErr.String(), GrpcNotFoundError))
+
 			} else {
 
 				require.NoError(t, err)
@@ -275,9 +284,11 @@ func TestQueryBlockMessageIds(t *testing.T) {
 func getGenesisChanges(testCase string) string {
 	switch testCase {
 	case "Default: 0":
-		return `".app_state.delaymsg.delayed_messages = [] | .app_state.delaymsg.next_delayed_message_id = '0'"`
+		return "\".app_state.delaymsg.delayed_messages = [] | .app_state.delaymsg.next_delayed_message_id = \"0\"\" \"\""
 	case "Non-zero":
-		return `".app_state.delaymsg.delayed_messages[0] = {id: '0', msg: {'@type': '/testdata.TestMsg', authority: 'dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr', funding_rate_clamp_factor_ppm: '6000000', premium_vote_clamp_factor_ppm: '60000000', min_num_votes_per_sample: '15'}, block_height: '10'} | .app_state.delaymsg.next_delayed_message_id = '20'"`
+		// setup(".app_state.delaymsg.delayed_messages[0] = {\"id\": \"0\", \"msg\": {\"@type\": \"/dydxprotocol.perpetuals.MsgUpdateParams\", \"authority\": \"dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr\", \"params\": {\"funding_rate_clamp_factor_ppm\": \"6000000\", \"premium_vote_clamp_factor_ppm\": \"60000000\", \"min_num_votes_per_sample\": \"15\"}}, \"block_height\": \"10\"} | .app_state.delaymsg.next_delayed_message_id = \"20\"", "")
+		return "\".app_state.delaymsg.delayed_messages[0] = {\\\"id\\\": \\\"0\\\", \\\"msg\\\": {\\\"@type\\\": \\\"/dydxprotocol.perpetuals.MsgUpdateParams\\\", \\\"authority\\\": \\\"dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr\\\", \\\"params\\\": {\\\"funding_rate_clamp_factor_ppm\\\": \\\"6000000\\\", \\\"premium_vote_clamp_factor_ppm\\\": \\\"60000000\\\", \\\"min_num_votes_per_sample\\\": \\\"15\\\"}}, \\\"block_height\\\": \\\"1000\\\"} | .app_state.delaymsg.next_delayed_message_id = \\\"20\\\"\" \"\""
+
 	default:
 		panic("unknown case")
 	}
