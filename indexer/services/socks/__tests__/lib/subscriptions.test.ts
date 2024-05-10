@@ -51,7 +51,7 @@ describe('Subscriptions', () => {
   const initialResponseUrlPatterns: Record<Channel, string[] | undefined> = {
     [Channel.V4_ACCOUNTS]: [
       '/v4/addresses/.+/subaccountNumber/.+',
-      '/v4/orders?.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED',
+      '/v4/orders?.+subaccountNubmer.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED',
     ],
     [Channel.V4_CANDLES]: ['/v4/candles/perpetualMarkets/.+?resolution=.+'],
     [Channel.V4_MARKETS]: ['/v4/perpetualMarkets'],
@@ -59,7 +59,7 @@ describe('Subscriptions', () => {
     [Channel.V4_TRADES]: ['/v4/trades/perpetualMarket/.+'],
     [Channel.V4_PARENT_ACCOUNTS]: [
       '/v4/addresses/.+/parentSubaccountNumber/.+',
-      '/v4/orders/parentSubaccountNumber?.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED',
+      '/v4/orders/parentSubaccountNumber?.+parentSubaccountNumber.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED',
     ],
   };
   const initialMessage: Object = { a: 'b' };
