@@ -854,6 +854,8 @@ func TestMarketUpdater_MetricsLabel(t *testing.T) {
 	}
 
 	for name, tc := range tests {
+		// Make sure each test case starts with a clean slate.
+		pricefeedmetrics.ClearMarketPairsForTelemetry()
 		t.Run(name, func(t *testing.T) {
 			// Create a mock `PriceFeedServiceClient`, a mock `PricefeedMutableMarketConfigs`,
 			// and run `RunMarketParamUpdaterTaskLoop`.
