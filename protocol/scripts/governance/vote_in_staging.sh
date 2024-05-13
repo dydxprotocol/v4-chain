@@ -1,0 +1,10 @@
+./build/dydxprotocold tx gov vote $1 yes --from alice --broadcast-mode sync --fees 5000000000000000adv4tnt --yes
+./build/dydxprotocold tx gov vote $1 yes --from bob --broadcast-mode sync --fees 5000000000000000adv4tnt --yes
+./build/dydxprotocold tx gov vote $1 yes --from carl --broadcast-mode sync --fees 5000000000000000adv4tnt --yes
+./build/dydxprotocold tx gov vote $1 yes --from dave --broadcast-mode sync --fees 5000000000000000adv4tnt --yes
+./build/dydxprotocold tx gov vote $1 yes --from emily --broadcast-mode sync --fees 5000000000000000adv4tnt --yes
+./build/dydxprotocold tx gov vote $1 yes --from fiona --broadcast-mode sync --fees 5000000000000000adv4tnt --yes
+./build/dydxprotocold tx gov vote $1 yes --from greg --broadcast-mode sync --fees 5000000000000000adv4tnt --yes
+./build/dydxprotocold tx gov vote $1 yes --from henry --broadcast-mode sync --fees 5000000000000000adv4tnt --yes
+./build/dydxprotocold tx gov vote $1 yes --from ian --broadcast-mode sync --fees 5000000000000000adv4tnt --yes
+./build/dydxprotocold tx gov vote $1 yes --from jeff --broadcast-mode sync --fees 5000000000000000adv4tnt --yes
