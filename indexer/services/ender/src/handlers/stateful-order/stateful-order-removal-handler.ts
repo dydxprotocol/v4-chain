@@ -12,6 +12,7 @@ import * as pg from 'pg';
 
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 
 export class StatefulOrderRemovalHandler extends
   AbstractStatefulOrderHandler<StatefulOrderEventV1> {
@@ -38,9 +39,15 @@ export class StatefulOrderRemovalHandler extends
       },
     });
 
+    logger.info({
+      at: 'handlers#stateful-order-removal',
+      message: `Clob pair ID ${orderIdProto.clobPairId}`,
+      messageKey: Buffer.from(orderIdProto.clobPairId.toString(), 'utf8')
+    });
+
     return [
       this.generateConsolidatedVulcanKafkaEvent(
-        getOrderIdHash(orderIdProto),
+        Buffer.from(orderIdProto.clobPairId.toString(), 'utf8'),
         offChainUpdate,
         {
           message_received_timestamp: this.messageReceivedTimestamp,

@@ -22,6 +22,7 @@ import * as pg from 'pg';
 import config from '../../config';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 
 // TODO(IND-334): Rename to LongTermOrderPlacementHandler after deprecating StatefulOrderPlacement
 export class StatefulOrderPlacementHandler
@@ -79,8 +80,15 @@ export class StatefulOrderPlacementHandler
         placementStatus: OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
       },
     });
+
+    logger.info({
+      at: 'handlers#stateful-order-placement',
+      message: `Clob pair ID ${order.orderId!.clobPairId}`,
+      messageKey: Buffer.from(order.orderId!.clobPairId.toString(), 'utf8')
+    });
+
     kafkaEvents.push(this.generateConsolidatedVulcanKafkaEvent(
-      getOrderIdHash(order.orderId!),
+      Buffer.from(order.orderId!.clobPairId.toString(), 'utf8'),
       offChainUpdate,
       {
         message_received_timestamp: this.messageReceivedTimestamp,
