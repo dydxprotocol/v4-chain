@@ -55,7 +55,8 @@ service Query {
   }
 
   // Queries the stateful order for a given order id.
-  rpc StatefulOrder(QueryStatefulOrderRequest) returns (QueryStatefulOrderResponse) {}
+  rpc StatefulOrder(QueryStatefulOrderRequest)
+      returns (QueryStatefulOrderResponse) {}
 
   // GRPC Streams
 
