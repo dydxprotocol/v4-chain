@@ -49,12 +49,23 @@ describe('Subscriptions', () => {
   const initialResponseUrlPatterns: Record<Channel, string[] | undefined> = {
     [Channel.V4_ACCOUNTS]: [
       '/v4/addresses/.+/subaccountNumber/.+',
+<<<<<<< HEAD
       '/v4/orders?.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED',
+=======
+      '/v4/orders?.+subaccountNumber.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED,BEST_EFFORT_CANCELED',
+>>>>>>> 54ceae66 (Add BEC to initial subaccount orders socks channel (#1500))
     ],
     [Channel.V4_CANDLES]: ['/v4/candles/perpetualMarkets/.+?resolution=.+'],
     [Channel.V4_MARKETS]: ['/v4/perpetualMarkets'],
     [Channel.V4_ORDERBOOK]: ['/v4/orderbooks/perpetualMarket/.+'],
     [Channel.V4_TRADES]: ['/v4/trades/perpetualMarket/.+'],
+<<<<<<< HEAD
+=======
+    [Channel.V4_PARENT_ACCOUNTS]: [
+      '/v4/addresses/.+/parentSubaccountNumber/.+',
+      '/v4/orders/parentSubaccountNumber?.+parentSubaccountNumber.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED,BEST_EFFORT_CANCELED',
+    ],
+>>>>>>> 54ceae66 (Add BEC to initial subaccount orders socks channel (#1500))
   };
   const initialMessage: Object = { a: 'b' };
   const country: string = 'AR';

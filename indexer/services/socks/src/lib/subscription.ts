@@ -3,7 +3,19 @@ import {
   logger,
   stats,
 } from '@dydxprotocol-indexer/base';
+<<<<<<< HEAD
 import { CandleResolution, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+=======
+import {
+  APIOrderStatus,
+  BestEffortOpenedStatus,
+  CHILD_SUBACCOUNT_MULTIPLIER,
+  CandleResolution,
+  MAX_PARENT_SUBACCOUNTS,
+  OrderStatus,
+  perpetualMarketRefresher,
+} from '@dydxprotocol-indexer/postgres';
+>>>>>>> 54ceae66 (Add BEC to initial subaccount orders socks channel (#1500))
 import WebSocket from 'ws';
 
 import config from '../config';
@@ -23,6 +35,13 @@ import { RateLimiter } from './rate-limit';
 
 const COMLINK_URL: string = `http://${config.COMLINK_URL}`;
 const EMPTY_INITIAL_RESPONSE: string = '{}';
+const VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE: APIOrderStatus[] = [
+  OrderStatus.OPEN,
+  OrderStatus.UNTRIGGERED,
+  BestEffortOpenedStatus.BEST_EFFORT_OPENED,
+  OrderStatus.BEST_EFFORT_CANCELED,
+];
+const VALID_ORDER_STATUS: string = VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE.join(',');
 
 export class Subscriptions {
   // Maps channels and ids to a list of websocket connections subscribed to them
@@ -518,7 +537,7 @@ export class Subscriptions {
         // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
         axiosRequest({
           method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED,BEST_EFFORT_OPENED`,
+          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=${VALID_ORDER_STATUS}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
           headers: {
             'cf-ipcountry': country,
@@ -547,6 +566,74 @@ export class Subscriptions {
     }
   }
 
+<<<<<<< HEAD
+=======
+  private async getInitialResponseForParentSubaccountSubscription(
+    id?: string,
+    country?: string,
+  ): Promise<string> {
+    if (id === undefined) {
+      throw new Error('Invalid undefined id');
+    }
+
+    try {
+      const {
+        address,
+        subaccountNumber,
+      } : {
+        address: string,
+        subaccountNumber: string,
+      } = this.parseSubaccountChannelId(id);
+
+      const [
+        subaccountsResponse,
+        ordersResponse,
+      ]: [
+        string,
+        string,
+      ] = await Promise.all([
+        axiosRequest({
+          method: RequestMethod.GET,
+          url: `${COMLINK_URL}/v4/addresses/${address}/parentSubaccountNumber/${subaccountNumber}`,
+          timeout: config.INITIAL_GET_TIMEOUT_MS,
+          headers: {
+            'cf-ipcountry': country,
+          },
+          transformResponse: (res) => res,
+        }),
+        // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
+        axiosRequest({
+          method: RequestMethod.GET,
+          url: `${COMLINK_URL}/v4/orders/parentSubaccountNumber?address=${address}&parentSubaccountNumber=${subaccountNumber}&status=${VALID_ORDER_STATUS}`,
+          timeout: config.INITIAL_GET_TIMEOUT_MS,
+          headers: {
+            'cf-ipcountry': country,
+          },
+          transformResponse: (res) => res,
+        }),
+      ]);
+
+      return JSON.stringify({
+        ...JSON.parse(subaccountsResponse),
+        orders: JSON.parse(ordersResponse),
+      });
+    } catch (error) {
+      // The subaccounts API endpoint returns a 404 for subaccounts that are not indexed, however
+      // such subaccounts can be subscribed to and events can be sent when the subaccounts are
+      // indexed to an existing subscription.
+      if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 404) {
+        return EMPTY_INITIAL_RESPONSE;
+      }
+      // 403 indicates a blocked address. Throw a specific error for blocked addresses with a
+      // specific error message detailing why the subscription failed due to a blocked address.
+      if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 403) {
+        throw new BlockedError();
+      }
+      throw error;
+    }
+  }
+
+>>>>>>> 54ceae66 (Add BEC to initial subaccount orders socks channel (#1500))
   private parseSubaccountChannelId(id: string): {
     address: string,
     subaccountNumber: string,
