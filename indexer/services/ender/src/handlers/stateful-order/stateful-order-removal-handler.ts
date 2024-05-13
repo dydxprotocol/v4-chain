@@ -39,15 +39,15 @@ export class StatefulOrderRemovalHandler extends
       },
     });
 
+    const messageKey: Buffer = Buffer.from(orderIdProto.clobPairId.toString());
     logger.info({
       at: 'handlers#stateful-order-removal',
       message: `Clob pair ID ${orderIdProto.clobPairId}`,
-      messageKey: Buffer.from(orderIdProto.clobPairId.toString(), 'utf8')
     });
 
     return [
       this.generateConsolidatedVulcanKafkaEvent(
-        Buffer.from(orderIdProto.clobPairId.toString(), 'utf8'),
+        messageKey,
         offChainUpdate,
         {
           message_received_timestamp: this.messageReceivedTimestamp,
