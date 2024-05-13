@@ -4,7 +4,13 @@ import {
   stats,
 } from '@dydxprotocol-indexer/base';
 import {
-  CHILD_SUBACCOUNT_MULTIPLIER, CandleResolution, MAX_PARENT_SUBACCOUNTS, perpetualMarketRefresher,
+  APIOrderStatus,
+  BestEffortOpenedStatus,
+  CHILD_SUBACCOUNT_MULTIPLIER,
+  CandleResolution,
+  MAX_PARENT_SUBACCOUNTS,
+  OrderStatus,
+  perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import WebSocket from 'ws';
 
@@ -25,6 +31,12 @@ import { RateLimiter } from './rate-limit';
 
 const COMLINK_URL: string = `http://${config.COMLINK_URL}`;
 const EMPTY_INITIAL_RESPONSE: string = '{}';
+const VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE: APIOrderStatus[] = [
+  OrderStatus.BEST_EFFORT_CANCELED,
+  BestEffortOpenedStatus.BEST_EFFORT_OPENED,
+  OrderStatus.OPEN,
+  OrderStatus.UNTRIGGERED,
+];
 
 export class Subscriptions {
   // Maps channels and ids to a list of websocket connections subscribed to them
@@ -583,6 +595,7 @@ export class Subscriptions {
         subaccountNumber: string,
       } = this.parseSubaccountChannelId(id);
 
+      const validOrderStatus: string = VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE.join(',');
       const [
         subaccountsResponse,
         ordersResponse,
@@ -602,7 +615,7 @@ export class Subscriptions {
         // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
         axiosRequest({
           method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/orders/parentSubaccountNumber?address=${address}&parentSubaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED,BEST_EFFORT_OPENED`,
+          url: `${COMLINK_URL}/v4/orders/parentSubaccountNumber?address=${address}&parentSubaccountNumber=${subaccountNumber}&status=${validOrderStatus}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
           headers: {
             'cf-ipcountry': country,
