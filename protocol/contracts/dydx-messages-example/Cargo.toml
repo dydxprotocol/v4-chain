@@ -1,7 +1,6 @@
 [package]
 name = "dydx-messages-example"
 version = "0.1.0"
-authors = ["Vincent Chau <99756290+vincentwschau@users.noreply.github.com>"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
