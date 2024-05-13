@@ -54,6 +54,7 @@ require (
 	cosmossdk.io/x/tx v0.13.1
 	cosmossdk.io/x/upgrade v0.1.1
 	github.com/CosmWasm/wasmd v0.50.0
+	github.com/CosmWasm/wasmvm v1.5.2
 	github.com/burdiyan/kafkautil v0.0.0-20190131162249-eaf83ed22d5b
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/iavl v1.1.1-0.20240313174921-bfaf5fcda7b3
@@ -97,7 +98,6 @@ require (
 	github.com/Antonboom/testifylint v1.2.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
-	github.com/CosmWasm/wasmvm v1.5.2 // indirect
 	github.com/DataDog/datadog-go v4.8.2+incompatible // indirect
 	github.com/DataDog/datadog-go/v5 v5.0.2 // indirect
 	github.com/DataDog/gostackparse v0.5.0 // indirect
