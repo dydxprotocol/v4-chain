@@ -426,7 +426,6 @@ func New(
 		govplusmoduletypes.StoreKey,
 		vaultmoduletypes.StoreKey,
 	)
-	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
 	tkeys := storetypes.NewTransientStoreKeys(
 		paramstypes.TStoreKey,
 		clobmoduletypes.TransientStoreKey,

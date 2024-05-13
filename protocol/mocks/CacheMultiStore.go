@@ -180,6 +180,26 @@ func (_m *CacheMultiStore) LatestVersion() int64 {
 	return r0
 }
 
+// Lock provides a mock function with given fields: keys
+func (_m *CacheMultiStore) Lock(keys [][]byte) {
+	_m.Called(keys)
+}
+
+// LockRW provides a mock function with given fields: Rkeys
+func (_m *CacheMultiStore) LockRW(Rkeys [][]byte) {
+	_m.Called(Rkeys)
+}
+
+// RLockRW provides a mock function with given fields: Rkeys
+func (_m *CacheMultiStore) RLockRW(Rkeys [][]byte) {
+	_m.Called(Rkeys)
+}
+
+// RUnlockRW provides a mock function with given fields: keys
+func (_m *CacheMultiStore) RUnlockRW(keys [][]byte) {
+	_m.Called(keys)
+}
+
 // SetTracer provides a mock function with given fields: w
 func (_m *CacheMultiStore) SetTracer(w io.Writer) types.MultiStore {
 	ret := _m.Called(w)
@@ -236,6 +256,16 @@ func (_m *CacheMultiStore) TracingEnabled() bool {
 	}
 
 	return r0
+}
+
+// Unlock provides a mock function with given fields: keys
+func (_m *CacheMultiStore) Unlock(keys [][]byte) {
+	_m.Called(keys)
+}
+
+// UnlockRW provides a mock function with given fields: keys
+func (_m *CacheMultiStore) UnlockRW(keys [][]byte) {
+	_m.Called(keys)
 }
 
 // Write provides a mock function with given fields:
