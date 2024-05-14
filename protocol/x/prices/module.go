@@ -161,5 +161,11 @@ func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, e
 	}, nil
 }
 
+// func (am AppModule) EndBlock(ctx context.Context) error {
+// 	sdkCtx := lib.UnwrapSDKContext(ctx, types.ModuleName)
+// 	am.keeper.DebugUpdatePrice(sdkCtx)
+// 	return nil
+// }
+
 // ConsensusVersion implements ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }

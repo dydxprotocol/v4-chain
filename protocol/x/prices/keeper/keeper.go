@@ -78,3 +78,20 @@ func (k Keeper) InitializeCurrencyPairIdCache(ctx sdk.Context) {
 	// Load the currency pair IDs for the markets from the x/prices state.
 	k.LoadCurrencyPairIDCache(ctx)
 }
+
+// func (k Keeper) DebugUpdatePrice(ctx sdk.Context) {
+// 	price := uint64(2000000000)
+// 	k.UpdateMarketPrices(
+// 		ctx,
+// 		[]*types.MsgUpdateMarketPrices_MarketPrice{
+// 			{
+// 				MarketId: 33,
+// 				// Price:    1000000,
+// 				// Price:    90000000,
+// 				Price: price,
+// 			},
+// 		},
+// 	)
+
+// 	fmt.Printf("!!!! Updated price for market 33, %v\n", price)
+// }
