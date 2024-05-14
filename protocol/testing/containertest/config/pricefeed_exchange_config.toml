@@ -1,5 +1,0 @@
-[[exchanges]]
-ExchangeId = "TestExchange"
-IntervalMs = 1000
-TimeoutMs = 1000
-MaxQueries = 33
