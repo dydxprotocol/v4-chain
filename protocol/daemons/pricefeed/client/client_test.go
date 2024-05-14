@@ -885,7 +885,6 @@ func TestMarketUpdater_MetricsLabel(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 // ----------------- Generate Mock Instances ----------------- //
