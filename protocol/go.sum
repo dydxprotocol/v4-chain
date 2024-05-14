@@ -520,21 +520,12 @@ github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkp
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/dvsekhvalnov/jose2go v1.6.0 h1:Y9gnSnP4qEI0+/uQkHvFXeD2PLPJeXEL+ySMEA2EjTY=
 github.com/dvsekhvalnov/jose2go v1.6.0/go.mod h1:QsHjhyTlD/lAVqn/NSbVZmSCGeDehTB/mPZadG+mhXU=
-<<<<<<< HEAD
 github.com/dydxprotocol/cometbft v0.38.6-0.20240426214049-a7ed4c26b62c h1:nZ/smgLPZNgEBmxnejq/Qv2htLNfXK7DYFNV+EsgNcY=
 github.com/dydxprotocol/cometbft v0.38.6-0.20240426214049-a7ed4c26b62c/go.mod h1:EBEod7kZfNr4W0VooOrTEMSiXNrSyiQ/M2FL/rOcPCs=
-github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c h1:vTcPGxL/uU0MF/Wfzi3G0uzLweEj/417qs1enjf0q60=
-github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c/go.mod h1:AgkOyykpqwdRuf8cLqoA6PxNZC6ODwNmPrEGYuRzBFY=
+github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240514191316-d7a660d6f78b h1:fqqozdlBmkpishFdCHbrhB/5/eF0G3sFhry+oSRpRCQ=
+github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240514191316-d7a660d6f78b/go.mod h1:0aNcByZzPnnr0A3EfICX+2BJm8IT4fJjrOECu1QOphU=
 github.com/dydxprotocol/iavl v1.1.1-0.20240408175732-0fca9d69cbc4 h1:/ylf3Y3CVT8uFy7E2C/wRcoOEcTMieNiymGqHGsLzKQ=
 github.com/dydxprotocol/iavl v1.1.1-0.20240408175732-0fca9d69cbc4/go.mod h1:8xIUkgVvwvVrBu81scdPty+/Dx9GqwHnAvXz4cwF7RY=
-=======
-github.com/dydxprotocol/cometbft v0.38.6-0.20240229050000-3b085f30b462 h1:ufl8wDrax5K/33NMX/2P54iJAb5LlHJA8CYIcdfeR+o=
-github.com/dydxprotocol/cometbft v0.38.6-0.20240229050000-3b085f30b462/go.mod h1:REQN+ObgfYxi39TcYR/Hv95C9bPxY3sYJCvghryj7vY=
-github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240320193634-44a06cd9428e h1:3HCMOMbqlBAK3dboZSKJjvDZ4eg3N1h7EdaMCpmRt9U=
-github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240320193634-44a06cd9428e/go.mod h1:yQgIqbm+W0FODUwPIihPJOp3igupvNTbPcmyaRYZGTw=
-github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240227194839-f4e166bc1057 h1:rY2cckHMrpk3+9ggVqp3Zsvfn7AwEjjazvyp4HK3lgw=
-github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240227194839-f4e166bc1057/go.mod h1:M4hH9rTCui49tnujKeM+BWCiXGQwZ//3QCvl0HbR6Cs=
->>>>>>> 42cbee63 (Upgrade cosmos fork to use libsecp256k1 from go-ethereum (#1210))
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
 github.com/eapache/go-resiliency v1.3.0 h1:RRL0nge+cWGlxXbUzJ7yMcq6w2XBEr19dCN6HECGaT0=
 github.com/eapache/go-resiliency v1.3.0/go.mod h1:5yPzW0MIvSe0JDsv0v+DvcjEv2FyD6iZYSs1ZI+iQho=

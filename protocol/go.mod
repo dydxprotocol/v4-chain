@@ -414,12 +414,8 @@ replace (
 	// Use dYdX fork of CometBFT
 	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20240426214049-a7ed4c26b62c
 	// Use dYdX fork of Cosmos SDK
-<<<<<<< HEAD
-	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c
+	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240514191316-d7a660d6f78b
 	github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240408175732-0fca9d69cbc4
-=======
-	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240320193634-44a06cd9428e
->>>>>>> 42cbee63 (Upgrade cosmos fork to use libsecp256k1 from go-ethereum (#1210))
 )
 
 replace (
