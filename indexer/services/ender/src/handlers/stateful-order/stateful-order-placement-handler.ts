@@ -81,15 +81,8 @@ export class StatefulOrderPlacementHandler
       },
     });
 
-    const messageKey: Buffer = Buffer.from(order.orderId!.clobPairId.toString());
-
-    logger.info({
-      at: 'handlers#stateful-order-placement',
-      message: `Clob pair ID ${order.orderId!.clobPairId}`,
-    });
-
     kafkaEvents.push(this.generateConsolidatedVulcanKafkaEvent(
-      messageKey,
+      getOrderIdHash(order.orderId!),
       offChainUpdate,
       {
         message_received_timestamp: this.messageReceivedTimestamp,
