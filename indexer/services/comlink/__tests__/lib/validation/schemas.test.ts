@@ -22,13 +22,13 @@ describe('schemas', () => {
         'missing subaccountNumber',
         { address: defaultAddress },
         'subaccountNumber',
-        'subaccountNumber must be a non-negative integer less than 128',
+        'subaccountNumber must be a non-negative integer less than 128001',
       ],
       [
         'non-integer subaccountNumber',
         { address: defaultAddress, subaccountNumber: positiveNonInteger },
         'subaccountNumber',
-        'subaccountNumber must be a non-negative integer less than 128',
+        'subaccountNumber must be a non-negative integer less than 128001',
       ],
       [
         'negative subaccountNumber',

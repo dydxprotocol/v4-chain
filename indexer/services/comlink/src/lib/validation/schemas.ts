@@ -29,7 +29,7 @@ export const CheckParentSubaccountSchema = checkSchema({
   parentSubaccountNumber: {
     in: ['params', 'query'],
     isInt: {
-      options: { gt: -1, lt: MAX_PARENT_SUBACCOUNTS + 1 },
+      options: { gt: -1, lt: MAX_PARENT_SUBACCOUNTS },
     },
     errorMessage: 'parentSubaccountNumber must be a non-negative integer less than 128',
   },
