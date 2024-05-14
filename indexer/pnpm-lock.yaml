@@ -129,7 +129,7 @@ importers:
       '@types/uuid': ^8.3.4
       dotenv-flow: ^3.2.0
       jest: ^28.1.2
-      kafkajs: ^2.1.0
+      kafkajs: ^2.2.4
       lodash: ^4.17.21
       typescript: ^4.7.4
       uuid: ^8.3.2
@@ -138,7 +138,7 @@ importers:
       '@dydxprotocol-indexer/postgres': link:../postgres
       '@dydxprotocol-indexer/v4-protos': link:../v4-protos
       dotenv-flow: 3.2.0
-      kafkajs: 2.1.0
+      kafkajs: 2.2.4
       lodash: 4.17.21
       uuid: 8.3.2
     devDependencies:
@@ -325,7 +325,7 @@ importers:
       dotenv-flow: ^3.2.0
       esbuild: ^0.15.11
       jest: ^28.1.2
-      kafkajs: 2.1.0
+      kafkajs: ^2.2.4
       lodash: ^4.17.21
       redis: 2.8.0
       ts-node: ^10.8.2
@@ -337,7 +337,7 @@ importers:
       '@aws-sdk/client-lambda': 3.353.0
       '@dydxprotocol-indexer/base': link:../../packages/base
       dotenv-flow: 3.2.0
-      kafkajs: 2.1.0
+      kafkajs: 2.2.4
       lodash: 4.17.21
       redis: 2.8.0
     devDependencies:
@@ -371,7 +371,7 @@ importers:
       dotenv-flow: ^3.2.0
       esbuild: ^0.15.11
       jest: ^28.1.2
-      kafkajs: 2.1.0
+      kafkajs: ^2.2.4
       lodash: ^4.17.21
       long: ^5.2.1
       redis: 2.8.0
@@ -387,7 +387,7 @@ importers:
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
       big.js: 6.2.1
       dotenv-flow: 3.2.0
-      kafkajs: 2.1.0
+      kafkajs: 2.2.4
       lodash: 4.17.21
       long: 5.2.1
       redis: 2.8.0
@@ -529,7 +529,7 @@ importers:
       dotenv-flow: ^3.2.0
       jest: ^28.1.2
       jest-mock-extended: ^3.0.5
-      kafkajs: ^2.1.0
+      kafkajs: ^2.2.4
       lodash: ^4.17.21
       long: ^5.2.1
       luxon: ^3.0.1
@@ -548,7 +548,7 @@ importers:
       dd-trace: 3.32.1
       dotenv-flow: 3.2.0
       jest-mock-extended: 3.0.5_jest@28.1.2+typescript@4.7.4
-      kafkajs: 2.1.0
+      kafkajs: 2.2.4
       lodash: 4.17.21
       long: 5.2.1
       luxon: 3.0.1
@@ -609,7 +609,7 @@ importers:
       dd-trace: ^3.32.1
       dotenv-flow: ^3.2.0
       jest: ^28.1.2
-      kafkajs: ^2.1.0
+      kafkajs: ^2.2.4
       lodash: ^4.17.21
       luxon: ^3.0.1
       redis: 2.8.0
@@ -629,7 +629,7 @@ importers:
       big.js: 6.2.1
       dd-trace: 3.32.1
       dotenv-flow: 3.2.0
-      kafkajs: 2.2.3
+      kafkajs: 2.2.4
       lodash: 4.17.21
       luxon: 3.0.1
       redis: 2.8.0
@@ -662,7 +662,7 @@ importers:
       big.js: ^6.0.2
       dotenv-flow: ^3.2.0
       jest: ^28.1.2
-      kafkajs: ^2.1.0
+      kafkajs: ^2.2.4
       lodash: ^4.17.21
       long: ^5.2.1
       ts-node: ^10.8.2
@@ -677,7 +677,7 @@ importers:
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
       big.js: 6.2.1
       dotenv-flow: 3.2.0
-      kafkajs: 2.2.3
+      kafkajs: 2.2.4
       lodash: 4.17.21
       long: 5.2.1
       yargs: 13.3.2
@@ -717,7 +717,7 @@ importers:
       express: ^4.18.1
       express-request-id: ^1.4.0
       jest: ^28.1.2
-      kafkajs: ^2.1.0
+      kafkajs: ^2.2.4
       lodash: ^4.17.21
       nocache: ^3.0.4
       response-time: ^2.3.2
@@ -739,7 +739,7 @@ importers:
       dotenv-flow: 3.2.0
       express: 4.18.1
       express-request-id: 1.4.1
-      kafkajs: 2.1.0
+      kafkajs: 2.2.4
       lodash: 4.17.21
       nocache: 3.0.4
       response-time: 2.3.2
@@ -780,7 +780,7 @@ importers:
       dd-trace: ^3.32.1
       dotenv-flow: ^3.2.0
       jest: ^28.1.2
-      kafkajs: ^2.2.3
+      kafkajs: ^2.2.4
       long: ^5.2.1
       luxon: ^3.0.1
       redis: 2.8.0
@@ -797,7 +797,7 @@ importers:
       big.js: 6.2.1
       dd-trace: 3.32.1
       dotenv-flow: 3.2.0
-      kafkajs: 2.2.3
+      kafkajs: 2.2.4
       long: 5.2.1
       luxon: 3.0.1
       redis: 2.8.0
@@ -10381,13 +10381,8 @@ packages:
       object.assign: 4.1.2
     dev: true
 
-  /kafkajs/2.1.0:
-    resolution: {integrity: sha512-6IYiOdGWvFPbSbVB+AV3feT+A7vzw5sXm7Ze4QTfP7FRNdY8pGcpiNPvD2lfgYFD8Dm9KbMgBgTt2mf8KaIkzw==}
-    engines: {node: '>=14.0.0'}
-    dev: false
-
-  /kafkajs/2.2.3:
-    resolution: {integrity: sha512-JmzIiLHE/TdQ7b4I2B/DNMtfhTh66fmEaEg7gGkyQXBC6f1A7I2jSjeUsVIJfC8d9YcEIURyBjtOEKBO5OHVhg==}
+  /kafkajs/2.2.4:
+    resolution: {integrity: sha512-j/YeapB1vfPT2iOIUn/vxdyKEuhuY2PxMBvf5JWux6iSaukAccrMtXEY/Lb7OvavDhOWME589bpLrEdnVHjfjA==}
     engines: {node: '>=14.0.0'}
     dev: false
 
