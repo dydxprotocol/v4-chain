@@ -2,9 +2,11 @@ package subaccounts
 
 import (
 	"context"
-	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
+
+	"cosmossdk.io/core/appmodule"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -139,3 +141,9 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 
 // ConsensusVersion implements ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+func (am AppModule) EndBlock(ctx context.Context) error {
+	sdkCtx := lib.UnwrapSDKContext(ctx, types.ModuleName)
+	am.keeper.DebugCheckOpenInterestForPerpetuals(sdkCtx)
+	return nil
+}
