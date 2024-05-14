@@ -1,5 +1,6 @@
 import { PageRequest, PageRequestSDKType, PageResponse, PageResponseSDKType } from "../../cosmos/base/query/v1beta1/pagination";
 import { ValidatorMevMatches, ValidatorMevMatchesSDKType, MevNodeToNodeMetrics, MevNodeToNodeMetricsSDKType } from "./mev";
+import { OrderId, OrderIdSDKType, LongTermOrderPlacement, LongTermOrderPlacementSDKType } from "./order";
 import { ClobPair, ClobPairSDKType } from "./clob_pair";
 import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } from "./equity_tier_limit_config";
 import { BlockRateLimitConfiguration, BlockRateLimitConfigurationSDKType } from "./block_rate_limit_config";
@@ -170,6 +171,48 @@ export interface QueryBlockRateLimitConfigurationResponse {
 
 export interface QueryBlockRateLimitConfigurationResponseSDKType {
   block_rate_limit_config?: BlockRateLimitConfigurationSDKType;
+}
+/** QueryStatefulOrderRequest is a request message for StatefulOrder. */
+
+export interface QueryStatefulOrderRequest {
+  /** Order id to query. */
+  orderId?: OrderId;
+}
+/** QueryStatefulOrderRequest is a request message for StatefulOrder. */
+
+export interface QueryStatefulOrderRequestSDKType {
+  /** Order id to query. */
+  order_id?: OrderIdSDKType;
+}
+/**
+ * QueryStatefulOrderResponse is a response message that contains the stateful
+ * order.
+ */
+
+export interface QueryStatefulOrderResponse {
+  /** Stateful order placement. */
+  orderPlacement?: LongTermOrderPlacement;
+  /** Fill amounts. */
+
+  fillAmount: Long;
+  /** Triggered status. */
+
+  triggered: boolean;
+}
+/**
+ * QueryStatefulOrderResponse is a response message that contains the stateful
+ * order.
+ */
+
+export interface QueryStatefulOrderResponseSDKType {
+  /** Stateful order placement. */
+  order_placement?: LongTermOrderPlacementSDKType;
+  /** Fill amounts. */
+
+  fill_amount: Long;
+  /** Triggered status. */
+
+  triggered: boolean;
 }
 /**
  * QueryLiquidationsConfigurationRequest is a request message for
@@ -778,6 +821,116 @@ export const QueryBlockRateLimitConfigurationResponse = {
   fromPartial(object: DeepPartial<QueryBlockRateLimitConfigurationResponse>): QueryBlockRateLimitConfigurationResponse {
     const message = createBaseQueryBlockRateLimitConfigurationResponse();
     message.blockRateLimitConfig = object.blockRateLimitConfig !== undefined && object.blockRateLimitConfig !== null ? BlockRateLimitConfiguration.fromPartial(object.blockRateLimitConfig) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryStatefulOrderRequest(): QueryStatefulOrderRequest {
+  return {
+    orderId: undefined
+  };
+}
+
+export const QueryStatefulOrderRequest = {
+  encode(message: QueryStatefulOrderRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.orderId !== undefined) {
+      OrderId.encode(message.orderId, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryStatefulOrderRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryStatefulOrderRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.orderId = OrderId.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryStatefulOrderRequest>): QueryStatefulOrderRequest {
+    const message = createBaseQueryStatefulOrderRequest();
+    message.orderId = object.orderId !== undefined && object.orderId !== null ? OrderId.fromPartial(object.orderId) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryStatefulOrderResponse(): QueryStatefulOrderResponse {
+  return {
+    orderPlacement: undefined,
+    fillAmount: Long.UZERO,
+    triggered: false
+  };
+}
+
+export const QueryStatefulOrderResponse = {
+  encode(message: QueryStatefulOrderResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.orderPlacement !== undefined) {
+      LongTermOrderPlacement.encode(message.orderPlacement, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (!message.fillAmount.isZero()) {
+      writer.uint32(16).uint64(message.fillAmount);
+    }
+
+    if (message.triggered === true) {
+      writer.uint32(24).bool(message.triggered);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryStatefulOrderResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryStatefulOrderResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.orderPlacement = LongTermOrderPlacement.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.fillAmount = (reader.uint64() as Long);
+          break;
+
+        case 3:
+          message.triggered = reader.bool();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryStatefulOrderResponse>): QueryStatefulOrderResponse {
+    const message = createBaseQueryStatefulOrderResponse();
+    message.orderPlacement = object.orderPlacement !== undefined && object.orderPlacement !== null ? LongTermOrderPlacement.fromPartial(object.orderPlacement) : undefined;
+    message.fillAmount = object.fillAmount !== undefined && object.fillAmount !== null ? Long.fromValue(object.fillAmount) : Long.UZERO;
+    message.triggered = object.triggered ?? false;
     return message;
   }
 
