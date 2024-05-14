@@ -22,7 +22,7 @@ export const kafkaConfigSchema = {
   KAFKA_SESSION_TIMEOUT_MS: parseInteger({ default: 60_000 }),
   KAFKA_REBALANCE_TIMEOUT_MS: parseInteger({ default: 50_000 }),
   KAFKA_HEARTBEAT_INTERVAL_MS: parseInteger({ default: 5_000 }),
-  KAFKA_CONCURRENT_PARTITIONS: parseInteger({ default: 1 }),
+  KAFKA_CONCURRENT_PARTITIONS: parseInteger({ default: 5 }),
   // If true, consumers will have unique group ids, and SERVICE_NAME will be a common prefix for
   // the consumer group ids.
   KAFKA_ENABLE_UNIQUE_CONSUMER_GROUP_IDS: parseBoolean({ default: false }),
