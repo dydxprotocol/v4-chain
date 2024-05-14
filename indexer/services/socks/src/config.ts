@@ -27,7 +27,7 @@ export const configSchema = {
     default: 8080,
   }),
   BATCH_SEND_INTERVAL_MS: parseInteger({
-    default: 250,
+    default: 500,
   }),
 
   WS_HEARTBEAT_INTERVAL_MS: parseInteger(),
