@@ -581,7 +581,12 @@ func (k Keeper) ProcessDeleveraging(
 	}
 
 	// Apply the update.
-	success, successPerUpdate, err := k.subaccountsKeeper.UpdateSubaccounts(ctx, updates, satypes.Match)
+	success, successPerUpdate, err := k.subaccountsKeeper.UpdateSubaccounts(
+		ctx,
+		updates,
+		// `Match` type is required to update open interest correctly.
+		satypes.Match,
+	)
 	if err != nil {
 		return err
 	}
