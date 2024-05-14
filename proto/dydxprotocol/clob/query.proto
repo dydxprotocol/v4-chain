@@ -9,6 +9,7 @@ import "dydxprotocol/clob/clob_pair.proto";
 import "dydxprotocol/clob/equity_tier_limit_config.proto";
 import "dydxprotocol/clob/liquidations_config.proto";
 import "dydxprotocol/clob/mev.proto";
+import "dydxprotocol/clob/order.proto";
 import "dydxprotocol/indexer/off_chain_updates/off_chain_updates.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
@@ -51,6 +52,10 @@ service Query {
       returns (QueryLiquidationsConfigurationResponse) {
     option (google.api.http).get = "/dydxprotocol/clob/liquidations_config";
   }
+
+  // Queries the stateful order for a given order id.
+  rpc StatefulOrder(QueryStatefulOrderRequest)
+      returns (QueryStatefulOrderResponse) {}
 
   // GRPC Streams
 
@@ -122,6 +127,25 @@ message QueryBlockRateLimitConfigurationRequest {}
 message QueryBlockRateLimitConfigurationResponse {
   BlockRateLimitConfiguration block_rate_limit_config = 1
       [ (gogoproto.nullable) = false ];
+}
+
+// QueryStatefulOrderRequest is a request message for StatefulOrder.
+message QueryStatefulOrderRequest {
+  // Order id to query.
+  OrderId order_id = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryStatefulOrderResponse is a response message that contains the stateful
+// order.
+message QueryStatefulOrderResponse {
+  // Stateful order placement.
+  LongTermOrderPlacement order_placement = 1 [ (gogoproto.nullable) = false ];
+
+  // Fill amounts.
+  uint64 fill_amount = 2;
+
+  // Triggered status.
+  bool triggered = 3;
 }
 
 // QueryLiquidationsConfigurationRequest is a request message for
