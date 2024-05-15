@@ -11,6 +11,7 @@
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
+    "run-pnl": "ts-node src/pnl-script.ts",
     "test": "NODE_ENV=test jest --runInBand --forceExit"
   },
   "author": "",

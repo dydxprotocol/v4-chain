@@ -64,7 +64,7 @@ export async function getPnlTicksCreateObjects(
       SubaccountFromDatabase[],
     ] = await Promise.all([
       getMostRecentPnlTicksForEachAccount(),
-      SubaccountTable.getSubaccountsWithTransfers(blockHeight, {readReplica: true, txId}),
+      SubaccountTable.getSubaccountsWithTransfers(blockHeight, { readReplica: true, txId }),
     ]);
     stats.timing(
       `${config.SERVICE_NAME}_get_ticks_relevant_accounts`,
@@ -101,62 +101,133 @@ export async function getPnlTicksCreateObjects(
     );
     const getFundingIndexStart: number = Date.now();
     const blockHeightToFundingIndexMap: _.Dictionary<FundingIndexMap> = await
-      getBlockHeightToFundingIndexMap(
-        subaccountsWithTransfers,
-        accountsToUpdate,
-        txId,
-      );
+    getBlockHeightToFundingIndexMap(
+      subaccountsWithTransfers,
+      accountsToUpdate,
+      txId,
+    );
     stats.timing(
       `${config.SERVICE_NAME}_get_ticks_funding_indices`,
       new Date().getTime() - getFundingIndexStart,
     );
 
     const getAccountInfoStart: number = Date.now();
-    const [
-      subaccountTotalTransfersMap,
-      openPerpetualPositions,
-      usdcAssetPositions,
-      netUsdcTransfers,
-      markets,
-      currentFundingIndexMap,
-    ]: [
-      SubaccountAssetNetTransferMap,
-      SubaccountToPerpetualPositionsMap,
-      { [subaccountId: string]: Big },
-      SubaccountUsdcTransferMap,
-      PriceMap,
-      FundingIndexMap,
-    ] = await Promise.all([
-      TransferTable.getNetTransfersPerSubaccount(
-        blockHeight,
-        {
-          readReplica: true,
-          txId,
-        },
-      ),
-      PerpetualPositionTable.findOpenPositionsForSubaccounts(
-        accountsToUpdate,
-        {
-          readReplica: true,
-          txId,
-        },
-      ),
-      AssetPositionTable.findUsdcPositionForSubaccounts(
-        accountsToUpdate,
-        {
-          readReplica: true,
-          txId,
-        },
-      ),
-      getUsdcTransfersSinceLastPnlTick(
-        accountsToUpdate,
-        mostRecentPnlTicks,
-        blockHeight,
+    // const [
+    //   subaccountTotalTransfersMap,
+    //   openPerpetualPositions,
+    //   usdcAssetPositions,
+    //   netUsdcTransfers,
+    //   markets,
+    //   currentFundingIndexMap,
+    // ]: [
+    //   SubaccountAssetNetTransferMap,
+    //   SubaccountToPerpetualPositionsMap,
+    //   { [subaccountId: string]: Big },
+    //   SubaccountUsdcTransferMap,
+    //   PriceMap,
+    //   FundingIndexMap,
+    // ] = await Promise.all([
+    //   TransferTable.getNetTransfersPerSubaccount(
+    //     blockHeight,
+    //     {
+    //       readReplica: true,
+    //       txId,
+    //     },
+    //   ),
+    //   PerpetualPositionTable.findOpenPositionsForSubaccounts(
+    //     accountsToUpdate,
+    //     {
+    //       readReplica: true,
+    //       txId,
+    //     },
+    //   ),
+    //   AssetPositionTable.findUsdcPositionForSubaccounts(
+    //     accountsToUpdate,
+    //     {
+    //       readReplica: true,
+    //       txId,
+    //     },
+    //   ),
+    //   getUsdcTransfersSinceLastPnlTick(
+    //     accountsToUpdate,
+    //     mostRecentPnlTicks,
+    //     blockHeight,
+    //     txId,
+    //   ),
+    //   OraclePriceTable.findLatestPrices(blockHeight),
+    //   FundingIndexUpdatesTable.findFundingIndexMap(blockHeight),
+    // ]);
+
+    // Retrieve net transfers per subaccount
+    const subaccountTotalTransfersMap: SubaccountAssetNetTransferMap = await
+    TransferTable.getNetTransfersPerSubaccount(
+      blockHeight,
+      {
+        readReplica: true,
         txId,
-      ),
-      OraclePriceTable.findLatestPrices(blockHeight),
-      FundingIndexUpdatesTable.findFundingIndexMap(blockHeight),
-    ]);
+      },
+    );
+    logger.info({
+      at: 'pnl-ticks-helper#computePnl',
+      message: 'got subaccountTotalTransfersMap',
+    });
+
+    // Find open positions for subaccounts
+    const openPerpetualPositions: SubaccountToPerpetualPositionsMap = await
+    PerpetualPositionTable.findOpenPositionsForSubaccounts(
+      accountsToUpdate,
+      {
+        readReplica: true,
+        txId,
+      },
+    );
+    logger.info({
+      at: 'pnl-ticks-helper#computePnl',
+      message: 'got openPerpetualPositions',
+    });
+
+    // Find USDC positions for subaccounts
+    const usdcAssetPositions: { [subaccountId: string]: Big } = await
+    AssetPositionTable.findUsdcPositionForSubaccounts(
+      accountsToUpdate,
+      {
+        readReplica: true,
+        txId,
+      },
+    );
+    logger.info({
+      at: 'pnl-ticks-helper#computePnl',
+      message: 'got usdcAssetPositions',
+    });
+
+    // Get USDC transfers since the last PnL tick
+    const netUsdcTransfers: SubaccountUsdcTransferMap = await
+    getUsdcTransfersSinceLastPnlTick(
+      accountsToUpdate,
+      mostRecentPnlTicks,
+      blockHeight,
+      txId,
+    );
+    logger.info({
+      at: 'pnl-ticks-helper#computePnl',
+      message: 'got netUsdcTransfers',
+    });
+
+    // Retrieve latest market prices
+    const markets: PriceMap = await OraclePriceTable.findLatestPrices(blockHeight);
+    logger.info({
+      at: 'pnl-ticks-helper#computePnl',
+      message: 'got markets',
+    });
+
+    // Find funding index map
+    const currentFundingIndexMap: FundingIndexMap = await
+    FundingIndexUpdatesTable.findFundingIndexMap(blockHeight);
+    logger.info({
+      at: 'pnl-ticks-helper#computePnl',
+      message: 'got currentFundingIndexMap',
+    });
+
     stats.timing(
       `${config.SERVICE_NAME}_get_ticks_account_info`,
       new Date().getTime() - getAccountInfoStart,
