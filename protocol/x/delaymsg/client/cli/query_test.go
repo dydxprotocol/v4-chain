@@ -97,11 +97,25 @@ func TestQueryNextDelayedMessageId(t *testing.T) {
 			cmd.Stdout = &queryOut
 			err = cmd.Run()
 
+			fmt.Println(err)
+
 			require.NoError(t, err)
 			var resp types.QueryNextDelayedMessageIdResponse
 			data := queryOut.Bytes()
 			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 			require.Equal(t, tc.state.NextDelayedMessageId, resp.NextDelayedMessageId)
+
+			stopCmd := exec.Command("bash", "-c", "docker stop interchain-security-instance")
+			if err := stopCmd.Run(); err != nil {
+				t.Fatalf("Failed to stop Docker container: %v", err)
+			}
+			fmt.Println("Stopped Docker container")
+			// Remove the Docker container
+			removeCmd := exec.Command("bash", "-c", "docker rm interchain-security-instance")
+			if err := removeCmd.Run(); err != nil {
+				t.Fatalf("Failed to remove Docker container: %v", err)
+			}
+			fmt.Println("Removed Docker container")
 
 		})
 	}
@@ -113,7 +127,7 @@ func getDelayedGenesisChanges(testCase string) string {
 		return "\".app_state.delaymsg.delayed_messages = [] | .app_state.delaymsg.next_delayed_message_id = \"0\"\" \"\""
 	case "Non-zero":
 		// setup(".app_state.delaymsg.delayed_messages[0] = {\"id\": \"0\", \"msg\": {\"@type\": \"/dydxprotocol.perpetuals.MsgUpdateParams\", \"authority\": \"dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr\", \"params\": {\"funding_rate_clamp_factor_ppm\": \"6000000\", \"premium_vote_clamp_factor_ppm\": \"60000000\", \"min_num_votes_per_sample\": \"15\"}}, \"block_height\": \"10\"} | .app_state.delaymsg.next_delayed_message_id = \"20\"", "")
-		return "\".app_state.delaymsg.delayed_messages[] | .app_state.delaymsg.next_delayed_message_id = \"20\"\" \"\""
+		return "\".app_state.delaymsg.delayed_messages = [] | .app_state.delaymsg.next_delayed_message_id = \"20\"\" \"\""
 
 	default:
 		panic("unknown case")
