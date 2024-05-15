@@ -53,141 +53,164 @@ export async function getPnlTicksCreateObjects(
   blockTime: IsoString,
   txId: number,
 ): Promise<PnlTicksCreateObject[]> {
-  const startGetPnlTicksCreateObjects: number = Date.now();
-  const pnlTicksToBeCreatedAt: DateTime = DateTime.utc();
-  const [
-    mostRecentPnlTicks,
-    subaccountsWithTransfers,
-  ]: [
-    PnlTickForSubaccounts,
-    SubaccountFromDatabase[],
-  ] = await Promise.all([
-    getMostRecentPnlTicksForEachAccount(),
-    SubaccountTable.getSubaccountsWithTransfers(blockHeight, { readReplica: true, txId }),
-  ]);
-  stats.timing(
-    `${config.SERVICE_NAME}_get_ticks_relevant_accounts`,
-    new Date().getTime() - startGetPnlTicksCreateObjects,
-  );
-  const accountToLastUpdatedBlockTime: _.Dictionary<IsoString> = _.mapValues(
-    mostRecentPnlTicks,
-    (pnlTick: PnlTicksCreateObject) => pnlTick.blockTime,
-  );
-  const subaccountIdsWithTranfers: string[] = _.map(subaccountsWithTransfers, 'id');
-  const newSubaccountIds: string[] = _.difference(
-    subaccountIdsWithTranfers, _.keys(accountToLastUpdatedBlockTime),
-  );
-  // get accounts to update based on last updated block height
-  const accountsToUpdate: string[] = [
-    ...getAccountsToUpdate(accountToLastUpdatedBlockTime, blockTime),
-    ...newSubaccountIds,
-  ];
-  stats.gauge(
-    `${config.SERVICE_NAME}_get_ticks_accounts_to_update`,
-    accountsToUpdate.length,
-  );
-  const idToSubaccount: _.Dictionary<SubaccountFromDatabase> = _.keyBy(
-    subaccountsWithTransfers,
-    'id',
-  );
-  const getFundingIndexStart: number = Date.now();
-  const blockHeightToFundingIndexMap: _.Dictionary<FundingIndexMap> = await
-  getBlockHeightToFundingIndexMap(
-    subaccountsWithTransfers,
-    accountsToUpdate,
-    txId,
-  );
-  stats.timing(
-    `${config.SERVICE_NAME}_get_ticks_funding_indices`,
-    new Date().getTime() - getFundingIndexStart,
-  );
-
-  const getAccountInfoStart: number = Date.now();
-  const [
-    subaccountTotalTransfersMap,
-    openPerpetualPositions,
-    usdcAssetPositions,
-    netUsdcTransfers,
-    markets,
-    currentFundingIndexMap,
-  ]: [
-    SubaccountAssetNetTransferMap,
-    SubaccountToPerpetualPositionsMap,
-    { [subaccountId: string]: Big },
-    SubaccountUsdcTransferMap,
-    PriceMap,
-    FundingIndexMap,
-  ] = await Promise.all([
-    TransferTable.getNetTransfersPerSubaccount(
-      blockHeight,
-      {
-        readReplica: true,
-        txId,
-      },
-    ),
-    PerpetualPositionTable.findOpenPositionsForSubaccounts(
-      accountsToUpdate,
-      {
-        readReplica: true,
-        txId,
-      },
-    ),
-    AssetPositionTable.findUsdcPositionForSubaccounts(
-      accountsToUpdate,
-      {
-        readReplica: true,
-        txId,
-      },
-    ),
-    getUsdcTransfersSinceLastPnlTick(
-      accountsToUpdate,
+  try {
+    const startGetPnlTicksCreateObjects: number = Date.now();
+    const pnlTicksToBeCreatedAt: DateTime = DateTime.utc();
+    const [
       mostRecentPnlTicks,
-      blockHeight,
-      txId,
-    ),
-    OraclePriceTable.findLatestPrices(blockHeight),
-    FundingIndexUpdatesTable.findFundingIndexMap(blockHeight),
-  ]);
-  stats.timing(
-    `${config.SERVICE_NAME}_get_ticks_account_info`,
-    new Date().getTime() - getAccountInfoStart,
-  );
-
-  const computePnlStart: number = Date.now();
-  const newTicksToCreate: PnlTicksCreateObject[] = [];
-  accountsToUpdate.forEach((account: string) => {
-    try {
-      const newTick: PnlTicksCreateObject = getNewPnlTick(
-        account,
-        subaccountTotalTransfersMap,
-        markets,
-        Object.values(openPerpetualPositions[account] || {}),
-        usdcAssetPositions[account] || ZERO,
-        netUsdcTransfers[account] || ZERO,
-        pnlTicksToBeCreatedAt,
-        blockHeight,
-        blockTime,
-        mostRecentPnlTicks,
-        blockHeightToFundingIndexMap[idToSubaccount[account].updatedAtHeight],
-        currentFundingIndexMap,
+      subaccountsWithTransfers,
+    ]: [
+      PnlTickForSubaccounts,
+      SubaccountFromDatabase[],
+    ] = await Promise.all([
+      getMostRecentPnlTicksForEachAccount(),
+      SubaccountTable.getSubaccountsWithTransfers(blockHeight, {readReplica: true, txId}),
+    ]);
+    stats.timing(
+      `${config.SERVICE_NAME}_get_ticks_relevant_accounts`,
+      new Date().getTime() - startGetPnlTicksCreateObjects,
+    );
+    logger.info({
+      at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+      message: 'Got most recent pnl ticks and subaccounts with transfers',
+    });
+    const accountToLastUpdatedBlockTime: _.Dictionary<IsoString> = _.mapValues(
+      mostRecentPnlTicks,
+      (pnlTick: PnlTicksCreateObject) => pnlTick.blockTime,
+    );
+    const subaccountIdsWithTranfers: string[] = _.map(subaccountsWithTransfers, 'id');
+    const newSubaccountIds: string[] = _.difference(
+      subaccountIdsWithTranfers, _.keys(accountToLastUpdatedBlockTime),
+    );
+    // get accounts to update based on last updated block height
+    const accountsToUpdate: string[] = [
+      ...getAccountsToUpdate(accountToLastUpdatedBlockTime, blockTime),
+      ...newSubaccountIds,
+    ];
+    stats.gauge(
+      `${config.SERVICE_NAME}_get_ticks_accounts_to_update`,
+      accountsToUpdate.length,
+    );
+    logger.info({
+      at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+      message: 'Got accounts to update',
+    });
+    const idToSubaccount: _.Dictionary<SubaccountFromDatabase> = _.keyBy(
+      subaccountsWithTransfers,
+      'id',
+    );
+    const getFundingIndexStart: number = Date.now();
+    const blockHeightToFundingIndexMap: _.Dictionary<FundingIndexMap> = await
+      getBlockHeightToFundingIndexMap(
+        subaccountsWithTransfers,
+        accountsToUpdate,
+        txId,
       );
-      newTicksToCreate.push(newTick);
-    } catch (error) {
-      logger.error({
-        at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
-        message: 'Error when getting new pnl tick',
-        account,
-        pnlTicksToBeCreatedAt,
+    stats.timing(
+      `${config.SERVICE_NAME}_get_ticks_funding_indices`,
+      new Date().getTime() - getFundingIndexStart,
+    );
+
+    const getAccountInfoStart: number = Date.now();
+    const [
+      subaccountTotalTransfersMap,
+      openPerpetualPositions,
+      usdcAssetPositions,
+      netUsdcTransfers,
+      markets,
+      currentFundingIndexMap,
+    ]: [
+      SubaccountAssetNetTransferMap,
+      SubaccountToPerpetualPositionsMap,
+      { [subaccountId: string]: Big },
+      SubaccountUsdcTransferMap,
+      PriceMap,
+      FundingIndexMap,
+    ] = await Promise.all([
+      TransferTable.getNetTransfersPerSubaccount(
         blockHeight,
-        blockTime,
-      });
-    }
-  });
-  stats.timing(
-    `${config.SERVICE_NAME}_get_ticks_compute_pnl`,
-    new Date().getTime() - computePnlStart,
-  );
-  return newTicksToCreate;
+        {
+          readReplica: true,
+          txId,
+        },
+      ),
+      PerpetualPositionTable.findOpenPositionsForSubaccounts(
+        accountsToUpdate,
+        {
+          readReplica: true,
+          txId,
+        },
+      ),
+      AssetPositionTable.findUsdcPositionForSubaccounts(
+        accountsToUpdate,
+        {
+          readReplica: true,
+          txId,
+        },
+      ),
+      getUsdcTransfersSinceLastPnlTick(
+        accountsToUpdate,
+        mostRecentPnlTicks,
+        blockHeight,
+        txId,
+      ),
+      OraclePriceTable.findLatestPrices(blockHeight),
+      FundingIndexUpdatesTable.findFundingIndexMap(blockHeight),
+    ]);
+    stats.timing(
+      `${config.SERVICE_NAME}_get_ticks_account_info`,
+      new Date().getTime() - getAccountInfoStart,
+    );
+    logger.info({
+      at: 'pnl-ticks-helper#computePnl',
+      message: 'Computing pnl',
+    });
+
+    const computePnlStart: number = Date.now();
+    const newTicksToCreate: PnlTicksCreateObject[] = [];
+    accountsToUpdate.forEach((account: string) => {
+      try {
+        const newTick: PnlTicksCreateObject = getNewPnlTick(
+          account,
+          subaccountTotalTransfersMap,
+          markets,
+          Object.values(openPerpetualPositions[account] || {}),
+          usdcAssetPositions[account] || ZERO,
+          netUsdcTransfers[account] || ZERO,
+          pnlTicksToBeCreatedAt,
+          blockHeight,
+          blockTime,
+          mostRecentPnlTicks,
+          blockHeightToFundingIndexMap[idToSubaccount[account].updatedAtHeight],
+          currentFundingIndexMap,
+        );
+        newTicksToCreate.push(newTick);
+      } catch (error) {
+        logger.error({
+          at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+          message: 'Error when getting new pnl tick',
+          account,
+          pnlTicksToBeCreatedAt,
+          blockHeight,
+          blockTime,
+        });
+      }
+    });
+    stats.timing(
+      `${config.SERVICE_NAME}_get_ticks_compute_pnl`,
+      new Date().getTime() - computePnlStart,
+    );
+    return newTicksToCreate;
+  } catch (error) {
+    logger.error({
+      at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+      message: 'Error when getting pnl ticks',
+      error,
+      blockHeight,
+      blockTime,
+    });
+    return [];
+  }
 }
 
 /**
