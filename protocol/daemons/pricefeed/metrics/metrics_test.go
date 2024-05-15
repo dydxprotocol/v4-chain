@@ -10,7 +10,9 @@ import (
 	grpc_util "github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/mock"
+	"reflect"
 	"testing"
+	"unsafe"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
@@ -21,6 +23,19 @@ import (
 const (
 	INVALID_ID = 10000000
 )
+
+// Used to clear the marketToPair map for testing purposes.
+//
+//go:linkname marketToPair github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics.marketToPair
+var marketToPair map[types.MarketId]string
+
+// clearMarketToPair resets the backing marketToPair map to an empty map.
+func clearMarketToPair() {
+	marketToPairValue := reflect.ValueOf(&marketToPair).Elem()
+	rp := reflect.NewAt(marketToPairValue.Type(), unsafe.Pointer(marketToPairValue.UnsafeAddr())).Elem()
+	newMap := map[types.MarketId]string{}
+	rp.Set(reflect.ValueOf(newMap))
+}
 
 func TestGetLabelForMarketIdSuccess(t *testing.T) {
 	pricefeedmetrics.SetMarketPairForTelemetry(exchange_config.MARKET_BTC_USD, "BTCUSD")
@@ -72,7 +87,7 @@ func TestGetLabelForMarketIdAutoPopulated(t *testing.T) {
 
 	for name, tc := range tests {
 		// Clear the mapping from market to pair to start the test with a blank state
-		pricefeedmetrics.ClearMarketPairsForTelemetry()
+		clearMarketToPair()
 
 		t.Run(name, func(t *testing.T) {
 			// Mock the `QueryAllMarketParams` call to return the given `MarketParams`
