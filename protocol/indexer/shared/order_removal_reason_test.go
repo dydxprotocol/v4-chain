@@ -55,7 +55,7 @@ func TestGetOrderRemovalReason_Success(t *testing.T) {
 			expectedReason: sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
 			expectedErr:    nil,
 		},
-		"Gets order removal reason for order error ErrReduceOnlyWouldIncreasePositionSize": {
+		"Gets order removal reason for order error ErrWouldViolateIsolatedSubaccountConstraints": {
 			orderError:     clobtypes.ErrWouldViolateIsolatedSubaccountConstraints,
 			expectedReason: sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS,
 			expectedErr:    nil,
