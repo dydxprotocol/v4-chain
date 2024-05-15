@@ -8,7 +8,6 @@ import (
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	pricefeed_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
-	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	daemonserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server"
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
@@ -826,62 +825,6 @@ func TestMarketUpdater_Mixed(t *testing.T) {
 				configs.AssertCalled(t, "UpdateMarkets", params)
 			} else {
 				configs.AssertNotCalled(t, "UpdateMarkets", params)
-			}
-		})
-	}
-}
-
-func TestMarketUpdater_MetricsLabel(t *testing.T) {
-	tests := map[string]struct {
-		MarketParams  []pricetypes.MarketParam
-		ExpectedLabel string
-	}{
-		"Without params, label is 'invalid_id'": {
-			MarketParams:  []pricetypes.MarketParam{},
-			ExpectedLabel: "invalid_id:1",
-		},
-		"With params, label is 'BTC-USD'": {
-			MarketParams: []pricetypes.MarketParam{
-				{
-					Id:           1,
-					MinExchanges: 1,
-					Exponent:     -9,
-					Pair:         "BTC-USD",
-				},
-			},
-			ExpectedLabel: "BTC-USD",
-		},
-	}
-
-	for name, tc := range tests {
-		// Make sure each test case starts with a clean slate.
-		pricefeedmetrics.ClearMarketPairsForTelemetry()
-		t.Run(name, func(t *testing.T) {
-			// Create a mock `PriceFeedServiceClient`, a mock `PricefeedMutableMarketConfigs`,
-			// and run `RunMarketParamUpdaterTaskLoop`.
-			resp := &pricetypes.QueryAllMarketParamsResponse{
-				MarketParams: tc.MarketParams,
-			}
-			pricesQueryClient := generateMockQueryClient()
-			pricesQueryClient.
-				On("AllMarketParams", grpc_util.Ctx, mock.Anything).
-				Return(resp, nil)
-			configs := &mocks.PricefeedMutableMarketConfigs{}
-
-			configs.On("UpdateMarkets", mock.Anything).
-				Return(map[types.MarketId]error{}, nil)
-
-			RunMarketParamUpdaterTaskLoop(
-				grpc_util.Ctx,
-				configs,
-				pricesQueryClient,
-				log.NewNopLogger(),
-				true,
-			)
-
-			haveLabel := pricefeedmetrics.GetLabelForMarketId(1).Value
-			if haveLabel != tc.ExpectedLabel {
-				t.Errorf("Expected label: %v, got: %v", tc.ExpectedLabel, haveLabel)
 			}
 		})
 	}

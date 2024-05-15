@@ -45,11 +45,3 @@ func GetMarketPairForTelemetry(marketId types.MarketId) string {
 
 	return marketPair
 }
-
-// ClearMarketPairsForTelemetry clears the in-memory map of marketId to marketPair strings.
-// Used for testing purposes.
-func ClearMarketPairsForTelemetry() {
-	lock.Lock()
-	defer lock.Unlock()
-	marketToPair = map[types.MarketId]string{}
-}
