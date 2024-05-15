@@ -86,7 +86,7 @@ export async function getPnlTicksCreateObjects(
     const accountsToUpdate: string[] = [
       ...getAccountsToUpdate(accountToLastUpdatedBlockTime, blockTime),
       ...newSubaccountIds,
-    ];
+    ].slice(0, 200);
     stats.gauge(
       `${config.SERVICE_NAME}_get_ticks_accounts_to_update`,
       accountsToUpdate.length,
@@ -171,6 +171,7 @@ export async function getPnlTicksCreateObjects(
       at: 'pnl-ticks-helper#computePnl',
       message: 'got subaccountTotalTransfersMap',
     });
+
 
     // Find open positions for subaccounts
     const openPerpetualPositions: SubaccountToPerpetualPositionsMap = await
