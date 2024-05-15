@@ -77,19 +77,46 @@ func TestQueryNextDelayedMessageId(t *testing.T) {
 			// require.Equal(t, tc.state.NextDelayedMessageId, resp.NextDelayedMessageId)
 
 			cfg := network.DefaultConfig(nil)
+			genesisChanges := getDelayedGenesisChanges(name)
 
-			cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "delaymsg", "get-next-delayed-message-id", "--node", "tcp://7.7.8.4:26658", "-o json")
+			setupCmd := exec.Command("bash", "-c", "cd ../../../../ethos/ethos-chain && ./e2e-setup -setup "+genesisChanges)
+
+			fmt.Println("Running setup command", setupCmd.String())
 			var out bytes.Buffer
-			cmd.Stdout = &out
-			err := cmd.Run()
+			var stderr bytes.Buffer
+			setupCmd.Stdout = &out
+			setupCmd.Stderr = &stderr
+			err := setupCmd.Run()
+			if err != nil {
+				t.Fatalf("Failed to set up environment: %v, stdout: %s, stderr: %s", err, out.String(), stderr.String())
+			}
+			fmt.Println("Setup output:", out.String())
+
+			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query delaymsg get-next-delayed-message-id --node tcp://7.7.8.4:26658 -o json")
+			var queryOut bytes.Buffer
+			cmd.Stdout = &queryOut
+			err = cmd.Run()
 
 			require.NoError(t, err)
 			var resp types.QueryNextDelayedMessageIdResponse
-			data := out.Bytes()
+			data := queryOut.Bytes()
 			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 			require.Equal(t, tc.state.NextDelayedMessageId, resp.NextDelayedMessageId)
 
 		})
+	}
+}
+
+func getDelayedGenesisChanges(testCase string) string {
+	switch testCase {
+	case "Default: 0":
+		return "\".app_state.delaymsg.delayed_messages = [] | .app_state.delaymsg.next_delayed_message_id = \"0\"\" \"\""
+	case "Non-zero":
+		// setup(".app_state.delaymsg.delayed_messages[0] = {\"id\": \"0\", \"msg\": {\"@type\": \"/dydxprotocol.perpetuals.MsgUpdateParams\", \"authority\": \"dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr\", \"params\": {\"funding_rate_clamp_factor_ppm\": \"6000000\", \"premium_vote_clamp_factor_ppm\": \"60000000\", \"min_num_votes_per_sample\": \"15\"}}, \"block_height\": \"10\"} | .app_state.delaymsg.next_delayed_message_id = \"20\"", "")
+		return "\".app_state.delaymsg.delayed_messages[] | .app_state.delaymsg.next_delayed_message_id = \"20\"\" \"\""
+
+	default:
+		panic("unknown case")
 	}
 }
 
@@ -152,15 +179,15 @@ func TestQueryMessage(t *testing.T) {
 
 			cfg := network.DefaultConfig(nil)
 
-			cmd := exec.Command("bash", "-c", "docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "delaymsg", "get-message", "0", "--node", "tcp://7.7.8.4:26658", "-o json")
+			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query delaymsg get-message 0 --node tcp://7.7.8.4:26658 -o json")
 			var queryOut bytes.Buffer
 			var stdQueryErr bytes.Buffer
 			cmd.Stdout = &queryOut
 			cmd.Stderr = &stdQueryErr
 			err = cmd.Run()
 
-			if tc.expectedMsg == nil {
-
+			if name == "Default: 0" {
+				fmt.Println("Printing error", stdQueryErr.String())
 				require.True(t, strings.Contains(stdQueryErr.String(), GrpcNotFoundError))
 			} else {
 
