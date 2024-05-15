@@ -112,6 +112,7 @@ export const configSchema = {
   // PNL ticks
   PNL_TICK_UPDATE_INTERVAL_MS: parseInteger({ default: ONE_HOUR_IN_MILLISECONDS }),
   PNL_TICK_MAX_ROWS_PER_UPSERT: parseInteger({ default: 1000 }),
+  PNL_TICK_MAX_ACCOUNTS_PER_RUN: parseInteger({ default: 200 }),
 
   // Remove expired orders
   BLOCKS_TO_DELAY_EXPIRY_BEFORE_SENDING_REMOVES: parseInteger({ default: 20 }),
