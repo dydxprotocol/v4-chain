@@ -51,6 +51,8 @@ func GetOrderRemovalReason(
 		return sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED, nil
 	case errors.Is(orderError, clobtypes.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit):
 		return sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_EQUITY_TIER, nil
+	case errors.Is(orderError, clobtypes.ErrWouldViolateIsolatedSubaccountConstraints):
+		return sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS, nil
 	}
 
 	switch orderStatus {
