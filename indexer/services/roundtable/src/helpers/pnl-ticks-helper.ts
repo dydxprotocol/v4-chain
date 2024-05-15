@@ -211,6 +211,7 @@ export async function getPnlTicksCreateObjects(
     logger.info({
       at: 'pnl-ticks-helper#computePnl',
       message: 'got netUsdcTransfers',
+      netUsdcTransfers,
     });
 
     // Retrieve latest market prices
@@ -218,6 +219,7 @@ export async function getPnlTicksCreateObjects(
     logger.info({
       at: 'pnl-ticks-helper#computePnl',
       message: 'got markets',
+      markets,
     });
 
     // Find funding index map
@@ -226,6 +228,7 @@ export async function getPnlTicksCreateObjects(
     logger.info({
       at: 'pnl-ticks-helper#computePnl',
       message: 'got currentFundingIndexMap',
+      currentFundingIndexMap,
     });
 
     stats.timing(
