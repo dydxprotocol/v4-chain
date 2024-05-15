@@ -133,20 +133,40 @@ func TestQueryMessage(t *testing.T) {
 			// 	require.Equal(t, tc.expectedMsg, msg)
 			// }
 
+			fmt.Println("PRINTING TEST CASE", name)
+
+			genesisChanges := getGenesisChanges(name)
+
+			setupCmd := exec.Command("bash", "-c", "cd ../../../../ethos/ethos-chain && ./e2e-setup -setup "+genesisChanges)
+
+			fmt.Println("Running setup command", setupCmd.String())
+			var out bytes.Buffer
+			var stderr bytes.Buffer
+			setupCmd.Stdout = &out
+			setupCmd.Stderr = &stderr
+			err := setupCmd.Run()
+			if err != nil {
+				t.Fatalf("Failed to set up environment: %v, stdout: %s, stderr: %s", err, out.String(), stderr.String())
+			}
+			fmt.Println("Setup output:", out.String())
+
 			cfg := network.DefaultConfig(nil)
 
-			cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "delaymsg", "get-message", "0", "--node", "tcp://7.7.8.4:26658", "-o json")
-			var out bytes.Buffer
-			cmd.Stdout = &out
-			err := cmd.Run()
+			cmd := exec.Command("bash", "-c", "docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "delaymsg", "get-message", "0", "--node", "tcp://7.7.8.4:26658", "-o json")
+			var queryOut bytes.Buffer
+			var stdQueryErr bytes.Buffer
+			cmd.Stdout = &queryOut
+			cmd.Stderr = &stdQueryErr
+			err = cmd.Run()
 
 			if tc.expectedMsg == nil {
-				require.ErrorContains(t, err, GrpcNotFoundError)
+
+				require.True(t, strings.Contains(stdQueryErr.String(), GrpcNotFoundError))
 			} else {
 
 				require.NoError(t, err)
 				var resp types.QueryMessageResponse
-				data := out.Bytes()
+				data := queryOut.Bytes()
 				require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 
 				err := resp.Message.UnpackInterfaces(cfg.Codec)
@@ -157,6 +177,18 @@ func TestQueryMessage(t *testing.T) {
 				require.Equal(t, tc.expectedMsg, msg)
 
 			}
+
+			stopCmd := exec.Command("bash", "-c", "docker stop interchain-security-instance")
+			if err := stopCmd.Run(); err != nil {
+				t.Fatalf("Failed to stop Docker container: %v", err)
+			}
+			fmt.Println("Stopped Docker container")
+			// Remove the Docker container
+			removeCmd := exec.Command("bash", "-c", "docker rm interchain-security-instance")
+			if err := removeCmd.Run(); err != nil {
+				t.Fatalf("Failed to remove Docker container: %v", err)
+			}
+			fmt.Println("Removed Docker container")
 
 		})
 	}
