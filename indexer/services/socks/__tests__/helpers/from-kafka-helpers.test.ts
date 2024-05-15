@@ -81,7 +81,10 @@ describe('from-kafka-helpers', () => {
 
       expect(messageToForward.channel).toEqual(Channel.V4_ACCOUNTS);
       expect(messageToForward.id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
-      expect(messageToForward.contents).toEqual(defaultContents);
+      expect(messageToForward.contents).toEqual({
+        ...defaultContents,
+        blockHeight: subaccountMessage.blockHeight,
+      });
     });
 
     it('gets correct MessageToForward for candles message', () => {

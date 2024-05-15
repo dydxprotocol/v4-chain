@@ -39,10 +39,14 @@ export function getMessageToForward(
   switch (channel) {
     case Channel.V4_ACCOUNTS: {
       const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(messageBinary);
+      const contents = JSON.parse(subaccountMessage.contents);
+      if (subaccountMessage.blockHeight !== '') {
+        contents.blockHeight = subaccountMessage.blockHeight;
+      }
       return {
         channel,
         id: getSubaccountMessageId(subaccountMessage),
-        contents: JSON.parse(subaccountMessage.contents),
+        contents,
         version: subaccountMessage.version,
       };
     }

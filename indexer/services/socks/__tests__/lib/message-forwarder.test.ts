@@ -359,6 +359,7 @@ describe('message-forwarder', () => {
           id,
           SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
           subaccountMessages,
+          baseSubaccountMessage.blockHeight,
         );
         done();
       }
@@ -430,6 +431,7 @@ describe('message-forwarder', () => {
           id,
           SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
           childSubaccountMessages,
+          baseSubaccountMessage.blockHeight,
           defaultChildAccNumber,
         );
       }
@@ -446,6 +448,7 @@ describe('message-forwarder', () => {
           id,
           SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
           childSubaccount2Messages,
+          baseSubaccountMessage.blockHeight,
           defaultChildAccNumber2,
         );
         done();
@@ -558,6 +561,7 @@ function checkBatchMessage(
   id: string,
   version: string,
   expectedMessages: {contents: string}[],
+  blockHeight: string,
   subaccountNumber?: number,
 ): void {
   expect(batchMsg.connection_id).toBe(connectionId);
@@ -569,7 +573,11 @@ function checkBatchMessage(
   expect(batchMsg.subaccountNumber).toBe(subaccountNumber);
   batchMsg.contents.forEach(
     (individualMessage: Object, idx: number) => {
-      expect(individualMessage).toEqual(JSON.parse(expectedMessages[idx].contents));
+      expect(individualMessage).toEqual(
+        {
+          ...JSON.parse(expectedMessages[idx].contents),
+          blockHeight,
+        });
     },
   );
 }
