@@ -3,7 +3,6 @@ import {
   dbHelpers,
   OraclePriceTable,
   PerpetualPositionTable,
-  PnlTicksFromDatabase,
   PnlTicksTable,
   testConstants,
   testMocks,
@@ -99,7 +98,7 @@ describe('create-pnl-ticks', () => {
     jest.spyOn(Date, 'now').mockImplementation(() => date);
     jest.spyOn(DateTime, 'utc').mockImplementation(() => dateTime);
     await createPnlTicksTask();
-    const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.findAll(
+    const { results: pnlTicks } = await PnlTicksTable.findAll(
       {},
       [],
       {},
@@ -144,7 +143,7 @@ describe('create-pnl-ticks', () => {
       }),
     ]);
     await createPnlTicksTask();
-    const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.findAll(
+    const { results: pnlTicks } = await PnlTicksTable.findAll(
       {},
       [],
       {},
@@ -196,7 +195,7 @@ describe('create-pnl-ticks', () => {
         }),
       ]);
       await createPnlTicksTask();
-      const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.findAll(
+      const { results: pnlTicks } = await PnlTicksTable.findAll(
         {},
         [],
         {},
@@ -248,7 +247,7 @@ describe('create-pnl-ticks', () => {
         }),
       ]);
       await createPnlTicksTask();
-      const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.findAll(
+      const { results: pnlTicks } = await PnlTicksTable.findAll(
         {},
         [],
         {},
@@ -297,7 +296,7 @@ describe('create-pnl-ticks', () => {
         }),
       ]);
       await createPnlTicksTask();
-      const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.findAll(
+      const { results: pnlTicks } = await PnlTicksTable.findAll(
         {},
         [],
         {},

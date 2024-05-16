@@ -3,14 +3,14 @@ import {
   Ordering,
   PnlTicksColumns,
   PnlTicksCreateObject,
-  PnlTicksFromDatabase,
 } from '../../src/types';
 import * as PnlTicksTable from '../../src/stores/pnl-ticks-table';
 import * as BlockTable from '../../src/stores/block-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { seedData } from '../helpers/mock-generators';
 import {
-  defaultBlock, defaultBlock2,
+  defaultBlock,
+  defaultBlock2,
   defaultPnlTick,
   defaultSubaccountId,
   defaultSubaccountId2,
@@ -58,7 +58,7 @@ describe('PnlTicks store', () => {
       PnlTicksTable.create(pnlTick2),
     ]);
 
-    const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.findAll({}, [], {
+    const { results: pnlTicks } = await PnlTicksTable.findAll({}, [], {
       orderBy: [[PnlTicksColumns.blockHeight, Ordering.ASC]],
     });
 
@@ -78,7 +78,7 @@ describe('PnlTicks store', () => {
       blockTime: defaultBlock.time,
     };
     await PnlTicksTable.createMany([defaultPnlTick, pnlTick2]);
-    const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.findAll({}, [], {
+    const { results: pnlTicks } = await PnlTicksTable.findAll({}, [], {
       orderBy: [[PnlTicksColumns.blockHeight, Ordering.ASC]],
     });
 
@@ -101,7 +101,7 @@ describe('PnlTicks store', () => {
       }),
     ]);
 
-    const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.findAll(
+    const { results: pnlTicks } = await PnlTicksTable.findAll(
       {
         subaccountId: [defaultSubaccountId],
       },

@@ -199,7 +199,7 @@ export interface ParentSubaccountTransferResponseObject {
 
 /* ------- PNL TICKS TYPES ------- */
 
-export interface HistoricalPnlResponse {
+export interface HistoricalPnlResponse extends PaginationResponse {
   historicalPnl: PnlTicksResponseObject[],
 }
 
