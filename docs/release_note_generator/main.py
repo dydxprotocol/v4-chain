@@ -7,7 +7,7 @@
 
 import argparse
 import os
-import requests
+from github import Github
 
 GITHUB_TOKEN_ENV_VAR = "GITHUB_TOKEN"
 COMMITS_ENDPOINT = "https://api.github.com/repos/dydxprotocol/v4-chain/commits"
@@ -20,48 +20,75 @@ def get_commit(session, commit_sha):
     r.raise_for_status()
     return r.json()
 
-# Return a string that is a markdown list entry. It should summarize the changes in this commit.
-def commit_to_entry(session, commit_json):
-    r = session.get(LIST_COMMIT_PULLS_ENDPOINT % commit_json["sha"])
-    r.raise_for_status()
-    pulls = r.json()
+def commit_to_entry(repo, commit_sha):
+    commit = repo.get_commit(commit_sha)
+    pulls = commit.get_pulls()
 
-    if len(pulls) > 1:
-        # I don't know when a commit would have more than one PR. If this happens, report a bug.
-        raise NotImplementedError("Commit unexpectedly had more than one associated PR. Please file a bug.")
-    elif len(pulls) == 1:
-        # If there is an associated PR, use PR title and link to PR.
-        pull = pulls[0]
-        return "- %s ([#%s](%s))" % (pull["title"], pull["number"], pull["html_url"])
-    else:
-        # If there is no associated PR, use first line of commit message and link to commit.
-        # This may happen if cherry-picks are pushed directly to a release branch.
-        return "- %s ([%s](%s))" % (
-            commit_json["commit"]["message"].partition('\n')[0],
-            commit_json["sha"][:7],
-            commit_json["html_url"]
-        )
+    if pulls.totalCount >= 1:
+        pull_info = []
+        for pull in pulls:
+            pull_info.append("[#%s](%s)" % (pull.number, pull.html_url))
+        return "- %s (%s)" % (pull.title, ' '.join(pull_info))
+
+    return "- %s ([%s](%s))" % (
+        commit.commit.message.partition('\n')[0],
+        commit.sha[:7],
+        commit.html_url
+    )
+
+# # Return a string that is a markdown list entry. It should summarize the changes in this commit.
+# def commit_to_entry(session, commit_json):
+#     r = session.get(LIST_COMMIT_PULLS_ENDPOINT % commit_json["sha"])
+#     r.raise_for_status()
+#     pulls = r.json()
+
+#     if len(pulls) > 1:
+#         # I don't know when a commit would have more than one PR. If this happens, report a bug.
+#         raise NotImplementedError("Commit unexpectedly had more than one associated PR. Please file a bug.")
+#     elif len(pulls) == 1:
+#         # If there is an associated PR, use PR title and link to PR.
+#         pull = pulls[0]
+#         return "- %s ([#%s](%s))" % (pull["title"], pull["number"], pull["html_url"])
+#     else:
+#         # If there is no associated PR, use first line of commit message and link to commit.
+#         # This may happen if cherry-picks are pushed directly to a release branch.
+#         return "- %s ([%s](%s))" % (
+#             commit_json["commit"]["message"].partition('\n')[0],
+#             commit_json["sha"][:7],
+#             commit_json["html_url"]
+#         )
 
 
-def get_release_notes(session, new, old, path):
-    old_json = get_commit(session, old)
-    r = session.get(COMMITS_ENDPOINT, params={
-        "sha": new,
-        "since": old_json["commit"]["author"]["date"],
-        "path": path,
-    })
-    r.raise_for_status()
+# def get_release_notes(session, new, old, path):
+#     old_json = get_commit(session, old)
+#     r = session.get(COMMITS_ENDPOINT, params={
+#         "sha": new,
+#         "since": old_json["commit"]["author"]["date"],
+#         "path": path,
+#         "per_page": 100,
+#     })
+#     r.raise_for_status()
 
-    # old commit will be the last commit iff it changes files in path. If it's there, remove it.
-    commits = r.json()
-    if commits[-1]["sha"] == old_json["sha"]:
-        commits = commits[:-1]
+#     # old commit will be the last commit iff it changes files in path. If it's there, remove it.
+#     commits = r.json()
+#     if commits[-1]["sha"] == old_json["sha"]:
+#         commits = commits[:-1]
+
+#     ret = []
+#     for commit in commits:
+#         ret.append(commit_to_entry(session, commit))
+#     return "\n".join(ret)
+
+def get_release_notes(repo, new, old, path):
+    old_commit = repo.get_commit(old)
+    commits = repo.get_commits(sha=new, since=old_commit.commit.author.date, path=path)
+    print('Got {} commits between old and new hashes'.format(len(list(commits))))
 
     ret = []
-    for commit in commits:
-        ret.append(commit_to_entry(session, commit))
+    for index, commit in enumerate(commits):
+        print('Processing commit {}/{}'.format(index + 1, len(list(commits))))
+        ret.append(commit_to_entry(repo, commit.sha))
     return "\n".join(ret)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -73,7 +100,10 @@ if __name__ == "__main__":
     if not os.getenv(GITHUB_TOKEN_ENV_VAR):
         raise ValueError("Environment variable %s is not set." % GITHUB_TOKEN_ENV_VAR)
 
-    session = requests.Session()
-    session.headers.update({'Authorization': 'Bearer %s' % os.getenv(GITHUB_TOKEN_ENV_VAR)})
+    # session = requests.Session()
+    # session.headers.update({'Authorization': 'Bearer %s' % os.getenv(GITHUB_TOKEN_ENV_VAR)})
 
-    print(get_release_notes(session, args.new, args.old, args.path))
+    g = Github(os.getenv(GITHUB_TOKEN_ENV_VAR))
+    repo = g.get_repo("dydxprotocol/v4-chain")
+
+    print(get_release_notes(repo, args.new, args.old, args.path))
