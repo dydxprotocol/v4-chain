@@ -3,32 +3,29 @@
 package cli_test
 
 import (
+	"bytes"
 	"fmt"
 	"math"
 	"math/big"
+	"os/exec"
+	"strconv"
 	"testing"
-
-	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
+	"time"
 
 	appconstants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
+	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
 	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
 	testutil_bank "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/bank"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
-	cli_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/client/testutil"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
-	feetierstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
-	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sa_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/client/testutil"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -98,75 +95,97 @@ func (s *PlaceOrderIntegrationTestSuite) SetupSuite() {
 
 	s.cfg.MinGasPrices = fmt.Sprintf("0%s", sdk.DefaultBondDenom)
 
-	clobPair := constants.ClobPair_Btc
-	state := types.GenesisState{}
+	// clobPair := constants.ClobPair_Btc
+	// state := types.GenesisState{}
 
-	state.ClobPairs = append(state.ClobPairs, clobPair)
-	state.LiquidationsConfig = types.LiquidationsConfig_Default
+	// state.ClobPairs = append(state.ClobPairs, clobPair)
+	// clobgenesis := "\".app_state.clob.clob_pairs = [{\\\"id\\\": \\\"0\\\", \\\"perpetual_clob_metadata\\\": {\\\"perpetual_id\\\": \\\"0\\\"}, \\\"step_base_quantums\\\": \\\"5\\\", \\\"subticks_per_tick\\\": \\\"5\\\", \\\"quantum_conversion_exponent\\\": \\\"-8\\\", \\\"status\\\": \\\"STATUS_ACTIVE\\\"}]\""
+	// state.LiquidationsConfig = types.LiquidationsConfig_Default
+	// liquidationGenesis := "\".app_state.clob.liquidations_config = {\\\"max_liquidation_fee_ppm\\\": \\\"5000\\\", \\\"fillable_price_config\\\": {\\\"bankruptcy_adjustment_ppm\\\": \\\"1000000\\\", \\\"spread_to_maintenance_margin_ratio_ppm\\\": \\\"100000\\\"}, \\\"position_block_limits\\\": {\\\"max_position_portion_liquidated_ppm\\\": \\\"1000000\\\", \\\"min_position_notional_liquidated\\\": \\\"1000\\\"}, \\\"subaccount_block_limits\\\": {\\\"max_notional_liquidated\\\": \\\"100000000000000\\\", \\\"max_quantums_insurance_lost\\\": \\\"100000000000000\\\"}}\""
+	// perpstate := perptypes.GenesisState{}
+	// perpstate.LiquidityTiers = constants.LiquidityTiers
+	// liquidityTiersGenesis := "\".app_state.perpetuals.liquidity_tiers = [{\\\"id\\\": \\\"0\\\", \\\"name\\\": \\\"0\\\", \\\"initial_margin_ppm\\\": \\\"1000000\\\", \\\"maintenance_fraction_ppm\\\": \\\"1000000\\\", \\\"impact_notional\\\": \\\"500000000\\\"}, {\\\"id\\\": \\\"1\\\", \\\"name\\\": \\\"1\\\", \\\"initial_margin_ppm\\\": \\\"1000000\\\", \\\"maintenance_fraction_ppm\\\": \\\"750000\\\", \\\"impact_notional\\\": \\\"500000000\\\"}, {\\\"id\\\": \\\"2\\\", \\\"name\\\": \\\"2\\\", \\\"initial_margin_ppm\\\": \\\"1000000\\\", \\\"maintenance_fraction_ppm\\\": \\\"0\\\", \\\"impact_notional\\\": \\\"500000000\\\"}, {\\\"id\\\": \\\"3\\\", \\\"name\\\": \\\"3\\\", \\\"initial_margin_ppm\\\": \\\"200000\\\", \\\"maintenance_fraction_ppm\\\": \\\"500000\\\", \\\"impact_notional\\\": \\\"2500000000\\\"}, {\\\"id\\\": \\\"4\\\", \\\"name\\\": \\\"4\\\", \\\"initial_margin_ppm\\\": \\\"500000\\\", \\\"maintenance_fraction_ppm\\\": \\\"800000\\\", \\\"impact_notional\\\": \\\"1000000000\\\"}, {\\\"id\\\": \\\"5\\\", \\\"name\\\": \\\"5\\\", \\\"initial_margin_ppm\\\": \\\"500000\\\", \\\"maintenance_fraction_ppm\\\": \\\"600000\\\", \\\"impact_notional\\\": \\\"1000000000\\\"}, {\\\"id\\\": \\\"6\\\", \\\"name\\\": \\\"6\\\", \\\"initial_margin_ppm\\\": \\\"200000\\\", \\\"maintenance_fraction_ppm\\\": \\\"900000\\\", \\\"impact_notional\\\": \\\"2500000000\\\"}, {\\\"id\\\": \\\"7\\\", \\\"name\\\": \\\"7\\\", \\\"initial_margin_ppm\\\": \\\"0\\\", \\\"maintenance_fraction_ppm\\\": \\\"0\\\", \\\"impact_notional\\\": \\\"1000000000\\\"}, {\\\"id\\\": \\\"8\\\", \\\"name\\\": \\\"8\\\", \\\"initial_margin_ppm\\\": \\\"9910\\\", \\\"maintenance_fraction_ppm\\\": \\\"1000000\\\", \\\"impact_notional\\\": \\\"50454000000\\\"}, {\\\"id\\\": \\\"101\\\", \\\"name\\\": \\\"101\\\", \\\"initial_margin_ppm\\\": \\\"200000\\\", \\\"maintenance_fraction_ppm\\\": \\\"500000\\\", \\\"impact_notional\\\": \\\"2500000000\\\"}]\""
+	// perpstate.Params = constants.PerpetualsGenesisParams
+	// perpstateGenesis := "\".app_state.perpetuals.params = {\\\"funding_rate_clamp_factor_ppm\\\": \\\"6000000\\\", \\\"min_num_votes_per_sample\\\": \\\"15\\\", \\\"premium_vote_clamp_factor_ppm\\\": \\\"60000000\\\"}\""
+	// perpetual := constants.BtcUsd_50PercentInitial_40PercentMaintenance
+	// perpstate.Perpetuals = append(perpstate.Perpetuals, perpetual)
+	// perpetualGenesis := "\".app_state.perpetuals.perpetuals = [{\\\"params\\\": {\\\"atomic_resolution\\\": \\\"-8\\\", \\\"default_funding_ppm\\\": \\\"0\\\", \\\"id\\\": \\\"0\\\", \\\"liquidity_tier\\\": \\\"4\\\", \\\"market_id\\\": \\\"0\\\", \\\"ticker\\\": \\\"BTC-USD 50/40 margin requirements\\\"}, \\\"funding_index\\\": \\\"0\\\"}]\""
+	// pricesstate := constants.Prices_DefaultGenesisState
+	// marketParamGenesis := "\".app_state.prices.market_params = [{\\\"id\\\": \\\"0\\\", \\\"pair\\\": \\\"BTC-USD\\\", \\\"exponent\\\": \\\"-5\\\", \\\"min_exchanges\\\": \\\"2\\\", \\\"min_price_change_ppm\\\": \\\"50\\\", \\\"exchange_config_json\\\": \\\"{\\\\\\\"exchanges\\\\\\\": [{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Binance\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTCUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"BinanceUS\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTCUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bitfinex\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"tBTCUSD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bitstamp\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC/USD\\\\\\\"},  {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bybit\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTCUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"CoinbasePro\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC-USD\\\\\\\"},  {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"CryptoCom\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC_USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Kraken\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"XXBTZUSD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Mexc\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC_USDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},  {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Okx\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC-USDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}]}\\\"}]"
+	// marketPricesGenesis := "\".app_state.prices.market_prices = [{\\\"exponent\\\": \\\"-5\\\", \\\"price\\\": \\\"5000000000\\\"}, {\\\"id\\\": \\\"1\\\", \\\"exponent\\\": \\\"-6\\\", \\\"price\\\": \\\"3000000000\\\"}]\""
+	// buf, err := s.cfg.Codec.MarshalJSON(&state)
+	// s.NoError(err)
+	// s.cfg.GenesisState[types.ModuleName] = buf
 
-	perpstate := perptypes.GenesisState{}
-	perpstate.LiquidityTiers = constants.LiquidityTiers
-	perpstate.Params = constants.PerpetualsGenesisParams
-	perpetual := constants.BtcUsd_50PercentInitial_40PercentMaintenance
-	perpstate.Perpetuals = append(perpstate.Perpetuals, perpetual)
+	// // Set the balances in the genesis state.
+	// s.cfg.GenesisState[banktypes.ModuleName] = cli_testutil.CreateBankGenesisState(
+	// 	s.T(),
+	// 	s.cfg,
+	// 	constants.QuoteBalance_OneDollar*10_000,
+	// )
 
-	pricesstate := constants.Prices_DefaultGenesisState
+	// bankGenesis := "\".app_state.bank.balances = [{\\\"address\\\": \\\"dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6\\\", \\\"coins\\\": [{\\\"denom\\\": \\\"ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5\\\", \\\"amount\\\": \\\"10000000000\\\"}]}]\""
 
-	buf, err := s.cfg.Codec.MarshalJSON(&state)
-	s.NoError(err)
-	s.cfg.GenesisState[types.ModuleName] = buf
+	// sastate := satypes.GenesisState{}
+	// sastate.Subaccounts = append(
+	// 	sastate.Subaccounts,
+	// 	satypes.Subaccount{
+	// 		Id:                 &satypes.SubaccountId{Owner: s.validatorAddress.String(), Number: subaccountNumberZero},
+	// 		AssetPositions:     testutil.CreateUsdcAssetPosition(big.NewInt(initialQuoteBalance)),
+	// 		PerpetualPositions: []*satypes.PerpetualPosition{},
+	// 	},
+	// 	satypes.Subaccount{
+	// 		Id:                 &satypes.SubaccountId{Owner: s.validatorAddress.String(), Number: subaccountNumberOne},
+	// 		AssetPositions:     testutil.CreateUsdcAssetPosition(big.NewInt(initialQuoteBalance)),
+	// 		PerpetualPositions: []*satypes.PerpetualPosition{},
+	// 	},
+	// )
+	// sagenesis := "\".app_state.subaccounts.subaccounts = [{\\\"id\\\": {\\\"number\\\": \\\"0\\\", \\\"owner\\\": \\\"dydxvaloper1eeeggku6dzk3mv7wph3zq035rhtd890s7hkzft\\\"}, \\\"asset_positions\\\": [{\\\"asset_id\\\": \\\"0\\\", \\\"quantums\\\": \\\"1000000000\\\"}], \\\"perpetual_positions\\\": []}, {\\\"id\\\": {\\\"number\\\": \\\"1\\\", \\\"owner\\\": \\\"dydxvaloper1eeeggku6dzk3mv7wph3zq035rhtd890s7hkzft\\\"}, \\\"asset_positions\\\": [{\\\"asset_id\\\": \\\"0\\\", \\\"quantums\\\": \\\"1000000000\\\"}], \\\"perpetual_positions\\\": []}]\"\"\""
+	// // Ensure that no funding payments will occur during this test.
+	// epstate := constants.GenerateEpochGenesisStateWithoutFunding()
+	// epgenesis := "\".app_state.epochs.epoch_info_list = [{\\\"name\\\": \\\"funding-sample\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"funding-tick\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}] \"\"\""
 
-	// Set the balances in the genesis state.
-	s.cfg.GenesisState[banktypes.ModuleName] = cli_testutil.CreateBankGenesisState(
-		s.T(),
-		s.cfg,
-		constants.QuoteBalance_OneDollar*10_000,
-	)
+	// feeTiersState := feetierstypes.GenesisState{}
+	// feeTiersState.Params = constants.PerpetualFeeParamsMakerRebate
+	// might have to add absolute volume, total_volume, etc. if not then it means it sets it to default value and we needed default anyways
+	// feeteirGenesis := "\".app_state.feetiers.params = {\\\"tiers\\\": [{\\\"name\\\": \\\"1\\\", \\\"maker_fee_ppm\\\": \\\"-200\\\", \\\"taker_fee_ppm\\\": \\\"500\\\"}]}\""
 
-	sastate := satypes.GenesisState{}
-	sastate.Subaccounts = append(
-		sastate.Subaccounts,
-		satypes.Subaccount{
-			Id:                 &satypes.SubaccountId{Owner: s.validatorAddress.String(), Number: subaccountNumberZero},
-			AssetPositions:     testutil.CreateUsdcAssetPosition(big.NewInt(initialQuoteBalance)),
-			PerpetualPositions: []*satypes.PerpetualPosition{},
-		},
-		satypes.Subaccount{
-			Id:                 &satypes.SubaccountId{Owner: s.validatorAddress.String(), Number: subaccountNumberOne},
-			AssetPositions:     testutil.CreateUsdcAssetPosition(big.NewInt(initialQuoteBalance)),
-			PerpetualPositions: []*satypes.PerpetualPosition{},
-		},
-	)
+	fullGenesis := "\".app_state.clob.clob_pairs = [{\\\"id\\\": \\\"0\\\", \\\"perpetual_clob_metadata\\\": {\\\"perpetual_id\\\": \\\"0\\\"}, \\\"step_base_quantums\\\": \\\"5\\\", \\\"subticks_per_tick\\\": \\\"5\\\", \\\"quantum_conversion_exponent\\\": \\\"-8\\\", \\\"status\\\": \\\"STATUS_ACTIVE\\\"}] | .app_state.clob.liquidations_config = {\\\"max_liquidation_fee_ppm\\\": \\\"5000\\\", \\\"fillable_price_config\\\": {\\\"bankruptcy_adjustment_ppm\\\": \\\"1000000\\\", \\\"spread_to_maintenance_margin_ratio_ppm\\\": \\\"100000\\\"}, \\\"position_block_limits\\\": {\\\"max_position_portion_liquidated_ppm\\\": \\\"1000000\\\", \\\"min_position_notional_liquidated\\\": \\\"1000\\\"}, \\\"subaccount_block_limits\\\": {\\\"max_notional_liquidated\\\": \\\"100000000000000\\\", \\\"max_quantums_insurance_lost\\\": \\\"100000000000000\\\"}} | .app_state.perpetuals.liquidity_tiers = [{\\\"id\\\": \\\"0\\\", \\\"name\\\": \\\"0\\\", \\\"initial_margin_ppm\\\": \\\"1000000\\\", \\\"maintenance_fraction_ppm\\\": \\\"1000000\\\", \\\"impact_notional\\\": \\\"500000000\\\"}, {\\\"id\\\": \\\"1\\\", \\\"name\\\": \\\"1\\\", \\\"initial_margin_ppm\\\": \\\"1000000\\\", \\\"maintenance_fraction_ppm\\\": \\\"750000\\\", \\\"impact_notional\\\": \\\"500000000\\\"}, {\\\"id\\\": \\\"2\\\", \\\"name\\\": \\\"2\\\", \\\"initial_margin_ppm\\\": \\\"1000000\\\", \\\"maintenance_fraction_ppm\\\": \\\"0\\\", \\\"impact_notional\\\": \\\"500000000\\\"}, {\\\"id\\\": \\\"3\\\", \\\"name\\\": \\\"3\\\", \\\"initial_margin_ppm\\\": \\\"200000\\\", \\\"maintenance_fraction_ppm\\\": \\\"500000\\\", \\\"impact_notional\\\": \\\"2500000000\\\"}, {\\\"id\\\": \\\"4\\\", \\\"name\\\": \\\"4\\\", \\\"initial_margin_ppm\\\": \\\"500000\\\", \\\"maintenance_fraction_ppm\\\": \\\"800000\\\", \\\"impact_notional\\\": \\\"1000000000\\\"}, {\\\"id\\\": \\\"5\\\", \\\"name\\\": \\\"5\\\", \\\"initial_margin_ppm\\\": \\\"500000\\\", \\\"maintenance_fraction_ppm\\\": \\\"600000\\\", \\\"impact_notional\\\": \\\"1000000000\\\"}, {\\\"id\\\": \\\"6\\\", \\\"name\\\": \\\"6\\\", \\\"initial_margin_ppm\\\": \\\"200000\\\", \\\"maintenance_fraction_ppm\\\": \\\"900000\\\", \\\"impact_notional\\\": \\\"2500000000\\\"}, {\\\"id\\\": \\\"7\\\", \\\"name\\\": \\\"7\\\", \\\"initial_margin_ppm\\\": \\\"0\\\", \\\"maintenance_fraction_ppm\\\": \\\"0\\\", \\\"impact_notional\\\": \\\"1000000000\\\"}, {\\\"id\\\": \\\"8\\\", \\\"name\\\": \\\"8\\\", \\\"initial_margin_ppm\\\": \\\"9910\\\", \\\"maintenance_fraction_ppm\\\": \\\"1000000\\\", \\\"impact_notional\\\": \\\"50454000000\\\"}, {\\\"id\\\": \\\"101\\\", \\\"name\\\": \\\"101\\\", \\\"initial_margin_ppm\\\": \\\"200000\\\", \\\"maintenance_fraction_ppm\\\": \\\"500000\\\", \\\"impact_notional\\\": \\\"2500000000\\\"}] | .app_state.perpetuals.params = {\\\"funding_rate_clamp_factor_ppm\\\": \\\"6000000\\\", \\\"min_num_votes_per_sample\\\": \\\"15\\\", \\\"premium_vote_clamp_factor_ppm\\\": \\\"60000000\\\"} | .app_state.perpetuals.perpetuals = [{\\\"params\\\": {\\\"atomic_resolution\\\": \\\"-8\\\", \\\"default_funding_ppm\\\": \\\"0\\\", \\\"id\\\": \\\"0\\\", \\\"liquidity_tier\\\": \\\"4\\\", \\\"market_id\\\": \\\"0\\\", \\\"ticker\\\": \\\"BTC-USD 50/40 margin requirements\\\"}, \\\"funding_index\\\": \\\"0\\\"}] | .app_state.prices.market_params = [{\\\"id\\\": \\\"0\\\", \\\"pair\\\": \\\"BTC-USD\\\", \\\"exponent\\\": \\\"-5\\\", \\\"min_exchanges\\\": \\\"2\\\", \\\"min_price_change_ppm\\\": \\\"50\\\", \\\"exchange_config_json\\\": \\\"{\\\\\\\"exchanges\\\\\\\": [{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Binance\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTCUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"BinanceUS\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTCUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bitfinex\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"tBTCUSD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bitstamp\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC/USD\\\\\\\"},  {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bybit\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTCUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"CoinbasePro\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC-USD\\\\\\\"},  {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"CryptoCom\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC_USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Kraken\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"XXBTZUSD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Mexc\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC_USDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},  {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Okx\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC-USDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}]}\\\"}, {\\\"id\\\": \\\"1\\\", \\\"pair\\\": \\\"ETH-USD\\\", \\\"exponent\\\": \\\"-6\\\", \\\"min_exchanges\\\": \\\"1\\\", \\\"min_price_change_ppm\\\": \\\"50\\\", \\\"exchange_config_json\\\": \\\"{\\\\\\\"exchanges\\\\\\\": [{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Binance\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETHUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"BinanceUS\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETHUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bitfinex\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"tETHUSD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bitstamp\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH/USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bybit\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETHUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"CoinbasePro\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"CryptoCom\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH_USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Kraken\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"XETHZUSD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Mexc\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH_USDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Okx\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH-USDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}]}\\\"}] | .app_state.prices.market_prices = [{\\\"exponent\\\": \\\"-5\\\", \\\"price\\\": \\\"5000000000\\\"}, {\\\"id\\\": \\\"1\\\", \\\"exponent\\\": \\\"-6\\\", \\\"price\\\": \\\"3000000000\\\"}] | .app_state.bank.balances = [{\\\"address\\\": \\\"dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6\\\", \\\"coins\\\": [{\\\"denom\\\": \\\"ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5\\\", \\\"amount\\\": \\\"10000000000\\\"}]}] | .app_state.bank.supply = [{\\\"denom\\\": \\\"ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5\\\", \\\"amount\\\": \\\"10000000000\\\"}] | .app_state.subaccounts.subaccounts = [{\\\"id\\\": {\\\"number\\\": \\\"0\\\", \\\"owner\\\": \\\"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6\\\"}, \\\"asset_positions\\\": [{\\\"asset_id\\\": \\\"0\\\", \\\"quantums\\\": \\\"1000000000\\\"}], \\\"perpetual_positions\\\": []}, {\\\"id\\\": {\\\"number\\\": \\\"1\\\", \\\"owner\\\": \\\"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6\\\"}, \\\"asset_positions\\\": [{\\\"asset_id\\\": \\\"0\\\", \\\"quantums\\\": \\\"1000000000\\\"}], \\\"perpetual_positions\\\": []}] | .app_state.epochs.epoch_info_list = [{\\\"name\\\": \\\"funding-sample\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"funding-tick\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"stats-epoch\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}] | .app_state.feetiers.params = {\\\"tiers\\\": [{\\\"name\\\": \\\"1\\\", \\\"maker_fee_ppm\\\": \\\"-200\\\", \\\"taker_fee_ppm\\\": \\\"500\\\"}]}\" \"\""
+	// epbuf, err := s.cfg.Codec.MarshalJSON(&epstate)
+	// s.Require().NoError(err)
 
-	// Ensure that no funding payments will occur during this test.
-	epstate := constants.GenerateEpochGenesisStateWithoutFunding()
+	// s.cfg.GenesisState[epochstypes.ModuleName] = epbuf
 
-	feeTiersState := feetierstypes.GenesisState{}
-	feeTiersState.Params = constants.PerpetualFeeParamsMakerRebate
+	// sabuf, err := s.cfg.Codec.MarshalJSON(&sastate)
+	// s.Require().NoError(err)
+	// s.cfg.GenesisState[satypes.ModuleName] = sabuf
 
-	epbuf, err := s.cfg.Codec.MarshalJSON(&epstate)
-	s.Require().NoError(err)
-	s.cfg.GenesisState[epochstypes.ModuleName] = epbuf
+	// perpbuf, err := s.cfg.Codec.MarshalJSON(&perpstate)
+	// s.Require().NoError(err)
+	// s.cfg.GenesisState[perptypes.ModuleName] = perpbuf
 
-	sabuf, err := s.cfg.Codec.MarshalJSON(&sastate)
-	s.Require().NoError(err)
-	s.cfg.GenesisState[satypes.ModuleName] = sabuf
+	// pricesbuf, err := s.cfg.Codec.MarshalJSON(&pricesstate)
+	// s.Require().NoError(err)
+	// s.cfg.GenesisState[pricestypes.ModuleName] = pricesbuf
 
-	perpbuf, err := s.cfg.Codec.MarshalJSON(&perpstate)
-	s.Require().NoError(err)
-	s.cfg.GenesisState[perptypes.ModuleName] = perpbuf
+	// feeTiersBuf, err := s.cfg.Codec.MarshalJSON(&feeTiersState)
+	// s.Require().NoError(err)
+	// s.cfg.GenesisState[feetierstypes.ModuleName] = feeTiersBuf
 
-	pricesbuf, err := s.cfg.Codec.MarshalJSON(&pricesstate)
-	s.Require().NoError(err)
-	s.cfg.GenesisState[pricestypes.ModuleName] = pricesbuf
+	// s.network = network.New(s.T(), s.cfg)
+	setupCmd := exec.Command("bash", "-c", "cd ../../../../ethos/ethos-chain && ./e2e-setup -setup "+fullGenesis)
 
-	feeTiersBuf, err := s.cfg.Codec.MarshalJSON(&feeTiersState)
-	s.Require().NoError(err)
-	s.cfg.GenesisState[feetierstypes.ModuleName] = feeTiersBuf
-
-	s.network = network.New(s.T(), s.cfg)
-
-	_, err = s.network.WaitForHeight(1)
+	fmt.Println("Running setup command", setupCmd.String())
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	setupCmd.Stdout = &out
+	setupCmd.Stderr = &stderr
+	err := setupCmd.Run()
+	if err != nil {
+		s.T().Fatalf("Failed to set up environment: %v, stdout: %s, stderr: %s", err, out.String(), stderr.String())
+	}
+	fmt.Println("Setup output:", out.String())
+	time.Sleep(5 * time.Second)
 	s.Require().NoError(err)
 }
 
@@ -175,66 +194,94 @@ func (s *PlaceOrderIntegrationTestSuite) SetupSuite() {
 // The orders placed are expected to match, and after matching, the subaccounts are queried and assertions
 // are performed on their QuoteBalance and PerpetualPositions.
 func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
-	val := s.network.Validators[0]
-	ctx := val.ClientCtx
+	// val := s.network.Validators[0]
+	// ctx := val.ClientCtx
 
-	currentHeight, err := s.network.LatestHeight()
-	s.Require().NoError(err)
+	cfg := network.DefaultConfig(nil)
 
-	goodTilBlock := uint32(currentHeight) + types.ShortBlockWindow
-	clientId := uint64(1)
+	// currentHeight, err := s.network.LatestHeight()
+	// s.Require().NoError(err)
+
+	goodTilBlock := uint32(0)
 	quantums := satypes.BaseQuantums(1_000)
 	subticks := types.Subticks(50_000_000_000)
+	blockHeightCmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query block --type=height 0 --node tcp://7.7.8.4:26658 -o json")
+	var heightOut bytes.Buffer
+	blockHeightCmd.Stdout = &heightOut
+	err := blockHeightCmd.Run()
+	if err != nil {
+		s.T().Fatalf("Failed to get block height: %v, stdout: %s", err, heightOut.String())
+	}
+	var resp blocktypes.Block
+	data := heightOut.Bytes()
+	require.NoError(s.T(), cfg.Codec.UnmarshalJSON(data, &resp))
+	blockHeight := resp.LastCommit.Height
 
-	// Place the first order.
-	_, err = cli_testutil.MsgPlaceOrderExec(
-		ctx,
-		s.validatorAddress,
-		subaccountNumberZero,
-		clientId,
-		constants.ClobPair_Btc.Id,
-		types.Order_SIDE_BUY,
-		quantums,
-		subticks.ToUint64(),
-		goodTilBlock,
-	)
+	// // Place the first order.
+	// _, err = cli_testutil.MsgPlaceOrderExec(
+	// 	ctx,
+	// 	s.validatorAddress,
+	// 	subaccountNumberZero,
+	// 	clientId,
+	// 	constants.ClobPair_Btc.Id,
+	// 	types.Order_SIDE_BUY,
+	// 	quantums,
+	// 	subticks.ToUint64(),
+	// 	goodTilBlock,
+	// )
+
+	goodTilBlock = uint32(blockHeight) + types.ShortBlockWindow
+	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
+	placeBuyCmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 1000 50000000000 "+goodTilBlockStr+" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658")
+	var placeBuyOut bytes.Buffer
+	placeBuyCmd.Stdout = &placeBuyOut
+	err = placeBuyCmd.Run()
+	if err != nil {
+		s.T().Fatalf("Failed to place order: %v, stdout: %s", err, placeBuyOut.String())
+	}
 	s.Require().NoError(err)
 
 	// Place the second order.
-	_, err = cli_testutil.MsgPlaceOrderExec(
-		ctx,
-		s.validatorAddress,
-		subaccountNumberOne,
-		clientId,
-		constants.ClobPair_Btc.Id,
-		types.Order_SIDE_SELL,
-		quantums,
-		subticks.ToUint64(),
-		goodTilBlock,
-	)
+	// _, err = cli_testutil.MsgPlaceOrderExec(
+	// 	ctx,
+	// 	s.validatorAddress,
+	// 	subaccountNumberOne,
+	// 	clientId,
+	// 	constants.ClobPair_Btc.Id,
+	// 	types.Order_SIDE_SELL,
+	// 	quantums,
+	// 	subticks.ToUint64(),
+	// 	goodTilBlock,
+	// )
+
+	placeSellCmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 1 1 0 1 1000 50000000000 "+goodTilBlockStr+" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658")
+	var placeSellOut bytes.Buffer
+	placeSellCmd.Stdout = &placeSellOut
+	err = placeSellCmd.Run()
+	if err != nil {
+		s.T().Fatalf("Failed to place order: %v, stdout: %s", err, placeSellOut.String())
+	}
 	s.Require().NoError(err)
 
-	currentHeight, err = s.network.LatestHeight()
-	s.Require().NoError(err)
+	// currentHeight, err = s.network.LatestHeight()
+	// s.Require().NoError(err)
 
-	// Wait for a few blocks to ensure the orders were matched and included in a block.
-	_, err = s.network.WaitForHeight(currentHeight + 3)
-	s.Require().NoError(err)
+	// // Wait for a few blocks to ensure the orders were matched and included in a block.
+	// _, err = s.network.WaitForHeight(currentHeight + 3)
+	// s.Require().NoError(err)
+
+	time.Sleep(5 * time.Second)
 
 	// Query both subaccounts.
-	resp, err := sa_testutil.MsgQuerySubaccountExec(ctx, s.validatorAddress, subaccountNumberZero)
-	s.Require().NoError(err)
-
+	acc, accerr := sa_testutil.MsgQuerySubaccountExec("dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6", subaccountNumberZero)
+	s.Require().NoError(accerr)
 	var subaccountResp satypes.QuerySubaccountResponse
-	s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(resp.Bytes(), &subaccountResp))
+	s.Require().NoError(cfg.Codec.UnmarshalJSON(acc.Bytes(), &subaccountResp))
 	subaccountZero := subaccountResp.Subaccount
-
-	resp, err = sa_testutil.MsgQuerySubaccountExec(ctx, s.validatorAddress, subaccountNumberOne)
-	s.Require().NoError(err)
-
-	s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(resp.Bytes(), &subaccountResp))
+	acc, accerr = sa_testutil.MsgQuerySubaccountExec("dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6", subaccountNumberOne)
+	s.Require().NoError(accerr)
+	s.Require().NoError(cfg.Codec.UnmarshalJSON(acc.Bytes(), &subaccountResp))
 	subaccountOne := subaccountResp.Subaccount
-
 	// Compute the fill price so as to know how much QuoteBalance should be remaining.
 	fillSizeQuoteQuantums := types.FillAmountToQuoteQuantums(
 		subticks,
@@ -256,6 +303,7 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 		},
 		subaccountZero.GetUsdcPosition(),
 	)
+
 	s.Require().Len(subaccountZero.PerpetualPositions, 1)
 	s.Require().Equal(quantums.ToBigInt(), subaccountZero.PerpetualPositions[0].GetBigQuantums())
 
@@ -266,14 +314,14 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 		},
 		subaccountOne.GetUsdcPosition(),
 	)
+
 	s.Require().Len(subaccountOne.PerpetualPositions, 1)
 	// Check that position is short and has the right size.
 	s.Require().Equal(new(big.Int).Neg(quantums.ToBigInt()), subaccountOne.PerpetualPositions[0].GetBigQuantums())
-
 	// Check that the `subaccounts` module account has expected remaining USDC balance.
 	saModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
-		val,
-		s.network.Config.Codec,
+		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
+		cfg.Codec,
 		satypes.ModuleName,
 	)
 	s.Require().NoError(err)
