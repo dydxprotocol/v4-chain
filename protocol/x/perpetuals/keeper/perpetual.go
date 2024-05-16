@@ -523,17 +523,14 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 
 	marketIdToIndexPrice := k.pricesKeeper.GetMarketIdToValidIndexPrice(ctx)
 
+	invalidPerpetualIndexPrices := []uint32{}
 	for _, perp := range allPerpetuals {
 		indexPrice, exists := marketIdToIndexPrice[perp.Params.MarketId]
 		// Valid index price is missing
 		if !exists {
 			// Only log and increment stats if height is passed initialization period.
 			if ctx.BlockHeight() > pricestypes.PriceDaemonInitializationBlocks {
-				log.ErrorLog(
-					ctx,
-					"Perpetual does not have valid index price. Skipping premium",
-					constants.MarketIdLogKey, perp.Params.MarketId,
-				)
+				invalidPerpetualIndexPrices = append(invalidPerpetualIndexPrices, perp.Params.MarketId)
 				telemetry.IncrCounterWithLabels(
 					[]string{
 						types.ModuleName,
@@ -551,6 +548,13 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 			}
 			// Skip this market, effectively emitting a zero premium.
 			continue
+		}
+		if len(invalidPerpetualIndexPrices) > 0 {
+			log.ErrorLog(
+				ctx,
+				"Perpetuals do not have valid index price. Skipping premium",
+				constants.MarketIdsLogKey, invalidPerpetualIndexPrices,
+			)
 		}
 
 		// Get impact notional corresponding to this perpetual market (panic if its liquidity tier doesn't exist).

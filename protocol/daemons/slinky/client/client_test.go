@@ -73,7 +73,7 @@ func TestClient(t *testing.T) {
 	)
 	waitTime := time.Second * 5
 	require.Eventually(t, func() bool {
-		return cli.HealthCheck() == nil
+		return cli.GetMarketPairHC().HealthCheck() == nil || cli.GetPriceHC().HealthCheck() == nil
 	}, waitTime, time.Millisecond*500, "Slinky daemon failed to become healthy within %s", waitTime)
 	cli.Stop()
 }
