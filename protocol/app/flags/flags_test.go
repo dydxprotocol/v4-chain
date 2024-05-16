@@ -32,6 +32,9 @@ func TestAddFlagsToCommand(t *testing.T) {
 		fmt.Sprintf("Has %s flag", flags.GrpcStreamingEnabled): {
 			flagName: flags.GrpcStreamingEnabled,
 		},
+		fmt.Sprintf("Has %s flag", flags.OptimisticExecutionEnabled): {
+			flagName: flags.OptimisticExecutionEnabled,
+		},
 	}
 
 	for name, tc := range tests {
@@ -48,11 +51,12 @@ func TestValidate(t *testing.T) {
 	}{
 		"success (default values)": {
 			flags: flags.Flags{
-				NonValidatingFullNode: flags.DefaultNonValidatingFullNode,
-				DdAgentHost:           flags.DefaultDdAgentHost,
-				DdTraceAgentPort:      flags.DefaultDdTraceAgentPort,
-				GrpcAddress:           config.DefaultGRPCAddress,
-				GrpcEnable:            true,
+				NonValidatingFullNode:      flags.DefaultNonValidatingFullNode,
+				DdAgentHost:                flags.DefaultDdAgentHost,
+				DdTraceAgentPort:           flags.DefaultDdTraceAgentPort,
+				GrpcAddress:                config.DefaultGRPCAddress,
+				GrpcEnable:                 true,
+				OptimisticExecutionEnabled: false,
 			},
 		},
 		"success - full node & gRPC disabled": {
@@ -66,6 +70,13 @@ func TestValidate(t *testing.T) {
 				NonValidatingFullNode: false,
 				GrpcEnable:            true,
 				GrpcStreamingEnabled:  true,
+			},
+		},
+		"success - optimistic execution": {
+			flags: flags.Flags{
+				NonValidatingFullNode:      false,
+				GrpcEnable:                 true,
+				OptimisticExecutionEnabled: true,
 			},
 		},
 		"failure - gRPC disabled": {
@@ -101,36 +112,40 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 		optsMap map[string]any
 
 		// Expectations.
-		expectedNonValidatingFullNodeFlag bool
-		expectedDdAgentHost               string
-		expectedDdTraceAgentPort          uint16
-		expectedGrpcAddress               string
-		expectedGrpcEnable                bool
-		expectedGrpcStreamingEnable       bool
+		expectedNonValidatingFullNodeFlag  bool
+		expectedDdAgentHost                string
+		expectedDdTraceAgentPort           uint16
+		expectedGrpcAddress                string
+		expectedGrpcEnable                 bool
+		expectedGrpcStreamingEnable        bool
+		expectedOptimisticExecutionEnabled bool
 	}{
 		"Sets to default if unset": {
-			expectedNonValidatingFullNodeFlag: false,
-			expectedDdAgentHost:               "",
-			expectedDdTraceAgentPort:          8126,
-			expectedGrpcAddress:               "localhost:9090",
-			expectedGrpcEnable:                true,
-			expectedGrpcStreamingEnable:       false,
+			expectedNonValidatingFullNodeFlag:  false,
+			expectedDdAgentHost:                "",
+			expectedDdTraceAgentPort:           8126,
+			expectedGrpcAddress:                "localhost:9090",
+			expectedGrpcEnable:                 true,
+			expectedGrpcStreamingEnable:        false,
+			expectedOptimisticExecutionEnabled: false,
 		},
 		"Sets values from options": {
 			optsMap: map[string]any{
-				flags.NonValidatingFullNodeFlag: true,
-				flags.DdAgentHost:               "agentHostTest",
-				flags.DdTraceAgentPort:          uint16(777),
-				flags.GrpcEnable:                false,
-				flags.GrpcAddress:               "localhost:9091",
-				flags.GrpcStreamingEnabled:      "true",
+				flags.NonValidatingFullNodeFlag:  true,
+				flags.DdAgentHost:                "agentHostTest",
+				flags.DdTraceAgentPort:           uint16(777),
+				flags.GrpcEnable:                 false,
+				flags.GrpcAddress:                "localhost:9091",
+				flags.GrpcStreamingEnabled:       "true",
+				flags.OptimisticExecutionEnabled: "true",
 			},
-			expectedNonValidatingFullNodeFlag: true,
-			expectedDdAgentHost:               "agentHostTest",
-			expectedDdTraceAgentPort:          777,
-			expectedGrpcEnable:                false,
-			expectedGrpcAddress:               "localhost:9091",
-			expectedGrpcStreamingEnable:       true,
+			expectedNonValidatingFullNodeFlag:  true,
+			expectedDdAgentHost:                "agentHostTest",
+			expectedDdTraceAgentPort:           777,
+			expectedGrpcEnable:                 false,
+			expectedGrpcAddress:                "localhost:9091",
+			expectedGrpcStreamingEnable:        true,
+			expectedOptimisticExecutionEnabled: true,
 		},
 	}
 
