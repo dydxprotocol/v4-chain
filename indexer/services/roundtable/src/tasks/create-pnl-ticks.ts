@@ -53,6 +53,9 @@ export default async function runTask(): Promise<void> {
       at: 'create-pnl-ticks#runTask',
       message: 'Error when getting pnl ticks',
       error,
+      latestBlockHeight,
+      latestBlockTime,
+      txId,
     });
     return;
   } finally {

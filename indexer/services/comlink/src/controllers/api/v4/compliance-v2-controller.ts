@@ -298,15 +298,7 @@ router.post(
           complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE ||
           complianceStatus[0].status === ComplianceStatus.COMPLIANT
         ) {
-          if (action === ComplianceAction.ONBOARD) {
-            logger.error({
-              at: 'ComplianceV2Controller POST /geoblock',
-              message: 'Invalid action for current compliance status',
-              address,
-              action,
-              complianceStatus: complianceStatus[0],
-            });
-          } else if (
+          if (
             isRestrictedCountryHeaders(req.headers as CountryHeaders) &&
             action === ComplianceAction.CONNECT
           ) {
@@ -320,15 +312,7 @@ router.post(
         } else if (
           complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY
         ) {
-          if (action === ComplianceAction.ONBOARD) {
-            logger.error({
-              at: 'ComplianceV2Controller POST /geoblock',
-              message: 'Invalid action for current compliance status',
-              address,
-              action,
-              complianceStatus: complianceStatus[0],
-            });
-          } else if (action === ComplianceAction.VALID_SURVEY) {
+          if (action === ComplianceAction.VALID_SURVEY) {
             complianceStatusFromDatabase = await ComplianceStatusTable.update({
               address,
               status: ComplianceStatus.FIRST_STRIKE,

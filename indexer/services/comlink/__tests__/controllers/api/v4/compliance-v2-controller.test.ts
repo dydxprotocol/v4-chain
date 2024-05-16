@@ -10,7 +10,7 @@ import {
 import { getIpAddr } from '../../../../src/lib/utils';
 import { sendRequest } from '../../../helpers/helpers';
 import { RequestMethod } from '../../../../src/types';
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { ratelimitRedis } from '../../../../src/caches/rate-limiters';
 import { ComplianceControllerHelper } from '../../../../src/controllers/api/v4/compliance-controller';
@@ -447,7 +447,6 @@ describe('ComplianceV2Controller', () => {
     });
 
     it('should be a no-op for ONBOARD action with existing COMPLIANT status', async () => {
-      const loggerError = jest.spyOn(logger, 'error');
       await ComplianceStatusTable.create({
         address: testConstants.defaultAddress,
         status: ComplianceStatus.COMPLIANT,
@@ -467,17 +466,11 @@ describe('ComplianceV2Controller', () => {
       expect(data[0]).toEqual(expect.objectContaining({
         address: testConstants.defaultAddress,
         status: ComplianceStatus.COMPLIANT,
-      }));
-
-      expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'ComplianceV2Controller POST /geoblock',
-        message: 'Invalid action for current compliance status',
       }));
       expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
     });
 
     it('should be a no-op for ONBOARD action with existing FIRST_STRIKE_CLOSE_ONLY status', async () => {
-      const loggerError = jest.spyOn(logger, 'error');
       await ComplianceStatusTable.create({
         address: testConstants.defaultAddress,
         status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
@@ -501,10 +494,6 @@ describe('ComplianceV2Controller', () => {
         reason: ComplianceReason.US_GEO,
       }));
 
-      expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'ComplianceV2Controller POST /geoblock',
-        message: 'Invalid action for current compliance status',
-      }));
       expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
       expect(response.body.updatedAt).toBeDefined();
