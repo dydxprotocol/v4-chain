@@ -484,6 +484,18 @@
       },
       "FillResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "fills": {
             "items": {
               "$ref": "#/components/schemas/FillResponseObject"
@@ -1105,6 +1117,18 @@
       },
       "TradeResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "trades": {
             "items": {
               "$ref": "#/components/schemas/TradeResponseObject"
@@ -1197,6 +1221,18 @@
       },
       "TransferResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "transfers": {
             "items": {
               "$ref": "#/components/schemas/TransferResponseObject"
@@ -1212,6 +1248,18 @@
       },
       "ParentSubaccountTransferResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "transfers": {
             "items": {
               "$ref": "#/components/schemas/TransferResponseObject"
@@ -1602,6 +1650,15 @@
             "schema": {
               "$ref": "#/components/schemas/IsoString"
             }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
           }
         ]
       }
@@ -1680,6 +1737,15 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
             }
           }
         ]
@@ -2588,6 +2654,15 @@
             "schema": {
               "$ref": "#/components/schemas/IsoString"
             }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
           }
         ]
       }
@@ -2651,6 +2726,15 @@
             "schema": {
               "$ref": "#/components/schemas/IsoString"
             }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
           }
         ]
       }
@@ -2713,6 +2797,15 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
             }
           }
         ]
