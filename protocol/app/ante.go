@@ -24,9 +24,8 @@ import (
 // struct embedding to include the normal cosmos-sdk `HandlerOptions`.
 type HandlerOptions struct {
 	ante.HandlerOptions
-	Codec        codec.Codec
-	AuthStoreKey storetypes.StoreKey
-	ClobKeeper   clobtypes.ClobKeeper
+	Codec      codec.Codec
+	ClobKeeper clobtypes.ClobKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -76,10 +75,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 	if options.Codec == nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "codec is required for ante builder")
-	}
-
-	if options.AuthStoreKey == nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "auth store key is required for ante builder")
 	}
 
 	h := &lockingAnteHandler{
