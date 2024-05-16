@@ -387,6 +387,16 @@ func TestBigRatMulPpm(t *testing.T) {
 	}
 }
 
+func BenchmarkBigRatMulPpm(b *testing.B) {
+	input := big.NewRat(1_000_000, 1_234_567)
+	ppm := uint32(5)
+	var result *big.Rat
+	for i := 0; i < b.N; i++ {
+		result = lib.BigRatMulPpm(input, ppm)
+	}
+	require.Equal(b, big.NewRat(5, 1_234_567), result)
+}
+
 func TestBigRatClamp(t *testing.T) {
 	tests := map[string]struct {
 		input          *big.Rat
