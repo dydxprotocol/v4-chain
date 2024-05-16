@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math/big"
 	"net/http"
@@ -1933,8 +1934,9 @@ func getGrpcStreamingManagerFromOptions(
 	logger log.Logger,
 ) (manager streamingtypes.GrpcStreamingManager) {
 	if appFlags.GrpcStreamingEnabled {
-		logger.Info("GRPC streaming is enabled")
-		return streaming.NewGrpcStreamingManager(logger)
+		grpcStreamingBufferSize := uint32(appFlags.GrpcStreamingBufferSize)
+		logger.Info(fmt.Sprintf("GRPC streaming is enabled with buffer size %d", grpcStreamingBufferSize))
+		return streaming.NewGrpcStreamingManager(logger, grpcStreamingBufferSize)
 	}
 	return streaming.NewNoopGrpcStreamingManager()
 }

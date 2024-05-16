@@ -51,14 +51,16 @@ type OrderbookSubscription struct {
 	srv clobtypes.Query_StreamOrderbookUpdatesServer
 }
 
-func NewGrpcStreamingManager(logger log.Logger) *GrpcStreamingManagerImpl {
+func NewGrpcStreamingManager(
+	logger log.Logger,
+	bufferWindow uint32,
+) *GrpcStreamingManagerImpl {
 	grpcStreamingManager := &GrpcStreamingManagerImpl{
 		logger:                 logger.With("module", "grpc-streaming"),
 		orderbookSubscriptions: make(map[uint32]*OrderbookSubscription),
 		nextSubscriptionId:     0,
 
-		// TODO prime the buffer size
-		updateBuffer: make(chan bufferInternalResponse, 1000),
+		updateBuffer: make(chan bufferInternalResponse, bufferWindow),
 	}
 
 	// Worker goroutine to consistently read from channel and send out updates
