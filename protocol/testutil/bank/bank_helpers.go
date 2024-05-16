@@ -1,13 +1,12 @@
 package bank
 
 import (
-	"fmt"
+	"bytes"
+	"os/exec"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -18,7 +17,7 @@ import (
 // GetModuleAccUsdcBalance is a test utility function to query USDC balance
 // of a module account from the bank module.
 func GetModuleAccUsdcBalance(
-	val *network.Validator,
+	valAddress string,
 	codec codec.Codec,
 	moduleName string,
 ) (
@@ -26,18 +25,28 @@ func GetModuleAccUsdcBalance(
 	err error,
 ) {
 	moduleAddress := authtypes.NewModuleAddress(moduleName)
-	resp, err := testutil.GetRequest(fmt.Sprintf(
-		"%s/cosmos/bank/v1beta1/balances/%s",
-		val.APIAddress,
-		moduleAddress,
-	))
+	queryCmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query bank balances "+moduleAddress.String()+"  --node tcp://7.7.8.4:26658 -o json")
+	var transferOut bytes.Buffer
+	var stdTransferErr bytes.Buffer
+	queryCmd.Stdout = &transferOut
+	queryCmd.Stderr = &stdTransferErr
+	err = queryCmd.Run()
 	if err != nil {
 		return 0, err
 	}
 
+	// resp, err := testutil.GetRequest(fmt.Sprintf(
+	// 	"%s/cosmos/bank/v1beta1/balances/%s",
+	// 	val.APIAddress,
+	// 	moduleAddress,
+	// ))
+	// if err != nil {
+	// 	return 0, err
+	// }
+
 	var balRes banktypes.QueryAllBalancesResponse
 
-	err = codec.UnmarshalJSON(resp, &balRes)
+	err = codec.UnmarshalJSON(transferOut.Bytes(), &balRes)
 	if err != nil {
 		return 0, err
 	}
