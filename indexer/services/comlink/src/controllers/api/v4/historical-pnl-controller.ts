@@ -211,6 +211,7 @@ router.get(
       createdBeforeOrAt,
       createdOnOrAfterHeight,
       createdOnOrAfter,
+      page,
     }: PnlTicksRequest = matchedData(req) as PnlTicksRequest;
 
     try {
@@ -223,6 +224,7 @@ router.get(
         createdBeforeOrAt,
         createdOnOrAfterHeight,
         createdOnOrAfter,
+        page,
       );
 
       return res.send(response);

@@ -112,6 +112,66 @@ describe('PnlTicks store', () => {
     expect(pnlTicks.length).toEqual(2);
   });
 
+  it('Successfully finds PnlTicks using pagination', async () => {
+    const blockTime: IsoString = '2023-01-01T00:00:00.000Z';
+    await Promise.all([
+      PnlTicksTable.create(defaultPnlTick),
+      PnlTicksTable.create({
+        ...defaultPnlTick,
+        createdAt: '2020-01-01T00:00:00.000Z',
+        blockHeight: '1000',
+        blockTime,
+      }),
+    ]);
+
+    const responsePageOne = await PnlTicksTable.findAll({
+      page: 1,
+      limit: 1,
+    }, [], {
+      orderBy: [[PnlTicksColumns.blockHeight, Ordering.DESC]],
+    });
+
+    expect(responsePageOne.results.length).toEqual(1);
+    expect(responsePageOne.results[0]).toEqual(expect.objectContaining({
+      ...defaultPnlTick,
+      createdAt: '2020-01-01T00:00:00.000Z',
+      blockHeight: '1000',
+      blockTime,
+    }));
+    expect(responsePageOne.offset).toEqual(0);
+    expect(responsePageOne.total).toEqual(2);
+
+    const responsePageTwo = await PnlTicksTable.findAll({
+      page: 2,
+      limit: 1,
+    }, [], {
+      orderBy: [[PnlTicksColumns.blockHeight, Ordering.DESC]],
+    });
+
+    expect(responsePageTwo.results.length).toEqual(1);
+    expect(responsePageTwo.results[0]).toEqual(expect.objectContaining(defaultPnlTick));
+    expect(responsePageTwo.offset).toEqual(1);
+    expect(responsePageTwo.total).toEqual(2);
+
+    const responsePageAllPages = await PnlTicksTable.findAll({
+      page: 1,
+      limit: 2,
+    }, [], {
+      orderBy: [[PnlTicksColumns.blockHeight, Ordering.DESC]],
+    });
+
+    expect(responsePageAllPages.results.length).toEqual(2);
+    expect(responsePageAllPages.results[0]).toEqual(expect.objectContaining({
+      ...defaultPnlTick,
+      createdAt: '2020-01-01T00:00:00.000Z',
+      blockHeight: '1000',
+      blockTime,
+    }));
+    expect(responsePageAllPages.results[1]).toEqual(expect.objectContaining(defaultPnlTick));
+    expect(responsePageAllPages.offset).toEqual(0);
+    expect(responsePageAllPages.total).toEqual(2);
+  });
+
   it('Successfully finds latest block time', async () => {
     const blockTime: IsoString = '2023-01-01T00:00:00.000Z';
     await Promise.all([
