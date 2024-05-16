@@ -4,11 +4,12 @@ package cli_test
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/base64"
 	"fmt"
 	"os/exec"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/stretchr/testify/require"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
@@ -121,26 +122,11 @@ func networkWithLiquidityTierAndPerpetualObjects(
 
 func getPerpetualGenesisShort() string {
 
-	//"{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": 2, \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": true}"
-	// {
-	// 	"asset_positions": [
-	// 	  {
-	// 		"asset_id": 0,
-	// 		"index": 0,
-	// 		"quantums": "100000000000000000"
-	// 	  }
-	// 	],
-	// 	"id": {
-	// 	  "number": 0,
-	// 	  "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4"
-	// 	},
-	// 	"margin_enabled": true
-	//   },
 	return "\".app_state.perpetuals.liquidity_tiers = [{\\\"name\\\": \\\"test_liquidity_tier_name_0\\\", \\\"initial_margin_ppm\\\": \\\"1000000\\\", \\\"maintenance_fraction_ppm\\\": \\\"1000000\\\", \\\"impact_notional\\\": \\\"500000000\\\"}, {\\\"id\\\": \\\"1\\\", \\\"name\\\": \\\"test_liquidity_tier_name_1\\\", \\\"initial_margin_ppm\\\": \\\"500000\\\", \\\"maintenance_fraction_ppm\\\": \\\"500000\\\", \\\"impact_notional\\\": \\\"1000000000\\\"}] | .app_state.perpetuals.perpetuals = [{\\\"params\\\": {\\\"ticker\\\": \\\"test_query_ticker_0\\\"}, \\\"funding_index\\\": \\\"0\\\"}, {\\\"params\\\": {\\\"id\\\": \\\"1\\\", \\\"ticker\\\": \\\"test_query_ticker_1\\\", \\\"liquidity_tier\\\": \\\"1\\\"}, \\\"funding_index\\\": \\\"0\\\"}] | .app_state.prices.market_prices = [{\\\"exponent\\\": \\\"-5\\\", \\\"price\\\": \\\"5000000000\\\"}, {\\\"id\\\": \\\"1\\\", \\\"exponent\\\": \\\"-6\\\", \\\"price\\\": \\\"3000000000\\\"}] | .app_state.prices.market_params = [{\\\"pair\\\": \\\"BTC-USD\\\", \\\"exponent\\\": \\\"-5\\\", \\\"min_exchanges\\\": \\\"2\\\", \\\"min_price_change_ppm\\\": \\\"50\\\", \\\"exchange_config_json\\\": \\\"{\\\\\\\"exchanges\\\\\\\": [{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Binance\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTCUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"BinanceUS\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTCUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bitfinex\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"tBTCUSD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bitstamp\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC/USD\\\\\\\"},  {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bybit\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTCUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"CoinbasePro\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC-USD\\\\\\\"},  {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"CryptoCom\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC_USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Kraken\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"XXBTZUSD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Mexc\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC_USDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},  {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Okx\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC-USDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}]}\\\"}, {\\\"id\\\": \\\"1\\\", \\\"pair\\\": \\\"ETH-USD\\\", \\\"exponent\\\": \\\"-6\\\", \\\"min_exchanges\\\": \\\"1\\\", \\\"min_price_change_ppm\\\": \\\"50\\\", \\\"exchange_config_json\\\": \\\"{\\\\\\\"exchanges\\\\\\\": [{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Binance\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETHUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"BinanceUS\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETHUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bitfinex\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"tETHUSD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bitstamp\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH/USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bybit\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETHUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"CoinbasePro\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"CryptoCom\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH_USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Kraken\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"XETHZUSD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Mexc\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH_USDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Okx\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH-USDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}]}\\\"}]\" \"\""
 }
 
 func TestShowPerpetual(t *testing.T) {
-	liq, objs := networkWithLiquidityTierAndPerpetualObjects(t, 2, 2)
+	_, objs := networkWithLiquidityTierAndPerpetualObjects(t, 2, 2)
 	genesisChanges := getPerpetualGenesisShort()
 
 	setupCmd := exec.Command("bash", "-c", "cd ../../../../ethos/ethos-chain && ./e2e-setup -setup "+genesisChanges)
@@ -225,8 +211,40 @@ func expectedContainsReceived(t *testing.T, expectedPerps []types.Perpetual, rec
 	t.Errorf("Received perp (%v) not found in expected perps (%v)", received, expectedPerps)
 }
 
+func getPerpetualGenesisList() string {
+
+	return "\".app_state.perpetuals.liquidity_tiers = [{\\\"name\\\": \\\"test_liquidity_tier_name_0\\\", \\\"initial_margin_ppm\\\": \\\"1000000\\\", \\\"maintenance_fraction_ppm\\\": \\\"1000000\\\", \\\"impact_notional\\\": \\\"500000000\\\"}, {\\\"id\\\": \\\"1\\\", \\\"name\\\": \\\"test_liquidity_tier_name_1\\\", \\\"initial_margin_ppm\\\": \\\"500000\\\", \\\"maintenance_fraction_ppm\\\": \\\"500000\\\", \\\"impact_notional\\\": \\\"1000000000\\\"}, {\\\"id\\\": \\\"2\\\", \\\"name\\\": \\\"test_liquidity_tier_name_2\\\", \\\"initial_margin_ppm\\\": \\\"333333\\\", \\\"maintenance_fraction_ppm\\\": \\\"333333\\\", \\\"impact_notional\\\": \\\"1500000000\\\"}] | .app_state.perpetuals.perpetuals = [{\\\"params\\\": {\\\"ticker\\\": \\\"test_query_ticker_0\\\"}, \\\"funding_index\\\": \\\"0\\\"}, {\\\"params\\\": {\\\"id\\\": \\\"1\\\", \\\"ticker\\\": \\\"test_query_ticker_1\\\", \\\"liquidity_tier\\\": \\\"1\\\"}, \\\"funding_index\\\": \\\"0\\\"}, {\\\"params\\\": {\\\"id\\\": \\\"2\\\", \\\"ticker\\\": \\\"test_query_ticker_2\\\", \\\"liquidity_tier\\\": \\\"2\\\"}, \\\"funding_index\\\": \\\"0\\\"}, {\\\"params\\\": {\\\"id\\\": \\\"3\\\", \\\"ticker\\\": \\\"test_query_ticker_3\\\"}, \\\"funding_index\\\": \\\"0\\\"}, {\\\"params\\\": {\\\"id\\\": \\\"4\\\", \\\"ticker\\\": \\\"test_query_ticker_4\\\", \\\"liquidity_tier\\\": \\\"1\\\"}, \\\"funding_index\\\": \\\"0\\\"}] | .app_state.prices.market_prices = [{\\\"exponent\\\": \\\"-5\\\", \\\"price\\\": \\\"5000000000\\\"}, {\\\"id\\\": \\\"1\\\", \\\"exponent\\\": \\\"-6\\\", \\\"price\\\": \\\"3000000000\\\"}] | .app_state.prices.market_params = [{\\\"pair\\\": \\\"BTC-USD\\\", \\\"exponent\\\": \\\"-5\\\", \\\"min_exchanges\\\": \\\"2\\\", \\\"min_price_change_ppm\\\": \\\"50\\\", \\\"exchange_config_json\\\": \\\"{\\\\\\\"exchanges\\\\\\\": [{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Binance\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTCUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"BinanceUS\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTCUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bitfinex\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"tBTCUSD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bitstamp\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC/USD\\\\\\\"},  {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bybit\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTCUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"CoinbasePro\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC-USD\\\\\\\"},  {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"CryptoCom\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC_USD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Kraken\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"XXBTZUSD\\\\\\\"}, {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Mexc\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC_USDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},  {\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Okx\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"BTC-USDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}]}\\\"}, {\\\"id\\\": \\\"1\\\", \\\"pair\\\": \\\"ETH-USD\\\", \\\"exponent\\\": \\\"-6\\\", \\\"min_exchanges\\\": \\\"1\\\", \\\"min_price_change_ppm\\\": \\\"50\\\", \\\"exchange_config_json\\\": \\\"{\\\\\\\"exchanges\\\\\\\": [{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Binance\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETHUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"BinanceUS\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETHUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bitfinex\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"tETHUSD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bitstamp\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH/USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Bybit\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETHUSDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"CoinbasePro\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"CryptoCom\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH_USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Kraken\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"XETHZUSD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Mexc\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH_USDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"},{\\\\\\\"exchangeName\\\\\\\": \\\\\\\"Okx\\\\\\\",\\\\\\\"ticker\\\\\\\": \\\\\\\"ETH-USDT\\\\\\\",\\\\\\\"adjustByMarket\\\\\\\": \\\\\\\"USDT-USD\\\\\\\"}]}\\\"}]\" \"\""
+}
+
+func removeNewlines(data []byte) []byte {
+	var result []byte
+	for _, b := range data {
+		if b != '\n' && b != '\r' { // Handle both Unix and Windows line endings
+			result = append(result, b)
+		}
+	}
+	return result
+}
+
 func TestListPerpetual(t *testing.T) {
-	liq, objs := networkWithLiquidityTierAndPerpetualObjects(t, 3, 5)
+	_, objs := networkWithLiquidityTierAndPerpetualObjects(t, 3, 5)
+
+	genesisChanges := getPerpetualGenesisList()
+
+	setupCmd := exec.Command("bash", "-c", "cd ../../../../ethos/ethos-chain && ./e2e-setup -setup "+genesisChanges)
+
+	fmt.Println("Running setup command", setupCmd.String())
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	setupCmd.Stdout = &out
+	setupCmd.Stderr = &stderr
+	err := setupCmd.Run()
+	if err != nil {
+		t.Fatalf("Failed to set up environment: %v, stdout: %s, stderr: %s", err, out.String(), stderr.String())
+	}
+	fmt.Println("Setup output:", out.String())
+
+	cfg := network.DefaultConfig(nil)
 
 	// request := func(next []byte, offset, limit uint64, total bool) []string {
 	// 	args := []string{
@@ -243,61 +261,112 @@ func TestListPerpetual(t *testing.T) {
 	// 	}
 	// 	return args
 	// }
+
+	request := func(next []byte, offset, limit uint64, total bool) string {
+		args := ""
+		if next == nil {
+			args += fmt.Sprintf(" --%s=%d", flags.FlagOffset, offset)
+		} else {
+			base64Next := base64.StdEncoding.EncodeToString(next)
+			args += fmt.Sprintf(" --%s=%s", flags.FlagPageKey, base64Next)
+		}
+		args += fmt.Sprintf(" --%s=%d", flags.FlagLimit, limit)
+		if total {
+			args += fmt.Sprintf(" --%s", flags.FlagCountTotal)
+		}
+
+		args += " --node tcp://7.7.8.4:26658 -o json"
+		return args
+	}
 	t.Run("ByOffset", func(t *testing.T) {
-		// step := 2
-		// for i := 0; i < len(objs); i += step {
-		// 	args := request(nil, uint64(i), uint64(step), false)
-		// 	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListPerpetual(), args)
-		// 	require.NoError(t, err)
-		// 	var resp types.QueryAllPerpetualsResponse
-		// 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-		// 	require.LessOrEqual(t, len(resp.Perpetual), step)
-		// 	for _, perp := range resp.Perpetual {
-		// 		expectedContainsReceived(t, objs, perp)
-		// 	}
-		// }
+		step := 2
+		for i := 0; i < len(objs); i += step {
+			args := request(nil, uint64(i), uint64(step), false)
 
-		jsonObj, _ := json.MarshalIndent(liq, "", "  ")
-		fmt.Println("liq: ", string(jsonObj))
-		jsonObj, _ = json.MarshalIndent(objs, "", "  ")
-		fmt.Println("objs: ", string(jsonObj))
+			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query perpetuals list-perpetual "+args)
+			var out bytes.Buffer
+			cmd.Stdout = &out
 
-		require.Equal(t, 1, 0)
+			err = cmd.Run()
+
+			require.NoError(t, err)
+			var resp types.QueryAllPerpetualsResponse
+			require.NoError(t, cfg.Codec.UnmarshalJSON(out.Bytes(), &resp))
+			require.LessOrEqual(t, len(resp.Perpetual), step)
+			for _, perp := range resp.Perpetual {
+				expectedContainsReceived(t, objs, perp)
+			}
+		}
 
 	})
 
-	// t.Run("ByKey", func(t *testing.T) {
-	// 	step := 2
-	// 	var next []byte
-	// 	for i := 0; i < len(objs); i += step {
-	// 		args := request(next, 0, uint64(step), false)
-	// 		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListPerpetual(), args)
-	// 		require.NoError(t, err)
-	// 		var resp types.QueryAllPerpetualsResponse
-	// 		require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-	// 		require.LessOrEqual(t, len(resp.Perpetual), step)
-	// 		for _, perp := range resp.Perpetual {
-	// 			expectedContainsReceived(t, objs, perp)
-	// 		}
-	// 		next = resp.Pagination.NextKey
-	// 	}
-	// })
-	// t.Run("Total", func(t *testing.T) {
-	// 	args := request(nil, 0, uint64(len(objs)), true)
-	// 	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListPerpetual(), args)
-	// 	require.NoError(t, err)
-	// 	var resp types.QueryAllPerpetualsResponse
-	// 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-	// 	require.NoError(t, err)
-	// 	require.Equal(t, len(objs), int(resp.Pagination.Total))
-	// 	cmpOptions := []cmp.Option{
-	// 		cmpopts.IgnoreFields(types.Perpetual{}, "FundingIndex"),
-	// 		cmpopts.SortSlices(func(x, y types.Perpetual) bool {
-	// 			return x.Params.Id > y.Params.Id
-	// 		}),
-	// 	}
-	// 	if diff := cmp.Diff(objs, resp.Perpetual, cmpOptions...); diff != "" {
-	// 		t.Errorf("resp.Perpetual mismatch (-want +received):\n%s", diff)
-	// 	}
-	// })
+	t.Run("ByKey", func(t *testing.T) {
+		step := 2
+		var next []byte
+		for i := 0; i < len(objs); i += step {
+			args := request(next, 0, uint64(step), false)
+
+			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query perpetuals list-perpetual "+args)
+			var out bytes.Buffer
+			var stdErr bytes.Buffer
+			cmd.Stdout = &out
+			cmd.Stderr = &stdErr
+
+			fmt.Println("Running command", cmd)
+
+			err = cmd.Run()
+
+			fmt.Println("ERR:  ", stdErr)
+			fmt.Println("ERRORORR", err)
+			fmt.Println("OUT:   ", out)
+			fmt.Println("NEXT   ", next)
+
+			require.NoError(t, err)
+			var resp types.QueryAllPerpetualsResponse
+			require.NoError(t, cfg.Codec.UnmarshalJSON(out.Bytes(), &resp))
+			require.LessOrEqual(t, len(resp.Perpetual), step)
+			for _, perp := range resp.Perpetual {
+				expectedContainsReceived(t, objs, perp)
+			}
+			next = resp.Pagination.NextKey
+		}
+	})
+	t.Run("Total", func(t *testing.T) {
+		args := request(nil, 0, uint64(len(objs)), true)
+
+		cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query perpetuals list-perpetual "+args)
+		var out bytes.Buffer
+		cmd.Stdout = &out
+
+		//fmt.Println("Running command", cmd.String())
+
+		err = cmd.Run()
+
+		require.NoError(t, err)
+		var resp types.QueryAllPerpetualsResponse
+		require.NoError(t, cfg.Codec.UnmarshalJSON(out.Bytes(), &resp))
+		require.NoError(t, err)
+		require.Equal(t, len(objs), int(resp.Pagination.Total))
+		cmpOptions := []cmp.Option{
+			cmpopts.IgnoreFields(types.Perpetual{}, "FundingIndex"),
+			cmpopts.SortSlices(func(x, y types.Perpetual) bool {
+				return x.Params.Id > y.Params.Id
+			}),
+		}
+		if diff := cmp.Diff(objs, resp.Perpetual, cmpOptions...); diff != "" {
+			t.Errorf("resp.Perpetual mismatch (-want +received):\n%s", diff)
+		}
+	})
+
+	stopCmd := exec.Command("bash", "-c", "docker stop interchain-security-instance")
+	if err := stopCmd.Run(); err != nil {
+		t.Fatalf("Failed to stop Docker container: %v", err)
+	}
+	fmt.Println("Stopped Docker container")
+	// Remove the Docker container
+	removeCmd := exec.Command("bash", "-c", "docker rm interchain-security-instance")
+	if err := removeCmd.Run(); err != nil {
+		t.Fatalf("Failed to remove Docker container: %v", err)
+	}
+	fmt.Println("Removed Docker container")
 }
