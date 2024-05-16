@@ -383,6 +383,11 @@ func New(
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
 
+	// Enable optimistic block execution.
+	if appFlags.OptimisticExecutionEnabled {
+		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
+	}
+
 	bApp := baseapp.NewBaseApp(appconstants.AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
