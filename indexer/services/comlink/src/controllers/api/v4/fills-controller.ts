@@ -7,6 +7,8 @@ import {
   FillTable,
   FillFromDatabase,
   QueryableField,
+  FillColumns,
+  Ordering,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import {
@@ -91,6 +93,7 @@ class FillsController extends Controller {
         page,
       },
       [QueryableField.LIMIT],
+      { orderBy: [[FillColumns.eventId, Ordering.ASC]] },
     );
 
     const clobPairIdToPerpetualMarket: Record<
@@ -165,6 +168,7 @@ class FillsController extends Controller {
         page,
       },
       [QueryableField.LIMIT],
+      { orderBy: [[FillColumns.eventId, Ordering.ASC]] },
     );
 
     const clobPairIdToPerpetualMarket: Record<

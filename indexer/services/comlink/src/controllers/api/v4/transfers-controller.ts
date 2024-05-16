@@ -86,7 +86,12 @@ class TransfersController extends Controller {
         [QueryableField.LIMIT],
         {
           ...DEFAULT_POSTGRES_OPTIONS,
-          orderBy: [[TransferColumns.createdAtHeight, Ordering.DESC]],
+          orderBy: page !== undefined ? [
+            [TransferColumns.eventId, Ordering.DESC],
+          ]
+            : [
+              [TransferColumns.createdAtHeight, Ordering.DESC],
+            ],
         },
       ),
       AssetTable.findAll(
@@ -184,7 +189,12 @@ class TransfersController extends Controller {
         [QueryableField.LIMIT],
         {
           ...DEFAULT_POSTGRES_OPTIONS,
-          orderBy: [[TransferColumns.createdAtHeight, Ordering.DESC]],
+          orderBy: page !== undefined ? [
+            [TransferColumns.eventId, Ordering.DESC],
+          ]
+            : [
+              [TransferColumns.createdAtHeight, Ordering.DESC],
+            ],
         },
       ),
       AssetTable.findAll(

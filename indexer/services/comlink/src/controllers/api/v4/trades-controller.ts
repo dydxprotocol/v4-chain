@@ -6,6 +6,8 @@ import {
   Liquidity,
   QueryableField,
   perpetualMarketRefresher,
+  FillColumns,
+  Ordering,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import {
@@ -71,6 +73,7 @@ class TradesController extends Controller {
         page,
       },
       [QueryableField.LIQUIDITY, QueryableField.CLOB_PAIR_ID, QueryableField.LIMIT],
+      { orderBy: [[FillColumns.eventId, Ordering.ASC]] },
     );
 
     return {
