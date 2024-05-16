@@ -46,6 +46,5 @@ jobs:
           tool: 'go'
           output-file-path: benchmark_output.txt
           external-data-json-path: ./cache/benchmark-data.json
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          comment-on-alert: true
-          alert-comment-cc-users: '@brendanchou'
+          fail-on-alert: true
+          alert-threshold: '150%'
