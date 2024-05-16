@@ -22,7 +22,12 @@ type Flags struct {
 
 	// Grpc Streaming
 	GrpcStreamingEnabled bool
-	VEOracleEnabled      bool // Slinky Vote Extensions
+
+	// Slinky Vote Extensions
+	VEOracleEnabled bool
+
+	// Optimistic block execution
+	OptimisticExecutionEnabled bool
 }
 
 // List of CLI flags.
@@ -41,6 +46,9 @@ const (
 
 	// Slinky VEs enabled
 	VEOracleEnabled = "slinky-vote-extension-oracle-enabled"
+
+	// Enable optimistic block execution.
+	OptimisticExecutionEnabled = "optimistic-execution-enabled"
 )
 
 // Default values.
@@ -50,8 +58,9 @@ const (
 	DefaultNonValidatingFullNode = false
 	DefaultDdErrorTrackingFormat = false
 
-	DefaultGrpcStreamingEnabled = false
-	DefaultVEOracleEnabled      = true
+	DefaultGrpcStreamingEnabled       = false
+	DefaultVEOracleEnabled            = true
+	DefaultOptimisticExecutionEnabled = false
 )
 
 // AddFlagsToCmd adds flags to app initialization.
@@ -90,6 +99,11 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		DefaultVEOracleEnabled,
 		"Whether to run on-chain oracle via slinky vote extensions",
 	)
+	cmd.Flags().Bool(
+		OptimisticExecutionEnabled,
+		DefaultOptimisticExecutionEnabled,
+		"Whether to enable optimistic block execution",
+	)
 }
 
 // Validate checks that the flags are valid.
@@ -124,8 +138,9 @@ func GetFlagValuesFromOptions(
 		GrpcAddress: config.DefaultGRPCAddress,
 		GrpcEnable:  true,
 
-		GrpcStreamingEnabled: DefaultGrpcStreamingEnabled,
-		VEOracleEnabled:      true,
+		GrpcStreamingEnabled:       DefaultGrpcStreamingEnabled,
+		VEOracleEnabled:            true,
+		OptimisticExecutionEnabled: DefaultOptimisticExecutionEnabled,
 	}
 
 	// Populate the flags if they exist.
@@ -177,5 +192,10 @@ func GetFlagValuesFromOptions(
 		}
 	}
 
+	if option := appOpts.Get(OptimisticExecutionEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.OptimisticExecutionEnabled = v
+		}
+	}
 	return result
 }
