@@ -231,7 +231,7 @@ test-unit-and-integration:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...
 
 benchmark:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='$(build_tags)' -bench=. ./...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='$(build_tags)' -run=^# -bench=. -count 5 -benchmem ./...
 
 test-container:
 	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./...
@@ -421,6 +421,6 @@ update-sample-pregenesis:
 check-sample-pregenesis-up-to-date:
 	$(MAKE) localnet-build
 	@docker build . -t check-sample-pregenesis -f scripts/genesis/Dockerfile --no-cache
-	@docker run -v $(CURDIR):/workspace check-sample-pregenesis 
+	@docker run -v $(CURDIR):/workspace check-sample-pregenesis
 
 .PHONY: update-sample-pregenesis check-sample-pregenesis-up-to-date
