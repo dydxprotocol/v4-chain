@@ -30,6 +30,7 @@ import { getChildSubaccountNums, handleControllerError } from '../../../lib/help
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
   CheckLimitAndCreatedBeforeOrAtSchema,
+  CheckPaginationSchema,
   CheckParentSubaccountSchema,
   CheckSubaccountSchema,
 } from '../../../lib/validation/schemas';
@@ -61,11 +62,14 @@ class TransfersController extends Controller {
       @Query() limit?: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
+      @Query() page?: number,
   ): Promise<TransferResponse> {
     const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
 
     // TODO(DEC-656): Change to a cache in Redis similar to Librarian instead of querying DB.
-    const [subaccount, { results: transfers }, assets] = await Promise.all([
+    const [subaccount, {
+      results: transfers, limit: pageSize, offset, total,
+    }, assets] = await Promise.all([
       SubaccountTable.findById(
         subaccountId,
       ),
@@ -77,11 +81,17 @@ class TransfersController extends Controller {
             ? createdBeforeOrAtHeight.toString()
             : undefined,
           createdBeforeOrAt,
+          page,
         },
         [QueryableField.LIMIT],
         {
           ...DEFAULT_POSTGRES_OPTIONS,
-          orderBy: [[TransferColumns.createdAtHeight, Ordering.DESC]],
+          orderBy: page !== undefined ? [
+            [TransferColumns.eventId, Ordering.DESC],
+          ]
+            : [
+              [TransferColumns.createdAtHeight, Ordering.DESC],
+            ],
         },
       ),
       AssetTable.findAll(
@@ -129,6 +139,9 @@ class TransfersController extends Controller {
       transfers: transfers.map((transfer: TransferFromDatabase) => {
         return transferToResponseObject(transfer, idToAsset, idToSubaccount, subaccountId);
       }),
+      pageSize,
+      totalResults: total,
+      offset,
     };
   }
 
@@ -139,6 +152,7 @@ class TransfersController extends Controller {
       @Query() limit?: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
+      @Query() page?: number,
   ): Promise<ParentSubaccountTransferResponse> {
 
     // get all child subaccountIds for the parent subaccount number
@@ -147,7 +161,12 @@ class TransfersController extends Controller {
     );
 
     // TODO(DEC-656): Change to a cache in Redis similar to Librarian instead of querying DB.
-    const [subaccounts, { results: transfers }, assets]: [
+    const [subaccounts, {
+      results: transfers,
+      limit: pageSize,
+      offset,
+      total,
+    }, assets]: [
       SubaccountFromDatabase[] | undefined,
       PaginationFromDatabase<TransferFromDatabase>,
       AssetFromDatabase[]
@@ -165,11 +184,17 @@ class TransfersController extends Controller {
             ? createdBeforeOrAtHeight.toString()
             : undefined,
           createdBeforeOrAt,
+          page,
         },
         [QueryableField.LIMIT],
         {
           ...DEFAULT_POSTGRES_OPTIONS,
-          orderBy: [[TransferColumns.createdAtHeight, Ordering.DESC]],
+          orderBy: page !== undefined ? [
+            [TransferColumns.eventId, Ordering.DESC],
+          ]
+            : [
+              [TransferColumns.createdAtHeight, Ordering.DESC],
+            ],
         },
       ),
       AssetTable.findAll(
@@ -229,7 +254,12 @@ class TransfersController extends Controller {
         return transfer.sender.parentSubaccountNumber !== transfer.recipient.parentSubaccountNumber;
       });
 
-    return { transfers: transfersFiltered };
+    return {
+      transfers: transfersFiltered,
+      pageSize,
+      totalResults: total,
+      offset,
+    };
   }
 }
 
@@ -238,6 +268,7 @@ router.get(
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
+  ...CheckPaginationSchema,
   handleValidationErrors,
   complianceAndGeoCheck,
   ExportResponseCodeStats({ controllerName }),
@@ -249,6 +280,7 @@ router.get(
       limit,
       createdBeforeOrAtHeight,
       createdBeforeOrAt,
+      page,
     }: TransferRequest = matchedData(req) as TransferRequest;
 
     try {
@@ -259,6 +291,7 @@ router.get(
         limit,
         createdBeforeOrAtHeight,
         createdBeforeOrAt,
+        page,
       );
 
       return res.send(response);
@@ -284,6 +317,7 @@ router.get(
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckParentSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
+  ...CheckPaginationSchema,
   handleValidationErrors,
   complianceAndGeoCheck,
   ExportResponseCodeStats({ controllerName }),
@@ -295,6 +329,7 @@ router.get(
       limit,
       createdBeforeOrAtHeight,
       createdBeforeOrAt,
+      page,
     }: ParentSubaccountTransferRequest = matchedData(req) as ParentSubaccountTransferRequest;
 
     // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
@@ -308,6 +343,7 @@ router.get(
         limit,
         createdBeforeOrAtHeight,
         createdBeforeOrAt,
+        page,
       );
 
       return res.send(response);
