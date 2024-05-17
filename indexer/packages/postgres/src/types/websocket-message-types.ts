@@ -101,15 +101,15 @@ export interface OrderSubaccountMessageContents {
   id: string;
   subaccountId: string;
   clientId: string;
-  clobPairId: string;
-  side: OrderSide;
-  size: string;
-  ticker: string,
-  price: string;
-  type: OrderType;
-  timeInForce: APITimeInForce;
-  postOnly: boolean;
-  reduceOnly: boolean;
+  clobPairId?: string;
+  side?: OrderSide;
+  size?: string;
+  ticker?: string,
+  price?: string;
+  type?: OrderType;
+  timeInForce?: APITimeInForce;
+  postOnly?: boolean;
+  reduceOnly?: boolean;
   status: APIOrderStatus;
   orderFlags: string;
 

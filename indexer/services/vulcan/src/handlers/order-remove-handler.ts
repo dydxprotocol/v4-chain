@@ -263,6 +263,7 @@ export class OrderRemoveHandler extends Handler {
     removeOrderResult: RemoveOrderResult,
     headers: IHeaders,
   ): Promise<void> {
+    // This can happen for short term orders if the order place message was not received.
     if (!removeOrderResult.removed) {
       logger.info({
         at: 'orderRemoveHandler#handleOrderRemoval',
@@ -270,6 +271,10 @@ export class OrderRemoveHandler extends Handler {
         orderId: orderRemove.removedOrderId,
         orderRemove,
       });
+      const canceledOrder: OrderFromDatabase | undefined = await runFuncWithTimingStat(
+        OrderTable.findById(OrderTable.orderIdToUuid(orderRemove.removedOrderId!)),
+        this.generateTimingStatsOptions('find_order'),
+      );
       return;
     }
 
@@ -277,7 +282,7 @@ export class OrderRemoveHandler extends Handler {
       removeOrderResult.removedOrder!,
     );
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-      .getPerpetualMarketFromTicker(removeOrderResult.removedOrder!.ticker);
+      .getPerpetualMarketFromClobPairId(orderRemove.removedOrderId!.clobPairId.toString());
     if (perpetualMarket === undefined) {
       const ticker: string = removeOrderResult.removedOrder!.ticker;
       logger.error({
@@ -529,6 +534,52 @@ export class OrderRemoveHandler extends Handler {
     }
 
     return sizeDelta.toFixed();
+  }
+
+  /**
+   * Should be called when an OrderRemove message is received for a non-existent order.
+   * This can happen when the order was not found in redis because the initial order
+   * placement message wasn't received.
+   *
+   * @param canceledOrder
+   * @param orderRemove
+   * @param perpetualMarket
+   * @protected
+   */
+  protected createSubaccountWebsocketMessageFromOrderRemoveMessage(
+    canceledOrder: OrderFromDatabase | undefined,
+    orderRemove: OrderRemoveV1,
+  ): Buffer {
+    const createdAtHeight: string | undefined = canceledOrder?.createdAtHeight;
+    const updatedAt: IsoString | undefined = canceledOrder?.updatedAt;
+    const updatedAtHeight: string | undefined = canceledOrder?.updatedAtHeight;
+    const contents: SubaccountMessageContents = {
+      orders: [
+        {
+          id: OrderTable.orderIdToUuid(orderRemove.removedOrderId!),
+          subaccountId: SubaccountTable.subaccountIdToUuid(
+            orderRemove.removedOrderId!.subaccountId!,
+          ),
+          clientId: orderRemove.removedOrderId!.clientId.toString(),
+          clobPairId: orderRemove.removedOrderId!.clobPairId.toString(),
+          status: this.orderRemovalStatusToOrderStatus(orderRemove.removalStatus),
+          orderFlags: orderRemove.removedOrderId!.orderFlags.toString(),
+          ticker: redisOrder.ticker,
+          removalReason: OrderRemovalReason[orderRemove.reason],
+          ...(createdAtHeight && { createdAtHeight }),
+          ...(updatedAt && { updatedAt }),
+          ...(updatedAtHeight && { updatedAtHeight }),
+        },
+      ],
+    };
+
+    const subaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({
+      contents: JSON.stringify(contents),
+      subaccountId: orderRemove.removedOrderId!.subaccountId!,
+      version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+    });
+
+    return Buffer.from(Uint8Array.from(SubaccountMessage.encode(subaccountMessage).finish()));
   }
 
   protected createSubaccountWebsocketMessageFromRemoveOrderResult(
