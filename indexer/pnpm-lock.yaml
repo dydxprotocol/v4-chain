@@ -4,7 +4,7 @@ importers:
 
   .:
     specifiers:
-      '@milahu/patch-package': ^6.4.14
+      '@milahu/patch-package': 6.4.14
       '@types/ws': 8.5.10
     dependencies:
       '@milahu/patch-package': 6.4.14
