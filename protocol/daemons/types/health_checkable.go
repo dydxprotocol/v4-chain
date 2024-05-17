@@ -1,11 +1,12 @@
 package types
 
 import (
-	"cosmossdk.io/log"
 	"fmt"
-	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"sync"
 	"time"
+
+	"cosmossdk.io/log"
+	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 )
 
 const (

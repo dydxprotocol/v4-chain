@@ -824,7 +824,8 @@ func New(
 					appFlags,
 					logger,
 				)
-				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient, maxDaemonUnhealthyDuration)
+				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient.GetMarketPairHC(), maxDaemonUnhealthyDuration)
+				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient.GetPriceHC(), maxDaemonUnhealthyDuration)
 			}
 		}
 
