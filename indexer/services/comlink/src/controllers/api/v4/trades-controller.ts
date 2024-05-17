@@ -53,7 +53,7 @@ class TradesController extends Controller {
       throw new NotFoundError(`${ticker} not found in tickers of type ${MarketType.PERPETUAL}`);
     }
 
-    const fills: FillFromDatabase[] = await FillTable.findAll(
+    const { results: fills } = await FillTable.findAll(
       {
         clobPairId,
         liquidity: Liquidity.TAKER,
