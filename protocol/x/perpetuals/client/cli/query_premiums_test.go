@@ -3,45 +3,46 @@
 package cli_test
 
 import (
-	"fmt"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/client/cli"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	tmcli "github.com/cometbft/cometbft/libs/cli"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestQueryPremiumSamples(t *testing.T) {
-	net, _, _ := networkWithLiquidityTierAndPerpetualObjects(t, 2, 2)
-	ctx := net.Validators[0].ClientCtx
+	genesisChanges := GetPerpetualGenesisShort()
+	network.DeployCustomNetwork(genesisChanges)
+	cfg := network.DefaultConfig(nil)
 
-	common := []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
-
-	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryPremiumSamples(), common)
+	perpQuery := "docker exec interchain-security-instance-setup interchain-security-cd query perpetuals get-premium-samples --node tcp://7.7.8.4:26658 -o json"
+	data, _, err := network.QueryCustomNetwork(perpQuery)
 	require.NoError(t, err)
 
 	var resp types.QueryPremiumSamplesResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 
 	// In CI, we see that PremiumSamples may have NumPremiums set to a non-zero value. Waiting for a block height before
 	// the query does not reproduce this locally, so we just check that the response PremiumSamples are non-nil the rest
 	// of the struct is as expected.
 	require.NotNil(t, resp.PremiumSamples)
 	require.Len(t, resp.PremiumSamples.AllMarketPremiums, 0)
+	network.CleanupCustomNetwork()
 }
 
 func TestQueryPremiumVotes(t *testing.T) {
-	net, _, _ := networkWithLiquidityTierAndPerpetualObjects(t, 2, 2)
-	ctx := net.Validators[0].ClientCtx
+	genesisChanges := GetPerpetualGenesisShort()
+	network.DeployCustomNetwork(genesisChanges)
+	cfg := network.DefaultConfig(nil)
+	perpQuery := "docker exec interchain-security-instance-setup interchain-security-cd query perpetuals get-premium-votes --node tcp://7.7.8.4:26658 -o json"
+	data, _, err := network.QueryCustomNetwork(perpQuery)
 
-	common := []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
-
-	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryPremiumVotes(), common)
 	require.NoError(t, err)
 
 	var resp types.QueryPremiumVotesResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 	require.NotNil(t, resp.PremiumVotes)
 	require.Equal(t, []types.MarketPremiums{}, resp.PremiumVotes.AllMarketPremiums)
+	network.CleanupCustomNetwork()
+
 }
