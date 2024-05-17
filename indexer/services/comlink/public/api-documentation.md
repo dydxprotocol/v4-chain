@@ -1192,6 +1192,7 @@ fetch('https://dydx-testnet.imperator.co/v4/historical-pnl?address=string&subacc
 |createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
 |createdOnOrAfterHeight|query|number(double)|false|none|
 |createdOnOrAfter|query|[IsoString](#schemaisostring)|false|none|
+|page|query|number(double)|false|none|
 
 > Example responses
 
@@ -1199,6 +1200,9 @@ fetch('https://dydx-testnet.imperator.co/v4/historical-pnl?address=string&subacc
 
 ```json
 {
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
   "historicalPnl": [
     {
       "id": "string",
@@ -1277,6 +1281,7 @@ fetch('https://dydx-testnet.imperator.co/v4/historical-pnl/parentSubaccount?addr
 |createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
 |createdOnOrAfterHeight|query|number(double)|false|none|
 |createdOnOrAfter|query|[IsoString](#schemaisostring)|false|none|
+|page|query|number(double)|false|none|
 
 > Example responses
 
@@ -1284,6 +1289,9 @@ fetch('https://dydx-testnet.imperator.co/v4/historical-pnl/parentSubaccount?addr
 
 ```json
 {
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
   "historicalPnl": [
     {
       "id": "string",
@@ -3772,6 +3780,9 @@ This operation does not require authentication
 
 ```json
 {
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
   "historicalPnl": [
     {
       "id": "string",
@@ -3792,6 +3803,9 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
+|pageSize|number(double)|false|none|none|
+|totalResults|number(double)|false|none|none|
+|offset|number(double)|false|none|none|
 |historicalPnl|[[PnlTicksResponseObject](#schemapnlticksresponseobject)]|true|none|none|
 
 ## TradingRewardAggregationPeriod

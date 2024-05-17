@@ -645,6 +645,18 @@
       },
       "HistoricalPnlResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "historicalPnl": {
             "items": {
               "$ref": "#/components/schemas/PnlTicksResponseObject"
@@ -1953,6 +1965,15 @@
             "schema": {
               "$ref": "#/components/schemas/IsoString"
             }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
           }
         ]
       }
@@ -2032,6 +2053,15 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
             }
           }
         ]
