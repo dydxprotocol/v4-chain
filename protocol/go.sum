@@ -527,10 +527,10 @@ github.com/dvsekhvalnov/jose2go v1.6.0 h1:Y9gnSnP4qEI0+/uQkHvFXeD2PLPJeXEL+ySMEA
 github.com/dvsekhvalnov/jose2go v1.6.0/go.mod h1:QsHjhyTlD/lAVqn/NSbVZmSCGeDehTB/mPZadG+mhXU=
 github.com/dydxprotocol/cometbft v0.38.6-0.20240426214049-c8beeeada40a h1:KeQZZsYJQ/AKQ6lbP5lL3N/6aOclxxYG8pIm8zerwZw=
 github.com/dydxprotocol/cometbft v0.38.6-0.20240426214049-c8beeeada40a/go.mod h1:EBEod7kZfNr4W0VooOrTEMSiXNrSyiQ/M2FL/rOcPCs=
-github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240326192503-dd116391188d h1:kHT+xXpjwdKO2drqMEFSN1J6VjEoOweYPIH4RrQ3IWs=
-github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240326192503-dd116391188d/go.mod h1:NruCXox2SOkVq2ZC5Bs8s2sT+jjVqBEU59wXyZOkCkM=
-github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326192503-dd116391188d h1:HgLu1FD2oDFzlKW6/+SFXlH5Os8cwNTbplQIrQOWx8w=
-github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326192503-dd116391188d/go.mod h1:zMcD3hfNwd0WMTpdRUhS3QxoCoEtBXWeoKsu3iaLBbQ=
+github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240515183437-194a18ccaefa h1:KH+dMpQVZJ71ksodPgD2XtqLyr87Uv0FF+FWgEY3FxY=
+github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240515183437-194a18ccaefa/go.mod h1:JduXhhVmN5MoPxyXbDa/ogScRjENRBJGRDE1HgoVSKs=
+github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240515183437-194a18ccaefa h1:h/Qa4TkwWbOzejK83ukzoyazzMIkyZyZUfaIM+IX5w4=
+github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240515183437-194a18ccaefa/go.mod h1:zMcD3hfNwd0WMTpdRUhS3QxoCoEtBXWeoKsu3iaLBbQ=
 github.com/dydxprotocol/iavl v1.1.1-0.20240509161911-1c8b8e787e85 h1:5B/yGZyTBX/OZASQQMnk6Ms/TZja56MYd8OBaVc0Mho=
 github.com/dydxprotocol/iavl v1.1.1-0.20240509161911-1c8b8e787e85/go.mod h1:8xIUkgVvwvVrBu81scdPty+/Dx9GqwHnAvXz4cwF7RY=
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=

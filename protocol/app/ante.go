@@ -1,8 +1,6 @@
 package app
 
 import (
-	"sync"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/cachemulti"
 	storetypes "cosmossdk.io/store/types"
@@ -15,6 +13,7 @@ import (
 	customante "github.com/dydxprotocol/v4-chain/protocol/app/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/locking"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -25,9 +24,8 @@ import (
 // struct embedding to include the normal cosmos-sdk `HandlerOptions`.
 type HandlerOptions struct {
 	ante.HandlerOptions
-	Codec        codec.Codec
-	AuthStoreKey storetypes.StoreKey
-	ClobKeeper   clobtypes.ClobKeeper
+	Codec      codec.Codec
+	ClobKeeper clobtypes.ClobKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -79,12 +77,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "codec is required for ante builder")
 	}
 
-	if options.AuthStoreKey == nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "auth store key is required for ante builder")
-	}
-
 	h := &lockingAnteHandler{
-		authStoreKey:             options.AuthStoreKey,
 		setupContextDecorator:    ante.NewSetUpContextDecorator(),
 		freeInfiniteGasDecorator: customante.NewFreeInfiniteGasDecorator(),
 		extensionOptionsChecker:  ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
@@ -116,9 +109,6 @@ func noOpAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, err
 }
 
 type lockingAnteHandler struct {
-	globalLock   sync.Mutex
-	authStoreKey storetypes.StoreKey
-
 	setupContextDecorator    ante.SetUpContextDecorator
 	freeInfiniteGasDecorator customante.FreeInfiniteGasDecorator
 	extensionOptionsChecker  sdk.AnteDecorator
@@ -197,10 +187,10 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 			return ctx, err
 		}
 
-		cacheMs = ctx.MultiStore().(cachemulti.Store).CacheMultiStoreWithLocking(map[storetypes.StoreKey][][]byte{
-			h.authStoreKey: signers,
-		})
-		defer cacheMs.(storetypes.LockingStore).Unlock()
+		authLocks := locking.PrefixLockKeys(locking.AuthSignerPrefix, signers)
+		ctx.MultiStore().(cachemulti.Store).Lock(authLocks)
+		defer ctx.MultiStore().(cachemulti.Store).Unlock(authLocks)
+		cacheMs = ctx.MultiStore().CacheMultiStore()
 		ctx = ctx.WithMultiStore(cacheMs)
 	}
 
@@ -233,8 +223,8 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	// We now acquire the global ante handler since the clob decorator is not thread safe and performs
 	// several reads and writes across many stores.
 	if !simulate && (ctx.IsCheckTx() || ctx.IsReCheckTx()) {
-		h.globalLock.Lock()
-		defer h.globalLock.Unlock()
+		ctx.MultiStore().(cachemulti.Store).Lock(locking.GlobalKey)
+		defer ctx.MultiStore().(cachemulti.Store).Unlock(locking.GlobalKey)
 	}
 
 	if ctx, err = h.clobRateLimit.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
@@ -349,14 +339,14 @@ func (h *lockingAnteHandler) otherMsgAnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 			return ctx, err
 		}
 
-		cacheMs = ctx.MultiStore().(cachemulti.Store).CacheMultiStoreWithLocking(map[storetypes.StoreKey][][]byte{
-			h.authStoreKey: signers,
-		})
-		defer cacheMs.(storetypes.LockingStore).Unlock()
+		authLocks := locking.PrefixLockKeys(locking.AuthSignerPrefix, signers)
+		ctx.MultiStore().(cachemulti.Store).Lock(authLocks)
+		defer ctx.MultiStore().(cachemulti.Store).Unlock(authLocks)
+		cacheMs = ctx.MultiStore().CacheMultiStore()
 		ctx = ctx.WithMultiStore(cacheMs)
 
-		h.globalLock.Lock()
-		defer h.globalLock.Unlock()
+		ctx.MultiStore().(cachemulti.Store).Lock(locking.GlobalKey)
+		defer ctx.MultiStore().(cachemulti.Store).Unlock(locking.GlobalKey)
 	}
 
 	if ctx, err = h.consumeTxSizeGas.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {

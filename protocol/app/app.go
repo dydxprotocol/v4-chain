@@ -426,7 +426,6 @@ func New(
 		govplusmoduletypes.StoreKey,
 		vaultmoduletypes.StoreKey,
 	)
-	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
 	tkeys := storetypes.NewTransientStoreKeys(
 		paramstypes.TStoreKey,
 		clobmoduletypes.TransientStoreKey,
@@ -1817,9 +1816,8 @@ func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 				FeegrantKeeper:  app.FeeGrantKeeper,
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
-			ClobKeeper:   app.ClobKeeper,
-			Codec:        app.appCodec,
-			AuthStoreKey: app.keys[authtypes.StoreKey],
+			ClobKeeper: app.ClobKeeper,
+			Codec:      app.appCodec,
 		},
 	)
 	if err != nil {
