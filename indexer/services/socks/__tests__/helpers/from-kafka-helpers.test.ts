@@ -20,6 +20,7 @@ import {
   childSubaccountMessage,
   tradesMessage,
   defaultChildAccNumber,
+  defaultTransferContents,
 } from '../constants';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage } from './kafka';
@@ -36,6 +37,8 @@ import {
   testMocks,
   perpetualMarketRefresher,
   CandleResolution,
+  TransferSubaccountMessageContents,
+  SubaccountMessageContents, TransferType,
 } from '@dydxprotocol-indexer/postgres';
 
 describe('from-kafka-helpers', () => {
@@ -149,6 +152,113 @@ describe('from-kafka-helpers', () => {
       expect(messageToForward.channel).toEqual(Channel.V4_PARENT_ACCOUNTS);
       expect(messageToForward.id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
       expect(messageToForward.contents).toEqual(defaultContents);
+      expect(messageToForward.subaccountNumber).toBeDefined();
+      expect(messageToForward.subaccountNumber).toEqual(defaultChildAccNumber);
+    });
+
+    it('filters out transfers between child subaccounts for parent subaccout channel', () => {
+      const transferContents: SubaccountMessageContents = {
+        transfers: {
+          ...defaultTransferContents,
+          sender: {
+            address: defaultOwner,
+            subaccountNumber: defaultAccNumber,
+          },
+          recipient: {
+            address: defaultOwner,
+            subaccountNumber: defaultChildAccNumber,
+          },
+          type: TransferType.TRANSFER_IN,
+        },
+      };
+      const message: KafkaMessage = createKafkaMessage(
+        Buffer.from(Uint8Array.from(SubaccountMessage.encode(
+          {
+            ...childSubaccountMessage,
+            contents: JSON.stringify(transferContents),
+          },
+        ).finish())),
+      );
+      const messageToForward: MessageToForward = getMessageToForward(
+        Channel.V4_PARENT_ACCOUNTS,
+        message,
+      );
+
+      expect(messageToForward.channel).toEqual(Channel.V4_PARENT_ACCOUNTS);
+      expect(messageToForward.id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
+      expect(messageToForward.contents).toEqual({});
+      expect(messageToForward.subaccountNumber).toBeDefined();
+      expect(messageToForward.subaccountNumber).toEqual(defaultChildAccNumber);
+    });
+
+    it.each([
+      [
+        'transfer between other parent/child subaccount',
+        {
+          ...defaultTransferContents,
+          sender: {
+            address: defaultOwner,
+            subaccountNumber: defaultAccNumber + 1,
+          },
+          recipient: {
+            address: defaultOwner,
+            subaccountNumber: defaultChildAccNumber,
+          },
+        },
+      ],
+      [
+        'deposit',
+        {
+          ...defaultTransferContents,
+          sender: {
+            address: defaultOwner,
+            subaccountNumber: undefined,
+          },
+          recipient: {
+            address: defaultOwner,
+            subaccountNumber: defaultChildAccNumber,
+          },
+          type: TransferType.DEPOSIT,
+        },
+      ],
+      [
+        'withdraw',
+        {
+          ...defaultTransferContents,
+          sender: {
+            address: defaultOwner,
+            subaccountNumber: defaultChildAccNumber,
+          },
+          recipient: {
+            address: defaultOwner,
+            subaccountNumber: undefined,
+          },
+          type: TransferType.WITHDRAWAL,
+        },
+      ],
+    ])('does not filter out transfer message for (%s)', (
+      _name: string,
+      transfer: TransferSubaccountMessageContents,
+    ) => {
+      const transferContents: SubaccountMessageContents = {
+        transfers: transfer,
+      };
+      const message: KafkaMessage = createKafkaMessage(
+        Buffer.from(Uint8Array.from(SubaccountMessage.encode(
+          {
+            ...childSubaccountMessage,
+            contents: JSON.stringify(transferContents),
+          },
+        ).finish())),
+      );
+      const messageToForward: MessageToForward = getMessageToForward(
+        Channel.V4_PARENT_ACCOUNTS,
+        message,
+      );
+
+      expect(messageToForward.channel).toEqual(Channel.V4_PARENT_ACCOUNTS);
+      expect(messageToForward.id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
+      expect(messageToForward.contents).toEqual(transferContents);
       expect(messageToForward.subaccountNumber).toBeDefined();
       expect(messageToForward.subaccountNumber).toEqual(defaultChildAccNumber);
     });

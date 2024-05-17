@@ -6,6 +6,8 @@ import {
   TRADES_WEBSOCKET_MESSAGE_VERSION,
 } from '@dydxprotocol-indexer/kafka';
 import {
+  TransferSubaccountMessageContents,
+  TransferType,
   MAX_PARENT_SUBACCOUNTS,
 } from '@dydxprotocol-indexer/postgres';
 import {
@@ -101,4 +103,21 @@ export const childSubaccountMessage: SubaccountMessage = {
   subaccountId: defaultChildSubaccountId,
   contents: defaultContentsString,
   version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+};
+
+export const defaultTransferContents: TransferSubaccountMessageContents = {
+  sender: {
+    address: defaultOwner,
+    subaccountNumber: defaultAccNumber,
+  },
+  recipient: {
+    address: defaultOwner,
+    subaccountNumber: defaultChildAccNumber,
+  },
+  symbol: 'USDC',
+  size: '1',
+  type: TransferType.TRANSFER_IN,
+  transactionHash: '0x1',
+  createdAt: '2023-10-05T14:48:00.000Z',
+  createdAtHeight: '10',
 };
