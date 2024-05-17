@@ -42,7 +42,7 @@ COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
 RUN chown dydx -R /home/dydx/app
 
 USER dydx
-RUN pnpm i --loglevel warn --production --frozen-lockfile
+RUN pnpm i --loglevel warn --production --frozen-lockfile --unsafe-perm
 
 WORKDIR /home/dydx/app/services/$service
 

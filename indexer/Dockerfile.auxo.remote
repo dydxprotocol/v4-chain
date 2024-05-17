@@ -19,7 +19,7 @@ COPY tsconfig.json ./
 RUN npm install -g pnpm@6
 
 # Install npm modules using pnpm
-RUN pnpm install --loglevel warn --frozen-lockfile
+RUN pnpm install --loglevel warn --frozen-lockfile --unsafe-perm
 RUN pnpm run build:prod:all
 
 FROM public.ecr.aws/lambda/nodejs:16
