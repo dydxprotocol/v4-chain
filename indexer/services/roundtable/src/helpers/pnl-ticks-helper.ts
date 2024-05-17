@@ -81,7 +81,7 @@ export async function getPnlTicksCreateObjects(
   const accountsToUpdate: string[] = [
     ...getAccountsToUpdate(accountToLastUpdatedBlockTime, blockTime),
     ...newSubaccountIds,
-  ];
+  ].slice(0, config.PNL_TICK_MAX_ACCOUNTS_PER_RUN);
   stats.gauge(
     `${config.SERVICE_NAME}_get_ticks_accounts_to_update`,
     accountsToUpdate.length,
