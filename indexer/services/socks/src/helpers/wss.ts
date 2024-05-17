@@ -20,7 +20,7 @@ export class Wss {
 
     const serverOptions: WebSocket.ServerOptions = {
       port: config.WS_PORT,
-      allowSynchronousEvents: false,
+      allowSynchronousEvents: true,
       autoPong: true,
     };
     this.wss = new WebSocket.Server(serverOptions);
