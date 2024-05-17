@@ -3,9 +3,7 @@
 package cli_test
 
 import (
-	"bytes"
 	"fmt"
-	"os/exec"
 	"strconv"
 	"strings"
 	"testing"
@@ -14,7 +12,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
-	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
@@ -25,33 +22,6 @@ const (
 
 // Prevent strconv unused error
 var _ = strconv.IntSize
-
-func setupNetwork(
-	t *testing.T,
-	state *types.GenesisState,
-) (
-	*network.Network,
-	client.Context,
-) {
-	t.Helper()
-	cfg := network.DefaultConfig(nil)
-
-	// Init state.
-	// Validate global genesis state contains a delaymsg genesis state.
-	configDefaultGenesisState := types.GenesisState{}
-	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &configDefaultGenesisState))
-
-	// Update global genesis state with specified delaymsg genesis state.
-	buf, err := cfg.Codec.MarshalJSON(state)
-	require.NoError(t, err)
-	cfg.GenesisState[types.ModuleName] = buf
-
-	// Create network.
-	net := network.New(t, cfg)
-	ctx := net.Validators[0].ClientCtx
-
-	return net, ctx
-}
 
 func TestQueryNextDelayedMessageId(t *testing.T) {
 	tests := map[string]struct {
@@ -69,54 +39,18 @@ func TestQueryNextDelayedMessageId(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// _, ctx := setupNetwork(t, tc.state)
-			// out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryNextDelayedMessageId(), []string{})
-			// require.NoError(t, err)
-			// var resp types.QueryNextDelayedMessageIdResponse
-			// require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
-			// require.Equal(t, tc.state.NextDelayedMessageId, resp.NextDelayedMessageId)
 
 			cfg := network.DefaultConfig(nil)
 			genesisChanges := getDelayedGenesisChanges(name)
 
-			setupCmd := exec.Command("bash", "-c", "cd ../../../../ethos/ethos-chain && ./e2e-setup -setup "+genesisChanges)
+			network.DeployCustomNetwork(genesisChanges)
+			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-next-delayed-message-id --node tcp://7.7.8.4:26658 -o json"
+			data, _, err := network.QueryCustomNetwork(delaymsgQuery)
 
-			fmt.Println("Running setup command", setupCmd.String())
-			var out bytes.Buffer
-			var stderr bytes.Buffer
-			setupCmd.Stdout = &out
-			setupCmd.Stderr = &stderr
-			err := setupCmd.Run()
-			if err != nil {
-				t.Fatalf("Failed to set up environment: %v, stdout: %s, stderr: %s", err, out.String(), stderr.String())
-			}
-			fmt.Println("Setup output:", out.String())
-
-			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query delaymsg get-next-delayed-message-id --node tcp://7.7.8.4:26658 -o json")
-			var queryOut bytes.Buffer
-			cmd.Stdout = &queryOut
-			err = cmd.Run()
-
-			fmt.Println(err)
-
-			require.NoError(t, err)
-			var resp types.QueryNextDelayedMessageIdResponse
-			data := queryOut.Bytes()
 			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 			require.Equal(t, tc.state.NextDelayedMessageId, resp.NextDelayedMessageId)
 
-			stopCmd := exec.Command("bash", "-c", "docker stop interchain-security-instance")
-			if err := stopCmd.Run(); err != nil {
-				t.Fatalf("Failed to stop Docker container: %v", err)
-			}
-			fmt.Println("Stopped Docker container")
-			// Remove the Docker container
-			removeCmd := exec.Command("bash", "-c", "docker rm interchain-security-instance")
-			if err := removeCmd.Run(); err != nil {
-				t.Fatalf("Failed to remove Docker container: %v", err)
-			}
-			fmt.Println("Removed Docker container")
-
+			network.CleanupCustomNetwork()
 		})
 	}
 }
@@ -157,57 +91,25 @@ func TestQueryMessage(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// _, ctx := setupNetwork(t, tc.state)
-			// out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryMessage(), []string{"0"})
-			// if tc.expectedMsg == nil {
-			// 	require.ErrorContains(t, err, GrpcNotFoundError)
-			// } else {
-			// 	require.NoError(t, err)
-			// 	var resp types.QueryMessageResponse
-			// 	require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
-
-			// 	err := resp.Message.UnpackInterfaces(ctx.Codec)
-			// 	require.NoError(t, err)
-			// 	msg, err := resp.Message.GetMessage()
-			// 	require.NoError(t, err)
-
-			// 	require.Equal(t, tc.expectedMsg, msg)
-			// }
 
 			fmt.Println("PRINTING TEST CASE", name)
 
 			genesisChanges := getGenesisChanges(name)
 
-			setupCmd := exec.Command("bash", "-c", "cd ../../../../ethos/ethos-chain && ./e2e-setup -setup "+genesisChanges)
-
-			fmt.Println("Running setup command", setupCmd.String())
-			var out bytes.Buffer
-			var stderr bytes.Buffer
-			setupCmd.Stdout = &out
-			setupCmd.Stderr = &stderr
-			err := setupCmd.Run()
-			if err != nil {
-				t.Fatalf("Failed to set up environment: %v, stdout: %s, stderr: %s", err, out.String(), stderr.String())
-			}
-			fmt.Println("Setup output:", out.String())
+			network.DeployCustomNetwork(genesisChanges)
 
 			cfg := network.DefaultConfig(nil)
-
-			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query delaymsg get-message 0 --node tcp://7.7.8.4:26658 -o json")
-			var queryOut bytes.Buffer
-			var stdQueryErr bytes.Buffer
-			cmd.Stdout = &queryOut
-			cmd.Stderr = &stdQueryErr
-			err = cmd.Run()
+			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-message 0 --node tcp://7.7.8.4:26658 -o json"
+			data, stdQueryErr, err := network.QueryCustomNetwork(delaymsgQuery)
 
 			if name == "Default: 0" {
-				fmt.Println("Printing error", stdQueryErr.String())
-				require.True(t, strings.Contains(stdQueryErr.String(), GrpcNotFoundError))
+				fmt.Println("Printing error", stdQueryErr)
+				require.True(t, strings.Contains(stdQueryErr, GrpcNotFoundError))
 			} else {
 
 				require.NoError(t, err)
 				var resp types.QueryMessageResponse
-				data := queryOut.Bytes()
+
 				require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 
 				err := resp.Message.UnpackInterfaces(cfg.Codec)
@@ -219,18 +121,7 @@ func TestQueryMessage(t *testing.T) {
 
 			}
 
-			stopCmd := exec.Command("bash", "-c", "docker stop interchain-security-instance")
-			if err := stopCmd.Run(); err != nil {
-				t.Fatalf("Failed to stop Docker container: %v", err)
-			}
-			fmt.Println("Stopped Docker container")
-			// Remove the Docker container
-			removeCmd := exec.Command("bash", "-c", "docker rm interchain-security-instance")
-			if err := removeCmd.Run(); err != nil {
-				t.Fatalf("Failed to remove Docker container: %v", err)
-			}
-			fmt.Println("Removed Docker container")
-
+			network.CleanupCustomNetwork()
 		})
 	}
 }
@@ -259,97 +150,26 @@ func TestQueryBlockMessageIds(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// _, ctx := setupNetwork(t, tc.state)
-			// out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryBlockMessageIds(), []string{"10"})
-			// if tc.expectedBlockMessageIds == nil {
-			// 	require.ErrorContains(t, err, GrpcNotFoundError)
-			// } else {
-			// 	require.NoError(t, err)
-			// 	var resp types.QueryBlockMessageIdsResponse
-			// 	require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
-			// 	require.Equal(t, tc.expectedBlockMessageIds, resp.MessageIds)
-			// }
-
-			// fmt.Println("Starting test", types.ModuleAddress.String())
-
-			// cmd := exec.Command("bash", "-c", "cd ../../../../ && ls") // You can add arguments inside the quotes, e.g., "ls", "-la", "/some/path"
-			// var out bytes.Buffer
-			// var stderr bytes.Buffer
-			// cmd.Stdout = &out
-			// cmd.Stderr = &stderr
-			// err := cmd.Run()
-			// if err != nil {
-			// 	fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
-			// 	return
-			// }
-			// fmt.Println("Command Successfully Executed")
-			// output := out.String()
-			// fmt.Println(output)
-
-			fmt.Println(encoding.EncodeMessageToAny(t, constants.TestMsg1))
 
 			genesisChanges := getGenesisChanges(name)
-			setupCmd := exec.Command("bash", "-c", "cd ../../../../ethos/ethos-chain && ./e2e-setup -setup "+genesisChanges)
+			network.DeployCustomNetwork(genesisChanges)
 
-			fmt.Println("Running setup command", setupCmd.String())
-			var out bytes.Buffer
-			var stderr bytes.Buffer
-			setupCmd.Stdout = &out
-			setupCmd.Stderr = &stderr
-			err := setupCmd.Run()
-			if err != nil {
-				t.Fatalf("Failed to set up environment: %v, stdout: %s, stderr: %s", err, out.String(), stderr.String())
-			}
-			fmt.Println("Setup output:", out.String())
-
-			testCmd := exec.Command("bash", "-c", "docker ps")
-			var testOut bytes.Buffer
-			var testErr bytes.Buffer
-			testCmd.Stdout = &testOut
-			testCmd.Stderr = &testErr
-			err = testCmd.Run()
-			if err != nil {
-				t.Fatalf("Failed to list Docker containers: %v, stdout: %s, stderr: %s", err, testOut.String(), testErr.String())
-			}
-			fmt.Println("Docker containers:", testOut.String())
 			cfg := network.DefaultConfig(nil)
-
-			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query delaymsg get-block-message-ids 1000 --node tcp://7.7.8.4:26658 -o json")
-
-			var queryOut bytes.Buffer
-			var stdQueryErr bytes.Buffer
-			cmd.Stdout = &queryOut
-			cmd.Stderr = &stdQueryErr
-			err = cmd.Run()
-
-			// if err != nil {
-			// 	fmt.Printf("Error running query command, stdout: %s, stderr: %s", queryOut.String(), stdQueryErr.String())
-			// }
+			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-block-message-ids 1000 --node tcp://7.7.8.4:26658 -o json"
+			data, stdQueryErr, err := network.QueryCustomNetwork(delaymsgQuery)
 
 			if name == "Default: 0" {
-				require.True(t, strings.Contains(stdQueryErr.String(), GrpcNotFoundError))
+				require.True(t, strings.Contains(stdQueryErr, GrpcNotFoundError))
 
 			} else {
 
 				require.NoError(t, err)
 				var resp types.QueryBlockMessageIdsResponse
-				data := queryOut.Bytes()
+
 				require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 				require.Equal(t, tc.expectedBlockMessageIds, resp.MessageIds)
 			}
-
-			stopCmd := exec.Command("bash", "-c", "docker stop interchain-security-instance")
-			if err := stopCmd.Run(); err != nil {
-				t.Fatalf("Failed to stop Docker container: %v", err)
-			}
-			fmt.Println("Stopped Docker container")
-			// Remove the Docker container
-			removeCmd := exec.Command("bash", "-c", "docker rm interchain-security-instance")
-			if err := removeCmd.Run(); err != nil {
-				t.Fatalf("Failed to remove Docker container: %v", err)
-			}
-			fmt.Println("Removed Docker container")
-
+			network.CleanupCustomNetwork()
 		})
 	}
 }
