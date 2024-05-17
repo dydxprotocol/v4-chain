@@ -3,7 +3,6 @@
 package cli_test
 
 import (
-	"bytes"
 	"encoding/base64"
 	"fmt"
 	"os/exec"
@@ -76,16 +75,6 @@ func TestShowEpochInfo(t *testing.T) {
 
 	networkStartTime := time.Now()
 
-	// net := network.New(t, cfg)
-	// _, err := net.WaitForHeight(3)
-	// require.NoError(t, err)
-
-	// we use the default docker already running
-
-	// ctx := net.Validators[0].ClientCtx
-	// common := []string{
-	// 	fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-	// }
 	for _, tc := range []struct {
 		desc string
 		id   string
@@ -110,26 +99,12 @@ func TestShowEpochInfo(t *testing.T) {
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
-			// args := []string{
-			// 	tc.id,
-			// }
-			// args = append(args, tc.args...)
-			// out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowEpochInfo(), args)
-
+			epochQuery := "docker exec interchain-security-instance-setup interchain-security-cd query epochs show-epoch-info " + tc.id + " --node tcp://7.7.8.4:26658 -o json"
 			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance-setup interchain-security-cd query epochs show-epoch-info "+tc.id+" --node tcp://7.7.8.4:26658 -o json")
-			var queryOut bytes.Buffer
-			var stdQueryErr bytes.Buffer
-			cmd.Stdout = &queryOut
-			cmd.Stderr = &stdQueryErr
-			err := cmd.Run()
+			data, stdQueryErr, err := network.QueryCustomNetwork(epochQuery)
 
 			if tc.err != nil {
-				// stat, ok := status.FromError(tc.err)
-				// require.True(t, ok)
-				// require.ErrorIs(t, stat.Err(), tc.err)
-
-				// require that stdQueryErr contains the string not found
-				require.Contains(t, stdQueryErr.String(), "not found")
+				require.Contains(t, sstdQueryErr, "not found")
 
 			} else {
 				require.NoError(t, err)
@@ -137,7 +112,7 @@ func TestShowEpochInfo(t *testing.T) {
 				genesisEpoch := getDefaultGenesisEpochById(t, tc.id)
 
 				var resp types.QueryEpochInfoResponse
-				require.NoError(t, cfg.Codec.UnmarshalJSON(queryOut.Bytes(), &resp))
+				require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 				require.NotNil(t, resp.EpochInfo)
 				checkExpectedEpoch(t, networkStartTime, genesisEpoch, resp.EpochInfo)
 			}
@@ -151,28 +126,7 @@ func TestListEpochInfo(t *testing.T) {
 	cfg := network.DefaultConfig(nil)
 	networkStartTime := time.Now()
 
-	// net := network.New(t, cfg)
-	// _, err := net.WaitForHeight(3)
-	// require.NoError(t, err)
-
 	objs := types.DefaultGenesis().GetEpochInfoList()
-
-	//ctx := net.Validators[0].ClientCtx
-	// request := func(next []byte, offset, limit uint64, total bool) []string {
-	// 	args := []string{
-	// 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-	// 	}
-	// 	if next == nil {
-	// 		args = append(args, fmt.Sprintf("--%s=%d", flags.FlagOffset, offset))
-	// 	} else {
-	// 		args = append(args, fmt.Sprintf("--%s=%s", flags.FlagPageKey, next))
-	// 	}
-	// 	args = append(args, fmt.Sprintf("--%s=%d", flags.FlagLimit, limit))
-	// 	if total {
-	// 		args = append(args, fmt.Sprintf("--%s", flags.FlagCountTotal))
-	// 	}
-	// 	return args
-	// }
 
 	request := func(next []byte, offset, limit uint64, total bool) string {
 		args := ""
@@ -193,16 +147,12 @@ func TestListEpochInfo(t *testing.T) {
 		step := 2
 		for i := 0; i < len(objs); i += step {
 			args := request(nil, uint64(i), uint64(step), false)
+			epochQuery := "docker exec interchain-security-instance-setup interchain-security-cd query epochs list-epoch-info" + args
+			data, _, err := network.QueryCustomNetwork(epochQuery)
 
-			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance-setup interchain-security-cd query epochs list-epoch-info"+args)
-			var queryOut bytes.Buffer
-			cmd.Stdout = &queryOut
-			err := cmd.Run()
-
-			//out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListEpochInfo(), args)
 			require.NoError(t, err)
 			var resp types.QueryEpochInfoAllResponse
-			require.NoError(t, cfg.Codec.UnmarshalJSON(queryOut.Bytes(), &resp))
+			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 			require.LessOrEqual(t, len(resp.EpochInfo), step)
 			for _, epoch := range resp.EpochInfo {
 				genesisEpoch := getDefaultGenesisEpochById(t, epoch.Name)
@@ -216,16 +166,11 @@ func TestListEpochInfo(t *testing.T) {
 		for i := 0; i < len(objs); i += step {
 			args := request(next, 0, uint64(step), false)
 
-			//out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListEpochInfo(), args)
-
-			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance-setup interchain-security-cd query epochs list-epoch-info"+args)
-			var queryOut bytes.Buffer
-			cmd.Stdout = &queryOut
-			err := cmd.Run()
-
+			epochQuery := "docker exec interchain-security-instance-setup interchain-security-cd query epochs list-epoch-info" + args
+			data, _, err := network.QueryCustomNetwork(epochQuery)
 			require.NoError(t, err)
 			var resp types.QueryEpochInfoAllResponse
-			require.NoError(t, cfg.Codec.UnmarshalJSON(queryOut.Bytes(), &resp))
+			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 			require.LessOrEqual(t, len(resp.EpochInfo), step)
 			for _, epoch := range resp.EpochInfo {
 				genesisEpoch := getDefaultGenesisEpochById(t, epoch.Name)
@@ -237,16 +182,12 @@ func TestListEpochInfo(t *testing.T) {
 	t.Run("Total", func(t *testing.T) {
 		args := request(nil, 0, uint64(len(objs)), true)
 
-		//out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListEpochInfo(), args)
-
-		cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance-setup interchain-security-cd query epochs list-epoch-info"+args)
-		var queryOut bytes.Buffer
-		cmd.Stdout = &queryOut
-		err := cmd.Run()
+		epochQuery := "docker exec interchain-security-instance-setup interchain-security-cd query epochs list-epoch-info" + args
+		data, _, err := network.QueryCustomNetwork(epochQuery)
 		require.NoError(t, err)
 
 		var resp types.QueryEpochInfoAllResponse
-		require.NoError(t, cfg.Codec.UnmarshalJSON(queryOut.Bytes(), &resp))
+		require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 		require.Equal(t, len(objs), int(resp.Pagination.Total))
 		for _, epoch := range resp.EpochInfo {
 			genesisEpoch := getDefaultGenesisEpochById(t, epoch.Name)
