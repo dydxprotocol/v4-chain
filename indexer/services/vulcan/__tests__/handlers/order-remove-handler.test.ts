@@ -202,8 +202,9 @@ describe('OrderRemoveHandler', () => {
   });
 
   describe('Order Remove Message - not a Stateful Cancelation', () => {
-    it('successfully returns early if unable to find order in redis', async () => {
+    it('successfully sends subaccount websocket message and returns if unable to find order in redis', async () => {
       const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate(defaultOrderRemove);
+      const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
       await orderRemoveHandler.handleUpdate(
@@ -216,6 +217,31 @@ describe('OrderRemoveHandler', () => {
         message: 'Unable to find order',
         orderId: defaultOrderRemove.removedOrderId,
       }));
+
+      // Subaccounts message is sent
+      const subaccountContents: SubaccountMessageContents = {
+        orders: [
+          {
+            id: OrderTable.orderIdToUuid(redisTestConstants.defaultOrderId),
+            subaccountId: testConstants.defaultSubaccountId,
+            clientId: redisTestConstants.defaultOrderId.clientId.toString(),
+            clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+            status: OrderStatus.CANCELED,
+            orderFlags: redisTestConstants.defaultOrderId.orderFlags.toString(),
+            ticker: redisTestConstants.defaultRedisOrder.ticker,
+            removalReason: OrderRemovalReason[defaultOrderRemove.reason],
+          },
+        ],
+      };
+      expectWebsocketMessagesSent(
+        producerSendSpy,
+        SubaccountMessage.fromPartial({
+          contents: JSON.stringify(subaccountContents),
+          subaccountId: redisTestConstants.defaultSubaccountId,
+          version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+        }),
+      );
+
       expect(logger.error).not.toHaveBeenCalled();
       expectTimingStats();
     });
