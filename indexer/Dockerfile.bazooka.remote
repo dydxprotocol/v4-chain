@@ -5,6 +5,8 @@ WORKDIR /usr/app
 
 # Copy pnpm lock and workspace and package.json from base directory
 COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./patches ./
+RUN ls
+RUN ls patches
 
 # Copy bazooka and imported packages
 COPY ./packages/base/ ./packages/base/
