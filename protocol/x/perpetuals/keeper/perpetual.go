@@ -549,13 +549,6 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 			// Skip this market, effectively emitting a zero premium.
 			continue
 		}
-		if len(invalidPerpetualIndexPrices) > 0 {
-			log.ErrorLog(
-				ctx,
-				"Perpetuals do not have valid index price. Skipping premium",
-				constants.MarketIdsLogKey, invalidPerpetualIndexPrices,
-			)
-		}
 
 		// Get impact notional corresponding to this perpetual market (panic if its liquidity tier doesn't exist).
 		liquidityTier, err := k.GetLiquidityTier(ctx, perp.Params.LiquidityTier)
@@ -603,6 +596,13 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 				perp.Params.Id,
 				premiumPpm,
 			),
+		)
+	}
+	if len(invalidPerpetualIndexPrices) > 0 {
+		log.ErrorLog(
+			ctx,
+			"Perpetuals do not have valid index price. Skipping premium",
+			constants.MarketIdsLogKey, invalidPerpetualIndexPrices,
 		)
 	}
 	return samples, nil
