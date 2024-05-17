@@ -3,10 +3,8 @@
 package cli_test
 
 import (
-	"bytes"
 	"fmt"
 	"math/big"
-	"os/exec"
 	"strconv"
 	"testing"
 
@@ -22,30 +20,6 @@ import (
 
 // Prevent strconv unused error
 var _ = strconv.IntSize
-
-// func networkWithSubaccountObjects(t *testing.T, n int) (*network.Network, []types.Subaccount) {
-// 	t.Helper()
-// 	cfg := network.DefaultConfig(nil)
-// 	state := types.GenesisState{}
-// 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
-
-// 	for i := 0; i < n; i++ {
-// 		subaccount := types.Subaccount{
-// 			Id: &types.SubaccountId{
-// 				Owner:  strconv.Itoa(i),
-// 				Number: uint32(n),
-// 			},
-// 			AssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(1_000)),
-// 		}
-// 		nullify.Fill(&subaccount) //nolint:staticcheck
-// 		state.Subaccounts = append(state.Subaccounts, subaccount)
-// 	}
-// 	buf, err := cfg.Codec.MarshalJSON(&state)
-// 	require.NoError(t, err)
-// 	cfg.GenesisState[types.ModuleName] = buf
-
-// 	return network.New(t, cfg), state.Subaccounts
-// }
 
 func networkWithSubaccountObjects(t *testing.T, n int) []types.Subaccount {
 	t.Helper()
@@ -72,21 +46,6 @@ func networkWithSubaccountObjects(t *testing.T, n int) []types.Subaccount {
 
 func getSubaccountGenesisShort() string {
 
-	//"{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": 2, \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": true}"
-	// {
-	// 	"asset_positions": [
-	// 	  {
-	// 		"asset_id": 0,
-	// 		"index": 0,
-	// 		"quantums": "100000000000000000"
-	// 	  }
-	// 	],
-	// 	"id": {
-	// 	  "number": 0,
-	// 	  "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4"
-	// 	},
-	// 	"margin_enabled": true
-	//   },
 	return "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"1\\\"}, \\\"margin_enabled\\\": false}]\" \"\""
 
 }
@@ -96,19 +55,7 @@ func TestShowSubaccount(t *testing.T) {
 	cfg := network.DefaultConfig(nil)
 
 	genesisChanges := getSubaccountGenesisShort()
-
-	setupCmd := exec.Command("bash", "-c", "cd ../../../../ethos/ethos-chain && ./e2e-setup -setup "+genesisChanges)
-
-	fmt.Println("Running setup command", setupCmd.String())
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	setupCmd.Stdout = &out
-	setupCmd.Stderr = &stderr
-	err := setupCmd.Run()
-	if err != nil {
-		t.Fatalf("Failed to set up environment: %v, stdout: %s, stderr: %s", err, out.String(), stderr.String())
-	}
-	fmt.Println("Setup output:", out.String())
+	network.DeployCustomNetwork(genesisChanges)
 
 	// ctx := net.Validators[0].ClientCtx
 	common := []string{
@@ -139,20 +86,11 @@ func TestShowSubaccount(t *testing.T) {
 			}
 
 			fmt.Println("Args:", args)
-
-			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query subaccounts show-subaccount "+args[0]+" "+args[1]+" --node tcp://7.7.8.4:26658 -o json")
-			var queryOut bytes.Buffer
-			var stdQueryErr bytes.Buffer
-			cmd.Stdout = &queryOut
-			cmd.Stderr = &stdQueryErr
-			err = cmd.Run()
-
-			fmt.Println("Query output:", queryOut.String())
-			fmt.Println("Query error:", stdQueryErr.String())
-
+			subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts show-subaccount " + args[0] + " " + args[1] + " --node tcp://7.7.8.4:26658 -o json"
+			data, _, err := newtork.QueryCustomNetwork(subQuery)
 			require.NoError(t, err)
 			var resp types.QuerySubaccountResponse
-			require.NoError(t, cfg.Codec.UnmarshalJSON(queryOut.Bytes(), &resp))
+			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 			require.NotNil(t, resp.Subaccount)
 			require.Equal(t,
 				nullify.Fill(&tc.obj),          //nolint:staticcheck
@@ -162,36 +100,11 @@ func TestShowSubaccount(t *testing.T) {
 		})
 	}
 
-	stopCmd := exec.Command("bash", "-c", "docker stop interchain-security-instance")
-	if err := stopCmd.Run(); err != nil {
-		t.Fatalf("Failed to stop Docker container: %v", err)
-	}
-	fmt.Println("Stopped Docker container")
-	// Remove the Docker container
-	removeCmd := exec.Command("bash", "-c", "docker rm interchain-security-instance")
-	if err := removeCmd.Run(); err != nil {
-		t.Fatalf("Failed to remove Docker container: %v", err)
-	}
-	fmt.Println("Removed Docker container")
+	network.CleanupCustomNetwork()
 }
 
 func getSubaccountGenesisList() string {
 
-	//"{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": 2, \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": true}"
-	// {
-	// 	"asset_positions": [
-	// 	  {
-	// 		"asset_id": 0,
-	// 		"index": 0,
-	// 		"quantums": "100000000000000000"
-	// 	  }
-	// 	],
-	// 	"id": {
-	// 	  "number": 0,
-	// 	  "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4"
-	// 	},
-	// 	"margin_enabled": true
-	//   },
 	return "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"0\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"1\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"2\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"3\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"4\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}]\" \"\""
 
 }
@@ -211,35 +124,7 @@ func TestListSubaccount(t *testing.T) {
 	cfg := network.DefaultConfig(nil)
 
 	genesisChanges := getSubaccountGenesisList()
-
-	setupCmd := exec.Command("bash", "-c", "cd ../../../../ethos/ethos-chain && ./e2e-setup -setup "+genesisChanges)
-
-	fmt.Println("Running setup command", setupCmd.String())
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	setupCmd.Stdout = &out
-	setupCmd.Stderr = &stderr
-	err := setupCmd.Run()
-	if err != nil {
-		t.Fatalf("Failed to set up environment: %v, stdout: %s, stderr: %s", err, out.String(), stderr.String())
-	}
-	fmt.Println("Setup output:", out.String())
-
-	// request := func(next []byte, offset, limit uint64, total bool) []string {
-	// 	args := []string{
-	// 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-	// 	}
-	// 	if next == nil {
-	// 		args = append(args, fmt.Sprintf("--%s=%d", flags.FlagOffset, offset))
-	// 	} else {
-	// 		args = append(args, fmt.Sprintf("--%s=%s", flags.FlagPageKey, next))
-	// 	}
-	// 	args = append(args, fmt.Sprintf("--%s=%d", flags.FlagLimit, limit))
-	// 	if total {
-	// 		args = append(args, fmt.Sprintf("--%s", flags.FlagCountTotal))
-	// 	}
-	// 	return args
-	// }
+	network.DeployCustomNetwork(genesisChanges)
 
 	request := func(next []byte, offset, limit uint64, total bool) string {
 		args := ""
@@ -260,15 +145,12 @@ func TestListSubaccount(t *testing.T) {
 		step := 2
 		for i := 0; i < len(objs); i += step {
 			args := request(nil, uint64(i), uint64(step), false)
-
-			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query subaccounts list-subaccount"+args)
-			var out bytes.Buffer
-			cmd.Stdout = &out
-			err = cmd.Run()
+			subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts list-subaccount" + args
+			data, _, err := network.QueryCustomNetwork(subQuery)
 
 			require.NoError(t, err)
 			var resp types.QuerySubaccountAllResponse
-			require.NoError(t, cfg.Codec.UnmarshalJSON(out.Bytes(), &resp))
+			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 			require.LessOrEqual(t, len(resp.Subaccount), step)
 			require.Subset(t,
 				nullify.Fill(objs),            //nolint:staticcheck
@@ -281,17 +163,11 @@ func TestListSubaccount(t *testing.T) {
 		var next []byte
 		for i := 0; i < len(objs); i += step {
 			args := request(next, 0, uint64(step), false)
-
-			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query subaccounts list-subaccount "+args)
-			var out bytes.Buffer
-			cmd.Stdout = &out
-
-			fmt.Println("Running command", cmd.String())
-			err = cmd.Run()
-
+			subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts list-subaccount " + args
+			data, _, err := network.QueryCustomNetwork(subQuery)
 			require.NoError(t, err)
 			var resp types.QuerySubaccountAllResponse
-			require.NoError(t, cfg.Codec.UnmarshalJSON(out.Bytes(), &resp))
+			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 			require.LessOrEqual(t, len(resp.Subaccount), step)
 			require.Subset(t,
 				nullify.Fill(objs),            //nolint:staticcheck
@@ -302,18 +178,11 @@ func TestListSubaccount(t *testing.T) {
 	})
 	t.Run("Total", func(t *testing.T) {
 		args := request(nil, 0, uint64(len(objs)), true)
-
-		cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query subaccounts list-subaccount "+args)
-		var out bytes.Buffer
-		cmd.Stdout = &out
-
-		fmt.Println("Running command", cmd.String())
-
-		err = cmd.Run()
-
+		subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts list-subaccount " + args
+		data, _, err := network.QueryCustomNetwork(subQuery)
 		require.NoError(t, err)
 		var resp types.QuerySubaccountAllResponse
-		require.NoError(t, cfg.Codec.UnmarshalJSON(out.Bytes(), &resp))
+		require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 		require.NoError(t, err)
 		require.Equal(t, len(objs), int(resp.Pagination.Total))
 		require.ElementsMatch(t,
@@ -322,15 +191,5 @@ func TestListSubaccount(t *testing.T) {
 		)
 	})
 
-	stopCmd := exec.Command("bash", "-c", "docker stop interchain-security-instance")
-	if err := stopCmd.Run(); err != nil {
-		t.Fatalf("Failed to stop Docker container: %v", err)
-	}
-	fmt.Println("Stopped Docker container")
-	// Remove the Docker container
-	removeCmd := exec.Command("bash", "-c", "docker rm interchain-security-instance")
-	if err := removeCmd.Run(); err != nil {
-		t.Fatalf("Failed to remove Docker container: %v", err)
-	}
-	fmt.Println("Removed Docker container")
+	network.ClearupCustomNetwork()
 }
