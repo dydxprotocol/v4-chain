@@ -66,6 +66,17 @@ const limitSchemaRecord: Record<string, ParamSchema> = {
   },
 };
 
+const paginationSchemaRecord: Record<string, ParamSchema> = {
+  page: {
+    in: ['query'],
+    optional: true,
+    isInt: {
+      options: { gt: 0 },
+    },
+    errorMessage: 'page must be a non-negative integer',
+  },
+};
+
 const createdBeforeOrAtSchemaRecord: Record<string, ParamSchema> = {
   createdBeforeOrAtHeight: {
     in: ['query'],
@@ -115,6 +126,8 @@ const createdOnOrAfterSchemaRecord: Record<string, ParamSchema> = {
 };
 
 export const CheckLimitSchema = checkSchema(limitSchemaRecord);
+
+export const CheckPaginationSchema = checkSchema(paginationSchemaRecord);
 
 export const CheckLimitAndCreatedBeforeOrAtSchema = checkSchema({
   ...limitSchemaRecord,
