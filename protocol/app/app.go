@@ -1674,6 +1674,7 @@ func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 	}
 	block := app.IndexerEventManager.ProduceBlock(ctx)
 	app.IndexerEventManager.SendOnchainData(block)
+	app.GrpcStreamingManager.EmitMetrics()
 	return response, err
 }
 
@@ -1691,6 +1692,7 @@ func (app *App) PrepareCheckStater(ctx sdk.Context) {
 	if err := app.ModuleManager.PrepareCheckState(ctx); err != nil {
 		panic(err)
 	}
+	app.GrpcStreamingManager.EmitMetrics()
 }
 
 // InitChainer application update at chain initialization.

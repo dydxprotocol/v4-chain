@@ -54,7 +54,7 @@ const (
 
 	DefaultGrpcStreamingEnabled = false
 	// TODO(jonfung) better value after stress testing
-	DefaultGrpcStreamingBufferSize = 100
+	DefaultGrpcStreamingBufferSize = 1000
 	DefaultVEOracleEnabled         = true
 )
 

@@ -48,3 +48,6 @@ func (sm *NoopGrpcStreamingManager) GetUninitializedClobPairIds() []uint32 {
 
 func (sm *NoopGrpcStreamingManager) Stop() {
 }
+
+func (sm *NoopGrpcStreamingManager) EmitMetrics() {
+}

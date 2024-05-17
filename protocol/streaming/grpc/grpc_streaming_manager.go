@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -81,6 +82,11 @@ func (sm *GrpcStreamingManagerImpl) Stop() {
 	close(sm.updateBuffer)
 }
 
+func (sm *GrpcStreamingManagerImpl) EmitMetrics() {
+	metrics.SetGauge(metrics.GrpcStreamingBufferSize, float32(len(sm.updateBuffer)))
+	metrics.SetGauge(metrics.GrpcStreamingNumConnections, float32(len(sm.orderbookSubscriptions)))
+}
+
 func (sm *GrpcStreamingManagerImpl) sendUpdateResponse(
 	internalResponse bufferInternalResponse,
 ) {
@@ -129,7 +135,7 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 
 	sm.orderbookSubscriptions[sm.nextSubscriptionId] = subscription
 	sm.nextSubscriptionId++
-
+	sm.logger.Info(fmt.Sprintf("New GRPC Stream Connection established, %+v", clobPairIds))
 	return nil
 }
 
