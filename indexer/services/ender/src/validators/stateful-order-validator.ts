@@ -3,7 +3,6 @@ import {
   IndexerTendermintEvent,
   IndexerOrder,
   StatefulOrderEventV1,
-  StatefulOrderEventV1_StatefulOrderPlacementV1,
   OrderRemovalReason,
   StatefulOrderEventV1_StatefulOrderRemovalV1,
   StatefulOrderEventV1_ConditionalOrderPlacementV1,
@@ -24,7 +23,6 @@ import { Validator } from './validator';
 export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
   public validate(): void {
     if (
-      this.event.orderPlace === undefined &&
       this.event.orderRemoval === undefined &&
       this.event.conditionalOrderPlacement === undefined &&
       this.event.conditionalOrderTriggered === undefined &&
@@ -35,10 +33,7 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
         'longTermOrderPlacement must be defined in StatefulOrderEvent',
         { event: this.event },
       );
-    }
-    if (this.event.orderPlace !== undefined) {
-      this.validateOrderPlace(this.event.orderPlace);
-    } else if (this.event.orderRemoval !== undefined) {
+    } if (this.event.orderRemoval !== undefined) {
       this.validateOrderRemoval(this.event.orderRemoval!);
     } else if (this.event.conditionalOrderPlacement !== undefined) {
       this.validateConditionalOrderPlacement(this.event.conditionalOrderPlacement);
@@ -64,20 +59,6 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
         { event: this.event },
       );
     }
-  }
-
-  private validateOrderPlace(
-    orderPlace: StatefulOrderEventV1_StatefulOrderPlacementV1,
-  ): void {
-    const order: IndexerOrder | undefined = orderPlace.order;
-    if (order === undefined) {
-      return this.logAndThrowParseMessageError(
-        'StatefulOrderEvent placement must contain an order',
-        { event: this.event },
-      );
-    }
-
-    return this.validateStatefulOrder(order);
   }
 
   private validateOrderRemoval(
@@ -194,9 +175,7 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
   }
 
   public getHandlerInitializer() : HandlerInitializer | undefined {
-    if (this.event.orderPlace !== undefined) {
-      return StatefulOrderPlacementHandler;
-    } else if (this.event.orderRemoval !== undefined) {
+    if (this.event.orderRemoval !== undefined) {
       return StatefulOrderRemovalHandler;
     } else if (this.event.conditionalOrderPlacement !== undefined) {
       return ConditionalOrderPlacementHandler;

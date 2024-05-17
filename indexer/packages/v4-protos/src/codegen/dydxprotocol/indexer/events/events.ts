@@ -619,7 +619,6 @@ export interface SubaccountUpdateEventV1SDKType {
  */
 
 export interface StatefulOrderEventV1 {
-  orderPlace?: StatefulOrderEventV1_StatefulOrderPlacementV1;
   orderRemoval?: StatefulOrderEventV1_StatefulOrderRemovalV1;
   conditionalOrderPlacement?: StatefulOrderEventV1_ConditionalOrderPlacementV1;
   conditionalOrderTriggered?: StatefulOrderEventV1_ConditionalOrderTriggeredV1;
@@ -633,21 +632,10 @@ export interface StatefulOrderEventV1 {
  */
 
 export interface StatefulOrderEventV1SDKType {
-  order_place?: StatefulOrderEventV1_StatefulOrderPlacementV1SDKType;
   order_removal?: StatefulOrderEventV1_StatefulOrderRemovalV1SDKType;
   conditional_order_placement?: StatefulOrderEventV1_ConditionalOrderPlacementV1SDKType;
   conditional_order_triggered?: StatefulOrderEventV1_ConditionalOrderTriggeredV1SDKType;
   long_term_order_placement?: StatefulOrderEventV1_LongTermOrderPlacementV1SDKType;
-}
-/** A stateful order placement contains an order. */
-
-export interface StatefulOrderEventV1_StatefulOrderPlacementV1 {
-  order?: IndexerOrder;
-}
-/** A stateful order placement contains an order. */
-
-export interface StatefulOrderEventV1_StatefulOrderPlacementV1SDKType {
-  order?: IndexerOrderSDKType;
 }
 /**
  * A stateful order removal contains the id of an order that was already
@@ -2383,7 +2371,6 @@ export const SubaccountUpdateEventV1 = {
 
 function createBaseStatefulOrderEventV1(): StatefulOrderEventV1 {
   return {
-    orderPlace: undefined,
     orderRemoval: undefined,
     conditionalOrderPlacement: undefined,
     conditionalOrderTriggered: undefined,
@@ -2393,10 +2380,6 @@ function createBaseStatefulOrderEventV1(): StatefulOrderEventV1 {
 
 export const StatefulOrderEventV1 = {
   encode(message: StatefulOrderEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.orderPlace !== undefined) {
-      StatefulOrderEventV1_StatefulOrderPlacementV1.encode(message.orderPlace, writer.uint32(10).fork()).ldelim();
-    }
-
     if (message.orderRemoval !== undefined) {
       StatefulOrderEventV1_StatefulOrderRemovalV1.encode(message.orderRemoval, writer.uint32(34).fork()).ldelim();
     }
@@ -2425,10 +2408,6 @@ export const StatefulOrderEventV1 = {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
-        case 1:
-          message.orderPlace = StatefulOrderEventV1_StatefulOrderPlacementV1.decode(reader, reader.uint32());
-          break;
-
         case 4:
           message.orderRemoval = StatefulOrderEventV1_StatefulOrderRemovalV1.decode(reader, reader.uint32());
           break;
@@ -2456,56 +2435,10 @@ export const StatefulOrderEventV1 = {
 
   fromPartial(object: DeepPartial<StatefulOrderEventV1>): StatefulOrderEventV1 {
     const message = createBaseStatefulOrderEventV1();
-    message.orderPlace = object.orderPlace !== undefined && object.orderPlace !== null ? StatefulOrderEventV1_StatefulOrderPlacementV1.fromPartial(object.orderPlace) : undefined;
     message.orderRemoval = object.orderRemoval !== undefined && object.orderRemoval !== null ? StatefulOrderEventV1_StatefulOrderRemovalV1.fromPartial(object.orderRemoval) : undefined;
     message.conditionalOrderPlacement = object.conditionalOrderPlacement !== undefined && object.conditionalOrderPlacement !== null ? StatefulOrderEventV1_ConditionalOrderPlacementV1.fromPartial(object.conditionalOrderPlacement) : undefined;
     message.conditionalOrderTriggered = object.conditionalOrderTriggered !== undefined && object.conditionalOrderTriggered !== null ? StatefulOrderEventV1_ConditionalOrderTriggeredV1.fromPartial(object.conditionalOrderTriggered) : undefined;
     message.longTermOrderPlacement = object.longTermOrderPlacement !== undefined && object.longTermOrderPlacement !== null ? StatefulOrderEventV1_LongTermOrderPlacementV1.fromPartial(object.longTermOrderPlacement) : undefined;
-    return message;
-  }
-
-};
-
-function createBaseStatefulOrderEventV1_StatefulOrderPlacementV1(): StatefulOrderEventV1_StatefulOrderPlacementV1 {
-  return {
-    order: undefined
-  };
-}
-
-export const StatefulOrderEventV1_StatefulOrderPlacementV1 = {
-  encode(message: StatefulOrderEventV1_StatefulOrderPlacementV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.order !== undefined) {
-      IndexerOrder.encode(message.order, writer.uint32(10).fork()).ldelim();
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): StatefulOrderEventV1_StatefulOrderPlacementV1 {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseStatefulOrderEventV1_StatefulOrderPlacementV1();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.order = IndexerOrder.decode(reader, reader.uint32());
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<StatefulOrderEventV1_StatefulOrderPlacementV1>): StatefulOrderEventV1_StatefulOrderPlacementV1 {
-    const message = createBaseStatefulOrderEventV1_StatefulOrderPlacementV1();
-    message.order = object.order !== undefined && object.order !== null ? IndexerOrder.fromPartial(object.order) : undefined;
     return message;
   }
 
