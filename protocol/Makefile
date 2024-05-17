@@ -244,7 +244,7 @@ test-cover:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 12m -coverprofile=coverage.out -covermode=atomic -coverpkg=github.com/dydxprotocol/v4-chain/protocol/... -tags='test_ledger_mock $(build_tags)' ./...
 
 test-unit-and-integration: 
-	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -run TestListEpochInfo ./x/epochs/client/cli/query_epoch_info_test.go
+	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -run TestCancelOrderIntegrationTestSuite ./x/clob/client/cli/cancel_order_cli_test.go
 
 test-unit-and-integration-linux: e2e-setup-linux 
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...
