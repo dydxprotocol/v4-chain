@@ -32,18 +32,3 @@ func TestPendingSendPackets(t *testing.T) {
 	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 	assert.Equal(t, 0, len(resp.PendingSendPackets))
 }
-
-// func TestPendingSendPackets(t *testing.T) {
-// 	net, ctx := setupNetwork(t)
-
-// 	out, err := clitestutil.ExecTestCLICmd(ctx,
-// 		cli.CmdPendingSendPackets(),
-// 		[]string{
-// 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-// 		})
-
-// 	require.NoError(t, err)
-// 	var resp types.QueryAllPendingSendPacketsResponse
-// 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-// 	assert.Equal(t, 0, len(resp.PendingSendPackets))
-// }
