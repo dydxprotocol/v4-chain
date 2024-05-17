@@ -138,6 +138,7 @@ function getCandleMessageId(candleMessage: CandleMessage): string {
 }
 
 function getParentSubaccountContents(msg: SubaccountMessage): SubaccountMessageContents {
+  // Filter out transfers between child subaccounts of the same parent subaccount.
   const contents: SubaccountMessageContents = JSON.parse(msg.contents) as SubaccountMessageContents;
   if (contents.transfers === undefined) {
     return contents;
