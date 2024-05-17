@@ -125,7 +125,7 @@ export interface OrderSubaccountMessageContents {
   removalReason?: string;
   // This will only be set for stateful orders
   createdAtHeight?: string;
-  clientMetadata: string;
+  clientMetadata?: string;
 }
 
 export interface FillSubaccountMessageContents {

@@ -263,6 +263,16 @@ export class OrderRemoveHandler extends Handler {
     removeOrderResult: RemoveOrderResult,
     headers: IHeaders,
   ): Promise<void> {
+    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
+      .getPerpetualMarketFromClobPairId(orderRemove.removedOrderId!.clobPairId.toString());
+    if (perpetualMarket === undefined) {
+      const clobPairId: string = orderRemove.removedOrderId!.clobPairId.toString();
+      logger.error({
+        at: 'orderRemoveHandler#handle',
+        message: `Unable to find perpetual market with clobPairId: ${clobPairId}`,
+      });
+      return;
+    }
     // This can happen for short term orders if the order place message was not received.
     if (!removeOrderResult.removed) {
       logger.info({
@@ -275,22 +285,27 @@ export class OrderRemoveHandler extends Handler {
         OrderTable.findById(OrderTable.orderIdToUuid(orderRemove.removedOrderId!)),
         this.generateTimingStatsOptions('find_order'),
       );
+      const subaccountMessage: Message = {
+        value: this.createSubaccountWebsocketMessageFromOrderRemoveMessage(
+          canceledOrder,
+          orderRemove,
+          perpetualMarket.ticker,
+        ),
+        headers,
+      };
+      const reason: OrderRemovalReason = orderRemove.reason;
+      if (!(
+        reason === OrderRemovalReason.ORDER_REMOVAL_REASON_INDEXER_EXPIRED ||
+        reason === OrderRemovalReason.ORDER_REMOVAL_REASON_FULLY_FILLED
+      )) {
+        sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
+      }
       return;
     }
 
     const stateRemainingQuantums: Big = await getStateRemainingQuantums(
       removeOrderResult.removedOrder!,
     );
-    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-      .getPerpetualMarketFromClobPairId(orderRemove.removedOrderId!.clobPairId.toString());
-    if (perpetualMarket === undefined) {
-      const ticker: string = removeOrderResult.removedOrder!.ticker;
-      logger.error({
-        at: 'orderRemoveHandler#handle',
-        message: `Unable to find perpetual market with ticker: ${ticker}`,
-      });
-      return;
-    }
 
     // If the remaining amount of the order in state is <= 0, the order is filled and
     // does not need to have it's status updated
@@ -549,6 +564,7 @@ export class OrderRemoveHandler extends Handler {
   protected createSubaccountWebsocketMessageFromOrderRemoveMessage(
     canceledOrder: OrderFromDatabase | undefined,
     orderRemove: OrderRemoveV1,
+    ticker: string,
   ): Buffer {
     const createdAtHeight: string | undefined = canceledOrder?.createdAtHeight;
     const updatedAt: IsoString | undefined = canceledOrder?.updatedAt;
@@ -564,7 +580,7 @@ export class OrderRemoveHandler extends Handler {
           clobPairId: orderRemove.removedOrderId!.clobPairId.toString(),
           status: this.orderRemovalStatusToOrderStatus(orderRemove.removalStatus),
           orderFlags: orderRemove.removedOrderId!.orderFlags.toString(),
-          ticker: redisOrder.ticker,
+          ticker,
           removalReason: OrderRemovalReason[orderRemove.reason],
           ...(createdAtHeight && { createdAtHeight }),
           ...(updatedAt && { updatedAt }),

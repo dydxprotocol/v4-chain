@@ -235,10 +235,10 @@ describe('OrderRemoveHandler', () => {
         defaultKafkaHeaders,
       );
 
-      const ticker: string = testConstants.defaultPerpetualMarket.ticker;
+      const clobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
       expect(logger.error).toHaveBeenCalledWith({
         at: 'orderRemoveHandler#handle',
-        message: `Unable to find perpetual market with ticker: ${ticker}`,
+        message: `Unable to find perpetual market with clobPairId: ${clobPairId}`,
       });
       expectTimingStats();
     });
