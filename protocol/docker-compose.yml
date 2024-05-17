@@ -113,13 +113,19 @@ services:
     volumes:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
   slinky0:
-    image: ghcr.io/skip-mev/slinky-sidecar:v0.3.2
+    image: ghcr.io/skip-mev/slinky-sidecar:v0.4.1
     entrypoint: >
       sh -c "slinky-config --chain dydx --node-http-url http://dydxprotocold0:1317 --oracle-config-path /etc/oracle.json &&
              slinky --oracle-config-path /etc/oracle.json --update-market-config-path /etc/market.json"
     ports:
       - "8080:8080"
-
+      - "8002:8002" # metrics
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./contrib/prometheus:/etc/prometheus/
+    ports:
+      - "9091:9090"
   datadog-agent:
     image: public.ecr.aws/datadog/agent:7
     environment:

@@ -36,7 +36,11 @@ func GetGroupMsgOther(availableTxs [][]byte, maxBytes uint64) ([][]byte, [][]byt
 }
 
 // RemoveDisallowMsgs removes any txs that contain a disallowed msg.
-func RemoveDisallowMsgs(ctx sdk.Context, decoder sdk.TxDecoder, txs [][]byte) [][]byte {
+func RemoveDisallowMsgs(
+	ctx sdk.Context,
+	decoder sdk.TxDecoder,
+	txs [][]byte,
+) [][]byte {
 	defer telemetry.ModuleMeasureSince(
 		ModuleName,
 		time.Now(),
@@ -45,16 +49,16 @@ func RemoveDisallowMsgs(ctx sdk.Context, decoder sdk.TxDecoder, txs [][]byte) []
 	)
 
 	var filteredTxs [][]byte
-	for _, txBytes := range txs {
+	for i, txBytes := range txs {
 		// Decode tx so we can read msgs.
 		tx, err := decoder(txBytes)
 		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("RemoveDisallowMsgs: failed to decode tx: %v", err))
+			ctx.Logger().Error(fmt.Sprintf("RemoveDisallowMsgs: failed to decode tx (index %v of %v txs): %v", i, len(txs), err))
 			continue // continue to next tx.
 		}
 
 		// For each msg in tx, check if it is disallowed.
-		containsDisllowMsg := false
+		containsDisallowMsg := false
 		for _, msg := range tx.GetMsgs() {
 			if ante.IsDisallowExternalSubmitMsg(msg) {
 				telemetry.IncrCounterWithLabels(
@@ -62,13 +66,13 @@ func RemoveDisallowMsgs(ctx sdk.Context, decoder sdk.TxDecoder, txs [][]byte) []
 					1,
 					[]gometrics.Label{metrics.GetLabelForStringValue(metrics.Detail, proto.MessageName(msg))},
 				)
-				containsDisllowMsg = true
+				containsDisallowMsg = true
 				break // break out of loop over msgs.
 			}
 		}
 
 		// If tx contains disallowed msg, skip it.
-		if containsDisllowMsg {
+		if containsDisallowMsg {
 			ctx.Logger().Error(
 				fmt.Sprintf("RemoveDisallowMsgs: skipping tx with disallowed msg. Size: %d", len(txBytes)))
 			continue // continue to next tx.

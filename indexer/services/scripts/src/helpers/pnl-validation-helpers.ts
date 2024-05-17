@@ -175,7 +175,7 @@ export async function validatePnl(
 export async function validatePnlForSubaccount(
   subaccountId: string,
 ): Promise<void> {
-  const pnlTicks: PnlTicksFromDatabase[] = await
+  const { results: pnlTicks } = await
   PnlTicksTable.findAll(
     { subaccountId: [subaccountId] },
     [],

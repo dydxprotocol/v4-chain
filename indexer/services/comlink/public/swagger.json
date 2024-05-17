@@ -167,6 +167,9 @@
           },
           "marginEnabled": {
             "type": "boolean"
+          },
+          "updatedAtHeight": {
+            "type": "string"
           }
         },
         "required": [
@@ -176,7 +179,8 @@
           "freeCollateral",
           "openPerpetualPositions",
           "assetPositions",
-          "marginEnabled"
+          "marginEnabled",
+          "updatedAtHeight"
         ],
         "type": "object",
         "additionalProperties": false
@@ -480,6 +484,18 @@
       },
       "FillResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "fills": {
             "items": {
               "$ref": "#/components/schemas/FillResponseObject"
@@ -629,6 +645,18 @@
       },
       "HistoricalPnlResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "historicalPnl": {
             "items": {
               "$ref": "#/components/schemas/PnlTicksResponseObject"
@@ -1101,6 +1129,18 @@
       },
       "TradeResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "trades": {
             "items": {
               "$ref": "#/components/schemas/TradeResponseObject"
@@ -1193,6 +1233,18 @@
       },
       "TransferResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "transfers": {
             "items": {
               "$ref": "#/components/schemas/TransferResponseObject"
@@ -1208,6 +1260,18 @@
       },
       "ParentSubaccountTransferResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "transfers": {
             "items": {
               "$ref": "#/components/schemas/TransferResponseObject"
@@ -1598,6 +1662,15 @@
             "schema": {
               "$ref": "#/components/schemas/IsoString"
             }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
           }
         ]
       }
@@ -1676,6 +1749,15 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
             }
           }
         ]
@@ -1882,6 +1964,104 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          }
+        ]
+      }
+    },
+    "/historical-pnl/parentSubaccount": {
+      "get": {
+        "operationId": "GetHistoricalPnlForParentSubaccount",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoricalPnlResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parentSubaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdOnOrAfterHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdOnOrAfter",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
             }
           }
         ]
@@ -2504,6 +2684,15 @@
             "schema": {
               "$ref": "#/components/schemas/IsoString"
             }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
           }
         ]
       }
@@ -2567,6 +2756,15 @@
             "schema": {
               "$ref": "#/components/schemas/IsoString"
             }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
           }
         ]
       }
@@ -2629,6 +2827,15 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
             }
           }
         ]

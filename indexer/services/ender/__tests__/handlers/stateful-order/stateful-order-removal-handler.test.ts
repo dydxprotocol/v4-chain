@@ -104,13 +104,20 @@ describe('statefulOrderRemovalHandler', () => {
     });
   });
 
-  it('successfully cancels and removes order', async () => {
+  it.each([
+    ['transaction event', 0],
+    ['block event', -1],
+  ])('successfully cancels and removes order (as %s)', async (
+    _name: string,
+    transactionIndex: number,
+  ) => {
     await OrderTable.create({
       ...testConstants.defaultOrder,
       clientId: '0',
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       defaultStatefulOrderEvent,
+      transactionIndex,
     );
 
     await onMessage(kafkaMessage);

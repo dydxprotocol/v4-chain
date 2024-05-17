@@ -6,6 +6,9 @@ import {
   TRADES_WEBSOCKET_MESSAGE_VERSION,
 } from '@dydxprotocol-indexer/kafka';
 import {
+  MAX_PARENT_SUBACCOUNTS,
+} from '@dydxprotocol-indexer/postgres';
+import {
   CandleMessage,
   CandleMessage_Resolution,
   MarketMessage,
@@ -28,9 +31,19 @@ export const defaultTxIndex: number = 1;
 export const defaultEventIndex: number = 3;
 export const defaultOwner: string = 'owner';
 export const defaultAccNumber: number = 4;
+export const defaultChildAccNumber: number = defaultAccNumber + MAX_PARENT_SUBACCOUNTS;
+export const defaultChildAccNumber2: number = defaultAccNumber + 2 * MAX_PARENT_SUBACCOUNTS;
 export const defaultSubaccountId: SubaccountId = {
   owner: defaultOwner,
   number: defaultAccNumber,
+};
+export const defaultChildSubaccountId: SubaccountId = {
+  owner: defaultOwner,
+  number: defaultChildAccNumber,
+};
+export const defaultChildSubaccountId2: SubaccountId = {
+  owner: defaultOwner,
+  number: defaultChildAccNumber2,
 };
 export const defaultContents: Object = {
   prop: 'property',
@@ -81,4 +94,11 @@ export const tradesMessage: TradeMessage = {
   clobPairId: btcClobPairId,
   contents: defaultContentsString,
   version: TRADES_WEBSOCKET_MESSAGE_VERSION,
+};
+
+export const childSubaccountMessage: SubaccountMessage = {
+  ...commonMsgProps,
+  subaccountId: defaultChildSubaccountId,
+  contents: defaultContentsString,
+  version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
 };

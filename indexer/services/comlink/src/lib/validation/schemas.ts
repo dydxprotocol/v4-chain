@@ -1,8 +1,11 @@
-import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+import {
+  perpetualMarketRefresher,
+  MAX_PARENT_SUBACCOUNTS,
+  CHILD_SUBACCOUNT_MULTIPLIER,
+} from '@dydxprotocol-indexer/postgres';
 import { checkSchema, ParamSchema } from 'express-validator';
 
 import config from '../../config';
-import { MAX_SUBACCOUNT_NUMBER } from '../../constants';
 
 export const CheckSubaccountSchema = checkSchema({
   address: {
@@ -12,9 +15,9 @@ export const CheckSubaccountSchema = checkSchema({
   subaccountNumber: {
     in: ['params', 'query'],
     isInt: {
-      options: { gt: -1, lt: MAX_SUBACCOUNT_NUMBER + 1 },
+      options: { gt: -1, lt: MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER + 1 },
     },
-    errorMessage: 'subaccountNumber must be a non-negative integer less than 128',
+    errorMessage: 'subaccountNumber must be a non-negative integer less than 128001',
   },
 });
 
@@ -26,7 +29,7 @@ export const CheckParentSubaccountSchema = checkSchema({
   parentSubaccountNumber: {
     in: ['params', 'query'],
     isInt: {
-      options: { gt: -1, lt: MAX_SUBACCOUNT_NUMBER + 1 },
+      options: { gt: -1, lt: MAX_PARENT_SUBACCOUNTS },
     },
     errorMessage: 'parentSubaccountNumber must be a non-negative integer less than 128',
   },
@@ -60,6 +63,17 @@ const limitSchemaRecord: Record<string, ParamSchema> = {
         return true;
       },
     },
+  },
+};
+
+const paginationSchemaRecord: Record<string, ParamSchema> = {
+  page: {
+    in: ['query'],
+    optional: true,
+    isInt: {
+      options: { gt: 0 },
+    },
+    errorMessage: 'page must be a non-negative integer',
   },
 };
 
@@ -112,6 +126,8 @@ const createdOnOrAfterSchemaRecord: Record<string, ParamSchema> = {
 };
 
 export const CheckLimitSchema = checkSchema(limitSchemaRecord);
+
+export const CheckPaginationSchema = checkSchema(paginationSchemaRecord);
 
 export const CheckLimitAndCreatedBeforeOrAtSchema = checkSchema({
   ...limitSchemaRecord,

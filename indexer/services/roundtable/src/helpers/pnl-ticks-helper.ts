@@ -81,7 +81,7 @@ export async function getPnlTicksCreateObjects(
   const accountsToUpdate: string[] = [
     ...getAccountsToUpdate(accountToLastUpdatedBlockTime, blockTime),
     ...newSubaccountIds,
-  ];
+  ].slice(0, config.PNL_TICK_MAX_ACCOUNTS_PER_RUN);
   stats.gauge(
     `${config.SERVICE_NAME}_get_ticks_accounts_to_update`,
     accountsToUpdate.length,
@@ -154,22 +154,35 @@ export async function getPnlTicksCreateObjects(
   );
 
   const computePnlStart: number = Date.now();
-  const newTicksToCreate: PnlTicksCreateObject[] = accountsToUpdate.map(
-    (account: string) => getNewPnlTick(
-      account,
-      subaccountTotalTransfersMap,
-      markets,
-      Object.values(openPerpetualPositions[account] || {}),
-      usdcAssetPositions[account] || ZERO,
-      netUsdcTransfers[account] || ZERO,
-      pnlTicksToBeCreatedAt,
-      blockHeight,
-      blockTime,
-      mostRecentPnlTicks,
-      blockHeightToFundingIndexMap[idToSubaccount[account].updatedAtHeight],
-      currentFundingIndexMap,
-    ),
-  );
+  const newTicksToCreate: PnlTicksCreateObject[] = [];
+  accountsToUpdate.forEach((account: string) => {
+    try {
+      const newTick: PnlTicksCreateObject = getNewPnlTick(
+        account,
+        subaccountTotalTransfersMap,
+        markets,
+        Object.values(openPerpetualPositions[account] || {}),
+        usdcAssetPositions[account] || ZERO,
+        netUsdcTransfers[account] || ZERO,
+        pnlTicksToBeCreatedAt,
+        blockHeight,
+        blockTime,
+        mostRecentPnlTicks,
+        blockHeightToFundingIndexMap[idToSubaccount[account].updatedAtHeight],
+        currentFundingIndexMap,
+      );
+      newTicksToCreate.push(newTick);
+    } catch (error) {
+      logger.error({
+        at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+        message: 'Error when getting new pnl tick',
+        account,
+        pnlTicksToBeCreatedAt,
+        blockHeight,
+        blockTime,
+      });
+    }
+  });
   stats.timing(
     `${config.SERVICE_NAME}_get_ticks_compute_pnl`,
     new Date().getTime() - computePnlStart,

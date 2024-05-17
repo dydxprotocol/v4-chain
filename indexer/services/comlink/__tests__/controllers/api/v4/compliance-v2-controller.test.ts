@@ -10,16 +10,17 @@ import {
 import { getIpAddr } from '../../../../src/lib/utils';
 import { sendRequest } from '../../../helpers/helpers';
 import { RequestMethod } from '../../../../src/types';
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { ratelimitRedis } from '../../../../src/caches/rate-limiters';
 import { ComplianceControllerHelper } from '../../../../src/controllers/api/v4/compliance-controller';
 import config from '../../../../src/config';
 import { DateTime } from 'luxon';
 import { ComplianceAction } from '../../../../src/controllers/api/v4/compliance-v2-controller';
-import { ExtendedSecp256k1Signature, Secp256k1, sha256 } from '@cosmjs/crypto';
+import { ExtendedSecp256k1Signature, Secp256k1 } from '@cosmjs/crypto';
 import { getGeoComplianceReason } from '../../../../src/helpers/compliance/compliance-utils';
 import { isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
+import { toBech32 } from '@cosmjs/encoding';
 
 jest.mock('@dydxprotocol-indexer/compliance');
 jest.mock('../../../../src/helpers/compliance/compliance-utils');
@@ -38,10 +39,15 @@ jest.mock('@cosmjs/crypto', () => ({
   },
 }));
 
+jest.mock('@cosmjs/encoding', () => ({
+  toBech32: jest.fn(),
+}));
+
 describe('ComplianceV2Controller', () => {
   const ipAddr: string = '192.168.1.1';
 
   const ipAddrMock: jest.Mock = (getIpAddr as unknown as jest.Mock);
+  const toBech32Mock: jest.Mock = (toBech32 as unknown as jest.Mock);
 
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -245,8 +251,8 @@ describe('ComplianceV2Controller', () => {
       address: testConstants.defaultAddress,
       message: 'Test message',
       action: ComplianceAction.ONBOARD,
-      signedMessage: sha256(Buffer.from('msg')),
-      pubkey: new Uint8Array([/* public key bytes */]),
+      signedMessage: 'signedmessage123',
+      pubkey: 'asdfasdf',
       timestamp: 1620000000,
     };
 
@@ -263,6 +269,7 @@ describe('ComplianceV2Controller', () => {
           fromFixedLength: jest.fn().mockResolvedValue({} as ExtendedSecp256k1Signature),
         },
       }));
+      toBech32Mock.mockReturnValue(testConstants.defaultAddress);
       jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(1620000000)); // Mock current time
     });
 
@@ -300,6 +307,17 @@ describe('ComplianceV2Controller', () => {
     it('should return 400 for invalid signature', async () => {
       // Mock verifySignature to return false for this test
       (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(false);
+
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/geoblock',
+        body,
+        expectedStatus: 400,
+      });
+    });
+
+    it('should return 400 for incorrect address', async () => {
+      toBech32Mock.mockResolvedValueOnce('invalid_address');
 
       await sendRequest({
         type: RequestMethod.POST,
@@ -429,7 +447,6 @@ describe('ComplianceV2Controller', () => {
     });
 
     it('should be a no-op for ONBOARD action with existing COMPLIANT status', async () => {
-      const loggerError = jest.spyOn(logger, 'error');
       await ComplianceStatusTable.create({
         address: testConstants.defaultAddress,
         status: ComplianceStatus.COMPLIANT,
@@ -449,17 +466,11 @@ describe('ComplianceV2Controller', () => {
       expect(data[0]).toEqual(expect.objectContaining({
         address: testConstants.defaultAddress,
         status: ComplianceStatus.COMPLIANT,
-      }));
-
-      expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'ComplianceV2Controller POST /geoblock',
-        message: 'Invalid action for current compliance status',
       }));
       expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
     });
 
     it('should be a no-op for ONBOARD action with existing FIRST_STRIKE_CLOSE_ONLY status', async () => {
-      const loggerError = jest.spyOn(logger, 'error');
       await ComplianceStatusTable.create({
         address: testConstants.defaultAddress,
         status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
@@ -483,10 +494,6 @@ describe('ComplianceV2Controller', () => {
         reason: ComplianceReason.US_GEO,
       }));
 
-      expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'ComplianceV2Controller POST /geoblock',
-        message: 'Invalid action for current compliance status',
-      }));
       expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
       expect(response.body.updatedAt).toBeDefined();

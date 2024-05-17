@@ -108,18 +108,6 @@ export class OrderUpdateHandler extends Handler {
       return;
     }
 
-    if (updateResult.updated !== true) {
-      logger.info({
-        at: 'OrderUpdateHandler#handle',
-        message: 'Received order update for order that does not exist, order id ' +
-                 `${JSON.stringify(orderUpdate.orderId!)}`,
-        update,
-        updateResult,
-      });
-      stats.increment(`${config.SERVICE_NAME}.order_update_order_does_not_exist`, 1);
-      return;
-    }
-
     const clobPairId: string = orderUpdate.orderId!.clobPairId.toString();
     if (orderUpdate.totalFilledQuantums.gte(updateResult.order!.order!.quantums)) {
       // TODO(IND-147): Remove once fully-filled orders are removed.

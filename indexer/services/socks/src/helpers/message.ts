@@ -38,6 +38,7 @@ export function createChannelDataMessage(
   version: string,
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   contents: any,
+  subaccountNumber?: number,
 ): ChannelDataMessage {
   if (channel === Channel.V4_MARKETS) {
     return {
@@ -58,6 +59,7 @@ export function createChannelDataMessage(
     channel,
     version,
     contents,
+    subaccountNumber,
   };
 }
 
@@ -69,6 +71,7 @@ export function createChannelBatchDataMessage(
   version: string,
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   contents: any[],
+  subaccountNumber?: number,
 ): ChannelBatchDataMessage {
   if (channel === Channel.V4_MARKETS) {
     return {
@@ -89,6 +92,7 @@ export function createChannelBatchDataMessage(
     channel,
     version,
     contents,
+    subaccountNumber,
   };
 }
 

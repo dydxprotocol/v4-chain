@@ -27,7 +27,7 @@ jobs:
       - name: Setup Golang
         uses: actions/setup-go@v3
         with:
-          go-version: 1.21
+          go-version: 1.22
       - name: Build images
         run: DOCKER_BUILDKIT=1 make test-container-build
       - name: Run container tests

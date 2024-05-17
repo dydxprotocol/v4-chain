@@ -148,6 +148,17 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 	return offchainUpdates, nil
 }
 
+// MaybeCreateOrderbook is used for updating memclob internal data structures to mark an orderbook as created.
+func (m *MemClobPriceTimePriority) MaybeCreateOrderbook(
+	ctx sdk.Context,
+	clobPair types.ClobPair,
+) {
+	if _, exists := m.openOrders.orderbooksMap[clobPair.GetClobPairId()]; exists {
+		return
+	}
+	m.CreateOrderbook(ctx, clobPair)
+}
+
 // CreateOrderbook is used for updating memclob internal data structures to mark an orderbook as created.
 // This function will panic if `clobPairId` already exists in any of the memclob's internal data structures.
 func (m *MemClobPriceTimePriority) CreateOrderbook(
@@ -375,7 +386,20 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 	}
 
 	// Add the new matches to the operations queue.
-	m.operationsToPropose.MustAddMatchToOperationsQueue(takerOrder, makerFillWithOrders)
+	internalOperation := m.operationsToPropose.MustAddMatchToOperationsQueue(takerOrder, makerFillWithOrders)
+	// If orderbook updates are on, send an orderbook update with the fill to grpc streams.
+	if m.generateOrderbookUpdates {
+		// Collect all maker orders.
+		makerOrders := lib.MapSlice(
+			makerFillWithOrders,
+			func(mfwo types.MakerFillWithOrder) types.Order {
+				return mfwo.Order
+			},
+		)
+		clobMatch := internalOperation.GetMatch()
+		orderbookMatchFill := m.GenerateStreamOrderbookFill(ctx, *clobMatch, takerOrder, makerOrders)
+		m.clobKeeper.SendOrderbookFillUpdates(ctx, []types.StreamOrderbookFill{orderbookMatchFill})
+	}
 
 	// Build a slice of all subaccounts which had matches this matching loop, and sort them for determinism.
 	allSubaccounts := lib.GetSortedKeys[satypes.SortedSubaccountIds](subaccountTotalMatchedQuantums)
@@ -508,6 +532,8 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				removalReason = types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED
 			} else if errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder) {
 				removalReason = types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER
+			} else if errors.Is(err, types.ErrWouldViolateIsolatedSubaccountConstraints) {
+				removalReason = types.OrderRemoval_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS
 			}
 
 			if !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
@@ -833,11 +859,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		// filled or not filled at all.
 		// TODO(CLOB-267): Create more granular error types here that indicate why the order was not
 		// fully filled (i.e. undercollateralized, reduce only resized, etc).
-		if takerOrderStatus.OrderStatus == types.ViolatesIsolatedSubaccountConstraints {
-			matchingErr = types.ErrWouldViolateIsolatedSubaccountConstraints
-		} else {
-			matchingErr = types.ErrFokOrderCouldNotBeFullyFilled
-		}
+		matchingErr = types.ErrFokOrderCouldNotBeFullyFilled
 	}
 
 	// If the order is post only and it's not the rewind step, then it cannot be filled.
@@ -847,6 +869,12 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		!order.IsLiquidation() &&
 		order.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_POST_ONLY {
 		matchingErr = types.ErrPostOnlyWouldCrossMakerOrder
+	}
+
+	// If the order filling leads to the subaccount having an invalid state due to failing checks for
+	// isolated subaccount constraints, return an error so that the order is canceled.
+	if !order.IsLiquidation() && takerOrderStatus.OrderStatus == types.ViolatesIsolatedSubaccountConstraints {
+		matchingErr = types.ErrWouldViolateIsolatedSubaccountConstraints
 	}
 
 	// If the match is valid and placing the taker order generated valid matches, update memclob state.
@@ -861,6 +889,20 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		)
 		offchainUpdates.Append(matchOffchainUpdates)
 		writeCache()
+	} else {
+		// If state was not written to, re-send grpc stream updates for all orders
+		// involved in the match to "reset" fill amounts.
+		allUpdates := types.NewOffchainUpdates()
+		if !order.IsLiquidation() {
+			normalOrder := order.MustGetOrder()
+			updates := m.GetOrderbookUpdatesForOrderUpdate(ctx, normalOrder.OrderId)
+			allUpdates.Append(updates)
+		}
+		for _, fill := range newMakerFills {
+			updates := m.GetOrderbookUpdatesForOrderUpdate(ctx, fill.MakerOrderId)
+			allUpdates.Append(updates)
+		}
+		m.clobKeeper.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 
 	return takerOrderStatus, offchainUpdates, makerOrdersToRemove, matchingErr
@@ -1866,7 +1908,6 @@ func (m *MemClobPriceTimePriority) SetMemclobGauges(
 				metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId)),
 			},
 		)
-
 		// Set gauge for best bid on each orderbook.
 		telemetry.SetGaugeWithLabels(
 			[]string{
@@ -1964,12 +2005,6 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 	// If the filled amount of the maker order is greater than the order size, panic to avoid silent failure.
 	if newTotalFilledAmount > makerOrderBaseQuantums {
 		panic("Total filled size of maker order greater than the order size")
-	}
-
-	// Send an orderbook update for the order's new total filled amount.
-	if m.generateOrderbookUpdates {
-		orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, makerOrder.OrderId)
-		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
 	}
 
 	// If the order is fully filled, remove it from the orderbook.

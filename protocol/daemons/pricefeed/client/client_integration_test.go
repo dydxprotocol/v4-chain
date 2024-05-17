@@ -3,8 +3,12 @@
 package client_test
 
 import (
-	"cosmossdk.io/log"
 	"fmt"
+	"net"
+	"sync"
+	"time"
+
+	"cosmossdk.io/log"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client"
@@ -26,9 +30,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
-	"net"
-	"sync"
-	"time"
 
 	"testing"
 )
@@ -365,7 +366,7 @@ func (s *PriceDaemonIntegrationTestSuite) expectPricesWithTimeout(
 		time.Sleep(100 * time.Millisecond)
 
 		// Check if the prices cache contains the expected prices.
-		prices := s.exchangePriceCache.GetValidMedianPrices(marketParams, time.Now())
+		prices := s.exchangePriceCache.GetValidMedianPrices(log.NewNopLogger(), marketParams, time.Now())
 		if len(prices) != len(expectedPrices) {
 			continue
 		}

@@ -1,9 +1,12 @@
 package types
 
 import (
-	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 	"testing"
 	"time"
+
+	"cosmossdk.io/log"
+
+	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -165,6 +168,7 @@ func TestGetValidMedianPrices_EmptyResult(t *testing.T) {
 			mte := NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 			mte.UpdatePrices(tc.updatePriceInput)
 			r := mte.GetValidMedianPrices(
+				log.NewNopLogger(),
 				tc.getPricesInputMarketParams,
 				tc.getPricesInputTime,
 			)
@@ -179,7 +183,11 @@ func TestGetValidMedianPrices_MultiMarketSuccess(t *testing.T) {
 
 	mte.UpdatePrices(constants.MixedTimePriceUpdate)
 
-	r := mte.GetValidMedianPrices(constants.AllMarketParamsMinExchanges2, constants.TimeT)
+	r := mte.GetValidMedianPrices(
+		log.NewNopLogger(),
+		constants.AllMarketParamsMinExchanges2,
+		constants.TimeT,
+	)
 
 	require.Len(t, r, 3)
 	require.Equal(t, uint64(2002), r[constants.MarketId9]) // Median of 1001, 2002, 3003

@@ -373,7 +373,7 @@ func TestSetPerpetualMarketType(t *testing.T) {
 					1,
 				)[0]
 				perp.Params.MarketType = tc.currType
-				pc.PerpetualsKeeper.SetPerpetual(pc.Ctx, perp)
+				pc.PerpetualsKeeper.SetPerpetualForTest(pc.Ctx, perp)
 
 				_, err := pc.PerpetualsKeeper.SetPerpetualMarketType(
 					pc.Ctx,
@@ -3566,7 +3566,7 @@ func TestIsIsolatedPerpetual(t *testing.T) {
 		t.Run(
 			name, func(t *testing.T) {
 				pc := keepertest.PerpetualsKeepers(t)
-				pc.PerpetualsKeeper.SetPerpetual(pc.Ctx, tc.perp)
+				pc.PerpetualsKeeper.SetPerpetualForTest(pc.Ctx, tc.perp)
 				isIsolated, err := pc.PerpetualsKeeper.IsIsolatedPerpetual(pc.Ctx, tc.perp.Params.Id)
 				require.NoError(t, err)
 				require.Equal(t, tc.expected, isIsolated)

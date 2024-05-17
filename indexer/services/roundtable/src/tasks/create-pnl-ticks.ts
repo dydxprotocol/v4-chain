@@ -48,6 +48,16 @@ export default async function runTask(): Promise<void> {
   let newTicksToCreate: PnlTicksCreateObject[] = [];
   try {
     newTicksToCreate = await getPnlTicksCreateObjects(latestBlockHeight, latestBlockTime, txId);
+  } catch (error) {
+    logger.error({
+      at: 'create-pnl-ticks#runTask',
+      message: 'Error when getting pnl ticks',
+      error,
+      latestBlockHeight,
+      latestBlockTime,
+      txId,
+    });
+    return;
   } finally {
     // Make sure to always roll-back the transaction so there are no hanging DB connections.
     // Transaction is read-only, so roll back.

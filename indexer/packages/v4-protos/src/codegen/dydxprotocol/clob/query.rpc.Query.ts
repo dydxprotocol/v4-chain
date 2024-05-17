@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryGetClobPairRequest, QueryClobPairResponse, QueryAllClobPairRequest, QueryClobPairAllResponse, MevNodeToNodeCalculationRequest, MevNodeToNodeCalculationResponse, QueryEquityTierLimitConfigurationRequest, QueryEquityTierLimitConfigurationResponse, QueryBlockRateLimitConfigurationRequest, QueryBlockRateLimitConfigurationResponse, QueryLiquidationsConfigurationRequest, QueryLiquidationsConfigurationResponse, StreamOrderbookUpdatesRequest, StreamOrderbookUpdatesResponse } from "./query";
+import { QueryGetClobPairRequest, QueryClobPairResponse, QueryAllClobPairRequest, QueryClobPairAllResponse, MevNodeToNodeCalculationRequest, MevNodeToNodeCalculationResponse, QueryEquityTierLimitConfigurationRequest, QueryEquityTierLimitConfigurationResponse, QueryBlockRateLimitConfigurationRequest, QueryBlockRateLimitConfigurationResponse, QueryLiquidationsConfigurationRequest, QueryLiquidationsConfigurationResponse, QueryStatefulOrderRequest, QueryStatefulOrderResponse, StreamOrderbookUpdatesRequest, StreamOrderbookUpdatesResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -22,7 +22,13 @@ export interface Query {
   /** Queries LiquidationsConfiguration. */
 
   liquidationsConfiguration(request?: QueryLiquidationsConfigurationRequest): Promise<QueryLiquidationsConfigurationResponse>;
-  /** Streams orderbook updates. */
+  /** Queries the stateful order for a given order id. */
+
+  statefulOrder(request: QueryStatefulOrderRequest): Promise<QueryStatefulOrderResponse>;
+  /**
+   * Streams orderbook updates. Updates contain orderbook data
+   * such as order placements, updates, and fills.
+   */
 
   streamOrderbookUpdates(request: StreamOrderbookUpdatesRequest): Promise<StreamOrderbookUpdatesResponse>;
 }
@@ -37,6 +43,7 @@ export class QueryClientImpl implements Query {
     this.equityTierLimitConfiguration = this.equityTierLimitConfiguration.bind(this);
     this.blockRateLimitConfiguration = this.blockRateLimitConfiguration.bind(this);
     this.liquidationsConfiguration = this.liquidationsConfiguration.bind(this);
+    this.statefulOrder = this.statefulOrder.bind(this);
     this.streamOrderbookUpdates = this.streamOrderbookUpdates.bind(this);
   }
 
@@ -78,6 +85,12 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QueryLiquidationsConfigurationResponse.decode(new _m0.Reader(data)));
   }
 
+  statefulOrder(request: QueryStatefulOrderRequest): Promise<QueryStatefulOrderResponse> {
+    const data = QueryStatefulOrderRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Query", "StatefulOrder", data);
+    return promise.then(data => QueryStatefulOrderResponse.decode(new _m0.Reader(data)));
+  }
+
   streamOrderbookUpdates(request: StreamOrderbookUpdatesRequest): Promise<StreamOrderbookUpdatesResponse> {
     const data = StreamOrderbookUpdatesRequest.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Query", "StreamOrderbookUpdates", data);
@@ -111,6 +124,10 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     liquidationsConfiguration(request?: QueryLiquidationsConfigurationRequest): Promise<QueryLiquidationsConfigurationResponse> {
       return queryService.liquidationsConfiguration(request);
+    },
+
+    statefulOrder(request: QueryStatefulOrderRequest): Promise<QueryStatefulOrderResponse> {
+      return queryService.statefulOrder(request);
     },
 
     streamOrderbookUpdates(request: StreamOrderbookUpdatesRequest): Promise<StreamOrderbookUpdatesResponse> {

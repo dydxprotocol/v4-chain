@@ -70,7 +70,9 @@ import {
   AssetPositionResponseObject,
   AssetPositionsMap,
   PerpetualPositionWithFunding,
-  AddressResponse, ParentSubaccountResponse, ParentSubaccountRequest,
+  AddressResponse,
+  ParentSubaccountResponse,
+  ParentSubaccountRequest,
 } from '../../../types';
 
 const router: express.Router = express.Router();

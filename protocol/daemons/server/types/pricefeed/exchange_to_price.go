@@ -3,6 +3,7 @@ package types
 import (
 	"time"
 
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
@@ -42,54 +43,41 @@ func (etp *ExchangeToPrice) UpdatePrices(updates []*api.ExchangePrice) {
 
 		isUpdated := priceTimestamp.UpdatePrice(exchangePrice.Price, exchangePrice.LastUpdateTime)
 
-		validity := metrics.Valid
+		// Measure invalid price updates inserted into the in-memory map.
 		if exists && !isUpdated {
-			validity = metrics.Invalid
+			telemetry.IncrCounterWithLabels(
+				[]string{metrics.PricefeedServer, metrics.UpdatePrice, metrics.Invalid, metrics.Count},
+				1,
+				[]gometrics.Label{
+					pricefeedmetrics.GetLabelForMarketId(etp.marketId),
+					pricefeedmetrics.GetLabelForExchangeId(exchangeId),
+				},
+			)
 		}
-
-		// Measure count of valid and invalid prices inserted into the in-memory map.
-		telemetry.IncrCounterWithLabels(
-			[]string{metrics.PricefeedServer, metrics.UpdatePrice, validity, metrics.Count},
-			1,
-			[]gometrics.Label{
-				pricefeedmetrics.GetLabelForMarketId(etp.marketId),
-				pricefeedmetrics.GetLabelForExchangeId(exchangeId),
-			},
-		)
 	}
 }
 
 // GetValidPrices returns a list of "valid" prices. Prices are considered
 // "valid" iff the last update time is greater than or equal to the given cutoff time.
 func (etp *ExchangeToPrice) GetValidPrices(
+	logger log.Logger,
 	cutoffTime time.Time,
 ) []uint64 {
 	validExchangePricesForMarket := make([]uint64, 0, len(etp.exchangeToPriceTimestamp))
 	for exchangeId, priceTimestamp := range etp.exchangeToPriceTimestamp {
-		validity := metrics.Valid
-
 		// PriceTimestamp returns price if the last update time is valid.
 		if price, ok := priceTimestamp.GetValidPrice(cutoffTime); ok {
 			validExchangePricesForMarket = append(validExchangePricesForMarket, price)
 		} else {
 			// Price is invalid.
-			validity = metrics.PriceIsInvalid
+			logger.Warn(
+				"GetValidPrice returned invalid price. This likely means stale prices.",
+				metrics.ExchangeId,
+				exchangeId,
+				metrics.MarketId,
+				etp.marketId,
+			)
 		}
-
-		// Measure count of valid and invalid prices fetched from the in-memory map.
-		telemetry.IncrCounterWithLabels(
-			[]string{
-				metrics.PricefeedServer,
-				metrics.GetValidPrices,
-				validity,
-				metrics.Count,
-			},
-			1,
-			[]gometrics.Label{
-				pricefeedmetrics.GetLabelForExchangeId(exchangeId),
-				pricefeedmetrics.GetLabelForMarketId(etp.marketId),
-			},
-		)
 	}
 	return validExchangePricesForMarket
 }
