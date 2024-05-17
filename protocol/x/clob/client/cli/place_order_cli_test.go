@@ -23,6 +23,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	sa_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/client/testutil"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	blocktypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -197,8 +198,6 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 	// val := s.network.Validators[0]
 	// ctx := val.ClientCtx
 
-	cfg := network.DefaultConfig(nil)
-
 	// currentHeight, err := s.network.LatestHeight()
 	// s.Require().NoError(err)
 
@@ -214,7 +213,7 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 	}
 	var resp blocktypes.Block
 	data := heightOut.Bytes()
-	require.NoError(s.T(), cfg.Codec.UnmarshalJSON(data, &resp))
+	require.NoError(s.T(), s.cfg.Codec.UnmarshalJSON(data, &resp))
 	blockHeight := resp.LastCommit.Height
 
 	// // Place the first order.
@@ -232,14 +231,6 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 
 	goodTilBlock = uint32(blockHeight) + types.ShortBlockWindow
 	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
-	placeBuyCmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 1000 50000000000 "+goodTilBlockStr+" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658")
-	var placeBuyOut bytes.Buffer
-	placeBuyCmd.Stdout = &placeBuyOut
-	err = placeBuyCmd.Run()
-	if err != nil {
-		s.T().Fatalf("Failed to place order: %v, stdout: %s", err, placeBuyOut.String())
-	}
-	s.Require().NoError(err)
 
 	// Place the second order.
 	// _, err = cli_testutil.MsgPlaceOrderExec(
@@ -253,8 +244,15 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 	// 	subticks.ToUint64(),
 	// 	goodTilBlock,
 	// )
-
-	placeSellCmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 1 1 0 1 1000 50000000000 "+goodTilBlockStr+" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658")
+	placeBuyCmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 1000 50000000000 "+goodTilBlockStr+" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658")
+	var placeBuyOut bytes.Buffer
+	placeBuyCmd.Stdout = &placeBuyOut
+	err = placeBuyCmd.Run()
+	if err != nil {
+		s.T().Fatalf("Failed to place order: %v, stdout: %s", err, placeBuyOut.String())
+	}
+	s.Require().NoError(err)
+	placeSellCmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 1 1 0 2 1000 50000000000 "+goodTilBlockStr+" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658")
 	var placeSellOut bytes.Buffer
 	placeSellCmd.Stdout = &placeSellOut
 	err = placeSellCmd.Run()
@@ -276,11 +274,11 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 	acc, accerr := sa_testutil.MsgQuerySubaccountExec("dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6", subaccountNumberZero)
 	s.Require().NoError(accerr)
 	var subaccountResp satypes.QuerySubaccountResponse
-	s.Require().NoError(cfg.Codec.UnmarshalJSON(acc.Bytes(), &subaccountResp))
+	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(acc.Bytes(), &subaccountResp))
 	subaccountZero := subaccountResp.Subaccount
 	acc, accerr = sa_testutil.MsgQuerySubaccountExec("dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6", subaccountNumberOne)
 	s.Require().NoError(accerr)
-	s.Require().NoError(cfg.Codec.UnmarshalJSON(acc.Bytes(), &subaccountResp))
+	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(acc.Bytes(), &subaccountResp))
 	subaccountOne := subaccountResp.Subaccount
 	// Compute the fill price so as to know how much QuoteBalance should be remaining.
 	fillSizeQuoteQuantums := types.FillAmountToQuoteQuantums(
@@ -321,7 +319,7 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 	// Check that the `subaccounts` module account has expected remaining USDC balance.
 	saModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
 		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-		cfg.Codec,
+		s.cfg.Codec,
 		satypes.ModuleName,
 	)
 	s.Require().NoError(err)
@@ -329,6 +327,18 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 		initialSubaccountModuleAccBalance-makerFee-takerFee,
 		saModuleUSDCBalance,
 	)
+
+	stopCmd := exec.Command("bash", "-c", "docker stop interchain-security-instance")
+	if err := stopCmd.Run(); err != nil {
+		s.T().Fatalf("Failed to stop Docker container: %v", err)
+	}
+	fmt.Println("Stopped Docker container")
+	// Remove the Docker container
+	removeCmd := exec.Command("bash", "-c", "docker rm interchain-security-instance")
+	if err := removeCmd.Run(); err != nil {
+		s.T().Fatalf("Failed to remove Docker container: %v", err)
+	}
+	fmt.Println("Removed Docker container")
 
 	// Check that the `distribution` module account has expected remaining USDC balance.
 	// During `BeginBlock()`, the `fee-collector` module account will send all fees
