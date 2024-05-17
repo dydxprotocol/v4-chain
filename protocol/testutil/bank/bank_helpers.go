@@ -1,11 +1,9 @@
 package bank
 
 import (
-	"bytes"
-	"os/exec"
-
 	sdkmath "cosmossdk.io/math"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -25,12 +23,9 @@ func GetModuleAccUsdcBalance(
 	err error,
 ) {
 	moduleAddress := authtypes.NewModuleAddress(moduleName)
-	queryCmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query bank balances "+moduleAddress.String()+"  --node tcp://7.7.8.4:26658 -o json")
-	var transferOut bytes.Buffer
-	var stdTransferErr bytes.Buffer
-	queryCmd.Stdout = &transferOut
-	queryCmd.Stderr = &stdTransferErr
-	err = queryCmd.Run()
+
+	query := "docker exec interchain-security-instance interchain-security-cd query bank balances " + moduleAddress.String() + "  --node tcp://7.7.8.4:26658 -o json"
+	transferOut, _, err := network.QueryCustomNetwork(query)
 	if err != nil {
 		return 0, err
 	}
@@ -46,7 +41,7 @@ func GetModuleAccUsdcBalance(
 
 	var balRes banktypes.QueryAllBalancesResponse
 
-	err = codec.UnmarshalJSON(transferOut.Bytes(), &balRes)
+	err = codec.UnmarshalJSON(transferOut, &balRes)
 	if err != nil {
 		return 0, err
 	}

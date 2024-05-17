@@ -1,8 +1,10 @@
 package network
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
 	"testing"
@@ -203,4 +205,44 @@ func NewTestNetworkFixture() network.TestFixture {
 			Amino:             dydxApp.LegacyAmino(),
 		},
 	}
+}
+
+func DeployCustomNetwork(genesis string) {
+	setupCmd := exec.Command("bash", "-c", "cd ../../../../ethos/ethos-chain && ./e2e-setup -setup "+genesis)
+
+	fmt.Println("Running setup command", setupCmd.String())
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	setupCmd.Stdout = &out
+	setupCmd.Stderr = &stderr
+	err := setupCmd.Run()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to set up environment: %v, stdout: %s, stderr: %s", err, out.String(), stderr.String()))
+	}
+	time.Sleep(5 * time.Second)
+}
+
+func CleanupCustomNetwork() {
+	stopCmd := exec.Command("bash", "-c", "docker stop interchain-security-instance")
+	if err := stopCmd.Run(); err != nil {
+		panic(fmt.Sprintf("Failed to stop Docker container: %v", err))
+	}
+	fmt.Println("Stopped Docker container")
+	// Remove the Docker container
+	removeCmd := exec.Command("bash", "-c", "docker rm interchain-security-instance")
+	if err := removeCmd.Run(); err != nil {
+		panic(fmt.Sprintf("Failed to remove Docker container: %v", err))
+	}
+	fmt.Println("Removed Docker container")
+}
+
+func QueryCustomNetwork(query string) ([]byte, string, error) {
+	cmd := exec.Command("bash", "-c", query)
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	return out.Bytes(), stderr.String(), err
+
 }
