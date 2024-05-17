@@ -191,7 +191,7 @@ export interface ParentSubaccountTransferResponseObject {
 
 /* ------- PNL TICKS TYPES ------- */
 
-export interface HistoricalPnlResponse {
+export interface HistoricalPnlResponse extends PaginationResponse {
   historicalPnl: PnlTicksResponseObject[],
 }
 
@@ -411,7 +411,8 @@ export interface TradeRequest extends LimitAndCreatedBeforeRequest {
 
 export interface PerpetualMarketRequest extends LimitRequest, TickerRequest {}
 
-export interface PnlTicksRequest extends SubaccountRequest, LimitAndCreatedBeforeAndAfterRequest {}
+export interface PnlTicksRequest
+  extends SubaccountRequest, LimitAndCreatedBeforeAndAfterRequest, PaginationRequest {}
 
 export interface ParentSubaccountPnlTicksRequest
   extends ParentSubaccountRequest, LimitAndCreatedBeforeAndAfterRequest {
