@@ -16,8 +16,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
-	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
-	feetierstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/client/testutil"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
@@ -108,27 +106,29 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 	s.cfg.MinGasPrices = fmt.Sprintf("0%s", sdk.DefaultBondDenom)
 
 	// Setting genesis state for Prices.
-	state := genesisState
+	// state := genesisState
 
-	buf, err := s.cfg.Codec.MarshalJSON(&state)
-	s.NoError(err)
-	s.cfg.GenesisState[types.ModuleName] = buf
+	// buf, err := s.cfg.Codec.MarshalJSON(&state)
+	// s.NoError(err)
+	// s.cfg.GenesisState[types.ModuleName] = buf
 
 	// Ensure that no funding-related epochs will occur during this test.
-	epstate := constants.GenerateEpochGenesisStateWithoutFunding()
+	// epstate := constants.GenerateEpochGenesisStateWithoutFunding()
 
-	feeTiersState := feetierstypes.GenesisState{}
-	feeTiersState.Params = constants.PerpetualFeeParams
+	// feeTiersState := feetierstypes.GenesisState{}
+	// feeTiersState.Params = constants.PerpetualFeeParams
 
-	feeTiersBuf, err := s.cfg.Codec.MarshalJSON(&feeTiersState)
-	s.Require().NoError(err)
-	s.cfg.GenesisState[feetierstypes.ModuleName] = feeTiersBuf
+	// feeTiersBuf, err := s.cfg.Codec.MarshalJSON(&feeTiersState)
+	// s.Require().NoError(err)
+	// s.cfg.GenesisState[feetierstypes.ModuleName] = feeTiersBuf
 
-	epbuf, err := s.cfg.Codec.MarshalJSON(&epstate)
-	s.Require().NoError(err)
-	s.cfg.GenesisState[epochstypes.ModuleName] = epbuf
+	// epbuf, err := s.cfg.Codec.MarshalJSON(&epstate)
+	// s.Require().NoError(err)
+	// s.cfg.GenesisState[epochstypes.ModuleName] = epbuf
 
-	// Gock setup.
+	genesis := "\".app_state.epochs.epoch_info_list = [{\\\"name\\\": \\\"funding-sample\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"funding-tick\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"stats-epoch\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}] | .app_state.feetiers.params = {\\\"tiers\\\": [{\\\"name\\\": \\\"1\\\", \\\"maker_fee_ppm\\\": \\\"200\\\", \\\"taker_fee_ppm\\\": \\\"500\\\"}]}\" \"\""
+	network.DeployCustomNetwork(genesis)
+	// // Gock setup.
 	defer gock.Off()         // Flush pending mocks after test execution.
 	gock.DisableNetworking() // Disables real networking.
 	gock.InterceptClient(&client.HttpClient)
@@ -149,13 +149,13 @@ func (s *PricesIntegrationTestSuite) expectMarketPricesWithTimeout(prices map[ui
 
 		time.Sleep(100 * time.Millisecond)
 
-		val := s.network.Validators[0]
-		ctx := val.ClientCtx
-		resp, err := testutil.MsgQueryAllMarketPriceExec(ctx)
+		// val := s.network.Validators[0]
+		// ctx := val.ClientCtx
+		resp, err := testutil.MsgQueryAllMarketPriceExec()
 		s.Require().NoError(err)
 
 		var allMarketPricesQueryResponse types.QueryAllMarketPricesResponse
-		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(resp.Bytes(), &allMarketPricesQueryResponse))
+		s.Require().NoError(s.cfg.Codec.UnmarshalJSON(resp, &allMarketPricesQueryResponse))
 
 		if len(allMarketPricesQueryResponse.MarketPrices) != len(prices) {
 			continue
@@ -193,6 +193,8 @@ func (s *PricesIntegrationTestSuite) TestCLIPrices_AllEmptyResponses_NoPriceUpda
 
 	// Verify.
 	s.expectMarketPricesWithTimeout(expectedPricesWithNoUpdates, 30*time.Second)
+
+	network.CleanupCustomNetwork()
 }
 
 func (s *PricesIntegrationTestSuite) TestCLIPrices_PartialResponses_PartialPriceUpdate() {
@@ -207,6 +209,8 @@ func (s *PricesIntegrationTestSuite) TestCLIPrices_PartialResponses_PartialPrice
 
 	// Verify.
 	s.expectMarketPricesWithTimeout(expectedPricesWithPartialUpdate, 30*time.Second)
+	network.CleanupCustomNetwork()
+
 }
 
 func (s *PricesIntegrationTestSuite) TestCLIPrices_AllValidResponses_ValidPriceUpdate() {
@@ -219,4 +223,6 @@ func (s *PricesIntegrationTestSuite) TestCLIPrices_AllValidResponses_ValidPriceU
 
 	// Verify.
 	s.expectMarketPricesWithTimeout(expectedPricesWithFullUpdate, 30*time.Second)
+	network.CleanupCustomNetwork()
+
 }
