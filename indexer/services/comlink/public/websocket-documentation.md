@@ -183,6 +183,7 @@ export interface OrderSubaccountMessageContents {
   triggerPrice?: string;
   updatedAt?: IsoString;
   updatedAtHeight?: string;
+  orderTimestamp?: Date;
 }
 
 export enum OrderSide {

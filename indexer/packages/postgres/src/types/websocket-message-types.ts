@@ -126,6 +126,7 @@ export interface OrderSubaccountMessageContents {
   // This will only be set for stateful orders
   createdAtHeight?: string;
   clientMetadata: string;
+  orderTimestamp?: Date;
 }
 
 export interface FillSubaccountMessageContents {
