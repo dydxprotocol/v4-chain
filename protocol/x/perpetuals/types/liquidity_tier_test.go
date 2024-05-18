@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 )
@@ -336,6 +337,129 @@ func TestGetInitialMarginQuoteQuantums(t *testing.T) {
 				openInterestNotional.Set(tc.openInterestNotional)
 			}
 			adjustedIMQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(tc.bigQuoteQuantums, openInterestNotional)
+
+			require.Equal(t, tc.expectedInitialMarginQuoteQuantums, adjustedIMQuoteQuantums)
+		})
+	}
+}
+
+func TestGetInitialMarginQuoteQuantumsInt256(t *testing.T) {
+	tests := map[string]struct {
+		initialMarginPpm                   uint32
+		openInterestLowerCap               uint64
+		openInterestUpperCap               uint64
+		openInterestNotional               *int256.Int
+		quoteQuantums                      *int256.Int
+		expectedInitialMarginQuoteQuantums *int256.Int
+	}{
+		"initial margin 20%": {
+			initialMarginPpm: uint32(200_000), // 20%
+			quoteQuantums:    int256.NewInt(500_000),
+			// initial margin * quote quantums
+			// = 20% * 100% * 500_000
+			// = 100_000
+			expectedInitialMarginQuoteQuantums: int256.NewInt(100_000),
+		},
+		"initial margin 50%": {
+			initialMarginPpm: uint32(500_000), // 50%base_IMF_=_10%
+			quoteQuantums:    int256.NewInt(1_000_000),
+			// initial margin * quote quantums
+			// = 50% * 100% * 1_000_000
+			// = 500_000
+			expectedInitialMarginQuoteQuantums: int256.NewInt(500_000),
+		},
+		"initial margin 10%, quote quantums = 1, should round up to 1": {
+			initialMarginPpm: uint32(100_000), // 10%
+			quoteQuantums:    int256.NewInt(1),
+			// initial margin * quote quantums
+			// = 10% * 1
+			// = 0.1 -> round up to 1
+			expectedInitialMarginQuoteQuantums: int256.NewInt(1),
+		},
+		"initial margin 56.7243%, quote quantums = 123_456, should round up to 70_030": {
+			initialMarginPpm: uint32(567_243), // 56.7243%
+			quoteQuantums:    int256.NewInt(123_456),
+			// initial margin * quote quantums
+			// = 56.7243% * 123_456
+			// ~= 70029.5518 -> round up to 70030
+			expectedInitialMarginQuoteQuantums: int256.NewInt(70_030),
+		},
+		"base IMF = 20%, no OIMF since lower_cap = upper_cap = 0": {
+			initialMarginPpm:     uint32(200_000), // 20%
+			quoteQuantums:        int256.NewInt(500_000),
+			openInterestNotional: int256.NewInt(1_500_000_000_000),
+			openInterestLowerCap: 0,
+			openInterestUpperCap: 0,
+			// initial margin * quote quantums
+			// = 20% * 500_000
+			// = 100_000
+			expectedInitialMarginQuoteQuantums: int256.NewInt(100_000),
+		},
+		"base IMF = 20%, scaling_factor = 0.5": {
+			initialMarginPpm:     uint32(200_000), // 20%
+			quoteQuantums:        int256.NewInt(500_000),
+			openInterestNotional: int256.NewInt(1_500_000_000_000),
+			openInterestLowerCap: 1_000_000_000_000,
+			openInterestUpperCap: 2_000_000_000_000,
+			// OIMF = 20% + 0.5 * (1 - 20%) = 20% + 0.5 * 80% = 60%
+			// initial margin * quote quantums
+			// = 60% * 100% * 500_000
+			// = 300_000
+			expectedInitialMarginQuoteQuantums: int256.NewInt(300_000),
+		},
+		"base IMF = 10%, scaling_factor = 1 since open_interest >> upper_cap": {
+			initialMarginPpm:     uint32(200_000), // 20%
+			quoteQuantums:        int256.NewInt(500_000),
+			openInterestNotional: int256.NewInt(80_000_000_000_000),
+			openInterestLowerCap: 25_000_000_000_000,
+			openInterestUpperCap: 50_000_000_000_000,
+			// OIMF = 100%
+			// initial margin * quote quantums
+			// = 100% * 100% * 500_000
+			// = 500_000
+			expectedInitialMarginQuoteQuantums: int256.NewInt(500_000),
+		},
+		"base IMF = 10%, open_interest = lower_cap so scaling_factor = 0": {
+			initialMarginPpm:     uint32(200_000), // 20%
+			quoteQuantums:        int256.NewInt(500_000),
+			openInterestNotional: int256.NewInt(25_000_000_000_000),
+			openInterestLowerCap: 25_000_000_000_000,
+			openInterestUpperCap: 50_000_000_000_000,
+			// OIMF = 20%
+			// initial margin * quote quantums
+			// = 20% * 100% * 500_000
+			// = 100_000
+			expectedInitialMarginQuoteQuantums: int256.NewInt(100_000),
+		},
+		"base IMF = 10%, lower_cap < open_interest < upper_cap, realistic numbers": {
+			initialMarginPpm:     uint32(200_000), // 20%
+			quoteQuantums:        int256.NewInt(500_000),
+			openInterestNotional: int256.NewInt(28_123_456_789_123),
+			openInterestLowerCap: 25_000_000_000_000,
+			openInterestUpperCap: 60_000_000_000_000,
+			// scaling_factor = (28.123 - 25) / (60 - 25) ~= 0.08924
+			// OIMF ~= 0.08924 * 80% + 20%
+			//      ~= 71392% + 20%
+			//      ~= 27.1392%
+			// initial margin * quote quantums
+			// = 27.1392% * 500_000
+			// = 135_697
+			expectedInitialMarginQuoteQuantums: int256.NewInt(135_697),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			liquidityTier := &types.LiquidityTier{
+				InitialMarginPpm:     tc.initialMarginPpm,
+				OpenInterestLowerCap: tc.openInterestLowerCap,
+				OpenInterestUpperCap: tc.openInterestUpperCap,
+			}
+
+			openInterestNotional := int256.NewInt(0)
+			if tc.openInterestNotional != nil {
+				openInterestNotional.Set(tc.openInterestNotional)
+			}
+			adjustedIMQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantumsInt256(tc.quoteQuantums, openInterestNotional)
 
 			require.Equal(t, tc.expectedInitialMarginQuoteQuantums, adjustedIMQuoteQuantums)
 		})

@@ -2,6 +2,8 @@ package lib
 
 import (
 	"math/big"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 )
 
 // BaseToQuoteQuantums converts an amount denoted in base quantums, to an equivalent amount denoted in quote
@@ -31,6 +33,20 @@ func BaseToQuoteQuantums(
 ) (bigNotional *big.Int) {
 	return multiplyByPrice(
 		new(big.Rat).SetInt(bigBaseQuantums),
+		baseCurrencyAtomicResolution,
+		priceValue,
+		priceExponent,
+	)
+}
+
+func BaseToQuoteQuantumsInt256(
+	baseQuantums *int256.Int,
+	baseCurrencyAtomicResolution int32,
+	priceValue uint64,
+	priceExponent int32,
+) (bigNotional *int256.Int) {
+	return multiplyByPriceInt256(
+		baseQuantums,
 		baseCurrencyAtomicResolution,
 		priceValue,
 		priceExponent,
@@ -115,6 +131,17 @@ func multiplyByPrice(
 		ratResult.Num(),
 		ratResult.Denom(),
 	)
+}
+
+func multiplyByPriceInt256(
+	value *int256.Int,
+	baseCurrencyAtomicResolution int32,
+	priceValue uint64,
+	priceExponent int32,
+) (result *int256.Int) {
+	result = int256.NewUnsignedInt(priceValue)
+	result.Mul(result, value)
+	return result.MulExp10(result, int64(priceExponent+baseCurrencyAtomicResolution-QuoteCurrencyAtomicResolution))
 }
 
 // FundingRateToIndex converts funding rate (in ppm) to FundingIndex given the oracle price.

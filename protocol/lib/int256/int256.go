@@ -192,3 +192,27 @@ func (z *Int) MulExp10(x *Int, y int64) *Int {
 	}
 	return z.Neg((*Int)(mulExp10((*uint256.Int)(z), (*uint256.Int)(z.Neg(x)), y)))
 }
+
+// --------------
+
+func (z *Int) DivRoundUp(x *Int, y *Int) *Int {
+	_, m := (*uint256.Int)(z).DivMod(
+		(*uint256.Int)(x),
+		(*uint256.Int)(y),
+		new(uint256.Int),
+	)
+	if !m.IsZero() {
+		z.Add(z, OneInt256)
+	}
+	return z
+}
+
+func (z *Int) MulPpm(x *Int, ppm uint32) *Int {
+	result := z.Mul(x, NewUnsignedInt(uint64(ppm)))
+	return result.Div(result, OneMillionInt256)
+}
+
+func (z *Int) MulPpmRoundUp(x *Int, ppm uint32) *Int {
+	z.Mul(x, NewUnsignedInt(uint64(ppm)))
+	return z.DivRoundUp(z, OneMillionInt256)
+}
