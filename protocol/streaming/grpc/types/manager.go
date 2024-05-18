@@ -28,4 +28,12 @@ type GrpcStreamingManager interface {
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
+	Stop()
+	SetBlockHeight(
+		blockHeight uint32,
+	)
+	FlushStreamUpdates(
+		blockHeight uint32,
+		execMode sdk.ExecMode,
+	)
 }

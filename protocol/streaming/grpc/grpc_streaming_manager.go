@@ -22,6 +22,14 @@ type GrpcStreamingManagerImpl struct {
 	// orderbookSubscriptions maps subscription IDs to their respective orderbook subscriptions.
 	orderbookSubscriptions map[uint32]*OrderbookSubscription
 	nextSubscriptionId     uint32
+
+	// grpc stream will batch and flush out messages every 100 ms.
+	ticker *time.Ticker
+	done   chan bool
+	// map of clob pair id to stream updates.
+	streamUpdateCache map[uint32][]clobtypes.StreamUpdate
+
+	blockHeight uint32
 }
 
 // OrderbookSubscription represents a active subscription to the orderbook updates stream.
@@ -36,14 +44,47 @@ type OrderbookSubscription struct {
 	srv clobtypes.Query_StreamOrderbookUpdatesServer
 }
 
-func NewGrpcStreamingManager() *GrpcStreamingManagerImpl {
-	return &GrpcStreamingManagerImpl{
+func NewGrpcStreamingManager(flushIntervalMs uint32) *GrpcStreamingManagerImpl {
+	grpcStreamingManager := &GrpcStreamingManagerImpl{
 		orderbookSubscriptions: make(map[uint32]*OrderbookSubscription),
+		nextSubscriptionId:     0,
+
+		ticker:            time.NewTicker(time.Duration(flushIntervalMs) * time.Millisecond),
+		done:              make(chan bool),
+		streamUpdateCache: make(map[uint32][]clobtypes.StreamUpdate),
 	}
+
+	// Start the goroutine for pushing order updates through
+	go func() {
+		for {
+			select {
+			case <-grpcStreamingManager.ticker.C:
+				// fix this with values
+				grpcStreamingManager.internalFlushStreamUpdates()
+			case <-grpcStreamingManager.done:
+				return
+			}
+		}
+	}()
+
+	return grpcStreamingManager
 }
 
 func (sm *GrpcStreamingManagerImpl) Enabled() bool {
 	return true
+}
+
+func (sm *GrpcStreamingManagerImpl) Stop() {
+	sm.done <- true
+}
+
+func (sm *GrpcStreamingManagerImpl) internalFlushStreamUpdates() {
+	// temporary
+	sm.FlushStreamUpdates(sm.blockHeight, 0)
+}
+
+func (sm *GrpcStreamingManagerImpl) SetBlockHeight(blockHeight uint32) {
+	sm.blockHeight = blockHeight
 }
 
 // Subscribe subscribes to the orderbook updates stream.
@@ -87,6 +128,8 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 		metrics.GrpcSendOrderbookUpdatesLatency,
 		time.Now(),
 	)
+	sm.Lock()
+	defer sm.Unlock()
 
 	// Group updates by clob pair id.
 	updates := make(map[uint32]*clobtypes.OffchainUpdates)
@@ -99,14 +142,33 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	}
 
 	// Unmarshal messages to v1 updates.
-	v1updates := make(map[uint32][]ocutypes.OffChainUpdateV1)
 	for clobPairId, update := range updates {
 		v1update, err := GetOffchainUpdatesV1(update)
 		if err != nil {
 			panic(err)
 		}
-		v1updates[clobPairId] = v1update
+		streamUpdates := clobtypes.StreamUpdate{
+			UpdateMessage: &clobtypes.StreamUpdate_OrderbookUpdate{
+				OrderbookUpdate: &clobtypes.StreamOrderbookUpdate{
+					Updates:  v1update,
+					Snapshot: snapshot,
+				},
+			},
+		}
+		sm.streamUpdateCache[clobPairId] = append(sm.streamUpdateCache[clobPairId], streamUpdates)
 	}
+}
+
+// FlushStreamUpdates flushes the update cache and sends them out to subscribers.
+func (sm *GrpcStreamingManagerImpl) FlushStreamUpdates(
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
+	defer metrics.ModuleMeasureSince(
+		metrics.FullNodeGrpc,
+		metrics.GrpcFlushStreamUpdatesLatency,
+		time.Now(),
+	)
 
 	sm.Lock()
 	defer sm.Unlock()
@@ -114,25 +176,17 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	// Send updates to subscribers.
 	idsToRemove := make([]uint32, 0)
 	for id, subscription := range sm.orderbookSubscriptions {
-		updatesToSend := make([]ocutypes.OffChainUpdateV1, 0)
+		updatesToSend := make([]clobtypes.StreamUpdate, 0)
 		for _, clobPairId := range subscription.clobPairIds {
-			if updates, ok := v1updates[clobPairId]; ok {
+			if updates, ok := sm.streamUpdateCache[clobPairId]; ok {
 				updatesToSend = append(updatesToSend, updates...)
 			}
 		}
 
 		if len(updatesToSend) > 0 {
-			streamUpdates := clobtypes.StreamUpdate{
-				UpdateMessage: &clobtypes.StreamUpdate_OrderbookUpdate{
-					OrderbookUpdate: &clobtypes.StreamOrderbookUpdate{
-						Updates:  updatesToSend,
-						Snapshot: snapshot,
-					},
-				},
-			}
 			if err := subscription.srv.Send(
 				&clobtypes.StreamOrderbookUpdatesResponse{
-					Updates:     []clobtypes.StreamUpdate{streamUpdates},
+					Updates:     updatesToSend,
 					BlockHeight: blockHeight,
 					ExecMode:    uint32(execMode),
 				},
@@ -147,6 +201,8 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	for _, id := range idsToRemove {
 		delete(sm.orderbookSubscriptions, id)
 	}
+
+	sm.streamUpdateCache = make(map[uint32][]clobtypes.StreamUpdate)
 }
 
 // SendOrderbookFillUpdates groups fills by their clob pair ids and
@@ -162,6 +218,8 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 		metrics.GrpcSendOrderbookFillsLatency,
 		time.Now(),
 	)
+	sm.Lock()
+	defer sm.Unlock()
 
 	// Group fills by clob pair id.
 	updatesByClobPairId := make(map[uint32][]clobtypes.StreamUpdate)
@@ -178,39 +236,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 				OrderFill: &orderbookFill,
 			},
 		}
-		updatesByClobPairId[clobPairId] = append(updatesByClobPairId[clobPairId], streamUpdate)
-	}
-
-	sm.Lock()
-	defer sm.Unlock()
-
-	// Send updates to subscribers.
-	idsToRemove := make([]uint32, 0)
-	for id, subscription := range sm.orderbookSubscriptions {
-		streamUpdatesForSubscription := make([]clobtypes.StreamUpdate, 0)
-		for _, clobPairId := range subscription.clobPairIds {
-			if update, ok := updatesByClobPairId[clobPairId]; ok {
-				streamUpdatesForSubscription = append(streamUpdatesForSubscription, update...)
-			}
-		}
-
-		if len(streamUpdatesForSubscription) > 0 {
-			if err := subscription.srv.Send(
-				&clobtypes.StreamOrderbookUpdatesResponse{
-					Updates:     streamUpdatesForSubscription,
-					BlockHeight: blockHeight,
-					ExecMode:    uint32(execMode),
-				},
-			); err != nil {
-				idsToRemove = append(idsToRemove, id)
-			}
-		}
-	}
-
-	// Clean up subscriptions that have been closed.
-	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
-	for _, id := range idsToRemove {
-		delete(sm.orderbookSubscriptions, id)
+		sm.streamUpdateCache[clobPairId] = append(sm.streamUpdateCache[clobPairId], streamUpdate)
 	}
 }
 

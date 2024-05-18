@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math/big"
 	"net/http"
@@ -457,6 +458,9 @@ func New(
 			}
 			if app.SlinkyClient != nil {
 				app.SlinkyClient.Stop()
+			}
+			if app.GrpcStreamingManager != nil {
+				app.GrpcStreamingManager.Stop()
 			}
 			return nil
 		},
@@ -1642,6 +1646,7 @@ func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithExecMode(lib.ExecModeBeginBlock)
+	app.GrpcStreamingManager.SetBlockHeight(uint32(ctx.BlockHeight()))
 
 	// Update the proposer address in the logger for the panic logging middleware.
 	proposerAddr := sdk.ConsAddress(ctx.BlockHeader().ProposerAddress)
@@ -1670,6 +1675,10 @@ func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 	}
 	block := app.IndexerEventManager.ProduceBlock(ctx)
 	app.IndexerEventManager.SendOnchainData(block)
+
+	if app.GrpcStreamingManager.Enabled() {
+		app.GrpcStreamingManager.FlushStreamUpdates(uint32(ctx.BlockHeight()), ctx.ExecMode())
+	}
 	return response, err
 }
 
@@ -1686,6 +1695,10 @@ func (app *App) PrepareCheckStater(ctx sdk.Context) {
 
 	if err := app.ModuleManager.PrepareCheckState(ctx); err != nil {
 		panic(err)
+	}
+
+	if app.GrpcStreamingManager.Enabled() {
+		app.GrpcStreamingManager.FlushStreamUpdates(uint32(ctx.BlockHeight()), ctx.ExecMode())
 	}
 }
 
@@ -1930,8 +1943,14 @@ func getGrpcStreamingManagerFromOptions(
 	logger log.Logger,
 ) (manager streamingtypes.GrpcStreamingManager) {
 	if appFlags.GrpcStreamingEnabled {
-		logger.Info("GRPC streaming is enabled")
-		return streaming.NewGrpcStreamingManager()
+		flushIntervalMs := uint32(appFlags.GrpcStreamingFlushIntervalMs)
+		logger.Info(
+			fmt.Sprintf(
+				"GRPC streaming is enabled with flush interval %+v",
+				flushIntervalMs,
+			),
+		)
+		return streaming.NewGrpcStreamingManager(uint32(appFlags.GrpcStreamingFlushIntervalMs))
 	}
 	return streaming.NewNoopGrpcStreamingManager()
 }
