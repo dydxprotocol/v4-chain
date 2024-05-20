@@ -281,11 +281,11 @@ describe('OrderRemoveHandler', () => {
               price: testConstants.defaultOrder.price,
               size: testConstants.defaultOrder.size,
               clientMetadata: testConstants.defaultOrder.clientMetadata,
-              type: testConstants.defaultOrder.type,
-              goodTilBlock: testConstants.defaultOrder.goodTilBlock,
               side: testConstants.defaultOrder.side,
               timeInForce: apiTranslations.orderTIFToAPITIF(testConstants.defaultOrder.timeInForce),
               totalFilled: testConstants.defaultOrder.totalFilled,
+              goodTilBlock: testConstants.defaultOrder.goodTilBlock,
+              type: testConstants.defaultOrder.type,
             },
           ],
         };
