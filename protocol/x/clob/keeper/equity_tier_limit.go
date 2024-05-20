@@ -95,7 +95,8 @@ func (k Keeper) getEquityTierLimitForSubaccount(
 	return equityTierLimit, nil, nil
 }
 
-// Deprecated: Equity tier limits were removed for short term orders. See https://github.com/dydxprotocol/v4-chain/pull/1318.
+// Deprecated: Equity tier limits were removed for short term orders.
+// See https://github.com/dydxprotocol/v4-chain/pull/1318.
 //
 // ValidateSubaccountEquityTierLimitForShortTermOrder returns an error if adding the order would exceed the equity
 // tier limit on how many short term open orders a subaccount can have. Short-term fill-or-kill and immediate-or-cancel
