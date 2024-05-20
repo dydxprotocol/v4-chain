@@ -242,7 +242,9 @@ message StatefulOrderEventV1 {
 
   // The type of event that this StatefulOrderEvent contains.
   oneof event {
-    StatefulOrderPlacementV1 order_place = 1 [ deprecated = true ]; // Deprecated in favor of long_term_order_placement
+    StatefulOrderPlacementV1 order_place = 1
+        [ deprecated =
+              true ]; // Deprecated in favor of long_term_order_placement
     StatefulOrderRemovalV1 order_removal = 4;
     ConditionalOrderPlacementV1 conditional_order_placement = 5;
     ConditionalOrderTriggeredV1 conditional_order_triggered = 6;
