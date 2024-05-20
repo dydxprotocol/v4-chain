@@ -92,13 +92,9 @@ func BigMax(a, b *big.Int) *big.Int {
 
 // BigRatMulPpm takes a `big.Rat` and returns the result of `input * ppm / 1_000_000`.
 func BigRatMulPpm(input *big.Rat, ppm uint32) *big.Rat {
-	return new(big.Rat).Mul(
-		input,
-		new(big.Rat).SetFrac64(
-			int64(ppm),
-			int64(OneMillion),
-		),
-	)
+	num := new(big.Int).Mul(input.Num(), big.NewInt(int64(ppm)))
+	den := new(big.Int).Mul(input.Denom(), big.NewInt(int64(OneMillion)))
+	return new(big.Rat).SetFrac(num, den)
 }
 
 // bigGenericClamp is a helper function for BigRatClamp and BigIntClamp
