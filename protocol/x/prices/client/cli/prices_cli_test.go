@@ -197,32 +197,30 @@ func (s *PricesIntegrationTestSuite) TestCLIPrices_AllEmptyResponses_NoPriceUpda
 	network.CleanupCustomNetwork()
 }
 
-// func (s *PricesIntegrationTestSuite) TestCLIPrices_PartialResponses_PartialPriceUpdate() {
-// 	// Setup.
-// 	ts := s.T()
+func (s *PricesIntegrationTestSuite) TestCLIPrices_PartialResponses_PartialPriceUpdate() {
+	// Setup.
+	ts := s.T()
 
-// 	// Add logging to see what's going on in circleCI.
-// 	testutil.SetupExchangeResponses(ts, testutil.PartialResponses_AllExchanges_Eth9001)
+	// Add logging to see what's going on in circleCI.
+	testutil.SetupExchangeResponses(ts, testutil.PartialResponses_AllExchanges_Eth9001)
 
-// 	// Run.
-// 	s.network = network.New(ts, s.cfg)
+	genesis := "\".app_state.epochs.epoch_info_list = [{\\\"name\\\": \\\"funding-sample\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"funding-tick\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"stats-epoch\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}] | .app_state.feetiers.params = {\\\"tiers\\\": [{\\\"name\\\": \\\"1\\\", \\\"maker_fee_ppm\\\": \\\"200\\\", \\\"taker_fee_ppm\\\": \\\"500\\\"}]}\" \"--liquidation-daemon-enabled=false --price-daemon-enabled=true --price-daemon-loop-delay-ms=1000\""
+	network.DeployCustomNetwork(genesis)
 
-// 	// Verify.
-// 	s.expectMarketPricesWithTimeout(expectedPricesWithPartialUpdate, 30*time.Second)
-// 	network.CleanupCustomNetwork()
+	// Verify.
+	s.expectMarketPricesWithTimeout(expectedPricesWithPartialUpdate, 30*time.Second)
+	network.CleanupCustomNetwork()
 
-// }
+}
 
-// func (s *PricesIntegrationTestSuite) TestCLIPrices_AllValidResponses_ValidPriceUpdate() {
-// 	// Setup.
-// 	ts := s.T()
-// 	testutil.SetupExchangeResponses(ts, testutil.FullResponses_AllExchanges_Btc101_Eth9001)
+func (s *PricesIntegrationTestSuite) TestCLIPrices_AllValidResponses_ValidPriceUpdate() {
+	// Setup.
+	ts := s.T()
+	testutil.SetupExchangeResponses(ts, testutil.FullResponses_AllExchanges_Btc101_Eth9001)
+	genesis := "\".app_state.epochs.epoch_info_list = [{\\\"name\\\": \\\"funding-sample\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"funding-tick\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"stats-epoch\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}] | .app_state.feetiers.params = {\\\"tiers\\\": [{\\\"name\\\": \\\"1\\\", \\\"maker_fee_ppm\\\": \\\"200\\\", \\\"taker_fee_ppm\\\": \\\"500\\\"}]}\" \"--liquidation-daemon-enabled=false --price-daemon-enabled=true --price-daemon-loop-delay-ms=1000\""
+	network.DeployCustomNetwork(genesis)
+	// Verify.
+	s.expectMarketPricesWithTimeout(expectedPricesWithFullUpdate, 30*time.Second)
+	network.CleanupCustomNetwork()
 
-// 	// Run.
-// 	s.network = network.New(ts, s.cfg)
-
-// 	// Verify.
-// 	s.expectMarketPricesWithTimeout(expectedPricesWithFullUpdate, 30*time.Second)
-// 	network.CleanupCustomNetwork()
-
-// }
+}
