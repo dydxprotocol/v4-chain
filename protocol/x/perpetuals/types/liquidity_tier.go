@@ -117,7 +117,11 @@ func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantums(
 	) <= 0 {
 		// Calculate base IMR: multiply `bigQuoteQuantums` with `initialMarginPpm` and divide by 1 million.
 		ratBaseIMR := lib.BigRatMulPpm(ratQuoteQuantums, liquidityTier.InitialMarginPpm)
-		return lib.BigRatRound(ratBaseIMR, true) // Round up initial margin.
+		return lib.BigIntDivRound(
+			ratBaseIMR.Num(),
+			ratBaseIMR.Denom(),
+			true, // Round up initial margin.
+		)
 	}
 
 	// If `open_interest_lower_cap` < `open_interest` <= `open_interest_upper_cap`, calculate the scaled OIMF.
@@ -152,23 +156,25 @@ func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantums(
 	}
 
 	// First, calculate base IMF in big.Rat
-	ratBaseIMF := new(big.Rat).SetFrac64(
+	marginFraction := new(big.Rat).SetFrac64(
 		int64(liquidityTier.InitialMarginPpm), // safe, since `InitialMargin` is uint32
 		int64(lib.OneMillion),
 	)
 
 	// `Effective IMF = Min(Base IMF + Max(IMF Increase, 0), 1.0)`
-	ratEffectiveIMF := ratBaseIMF.Add(
-		ratBaseIMF, // reuse pointer for memory efficiency
+	marginFraction.Add(
+		marginFraction,
 		ratIMFIncrease,
 	)
 
 	// `Effective IMR = Effective IMF * Quote Quantums`
-	bigIMREffective := lib.BigRatRound(
-		ratEffectiveIMF.Mul(
-			ratEffectiveIMF, // reuse pointer for memory efficiency
-			ratQuoteQuantums,
-		),
+	marginFraction.Mul(
+		marginFraction,
+		ratQuoteQuantums,
+	)
+	bigIMREffective := lib.BigIntDivRound(
+		marginFraction.Num(),
+		marginFraction.Denom(),
 		true, // Round up initial margin.
 	)
 

@@ -292,6 +292,16 @@ func (k Keeper) GetVaultClobOrders(
 			}
 		}
 
+		roundUpSubticks := side == clobtypes.Order_SIDE_SELL // round up for asks and down for bids.
+		subticks := lib.BigRoundToNearestMultiple(
+			lib.BigIntDivRound(
+				orderSubticks.Num(),
+				orderSubticks.Denom(),
+				roundUpSubticks,
+			),
+			clobPair.SubticksPerTick,
+			roundUpSubticks,
+		)
 		return &clobtypes.Order{
 			OrderId: clobtypes.OrderId{
 				SubaccountId: *vault,

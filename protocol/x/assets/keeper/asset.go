@@ -305,7 +305,11 @@ func (k Keeper) ConvertAssetToCoin(
 	)
 
 	// round down to get denom amount that was converted.
-	bigConvertedDenomAmount := lib.BigRatRound(bigRatDenomAmount, false)
+	bigConvertedDenomAmount := lib.BigIntDivRound(
+		bigRatDenomAmount.Num(),
+		bigRatDenomAmount.Denom(),
+		false,
+	)
 
 	bigRatConvertedQuantums := lib.BigMulPow10(
 		bigConvertedDenomAmount,

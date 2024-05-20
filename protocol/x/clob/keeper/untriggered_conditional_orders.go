@@ -228,7 +228,13 @@ func (untriggeredOrders *UntriggeredConditionalOrders) PollTriggeredConditionalO
 	oraclePriceSubticksRat *big.Rat,
 ) []types.OrderId {
 	triggeredOrderIds := make([]types.OrderId, 0)
-	pessimisticLTESubticks := types.Subticks(lib.BigRatRound(oraclePriceSubticksRat, true).Uint64())
+	pessimisticLTESubticks := types.Subticks(
+		lib.BigIntDivRound(
+			oraclePriceSubticksRat.Num(),
+			oraclePriceSubticksRat.Denom(),
+			true,
+		).Uint64(),
+	)
 	// For the lte array, find all orders that are triggered when oracle price goes lower
 	// than or equal to the trigger price.
 
@@ -245,7 +251,13 @@ func (untriggeredOrders *UntriggeredConditionalOrders) PollTriggeredConditionalO
 	}
 	untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice = newOrdersToTriggerWhenOraclePriceLTETriggerPrice
 
-	pessimisticGTESubticks := types.Subticks(lib.BigRatRound(oraclePriceSubticksRat, false).Uint64())
+	pessimisticGTESubticks := types.Subticks(
+		lib.BigIntDivRound(
+			oraclePriceSubticksRat.Num(),
+			oraclePriceSubticksRat.Denom(),
+			false,
+		).Uint64(),
+	)
 	// For the gte array, find all orders that are triggered when oracle price goes greater
 	// than or equal to the trigger price.
 	newOrdersToTriggerWhenOraclePriceGTETriggerPrice := make([]types.Order, 0)

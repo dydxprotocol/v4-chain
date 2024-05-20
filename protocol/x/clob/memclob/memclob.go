@@ -2463,12 +2463,11 @@ func (m *MemClobPriceTimePriority) getPricePremiumFromSide(
 	)
 
 	// Round result towards zero.
-	var resultRounded *big.Int
-	if result.Sign() > 0 {
-		resultRounded = lib.BigRatRound(result, false)
-	} else {
-		resultRounded = lib.BigRatRound(result, true)
-	}
+	resultRounded := lib.BigIntDivRound(
+		result.Num(),
+		result.Denom(),
+		result.Sign() <= 0,
+	)
 
 	return lib.BigInt32Clamp(
 		resultRounded,

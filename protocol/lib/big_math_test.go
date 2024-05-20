@@ -750,74 +750,87 @@ func TestBigDivCeil(t *testing.T) {
 
 func TestBigRatRound(t *testing.T) {
 	tests := map[string]struct {
-		input          *big.Rat
+		num            *big.Int
+		den            *big.Int
 		roundUp        bool
 		expectedResult *big.Int
 	}{
 		"Input is unrounded if it is zero and we round up": {
-			input:          big.NewRat(0, 1),
+			num:            big.NewInt(0),
+			den:            big.NewInt(1),
 			roundUp:        true,
 			expectedResult: big.NewInt(0),
 		},
 		"Input is unrounded if it is zero and we round down": {
-			input:          big.NewRat(0, 1),
+			num:            big.NewInt(0),
+			den:            big.NewInt(1),
 			roundUp:        false,
 			expectedResult: big.NewInt(0),
 		},
 		"Input is unrounded if it is an int and we round up": {
-			input:          big.NewRat(2, 1),
+			num:            big.NewInt(2),
+			den:            big.NewInt(1),
 			roundUp:        true,
 			expectedResult: big.NewInt(2),
 		},
 		"Input is unrounded if it is an int and we round down": {
-			input:          big.NewRat(2, 1),
+			num:            big.NewInt(2),
+			den:            big.NewInt(1),
 			roundUp:        false,
 			expectedResult: big.NewInt(2),
 		},
 		"Input is unrounded if it isn't normalized, it is an int and we round up": {
-			input:          big.NewRat(21, 3),
+			num:            big.NewInt(21),
+			den:            big.NewInt(3),
 			roundUp:        true,
 			expectedResult: big.NewInt(7),
 		},
 		"Input is unrounded if it isn't normalized, it is an int and we round down": {
-			input:          big.NewRat(21, 3),
+			num:            big.NewInt(21),
+			den:            big.NewInt(3),
 			roundUp:        false,
 			expectedResult: big.NewInt(7),
 		},
 		"Input is rounded up if we round up": {
-			input:          big.NewRat(5, 4),
+			num:            big.NewInt(5),
+			den:            big.NewInt(4),
 			roundUp:        true,
 			expectedResult: big.NewInt(2),
 		},
 		"Input is rounded up if it isn't normalized and we round up": {
-			input:          big.NewRat(10, 4),
+			num:            big.NewInt(10),
+			den:            big.NewInt(4),
 			roundUp:        true,
 			expectedResult: big.NewInt(3),
 		},
 		"Input is rounded down if rational number isn't normalized and we round down": {
-			input:          big.NewRat(10, 4),
+			num:            big.NewInt(10),
+			den:            big.NewInt(4),
 			roundUp:        false,
 			expectedResult: big.NewInt(2),
 		},
 		"Input is rounded down if we round down": {
-			input:          big.NewRat(5, 4),
+			num:            big.NewInt(5),
+			den:            big.NewInt(4),
 			roundUp:        false,
 			expectedResult: big.NewInt(1),
 		},
 		"Input is rounded down if input is negative and we round down": {
-			input:          big.NewRat(-22, 7),
+			num:            big.NewInt(-22),
+			den:            big.NewInt(7),
 			roundUp:        false,
 			expectedResult: big.NewInt(-4),
 		},
 		"Input is rounded up if input is negative and we round up": {
-			input:          big.NewRat(-22, 7),
+			num:            big.NewInt(-22),
+			den:            big.NewInt(7),
 			roundUp:        true,
 			expectedResult: big.NewInt(-3),
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := lib.BigRatRound(tc.input, tc.roundUp)
+			result := lib.BigIntDivRound(tc.num, tc.den, tc.roundUp)
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}
@@ -1115,89 +1128,117 @@ func TestMustConvertBigIntToInt32(t *testing.T) {
 	}
 }
 
-func TestBigRatRoundToNearestMultiple(t *testing.T) {
+func TestBigRoundToNearestMultiple(t *testing.T) {
 	tests := map[string]struct {
-		value          *big.Rat
+		value          *big.Int
 		base           uint32
 		up             bool
 		expectedResult uint64
 	}{
 		"Round 5 down to a multiple of 2": {
-			value:          big.NewRat(5, 1),
+			value:          big.NewInt(5),
 			base:           2,
 			up:             false,
 			expectedResult: 4,
 		},
 		"Round 5 up to a multiple of 2": {
-			value:          big.NewRat(5, 1),
+			value:          big.NewInt(5),
 			base:           2,
 			up:             true,
 			expectedResult: 6,
 		},
 		"Round 7 down to a multiple of 14": {
-			value:          big.NewRat(7, 1),
+			value:          big.NewInt(7),
 			base:           14,
 			up:             false,
 			expectedResult: 0,
 		},
 		"Round 7 up to a multiple of 14": {
-			value:          big.NewRat(7, 1),
+			value:          big.NewInt(7),
 			base:           14,
 			up:             true,
 			expectedResult: 14,
 		},
 		"Round 123 down to a multiple of 123": {
-			value:          big.NewRat(123, 1),
+			value:          big.NewInt(123),
 			base:           123,
 			up:             false,
 			expectedResult: 123,
 		},
 		"Round 123 up to a multiple of 123": {
-			value:          big.NewRat(123, 1),
+			value:          big.NewInt(123),
 			base:           123,
 			up:             true,
 			expectedResult: 123,
 		},
-		"Round 100/6 down to a multiple of 3": {
-			value:          big.NewRat(100, 6),
+		"Round 16 down to a multiple of 3": {
+			value:          big.NewInt(16),
 			base:           3,
 			up:             false,
 			expectedResult: 15,
 		},
-		"Round 100/6 up to a multiple of 3": {
-			value:          big.NewRat(100, 6),
+		"Round 16 up to a multiple of 3": {
+			value:          big.NewInt(16),
 			base:           3,
 			up:             true,
 			expectedResult: 18,
 		},
-		"Round 7/2 down to a multiple of 1": {
-			value:          big.NewRat(7, 2),
+		"Round -16 down to a multiple of 3, is clamped to zero": {
+			value:          big.NewInt(-16),
+			base:           3,
+			up:             false,
+			expectedResult: 0,
+		},
+		"Round -16 up to a multiple of 3, is clamped to zero": {
+			value:          big.NewInt(-16),
+			base:           3,
+			up:             true,
+			expectedResult: 0,
+		},
+		"Round 4 down to a multiple of 1": {
+			value:          big.NewInt(4),
 			base:           1,
 			up:             false,
-			expectedResult: 3,
+			expectedResult: 4,
 		},
-		"Round 7/2 up to a multiple of 1": {
-			value:          big.NewRat(7, 2),
+		"Round 4 up to a multiple of 1": {
+			value:          big.NewInt(4),
 			base:           1,
 			up:             true,
 			expectedResult: 4,
 		},
 		"Round 10 down to a multiple of 0": {
-			value:          big.NewRat(10, 1),
+			value:          big.NewInt(10),
 			base:           0,
 			up:             false,
 			expectedResult: 0,
 		},
 		"Round 10 up to a multiple of 0": {
-			value:          big.NewRat(10, 1),
+			value:          big.NewInt(10),
 			base:           0,
 			up:             true,
 			expectedResult: 0,
 		},
+		"Check overflow is clamped when rounding down": {
+			value: big_testutil.MustFirst(
+				new(big.Int).SetString("99999999999999999999", 10),
+			),
+			base:           100,
+			up:             false,
+			expectedResult: 18446744073709551600,
+		},
+		"Check overflow is clamped when rounding up": {
+			value: big_testutil.MustFirst(
+				new(big.Int).SetString("99999999999999999999", 10),
+			),
+			base:           100,
+			up:             true,
+			expectedResult: 18446744073709551600,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := lib.BigRatRoundToNearestMultiple(
+			result := lib.BigRoundToNearestMultiple(
 				tc.value,
 				tc.base,
 				tc.up,

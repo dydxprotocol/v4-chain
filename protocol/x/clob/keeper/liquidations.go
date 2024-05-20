@@ -1072,7 +1072,11 @@ func (k Keeper) ConvertFillablePriceToSubticks(
 	roundUp := isLiquidatingLong
 
 	// Round the subticks to the nearest `big.Int` in the correct direction.
-	roundedSubticksBig := lib.BigRatRound(subticksRat, roundUp)
+	roundedSubticksBig := lib.BigIntDivRound(
+		subticksRat.Num(),
+		subticksRat.Denom(),
+		roundUp,
+	)
 
 	// Ensure `roundedSubticksBig % clobPair.SubticksPerTick == 0`, rounding in the correct
 	// direction if necessary.

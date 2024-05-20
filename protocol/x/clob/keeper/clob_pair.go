@@ -404,7 +404,12 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 		// the oracle price. For instance without this check a user could place an ask far below the oracle
 		// price, thereby preventing any bids at or above the specified price of the ask.
 		currentOraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
-		currentOraclePriceSubticks := lib.BigRatRound(currentOraclePriceSubticksRat, false).Uint64()
+		currentOraclePriceSubticks := lib.BigIntDivRound(
+			currentOraclePriceSubticksRat.Num(),
+			currentOraclePriceSubticksRat.Denom(),
+			false,
+		).Uint64()
+
 		// Throw error if order is a buy and order subticks is greater than oracle price subticks
 		if order.IsBuy() && order.Subticks > currentOraclePriceSubticks {
 			return errorsmod.Wrapf(

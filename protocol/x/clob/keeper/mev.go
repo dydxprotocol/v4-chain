@@ -381,7 +381,11 @@ func (k Keeper) GetClobMetadata(
 		midPriceSubticks, bestBid, bestAsk, exist := k.MemClob.GetMidPrice(ctx, clobPairId)
 		oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
 		// Consistently round down here.
-		oraclePriceSubticksInt := lib.BigRatRound(oraclePriceSubticksRat, false)
+		oraclePriceSubticksInt := lib.BigIntDivRound(
+			oraclePriceSubticksRat.Num(),
+			oraclePriceSubticksRat.Denom(),
+			false,
+		)
 		if !oraclePriceSubticksInt.IsUint64() {
 			panic(
 				fmt.Sprintf(

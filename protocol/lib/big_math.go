@@ -76,13 +76,9 @@ func BigIntMulPpm(input *big.Int, ppm uint32) *big.Int {
 
 // BigIntMulSignedPpm takes a `big.Int` and returns the result of `input * ppm / 1_000_000`.
 func BigIntMulSignedPpm(input *big.Int, ppm int32, roundUp bool) *big.Int {
-	result := new(big.Rat)
-	result.Mul(
-		new(big.Rat).SetInt(input),
-		new(big.Rat).SetInt64(int64(ppm)),
-	)
-	result.Quo(result, BigRatOneMillion())
-	return BigRatRound(result, roundUp)
+	r := big.NewInt(int64(ppm))
+	r.Mul(r, input)
+	return BigIntDivRound(r, BigIntOneMillion(), roundUp)
 }
 
 // BigMin takes two `big.Int` as parameters and returns the smaller one.
@@ -186,7 +182,7 @@ func BigRatRound(n *big.Rat, roundUp bool) *big.Int {
 	if remainderBig.Sign() > 0 && roundUp {
 		resultBig.Add(resultBig, big.NewInt(1))
 	}
-	return resultBig
+	return result
 }
 
 // BigIntRoundToMultiple takes an input, a multiple, and a direction to round (true for up,
@@ -296,26 +292,32 @@ func warmCache() map[uint64]*big.Int {
 	return bigExponentValues
 }
 
-// BigRatRoundToNearestMultiple rounds `value` up/down to the nearest multiple of `base`.
+// BigRoundToNearestMultiple rounds `value` up/down to the nearest multiple of `base`.
+// Bounds the result between 0 and `math.MaxUint64`.
 // Returns 0 if `base` is 0.
-func BigRatRoundToNearestMultiple(
-	value *big.Rat,
+func BigRoundToNearestMultiple(
+	value *big.Int,
 	base uint32,
 	up bool,
 ) uint64 {
+	// Special-case for zero.
 	if base == 0 {
 		return 0
 	}
 
-	quotient := new(big.Rat).Quo(
-		value,
-		new(big.Rat).SetUint64(uint64(base)),
-	)
-	quotientFloored := new(big.Int).Div(quotient.Num(), quotient.Denom())
-
-	if up && quotientFloored.Cmp(quotient.Num()) != 0 {
-		return (quotientFloored.Uint64() + 1) * uint64(base)
+	// Set up variables.
+	baseBig := new(big.Int).SetUint64(uint64(base))
+	result := new(big.Int).Set(value)
+	if up {
+		result.Add(result, new(big.Int).Sub(baseBig, big.NewInt(1)))
 	}
 
-	return quotientFloored.Uint64() * uint64(base)
+	// Clamp result to prevent overflow.
+	result = BigIntClamp(result, big.NewInt(0), new(big.Int).SetUint64(math.MaxUint64))
+
+	// Do the division, rounding down (since we added `base - 1` if we wanted to round up).
+	result.Div(result, baseBig)
+
+	// Multiply back in.
+	return result.Mul(result, baseBig).Uint64()
 }

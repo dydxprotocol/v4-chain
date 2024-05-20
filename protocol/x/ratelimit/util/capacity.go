@@ -63,7 +63,11 @@ func CalculateNewCapacityList(
 		// Calculate: `capacity_diff = max(baseline, capacity-baseline) * (time_since_last_block / period)`
 		// Since both operands > 0, `capacity_diff` is positive or zero (due to rounding).
 		capacityDiffRat := new(big.Rat).Mul(operandL, operandR)
-		capacityDiff := lib.BigRatRound(capacityDiffRat, false) // rounds down `capacity_diff`
+		capacityDiff := lib.BigIntDivRound(
+			capacityDiffRat.Num(),
+			capacityDiffRat.Denom(),
+			false, // Round down.
+		)
 
 		if new(big.Int).Abs(capacityMinusBaseline).Cmp(capacityDiff) <= 0 {
 			// if `abs(capacity - baseline) < capacity_diff` then `capacity = baseline``
