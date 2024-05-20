@@ -354,6 +354,7 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
 		s.T().Fatalf("Failed to remove Docker container: %v", err)
 	}
 	fmt.Println("Removed Docker container")
+	network.CleanupCustomNetwork()
 	// Check that the `distribution` module account USDC balance has not changed.
 	// distrModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
 	// 	val,
