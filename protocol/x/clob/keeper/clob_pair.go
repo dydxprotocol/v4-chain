@@ -693,3 +693,35 @@ func (k Keeper) IsPerpetualClobPairActive(
 
 	return clobPair.Status == types.ClobPair_STATUS_ACTIVE, nil
 }
+
+func (k Keeper) GetPerpetualClobDetails(
+	ctx sdk.Context,
+	clobPairId types.ClobPairId,
+) (*types.QueryPerpetualClobDetails, error) {
+	clobPair, found := k.GetClobPair(ctx, clobPairId)
+	if !found {
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidClob,
+			"GetPerpetualClobDetails: did not find clob pair with id = %d",
+			clobPairId,
+		)
+	}
+	perpetualId, err := clobPair.GetPerpetualId()
+	if err != nil {
+		return nil, errorsmod.Wrap(
+			types.ErrInvalidClob,
+			err.Error(),
+		)
+	}
+	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return nil, errorsmod.Wrap(
+			types.ErrInvalidClob,
+			err.Error(),
+		)
+	}
+	return &types.QueryPerpetualClobDetails{
+		ClobPair:  clobPair,
+		Perpetual: perpetual,
+	}, nil
+}
