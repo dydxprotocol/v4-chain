@@ -45,8 +45,8 @@ func TestQueryNextDelayedMessageId(t *testing.T) {
 
 			network.DeployCustomNetwork(genesisChanges)
 			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-next-delayed-message-id --node tcp://7.7.8.4:26658 -o json"
-			data, _, err := network.QueryCustomNetwork(delaymsgQuery)
-
+			data, _, _ := network.QueryCustomNetwork(delaymsgQuery)
+			var resp types.QueryNextDelayedMessageIdResponse
 			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 			require.Equal(t, tc.state.NextDelayedMessageId, resp.NextDelayedMessageId)
 
