@@ -27,6 +27,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/funding"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	gometrics "github.com/hashicorp/go-metrics"
@@ -432,46 +433,6 @@ func (k Keeper) MaybeProcessNewFundingSampleEpoch(
 	k.processPremiumVotesIntoSamples(ctx, newFundingSampleEpoch)
 }
 
-// getFundingIndexDelta returns fundingIndexDelta which represents the change of FundingIndex since
-// the last time `funding-tick` was processed.
-// TODO(DEC-1536): Make the 8-hour funding rate period configurable.
-func (k Keeper) getFundingIndexDelta(
-	ctx sdk.Context,
-	perp types.Perpetual,
-	big8hrFundingRatePpm *big.Int,
-	timeSinceLastFunding uint32,
-) (
-	fundingIndexDelta *big.Int,
-	err error,
-) {
-	marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.Params.MarketId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get market price for perpetual %v, err = %w", perp.Params.Id, err)
-	}
-
-	// Get pro-rated funding rate adjusted by time delta.
-	proratedFundingRate := new(big.Rat).SetInt(big8hrFundingRatePpm)
-	proratedFundingRate.Mul(
-		proratedFundingRate,
-		new(big.Rat).SetUint64(uint64(timeSinceLastFunding)),
-	)
-
-	proratedFundingRate.Quo(
-		proratedFundingRate,
-		// TODO(DEC-1536): Make the 8-hour funding rate period configurable.
-		new(big.Rat).SetUint64(3600*8),
-	)
-
-	bigFundingIndexDelta := lib.FundingRateToIndex(
-		proratedFundingRate,
-		perp.Params.AtomicResolution,
-		marketPrice.Price,
-		marketPrice.Exponent,
-	)
-
-	return bigFundingIndexDelta, nil
-}
-
 // GetAddPremiumVotes returns the newest premiums for all perpetuals,
 // if the current block is the start of a new funding-sample epoch.
 // Otherwise, does nothing and returns an empty message.
@@ -770,20 +731,26 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 			))
 		}
 
+		// Update the funding index if the funding rate is non-zero.
 		if bigFundingRatePpm.Sign() != 0 {
-			fundingIndexDelta, err := k.getFundingIndexDelta(
-				ctx,
+			// Get the price of the perpetual from state.
+			marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.Params.MarketId)
+			if err != nil {
+				panic(err)
+			}
+
+			// Calculate the delta in the funding index.
+			fundingIndexDelta := funding.GetFundingIndexDelta(
 				perp,
+				marketPrice,
 				bigFundingRatePpm,
 				// use funding-tick duration as `timeSinceLastFunding`
 				// TODO(DEC-1483): Handle the case when duration value is updated
 				// during the epoch.
 				fundingTickEpochInfo.Duration,
 			)
-			if err != nil {
-				panic(err)
-			}
 
+			// Update the funding index in state.
 			if err := k.ModifyFundingIndex(ctx, perp.Params.Id, fundingIndexDelta); err != nil {
 				panic(err)
 			}
@@ -1095,7 +1062,7 @@ func GetSettlementPpmWithPerpetual(
 
 	bigNetSettlementPpm = new(big.Int).Mul(indexDelta, quantums)
 
-	// `bigNetSettlementPpm` carries sign. `indexDelta`` is the increase in `fundingIndex`, so if
+	// `bigNetSettlementPpm` carries sign. `indexDelta` is the increase in `fundingIndex`, so if
 	// the position is long (positive), the net settlement should be short (negative), and vice versa.
 	// Thus, always negate `bigNetSettlementPpm` here.
 	bigNetSettlementPpm = bigNetSettlementPpm.Neg(bigNetSettlementPpm)
