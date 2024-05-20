@@ -5,7 +5,6 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
-	"os/exec"
 	"strconv"
 	"testing"
 	"time"
@@ -100,11 +99,11 @@ func TestShowEpochInfo(t *testing.T) {
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
 			epochQuery := "docker exec interchain-security-instance-setup interchain-security-cd query epochs show-epoch-info " + tc.id + " --node tcp://7.7.8.4:26658 -o json"
-			cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance-setup interchain-security-cd query epochs show-epoch-info "+tc.id+" --node tcp://7.7.8.4:26658 -o json")
+			// cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance-setup interchain-security-cd query epochs show-epoch-info "+tc.id+" --node tcp://7.7.8.4:26658 -o json")
 			data, stdQueryErr, err := network.QueryCustomNetwork(epochQuery)
 
 			if tc.err != nil {
-				require.Contains(t, sstdQueryErr, "not found")
+				require.Contains(t, stdQueryErr, "not found")
 
 			} else {
 				require.NoError(t, err)
