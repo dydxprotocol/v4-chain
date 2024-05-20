@@ -3,23 +3,24 @@ package cmd
 import (
 	"time"
 
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	tmcfg "github.com/cometbft/cometbft/config"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 )
 
-// const (
-// 	// `minGasPriceUusdc` is default minimum gas price in micro USDC.
-// 	minGasPriceUusdc = "0.025" + assettypes.UusdcDenom
-// 	// `minGasPriceStakeToken` is the default minimum gas price in stake token.
-// 	// TODO(GENESIS): `adv4tnt` is a placeholder for the stake token of the dYdX chain.
-// 	// Before this software is published for genesis, `adv4tnt` should be replaced with
-// 	// the chain stake token. It's also recommended that the min gas price in stake token
-// 	// is roughly the same in value as 0.025 micro USDC.
-// 	minGasPriceStakeToken = "25000000000adv4tnt"
-// 	// `minGasPrice` defines the default `minimum-gas-prices` attribute in validator's `app.toml` file.
-// 	MinGasPrice = minGasPriceUusdc + "," + minGasPriceStakeToken
-// )
+const (
+	// `minGasPriceUusdc` is default minimum gas price in micro USDC.
+	minGasPriceUusdc = "0.025" + assettypes.UusdcDenom
+	// `minGasPriceStakeToken` is the default minimum gas price in stake token.
+	// TODO(GENESIS): `adv4tnt` is a placeholder for the stake token of the dYdX chain.
+	// Before this software is published for genesis, `adv4tnt` should be replaced with
+	// the chain stake token. It's also recommended that the min gas price in stake token
+	// is roughly the same in value as 0.025 micro USDC.
+	minGasPriceStakeToken = "25000000000adv4tnt"
+	// `minGasPrice` defines the default `minimum-gas-prices` attribute in validator's `app.toml` file.
+	MinGasPrice = minGasPriceUusdc + "," + minGasPriceStakeToken
+)
 
 // DydxAppConfig specifies dYdX app specific config.
 type DydxAppConfig struct {
@@ -48,8 +49,8 @@ func initAppConfig() (string, *DydxAppConfig) {
 	//
 	// In simapp, we set the min gas prices to 0.
 
-	//srvCfg.MinGasPrices = MinGasPrice
-	srvCfg.MinGasPrices = "0stake"
+	srvCfg.MinGasPrices = MinGasPrice
+	//srvCfg.MinGasPrices = "0stake"
 
 	appConfig := DydxAppConfig{
 		Config: *srvCfg,
