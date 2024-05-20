@@ -52,7 +52,7 @@ func (om *OffchainUpdates) AddRemoveMessage(orderId OrderId, message msgsender.M
 	om.Messages = append(om.Messages, OffchainUpdateMessage{RemoveMessageType, orderId, message})
 }
 
-// AddRemoveMessage adds an off-chain message for the removal of an order to the OffchainUpdates.
+// AddReplaceMessage adds an off-chain message for the replacement of an order to the OffchainUpdates.
 func (om *OffchainUpdates) AddReplaceMessage(orderId OrderId, message msgsender.Message) {
 	om.Messages = append(om.Messages, OffchainUpdateMessage{ReplaceMessageType, orderId, message})
 }
