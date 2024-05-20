@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -87,19 +88,42 @@ func (sm *GrpcStreamingManagerImpl) EmitMetrics() {
 	metrics.SetGauge(metrics.GrpcStreamingNumConnections, float32(len(sm.orderbookSubscriptions)))
 }
 
+func (sm *GrpcStreamingManagerImpl) removeSubscription(clobPairId uint32) {
+	sm.logger.Info(
+		fmt.Sprintf(
+			"Removing orderbook subscriptions for clob pair id %+v",
+			clobPairId,
+		),
+	)
+	delete(sm.orderbookSubscriptions, clobPairId)
+}
+
 func (sm *GrpcStreamingManagerImpl) sendUpdateResponse(
 	internalResponse bufferInternalResponse,
 ) {
+	sample_rate := 0.01
+	log := false
+	if rand.Float64() < sample_rate {
+		log = true
+	}
+
 	// Send update to subscribers.
 	subscriptionIdsToRemove := make([]uint32, 0)
 
 	for id, subscription := range sm.orderbookSubscriptions {
 		for _, clobPairId := range subscription.clobPairIds {
 			if clobPairId == internalResponse.clobPairId {
+				if log {
+					sm.logger.Info("sending out update")
+				}
 				if err := subscription.srv.Send(
 					&internalResponse.response,
 				); err != nil {
+					sm.logger.Error("Error sending out update", "err", err)
 					subscriptionIdsToRemove = append(subscriptionIdsToRemove, id)
+				}
+				if log {
+					sm.logger.Info("finished sending out update")
 				}
 			}
 		}
@@ -107,7 +131,7 @@ func (sm *GrpcStreamingManagerImpl) sendUpdateResponse(
 	// Clean up subscriptions that have been closed.
 	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
 	for _, id := range subscriptionIdsToRemove {
-		delete(sm.orderbookSubscriptions, id)
+		sm.removeSubscription(id)
 	}
 }
 
@@ -247,7 +271,7 @@ func (sm *GrpcStreamingManagerImpl) mustEnqueueOrderbookUpdate(internalResponse 
 	default:
 		sm.logger.Info("GRPC Streaming buffer full. Clearing all subscriptions")
 		for k := range sm.orderbookSubscriptions {
-			delete(sm.orderbookSubscriptions, k)
+			sm.removeSubscription(k)
 		}
 	}
 }
