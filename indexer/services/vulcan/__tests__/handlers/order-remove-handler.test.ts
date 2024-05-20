@@ -74,6 +74,7 @@ import {
 import { expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
 import { ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
+import config from '../../src/config';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
@@ -99,6 +100,7 @@ describe('OrderRemoveHandler', () => {
     await dbHelpers.clearData();
     await redis.deleteAllAsync(redisClient);
     jest.resetAllMocks();
+    config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_CANCELS_MISSING_ORDERS = false;
   });
 
   afterAll(async () => {
@@ -202,7 +204,26 @@ describe('OrderRemoveHandler', () => {
   });
 
   describe('Order Remove Message - not a Stateful Cancelation', () => {
+    it('successfully returns early if unable to find order in redis', async () => {
+      const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate(defaultOrderRemove);
+
+      const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
+
+      expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
+        at: 'orderRemoveHandler#handleOrderRemoval',
+        message: 'Unable to find order',
+        orderId: defaultOrderRemove.removedOrderId,
+      }));
+      expect(logger.error).not.toHaveBeenCalled();
+      expectTimingStats();
+    });
+
     it('successfully sends subaccount websocket message and returns if unable to find order in redis', async () => {
+      config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_CANCELS_MISSING_ORDERS = true;
       const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate(defaultOrderRemove);
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
@@ -248,6 +269,7 @@ describe('OrderRemoveHandler', () => {
 
     it('successfully sends subaccount websocket message with db order fields if unable to find order in redis',
       async () => {
+        config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_CANCELS_MISSING_ORDERS = true;
         await OrderTable.create(testConstants.defaultOrder);
         const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate(defaultOrderRemove);
         const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();

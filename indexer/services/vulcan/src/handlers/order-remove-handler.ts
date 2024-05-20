@@ -284,24 +284,26 @@ export class OrderRemoveHandler extends Handler {
         orderId: orderRemove.removedOrderId,
         orderRemove,
       });
-      const canceledOrder: OrderFromDatabase | undefined = await runFuncWithTimingStat(
-        OrderTable.findById(OrderTable.orderIdToUuid(orderRemove.removedOrderId!)),
-        this.generateTimingStatsOptions('find_order'),
-      );
-      const subaccountMessage: Message = {
-        value: this.createSubaccountWebsocketMessageFromOrderRemoveMessage(
-          canceledOrder,
-          orderRemove,
-          perpetualMarket.ticker,
-        ),
-        headers,
-      };
-      const reason: OrderRemovalReason = orderRemove.reason;
-      if (!(
-        reason === OrderRemovalReason.ORDER_REMOVAL_REASON_INDEXER_EXPIRED ||
-        reason === OrderRemovalReason.ORDER_REMOVAL_REASON_FULLY_FILLED
-      )) {
-        sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
+      if (config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_CANCELS_MISSING_ORDERS) {
+        const canceledOrder: OrderFromDatabase | undefined = await runFuncWithTimingStat(
+          OrderTable.findById(OrderTable.orderIdToUuid(orderRemove.removedOrderId!)),
+          this.generateTimingStatsOptions('find_order'),
+        );
+        const subaccountMessage: Message = {
+          value: this.createSubaccountWebsocketMessageFromOrderRemoveMessage(
+            canceledOrder,
+            orderRemove,
+            perpetualMarket.ticker,
+          ),
+          headers,
+        };
+        const reason: OrderRemovalReason = orderRemove.reason;
+        if (!(
+          reason === OrderRemovalReason.ORDER_REMOVAL_REASON_INDEXER_EXPIRED ||
+          reason === OrderRemovalReason.ORDER_REMOVAL_REASON_FULLY_FILLED
+        )) {
+          sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
+        }
       }
       return;
     }
