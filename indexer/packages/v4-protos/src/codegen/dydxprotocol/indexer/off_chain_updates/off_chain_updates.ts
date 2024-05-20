@@ -8,7 +8,7 @@ import { toTimestamp, fromTimestamp, DeepPartial, Long } from "../../../helpers"
  * placed.
  */
 
-export enum OrderPlacementStatus {
+export enum OrderPlaceV1_OrderPlacementStatus {
   /** ORDER_PLACEMENT_STATUS_UNSPECIFIED - Default value, this is invalid and unused. */
   ORDER_PLACEMENT_STATUS_UNSPECIFIED = 0,
 
@@ -39,7 +39,7 @@ export enum OrderPlacementStatus {
  * placed.
  */
 
-export enum OrderPlacementStatusSDKType {
+export enum OrderPlaceV1_OrderPlacementStatusSDKType {
   /** ORDER_PLACEMENT_STATUS_UNSPECIFIED - Default value, this is invalid and unused. */
   ORDER_PLACEMENT_STATUS_UNSPECIFIED = 0,
 
@@ -65,38 +65,38 @@ export enum OrderPlacementStatusSDKType {
   ORDER_PLACEMENT_STATUS_OPENED = 2,
   UNRECOGNIZED = -1,
 }
-export function orderPlacementStatusFromJSON(object: any): OrderPlacementStatus {
+export function orderPlaceV1_OrderPlacementStatusFromJSON(object: any): OrderPlaceV1_OrderPlacementStatus {
   switch (object) {
     case 0:
     case "ORDER_PLACEMENT_STATUS_UNSPECIFIED":
-      return OrderPlacementStatus.ORDER_PLACEMENT_STATUS_UNSPECIFIED;
+      return OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_UNSPECIFIED;
 
     case 1:
     case "ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED":
-      return OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED;
+      return OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED;
 
     case 2:
     case "ORDER_PLACEMENT_STATUS_OPENED":
-      return OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED;
+      return OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED;
 
     case -1:
     case "UNRECOGNIZED":
     default:
-      return OrderPlacementStatus.UNRECOGNIZED;
+      return OrderPlaceV1_OrderPlacementStatus.UNRECOGNIZED;
   }
 }
-export function orderPlacementStatusToJSON(object: OrderPlacementStatus): string {
+export function orderPlaceV1_OrderPlacementStatusToJSON(object: OrderPlaceV1_OrderPlacementStatus): string {
   switch (object) {
-    case OrderPlacementStatus.ORDER_PLACEMENT_STATUS_UNSPECIFIED:
+    case OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_UNSPECIFIED:
       return "ORDER_PLACEMENT_STATUS_UNSPECIFIED";
 
-    case OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED:
+    case OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED:
       return "ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED";
 
-    case OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED:
+    case OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED:
       return "ORDER_PLACEMENT_STATUS_OPENED";
 
-    case OrderPlacementStatus.UNRECOGNIZED:
+    case OrderPlaceV1_OrderPlacementStatus.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";
   }
@@ -220,7 +220,7 @@ export function orderRemoveV1_OrderRemovalStatusToJSON(object: OrderRemoveV1_Ord
 
 export interface OrderPlaceV1 {
   order?: IndexerOrder;
-  placementStatus: OrderPlacementStatus;
+  placementStatus: OrderPlaceV1_OrderPlacementStatus;
   /** The timestamp of the order placement. */
 
   timeStamp?: Date;
@@ -229,7 +229,7 @@ export interface OrderPlaceV1 {
 
 export interface OrderPlaceV1SDKType {
   order?: IndexerOrderSDKType;
-  placement_status: OrderPlacementStatusSDKType;
+  placement_status: OrderPlaceV1_OrderPlacementStatusSDKType;
   /** The timestamp of the order placement. */
 
   time_stamp?: Date;
@@ -278,14 +278,18 @@ export interface OrderUpdateV1SDKType {
   order_id?: IndexerOrderIdSDKType;
   total_filled_quantums: Long;
 }
+/** OrderReplace messages contain the replacement order. */
+
 export interface OrderReplaceV1 {
   order?: IndexerOrder;
-  placementStatus: OrderPlacementStatus;
+  placementStatus: OrderPlaceV1_OrderPlacementStatus;
   timeStamp?: Date;
 }
+/** OrderReplace messages contain the replacement order. */
+
 export interface OrderReplaceV1SDKType {
   order?: IndexerOrderSDKType;
-  placement_status: OrderPlacementStatusSDKType;
+  placement_status: OrderPlaceV1_OrderPlacementStatusSDKType;
   time_stamp?: Date;
 }
 /**
