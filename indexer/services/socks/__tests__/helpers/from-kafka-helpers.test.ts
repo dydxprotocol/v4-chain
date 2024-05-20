@@ -156,7 +156,7 @@ describe('from-kafka-helpers', () => {
       expect(messageToForward.subaccountNumber).toEqual(defaultChildAccNumber);
     });
 
-    it('filters out transfers between child subaccounts for parent subaccout channel', () => {
+    it('filters out transfers between child subaccounts for parent subaccount channel', () => {
       const transferContents: SubaccountMessageContents = {
         transfers: {
           ...defaultTransferContents,
