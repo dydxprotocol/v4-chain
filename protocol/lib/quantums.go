@@ -85,7 +85,6 @@ func QuoteToBaseQuantums(
 	// Divide result (towards zero) by priceValue.
 	// If there are two divisions, it is okay to do them separately as the result is the same.
 	result.Quo(result, new(big.Int).SetUint64(priceValue))
-
 	return result
 }
 
