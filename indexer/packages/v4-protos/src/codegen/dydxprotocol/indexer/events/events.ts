@@ -619,6 +619,7 @@ export interface SubaccountUpdateEventV1SDKType {
  */
 
 export interface StatefulOrderEventV1 {
+  /** @deprecated */
   orderPlace?: StatefulOrderEventV1_StatefulOrderPlacementV1;
   orderRemoval?: StatefulOrderEventV1_StatefulOrderRemovalV1;
   conditionalOrderPlacement?: StatefulOrderEventV1_ConditionalOrderPlacementV1;
@@ -634,6 +635,7 @@ export interface StatefulOrderEventV1 {
  */
 
 export interface StatefulOrderEventV1SDKType {
+  /** @deprecated */
   order_place?: StatefulOrderEventV1_StatefulOrderPlacementV1SDKType;
   order_removal?: StatefulOrderEventV1_StatefulOrderRemovalV1SDKType;
   conditional_order_placement?: StatefulOrderEventV1_ConditionalOrderPlacementV1SDKType;
@@ -641,12 +643,18 @@ export interface StatefulOrderEventV1SDKType {
   long_term_order_placement?: StatefulOrderEventV1_LongTermOrderPlacementV1SDKType;
   order_replace?: StatefulOrderEventV1_StatefulOrderReplacementV1SDKType;
 }
-/** A stateful order placement contains an order. */
+/**
+ * A stateful order placement contains an order.
+ * Deprecated in favor of LongTermOrderPlacementV1.
+ */
 
 export interface StatefulOrderEventV1_StatefulOrderPlacementV1 {
   order?: IndexerOrder;
 }
-/** A stateful order placement contains an order. */
+/**
+ * A stateful order placement contains an order.
+ * Deprecated in favor of LongTermOrderPlacementV1.
+ */
 
 export interface StatefulOrderEventV1_StatefulOrderPlacementV1SDKType {
   order?: IndexerOrderSDKType;
