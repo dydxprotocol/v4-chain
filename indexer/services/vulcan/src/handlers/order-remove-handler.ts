@@ -14,6 +14,9 @@ import {
   apiTranslations,
   TimeInForce,
   IsoString,
+  OrderSide,
+  APITimeInForce,
+  OrderType,
 } from '@dydxprotocol-indexer/postgres';
 import {
   OpenOrdersCache,
@@ -569,6 +572,19 @@ export class OrderRemoveHandler extends Handler {
     const createdAtHeight: string | undefined = canceledOrder?.createdAtHeight;
     const updatedAt: IsoString | undefined = canceledOrder?.updatedAt;
     const updatedAtHeight: string | undefined = canceledOrder?.updatedAtHeight;
+    const price: string | undefined = canceledOrder?.price;
+    const size: string | undefined = canceledOrder?.size;
+    const clientMetadata: string | undefined = canceledOrder?.clientMetadata;
+    const reduceOnly: boolean | undefined = canceledOrder?.reduceOnly;
+    const side: OrderSide | undefined = canceledOrder?.side;
+    const timeInForce: APITimeInForce | undefined = canceledOrder
+      ? apiTranslations.orderTIFToAPITIF(canceledOrder.timeInForce) : undefined;
+    const totalFilled: string | undefined = canceledOrder?.totalFilled;
+    const goodTilBlock: string | undefined = canceledOrder?.goodTilBlock;
+    const goodTilBlockTime: string | undefined = canceledOrder?.goodTilBlockTime;
+    const triggerPrice: string | undefined = canceledOrder?.triggerPrice;
+    const type: OrderType | undefined = canceledOrder?.type;
+
     const contents: SubaccountMessageContents = {
       orders: [
         {
@@ -585,6 +601,17 @@ export class OrderRemoveHandler extends Handler {
           ...(createdAtHeight && { createdAtHeight }),
           ...(updatedAt && { updatedAt }),
           ...(updatedAtHeight && { updatedAtHeight }),
+          ...(price && { price }),
+          ...(size && { size }),
+          ...(clientMetadata && { clientMetadata }),
+          ...(reduceOnly && { reduceOnly }),
+          ...(side && { side }),
+          ...(timeInForce && { timeInForce }),
+          ...(totalFilled && { totalFilled }),
+          ...(goodTilBlock && { goodTilBlock }),
+          ...(goodTilBlockTime && { goodTilBlockTime }),
+          ...(triggerPrice && { triggerPrice }),
+          ...(type && { type }),
         },
       ],
     };

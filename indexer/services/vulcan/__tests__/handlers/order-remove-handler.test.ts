@@ -246,6 +246,62 @@ describe('OrderRemoveHandler', () => {
       expectTimingStats();
     });
 
+    it('successfully sends subaccount websocket message with db order fields if unable to find order in redis',
+      async () => {
+        await OrderTable.create(testConstants.defaultOrder);
+        const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate(defaultOrderRemove);
+        const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
+
+        const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
+        await orderRemoveHandler.handleUpdate(
+          offChainUpdate,
+          defaultKafkaHeaders,
+        );
+
+        expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
+          at: 'orderRemoveHandler#handleOrderRemoval',
+          message: 'Unable to find order',
+          orderId: defaultOrderRemove.removedOrderId,
+        }));
+
+        // Subaccounts message is sent
+        const subaccountContents: SubaccountMessageContents = {
+          orders: [
+            {
+              id: OrderTable.orderIdToUuid(redisTestConstants.defaultOrderId),
+              subaccountId: testConstants.defaultSubaccountId,
+              clientId: redisTestConstants.defaultOrderId.clientId.toString(),
+              clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+              status: OrderStatus.CANCELED,
+              orderFlags: redisTestConstants.defaultOrderId.orderFlags.toString(),
+              ticker: redisTestConstants.defaultRedisOrder.ticker,
+              removalReason: OrderRemovalReason[defaultOrderRemove.reason],
+              updatedAt: testConstants.defaultOrder.updatedAt,
+              updatedAtHeight: testConstants.defaultOrder.updatedAtHeight,
+              price: testConstants.defaultOrder.price,
+              size: testConstants.defaultOrder.size,
+              clientMetadata: testConstants.defaultOrder.clientMetadata,
+              type: testConstants.defaultOrder.type,
+              goodTilBlock: testConstants.defaultOrder.goodTilBlock,
+              side: testConstants.defaultOrder.side,
+              timeInForce: apiTranslations.orderTIFToAPITIF(testConstants.defaultOrder.timeInForce),
+              totalFilled: testConstants.defaultOrder.totalFilled,
+            },
+          ],
+        };
+        expectWebsocketMessagesSent(
+          producerSendSpy,
+          SubaccountMessage.fromPartial({
+            contents: JSON.stringify(subaccountContents),
+            subaccountId: redisTestConstants.defaultSubaccountId,
+            version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+          }),
+        );
+
+        expect(logger.error).not.toHaveBeenCalled();
+        expectTimingStats();
+      });
+
     it('successfully returns early if unable to find perpetualMarket', async () => {
       await Promise.all([
         dbHelpers.clearData(),
