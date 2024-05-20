@@ -87,7 +87,7 @@ func TestShowSubaccount(t *testing.T) {
 
 			fmt.Println("Args:", args)
 			subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts show-subaccount " + args[0] + " " + args[1] + " --node tcp://7.7.8.4:26658 -o json"
-			data, _, err := newtork.QueryCustomNetwork(subQuery)
+			data, _, err := network.QueryCustomNetwork(subQuery)
 			require.NoError(t, err)
 			var resp types.QuerySubaccountResponse
 			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
@@ -191,5 +191,5 @@ func TestListSubaccount(t *testing.T) {
 		)
 	})
 
-	network.ClearupCustomNetwork()
+	network.CleanupCustomNetwork()
 }
