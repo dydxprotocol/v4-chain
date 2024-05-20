@@ -501,12 +501,13 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			); success {
 				offchainUpdates.AddReplaceMessage(orderId, message)
 			}
-		}
-		if message, success := off_chain_updates.CreateOrderPlaceMessage(
-			ctx,
-			order,
-		); success {
-			offchainUpdates.AddPlaceMessage(order.OrderId, message)
+		} else {
+			if message, success := off_chain_updates.CreateOrderPlaceMessage(
+				ctx,
+				order,
+			); success {
+				offchainUpdates.AddPlaceMessage(order.OrderId, message)
+			}
 		}
 	}
 

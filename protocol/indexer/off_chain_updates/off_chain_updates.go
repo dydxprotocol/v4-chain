@@ -62,6 +62,18 @@ func CreateOrderPlaceMessage(
 	return msgsender.Message{Key: orderIdHash, Value: update}, true
 }
 
+// MustCreateOrderReplaceMessage invokes CreateOrderReplaceMessage and panics if creation was unsuccessful.
+func MustCreateOrderReplaceMessage(
+	ctx sdk.Context,
+	order clobtypes.Order,
+) msgsender.Message {
+	msg, ok := CreateOrderReplaceMessage(ctx, order)
+	if !ok {
+		panic(fmt.Errorf("Unable to create place order message for order %+v", order))
+	}
+	return msg
+}
+
 // CreateOrderReplaceMessage creates an off-chain update message for an order.
 func CreateOrderReplaceMessage(
 	ctx sdk.Context,
