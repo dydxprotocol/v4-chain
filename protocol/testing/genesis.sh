@@ -85,20 +85,14 @@ function edit_genesis() {
 
 	# Update gov module.
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].denom' -v "$NATIVE_TOKEN"
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_min_deposit.[0].denom' -v "$NATIVE_TOKEN"
 	# reduced deposit period
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '300s'
 	# reduced voting period
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_voting_period' -v '60s'
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '300s'
 	# set initial deposit ratio to prevent spamming
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_initial_deposit_ratio' -v '0.20000' # 20%
-	# setting to 1 disables cancelling proposals
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.proposal_cancel_ratio' -v '1'
-	# require 75% of votes for an expedited proposal to pass
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_threshold' -v '0.75000' # 75%
 
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v "120s"
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v "60s"
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.quorum' -v "0.000000000000000100"
 
 	# Update staking module.
@@ -1443,11 +1437,6 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '378000'
 	# Uncomment the following to schedule the message to execute in ~120 days (at 1.6s per block.)
 	# dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '6480000'
-
-	# ICA Host Params
-	update_ica_host_params
-	# ICA Controller Params
-	update_ica_controller_params
 }
 
 function add_subaccount() {
