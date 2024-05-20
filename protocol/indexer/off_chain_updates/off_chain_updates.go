@@ -62,6 +62,38 @@ func CreateOrderPlaceMessage(
 	return msgsender.Message{Key: orderIdHash, Value: update}, true
 }
 
+// CreateOrderReplaceMessage creates an off-chain update message for an order.
+func CreateOrderReplaceMessage(
+	ctx sdk.Context,
+	order clobtypes.Order,
+) (message msgsender.Message, success bool) {
+	errMessage := "Error creating off-chain update message for replacing order."
+
+	orderIdHash, err := GetOrderIdHash(order.OrderId)
+	if err != nil {
+		log.ErrorLogWithError(
+			ctx,
+			errMessage,
+			err,
+			log.Order, order,
+		)
+		return msgsender.Message{}, false
+	}
+
+	update, err := newOrderReplaceMessage(order)
+	if err != nil {
+		log.ErrorLogWithError(
+			ctx,
+			errMessage,
+			err,
+			log.Order, order,
+		)
+		return msgsender.Message{}, false
+	}
+
+	return msgsender.Message{Key: orderIdHash, Value: update}, true
+}
+
 // MustCreateOrderUpdateMessage invokes CreateOrderUpdateMessage and panics if creation was unsuccessful.
 func MustCreateOrderUpdateMessage(
 	ctx sdk.Context,
@@ -292,6 +324,24 @@ func newOrderUpdateMessage(
 			OrderUpdate: &ocutypes.OrderUpdateV1{
 				OrderId:             &indexerOrderId,
 				TotalFilledQuantums: totalFilled.ToUint64(),
+			},
+		},
+	}
+	return proto.Marshal(&update)
+}
+
+// newOrderReplaceMessage returns an `OffChainUpdate` struct populated with an `OrderReplace` struct
+// as the `UpdateMessage` parameter, encoded as a byte slice.
+func newOrderReplaceMessage(
+	order clobtypes.Order,
+) ([]byte, error) {
+	indexerOrder := v1.OrderToIndexerOrder(order)
+	update := ocutypes.OffChainUpdateV1{
+		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderReplace{
+			OrderReplace: &ocutypes.OrderReplaceV1{
+				Order: &indexerOrder,
+				// Protocol will always send best effort opened messages to indexer.
+				PlacementStatus: ocutypes.OrderPlaceV1_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
 			},
 		},
 	}

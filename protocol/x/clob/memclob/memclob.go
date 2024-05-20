@@ -492,16 +492,14 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	}
 
 	if m.generateOffchainUpdates {
-		// If this is a replacement order, then ensure we send the appropriate removal message.
+		// If this is a replacement order, then ensure we send the appropriate replacement message.
 		orderId := order.OrderId
 		if _, found := m.openOrders.getOrder(ctx, orderId); found {
-			if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+			if message, success := off_chain_updates.CreateOrderReplaceMessage(
 				ctx,
-				orderId,
-				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
-				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				order,
 			); success {
-				offchainUpdates.AddRemoveMessage(orderId, message)
+				offchainUpdates.AddReplaceMessage(orderId, message)
 			}
 		}
 		if message, success := off_chain_updates.CreateOrderPlaceMessage(
