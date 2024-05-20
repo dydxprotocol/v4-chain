@@ -7,6 +7,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBaseToQuoteQuantums(t *testing.T) {
@@ -219,4 +220,34 @@ func TestQuoteToBaseQuantums(t *testing.T) {
 			}
 		})
 	}
+}
+
+func BenchmarkBaseToQuoteQuantums(b *testing.B) {
+	value := big.NewInt(1234123412341)
+	baseCurrencyAtomicResolution := int32(-8)
+	priceValue := uint64(18446744073709551610)
+	priceExponent1 := int32(-10)
+	priceExponent2 := int32(10)
+	var result1 *big.Int
+	var result2 *big.Int
+
+	for i := 0; i < b.N; i++ {
+		result1 = lib.BaseToQuoteQuantums(
+			value,
+			baseCurrencyAtomicResolution,
+			priceValue,
+			priceExponent1,
+		)
+		result2 = lib.BaseToQuoteQuantums(
+			value,
+			baseCurrencyAtomicResolution,
+			priceValue,
+			priceExponent2,
+		)
+	}
+
+	expected1, _ := new(big.Int).SetString("22765558742827551059", 10)
+	require.Equal(b, expected1, result1)
+	expected2, _ := new(big.Int).SetString("2276555874282755105905825041901000000000", 10)
+	require.Equal(b, expected2, result2)
 }
