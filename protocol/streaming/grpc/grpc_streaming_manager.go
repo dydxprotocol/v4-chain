@@ -101,7 +101,7 @@ func (sm *GrpcStreamingManagerImpl) removeSubscription(clobPairId uint32) {
 func (sm *GrpcStreamingManagerImpl) sendUpdateResponse(
 	internalResponse bufferInternalResponse,
 ) {
-	sample_rate := 0.01
+	sample_rate := 1.0
 	log := false
 	if rand.Float64() < sample_rate {
 		log = true
@@ -133,6 +133,7 @@ func (sm *GrpcStreamingManagerImpl) sendUpdateResponse(
 	for _, id := range subscriptionIdsToRemove {
 		sm.removeSubscription(id)
 	}
+	sm.EmitMetrics()
 }
 
 // Subscribe subscribes to the orderbook updates stream.
@@ -267,13 +268,14 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 func (sm *GrpcStreamingManagerImpl) mustEnqueueOrderbookUpdate(internalResponse bufferInternalResponse) {
 	select {
 	case sm.updateBuffer <- internalResponse:
-		return
+		sm.logger.Info("successfully enqueue buffer")
 	default:
 		sm.logger.Info("GRPC Streaming buffer full. Clearing all subscriptions")
 		for k := range sm.orderbookSubscriptions {
 			sm.removeSubscription(k)
 		}
 	}
+	sm.EmitMetrics()
 }
 
 // GetUninitializedClobPairIds returns the clob pair ids that have not been initialized.
