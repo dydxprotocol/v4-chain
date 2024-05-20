@@ -88,6 +88,7 @@ message OrderUpdateV1 {
   uint64 total_filled_quantums = 2;
 }
 
+// OrderReplace messages contain the replacement order.
 message OrderReplaceV1 {
   dydxprotocol.indexer.protocol.v1.IndexerOrder order = 1;
   OrderPlacementStatus placement_status = 2;
