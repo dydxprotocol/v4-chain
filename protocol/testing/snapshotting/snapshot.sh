@@ -51,7 +51,7 @@ now_date() {
     echo -n $(TZ="UTC" date '+%Y-%m-%d_%H:%M:%S')
 }
 
-PREUPGRADE_BINARY_PATH="/bin/dydxprotocold_preupgrade"
+GENESIS_BINARY_PATH="/bin/dydxprotocold_genesis_bin"
 
 install_prerequisites() {
     apk add dasel jq curl
@@ -64,13 +64,33 @@ install_prerequisites() {
     && rm -rf /var/cache/apk/*
 }
 
-setup_preupgrade_binary() {
-	tar_url='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv4.1.0/dydxprotocold-v4.1.0-linux-amd64.tar.gz'
+setup_genesis_binary() {
+	tar_url='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv2.0.0/dydxprotocold-v2.0.0-linux-amd64.tar.gz'
 	tar_path='/tmp/dydxprotocold/dydxprotocold.tar.gz'
 	mkdir -p /tmp/dydxprotocold
 	curl -vL $tar_url -o $tar_path
 	dydxprotocold_path=$(tar -xvf $tar_path --directory /tmp/dydxprotocold)
-	mv /tmp/dydxprotocold/$dydxprotocold_path $PREUPGRADE_BINARY_PATH
+	mv /tmp/dydxprotocold/$dydxprotocold_path $GENESIS_BINARY_PATH
+}
+
+setup_upgrade_binaries() {
+	VAL_HOME_DIR=$1
+	declare -A version_urls=(
+		["v4.1.0"]='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv4.1.0/dydxprotocold-v4.1.0-linux-amd64.tar.gz'
+		["v4.0.0"]='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv4.0.0/dydxprotocold-v4.0.0-linux-amd64.tar.gz'
+		["v3.0.0"]='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv3.0.0/dydxprotocold-v3.0.0-linux-amd64.tar.gz'
+	)
+
+	for version in "${!version_urls[@]}"; do
+		tar_url=${version_urls[$version]}
+		mkdir -p /bin/$version
+		tar_path=/bin/$version/dydxprotocold.tar.gz
+		curl -vL $tar_url -o $tar_path
+		dydxprotocold_path=$(tar -xvf $tar_path --directory /bin/$version)
+		cosmovisor_path=$VAL_HOME_DIR/cosmovisor/upgrades/$version/bin
+		mkdir -p $cosmovisor_path
+		ln -s /bin/$version/$dydxprotocold_path $cosmovisor_path/dydxprotocold
+	done
 }
 
 setup_cosmovisor() {
@@ -78,7 +98,10 @@ setup_cosmovisor() {
     export DAEMON_NAME=dydxprotocold
     export DAEMON_HOME="$HOME/chain/local_node"
 
-    cosmovisor init $PREUPGRADE_BINARY_PATH
+    cosmovisor init $GENESIS_BINARY_PATH
+
+    setup_upgrade_binaries $VAL_HOME_DIR
+
     mkdir -p "$VAL_HOME_DIR/cosmovisor/upgrades/v5.0.0/bin/"
     ln -s /bin/dydxprotocold "$VAL_HOME_DIR/cosmovisor/upgrades/v5.0.0/bin/dydxprotocold"
 }
@@ -97,7 +120,7 @@ log_this() {
 mkdir -p $SNAP_PATH
 touch $LOG_PATH
 sleep 10
-dydxprotocold init --chain-id=${CHAIN_ID} --home /dydxprotocol/chain/local_node local_node
+$GENESIS_BINARY_PATH init --chain-id=${CHAIN_ID} --home /dydxprotocol/chain/local_node local_node
 curl -X GET ${genesis_file_rpc_address}/genesis | jq '.result.genesis' > /dydxprotocol/chain/local_node/config/genesis.json
 
 # Prune snapshots to prevent them from getting too big. We make 3 changes:
@@ -109,7 +132,7 @@ sed -i 's/min-retain-blocks = 0/min-retain-blocks = 2/' /dydxprotocol/chain/loca
 # Do not index tx_index.db
 sed -i 's/indexer = "kv"/indexer = "null"/' /dydxprotocol/chain/local_node/config/config.toml
 
-setup_preupgrade_binary
+setup_genesis_binary
 setup_cosmovisor
 
 # TODO: add metrics around snapshot upload latency/frequency/success rate
