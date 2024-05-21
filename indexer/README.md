@@ -107,6 +107,8 @@ pnpm run test:all
 
 If you change any logic, you'll have to re-build the services and packages before running unit tests.
 
+### To run a single test file:
+`cd services/{service_name} && pnpm build && pnpm test -- {test_name}`
 
 # Running Dockerfile locally
 TODO(DEC-671): Add e2e tests
