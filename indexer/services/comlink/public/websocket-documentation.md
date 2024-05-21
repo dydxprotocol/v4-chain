@@ -162,27 +162,27 @@ export interface OrderSubaccountMessageContents {
   id: string;
   subaccountId: string;
   clientId: string;
-  clobPairId: string;
-  side: OrderSide;
-  size: string;
-  ticker: string,
-  price: string;
-  type: OrderType;
-  timeInForce: APITimeInForce;
-  postOnly: boolean;
-  reduceOnly: boolean;
+  clobPairId?: string;
+  side?: OrderSide;
+  size?: string;
+  ticker?: string,
+  price?: string;
+  type?: OrderType;
+  timeInForce?: APITimeInForce;
+  postOnly?: boolean;
+  reduceOnly?: boolean;
   status: APIOrderStatus;
   orderFlags: string;
   totalFilled?: string;
   totalOptimisticFilled?: string;
   goodTilBlock?: string;
   goodTilBlockTime?: string;
-  removalReason?: string;
-  createdAtHeight?: string;
-  clientMetadata: string;
   triggerPrice?: string;
   updatedAt?: IsoString;
   updatedAtHeight?: string;
+  removalReason?: string;
+  createdAtHeight?: string;
+  clientMetadata?: string;
 }
 
 export enum OrderSide {
