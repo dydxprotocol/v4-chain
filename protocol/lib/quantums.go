@@ -63,19 +63,17 @@ func BaseToQuoteQuantums(
 //	  quoteQuantums / priceValue /
 //	  10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution)
 //
-// The result is rounded down. It is okay to do the divisions separately, as the result is the same.
+// The result is rounded towards zero.
 func QuoteToBaseQuantums(
 	bigQuoteQuantums *big.Int,
 	baseCurrencyAtomicResolution int32,
 	priceValue uint64,
 	priceExponent int32,
 ) (bigNotional *big.Int) {
-	// Determine the non-exponent part of the equation.
-	// We perform all calculations using positive rationals for consistent rounding.
-	isLong := bigQuoteQuantums.Sign() >= 0
-	result := new(big.Int).Abs(bigQuoteQuantums)
+	// Initialize result to quoteQuantums.
+	result := new(big.Int).Set(bigQuoteQuantums)
 
-	// Divide result (towards zero) by 10^(exponent)
+	// Divide result (towards zero) by 10^(exponent).
 	exponent := priceExponent + baseCurrencyAtomicResolution - QuoteCurrencyAtomicResolution
 	power10Exponent := BigPow10(uint64(AbsInt32(exponent)))
 	if exponent > 0 {
@@ -85,12 +83,9 @@ func QuoteToBaseQuantums(
 	}
 
 	// Divide result (towards zero) by priceValue.
+	// If there are two divisions, it is okay to do them separately as the result is the same.
 	result.Quo(result, new(big.Int).SetUint64(priceValue))
 
-	// Flip the sign of the return value if necessary.
-	if !isLong {
-		result.Neg(result)
-	}
 	return result
 }
 
