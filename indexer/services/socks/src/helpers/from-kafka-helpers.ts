@@ -3,13 +3,16 @@ import {
   perpetualMarketRefresher,
   PROTO_TO_CANDLE_RESOLUTION,
   parentSubaccountHelpers,
+  SubaccountMessageContents,
 } from '@dydxprotocol-indexer/postgres';
+import { getParentSubaccountNum } from '@dydxprotocol-indexer/postgres/build/src/lib/parent-subaccount-helpers';
 import {
   CandleMessage,
   MarketMessage,
   OrderbookMessage,
   TradeMessage,
-  SubaccountMessage, CandleMessage_Resolution,
+  SubaccountMessage,
+  CandleMessage_Resolution,
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 
@@ -91,7 +94,7 @@ export function getMessageToForward(
         channel,
         id: getParentSubaccountMessageId(subaccountMessage),
         subaccountNumber: subaccountMessage.subaccountId!.number,
-        contents: JSON.parse(subaccountMessage.contents),
+        contents: getParentSubaccountContents(subaccountMessage),
         version: subaccountMessage.version,
       };
     }
@@ -132,4 +135,36 @@ function getCandleMessageId(candleMessage: CandleMessage): string {
     return `${ticker}/`;
   }
   return `${ticker}/${PROTO_TO_CANDLE_RESOLUTION[candleMessage.resolution]}`;
+}
+
+function getParentSubaccountContents(msg: SubaccountMessage): SubaccountMessageContents {
+  // Filter out transfers between child subaccounts of the same parent subaccount.
+  const contents: SubaccountMessageContents = JSON.parse(msg.contents) as SubaccountMessageContents;
+  if (contents.transfers === undefined) {
+    return contents;
+  }
+
+  const senderAddress: string = contents.transfers.sender.address;
+  const recipientAddress: string = contents.transfers.recipient.address;
+
+  if (senderAddress !== recipientAddress) {
+    return contents;
+  }
+
+  const senderSubaccount: number | undefined = contents.transfers.sender.subaccountNumber;
+  const recipientSubaccount: number | undefined = contents.transfers.recipient.subaccountNumber;
+
+  if (senderSubaccount === undefined || recipientSubaccount === undefined) {
+    return contents;
+  }
+
+  const senderParentSubaccountNumber: number = getParentSubaccountNum(senderSubaccount);
+  const recipientParentSubaccountNumber: number = getParentSubaccountNum(recipientSubaccount);
+
+  if (senderParentSubaccountNumber !== recipientParentSubaccountNumber) {
+    return contents;
+  }
+
+  delete contents.transfers;
+  return contents;
 }
