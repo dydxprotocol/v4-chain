@@ -73,7 +73,7 @@ class TradesController extends Controller {
         page,
       },
       [QueryableField.LIQUIDITY, QueryableField.CLOB_PAIR_ID, QueryableField.LIMIT],
-      { orderBy: [[FillColumns.eventId, Ordering.ASC]] },
+      page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
     );
 
     return {
