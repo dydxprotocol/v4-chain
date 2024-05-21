@@ -11,7 +11,6 @@ import "dydxprotocol/clob/order.proto";
 import "dydxprotocol/clob/matches.proto";
 import "dydxprotocol/clob/liquidations_config.proto";
 import "dydxprotocol/clob/mev.proto";
-import "dydxprotocol/clob/order.proto";
 import "dydxprotocol/indexer/off_chain_updates/off_chain_updates.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
