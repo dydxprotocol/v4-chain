@@ -213,13 +213,18 @@ clean:
 include sims.mk
 include ./mocks/Makefile
 
-e2e-setup:
+GO_BIN_DIR := $(HOME)/go/bin
+SCRIPT_DIR := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
+compile-e2e-setup:
+	cd $(SCRIPT_DIR)/ethos/ethos-chain/tests/e2e && go install
+	mv $(GO_BIN_DIR)/e2e $(SCRIPT_DIR)/ethos/ethos-chain/e2e-setup
+
+compile-testing-files: compile-e2e-setup
+	make -f ethos/ethos-chain/Makefile install-ics-cd
+
+e2e-setup: compile-testing-files
 	@echo "Setting up environment..."
 	@cd ethos/ethos-chain && ./e2e-setup -setup
-
-e2e-setup-linux:
-	@echo "Setting up environment..."
-	@cd ethos/ethos-chain && ./e2e-setup-linux -setup
 
 test: test-unit
 
