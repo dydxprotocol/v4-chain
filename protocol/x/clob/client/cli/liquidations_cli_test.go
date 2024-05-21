@@ -50,6 +50,7 @@ type LiquidationsIntegrationTestSuite struct {
 }
 
 func TestLiquidationOrderIntegrationTestSuite(t *testing.T) {
+	fmt.Println("TestLiquidationOrderIntegrationTestSuite")
 	// Deterministic Mnemonic.
 	validatorMnemonic := constants.AliceMnenomic
 

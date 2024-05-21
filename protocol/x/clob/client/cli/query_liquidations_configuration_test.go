@@ -3,6 +3,7 @@
 package cli_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
@@ -11,6 +12,7 @@ import (
 )
 
 func TestCmdGetLiquidationsConfiguration(t *testing.T) {
+	fmt.Println("TestCmdGetLiquidationsConfiguration")
 	networkWithClobPairObjects(t, 2)
 
 	cfg := network.DefaultConfig(nil)

@@ -3,6 +3,7 @@
 package cli_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
@@ -18,6 +19,7 @@ var (
 )
 
 func TestCmdGetEquityTierLimitConfig(t *testing.T) {
+	fmt.Println("TestCmdGetEquityTierLimitConfig")
 	networkWithClobPairObjects(t, 2)
 
 	cfg := network.DefaultConfig(nil)

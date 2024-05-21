@@ -46,6 +46,7 @@ type CancelOrderIntegrationTestSuite struct {
 }
 
 func TestCancelOrderIntegrationTestSuite(t *testing.T) {
+	fmt.Println("TestCancelOrderIntegrationTestSuite")
 	suite.Run(t, &CancelOrderIntegrationTestSuite{})
 }
 
@@ -343,17 +344,6 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
 		saModuleUSDCBalance,
 	)
 
-	stopCmd := exec.Command("bash", "-c", "docker stop interchain-security-instance")
-	if err := stopCmd.Run(); err != nil {
-		s.T().Fatalf("Failed to stop Docker container: %v", err)
-	}
-	fmt.Println("Stopped Docker container")
-	// Remove the Docker container
-	removeCmd := exec.Command("bash", "-c", "docker rm interchain-security-instance")
-	if err := removeCmd.Run(); err != nil {
-		s.T().Fatalf("Failed to remove Docker container: %v", err)
-	}
-	fmt.Println("Removed Docker container")
 	network.CleanupCustomNetwork()
 	// Check that the `distribution` module account USDC balance has not changed.
 	// distrModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(

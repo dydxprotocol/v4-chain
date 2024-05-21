@@ -58,6 +58,7 @@ func getFullGenesisForClobPair(n int) string {
 }
 
 func TestShowClobPair(t *testing.T) {
+	fmt.Println("TestShowClobPair")
 	_, objs := networkWithClobPairObjects(t, 2)
 
 	common := []string{
@@ -113,6 +114,7 @@ func TestShowClobPair(t *testing.T) {
 }
 
 func TestListClobPair(t *testing.T) {
+	fmt.Println("TestListClobPair")
 	_, objs := networkWithClobPairObjects(t, 5)
 
 	// ctx := net.Validators[0].ClientCtx
