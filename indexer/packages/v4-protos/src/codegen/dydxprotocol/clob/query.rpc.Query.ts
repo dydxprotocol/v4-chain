@@ -25,7 +25,10 @@ export interface Query {
   /** Queries the stateful order for a given order id. */
 
   statefulOrder(request: QueryStatefulOrderRequest): Promise<QueryStatefulOrderResponse>;
-  /** Streams orderbook updates. */
+  /**
+   * Streams orderbook updates. Updates contain orderbook data
+   * such as order placements, updates, and fills.
+   */
 
   streamOrderbookUpdates(request: StreamOrderbookUpdatesRequest): Promise<StreamOrderbookUpdatesResponse>;
 }
