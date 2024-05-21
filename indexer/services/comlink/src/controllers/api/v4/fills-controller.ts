@@ -93,7 +93,7 @@ class FillsController extends Controller {
         page,
       },
       [QueryableField.LIMIT],
-      { orderBy: [[FillColumns.eventId, Ordering.ASC]] },
+      page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
     );
 
     const clobPairIdToPerpetualMarket: Record<
@@ -168,7 +168,7 @@ class FillsController extends Controller {
         page,
       },
       [QueryableField.LIMIT],
-      { orderBy: [[FillColumns.eventId, Ordering.ASC]] },
+      page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
     );
 
     const clobPairIdToPerpetualMarket: Record<

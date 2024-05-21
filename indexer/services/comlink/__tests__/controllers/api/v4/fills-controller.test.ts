@@ -125,10 +125,13 @@ describe('fills-controller#V4', () => {
       );
     });
 
-    it('Get /fills with market gets fills ordered by createdAtHeight descending', async () => {
+    it('Get /fills with market gets correctly ordered fills', async () => {
       // Order and fill for BTC-USD
       await OrderTable.create(testConstants.defaultOrder);
-      await FillTable.create(testConstants.defaultFill);
+      await FillTable.create({
+        ...testConstants.defaultFill,
+        eventId: testConstants.defaultTendermintEventId2,
+      });
 
       // Order and fill for ETH-USD
       const ethOrder: OrderFromDatabase = await OrderTable.create({
@@ -140,11 +143,10 @@ describe('fills-controller#V4', () => {
         ...testConstants.defaultFill,
         orderId: ethOrder.id,
         clobPairId: testConstants.defaultPerpetualMarket2.clobPairId,
-        eventId: testConstants.defaultTendermintEventId2,
         createdAtHeight: '1',
       });
 
-      const response: request.Response = await sendRequest({
+      let response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/fills?address=${testConstants.defaultAddress}` +
           `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}`,
@@ -179,17 +181,36 @@ describe('fills-controller#V4', () => {
         },
       ];
 
-      // Fills should be returned sorted by createdAtHeight in descending order.
+      // Page is not specified, so fills should be returned sorted by createdAtHeight
+      // in descending order.
       expect(response.body.fills).toHaveLength(2);
       expect(response.body.fills).toEqual(
-        expect.arrayContaining([
+        [
           expect.objectContaining({
             ...expected[0],
           }),
           expect.objectContaining({
             ...expected[1],
           }),
-        ]),
+        ],
+      );
+
+      response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/fills?address=${testConstants.defaultAddress}` +
+          `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&page=1&limit=2`,
+      });
+      // Page is specified, so fills should be sorted by eventId in ascending order.
+      expect(response.body.fills).toHaveLength(2);
+      expect(response.body.fills).toEqual(
+        [
+          expect.objectContaining({
+            ...expected[1],
+          }),
+          expect.objectContaining({
+            ...expected[0],
+          }),
+        ],
       );
     });
 
