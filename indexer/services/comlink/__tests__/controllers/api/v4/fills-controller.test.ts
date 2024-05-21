@@ -185,14 +185,14 @@ describe('fills-controller#V4', () => {
       // in descending order.
       expect(response.body.fills).toHaveLength(2);
       expect(response.body.fills).toEqual(
-        expect.arrayContaining([
+        [
           expect.objectContaining({
             ...expected[0],
           }),
           expect.objectContaining({
             ...expected[1],
           }),
-        ]),
+        ],
       );
 
       response = await sendRequest({
@@ -203,14 +203,14 @@ describe('fills-controller#V4', () => {
       // Page is specified, so fills should be sorted by eventId in ascending order.
       expect(response.body.fills).toHaveLength(2);
       expect(response.body.fills).toEqual(
-        expect.arrayContaining([
+        [
           expect.objectContaining({
             ...expected[1],
           }),
           expect.objectContaining({
             ...expected[0],
           }),
-        ]),
+        ],
       );
     });
 
