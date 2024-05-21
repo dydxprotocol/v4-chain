@@ -87,9 +87,10 @@ export class MessageForwarder {
   }
 
   public onMessage(topic: string, message: KafkaMessage): void {
+    const start: number = Date.now();
     stats.timing(
       `${config.SERVICE_NAME}.message_time_in_queue`,
-      Date.now() - Number(message.timestamp),
+      start - Number(message.timestamp),
       config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       {
         topic,
@@ -184,10 +185,10 @@ export class MessageForwarder {
 
     if (subscriptions.length > 0) {
       if (message.channel !== Channel.V4_ORDERBOOK ||
-          (
-            // Don't log orderbook messages unless enabled
-            message.channel === Channel.V4_ORDERBOOK && config.ENABLE_ORDERBOOK_LOGS
-          )
+        (
+          // Don't log orderbook messages unless enabled
+          message.channel === Channel.V4_ORDERBOOK && config.ENABLE_ORDERBOOK_LOGS
+        )
       ) {
         logger.debug({
           at: 'message-forwarder#forwardMessage',
@@ -200,7 +201,7 @@ export class MessageForwarder {
 
     // Buffer messages if the subscription is for batched messages
     if (this.subscriptions.batchedSubscriptions[message.channel] &&
-       this.subscriptions.batchedSubscriptions[message.channel][message.id]) {
+      this.subscriptions.batchedSubscriptions[message.channel][message.id]) {
       const bufferKey: string = this.getMessageBufferKey(
         message.channel,
         message.id,
