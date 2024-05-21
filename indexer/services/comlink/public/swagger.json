@@ -803,10 +803,7 @@
           "STOP_MARKET",
           "TRAILING_STOP",
           "TAKE_PROFIT",
-          "TAKE_PROFIT_MARKET",
-          "HARD_TRADE",
-          "FAILED_HARD_TRADE",
-          "TRANSFER_PLACEHOLDER"
+          "TAKE_PROFIT_MARKET"
         ],
         "type": "string"
       },

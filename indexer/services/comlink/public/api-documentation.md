@@ -1553,9 +1553,6 @@ fetch('https://dydx-testnet.imperator.co/v4/orders?address=string&subaccountNumb
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
-|type|HARD_TRADE|
-|type|FAILED_HARD_TRADE|
-|type|TRANSFER_PLACEHOLDER|
 
 > Example responses
 
@@ -1658,9 +1655,6 @@ Status Code **200**
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
-|type|HARD_TRADE|
-|type|FAILED_HARD_TRADE|
-|type|TRANSFER_PLACEHOLDER|
 |timeInForce|GTT|
 |timeInForce|FOK|
 |timeInForce|IOC|
@@ -1745,9 +1739,6 @@ fetch('https://dydx-testnet.imperator.co/v4/orders/parentSubaccountNumber?addres
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
-|type|HARD_TRADE|
-|type|FAILED_HARD_TRADE|
-|type|TRANSFER_PLACEHOLDER|
 
 > Example responses
 
@@ -1850,9 +1841,6 @@ Status Code **200**
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
-|type|HARD_TRADE|
-|type|FAILED_HARD_TRADE|
-|type|TRANSFER_PLACEHOLDER|
 |timeInForce|GTT|
 |timeInForce|FOK|
 |timeInForce|IOC|
@@ -4080,9 +4068,6 @@ or
 |*anonymous*|TRAILING_STOP|
 |*anonymous*|TAKE_PROFIT|
 |*anonymous*|TAKE_PROFIT_MARKET|
-|*anonymous*|HARD_TRADE|
-|*anonymous*|FAILED_HARD_TRADE|
-|*anonymous*|TRANSFER_PLACEHOLDER|
 
 ## OrderResponseObject
 
