@@ -1322,24 +1322,18 @@ func assertPlaceOrderOffchainMessages(
 
 	// If there are no errors expected, an order place message should be sent.
 	if expectedErr == nil || doesErrorProduceOffchainMessages(expectedErr) {
+		var updateMessage msgsender.Message
 		if expectedToReplaceOrder {
-			updateMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+			updateMessage = off_chain_updates.MustCreateOrderReplaceMessage(
 				ctx,
-				order.OrderId,
-				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
-				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				order,
 			)
-			expectedOffchainMessages = append(
-				expectedOffchainMessages,
-				updateMessage,
+		} else {
+			updateMessage = off_chain_updates.MustCreateOrderPlaceMessage(
+				ctx,
+				order,
 			)
-			require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
 		}
-
-		updateMessage := off_chain_updates.MustCreateOrderPlaceMessage(
-			ctx,
-			order,
-		)
 		expectedOffchainMessages = append(
 			expectedOffchainMessages,
 			updateMessage,

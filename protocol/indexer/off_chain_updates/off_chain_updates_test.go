@@ -35,6 +35,14 @@ var (
 			},
 		},
 	}
+	offchainUpdateOrderReplace = ocutypes.OffChainUpdateV1{
+		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderReplace{
+			OrderReplace: &ocutypes.OrderReplaceV1{
+				Order:           &indexerOrder,
+				PlacementStatus: ocutypes.OrderPlaceV1_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+			},
+		},
+	}
 	offchainUpdateOrderUpdate = ocutypes.OffChainUpdateV1{
 		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderUpdate{
 			OrderUpdate: &ocutypes.OrderUpdateV1{
@@ -72,6 +80,23 @@ func TestCreateOrderPlaceMessage(t *testing.T) {
 	require.True(t, success)
 
 	updateBytes, err := proto.Marshal(&offchainUpdateOrderPlace)
+	require.NoError(t, err)
+	expectedMessage := msgsender.Message{
+		Key:   orderIdHash,
+		Value: updateBytes,
+	}
+	require.Equal(t, expectedMessage, actualMessage)
+}
+
+func TestCreateOrderReplaceMessage(t *testing.T) {
+	ctx, _, _ := sdk.NewSdkContextWithMultistore()
+	actualMessage, success := CreateOrderReplaceMessage(
+		ctx,
+		order,
+	)
+	require.True(t, success)
+
+	updateBytes, err := proto.Marshal(&offchainUpdateOrderReplace)
 	require.NoError(t, err)
 	expectedMessage := msgsender.Message{
 		Key:   orderIdHash,
