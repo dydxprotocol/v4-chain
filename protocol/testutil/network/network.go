@@ -234,6 +234,7 @@ func CleanupCustomNetwork() {
 		panic(fmt.Sprintf("Failed to remove Docker container: %v", err))
 	}
 	fmt.Println("Removed Docker container")
+	time.Sleep(5 * time.Second)
 }
 
 func QueryCustomNetwork(query string) ([]byte, string, error) {
