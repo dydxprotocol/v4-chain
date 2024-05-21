@@ -4,14 +4,12 @@ package cli_test
 
 import (
 	"bytes"
-	"fmt"
 	"os/exec"
 	"strconv"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
-	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,9 +20,7 @@ func TestQueryParams(t *testing.T) {
 
 	cfg := network.DefaultConfig(nil)
 
-	param := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
-
-	cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "rewards", "get-params", param, "--node", "tcp://7.7.8.4:26658", "-o json")
+	cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "rewards", "params", "--node", "tcp://7.7.8.4:26658", "-o json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
