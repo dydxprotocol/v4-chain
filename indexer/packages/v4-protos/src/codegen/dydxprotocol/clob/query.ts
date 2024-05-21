@@ -1,13 +1,12 @@
 import { PageRequest, PageRequestSDKType, PageResponse, PageResponseSDKType } from "../../cosmos/base/query/v1beta1/pagination";
 import { ValidatorMevMatches, ValidatorMevMatchesSDKType, MevNodeToNodeMetrics, MevNodeToNodeMetricsSDKType } from "./mev";
-import { OrderId, OrderIdSDKType, LongTermOrderPlacement, LongTermOrderPlacementSDKType } from "./order";
+import { OrderId, OrderIdSDKType, LongTermOrderPlacement, LongTermOrderPlacementSDKType, Order, OrderSDKType } from "./order";
 import { ClobPair, ClobPairSDKType } from "./clob_pair";
 import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } from "./equity_tier_limit_config";
 import { BlockRateLimitConfiguration, BlockRateLimitConfigurationSDKType } from "./block_rate_limit_config";
 import { LiquidationsConfig, LiquidationsConfigSDKType } from "./liquidations_config";
 import { OffChainUpdateV1, OffChainUpdateV1SDKType } from "../indexer/off_chain_updates/off_chain_updates";
 import { ClobMatch, ClobMatchSDKType } from "./matches";
-import { Order, OrderSDKType } from "./order";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
 /** QueryGetClobPairRequest is request type for the ClobPair method. */
