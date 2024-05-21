@@ -45,7 +45,7 @@ wscli connect wss://indexer.v4testnet.dydx.exchange/v4/ws
 
 ## Subaccounts
 
-This channel provides realtime information about orders, fills, transfers, perpetual positions, and perpetual assets for a subaccount. 
+This channel provides realtime information about orders, fills, transfers, perpetual positions, and perpetual assets for a subaccount.
 
 ### Subscribe
 
@@ -198,9 +198,6 @@ export enum OrderType {
   TRAILING_STOP = 'TRAILING_STOP',
   TAKE_PROFIT = 'TAKE_PROFIT',
   TAKE_PROFIT_MARKET = 'TAKE_PROFIT_MARKET',
-  HARD_TRADE = 'HARD_TRADE',
-  FAILED_HARD_TRADE = 'FAILED_HARD_TRADE',
-  TRANSFER_PLACEHOLDER = 'TRANSFER_PLACEHOLDER',
 }
 
 export enum APITimeInForce {
@@ -302,7 +299,7 @@ export enum TransferType {
 ```
 
 ### Example
-    
+
 ```tsx
 {
   "type": "channel_data",
@@ -385,7 +382,7 @@ export enum TransferType {
 Returns everything from `v4/orderbooks/perpetualMarkets/${id}` endpoint.
 
 - Example
-    
+
     ```tsx
     {
       "type": "subscribed",
@@ -469,7 +466,7 @@ Returns everything from `v4/orderbooks/perpetualMarkets/${id}` endpoint.
     	},
     }
     ```
-    
+
 
 ### Channel Data
 
@@ -492,7 +489,7 @@ type PriceLevel = [string, string];
 ```
 
 - Example
-    
+
     ```tsx
     {
       "type": "channel_data",
@@ -511,7 +508,7 @@ type PriceLevel = [string, string];
       }
     }
     ```
-    
+
 
 ## Trades
 
@@ -528,7 +525,7 @@ type PriceLevel = [string, string];
 Returns everything from `v4/trades/perpetualMarkets/${id}` endpoint.
 
 - Example
-    
+
     ```tsx
     {
       "type": "subscribed",
@@ -696,7 +693,7 @@ Returns everything from `v4/trades/perpetualMarkets/${id}` endpoint.
     	},
     }
     ```
-    
+
 
 ### Channel Data
 
@@ -726,7 +723,7 @@ interface TradeContent {
 ```
 
 ### Example
-    
+
 ```tsx
 {
   "type": "channel_data",
@@ -789,7 +786,7 @@ interface TradeContent {
 Returns everything from `v4/perpetualMarkets` endpoint.
 
 ### Example
-    
+
 ```tsx
 {
   "type": "subscribed",
@@ -908,7 +905,7 @@ interface OraclePriceMarket {
 ```
 
 ### Example
-    
+
 ```tsx
 {
   "type": "channel_data",
