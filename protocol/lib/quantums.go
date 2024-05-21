@@ -63,37 +63,30 @@ func BaseToQuoteQuantums(
 //	  quoteQuantums / priceValue /
 //	  10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution)
 //
-// The result is rounded down.
+// The result is rounded towards zero.
 func QuoteToBaseQuantums(
 	bigQuoteQuantums *big.Int,
 	baseCurrencyAtomicResolution int32,
 	priceValue uint64,
 	priceExponent int32,
 ) (bigNotional *big.Int) {
-	// Determine the non-exponent part of the equation.
-	// We perform all calculations using positive rationals for consistent rounding.
-	isLong := bigQuoteQuantums.Sign() >= 0
-	ratAbsQuoteQuantums := new(big.Rat).Abs(
-		new(big.Rat).SetInt(bigQuoteQuantums),
-	)
-	ratPrice := new(big.Rat).SetUint64(priceValue)
-	ratQuoteQuantumsDivPrice := new(big.Rat).Quo(ratAbsQuoteQuantums, ratPrice)
+	// Initialize result to quoteQuantums.
+	result := new(big.Int).Set(bigQuoteQuantums)
 
-	// Determine the absolute value of the return value.
+	// Divide result (towards zero) by 10^(exponent).
 	exponent := priceExponent + baseCurrencyAtomicResolution - QuoteCurrencyAtomicResolution
-	ratBaseQuantums := new(big.Rat).Quo(
-		ratQuoteQuantumsDivPrice,
-		RatPow10(exponent),
-	)
-
-	// Round down.
-	bigBaseQuantums := BigRatRound(ratBaseQuantums, false)
-
-	// Flip the sign of the return value if necessary.
-	if !isLong {
-		bigBaseQuantums.Neg(bigBaseQuantums)
+	power10Exponent := BigPow10(uint64(AbsInt32(exponent)))
+	if exponent > 0 {
+		result.Quo(result, power10Exponent)
+	} else {
+		result.Mul(result, power10Exponent)
 	}
-	return bigBaseQuantums
+
+	// Divide result (towards zero) by priceValue.
+	// If there are two divisions, it is okay to do them separately as the result is the same.
+	result.Quo(result, new(big.Int).SetUint64(priceValue))
+
+	return result
 }
 
 // multiplyByPrice multiples a value by price, factoring in exponents of base
