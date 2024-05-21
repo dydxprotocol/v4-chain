@@ -46,6 +46,7 @@ type CancelOrderIntegrationTestSuite struct {
 }
 
 func TestCancelOrderIntegrationTestSuite(t *testing.T) {
+	fmt.Println("TestCancelOrderIntegrationTestSuite")
 	suite.Run(t, &CancelOrderIntegrationTestSuite{})
 }
 

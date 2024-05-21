@@ -3,6 +3,7 @@
 package cli_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
@@ -19,10 +20,11 @@ var (
 )
 
 func TestCmdGetBlockRateLimitConfiguration(t *testing.T) {
+	fmt.Println("TestCmdGetBlockRateLimitConfiguration")
 	networkWithClobPairObjects(t, 2)
 
 	cfg := network.DefaultConfig(nil)
-	query := "docker exec interchain-security-instance interchain-security-cd query clob get-block-rate-limit-config  --node tcp://7.7.8.4:26658 -o json"
+	query := "docker exec interchain-security-instance interchain-security-cd query clob get-block-rate-limit-config --node tcp://7.7.8.4:26658 -o json"
 	data, _, err := network.QueryCustomNetwork(query)
 
 	require.NoError(t, err)
