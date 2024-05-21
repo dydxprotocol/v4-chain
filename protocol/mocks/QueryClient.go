@@ -767,10 +767,6 @@ func (_m *QueryClient) StatefulOrder(ctx context.Context, in *clobtypes.QuerySta
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	if len(ret) == 0 {
-		panic("no return value specified for StatefulOrder")
-	}
-
 	var r0 *clobtypes.QueryStatefulOrderResponse
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.QueryStatefulOrderRequest, ...grpc.CallOption) (*clobtypes.QueryStatefulOrderResponse, error)); ok {
