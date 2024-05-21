@@ -74,6 +74,7 @@ import {
 import { expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
 import { ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
+import config from '../../src/config';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
@@ -99,6 +100,7 @@ describe('OrderRemoveHandler', () => {
     await dbHelpers.clearData();
     await redis.deleteAllAsync(redisClient);
     jest.resetAllMocks();
+    config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_CANCELS_MISSING_ORDERS = false;
   });
 
   afterAll(async () => {
@@ -220,6 +222,108 @@ describe('OrderRemoveHandler', () => {
       expectTimingStats();
     });
 
+    it('successfully sends subaccount websocket message and returns if unable to find order in redis', async () => {
+      config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_CANCELS_MISSING_ORDERS = true;
+      const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate(defaultOrderRemove);
+      const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
+
+      const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
+
+      expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
+        at: 'orderRemoveHandler#handleOrderRemoval',
+        message: 'Unable to find order',
+        orderId: defaultOrderRemove.removedOrderId,
+      }));
+
+      // Subaccounts message is sent
+      const subaccountContents: SubaccountMessageContents = {
+        orders: [
+          {
+            id: OrderTable.orderIdToUuid(redisTestConstants.defaultOrderId),
+            subaccountId: testConstants.defaultSubaccountId,
+            clientId: redisTestConstants.defaultOrderId.clientId.toString(),
+            clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+            status: OrderStatus.CANCELED,
+            orderFlags: redisTestConstants.defaultOrderId.orderFlags.toString(),
+            ticker: redisTestConstants.defaultRedisOrder.ticker,
+            removalReason: OrderRemovalReason[defaultOrderRemove.reason],
+          },
+        ],
+      };
+      expectWebsocketMessagesSent(
+        producerSendSpy,
+        SubaccountMessage.fromPartial({
+          contents: JSON.stringify(subaccountContents),
+          subaccountId: redisTestConstants.defaultSubaccountId,
+          version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+        }),
+      );
+
+      expect(logger.error).not.toHaveBeenCalled();
+      expectTimingStats();
+    });
+
+    it('successfully sends subaccount websocket message with db order fields if unable to find order in redis',
+      async () => {
+        config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_CANCELS_MISSING_ORDERS = true;
+        await OrderTable.create(testConstants.defaultOrder);
+        const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate(defaultOrderRemove);
+        const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
+
+        const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
+        await orderRemoveHandler.handleUpdate(
+          offChainUpdate,
+          defaultKafkaHeaders,
+        );
+
+        expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
+          at: 'orderRemoveHandler#handleOrderRemoval',
+          message: 'Unable to find order',
+          orderId: defaultOrderRemove.removedOrderId,
+        }));
+
+        // Subaccounts message is sent
+        const subaccountContents: SubaccountMessageContents = {
+          orders: [
+            {
+              id: OrderTable.orderIdToUuid(redisTestConstants.defaultOrderId),
+              subaccountId: testConstants.defaultSubaccountId,
+              clientId: redisTestConstants.defaultOrderId.clientId.toString(),
+              clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+              status: OrderStatus.CANCELED,
+              orderFlags: redisTestConstants.defaultOrderId.orderFlags.toString(),
+              ticker: redisTestConstants.defaultRedisOrder.ticker,
+              removalReason: OrderRemovalReason[defaultOrderRemove.reason],
+              updatedAt: testConstants.defaultOrder.updatedAt,
+              updatedAtHeight: testConstants.defaultOrder.updatedAtHeight,
+              price: testConstants.defaultOrder.price,
+              size: testConstants.defaultOrder.size,
+              clientMetadata: testConstants.defaultOrder.clientMetadata,
+              side: testConstants.defaultOrder.side,
+              timeInForce: apiTranslations.orderTIFToAPITIF(testConstants.defaultOrder.timeInForce),
+              totalFilled: testConstants.defaultOrder.totalFilled,
+              goodTilBlock: testConstants.defaultOrder.goodTilBlock,
+              type: testConstants.defaultOrder.type,
+            },
+          ],
+        };
+        expectWebsocketMessagesSent(
+          producerSendSpy,
+          SubaccountMessage.fromPartial({
+            contents: JSON.stringify(subaccountContents),
+            subaccountId: redisTestConstants.defaultSubaccountId,
+            version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+          }),
+        );
+
+        expect(logger.error).not.toHaveBeenCalled();
+        expectTimingStats();
+      });
+
     it('successfully returns early if unable to find perpetualMarket', async () => {
       await Promise.all([
         dbHelpers.clearData(),
@@ -235,10 +339,10 @@ describe('OrderRemoveHandler', () => {
         defaultKafkaHeaders,
       );
 
-      const ticker: string = testConstants.defaultPerpetualMarket.ticker;
+      const clobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
       expect(logger.error).toHaveBeenCalledWith({
         at: 'orderRemoveHandler#handle',
-        message: `Unable to find perpetual market with ticker: ${ticker}`,
+        message: `Unable to find perpetual market with clobPairId: ${clobPairId}`,
       });
       expectTimingStats();
     });
