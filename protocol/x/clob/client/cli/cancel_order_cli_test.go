@@ -89,87 +89,87 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 	network.DeployCustomNetwork(fullGenesis)
 }
 
-// // TestCLICancelPendingOrder places then cancels an order from a subaccount, and then places an order from
-// // a different subaccount (with the same owner and different numbers).
-// // The orders placed are expected to match, but should not due to the first order being canceled.
-// // Afterwards, an additional cancel of an unknown is order is made (expected to be a no-op).
-// // The subaccounts are then queried and assertions are performed on their QuoteBalance and PerpetualPositions.
-// // The account which places the orders is also the validator's AccAddress.
-// func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
+// TestCLICancelPendingOrder places then cancels an order from a subaccount, and then places an order from
+// a different subaccount (with the same owner and different numbers).
+// The orders placed are expected to match, but should not due to the first order being canceled.
+// Afterwards, an additional cancel of an unknown is order is made (expected to be a no-op).
+// The subaccounts are then queried and assertions are performed on their QuoteBalance and PerpetualPositions.
+// The account which places the orders is also the validator's AccAddress.
+func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 
-// 	goodTilBlock := uint32(0)
-// 	query := "docker exec interchain-security-instance interchain-security-cd query block --type=height 0 --node tcp://7.7.8.4:26658 -o json"
-// 	data, _, err := network.QueryCustomNetwork(query)
-// 	var resp blocktypes.Block
-// 	require.NoError(s.T(), s.cfg.Codec.UnmarshalJSON(data, &resp))
-// 	blockHeight := resp.LastCommit.Height
+	goodTilBlock := uint32(0)
+	query := "docker exec interchain-security-instance interchain-security-cd query block --type=height 0 --node tcp://7.7.8.4:26658 -o json"
+	data, _, err := network.QueryCustomNetwork(query)
+	var resp blocktypes.Block
+	require.NoError(s.T(), s.cfg.Codec.UnmarshalJSON(data, &resp))
+	blockHeight := resp.LastCommit.Height
 
-// 	goodTilBlock = uint32(blockHeight) + types.ShortBlockWindow
-// 	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
+	goodTilBlock = uint32(blockHeight) + types.ShortBlockWindow
+	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
 
-// 	buyTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658"
-// 	_, _, err = network.QueryCustomNetwork(buyTx)
-// 	s.Require().NoError(err)
+	buyTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658"
+	_, _, err = network.QueryCustomNetwork(buyTx)
+	s.Require().NoError(err)
 
-// 	cancelTx := "docker exec interchain-security-instance interchain-security-cd tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658"
-// 	_, _, err = network.QueryCustomNetwork(cancelTx)
-// 	s.Require().NoError(err)
+	cancelTx := "docker exec interchain-security-instance interchain-security-cd tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658"
+	_, _, err = network.QueryCustomNetwork(cancelTx)
+	s.Require().NoError(err)
 
-// 	sellTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 1 1 0 2 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658"
-// 	_, _, err = network.QueryCustomNetwork(sellTx)
-// 	s.Require().NoError(err)
+	sellTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 1 1 0 2 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658"
+	_, _, err = network.QueryCustomNetwork(sellTx)
+	s.Require().NoError(err)
 
-// 	cancelUknownTx := "docker exec interchain-security-instance interchain-security-cd tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 10 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658"
-// 	_, _, err = network.QueryCustomNetwork(cancelUknownTx)
-// 	s.Require().NoError(err)
+	cancelUknownTx := "docker exec interchain-security-instance interchain-security-cd tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 10 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658"
+	_, _, err = network.QueryCustomNetwork(cancelUknownTx)
+	s.Require().NoError(err)
 
-// 	time.Sleep(5 * time.Second)
+	time.Sleep(5 * time.Second)
 
-// 	// Check that subaccounts balance have not changed, and no positions were opened.
-// 	for _, subaccountNumber := range []uint32{cancelsSubaccountNumberZero, cancelsSubaccountNumberOne} {
-// 		resp, err := sa_testutil.MsgQuerySubaccountExec("dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6", subaccountNumber)
-// 		s.Require().NoError(err)
+	// Check that subaccounts balance have not changed, and no positions were opened.
+	for _, subaccountNumber := range []uint32{cancelsSubaccountNumberZero, cancelsSubaccountNumberOne} {
+		resp, err := sa_testutil.MsgQuerySubaccountExec("dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6", subaccountNumber)
+		s.Require().NoError(err)
 
-// 		var subaccountResp satypes.QuerySubaccountResponse
-// 		s.Require().NoError(s.cfg.Codec.UnmarshalJSON(resp.Bytes(), &subaccountResp))
-// 		subaccount := subaccountResp.Subaccount
+		var subaccountResp satypes.QuerySubaccountResponse
+		s.Require().NoError(s.cfg.Codec.UnmarshalJSON(resp.Bytes(), &subaccountResp))
+		subaccount := subaccountResp.Subaccount
 
-// 		s.Require().Equal(
-// 			new(big.Int).SetInt64(cancelsInitialQuoteBalance),
-// 			subaccount.GetUsdcPosition(),
-// 		)
-// 		s.Require().Len(subaccount.PerpetualPositions, 0)
+		s.Require().Equal(
+			new(big.Int).SetInt64(cancelsInitialQuoteBalance),
+			subaccount.GetUsdcPosition(),
+		)
+		s.Require().Len(subaccount.PerpetualPositions, 0)
 
-// 		s.Require().Equal(
-// 			new(big.Int).SetInt64(cancelsInitialQuoteBalance),
-// 			subaccount.GetUsdcPosition())
-// 		s.Require().Len(subaccount.PerpetualPositions, 0)
-// 	}
+		s.Require().Equal(
+			new(big.Int).SetInt64(cancelsInitialQuoteBalance),
+			subaccount.GetUsdcPosition())
+		s.Require().Len(subaccount.PerpetualPositions, 0)
+	}
 
-// 	// Check that the `subaccounts` module account balance has not changed.
-// 	saModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
-// 		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-// 		s.cfg.Codec,
-// 		satypes.ModuleName,
-// 	)
-// 	s.Require().NoError(err)
-// 	s.Require().Equal(
-// 		cancelsInitialSubaccountModuleAccBalance,
-// 		saModuleUSDCBalance,
-// 	)
+	// Check that the `subaccounts` module account balance has not changed.
+	saModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
+		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
+		s.cfg.Codec,
+		satypes.ModuleName,
+	)
+	s.Require().NoError(err)
+	s.Require().Equal(
+		cancelsInitialSubaccountModuleAccBalance,
+		saModuleUSDCBalance,
+	)
 
-// 	network.CleanupCustomNetwork()
+	network.CleanupCustomNetwork()
 
-// 	// // Check that the `distribution` module account USDC balance has not changed.
-// 	// distrModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
-// 	// 	val,
-// 	// 	s.network.Config.Codec,
-// 	// 	distrtypes.ModuleName,
-// 	// )
+	// // Check that the `distribution` module account USDC balance has not changed.
+	// distrModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
+	// 	val,
+	// 	s.network.Config.Codec,
+	// 	distrtypes.ModuleName,
+	// )
 
-// 	// s.Require().NoError(err)
-// 	// s.Require().Equal(int64(0), distrModuleUSDCBalance)
-// }
+	// s.Require().NoError(err)
+	// s.Require().Equal(int64(0), distrModuleUSDCBalance)
+}
 
 // TestCLICancelMatchingOrders places two matching orders from two different subaccounts (with the
 // same owner and different numbers), then cancels the first matching order a few blocks later.
@@ -343,17 +343,6 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
 		saModuleUSDCBalance,
 	)
 
-	stopCmd := exec.Command("bash", "-c", "docker stop interchain-security-instance")
-	if err := stopCmd.Run(); err != nil {
-		s.T().Fatalf("Failed to stop Docker container: %v", err)
-	}
-	fmt.Println("Stopped Docker container")
-	// Remove the Docker container
-	removeCmd := exec.Command("bash", "-c", "docker rm interchain-security-instance")
-	if err := removeCmd.Run(); err != nil {
-		s.T().Fatalf("Failed to remove Docker container: %v", err)
-	}
-	fmt.Println("Removed Docker container")
 	network.CleanupCustomNetwork()
 	// Check that the `distribution` module account USDC balance has not changed.
 	// distrModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
