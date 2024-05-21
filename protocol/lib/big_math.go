@@ -6,6 +6,32 @@ import (
 	"math/big"
 )
 
+// BigU returns a new big.Int from the input unsigned integer.
+func BigU[T uint | uint32 | uint64](u T) *big.Int {
+	return new(big.Int).SetUint64(uint64(u))
+}
+
+// BigI returns a new big.Int from the input signed integer.
+func BigI[T int | int32 | int64](i T) *big.Int {
+	return big.NewInt(int64(i))
+}
+
+// BigMulPpm returns the result of `val * ppm / 1_000_000`, rounding in the direction indicated.
+func BigMulPpm(val *big.Int, ppm *big.Int, roundUp bool) *big.Int {
+	result := new(big.Int).Mul(val, ppm)
+	oneMillion := BigIntOneMillion()
+	if roundUp {
+		remainder := new(big.Int)
+		result.DivMod(result, oneMillion, remainder)
+		if remainder.Sign() > 0 {
+			result.Add(result, BigI(1))
+		}
+		return result
+	} else {
+		return result.Div(result, oneMillion)
+	}
+}
+
 // BigMulPow10 returns the result of `val * 10^exponent`, in *big.Rat.
 func BigMulPow10(
 	val *big.Int,
