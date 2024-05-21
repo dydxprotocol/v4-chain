@@ -5,6 +5,9 @@ import {
   STATS_FUNCTION_NAME,
   wrapBackgroundTask,
 } from '@dydxprotocol-indexer/base';
+import {
+  defaultTime,
+} from '../helpers/constants';
 import { synchronizeWrapBackgroundTask } from '@dydxprotocol-indexer/dev';
 import {
   ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
@@ -52,14 +55,16 @@ import {
   OrderRemoveV1_OrderRemovalStatus,
   RedisOrder,
   SubaccountMessage,
+  protoTimestampToDate,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
-import { ProducerRecord } from 'kafkajs';
+import { IHeaders, ProducerRecord } from 'kafkajs';
 import { DateTime } from 'luxon';
 
 import { OrderRemoveHandler } from '../../src/handlers/order-remove-handler';
 import { OrderbookSide } from '../../src/lib/types';
 import { redisClient } from '../../src/helpers/redis/redis-controller';
+
 import {
   expectCanceledOrderStatus,
   expectOpenOrderIds,
@@ -135,6 +140,10 @@ describe('OrderRemoveHandler', () => {
     timeInForce: TimeInForce.IOC,
   };
 
+  const defaultKafkaHeaders: IHeaders = {
+    message_received_timestamp: String(protoTimestampToDate(defaultTime)),
+  };
+
   it.each([
     [
       {
@@ -181,7 +190,10 @@ describe('OrderRemoveHandler', () => {
     const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate(orderRemoveJson);
 
     const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-    await expect(orderRemoveHandler.handleUpdate(offChainUpdate)).rejects.toThrow(
+    await expect(orderRemoveHandler.handleUpdate(
+      offChainUpdate,
+      defaultKafkaHeaders,
+    )).rejects.toThrow(
       new ParseMessageError(errorMessage),
     );
     expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
@@ -196,7 +208,10 @@ describe('OrderRemoveHandler', () => {
       const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate(defaultOrderRemove);
 
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-      await orderRemoveHandler.handleUpdate(offChainUpdate);
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
 
       expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
         at: 'orderRemoveHandler#handleOrderRemoval',
@@ -319,7 +334,10 @@ describe('OrderRemoveHandler', () => {
 
       const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate(defaultOrderRemove);
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-      await orderRemoveHandler.handleUpdate(offChainUpdate);
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
 
       const clobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
       expect(logger.error).toHaveBeenCalledWith({
@@ -424,7 +442,10 @@ describe('OrderRemoveHandler', () => {
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-      await orderRemoveHandler.handleUpdate(offChainUpdate);
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
 
       // orderbook level reduced by defaultQuantums
       const remainingOrderbookLevel: string = Big(
@@ -574,7 +595,10 @@ describe('OrderRemoveHandler', () => {
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-      await orderRemoveHandler.handleUpdate(offChainUpdate);
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
 
       await Promise.all([
         expectOrderStatus(expectedOrderUuid, OrderStatus.BEST_EFFORT_CANCELED),
@@ -708,7 +732,10 @@ describe('OrderRemoveHandler', () => {
         const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
         const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-        await orderRemoveHandler.handleUpdate(offChainUpdate);
+        await orderRemoveHandler.handleUpdate(
+          offChainUpdate,
+          defaultKafkaHeaders,
+        );
 
         await Promise.all([
           expectOrderStatus(expectedOrderUuid, OrderStatus.CANCELED),
@@ -846,7 +873,10 @@ describe('OrderRemoveHandler', () => {
         const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
         const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-        await orderRemoveHandler.handleUpdate(offChainUpdate);
+        await orderRemoveHandler.handleUpdate(
+          offChainUpdate,
+          defaultKafkaHeaders,
+        );
 
         await Promise.all([
           expectOrderStatus(expectedOrderUuid, OrderStatus.CANCELED),
@@ -999,7 +1029,10 @@ describe('OrderRemoveHandler', () => {
         const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
         const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-        await orderRemoveHandler.handleUpdate(offChainUpdate);
+        await orderRemoveHandler.handleUpdate(
+          offChainUpdate,
+          defaultKafkaHeaders,
+        );
 
         await Promise.all([
           expectOrderStatus(expectedOrderUuid, removedOrder.status),
@@ -1082,7 +1115,10 @@ describe('OrderRemoveHandler', () => {
         const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
         const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-        await orderRemoveHandler.handleUpdate(offChainUpdate);
+        await orderRemoveHandler.handleUpdate(
+          offChainUpdate,
+          defaultKafkaHeaders,
+        );
 
         await Promise.all([
           expectOrderStatus(expectedOrderUuid, OrderStatus.FILLED),
@@ -1118,7 +1154,10 @@ describe('OrderRemoveHandler', () => {
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-      await orderRemoveHandler.handleUpdate(offChainUpdate);
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
 
       expect(producerSendSpy).not.toHaveBeenCalled();
       expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
@@ -1166,7 +1205,10 @@ describe('OrderRemoveHandler', () => {
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-      await orderRemoveHandler.handleUpdate(offChainUpdate);
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
 
       // Subaccounts message is sent first followed by orderbooks message
       const subaccountContents: SubaccountMessageContents = {
@@ -1266,7 +1308,10 @@ describe('OrderRemoveHandler', () => {
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-      await orderRemoveHandler.handleUpdate(offChainUpdate);
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
 
       await Promise.all([
         // orderbook should not be affected, so it will be set to defaultQuantums
@@ -1383,7 +1428,10 @@ describe('OrderRemoveHandler', () => {
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-      await orderRemoveHandler.handleUpdate(offChainUpdate);
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
 
       // orderbook level reduced by defaultQuantums
       const remainingOrderbookLevel: string = Big(
@@ -1527,7 +1575,10 @@ describe('OrderRemoveHandler', () => {
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-      await orderRemoveHandler.handleUpdate(offChainUpdate);
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
 
       await Promise.all([
         expectOrderbookLevelCache(
@@ -1649,7 +1700,10 @@ describe('OrderRemoveHandler', () => {
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-      await orderRemoveHandler.handleUpdate(offChainUpdate);
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
 
       // orderbook level reduced by defaultQuantums
       const remainingOrderbookLevel: string = Big(
@@ -1780,7 +1834,10 @@ describe('OrderRemoveHandler', () => {
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-      await orderRemoveHandler.handleUpdate(offChainUpdate);
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
 
       // orderbook level should not be reduced
       const remainingOrderbookLevel: string = Big(
@@ -1842,7 +1899,10 @@ describe('OrderRemoveHandler', () => {
         const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
         const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-        await orderRemoveHandler.handleUpdate(offChainUpdate);
+        await orderRemoveHandler.handleUpdate(
+          offChainUpdate,
+          defaultKafkaHeaders,
+        );
 
         expect(producerSendSpy).not.toHaveBeenCalled();
         expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
@@ -1909,7 +1969,10 @@ describe('OrderRemoveHandler', () => {
         const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
         const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-        await orderRemoveHandler.handleUpdate(offChainUpdate);
+        await orderRemoveHandler.handleUpdate(
+          offChainUpdate,
+          defaultKafkaHeaders,
+        );
 
         expect(producerSendSpy).not.toHaveBeenCalled();
         expect(stats.increment).toHaveBeenCalledWith('vulcan.indexer_expired_order_not_found', 1);
@@ -1982,7 +2045,10 @@ describe('OrderRemoveHandler', () => {
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-      await orderRemoveHandler.handleUpdate(offChainUpdate);
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
 
       expect(producerSendSpy).not.toHaveBeenCalled();
       expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
@@ -2044,7 +2110,10 @@ describe('OrderRemoveHandler', () => {
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
-      await orderRemoveHandler.handleUpdate(offChainUpdate);
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
 
       expect(producerSendSpy).not.toHaveBeenCalled();
       expect(
@@ -2148,7 +2217,11 @@ describe('OrderRemoveHandler', () => {
 
     if (expectedSubaccountMessage !== undefined) {
       const subaccountProducerRecord: ProducerRecord = producerSendSpy.mock.calls[0][0];
-      expectWebsocketSubaccountMessage(subaccountProducerRecord, expectedSubaccountMessage);
+      expectWebsocketSubaccountMessage(
+        subaccountProducerRecord,
+        expectedSubaccountMessage,
+        defaultKafkaHeaders,
+      );
     }
 
     if (expectedOrderbookMessage !== undefined) {
