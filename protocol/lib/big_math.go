@@ -6,6 +6,27 @@ import (
 	"math/big"
 )
 
+// BigU returns a new big.Int from the input unsigned integer.
+func BigU[T uint | uint32 | uint64](u T) *big.Int {
+	return new(big.Int).SetUint64(uint64(u))
+}
+
+// BigI returns a new big.Int from the input signed integer.
+func BigI[T int | int32 | int64](i T) *big.Int {
+	return big.NewInt(int64(i))
+}
+
+// BigMulPpm returns the result of `val * ppm / 1_000_000`, rounding in the direction indicated.
+func BigMulPpm(val *big.Int, ppm *big.Int, roundUp bool) *big.Int {
+	result := new(big.Int).Mul(val, ppm)
+	oneMillion := BigIntOneMillion()
+	if roundUp {
+		return BigDivCeil(result, oneMillion)
+	} else {
+		return result.Div(result, oneMillion)
+	}
+}
+
 // BigMulPow10 returns the result of `val * 10^exponent`, in *big.Rat.
 func BigMulPow10(
 	val *big.Int,
@@ -135,6 +156,19 @@ func BigRatClamp(n *big.Rat, lowerBound *big.Rat, upperBound *big.Rat) *big.Rat 
 // See `bigGenericClamp` for specification.
 func BigIntClamp(n *big.Int, lowerBound *big.Int, upperBound *big.Int) *big.Int {
 	return bigGenericClamp(n, lowerBound, upperBound)
+}
+
+// BigDivCeil returns the ceiling of `a / b`.
+func BigDivCeil(a *big.Int, b *big.Int) *big.Int {
+	result, remainder := new(big.Int).QuoRem(a, b, new(big.Int))
+
+	// If the value was rounded (i.e. there is a remainder), and the exact result would be positive,
+	// then add 1 to the result.
+	if remainder.Sign() != 0 && (a.Sign() == b.Sign()) {
+		result.Add(result, big.NewInt(1))
+	}
+
+	return result
 }
 
 // BigRatRound takes an input and a direction to round (true for up, false for down).

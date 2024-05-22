@@ -12,6 +12,138 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func BenchmarkBigI(b *testing.B) {
+	var result *big.Int
+	for i := 0; i < b.N; i++ {
+		result = lib.BigI(int64(i))
+	}
+	require.Equal(b, result, result)
+}
+
+func BenchmarkBigU(b *testing.B) {
+	var result *big.Int
+	for i := 0; i < b.N; i++ {
+		result = lib.BigU(uint32(i))
+	}
+	require.Equal(b, result, result)
+}
+
+func TestBigI(t *testing.T) {
+	require.Equal(t, big.NewInt(-123), lib.BigI(int(-123)))
+	require.Equal(t, big.NewInt(-123), lib.BigI(int32(-123)))
+	require.Equal(t, big.NewInt(-123), lib.BigI(int64(-123)))
+	require.Equal(t, big.NewInt(math.MaxInt64), lib.BigI(math.MaxInt64))
+}
+
+func TestBigU(t *testing.T) {
+	require.Equal(t, big.NewInt(123), lib.BigU(uint(123)))
+	require.Equal(t, big.NewInt(123), lib.BigU(uint32(123)))
+	require.Equal(t, big.NewInt(123), lib.BigU(uint64(123)))
+	require.Equal(t, new(big.Int).SetUint64(math.MaxUint64), lib.BigU(uint64(math.MaxUint64)))
+}
+
+func BenchmarkBigMulPpm_RoundDown(b *testing.B) {
+	val := big.NewInt(543_211)
+	ppm := big.NewInt(876_543)
+	var result *big.Int
+	for i := 0; i < b.N; i++ {
+		result = lib.BigMulPpm(val, ppm, false)
+	}
+	require.Equal(b, big.NewInt(476147), result)
+}
+
+func BenchmarkBigMulPpm_RoundUp(b *testing.B) {
+	val := big.NewInt(543_211)
+	ppm := big.NewInt(876_543)
+	var result *big.Int
+	for i := 0; i < b.N; i++ {
+		result = lib.BigMulPpm(val, ppm, true)
+	}
+	require.Equal(b, big.NewInt(476148), result)
+}
+
+func TestBigMulPpm(t *testing.T) {
+	tests := map[string]struct {
+		val            *big.Int
+		ppm            *big.Int
+		roundUp        bool
+		expectedResult *big.Int
+	}{
+		"Positive round down": {
+			val:            big.NewInt(543_211),
+			ppm:            big.NewInt(876_543),
+			roundUp:        false,
+			expectedResult: big.NewInt(476147),
+		},
+		"Negative round down": {
+			val:            big.NewInt(-543_211),
+			ppm:            big.NewInt(876_543),
+			roundUp:        false,
+			expectedResult: big.NewInt(-476148),
+		},
+		"Positive round up": {
+			val:            big.NewInt(543_211),
+			ppm:            big.NewInt(876_543),
+			roundUp:        true,
+			expectedResult: big.NewInt(476148),
+		},
+		"Negative round up": {
+			val:            big.NewInt(-543_211),
+			ppm:            big.NewInt(876_543),
+			roundUp:        true,
+			expectedResult: big.NewInt(-476147),
+		},
+		"Zero val": {
+			val:            big.NewInt(0),
+			ppm:            big.NewInt(876_543),
+			roundUp:        true,
+			expectedResult: big.NewInt(0),
+		},
+		"Zero ppm": {
+			val:            big.NewInt(543_211),
+			ppm:            big.NewInt(0),
+			roundUp:        true,
+			expectedResult: big.NewInt(0),
+		},
+		"Zero val and ppm": {
+			val:            big.NewInt(0),
+			ppm:            big.NewInt(0),
+			roundUp:        true,
+			expectedResult: big.NewInt(0),
+		},
+		"Negative val": {
+			val:            big.NewInt(-543_211),
+			ppm:            big.NewInt(876_543),
+			roundUp:        true,
+			expectedResult: big.NewInt(-476147),
+		},
+		"Negative ppm": {
+			val:            big.NewInt(543_211),
+			ppm:            big.NewInt(-876_543),
+			roundUp:        true,
+			expectedResult: big.NewInt(-476147),
+		},
+		"Negative val and ppm": {
+			val:            big.NewInt(-543_211),
+			ppm:            big.NewInt(-876_543),
+			roundUp:        true,
+			expectedResult: big.NewInt(476148),
+		},
+		"Greater than max int64": {
+			val:            big_testutil.MustFirst(new(big.Int).SetString("1000000000000000000000000", 10)),
+			ppm:            big.NewInt(10_000),
+			roundUp:        true,
+			expectedResult: big_testutil.MustFirst(new(big.Int).SetString("10000000000000000000000", 10)),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := lib.BigMulPpm(tc.val, tc.ppm, tc.roundUp)
+			require.Equal(t, tc.expectedResult, result)
+		})
+	}
+}
+
 func TestBigPow10(t *testing.T) {
 	tests := map[string]struct {
 		exponent       uint64
@@ -528,6 +660,89 @@ func TestBigIntClamp(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			result := lib.BigIntClamp(tc.input, tc.lower, tc.upper)
+			require.Equal(t, tc.expectedResult, result)
+		})
+	}
+}
+
+func BenchmarkBigDivCeil(b *testing.B) {
+	numerator := big.NewInt(10)
+	denominator := big.NewInt(3)
+	var result *big.Int
+	for i := 0; i < b.N; i++ {
+		result = lib.BigDivCeil(numerator, denominator)
+	}
+	require.Equal(b, big.NewInt(4), result)
+}
+
+func TestBigDivCeil(t *testing.T) {
+	tests := map[string]struct {
+		numerator      *big.Int
+		denominator    *big.Int
+		expectedResult *big.Int
+	}{
+		"Divides evenly": {
+			numerator:      big.NewInt(10),
+			denominator:    big.NewInt(5),
+			expectedResult: big.NewInt(2),
+		},
+		"Doesn't divide evenly": {
+			numerator:      big.NewInt(10),
+			denominator:    big.NewInt(3),
+			expectedResult: big.NewInt(4),
+		},
+		"Negative numerator": {
+			numerator:      big.NewInt(-10),
+			denominator:    big.NewInt(3),
+			expectedResult: big.NewInt(-3),
+		},
+		"Negative numerator 2": {
+			numerator:      big.NewInt(-1),
+			denominator:    big.NewInt(2),
+			expectedResult: big.NewInt(0),
+		},
+		"Negative denominator": {
+			numerator:      big.NewInt(10),
+			denominator:    big.NewInt(-3),
+			expectedResult: big.NewInt(-3),
+		},
+		"Negative denominator 2": {
+			numerator:      big.NewInt(1),
+			denominator:    big.NewInt(-2),
+			expectedResult: big.NewInt(0),
+		},
+		"Negative numerator and denominator": {
+			numerator:      big.NewInt(-10),
+			denominator:    big.NewInt(-3),
+			expectedResult: big.NewInt(4),
+		},
+		"Negative numerator and denominator 2": {
+			numerator:      big.NewInt(-1),
+			denominator:    big.NewInt(-2),
+			expectedResult: big.NewInt(1),
+		},
+		"Zero numerator": {
+			numerator:      big.NewInt(0),
+			denominator:    big.NewInt(3),
+			expectedResult: big.NewInt(0),
+		},
+		"Zero denominator": {
+			numerator:      big.NewInt(10),
+			denominator:    big.NewInt(0),
+			expectedResult: nil,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Panics if the expected result is nil
+			if tc.expectedResult == nil {
+				require.Panics(t, func() {
+					lib.BigDivCeil(tc.numerator, tc.denominator)
+				})
+				return
+			}
+			// Otherwise test the result
+			result := lib.BigDivCeil(tc.numerator, tc.denominator)
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}
