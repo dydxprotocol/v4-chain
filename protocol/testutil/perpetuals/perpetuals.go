@@ -44,6 +44,12 @@ func WithLiquidityTier(liquidityTier uint32) PerpetualModifierOption {
 	}
 }
 
+func WithAtomicResolution(atomicResolution int32) PerpetualModifierOption {
+	return func(cp *perptypes.Perpetual) {
+		cp.Params.AtomicResolution = atomicResolution
+	}
+}
+
 func WithMarketType(marketType perptypes.PerpetualMarketType) PerpetualModifierOption {
 	return func(cp *perptypes.Perpetual) {
 		cp.Params.MarketType = marketType
