@@ -21,12 +21,7 @@ func BigMulPpm(val *big.Int, ppm *big.Int, roundUp bool) *big.Int {
 	result := new(big.Int).Mul(val, ppm)
 	oneMillion := BigIntOneMillion()
 	if roundUp {
-		remainder := new(big.Int)
-		result.DivMod(result, oneMillion, remainder)
-		if remainder.Sign() > 0 {
-			result.Add(result, BigI(1))
-		}
-		return result
+		return BigDivCeil(result, oneMillion)
 	} else {
 		return result.Div(result, oneMillion)
 	}
@@ -161,6 +156,19 @@ func BigRatClamp(n *big.Rat, lowerBound *big.Rat, upperBound *big.Rat) *big.Rat 
 // See `bigGenericClamp` for specification.
 func BigIntClamp(n *big.Int, lowerBound *big.Int, upperBound *big.Int) *big.Int {
 	return bigGenericClamp(n, lowerBound, upperBound)
+}
+
+// BigDivCeil returns the ceiling of `a / b`.
+func BigDivCeil(a *big.Int, b *big.Int) *big.Int {
+	result, remainder := new(big.Int).QuoRem(a, b, new(big.Int))
+
+	// If the value was rounded (i.e. there is a remainder), and the exact result would be positive,
+	// then add 1 to the result.
+	if remainder.Sign() != 0 && (a.Sign() == b.Sign()) {
+		result.Add(result, big.NewInt(1))
+	}
+
+	return result
 }
 
 // BigRatRound takes an input and a direction to round (true for up, false for down).

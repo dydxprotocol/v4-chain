@@ -665,6 +665,89 @@ func TestBigIntClamp(t *testing.T) {
 	}
 }
 
+func BenchmarkBigDivCeil(b *testing.B) {
+	numerator := big.NewInt(10)
+	denominator := big.NewInt(3)
+	var result *big.Int
+	for i := 0; i < b.N; i++ {
+		result = lib.BigDivCeil(numerator, denominator)
+	}
+	require.Equal(b, big.NewInt(4), result)
+}
+
+func TestBigDivCeil(t *testing.T) {
+	tests := map[string]struct {
+		numerator      *big.Int
+		denominator    *big.Int
+		expectedResult *big.Int
+	}{
+		"Divides evenly": {
+			numerator:      big.NewInt(10),
+			denominator:    big.NewInt(5),
+			expectedResult: big.NewInt(2),
+		},
+		"Doesn't divide evenly": {
+			numerator:      big.NewInt(10),
+			denominator:    big.NewInt(3),
+			expectedResult: big.NewInt(4),
+		},
+		"Negative numerator": {
+			numerator:      big.NewInt(-10),
+			denominator:    big.NewInt(3),
+			expectedResult: big.NewInt(-3),
+		},
+		"Negative numerator 2": {
+			numerator:      big.NewInt(-1),
+			denominator:    big.NewInt(2),
+			expectedResult: big.NewInt(0),
+		},
+		"Negative denominator": {
+			numerator:      big.NewInt(10),
+			denominator:    big.NewInt(-3),
+			expectedResult: big.NewInt(-3),
+		},
+		"Negative denominator 2": {
+			numerator:      big.NewInt(1),
+			denominator:    big.NewInt(-2),
+			expectedResult: big.NewInt(0),
+		},
+		"Negative numerator and denominator": {
+			numerator:      big.NewInt(-10),
+			denominator:    big.NewInt(-3),
+			expectedResult: big.NewInt(4),
+		},
+		"Negative numerator and denominator 2": {
+			numerator:      big.NewInt(-1),
+			denominator:    big.NewInt(-2),
+			expectedResult: big.NewInt(1),
+		},
+		"Zero numerator": {
+			numerator:      big.NewInt(0),
+			denominator:    big.NewInt(3),
+			expectedResult: big.NewInt(0),
+		},
+		"Zero denominator": {
+			numerator:      big.NewInt(10),
+			denominator:    big.NewInt(0),
+			expectedResult: nil,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Panics if the expected result is nil
+			if tc.expectedResult == nil {
+				require.Panics(t, func() {
+					lib.BigDivCeil(tc.numerator, tc.denominator)
+				})
+				return
+			}
+			// Otherwise test the result
+			result := lib.BigDivCeil(tc.numerator, tc.denominator)
+			require.Equal(t, tc.expectedResult, result)
+		})
+	}
+}
+
 func TestBigRatRound(t *testing.T) {
 	tests := map[string]struct {
 		input          *big.Rat
