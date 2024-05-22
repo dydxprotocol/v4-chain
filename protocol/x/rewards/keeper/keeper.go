@@ -19,8 +19,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
 
@@ -272,10 +270,6 @@ func (k Keeper) ProcessRewardsForBlock(
 	params := k.GetParams(ctx)
 
 	// Calculate value of `F`.
-	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
-	if !exists {
-		return fmt.Errorf("failed to get USDC asset")
-	}
 	rewardTokenPrice, err := k.pricesKeeper.GetMarketPrice(ctx, params.GetMarketId())
 	if err != nil {
 		return fmt.Errorf("failed to get market price of reward token: %w", err)
@@ -287,23 +281,20 @@ func (k Keeper) ProcessRewardsForBlock(
 		types.ModuleName,
 		metrics.TotalRewardShareWeight,
 	)
-	bigRatRewardTokenAmount := clobtypes.NotionalToCoinAmount(
-		totalRewardWeight,
-		usdcAsset.AtomicResolution,
+	totalRewardWeightPpm := new(big.Int).Mul(totalRewardWeight, lib.BigU(params.FeeMultiplierPpm))
+	rewardTokenAmountPpm := lib.QuoteToBaseQuantums(
+		totalRewardWeightPpm,
 		params.DenomExponent,
-		rewardTokenPrice,
+		rewardTokenPrice.Price,
+		rewardTokenPrice.Exponent,
 	)
-	bigRatRewardTokenAmount = lib.BigRatMulPpm(
-		bigRatRewardTokenAmount,
-		params.FeeMultiplierPpm,
-	)
-	bigIntRewardTokenAmount := lib.BigRatRound(bigRatRewardTokenAmount, false)
+	rewardTokenAmount := new(big.Int).Div(rewardTokenAmountPpm, lib.BigIntOneMillion())
 
 	// Calculate value of `T`, the reward tokens balance in the `treasury_account`.
 	rewardTokenBalance := k.bankKeeper.GetBalance(ctx, types.TreasuryModuleAddress, params.Denom)
 
 	// Get tokenToDistribute as the min(F, T).
-	tokensToDistribute := lib.BigMin(rewardTokenBalance.Amount.BigInt(), bigIntRewardTokenAmount)
+	tokensToDistribute := lib.BigMin(rewardTokenBalance.Amount.BigInt(), rewardTokenAmount)
 	// Measure distributed token amount.
 	telemetry.SetGauge(
 		metrics.GetMetricValueFromBigInt(tokensToDistribute),
