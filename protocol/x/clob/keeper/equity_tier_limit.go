@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -145,7 +144,6 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForShortTermOrder(ctx sdk.Conte
 // stateful orders. For `deliverState`, we sum:
 //   - the number of long term orders.
 //   - the number of conditional orders.
-//   - the number of uncommitted stateful orders in the mempool (checkState only)
 func (k Keeper) ValidateSubaccountEquityTierLimitForStatefulOrder(ctx sdk.Context, order types.Order) error {
 	equityTierLimits := k.GetEquityTierLimitConfiguration(ctx).StatefulOrderEquityTiers
 	if len(equityTierLimits) == 0 {
@@ -162,24 +160,6 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForStatefulOrder(ctx sdk.Contex
 	}
 
 	equityTierCount := k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId)
-	// If this is `CheckTx` then we must also add the number of uncommitted stateful orders that this validator
-	// is aware of (orders that are part of the mempool but have yet to proposed in a block).
-	if !lib.IsDeliverTxMode(ctx) {
-		equityTierCountMaybeNegative := k.GetUncommittedStatefulOrderCount(ctx, order.OrderId) + int32(equityTierCount)
-		if equityTierCountMaybeNegative < 0 {
-			panic(
-				fmt.Errorf(
-					"Expected ValidateSubaccountEquityTierLimitForStatefulOrder for new order %+v to be >= 0. "+
-						"equityTierCount %d, statefulOrderCount %d, uncommittedStatefulOrderCount %d.",
-					order,
-					equityTierCountMaybeNegative,
-					k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId),
-					k.GetUncommittedStatefulOrderCount(ctx, order.OrderId),
-				),
-			)
-		}
-		equityTierCount = uint32(equityTierCountMaybeNegative)
-	}
 
 	// Verify that opening this order would not exceed the maximum amount of orders for the equity tier.
 	if lib.MustConvertIntegerToUint32(equityTierCount) >= equityTierLimit.Limit {
