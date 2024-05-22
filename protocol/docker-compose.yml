@@ -116,7 +116,7 @@ services:
     image: ghcr.io/skip-mev/slinky-sidecar:v0.4.1
     entrypoint: >
       sh -c "slinky-config --chain dydx --node-http-url http://dydxprotocold0:1317 --oracle-config-path /etc/oracle.json &&
-             slinky --oracle-config-path /etc/oracle.json --update-market-config-path /etc/market.json"
+             slinky --oracle-config-path /etc/oracle.json --update-market-config-path /etc/market.json > /dev/null 2>&1"
     ports:
       - "8080:8080"
       - "8002:8002" # metrics
