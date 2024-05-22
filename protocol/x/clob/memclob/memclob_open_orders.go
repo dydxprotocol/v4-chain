@@ -1,10 +1,10 @@
 package memclob
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -148,6 +148,30 @@ func (m *memclobOpenOrders) findNextBestSubticks(
 	}
 
 	return nextBestSubtick, found
+}
+
+// getBestCrossingOrder returns a reference to the best order that crosses with the given order. Returns nil if
+// no order is found.
+func (m *memclobOpenOrders) getBestCrossingOrder(
+	orderbook *types.Orderbook,
+	takerOrder *types.Order,
+) *types.LevelOrder {
+	makerLevelOrder, _ := m.getBestOrderOnSide(orderbook, !takerOrder.IsBuy())
+	if makerLevelOrder == nil {
+		return nil
+	}
+	// Check if the orderbook is crossed.
+	var takerOrderCrossesMakerOrder bool
+	if takerOrder.IsBuy() {
+		takerOrderCrossesMakerOrder = takerOrder.GetOrderSubticks() >= makerLevelOrder.Value.Order.GetOrderSubticks()
+	} else {
+		takerOrderCrossesMakerOrder = takerOrder.GetOrderSubticks() <= makerLevelOrder.Value.Order.GetOrderSubticks()
+	}
+	if !takerOrderCrossesMakerOrder {
+		return nil
+	}
+
+	return makerLevelOrder
 }
 
 // getBestOrderOnSide returns a reference to the best order on the passed in side of the book, along with a boolean
