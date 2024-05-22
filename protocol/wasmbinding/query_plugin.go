@@ -9,7 +9,9 @@ import (
 )
 
 const (
-	PricesRoute = "prices"
+	SubaccountsRoute     = "subaccounts"
+	PricesRoute          = "prices"
+	perpetualClobDetails = "perpetual_clob_details"
 )
 
 type DydxQueryWrapper struct {
@@ -28,6 +30,10 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 		switch contractQuery.Route {
 		case PricesRoute:
 			return qp.HandleMarketPriceQuery(ctx, contractQuery.QueryData)
+		case SubaccountsRoute:
+			return qp.HandleSubaccountsQuery(ctx, contractQuery.QueryData)
+		case perpetualClobDetails:
+			return qp.HandlePerpetualClobDetailsQuery(ctx, contractQuery.QueryData)
 		default:
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: "Unknown Dydx Wasm Query Route"}
 		}

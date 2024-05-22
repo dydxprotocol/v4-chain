@@ -7,8 +7,11 @@ mod proto_structs;
 pub use querier::DydxQuerier;
 pub use query::{
     MarketPriceResponse, DydxQuery, DydxQueryWrapper,
+    SubaccountResponse, PerpetualClobDetailsResponse,
 };
-pub use proto_structs::MarketPrice;
+pub use proto_structs::{
+    AssetPosition, ClobPair, MarketPrice, Metadata, PerpetualClobMetadata, PerpetualPosition, SpotClobMetadata, Status, Subaccount, SubaccountId,
+};
 pub use route::DydxRoute;
 
 // This export is added to all contracts that import this package, signifying that they require

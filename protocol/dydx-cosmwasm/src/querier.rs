@@ -1,6 +1,6 @@
 use cosmwasm_std::{QuerierWrapper, StdResult};
 
-use crate::query::{MarketPriceResponse, DydxQuery, DydxQueryWrapper};
+use crate::query::{DydxQuery, DydxQueryWrapper, MarketPriceResponse, PerpetualClobDetailsResponse, SubaccountResponse};
 use crate::route::DydxRoute;
 
 /// This is a helper wrapper to easily use our custom queries
@@ -15,10 +15,30 @@ impl<'a> DydxQuerier<'a> {
 
     pub fn query_market_price(&self, market_id: u32) -> StdResult<MarketPriceResponse> {
         let request = DydxQueryWrapper {
-            route: DydxRoute::Oracle,
+            route: DydxRoute::MarketPrice,
             query_data: DydxQuery::MarketPrice { id: market_id },
         }
         .into();
+
+        self.querier.query(&request)
+    }
+
+    pub fn query_subaccount(&self, owner: String, number: u32) -> StdResult<SubaccountResponse> {
+        let request = DydxQueryWrapper {
+            route: DydxRoute::Subaccount,
+            query_data: DydxQuery::Subaccount { owner, number },
+        }
+            .into();
+
+        self.querier.query(&request)
+    }
+
+    pub fn query_perpetual_clob_details(&self, perpetual_id: u32) -> StdResult<PerpetualClobDetailsResponse> {
+        let request = DydxQueryWrapper {
+            route: DydxRoute::PerpetualClobDetails,
+            query_data: DydxQuery::PerpetualClobDetails { id: perpetual_id },
+        }
+            .into();
 
         self.querier.query(&request)
     }

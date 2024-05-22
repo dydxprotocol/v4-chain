@@ -55,16 +55,8 @@ func (qp QueryPlugin) HandleMarketPriceQuery(ctx sdk.Context, queryData json.Raw
 
 func (qp QueryPlugin) HandleSubaccountsQuery(ctx sdk.Context, queryData json.RawMessage) ([]byte, error) {
 	var parsedQuery subaccountstypes.QueryGetSubaccountRequest
-	if err := json.Unmarshal(queryData, &parsedQuery); err != nil {
-		return nil, errorsmod.Wrap(err, "Error parsing DydxGetSubaccountQuery")
-	}
-
-	subaccount := qp.subaccountsKeeper.GetSubaccount(ctx,
-		subaccountstypes.SubaccountId{
-			Owner:  parsedQuery.Owner,
-			Number: parsedQuery.Number,
-		},
-	)
+	parsedSubaccountId := subaccountstypes.SubaccountId(parsedQuery)
+	subaccount := qp.subaccountsKeeper.GetSubaccount(ctx, parsedSubaccountId)
 
 	res := subaccountstypes.QuerySubaccountResponse{
 		Subaccount: subaccount,
