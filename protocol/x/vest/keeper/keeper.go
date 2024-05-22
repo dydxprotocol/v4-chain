@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"math/big"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -93,8 +92,8 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 		// Given `block_time > prev_block_time` and `block_time > start_time` ===> `block_time > last_vest_time`
 		// Given `end_time > prev_block_time` and `end_time > start_time` ===> `end_time > last_vest_time`
 		// Therefore, both numerator and denominator are positive.
-		timeNum := lib.BigI(blockTimeMilli-lastVestTimeMilli)
-		timeDen := lib.BigI(endTimeMilli-lastVestTimeMilli)
+		timeNum := lib.BigI(blockTimeMilli - lastVestTimeMilli)
+		timeDen := lib.BigI(endTimeMilli - lastVestTimeMilli)
 
 		// Get vester account remaining balance.
 		vesterBalance := k.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(entry.VesterAccount), entry.Denom)
