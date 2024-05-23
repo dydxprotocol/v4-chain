@@ -113,10 +113,17 @@ services:
     volumes:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
   slinky0:
+<<<<<<< HEAD
     image: ghcr.io/skip-mev/slinky-sidecar:v0.3.2
     entrypoint: >
       sh -c "slinky-config --chain dydx --node-http-url http://dydxprotocold0:1317 --oracle-config-path /etc/oracle.json &&
              slinky --oracle-config-path /etc/oracle.json --update-market-config-path /etc/market.json"
+=======
+    image: ghcr.io/skip-mev/slinky-sidecar:v0.4.6
+    entrypoint: >
+      sh -c "slinky-config --chain dydx --node-http-url http://dydxprotocold0:1317 --oracle-config-path /etc/oracle.json &&
+             slinky --oracle-config-path /etc/oracle.json --update-market-config-path /etc/market.json --log-std-out-level error"
+>>>>>>> 1082737e (Upgrade Slinky Sidecar Version to v0.4.6 (#1578))
     ports:
       - "8080:8080"
 
