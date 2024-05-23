@@ -173,6 +173,7 @@ export class OrderPlaceHandler extends Handler {
         at: 'OrderPlaceHandler#handle',
         message: 'Sending websocket orderbook message',
         txHash: this.txHash,
+        clobPair: order.orderId!.clobPairId.toString()
       });
       sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
     }

@@ -389,6 +389,7 @@ export class OrderRemoveHandler extends Handler {
       at: 'OrderRemoveHandler#handle',
       message: 'Sending websocket orderbook message',
       txHash: this.txHash,
+      clobPair: perpetualMarket.clobPairId
     });
     sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
   }
