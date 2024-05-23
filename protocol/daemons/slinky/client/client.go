@@ -2,9 +2,10 @@ package client
 
 import (
 	"context"
-	"cosmossdk.io/errors"
 	"sync"
 	"time"
+
+	"cosmossdk.io/errors"
 
 	"cosmossdk.io/log"
 
@@ -17,16 +18,14 @@ import (
 	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 )
 
-// Ensure Client is HealthCheckable
-var _ daemontypes.HealthCheckable = (*Client)(nil)
-
 // Client is the daemon implementation for pulling price data from the slinky sidecar.
 type Client struct {
-	daemontypes.HealthCheckable
 	ctx               context.Context
 	cf                context.CancelFunc
 	marketPairFetcher MarketPairFetcher
+	marketPairHC      daemontypes.HealthCheckable
 	priceFetcher      PriceFetcher
+	priceHC           daemontypes.HealthCheckable
 	wg                sync.WaitGroup
 	logger            log.Logger
 }
@@ -34,8 +33,13 @@ type Client struct {
 func newClient(ctx context.Context, logger log.Logger) *Client {
 	logger = logger.With(log.ModuleKey, SlinkyClientDaemonModuleName)
 	client := &Client{
-		HealthCheckable: daemontypes.NewTimeBoundedHealthCheckable(
-			SlinkyClientDaemonModuleName,
+		marketPairHC: daemontypes.NewTimeBoundedHealthCheckable(
+			SlinkyClientMarketPairFetcherDaemonModuleName,
+			&libtime.TimeProviderImpl{},
+			logger,
+		),
+		priceHC: daemontypes.NewTimeBoundedHealthCheckable(
+			SlinkyClientPriceFetcherDaemonModuleName,
 			&libtime.TimeProviderImpl{},
 			logger,
 		),
@@ -43,6 +47,14 @@ func newClient(ctx context.Context, logger log.Logger) *Client {
 	}
 	client.ctx, client.cf = context.WithCancel(ctx)
 	return client
+}
+
+func (c *Client) GetMarketPairHC() daemontypes.HealthCheckable {
+	return c.marketPairHC
+}
+
+func (c *Client) GetPriceHC() daemontypes.HealthCheckable {
+	return c.priceHC
 }
 
 // start creates the main goroutines of the Client.
@@ -90,9 +102,9 @@ func (c *Client) RunPriceFetcher(ctx context.Context) {
 			err := c.priceFetcher.FetchPrices(ctx)
 			if err != nil {
 				c.logger.Error("Failed to run fetch prices for slinky daemon", "error", err)
-				c.ReportFailure(errors.Wrap(err, "failed to run PriceFetcher for slinky daemon"))
+				c.priceHC.ReportFailure(errors.Wrap(err, "failed to run PriceFetcher for slinky daemon"))
 			} else {
-				c.ReportSuccess()
+				c.priceHC.ReportSuccess()
 			}
 		case <-ctx.Done():
 			return
@@ -124,9 +136,9 @@ func (c *Client) RunMarketPairFetcher(ctx context.Context, appFlags appflags.Fla
 			err = c.marketPairFetcher.FetchIdMappings(ctx)
 			if err != nil {
 				c.logger.Error("Failed to run fetch id mappings for slinky daemon", "error", err)
-				c.ReportFailure(errors.Wrap(err, "failed to run FetchIdMappings for slinky daemon"))
+				c.marketPairHC.ReportFailure(errors.Wrap(err, "failed to run FetchIdMappings for slinky daemon"))
 			} else {
-				c.ReportSuccess()
+				c.marketPairHC.ReportSuccess()
 			}
 		case <-ctx.Done():
 			return

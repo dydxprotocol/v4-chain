@@ -16,5 +16,7 @@ var (
 
 const (
 	// SlinkyClientDaemonModuleName is the module name used in logging.
-	SlinkyClientDaemonModuleName = "slinky-client-daemon"
+	SlinkyClientDaemonModuleName                  = "slinky-client-daemon"
+	SlinkyClientPriceFetcherDaemonModuleName      = "slinky-client-price-fetcher-daemon"
+	SlinkyClientMarketPairFetcherDaemonModuleName = "slinky-client-market-pair-fetcher-daemon"
 )
