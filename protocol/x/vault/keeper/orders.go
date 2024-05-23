@@ -32,7 +32,7 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
 
 		// Skip if TotalShares is non-positive.
-		if totalShares.NumShares.BigInt().Sign() <= 0 {
+		if totalShares.NumShares.Sign() <= 0 {
 			continue
 		}
 
