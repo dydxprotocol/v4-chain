@@ -60,6 +60,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 
 	// 3. Collect all "valid" price updates.
 	updates := make([]*types.MsgUpdateMarketPrices_MarketPrice, 0, len(allMarketParamPrices))
+	nonExistentMarkets := []uint32{}
 	for _, marketParamPrice := range allMarketParamPrices {
 		marketId := marketParamPrice.Param.Id
 		indexPrice, indexPriceExists := allIndexPrices[marketId]
@@ -73,14 +74,17 @@ func (k Keeper) GetValidMarketPriceUpdates(
 			// there will be a delay in populating index prices after network genesis or a network restart, or when a
 			// market is created, it takes the daemon some time to warm up.
 			if !k.IsRecentlyAvailable(ctx, marketId) {
-				log.ErrorLog(
-					ctx,
-					"Index price for market does not exist",
-					constants.MarketIdLogKey,
-					marketId,
-				)
+				nonExistentMarkets = append(nonExistentMarkets, marketId)
 			}
 			continue
+		}
+		if len(nonExistentMarkets) > 0 {
+			log.ErrorLog(
+				ctx,
+				"Index price for markets does not exist",
+				constants.MarketIdsLogKey,
+				nonExistentMarkets,
+			)
 		}
 
 		// Index prices of 0 are unexpected. In this scenario, we skip the proposal logic for the market and report an
