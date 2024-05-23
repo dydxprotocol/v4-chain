@@ -69,7 +69,7 @@ func TestRandomizedGenState(t *testing.T) {
 			require.True(t, perp.Params.DefaultFundingPpm > -int32(lib.OneMillion))
 			require.True(t, perp.Params.DefaultFundingPpm < int32(lib.OneMillion))
 
-			require.True(t, perp.FundingIndex.BigInt().Sign() == 0)
+			require.True(t, perp.FundingIndex.Sign() == 0)
 		}
 	}
 }

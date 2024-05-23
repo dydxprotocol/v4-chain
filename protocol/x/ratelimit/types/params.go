@@ -57,7 +57,7 @@ func (p *LimitParams) Validate() error {
 			return ErrInvalidRateLimitPeriod
 		}
 
-		if limiter.BaselineMinimum.BigInt().Sign() <= 0 {
+		if limiter.BaselineMinimum.Sign() <= 0 {
 			return ErrInvalidBaselineMinimum
 		}
 

@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -33,7 +32,7 @@ func (msg *MsgSlashValidator) ValidateBasic() error {
 		)
 	}
 
-	if msg.TokensAtInfractionHeight.BigInt().Cmp(big.NewInt(0)) != 1 {
+	if msg.TokensAtInfractionHeight.Sign() <= 0 {
 		return ErrInvalidTokensAtInfractionHeight
 	}
 

@@ -38,7 +38,7 @@ func (p Params) Validate() error {
 		return ErrInvalidOrderExpirationSeconds
 	}
 	// Activation threshold quote quantums must be non-negative.
-	if p.ActivationThresholdQuoteQuantums.BigInt().Sign() < 0 {
+	if p.ActivationThresholdQuoteQuantums.Sign() < 0 {
 		return ErrInvalidActivationThresholdQuoteQuantums
 	}
 
