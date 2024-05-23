@@ -167,6 +167,13 @@ export class OrderPlaceHandler extends Handler {
         ),
         headers,
       };
+
+      // TODO: remove
+      logger.info({
+        at: 'OrderPlaceHandler#handle',
+        message: 'Sending websocket orderbook message',
+        txHash: this.txHash,
+      });
       sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
     }
   }
