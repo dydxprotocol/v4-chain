@@ -56,7 +56,7 @@ func (m *AssetPosition) GetBigQuantums() *big.Int {
 		return new(big.Int)
 	}
 
-	if m.Quantums.BigInt().Sign() == 0 {
+	if m.Quantums.Sign() == 0 {
 		panic(errorsmod.Wrapf(
 			ErrAssetPositionZeroQuantum,
 			"asset position (asset Id: %v) has zero quantum",
@@ -92,7 +92,7 @@ func (m *PerpetualPosition) GetBigQuantums() *big.Int {
 		return new(big.Int)
 	}
 
-	if m.Quantums.BigInt().Sign() == 0 {
+	if m.Quantums.Sign() == 0 {
 		panic(errorsmod.Wrapf(
 			ErrPerpPositionZeroQuantum,
 			"perpetual position (perpetual Id: %v) has zero quantum",

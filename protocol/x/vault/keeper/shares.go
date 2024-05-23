@@ -33,7 +33,7 @@ func (k Keeper) SetTotalShares(
 	vaultId types.VaultId,
 	totalShares types.NumShares,
 ) error {
-	if totalShares.NumShares.BigInt().Sign() < 0 {
+	if totalShares.NumShares.Sign() < 0 {
 		return types.ErrNegativeShares
 	}
 
@@ -81,7 +81,7 @@ func (k Keeper) SetOwnerShares(
 	owner string,
 	ownerShares types.NumShares,
 ) error {
-	if ownerShares.NumShares.BigInt().Sign() < 0 {
+	if ownerShares.NumShares.Sign() < 0 {
 		return types.ErrNegativeShares
 	}
 
