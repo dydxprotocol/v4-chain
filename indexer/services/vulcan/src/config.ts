@@ -38,7 +38,7 @@ export const configSchema = {
     default: true,
   }),
   SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_CANCELS_MISSING_ORDERS: parseBoolean({
-    default: false,
+    default: true,
   }),
 };
 
