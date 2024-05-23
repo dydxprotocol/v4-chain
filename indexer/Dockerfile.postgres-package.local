@@ -1,5 +1,5 @@
 # Dockerfile to containerize postgres package locally
-FROM dydxprotocol/indexer-node:16-alpine-m1
+FROM dydxprotocol/indexer-node:16-alpine
 ENV NODE_ENV=development
 
 RUN adduser -S dydx
