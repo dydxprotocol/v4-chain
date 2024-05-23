@@ -36,7 +36,7 @@ func perpetualsUpgrade(
 	subaccounts := subaccountsKeeper.GetAllSubaccount(ctx)
 	for _, sa := range subaccounts {
 		for _, perpPosition := range sa.PerpetualPositions {
-			if perpPosition.Quantums.BigInt().Sign() <= 0 {
+			if perpPosition.Quantums.Sign() <= 0 {
 				// Only record positive positions for total open interest.
 				// Total negative position size should be equal to total positive position size.
 				continue

@@ -191,7 +191,7 @@ func UpdateAssetPositions(
 				ap.Quantums = dtypes.NewIntFromBigInt(newQuantums)
 
 				// Handle the case where the position is now closed.
-				if ap.Quantums.BigInt().Sign() == 0 {
+				if ap.Quantums.Sign() == 0 {
 					delete(assetPositionsMap, au.AssetId)
 				}
 			} else {
