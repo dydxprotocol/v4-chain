@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 
-	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -34,9 +33,6 @@ func (k msgServer) DepositToVault(
 	// Transfer from sender subaccount to vault.
 	// Note: Transfer should take place after minting shares for
 	// shares calculation to be correct.
-	if !quoteQuantums.IsUint64() {
-		return nil, errorsmod.Wrap(types.ErrInvalidDepositAmount, "quote quantums must be strictly less than 2^64")
-	}
 	err = k.sendingKeeper.ProcessTransfer(
 		ctx,
 		&sendingtypes.Transfer{

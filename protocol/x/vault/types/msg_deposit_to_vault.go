@@ -15,9 +15,9 @@ func (msg *MsgDepositToVault) ValidateBasic() error {
 		return err
 	}
 
-	// Validate that quote quantums is positive.
-	if msg.QuoteQuantums.Cmp(dtypes.NewInt(0)) <= 0 {
-		return errorsmod.Wrap(ErrInvalidDepositAmount, "quote quantums must be strictly positive")
+	// Validate that quote quantums is positive and an uint64.
+	if msg.QuoteQuantums.Cmp(dtypes.NewInt(0)) <= 0 || !msg.QuoteQuantums.BigInt().IsUint64() {
+		return errorsmod.Wrap(ErrInvalidDepositAmount, "quote quantums must be strictly positive and less than 2^64")
 	}
 
 	return nil
