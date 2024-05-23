@@ -16,13 +16,14 @@ func (k msgServer) DepositToVault(
 	msg *types.MsgDepositToVault,
 ) (*types.MsgDepositToVaultResponse, error) {
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
+	quoteQuantums := msg.QuoteQuantums.BigInt()
 
 	// Mint shares for the vault.
 	err := k.MintShares(
 		ctx,
 		*msg.VaultId,
 		msg.SubaccountId.Owner,
-		msg.QuoteQuantums.BigInt(),
+		quoteQuantums,
 	)
 	if err != nil {
 		return nil, err
@@ -36,7 +37,7 @@ func (k msgServer) DepositToVault(
 		*msg.SubaccountId,
 		*msg.VaultId.ToSubaccountId(),
 		assettypes.AssetUsdc.Id,
-		msg.QuoteQuantums.BigInt(),
+		quoteQuantums,
 	)
 	if err != nil {
 		return nil, err

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"bytes"
+	"math"
 	"math/big"
 	"testing"
 
@@ -198,7 +199,7 @@ func TestMsgDepositToVault(t *testing.T) {
 				big.NewInt(1_000),
 			},
 		},
-		"Two failed deposits due to non-positive amounts": {
+		"Three failed deposits due to invalid deposit amount": {
 			vaultId: constants.Vault_Clob_1,
 			depositorSetups: []DepositorSetup{
 				{
@@ -227,12 +228,25 @@ func TestMsgDepositToVault(t *testing.T) {
 					checkTxResponseContains: "Deposit amount is invalid",
 					expectedOwnerShares:     nil,
 				},
+				{
+					depositor: constants.Bob_Num0,
+					depositAmount: new(big.Int).Add(
+						new(big.Int).SetUint64(math.MaxUint64),
+						big.NewInt(1),
+					),
+					msgSigner:               constants.Bob_Num0.Owner,
+					checkTxFails:            true,
+					checkTxResponseContains: "Deposit amount is invalid",
+					expectedOwnerShares:     nil,
+				},
 			},
 			totalSharesHistory: []*big.Int{
 				big.NewInt(0),
 				big.NewInt(0),
+				big.NewInt(0),
 			},
 			vaultEquityHistory: []*big.Int{
+				big.NewInt(0),
 				big.NewInt(0),
 				big.NewInt(0),
 			},
