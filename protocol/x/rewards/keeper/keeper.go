@@ -211,7 +211,7 @@ func (k Keeper) SetRewardShare(
 	ctx sdk.Context,
 	rewardShare types.RewardShare,
 ) error {
-	if rewardShare.Weight.BigInt().Cmp(lib.BigInt0()) <= 0 {
+	if rewardShare.Weight.Sign() <= 0 {
 		return errorsmod.Wrapf(
 			types.ErrNonpositiveWeight,
 			"Invalid weight %v",
