@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
@@ -515,12 +516,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			clobs: []types.ClobPair{
 				constants.ClobPair_Btc,
 			},
-			existingOrders:           []types.Order{},
-			feeParams:                constants.PerpetualFeeParamsNoFee,
-			order:                    constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price5subticks_GTB10,
-			expectedOrderStatus:      types.Undercollateralized,
-			expectedFilledSize:       0,
-			expectedMultiStoreWrites: []string{},
+			existingOrders: []types.Order{},
+			feeParams:      constants.PerpetualFeeParamsNoFee,
+			order:          constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price5subticks_GTB10,
+			expectedErr:    types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
 		},
 		`Subaccount cannot place maker sell order for 1 BTC at 500,000 with 0 collateral`: {
 			perpetuals: []perptypes.Perpetual{
@@ -530,20 +529,18 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			clobs: []types.ClobPair{
 				constants.ClobPair_Btc,
 			},
-			existingOrders:           []types.Order{},
-			feeParams:                constants.PerpetualFeeParamsNoFee,
-			order:                    constants.Order_Carl_Num0_Id0_Clob0_Sell1BTC_Price500000_GTB10,
-			expectedOrderStatus:      types.Undercollateralized,
-			expectedFilledSize:       0,
-			expectedMultiStoreWrites: []string{},
+			existingOrders: []types.Order{},
+			feeParams:      constants.PerpetualFeeParamsNoFee,
+			order:          constants.Order_Carl_Num0_Id0_Clob0_Sell1BTC_Price500000_GTB10,
+			expectedErr:    types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
 		},
-		// <grouped tests: pessimistic value collateralization check -- BUY>
-		// The following 3 tests are a group to test the pessimistic value used for the collateralization check.
-		// 1. The first should have a lower asset value in its subaccount. (undercollateralized)
+		// <grouped tests: deprecating pessimistic value collateralization check -- BUY>
+		// The following 3 tests are a group to test the deprecation of pessimistic collateralization check.
+		// 1. The first should have a buy price well below the oracle price of 50,000. (success)
 		// 2. The second should have a buy price above the oracle price of 50,000. (undercollateralized)
 		// 3. The third should have the order in common with #1 and the subaccount in common with #2 and should succeed.
-		`Subaccount cannot place buy order due to a failed collateralization check with the oracle price but would
-				pass if using the maker price`: {
+		`Subaccount can now place buy order that would have failed the deprecated pessimistic collateralization 
+			check with the oracle price`: {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_50PercentInitial_40PercentMaintenance,
 			},
@@ -554,7 +551,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			existingOrders:           []types.Order{},
 			feeParams:                constants.PerpetualFeeParamsNoFee,
 			order:                    constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price5subticks_GTB10,
-			expectedOrderStatus:      types.Undercollateralized,
+			expectedOrderStatus:      types.Success,
 			expectedFilledSize:       0,
 			expectedMultiStoreWrites: []string{},
 		},
@@ -574,7 +571,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			expectedFilledSize:       0,
 			expectedMultiStoreWrites: []string{},
 		},
-		`Subaccount placed buy order passes collateralization check when using the oracle price`: {
+		`Subaccount placed buy order passes collateralization check when using the maker price`: {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_50PercentInitial_40PercentMaintenance,
 			},
@@ -590,13 +587,13 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			expectedMultiStoreWrites: []string{},
 		},
 		// <end of grouped tests: pessimistic value collateralization check -- BUY>
-		// <grouped tests: pessimistic value collateralization check -- SELL>
-		// The following 3 tests are a group to test the pessimistic value used for the collateralization check.
-		// 1. The first should have a lower asset value in its subaccount. (undercollateralized)
+		// <grouped tests: deprecating pessimistic value collateralization check -- SELL>
+		// The following 3 tests are a group to test the deprecation of pessimistic collateralization check.
+		// 1. The first should have a sell price well above the oracle price of 50,000. (success)
 		// 2. The second should have a sell price below the oracle price of 50,000 subticks. (undercollateralized)
 		// 3. The third should have the order in common with #1 and the subaccount in common with #2 and should succeed.
-		`Subaccount cannot place sell order due to a failed collateralization check with the oracle price but would
-				pass if using the maker price`: {
+		`Subaccount can now place sell order that would have failed the deprecated pessimistic collateralization 
+			check with the oracle price`: {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_50PercentInitial_40PercentMaintenance,
 			},
@@ -607,7 +604,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			existingOrders:           []types.Order{},
 			feeParams:                constants.PerpetualFeeParamsNoFee,
 			order:                    constants.Order_Carl_Num0_Id0_Clob0_Sell1BTC_Price500000_GTB10,
-			expectedOrderStatus:      types.Undercollateralized,
+			expectedOrderStatus:      types.Success,
 			expectedFilledSize:       0,
 			expectedMultiStoreWrites: []string{},
 		},
@@ -627,7 +624,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			expectedFilledSize:       0,
 			expectedMultiStoreWrites: []string{},
 		},
-		`Subaccount placed sell order passes collateralization check when using the oracle price`: {
+		`Subaccount placed sell order passes collateralization check when using the maker price`: {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_50PercentInitial_40PercentMaintenance,
 			},
@@ -704,6 +701,25 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			err = ks.ClobKeeper.InitializeEquityTierLimit(
+				ctx,
+				types.EquityTierLimitConfiguration{
+					ShortTermOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.NewInt(20_000_000),
+							Limit:          5,
+						},
+					},
+					StatefulOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.NewInt(20_000_000),
+							Limit:          5,
+						},
+					},
+				},
+			)
+			require.NoError(t, err)
 
 			// Create all existing orders.
 			for _, order := range tc.existingOrders {
