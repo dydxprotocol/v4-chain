@@ -3,7 +3,6 @@ package types
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 )
 
 var _ sdk.Msg = &MsgDepositToVault{}
@@ -16,7 +15,8 @@ func (msg *MsgDepositToVault) ValidateBasic() error {
 	}
 
 	// Validate that quote quantums is positive and an uint64.
-	if msg.QuoteQuantums.Cmp(dtypes.NewInt(0)) <= 0 || !msg.QuoteQuantums.BigInt().IsUint64() {
+	quoteQuantums := msg.QuoteQuantums.BigInt()
+	if quoteQuantums.Sign() <= 0 || !quoteQuantums.IsUint64() {
 		return errorsmod.Wrap(ErrInvalidDepositAmount, "quote quantums must be strictly positive and less than 2^64")
 	}
 
