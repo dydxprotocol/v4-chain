@@ -1,6 +1,8 @@
 package types_test
 
 import (
+	"math"
+	"math/big"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -21,6 +23,26 @@ func TestMsgDepositToVault_ValidateBasic(t *testing.T) {
 				SubaccountId:  &constants.Alice_Num0,
 				QuoteQuantums: dtypes.NewInt(1),
 			},
+		},
+		"Success: max uint64 quote quantums": {
+			msg: types.MsgDepositToVault{
+				VaultId:       &constants.Vault_Clob_0,
+				SubaccountId:  &constants.Alice_Num0,
+				QuoteQuantums: dtypes.NewIntFromUint64(math.MaxUint64),
+			},
+		},
+		"Failure: quote quantums greater than max uint64": {
+			msg: types.MsgDepositToVault{
+				VaultId:      &constants.Vault_Clob_0,
+				SubaccountId: &constants.Alice_Num0,
+				QuoteQuantums: dtypes.NewIntFromBigInt(
+					new(big.Int).Add(
+						new(big.Int).SetUint64(math.MaxUint64),
+						new(big.Int).SetUint64(1),
+					),
+				),
+			},
+			expectedErr: "Deposit amount is invalid",
 		},
 		"Failure: zero quote quantums": {
 			msg: types.MsgDepositToVault{
