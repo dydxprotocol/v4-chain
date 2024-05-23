@@ -23,6 +23,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	gometrics "github.com/hashicorp/go-metrics"
 )
 
@@ -625,38 +626,41 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, nil
 	}
 
-	// The taker order has unfilled size which will be added to the orderbook as a maker order.
-	// Verify the maker order can be added to the orderbook by performing the add-to-orderbook
-	// subaccount updates check.
-	addOrderOrderStatus := m.addOrderToOrderbookSubaccountUpdatesCheck(
-		ctx,
-		order,
-	)
+	// Skip the AddToOrderbook check for vault addresses.
+	if !vaulttypes.IsVaultAddress(order.GetSubaccountId().Owner) {
+		// The taker order has unfilled size which will be added to the orderbook as a maker order.
+		// Verify the maker order can be added to the orderbook by performing the add-to-orderbook
+		// subaccount updates check.
+		addOrderOrderStatus := m.addOrderToOrderbookSubaccountUpdatesCheck(
+			ctx,
+			order,
+		)
 
-	// If the add order to orderbook subaccount updates check failed, we cannot add the order to the orderbook.
-	if !addOrderOrderStatus.IsSuccess() {
-		if m.generateOffchainUpdates {
-			// Send an off-chain update message indicating the order should be removed from the orderbook
-			// on the Indexer.
-			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				ctx,
-				order.OrderId,
-				addOrderOrderStatus,
-				nil,
-				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-			); success {
-				offchainUpdates.AddRemoveMessage(order.OrderId, message)
+		// If the add order to orderbook subaccount updates check failed, we cannot add the order to the orderbook.
+		if !addOrderOrderStatus.IsSuccess() {
+			if m.generateOffchainUpdates {
+				// Send an off-chain update message indicating the order should be removed from the orderbook
+				// on the Indexer.
+				if message, success := off_chain_updates.CreateOrderRemoveMessage(
+					ctx,
+					order.OrderId,
+					addOrderOrderStatus,
+					nil,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				); success {
+					offchainUpdates.AddRemoveMessage(order.OrderId, message)
+				}
 			}
-		}
 
-		// remove stateful orders which fail collateralization check while being added to orderbook
-		if order.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
-			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
-				order.OrderId,
-				types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
-			)
+			// remove stateful orders which fail collateralization check while being added to orderbook
+			if order.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
+				m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+					order.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+				)
+			}
+			return orderSizeOptimisticallyFilledFromMatchingQuantums, addOrderOrderStatus, offchainUpdates, nil
 		}
-		return orderSizeOptimisticallyFilledFromMatchingQuantums, addOrderOrderStatus, offchainUpdates, nil
 	}
 
 	// If this is a Short-Term order and it's not in the operations queue, add the TX bytes to the
