@@ -81,26 +81,26 @@ func ValidateAndTransformRawOperations(
 		var err error
 		operation := &InternalOperation{}
 		switch rawOperation.Operation.(type) {
-		case *OperationRaw_Match:
-			match := rawOperation.GetMatch()
-			if err = validator.validateMatchOperation(match); err != nil {
-				return nil, err
-			}
-			operation.Operation = &InternalOperation_Match{
-				Match: match,
-			}
-		case *OperationRaw_ShortTermOrderPlacement:
-			operation, err = decodeOperationRawShortTermOrderPlacementBytes(
+		// case *OperationRaw_Match:
+		// 	match := rawOperation.GetMatch()
+		// 	if err = validator.validateMatchOperation(match); err != nil {
+		// 		return nil, err
+		// 	}
+		// 	operation.Operation = &InternalOperation_Match{
+		// 		Match: match,
+		// 	}
+		case *OperationRaw_OrderPlacement:
+			operation, err = decodeOperationRawOrderPlacementBytes(
 				ctx,
-				rawOperation.GetShortTermOrderPlacement(),
+				rawOperation.GetOrderPlacement(),
 				decoder,
 				anteHandler,
 			)
 			if err != nil {
 				return nil, err
 			}
-			if err = validator.validateShortTermOrderPlacementOperation(
-				operation.GetShortTermOrderPlacement(),
+			if err = validator.validateOrderPlacementOperation(
+				operation.GetOrderPlacement(),
 			); err != nil {
 				return nil, err
 			}
@@ -169,7 +169,7 @@ func (validator *operationsQueueValidator) validateMatchOperation(match *ClobMat
 	return nil
 }
 
-// validateShortTermOrderPlacementOperation performs stateless validation on an order placement.
+// validateOrderPlacementOperation performs stateless validation on an order placement.
 // It also populates the validator object with the order.
 // This validation does not perform any state reads, or memclob reads.
 //
@@ -177,7 +177,7 @@ func (validator *operationsQueueValidator) validateMatchOperation(match *ClobMat
 //
 //   - ValidateBasic for OrderPlacement message
 //   - Orders placed in the same block with same OrderId must not be the same.
-func (validator *operationsQueueValidator) validateShortTermOrderPlacementOperation(
+func (validator *operationsQueueValidator) validateOrderPlacementOperation(
 	orderPlacement *MsgPlaceOrder,
 ) error {
 	// Order placement msg has to pass its own validation.

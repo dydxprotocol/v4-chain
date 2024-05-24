@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -11,6 +12,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
+	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
@@ -163,17 +166,17 @@ func (k Keeper) ProcessInternalOperations(
 		}
 
 		switch castedOperation := operation.Operation.(type) {
-		case *types.InternalOperation_Match:
-			clobMatch := castedOperation.Match
-			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders); err != nil {
-				return errorsmod.Wrapf(
-					err,
-					"ProcessInternalOperations: Failed to process clobMatch: %+v",
-					clobMatch,
-				)
-			}
-		case *types.InternalOperation_ShortTermOrderPlacement:
-			order := castedOperation.ShortTermOrderPlacement.GetOrder()
+		// case *types.InternalOperation_Match:
+		// 	clobMatch := castedOperation.Match
+		// 	if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders); err != nil {
+		// 		return errorsmod.Wrapf(
+		// 			err,
+		// 			"ProcessInternalOperations: Failed to process clobMatch: %+v",
+		// 			clobMatch,
+		// 		)
+		// 	}
+		case *types.InternalOperation_OrderPlacement:
+			order := castedOperation.OrderPlacement.GetOrder()
 			if err := k.PerformStatefulOrderValidation(
 				ctx,
 				&order,
@@ -183,6 +186,7 @@ func (k Keeper) ProcessInternalOperations(
 				return err
 			}
 			placedShortTermOrders[order.GetOrderId()] = order
+			return k.PlaceOrderDeliverTx(ctx, order)
 		case *types.InternalOperation_OrderRemoval:
 			orderRemoval := castedOperation.OrderRemoval
 
@@ -194,15 +198,15 @@ func (k Keeper) ProcessInternalOperations(
 					err,
 				)
 			}
-		case *types.InternalOperation_PreexistingStatefulOrder:
-			// When we fetch operations to propose, preexisting stateful orders are not included
-			// in the operations queue.
-			panic(
-				fmt.Sprintf(
-					"ProcessInternalOperations: Preexisting Stateful Orders should not exist in operations queue: %+v",
-					castedOperation.PreexistingStatefulOrder,
-				),
-			)
+		// case *types.InternalOperation_PreexistingStatefulOrder:
+		// 	// When we fetch operations to propose, preexisting stateful orders are not included
+		// 	// in the operations queue.
+		// 	panic(
+		// 		fmt.Sprintf(
+		// 			"ProcessInternalOperations: Preexisting Stateful Orders should not exist in operations queue: %+v",
+		// 			castedOperation.PreexistingStatefulOrder,
+		// 		),
+		// 	)
 		default:
 			panic(
 				fmt.Sprintf(
@@ -268,6 +272,339 @@ func (k Keeper) statUnverifiedOrderRemoval(
 			metrics.GetLabelForStringValue(metrics.Proposer, proposerConsAddress.String()),
 		},
 	)
+}
+
+// Written after memClob `validateNewOrder` function.
+func (k Keeper) validateNewOrder(
+	ctx sdk.Context,
+	order types.Order,
+) (
+	err error,
+) {
+	defer telemetry.ModuleMeasureSince(
+		types.ModuleName,
+		time.Now(),
+		metrics.PlaceOrder,
+		metrics.Memclob,
+		metrics.ValidateOrder,
+		metrics.Latency,
+	)
+	orderId := order.OrderId
+
+	if orderId.IsShortTermOrder() {
+		// TODO: Optionally put cancel at top of block and verify the order is not cancelled.
+		// // If the cancelation has an equal-to-or-greater `GoodTilBlock` than the new order, return an error.
+		// // If the cancelation has a lesser `GoodTilBlock` than the new order, we do not remove the cancelation.
+		// if cancelTilBlock, cancelExists := m.cancels.get(orderId); cancelExists && cancelTilBlock >= order.GetGoodTilBlock() {
+		// 	return errorsmod.Wrapf(
+		// 		types.ErrOrderIsCanceled,
+		// 		"Order: %+v, Cancellation GoodTilBlock: %d",
+		// 		order,
+		// 		cancelTilBlock,
+		// 	)
+		// }
+	}
+
+	existingRestingOrder, restingOrderExists := m.openOrders.getOrder(ctx, orderId)
+	existingMatchedOrder, matchedOrderExists := m.operationsToPropose.MatchedOrderIdToOrder[orderId]
+
+	// If an order with the same `OrderId` already exists on the orderbook (or was already matched),
+	// then we must validate that the new order's `GoodTilBlock` is greater-in-value than the old order.
+	// If greater, then it can be placed (replacing the old order if it was resting on the book).
+	// If equal-or-lesser, then it is dropped.
+	if restingOrderExists && existingRestingOrder.MustCmpReplacementOrder(&order) >= 0 {
+		return types.ErrInvalidReplacement
+	}
+
+	if matchedOrderExists && existingMatchedOrder.MustCmpReplacementOrder(&order) >= 0 {
+		return types.ErrInvalidReplacement
+	}
+
+	// If the order is a reduce-only order, we should ensure that the sign of the order size is the opposite of
+	// the current position size. Note that we do not validate the size/quantity of the reduce only order fill,
+	// as that will be validated if the order is matched.
+	// The subaccount's current position size is defined as the current state size + any partial fills
+	// that might have occurred as a result of this reduce only order replacing another partially filled order.
+	// Partial fills should be already recorded in state since order matching is optimistic and writes to state.
+	if order.IsReduceOnly() {
+		existingPositionSize := m.clobKeeper.GetStatePosition(ctx, orderId.SubaccountId, order.GetClobPairId())
+		orderSize := order.GetBigQuantums()
+
+		// If the reduce-only order is not on the opposite side of the existing position size,
+		// cancel the order by returning an error.
+		if orderSize.Sign()*existingPositionSize.Sign() != -1 {
+			return types.ErrReduceOnlyWouldIncreasePositionSize
+		}
+	}
+
+	// Check if the order being replaced has at least `MinOrderBaseQuantums` of size remaining, otherwise the order
+	// is considered fully filled and cannot be placed/replaced.
+	orderbook := m.openOrders.mustGetOrderbook(ctx, order.GetClobPairId())
+	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
+	if !hasRemainingAmount || remainingAmount < orderbook.MinOrderBaseQuantums {
+		return errorsmod.Wrapf(
+			types.ErrOrderFullyFilled,
+			"Order remaining amount is less than `MinOrderBaseQuantums`. Remaining amount: %d. Order: %+v",
+			remainingAmount,
+			order.GetOrderTextString(),
+		)
+	}
+
+	// Immediate-or-cancel and fill-or-kill orders may only be filled once. The remaining size becomes unfillable.
+	// This prevents the case where an IOC order is partially filled multiple times over the course of multiple blocks.
+	if order.RequiresImmediateExecution() && remainingAmount < order.GetBaseQuantums() {
+		// Prevent IOC/FOK orders from replacing partially filled orders.
+		if restingOrderExists {
+			return errorsmod.Wrapf(
+				types.ErrInvalidReplacement,
+				"Cannot replace partially filled order with IOC order. Size: %d, Fill Amount: %d.",
+				order.GetBaseQuantums(),
+				order.GetBaseQuantums()-remainingAmount,
+			)
+		}
+
+		return errorsmod.Wrapf(
+			types.ErrImmediateExecutionOrderAlreadyFilled,
+			"Order: %s",
+			order.GetOrderTextString(),
+		)
+	}
+
+	return nil
+}
+
+// Written after `PlaceOrder` function on MemClob.
+func (k Keeper) PlaceOrderDeliverTx(
+	ctx sdk.Context,
+	order types.Order,
+) (
+	// orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
+	// orderStatus types.OrderStatus,
+	// offchainUpdates *types.OffchainUpdates,
+	err error,
+) {
+	lib.AssertDeliverTxMode(ctx)
+
+	// offchainUpdates = types.NewOffchainUpdates()
+
+	// Validate the order and return an error if any validation fails.
+	if err := k.validateNewOrder(ctx, order); err != nil {
+		return 0, 0, offchainUpdates, err
+	}
+
+	if m.generateOffchainUpdates {
+		// If this is a replacement order, then ensure we send the appropriate replacement message.
+		orderId := order.OrderId
+		if _, found := m.openOrders.getOrder(ctx, orderId); found {
+			if message, success := off_chain_updates.CreateOrderReplaceMessage(
+				ctx,
+				order,
+			); success {
+				offchainUpdates.AddReplaceMessage(orderId, message)
+			}
+		} else {
+			if message, success := off_chain_updates.CreateOrderPlaceMessage(
+				ctx,
+				order,
+			); success {
+				offchainUpdates.AddPlaceMessage(order.OrderId, message)
+			}
+		}
+	}
+
+	// Attempt to match the order against the orderbook.
+	takerOrderStatus, takerOffchainUpdates, _, err := m.matchOrder(ctx, &order)
+	offchainUpdates.Append(takerOffchainUpdates)
+
+	if err != nil {
+		if order.IsStatefulOrder() {
+			var removalReason types.OrderRemoval_RemovalReason
+
+			if errors.Is(err, types.ErrFokOrderCouldNotBeFullyFilled) {
+				if !order.IsConditionalOrder() {
+					panic(
+						fmt.Sprintf(
+							"PlaceOrder: stateful FOK order must be conditional. Order %+v",
+							order,
+						),
+					)
+				}
+				removalReason = types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED
+			} else if errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder) {
+				removalReason = types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER
+			} else if errors.Is(err, types.ErrWouldViolateIsolatedSubaccountConstraints) {
+				removalReason = types.OrderRemoval_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS
+			}
+
+			if !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
+				m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+					order.OrderId,
+					removalReason,
+				)
+			}
+		}
+
+		if m.generateOffchainUpdates {
+			// Send an off-chain update message indicating the order should be removed from the orderbook
+			// on the Indexer.
+			if message, success := off_chain_updates.CreateOrderRemoveMessage(
+				ctx,
+				order.OrderId,
+				takerOrderStatus.OrderStatus,
+				err,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			); success {
+				offchainUpdates.AddRemoveMessage(order.OrderId, message)
+			}
+		}
+
+		return 0, 0, offchainUpdates, err
+	}
+
+	remainingSize := takerOrderStatus.RemainingQuantums
+	orderSizeOptimisticallyFilledFromMatchingQuantums = takerOrderStatus.OrderOptimisticallyFilledQuantums
+
+	// If the status of the taker order is not successful, do not attempt to add the order to the orderbook.
+	if !takerOrderStatus.OrderStatus.IsSuccess() {
+		if m.generateOffchainUpdates {
+			// Send an off-chain update message indicating the order should be removed from the orderbook
+			// on the Indexer.
+			if message, success := off_chain_updates.CreateOrderRemoveMessage(
+				ctx,
+				order.OrderId,
+				takerOrderStatus.OrderStatus,
+				nil,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			); success {
+				offchainUpdates.AddRemoveMessage(order.OrderId, message)
+			}
+		}
+		// If stateful taker order fails collateralization checks while matching, add Order Removal
+		// to operations queue to forcefully remove the order from state.
+		if takerOrderStatus.OrderStatus == types.Undercollateralized && order.IsStatefulOrder() {
+			if !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
+				m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+					order.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+				)
+			}
+		}
+		return orderSizeOptimisticallyFilledFromMatchingQuantums, takerOrderStatus.OrderStatus, offchainUpdates, nil
+	}
+
+	// If the order has no remaining size, we do not have to add the order to the orderbook and we can return early.
+	if remainingSize == 0 {
+		// If the status of the taker order after matching is success and the order has no remaining size, send an
+		// off-chain message with the total filled size of the order equal to the size of the order.
+		// This is needed to account for the case where an order was partially matched, rewound, then was fully matched
+		// during uncrossing.
+		if m.generateOffchainUpdates {
+			if message, success := off_chain_updates.CreateOrderUpdateMessage(
+				ctx,
+				order.OrderId,
+				order.GetBaseQuantums(),
+			); success {
+				offchainUpdates.AddUpdateMessage(order.OrderId, message)
+			}
+		}
+		return orderSizeOptimisticallyFilledFromMatchingQuantums, takerOrderStatus.OrderStatus, offchainUpdates, nil
+	}
+
+	// If this is an IOC order, cancel the remaining size since IOC orders cannot be maker orders.
+	if order.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
+		orderStatus := types.ImmediateOrCancelWouldRestOnBook
+		if m.generateOffchainUpdates {
+			// Send an off-chain update message indicating the order should be removed from the orderbook
+			// on the Indexer.
+			if message, success := off_chain_updates.CreateOrderRemoveMessage(
+				ctx,
+				order.OrderId,
+				orderStatus,
+				nil,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			); success {
+				offchainUpdates.AddRemoveMessage(order.OrderId, message)
+			}
+		}
+
+		// long-term orders cannot use IOC, so we know this stateful order
+		// is conditional. Remove the conditional order.
+		if order.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
+			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+				order.OrderId,
+				types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK,
+			)
+		}
+		return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, nil
+	}
+
+	// The taker order has unfilled size which will be added to the orderbook as a maker order.
+	// Verify the maker order can be added to the orderbook by performing the add-to-orderbook
+	// subaccount updates check.
+	addOrderOrderStatus := m.addOrderToOrderbookSubaccountUpdatesCheck(
+		ctx,
+		order,
+	)
+
+	// If the add order to orderbook subaccount updates check failed, we cannot add the order to the orderbook.
+	if !addOrderOrderStatus.IsSuccess() {
+		if m.generateOffchainUpdates {
+			// Send an off-chain update message indicating the order should be removed from the orderbook
+			// on the Indexer.
+			if message, success := off_chain_updates.CreateOrderRemoveMessage(
+				ctx,
+				order.OrderId,
+				addOrderOrderStatus,
+				nil,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			); success {
+				offchainUpdates.AddRemoveMessage(order.OrderId, message)
+			}
+		}
+
+		// remove stateful orders which fail collateralization check while being added to orderbook
+		if order.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
+			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+				order.OrderId,
+				types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+			)
+		}
+		return orderSizeOptimisticallyFilledFromMatchingQuantums, addOrderOrderStatus, offchainUpdates, nil
+	}
+
+	// If this is a Short-Term order and it's not in the operations queue, add the TX bytes to the
+	// operations to propose.
+	if order.IsShortTermOrder() &&
+		!m.operationsToPropose.IsOrderPlacementInOperationsQueue(order) {
+		m.operationsToPropose.MustAddShortTermOrderTxBytes(
+			order,
+			ctx.TxBytes(),
+		)
+	}
+
+	// Add the order to the orderbook and all other bookkeeping data structures.
+	m.mustAddOrderToOrderbook(ctx, order, false)
+
+	// If the taker order is added to the orderbook successfully, send an off-chain message with
+	// the total filled size of the order (size of order - remaining size).
+	if m.generateOffchainUpdates {
+		if message, success := off_chain_updates.CreateOrderUpdateMessage(
+			ctx,
+			order.OrderId,
+			order.GetBaseQuantums()-remainingSize,
+		); success {
+			offchainUpdates.AddUpdateMessage(order.OrderId, message)
+		}
+	}
+
+	// TODO(DEC-1347): Ensure emitted stats have tags for which ABCI callback was the caller.
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.PlaceOrder, metrics.AddedToOrderBook},
+		1,
+		order.GetOrderLabels(),
+	)
+
+	return orderSizeOptimisticallyFilledFromMatchingQuantums, types.Success, offchainUpdates, nil
 }
 
 // PersistOrderRemovalToState takes in an OrderRemoval, statefully validates it according to

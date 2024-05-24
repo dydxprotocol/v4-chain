@@ -3,15 +3,16 @@ package types
 import (
 	"bytes"
 	fmt "fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 )
 
-// decodeOperationRawShortTermOrderPlacementBytes performs stateless validation
+// decodeOperationRawOrderPlacementBytes performs stateless validation
 // on a short term order placement given its underlying raw tx bytes. It also
 // runs the transaction through an antehandler. The antehandler is needed to
 // do signature validation. Returns an Operation if successful.
-func decodeOperationRawShortTermOrderPlacementBytes(
+func decodeOperationRawOrderPlacementBytes(
 	ctx sdk.Context,
 	bytes []byte,
 	decoder sdk.TxDecoder,
@@ -37,8 +38,8 @@ func decodeOperationRawShortTermOrderPlacementBytes(
 	}
 
 	return &InternalOperation{
-		Operation: &InternalOperation_ShortTermOrderPlacement{
-			ShortTermOrderPlacement: msg,
+		Operation: &InternalOperation_OrderPlacement{
+			OrderPlacement: msg,
 		},
 	}, nil
 }

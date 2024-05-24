@@ -1,0 +1,25 @@
+syntax = "proto3";
+package dydxprotocol.clob;
+
+import "gogoproto/gogo.proto";
+import "dydxprotocol/clob/order.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
+
+message LevelProto {
+    uint64 subticks = 1;
+    // No need to store signature, because all orders are in state.
+    repeated Order orders = 2;
+}
+
+message OrderbookProto {
+    uint32 subticks_per_tick = 1;
+
+    repeated LevelProto bids = 2;
+
+    repeated LevelProto asks = 3;
+
+    uint64 best_bid = 4;
+
+    uint64 best_ask = 5;
+}
