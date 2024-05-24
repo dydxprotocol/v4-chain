@@ -2208,76 +2208,73 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 	clobPair types.ClobPair,
 	orderbook *types.Orderbook,
 	isBid bool,
-	impactNotionalQuoteQuantums *big.Int,
+	impactNotional *big.Int,
 ) (
 	impactPriceSubticks *big.Rat,
 	hasEnoughLiquidity bool,
 ) {
-	remainingImpactQuoteQuantums := new(big.Int).Set(impactNotionalQuoteQuantums)
-	accumulatedBaseQuantums := new(big.Rat).SetInt64(0)
+	notionalLeft := new(big.Int).Set(impactNotional)
+	sizeSum := big.NewInt(0)
 
-	makerLevelOrder, foundMakerOrder := m.openOrders.getBestOrderOnSide(orderbook, isBid)
-	if impactNotionalQuoteQuantums.Sign() == 0 && foundMakerOrder {
-		// Impact notional is zero, returns the price of the best order as impact price.
-		return makerLevelOrder.Value.Order.GetOrderSubticks().ToBigRat(), true
-	}
-
-	for remainingImpactQuoteQuantums.Sign() > 0 && foundMakerOrder {
-		makerOrder := makerLevelOrder.Value.Order
-		makerRemainingSize, makerHasRemainingSize := m.GetOrderRemainingAmount(ctx, makerOrder)
-		if !makerHasRemainingSize {
-			panic(fmt.Sprintf("getImpactPriceSubticks: maker order has no remaining amount (%+v)", makerOrder))
+	orderLvl, orderOk := m.openOrders.getBestOrderOnSide(orderbook, isBid)
+	for ; orderOk && notionalLeft.Sign() > 0; orderLvl, orderOk = m.openOrders.findNextBestLevelOrder(ctx, orderLvl) {
+		order := orderLvl.Value.Order
+		orderSize, sizeOk := m.GetOrderRemainingAmount(ctx, order)
+		if !sizeOk {
+			panic(fmt.Sprintf("getImpactPriceSubticks: order has no remaining amount (%+v)", order))
 		}
 
-		quoteQuantumsIfFullyMatched := types.FillAmountToQuoteQuantums(
-			makerOrder.GetOrderSubticks(),
-			makerRemainingSize,
+		orderNotional := types.FillAmountToQuoteQuantums(
+			order.GetOrderSubticks(),
+			orderSize,
 			clobPair.QuantumConversionExponent,
 		)
 
-		if remainingImpactQuoteQuantums.Cmp(quoteQuantumsIfFullyMatched) > 0 {
-			accumulatedBaseQuantums.Add(
-				accumulatedBaseQuantums,
-				new(big.Rat).SetUint64(makerRemainingSize.ToUint64()),
-			)
-		} else {
-			lastFillFraction := new(big.Rat).SetFrac(
-				remainingImpactQuoteQuantums,
-				quoteQuantumsIfFullyMatched,
-			)
-
-			fractionalBaseQuantums := lastFillFraction.Mul(
-				lastFillFraction,
-				new(big.Rat).SetInt(makerRemainingSize.ToBigInt()),
-			)
-
-			accumulatedBaseQuantums.Add(
-				accumulatedBaseQuantums,
-				fractionalBaseQuantums,
-			)
-		}
-		remainingImpactQuoteQuantums.Sub(
-			remainingImpactQuoteQuantums,
-			quoteQuantumsIfFullyMatched,
+		// Check if subaccount can be updated. If not, skip over the order and continue.
+		orderMap := make(map[satypes.SubaccountId][]types.PendingOpenOrder, 1)
+		orderMap[order.GetSubaccountId()] = []types.PendingOpenOrder{{
+			RemainingQuantums: orderSize,
+			IsBuy:             order.IsBuy(),
+			Subticks:          order.GetOrderSubticks(),
+			ClobPairId:        order.GetClobPairId(),
+		}}
+		success, _ := m.clobKeeper.AddOrderToOrderbookSubaccountUpdatesCheck(
+			ctx,
+			order.GetClobPairId(),
+			orderMap,
 		)
+		if !success {
+			continue
+		}
 
-		// The previous maker order must have been fully matched by the impact order (which has nonzero remaining
-		// size), and we need to find the next best maker order.
-		makerLevelOrder, foundMakerOrder = m.openOrders.findNextBestLevelOrder(ctx, makerLevelOrder)
+		// Update the accumulated base quantums and the total quote quantums.
+		// If only part of the order would be filled by the impact notional amount,
+		// use the portion base quantums that would be filled.
+		sizeFill := orderSize.ToBigInt()
+		if notionalLeft.Cmp(orderNotional) < 0 {
+			sizeFill.Mul(sizeFill, notionalLeft)
+			sizeFill.Quo(sizeFill, orderNotional)
+		}
+		sizeSum.Add(sizeSum, sizeFill)
+		notionalLeft.Sub(notionalLeft, orderNotional)
 	}
 
-	if remainingImpactQuoteQuantums.Sign() > 0 {
-		// Impact order was not fully matched, caused by insufficient liquidity.
+	// Impact order was not fully matched, caused by insufficient liquidity.
+	if notionalLeft.Sign() > 0 {
 		return nil, false
+	}
+
+	// At this point, orderbook has enough liquidity to absorb the impact notional amount.
+	// However, the filled amount is zero, either due to rounding or due to zero impact notional.
+	// Therefore, return the current best-order price as the impact price.
+	if sizeSum.Sign() == 0 && orderOk {
+		return orderLvl.Value.Order.GetOrderSubticks().ToBigRat(), true
 	}
 
 	// Impact order was fully matched. Calculate average impact price.
 	return types.GetAveragePriceSubticks(
-		impactNotionalQuoteQuantums,
-		new(big.Int).Div(
-			accumulatedBaseQuantums.Num(),
-			accumulatedBaseQuantums.Denom(),
-		),
+		impactNotional,
+		sizeSum,
 		clobPair.QuantumConversionExponent,
 	), true
 }
