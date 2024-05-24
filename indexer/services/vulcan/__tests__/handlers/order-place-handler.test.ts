@@ -241,7 +241,7 @@ describe('order-place-handler', () => {
       await testMocks.seedData();
       await Promise.all([
         perpetualMarketRefresher.updatePerpetualMarkets(),
-        blockHeightRefresher.getLatestBlockHeight(),
+        blockHeightRefresher.updateBlockHeight(),
       ]);
       await Promise.all([
         OrderTable.create(dbDefaultOrder),
