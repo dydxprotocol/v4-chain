@@ -133,10 +133,12 @@ FAUCET_ACCOUNTS=(
 	"dydx1axstmx84qtv0avhjwek46v6tcmyc8agu03nafv" # backup #2
 )
 
+GENESIS_BINARY_PATH="/bin/dydxprotocold_genesis_bin"
+
 # Define dependencies for this script.
 # `jq` and `dasel` are used to manipulate json and yaml files respectively.
 install_prerequisites() {
-	apk add dasel jq
+	apk add curl dasel jq
 }
 
 # Create all validators for the chain including a full-node.
@@ -146,7 +148,7 @@ create_validators() {
 	for i in "${!FULL_NODE_KEYS[@]}"; do
 		FULL_NODE_HOME_DIR="$HOME/chain/.full-node-$i"
 		FULL_NODE_CONFIG_DIR="$FULL_NODE_HOME_DIR/config"
-		dydxprotocold init "full-node" -o --chain-id=$CHAIN_ID --home "$FULL_NODE_HOME_DIR"
+		$GENESIS_BINARY_PATH init "full-node" -o --chain-id=$CHAIN_ID --home "$FULL_NODE_HOME_DIR"
 
 		# Note: `dydxprotocold init` non-deterministically creates `node_id.json` for each validator.
 		# This is inconvenient for persistent peering during testing in Terraform configuration as the `node_id`
@@ -168,10 +170,10 @@ create_validators() {
 		VAL_CONFIG_DIR="$VAL_HOME_DIR/config"
 
 		# Initialize the chain and validator files.
-		dydxprotocold init "${MONIKERS[$i]}" -o --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
+		$GENESIS_BINARY_PATH init "${MONIKERS[$i]}" -o --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
 
 		# Overwrite the randomly generated `priv_validator_key.json` with a key generated deterministically from the mnemonic.
-		dydxprotocold tendermint gen-priv-key --home "$VAL_HOME_DIR" --mnemonic "${MNEMONICS[$i]}"
+		$GENESIS_BINARY_PATH tendermint gen-priv-key --home "$VAL_HOME_DIR" --mnemonic "${MNEMONICS[$i]}"
 
 		# Note: `dydxprotocold init` non-deterministically creates `node_id.json` for each validator.
 		# This is inconvenient for persistent peering during testing in Terraform configuration as the `node_id`
@@ -183,7 +185,7 @@ create_validators() {
 
 		edit_config "$VAL_CONFIG_DIR"
 
-		echo "${MNEMONICS[$i]}" | dydxprotocold keys add "${MONIKERS[$i]}" --recover --keyring-backend=test --home "$VAL_HOME_DIR"
+		echo "${MNEMONICS[$i]}" | $GENESIS_BINARY_PATH keys add "${MONIKERS[$i]}" --recover --keyring-backend=test --home "$VAL_HOME_DIR"
 
 		# Using "*" as a subscript results in a single arg: "dydx1... dydx1... dydx1..."
 		# Using "@" as a subscript results in separate args: "dydx1..." "dydx1..." "dydx1..."
@@ -193,13 +195,13 @@ create_validators() {
 		update_genesis_complete_bridge_delay "$VAL_CONFIG_DIR" "600"
 
 		for acct in "${TEST_ACCOUNTS[@]}"; do
-			dydxprotocold add-genesis-account "$acct" 100000000000000000$USDC_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
+			$GENESIS_BINARY_PATH add-genesis-account "$acct" 100000000000000000$USDC_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
 		done
 		for acct in "${FAUCET_ACCOUNTS[@]}"; do
-			dydxprotocold add-genesis-account "$acct" 900000000000000000$USDC_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
+			$GENESIS_BINARY_PATH add-genesis-account "$acct" 900000000000000000$USDC_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
 		done
 
-		dydxprotocold gentx "${MONIKERS[$i]}" $TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT$NATIVE_TOKEN --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
+		$GENESIS_BINARY_PATH gentx "${MONIKERS[$i]}" $TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT$NATIVE_TOKEN --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
 
 		# Copy the gentx to a shared directory.
 		cp -a "$VAL_CONFIG_DIR/gentx/." /tmp/gentx
@@ -214,7 +216,7 @@ create_validators() {
 	cp -r /tmp/gentx "$FIRST_VAL_CONFIG_DIR"
 
 	# Build the final genesis.json file that all validators and the full-nodes will use.
-	dydxprotocold collect-gentxs --home "$FIRST_VAL_HOME_DIR"
+	$GENESIS_BINARY_PATH collect-gentxs --home "$FIRST_VAL_HOME_DIR"
 
 	# Copy this genesis file to each of the other validators
 	for i in "${!MONIKERS[@]}"; do
@@ -238,13 +240,47 @@ create_validators() {
 	done
 }
 
+setup_genesis_binary() {
+	tar_url='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv2.0.0/dydxprotocold-v2.0.0-linux-amd64.tar.gz'
+	tar_path='/tmp/dydxprotocold/dydxprotocold.tar.gz'
+	mkdir -p /tmp/dydxprotocold
+	curl -vL $tar_url -o $tar_path
+	dydxprotocold_path=$(tar -xvf $tar_path --directory /tmp/dydxprotocold)
+	mv /tmp/dydxprotocold/$dydxprotocold_path $GENESIS_BINARY_PATH
+}
+
+setup_upgrade_binaries() {
+	VAL_HOME_DIR=$1
+	declare -A version_urls=(
+		["v4.1.0"]='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv4.1.0/dydxprotocold-v4.1.0-linux-amd64.tar.gz'
+		["v4.0.0"]='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv4.0.0/dydxprotocold-v4.0.0-linux-amd64.tar.gz'
+		["v3.0.0"]='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv3.0.0/dydxprotocold-v3.0.0-linux-amd64.tar.gz'
+	)
+
+	for version in "${!version_urls[@]}"; do
+		tar_url=${version_urls[$version]}
+		mkdir -p /bin/$version
+		tar_path=/bin/$version/dydxprotocold.tar.gz
+		curl -vL $tar_url -o $tar_path
+		dydxprotocold_path=$(tar -xvf $tar_path --directory /bin/$version)
+		cosmovisor_path=$VAL_HOME_DIR/cosmovisor/upgrades/$version/bin
+		mkdir -p $cosmovisor_path
+		ln -s /bin/$version/$dydxprotocold_path $cosmovisor_path/dydxprotocold
+	done
+}
+
 setup_cosmovisor() {
 	for i in "${!FULL_NODE_KEYS[@]}"; do
 		FULL_NODE_HOME_DIR="$HOME/chain/.full-node-$i"
 		export DAEMON_NAME=dydxprotocold
 		export DAEMON_HOME="$HOME/chain/.full-node-$i"
 
-		cosmovisor init /bin/dydxprotocold
+		cosmovisor init $GENESIS_BINARY_PATH
+
+		setup_upgrade_binaries $FULL_NODE_HOME_DIR
+
+		mkdir -p "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v5.0.0/bin/"
+		ln -s /bin/dydxprotocold "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v5.0.0/bin/dydxprotocold"
 	done
 
 	for i in "${!MONIKERS[@]}"; do
@@ -252,7 +288,12 @@ setup_cosmovisor() {
 		export DAEMON_NAME=dydxprotocold
 		export DAEMON_HOME="$HOME/chain/.${MONIKERS[$i]}"
 
-		cosmovisor init /bin/dydxprotocold
+		cosmovisor init $GENESIS_BINARY_PATH
+
+		setup_upgrade_binaries $VAL_HOME_DIR
+
+		mkdir -p "$VAL_HOME_DIR/cosmovisor/upgrades/v5.0.0/bin/"
+		ln -s /bin/dydxprotocold "$VAL_HOME_DIR/cosmovisor/upgrades/v5.0.0/bin/dydxprotocold"
 	done
 }
 
@@ -271,5 +312,6 @@ edit_config() {
 }
 
 install_prerequisites
+setup_genesis_binary
 create_validators
 setup_cosmovisor
