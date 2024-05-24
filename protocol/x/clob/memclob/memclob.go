@@ -511,6 +511,30 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		}
 	}
 
+	// If this is a replacement order, then ensure we remove the existing order from the orderbook.
+	orderId := order.MustGetOrder().OrderId
+	if orderToBeReplaced, found := m.openOrders.getOrder(ctx, orderId); found {
+		m.mustRemoveOrder(ctx, orderToBeReplaced.OrderId)
+		if orderToBeReplaced.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(orderToBeReplaced.OrderId) {
+			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+				orderToBeReplaced.OrderId,
+				types.OrderRemoval_REMOVAL_REASON_UNSPECIFIED,
+			)
+		}
+	}
+
+	if !order.RequiresImmediateExecution() {
+		orderbook := m.openOrders.mustGetOrderbook(ctx, order.GetClobPairId())
+		if crossingOrder := m.openOrders.getBestCrossingOrder(orderbook, &order); crossingOrder == nil {
+			remainingSize, _ := m.GetOrderRemainingAmount(
+				ctx,
+				order.MustGetOrder(),
+			)
+			status := m.placeOrderOnOrderBook(ctx, order, offchainUpdates, remainingSize)
+			return 0, status, offchainUpdates, nil
+		}
+	}
+
 	// Attempt to match the order against the orderbook.
 	takerOrderStatus, takerOffchainUpdates, _, err := m.matchOrder(ctx, &order)
 	offchainUpdates.Append(takerOffchainUpdates)
@@ -609,6 +633,16 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		return orderSizeOptimisticallyFilledFromMatchingQuantums, takerOrderStatus.OrderStatus, offchainUpdates, nil
 	}
 
+	status := m.placeOrderOnOrderBook(ctx, order, offchainUpdates, remainingSize)
+	return orderSizeOptimisticallyFilledFromMatchingQuantums, status, offchainUpdates, nil
+}
+
+func (m *MemClobPriceTimePriority) placeOrderOnOrderBook(
+	ctx sdk.Context,
+	order types.Order,
+	offchainUpdates *types.OffchainUpdates,
+	remainingSize satypes.BaseQuantums,
+) types.OrderStatus {
 	// If this is an IOC order, cancel the remaining size since IOC orders cannot be maker orders.
 	if order.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
 		orderStatus := types.ImmediateOrCancelWouldRestOnBook
@@ -634,7 +668,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK,
 			)
 		}
-		return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, nil
+		return orderStatus
 	}
 
 	// The taker order has unfilled size which will be added to the orderbook as a maker order.
@@ -668,7 +702,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
 			)
 		}
-		return orderSizeOptimisticallyFilledFromMatchingQuantums, addOrderOrderStatus, offchainUpdates, nil
+		return addOrderOrderStatus
 	}
 
 	// If this is a Short-Term order and it's not in the operations queue, add the TX bytes to the
@@ -703,7 +737,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		order.GetOrderLabels(),
 	)
 
-	return orderSizeOptimisticallyFilledFromMatchingQuantums, types.Success, offchainUpdates, nil
+	return types.Success
 }
 
 // PlacePerpetualLiquidation matches an IOC liquidation order against the orderbook. Specifically,
@@ -800,14 +834,6 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		branchedContext,
 		order,
 	)
-
-	// If this is a replacement order, then ensure we remove the existing order from the orderbook.
-	if !order.IsLiquidation() {
-		orderId := order.MustGetOrder().OrderId
-		if orderToBeReplaced, found := m.openOrders.getOrder(branchedContext, orderId); found {
-			makerOrdersToRemove = append(makerOrdersToRemove, OrderWithRemovalReason{Order: orderToBeReplaced})
-		}
-	}
 
 	// For each maker order that should be removed, remove it from the orderbook and emit off-chain
 	// updates for the indexer.
