@@ -118,7 +118,7 @@ export interface SubaccountMessageContents {
   fills?: FillSubaccountMessageContents[],
 	// Transfers that occur on the subaccount
   transfers?: TransferSubaccountMessageContents,
-    // Latest block processed by Indexer
+	// Latest block processed by Indexer
   blockHeight?: string,
 }
 

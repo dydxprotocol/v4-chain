@@ -28,7 +28,12 @@ import {
 } from '../../src/types';
 import { Admin } from 'kafkajs';
 import { SubaccountMessage, TradeMessage } from '@dydxprotocol-indexer/v4-protos';
-import { dbHelpers, testMocks, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+import {
+  dbHelpers,
+  testMocks,
+  perpetualMarketRefresher,
+  blockHeightRefresher,
+} from '@dydxprotocol-indexer/postgres';
 import {
   btcClobPairId,
   btcTicker,
@@ -171,12 +176,16 @@ describe('message-forwarder', () => {
   const subaccountInitialMessage: Object = {
     ...mockAxiosResponse,
     orders: mockAxiosResponse,
+    blockHeight: '2',
   };
 
   beforeAll(async () => {
     await dbHelpers.migrate();
     await testMocks.seedData();
-    await perpetualMarketRefresher.updatePerpetualMarkets();
+    await Promise.all([
+      perpetualMarketRefresher.updatePerpetualMarkets(),
+      blockHeightRefresher.updateBlockHeight(),
+    ]);
     admin = kafka.admin();
     await Promise.all([
       connectToKafka(),

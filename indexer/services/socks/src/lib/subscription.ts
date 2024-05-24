@@ -604,7 +604,9 @@ export class Subscriptions {
       const [
         subaccountsResponse,
         ordersResponse,
+        blockHeight,
       ]: [
+        string,
         string,
         string,
       ] = await Promise.all([
@@ -627,11 +629,13 @@ export class Subscriptions {
           },
           transformResponse: (res) => res,
         }),
+        blockHeightRefresher.getLatestBlockHeight(),
       ]);
 
       return JSON.stringify({
         ...JSON.parse(subaccountsResponse),
         orders: JSON.parse(ordersResponse),
+        blockHeight,
       });
     } catch (error) {
       // The subaccounts API endpoint returns a 404 for subaccounts that are not indexed, however
