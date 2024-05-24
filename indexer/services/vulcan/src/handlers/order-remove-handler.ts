@@ -386,7 +386,7 @@ export class OrderRemoveHandler extends Handler {
     };
     // TODO: remove
     logger.info({
-      at: 'OrderRemoveHandler#handle',
+      at: 'OrderRemoveHandler#sendingOrderbookMessage',
       message: 'Sending websocket orderbook message',
       txHash: this.txHash,
       clobPair: perpetualMarket.clobPairId,

@@ -170,7 +170,7 @@ export class OrderPlaceHandler extends Handler {
 
       // TODO: remove
       logger.info({
-        at: 'OrderPlaceHandler#handle',
+        at: 'OrderPlaceHandler#sendingOrderbookMessage',
         message: 'Sending websocket orderbook message',
         txHash: this.txHash,
         clobPair: order.orderId!.clobPairId.toString(),
