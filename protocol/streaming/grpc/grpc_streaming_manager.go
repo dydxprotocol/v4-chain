@@ -68,11 +68,13 @@ func NewGrpcStreamingManager(
 
 	// Worker goroutine to consistently read from channel and send out updates
 	go func() {
-		for internalResponse := range grpcStreamingManager.updateBuffer {
-			grpcStreamingManager.logger.Info("start polling a response", "len", len(grpcStreamingManager.updateBuffer))
-			grpcStreamingManager.sendUpdateResponse(internalResponse)
-			grpcStreamingManager.logger.Info("finish polling a response", "len", len(grpcStreamingManager.updateBuffer))
+		for {
+			for internalResponse := range grpcStreamingManager.updateBuffer {
+				grpcStreamingManager.logger.Info("start polling a response", "len", len(grpcStreamingManager.updateBuffer))
+				grpcStreamingManager.sendUpdateResponse(internalResponse)
+				grpcStreamingManager.logger.Info("finish polling a response", "len", len(grpcStreamingManager.updateBuffer))
 
+			}
 		}
 	}()
 
@@ -268,6 +270,7 @@ func (sm *GrpcStreamingManagerImpl) mustEnqueueOrderbookUpdate(internalResponse 
 			sm.removeSubscription(k)
 		}
 		// Clear out the buffer
+		close(sm.updateBuffer)
 		sm.updateBuffer = make(chan bufferInternalResponse, sm.updateBufferWindowSize)
 	}
 	sm.EmitMetrics()
