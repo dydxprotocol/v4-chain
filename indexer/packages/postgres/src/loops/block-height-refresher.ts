@@ -27,12 +27,14 @@ export async function start(): Promise<void> {
  */
 export async function updateBlockHeight(options?: Options): Promise<void> {
   const startTime: number = Date.now();
-  const latestBlock: BlockFromDatabase = await BlockTable.getLatest(
-    options || { readReplica: true },
-  );
-
-  latestBlockHeight = latestBlock.blockHeight;
-  stats.timing(`${config.SERVICE_NAME}.loops.update_block_height`, Date.now() - startTime);
+  try {
+    const latestBlock: BlockFromDatabase = await BlockTable.getLatest(
+      options || { readReplica: true },
+    );
+    latestBlockHeight = latestBlock.blockHeight;
+    stats.timing(`${config.SERVICE_NAME}.loops.update_block_height`, Date.now() - startTime);
+    // eslint-disable-next-line no-empty
+  } catch (error) { }
 }
 
 /**
