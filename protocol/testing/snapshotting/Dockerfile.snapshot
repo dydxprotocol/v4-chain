@@ -3,5 +3,6 @@ FROM dydxprotocol-base
 COPY ./testing/snapshotting/snapshot.sh /dydxprotocol/snapshot.sh
 
 RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
+RUN apk add --no-cache bash jq aws-cli
 
 ENTRYPOINT ["/dydxprotocol/snapshot.sh"]
