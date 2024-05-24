@@ -51,6 +51,7 @@ export class TradingRewardsHandler extends Handler<TradingRewardsEventV1> {
 
       const subaccountMessageContents: SubaccountMessageContents = {
         tradingReward: tradingRewardSubaccountMessageContents,
+        blockHeight: this.block.height.toString(),
       };
 
       kafkaEvents.push(

@@ -91,6 +91,7 @@ export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
       perpetualMarketsMapping,
       updatedAssetPositions,
       assetsMap,
+      this.block.height.toString(),
     );
 
     return this.generateConsolidatedSubaccountKafkaEvent(

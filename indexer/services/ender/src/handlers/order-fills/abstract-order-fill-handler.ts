@@ -72,6 +72,7 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
         [position],
         perpetualMarketRefresher.getPerpetualMarketsMap(),
       ),
+      blockHeight: this.block.height.toString(),
     };
     if (order !== undefined) {
       message.orders = [

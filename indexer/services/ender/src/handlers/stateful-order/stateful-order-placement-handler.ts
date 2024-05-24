@@ -1,6 +1,7 @@
 import { generateSubaccountMessageContents } from '@dydxprotocol-indexer/kafka';
 import {
-  OrderFromDatabase, OrderModel,
+  OrderFromDatabase,
+  OrderModel,
   OrderTable,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
@@ -98,6 +99,7 @@ export class StatefulOrderPlacementHandler
         dbOrder,
         perpetualMarket,
         OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
+        this.block.height.toString(),
       );
 
       const subaccountIdProto: SubaccountId = {
