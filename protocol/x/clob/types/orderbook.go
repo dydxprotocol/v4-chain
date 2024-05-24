@@ -3,6 +3,7 @@ package types
 import (
 	math "math"
 	"math/big"
+	"sort"
 
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/zyedidia/generic/list"
@@ -44,14 +45,14 @@ type ClobOrder struct {
 
 // LevelOrder represents the queue position of an order that is within a
 // specific price level of the CLOB.
-type LevelOrder = list.Node[ClobOrder]
+type LevelOrder = list.Node[Order]
 
 // Level represents a price level on the CLOB.
 type Level struct {
 	// LevelOrders represents a doubly-linked list of `ClobOrder`s sorted in chronical
 	// order (ascending). Note that this should always be non-`nil`, since the
 	// `Level` should not exist if there are no elements in the linked list.
-	LevelOrders list.List[ClobOrder]
+	LevelOrders list.List[Order]
 }
 
 // Orderbook holds the bids and asks for a specific product.
@@ -80,7 +81,8 @@ type Orderbook struct {
 	MinOrderBaseQuantums satypes.BaseQuantums
 	// Contains all open reduce-only orders on this CLOB from each subaccount. Used for tracking
 	// which open reduce-only orders should be canceled when a position changes sides.
-	SubaccountOpenReduceOnlyOrders map[satypes.SubaccountId]map[OrderId]bool
+	// TODO does not support reduce-only for now.
+	// SubaccountOpenReduceOnlyOrders map[satypes.SubaccountId]map[OrderId]bool
 	// TotalOpenOrders tracks the total number of open orders in an orderbook for observability purposes.
 	TotalOpenOrders uint
 }
@@ -258,4 +260,111 @@ type MatchableOrder interface {
 	// IsReduceOnly returns whether this is a reduce-only order.
 	// This always returns false for liquidation orders.
 	IsReduceOnly() bool
+}
+
+func addToOrderMap(m map[satypes.SubaccountId]map[Order_Side]map[OrderId]bool, order Order) {
+	subaccountId := order.GetSubaccountId()
+	side := order.GetSide()
+	if m[subaccountId] == nil {
+		m[subaccountId] = make(map[Order_Side]map[OrderId]bool)
+	}
+	if m[subaccountId][side] == nil {
+		m[subaccountId][side] = make(map[OrderId]bool)
+	}
+	m[subaccountId][side][order.GetOrderId()] = true
+}
+
+func NewOrderbookFromStore(
+	orderbookStore OrderbookStore,
+) *Orderbook {
+	bidMap := make(map[Subticks]*Level)
+	askMap := make(map[Subticks]*Level)
+	subaccountOpenOrders := make(map[satypes.SubaccountId]map[Order_Side]map[OrderId]bool)
+	totalOpenOrders := uint(0)
+
+	bestBid := uint64(0)
+	for _, levelStore := range orderbookStore.Bids {
+		if levelStore.Subticks > bestBid {
+			bestBid = levelStore.Subticks
+		}
+		level := list.New[Order]()
+		for _, order := range levelStore.Orders {
+			level.PushBack(order)
+			totalOpenOrders++
+			addToOrderMap(subaccountOpenOrders, order)
+		}
+		bidMap[Subticks(levelStore.Subticks)] = &Level{}
+	}
+
+	bestAsk := uint64(math.MaxUint64)
+	for _, levelStore := range orderbookStore.Asks {
+		if uint64(levelStore.Subticks) < bestAsk {
+			bestAsk = levelStore.Subticks
+		}
+		level := list.New[Order]()
+		for _, order := range levelStore.Orders {
+			level.PushBack(order)
+			totalOpenOrders++
+			addToOrderMap(subaccountOpenOrders, order)
+		}
+		askMap[Subticks(levelStore.Subticks)] = &Level{}
+	}
+
+	return &Orderbook{
+		SubticksPerTick:          SubticksPerTick(orderbookStore.SubticksPerTick),
+		Bids:                     bidMap,
+		Asks:                     askMap,
+		BestBid:                  Subticks(bestBid),
+		BestAsk:                  Subticks(bestAsk),
+		MinOrderBaseQuantums:     satypes.BaseQuantums(orderbookStore.MinOrderBaseQuantums),
+		TotalOpenOrders:          totalOpenOrders,
+		SubaccountOpenClobOrders: subaccountOpenOrders,
+	}
+}
+
+func OrderbookToStore(orderbook *Orderbook) *OrderbookStore {
+	orderbookStore := &OrderbookStore{
+		SubticksPerTick:      uint32(orderbook.SubticksPerTick),
+		MinOrderBaseQuantums: uint64(orderbook.MinOrderBaseQuantums),
+	}
+
+	// Convert Bids
+	bidKeys := make([]Subticks, 0, len(orderbook.Bids))
+	for k := range orderbook.Bids {
+		bidKeys = append(bidKeys, k)
+	}
+	sort.Slice(bidKeys, func(i, j int) bool { return bidKeys[i] < bidKeys[j] }) // Ensure deterministic order
+	for _, k := range bidKeys {
+		level := orderbook.Bids[k]
+		var orders []Order
+		for e := level.LevelOrders.Front; e != nil; e = e.Next {
+			orders = append(orders, e.Value)
+		}
+		levelStore := LevelStore{
+			Subticks: uint64(k),
+			Orders:   orders,
+		}
+		orderbookStore.Bids = append(orderbookStore.Bids, levelStore)
+	}
+
+	// Convert Asks
+	askKeys := make([]Subticks, 0, len(orderbook.Asks))
+	for k := range orderbook.Asks {
+		askKeys = append(askKeys, k)
+	}
+	sort.Slice(askKeys, func(i, j int) bool { return askKeys[i] < askKeys[j] }) // Ensure deterministic order
+	for _, k := range askKeys {
+		level := orderbook.Asks[k]
+		var orders []Order
+		for e := level.LevelOrders.Front; e != nil; e = e.Next {
+			orders = append(orders, e.Value)
+		}
+		levelStore := LevelStore{
+			Subticks: uint64(k),
+			Orders:   orders,
+		}
+		orderbookStore.Asks = append(orderbookStore.Asks, levelStore)
+	}
+
+	return orderbookStore
 }
