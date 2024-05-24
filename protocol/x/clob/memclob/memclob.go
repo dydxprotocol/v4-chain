@@ -437,6 +437,21 @@ func (m *MemClobPriceTimePriority) GetOperationsToReplay(ctx sdk.Context) (
 	return m.operationsToPropose.GetOperationsToReplay()
 }
 
+func (m *MemClobPriceTimePriority) AddOrderToMempool(
+	ctx sdk.Context,
+	order types.Order,
+) (
+	err error,
+) {
+	lib.AssertCheckTxMode(ctx)
+
+	m.operationsToPropose.MustAddOrderPlacementToOperationsQueue(
+		order,
+	)
+
+	return nil
+}
+
 // PlaceOrder will perform the following operations:
 // - Validate the order against memclob in-memory state.
 // - If the newly placed order causes an overlap, match orders within that orderbook.

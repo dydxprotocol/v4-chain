@@ -158,8 +158,7 @@ message OperationRaw {
   // operationRaw represents an operation that occurred, which can be a match,
   // a signed order placement, or an order removal.
   oneof operation {
-    ClobMatch match = 1;
-    bytes short_term_order_placement = 2;
+    bytes order_placement = 2;
     OrderRemoval order_removal = 3;
   }
 }

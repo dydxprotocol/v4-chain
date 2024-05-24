@@ -161,6 +161,18 @@ func (k Keeper) CancelShortTermOrder(
 	return nil
 }
 
+func (k Keeper) AddOrderCheckTx(
+	ctx sdk.Context,
+	msg *types.MsgPlaceOrder,
+) (
+	err error,
+) {
+	lib.AssertCheckTxMode(ctx)
+
+	// TODO: Do some lightweight collateral and rate limit checks here.
+	return k.MemClob.AddOrderToMempool(ctx, msg.Order)
+}
+
 // PlaceShortTermOrder places an order on the corresponding orderbook, and performs matching if placing the
 // order causes an overlap. This function will return the result of calling `PlaceOrder` on the
 // keeper's memclob. This method is meant to be used in the CheckTx flow. It uses the next block height.

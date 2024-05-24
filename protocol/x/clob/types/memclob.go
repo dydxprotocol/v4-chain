@@ -11,6 +11,10 @@ import (
 // MemClob is an interface that encapsulates all reads and writes to the
 // CLOB's in-memory data structures.
 type MemClob interface {
+	AddOrderToMempool(
+		ctx sdk.Context,
+		order Order,
+	) (err error)
 	SetClobKeeper(
 		keeper MemClobKeeper,
 	)

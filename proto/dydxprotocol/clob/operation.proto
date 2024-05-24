@@ -15,10 +15,8 @@ message Operation {
   // short term order placement, short term order cancellation, or the placement
   // of a pre-existing stateful order.
   oneof operation {
-    ClobMatch match = 1;
-    MsgPlaceOrder short_term_order_placement = 2;
-    MsgCancelOrder short_term_order_cancellation = 3;
-    OrderId preexisting_stateful_order = 4;
+    MsgPlaceOrder order_placement = 2;
+    MsgCancelOrder order_cancellation = 3;
   }
 }
 
@@ -29,9 +27,7 @@ message InternalOperation {
   // Short-Term order placement, or the placement of a pre-existing stateful
   // order.
   oneof operation {
-    ClobMatch match = 1;
-    MsgPlaceOrder short_term_order_placement = 2;
-    OrderId preexisting_stateful_order = 3;
+    MsgPlaceOrder order_placement = 2;
     OrderRemoval order_removal = 4;
   }
 }

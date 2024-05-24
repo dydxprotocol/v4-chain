@@ -15,10 +15,10 @@ type OperationsToPropose struct {
 	OperationsQueue []InternalOperation
 	// A set of order hashes where the order placement has already been included in the operations queue.
 	OrderHashesInOperationsQueue map[OrderHash]bool
-	// A map of Short-Term order hashes to the raw transaction bytes of the order placement.
+	// A map of order hashes to the raw transaction bytes of the order placement.
 	// This is used in `GetOperationsQueueRaw` for returning a slice of `OperationRaw` for
 	// the purposes of constructing `MsgProposedOperations`.
-	ShortTermOrderHashToTxBytes map[OrderHash][]byte
+	OrderHashToTxBytes map[OrderHash][]byte
 	// A map from order ID to the orders themselves for each order that
 	// was matched. Note: there may be multiple distinct orders with the same
 	// ID that are matched. In that case, only the "greatest" of any such orders
@@ -79,6 +79,18 @@ func (o *OperationsToPropose) MustAddShortTermOrderTxBytes(
 	}
 
 	o.ShortTermOrderHashToTxBytes[orderHash] = txBytes
+}
+
+func (o *OperationsToPropose) MustAddOrderPlacementToOperationsQueue(
+	order Order,
+) {
+	orderHash := order.GetOrderHash()
+	if _, exists := o.OrderHashesInOperationsQueue[orderHash]; exists {
+		return
+	}
+
+	o.OrderHashesInOperationsQueue[orderHash] = true
+	o.OperationsQueue = append(o.OperationsQueue, NewOrderPlacementInternalOperation(order))
 }
 
 // MustAddShortTermOrderPlacementToOperationsQueue adds a Short-Term order placement operation to the
@@ -436,17 +448,9 @@ func (o *OperationsToPropose) GetOperationsToPropose() []OperationRaw {
 
 	for _, operation := range o.OperationsQueue {
 		switch operation := operation.Operation.(type) {
-		case *InternalOperation_Match:
-			operationRaws = append(operationRaws, OperationRaw{
-				Operation: &OperationRaw_Match{
-					Match: &ClobMatch{
-						Match: operation.Match.Match,
-					},
-				},
-			})
-		case *InternalOperation_ShortTermOrderPlacement:
-			order := operation.ShortTermOrderPlacement.GetOrder()
-			operationBytes, exists := o.ShortTermOrderHashToTxBytes[order.GetOrderHash()]
+		case *InternalOperation_OrderPlacement:
+			order := operation.OrderPlacement.GetOrder()
+			operationBytes, exists := o.OrderHashToTxBytes[order.GetOrderHash()]
 			if !exists {
 				panic(
 					fmt.Sprintf(
@@ -457,11 +461,10 @@ func (o *OperationsToPropose) GetOperationsToPropose() []OperationRaw {
 				)
 			}
 			operationRaws = append(operationRaws, OperationRaw{
-				Operation: &OperationRaw_ShortTermOrderPlacement{
-					ShortTermOrderPlacement: operationBytes,
+				Operation: &OperationRaw_OrderPlacement{
+					OrderPlacement: operationBytes,
 				},
 			})
-		case *InternalOperation_PreexistingStatefulOrder:
 		case *InternalOperation_OrderRemoval:
 			operationRaws = append(operationRaws, OperationRaw{
 				Operation: &OperationRaw_OrderRemoval{

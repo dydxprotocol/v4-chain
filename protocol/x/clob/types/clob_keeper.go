@@ -60,6 +60,9 @@ type ClobKeeper interface {
 		orderStatus OrderStatus,
 		err error,
 	)
+	AddOrderCheckTx(ctx sdk.Context, msg *MsgPlaceOrder) (
+		err error,
+	)
 	PlaceStatefulOrder(
 		ctx sdk.Context,
 		msg *MsgPlaceOrder,
