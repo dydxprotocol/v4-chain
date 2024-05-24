@@ -1,6 +1,7 @@
 import { logger, runFuncWithTimingStat, stats } from '@dydxprotocol-indexer/base';
 import { KafkaTopics, SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION, getTriggerPrice } from '@dydxprotocol-indexer/kafka';
 import {
+  blockHeightRefresher,
   BlockTable,
   BlockFromDatabase,
   OrderFromDatabase,
@@ -233,6 +234,7 @@ export class OrderRemoveHandler extends Handler {
         order,
         orderRemove,
         perpetualMarket.ticker,
+        blockHeightRefresher.getLatestBlockHeight(),
       ),
       headers,
     };
@@ -294,6 +296,7 @@ export class OrderRemoveHandler extends Handler {
             canceledOrder,
             orderRemove,
             perpetualMarket.ticker,
+            blockHeightRefresher.getLatestBlockHeight(),
           ),
           headers,
         };
@@ -333,6 +336,7 @@ export class OrderRemoveHandler extends Handler {
         canceledOrder,
         orderRemove,
         perpetualMarket,
+        blockHeightRefresher.getLatestBlockHeight(),
       ),
       headers,
     };
@@ -570,6 +574,7 @@ export class OrderRemoveHandler extends Handler {
     canceledOrder: OrderFromDatabase | undefined,
     orderRemove: OrderRemoveV1,
     ticker: string,
+    blockHeight: string | undefined,
   ): Buffer {
     const createdAtHeight: string | undefined = canceledOrder?.createdAtHeight;
     const updatedAt: IsoString | undefined = canceledOrder?.updatedAt;
@@ -616,6 +621,7 @@ export class OrderRemoveHandler extends Handler {
           ...(type && { type }),
         },
       ],
+      ...(blockHeight && { blockHeight }),
     };
 
     const subaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({
@@ -632,6 +638,7 @@ export class OrderRemoveHandler extends Handler {
     canceledOrder: OrderFromDatabase | undefined,
     orderRemove: OrderRemoveV1,
     perpetualMarket: PerpetualMarketFromDatabase,
+    blockHeight: string | undefined,
   ): Buffer {
     const redisOrder: RedisOrder = removeOrderResult.removedOrder!;
     const orderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
@@ -676,6 +683,7 @@ export class OrderRemoveHandler extends Handler {
           triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
         },
       ],
+      ...(blockHeight && { blockHeight }),
     };
 
     const subaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({
@@ -691,6 +699,7 @@ export class OrderRemoveHandler extends Handler {
     order: OrderFromDatabase,
     orderRemove: OrderRemoveV1,
     orderTicker: string,
+    blockHeight: string | undefined,
   ): Buffer {
     const contents: SubaccountMessageContents = {
       orders: [
@@ -722,6 +731,7 @@ export class OrderRemoveHandler extends Handler {
           triggerPrice: order.triggerPrice ?? undefined,
         },
       ],
+      ...(blockHeight && { blockHeight }),
     };
 
     const subaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({

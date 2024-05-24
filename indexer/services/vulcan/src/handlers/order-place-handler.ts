@@ -1,6 +1,7 @@
 import { logger, runFuncWithTimingStat, stats } from '@dydxprotocol-indexer/base';
 import { createSubaccountWebsocketMessage, KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
+  blockHeightRefresher,
   OrderFromDatabase,
   OrderTable,
   PerpetualMarketFromDatabase,
@@ -150,6 +151,7 @@ export class OrderPlaceHandler extends Handler {
           dbOrder,
           perpetualMarket,
           placementStatus,
+          blockHeightRefresher.getLatestBlockHeight(),
         ),
         headers,
       };

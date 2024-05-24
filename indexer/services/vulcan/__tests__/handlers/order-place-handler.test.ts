@@ -16,6 +16,8 @@ import {
   APIOrderStatus,
   APIOrderStatusEnum,
   apiTranslations,
+  blockHeightRefresher,
+  BlockTable,
   dbHelpers,
   OrderbookMessageContents,
   OrderFromDatabase,
@@ -76,7 +78,9 @@ interface OffchainUpdateRecord {
 }
 
 describe('order-place-handler', () => {
-  beforeAll(() => {
+  beforeAll(async () => {
+    await BlockTable.create(testConstants.defaultBlock);
+    await blockHeightRefresher.updateBlockHeight();
     jest.useFakeTimers();
   });
 
@@ -233,8 +237,12 @@ describe('order-place-handler', () => {
     });
 
     beforeEach(async () => {
+      await dbHelpers.clearData();
       await testMocks.seedData();
-      await perpetualMarketRefresher.updatePerpetualMarkets();
+      await Promise.all([
+        perpetualMarketRefresher.updatePerpetualMarkets(),
+        blockHeightRefresher.getLatestBlockHeight(),
+      ]);
       await Promise.all([
         OrderTable.create(dbDefaultOrder),
         OrderTable.create(dbOrderGoodTilBlockTime),
@@ -1225,6 +1233,7 @@ function expectWebsocketMessagesSent(
           triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
         },
       ],
+      blockHeight: blockHeightRefresher.getLatestBlockHeight(),
     };
     const subaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({
       contents: JSON.stringify(contents),
