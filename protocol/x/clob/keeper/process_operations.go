@@ -159,6 +159,9 @@ func (k Keeper) ProcessInternalOperations(
 	// All short term orders in this map have passed validation.
 	placedShortTermOrders := make(map[types.OrderId]types.Order, 0)
 
+	// Orderbook will be lazily decoded and stored here if there's a an order on the book.
+	clobPairIdToOrderbook := make(map[types.ClobPairId]types.Orderbook)
+
 	// Write the matches to state if all stateful validation passes.
 	for _, operation := range operations {
 		if err := k.validateInternalOperationAgainstClobPairStatus(ctx, operation); err != nil {
@@ -186,7 +189,7 @@ func (k Keeper) ProcessInternalOperations(
 				return err
 			}
 			placedShortTermOrders[order.GetOrderId()] = order
-			return k.PlaceOrderDeliverTx(ctx, order)
+			return k.PlaceOrderDeliverTx(ctx, order, clobPairIdToOrderbook)
 		case *types.InternalOperation_OrderRemoval:
 			orderRemoval := castedOperation.OrderRemoval
 
@@ -377,9 +380,11 @@ func (k Keeper) validateNewOrder(
 func (k Keeper) PlaceOrderDeliverTx(
 	ctx sdk.Context,
 	order types.Order,
+	clobPairIdToOrderbook map[types.ClobPairId]types.Orderbook,
 ) (
 	// orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 	// orderStatus types.OrderStatus,
+	// TODO: onchain update?
 	// offchainUpdates *types.OffchainUpdates,
 	err error,
 ) {
@@ -389,32 +394,11 @@ func (k Keeper) PlaceOrderDeliverTx(
 
 	// Validate the order and return an error if any validation fails.
 	if err := k.validateNewOrder(ctx, order); err != nil {
-		return 0, 0, offchainUpdates, err
-	}
-
-	if m.generateOffchainUpdates {
-		// If this is a replacement order, then ensure we send the appropriate replacement message.
-		orderId := order.OrderId
-		if _, found := m.openOrders.getOrder(ctx, orderId); found {
-			if message, success := off_chain_updates.CreateOrderReplaceMessage(
-				ctx,
-				order,
-			); success {
-				offchainUpdates.AddReplaceMessage(orderId, message)
-			}
-		} else {
-			if message, success := off_chain_updates.CreateOrderPlaceMessage(
-				ctx,
-				order,
-			); success {
-				offchainUpdates.AddPlaceMessage(order.OrderId, message)
-			}
-		}
+		return err
 	}
 
 	// Attempt to match the order against the orderbook.
-	takerOrderStatus, takerOffchainUpdates, _, err := m.matchOrder(ctx, &order)
-	offchainUpdates.Append(takerOffchainUpdates)
+	takerOrderStatus, takerOffchainUpdates, _, err := k.matchOrder(ctx, order, clobPairIdToOrderbook)
 
 	if err != nil {
 		if order.IsStatefulOrder() {

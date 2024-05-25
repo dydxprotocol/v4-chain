@@ -1,4 +1,4 @@
-package memclob
+package keeper
 
 import (
 	"errors"
@@ -26,60 +26,9 @@ import (
 	gometrics "github.com/hashicorp/go-metrics"
 )
 
-// Ensure that `memClobPriceTimePriority` struct properly implements
-// the `MemClob` interface.
-var _ types.MemClob = &MemClobPriceTimePriority{}
-
-type MemClobPriceTimePriority struct {
-	// ---- Fields for open orders ----
-	// Struct for storing all open orders (including their expiries).
-	openOrders *memclobOpenOrders
-
-	// ---- Fields for canceled orders ----
-	// Struct for storing order cancelations (including their expiries).
-	cancels *memclobCancels
-
-	// OperationsToPropose struct for proposing operations in the next block.
-	operationsToPropose types.OperationsToPropose
-
-	// A reference to an expected clob keeper.
-	clobKeeper types.MemClobKeeper
-
-	// ---- Fields for determining if off-chain update messages should be generated ----
-	generateOffchainUpdates bool
-
-	// ---- Fields for determining if orderbook updates should be generated ----
-	generateOrderbookUpdates bool
-}
-
 type OrderWithRemovalReason struct {
 	Order         types.Order
 	RemovalReason types.OrderRemoval_RemovalReason
-}
-
-func NewMemClobPriceTimePriority(
-	generateOffchainUpdates bool,
-) *MemClobPriceTimePriority {
-	return &MemClobPriceTimePriority{
-		openOrders:               newMemclobOpenOrders(),
-		cancels:                  newMemclobCancels(),
-		operationsToPropose:      *types.NewOperationsToPropose(),
-		generateOffchainUpdates:  generateOffchainUpdates,
-		generateOrderbookUpdates: false,
-	}
-}
-
-// SetClobKeeper sets the MemClobKeeper reference for this MemClob.
-// This method is called after the MemClob struct is initialized.
-// This reference is set with an explicit method call rather than during `NewMemClobPriceTimePriority`
-// due to the bidirectional dependency between the Keeper and the MemClob.
-func (m *MemClobPriceTimePriority) SetClobKeeper(clobKeeper types.MemClobKeeper) {
-	m.clobKeeper = clobKeeper
-}
-
-// SetGenerateOffchainUpdates sets the `generateOffchainUpdates` field of the MemClob.
-func (m *MemClobPriceTimePriority) SetGenerateOrderbookUpdates(generateOrderbookUpdates bool) {
-	m.generateOrderbookUpdates = generateOrderbookUpdates
 }
 
 // CancelOrder removes a Short-Term order by `OrderId` (if it exists) from all order-related data structures
