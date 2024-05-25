@@ -1,5 +1,5 @@
 # Dockerfile to containerize services locally
-FROM dydxprotocol/indexer-node:16-alpine-m1
+FROM dydxprotocol/indexer-node:16-alpine
 ENV NODE_ENV=development
 ARG service
 
@@ -42,7 +42,7 @@ COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
 RUN chown dydx -R /home/dydx/app
 
 USER dydx
-RUN pnpm i --loglevel warn --production --frozen-lockfile
+RUN pnpm i --loglevel warn --frozen-lockfile
 
 WORKDIR /home/dydx/app/services/$service
 

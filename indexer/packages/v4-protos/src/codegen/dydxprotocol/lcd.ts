@@ -15,9 +15,6 @@ export const createLCDClient = async ({
       blocktime: new (await import("./blocktime/query.lcd")).LCDQueryClient({
         requestClient
       }),
-      bridge: new (await import("./bridge/query.lcd")).LCDQueryClient({
-        requestClient
-      }),
       clob: new (await import("./clob/query.lcd")).LCDQueryClient({
         requestClient
       }),
