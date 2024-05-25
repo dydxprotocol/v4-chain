@@ -160,7 +160,7 @@ func (k Keeper) ProcessInternalOperations(
 	placedShortTermOrders := make(map[types.OrderId]types.Order, 0)
 
 	// Orderbook will be lazily decoded and stored here if there's a an order on the book.
-	clobPairIdToOrderbook := make(map[types.ClobPairId]types.Orderbook)
+	clobPairIdToOrderbook := make(map[types.ClobPairId]*types.Orderbook)
 
 	// Write the matches to state if all stateful validation passes.
 	for _, operation := range operations {
@@ -380,7 +380,7 @@ func (k Keeper) validateNewOrder(
 func (k Keeper) PlaceOrderDeliverTx(
 	ctx sdk.Context,
 	order types.Order,
-	clobPairIdToOrderbook map[types.ClobPairId]types.Orderbook,
+	clobPairIdToOrderbook map[types.ClobPairId]*types.Orderbook,
 ) (
 	// orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 	// orderStatus types.OrderStatus,

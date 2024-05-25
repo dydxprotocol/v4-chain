@@ -45,6 +45,9 @@ const (
 	// ClobPairKeyPrefix is the prefix to retrieve all ClobPair
 	ClobPairKeyPrefix = "Clob:"
 
+	// OrderbookStoreKeyPrefix is the prefix to retrieve an OrderbookStore.
+	OrderbookStoreKeyPrefix = "Orderbook:"
+
 	// OrderAmountFilledKeyPrefix is the prefix to retrieve the fill amount for an order.
 	OrderAmountFilledKeyPrefix = "Fill:"
 
