@@ -46,9 +46,6 @@ func TestGetOrderFilledAmount(t *testing.T) {
 				ClientId:     0,
 			}
 
-			memClobKeeper.On("AddOrderToOrderbookSubaccountUpdatesCheck", mock.Anything, mock.Anything).
-				Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult))
-
 			memClobKeeper.On("GetStatePosition", mock.Anything, mock.Anything, mock.Anything).
 				Return(big.NewInt(0))
 

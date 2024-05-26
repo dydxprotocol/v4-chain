@@ -266,8 +266,6 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 						satypes.BaseQuantums(0),
 						uint32(0),
 					).Times(5)
-					mockMemClobKeeper.On("AddOrderToOrderbookSubaccountUpdatesCheck", mock.Anything, mock.Anything, mock.Anything).
-						Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult)).Once()
 
 					// Mock out all remaining calls to GetOrderFillAmount, which is called in
 					// `memclob.PurgeInvalidMemclobState` and during test assertions.
