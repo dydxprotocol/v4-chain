@@ -63,7 +63,7 @@ async function uncrossOrderbook(
     bi < orderbookLevels.bids.length &&
     Big(orderbookLevels.bids[bi].humanPrice).gte(Big(orderbookLevels.asks[ai].humanPrice))
   ) {
-    // Compare the recency and size of the bid and ask to decide which to remove
+    // Remove the older side
     if (
       Number(orderbookLevels.bids[bi].lastUpdated) > Number(orderbookLevels.asks[ai].lastUpdated)
     ) {
@@ -76,6 +76,13 @@ async function uncrossOrderbook(
   // Remove crossed levels from Redis
   const removeBidLevels = orderbookLevels.bids.slice(0, bi);
   const removeAskLevels = orderbookLevels.asks.slice(0, ai);
+
+  logger.info({
+    at: 'uncrossOrderbook#uncrossOrderbook',
+    message: `Uncrossing orderbook for ${ticker}`,
+    removedBids: JSON.stringify(removeBidLevels),
+    removedAsks: JSON.stringify(removeAskLevels),
+  });
 
   for (const bid of removeBidLevels) {
     const deleted: boolean = await deleteStalePriceLevel({
@@ -110,11 +117,4 @@ async function uncrossOrderbook(
       });
     }
   }
-
-  logger.info({
-    at: 'uncrossOrderbook#uncrossOrderbook',
-    message: `Uncrossed orderbook for ${ticker}`,
-    removedBids: JSON.stringify(removeBidLevels),
-    removedAsks: JSON.stringify(removeAskLevels),
-  });
 }
