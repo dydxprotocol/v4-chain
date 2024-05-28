@@ -120,7 +120,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcAddress:               "localhost:9090",
 			expectedGrpcEnable:                true,
 			expectedGrpcStreamingEnable:       false,
-			expectedGrpcStreamingBufferSize:   100,
+			expectedGrpcStreamingBufferSize:   1000,
 		},
 		"Sets values from options": {
 			optsMap: map[string]any{
