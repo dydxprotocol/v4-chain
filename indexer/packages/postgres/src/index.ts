@@ -42,6 +42,7 @@ export * as TradingRewardAggregationTable from './stores/trading-reward-aggregat
 
 export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
 export * as assetRefresher from './loops/asset-refresher';
+export * as blockHeightRefresher from './loops/block-height-refresher';
 export * as liquidityTierRefresher from './loops/liquidity-tier-refresher';
 
 export * as uuid from './helpers/uuid';

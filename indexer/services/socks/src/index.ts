@@ -1,6 +1,6 @@
 import { logger, startBugsnag, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
 import { startConsumer } from '@dydxprotocol-indexer/kafka';
-import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+import { blockHeightRefresher, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 
 import config from './config';
 import {
@@ -39,8 +39,12 @@ async function start(): Promise<void> {
 
   startBugsnag();
 
-  // Initialize PerpetualMarkets cache
-  await perpetualMarketRefresher.updatePerpetualMarkets();
+  // Initialize PerpetualMarkets and BlockHeight cache
+  await Promise.all([
+    blockHeightRefresher.updateBlockHeight(),
+    perpetualMarketRefresher.updatePerpetualMarkets(),
+  ]);
+  wrapBackgroundTask(blockHeightRefresher.start(), true, 'startUpdateBlockHeight');
   wrapBackgroundTask(perpetualMarketRefresher.start(), true, 'startUpdatePerpetualMarkets');
 
   logger.info({

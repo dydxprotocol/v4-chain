@@ -46,6 +46,7 @@ export function generateSubaccountMessageContents(
   order: OrderFromDatabase | undefined,
   perpetualMarket: PerpetualMarketFromDatabase,
   placementStatus: OrderPlaceV1_OrderPlacementStatus,
+  blockHeight: string | undefined,
 ): SubaccountMessageContents {
   const orderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
     redisOrder.order!.timeInForce,
@@ -89,6 +90,7 @@ export function generateSubaccountMessageContents(
         triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
       },
     ],
+    ...(blockHeight && { blockHeight }),
   };
   return contents;
 }
@@ -98,12 +100,14 @@ export function createSubaccountWebsocketMessage(
   order: OrderFromDatabase | undefined,
   perpetualMarket: PerpetualMarketFromDatabase,
   placementStatus: OrderPlaceV1_OrderPlacementStatus,
+  blockHeight: string | undefined,
 ): Buffer {
   const contents: SubaccountMessageContents = generateSubaccountMessageContents(
     redisOrder,
     order,
     perpetualMarket,
     placementStatus,
+    blockHeight,
   );
 
   const subaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({

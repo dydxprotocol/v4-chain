@@ -14,6 +14,7 @@ import {
 } from '../helpers/helpers';
 import { redisClient as client } from '../../src/helpers/redis/redis-controller';
 import {
+  blockHeightRefresher,
   dbHelpers,
   OrderbookMessageContents,
   perpetualMarketRefresher,
@@ -60,7 +61,10 @@ describe('OrderUpdateHandler', () => {
 
     beforeEach(async () => {
       await testMocks.seedData();
-      await perpetualMarketRefresher.updatePerpetualMarkets();
+      await Promise.all([
+        perpetualMarketRefresher.updatePerpetualMarkets(),
+        blockHeightRefresher.updateBlockHeight(),
+      ]);
       jest.spyOn(stats, 'timing');
       jest.spyOn(stats, 'increment');
       jest.spyOn(OrderbookLevelsCache, 'updatePriceLevel');

@@ -740,6 +740,7 @@ async function expectUpdatedPositionsSubaccountKafkaMessage(
     _.keyBy(perpMarkets, PerpetualMarketColumns.id),
     assetPositions,
     _.keyBy(assets, AssetColumns.id),
+    blockHeight,
   );
 
   expectSubaccountKafkaMessage({
