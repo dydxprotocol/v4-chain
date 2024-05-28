@@ -94,49 +94,6 @@ func (k Keeper) getEquityTierLimitForSubaccount(
 	return equityTierLimit, nil, nil
 }
 
-// Deprecated: Equity tier limits were removed for short term orders.
-// See https://github.com/dydxprotocol/v4-chain/pull/1318.
-//
-// ValidateSubaccountEquityTierLimitForShortTermOrder returns an error if adding the order would exceed the equity
-// tier limit on how many short term open orders a subaccount can have. Short-term fill-or-kill and immediate-or-cancel
-// orders never rest on the book and will always be allowed as they do not apply to the number of open orders that
-// equity tier limits enforce.
-func (k Keeper) ValidateSubaccountEquityTierLimitForShortTermOrder(ctx sdk.Context, order types.Order) error {
-	if order.RequiresImmediateExecution() {
-		return nil
-	}
-
-	equityTierLimits := k.GetEquityTierLimitConfiguration(ctx).ShortTermOrderEquityTiers
-	if len(equityTierLimits) == 0 {
-		return nil
-	}
-
-	equityTierLimit, netCollateral, err := k.getEquityTierLimitForSubaccount(
-		ctx,
-		order.GetSubaccountId(),
-		equityTierLimits,
-	)
-	if err != nil {
-		return err
-	}
-
-	// For short term orders we just count how many orders exist on the memclob.
-	equityTierCount := k.MemClob.CountSubaccountShortTermOrders(ctx, order.GetSubaccountId())
-
-	// Verify that opening this order would not exceed the maximum amount of orders for the equity tier.
-	if lib.MustConvertIntegerToUint32(equityTierCount) >= equityTierLimit.Limit {
-		return errorsmod.Wrapf(
-			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
-			"Opening order would exceed equity tier limit of %d. Order count: %d, total net collateral: %+v, order id: %+v",
-			equityTierLimit.Limit,
-			equityTierCount,
-			netCollateral,
-			order.GetOrderId(),
-		)
-	}
-	return nil
-}
-
 // ValidateSubaccountEquityTierLimitForStatefulOrder returns an error if adding the order would exceed the equity
 // tier limit on how many open orders a subaccount can have.
 //

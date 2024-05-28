@@ -1,7 +1,6 @@
 package types
 
 import (
-	math "math"
 	"math/big"
 
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -52,56 +51,6 @@ type Level struct {
 	// order (ascending). Note that this should always be non-`nil`, since the
 	// `Level` should not exist if there are no elements in the linked list.
 	LevelOrders list.List[ClobOrder]
-}
-
-// Orderbook holds the bids and asks for a specific product.
-type Orderbook struct {
-	// Defines the tick size of the orderbook by defining how many subticks
-	// are in one tick. That is, the subticks of any valid order must be a
-	// multiple of this value. Generally this value should start `>= 100` to
-	// allow room for decreasing it. This field is stored in state as part of a
-	// `ClobPair`, but must be made available to the in-memory `Orderbook` in
-	// order to efficiently remove orders from the orderbook. See the `removeOrder`
-	// implementation for more information.
-	SubticksPerTick SubticksPerTick
-	// Map of price level (in subticks) to buy orders contained at that level.
-	Bids map[Subticks]*Level
-	// Map of price level (in subticks) to sell orders contained at that level.
-	Asks map[Subticks]*Level
-	// The highest bid on this orderbook, in subticks. 0 if no bids exist.
-	BestBid Subticks
-	// The lowest ask on this orderbook, in subticks. math.MaxUint64 if no asks exist.
-	BestAsk Subticks
-	// Contains all open orders on this CLOB for a given subaccount and side.
-	// Used for fetching open orders for the add to orderbook collateralization
-	// check for a subaccount.
-	SubaccountOpenClobOrders map[satypes.SubaccountId]map[Order_Side]map[OrderId]bool
-	// Minimum size of an order on the CLOB, in base quantums.
-	MinOrderBaseQuantums satypes.BaseQuantums
-	// Contains all open reduce-only orders on this CLOB from each subaccount. Used for tracking
-	// which open reduce-only orders should be canceled when a position changes sides.
-	SubaccountOpenReduceOnlyOrders map[satypes.SubaccountId]map[OrderId]bool
-	// TotalOpenOrders tracks the total number of open orders in an orderbook for observability purposes.
-	TotalOpenOrders uint
-}
-
-// GetSide returns the Bid-side levels if `isBuy == true` otherwise, returns the Ask-side levels.
-func (ob *Orderbook) GetSide(isBuy bool) map[Subticks]*Level {
-	if isBuy {
-		return ob.Bids
-	}
-	return ob.Asks
-}
-
-// GetMidPrice returns the mid price of the orderbook and whether or not it exists.
-func (ob *Orderbook) GetMidPrice() (
-	midPrice Subticks,
-	exists bool,
-) {
-	if ob.BestBid == 0 || ob.BestAsk == math.MaxUint64 {
-		return 0, false
-	}
-	return ob.BestBid + (ob.BestAsk-ob.BestBid)/2, true
 }
 
 // PendingOpenOrder is a utility struct used for representing an order a subaccount will open. This is

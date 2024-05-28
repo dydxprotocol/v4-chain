@@ -382,7 +382,6 @@ func TestHydrationInPreBlocker(t *testing.T) {
 
 	// Order should be on the orderbook
 	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(
-		ctx,
 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 	)
 	require.True(t, found)
@@ -492,13 +491,11 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 
 	// Make sure orders are not on the orderbook.
 	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(
-		ctx,
 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 	)
 	require.False(t, found)
 
 	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(
-		ctx,
 		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
 	)
 	require.False(t, found)
