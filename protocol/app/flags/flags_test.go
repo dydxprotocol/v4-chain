@@ -32,6 +32,9 @@ func TestAddFlagsToCommand(t *testing.T) {
 		fmt.Sprintf("Has %s flag", flags.GrpcStreamingEnabled): {
 			flagName: flags.GrpcStreamingEnabled,
 		},
+		fmt.Sprintf("Has %s flag", flags.GrpcStreamingBufferSize): {
+			flagName: flags.GrpcStreamingBufferSize,
+		},
 	}
 
 	for name, tc := range tests {
@@ -63,9 +66,10 @@ func TestValidate(t *testing.T) {
 		},
 		"success - gRPC streaming enabled for validating nodes": {
 			flags: flags.Flags{
-				NonValidatingFullNode: false,
-				GrpcEnable:            true,
-				GrpcStreamingEnabled:  true,
+				NonValidatingFullNode:   false,
+				GrpcEnable:              true,
+				GrpcStreamingEnabled:    true,
+				GrpcStreamingBufferSize: 15,
 			},
 		},
 		"failure - gRPC disabled": {
@@ -107,6 +111,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 		expectedGrpcAddress               string
 		expectedGrpcEnable                bool
 		expectedGrpcStreamingEnable       bool
+		expectedGrpcStreamingBufferSize   uint16
 	}{
 		"Sets to default if unset": {
 			expectedNonValidatingFullNodeFlag: false,
@@ -115,6 +120,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcAddress:               "localhost:9090",
 			expectedGrpcEnable:                true,
 			expectedGrpcStreamingEnable:       false,
+			expectedGrpcStreamingBufferSize:   1000,
 		},
 		"Sets values from options": {
 			optsMap: map[string]any{
@@ -124,6 +130,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 				flags.GrpcEnable:                false,
 				flags.GrpcAddress:               "localhost:9091",
 				flags.GrpcStreamingEnabled:      "true",
+				flags.GrpcStreamingBufferSize:   "15",
 			},
 			expectedNonValidatingFullNodeFlag: true,
 			expectedDdAgentHost:               "agentHostTest",
@@ -131,6 +138,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcEnable:                false,
 			expectedGrpcAddress:               "localhost:9091",
 			expectedGrpcStreamingEnable:       true,
+			expectedGrpcStreamingBufferSize:   15,
 		},
 	}
 
@@ -167,6 +175,21 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 				t,
 				tc.expectedGrpcAddress,
 				flags.GrpcAddress,
+			)
+			require.Equal(
+				t,
+				tc.expectedGrpcAddress,
+				flags.GrpcAddress,
+			)
+			require.Equal(
+				t,
+				tc.expectedGrpcStreamingEnable,
+				flags.GrpcStreamingEnabled,
+			)
+			require.Equal(
+				t,
+				tc.expectedGrpcStreamingBufferSize,
+				flags.GrpcStreamingBufferSize,
 			)
 		})
 	}

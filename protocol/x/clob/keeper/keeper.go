@@ -266,7 +266,6 @@ func (k Keeper) SendOrderbookFillUpdates(
 		return
 	}
 	k.GetGrpcStreamingManager().SendOrderbookFillUpdates(
-		ctx,
 		orderbookFills,
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),

@@ -21,7 +21,8 @@ type Flags struct {
 	GrpcEnable  bool
 
 	// Grpc Streaming
-	GrpcStreamingEnabled bool
+	GrpcStreamingEnabled    bool
+	GrpcStreamingBufferSize uint16
 }
 
 // List of CLI flags.
@@ -36,7 +37,8 @@ const (
 	GrpcEnable  = "grpc.enable"
 
 	// Grpc Streaming
-	GrpcStreamingEnabled = "grpc-streaming-enabled"
+	GrpcStreamingEnabled    = "grpc-streaming-enabled"
+	GrpcStreamingBufferSize = "grpc-streaming-buffer-size"
 )
 
 // Default values.
@@ -46,7 +48,8 @@ const (
 	DefaultNonValidatingFullNode = false
 	DefaultDdErrorTrackingFormat = false
 
-	DefaultGrpcStreamingEnabled = false
+	DefaultGrpcStreamingEnabled    = false
+	DefaultGrpcStreamingBufferSize = 1000
 )
 
 // AddFlagsToCmd adds flags to app initialization.
@@ -79,6 +82,11 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		GrpcStreamingEnabled,
 		DefaultGrpcStreamingEnabled,
 		"Whether to enable grpc streaming for full nodes",
+	)
+	cmd.Flags().Uint16(
+		GrpcStreamingBufferSize,
+		DefaultGrpcStreamingBufferSize,
+		"Protocol-side buffer channel size to store grpc stream updates before dropping messages",
 	)
 }
 
@@ -114,7 +122,8 @@ func GetFlagValuesFromOptions(
 		GrpcAddress: config.DefaultGRPCAddress,
 		GrpcEnable:  true,
 
-		GrpcStreamingEnabled: DefaultGrpcStreamingEnabled,
+		GrpcStreamingEnabled:    DefaultGrpcStreamingEnabled,
+		GrpcStreamingBufferSize: DefaultGrpcStreamingBufferSize,
 	}
 
 	// Populate the flags if they exist.
@@ -157,6 +166,12 @@ func GetFlagValuesFromOptions(
 	if option := appOpts.Get(GrpcStreamingEnabled); option != nil {
 		if v, err := cast.ToBoolE(option); err == nil {
 			result.GrpcStreamingEnabled = v
+		}
+	}
+
+	if option := appOpts.Get(GrpcStreamingBufferSize); option != nil {
+		if v, err := cast.ToUint16E(option); err == nil {
+			result.GrpcStreamingBufferSize = v
 		}
 	}
 
