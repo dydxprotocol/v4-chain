@@ -57,7 +57,7 @@ This channel provides realtime information about orders, fills, transfers, perpe
 
 ### Initial Response
 
-Returns everything from the `/v4/addresses/:address/subaccountNumber/:subaccountNumber`, and `/v4/orders?addresses=${address}&subaccountNumber=${subaccountNumber}&status=OPEN`.
+Returns everything from the `/v4/addresses/:address/subaccountNumber/:subaccountNumber`, and `/v4/orders?addresses=${address}&subaccountNumber=${subaccountNumber}&status=OPEN` and the latest block height.
 
 ### Example
 ```tsx
@@ -84,7 +84,8 @@ Returns everything from the `/v4/addresses/:address/subaccountNumber/:subaccount
       },
       "marginEnabled": true
     },
-    "orders": []
+    "orders": [],
+    "blockHeight": "5"
   }
 }
 ```
@@ -117,6 +118,8 @@ export interface SubaccountMessageContents {
   fills?: FillSubaccountMessageContents[],
 	// Transfers that occur on the subaccount
   transfers?: TransferSubaccountMessageContents,
+	// Latest block processed by Indexer
+  blockHeight?: string,
 }
 
 export interface PerpetualPositionSubaccountMessageContents {

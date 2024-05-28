@@ -685,6 +685,7 @@ export async function expectFillSubaccountKafkaMessageFromLiquidationEvent(
       [convertPerpetualPosition(position!)],
       perpetualMarketRefresher.getPerpetualMarketsMap(),
     ),
+    blockHeight,
   };
 
   expectSubaccountKafkaMessage({
@@ -739,6 +740,7 @@ export function expectOrderSubaccountKafkaMessage(
     orders: [
       orderObject,
     ],
+    blockHeight,
   };
 
   expectSubaccountKafkaMessage({
@@ -798,6 +800,7 @@ export async function expectOrderFillAndPositionSubaccountKafkaMessageFromIds(
     fills: [
       generateFillSubaccountMessage(fill!, perpetualMarket!.ticker),
     ],
+    blockHeight,
   };
 
   if (position !== undefined) {
