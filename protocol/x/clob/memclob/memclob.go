@@ -492,22 +492,26 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	}
 
 	if m.generateOffchainUpdates {
-		// If this is a replacement order, then ensure we send the appropriate replacement message.
+		// If existing order ID is found and the price of the existing order is different from the new order, create an order removal message first
+		// because Indexer order place handler supports replacement, but only with the same price.
 		orderId := order.OrderId
-		if _, found := m.openOrders.getOrder(ctx, orderId); found {
-			if message, success := off_chain_updates.CreateOrderReplaceMessage(
-				ctx,
-				order,
-			); success {
-				offchainUpdates.AddReplaceMessage(orderId, message)
+		if existingOrder, found := m.openOrders.getOrder(ctx, orderId); found {
+			if order.Subticks != existingOrder.Subticks {
+				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+					ctx,
+					orderId,
+					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				); success {
+					offchainUpdates.AddRemoveMessage(orderId, message)
+				}
 			}
-		} else {
-			if message, success := off_chain_updates.CreateOrderPlaceMessage(
-				ctx,
-				order,
-			); success {
-				offchainUpdates.AddPlaceMessage(order.OrderId, message)
-			}
+		}
+		if message, success := off_chain_updates.CreateOrderPlaceMessage(
+			ctx,
+			order,
+		); success {
+			offchainUpdates.AddPlaceMessage(order.OrderId, message)
 		}
 	}
 
