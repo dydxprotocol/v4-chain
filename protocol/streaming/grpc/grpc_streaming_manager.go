@@ -69,10 +69,8 @@ func NewGrpcStreamingManager(
 	// Worker goroutine to consistently read from channel and send out updates
 	go func() {
 		for internalResponse := range grpcStreamingManager.updateBuffer {
-			grpcStreamingManager.logger.Info("start polling a response", "len", len(grpcStreamingManager.updateBuffer))
 			grpcStreamingManager.sendUpdateResponse(internalResponse)
 		}
-		grpcStreamingManager.logger.Error("Should never see this.  Poller has failed.")
 	}()
 
 	return grpcStreamingManager
@@ -91,14 +89,14 @@ func (sm *GrpcStreamingManagerImpl) EmitMetrics() {
 	metrics.SetGauge(metrics.GrpcStreamingNumConnections, float32(len(sm.orderbookSubscriptions)))
 }
 
-func (sm *GrpcStreamingManagerImpl) removeSubscription(clobPairId uint32) {
+func (sm *GrpcStreamingManagerImpl) removeSubscription(id uint32) {
 	sm.logger.Info(
 		fmt.Sprintf(
-			"Removing orderbook subscriptions for clob pair id %+v",
-			clobPairId,
+			"Removing orderbook subscriptions for subscription id %+v",
+			id,
 		),
 	)
-	delete(sm.orderbookSubscriptions, clobPairId)
+	delete(sm.orderbookSubscriptions, id)
 }
 
 func (sm *GrpcStreamingManagerImpl) sendUpdateResponse(
@@ -110,14 +108,12 @@ func (sm *GrpcStreamingManagerImpl) sendUpdateResponse(
 	for id, subscription := range sm.orderbookSubscriptions {
 		for _, clobPairId := range subscription.clobPairIds {
 			if clobPairId == internalResponse.clobPairId {
-				sm.logger.Info("sending out update")
 				if err := subscription.srv.Send(
 					&internalResponse.response,
 				); err != nil {
 					sm.logger.Error("Error sending out update", "err", err)
 					subscriptionIdsToRemove = append(subscriptionIdsToRemove, id)
 				}
-				sm.logger.Info("finished sending out update")
 			}
 		}
 	}
@@ -262,7 +258,8 @@ func (sm *GrpcStreamingManagerImpl) mustEnqueueOrderbookUpdate(internalResponse 
 	select {
 	case sm.updateBuffer <- internalResponse:
 	default:
-		sm.logger.Info("GRPC Streaming buffer full capacity. Dropping messages and all subscriptions. Increase buffer size via the `grpc-streaming-buffer-size flag.")
+		sm.logger.Error("GRPC Streaming buffer full capacity. Dropping messages and all subscriptions. " +
+			"Disconnect all clients and increase buffer size via the `grpc-streaming-buffer-size flag.")
 		for k := range sm.orderbookSubscriptions {
 			sm.removeSubscription(k)
 		}
