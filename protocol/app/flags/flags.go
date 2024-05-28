@@ -21,13 +21,8 @@ type Flags struct {
 	GrpcEnable  bool
 
 	// Grpc Streaming
-<<<<<<< HEAD
-	GrpcStreamingEnabled bool
-=======
 	GrpcStreamingEnabled    bool
 	GrpcStreamingBufferSize uint16
-	VEOracleEnabled         bool // Slinky Vote Extensions
->>>>>>> bd91a737 (Add a channel buffer to decouple abci and grpc streaming (#1530))
 }
 
 // List of CLI flags.
@@ -42,15 +37,8 @@ const (
 	GrpcEnable  = "grpc.enable"
 
 	// Grpc Streaming
-<<<<<<< HEAD
-	GrpcStreamingEnabled = "grpc-streaming-enabled"
-=======
 	GrpcStreamingEnabled    = "grpc-streaming-enabled"
 	GrpcStreamingBufferSize = "grpc-streaming-buffer-size"
-
-	// Slinky VEs enabled
-	VEOracleEnabled = "slinky-vote-extension-oracle-enabled"
->>>>>>> bd91a737 (Add a channel buffer to decouple abci and grpc streaming (#1530))
 )
 
 // Default values.
@@ -60,13 +48,8 @@ const (
 	DefaultNonValidatingFullNode = false
 	DefaultDdErrorTrackingFormat = false
 
-	DefaultGrpcStreamingEnabled = false
-<<<<<<< HEAD
-=======
-	// TODO(jonfung) better value after stress testing
+	DefaultGrpcStreamingEnabled    = false
 	DefaultGrpcStreamingBufferSize = 1000
-	DefaultVEOracleEnabled         = true
->>>>>>> bd91a737 (Add a channel buffer to decouple abci and grpc streaming (#1530))
 )
 
 // AddFlagsToCmd adds flags to app initialization.
@@ -100,19 +83,11 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		DefaultGrpcStreamingEnabled,
 		"Whether to enable grpc streaming for full nodes",
 	)
-<<<<<<< HEAD
-=======
 	cmd.Flags().Uint16(
 		GrpcStreamingBufferSize,
 		DefaultGrpcStreamingBufferSize,
 		"Protocol-side buffer channel size to store grpc stream updates before dropping messages",
 	)
-	cmd.Flags().Bool(
-		VEOracleEnabled,
-		DefaultVEOracleEnabled,
-		"Whether to run on-chain oracle via slinky vote extensions",
-	)
->>>>>>> bd91a737 (Add a channel buffer to decouple abci and grpc streaming (#1530))
 }
 
 // Validate checks that the flags are valid.
@@ -147,13 +122,8 @@ func GetFlagValuesFromOptions(
 		GrpcAddress: config.DefaultGRPCAddress,
 		GrpcEnable:  true,
 
-<<<<<<< HEAD
-		GrpcStreamingEnabled: DefaultGrpcStreamingEnabled,
-=======
 		GrpcStreamingEnabled:    DefaultGrpcStreamingEnabled,
 		GrpcStreamingBufferSize: DefaultGrpcStreamingBufferSize,
-		VEOracleEnabled:         true,
->>>>>>> bd91a737 (Add a channel buffer to decouple abci and grpc streaming (#1530))
 	}
 
 	// Populate the flags if they exist.
@@ -199,20 +169,11 @@ func GetFlagValuesFromOptions(
 		}
 	}
 
-<<<<<<< HEAD
-=======
 	if option := appOpts.Get(GrpcStreamingBufferSize); option != nil {
 		if v, err := cast.ToUint16E(option); err == nil {
 			result.GrpcStreamingBufferSize = v
 		}
 	}
 
-	if option := appOpts.Get(VEOracleEnabled); option != nil {
-		if v, err := cast.ToBoolE(option); err == nil {
-			result.VEOracleEnabled = v
-		}
-	}
-
->>>>>>> bd91a737 (Add a channel buffer to decouple abci and grpc streaming (#1530))
 	return result
 }

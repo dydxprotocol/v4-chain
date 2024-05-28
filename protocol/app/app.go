@@ -426,15 +426,9 @@ func New(
 			if app.Server != nil {
 				app.Server.Stop()
 			}
-<<<<<<< HEAD
-=======
-			if app.SlinkyClient != nil {
-				app.SlinkyClient.Stop()
-			}
 			if app.GrpcStreamingManager != nil {
 				app.GrpcStreamingManager.Stop()
 			}
->>>>>>> bd91a737 (Add a channel buffer to decouple abci and grpc streaming (#1530))
 			return nil
 		},
 	)
