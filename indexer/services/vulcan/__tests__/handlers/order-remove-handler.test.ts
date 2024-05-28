@@ -30,7 +30,7 @@ import {
   testConstants,
   testMocks,
   apiTranslations,
-  TimeInForce,
+  TimeInForce, blockHeightRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   OpenOrdersCache,
@@ -89,7 +89,10 @@ describe('OrderRemoveHandler', () => {
 
   beforeEach(async () => {
     await testMocks.seedData();
-    await perpetualMarketRefresher.updatePerpetualMarkets();
+    await Promise.all([
+      perpetualMarketRefresher.updatePerpetualMarkets(),
+      blockHeightRefresher.updateBlockHeight(),
+    ]);
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'increment');
     jest.spyOn(logger, 'info');
@@ -253,6 +256,7 @@ describe('OrderRemoveHandler', () => {
             removalReason: OrderRemovalReason[defaultOrderRemove.reason],
           },
         ],
+        blockHeight: blockHeightRefresher.getLatestBlockHeight(),
       };
       expectWebsocketMessagesSent(
         producerSendSpy,
@@ -310,6 +314,7 @@ describe('OrderRemoveHandler', () => {
               type: testConstants.defaultOrder.type,
             },
           ],
+          blockHeight: blockHeightRefresher.getLatestBlockHeight(),
         };
         expectWebsocketMessagesSent(
           producerSendSpy,
@@ -505,6 +510,7 @@ describe('OrderRemoveHandler', () => {
             triggerPrice,
           },
         ],
+        blockHeight: blockHeightRefresher.getLatestBlockHeight(),
       };
       const orderbookContents: OrderbookMessageContents = {
         [OrderbookSide.BIDS]: [[
@@ -646,6 +652,7 @@ describe('OrderRemoveHandler', () => {
             triggerPrice,
           },
         ],
+        blockHeight: blockHeightRefresher.getLatestBlockHeight(),
       };
 
       const orderbookContents: OrderbookMessageContents = {
@@ -786,6 +793,7 @@ describe('OrderRemoveHandler', () => {
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
             triggerPrice,
           }],
+          blockHeight: blockHeightRefresher.getLatestBlockHeight(),
         };
         expectWebsocketMessagesSent(
           producerSendSpy,
@@ -928,6 +936,7 @@ describe('OrderRemoveHandler', () => {
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
             triggerPrice,
           }],
+          blockHeight: blockHeightRefresher.getLatestBlockHeight(),
         };
         expectWebsocketMessagesSent(
           producerSendSpy,
@@ -1238,6 +1247,7 @@ describe('OrderRemoveHandler', () => {
           clientMetadata: removedOrder.clientMetadata.toString(),
           triggerPrice,
         }],
+        blockHeight: blockHeightRefresher.getLatestBlockHeight(),
       };
       expectWebsocketMessagesSent(
         producerSendSpy,
@@ -1355,6 +1365,7 @@ describe('OrderRemoveHandler', () => {
           clientMetadata: removedOrder.clientMetadata.toString(),
           triggerPrice,
         }],
+        blockHeight: blockHeightRefresher.getLatestBlockHeight(),
       };
       expectWebsocketMessagesSent(
         producerSendSpy,
@@ -1480,6 +1491,7 @@ describe('OrderRemoveHandler', () => {
           clientMetadata: removedOrder.clientMetadata.toString(),
           triggerPrice,
         }],
+        blockHeight: blockHeightRefresher.getLatestBlockHeight(),
       };
 
       const orderbookContents: OrderbookMessageContents = {
@@ -1621,6 +1633,7 @@ describe('OrderRemoveHandler', () => {
           clientMetadata: removedOrder.clientMetadata.toString(),
           triggerPrice,
         }],
+        blockHeight: blockHeightRefresher.getLatestBlockHeight(),
       };
 
       const orderbookContents: OrderbookMessageContents = {
@@ -1758,6 +1771,7 @@ describe('OrderRemoveHandler', () => {
             clientMetadata: testConstants.defaultOrderGoodTilBlockTime.clientMetadata.toString(),
           },
         ],
+        blockHeight: blockHeightRefresher.getLatestBlockHeight(),
       };
       const orderbookContents: OrderbookMessageContents = {
         [OrderbookSide.BIDS]: [[
