@@ -123,7 +123,6 @@ services:
   #     - DAEMON_HOME=/dydxprotocol/chain/.dave
   #   volumes:
   #     - ../protocol/localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
-
   postgres-package:
     build:
       context: ../indexer
