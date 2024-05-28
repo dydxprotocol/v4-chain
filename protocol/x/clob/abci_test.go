@@ -666,7 +666,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
-			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
+			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 
 			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 			// the indexer event manager to expect these events.
@@ -700,7 +700,7 @@ func TestEndBlocker_Success(t *testing.T) {
 				constants.ClobPair_Btc.Status,
 			)
 			require.NoError(t, err)
-			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Eth).Return()
+			memClob.On("CreateOrderbook", constants.ClobPair_Eth).Return()
 			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 			// the indexer event manager to expect these events.
 			mockIndexerEventManager.On("AddTxnEvent",

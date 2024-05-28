@@ -19,17 +19,11 @@ type MemClob interface {
 		msgCancelOrder *MsgCancelOrder,
 	) (offchainUpdates *OffchainUpdates, err error)
 	CreateOrderbook(
-		ctx sdk.Context,
 		clobPair ClobPair,
 	)
 	MaybeCreateOrderbook(
-		ctx sdk.Context,
 		clobPair ClobPair,
 	)
-	CountSubaccountShortTermOrders(
-		ctx sdk.Context,
-		subaccountId satypes.SubaccountId,
-	) uint32
 	GetOperationsToReplay(
 		ctx sdk.Context,
 	) (
@@ -43,11 +37,9 @@ type MemClob interface {
 		operationsQueue []OperationRaw,
 	)
 	GetOrder(
-		ctx sdk.Context,
 		orderId OrderId,
 	) (Order, bool)
 	GetCancelOrder(
-		ctx sdk.Context,
 		orderId OrderId,
 	) (uint32, bool)
 	GetOrderFilledAmount(
@@ -62,7 +54,6 @@ type MemClob interface {
 		hasRemainingAmount bool,
 	)
 	GetSubaccountOrders(
-		ctx sdk.Context,
 		clobPairId ClobPairId,
 		subaccountId satypes.SubaccountId,
 		side Order_Side,
@@ -133,7 +124,6 @@ type MemClob interface {
 		exists bool,
 	)
 	InsertZeroFillDeleveragingIntoOperationsQueue(
-		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 		perpetualId uint32,
 	)

@@ -1096,7 +1096,7 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 	ctx := ks.Ctx.WithTxBytes(constants.TestTxBytes)
 	ctx = ctx.WithIsCheckTx(true)
 
-	memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
+	memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 	// the indexer event manager to expect these events.
 	indexerEventManager.On("AddTxnEvent",
@@ -1151,7 +1151,7 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
-	memClob.On("CreateOrderbook", ks.Ctx, constants.ClobPair_Btc).Return()
+	memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 	// the indexer event manager to expect these events.
 	indexerEventManager.On("AddTxnEvent",
@@ -2122,7 +2122,7 @@ func TestInitStatefulOrders(t *testing.T) {
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 			// Create CLOB pair.
-			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
+			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 			indexerEventManager.On("AddTxnEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
@@ -2254,7 +2254,7 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 			// Create CLOB pair.
-			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
+			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 			indexerEventManager.On("AddTxnEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
@@ -2429,7 +2429,7 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 			})
 
 			// Create CLOB pair.
-			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
+			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				constants.ClobPair_Btc.Id,
@@ -2558,7 +2558,7 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 			})
 
 			// Create CLOB pair.
-			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
+			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				constants.ClobPair_Btc.Id,

@@ -2243,7 +2243,7 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 	prices.InitGenesis(ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
-	memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
+	memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 	// the indexer event manager to expect these events.
 	indexerEventManager.On("AddTxnEvent",

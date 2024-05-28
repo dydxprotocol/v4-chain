@@ -261,7 +261,7 @@ func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 		)
 	}
 	perpetualId := subaccount.PerpetualPositions[0].PerpetualId
-	k.MemClob.InsertZeroFillDeleveragingIntoOperationsQueue(ctx, negativeTncSubaccountId, perpetualId)
+	k.MemClob.InsertZeroFillDeleveragingIntoOperationsQueue(negativeTncSubaccountId, perpetualId)
 	metrics.IncrCountMetricWithLabels(
 		types.ModuleName,
 		metrics.SubaccountsNegativeTncSubaccountSeen,

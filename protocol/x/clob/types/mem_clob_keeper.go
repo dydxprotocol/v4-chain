@@ -104,10 +104,6 @@ type MemClobKeeper interface {
 		bool,
 		error,
 	)
-	ValidateSubaccountEquityTierLimitForShortTermOrder(
-		ctx sdk.Context,
-		order Order,
-	) error
 	ValidateSubaccountEquityTierLimitForStatefulOrder(
 		ctx sdk.Context,
 		order Order,
