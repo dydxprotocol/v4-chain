@@ -37,6 +37,7 @@ export const configSchema = {
   // Loop Enablement
   LOOPS_ENABLED_MARKET_UPDATER: parseBoolean({ default: true }),
   LOOPS_ENABLED_DELETE_ZERO_PRICE_LEVELS: parseBoolean({ default: true }),
+  LOOPS_ENABLED_UNCROSS_ORDERBOOK: parseBoolean({ default: false }),
   LOOPS_ENABLED_PNL_TICKS: parseBoolean({ default: true }),
   LOOPS_ENABLED_REMOVE_EXPIRED_ORDERS: parseBoolean({ default: true }),
   LOOPS_ORDERBOOK_INSTRUMENTATION: parseBoolean({ default: true }),
@@ -56,6 +57,9 @@ export const configSchema = {
   }),
   LOOPS_INTERVAL_MS_DELETE_ZERO_PRICE_LEVELS: parseInteger({
     default: 2 * ONE_MINUTE_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_UNCROSS_ORDERBOOK: parseInteger({
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_PNL_TICKS: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,
@@ -103,6 +107,7 @@ export const configSchema = {
   // Lock multipliers
   MARKET_UPDATER_LOCK_MULTIPLIER: parseInteger({ default: 10 }),
   DELETE_ZERO_PRICE_LEVELS_LOCK_MULTIPLIER: parseInteger({ default: 1 }),
+  UNCROSS_ORDERBOOK_LOCK_MULTIPLIER: parseInteger({ default: 1 }),
   PNL_TICK_UPDATE_LOCK_MULTIPLIER: parseInteger({ default: 20 }),
 
   // Maximum number of running tasks - set this equal to PG_POOL_MIN in .env, default is 2
