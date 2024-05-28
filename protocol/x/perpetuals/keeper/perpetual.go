@@ -907,6 +907,114 @@ func (k Keeper) GetNetCollateral(
 	return k.GetNetNotional(ctx, id, bigQuantums)
 }
 
+// GetMarginRequirements returns initial and maintenance margin requirements in quote quantums, given the position
+// size in base quantums.
+//
+// Margin requirements are a function of the absolute value of the open notional of the position as well as
+// the parameters of the relevant `LiquidityTier` of the perpetual.
+// Initial margin requirement is determined by multiplying `InitialMarginPpm` and `notionalValue`.
+// `notionalValue` is determined by multiplying the size of the position by the oracle price of the position.
+// Maintenance margin requirement is then simply a fraction (`maintenanceFractionPpm`) of initial margin requirement.
+//
+// Returns an error if a perpetual with `id`, `perpetual.Params.MarketId`, or
+// `perpetual.Params.LiquidityTier` does not exist.
+//
+// Note that this function is getting called very frequently; metrics in this function
+// should be sampled to reduce CPU time.
+func (k Keeper) GetMarginRequirements(
+	ctx sdk.Context,
+	id uint32,
+	bigQuantums *big.Int,
+) (
+	bigInitialMarginQuoteQuantums *big.Int,
+	bigMaintenanceMarginQuoteQuantums *big.Int,
+	err error,
+) {
+	if rand.Float64() < metrics.LatencyMetricSampleRate {
+		defer metrics.ModuleMeasureSinceWithLabels(
+			types.ModuleName,
+			[]string{metrics.GetMarginRequirements, metrics.Latency},
+			time.Now(),
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(
+					metrics.SampleRate,
+					fmt.Sprintf("%f", metrics.LatencyMetricSampleRate),
+				),
+			},
+		)
+	}
+
+	// Get perpetual and market price.
+	perpetual, marketPrice, err := k.GetPerpetualAndMarketPrice(ctx, id)
+	if err != nil {
+		return nil, nil, err
+	}
+	// Get perpetual's liquidity tier.
+	liquidityTier, err := k.GetLiquidityTier(ctx, perpetual.Params.LiquidityTier)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	bigInitialMarginQuoteQuantums,
+		bigMaintenanceMarginQuoteQuantums = GetMarginRequirementsInQuoteQuantums(
+		perpetual,
+		marketPrice,
+		liquidityTier,
+		bigQuantums,
+	)
+	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
+}
+
+// GetMarginRequirementsInQuoteQuantums returns initial and maintenance margin requirements
+// in quote quantums, given the position size in base quantums.
+//
+// Note that this is a stateless function.
+func GetMarginRequirementsInQuoteQuantums(
+	perpetual types.Perpetual,
+	marketPrice pricestypes.MarketPrice,
+	liquidityTier types.LiquidityTier,
+	bigQuantums *big.Int,
+) (
+	bigInitialMarginQuoteQuantums *big.Int,
+	bigMaintenanceMarginQuoteQuantums *big.Int,
+) {
+	// Always consider the magnitude of the position regardless of whether it is long/short.
+	bigAbsQuantums := new(big.Int).Set(bigQuantums).Abs(bigQuantums)
+
+	// Calculate the notional value of the position in quote quantums.
+	bigQuoteQuantums := lib.BaseToQuoteQuantums(
+		bigAbsQuantums,
+		perpetual.Params.AtomicResolution,
+		marketPrice.Price,
+		marketPrice.Exponent,
+	)
+	// Calculate the perpetual's open interest in quote quantums.
+	openInterestQuoteQuantums := lib.BaseToQuoteQuantums(
+		perpetual.OpenInterest.BigInt(), // OpenInterest is represented as base quantums.
+		perpetual.Params.AtomicResolution,
+		marketPrice.Price,
+		marketPrice.Exponent,
+	)
+
+	// Initial margin requirement quote quantums = size in quote quantums * initial margin PPM.
+	bigBaseInitialMarginQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(
+		bigQuoteQuantums,
+		big.NewInt(0), // pass in 0 as open interest to get base IMR.
+	)
+	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
+	bigMaintenanceMarginQuoteQuantums = lib.BigMulPpm(
+		bigBaseInitialMarginQuoteQuantums,
+		lib.BigU(liquidityTier.MaintenanceFractionPpm),
+		true,
+	)
+
+	bigInitialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantums(
+		bigQuoteQuantums,
+		openInterestQuoteQuantums, // pass in current OI to get scaled IMR.
+	)
+	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums
+}
+
 // GetSettlementPpm returns the net settlement amount ppm (in quote quantums) given
 // the perpetual Id and position size (in base quantums).
 // When handling rounding, always round positive settlement amount to zero, and
