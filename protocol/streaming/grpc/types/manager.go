@@ -22,8 +22,9 @@ type GrpcStreamingManager interface {
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
+	Stop()
+	EmitMetrics()
 	SendOrderbookFillUpdates(
-		ctx sdk.Context,
 		orderbookFills []clobtypes.StreamOrderbookFill,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
