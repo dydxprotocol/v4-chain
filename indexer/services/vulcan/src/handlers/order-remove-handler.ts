@@ -568,13 +568,14 @@ export class OrderRemoveHandler extends Handler {
    * @param canceledOrder
    * @param orderRemove
    * @param perpetualMarket
+   * @param blockHeight: latest block height processed by Indexer
    * @protected
    */
   protected createSubaccountWebsocketMessageFromOrderRemoveMessage(
     canceledOrder: OrderFromDatabase | undefined,
     orderRemove: OrderRemoveV1,
     ticker: string,
-    blockHeight: string | undefined,
+    blockHeight: string,
   ): Buffer {
     const createdAtHeight: string | undefined = canceledOrder?.createdAtHeight;
     const updatedAt: IsoString | undefined = canceledOrder?.updatedAt;
@@ -621,7 +622,7 @@ export class OrderRemoveHandler extends Handler {
           ...(type && { type }),
         },
       ],
-      ...(blockHeight && { blockHeight }),
+      blockHeight,
     };
 
     const subaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({

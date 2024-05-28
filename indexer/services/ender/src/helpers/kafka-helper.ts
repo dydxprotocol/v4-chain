@@ -226,6 +226,7 @@ export function convertPerpetualPosition(
  * @param subaccountId to generate the websocket message for
  * @param senderSubaccountId
  * @param recipientSubaccountId
+ * @param blockHeight: latest block height processed by Indexer
  */
 export function generateTransferContents(
   transfer: TransferFromDatabase,
