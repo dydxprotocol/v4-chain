@@ -363,3 +363,77 @@ func TestGetInitialMarginQuoteQuantums(t *testing.T) {
 		})
 	}
 }
+
+func TestGetAdjustedInitialMarginPpm(t *testing.T) {
+	tests := map[string]struct {
+		initialMarginPpm     uint32
+		openInterestLowerCap uint64
+		openInterestUpperCap uint64
+		openInterestNotional *big.Int
+		expectedPpm          *big.Int
+	}{
+		"Zero open interest": {
+			initialMarginPpm:     uint32(200_000),
+			openInterestLowerCap: 1_000_000,
+			openInterestUpperCap: 2_000_000,
+			openInterestNotional: big.NewInt(0),
+			expectedPpm:          big.NewInt(200_000),
+		},
+		"Open interest within bounds": {
+			initialMarginPpm:     uint32(200_000),
+			openInterestLowerCap: 1_000_000,
+			openInterestUpperCap: 2_000_000,
+			openInterestNotional: big.NewInt(1_500_000),
+			expectedPpm:          big.NewInt(600_000),
+		},
+		"Open interest within bounds, rounded": {
+			initialMarginPpm:     uint32(200_000),
+			openInterestLowerCap: 1_000_000,
+			openInterestUpperCap: 2_000_000,
+			openInterestNotional: big.NewInt(1_234_567),
+			// Base_IMF + OI_IMF_Adjustment =
+			// 0.2 + (0.234_567 * 0.8) =
+			// 0.387_653_6 (rounded down to 0.387_653)
+			expectedPpm: big.NewInt(387_653),
+		},
+		"Open interest at lower bound": {
+			initialMarginPpm:     uint32(200_000),
+			openInterestLowerCap: 1_000_000,
+			openInterestUpperCap: 2_000_000,
+			openInterestNotional: big.NewInt(1_000_000),
+			expectedPpm:          big.NewInt(200_000),
+		},
+		"Open interest at upper bound": {
+			initialMarginPpm:     uint32(200_000),
+			openInterestLowerCap: 1_000_000,
+			openInterestUpperCap: 2_000_000,
+			openInterestNotional: big.NewInt(2_000_000),
+			expectedPpm:          big.NewInt(1_000_000),
+		},
+		"Open interest above upper bound": {
+			initialMarginPpm:     uint32(200_000),
+			openInterestLowerCap: 1_000_000,
+			openInterestUpperCap: 2_000_000,
+			openInterestNotional: big.NewInt(2_500_000),
+			expectedPpm:          big.NewInt(1_000_000),
+		},
+		"No upper bound, no increase": {
+			initialMarginPpm:     uint32(200_000),
+			openInterestLowerCap: 0,
+			openInterestUpperCap: 0,
+			openInterestNotional: big.NewInt(1_500_000),
+			expectedPpm:          big.NewInt(200_000),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			liquidityTier := &types.LiquidityTier{
+				InitialMarginPpm:     tc.initialMarginPpm,
+				OpenInterestLowerCap: tc.openInterestLowerCap,
+				OpenInterestUpperCap: tc.openInterestUpperCap,
+			}
+			adjustedIMQuoteQuantums := liquidityTier.GetAdjustedInitialMarginPpm(tc.openInterestNotional)
+			require.Equal(t, tc.expectedPpm, adjustedIMQuoteQuantums, "Adjusted initial margin ppm mismatch")
+		})
+	}
+}
