@@ -220,6 +220,11 @@ var (
 		47,
 		"CLOB has not been initialized",
 	)
+	ErrDeprecatedField = errorsmod.Register(
+		ModuleName,
+		48,
+		"This field has been deprecated",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(

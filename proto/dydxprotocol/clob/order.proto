@@ -174,7 +174,7 @@ message Order {
     // TIME_IN_FORCE_FILL_OR_KILL enforces that an order will either be filled
     // completely and immediately by maker orders on the book or canceled if the
     // entire amount can‘t be matched.
-    TIME_IN_FORCE_FILL_OR_KILL = 3;
+    TIME_IN_FORCE_FILL_OR_KILL = 3 [ deprecated = true ];
   }
 
   // The time in force of this order.
