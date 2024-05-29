@@ -46,7 +46,7 @@ func (m *MemClobPriceTimePriority) GetOffchainUpdatesForOrderbookSnapshot(
 ) (offchainUpdates *types.OffchainUpdates) {
 	offchainUpdates = types.NewOffchainUpdates()
 
-	if orderbook, exists := m.openOrders.orderbooksMap[clobPairId]; exists {
+	if orderbook, exists := m.orderbooks[clobPairId]; exists {
 		// Generate the offchain updates for buy orders.
 		// Updates are sorted in descending order of price.
 		buyPriceLevels := lib.GetSortedKeys[lib.Sortable[types.Subticks]](orderbook.Bids)

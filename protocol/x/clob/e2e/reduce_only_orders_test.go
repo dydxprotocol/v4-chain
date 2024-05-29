@@ -600,7 +600,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 
 			// Verify expectations.
 			for orderId, exists := range tc.expectedOrderOnMemClob {
-				_, existsOnMemclob := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, orderId)
+				_, existsOnMemclob := tApp.App.ClobKeeper.MemClob.GetOrder(orderId)
 				require.Equal(t, exists, existsOnMemclob)
 			}
 

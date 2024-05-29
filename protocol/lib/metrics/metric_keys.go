@@ -68,6 +68,8 @@ const (
 	FullNodeGrpc                    = "full_node_grpc"
 	GrpcSendOrderbookUpdatesLatency = "grpc_send_orderbook_updates_latency"
 	GrpcSendOrderbookFillsLatency   = "grpc_send_orderbook_fills_latency"
+	GrpcStreamingBufferSize         = "grpc_streaming_buffer_size"
+	GrpcStreamingNumConnections     = "grpc_streaming_num_connections"
 	EndBlocker                      = "end_blocker"
 	EndBlockerLag                   = "end_blocker_lag"
 )

@@ -21,8 +21,9 @@ type Flags struct {
 	GrpcEnable  bool
 
 	// Grpc Streaming
-	GrpcStreamingEnabled bool
-	VEOracleEnabled      bool // Slinky Vote Extensions
+	GrpcStreamingEnabled    bool
+	GrpcStreamingBufferSize uint16
+	VEOracleEnabled         bool // Slinky Vote Extensions
 }
 
 // List of CLI flags.
@@ -37,7 +38,8 @@ const (
 	GrpcEnable  = "grpc.enable"
 
 	// Grpc Streaming
-	GrpcStreamingEnabled = "grpc-streaming-enabled"
+	GrpcStreamingEnabled    = "grpc-streaming-enabled"
+	GrpcStreamingBufferSize = "grpc-streaming-buffer-size"
 
 	// Slinky VEs enabled
 	VEOracleEnabled = "slinky-vote-extension-oracle-enabled"
@@ -51,7 +53,9 @@ const (
 	DefaultDdErrorTrackingFormat = false
 
 	DefaultGrpcStreamingEnabled = false
-	DefaultVEOracleEnabled      = true
+	// TODO(jonfung) better value after stress testing
+	DefaultGrpcStreamingBufferSize = 1000
+	DefaultVEOracleEnabled         = true
 )
 
 // AddFlagsToCmd adds flags to app initialization.
@@ -84,6 +88,11 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		GrpcStreamingEnabled,
 		DefaultGrpcStreamingEnabled,
 		"Whether to enable grpc streaming for full nodes",
+	)
+	cmd.Flags().Uint16(
+		GrpcStreamingBufferSize,
+		DefaultGrpcStreamingBufferSize,
+		"Protocol-side buffer channel size to store grpc stream updates before dropping messages",
 	)
 	cmd.Flags().Bool(
 		VEOracleEnabled,
@@ -124,8 +133,9 @@ func GetFlagValuesFromOptions(
 		GrpcAddress: config.DefaultGRPCAddress,
 		GrpcEnable:  true,
 
-		GrpcStreamingEnabled: DefaultGrpcStreamingEnabled,
-		VEOracleEnabled:      true,
+		GrpcStreamingEnabled:    DefaultGrpcStreamingEnabled,
+		GrpcStreamingBufferSize: DefaultGrpcStreamingBufferSize,
+		VEOracleEnabled:         true,
 	}
 
 	// Populate the flags if they exist.
@@ -168,6 +178,12 @@ func GetFlagValuesFromOptions(
 	if option := appOpts.Get(GrpcStreamingEnabled); option != nil {
 		if v, err := cast.ToBoolE(option); err == nil {
 			result.GrpcStreamingEnabled = v
+		}
+	}
+
+	if option := appOpts.Get(GrpcStreamingBufferSize); option != nil {
+		if v, err := cast.ToUint16E(option); err == nil {
+			result.GrpcStreamingBufferSize = v
 		}
 	}
 

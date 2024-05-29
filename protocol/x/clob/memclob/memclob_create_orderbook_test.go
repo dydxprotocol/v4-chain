@@ -4,27 +4,22 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCreateOrderbook_PerpetualClobPairSucceeds(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-
 	memclob := NewMemClobPriceTimePriority(false)
 
 	clobPair := constants.ClobPair_Btc
 	require.NotPanics(t, func() {
-		memclob.CreateOrderbook(ctx, clobPair)
+		memclob.CreateOrderbook(clobPair)
 	})
 
-	require.Contains(t, memclob.openOrders.orderbooksMap, clobPair.GetClobPairId())
+	require.Contains(t, memclob.orderbooks, clobPair.GetClobPairId())
 }
 
 func TestCreateOrderbook_MultiplePerpetualClobPairSucceeds(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-
 	memclob := NewMemClobPriceTimePriority(false)
 	clobPair_Btc2 := types.ClobPair{
 		Id:               100,
@@ -45,7 +40,7 @@ func TestCreateOrderbook_MultiplePerpetualClobPairSucceeds(t *testing.T) {
 	expectedPerpetualIdToClobPairIds := make(map[uint32][]types.ClobPairId)
 	for _, clobPair := range clobPairs {
 		require.NotPanics(t, func() {
-			memclob.CreateOrderbook(ctx, clobPair)
+			memclob.CreateOrderbook(clobPair)
 		})
 		perpetualId := clobPair.GetPerpetualClobMetadata().PerpetualId
 		if _, exists := expectedPerpetualIdToClobPairIds[perpetualId]; !exists {
@@ -56,37 +51,31 @@ func TestCreateOrderbook_MultiplePerpetualClobPairSucceeds(t *testing.T) {
 			clobPair.GetClobPairId(),
 		)
 
-		require.Contains(t, memclob.openOrders.orderbooksMap, clobPair.GetClobPairId())
+		require.Contains(t, memclob.orderbooks, clobPair.GetClobPairId())
 	}
 }
 
 func TestCreateOrderbook_AssetClobPairSucceeds(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-
 	memclob := NewMemClobPriceTimePriority(false)
 
 	clobPair := constants.ClobPair_Asset
 	require.NotPanics(t, func() {
-		memclob.CreateOrderbook(ctx, clobPair)
+		memclob.CreateOrderbook(clobPair)
 	})
 
-	require.Contains(t, memclob.openOrders.orderbooksMap, clobPair.GetClobPairId())
+	require.Contains(t, memclob.orderbooks, clobPair.GetClobPairId())
 }
 
 func TestCreateOrderbook_PanicsWhenCreatingDuplicateOrderbook(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-
 	memclob := NewMemClobPriceTimePriority(false)
 
-	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 	require.Panics(t, func() {
-		memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+		memclob.CreateOrderbook(constants.ClobPair_Btc)
 	})
 }
 
 func TestCreateOrderbook_PanicsWhenSubticksPerTickIsZero(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-
 	memclob := NewMemClobPriceTimePriority(false)
 
 	clobPair := types.ClobPair{
@@ -100,13 +89,11 @@ func TestCreateOrderbook_PanicsWhenSubticksPerTickIsZero(t *testing.T) {
 		},
 	}
 	require.Panics(t, func() {
-		memclob.CreateOrderbook(ctx, clobPair)
+		memclob.CreateOrderbook(clobPair)
 	})
 }
 
 func TestCreateOrderbook_PanicsWhenStepBaseQuantumsIsZero(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-
 	memclob := NewMemClobPriceTimePriority(false)
 
 	clobPair := types.ClobPair{
@@ -120,6 +107,6 @@ func TestCreateOrderbook_PanicsWhenStepBaseQuantumsIsZero(t *testing.T) {
 		},
 	}
 	require.Panics(t, func() {
-		memclob.CreateOrderbook(ctx, clobPair)
+		memclob.CreateOrderbook(clobPair)
 	})
 }

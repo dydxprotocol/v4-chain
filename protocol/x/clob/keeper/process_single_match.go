@@ -542,7 +542,7 @@ func (k Keeper) setOrderFillAmountsAndPruning(
 	)
 
 	if k.GetIndexerEventManager().Enabled() {
-		if _, exists := k.MemClob.GetOrder(ctx, order.OrderId); exists {
+		if _, exists := k.MemClob.GetOrder(order.OrderId); exists {
 			// Generate an off-chain update message updating the total filled amount of order.
 			if message, success := off_chain_updates.CreateOrderUpdateMessage(
 				ctx,

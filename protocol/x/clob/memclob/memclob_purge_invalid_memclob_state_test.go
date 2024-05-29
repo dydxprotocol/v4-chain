@@ -342,6 +342,7 @@ func TestPurgeInvalidMemclobState_DoesNotPanicWhenCalledWithDuplicateCanceledSta
 	memclob := NewMemClobPriceTimePriority(true)
 	mockMemClobKeeper := &mocks.MemClobKeeper{}
 	memclob.SetClobKeeper(mockMemClobKeeper)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return().Maybe()
 
 	canceledStatefulOrderIds := []types.OrderId{
@@ -371,6 +372,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenNonStatefulOrderIsCanceled(t *testin
 	memclob := NewMemClobPriceTimePriority(true)
 	mockMemClobKeeper := &mocks.MemClobKeeper{}
 	memclob.SetClobKeeper(mockMemClobKeeper)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return().Maybe()
 
 	shortTermOrderId := constants.Order_Alice_Num0_Id0_Clob2_Buy5_Price10_GTB15.OrderId
@@ -402,6 +404,7 @@ func TestPurgeInvalidMemclobState_DoesNotPanicWhenCalledWithDuplicateExpiredStat
 	memclob := NewMemClobPriceTimePriority(true)
 	mockMemClobKeeper := &mocks.MemClobKeeper{}
 	memclob.SetClobKeeper(mockMemClobKeeper)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return().Maybe()
 
 	expiredStatefulOrderIds := []types.OrderId{

@@ -333,7 +333,8 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 
 			// Mark the current order as canceled if necessary.
 			if tc.canceledOrderGTB != 0 {
-				memclob.cancels.addShortTermCancel(tc.order.OrderId, tc.canceledOrderGTB)
+				orderbook := memclob.mustGetOrderbook(tc.order.GetClobPairId())
+				orderbook.addShortTermCancel(tc.order.OrderId, tc.canceledOrderGTB)
 			}
 
 			// TODO(DEC-1640): Explicitly specify expected remaining orders on the book in test case.
@@ -2825,7 +2826,7 @@ func TestAddOrderToOrderbook_ErrorPlaceNewFullyFilledOrder(t *testing.T) {
 	memClobKeeper := mocks.MemClobKeeper{}
 	memclob := NewMemClobPriceTimePriority(false)
 	memclob.SetClobKeeper(&memClobKeeper)
-	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 
 	memClobKeeper.On("AddOrderToOrderbookSubaccountUpdatesCheck", mock.Anything, mock.Anything, mock.Anything).
 		Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult))
@@ -2873,26 +2874,6 @@ func TestAddOrderToOrderbook_PanicsIfFullyFilled(t *testing.T) {
 
 	require.Panics(t, func() {
 		memclob.mustAddOrderToOrderbook(ctx, order, false)
-	})
-}
-
-func TestAddOrderToSubaccountOrders_PanicsOnInvalidSide(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-	ctx = ctx.WithIsCheckTx(true)
-	memclob := NewMemClobPriceTimePriority(false)
-
-	require.Panics(t, func() {
-		memclob.openOrders.mustAddOrderToSubaccountOrders(ctx, types.Order{})
-	})
-}
-
-func TestAddOrderToSubaccountOrders_PanicsOnInvalidClob(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-	ctx = ctx.WithIsCheckTx(true)
-	memclob := NewMemClobPriceTimePriority(false)
-
-	require.Panics(t, func() {
-		memclob.openOrders.mustAddOrderToSubaccountOrders(ctx, types.Order{Side: types.Order_SIDE_BUY})
 	})
 }
 
@@ -4166,7 +4147,7 @@ func TestPlaceOrder_Telemetry(t *testing.T) {
 	}
 
 	// Create the orderbook.
-	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 
 	// Create all orders.
 	createAllOrders(
@@ -4217,7 +4198,7 @@ func TestPlaceOrder_GenerateOffchainUpdatesFalse_NoMessagesSent(t *testing.T) {
 	order := constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30
 
 	// Create the orderbook.
-	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 
 	// Place a new order.
 	_, _, offchainUpdates, err := memclob.PlaceOrder(ctx, order)
@@ -4237,7 +4218,7 @@ func TestPlaceOrder_DuplicateOrder(t *testing.T) {
 	memclob := NewMemClobPriceTimePriority(false)
 	memclob.SetClobKeeper(memClobKeeper)
 
-	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 
 	order := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15
 	_, _, _, err := memclob.PlaceOrder(ctx, order)
