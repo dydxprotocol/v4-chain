@@ -1,7 +1,6 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import { OrderSide, PerpetualMarketFromDatabase, PerpetualMarketTable } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, OrderbookLevelsCache } from '@dydxprotocol-indexer/redis';
-import { deleteStalePriceLevel } from '@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache';
 import Big from 'big.js';
 
 import { redisClient } from '../helpers/redis';
@@ -85,7 +84,7 @@ async function uncrossOrderbook(
   });
 
   for (const bid of removeBidLevels) {
-    const deleted: boolean = await deleteStalePriceLevel({
+    const deleted: boolean = await OrderbookLevelsCache.deleteStalePriceLevel({
       ticker,
       side: OrderSide.BUY,
       humanPrice: bid.humanPrice,
@@ -102,7 +101,7 @@ async function uncrossOrderbook(
   }
 
   for (const ask of removeAskLevels) {
-    const deleted: boolean = await deleteStalePriceLevel({
+    const deleted: boolean = await OrderbookLevelsCache.deleteStalePriceLevel({
       ticker,
       side: OrderSide.SELL,
       humanPrice: ask.humanPrice,
