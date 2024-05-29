@@ -1315,6 +1315,7 @@ func assertPlaceOrderOffchainMessages(
 	expectedNewMatches []expectedMatch,
 	expectedCancelledReduceOnlyOrders []types.OrderId,
 	expectedToReplaceOrder bool,
+	expectedReplacementOrderPriceChanged bool,
 ) {
 	actualOffchainMessages := offchainUpdates.GetMessages()
 	expectedOffchainMessages := []msgsender.Message{}
@@ -1322,23 +1323,36 @@ func assertPlaceOrderOffchainMessages(
 
 	// If there are no errors expected, an order place message should be sent.
 	if expectedErr == nil || doesErrorProduceOffchainMessages(expectedErr) {
-		var updateMessage msgsender.Message
 		if expectedToReplaceOrder {
-			updateMessage = off_chain_updates.MustCreateOrderReplaceMessage(
-				ctx,
-				order,
-			)
+			if expectedReplacementOrderPriceChanged {
+				removeMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+					ctx,
+					order.OrderId,
+					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				)
+				placeMessage := off_chain_updates.MustCreateOrderPlaceMessage(
+					ctx,
+					order,
+				)
+				expectedOffchainMessages = append(
+					expectedOffchainMessages,
+					removeMessage,
+					placeMessage,
+				)
+				require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
+			}
 		} else {
-			updateMessage = off_chain_updates.MustCreateOrderPlaceMessage(
+			placeMessage := off_chain_updates.MustCreateOrderPlaceMessage(
 				ctx,
 				order,
 			)
+			expectedOffchainMessages = append(
+				expectedOffchainMessages,
+				placeMessage,
+			)
+			require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
 		}
-		expectedOffchainMessages = append(
-			expectedOffchainMessages,
-			updateMessage,
-		)
-		require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
 	}
 
 	// Reduce-only order removals are sent before updates if the maker orders are removed during
