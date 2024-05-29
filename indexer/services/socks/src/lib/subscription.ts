@@ -1,32 +1,18 @@
-import {
-  AxiosSafeServerError,
-  logger,
-  stats,
-} from '@dydxprotocol-indexer/base';
-<<<<<<< HEAD
-import { CandleResolution, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
-=======
+import { AxiosSafeServerError, logger, stats } from '@dydxprotocol-indexer/base';
 import {
   APIOrderStatus,
   BestEffortOpenedStatus,
-  CHILD_SUBACCOUNT_MULTIPLIER,
   CandleResolution,
-  MAX_PARENT_SUBACCOUNTS,
   OrderStatus,
   perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
->>>>>>> 54ceae66 (Add BEC to initial subaccount orders socks channel (#1500))
 import WebSocket from 'ws';
 
 import config from '../config';
 import { createErrorMessage, createSubscribedMessage } from '../helpers/message';
 import { sendMessage, sendMessageString } from '../helpers/wss';
 import {
-  Channel,
-  MessageToForward,
-  RequestMethod,
-  Subscription,
-  SubscriptionInfo,
+  Channel, MessageToForward, RequestMethod, Subscription, SubscriptionInfo,
 } from '../types';
 import { axiosRequest } from './axios';
 import { V4_MARKETS_ID, WS_CLOSE_CODE_POLICY_VIOLATION } from './constants';
@@ -487,7 +473,7 @@ export class Subscriptions {
         const {
           ticker,
           resolution,
-        } : {
+        }: {
           ticker: string,
           resolution?: CandleResolution,
         } = this.parseCandleChannelId(id);
@@ -513,7 +499,7 @@ export class Subscriptions {
       const {
         address,
         subaccountNumber,
-      } : {
+      }: {
         address: string,
         subaccountNumber: string,
       } = this.parseSubaccountChannelId(id);
@@ -566,74 +552,6 @@ export class Subscriptions {
     }
   }
 
-<<<<<<< HEAD
-=======
-  private async getInitialResponseForParentSubaccountSubscription(
-    id?: string,
-    country?: string,
-  ): Promise<string> {
-    if (id === undefined) {
-      throw new Error('Invalid undefined id');
-    }
-
-    try {
-      const {
-        address,
-        subaccountNumber,
-      } : {
-        address: string,
-        subaccountNumber: string,
-      } = this.parseSubaccountChannelId(id);
-
-      const [
-        subaccountsResponse,
-        ordersResponse,
-      ]: [
-        string,
-        string,
-      ] = await Promise.all([
-        axiosRequest({
-          method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/addresses/${address}/parentSubaccountNumber/${subaccountNumber}`,
-          timeout: config.INITIAL_GET_TIMEOUT_MS,
-          headers: {
-            'cf-ipcountry': country,
-          },
-          transformResponse: (res) => res,
-        }),
-        // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
-        axiosRequest({
-          method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/orders/parentSubaccountNumber?address=${address}&parentSubaccountNumber=${subaccountNumber}&status=${VALID_ORDER_STATUS}`,
-          timeout: config.INITIAL_GET_TIMEOUT_MS,
-          headers: {
-            'cf-ipcountry': country,
-          },
-          transformResponse: (res) => res,
-        }),
-      ]);
-
-      return JSON.stringify({
-        ...JSON.parse(subaccountsResponse),
-        orders: JSON.parse(ordersResponse),
-      });
-    } catch (error) {
-      // The subaccounts API endpoint returns a 404 for subaccounts that are not indexed, however
-      // such subaccounts can be subscribed to and events can be sent when the subaccounts are
-      // indexed to an existing subscription.
-      if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 404) {
-        return EMPTY_INITIAL_RESPONSE;
-      }
-      // 403 indicates a blocked address. Throw a specific error for blocked addresses with a
-      // specific error message detailing why the subscription failed due to a blocked address.
-      if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 403) {
-        throw new BlockedError();
-      }
-      throw error;
-    }
-  }
-
->>>>>>> 54ceae66 (Add BEC to initial subaccount orders socks channel (#1500))
   private parseSubaccountChannelId(id: string): {
     address: string,
     subaccountNumber: string,
