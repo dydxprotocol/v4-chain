@@ -1,20 +1,18 @@
+import { AxiosSafeServerError, logger, stats } from '@dydxprotocol-indexer/base';
 import {
-  AxiosSafeServerError,
-  logger,
-  stats,
-} from '@dydxprotocol-indexer/base';
-import { CandleResolution, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+  APIOrderStatus,
+  BestEffortOpenedStatus,
+  CandleResolution,
+  OrderStatus,
+  perpetualMarketRefresher,
+} from '@dydxprotocol-indexer/postgres';
 import WebSocket from 'ws';
 
 import config from '../config';
 import { createErrorMessage, createSubscribedMessage } from '../helpers/message';
 import { sendMessage, sendMessageString } from '../helpers/wss';
 import {
-  Channel,
-  MessageToForward,
-  RequestMethod,
-  Subscription,
-  SubscriptionInfo,
+  Channel, MessageToForward, RequestMethod, Subscription, SubscriptionInfo,
 } from '../types';
 import { axiosRequest } from './axios';
 import { V4_MARKETS_ID, WS_CLOSE_CODE_POLICY_VIOLATION } from './constants';
@@ -23,6 +21,13 @@ import { RateLimiter } from './rate-limit';
 
 const COMLINK_URL: string = `http://${config.COMLINK_URL}`;
 const EMPTY_INITIAL_RESPONSE: string = '{}';
+const VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE: APIOrderStatus[] = [
+  OrderStatus.OPEN,
+  OrderStatus.UNTRIGGERED,
+  BestEffortOpenedStatus.BEST_EFFORT_OPENED,
+  OrderStatus.BEST_EFFORT_CANCELED,
+];
+const VALID_ORDER_STATUS: string = VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE.join(',');
 
 export class Subscriptions {
   // Maps channels and ids to a list of websocket connections subscribed to them
@@ -468,7 +473,7 @@ export class Subscriptions {
         const {
           ticker,
           resolution,
-        } : {
+        }: {
           ticker: string,
           resolution?: CandleResolution,
         } = this.parseCandleChannelId(id);
@@ -494,7 +499,7 @@ export class Subscriptions {
       const {
         address,
         subaccountNumber,
-      } : {
+      }: {
         address: string,
         subaccountNumber: string,
       } = this.parseSubaccountChannelId(id);
@@ -518,7 +523,7 @@ export class Subscriptions {
         // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
         axiosRequest({
           method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED,BEST_EFFORT_OPENED`,
+          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=${VALID_ORDER_STATUS}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
           headers: {
             'cf-ipcountry': country,
