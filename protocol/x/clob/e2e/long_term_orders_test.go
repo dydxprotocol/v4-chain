@@ -341,7 +341,7 @@ func TestImmediateExecutionLongTermOrders(t *testing.T) {
 	) {
 		resp := tApp.CheckTx(checkTx)
 		require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
-		require.Contains(t, resp.Log, clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error())
+		require.Contains(t, resp.Log, clobtypes.ErrDeprecatedField.Error())
 	}
 
 	// Reject long-term IOC/FOK in DeliverTx
@@ -354,7 +354,7 @@ func TestImmediateExecutionLongTermOrders(t *testing.T) {
 		},
 		ExpectedDeliverTxErrors: map[int]string{
 			0: clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error(),
-			1: clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error(),
+			1: clobtypes.ErrDeprecatedField.Error(),
 		},
 	}
 	blockAdvancement.AdvanceToBlock(ctx, 2, tApp, t)

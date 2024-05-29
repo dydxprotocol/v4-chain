@@ -173,51 +173,6 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 				},
 			},
 		},
-		"Error: partially filled order cannot be replaced by FOK": {
-			subaccounts: []satypes.Subaccount{
-				constants.Alice_Num1_10_000USD,
-				constants.Bob_Num0_10_000USD,
-			},
-			blockAdvancements: []testapp.BlockAdvancementWithErrors{
-				{
-					BlockAdvancement: testapp.BlockAdvancement{
-						ShortTermOrdersAndOperations: []interface{}{
-							testapp.MustScaleOrder(constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
-							testapp.MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20, testapp.DefaultGenesis()),
-							clobtestutils.NewMatchOperationRaw(
-								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
-								[]clobtypes.MakerFill{
-									{
-										FillAmount:   5_000, // step base quantums is 1000 for ETH/USDC (ClobPair 1)
-										MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId,
-									},
-								},
-							),
-						},
-					},
-				},
-				{
-					BlockAdvancement: testapp.BlockAdvancement{
-						ShortTermOrdersAndOperations: []interface{}{
-							testapp.MustScaleOrder(constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
-							testapp.MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK, testapp.DefaultGenesis()),
-							clobtestutils.NewMatchOperationRaw(
-								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK,
-								[]clobtypes.MakerFill{
-									{
-										FillAmount:   5_000,
-										MakerOrderId: constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20.OrderId,
-									},
-								},
-							),
-						},
-					},
-					ExpectedDeliverTxErrors: testapp.TxIndexesToErrors{
-						0: "IOC/FOK order is already filled, remaining size is cancelled.",
-					},
-				},
-			},
-		},
 	}
 
 	for name, tc := range tests {

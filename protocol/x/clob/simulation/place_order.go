@@ -31,10 +31,9 @@ var (
 	orderLevels                = big.NewInt(4)
 
 	weightedSupportedTimeInForces = map[types.Order_TimeInForce]int{
-		types.Order_TIME_IN_FORCE_UNSPECIFIED:  3,
-		types.Order_TIME_IN_FORCE_IOC:          1,
-		types.Order_TIME_IN_FORCE_POST_ONLY:    1,
-		types.Order_TIME_IN_FORCE_FILL_OR_KILL: 1,
+		types.Order_TIME_IN_FORCE_UNSPECIFIED: 3,
+		types.Order_TIME_IN_FORCE_IOC:         1,
+		types.Order_TIME_IN_FORCE_POST_ONLY:   1,
 	}
 
 	weightedReduceOnly = map[bool]int{
