@@ -27,7 +27,6 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 	defer totalSharesIterator.Close()
 	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
 		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
-		fmt.Printf("vaultId: %+v\n", vaultId)
 
 		if err != nil {
 			log.ErrorLogWithError(ctx, "Failed to get vault ID from state key", err)
@@ -36,7 +35,6 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 		var totalShares types.NumShares
 		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
 
-		fmt.Printf("totalShares: %+v\n", totalShares)
 		// Skip if TotalShares is non-positive.
 		if totalShares.NumShares.Sign() <= 0 {
 			continue
