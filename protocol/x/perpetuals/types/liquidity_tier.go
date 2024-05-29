@@ -125,7 +125,7 @@ func (liquidityTier LiquidityTier) GetAdjustedInitialMarginPpm(
 	if capNum.Sign() < 0 || capDen.Sign() <= 0 || capDen.Cmp(capNum) < 0 {
 		panic(fmt.Sprintf("invalid open interest values for liquidity tier %d", liquidityTier.Id))
 	}
-	if capNum.Cmp(capDen) > 0 {
+	if oiCapLower.Cmp(oiCapUpper) > 0 {
 		panic(errorsmod.Wrap(ErrOpenInterestLowerCapLargerThanUpperCap, lib.UintToString(liquidityTier.Id)))
 	}
 	if liquidityTier.InitialMarginPpm > lib.OneMillion {
