@@ -502,10 +502,10 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewShortTermOrderPlacementOperationRaw(
-					constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_FOK,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_IOC,
 				),
 				clobtest.NewMatchOperationRaw(
-					&constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_FOK,
+					&constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_IOC,
 					[]types.MakerFill{
 						{
 							MakerOrderId: constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
@@ -527,7 +527,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				),
 			},
 			expectedFillAmounts: map[types.OrderId]satypes.BaseQuantums{
-				constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_FOK.OrderId: 50_000_000,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_IOC.OrderId: 50_000_000,
 				constants.Order_Carl_Num0_Id2_Clob0_Buy05BTC_Price50000.OrderId:           50_000_000,
 				// Fully filled orders are removed.
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId: 0,
@@ -540,7 +540,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
 				OrderIdsFilledInLastBlock: []types.OrderId{
-					constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_FOK.OrderId,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_IOC.OrderId,
 					constants.Order_Carl_Num0_Id2_Clob0_Buy05BTC_Price50000.OrderId,
 					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
 				},
