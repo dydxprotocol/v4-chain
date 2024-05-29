@@ -119,9 +119,8 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		)
 
 		// Send indexer messages.
-		// If the price is different, send a cancel and a place message
-		// If the price is the same, but size is different, send an order replacement message with the old order ID and the new order data
-		// If price and size are the same, do nothing
+		// If the price of the old and new orders are different, send a cancel and a place message
+		// Otherwise, send an order place message only.
 		replacedOrder := ordersToCancel[i]
 		if replacedOrder.Subticks != order.Subticks {
 			k.GetIndexerEventManager().AddTxnEvent(
@@ -381,11 +380,6 @@ func (k Keeper) GetVaultClobOrders(
 // GetVaultClobOrderClientId returns the client ID for a CLOB order where
 // - 1st bit is `side-1` (subtract 1 as buy_side = 1, sell_side = 2)
 //
-// - 2nd bit is `block height % 2`
-//   - block height bit alternates between 0 and 1 to ensure that client IDs
-//     are different in two consecutive blocks (otherwise, order placement would
-//     fail because the same order IDs are already marked for cancellation)
-//
 // - next 8 bits are `layer`
 func (k Keeper) GetVaultClobOrderClientId(
 	ctx sdk.Context,
@@ -395,16 +389,9 @@ func (k Keeper) GetVaultClobOrderClientId(
 	sideBit := uint32(side - 1)
 	sideBit <<= 31
 
-	// blockHeightBit := uint32(ctx.BlockHeight() % 2)
-	// blockHeightBit := uint32(ctx.BlockHeight())
-	// blockHeightBit <<= 30
-
-	layerBits := uint32(layer) << 22
+	layerBits := uint32(layer) << 23
 
 	return sideBit | layerBits
-
-	// return sideBit | blockHeightBit | layerBits
-
 }
 
 // PlaceVaultClobOrder places a vault CLOB order as an order internal to the protocol,

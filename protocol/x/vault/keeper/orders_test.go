@@ -696,43 +696,43 @@ func TestGetVaultClobOrderClientId(t *testing.T) {
 	}{
 		"Buy, Block Height Odd, Layer 1": {
 			side:             clobtypes.Order_SIDE_BUY, // 0<<31
-			layer:            1,                        // 1<<22
-			expectedClientId: 0<<31 | 1<<22,
+			layer:            1,                        // 1<<23
+			expectedClientId: 0<<31 | 1<<23,
 		},
 		"Buy, Block Height Even, Layer 1": {
 			side:             clobtypes.Order_SIDE_BUY, // 0<<31
-			layer:            1,                        // 1<<22
-			expectedClientId: 0<<31 | 1<<22,
+			layer:            1,                        // 1<<23
+			expectedClientId: 0<<31 | 1<<23,
 		},
 		"Sell, Block Height Odd, Layer 2": {
 			side:             clobtypes.Order_SIDE_SELL, // 1<<31
-			layer:            2,                         // 2<<22
-			expectedClientId: 1<<31 | 2<<22,
+			layer:            2,                         // 2<<23
+			expectedClientId: 1<<31 | 2<<23,
 		},
 		"Sell, Block Height Even, Layer 2": {
 			side:             clobtypes.Order_SIDE_SELL, // 1<<31
-			layer:            2,                         // 2<<22
-			expectedClientId: 1<<31 | 2<<22,
+			layer:            2,                         // 2<<23
+			expectedClientId: 1<<31 | 2<<23,
 		},
 		"Buy, Block Height Even, Layer Max Uint8": {
 			side:             clobtypes.Order_SIDE_BUY, // 0<<31
-			layer:            math.MaxUint8,            // 255<<22
-			expectedClientId: 0<<31 | 255<<22,
+			layer:            math.MaxUint8,            // 255<<23
+			expectedClientId: 0<<31 | 255<<23,
 		},
 		"Sell, Block Height Odd, Layer 0": {
 			side:             clobtypes.Order_SIDE_SELL, // 1<<31
-			layer:            0,                         // 0<<22
-			expectedClientId: 1<<31 | 0<<22,
+			layer:            0,                         // 0<<23
+			expectedClientId: 1<<31 | 0<<23,
 		},
 		"Sell, Block Height Odd (negative), Layer 202": {
 			side:             clobtypes.Order_SIDE_SELL, // 1<<31
-			layer:            202,                       // 202<<22
-			expectedClientId: 1<<31 | 202<<22,
+			layer:            202,                       // 202<<23
+			expectedClientId: 1<<31 | 202<<23,
 		},
 		"Buy, Block Height Even (zero), Layer 157": {
 			side:             clobtypes.Order_SIDE_SELL, // 1<<31
-			layer:            157,                       // 157<<22
-			expectedClientId: 1<<31 | 157<<22,
+			layer:            157,                       // 157<<23
+			expectedClientId: 1<<31 | 157<<23,
 		},
 	}
 
