@@ -6,6 +6,9 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -24,6 +27,8 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 	defer totalSharesIterator.Close()
 	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
 		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
+		fmt.Printf("vaultId: %+v\n", vaultId)
+
 		if err != nil {
 			log.ErrorLogWithError(ctx, "Failed to get vault ID from state key", err)
 			continue
@@ -31,6 +36,7 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 		var totalShares types.NumShares
 		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
 
+		fmt.Printf("totalShares: %+v\n", totalShares)
 		// Skip if TotalShares is non-positive.
 		if totalShares.NumShares.Sign() <= 0 {
 			continue
@@ -84,7 +90,7 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 			err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
 				order.OrderId,
 				uint32(ctx.BlockTime().Unix())+orderExpirationSeconds,
-			))
+			), true)
 			if err != nil {
 				log.ErrorLogWithError(ctx, "Failed to cancel order", err, "order", order, "vaultId", vaultId)
 			}
@@ -97,11 +103,12 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 
 	// Place new CLOB orders.
 	ordersToPlace, err := k.GetVaultClobOrders(ctx, vaultId)
+
 	if err != nil {
 		log.ErrorLogWithError(ctx, "Failed to get vault clob orders to place", err, "vaultId", vaultId)
 		return err
 	}
-	for _, order := range ordersToPlace {
+	for i, order := range ordersToPlace {
 		err := k.PlaceVaultClobOrder(ctx, order)
 		if err != nil {
 			log.ErrorLogWithError(ctx, "Failed to place order", err, "order", order, "vaultId", vaultId)
@@ -110,8 +117,47 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 			metrics.VaultPlaceOrder,
 			metrics.GetLabelForBoolValue(metrics.Success, err == nil),
 		)
-	}
 
+		// Send indexer messages.
+		// If the price is different, send a cancel and a place message
+		// If the price is the same, but size is different, send an order replacement message with the old order ID and the new order data
+		// If price and size are the same, do nothing
+		replacedOrder := ordersToCancel[i]
+		if replacedOrder.Subticks != order.Subticks {
+			k.GetIndexerEventManager().AddTxnEvent(
+				ctx,
+				indexerevents.SubtypeStatefulOrder,
+				indexerevents.StatefulOrderEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewStatefulOrderRemovalEvent(
+						replacedOrder.OrderId,
+						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
+					),
+				),
+			)
+			k.GetIndexerEventManager().AddTxnEvent(
+				ctx,
+				indexerevents.SubtypeStatefulOrder,
+				indexerevents.StatefulOrderEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewLongTermOrderPlacementEvent(
+						*order,
+					),
+				),
+			)
+		} else {
+			k.GetIndexerEventManager().AddTxnEvent(
+				ctx,
+				indexerevents.SubtypeStatefulOrder,
+				indexerevents.StatefulOrderEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewLongTermOrderPlacementEvent(
+						*order,
+					),
+				),
+			)
+		}
+	}
 	return nil
 }
 
@@ -349,12 +395,16 @@ func (k Keeper) GetVaultClobOrderClientId(
 	sideBit := uint32(side - 1)
 	sideBit <<= 31
 
-	blockHeightBit := uint32(ctx.BlockHeight() % 2)
-	blockHeightBit <<= 30
+	// blockHeightBit := uint32(ctx.BlockHeight() % 2)
+	// blockHeightBit := uint32(ctx.BlockHeight())
+	// blockHeightBit <<= 30
 
 	layerBits := uint32(layer) << 22
 
-	return sideBit | blockHeightBit | layerBits
+	return sideBit | layerBits
+
+	// return sideBit | blockHeightBit | layerBits
+
 }
 
 // PlaceVaultClobOrder places a vault CLOB order as an order internal to the protocol,

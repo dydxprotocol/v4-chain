@@ -158,24 +158,6 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			allStatefulOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
 			require.Len(t, allStatefulOrders, 0)
 
-			// Simulate vault orders placed in last block.
-			numPreviousOrders := 0
-			for i, vaultId := range tc.vaultIds {
-				if tc.totalShares[i].Sign() > 0 && tc.assetQuantums[i].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
-					orders, err := tApp.App.VaultKeeper.GetVaultClobOrders(
-						ctx.WithBlockHeight(ctx.BlockHeight()-1),
-						vaultId,
-					)
-					require.NoError(t, err)
-					for _, order := range orders {
-						err := tApp.App.VaultKeeper.PlaceVaultClobOrder(ctx, order)
-						require.NoError(t, err)
-					}
-					numPreviousOrders += len(orders)
-				}
-			}
-			require.Len(t, tApp.App.ClobKeeper.GetAllStatefulOrders(ctx), numPreviousOrders)
-
 			// Refresh all vault orders.
 			tApp.App.VaultKeeper.RefreshAllVaultOrders(ctx)
 
@@ -705,8 +687,6 @@ func TestGetVaultClobOrderClientId(t *testing.T) {
 		/* --- Setup --- */
 		// side.
 		side clobtypes.Order_Side
-		// block height.
-		blockHeight int64
 		// layer.
 		layer uint8
 
@@ -716,53 +696,43 @@ func TestGetVaultClobOrderClientId(t *testing.T) {
 	}{
 		"Buy, Block Height Odd, Layer 1": {
 			side:             clobtypes.Order_SIDE_BUY, // 0<<31
-			blockHeight:      1,                        // 1<<30
 			layer:            1,                        // 1<<22
-			expectedClientId: 0<<31 | 1<<30 | 1<<22,
+			expectedClientId: 0<<31 | 1<<22,
 		},
 		"Buy, Block Height Even, Layer 1": {
 			side:             clobtypes.Order_SIDE_BUY, // 0<<31
-			blockHeight:      2,                        // 0<<30
 			layer:            1,                        // 1<<22
-			expectedClientId: 0<<31 | 0<<30 | 1<<22,
+			expectedClientId: 0<<31 | 1<<22,
 		},
 		"Sell, Block Height Odd, Layer 2": {
 			side:             clobtypes.Order_SIDE_SELL, // 1<<31
-			blockHeight:      1,                         // 1<<30
 			layer:            2,                         // 2<<22
-			expectedClientId: 1<<31 | 1<<30 | 2<<22,
+			expectedClientId: 1<<31 | 2<<22,
 		},
 		"Sell, Block Height Even, Layer 2": {
 			side:             clobtypes.Order_SIDE_SELL, // 1<<31
-			blockHeight:      2,                         // 0<<30
 			layer:            2,                         // 2<<22
-			expectedClientId: 1<<31 | 0<<30 | 2<<22,
+			expectedClientId: 1<<31 | 2<<22,
 		},
 		"Buy, Block Height Even, Layer Max Uint8": {
 			side:             clobtypes.Order_SIDE_BUY, // 0<<31
-			blockHeight:      123456,                   // 0<<30
 			layer:            math.MaxUint8,            // 255<<22
-			expectedClientId: 0<<31 | 0<<30 | 255<<22,
+			expectedClientId: 0<<31 | 255<<22,
 		},
 		"Sell, Block Height Odd, Layer 0": {
 			side:             clobtypes.Order_SIDE_SELL, // 1<<31
-			blockHeight:      12345654321,               // 1<<30
 			layer:            0,                         // 0<<22
-			expectedClientId: 1<<31 | 1<<30 | 0<<22,
+			expectedClientId: 1<<31 | 0<<22,
 		},
 		"Sell, Block Height Odd (negative), Layer 202": {
-			side: clobtypes.Order_SIDE_SELL, // 1<<31
-			// Negative block height shouldn't happen but blockHeight
-			// is represented as int64.
-			blockHeight:      -678987, // 1<<30
-			layer:            202,     // 202<<22
-			expectedClientId: 1<<31 | 1<<30 | 202<<22,
+			side:             clobtypes.Order_SIDE_SELL, // 1<<31
+			layer:            202,                       // 202<<22
+			expectedClientId: 1<<31 | 202<<22,
 		},
 		"Buy, Block Height Even (zero), Layer 157": {
 			side:             clobtypes.Order_SIDE_SELL, // 1<<31
-			blockHeight:      0,                         // 0<<30
 			layer:            157,                       // 157<<22
-			expectedClientId: 1<<31 | 0<<30 | 157<<22,
+			expectedClientId: 1<<31 | 157<<22,
 		},
 	}
 
@@ -772,7 +742,7 @@ func TestGetVaultClobOrderClientId(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			clientId := tApp.App.VaultKeeper.GetVaultClobOrderClientId(
-				ctx.WithBlockHeight(tc.blockHeight),
+				ctx,
 				tc.side,
 				tc.layer,
 			)

@@ -88,13 +88,15 @@ func (k Keeper) HandleMsgPlaceOrder(
 
 	// 2. Return an error if an associated cancellation or removal already exists in the current block.
 	processProposerMatchesEvents := k.GetProcessProposerMatchesEvents(ctx)
-	cancelledOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
-	if _, found := cancelledOrderIds[order.GetOrderId()]; found {
-		return errorsmod.Wrapf(
-			types.ErrStatefulOrderPreviouslyCancelled,
-			"PlaceOrder: order (%+v)",
-			order,
-		)
+	if !isInternalOrder { // If vault order, we allow the order to replace a cancelled order with the same order ID
+		cancelledOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
+		if _, found := cancelledOrderIds[order.GetOrderId()]; found {
+			return errorsmod.Wrapf(
+				types.ErrStatefulOrderPreviouslyCancelled,
+				"PlaceOrder: order (%+v)",
+				order,
+			)
+		}
 	}
 	removedOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
 	if _, found := removedOrderIds[order.GetOrderId()]; found {
@@ -115,31 +117,35 @@ func (k Keeper) HandleMsgPlaceOrder(
 
 	// 4. Emit the new order placement indexer event.
 	if order.IsConditionalOrder() {
-		k.GetIndexerEventManager().AddTxnEvent(
-			ctx,
-			indexerevents.SubtypeStatefulOrder,
-			indexerevents.StatefulOrderEventVersion,
-			indexer_manager.GetBytes(
-				indexerevents.NewConditionalOrderPlacementEvent(
-					order,
+		if !isInternalOrder {
+			k.GetIndexerEventManager().AddTxnEvent(
+				ctx,
+				indexerevents.SubtypeStatefulOrder,
+				indexerevents.StatefulOrderEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewConditionalOrderPlacementEvent(
+						order,
+					),
 				),
-			),
-		)
+			)
+		}
 		processProposerMatchesEvents.PlacedConditionalOrderIds = append(
 			processProposerMatchesEvents.PlacedConditionalOrderIds,
 			order.OrderId,
 		)
 	} else {
-		k.GetIndexerEventManager().AddTxnEvent(
-			ctx,
-			indexerevents.SubtypeStatefulOrder,
-			indexerevents.StatefulOrderEventVersion,
-			indexer_manager.GetBytes(
-				indexerevents.NewLongTermOrderPlacementEvent(
-					order,
+		if !isInternalOrder {
+			k.GetIndexerEventManager().AddTxnEvent(
+				ctx,
+				indexerevents.SubtypeStatefulOrder,
+				indexerevents.StatefulOrderEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewLongTermOrderPlacementEvent(
+						order,
+					),
 				),
-			),
-		)
+			)
+		}
 		processProposerMatchesEvents.PlacedLongTermOrderIds = append(
 			processProposerMatchesEvents.PlacedLongTermOrderIds,
 			order.OrderId,

@@ -23,7 +23,7 @@ func (k msgServer) CancelOrder(
 ) (resp *types.MsgCancelOrderResponse, err error) {
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
-	if err := k.Keeper.HandleMsgCancelOrder(ctx, msg); err != nil {
+	if err := k.Keeper.HandleMsgCancelOrder(ctx, msg, false); err != nil {
 		return nil, err
 	}
 
@@ -37,6 +37,7 @@ func (k msgServer) CancelOrder(
 func (k Keeper) HandleMsgCancelOrder(
 	ctx sdk.Context,
 	msg *types.MsgCancelOrder,
+	isInternalOrder bool,
 ) (err error) {
 	lib.AssertDeliverTxMode(ctx)
 
@@ -111,17 +112,19 @@ func (k Keeper) HandleMsgCancelOrder(
 	k.MustSetProcessProposerMatchesEvents(ctx, processProposerMatchesEvents)
 
 	// 4. Add the relevant on-chain Indexer event for the cancellation.
-	k.GetIndexerEventManager().AddTxnEvent(
-		ctx,
-		indexerevents.SubtypeStatefulOrder,
-		indexerevents.StatefulOrderEventVersion,
-		indexer_manager.GetBytes(
-			indexerevents.NewStatefulOrderRemovalEvent(
-				msg.OrderId,
-				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
+	if !isInternalOrder {
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeStatefulOrder,
+			indexerevents.StatefulOrderEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewStatefulOrderRemovalEvent(
+					msg.OrderId,
+					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
+				),
 			),
-		),
-	)
+		)
+	}
 
 	return nil
 }
