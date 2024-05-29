@@ -317,8 +317,8 @@ func (k Keeper) persistMatchedOrders(
 	isTakerLiquidation := matchWithOrders.TakerOrder.IsLiquidation()
 
 	// Taker fees and maker fees/rebates are rounded towards positive infinity.
-	bigTakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, takerFeePpm, true)
-	bigMakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, makerFeePpm, true)
+	bigTakerFeeQuoteQuantums := lib.BigMulPpm(bigFillQuoteQuantums, lib.BigI(takerFeePpm), true)
+	bigMakerFeeQuoteQuantums := lib.BigMulPpm(bigFillQuoteQuantums, lib.BigI(makerFeePpm), true)
 
 	matchWithOrders.MakerFee = bigMakerFeeQuoteQuantums.Int64()
 	// Liquidation orders pay the liquidation fee instead of the standard taker fee
