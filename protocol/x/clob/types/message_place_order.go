@@ -28,6 +28,11 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 		}
 	}()
 
+	// Check for deprecated fields.
+	if msg.Order.TimeInForce == Order_TIME_IN_FORCE_FILL_OR_KILL {
+		return errorsmod.Wrapf(ErrDeprecatedField, "Fill-or-kill has been deprecated")
+	}
+
 	err = msg.Order.OrderId.SubaccountId.Validate()
 	if err != nil {
 		return err
