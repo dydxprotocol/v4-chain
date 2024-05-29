@@ -50,27 +50,9 @@ func (_m *MemClob) CancelOrder(ctx types.Context, msgCancelOrder *clobtypes.MsgC
 	return r0, r1
 }
 
-// CountSubaccountShortTermOrders provides a mock function with given fields: ctx, subaccountId
-func (_m *MemClob) CountSubaccountShortTermOrders(ctx types.Context, subaccountId subaccountstypes.SubaccountId) uint32 {
-	ret := _m.Called(ctx, subaccountId)
-
-	if len(ret) == 0 {
-		panic("no return value specified for CountSubaccountShortTermOrders")
-	}
-
-	var r0 uint32
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) uint32); ok {
-		r0 = rf(ctx, subaccountId)
-	} else {
-		r0 = ret.Get(0).(uint32)
-	}
-
-	return r0
-}
-
-// CreateOrderbook provides a mock function with given fields: ctx, clobPair
-func (_m *MemClob) CreateOrderbook(ctx types.Context, clobPair clobtypes.ClobPair) {
-	_m.Called(ctx, clobPair)
+// CreateOrderbook provides a mock function with given fields: clobPair
+func (_m *MemClob) CreateOrderbook(clobPair clobtypes.ClobPair) {
+	_m.Called(clobPair)
 }
 
 // DeleverageSubaccount provides a mock function with given fields: ctx, subaccountId, perpetualId, deltaQuantums, isFinalSettlement
@@ -121,9 +103,9 @@ func (_m *MemClob) GenerateStreamOrderbookFill(ctx types.Context, clobMatch clob
 	return r0
 }
 
-// GetCancelOrder provides a mock function with given fields: ctx, orderId
-func (_m *MemClob) GetCancelOrder(ctx types.Context, orderId clobtypes.OrderId) (uint32, bool) {
-	ret := _m.Called(ctx, orderId)
+// GetCancelOrder provides a mock function with given fields: orderId
+func (_m *MemClob) GetCancelOrder(orderId clobtypes.OrderId) (uint32, bool) {
+	ret := _m.Called(orderId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetCancelOrder")
@@ -131,17 +113,17 @@ func (_m *MemClob) GetCancelOrder(ctx types.Context, orderId clobtypes.OrderId) 
 
 	var r0 uint32
 	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) (uint32, bool)); ok {
-		return rf(ctx, orderId)
+	if rf, ok := ret.Get(0).(func(clobtypes.OrderId) (uint32, bool)); ok {
+		return rf(orderId)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) uint32); ok {
-		r0 = rf(ctx, orderId)
+	if rf, ok := ret.Get(0).(func(clobtypes.OrderId) uint32); ok {
+		r0 = rf(orderId)
 	} else {
 		r0 = ret.Get(0).(uint32)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.OrderId) bool); ok {
-		r1 = rf(ctx, orderId)
+	if rf, ok := ret.Get(1).(func(clobtypes.OrderId) bool); ok {
+		r1 = rf(orderId)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
@@ -263,9 +245,9 @@ func (_m *MemClob) GetOperationsToReplay(ctx types.Context) ([]clobtypes.Interna
 	return r0, r1
 }
 
-// GetOrder provides a mock function with given fields: ctx, orderId
-func (_m *MemClob) GetOrder(ctx types.Context, orderId clobtypes.OrderId) (clobtypes.Order, bool) {
-	ret := _m.Called(ctx, orderId)
+// GetOrder provides a mock function with given fields: orderId
+func (_m *MemClob) GetOrder(orderId clobtypes.OrderId) (clobtypes.Order, bool) {
+	ret := _m.Called(orderId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetOrder")
@@ -273,17 +255,17 @@ func (_m *MemClob) GetOrder(ctx types.Context, orderId clobtypes.OrderId) (clobt
 
 	var r0 clobtypes.Order
 	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) (clobtypes.Order, bool)); ok {
-		return rf(ctx, orderId)
+	if rf, ok := ret.Get(0).(func(clobtypes.OrderId) (clobtypes.Order, bool)); ok {
+		return rf(orderId)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) clobtypes.Order); ok {
-		r0 = rf(ctx, orderId)
+	if rf, ok := ret.Get(0).(func(clobtypes.OrderId) clobtypes.Order); ok {
+		r0 = rf(orderId)
 	} else {
 		r0 = ret.Get(0).(clobtypes.Order)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.OrderId) bool); ok {
-		r1 = rf(ctx, orderId)
+	if rf, ok := ret.Get(1).(func(clobtypes.OrderId) bool); ok {
+		r1 = rf(orderId)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
@@ -425,9 +407,9 @@ func (_m *MemClob) GetPricePremium(ctx types.Context, clobPair clobtypes.ClobPai
 	return r0, r1
 }
 
-// GetSubaccountOrders provides a mock function with given fields: ctx, clobPairId, subaccountId, side
-func (_m *MemClob) GetSubaccountOrders(ctx types.Context, clobPairId clobtypes.ClobPairId, subaccountId subaccountstypes.SubaccountId, side clobtypes.Order_Side) ([]clobtypes.Order, error) {
-	ret := _m.Called(ctx, clobPairId, subaccountId, side)
+// GetSubaccountOrders provides a mock function with given fields: clobPairId, subaccountId, side
+func (_m *MemClob) GetSubaccountOrders(clobPairId clobtypes.ClobPairId, subaccountId subaccountstypes.SubaccountId, side clobtypes.Order_Side) ([]clobtypes.Order, error) {
+	ret := _m.Called(clobPairId, subaccountId, side)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetSubaccountOrders")
@@ -435,19 +417,19 @@ func (_m *MemClob) GetSubaccountOrders(ctx types.Context, clobPairId clobtypes.C
 
 	var r0 []clobtypes.Order
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId, subaccountstypes.SubaccountId, clobtypes.Order_Side) ([]clobtypes.Order, error)); ok {
-		return rf(ctx, clobPairId, subaccountId, side)
+	if rf, ok := ret.Get(0).(func(clobtypes.ClobPairId, subaccountstypes.SubaccountId, clobtypes.Order_Side) ([]clobtypes.Order, error)); ok {
+		return rf(clobPairId, subaccountId, side)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId, subaccountstypes.SubaccountId, clobtypes.Order_Side) []clobtypes.Order); ok {
-		r0 = rf(ctx, clobPairId, subaccountId, side)
+	if rf, ok := ret.Get(0).(func(clobtypes.ClobPairId, subaccountstypes.SubaccountId, clobtypes.Order_Side) []clobtypes.Order); ok {
+		r0 = rf(clobPairId, subaccountId, side)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]clobtypes.Order)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.ClobPairId, subaccountstypes.SubaccountId, clobtypes.Order_Side) error); ok {
-		r1 = rf(ctx, clobPairId, subaccountId, side)
+	if rf, ok := ret.Get(1).(func(clobtypes.ClobPairId, subaccountstypes.SubaccountId, clobtypes.Order_Side) error); ok {
+		r1 = rf(clobPairId, subaccountId, side)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -455,14 +437,14 @@ func (_m *MemClob) GetSubaccountOrders(ctx types.Context, clobPairId clobtypes.C
 	return r0, r1
 }
 
-// InsertZeroFillDeleveragingIntoOperationsQueue provides a mock function with given fields: ctx, subaccountId, perpetualId
-func (_m *MemClob) InsertZeroFillDeleveragingIntoOperationsQueue(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32) {
-	_m.Called(ctx, subaccountId, perpetualId)
+// InsertZeroFillDeleveragingIntoOperationsQueue provides a mock function with given fields: subaccountId, perpetualId
+func (_m *MemClob) InsertZeroFillDeleveragingIntoOperationsQueue(subaccountId subaccountstypes.SubaccountId, perpetualId uint32) {
+	_m.Called(subaccountId, perpetualId)
 }
 
-// MaybeCreateOrderbook provides a mock function with given fields: ctx, clobPair
-func (_m *MemClob) MaybeCreateOrderbook(ctx types.Context, clobPair clobtypes.ClobPair) {
-	_m.Called(ctx, clobPair)
+// MaybeCreateOrderbook provides a mock function with given fields: clobPair
+func (_m *MemClob) MaybeCreateOrderbook(clobPair clobtypes.ClobPair) {
+	_m.Called(clobPair)
 }
 
 // PlaceOrder provides a mock function with given fields: ctx, order

@@ -349,7 +349,7 @@ func (k *Keeper) computeAndExecuteCollateralTransfer(
 func getPerpIdToMarketTypeMap(
 	perpetuals []perptypes.Perpetual,
 ) map[uint32]perptypes.PerpetualMarketType {
-	var perpIdToMarketType = make(map[uint32]perptypes.PerpetualMarketType)
+	var perpIdToMarketType = make(map[uint32]perptypes.PerpetualMarketType, len(perpetuals))
 
 	for _, perpetual := range perpetuals {
 		perpIdToMarketType[perpetual.GetId()] = perpetual.Params.MarketType

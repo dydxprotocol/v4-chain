@@ -317,8 +317,8 @@ func (k Keeper) persistMatchedOrders(
 	isTakerLiquidation := matchWithOrders.TakerOrder.IsLiquidation()
 
 	// Taker fees and maker fees/rebates are rounded towards positive infinity.
-	bigTakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, takerFeePpm, true)
-	bigMakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, makerFeePpm, true)
+	bigTakerFeeQuoteQuantums := lib.BigMulPpm(bigFillQuoteQuantums, lib.BigI(takerFeePpm), true)
+	bigMakerFeeQuoteQuantums := lib.BigMulPpm(bigFillQuoteQuantums, lib.BigI(makerFeePpm), true)
 
 	matchWithOrders.MakerFee = bigMakerFeeQuoteQuantums.Int64()
 	// Liquidation orders pay the liquidation fee instead of the standard taker fee
@@ -542,7 +542,7 @@ func (k Keeper) setOrderFillAmountsAndPruning(
 	)
 
 	if k.GetIndexerEventManager().Enabled() {
-		if _, exists := k.MemClob.GetOrder(ctx, order.OrderId); exists {
+		if _, exists := k.MemClob.GetOrder(order.OrderId); exists {
 			// Generate an off-chain update message updating the total filled amount of order.
 			if message, success := off_chain_updates.CreateOrderUpdateMessage(
 				ctx,

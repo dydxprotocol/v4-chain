@@ -1428,7 +1428,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			}
 
 			// Verify orderbook
-			_, found := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, tc.order.OrderId)
+			_, found := tApp.App.ClobKeeper.MemClob.GetOrder(tc.order.OrderId)
 			require.Equal(t, tc.orderShouldRestOnOrderbook, found)
 
 			// Verify fill amount
@@ -1843,7 +1843,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 			}
 
 			// Verify orderbook
-			_, found := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, tc.order.OrderId)
+			_, found := tApp.App.ClobKeeper.MemClob.GetOrder(tc.order.OrderId)
 			require.Equal(t, tc.orderShouldRestOnOrderbook, found)
 
 			// Verify fill amount

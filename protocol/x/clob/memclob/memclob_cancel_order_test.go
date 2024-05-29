@@ -70,7 +70,7 @@ func TestShortTermCancelOrder_OrdersTilBlockExceedsCancels(t *testing.T) {
 	offchainUpdates, err := memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(orderId, cancelGoodTilBlock1))
 	require.NoError(t, err)
 	testutil_memclob.RequireCancelOrderOffchainUpdate(t, ctx, offchainUpdates, order.OrderId)
-	cancelBlock, isCanceled := memclob.cancels.get(orderId)
+	cancelBlock, isCanceled := memclob.GetCancelOrder(orderId)
 	require.True(t, isCanceled)
 	require.Equal(t, cancelGoodTilBlock1, cancelBlock)
 
@@ -78,12 +78,12 @@ func TestShortTermCancelOrder_OrdersTilBlockExceedsCancels(t *testing.T) {
 	offchainUpdates, err = memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(orderId, cancelGoodTilBlock2))
 	require.NoError(t, err)
 	testutil_memclob.RequireCancelOrderOffchainUpdate(t, ctx, offchainUpdates, order.OrderId)
-	cancelBlock, isCanceled = memclob.cancels.get(orderId)
+	cancelBlock, isCanceled = memclob.GetCancelOrder(orderId)
 	require.True(t, isCanceled)
 	require.Equal(t, cancelGoodTilBlock2, cancelBlock)
 
 	// Order is still on the book.
-	gottenOrder, found := memclob.GetOrder(ctx, orderId)
+	gottenOrder, found := memclob.GetOrder(orderId)
 	require.True(t, found)
 	require.Equal(t, order, gottenOrder)
 }
@@ -99,6 +99,7 @@ func TestCancelOrder_PanicsOnStatefulOrder(t *testing.T) {
 		orderId,
 	)
 
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 	require.PanicsWithValue(t, expectedError, func() {
 		//nolint:errcheck
 		memclob.CancelOrder(ctx, types.NewMsgCancelOrderStateful(orderId, 100))
@@ -191,6 +192,7 @@ func TestCancelOrder(t *testing.T) {
 				constants.Order_Bob_Num0_Id5_Clob0_Buy20_Price10_GTB22,
 				constants.Order_Bob_Num0_Id6_Clob0_Buy20_Price1000_GTB22,
 				constants.Order_Bob_Num0_Id7_Clob0_Buy20_Price10000_GTB22,
+				constants.Order_Bob_Num0_Id8_Clob1_Sell20_Price10_GTB22,
 			},
 			existingCancels: []*types.MsgCancelOrder{
 				{
@@ -212,15 +214,16 @@ func TestCancelOrder(t *testing.T) {
 			expectBlockExpirationsForOrdersToExist:       true,
 			expectSubaccountOpenClobOrdersForSideToExist: true,
 			expectSubaccountOpenClobOrdersToExist:        true,
-			expectedCanceledOrdersLen:                    3,
-			expectedCancelOrderExpirationsLen:            2,
-			expectedCancelOrderExpirationsForTilBlockLen: 2,
+			expectedCanceledOrdersLen:                    1,
+			expectedCancelOrderExpirationsLen:            1,
+			expectedCancelOrderExpirationsForTilBlockLen: 1,
 		},
 		`Cancels an order where an existing cancel already exists, and an existing cancel
 			already exists for this goodTilBlock for a different order`: {
 			existingOrders: []types.Order{
 				constants.Order_Bob_Num0_Id5_Clob0_Buy20_Price10_GTB22,
 				constants.Order_Bob_Num0_Id6_Clob0_Buy20_Price1000_GTB22,
+				constants.Order_Bob_Num0_Id8_Clob1_Sell20_Price10_GTB22,
 			},
 			existingCancels: []*types.MsgCancelOrder{
 				{
@@ -242,9 +245,9 @@ func TestCancelOrder(t *testing.T) {
 			expectBlockExpirationsForOrdersToExist:       true,
 			expectSubaccountOpenClobOrdersForSideToExist: true,
 			expectSubaccountOpenClobOrdersToExist:        true,
-			expectedCanceledOrdersLen:                    2,
+			expectedCanceledOrdersLen:                    1,
 			expectedCancelOrderExpirationsLen:            1,
-			expectedCancelOrderExpirationsForTilBlockLen: 2,
+			expectedCancelOrderExpirationsForTilBlockLen: 1,
 		},
 	}
 
@@ -292,20 +295,21 @@ func TestCancelOrder(t *testing.T) {
 			}
 
 			// Verify that the cancel now exists in the memclob.
-			block, exists := memclob.cancels.get(tc.order.OrderId)
+			orderbook := memclob.mustGetOrderbook(tc.order.GetClobPairId())
+			block, exists := orderbook.getCancel(tc.order.OrderId)
 			require.Equal(t, tc.goodTilBlock, block)
 			require.True(t, exists)
-			require.True(t, memclob.cancels.expiryToOrderIds[tc.goodTilBlock][tc.order.OrderId])
+			require.True(t, orderbook.cancelExpiryToOrderIds[tc.goodTilBlock][tc.order.OrderId])
 
 			// Verify public method matches private method.
-			publicBlock, publicExists := memclob.GetCancelOrder(ctx, tc.order.OrderId)
+			publicBlock, publicExists := memclob.GetCancelOrder(tc.order.OrderId)
 			require.Equal(t, block, publicBlock)
 			require.Equal(t, exists, publicExists)
 
 			// Verify that the cancel data structures meet expectations.
-			require.Len(t, memclob.cancels.orderIdToExpiry, tc.expectedCanceledOrdersLen)
-			require.Len(t, memclob.cancels.expiryToOrderIds, tc.expectedCancelOrderExpirationsLen)
-			require.Len(t, memclob.cancels.expiryToOrderIds[tc.goodTilBlock], tc.expectedCancelOrderExpirationsForTilBlockLen)
+			require.Len(t, orderbook.orderIdToCancelExpiry, tc.expectedCanceledOrdersLen)
+			require.Len(t, orderbook.cancelExpiryToOrderIds, tc.expectedCancelOrderExpirationsLen)
+			require.Len(t, orderbook.cancelExpiryToOrderIds[tc.goodTilBlock], tc.expectedCancelOrderExpirationsForTilBlockLen)
 
 			// Enforce various expectations around the in-memory data structures for
 			// orders in the clob.

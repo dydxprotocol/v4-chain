@@ -1292,6 +1292,7 @@ func launchValidatorInDir(
 		"https://eth-sepolia.g.alchemy.com/v2/demo",
 		"--oracle.enabled=false",
 		"--oracle.metrics_enabled=false",
+		"--log_level=error",
 	})
 
 	ctx := svrcmd.CreateExecuteContext(parentCtx)

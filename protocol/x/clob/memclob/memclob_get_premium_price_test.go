@@ -658,7 +658,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			)
 			if len(tc.placedMatchableOrders) == 0 {
 				// Create the orderbook when there are no orders.
-				memclob.CreateOrderbook(ctx, tc.clobPair)
+				memclob.CreateOrderbook(tc.clobPair)
 			}
 
 			pricePremiumParams := perptypes.GetPricePremiumParams{

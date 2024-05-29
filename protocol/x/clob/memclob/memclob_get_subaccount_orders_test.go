@@ -5,15 +5,13 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
+	"github.com/zyedidia/generic/list"
 )
 
 func TestGetSubaccountOrders(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-	ctx = ctx.WithIsCheckTx(true)
 	tests := map[string]struct {
 		// State.
 		memclobOrders []types.Order
@@ -162,23 +160,27 @@ func TestGetSubaccountOrders(t *testing.T) {
 
 			// Populate memclob state.
 			// 1. Create the map containing all open CLOB orders for the CLOB we're fetching.
-			memclob.openOrders.orderbooksMap[types.ClobPairId(tc.clobPairId)] = &types.Orderbook{
+			memclob.orderbooks[types.ClobPairId(tc.clobPairId)] = &Orderbook{
 				SubaccountOpenClobOrders: make(
 					map[satypes.SubaccountId]map[types.Order_Side]map[types.OrderId]bool,
 				),
+				orderIdToLevelOrder:       make(map[types.OrderId]*list.Node[types.ClobOrder]),
+				blockExpirationsForOrders: make(map[uint32]map[types.OrderId]bool),
 			}
 
 			// 2. Add all orders to the `SubaccountOpenClobOrders` and `orderIdToLevelOrder` map.
 			for _, order := range tc.memclobOrders {
 				// 2.1. Create the orderbook, if it doesn't exist.
-				if _, exists := memclob.openOrders.orderbooksMap[order.GetClobPairId()]; !exists {
-					memclob.openOrders.orderbooksMap[order.GetClobPairId()] = &types.Orderbook{
+				if _, exists := memclob.orderbooks[order.GetClobPairId()]; !exists {
+					memclob.orderbooks[order.GetClobPairId()] = &Orderbook{
 						SubaccountOpenClobOrders: make(
 							map[satypes.SubaccountId]map[types.Order_Side]map[types.OrderId]bool,
 						),
+						orderIdToLevelOrder:       make(map[types.OrderId]*list.Node[types.ClobOrder]),
+						blockExpirationsForOrders: make(map[uint32]map[types.OrderId]bool),
 					}
 				}
-				openClobOrders := memclob.openOrders.orderbooksMap[order.GetClobPairId()].SubaccountOpenClobOrders
+				openClobOrders := memclob.orderbooks[order.GetClobPairId()].SubaccountOpenClobOrders
 
 				// 2.2. Create the map containing all of a subaccount's open orders on this CLOB,
 				// if it doesn't exist.
@@ -198,7 +200,7 @@ func TestGetSubaccountOrders(t *testing.T) {
 				userOpenClobOrdersSide[order.OrderId] = true
 
 				// 2.4. Add the order to the `orderIdToLevelOrder` map.
-				memclob.openOrders.orderIdToLevelOrder[order.OrderId] = &types.LevelOrder{
+				memclob.orderbooks[order.GetClobPairId()].orderIdToLevelOrder[order.OrderId] = &types.LevelOrder{
 					Value: types.ClobOrder{
 						Order: order,
 					},
@@ -206,7 +208,6 @@ func TestGetSubaccountOrders(t *testing.T) {
 			}
 
 			orders, err := memclob.GetSubaccountOrders(
-				ctx,
 				types.ClobPairId(tc.clobPairId),
 				tc.subaccountId,
 				tc.side,
@@ -235,10 +236,8 @@ func TestGetSubaccountOrders(t *testing.T) {
 }
 
 func TestGetSubaccountOrders_OrderNotFoundPanics(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-	ctx = ctx.WithIsCheckTx(true)
 	memclob := NewMemClobPriceTimePriority(false)
-	memclob.openOrders.orderbooksMap[0] = &types.Orderbook{
+	memclob.orderbooks[0] = &Orderbook{
 		SubaccountOpenClobOrders: map[satypes.SubaccountId]map[types.Order_Side]map[types.OrderId]bool{
 
 			constants.Alice_Num0: {
@@ -252,7 +251,6 @@ func TestGetSubaccountOrders_OrderNotFoundPanics(t *testing.T) {
 	require.Panics(t, func() {
 		//nolint: errcheck
 		memclob.GetSubaccountOrders(
-			ctx,
 			0,
 			constants.Alice_Num0,
 			types.Order_SIDE_BUY,

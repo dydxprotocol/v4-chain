@@ -1043,7 +1043,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 				}
 
 				for orderId, expectations := range block.orderIdsExpectations {
-					order, exists := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, orderId)
+					order, exists := tApp.App.ClobKeeper.MemClob.GetOrder(orderId)
 					require.Equal(t, expectations.shouldExistOnMemclob, exists)
 					if expectations.shouldExistOnMemclob {
 						require.Equal(t, expectations.expectedOrder, order)
@@ -1250,11 +1250,11 @@ func TestCancelShortTermOrder(t *testing.T) {
 
 			// Verify expectations
 			for orderId, shouldHaveOrder := range tc.expectedOrderIdsInMemclob {
-				_, exists := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, orderId)
+				_, exists := tApp.App.ClobKeeper.MemClob.GetOrder(orderId)
 				require.Equal(t, shouldHaveOrder, exists)
 			}
 			for orderId, expectedCancelExpirationBlock := range tc.expectedCancelExpirationsInMemclob {
-				cancelExpirationBlock, exists := tApp.App.ClobKeeper.MemClob.GetCancelOrder(ctx, orderId)
+				cancelExpirationBlock, exists := tApp.App.ClobKeeper.MemClob.GetCancelOrder(orderId)
 				require.True(t, exists)
 				require.Equal(t, expectedCancelExpirationBlock, cancelExpirationBlock)
 			}
@@ -1633,7 +1633,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 			}
 
 			for orderId, shouldHaveOrder := range tc.expectedOrderIdsInMemclob {
-				_, exists := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, orderId)
+				_, exists := tApp.App.ClobKeeper.MemClob.GetOrder(orderId)
 				require.Equal(t, shouldHaveOrder, exists)
 			}
 
