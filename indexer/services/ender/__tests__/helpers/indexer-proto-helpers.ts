@@ -681,13 +681,30 @@ export async function expectFillSubaccountKafkaMessageFromLiquidationEvent(
   expect(fill).toBeDefined();
   expect(position).toBeDefined();
 
+  let perpUpdate: UpdatedPerpetualPositionSubaccountKafkaObject = convertPerpetualPosition(
+    position!,
+  );
+  const markets: MarketFromDatabase[] = await MarketTable.findAll(
+    {},
+    [],
+  );
+  const marketIdToMarket: MarketsMap = _.keyBy(
+    markets,
+    MarketColumns.id,
+  );
+  perpUpdate = annotateWithPnl(
+    perpUpdate,
+    perpetualMarketRefresher.getPerpetualMarketsMap(),
+    marketIdToMarket,
+  );
+
   const contents: SubaccountMessageContents = {
     fills: [
       generateFillSubaccountMessage(fill!, ticker),
     ],
     perpetualPositions: generatePerpetualPositionsContents(
       subaccountIdProto,
-      [convertPerpetualPosition(position!)],
+      [perpUpdate],
       perpetualMarketRefresher.getPerpetualMarketsMap(),
     ),
     blockHeight,
