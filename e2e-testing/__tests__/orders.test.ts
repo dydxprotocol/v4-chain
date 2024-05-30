@@ -37,9 +37,6 @@ async function placeOrder(
   order: IPlaceOrder,
 ): Promise<void> {
   const wallet = await LocalWallet.fromMnemonic(mnemonic, BECH32_PREFIX);
-  console.log(
-    Network.local().validatorConfig
-  )
   const client = await ValidatorClient.connect(Network.local().validatorConfig);
 
   const subaccount = new SubaccountInfo(wallet, 0);
