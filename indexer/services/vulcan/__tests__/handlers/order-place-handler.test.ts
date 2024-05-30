@@ -7,7 +7,6 @@ import {
 import { synchronizeWrapBackgroundTask } from '@dydxprotocol-indexer/dev';
 import {
   createKafkaMessage,
-  ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
   producer,
   SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
   getTriggerPrice,
@@ -19,7 +18,6 @@ import {
   blockHeightRefresher,
   BlockTable,
   dbHelpers,
-  OrderbookMessageContents,
   OrderFromDatabase,
   OrderTable,
   PerpetualMarketFromDatabase,
@@ -62,7 +60,6 @@ import { redisClient, redisClient as client } from '../../src/helpers/redis/redi
 import { onMessage } from '../../src/lib/on-message';
 import { expectCanceledOrderStatus, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';
 import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
-import { OrderbookSide } from '../../src/lib/types';
 import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import { defaultKafkaHeaders } from '../helpers/constants';
 import config from '../../src/config';
@@ -545,10 +542,6 @@ describe('order-place-handler', () => {
       const expectedPriceLevelQuantums: number = (
         oldPriceLevelInitialQuantums - (Number(initialOrderToPlace.quantums) - oldOrderTotalFilled)
       );
-      const expectedPriceLevelSize: string = protocolTranslations.quantumsToHumanFixedString(
-        expectedPriceLevelQuantums.toString(),
-        testConstants.defaultPerpetualMarket.atomicResolution,
-      );
       const expectedPriceLevel: PriceLevel = {
         humanPrice: expectedRedisOrder.price,
         quantums: expectedPriceLevelQuantums.toString(),
@@ -628,12 +621,6 @@ describe('order-place-handler', () => {
       await expectOpenOrderIds(testConstants.defaultPerpetualMarket.clobPairId, []);
 
       expect(logger.error).not.toHaveBeenCalled();
-      const orderbookContents: OrderbookMessageContents = {
-        [OrderbookSide.BIDS]: [[
-          redisTestConstants.defaultPrice,
-          expectedPriceLevelSize,
-        ]],
-      };
       expectWebsocketMessagesSent(
         producerSendSpy,
         expectedReplacedOrder,
