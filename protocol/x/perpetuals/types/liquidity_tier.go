@@ -73,9 +73,20 @@ func (liquidityTier LiquidityTier) GetMaxAbsFundingClampPpm(clampFactorPpm uint3
 	)
 }
 
-// GetInitialMarginQuoteQuantums returns initial margin requirement (IMR) in quote quantums.
-//
-// Now that OIMF is introduced, the calculation of IMR is as follows:
+// GetInitialMarginQuoteQuantums returns the initial margin requirement (IMR) in quote quantums.
+func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantums(
+	quoteQuantums *big.Int,
+	oiQuoteQuantums *big.Int,
+) *big.Int {
+	totalImfPpm := liquidityTier.GetAdjustedInitialMarginPpm(oiQuoteQuantums)
+	return lib.BigMulPpm(
+		quoteQuantums,
+		totalImfPpm,
+		true, // Round up initial margin.
+	)
+}
+
+// GetAdjustedInitialMarginPpm returns the adjusted initial margin (in ppm) based on the current open interest.
 //
 // - Each market has a `Lower Cap` and `Upper Cap` denominated in USDC.
 // - Each market already has a `Base IMF`.
@@ -88,93 +99,43 @@ func (liquidityTier LiquidityTier) GetMaxAbsFundingClampPpm(clampFactorPpm uint3
 //
 // - I.e. the effective IMF is the base IMF while the OI < lower cap, and increases linearly until OI = Upper Cap,
 // at which point the IMF stays at 1.0 (requiring 1:1 collateral for trading).
-// - initialMarginQuoteQuantums = scaledInitialMarginPpm * quoteQuantums / 1_000_000
-//
-// note:
-// - divisions are delayed for precision purposes.
-func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantums(
-	bigQuoteQuantums *big.Int,
-	openInterestQuoteQuantums *big.Int,
+func (liquidityTier LiquidityTier) GetAdjustedInitialMarginPpm(
+	oiQuoteQuantums *big.Int,
 ) *big.Int {
-	bigOpenInterestUpperCap := new(big.Int).SetUint64(liquidityTier.OpenInterestUpperCap)
+	oiCapUpper := lib.BigU(liquidityTier.OpenInterestUpperCap)
+	oiCapLower := lib.BigU(liquidityTier.OpenInterestLowerCap)
 
-	// If `open_interest` >= `open_interest_upper_cap` where `upper_cap` is non-zero,
-	// OIMF = 1.0 so return input quote quantums as the IMR.
-	if openInterestQuoteQuantums.Cmp(
-		bigOpenInterestUpperCap,
-	) >= 0 && liquidityTier.OpenInterestUpperCap != 0 {
-		return bigQuoteQuantums
-	}
-
-	ratQuoteQuantums := new(big.Rat).SetInt(bigQuoteQuantums)
-
-	// If `open_interest_upper_cap` is 0, OIMF is disabled。
+	// If `open_interest_upper_cap` is 0, OIMF is disabled.
 	// Or if `current_interest` <= `open_interest_lower_cap`, IMF is not scaled.
-	// In both cases, use base IMF as OIMF.
-	bigOpenInterestLowerCap := new(big.Int).SetUint64(liquidityTier.OpenInterestLowerCap)
-	if liquidityTier.OpenInterestUpperCap == 0 || openInterestQuoteQuantums.Cmp(
-		bigOpenInterestLowerCap,
-	) <= 0 {
-		// Calculate base IMR: multiply `bigQuoteQuantums` with `initialMarginPpm` and divide by 1 million.
-		ratBaseIMR := lib.BigRatMulPpm(ratQuoteQuantums, liquidityTier.InitialMarginPpm)
-		return lib.BigRatRound(ratBaseIMR, true) // Round up initial margin.
+	if oiCapUpper.Sign() == 0 || oiQuoteQuantums.Cmp(oiCapLower) <= 0 {
+		return lib.BigU(liquidityTier.InitialMarginPpm)
 	}
 
-	// If `open_interest_lower_cap` < `open_interest` <= `open_interest_upper_cap`, calculate the scaled OIMF.
-	// `Scaling Factor = (Open Notional - Lower Cap) / (Upper Cap - Lower Cap)`
-	ratScalingFactor := new(big.Rat).SetFrac(
-		new(big.Int).Sub(
-			openInterestQuoteQuantums, // reuse pointer for memory efficiency
-			bigOpenInterestLowerCap,
-		),
-		bigOpenInterestUpperCap.Sub(
-			bigOpenInterestUpperCap, // reuse pointer for memory efficiency
-			bigOpenInterestLowerCap,
-		),
-	)
-
-	// `IMF Increase = Scaling Factor * (1 - Base IMF)`
-	ratIMFIncrease := lib.BigRatMulPpm(
-		ratScalingFactor,
-		lib.OneMillion-liquidityTier.InitialMarginPpm, // >= 0, since we check in `liquidityTier.Validate()`
-	)
-
-	// Calculate `Max(IMF Increase, 0)`.
-	if ratIMFIncrease.Sign() < 0 {
-		panic(
-			fmt.Sprintf(
-				"GetInitialMarginQuoteQuantums: IMF Increase is negative (%s), liquidityTier: %+v, openInterestQuoteQuantums: %s",
-				ratIMFIncrease.String(),
-				liquidityTier,
-				openInterestQuoteQuantums.String(),
-			),
-		)
+	// If `open_interest` >= `open_interest_upper_cap` where `upper_cap` is non-zero, OIMF is 1.
+	if oiCapUpper.Sign() > 0 && oiQuoteQuantums.Cmp(oiCapUpper) >= 0 {
+		return lib.BigU(lib.OneMillion)
 	}
 
-	// First, calculate base IMF in big.Rat
-	ratBaseIMF := new(big.Rat).SetFrac64(
-		int64(liquidityTier.InitialMarginPpm), // safe, since `InitialMargin` is uint32
-		int64(lib.OneMillion),
-	)
+	// Get the ratio of where the current OI is between the lower and upper caps.
+	// The ratio should be between 0 and 1.
+	capNum := new(big.Int).Sub(oiQuoteQuantums, oiCapLower)
+	capDen := new(big.Int).Sub(oiCapUpper, oiCapLower)
 
-	// `Effective IMF = Min(Base IMF + Max(IMF Increase, 0), 1.0)`
-	ratEffectiveIMF := ratBaseIMF.Add(
-		ratBaseIMF, // reuse pointer for memory efficiency
-		ratIMFIncrease,
-	)
-
-	// `Effective IMR = Effective IMF * Quote Quantums`
-	bigIMREffective := lib.BigRatRound(
-		ratEffectiveIMF.Mul(
-			ratEffectiveIMF, // reuse pointer for memory efficiency
-			ratQuoteQuantums,
-		),
-		true, // Round up initial margin.
-	)
-
-	// Return min(Effective IMR, Quote Quantums)
-	if bigIMREffective.Cmp(bigQuoteQuantums) >= 0 {
-		return bigQuoteQuantums
+	// Invariant checks.
+	if capNum.Sign() < 0 || capDen.Sign() <= 0 || capDen.Cmp(capNum) < 0 {
+		panic(fmt.Sprintf("invalid open interest values for liquidity tier %d", liquidityTier.Id))
 	}
-	return bigIMREffective
+	if oiCapLower.Cmp(oiCapUpper) > 0 {
+		panic(errorsmod.Wrap(ErrOpenInterestLowerCapLargerThanUpperCap, lib.UintToString(liquidityTier.Id)))
+	}
+	if liquidityTier.InitialMarginPpm > lib.OneMillion {
+		panic(errorsmod.Wrap(ErrInitialMarginPpmExceedsMax, lib.UintToString(liquidityTier.Id)))
+	}
+
+	// Total IMF.
+	capScalePpm := lib.BigU(lib.OneMillion - liquidityTier.InitialMarginPpm)
+	result := new(big.Int).Mul(capScalePpm, capNum)
+	result.Div(result, capDen)
+	result.Add(result, lib.BigU(liquidityTier.InitialMarginPpm))
+	return result
 }
