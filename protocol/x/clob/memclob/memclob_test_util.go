@@ -1308,28 +1308,21 @@ func assertPlaceOrderOffchainMessages(
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
 					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 				)
-				placeMessage := off_chain_updates.MustCreateOrderPlaceMessage(
-					ctx,
-					order,
-				)
 				expectedOffchainMessages = append(
 					expectedOffchainMessages,
 					removeMessage,
-					placeMessage,
 				)
-				require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
 			}
-		} else {
-			placeMessage := off_chain_updates.MustCreateOrderPlaceMessage(
-				ctx,
-				order,
-			)
-			expectedOffchainMessages = append(
-				expectedOffchainMessages,
-				placeMessage,
-			)
-			require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
 		}
+		placeMessage := off_chain_updates.MustCreateOrderPlaceMessage(
+			ctx,
+			order,
+		)
+		expectedOffchainMessages = append(
+			expectedOffchainMessages,
+			placeMessage,
+		)
+		require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
 	}
 
 	// Reduce-only order removals are sent before updates if the maker orders are removed during
