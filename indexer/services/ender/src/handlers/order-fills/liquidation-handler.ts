@@ -15,7 +15,8 @@ import {
   MarketTable,
   MarketsMap,
   MarketColumns,
-  UpdatedPerpetualPositionSubaccountKafkaObject, perpetualMarketRefresher,
+  UpdatedPerpetualPositionSubaccountKafkaObject,
+  perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
