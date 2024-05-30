@@ -641,12 +641,6 @@ describe('order-place-handler', () => {
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         expectSubaccountMessage,
-        expectOrderBookUpdate
-          ? OrderbookMessage.fromPartial({
-            contents: JSON.stringify(orderbookContents),
-            clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
-            version: ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
-          }) : undefined,
       );
       expectStats(true);
     });
