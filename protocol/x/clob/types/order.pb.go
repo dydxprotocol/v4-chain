@@ -78,9 +78,8 @@ const (
 	// any newly-placed post only orders that would cross with other maker
 	// orders.
 	Order_TIME_IN_FORCE_POST_ONLY Order_TimeInForce = 2
-	// TIME_IN_FORCE_FILL_OR_KILL enforces that an order will either be filled
-	// completely and immediately by maker orders on the book or canceled if the
-	// entire amount can‘t be matched.
+	// TIME_IN_FORCE_FILL_OR_KILL has been deprecated and will be removed in
+	// future versions.
 	Order_TIME_IN_FORCE_FILL_OR_KILL Order_TimeInForce = 3 // Deprecated: Do not use.
 )
 
