@@ -99,7 +99,7 @@ export class OrderPlaceHandler extends Handler {
 
     // TODO(IND-68): Remove once order replacement flow in V4 protocol removes the old order and
     // places the updated order.
-    const updatedQuantums: number | undefined = await this.updatePriceLevel(
+    await this.updatePriceLevel(
       placeOrderResult,
       perpetualMarket,
       update,
