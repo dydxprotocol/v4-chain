@@ -25,13 +25,14 @@ describe('transfers', () => {
   it('test deposit', async () => {
     connectAndValidateSocketClient(validateTransfers);
     const wallet = await LocalWallet.fromMnemonic(DYDX_LOCAL_MNEMONIC, BECH32_PREFIX);
-
-    const validatorClient = await ValidatorClient.connect(Network.local().validatorConfig);
     const indexerClient = new IndexerClient(Network.local().indexerConfig);
+    const validatorClient = await ValidatorClient.connect(Network.local().validatorConfig);
+
     const heightResp: HeightResponse = await indexerClient.utility.getHeight();
     const height: number = heightResp.height;
 
     const subaccount = new SubaccountInfo(wallet, 0);
+    console.log(subaccount)
 
     // Check USDC asset position before
     let assetPosResp: any = await indexerClient.account.getSubaccountAssetPositions(
@@ -60,8 +61,8 @@ describe('transfers', () => {
         createdAfterHeight: height.toString(),
       },
       [], {
-        orderBy: [[TransferColumns.id, Ordering.ASC]],
-      });
+      orderBy: [[TransferColumns.id, Ordering.ASC]],
+    });
 
     expect(transfers.length).toEqual(1);
     expect(transfers[0]).toEqual(
