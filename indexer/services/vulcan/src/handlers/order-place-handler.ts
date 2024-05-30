@@ -158,26 +158,26 @@ export class OrderPlaceHandler extends Handler {
 
     // TODO(IND-68): Remove once order replacement flow in V4 protocol removes the old order and
     // places the updated order.
-    if (updatedQuantums !== undefined) {
-      const orderbookMessage: Message = {
-        value: this.createOrderbookWebsocketMessage(
-          placeOrderResult.oldOrder!,
-          perpetualMarket,
-          updatedQuantums,
-        ),
-        headers,
-      };
+    // if (updatedQuantums !== undefined) {
+    //   const orderbookMessage: Message = {
+    //     value: this.createOrderbookWebsocketMessage(
+    //       placeOrderResult.oldOrder!,
+    //       perpetualMarket,
+    //       updatedQuantums,
+    //     ),
+    //     headers,
+    //   };
 
-      // TODO: remove
-      logger.info({
-        at: 'OrderPlaceHandler#sendingOrderbookMessage',
-        message: 'Sending websocket orderbook message',
-        txHash: this.txHash,
-        clobPair: order.orderId!.clobPairId.toString(),
-        orderId: order.orderId
-      });
-      sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
-    }
+    //   // TODO: remove
+    //   logger.info({
+    //     at: 'OrderPlaceHandler#sendingOrderbookMessage',
+    //     message: 'Sending websocket orderbook message',
+    //     txHash: this.txHash,
+    //     clobPair: order.orderId!.clobPairId.toString(),
+    //     orderId: order.orderId
+    //   });
+    //   sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
+    // }
   }
 
   /**
