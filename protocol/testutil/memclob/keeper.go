@@ -284,17 +284,6 @@ func (f *FakeMemClobKeeper) GetStatefulOrdersTimeSlice(
 	return orderIds
 }
 
-func (f *FakeMemClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(
-	ctx sdk.Context,
-	clobPairId types.ClobPairId,
-	subaccountOpenOrders map[satypes.SubaccountId][]types.PendingOpenOrder,
-) (
-	success bool,
-	successPerUpdate map[satypes.SubaccountId]satypes.UpdateResult,
-) {
-	return f.collatCheckFn(subaccountOpenOrders)
-}
-
 func (f *FakeMemClobKeeper) addFakePositionSize(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,

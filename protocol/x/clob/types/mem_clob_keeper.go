@@ -28,14 +28,6 @@ type MemClobKeeper interface {
 		makerUpdateResult satypes.UpdateResult,
 		err error,
 	)
-	AddOrderToOrderbookSubaccountUpdatesCheck(
-		ctx sdk.Context,
-		clobPairId ClobPairId,
-		subaccountOpenOrders map[satypes.SubaccountId][]PendingOpenOrder,
-	) (
-		success bool,
-		successPerUpdate map[satypes.SubaccountId]satypes.UpdateResult,
-	)
 	CanDeleverageSubaccount(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,

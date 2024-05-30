@@ -177,24 +177,6 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedOrderStatus:    types.Success,
 			expectedToReplaceOrder: false,
 		},
-		"Placing an order that causes the account to be undercollateralized fails": {
-			existingOrders:         []types.MatchableOrder{},
-			collateralizationCheck: satypes.NewlyUndercollateralized,
-
-			order: constants.Order_Bob_Num0_Id1_Clob1_Sell11_Price16_GTB20,
-
-			expectedOrderStatus:    types.Undercollateralized,
-			expectedToReplaceOrder: false,
-		},
-		"Placing an order that throws an error from the collateralization check fails": {
-			existingOrders:         []types.MatchableOrder{},
-			collateralizationCheck: satypes.UpdateCausedError,
-
-			order: constants.Order_Bob_Num0_Id1_Clob1_Sell11_Price16_GTB20,
-
-			expectedOrderStatus:    types.InternalError,
-			expectedToReplaceOrder: false,
-		},
 		"Replacing an order fails if GoodTilBlock is lower than existing order": {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Bob_Num0_Id1_Clob1_Sell11_Price16_GTB20,
@@ -274,18 +256,6 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 
 			collateralizationCheck: satypes.Success,
 			expectedOrderStatus:    types.Success,
-			expectedToReplaceOrder: true,
-		},
-		`Old order is removed from the book if GoodTilBlock is greater than existing order, the order
-		passes initial validation, and new replacement order fails collateralization checks`: {
-			existingOrders: []types.MatchableOrder{
-				&constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
-			},
-
-			order: constants.Order_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
-
-			collateralizationCheck: satypes.NewlyUndercollateralized,
-			expectedOrderStatus:    types.Undercollateralized,
 			expectedToReplaceOrder: true,
 		},
 		`Replacing an order succeeds and old order is skipped during matching if GoodTilBlock is greater
@@ -2822,8 +2792,6 @@ func TestAddOrderToOrderbook_ErrorPlaceNewFullyFilledOrder(t *testing.T) {
 	memclob.SetClobKeeper(&memClobKeeper)
 	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
 
-	memClobKeeper.On("AddOrderToOrderbookSubaccountUpdatesCheck", mock.Anything, mock.Anything, mock.Anything).
-		Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult))
 	memClobKeeper.On("GetStatePosition", mock.Anything, mock.Anything, mock.Anything).
 		Return(big.NewInt(0))
 	memClobKeeper.On("ValidateSubaccountEquityTierLimitForNewOrder", mock.Anything, mock.Anything).
@@ -2855,9 +2823,6 @@ func TestAddOrderToOrderbook_PanicsIfFullyFilled(t *testing.T) {
 	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
 	orderId := order.OrderId
 	quantums := order.GetBaseQuantums()
-
-	memClobKeeper.On("AddOrderToOrderbookSubaccountUpdatesCheck", mock.Anything, mock.Anything, mock.Anything).
-		Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult))
 
 	memClobKeeper.On("GetStatePosition", mock.Anything, mock.Anything, mock.Anything).
 		Return(big.NewInt(0))
