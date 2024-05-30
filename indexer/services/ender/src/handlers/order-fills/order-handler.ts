@@ -95,11 +95,8 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       markets,
       MarketColumns.id,
     );
-    let perpUpdate: UpdatedPerpetualPositionSubaccountKafkaObject = convertPerpetualPosition(
-      position,
-    );
-    perpUpdate = annotateWithPnl(
-      perpUpdate,
+    const positionUpdate: UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
+      convertPerpetualPosition(position),
       perpetualMarketRefresher.getPerpetualMarketsMap(),
       marketIdToMarket,
     );
@@ -107,7 +104,7 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       this.generateConsolidatedKafkaEvent(
         subaccountId,
         order,
-        perpUpdate,
+        positionUpdate,
         fill,
         perpetualMarket,
       ),

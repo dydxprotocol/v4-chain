@@ -681,9 +681,6 @@ export async function expectFillSubaccountKafkaMessageFromLiquidationEvent(
   expect(fill).toBeDefined();
   expect(position).toBeDefined();
 
-  let perpUpdate: UpdatedPerpetualPositionSubaccountKafkaObject = convertPerpetualPosition(
-    position!,
-  );
   const markets: MarketFromDatabase[] = await MarketTable.findAll(
     {},
     [],
@@ -692,8 +689,8 @@ export async function expectFillSubaccountKafkaMessageFromLiquidationEvent(
     markets,
     MarketColumns.id,
   );
-  perpUpdate = annotateWithPnl(
-    perpUpdate,
+  const positionUpdate = annotateWithPnl(
+    convertPerpetualPosition(position!),
     perpetualMarketRefresher.getPerpetualMarketsMap(),
     marketIdToMarket,
   );
@@ -704,7 +701,7 @@ export async function expectFillSubaccountKafkaMessageFromLiquidationEvent(
     ],
     perpetualPositions: generatePerpetualPositionsContents(
       subaccountIdProto,
-      [perpUpdate],
+      [positionUpdate],
       perpetualMarketRefresher.getPerpetualMarketsMap(),
     ),
     blockHeight,
@@ -834,17 +831,14 @@ export async function expectOrderFillAndPositionSubaccountKafkaMessageFromIds(
       markets,
       MarketColumns.id,
     );
-    let perpUpdate: UpdatedPerpetualPositionSubaccountKafkaObject = convertPerpetualPosition(
-      position,
-    );
-    perpUpdate = annotateWithPnl(
-      perpUpdate,
+    const positionUpdate: UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
+      convertPerpetualPosition(position),
       perpetualMarketRefresher.getPerpetualMarketsMap(),
       marketIdToMarket,
     );
     contents.perpetualPositions = generatePerpetualPositionsContents(
       subaccountIdProto,
-      [perpUpdate],
+      [positionUpdate],
       perpetualMarketRefresher.getPerpetualMarketsMap(),
     );
   }
