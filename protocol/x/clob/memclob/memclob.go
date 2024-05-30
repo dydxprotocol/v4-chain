@@ -495,11 +495,9 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	}
 
 	if m.generateOffchainUpdates {
+		// Send an order place message.
 		// If existing order ID is found and the price of the existing order is different from the new order,
-		// create an order removal message and then an order place message.
-		// If the price of the existing order is the same as the new order, don't send any messages here because
-		// the size of the order will get updated by the Order Update message after the order is matched.
-		// Otherwise, this is a new order and so send an order place message.
+		// create an order removal message first so we can remove the original price level from the orderbook.
 		orderId := order.OrderId
 		if existingOrder, found := orderbook.getOrder(orderId); found {
 			if order.Subticks != existingOrder.Subticks {
@@ -511,21 +509,13 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				); success {
 					offchainUpdates.AddRemoveMessage(orderId, message)
 				}
-
-				if message, success := off_chain_updates.CreateOrderPlaceMessage(
-					ctx,
-					order,
-				); success {
-					offchainUpdates.AddPlaceMessage(order.OrderId, message)
-				}
 			}
-		} else {
-			if message, success := off_chain_updates.CreateOrderPlaceMessage(
-				ctx,
-				order,
-			); success {
-				offchainUpdates.AddPlaceMessage(order.OrderId, message)
-			}
+		}
+		if message, success := off_chain_updates.CreateOrderPlaceMessage(
+			ctx,
+			order,
+		); success {
+			offchainUpdates.AddPlaceMessage(order.OrderId, message)
 		}
 	}
 
