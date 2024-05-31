@@ -2,17 +2,24 @@ import { logger } from '@dydxprotocol-indexer/base';
 import {
   FillFromDatabase,
   FillModel,
+  MarketColumns,
+  MarketFromDatabase,
+  MarketsMap,
+  MarketTable,
   PerpetualMarketFromDatabase,
   PerpetualMarketModel,
   perpetualMarketRefresher,
   PerpetualPositionFromDatabase,
   PerpetualPositionModel,
   SubaccountTable,
+  UpdatedPerpetualPositionSubaccountKafkaObject,
 } from '@dydxprotocol-indexer/postgres';
 import { DeleveragingEventV1 } from '@dydxprotocol-indexer/v4-protos';
+import _ from 'lodash';
 import * as pg from 'pg';
 
 import { SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
+import { annotateWithPnl, convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
 
@@ -59,18 +66,38 @@ export class DeleveragingHandler extends AbstractOrderFillHandler<DeleveragingEv
     const offsettingPerpetualPosition:
     PerpetualPositionFromDatabase = PerpetualPositionModel.fromJson(
       resultRow.offsetting_perpetual_position) as PerpetualPositionFromDatabase;
+    const markets: MarketFromDatabase[] = await MarketTable.findAll(
+      {},
+      [],
+      { txId: this.txId },
+    );
+    const marketIdToMarket: MarketsMap = _.keyBy(
+      markets,
+      MarketColumns.id,
+    );
+
+    const liquidatedPositionUpdate: UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
+      convertPerpetualPosition(liquidatedPerpetualPosition),
+      perpetualMarketRefresher.getPerpetualMarketsMap(),
+      marketIdToMarket,
+    );
+    const offsettingPositionUpdate: UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
+      convertPerpetualPosition(offsettingPerpetualPosition),
+      perpetualMarketRefresher.getPerpetualMarketsMap(),
+      marketIdToMarket,
+    );
     const kafkaEvents: ConsolidatedKafkaEvent[] = [
       this.generateConsolidatedKafkaEvent(
         this.event.liquidated!,
         undefined,
-        liquidatedPerpetualPosition,
+        liquidatedPositionUpdate,
         liquidatedFill,
         perpetualMarket,
       ),
       this.generateConsolidatedKafkaEvent(
         this.event.offsetting!,
         undefined,
-        offsettingPerpetualPosition,
+        offsettingPositionUpdate,
         offsettingFill,
         perpetualMarket,
       ),
