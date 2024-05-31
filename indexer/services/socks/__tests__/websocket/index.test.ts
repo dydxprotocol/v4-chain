@@ -49,7 +49,7 @@ describe('Index', () => {
     (Subscriptions as unknown as jest.Mock).mockClear();
     (sendMessage as unknown as jest.Mock).mockClear();
     mockWss = new Wss();
-    websocket = new WebSocket(null);
+    websocket = new WebSocket(null, [], {});
     wsOnSpy = jest.spyOn(websocket, 'on');
     wsPingSpy = jest.spyOn(websocket, 'ping').mockImplementation(jest.fn());
     wsPongSpy = jest.spyOn(websocket, 'pong').mockImplementation(jest.fn());
