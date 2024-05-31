@@ -340,7 +340,8 @@ export async function deleteZeroPriceLevel({
 
 /**
  * Deletes a stale price level from the orderbook levels cache idempotently using a Lua script.
- * @param param0 Ticker of the exchange pair, side, human readable price level, time threshold to delete.
+ * @param param0 Ticker of the exchange pair, side, human readable price level,
+ * time threshold to delete.
  * @returns `boolean`, true/false for whether the level was deleted.
  */
 export async function deleteStalePriceLevel({
