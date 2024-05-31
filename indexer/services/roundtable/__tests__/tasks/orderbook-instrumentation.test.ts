@@ -7,7 +7,6 @@ import {
   testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import {
-  OpenOrdersCache,
   OrderbookLevelsCache,
   redis,
 } from '@dydxprotocol-indexer/redis';
@@ -113,7 +112,6 @@ describe('orderbook-instrumentation', () => {
             sizeDeltaInQuantums: '3500',
             client: redisClient,
           }),
-          OpenOrdersCache.addOpenOrder('orderUuid', perpetualMarket.clobPairId, redisClient),
         ]);
       },
       ));
