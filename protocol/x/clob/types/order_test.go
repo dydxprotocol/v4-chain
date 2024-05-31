@@ -392,7 +392,6 @@ func TestOrder_IsReduceOnly(t *testing.T) {
 
 func TestOrder_RequiresImmediateExecution(t *testing.T) {
 	require.False(t, constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15.RequiresImmediateExecution())
-	require.True(t, constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK.RequiresImmediateExecution())
 	require.True(t, constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC.RequiresImmediateExecution())
 }
 

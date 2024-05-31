@@ -336,7 +336,14 @@ func TestImmediateExecutionLongTermOrders(t *testing.T) {
 		ctx,
 		tApp.App,
 		*clobtypes.NewMsgPlaceOrder(
-			constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_FOK,
+			clobtypes.Order{
+				OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 1},
+				Side:         clobtypes.Order_SIDE_BUY,
+				Quantums:     20,
+				Subticks:     15,
+				GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+				TimeInForce:  clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL,
+			},
 		),
 	) {
 		resp := tApp.CheckTx(checkTx)
@@ -349,7 +356,19 @@ func TestImmediateExecutionLongTermOrders(t *testing.T) {
 		BlockAdvancement: testapp.BlockAdvancement{
 			StatefulOrders: []clobtypes.Order{
 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_IOC,
-				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_FOK,
+				{
+					OrderId: clobtypes.OrderId{
+						SubaccountId: constants.Carl_Num0,
+						ClientId:     0,
+						OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+						ClobPairId:   0,
+					},
+					Side:         clobtypes.Order_SIDE_SELL,
+					Quantums:     100_000_000,
+					Subticks:     50_000_000_000,
+					GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
+					TimeInForce:  clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL,
+				},
 			},
 		},
 		ExpectedDeliverTxErrors: map[int]string{
