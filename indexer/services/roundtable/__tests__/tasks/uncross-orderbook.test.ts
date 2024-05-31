@@ -125,7 +125,7 @@ describe('uncross-orderbook', () => {
     }));
   });
 
-  it('removes multiple crossed bid levels', async () => {
+  it('removes first updated when there exist multiple crossed bid levels', async () => {
     const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
       {},
       [],
@@ -156,6 +156,44 @@ describe('uncross-orderbook', () => {
     await runTask();
 
     expect(require('@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache').deleteStalePriceLevel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        side: OrderSide.SELL,
+        humanPrice: '45000',
+      }));
+  });
+
+  it('removes multiple crossed bid levels', async () => {
+    const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
+      {},
+      [],
+    );
+    const market: PerpetualMarketFromDatabase = perpetualMarkets[0];
+    await updatePriceLevelWithSleep({
+      ticker: market.ticker,
+      side: OrderSide.BUY,
+      humanPrice: '45100',
+      sizeDeltaInQuantums: '2000',
+      client: redisClient,
+    });
+    await updatePriceLevelWithSleep({
+      ticker: market.ticker,
+      side: OrderSide.BUY,
+      humanPrice: '45200',
+      sizeDeltaInQuantums: '2000',
+      client: redisClient,
+    });
+    await updatePriceLevelWithSleep({
+      ticker: market.ticker,
+      side: OrderSide.SELL,
+      humanPrice: '45000',
+      sizeDeltaInQuantums: '1000',
+      client: redisClient,
+    });
+
+    await runTask();
+
+    expect(require('@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache').deleteStalePriceLevel).toHaveBeenCalledTimes(2);
+    expect(require('@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache').deleteStalePriceLevel).not.toHaveBeenCalledWith(
       expect.objectContaining({
         side: OrderSide.SELL,
         humanPrice: '45000',
