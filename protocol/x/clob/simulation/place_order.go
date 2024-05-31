@@ -172,7 +172,6 @@ func SimulateMsgPlaceOrder(
 		if err != nil {
 			switch {
 			case errors.Is(err, satypes.ErrIntegerOverflow),
-				errors.Is(err, types.ErrFokOrderCouldNotBeFullyFilled),
 				errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder),
 				errors.Is(err, types.ErrWouldViolateIsolatedSubaccountConstraints):
 				// These errors are expected, and can occur during normal operation. We shouldn't panic on them.

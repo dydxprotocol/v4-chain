@@ -58,7 +58,7 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 						},
 					},
 					ExpectedDeliverTxErrors: testapp.TxIndexesToErrors{
-						0: "IOC/FOK order is already filled, remaining size is cancelled.",
+						0: "IOC order is already filled, remaining size is cancelled.",
 					},
 				},
 			},
@@ -168,7 +168,7 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 						},
 					},
 					ExpectedDeliverTxErrors: testapp.TxIndexesToErrors{
-						0: "IOC/FOK order is already filled, remaining size is cancelled.",
+						0: "IOC order is already filled, remaining size is cancelled.",
 					},
 				},
 			},
