@@ -646,6 +646,7 @@ describe('orderbookLevelsCache', () => {
         ticker,
         side: OrderSide.BUY,
         humanPrice,
+        timeThreshold: 10,
         client,
       });
 
@@ -674,6 +675,7 @@ describe('orderbookLevelsCache', () => {
         ticker,
         side: OrderSide.BUY,
         humanPrice,
+        timeThreshold: 10,
         client,
       });
 

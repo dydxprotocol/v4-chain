@@ -160,6 +160,9 @@ export const configSchema = {
     default: ONE_HOUR_IN_MILLISECONDS,
   }),
   AGGREGATE_TRADING_REWARDS_CHUNK_SIZE: parseInteger({ default: 50 }),
+
+  // Uncross orderbook
+  STALE_ORDERBOOK_LEVEL_THRESHOLD_SECONDS: parseInteger({ default: 10 }),
 };
 
 export default parseSchema(configSchema);

@@ -340,18 +340,20 @@ export async function deleteZeroPriceLevel({
 
 /**
  * Deletes a stale price level from the orderbook levels cache idempotently using a Lua script.
- * @param param0 Ticker of the exchange pair, side, human readable price level to delete.
+ * @param param0 Ticker of the exchange pair, side, human readable price level, time threshold to delete.
  * @returns `boolean`, true/false for whether the level was deleted.
  */
 export async function deleteStalePriceLevel({
   ticker,
   side,
   humanPrice,
+  timeThreshold,
   client,
 }: {
   ticker: string,
   side: OrderSide,
   humanPrice: string,
+  timeThreshold: number,
   client: RedisClient,
 }): Promise<boolean> {
   // Number of keys for the lua script.
@@ -361,10 +363,12 @@ export async function deleteStalePriceLevel({
     orderbookKey: string,
     lastUpdatedKey: string,
     priceLevel: string,
+    timeInterval: number,
   ) => Promise<boolean> = (
     orderbookKey,
     lastUpdatedKey,
     priceLevel,
+    timeInterval,
   ) => {
     return new Promise((resolve, reject) => {
       const callback: Callback<number> = (
@@ -383,6 +387,7 @@ export async function deleteStalePriceLevel({
         orderbookKey,
         lastUpdatedKey,
         priceLevel,
+        timeInterval,
         callback,
       );
     });
@@ -393,6 +398,7 @@ export async function deleteStalePriceLevel({
     getKey(ticker, side),
     getLastUpdatedKey(ticker, side),
     humanPrice,
+    timeThreshold,
   );
 }
 

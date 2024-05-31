@@ -4,8 +4,10 @@ local hash = KEYS[1]
 local lastUpdatedHash = KEYS[2]
 -- Price level
 local level = ARGV[1]
+-- Time threshold in seconds
+local timeThreshold = tonumber(ARGV[2])
 
--- This script deletes a price level in the orderbook levels cache if the last updated time is more than 10 seconds in the past.
+-- This script deletes a price level in the orderbook levels cache if the last updated time is more than timeThreshold seconds in the past.
 -- The return value is 1 if a price level was deleted and 0 if a price level was not deleted.
 
 -- Get the current time
@@ -17,8 +19,8 @@ if not lastUpdatedTime then
     return 0
 end
 
--- Check if the last updated time is more than 10 seconds in the past
-if currentTime - lastUpdatedTime <= 10 then
+-- Check if the last updated time is more than timeThreshold seconds in the past
+if currentTime - lastUpdatedTime <= timeThreshold then
     return 0
 end
 

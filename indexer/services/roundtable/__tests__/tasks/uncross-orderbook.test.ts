@@ -9,11 +9,39 @@ import {
 import { OrderbookLevelsCache, redis } from '@dydxprotocol-indexer/redis';
 import runTask from '../../src/tasks/uncross-orderbook';
 import { redisClient } from '../../src/helpers/redis';
+import {
+  RedisClient,
+} from 'redis';
 
 jest.mock('@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache'),
   deleteStalePriceLevel: jest.fn(),
 }));
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function updatePriceLevelWithSleep({
+  ticker,
+  side,
+  humanPrice,
+  sizeDeltaInQuantums,
+  client,
+}: {
+  ticker: string,
+  side: OrderSide,
+  humanPrice: string,
+  sizeDeltaInQuantums: string,
+  client: RedisClient,
+}) {
+  await OrderbookLevelsCache.updatePriceLevel({
+    ticker,
+    side,
+    humanPrice,
+    sizeDeltaInQuantums,
+    client,
+  });
+  await sleep(1000); // sleep for 1 second
+}
 
 describe('uncross-orderbook', () => {
   beforeAll(async () => {
@@ -44,15 +72,15 @@ describe('uncross-orderbook', () => {
       {},
       [],
     );
-    const market = perpetualMarkets[0];
-    await OrderbookLevelsCache.updatePriceLevel({
+    const market: PerpetualMarketFromDatabase = perpetualMarkets[0];
+    await updatePriceLevelWithSleep({
       ticker: market.ticker,
       side: OrderSide.BUY,
       humanPrice: '30100',
       sizeDeltaInQuantums: '2000',
       client: redisClient,
     });
-    await OrderbookLevelsCache.updatePriceLevel({
+    await updatePriceLevelWithSleep({
       ticker: market.ticker,
       side: OrderSide.SELL,
       humanPrice: '45000',
@@ -61,15 +89,15 @@ describe('uncross-orderbook', () => {
     });
 
     await runTask();
-    expect(logger.info).not.toHaveBeenCalled();
+    expect(require('@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache').deleteStalePriceLevel).not.toHaveBeenCalled();
   });
 
-  it('removes crossed bid and ask levels', async () => {
+  it('removes single crossed bid level', async () => {
     const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
       {},
       [],
     );
-    const market = perpetualMarkets[0];
+    const market: PerpetualMarketFromDatabase = perpetualMarkets[0];
     await OrderbookLevelsCache.updatePriceLevel({
       ticker: market.ticker,
       side: OrderSide.BUY,
@@ -97,6 +125,43 @@ describe('uncross-orderbook', () => {
     }));
   });
 
+  it('removes multiple crossed bid levels', async () => {
+    const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
+      {},
+      [],
+    );
+    const market: PerpetualMarketFromDatabase = perpetualMarkets[0];
+    await updatePriceLevelWithSleep({
+      ticker: market.ticker,
+      side: OrderSide.BUY,
+      humanPrice: '45100',
+      sizeDeltaInQuantums: '2000',
+      client: redisClient,
+    });
+    await updatePriceLevelWithSleep({
+      ticker: market.ticker,
+      side: OrderSide.SELL,
+      humanPrice: '45000',
+      sizeDeltaInQuantums: '1000',
+      client: redisClient,
+    });
+    await updatePriceLevelWithSleep({
+      ticker: market.ticker,
+      side: OrderSide.BUY,
+      humanPrice: '45200',
+      sizeDeltaInQuantums: '2000',
+      client: redisClient,
+    });
+
+    await runTask();
+
+    expect(require('@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache').deleteStalePriceLevel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        side: OrderSide.SELL,
+        humanPrice: '45000',
+      }));
+  });
+
   it('logs a failure to delete stale bid or ask level', async () => {
     const { deleteStalePriceLevel } = require('@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache');
     deleteStalePriceLevel.mockImplementationOnce(() => false);
@@ -105,7 +170,7 @@ describe('uncross-orderbook', () => {
       {},
       [],
     );
-    const market = perpetualMarkets[0];
+    const market: PerpetualMarketFromDatabase = perpetualMarkets[0];
     await OrderbookLevelsCache.updatePriceLevel({
       ticker: market.ticker,
       side: OrderSide.BUY,

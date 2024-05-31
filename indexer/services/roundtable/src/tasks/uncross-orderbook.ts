@@ -1,8 +1,9 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import { OrderSide, PerpetualMarketFromDatabase, PerpetualMarketTable } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, OrderbookLevelsCache } from '@dydxprotocol-indexer/redis';
 import Big from 'big.js';
 
+import config from '../config';
 import { redisClient } from '../helpers/redis';
 
 /**
@@ -26,6 +27,7 @@ export default async function runTask(): Promise<void> {
 
     // Check if the orderbook is crossed
     if (isOrderbookCrossed(crossedOrderbookLevels)) {
+      stats.increment(`${config.SERVICE_NAME}.crossed_orderbook`, { ticker: market.ticker });
       await uncrossOrderbook(market, crossedOrderbookLevels);
     }
   }
@@ -51,6 +53,7 @@ async function uncrossOrderbook(
   market: PerpetualMarketFromDatabase,
   orderbookLevels: OrderbookLevels,
 ): Promise<void> {
+  console.log(`orderbookLevels: ${JSON.stringify(orderbookLevels)}`);
   const ticker = market.ticker;
 
   // Remove overlapping levels
@@ -62,7 +65,8 @@ async function uncrossOrderbook(
     bi < orderbookLevels.bids.length &&
     Big(orderbookLevels.bids[bi].humanPrice).gte(Big(orderbookLevels.asks[ai].humanPrice))
   ) {
-    // Remove the older side
+    // Remove the older side. If the ask and bid levels have the same lastUpdated time,
+    // remove the bid level.
     if (
       Number(orderbookLevels.bids[bi].lastUpdated) > Number(orderbookLevels.asks[ai].lastUpdated)
     ) {
@@ -83,37 +87,56 @@ async function uncrossOrderbook(
     removedAsks: JSON.stringify(removeAskLevels),
   });
 
+  stats.increment(
+    `${config.SERVICE_NAME}.expected_uncross_orderbook_levels`,
+    removeBidLevels.length,
+    { side: OrderSide.BUY },
+  );
   for (const bid of removeBidLevels) {
     const deleted: boolean = await OrderbookLevelsCache.deleteStalePriceLevel({
       ticker,
       side: OrderSide.BUY,
       humanPrice: bid.humanPrice,
+      timeThreshold: config.STALE_ORDERBOOK_LEVEL_THRESHOLD_SECONDS,
       client: redisClient,
     });
     if (!deleted) {
+      stats.increment(`${config.SERVICE_NAME}.uncross_orderbook_failed`, { side: OrderSide.BUY });
       logger.info({
         at: 'uncrossOrderbook#deleteStalePriceLevel',
         message: `Failed to delete stale bid level for ${ticker}`,
         side: OrderSide.BUY,
         humanPrice: bid.humanPrice,
       });
+    } else {
+      stats.increment(`${config.SERVICE_NAME}.uncross_orderbook`, { side: OrderSide.BUY });
     }
   }
 
+  stats.increment(
+    `${config.SERVICE_NAME}.expected_uncross_orderbook_levels`,
+    removeAskLevels.length,
+    { side: OrderSide.SELL },
+  );
   for (const ask of removeAskLevels) {
+    stats.increment(`${config.SERVICE_NAME}.uncross_orderbook`, { side: OrderSide.SELL });
     const deleted: boolean = await OrderbookLevelsCache.deleteStalePriceLevel({
       ticker,
       side: OrderSide.SELL,
       humanPrice: ask.humanPrice,
+      timeThreshold: config.STALE_ORDERBOOK_LEVEL_THRESHOLD_SECONDS,
       client: redisClient,
     });
     if (!deleted) {
+      stats.increment(`${config.SERVICE_NAME}.uncross_orderbook_failed`, { side: OrderSide.SELL });
       logger.info({
         at: 'uncrossOrderbook#deleteStalePriceLevel',
         message: `Failed to delete stale ask level for ${ticker}`,
         side: OrderSide.SELL,
         humanPrice: ask.humanPrice,
       });
+    } else {
+      stats.increment(`${config.SERVICE_NAME}.uncross_orderbook`, { side: OrderSide.SELL });
     }
   }
 }
