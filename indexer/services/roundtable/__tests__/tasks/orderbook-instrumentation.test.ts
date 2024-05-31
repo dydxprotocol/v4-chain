@@ -46,18 +46,7 @@ describe('orderbook-instrumentation', () => {
     );
 
     await orderbookInstrumentationTask();
-
-    perpetualMarkets.forEach((perpetualMarket: PerpetualMarketFromDatabase) => {
-      const tags: Object = { clob_pair_id: perpetualMarket.clobPairId };
-      expect(stats.gauge).toHaveBeenCalledWith(
-        'roundtable.open_orders_count',
-        0,
-        tags,
-      );
-    });
-
-    // Only open orders stat should have been sent
-    expect(stats.gauge).toHaveBeenCalledTimes(perpetualMarkets.length);
+    expect(stats.gauge).toHaveBeenCalledTimes(0);
   });
 
   it('succeeds with stats', async () => {
@@ -162,13 +151,6 @@ describe('orderbook-instrumentation', () => {
       expect(stats.gauge).toHaveBeenCalledWith(
         'roundtable.crossed_orderbook.best_ask_subticks',
         priceToSubticks('45000', perpetualMarket),
-        tags,
-      );
-
-      // Check for open order count being gauged
-      expect(stats.gauge).toHaveBeenCalledWith(
-        'roundtable.open_orders_count',
-        1,
         tags,
       );
     });
