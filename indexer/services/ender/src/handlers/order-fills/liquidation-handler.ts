@@ -11,17 +11,24 @@ import {
   PerpetualPositionModel,
   SubaccountTable,
   OrderStatus,
+  MarketFromDatabase,
+  MarketTable,
+  MarketsMap,
+  MarketColumns,
+  UpdatedPerpetualPositionSubaccountKafkaObject,
+  perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   LiquidationOrderV1, IndexerOrderId,
 } from '@dydxprotocol-indexer/v4-protos';
+import _ from 'lodash';
 import Long from 'long';
 import * as pg from 'pg';
 
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
-import { convertPerpetualPosition } from '../../helpers/kafka-helper';
+import { annotateWithPnl, convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { redisClient } from '../../helpers/redis/redis-controller';
 import {
   orderFillWithLiquidityToOrderFillEventWithLiquidation,
@@ -95,6 +102,22 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
     const position: PerpetualPositionFromDatabase = PerpetualPositionModel.fromJson(
       resultRow[field].perpetual_position) as PerpetualPositionFromDatabase;
 
+    const markets: MarketFromDatabase[] = await MarketTable.findAll(
+      {},
+      [],
+      { txId: this.txId },
+    );
+    const marketIdToMarket: MarketsMap = _.keyBy(
+      markets,
+      MarketColumns.id,
+    );
+
+    const positionUpdate: UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
+      convertPerpetualPosition(position),
+      perpetualMarketRefresher.getPerpetualMarketsMap(),
+      marketIdToMarket,
+    );
+
     if (this.event.liquidity === Liquidity.MAKER) {
       // Must be done in this order, because fills refer to an order
       // We do not create a taker order for liquidations.
@@ -107,12 +130,11 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
         this.getTotalFilled(castedLiquidationFillEventMessage).toString(),
         redisClient,
       );
-
       const kafkaEvents: ConsolidatedKafkaEvent[] = [
         this.generateConsolidatedKafkaEvent(
           castedLiquidationFillEventMessage.makerOrder.orderId!.subaccountId!,
           makerOrder,
-          convertPerpetualPosition(position),
+          positionUpdate,
           fill,
           perpetualMarket,
         ),
@@ -137,7 +159,7 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
         this.generateConsolidatedKafkaEvent(
           castedLiquidationFillEventMessage.liquidationOrder.liquidated!,
           undefined,
-          convertPerpetualPosition(position),
+          positionUpdate,
           fill,
           perpetualMarket,
         ),
