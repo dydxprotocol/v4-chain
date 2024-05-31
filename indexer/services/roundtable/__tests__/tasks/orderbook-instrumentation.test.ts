@@ -39,12 +39,6 @@ describe('orderbook-instrumentation', () => {
   });
 
   it('succeeds with empty orderbook', async () => {
-    const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
-      {},
-      [],
-      {},
-    );
-
     await orderbookInstrumentationTask();
     expect(stats.gauge).toHaveBeenCalledTimes(0);
   });
