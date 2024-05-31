@@ -11,4 +11,6 @@ RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
 RUN /dydxprotocol/dev.sh
 
 ENV DAEMON_NAME=dydxprotocold
+ENV DAEMON_HOME=/dydxprotocol/chain/.alice
+
 ENTRYPOINT ["cosmovisor", "run"]
