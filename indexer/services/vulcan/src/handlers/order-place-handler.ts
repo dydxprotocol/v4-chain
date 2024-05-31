@@ -10,7 +10,6 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import {
   CanceledOrdersCache,
-  OpenOrdersCache,
   OrderbookLevelsCache,
   placeOrder,
   PlaceOrderResult,
@@ -105,18 +104,7 @@ export class OrderPlaceHandler extends Handler {
       update,
     );
 
-    // TODO(IND-68): Error on this case once replacements are done by first removing the order, then
-    // placing a new order.
     if (placeOrderResult.replaced) {
-      // Replaced orders are no longer counted as resting on the book until an order update message
-      // is received, so remove the order from the set of open orders when replaced.
-      const clobPairId: string = order.orderId!.clobPairId.toString();
-      await OpenOrdersCache.removeOpenOrder(
-        redisOrder.id,
-        clobPairId,
-        redisClient,
-      );
-      // TODO(IND-172): Replace this with a logger.error call
       stats.increment(`${config.SERVICE_NAME}.place_order_handler.replaced_order`, 1);
     }
 
