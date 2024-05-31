@@ -1,11 +1,10 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Coin};
+use dydx_cosmwasm::{OrderConditionType, OrderSide, OrderTimeInForce, SubaccountId, Order, OrderId, Transfer};
 use cw_utils::Expiration;
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub arbiter: String,
-    pub recipient: String,
     /// When end height set and block height exceeds this value, the escrow is expired.
     /// Once an escrow is expired, it can be returned to the original funder (via "refund").
     ///
@@ -22,6 +21,26 @@ pub enum ExecuteMsg {
         quantity: Option<u64>,
         //quantity: Option<Vec<Coin>>,
     },
+    DepositToSubaccount {
+        sender: String,
+        recipient: SubaccountId,
+        asset_id: u32,
+        quantums: u64,
+      },
+        WithdrawFromSubaccount {
+            sender: SubaccountId,
+            recipient: String,
+            asset_id: u32,
+            quantums: u64,
+        },
+      PlaceOrder {
+        order: Order,
+      },
+      CancelOrder {
+        order_id: OrderId,
+        good_til_block: Option<u32>,
+        good_til_block_time: Option<u32>,
+      },
     Refund {},
 }
 
