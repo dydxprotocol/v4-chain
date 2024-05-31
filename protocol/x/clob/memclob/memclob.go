@@ -496,8 +496,9 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 
 	if m.generateOffchainUpdates {
 		// Send an order place message.
-		// If existing order ID is found and the price of the existing order is different from the new order,
+		// For replacement orders, if the price of the existing order is different from the new order,
 		// create an order removal message first so we can remove the original price level from the orderbook.
+		// TODO (CT-884): send OrderReplaceV1 message for replacement orders and add order-replace-handler to Vulcan
 		orderId := order.OrderId
 		if existingOrder, found := orderbook.getOrder(orderId); found {
 			if order.Subticks != existingOrder.Subticks {
