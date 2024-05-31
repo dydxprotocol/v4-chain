@@ -536,14 +536,9 @@ describe('order-place-handler', () => {
     ) => {
       const oldOrderTotalFilled: number = 10;
       const oldPriceLevelInitialQuantums: number = Number(initialOrderToPlace.quantums) * 2;
-      // After replacing the order the quantums at the price level of the old order should be:
-      // initial quantums - (old order quantums - old order total filled)
-      const expectedPriceLevelQuantums: number = (
-        oldPriceLevelInitialQuantums - (Number(initialOrderToPlace.quantums) - oldOrderTotalFilled)
-      );
       const expectedPriceLevel: PriceLevel = {
         humanPrice: expectedRedisOrder.price,
-        quantums: expectedPriceLevelQuantums.toString(),
+        quantums: oldPriceLevelInitialQuantums.toString(),
         lastUpdated: expect.stringMatching(/^[0-9]{10}$/),
       };
 
@@ -575,6 +570,7 @@ describe('order-place-handler', () => {
         newTotalFilledQuantums: oldOrderTotalFilled,
         client,
       });
+
       // Update the price level in the order book to a value larger than the quantums of the order
       await OrderbookLevelsCache.updatePriceLevel({
         ticker: testConstants.defaultPerpetualMarket.ticker,
@@ -1086,11 +1082,6 @@ describe('order-place-handler', () => {
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         true,
       );
-
-      expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'OrderPlaceHandler#handle',
-        message: 'Total filled of order in Redis exceeds order quantums.',
-      }));
     });
   });
 });

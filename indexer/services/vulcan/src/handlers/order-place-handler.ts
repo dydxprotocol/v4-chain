@@ -96,14 +96,6 @@ export class OrderPlaceHandler extends Handler {
       placeOrderResult,
     });
 
-    // TODO(IND-68): Remove once order replacement flow in V4 protocol removes the old order and
-    // places the updated order.
-    await this.updatePriceLevel(
-      placeOrderResult,
-      perpetualMarket,
-      update,
-    );
-
     if (placeOrderResult.replaced) {
       stats.increment(`${config.SERVICE_NAME}.place_order_handler.replaced_order`, 1);
     }
