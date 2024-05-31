@@ -226,12 +226,12 @@ e2e-setup: compile-testing-files
 	@echo "Setting up environment..."
 	@cd ethos/ethos-chain && ./e2e-setup -setup
 	
-CUSTOM_GENESIS ?=
+# CUSTOM_GENESIS ?=
 custom-e2e-setup: compile-testing-files
 	@echo "Setting up environment..."
 	echo "logging custom genesis"
-	echo $(CUSTOM_GENESIS)
-	@cd ethos/ethos-chain && ./e2e-setup -setup $(CUSTOM_GENESIS)
+	echo $(GENESIS)
+	@cd ethos/ethos-chain && ./e2e-setup -setup $(GENESIS)
 
 test: test-unit
 
