@@ -26,6 +26,13 @@ jobs:
         working-directory: ./protocol
     steps:
       - uses: actions/checkout@v3
+
+    # Install dependencies
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make jq
+
       - name: Check Sample Pregenesis Up-to-date
         run: >
           make check-sample-pregenesis-up-to-date
