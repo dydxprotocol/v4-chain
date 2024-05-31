@@ -522,17 +522,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		if order.IsStatefulOrder() {
 			var removalReason types.OrderRemoval_RemovalReason
 
-			if errors.Is(err, types.ErrFokOrderCouldNotBeFullyFilled) {
-				if !order.IsConditionalOrder() {
-					panic(
-						fmt.Sprintf(
-							"PlaceOrder: stateful FOK order must be conditional. Order %+v",
-							order,
-						),
-					)
-				}
-				removalReason = types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED
-			} else if errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder) {
+			if errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder) {
 				removalReason = types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER
 			} else if errors.Is(err, types.ErrWouldViolateIsolatedSubaccountConstraints) {
 				removalReason = types.OrderRemoval_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS
@@ -1444,7 +1434,7 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	// Immediate-or-cancel orders may only be filled once. The remaining size becomes unfillable.
 	// This prevents the case where an IOC order is partially filled multiple times over the course of multiple blocks.
 	if order.RequiresImmediateExecution() && remainingAmount < order.GetBaseQuantums() {
-		// Prevent IOC/FOK orders from replacing partially filled orders.
+		// Prevent IOC orders from replacing partially filled orders.
 		if restingOrderExists {
 			return errorsmod.Wrapf(
 				types.ErrInvalidReplacement,
