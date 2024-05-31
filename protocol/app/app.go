@@ -553,6 +553,8 @@ func New(
 		lib.GovModuleAddress.String(),               // authority
 	)
 
+	app.ICAHostKeeper.WithQueryRouter(app.GRPCQueryRouter())
+
 	app.BlockTimeKeeper = *blocktimemodulekeeper.NewKeeper(
 		appCodec,
 		keys[blocktimemoduletypes.StoreKey],
@@ -1178,6 +1180,7 @@ func New(
 
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+
 	err := app.ModuleManager.RegisterServices(app.configurator)
 	app.ModuleBasics = module.NewBasicManagerFromManager(
 		app.ModuleManager,

@@ -5,14 +5,13 @@ go 1.22
 toolchain go1.22.0
 
 require (
-
 	cosmossdk.io/api v0.7.4
 	cosmossdk.io/math v1.3.0
 	github.com/Shopify/sarama v1.37.2
-	github.com/cometbft/cometbft v0.38.6
+	github.com/cometbft/cometbft v0.38.7
 	github.com/cometbft/cometbft-db v0.9.1 // indirect
-	github.com/cosmos/cosmos-proto v1.0.0-beta.4
-	github.com/cosmos/cosmos-sdk v0.50.6-0.20240326131047-654f758b3fe2
+	github.com/cosmos/cosmos-proto v1.0.0-beta.5
+	github.com/cosmos/cosmos-sdk v0.50.6
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.4.12
 	github.com/go-playground/validator/v10 v10.14.0
@@ -34,7 +33,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/vektra/mockery/v2 v2.23.1
 	github.com/zyedidia/generic v1.0.0
-	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
+	golang.org/x/exp v0.0.0-20240404231335-c0f41cb1a7a0
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/grpc v1.63.2
 	gopkg.in/DataDog/dd-trace-go.v1 v1.48.0
@@ -46,7 +45,7 @@ require (
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
-	cosmossdk.io/store v1.0.2
+	cosmossdk.io/store v1.1.0
 	cosmossdk.io/tools/confix v0.1.1
 	cosmossdk.io/x/circuit v0.1.0
 	cosmossdk.io/x/evidence v0.1.0
@@ -55,15 +54,15 @@ require (
 	cosmossdk.io/x/upgrade v0.1.1
 	github.com/burdiyan/kafkautil v0.0.0-20190131162249-eaf83ed22d5b
 	github.com/cosmos/cosmos-db v1.0.2
-	github.com/cosmos/iavl v1.1.1-0.20240314134843-68cfac080ec8
+	github.com/cosmos/iavl v1.1.2
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
-	github.com/cosmos/ibc-go/v8 v8.2.0
+	github.com/cosmos/ibc-go/v8 v8.3.1
 	github.com/cosmos/rosetta v0.50.3
 	github.com/deckarep/golang-set/v2 v2.3.0
-	github.com/ethereum/go-ethereum v1.13.14
+	github.com/ethereum/go-ethereum v1.14.0
 	github.com/ethos-works/ethos/ethos-chain v0.0.0-20240427014547-bab686cfb261
 	github.com/go-kit/log v0.2.1
-	github.com/hashicorp/go-metrics v0.5.2
+	github.com/hashicorp/go-metrics v0.5.3
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rs/zerolog v1.32.0
@@ -127,7 +126,7 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/chavacava/garif v0.0.0-20230227094218-b8c73b2037b8 // indirect
 	github.com/chigopher/pathlib v0.12.0 // indirect
@@ -147,7 +146,7 @@ require (
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
-	github.com/crate-crypto/go-kzg-4844 v0.7.0 // indirect
+	github.com/crate-crypto/go-kzg-4844 v1.0.0 // indirect
 	github.com/creachadair/atomicfile v0.3.1 // indirect
 	github.com/creachadair/tomledit v0.0.24 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
@@ -171,7 +170,7 @@ require (
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/emicklei/dot v1.6.1 // indirect
 	github.com/esimonov/ifshort v1.0.4 // indirect
-	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
+	github.com/ethereum/c-kzg-4844 v1.0.0 // indirect
 	github.com/ettle/strcase v0.1.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
@@ -278,7 +277,7 @@ require (
 	github.com/leonklingele/grouper v1.1.1 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
-	github.com/linxGnu/grocksdb v1.8.12 // indirect
+	github.com/linxGnu/grocksdb v1.8.14 // indirect
 	github.com/lovoo/goka v1.1.9 // indirect
 	github.com/lufeee/execinquery v1.2.1 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
@@ -310,14 +309,14 @@ require (
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/opencontainers/runc v1.1.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
-	github.com/petermattis/goid v0.0.0-20230904192822-1876fd5063bc // indirect
+	github.com/petermattis/goid v0.0.0-20231207134359-e60b3f734c67 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/polyfloyd/go-errorlint v1.4.5 // indirect
-	github.com/prometheus/client_golang v1.18.0 // indirect
-	github.com/prometheus/client_model v0.6.0 // indirect
-	github.com/prometheus/common v0.47.0 // indirect
-	github.com/prometheus/procfs v0.12.0 // indirect
+	github.com/prometheus/client_golang v1.19.0 // indirect
+	github.com/prometheus/client_model v0.6.1 // indirect
+	github.com/prometheus/common v0.52.2 // indirect
+	github.com/prometheus/procfs v0.13.0 // indirect
 	github.com/quasilyte/go-ruleguard v0.4.0 // indirect
 	github.com/quasilyte/gogrep v0.5.0 // indirect
 	github.com/quasilyte/regex/syntax v0.0.0-20210819130434-b3f0c404a727 // indirect
@@ -384,18 +383,18 @@ require (
 	go.opentelemetry.io/otel/trace v1.22.0 // indirect
 	go.tmz.dev/musttag v0.7.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.26.0 // indirect
+	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20230307190834-24139beb5833 // indirect
-	golang.org/x/mod v0.15.0 // indirect
+	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
-	golang.org/x/oauth2 v0.17.0 // indirect
-	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/oauth2 v0.18.0 // indirect
+	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/term v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.18.0 // indirect
+	golang.org/x/tools v0.20.0 // indirect
 	google.golang.org/api v0.162.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240401170217-c3f982113cda // indirect
@@ -424,7 +423,7 @@ replace (
 	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20240409171441-6d0767b72c06
 	// Use dYdX fork of Cosmos SDK
 	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c
-	github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240408175732-0fca9d69cbc4
+	//github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240408175732-0fca9d69cbc4
 	github.com/ethos-works/ethos-avs => ./ethos/ethos-avs
 	github.com/ethos-works/ethos/ethos-chain => ./ethos/ethos-chain
 )
