@@ -5,9 +5,9 @@ import Long from 'long';
 
 import { OrderDetails } from './types';
 
-export const DYDX_LOCAL_ADDRESS = 'dydx1q90l6j6lzzgt460ehjj56azknlt5yrd4egfh9f';
+export const DYDX_LOCAL_ADDRESS = 'dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6';
 export const DYDX_LOCAL_MNEMONIC = 'exile install vapor thing little toss immune notable lounge december final easy strike title end program interest quote cloth forget forward job october twenty';
-export const DYDX_LOCAL_ADDRESS_2 = 'dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs';
+export const DYDX_LOCAL_ADDRESS_2 = 'dydx1q90l6j6lzzgt460ehjj56azknlt5yrd4egfh9f';
 export const DYDX_LOCAL_MNEMONIC_2 = 'grunt list hour endless observe better spoil penalty lab duck only layer vague fantasy satoshi record demise topple space shaft solar practice donor sphere';
 
 export const MNEMONIC_TO_ADDRESS: Record<string, string> = {
