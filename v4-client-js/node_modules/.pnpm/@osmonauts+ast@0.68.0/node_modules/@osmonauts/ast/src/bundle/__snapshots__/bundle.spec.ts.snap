@@ -1,0 +1,103 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`recursiveModuleBundle osmo 1`] = `
+"export namespace osmosis {
+  export namespace claim {
+    export const v1beta1 = { ..._177,
+      ..._178,
+      ..._179,
+      ..._180
+    };
+  }
+  export namespace epochs {
+    export const v1beta1 = { ..._181,
+      ..._182
+    };
+  }
+  export namespace gamm {
+    export const v1beta1 = { ..._183,
+      ..._184,
+      ..._185,
+      ..._186,
+      ..._187
+    };
+  }
+  export const incentives = { ..._188,
+    ..._189,
+    ..._190,
+    ..._191,
+    ..._192
+  };
+  export const lockup = { ..._193,
+    ..._194,
+    ..._195,
+    ..._196
+  };
+  export namespace mint {
+    export const v1beta1 = { ..._197,
+      ..._198,
+      ..._199
+    };
+  }
+  export namespace poolincentives {
+    export const v1beta1 = { ..._200,
+      ..._201,
+      ..._202,
+      ..._203
+    };
+  }
+  export namespace store {
+    export const v1beta1 = { ..._204
+    };
+  }
+  export const superfluid = { ..._205,
+    ..._206,
+    ..._207,
+    ..._208,
+    ..._209
+  };
+  export namespace txfees {
+    export const v1beta1 = { ..._210,
+      ..._211,
+      ..._212,
+      ..._213
+    };
+  }
+}"
+`;
+
+exports[`recursiveModuleBundle root 1`] = `
+"export const osmosis = { ..._0
+};
+export const tendermint = { ..._0
+};"
+`;
+
+exports[`recursiveModuleBundle single 1`] = `
+"export const ics23 = { ..._0
+};"
+`;
+
+exports[`recursiveModuleBundle tendermint 1`] = `
+"export namespace tendermint {
+  export const abci = { ..._223
+  };
+  export const crypto = { ..._224,
+    ..._225
+  };
+  export namespace libs {
+    export const bits = { ..._226
+    };
+  }
+  export const p2p = { ..._227
+  };
+  export const types = { ..._228,
+    ..._229,
+    ..._230,
+    ..._231,
+    ..._232
+  };
+  export const version = { ..._233
+  };
+}"
+`;

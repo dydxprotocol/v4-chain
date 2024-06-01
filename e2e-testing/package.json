@@ -21,7 +21,7 @@
     "@dydxprotocol-indexer/postgres": "file:../indexer/packages/postgres",
     "@dydxprotocol-indexer/v4-proto-parser": "file:../indexer/packages/v4-proto-parser",
     "@dydxprotocol-indexer/v4-protos": "file:../indexer/packages/v4-protos",
-    "@dydxprotocol/v4-client-js": "^1.0.12",
+    "@dydxprotocol/v4-client-js": "file:../v4-client-js",
     "big.js": "^6.0.2",
     "dotenv-flow": "^3.2.0",
     "kafkajs": "^2.1.0",

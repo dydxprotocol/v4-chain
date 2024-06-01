@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`query classes 1`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+  }
+
+}"
+`;
+
+exports[`query interface 1`] = `
+"export interface ReadOnlyInstance {
+  contractAddress: string;
+}"
+`;

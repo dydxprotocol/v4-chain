@@ -1,0 +1,984 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`execute class /issues/55/batch.json 1`] = `
+"export class SG721Client implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+  }
+
+}"
+`;
+
+exports[`execute class /issues/55/denom_response.json 1`] = `
+"export class SG721Client implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+  }
+
+}"
+`;
+
+exports[`execute class /issues/55/edge.json 1`] = `
+"export class SG721Client implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+  }
+
+}"
+`;
+
+exports[`execute class /issues/55/execute_msg.json 1`] = `
+"export class SG721Client implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+    this.createEdge = this.createEdge.bind(this);
+    this.editEdge = this.editEdge.bind(this);
+    this.removeEdge = this.removeEdge.bind(this);
+    this.createGraph = this.createGraph.bind(this);
+    this.createGraphSimplified = this.createGraphSimplified.bind(this);
+    this.editGraphSimplified = this.editGraphSimplified.bind(this);
+    this.removeGraph = this.removeGraph.bind(this);
+    this.updateEdges = this.updateEdges.bind(this);
+    this.findSavings = this.findSavings.bind(this);
+    this.findSavingsInAGraph = this.findSavingsInAGraph.bind(this);
+    this.reset = this.reset.bind(this);
+    this.saveNetworkToFile = this.saveNetworkToFile.bind(this);
+    this.createGraphFromFile = this.createGraphFromFile.bind(this);
+    this.applySetOffFromFile = this.applySetOffFromFile.bind(this);
+  }
+
+  createEdge = async ({
+    amount,
+    creditor
+  }: {
+    amount: number;
+    creditor: Addr;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      create_edge: {
+        amount,
+        creditor
+      }
+    }, fee, memo, funds);
+  };
+  editEdge = async ({
+    amount,
+    creditor,
+    edgeId
+  }: {
+    amount: number;
+    creditor: Addr;
+    edgeId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      edit_edge: {
+        amount,
+        creditor,
+        edge_id: edgeId
+      }
+    }, fee, memo, funds);
+  };
+  removeEdge = async ({
+    edgeId
+  }: {
+    edgeId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      remove_edge: {
+        edge_id: edgeId
+      }
+    }, fee, memo, funds);
+  };
+  createGraph = async ({
+    graph
+  }: {
+    graph: Edge[];
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      create_graph: {
+        graph
+      }
+    }, fee, memo, funds);
+  };
+  createGraphSimplified = async ({
+    graph,
+    graphId
+  }: {
+    graph: Addr[][];
+    graphId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      create_graph_simplified: {
+        graph,
+        graph_id: graphId
+      }
+    }, fee, memo, funds);
+  };
+  editGraphSimplified = async ({
+    graph,
+    graphId
+  }: {
+    graph: Addr[][];
+    graphId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      edit_graph_simplified: {
+        graph,
+        graph_id: graphId
+      }
+    }, fee, memo, funds);
+  };
+  removeGraph = async ({
+    graphId
+  }: {
+    graphId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      remove_graph: {
+        graph_id: graphId
+      }
+    }, fee, memo, funds);
+  };
+  updateEdges = async ({
+    edges
+  }: {
+    edges: number[][];
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      update_edges: {
+        edges
+      }
+    }, fee, memo, funds);
+  };
+  findSavings = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      find_savings: {}
+    }, fee, memo, funds);
+  };
+  findSavingsInAGraph = async ({
+    graphId
+  }: {
+    graphId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      find_savings_in_a_graph: {
+        graph_id: graphId
+      }
+    }, fee, memo, funds);
+  };
+  reset = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      reset: {}
+    }, fee, memo, funds);
+  };
+  saveNetworkToFile = async ({
+    filepath
+  }: {
+    filepath: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      save_network_to_file: {
+        filepath
+      }
+    }, fee, memo, funds);
+  };
+  createGraphFromFile = async ({
+    filepath
+  }: {
+    filepath: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      create_graph_from_file: {
+        filepath
+      }
+    }, fee, memo, funds);
+  };
+  applySetOffFromFile = async ({
+    filepath
+  }: {
+    filepath: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      apply_set_off_from_file: {
+        filepath
+      }
+    }, fee, memo, funds);
+  };
+}"
+`;
+
+exports[`execute class /issues/55/instantiate_msg.json 1`] = `
+"export class SG721Client implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+  }
+
+}"
+`;
+
+exports[`execute class /issues/55/network.json 1`] = `
+"export class SG721Client implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+  }
+
+}"
+`;
+
+exports[`execute class /issues/55/query_msg.json 1`] = `
+"export class SG721Client implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+    this.getDenom = this.getDenom.bind(this);
+    this.getOwner = this.getOwner.bind(this);
+    this.allEdges = this.allEdges.bind(this);
+    this.oneEdge = this.oneEdge.bind(this);
+    this.oneBatch = this.oneBatch.bind(this);
+    this.oneGraph = this.oneGraph.bind(this);
+    this.getEdgesByAddress = this.getEdgesByAddress.bind(this);
+    this.getEdgesAsCounterparty = this.getEdgesAsCounterparty.bind(this);
+    this.getTotalDebtPerAddress = this.getTotalDebtPerAddress.bind(this);
+    this.getTotalCreditPerAddress = this.getTotalCreditPerAddress.bind(this);
+    this.getTotalDebtByGraph = this.getTotalDebtByGraph.bind(this);
+    this.getTotalDebt = this.getTotalDebt.bind(this);
+  }
+
+  getDenom = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      get_denom: {}
+    }, fee, memo, funds);
+  };
+  getOwner = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      get_owner: {}
+    }, fee, memo, funds);
+  };
+  allEdges = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      all_edges: {}
+    }, fee, memo, funds);
+  };
+  oneEdge = async ({
+    edgeId
+  }: {
+    edgeId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      one_edge: {
+        edge_id: edgeId
+      }
+    }, fee, memo, funds);
+  };
+  oneBatch = async ({
+    batchId
+  }: {
+    batchId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      one_batch: {
+        batch_id: batchId
+      }
+    }, fee, memo, funds);
+  };
+  oneGraph = async ({
+    graphId
+  }: {
+    graphId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      one_graph: {
+        graph_id: graphId
+      }
+    }, fee, memo, funds);
+  };
+  getEdgesByAddress = async ({
+    address
+  }: {
+    address: Addr;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      get_edges_by_address: {
+        address
+      }
+    }, fee, memo, funds);
+  };
+  getEdgesAsCounterparty = async ({
+    address
+  }: {
+    address: Addr;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      get_edges_as_counterparty: {
+        address
+      }
+    }, fee, memo, funds);
+  };
+  getTotalDebtPerAddress = async ({
+    address
+  }: {
+    address: Addr;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      get_total_debt_per_address: {
+        address
+      }
+    }, fee, memo, funds);
+  };
+  getTotalCreditPerAddress = async ({
+    address
+  }: {
+    address: Addr;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      get_total_credit_per_address: {
+        address
+      }
+    }, fee, memo, funds);
+  };
+  getTotalDebtByGraph = async ({
+    graphId
+  }: {
+    graphId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      get_total_debt_by_graph: {
+        graph_id: graphId
+      }
+    }, fee, memo, funds);
+  };
+  getTotalDebt = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      get_total_debt: {}
+    }, fee, memo, funds);
+  };
+}"
+`;
+
+exports[`execute interface /issues/55/batch.json 1`] = `
+"export interface SG721Instance {
+  contractAddress: string;
+  sender: string;
+}"
+`;
+
+exports[`execute interface /issues/55/denom_response.json 1`] = `
+"export interface SG721Instance {
+  contractAddress: string;
+  sender: string;
+}"
+`;
+
+exports[`execute interface /issues/55/edge.json 1`] = `
+"export interface SG721Instance {
+  contractAddress: string;
+  sender: string;
+}"
+`;
+
+exports[`execute interface /issues/55/execute_msg.json 1`] = `
+"export interface SG721Instance {
+  contractAddress: string;
+  sender: string;
+  createEdge: ({
+    amount,
+    creditor
+  }: {
+    amount: number;
+    creditor: Addr;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  editEdge: ({
+    amount,
+    creditor,
+    edgeId
+  }: {
+    amount: number;
+    creditor: Addr;
+    edgeId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  removeEdge: ({
+    edgeId
+  }: {
+    edgeId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  createGraph: ({
+    graph
+  }: {
+    graph: Edge[];
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  createGraphSimplified: ({
+    graph,
+    graphId
+  }: {
+    graph: Addr[][];
+    graphId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  editGraphSimplified: ({
+    graph,
+    graphId
+  }: {
+    graph: Addr[][];
+    graphId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  removeGraph: ({
+    graphId
+  }: {
+    graphId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  updateEdges: ({
+    edges
+  }: {
+    edges: number[][];
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  findSavings: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  findSavingsInAGraph: ({
+    graphId
+  }: {
+    graphId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  reset: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  saveNetworkToFile: ({
+    filepath
+  }: {
+    filepath: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  createGraphFromFile: ({
+    filepath
+  }: {
+    filepath: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  applySetOffFromFile: ({
+    filepath
+  }: {
+    filepath: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+}"
+`;
+
+exports[`execute interface /issues/55/instantiate_msg.json 1`] = `
+"export interface SG721Instance {
+  contractAddress: string;
+  sender: string;
+}"
+`;
+
+exports[`execute interface /issues/55/network.json 1`] = `
+"export interface SG721Instance {
+  contractAddress: string;
+  sender: string;
+}"
+`;
+
+exports[`execute interface /issues/55/query_msg.json 1`] = `
+"export interface SG721Instance {
+  contractAddress: string;
+  sender: string;
+  getDenom: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  getOwner: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  allEdges: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  oneEdge: ({
+    edgeId
+  }: {
+    edgeId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  oneBatch: ({
+    batchId
+  }: {
+    batchId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  oneGraph: ({
+    graphId
+  }: {
+    graphId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  getEdgesByAddress: ({
+    address
+  }: {
+    address: Addr;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  getEdgesAsCounterparty: ({
+    address
+  }: {
+    address: Addr;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  getTotalDebtPerAddress: ({
+    address
+  }: {
+    address: Addr;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  getTotalCreditPerAddress: ({
+    address
+  }: {
+    address: Addr;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  getTotalDebtByGraph: ({
+    graphId
+  }: {
+    graphId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  getTotalDebt: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+}"
+`;
+
+exports[`execute_msg_for__empty /issues/55/batch.json 1`] = `
+"export interface Batch {
+  batchId: number;
+  setoffs: number[][];
+}"
+`;
+
+exports[`execute_msg_for__empty /issues/55/denom_response.json 1`] = `
+"export interface DenomResponse {
+  denom: string;
+}"
+`;
+
+exports[`execute_msg_for__empty /issues/55/edge.json 1`] = `
+"export interface Edge {
+  amount: number;
+  creditor: Addr;
+  debtor: Addr;
+  edgeId: number;
+  graphId?: number;
+}"
+`;
+
+exports[`execute_msg_for__empty /issues/55/execute_msg.json 1`] = `"export type ExecuteMsg = ExecuteMsg;"`;
+
+exports[`execute_msg_for__empty /issues/55/instantiate_msg.json 1`] = `
+"export interface InstantiateMsg {
+  denom: string;
+}"
+`;
+
+exports[`execute_msg_for__empty /issues/55/network.json 1`] = `
+"export interface Network {
+  denom: string;
+  owner: Addr;
+}"
+`;
+
+exports[`execute_msg_for__empty /issues/55/query_msg.json 1`] = `"export type QueryMsg = QueryMsg;"`;
+
+exports[`query classes /issues/55/batch.json 1`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+  }
+
+}"
+`;
+
+exports[`query classes /issues/55/denom_response.json 1`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+  }
+
+}"
+`;
+
+exports[`query classes /issues/55/edge.json 1`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+  }
+
+}"
+`;
+
+exports[`query classes /issues/55/execute_msg.json 1`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+    this.createEdge = this.createEdge.bind(this);
+    this.editEdge = this.editEdge.bind(this);
+    this.removeEdge = this.removeEdge.bind(this);
+    this.createGraph = this.createGraph.bind(this);
+    this.createGraphSimplified = this.createGraphSimplified.bind(this);
+    this.editGraphSimplified = this.editGraphSimplified.bind(this);
+    this.removeGraph = this.removeGraph.bind(this);
+    this.updateEdges = this.updateEdges.bind(this);
+    this.findSavings = this.findSavings.bind(this);
+    this.findSavingsInAGraph = this.findSavingsInAGraph.bind(this);
+    this.reset = this.reset.bind(this);
+    this.saveNetworkToFile = this.saveNetworkToFile.bind(this);
+    this.createGraphFromFile = this.createGraphFromFile.bind(this);
+    this.applySetOffFromFile = this.applySetOffFromFile.bind(this);
+  }
+
+  createEdge = async ({
+    amount,
+    creditor
+  }: {
+    amount: number;
+    creditor: Addr;
+  }): Promise<CreateEdgeResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      create_edge: {
+        amount,
+        creditor
+      }
+    });
+  };
+  editEdge = async ({
+    amount,
+    creditor,
+    edgeId
+  }: {
+    amount: number;
+    creditor: Addr;
+    edgeId: number;
+  }): Promise<EditEdgeResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      edit_edge: {
+        amount,
+        creditor,
+        edge_id: edgeId
+      }
+    });
+  };
+  removeEdge = async ({
+    edgeId
+  }: {
+    edgeId: number;
+  }): Promise<RemoveEdgeResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      remove_edge: {
+        edge_id: edgeId
+      }
+    });
+  };
+  createGraph = async ({
+    graph
+  }: {
+    graph: Edge[];
+  }): Promise<CreateGraphResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      create_graph: {
+        graph
+      }
+    });
+  };
+  createGraphSimplified = async ({
+    graph,
+    graphId
+  }: {
+    graph: Addr[][];
+    graphId: number;
+  }): Promise<CreateGraphSimplifiedResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      create_graph_simplified: {
+        graph,
+        graph_id: graphId
+      }
+    });
+  };
+  editGraphSimplified = async ({
+    graph,
+    graphId
+  }: {
+    graph: Addr[][];
+    graphId: number;
+  }): Promise<EditGraphSimplifiedResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      edit_graph_simplified: {
+        graph,
+        graph_id: graphId
+      }
+    });
+  };
+  removeGraph = async ({
+    graphId
+  }: {
+    graphId: number;
+  }): Promise<RemoveGraphResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      remove_graph: {
+        graph_id: graphId
+      }
+    });
+  };
+  updateEdges = async ({
+    edges
+  }: {
+    edges: number[][];
+  }): Promise<UpdateEdgesResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      update_edges: {
+        edges
+      }
+    });
+  };
+  findSavings = async (): Promise<FindSavingsResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      find_savings: {}
+    });
+  };
+  findSavingsInAGraph = async ({
+    graphId
+  }: {
+    graphId: number;
+  }): Promise<FindSavingsInAGraphResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      find_savings_in_a_graph: {
+        graph_id: graphId
+      }
+    });
+  };
+  reset = async (): Promise<ResetResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      reset: {}
+    });
+  };
+  saveNetworkToFile = async ({
+    filepath
+  }: {
+    filepath: string;
+  }): Promise<SaveNetworkToFileResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      save_network_to_file: {
+        filepath
+      }
+    });
+  };
+  createGraphFromFile = async ({
+    filepath
+  }: {
+    filepath: string;
+  }): Promise<CreateGraphFromFileResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      create_graph_from_file: {
+        filepath
+      }
+    });
+  };
+  applySetOffFromFile = async ({
+    filepath
+  }: {
+    filepath: string;
+  }): Promise<ApplySetOffFromFileResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      apply_set_off_from_file: {
+        filepath
+      }
+    });
+  };
+}"
+`;
+
+exports[`query classes /issues/55/instantiate_msg.json 1`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+  }
+
+}"
+`;
+
+exports[`query classes /issues/55/network.json 1`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+  }
+
+}"
+`;
+
+exports[`query classes /issues/55/query_msg.json 1`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+    this.getDenom = this.getDenom.bind(this);
+    this.getOwner = this.getOwner.bind(this);
+    this.allEdges = this.allEdges.bind(this);
+    this.oneEdge = this.oneEdge.bind(this);
+    this.oneBatch = this.oneBatch.bind(this);
+    this.oneGraph = this.oneGraph.bind(this);
+    this.getEdgesByAddress = this.getEdgesByAddress.bind(this);
+    this.getEdgesAsCounterparty = this.getEdgesAsCounterparty.bind(this);
+    this.getTotalDebtPerAddress = this.getTotalDebtPerAddress.bind(this);
+    this.getTotalCreditPerAddress = this.getTotalCreditPerAddress.bind(this);
+    this.getTotalDebtByGraph = this.getTotalDebtByGraph.bind(this);
+    this.getTotalDebt = this.getTotalDebt.bind(this);
+  }
+
+  getDenom = async (): Promise<GetDenomResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      get_denom: {}
+    });
+  };
+  getOwner = async (): Promise<GetOwnerResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      get_owner: {}
+    });
+  };
+  allEdges = async (): Promise<AllEdgesResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      all_edges: {}
+    });
+  };
+  oneEdge = async ({
+    edgeId
+  }: {
+    edgeId: number;
+  }): Promise<OneEdgeResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      one_edge: {
+        edge_id: edgeId
+      }
+    });
+  };
+  oneBatch = async ({
+    batchId
+  }: {
+    batchId: number;
+  }): Promise<OneBatchResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      one_batch: {
+        batch_id: batchId
+      }
+    });
+  };
+  oneGraph = async ({
+    graphId
+  }: {
+    graphId: number;
+  }): Promise<OneGraphResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      one_graph: {
+        graph_id: graphId
+      }
+    });
+  };
+  getEdgesByAddress = async ({
+    address
+  }: {
+    address: Addr;
+  }): Promise<GetEdgesByAddressResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      get_edges_by_address: {
+        address
+      }
+    });
+  };
+  getEdgesAsCounterparty = async ({
+    address
+  }: {
+    address: Addr;
+  }): Promise<GetEdgesAsCounterpartyResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      get_edges_as_counterparty: {
+        address
+      }
+    });
+  };
+  getTotalDebtPerAddress = async ({
+    address
+  }: {
+    address: Addr;
+  }): Promise<GetTotalDebtPerAddressResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      get_total_debt_per_address: {
+        address
+      }
+    });
+  };
+  getTotalCreditPerAddress = async ({
+    address
+  }: {
+    address: Addr;
+  }): Promise<GetTotalCreditPerAddressResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      get_total_credit_per_address: {
+        address
+      }
+    });
+  };
+  getTotalDebtByGraph = async ({
+    graphId
+  }: {
+    graphId: number;
+  }): Promise<GetTotalDebtByGraphResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      get_total_debt_by_graph: {
+        graph_id: graphId
+      }
+    });
+  };
+  getTotalDebt = async (): Promise<GetTotalDebtResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      get_total_debt: {}
+    });
+  };
+}"
+`;
