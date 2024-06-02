@@ -307,9 +307,9 @@ func TestGetVaultClobOrders(t *testing.T) {
 		"Success - Get orders from Vault for Clob Pair 0": {
 			vaultParams: vaulttypes.Params{
 				Layers:                           2,       // 2 layers
-				SpreadMinPpm:                     3_000,   // 30 bps
+				SpreadMinPpm:                     3_123,   // 31.23 bps
 				SpreadBufferPpm:                  1_500,   // 15 bps
-				SkewFactorPpm:                    500_000, // 0.5
+				SkewFactorPpm:                    554_321, // 0.554321
 				OrderSizePctPpm:                  100_000, // 10%
 				OrderExpirationSeconds:           2,       // 2 seconds
 				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
@@ -319,8 +319,12 @@ func TestGetVaultClobOrders(t *testing.T) {
 			vaultInventoryBaseQuantums: big.NewInt(0),
 			clobPair:                   constants.ClobPair_Btc,
 			marketParam:                constants.TestMarketParams[0],
-			marketPrice:                constants.TestMarketPrices[0],
-			perpetual:                  constants.BtcUsd_0DefaultFunding_10AtomicResolution,
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    5_000_000, // $50
+			},
+			perpetual: constants.BtcUsd_0DefaultFunding_10AtomicResolution,
 			// To calculate order subticks:
 			// 1. spread = max(spread_min, spread_buffer + min_price_change)
 			// 2. leverage = open_notional / equity
@@ -332,32 +336,32 @@ func TestGetVaultClobOrders(t *testing.T) {
 			// To calculate size of each order
 			// 1. `order_size_pct_ppm * equity / oracle_price`.
 			expectedOrderSubticks: []uint64{
-				// spreadPpm = max(3_000, 1_500 + 50) = 3_000
-				// spread = 0.003
+				// spreadPpm = max(3_123, 1_500 + 50) = 3_123
+				// spread = 0.003123
 				// leverage = 0 / 1_000 = 0
 				// oracleSubticks = 5_000_000_000 * 10^(-5 - (-8) + (-10) - (-6)) = 5e8
 				// leverage_0 = leverage = 0
-				// skew_0 = -0 * 3_000 * 0.5 = 0
-				// a_0 = 5e8 * (1 + 0 + 0.003*1) = 501_500_000
-				501_500_000,
-				// b_0 = 5e8 * (1 + 0 - 0.003*1) = 498_500_000
-				498_500_000,
+				// skew_0 = -0 * 3_123 * 0.554321 = 0
+				// a_0 = 5e5 * (1 + 0 + 0.003123*1) = 501_561.5 = 501_565 (rounded up to 5)
+				501_565,
+				// b_0 = 5e5 * (1 + 0 - 0.003123*1) = 498_438.5 = 498435 (rounded down to 5)
+				498_435,
 				// leverage_1 = leverage - 0.1 = -0.1
-				// skew_1 = 0.1 * 0.003 * 0.5 = 0.00015
-				// a_1 = 5e8 * (1 + 0.00015 + 0.003*2) = 503_075_000
-				503_075_000,
+				// skew_1 = 0.1 * 0.003123 * 0.554321 ~= 0.000173
+				// a_1 = 5e5 * (1 + 0.000173 + 0.003123*2) = 503209.5 ~= 503_210 (rounded up to 5)
+				503_210,
 				// leverage_1 = leverage + 0.1 = 0.1
-				// skew_1 = -0.1 * 0.003 * 0.5 = -0.00015
-				// b_2 = 5e8 * (1 - 0.00015 - 0.003*2) = 496_925_000
-				496_925_000,
+				// skew_1 = -0.1 * 0.003123 * 0.554321 = -0.000173
+				// b_2 = 5e5 * (1 - 0.000173 - 0.003123*2) = 496790.5 ~= 496_790 (rounded down to 5)
+				496_790,
 			},
-			// order_size = 10% * 1_000 / 50_000 = 0.002
-			// order_size_base_quantums = 0.002 * 10^10 = 20_000_000
+			// order_size = 10% * $1_000 / $50 = 2
+			// order_size_base_quantums = 2 * 10^10 = 20_000_000_000
 			expectedOrderQuantums: []uint64{
-				20_000_000,
-				20_000_000,
-				20_000_000,
-				20_000_000,
+				20_000_000_000,
+				20_000_000_000,
+				20_000_000_000,
+				20_000_000_000,
 			},
 		},
 		"Success - Get orders from Vault for Clob Pair 1, bids bounded by oracle price.": {
