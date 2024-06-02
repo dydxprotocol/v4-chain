@@ -813,7 +813,7 @@
         "active_channels": [],
         "interchain_accounts": [],
         "params": {
-          "controller_enabled": true
+          "controller_enabled": false
         },
         "ports": []
       },
