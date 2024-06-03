@@ -101,12 +101,20 @@ async function uncrossOrderbook(
       client: redisClient,
     });
     if (!deleted) {
-      stats.increment(`${config.SERVICE_NAME}.uncross_orderbook_failed`, { side: OrderSide.BUY });
+      stats.increment(
+        `${config.SERVICE_NAME}.uncross_orderbook_failed`,
+        {
+          side: OrderSide.BUY,
+          clobPairId: market.clobPairId,
+          ticker,
+        },
+      );
       logger.info({
         at: 'uncrossOrderbook#deleteStalePriceLevel',
         message: `Failed to delete stale bid level for ${ticker}`,
         side: OrderSide.BUY,
         humanPrice: bid.humanPrice,
+        ticker,
       });
     } else {
       stats.increment(`${config.SERVICE_NAME}.uncross_orderbook`, { side: OrderSide.BUY });
@@ -128,12 +136,20 @@ async function uncrossOrderbook(
       client: redisClient,
     });
     if (!deleted) {
-      stats.increment(`${config.SERVICE_NAME}.uncross_orderbook_failed`, { side: OrderSide.SELL });
+      stats.increment(
+        `${config.SERVICE_NAME}.uncross_orderbook_failed`,
+        {
+          side: OrderSide.SELL,
+          clobPairId: market.clobPairId,
+          ticker,
+        },
+      );
       logger.info({
         at: 'uncrossOrderbook#deleteStalePriceLevel',
         message: `Failed to delete stale ask level for ${ticker}`,
         side: OrderSide.SELL,
         humanPrice: ask.humanPrice,
+        ticker,
       });
     } else {
       stats.increment(`${config.SERVICE_NAME}.uncross_orderbook`, { side: OrderSide.SELL });
