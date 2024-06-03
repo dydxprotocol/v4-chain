@@ -1,11 +1,12 @@
 import { PageRequest, PageRequestSDKType, PageResponse, PageResponseSDKType } from "../../cosmos/base/query/v1beta1/pagination";
 import { ValidatorMevMatches, ValidatorMevMatchesSDKType, MevNodeToNodeMetrics, MevNodeToNodeMetricsSDKType } from "./mev";
-import { OrderId, OrderIdSDKType, LongTermOrderPlacement, LongTermOrderPlacementSDKType } from "./order";
+import { OrderId, OrderIdSDKType, LongTermOrderPlacement, LongTermOrderPlacementSDKType, Order, OrderSDKType } from "./order";
 import { ClobPair, ClobPairSDKType } from "./clob_pair";
 import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } from "./equity_tier_limit_config";
 import { BlockRateLimitConfiguration, BlockRateLimitConfigurationSDKType } from "./block_rate_limit_config";
 import { LiquidationsConfig, LiquidationsConfigSDKType } from "./liquidations_config";
 import { OffChainUpdateV1, OffChainUpdateV1SDKType } from "../indexer/off_chain_updates/off_chain_updates";
+import { ClobMatch, ClobMatchSDKType } from "./matches";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
 /** QueryGetClobPairRequest is request type for the ClobPair method. */
@@ -267,15 +268,7 @@ export interface StreamOrderbookUpdatesRequestSDKType {
 
 export interface StreamOrderbookUpdatesResponse {
   /** Orderbook updates for the clob pair. */
-  updates: OffChainUpdateV1[];
-  /**
-   * Snapshot indicates if the response is from a snapshot of the orderbook.
-   * This is true for the initial response and false for all subsequent updates.
-   * Note that if the snapshot is true, then all previous entries should be
-   * discarded and the orderbook should be resynced.
-   */
-
-  snapshot: boolean;
+  updates: StreamUpdate[];
   /**
    * ---Additional fields used to debug issues---
    * Block height of the updates.
@@ -293,15 +286,7 @@ export interface StreamOrderbookUpdatesResponse {
 
 export interface StreamOrderbookUpdatesResponseSDKType {
   /** Orderbook updates for the clob pair. */
-  updates: OffChainUpdateV1SDKType[];
-  /**
-   * Snapshot indicates if the response is from a snapshot of the orderbook.
-   * This is true for the initial response and false for all subsequent updates.
-   * Note that if the snapshot is true, then all previous entries should be
-   * discarded and the orderbook should be resynced.
-   */
-
-  snapshot: boolean;
+  updates: StreamUpdateSDKType[];
   /**
    * ---Additional fields used to debug issues---
    * Block height of the updates.
@@ -311,6 +296,106 @@ export interface StreamOrderbookUpdatesResponseSDKType {
   /** Exec mode of the updates. */
 
   exec_mode: number;
+}
+/**
+ * StreamUpdate is an update that will be pushed through the
+ * GRPC stream.
+ */
+
+export interface StreamUpdate {
+  orderbookUpdate?: StreamOrderbookUpdate;
+  orderFill?: StreamOrderbookFill;
+}
+/**
+ * StreamUpdate is an update that will be pushed through the
+ * GRPC stream.
+ */
+
+export interface StreamUpdateSDKType {
+  orderbook_update?: StreamOrderbookUpdateSDKType;
+  order_fill?: StreamOrderbookFillSDKType;
+}
+/**
+ * StreamOrderbookUpdate provides information on an orderbook update. Used in
+ * the full node GRPC stream.
+ */
+
+export interface StreamOrderbookUpdate {
+  /**
+   * Orderbook updates for the clob pair. Can contain order place, removals,
+   * or updates.
+   */
+  updates: OffChainUpdateV1[];
+  /**
+   * Snapshot indicates if the response is from a snapshot of the orderbook.
+   * This is true for the initial response and false for all subsequent updates.
+   * Note that if the snapshot is true, then all previous entries should be
+   * discarded and the orderbook should be resynced.
+   */
+
+  snapshot: boolean;
+}
+/**
+ * StreamOrderbookUpdate provides information on an orderbook update. Used in
+ * the full node GRPC stream.
+ */
+
+export interface StreamOrderbookUpdateSDKType {
+  /**
+   * Orderbook updates for the clob pair. Can contain order place, removals,
+   * or updates.
+   */
+  updates: OffChainUpdateV1SDKType[];
+  /**
+   * Snapshot indicates if the response is from a snapshot of the orderbook.
+   * This is true for the initial response and false for all subsequent updates.
+   * Note that if the snapshot is true, then all previous entries should be
+   * discarded and the orderbook should be resynced.
+   */
+
+  snapshot: boolean;
+}
+/**
+ * StreamOrderbookFill provides information on an orderbook fill. Used in
+ * the full node GRPC stream.
+ */
+
+export interface StreamOrderbookFill {
+  /**
+   * Clob match. Provides information on which orders were matched
+   * and the type of order. Fill amounts here are relative.
+   */
+  clobMatch?: ClobMatch;
+  /**
+   * All orders involved in the specified clob match. Used to look up
+   * price of a match through a given maker order id.
+   */
+
+  orders: Order[];
+  /** Resulting fill amounts for each order in the orders array. */
+
+  fillAmounts: Long[];
+}
+/**
+ * StreamOrderbookFill provides information on an orderbook fill. Used in
+ * the full node GRPC stream.
+ */
+
+export interface StreamOrderbookFillSDKType {
+  /**
+   * Clob match. Provides information on which orders were matched
+   * and the type of order. Fill amounts here are relative.
+   */
+  clob_match?: ClobMatchSDKType;
+  /**
+   * All orders involved in the specified clob match. Used to look up
+   * price of a match through a given maker order id.
+   */
+
+  orders: OrderSDKType[];
+  /** Resulting fill amounts for each order in the orders array. */
+
+  fill_amounts: Long[];
 }
 
 function createBaseQueryGetClobPairRequest(): QueryGetClobPairRequest {
@@ -1075,7 +1160,6 @@ export const StreamOrderbookUpdatesRequest = {
 function createBaseStreamOrderbookUpdatesResponse(): StreamOrderbookUpdatesResponse {
   return {
     updates: [],
-    snapshot: false,
     blockHeight: 0,
     execMode: 0
   };
@@ -1084,19 +1168,15 @@ function createBaseStreamOrderbookUpdatesResponse(): StreamOrderbookUpdatesRespo
 export const StreamOrderbookUpdatesResponse = {
   encode(message: StreamOrderbookUpdatesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.updates) {
-      OffChainUpdateV1.encode(v!, writer.uint32(10).fork()).ldelim();
-    }
-
-    if (message.snapshot === true) {
-      writer.uint32(16).bool(message.snapshot);
+      StreamUpdate.encode(v!, writer.uint32(10).fork()).ldelim();
     }
 
     if (message.blockHeight !== 0) {
-      writer.uint32(24).uint32(message.blockHeight);
+      writer.uint32(16).uint32(message.blockHeight);
     }
 
     if (message.execMode !== 0) {
-      writer.uint32(32).uint32(message.execMode);
+      writer.uint32(24).uint32(message.execMode);
     }
 
     return writer;
@@ -1112,18 +1192,14 @@ export const StreamOrderbookUpdatesResponse = {
 
       switch (tag >>> 3) {
         case 1:
-          message.updates.push(OffChainUpdateV1.decode(reader, reader.uint32()));
+          message.updates.push(StreamUpdate.decode(reader, reader.uint32()));
           break;
 
         case 2:
-          message.snapshot = reader.bool();
-          break;
-
-        case 3:
           message.blockHeight = reader.uint32();
           break;
 
-        case 4:
+        case 3:
           message.execMode = reader.uint32();
           break;
 
@@ -1138,10 +1214,196 @@ export const StreamOrderbookUpdatesResponse = {
 
   fromPartial(object: DeepPartial<StreamOrderbookUpdatesResponse>): StreamOrderbookUpdatesResponse {
     const message = createBaseStreamOrderbookUpdatesResponse();
-    message.updates = object.updates?.map(e => OffChainUpdateV1.fromPartial(e)) || [];
-    message.snapshot = object.snapshot ?? false;
+    message.updates = object.updates?.map(e => StreamUpdate.fromPartial(e)) || [];
     message.blockHeight = object.blockHeight ?? 0;
     message.execMode = object.execMode ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseStreamUpdate(): StreamUpdate {
+  return {
+    orderbookUpdate: undefined,
+    orderFill: undefined
+  };
+}
+
+export const StreamUpdate = {
+  encode(message: StreamUpdate, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.orderbookUpdate !== undefined) {
+      StreamOrderbookUpdate.encode(message.orderbookUpdate, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.orderFill !== undefined) {
+      StreamOrderbookFill.encode(message.orderFill, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): StreamUpdate {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseStreamUpdate();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.orderbookUpdate = StreamOrderbookUpdate.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.orderFill = StreamOrderbookFill.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<StreamUpdate>): StreamUpdate {
+    const message = createBaseStreamUpdate();
+    message.orderbookUpdate = object.orderbookUpdate !== undefined && object.orderbookUpdate !== null ? StreamOrderbookUpdate.fromPartial(object.orderbookUpdate) : undefined;
+    message.orderFill = object.orderFill !== undefined && object.orderFill !== null ? StreamOrderbookFill.fromPartial(object.orderFill) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseStreamOrderbookUpdate(): StreamOrderbookUpdate {
+  return {
+    updates: [],
+    snapshot: false
+  };
+}
+
+export const StreamOrderbookUpdate = {
+  encode(message: StreamOrderbookUpdate, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.updates) {
+      OffChainUpdateV1.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.snapshot === true) {
+      writer.uint32(16).bool(message.snapshot);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): StreamOrderbookUpdate {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseStreamOrderbookUpdate();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.updates.push(OffChainUpdateV1.decode(reader, reader.uint32()));
+          break;
+
+        case 2:
+          message.snapshot = reader.bool();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<StreamOrderbookUpdate>): StreamOrderbookUpdate {
+    const message = createBaseStreamOrderbookUpdate();
+    message.updates = object.updates?.map(e => OffChainUpdateV1.fromPartial(e)) || [];
+    message.snapshot = object.snapshot ?? false;
+    return message;
+  }
+
+};
+
+function createBaseStreamOrderbookFill(): StreamOrderbookFill {
+  return {
+    clobMatch: undefined,
+    orders: [],
+    fillAmounts: []
+  };
+}
+
+export const StreamOrderbookFill = {
+  encode(message: StreamOrderbookFill, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.clobMatch !== undefined) {
+      ClobMatch.encode(message.clobMatch, writer.uint32(10).fork()).ldelim();
+    }
+
+    for (const v of message.orders) {
+      Order.encode(v!, writer.uint32(18).fork()).ldelim();
+    }
+
+    writer.uint32(26).fork();
+
+    for (const v of message.fillAmounts) {
+      writer.uint64(v);
+    }
+
+    writer.ldelim();
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): StreamOrderbookFill {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseStreamOrderbookFill();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.clobMatch = ClobMatch.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.orders.push(Order.decode(reader, reader.uint32()));
+          break;
+
+        case 3:
+          if ((tag & 7) === 2) {
+            const end2 = reader.uint32() + reader.pos;
+
+            while (reader.pos < end2) {
+              message.fillAmounts.push((reader.uint64() as Long));
+            }
+          } else {
+            message.fillAmounts.push((reader.uint64() as Long));
+          }
+
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<StreamOrderbookFill>): StreamOrderbookFill {
+    const message = createBaseStreamOrderbookFill();
+    message.clobMatch = object.clobMatch !== undefined && object.clobMatch !== null ? ClobMatch.fromPartial(object.clobMatch) : undefined;
+    message.orders = object.orders?.map(e => Order.fromPartial(e)) || [];
+    message.fillAmounts = object.fillAmounts?.map(e => Long.fromValue(e)) || [];
     return message;
   }
 

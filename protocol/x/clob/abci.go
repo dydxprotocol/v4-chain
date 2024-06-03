@@ -175,45 +175,6 @@ func PrepareCheckState(
 		offchainUpdates,
 	)
 
-	// For orders that are filled in the last block, send an orderbook update to the grpc streams.
-	if keeper.GetGrpcStreamingManager().Enabled() {
-		allUpdates := types.NewOffchainUpdates()
-		orderIdsToSend := make(map[types.OrderId]bool)
-
-		// Send an update for reverted local operations.
-		for _, operation := range localValidatorOperationsQueue {
-			if match := operation.GetMatch(); match != nil {
-				// For normal order matches, we send an update for the taker and maker orders.
-				if matchedOrders := match.GetMatchOrders(); matchedOrders != nil {
-					orderIdsToSend[matchedOrders.TakerOrderId] = true
-					for _, fill := range matchedOrders.Fills {
-						orderIdsToSend[fill.MakerOrderId] = true
-					}
-				}
-				// For liquidation matches, we send an update for the maker orders.
-				if matchedLiquidation := match.GetMatchPerpetualLiquidation(); matchedLiquidation != nil {
-					for _, fill := range matchedLiquidation.Fills {
-						orderIdsToSend[fill.MakerOrderId] = true
-					}
-				}
-			}
-		}
-
-		// Send an update for orders that were proposed.
-		for _, orderId := range processProposerMatchesEvents.OrderIdsFilledInLastBlock {
-			orderIdsToSend[orderId] = true
-		}
-
-		// Send update.
-		for orderId := range orderIdsToSend {
-			if _, exists := keeper.MemClob.GetOrder(ctx, orderId); exists {
-				orderbookUpdate := keeper.MemClob.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
-				allUpdates.Append(orderbookUpdate)
-			}
-		}
-		keeper.SendOrderbookUpdates(ctx, allUpdates, false)
-	}
-
 	// 3. Place all stateful order placements included in the last block on the memclob.
 	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`
 	// is called within `PlaceConditionalOrdersTriggeredInLastBlock`.

@@ -253,7 +253,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 			mockMemClobKeeper := &mocks.MemClobKeeper{}
 			memclob.SetClobKeeper(mockMemClobKeeper)
 			mockMemClobKeeper.On("Logger", mock.Anything).Return(log.NewNopLogger()).Maybe()
-			mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return().Maybe()
+			mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
 
 			for _, operation := range tc.placedOperations {
 				switch operation.Operation.(type) {
@@ -265,7 +265,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 						false,
 						satypes.BaseQuantums(0),
 						uint32(0),
-					).Times(4)
+					).Times(5)
 					mockMemClobKeeper.On("AddOrderToOrderbookSubaccountUpdatesCheck", mock.Anything, mock.Anything, mock.Anything).
 						Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult)).Once()
 

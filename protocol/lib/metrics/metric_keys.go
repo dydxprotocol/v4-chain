@@ -65,8 +65,13 @@ const (
 	GateWithdrawalsIfNegativeTncSubaccountSeenLatency = "gate_withdrawals_if_negative_tnc_subaccount_seen_latency"
 
 	// Full node grpc
-	FullNodeGrpc                    = "full_node_grpc"
-	GrpcSendOrderbookUpdatesLatency = "grpc_send_orderbook_updates_latency"
-	EndBlocker                      = "end_blocker"
-	EndBlockerLag                   = "end_blocker_lag"
+	FullNodeGrpc                      = "full_node_grpc"
+	GrpcSendOrderbookUpdatesLatency   = "grpc_send_orderbook_updates_latency"
+	GrpcSendOrderbookFillsLatency     = "grpc_send_orderbook_fills_latency"
+	GrpcEmitProtocolUpdateCount       = "grpc_emit_protocol_update_count"
+	GrpcSendResponseToSubscriberCount = "grpc_send_response_to_subscriber_count"
+	GrpcStreamSubscriberCount         = "grpc_stream_subscriber_count"
+
+	EndBlocker    = "end_blocker"
+	EndBlockerLag = "end_blocker_lag"
 )
