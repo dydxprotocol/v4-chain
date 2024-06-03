@@ -21,6 +21,7 @@ import removeExpiredOrdersTask from './tasks/remove-expired-orders';
 import removeOldOrderUpdatesTask from './tasks/remove-old-order-updates';
 import takeFastSyncSnapshotTask from './tasks/take-fast-sync-snapshot';
 import trackLag from './tasks/track-lag';
+import uncrossOrderbookTask from './tasks/uncross-orderbook';
 import updateComplianceDataTask from './tasks/update-compliance-data';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
 
@@ -61,6 +62,15 @@ async function start(): Promise<void> {
       'delete_zero_price_levels',
       config.LOOPS_INTERVAL_MS_DELETE_ZERO_PRICE_LEVELS,
       config.DELETE_ZERO_PRICE_LEVELS_LOCK_MULTIPLIER,
+    );
+  }
+
+  if (config.LOOPS_ENABLED_UNCROSS_ORDERBOOK) {
+    startLoop(
+      uncrossOrderbookTask,
+      'uncross_orderbook',
+      config.LOOPS_INTERVAL_MS_UNCROSS_ORDERBOOK,
+      config.UNCROSS_ORDERBOOK_LOCK_MULTIPLIER,
     );
   }
 
