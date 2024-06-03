@@ -42,6 +42,7 @@ type OrderbookSubscription struct {
 func NewGrpcStreamingManager(
 	logger log.Logger,
 ) *GrpcStreamingManagerImpl {
+	logger = logger.With(log.ModuleKey, "grpc-streaming")
 	return &GrpcStreamingManagerImpl{
 		logger:                 logger,
 		orderbookSubscriptions: make(map[uint32]*OrderbookSubscription),
