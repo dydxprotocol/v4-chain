@@ -60,6 +60,8 @@ async function uncrossOrderbook(
   let ai = 0;
   let bi = 0;
 
+  // the bids are sorted in descending order
+  // the asks are sorted in ascending order
   while (
     ai < orderbookLevels.asks.length &&
     bi < orderbookLevels.bids.length &&

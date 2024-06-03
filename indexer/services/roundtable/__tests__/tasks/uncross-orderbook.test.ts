@@ -155,6 +155,10 @@ describe('uncross-orderbook', () => {
 
     await runTask();
 
+    // the bids are sorted in descending order
+    // the asks are sorted in ascending order
+    // the highest bid at price level 45200 was updated after the ask at price level 45000,
+    // so the ask at price level 45000 should be removed.
     expect(require('@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache').deleteStalePriceLevel).toHaveBeenCalledWith(
       expect.objectContaining({
         side: OrderSide.SELL,
