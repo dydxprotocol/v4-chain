@@ -1052,20 +1052,22 @@ func (k Keeper) ConvertFillablePriceToSubticks(
 		panic("ConvertFillablePriceToSubticks: FillablePrice should not be negative")
 	}
 
-	exponent := clobPair.QuantumConversionExponent
-	absExponentiatedValueBig := lib.BigPow10(uint64(lib.AbsInt32(exponent)))
-	quoteQuantumsPerBaseQuantumAndSubtickRat := new(big.Rat).SetInt(absExponentiatedValueBig)
-	// If `exponent` is negative, invert the fraction to set the result to `1 / 10^exponent`.
-	if exponent < 0 {
-		quoteQuantumsPerBaseQuantumAndSubtickRat.Inv(quoteQuantumsPerBaseQuantumAndSubtickRat)
-	}
-
 	// Assuming `fillablePrice` is in units of `quote quantums / base quantum`,  then dividing by
 	// `quote quantums / (base quantum * subtick)` will give the resulting units of subticks.
-	subticksRat := new(big.Rat).Quo(
-		fillablePrice,
-		quoteQuantumsPerBaseQuantumAndSubtickRat,
-	)
+	exponent := clobPair.QuantumConversionExponent
+	p10, inverse := lib.BigPow10(exponent)
+	subticksRat := new(big.Rat)
+	if inverse {
+		subticksRat.SetFrac(
+			new(big.Int).Mul(p10, fillablePrice.Num()),
+			fillablePrice.Denom(),
+		)
+	} else {
+		subticksRat.SetFrac(
+			fillablePrice.Num(),
+			new(big.Int).Mul(p10, fillablePrice.Denom()),
+		)
+	}
 
 	// If we are liquidating a long position with a sell order, then we round up to the nearest
 	// subtick (and vice versa for liquidating shorts).
