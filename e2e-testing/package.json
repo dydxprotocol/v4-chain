@@ -11,7 +11,8 @@
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
-    "test": "NODE_ENV=test jest --runInBand --forceExit"
+    "test": "NODE_ENV=test jest --runInBand --forceExit",
+    "e2e-test": "./run-containerized-env.sh && pnpm run build && sleep 30 && pnpm run test"
   },
   "author": "",
   "license": "AGPL-3.0",
