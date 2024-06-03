@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"math/big"
 	"net/http"
@@ -458,9 +457,6 @@ func New(
 			}
 			if app.SlinkyClient != nil {
 				app.SlinkyClient.Stop()
-			}
-			if app.GrpcStreamingManager != nil {
-				app.GrpcStreamingManager.Stop()
 			}
 			return nil
 		},
@@ -1674,7 +1670,6 @@ func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 	}
 	block := app.IndexerEventManager.ProduceBlock(ctx)
 	app.IndexerEventManager.SendOnchainData(block)
-	app.GrpcStreamingManager.EmitMetrics()
 	return response, err
 }
 
@@ -1692,7 +1687,6 @@ func (app *App) PrepareCheckStater(ctx sdk.Context) {
 	if err := app.ModuleManager.PrepareCheckState(ctx); err != nil {
 		panic(err)
 	}
-	app.GrpcStreamingManager.EmitMetrics()
 }
 
 // InitChainer application update at chain initialization.
@@ -1936,9 +1930,8 @@ func getGrpcStreamingManagerFromOptions(
 	logger log.Logger,
 ) (manager streamingtypes.GrpcStreamingManager) {
 	if appFlags.GrpcStreamingEnabled {
-		grpcStreamingBufferSize := uint32(appFlags.GrpcStreamingBufferSize)
-		logger.Info(fmt.Sprintf("GRPC streaming is enabled with buffer size %d", grpcStreamingBufferSize))
-		return streaming.NewGrpcStreamingManager(logger, grpcStreamingBufferSize)
+		logger.Info("GRPC streaming is enabled")
+		return streaming.NewGrpcStreamingManager(logger)
 	}
 	return streaming.NewNoopGrpcStreamingManager()
 }

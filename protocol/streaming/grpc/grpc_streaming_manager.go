@@ -1,7 +1,6 @@
 package grpc
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -19,26 +18,13 @@ var _ types.GrpcStreamingManager = (*GrpcStreamingManagerImpl)(nil)
 
 // GrpcStreamingManagerImpl is an implementation for managing gRPC streaming subscriptions.
 type GrpcStreamingManagerImpl struct {
-	logger log.Logger
 	sync.Mutex
+
+	logger log.Logger
 
 	// orderbookSubscriptions maps subscription IDs to their respective orderbook subscriptions.
 	orderbookSubscriptions map[uint32]*OrderbookSubscription
 	nextSubscriptionId     uint32
-
-	// Readonly buffer to enqueue orderbook updates before pushing them through grpc streams.
-	// Decouples the execution of abci logic with full node streaming.
-	updateBuffer           chan bufferInternalResponse
-	updateBufferWindowSize uint32
-}
-
-// bufferInternalResponse is enqueued into the readonly buffer.
-// It contains an update respnose and the clob pair id to send this information to.
-type bufferInternalResponse struct {
-	response clobtypes.StreamOrderbookUpdatesResponse
-
-	// Information relevant to which Orderbook Subscription to send out to
-	clobPairId uint32
 }
 
 // OrderbookSubscription represents a active subscription to the orderbook updates stream.
@@ -55,74 +41,23 @@ type OrderbookSubscription struct {
 
 func NewGrpcStreamingManager(
 	logger log.Logger,
-	bufferWindow uint32,
 ) *GrpcStreamingManagerImpl {
-	grpcStreamingManager := &GrpcStreamingManagerImpl{
-		logger:                 logger.With("module", "grpc-streaming"),
+	logger = logger.With(log.ModuleKey, "grpc-streaming")
+	return &GrpcStreamingManagerImpl{
+		logger:                 logger,
 		orderbookSubscriptions: make(map[uint32]*OrderbookSubscription),
-		nextSubscriptionId:     0,
-
-		updateBuffer:           make(chan bufferInternalResponse, bufferWindow),
-		updateBufferWindowSize: bufferWindow,
 	}
-
-	// Worker goroutine to consistently read from channel and send out updates
-	go func() {
-		for internalResponse := range grpcStreamingManager.updateBuffer {
-			grpcStreamingManager.sendUpdateResponse(internalResponse)
-		}
-	}()
-
-	return grpcStreamingManager
 }
 
 func (sm *GrpcStreamingManagerImpl) Enabled() bool {
 	return true
 }
 
-func (sm *GrpcStreamingManagerImpl) Stop() {
-	close(sm.updateBuffer)
-}
-
 func (sm *GrpcStreamingManagerImpl) EmitMetrics() {
-	metrics.SetGauge(metrics.GrpcStreamingBufferSize, float32(len(sm.updateBuffer)))
-	metrics.SetGauge(metrics.GrpcStreamingNumConnections, float32(len(sm.orderbookSubscriptions)))
-}
-
-func (sm *GrpcStreamingManagerImpl) removeSubscription(id uint32) {
-	sm.logger.Info(
-		fmt.Sprintf(
-			"Removing orderbook subscriptions for subscription id %+v",
-			id,
-		),
+	metrics.SetGauge(
+		metrics.GrpcStreamSubscriberCount,
+		float32(len(sm.orderbookSubscriptions)),
 	)
-	delete(sm.orderbookSubscriptions, id)
-}
-
-func (sm *GrpcStreamingManagerImpl) sendUpdateResponse(
-	internalResponse bufferInternalResponse,
-) {
-	// Send update to subscribers.
-	subscriptionIdsToRemove := make([]uint32, 0)
-
-	for id, subscription := range sm.orderbookSubscriptions {
-		for _, clobPairId := range subscription.clobPairIds {
-			if clobPairId == internalResponse.clobPairId {
-				if err := subscription.srv.Send(
-					&internalResponse.response,
-				); err != nil {
-					sm.logger.Error("Error sending out update", "err", err)
-					subscriptionIdsToRemove = append(subscriptionIdsToRemove, id)
-				}
-			}
-		}
-	}
-	// Clean up subscriptions that have been closed.
-	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
-	for _, id := range subscriptionIdsToRemove {
-		sm.removeSubscription(id)
-	}
-	sm.EmitMetrics()
 }
 
 // Subscribe subscribes to the orderbook updates stream.
@@ -149,13 +84,64 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 
 	sm.orderbookSubscriptions[sm.nextSubscriptionId] = subscription
 	sm.nextSubscriptionId++
-	sm.logger.Info(fmt.Sprintf("New GRPC Stream Connection established, %+v", clobPairIds))
+	sm.EmitMetrics()
 	return nil
 }
 
+// SendOrderbookUpdates groups updates by their clob pair ids and
+// sends messages to the subscribers.
+func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
+	offchainUpdates *clobtypes.OffchainUpdates,
+	snapshot bool,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
+	defer metrics.ModuleMeasureSince(
+		metrics.FullNodeGrpc,
+		metrics.GrpcSendOrderbookUpdatesLatency,
+		time.Now(),
+	)
+
+	// Group updates by clob pair id.
+	updates := make(map[uint32]*clobtypes.OffchainUpdates)
+	for _, message := range offchainUpdates.Messages {
+		clobPairId := message.OrderId.ClobPairId
+		if _, ok := updates[clobPairId]; !ok {
+			updates[clobPairId] = clobtypes.NewOffchainUpdates()
+		}
+		updates[clobPairId].Messages = append(updates[clobPairId].Messages, message)
+	}
+
+	// Unmarshal each per-clob pair message to v1 updates.
+	updatesByClobPairId := make(map[uint32][]clobtypes.StreamUpdate)
+	for clobPairId, update := range updates {
+		v1updates, err := GetOffchainUpdatesV1(update)
+		if err != nil {
+			panic(err)
+		}
+		updatesByClobPairId[clobPairId] = []clobtypes.StreamUpdate{
+			{
+				UpdateMessage: &clobtypes.StreamUpdate_OrderbookUpdate{
+					OrderbookUpdate: &clobtypes.StreamOrderbookUpdate{
+						Updates:  v1updates,
+						Snapshot: snapshot,
+					},
+				},
+			},
+		}
+	}
+
+	sm.sendStreamUpdate(
+		updatesByClobPairId,
+		blockHeight,
+		execMode,
+	)
+}
+
 // SendOrderbookFillUpdates groups fills by their clob pair ids and
-// enqueues messages to be sent to the subscribers.
+// sends messages to the subscribers.
 func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
+	ctx sdk.Context,
 	orderbookFills []clobtypes.StreamOrderbookFill,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
@@ -165,8 +151,6 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 		metrics.GrpcSendOrderbookFillsLatency,
 		time.Now(),
 	)
-	sm.Lock()
-	defer sm.Unlock()
 
 	// Group fills by clob pair id.
 	updatesByClobPairId := make(map[uint32][]clobtypes.StreamUpdate)
@@ -186,87 +170,58 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 		updatesByClobPairId[clobPairId] = append(updatesByClobPairId[clobPairId], streamUpdate)
 	}
 
-	// Send response updates into the stream buffer
-	for clobPairId, streamUpdates := range updatesByClobPairId {
-		streamResponse := clobtypes.StreamOrderbookUpdatesResponse{
-			Updates:     streamUpdates,
-			BlockHeight: blockHeight,
-			ExecMode:    uint32(execMode),
-		}
-
-		sm.mustEnqueueOrderbookUpdate(bufferInternalResponse{
-			response:   streamResponse,
-			clobPairId: clobPairId,
-		})
-	}
+	sm.sendStreamUpdate(
+		updatesByClobPairId,
+		blockHeight,
+		execMode,
+	)
 }
 
-// SendOrderbookUpdates groups updates by their clob pair ids and
-// enqueues messages to be sent to the subscribers.
-func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
-	offchainUpdates *clobtypes.OffchainUpdates,
-	snapshot bool,
+// sendStreamUpdate takes in a map of clob pair id to stream updates and emits them to subscribers.
+func (sm *GrpcStreamingManagerImpl) sendStreamUpdate(
+	updatesByClobPairId map[uint32][]clobtypes.StreamUpdate,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
-	defer metrics.ModuleMeasureSince(
-		metrics.FullNodeGrpc,
-		metrics.GrpcSendOrderbookUpdatesLatency,
-		time.Now(),
+	metrics.IncrCounter(
+		metrics.GrpcEmitProtocolUpdateCount,
+		1,
 	)
+
 	sm.Lock()
 	defer sm.Unlock()
 
-	// Group updates by clob pair id.
-	updatesByClobPairId := make(map[uint32]*clobtypes.OffchainUpdates)
-	for _, message := range offchainUpdates.Messages {
-		clobPairId := message.OrderId.ClobPairId
-		if _, ok := updatesByClobPairId[clobPairId]; !ok {
-			updatesByClobPairId[clobPairId] = clobtypes.NewOffchainUpdates()
+	// Send updates to subscribers.
+	idsToRemove := make([]uint32, 0)
+	for id, subscription := range sm.orderbookSubscriptions {
+		streamUpdatesForSubscription := make([]clobtypes.StreamUpdate, 0)
+		for _, clobPairId := range subscription.clobPairIds {
+			if update, ok := updatesByClobPairId[clobPairId]; ok {
+				streamUpdatesForSubscription = append(streamUpdatesForSubscription, update...)
+			}
 		}
-		updatesByClobPairId[clobPairId].Messages = append(updatesByClobPairId[clobPairId].Messages, message)
-	}
 
-	// Unmarshal messages to v1 updates and enqueue in buffer to be sent.
-	for clobPairId, update := range updatesByClobPairId {
-		v1updates, err := GetOffchainUpdatesV1(update)
-		if err != nil {
-			panic(err)
-		}
-		streamUpdate := clobtypes.StreamUpdate{
-			UpdateMessage: &clobtypes.StreamUpdate_OrderbookUpdate{
-				OrderbookUpdate: &clobtypes.StreamOrderbookUpdate{
-					Updates:  v1updates,
-					Snapshot: snapshot,
+		if len(streamUpdatesForSubscription) > 0 {
+			metrics.IncrCounter(
+				metrics.GrpcSendResponseToSubscriberCount,
+				1,
+			)
+			if err := subscription.srv.Send(
+				&clobtypes.StreamOrderbookUpdatesResponse{
+					Updates:     streamUpdatesForSubscription,
+					BlockHeight: blockHeight,
+					ExecMode:    uint32(execMode),
 				},
-			},
+			); err != nil {
+				idsToRemove = append(idsToRemove, id)
+			}
 		}
-		sm.mustEnqueueOrderbookUpdate(bufferInternalResponse{
-			response: clobtypes.StreamOrderbookUpdatesResponse{
-				Updates:     []clobtypes.StreamUpdate{streamUpdate},
-				BlockHeight: blockHeight,
-				ExecMode:    uint32(execMode),
-			},
-			clobPairId: clobPairId,
-		})
 	}
-}
 
-// mustEnqueueOrderbookUpdate tries to enqueue an orderbook update to the buffer via non-blocking send.
-// If the buffer is full, *all* streaming subscriptions will be shut down.
-func (sm *GrpcStreamingManagerImpl) mustEnqueueOrderbookUpdate(internalResponse bufferInternalResponse) {
-	select {
-	case sm.updateBuffer <- internalResponse:
-	default:
-		sm.logger.Error("GRPC Streaming buffer full capacity. Dropping messages and all subscriptions. " +
-			"Disconnect all clients and increase buffer size via the `grpc-streaming-buffer-size flag.")
-		for k := range sm.orderbookSubscriptions {
-			sm.removeSubscription(k)
-		}
-		// Clear out the buffer
-		for len(sm.updateBuffer) > 0 {
-			<-sm.updateBuffer
-		}
+	// Clean up subscriptions that have been closed.
+	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
+	for _, id := range idsToRemove {
+		delete(sm.orderbookSubscriptions, id)
 	}
 	sm.EmitMetrics()
 }
