@@ -495,22 +495,28 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	}
 
 	if m.generateOffchainUpdates {
-		// If this is a replacement order, then ensure we send the appropriate replacement message.
+		// Send an order place message.
+		// For replacement orders, if the price of the existing order is different from the new order,
+		// create an order removal message first so we can remove the original price level from the orderbook.
+		// TODO (CT-884): send OrderReplaceV1 message for replacement orders and add order-replace-handler to Vulcan
 		orderId := order.OrderId
-		if _, found := orderbook.getOrder(orderId); found {
-			if message, success := off_chain_updates.CreateOrderReplaceMessage(
-				ctx,
-				order,
-			); success {
-				offchainUpdates.AddReplaceMessage(orderId, message)
+		if existingOrder, found := orderbook.getOrder(orderId); found {
+			if order.Subticks != existingOrder.Subticks {
+				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+					ctx,
+					orderId,
+					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				); success {
+					offchainUpdates.AddRemoveMessage(orderId, message)
+				}
 			}
-		} else {
-			if message, success := off_chain_updates.CreateOrderPlaceMessage(
-				ctx,
-				order,
-			); success {
-				offchainUpdates.AddPlaceMessage(order.OrderId, message)
-			}
+		}
+		if message, success := off_chain_updates.CreateOrderPlaceMessage(
+			ctx,
+			order,
+		); success {
+			offchainUpdates.AddPlaceMessage(order.OrderId, message)
 		}
 	}
 
