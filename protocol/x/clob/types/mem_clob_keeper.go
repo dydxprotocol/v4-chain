@@ -26,7 +26,6 @@ type MemClobKeeper interface {
 		success bool,
 		takerUpdateResult satypes.UpdateResult,
 		makerUpdateResult satypes.UpdateResult,
-		offchainUpdates *OffchainUpdates,
 		err error,
 	)
 	CanDeleverageSubaccount(
