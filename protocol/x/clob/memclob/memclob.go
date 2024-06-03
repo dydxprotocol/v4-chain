@@ -1773,7 +1773,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			FillAmount: matchedAmount,
 		}
 
-		success, takerUpdateResult, makerUpdateResult, _, err := m.clobKeeper.ProcessSingleMatch(ctx, &matchWithOrders)
+		success, takerUpdateResult, makerUpdateResult, err := m.clobKeeper.ProcessSingleMatch(ctx, &matchWithOrders)
 		if err != nil && !errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) {
 			if errors.Is(err, types.ErrLiquidationExceedsSubaccountMaxInsuranceLost) {
 				// Subaccount has reached max insurance lost block limit. Stop matching.

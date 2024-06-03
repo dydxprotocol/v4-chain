@@ -340,7 +340,7 @@ func (_m *MemClobKeeper) OffsetSubaccountPerpetualPosition(ctx types.Context, li
 }
 
 // ProcessSingleMatch provides a mock function with given fields: ctx, matchWithOrders
-func (_m *MemClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clobtypes.MatchWithOrders) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, *clobtypes.OffchainUpdates, error) {
+func (_m *MemClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clobtypes.MatchWithOrders) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, error) {
 	ret := _m.Called(ctx, matchWithOrders)
 
 	if len(ret) == 0 {
@@ -350,9 +350,8 @@ func (_m *MemClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *
 	var r0 bool
 	var r1 subaccountstypes.UpdateResult
 	var r2 subaccountstypes.UpdateResult
-	var r3 *clobtypes.OffchainUpdates
-	var r4 error
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, *clobtypes.OffchainUpdates, error)); ok {
+	var r3 error
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, error)); ok {
 		return rf(ctx, matchWithOrders)
 	}
 	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders) bool); ok {
@@ -373,21 +372,13 @@ func (_m *MemClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *
 		r2 = ret.Get(2).(subaccountstypes.UpdateResult)
 	}
 
-	if rf, ok := ret.Get(3).(func(types.Context, *clobtypes.MatchWithOrders) *clobtypes.OffchainUpdates); ok {
+	if rf, ok := ret.Get(3).(func(types.Context, *clobtypes.MatchWithOrders) error); ok {
 		r3 = rf(ctx, matchWithOrders)
 	} else {
-		if ret.Get(3) != nil {
-			r3 = ret.Get(3).(*clobtypes.OffchainUpdates)
-		}
+		r3 = ret.Error(3)
 	}
 
-	if rf, ok := ret.Get(4).(func(types.Context, *clobtypes.MatchWithOrders) error); ok {
-		r4 = rf(ctx, matchWithOrders)
-	} else {
-		r4 = ret.Error(4)
-	}
-
-	return r0, r1, r2, r3, r4
+	return r0, r1, r2, r3
 }
 
 // ReplayPlaceOrder provides a mock function with given fields: ctx, msg
