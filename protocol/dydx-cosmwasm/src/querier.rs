@@ -1,7 +1,9 @@
 use cosmwasm_std::{QuerierWrapper, StdResult};
-
-use crate::query::{MarketPriceResponse, DydxQuery, DydxQueryWrapper};
+use protobuf::Error;
+use crate::proto_structs::{PerpetualClobDetails};
+use crate::query::{DydxQuery, DydxQueryWrapper};
 use crate::route::DydxRoute;
+use crate::{MarketPrice, PerpetualClobDetailsResponse, Subaccount, SubaccountResponse, MarketPriceResponse};
 
 /// This is a helper wrapper to easily use our custom queries
 pub struct DydxQuerier<'a> {
@@ -15,11 +17,41 @@ impl<'a> DydxQuerier<'a> {
 
     pub fn query_market_price(&self, market_id: u32) -> StdResult<MarketPriceResponse> {
         let request = DydxQueryWrapper {
-            route: DydxRoute::Oracle,
+            route: DydxRoute::MarketPrice,
             query_data: DydxQuery::MarketPrice { id: market_id },
         }
         .into();
 
-        self.querier.query(&request)
+        let result: StdResult<MarketPrice> = self.querier.query(&request);
+        result.map(|market_price| MarketPriceResponse { market_price })
+    }
+
+    pub fn query_subaccount(&self, owner: String, number: u32) -> StdResult<SubaccountResponse> {
+        // print the owner and number
+        println!("owner: {}, number: {}", owner, number);
+        let request = DydxQueryWrapper {
+            route: DydxRoute::Subaccount,
+            query_data: DydxQuery::Subaccount { 
+                owner: owner,
+                number: number,
+            },
+        }
+            .into();
+
+        let result: Result<Subaccount, cosmwasm_std::StdError> = self.querier.query::<Subaccount>(&request);
+        Ok(SubaccountResponse { subaccount: result? })
+
+
+    }
+
+    pub fn query_perpetual_clob_details(&self, perpetual_id: u32) -> StdResult<PerpetualClobDetailsResponse> {
+        let request = DydxQueryWrapper {
+            route: DydxRoute::PerpetualClobDetails,
+            query_data: DydxQuery::PerpetualClobDetails { id: perpetual_id },
+        }
+            .into();
+        
+        let result: Result<PerpetualClobDetails, cosmwasm_std::StdError> = self.querier.query::<PerpetualClobDetails>(&request);
+        Ok(PerpetualClobDetailsResponse { perpetual_clob_details: result? })
     }
 }

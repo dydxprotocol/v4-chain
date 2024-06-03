@@ -3,13 +3,16 @@ mod query;
 mod route;
 mod dydx_types;
 mod proto_structs;
+mod serializable_int;
 
 pub use querier::DydxQuerier;
-pub use query::{
-    MarketPriceResponse, DydxQuery, DydxQueryWrapper,
+pub use query::{DydxQuery, DydxQueryWrapper,
+    MarketPriceResponse, PerpetualClobDetailsResponse, SubaccountResponse
 };
-pub use proto_structs::MarketPrice;
-pub use route::DydxRoute;
+pub use proto_structs::{
+    AssetPosition, ClobPair, MarketPrice, Metadata, PerpetualClobMetadata, PerpetualPosition, SpotClobMetadata, Status, Subaccount, SubaccountId
+};
+pub use serializable_int::SerializableInt;
 
 // This export is added to all contracts that import this package, signifying that they require
 // "dydx" support on the chain they run on.

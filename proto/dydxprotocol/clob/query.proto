@@ -12,6 +12,7 @@ import "dydxprotocol/clob/matches.proto";
 import "dydxprotocol/clob/liquidations_config.proto";
 import "dydxprotocol/clob/mev.proto";
 import "dydxprotocol/indexer/off_chain_updates/off_chain_updates.proto";
+import "dydxprotocol/perpetuals/perpetual.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
@@ -198,3 +199,12 @@ message StreamOrderbookFill {
   // Resulting fill amounts for each order in the orders array.
   repeated uint64 fill_amounts = 3 [ (gogoproto.nullable) = false ];
 }
+
+// QueryPerpetualClobDetails is a response message that contains the perpetual clob details.
+message QueryPerpetualClobDetails {
+  ClobPair clob_pair = 1 [ (gogoproto.nullable) = false ];
+  dydxprotocol.perpetuals.Perpetual perpetual = 2 [ (gogoproto.nullable) = false ];
+}
+
+// QueryGetPerpetualClobDetailsRequest is request type to get the perpetual clob details.
+message QueryGetPerpetualClobDetailsRequest { uint32 id = 1; }
