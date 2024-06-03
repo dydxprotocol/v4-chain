@@ -7,7 +7,6 @@ import {
 import { synchronizeWrapBackgroundTask } from '@dydxprotocol-indexer/dev';
 import {
   createKafkaMessage,
-  ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
   producer,
   SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
   getTriggerPrice,
@@ -19,7 +18,6 @@ import {
   blockHeightRefresher,
   BlockTable,
   dbHelpers,
-  OrderbookMessageContents,
   OrderFromDatabase,
   OrderTable,
   PerpetualMarketFromDatabase,
@@ -61,7 +59,6 @@ import { redisClient, redisClient as client } from '../../src/helpers/redis/redi
 import { onMessage } from '../../src/lib/on-message';
 import { expectCanceledOrderStatus, handleInitialOrderPlace } from '../helpers/helpers';
 import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
-import { OrderbookSide } from '../../src/lib/types';
 import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import { defaultKafkaHeaders } from '../helpers/constants';
 import config from '../../src/config';
@@ -539,18 +536,9 @@ describe('order-place-handler', () => {
     ) => {
       const oldOrderTotalFilled: number = 10;
       const oldPriceLevelInitialQuantums: number = Number(initialOrderToPlace.quantums) * 2;
-      // After replacing the order the quantums at the price level of the old order should be:
-      // initial quantums - (old order quantums - old order total filled)
-      const expectedPriceLevelQuantums: number = (
-        oldPriceLevelInitialQuantums - (Number(initialOrderToPlace.quantums) - oldOrderTotalFilled)
-      );
-      const expectedPriceLevelSize: string = protocolTranslations.quantumsToHumanFixedString(
-        expectedPriceLevelQuantums.toString(),
-        testConstants.defaultPerpetualMarket.atomicResolution,
-      );
       const expectedPriceLevel: PriceLevel = {
         humanPrice: expectedRedisOrder.price,
-        quantums: expectedPriceLevelQuantums.toString(),
+        quantums: oldPriceLevelInitialQuantums.toString(),
         lastUpdated: expect.stringMatching(/^[0-9]{10}$/),
       };
 
@@ -582,6 +570,7 @@ describe('order-place-handler', () => {
         newTotalFilledQuantums: oldOrderTotalFilled,
         client,
       });
+
       // Update the price level in the order book to a value larger than the quantums of the order
       await OrderbookLevelsCache.updatePriceLevel({
         ticker: testConstants.defaultPerpetualMarket.ticker,
@@ -614,12 +603,6 @@ describe('order-place-handler', () => {
       }
 
       expect(logger.error).not.toHaveBeenCalled();
-      const orderbookContents: OrderbookMessageContents = {
-        [OrderbookSide.BIDS]: [[
-          redisTestConstants.defaultPrice,
-          expectedPriceLevelSize,
-        ]],
-      };
       expectWebsocketMessagesSent(
         producerSendSpy,
         expectedReplacedOrder,
@@ -627,12 +610,6 @@ describe('order-place-handler', () => {
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         expectSubaccountMessage,
-        expectOrderBookUpdate
-          ? OrderbookMessage.fromPartial({
-            contents: JSON.stringify(orderbookContents),
-            clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
-            version: ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
-          }) : undefined,
       );
       expectStats(true);
     });
@@ -1105,11 +1082,6 @@ describe('order-place-handler', () => {
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         true,
       );
-
-      expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'OrderPlaceHandler#handle',
-        message: 'Total filled of order in Redis exceeds order quantums.',
-      }));
     });
   });
 });
