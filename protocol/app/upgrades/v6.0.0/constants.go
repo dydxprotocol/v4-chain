@@ -1,4 +1,4 @@
-package v_5_0_0
+package v_6_0_0
 
 import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
