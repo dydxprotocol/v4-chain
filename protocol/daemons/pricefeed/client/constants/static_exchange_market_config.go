@@ -3,8 +3,9 @@ package constants
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"sort"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
@@ -15,8 +16,8 @@ const (
 	// by the pricefeed daemon. This number was chosen to supply the minimum number of prices required to
 	// compute an index price for a market, given exchange unavailability due to exchange geo-fencing,
 	// downtime, etc.
-	// Ok to drop this to 5 for some markets if needed, but 6 is better.
-	MinimumRequiredExchangesPerMarket = 6
+	// Ok to drop this to 5 for some markets if needed, but 5 is better.
+	MinimumRequiredExchangesPerMarket = 5
 )
 
 // GenerateExchangeConfigJson generates human-readable exchange config json for each market based on the contents
