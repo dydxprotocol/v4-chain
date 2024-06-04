@@ -379,7 +379,7 @@ func (k Keeper) validateNewOrder(
 func (k Keeper) PlaceOrderDeliverTx(
 	ctx sdk.Context,
 	order types.Order,
-	clobPairIdToOrderbook openOrders,
+	clobPairIdToOrderbook *openOrders,
 ) (
 	// orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 	// orderStatus types.OrderStatus,
