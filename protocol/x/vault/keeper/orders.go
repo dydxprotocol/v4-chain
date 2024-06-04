@@ -180,36 +180,38 @@ func (k Keeper) GetVaultClobOrders(
 		marketPrice.GetPrice(),
 		marketPrice.GetExponent(),
 	)
-	leverage := new(big.Rat).Quo(
-		new(big.Rat).SetInt(openNotional),
-		new(big.Rat).SetInt(equity),
-	)
+	leverage := new(big.Rat).SetFrac(openNotional, equity)
+
 	// Get parameters.
 	params := k.GetParams(ctx)
+
 	// Calculate order size (in base quantums).
-	// order_size = order_size_pct * equity / oracle_price
-	// = order_size_pct * equity / (price * 10^exponent / 10^quote_atomic_resolution) / 10^base_atomic_resolution
-	// = order_size_pct * equity / (price * 10^(exponent - quote_atomic_resolution + base_atomic_resolution))
-	orderSizeBaseQuantums := lib.BigRatMulPpm(
-		new(big.Rat).SetInt(equity),
-		params.OrderSizePctPpm,
+	orderSizePctPpm := lib.BigU(params.OrderSizePctPpm)
+	orderSize := lib.QuoteToBaseQuantums(
+		new(big.Int).Mul(equity, orderSizePctPpm),
+		perpetual.Params.AtomicResolution,
+		marketPrice.Price,
+		marketPrice.Exponent,
 	)
-	orderSizeBaseQuantums = orderSizeBaseQuantums.Quo(
-		orderSizeBaseQuantums,
-		lib.BigMulPow10(
-			new(big.Int).SetUint64(marketPrice.Price),
-			marketPrice.Exponent-lib.QuoteCurrencyAtomicResolution+perpetual.Params.AtomicResolution,
-		),
-	)
-	orderSizeBaseQuantumsRounded := lib.BigRatRoundToNearestMultiple(
-		orderSizeBaseQuantums,
-		uint32(clobPair.StepBaseQuantums),
-		false,
-	)
-	// If order size is non-positive, return empty orders.
-	if orderSizeBaseQuantumsRounded <= 0 {
+	orderSize.Quo(orderSize, lib.BigIntOneMillion())
+
+	// Round (towards-zero) order size to the nearest multiple of step size.
+	stepSize := lib.BigU(clobPair.StepBaseQuantums)
+	orderSize.Quo(orderSize, stepSize).Mul(orderSize, stepSize)
+
+	// If order size is zero, return empty orders.
+	if orderSize.Sign() == 0 {
 		return []*clobtypes.Order{}, nil
 	}
+
+	// If order size is not a valid uint64, return error.
+	if !orderSize.IsUint64() {
+		return []*clobtypes.Order{}, errorsmod.Wrap(
+			types.ErrInvalidOrderSize,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
+	}
+
 	// Calculate spread.
 	spreadPpm := lib.Max(
 		params.SpreadMinPpm,
@@ -298,7 +300,7 @@ func (k Keeper) GetVaultClobOrders(
 				ClobPairId:   clobPair.Id,
 			},
 			Side:     side,
-			Quantums: orderSizeBaseQuantumsRounded,
+			Quantums: orderSize.Uint64(), // Validated to be a uint64 above.
 			Subticks: lib.BigRatRoundToNearestMultiple(
 				orderSubticks,
 				clobPair.SubticksPerTick,

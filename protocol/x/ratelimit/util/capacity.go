@@ -36,55 +36,26 @@ func CalculateNewCapacityList(
 	newCapacityList = make([]dtypes.SerializableInt, len(limiterCapacityList))
 
 	for i, limiterCapacity := range limiterCapacityList {
-		limiter, bigPrevCapacity := limiterCapacity.Limiter, limiterCapacity.Capacity.BigInt()
-
-		// For each limiter, calculate the current baseline.
+		limiter := limiterCapacity.Limiter
+		capacity := limiterCapacity.Capacity.BigInt()
 		baseline := GetBaseline(bigTvl, limiter)
+		capacityMinusBaseline := new(big.Int).Sub(capacity, baseline)
 
-		capacityMinusBaseline := new(big.Int).Sub(
-			bigPrevCapacity,
-			baseline,
-		)
+		// Calculate the absolute value of the capacity delta.
+		capacityDiff := lib.BigMax(baseline, capacityMinusBaseline)
+		capacityDiff.Mul(capacityDiff, lib.BigI(timeSinceLastBlock.Milliseconds()))
+		capacityDiff.Div(capacityDiff, lib.BigI(limiter.Period.Milliseconds()))
 
-		// Calculate left operand: `max(baseline, capacity-baseline)`. This equals `baseline` when `capacity <= 2 * baseline`
-		operandL := new(big.Rat).SetInt(
-			lib.BigMax(
-				baseline,
-				capacityMinusBaseline,
-			),
-		)
-
-		// Calculate right operand: `time_since_last_block / period`
-		operandR := new(big.Rat).SetFrac64(
-			timeSinceLastBlock.Milliseconds(),
-			limiter.Period.Milliseconds(),
-		)
-
-		// Calculate: `capacity_diff = max(baseline, capacity-baseline) * (time_since_last_block / period)`
-		// Since both operands > 0, `capacity_diff` is positive or zero (due to rounding).
-		capacityDiffRat := new(big.Rat).Mul(operandL, operandR)
-		capacityDiff := lib.BigRatRound(capacityDiffRat, false) // rounds down `capacity_diff`
-
+		// Move the capacity towards the baseline by capacityDiff. Do not cross the baseline.
+		// Capacity is modified in-place if necessary.
 		if new(big.Int).Abs(capacityMinusBaseline).Cmp(capacityDiff) <= 0 {
-			// if `abs(capacity - baseline) < capacity_diff` then `capacity = baseline``
-			newCapacityList[i] = dtypes.NewIntFromBigInt(baseline)
+			capacity = baseline
 		} else if capacityMinusBaseline.Sign() < 0 {
-			// else if `capacity < baseline` then `capacity += capacity_diff`
-			newCapacityList[i] = dtypes.NewIntFromBigInt(
-				new(big.Int).Add(
-					bigPrevCapacity,
-					capacityDiff,
-				),
-			)
+			capacity.Add(capacity, capacityDiff)
 		} else {
-			// else `capacity -= capacity_diff`
-			newCapacityList[i] = dtypes.NewIntFromBigInt(
-				new(big.Int).Sub(
-					bigPrevCapacity,
-					capacityDiff,
-				),
-			)
+			capacity.Sub(capacity, capacityDiff)
 		}
+		newCapacityList[i] = dtypes.NewIntFromBigInt(capacity)
 	}
 
 	return newCapacityList

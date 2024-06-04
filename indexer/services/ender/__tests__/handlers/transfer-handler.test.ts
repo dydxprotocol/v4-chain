@@ -651,6 +651,7 @@ function expectTransfersSubaccountKafkaMessage(
       event.sender!.subaccountId!,
       event.sender!.subaccountId!,
       event.recipient!.subaccountId,
+      blockHeight,
     );
   }
 
@@ -661,6 +662,7 @@ function expectTransfersSubaccountKafkaMessage(
       event.recipient!.subaccountId!,
       event.sender!.subaccountId,
       event.recipient!.subaccountId!,
+      blockHeight,
     );
   }
 

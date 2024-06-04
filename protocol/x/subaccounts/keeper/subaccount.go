@@ -303,7 +303,7 @@ func (k Keeper) UpdateSubaccounts(
 	}
 
 	// Get a mapping from perpetual Id to current perpetual funding index.
-	perpIdToFundingIndex := make(map[uint32]dtypes.SerializableInt)
+	perpIdToFundingIndex := make(map[uint32]dtypes.SerializableInt, len(allPerps))
 	for _, perp := range allPerps {
 		perpIdToFundingIndex[perp.Params.Id] = perp.FundingIndex
 	}
@@ -445,7 +445,7 @@ func (k Keeper) getSettledSubaccount(
 	err error,
 ) {
 	// Fetch all relevant perpetuals.
-	perpetuals := make(map[uint32]perptypes.Perpetual)
+	perpetuals := make(map[uint32]perptypes.Perpetual, len(subaccount.PerpetualPositions))
 	for _, p := range subaccount.PerpetualPositions {
 		perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, p.PerpetualId)
 		if err != nil {
@@ -997,8 +997,8 @@ func applyUpdatesToPositions[
 ](positions []P, updates []U) ([]types.PositionSize, error) {
 	var result []types.PositionSize = make([]types.PositionSize, 0, len(positions)+len(updates))
 
-	updateMap := make(map[uint32]types.PositionSize)
-	updateIndexMap := make(map[uint32]int)
+	updateMap := make(map[uint32]types.PositionSize, len(updates))
+	updateIndexMap := make(map[uint32]int, len(updates))
 	for i, update := range updates {
 		// Check for non-unique updates (two updates to the same position).
 		id := update.GetId()

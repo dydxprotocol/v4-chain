@@ -26,16 +26,7 @@ type MemClobKeeper interface {
 		success bool,
 		takerUpdateResult satypes.UpdateResult,
 		makerUpdateResult satypes.UpdateResult,
-		offchainUpdates *OffchainUpdates,
 		err error,
-	)
-	AddOrderToOrderbookSubaccountUpdatesCheck(
-		ctx sdk.Context,
-		clobPairId ClobPairId,
-		subaccountOpenOrders map[satypes.SubaccountId][]PendingOpenOrder,
-	) (
-		success bool,
-		successPerUpdate map[satypes.SubaccountId]satypes.UpdateResult,
 	)
 	CanDeleverageSubaccount(
 		ctx sdk.Context,
@@ -104,10 +95,6 @@ type MemClobKeeper interface {
 		bool,
 		error,
 	)
-	ValidateSubaccountEquityTierLimitForShortTermOrder(
-		ctx sdk.Context,
-		order Order,
-	) error
 	ValidateSubaccountEquityTierLimitForStatefulOrder(
 		ctx sdk.Context,
 		order Order,

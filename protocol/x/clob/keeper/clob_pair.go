@@ -158,13 +158,13 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 // maybeCreateOrderbook creates a new orderbook in the memclob.
 func (k Keeper) maybeCreateOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
 	// Create the corresponding orderbook in the memclob.
-	k.MemClob.MaybeCreateOrderbook(ctx, clobPair)
+	k.MemClob.MaybeCreateOrderbook(clobPair)
 }
 
 // createOrderbook creates a new orderbook in the memclob.
 func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
 	// Create the corresponding orderbook in the memclob.
-	k.MemClob.CreateOrderbook(ctx, clobPair)
+	k.MemClob.CreateOrderbook(clobPair)
 }
 
 // createClobPair creates a new `ClobPair` in the store and creates the corresponding orderbook in the memclob.

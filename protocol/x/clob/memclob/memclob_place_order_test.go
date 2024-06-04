@@ -75,7 +75,7 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedToReplaceOrder: false,
 		},
 		`Can place a new sell order on an orderbook with asks at same price level, and best ask is not updated but total
-			level quantums is updated`: {
+				level quantums is updated`: {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
 			},
@@ -87,7 +87,7 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedToReplaceOrder: false,
 		},
 		`Can place a new buy order on an orderbook with bids at same price level, and best bid is not updated but total
-				level quantums is updated`: {
+					level quantums is updated`: {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num1_Id2_Clob1_Buy67_Price5_GTB20,
 			},
@@ -177,24 +177,6 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedOrderStatus:    types.Success,
 			expectedToReplaceOrder: false,
 		},
-		"Placing an order that causes the account to be undercollateralized fails": {
-			existingOrders:         []types.MatchableOrder{},
-			collateralizationCheck: satypes.NewlyUndercollateralized,
-
-			order: constants.Order_Bob_Num0_Id1_Clob1_Sell11_Price16_GTB20,
-
-			expectedOrderStatus:    types.Undercollateralized,
-			expectedToReplaceOrder: false,
-		},
-		"Placing an order that throws an error from the collateralization check fails": {
-			existingOrders:         []types.MatchableOrder{},
-			collateralizationCheck: satypes.UpdateCausedError,
-
-			order: constants.Order_Bob_Num0_Id1_Clob1_Sell11_Price16_GTB20,
-
-			expectedOrderStatus:    types.InternalError,
-			expectedToReplaceOrder: false,
-		},
 		"Replacing an order fails if GoodTilBlock is lower than existing order": {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Bob_Num0_Id1_Clob1_Sell11_Price16_GTB20,
@@ -222,16 +204,15 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedOrderStatus:    types.Success,
 			expectedToReplaceOrder: true,
 		},
-		"Replacing an order succeeds if GoodTilBlock is greater than existing order and changes sides": {
+		"Replacing an order fails if GoodTilBlock is greater than existing order and changes sides": {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
 			},
 
 			order: constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 
-			collateralizationCheck: satypes.Success,
-			expectedOrderStatus:    types.Success,
-			expectedToReplaceOrder: true,
+			expectedErr:            types.ErrInvalidReplacement,
+			expectedToReplaceOrder: false,
 		},
 		"Replacing an order succeeds if GoodTilBlock is greater than existing order and changes price": {
 			existingOrders: []types.MatchableOrder{
@@ -276,30 +257,6 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedOrderStatus:    types.Success,
 			expectedToReplaceOrder: true,
 		},
-		`Old order is removed from the book if GoodTilBlock is greater than existing order, the order
-		passes initial validation, and new replacement order fails collateralization checks`: {
-			existingOrders: []types.MatchableOrder{
-				&constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
-			},
-
-			order: constants.Order_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
-
-			collateralizationCheck: satypes.NewlyUndercollateralized,
-			expectedOrderStatus:    types.Undercollateralized,
-			expectedToReplaceOrder: true,
-		},
-		`Replacing an order succeeds and old order is skipped during matching if GoodTilBlock is greater
-			than existing order and the new replacement order is on the opposite side of the existing order`: {
-			existingOrders: []types.MatchableOrder{
-				&constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
-			},
-
-			order: constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
-
-			collateralizationCheck: satypes.Success,
-			expectedOrderStatus:    types.Success,
-			expectedToReplaceOrder: true,
-		},
 	}
 
 	for name, tc := range tests {
@@ -333,7 +290,8 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 
 			// Mark the current order as canceled if necessary.
 			if tc.canceledOrderGTB != 0 {
-				memclob.cancels.addShortTermCancel(tc.order.OrderId, tc.canceledOrderGTB)
+				orderbook := memclob.mustGetOrderbook(tc.order.GetClobPairId())
+				orderbook.addShortTermCancel(tc.order.OrderId, tc.canceledOrderGTB)
 			}
 
 			// TODO(DEC-1640): Explicitly specify expected remaining orders on the book in test case.
@@ -348,6 +306,7 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 				ordersOnBook = append(ordersOnBook, &order)
 			}
 
+			expectedReplacementOrderPriceChanged := false
 			for _, matchableOrder := range ordersOnBook {
 				// Note we assume these are regular orders since liquidation orders cannot rest on
 				// the book.
@@ -355,7 +314,11 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 				// If this is an order replacement and it was successful, we assert that the old order being replaced
 				// is no longer on the book.
 				matchableOrderOrder := matchableOrder.MustGetOrder()
-				if matchableOrderOrder.OrderId == tc.order.OrderId && tc.order.MustCmpReplacementOrder(&matchableOrderOrder) > 0 {
+				if tc.expectedToReplaceOrder && matchableOrderOrder.OrderId == tc.order.OrderId &&
+					tc.order.MustCmpReplacementOrder(&matchableOrderOrder) > 0 {
+					if matchableOrderOrder.Subticks != tc.order.Subticks {
+						expectedReplacementOrderPriceChanged = true
+					}
 					continue
 				}
 
@@ -407,6 +370,7 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 				[]expectedMatch{},
 				[]types.OrderId{},
 				tc.expectedToReplaceOrder,
+				expectedReplacementOrderPriceChanged,
 			)
 		})
 	}
@@ -2223,29 +2187,37 @@ func TestPlaceOrder_MatchOrders_PreexistingMatches(t *testing.T) {
 
 			expectedErr: types.ErrInvalidReplacement,
 		},
-		"IOC Taker replaces unfilled non IOC order": {
+		"IOC Taker cannot replace unfilled non IOC order": {
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+			},
+			expectedRemainingAsks: []OrderWithRemainingSize{
+				{
+					Order:         constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+					RemainingSize: 10,
+				},
 			},
 
 			order:                      constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB21_IOC,
 			expectedInternalOperations: []types.InternalOperation{},
 
-			expectedOrderStatus:    types.ImmediateOrCancelWouldRestOnBook,
-			expectedToReplaceOrder: true,
+			expectedErr: types.ErrInvalidReplacement,
 		},
-		"FOK Taker replaces unfilled non IOC order": {
+		"FOK Taker cannot replace unfilled non IOC order": {
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+			},
+			expectedRemainingAsks: []OrderWithRemainingSize{
+				{
+					Order:         constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+					RemainingSize: 10,
+				},
 			},
 
 			order:                      constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB21_FOK,
 			expectedInternalOperations: []types.InternalOperation{},
 
-			expectedOrderStatus:    types.InternalError,
-			expectedToReplaceOrder: true,
-
-			expectedErr: types.ErrFokOrderCouldNotBeFullyFilled,
+			expectedErr: types.ErrInvalidReplacement,
 		},
 	}
 
@@ -2304,6 +2276,7 @@ func TestPlaceOrder_MatchOrders_PreexistingMatches(t *testing.T) {
 				tc.expectedNewMatches,
 				[]types.OrderId{},
 				tc.expectedToReplaceOrder,
+				false,
 			)
 		})
 	}
@@ -2820,10 +2793,8 @@ func TestAddOrderToOrderbook_ErrorPlaceNewFullyFilledOrder(t *testing.T) {
 	memClobKeeper := mocks.MemClobKeeper{}
 	memclob := NewMemClobPriceTimePriority(false)
 	memclob.SetClobKeeper(&memClobKeeper)
-	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 
-	memClobKeeper.On("AddOrderToOrderbookSubaccountUpdatesCheck", mock.Anything, mock.Anything, mock.Anything).
-		Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult))
 	memClobKeeper.On("GetStatePosition", mock.Anything, mock.Anything, mock.Anything).
 		Return(big.NewInt(0))
 	memClobKeeper.On("ValidateSubaccountEquityTierLimitForNewOrder", mock.Anything, mock.Anything).
@@ -2856,9 +2827,6 @@ func TestAddOrderToOrderbook_PanicsIfFullyFilled(t *testing.T) {
 	orderId := order.OrderId
 	quantums := order.GetBaseQuantums()
 
-	memClobKeeper.On("AddOrderToOrderbookSubaccountUpdatesCheck", mock.Anything, mock.Anything, mock.Anything).
-		Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult))
-
 	memClobKeeper.On("GetStatePosition", mock.Anything, mock.Anything, mock.Anything).
 		Return(big.NewInt(0))
 
@@ -2868,26 +2836,6 @@ func TestAddOrderToOrderbook_PanicsIfFullyFilled(t *testing.T) {
 
 	require.Panics(t, func() {
 		memclob.mustAddOrderToOrderbook(ctx, order, false)
-	})
-}
-
-func TestAddOrderToSubaccountOrders_PanicsOnInvalidSide(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-	ctx = ctx.WithIsCheckTx(true)
-	memclob := NewMemClobPriceTimePriority(false)
-
-	require.Panics(t, func() {
-		memclob.openOrders.mustAddOrderToSubaccountOrders(ctx, types.Order{})
-	})
-}
-
-func TestAddOrderToSubaccountOrders_PanicsOnInvalidClob(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-	ctx = ctx.WithIsCheckTx(true)
-	memclob := NewMemClobPriceTimePriority(false)
-
-	require.Panics(t, func() {
-		memclob.openOrders.mustAddOrderToSubaccountOrders(ctx, types.Order{Side: types.Order_SIDE_BUY})
 	})
 }
 
@@ -3300,6 +3248,7 @@ func TestPlaceOrder_PostOnly(t *testing.T) {
 				[]expectedMatch{},
 				[]types.OrderId{},
 				false,
+				false,
 			)
 		})
 	}
@@ -3442,6 +3391,7 @@ func TestPlaceOrder_ImmediateOrCancel(t *testing.T) {
 				[]expectedMatch{},
 				tc.expectedCollatCheck,
 				[]types.OrderId{},
+				false,
 				false,
 			)
 		})
@@ -4117,6 +4067,7 @@ func TestPlaceOrder_FillOrKill(t *testing.T) {
 				expectedMatches,
 				[]types.OrderId{},
 				false,
+				false,
 			)
 		})
 	}
@@ -4158,7 +4109,7 @@ func TestPlaceOrder_Telemetry(t *testing.T) {
 	}
 
 	// Create the orderbook.
-	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 
 	// Create all orders.
 	createAllOrders(
@@ -4209,7 +4160,7 @@ func TestPlaceOrder_GenerateOffchainUpdatesFalse_NoMessagesSent(t *testing.T) {
 	order := constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30
 
 	// Create the orderbook.
-	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 
 	// Place a new order.
 	_, _, offchainUpdates, err := memclob.PlaceOrder(ctx, order)
@@ -4229,7 +4180,7 @@ func TestPlaceOrder_DuplicateOrder(t *testing.T) {
 	memclob := NewMemClobPriceTimePriority(false)
 	memclob.SetClobKeeper(memClobKeeper)
 
-	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 
 	order := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15
 	_, _, _, err := memclob.PlaceOrder(ctx, order)

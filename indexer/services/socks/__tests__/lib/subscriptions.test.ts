@@ -4,7 +4,12 @@ import { Subscriptions } from '../../src/lib/subscription';
 import { sendMessage, sendMessageString } from '../../src/helpers/wss';
 import { RateLimiter } from '../../src/lib/rate-limit';
 import {
-  dbHelpers, testMocks, perpetualMarketRefresher, CandleResolution, MAX_PARENT_SUBACCOUNTS,
+  dbHelpers,
+  testMocks,
+  perpetualMarketRefresher,
+  CandleResolution,
+  MAX_PARENT_SUBACCOUNTS,
+  blockHeightRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { btcTicker, invalidChannel, invalidTicker } from '../constants';
 import { axiosRequest } from '../../src/lib/axios';
@@ -68,7 +73,10 @@ describe('Subscriptions', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await testMocks.seedData();
-    await perpetualMarketRefresher.updatePerpetualMarkets();
+    await Promise.all([
+      perpetualMarketRefresher.updatePerpetualMarkets(),
+      blockHeightRefresher.updateBlockHeight(),
+    ]);
   });
 
   afterAll(async () => {

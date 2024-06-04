@@ -7,7 +7,6 @@ import {
 import { synchronizeWrapBackgroundTask } from '@dydxprotocol-indexer/dev';
 import {
   createKafkaMessage,
-  ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
   producer,
   SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
   getTriggerPrice,
@@ -16,8 +15,9 @@ import {
   APIOrderStatus,
   APIOrderStatusEnum,
   apiTranslations,
+  blockHeightRefresher,
+  BlockTable,
   dbHelpers,
-  OrderbookMessageContents,
   OrderFromDatabase,
   OrderTable,
   PerpetualMarketFromDatabase,
@@ -31,7 +31,6 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import * as redisPackage from '@dydxprotocol-indexer/redis';
 import {
-  OpenOrdersCache,
   PriceLevel,
   OrdersCache,
   OrderbookLevels,
@@ -58,9 +57,8 @@ import { KafkaMessage } from 'kafkajs';
 import Long from 'long';
 import { redisClient, redisClient as client } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
-import { expectCanceledOrderStatus, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';
+import { expectCanceledOrderStatus, handleInitialOrderPlace } from '../helpers/helpers';
 import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
-import { OrderbookSide } from '../../src/lib/types';
 import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import { defaultKafkaHeaders } from '../helpers/constants';
 import config from '../../src/config';
@@ -76,7 +74,9 @@ interface OffchainUpdateRecord {
 }
 
 describe('order-place-handler', () => {
-  beforeAll(() => {
+  beforeAll(async () => {
+    await BlockTable.create(testConstants.defaultBlock);
+    await blockHeightRefresher.updateBlockHeight();
     jest.useFakeTimers();
   });
 
@@ -233,8 +233,12 @@ describe('order-place-handler', () => {
     });
 
     beforeEach(async () => {
+      await dbHelpers.clearData();
       await testMocks.seedData();
-      await perpetualMarketRefresher.updatePerpetualMarkets();
+      await Promise.all([
+        perpetualMarketRefresher.updatePerpetualMarkets(),
+        blockHeightRefresher.updateBlockHeight(),
+      ]);
       await Promise.all([
         OrderTable.create(dbDefaultOrder),
         OrderTable.create(dbOrderGoodTilBlockTime),
@@ -532,18 +536,9 @@ describe('order-place-handler', () => {
     ) => {
       const oldOrderTotalFilled: number = 10;
       const oldPriceLevelInitialQuantums: number = Number(initialOrderToPlace.quantums) * 2;
-      // After replacing the order the quantums at the price level of the old order should be:
-      // initial quantums - (old order quantums - old order total filled)
-      const expectedPriceLevelQuantums: number = (
-        oldPriceLevelInitialQuantums - (Number(initialOrderToPlace.quantums) - oldOrderTotalFilled)
-      );
-      const expectedPriceLevelSize: string = protocolTranslations.quantumsToHumanFixedString(
-        expectedPriceLevelQuantums.toString(),
-        testConstants.defaultPerpetualMarket.atomicResolution,
-      );
       const expectedPriceLevel: PriceLevel = {
         humanPrice: expectedRedisOrder.price,
-        quantums: expectedPriceLevelQuantums.toString(),
+        quantums: oldPriceLevelInitialQuantums.toString(),
         lastUpdated: expect.stringMatching(/^[0-9]{10}$/),
       };
 
@@ -575,6 +570,7 @@ describe('order-place-handler', () => {
         newTotalFilledQuantums: oldOrderTotalFilled,
         client,
       });
+
       // Update the price level in the order book to a value larger than the quantums of the order
       await OrderbookLevelsCache.updatePriceLevel({
         ticker: testConstants.defaultPerpetualMarket.ticker,
@@ -585,16 +581,6 @@ describe('order-place-handler', () => {
         sizeDeltaInQuantums: oldPriceLevelInitialQuantums.toString(),
         client,
       });
-      // Add the order to the open orders cache to check if it is removed after replacement
-      await OpenOrdersCache.addOpenOrder(
-        expectedRedisOrder.id,
-        testConstants.defaultPerpetualMarket.clobPairId.toString(),
-        client,
-      );
-      await expectOpenOrderIds(
-        testConstants.defaultPerpetualMarket.clobPairId,
-        [expectedRedisOrder.id],
-      );
 
       // Handle the order place off-chain update with the replacement order
       await onMessage(orderReplacementMessage);
@@ -616,16 +602,7 @@ describe('order-place-handler', () => {
         expect(orderbook.bids).toContainEqual(expectedPriceLevel);
       }
 
-      // Check the order was removed from the open orders cache
-      await expectOpenOrderIds(testConstants.defaultPerpetualMarket.clobPairId, []);
-
       expect(logger.error).not.toHaveBeenCalled();
-      const orderbookContents: OrderbookMessageContents = {
-        [OrderbookSide.BIDS]: [[
-          redisTestConstants.defaultPrice,
-          expectedPriceLevelSize,
-        ]],
-      };
       expectWebsocketMessagesSent(
         producerSendSpy,
         expectedReplacedOrder,
@@ -633,12 +610,6 @@ describe('order-place-handler', () => {
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         expectSubaccountMessage,
-        expectOrderBookUpdate
-          ? OrderbookMessage.fromPartial({
-            contents: JSON.stringify(orderbookContents),
-            clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
-            version: ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
-          }) : undefined,
       );
       expectStats(true);
     });
@@ -1111,11 +1082,6 @@ describe('order-place-handler', () => {
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         true,
       );
-
-      expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'OrderPlaceHandler#handle',
-        message: 'Total filled of order in Redis exceeds order quantums.',
-      }));
     });
   });
 });
@@ -1225,6 +1191,7 @@ function expectWebsocketMessagesSent(
           triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
         },
       ],
+      blockHeight: blockHeightRefresher.getLatestBlockHeight(),
     };
     const subaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({
       contents: JSON.stringify(contents),

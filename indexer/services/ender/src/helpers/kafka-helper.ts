@@ -50,6 +50,7 @@ export function addPositionsToContents(
   perpetualMarketsMapping: PerpetualMarketsMap,
   assetPositions: AssetPositionFromDatabase[],
   assetsMap: AssetsMap,
+  blockHeight: string,
 ): SubaccountMessageContents {
   return {
     ...contents,
@@ -63,6 +64,7 @@ export function addPositionsToContents(
       assetPositions,
       assetsMap,
     ),
+    blockHeight,
   };
 }
 
@@ -224,6 +226,7 @@ export function convertPerpetualPosition(
  * @param subaccountId to generate the websocket message for
  * @param senderSubaccountId
  * @param recipientSubaccountId
+ * @param blockHeight: latest block height processed by Indexer
  */
 export function generateTransferContents(
   transfer: TransferFromDatabase,
@@ -231,6 +234,7 @@ export function generateTransferContents(
   subaccountId: SubaccountId,
   senderSubaccountId?: SubaccountId,
   recipientSubaccountId?: SubaccountId,
+  blockHeight?: string,
 ): SubaccountMessageContents {
   return {
     transfers: {
@@ -254,6 +258,7 @@ export function generateTransferContents(
       createdAtHeight: transfer.createdAtHeight,
       transactionHash: transfer.transactionHash,
     },
+    blockHeight,
   };
 }
 

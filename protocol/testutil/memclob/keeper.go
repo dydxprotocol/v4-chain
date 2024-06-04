@@ -284,17 +284,6 @@ func (f *FakeMemClobKeeper) GetStatefulOrdersTimeSlice(
 	return orderIds
 }
 
-func (f *FakeMemClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(
-	ctx sdk.Context,
-	clobPairId types.ClobPairId,
-	subaccountOpenOrders map[satypes.SubaccountId][]types.PendingOpenOrder,
-) (
-	success bool,
-	successPerUpdate map[satypes.SubaccountId]satypes.UpdateResult,
-) {
-	return f.collatCheckFn(subaccountOpenOrders)
-}
-
 func (f *FakeMemClobKeeper) addFakePositionSize(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,
@@ -342,7 +331,6 @@ func (f *FakeMemClobKeeper) ProcessSingleMatch(
 	success bool,
 	takerUpdateResult satypes.UpdateResult,
 	makerUpdateResult satypes.UpdateResult,
-	offchainUpdates *types.OffchainUpdates,
 	err error,
 ) {
 	makerOrder := matchWithOrders.MakerOrder
@@ -375,7 +363,7 @@ func (f *FakeMemClobKeeper) ProcessSingleMatch(
 			)
 		}
 
-		return true, satypes.Success, satypes.Success, types.NewOffchainUpdates(), nil
+		return true, satypes.Success, satypes.Success, nil
 	}
 
 	subaccountMatchedOrders := make(map[satypes.SubaccountId][]types.PendingOpenOrder)
@@ -422,7 +410,7 @@ func (f *FakeMemClobKeeper) ProcessSingleMatch(
 		}
 	}
 
-	return success, takerUpdateResult, makerUpdateResult, types.NewOffchainUpdates(), nil
+	return success, takerUpdateResult, makerUpdateResult, nil
 }
 
 func (f *FakeMemClobKeeper) GetStatePosition(
