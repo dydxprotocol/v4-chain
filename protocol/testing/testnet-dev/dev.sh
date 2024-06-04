@@ -209,6 +209,14 @@ edit_config() {
 
 	# Disable pex
 	dasel put -t bool -f "$CONFIG_FOLDER"/config.toml '.p2p.pex' -v 'false'
+
+	# How long we wait for a proposal block before prevoting nil: currently at 60s
+    dasel put -t string -f "$CONFIG_FOLDER"/config.toml '.consensus.timeout_propose' -v '60s'
+
+	# How long we wait after committing a block, before starting on the new
+	# height (this gives us a chance to receive some more precommits, even
+	# though we already have +2/3): currently at 60s.
+    dasel put -t string -f "$CONFIG_FOLDER"/config.toml '.consensus.timeout_commit' -v '60s'
 }
 
 install_prerequisites

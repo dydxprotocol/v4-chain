@@ -1,6 +1,7 @@
 # E2E testing
 
-E2E testing framework for Indexer/protocol.
+E2E testing framework for Indexer/protocol. Read more about potential
+issues in the E2E testing notion.
 
 ### Instructions
 
@@ -12,7 +13,8 @@ In one terminal, run
 ./run-containerized-env.sh
 ```
 
-In another terminal, run
+Wait until the chain that was launched has reached height at least 50. 
+Then, in another terminal, from the e2e-testing directory, run:
 ```
 pnpm build && pnpm test
 ```
