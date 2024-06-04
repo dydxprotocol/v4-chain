@@ -82,6 +82,27 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		log.ErrorLogWithError(ctx, "Failed to get vault clob orders to cancel", err, "vaultId", vaultId)
 		return err
 	}
+	// Place new CLOB orders.
+	ordersToPlace, err := k.GetVaultClobOrders(ctx, vaultId)
+
+	if err != nil {
+		log.ErrorLogWithError(ctx, "Failed to get vault clob orders to place", err, "vaultId", vaultId)
+		return err
+	}
+
+	for i, order := range ordersToPlace {
+		replacedOrder := ordersToCancel[i]
+		if replacedOrder.Subticks != order.Subticks {
+			vaultId.IncrCounter(
+				metrics.VaultPlaceOrderDifferentPrice,
+			)
+		} else {
+			vaultId.IncrCounter(
+				metrics.VaultPlaceOrderSamePrice,
+			)
+		}
+	}
+
 	orderExpirationSeconds := k.GetParams(ctx).OrderExpirationSeconds
 	for _, order := range ordersToCancel {
 		if _, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId); exists {
@@ -99,13 +120,14 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		}
 	}
 
-	// Place new CLOB orders.
-	ordersToPlace, err := k.GetVaultClobOrders(ctx, vaultId)
+	// // Place new CLOB orders.
+	// ordersToPlace, err := k.GetVaultClobOrders(ctx, vaultId)
 
-	if err != nil {
-		log.ErrorLogWithError(ctx, "Failed to get vault clob orders to place", err, "vaultId", vaultId)
-		return err
-	}
+	// if err != nil {
+	// 	log.ErrorLogWithError(ctx, "Failed to get vault clob orders to place", err, "vaultId", vaultId)
+	// 	return err
+	// }
+
 	for i, order := range ordersToPlace {
 		err := k.PlaceVaultClobOrder(ctx, order)
 		if err != nil {
@@ -121,10 +143,6 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		// Otherwise, send an order place message only.
 		replacedOrder := ordersToCancel[i]
 		if replacedOrder.Subticks != order.Subticks {
-			vaultId.IncrCounter(
-				metrics.VaultPlaceOrderDifferentPrice,
-			)
-
 			k.GetIndexerEventManager().AddTxnEvent(
 				ctx,
 				indexerevents.SubtypeStatefulOrder,
@@ -147,9 +165,6 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 				),
 			)
 		} else {
-			vaultId.IncrCounter(
-				metrics.VaultPlaceOrderDifferentPrice,
-			)
 			k.GetIndexerEventManager().AddTxnEvent(
 				ctx,
 				indexerevents.SubtypeStatefulOrder,
