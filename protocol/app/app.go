@@ -1931,7 +1931,11 @@ func getGrpcStreamingManagerFromOptions(
 ) (manager streamingtypes.GrpcStreamingManager) {
 	if appFlags.GrpcStreamingEnabled {
 		logger.Info("GRPC streaming is enabled")
-		return streaming.NewGrpcStreamingManager(logger)
+		return streaming.NewGrpcStreamingManager(
+			logger,
+			10,
+			10,
+		)
 	}
 	return streaming.NewNoopGrpcStreamingManager()
 }
