@@ -249,6 +249,7 @@ const (
 	VaultCancelOrder              = "vault_cancel_order"
 	VaultPlaceOrder               = "vault_place_order"
 	VaultPlaceOrderDifferentPrice = "vault_place_order_different_price"
+	VaultPlaceOrderSamePrice      = "vault_place_order_same_price"
 	VaultType                     = "vault_type"
 	VaultId                       = "vault_id"
 	VaultEquity                   = "vault_equity"

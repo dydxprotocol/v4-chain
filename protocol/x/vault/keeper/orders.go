@@ -147,6 +147,9 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 				),
 			)
 		} else {
+			vaultId.IncrCounter(
+				metrics.VaultPlaceOrderDifferentPrice,
+			)
 			k.GetIndexerEventManager().AddTxnEvent(
 				ctx,
 				indexerevents.SubtypeStatefulOrder,
