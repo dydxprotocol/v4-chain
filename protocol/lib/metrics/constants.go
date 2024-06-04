@@ -245,13 +245,14 @@ const (
 	TreasuryBalanceAfterDistribution = "treasury_balance_after_distribution"
 
 	// Vault.
-	NumActiveVaults  = "num_active_vaults"
-	VaultCancelOrder = "vault_cancel_order"
-	VaultPlaceOrder  = "vault_place_order"
-	VaultType        = "vault_type"
-	VaultId          = "vault_id"
-	VaultEquity      = "vault_equity"
-	TotalShares      = "total_shares"
+	NumActiveVaults               = "num_active_vaults"
+	VaultCancelOrder              = "vault_cancel_order"
+	VaultPlaceOrder               = "vault_place_order"
+	VaultPlaceOrderDifferentPrice = "vault_place_order_different_price"
+	VaultType                     = "vault_type"
+	VaultId                       = "vault_id"
+	VaultEquity                   = "vault_equity"
+	TotalShares                   = "total_shares"
 
 	// Vest.
 	GetVestEntry          = "get_vest_entry"
