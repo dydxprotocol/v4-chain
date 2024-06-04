@@ -1334,11 +1334,41 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	return existingOffchainUpdates
 }
 
+// validateReplacement validates that an order can replace another.
+// Only size, price, and GTB/GTT can change. GTB/GTT cannot be reduced.
+func validateReplacement(existing, new types.Order) error {
+	if existing.MustCmpReplacementOrder(&new) >= 0 {
+		return errorsmod.Wrapf(
+			types.ErrInvalidReplacement,
+			"New order cannot reduce the GoodTilBlock or GoodTilBlockTime of existing order",
+		)
+	}
+	if existing.Side != new.Side {
+		return errorsmod.Wrapf(
+			types.ErrInvalidReplacement,
+			"New order cannot change the Side of the existing order",
+		)
+	}
+	if existing.TimeInForce != new.TimeInForce {
+		return errorsmod.Wrapf(
+			types.ErrInvalidReplacement,
+			"New order cannot change the TimeInForce of the existing order",
+		)
+	}
+	if existing.ReduceOnly != new.ReduceOnly {
+		return errorsmod.Wrapf(
+			types.ErrInvalidReplacement,
+			"New order cannot change the ReduceOnly field of the existing order",
+		)
+	}
+	// TODO(DEC-1238): Support stateful order replacements.
+	return nil
+}
+
 // validateNewOrder will perform the following validation against the memclob's in-memory state to ensure the order
 // can be placed (and if any condition is false, an error will be returned):
 //   - The order is not canceled (with an equal-to-or-greater-than `GoodTilBlock` than the new order).
-//   - If the order is replacing another order, then the new order's expiration must not be less than the
-//     existing order's expiration.
+//   - The order is a valid replacement
 //
 // Note that it does not perform collateralization checks since that will be done when matching the order (if the order
 // overlaps the book) and when adding the order to the book (if the order has remaining size after matching).
@@ -1388,17 +1418,15 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 
 	existingRestingOrder, restingOrderExists := orderbook.getOrder(orderId)
 	existingMatchedOrder, matchedOrderExists := m.operationsToPropose.MatchedOrderIdToOrder[orderId]
-
-	// If an order with the same `OrderId` already exists on the orderbook (or was already matched),
-	// then we must validate that the new order's `GoodTilBlock` is greater-in-value than the old order.
-	// If greater, then it can be placed (replacing the old order if it was resting on the book).
-	// If equal-or-lesser, then it is dropped.
-	if restingOrderExists && existingRestingOrder.MustCmpReplacementOrder(&order) >= 0 {
-		return types.ErrInvalidReplacement
+	if restingOrderExists {
+		if err := validateReplacement(existingRestingOrder, order); err != nil {
+			return err
+		}
 	}
-
-	if matchedOrderExists && existingMatchedOrder.MustCmpReplacementOrder(&order) >= 0 {
-		return types.ErrInvalidReplacement
+	if matchedOrderExists {
+		if err := validateReplacement(existingMatchedOrder, order); err != nil {
+			return err
+		}
 	}
 
 	// If the order is a reduce-only order, we should ensure that the sign of the order size is the opposite of
