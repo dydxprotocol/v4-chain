@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
-	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	indexersharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
@@ -744,7 +743,7 @@ func (k Keeper) DeleverageSubaccount(
 func (k Keeper) matchOrder(
 	ctx sdk.Context,
 	order types.MatchableOrder,
-	clobPairIdToOrderbook map[types.ClobPairId]*types.Orderbook,
+	openOrders openOrders,
 ) (
 	orderStatus types.TakerOrderStatus,
 	offchainUpdates *types.OffchainUpdates,
@@ -764,12 +763,13 @@ func (k Keeper) matchOrder(
 		takerOrderStatus := k.mustPerformTakerOrderMatching(
 		branchedContext,
 		order,
+		openOrders,
 	)
 
 	// If this is a replacement order, then ensure we remove the existing order from the orderbook.
 	if !order.IsLiquidation() {
 		orderId := order.MustGetOrder().OrderId
-		if orderToBeReplaced, found := k.openOrders.getOrder(branchedContext, orderId); found {
+		if orderToBeReplaced, found := openOrders.getOrder(branchedContext, orderId); found {
 			makerOrdersToRemove = append(makerOrdersToRemove, OrderWithRemovalReason{Order: orderToBeReplaced})
 		}
 	}
@@ -779,32 +779,32 @@ func (k Keeper) matchOrder(
 	for _, makerOrderWithRemovalReason := range makerOrdersToRemove {
 		// TODO(DEC-847): Update logic to properly remove long-term orders.
 		makerOrderId := makerOrderWithRemovalReason.Order.OrderId
-		// TODO(CLOB-669): Move logic outside of `memclob.go` by returning a slice of removed orders.
-		// If the order is a replacement order, a message was already added above the place message.
-		if k.generateOffchainUpdates && (order.IsLiquidation() || makerOrderId != order.MustGetOrder().OrderId) {
-			// If the taker order and the removed maker order are from the same subaccount, set
-			// the reason to SELF_TRADE error, otherwise set the reason to be UNDERCOLLATERALIZED.
-			// TODO(DEC-1409): Update this to support order replacements on indexer.
-			reason := indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
-				makerOrderWithRemovalReason.RemovalReason,
-			)
-			if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-				branchedContext,
-				makerOrderId,
-				reason,
-				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-			); success {
-				offchainUpdates.AddRemoveMessage(makerOrderId, message)
-			}
-		}
+		// // TODO(CLOB-669): Move logic outside of `memclob.go` by returning a slice of removed orders.
+		// // If the order is a replacement order, a message was already added above the place message.
+		// if k.generateOffchainUpdates && (order.IsLiquidation() || makerOrderId != order.MustGetOrder().OrderId) {
+		// 	// If the taker order and the removed maker order are from the same subaccount, set
+		// 	// the reason to SELF_TRADE error, otherwise set the reason to be UNDERCOLLATERALIZED.
+		// 	// TODO(DEC-1409): Update this to support order replacements on indexer.
+		// 	reason := indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
+		// 		makerOrderWithRemovalReason.RemovalReason,
+		// 	)
+		// 	if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+		// 		branchedContext,
+		// 		makerOrderId,
+		// 		reason,
+		// 		ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+		// 	); success {
+		// 		offchainUpdates.AddRemoveMessage(makerOrderId, message)
+		// 	}
+		// }
 
 		k.mustRemoveOrder(branchedContext, makerOrderId)
-		if makerOrderId.IsStatefulOrder() && !k.operationsToPropose.IsOrderRemovalInOperationsQueue(makerOrderId) {
-			k.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
-				makerOrderId,
-				makerOrderWithRemovalReason.RemovalReason,
-			)
-		}
+		// if makerOrderId.IsStatefulOrder() && !k.operationsToPropose.IsOrderRemovalInOperationsQueue(makerOrderId) {
+		// 	k.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+		// 		makerOrderId,
+		// 		makerOrderWithRemovalReason.RemovalReason,
+		// 	)
+		// }
 	}
 
 	var matchingErr error
@@ -1520,9 +1520,9 @@ func (k Keeper) mustAddOrderToOrderbook(
 func (k Keeper) mustGetOrderbook(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,
-	clobPairIdToOrderbook map[types.ClobPairId]*types.Orderbook,
+	openOrders openOrders,
 ) *types.Orderbook {
-	orderbook, found := clobPairIdToOrderbook[clobPairId]
+	orderbook, found := openOrders.orderbooksMap[clobPairId]
 	if found {
 		return orderbook
 	}
@@ -1530,6 +1530,8 @@ func (k Keeper) mustGetOrderbook(
 	if !exist {
 		panic(fmt.Sprintf("mustGetOrderbook: orderbook not found in store for clobPairId %d", clobPairId))
 	}
+	// cache the retrieved orderbook object in memory.
+	openOrders.orderbooksMap[clobPairId] = orderbook
 	return orderbook
 }
 
@@ -1543,7 +1545,7 @@ func (k Keeper) mustGetOrderbook(
 func (k Keeper) mustPerformTakerOrderMatching(
 	ctx sdk.Context,
 	newTakerOrder types.MatchableOrder,
-	clobPairIdToOrderbook map[types.ClobPairId]*types.Orderbook,
+	openOrders openOrders,
 ) (
 	// A slice of new maker fills created from matching this taker order.
 	newMakerFills []types.MakerFill,
@@ -1569,7 +1571,7 @@ func (k Keeper) mustPerformTakerOrderMatching(
 
 	// Initialize variables used for traversing the orderbook.
 	clobPairId := newTakerOrder.GetClobPairId()
-	orderbook := k.mustGetOrderbook(ctx, clobPairId, clobPairIdToOrderbook)
+	orderbook := k.mustGetOrderbook(ctx, clobPairId, openOrders)
 	takerIsBuy := newTakerOrder.IsBuy()
 	takerSubaccountId := newTakerOrder.GetSubaccountId()
 	takerIsLiquidation := newTakerOrder.IsLiquidation()
@@ -1614,9 +1616,9 @@ func (k Keeper) mustPerformTakerOrderMatching(
 		// Else, the maker order must have been fully matched (since the taker order has nonzero remaining size), and we
 		// need to find the next best maker order.
 		if makerLevelOrder == nil {
-			makerLevelOrder, foundMakerOrder = k.openOrders.getBestOrderOnSide(orderbook, !takerIsBuy)
+			makerLevelOrder, foundMakerOrder = openOrders.getBestOrderOnSide(orderbook, !takerIsBuy)
 		} else {
-			makerLevelOrder, foundMakerOrder = k.openOrders.findNextBestLevelOrder(ctx, makerLevelOrder)
+			makerLevelOrder, foundMakerOrder = openOrders.findNextBestLevelOrder(ctx, makerLevelOrder)
 		}
 
 		// If no next best maker order was found, stop matching.
@@ -1629,9 +1631,9 @@ func (k Keeper) mustPerformTakerOrderMatching(
 		// Check if the orderbook is crossed.
 		var takerOrderCrossesMakerOrder bool
 		if takerIsBuy {
-			takerOrderCrossesMakerOrder = newTakerOrder.GetOrderSubticks() >= makerOrder.Order.GetOrderSubticks()
+			takerOrderCrossesMakerOrder = newTakerOrder.GetOrderSubticks() >= makerOrder.GetOrderSubticks() // TODO why no Order?
 		} else {
-			takerOrderCrossesMakerOrder = newTakerOrder.GetOrderSubticks() <= makerOrder.Order.GetOrderSubticks()
+			takerOrderCrossesMakerOrder = newTakerOrder.GetOrderSubticks() <= makerOrder.GetOrderSubticks()
 		}
 
 		// If the taker order no longer crosses the maker order, stop matching.
@@ -1639,7 +1641,7 @@ func (k Keeper) mustPerformTakerOrderMatching(
 			break
 		}
 
-		makerOrderId := makerOrder.Order.OrderId
+		makerOrderId := makerOrder.OrderId
 		makerSubaccountId := makerOrderId.SubaccountId
 
 		// If the taker order is replacing the maker order, skip this order and continue matching.
@@ -1655,16 +1657,16 @@ func (k Keeper) mustPerformTakerOrderMatching(
 			makerOrdersToRemove = append(
 				makerOrdersToRemove,
 				OrderWithRemovalReason{
-					Order:         makerOrder.Order,
+					Order:         makerOrder,
 					RemovalReason: types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE,
 				},
 			)
 			continue
 		}
 
-		makerRemainingSize, makerHasRemainingSize := k.GetOrderRemainingAmount(ctx, makerOrder.Order)
+		makerRemainingSize, makerHasRemainingSize := k.GetOrderRemainingAmount(ctx, makerOrder)
 		if !makerHasRemainingSize {
-			panic(fmt.Sprintf("mustPerformTakerOrderMatching: maker order has no remaining amount %v", makerOrder.Order))
+			panic(fmt.Sprintf("mustPerformTakerOrderMatching: maker order has no remaining amount %v", makerOrder))
 		}
 
 		// The matched amount is the minimum of the remaining amount of both orders.
@@ -1677,8 +1679,8 @@ func (k Keeper) mustPerformTakerOrderMatching(
 
 		// For each subaccount involved in the match, if the order is reduce-only we should verify
 		// that the position side does not change or increase as a result of matching the order.
-		if makerOrder.Order.IsReduceOnly() {
-			currentPositionSize := k.clobKeeper.GetStatePosition(ctx, makerSubaccountId, clobPairId)
+		if makerOrder.IsReduceOnly() {
+			currentPositionSize := k.GetStatePosition(ctx, makerSubaccountId, clobPairId)
 			resizedMatchAmount := k.resizeReduceOnlyMatchIfNecessary(
 				ctx,
 				makerSubaccountId,
@@ -1697,7 +1699,7 @@ func (k Keeper) mustPerformTakerOrderMatching(
 				makerOrdersToRemove = append(
 					makerOrdersToRemove,
 					OrderWithRemovalReason{
-						Order:         makerOrder.Order,
+						Order:         makerOrder,
 						RemovalReason: types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY,
 					},
 				)
@@ -1708,7 +1710,7 @@ func (k Keeper) mustPerformTakerOrderMatching(
 		}
 
 		if newTakerOrder.IsReduceOnly() {
-			currentPositionSize := k.clobKeeper.GetStatePosition(ctx, takerSubaccountId, clobPairId)
+			currentPositionSize := k.GetStatePosition(ctx, takerSubaccountId, clobPairId)
 			resizedMatchAmount := k.resizeReduceOnlyMatchIfNecessary(
 				ctx,
 				takerSubaccountId,
@@ -1730,11 +1732,11 @@ func (k Keeper) mustPerformTakerOrderMatching(
 		// Perform collateralization checks to verify the orders can be filled.
 		matchWithOrders := types.MatchWithOrders{
 			TakerOrder: newTakerOrder,
-			MakerOrder: &makerOrder.Order,
+			MakerOrder: &makerOrder,
 			FillAmount: matchedAmount,
 		}
 
-		success, takerUpdateResult, makerUpdateResult, _, err := k.clobKeeper.ProcessSingleMatch(ctx, &matchWithOrders)
+		success, takerUpdateResult, makerUpdateResult, _, err := k.ProcessSingleMatch(ctx, &matchWithOrders)
 		if err != nil && !errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) {
 			if errors.Is(err, types.ErrLiquidationExceedsSubaccountMaxInsuranceLost) {
 				// Subaccount has reached max insurance lost block limit. Stop matching.
@@ -1784,7 +1786,7 @@ func (k Keeper) mustPerformTakerOrderMatching(
 				makerOrdersToRemove = append(
 					makerOrdersToRemove,
 					OrderWithRemovalReason{
-						Order:         makerOrder.Order,
+						Order:         makerOrder,
 						RemovalReason: types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
 					},
 				)
@@ -1823,9 +1825,9 @@ func (k Keeper) mustPerformTakerOrderMatching(
 		}
 
 		// 2.
-		makerOrderHash := makerOrder.Order.GetOrderHash()
-		matchedOrderHashToOrder[makerOrderHash] = &makerOrder.Order
-		matchedMakerOrderIdToOrder[makerOrderId] = makerOrder.Order
+		makerOrderHash := makerOrder.GetOrderHash()
+		matchedOrderHashToOrder[makerOrderHash] = &makerOrder
+		matchedMakerOrderIdToOrder[makerOrderId] = makerOrder
 
 		// Note that this if statement will only be entered once per every matching cycle. The taker order is hashed
 		// inside the loop since we expect the ratio of placed to matched orders to be roughly 100:1, and therefore
@@ -1844,7 +1846,7 @@ func (k Keeper) mustPerformTakerOrderMatching(
 
 		// 4.
 		if newTakerOrder.IsReduceOnly() && takerRemainingSize > 0 {
-			takerStatePositionSize := k.clobKeeper.GetStatePosition(ctx, takerSubaccountId, clobPairId)
+			takerStatePositionSize := k.GetStatePosition(ctx, takerSubaccountId, clobPairId)
 			if takerStatePositionSize.Sign() == 0 {
 				// TODO(DEC-847): Update logic to properly remove stateful taker reduce-only orders.
 				takerOrderStatus.OrderStatus = types.ReduceOnlyResized
@@ -1941,6 +1943,7 @@ func (k Keeper) SetMemclobGauges(
 func (k Keeper) mustRemoveOrder(
 	ctx sdk.Context,
 	orderId types.OrderId,
+	openOrders openOrders,
 ) {
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
@@ -1951,12 +1954,12 @@ func (k Keeper) mustRemoveOrder(
 	)
 
 	// Verify that the order exists.
-	levelOrder, exists := k.openOrders.orderIdToLevelOrder[orderId]
+	levelOrder, exists := openOrders.orderIdToLevelOrder[orderId]
 	if !exists {
 		panic(fmt.Sprintf("mustRemoveOrder: order does not exist %v", orderId))
 	}
 
-	k.openOrders.mustRemoveOrder(ctx, levelOrder)
+	openOrders.mustRemoveOrder(ctx, levelOrder)
 
 	// If this is a Short-Term order and it's not in the operations queue, then remove it from
 	// `ShortTermOrderTxBytes`.

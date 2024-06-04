@@ -1,9 +1,10 @@
-package memclob
+package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -12,8 +13,8 @@ import (
 	"github.com/zyedidia/generic/list"
 )
 
-// memclobOpenOrders is a utility struct used for storing orders (within an orderbook) and order expirations.
-type memclobOpenOrders struct {
+// openOrders is a utility struct used for storing orders (within an orderbook) and order expirations.
+type openOrders struct {
 	// Holds every `Orderbook` by ID of the CLOB.
 	orderbooksMap map[types.ClobPairId]*types.Orderbook
 	// Map from order IDs to their `LevelOrder` reference contained in the
@@ -25,9 +26,9 @@ type memclobOpenOrders struct {
 	blockExpirationsForOrders map[uint32]map[types.OrderId]bool
 }
 
-// newMemclobOpenOrders returns a new `memclobOpenOrders`.
-func newMemclobOpenOrders() *memclobOpenOrders {
-	return &memclobOpenOrders{
+// newOpenOrders returns a new `openOrders`.
+func newOpenOrders() *openOrders {
+	return &openOrders{
 		orderbooksMap:             make(map[types.ClobPairId]*types.Orderbook),
 		orderIdToLevelOrder:       make(map[types.OrderId]*types.LevelOrder),
 		blockExpirationsForOrders: make(map[uint32]map[types.OrderId]bool),
@@ -35,7 +36,7 @@ func newMemclobOpenOrders() *memclobOpenOrders {
 }
 
 // mustGetOrderbook returns the orderbook for the given clobPairId. Panics if the orderbook cannot be found.
-func (m *memclobOpenOrders) mustGetOrderbook(
+func (m *openOrders) mustGetOrderbook(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,
 ) *types.Orderbook {
@@ -49,7 +50,7 @@ func (m *memclobOpenOrders) mustGetOrderbook(
 // findNextBestLevelOrder is a helper method for finding the next best level order in the orderbook.
 // Note that it does not modify any state in the memclob.
 // It will return the next best level order along with a boolean indicating whether the next best level order exists.
-func (m *memclobOpenOrders) findNextBestLevelOrder(
+func (m *openOrders) findNextBestLevelOrder(
 	ctx sdk.Context,
 	levelOrder *types.LevelOrder,
 ) (
@@ -86,7 +87,7 @@ func (m *memclobOpenOrders) findNextBestLevelOrder(
 // then simply take the set of all populated levels, and iterates over all of them to get the result.
 // It returns the next best subtick for the given orderbook and side, and a boolean to indicate whether it exists
 // (false if no "next best" subticks exist on that side of the book).
-func (m *memclobOpenOrders) findNextBestSubticks(
+func (m *openOrders) findNextBestSubticks(
 	ctx sdk.Context,
 	startingTicks types.Subticks,
 	orderbook *types.Orderbook,
@@ -152,7 +153,7 @@ func (m *memclobOpenOrders) findNextBestSubticks(
 
 // getBestOrderOnSide returns a reference to the best order on the passed in side of the book, along with a boolean
 // indicating whether such an order exists at that subtick.
-func (m *memclobOpenOrders) getBestOrderOnSide(
+func (m *openOrders) getBestOrderOnSide(
 	orderbook *types.Orderbook,
 	isBuy bool,
 ) (
@@ -172,7 +173,7 @@ func (m *memclobOpenOrders) getBestOrderOnSide(
 // getFirstOrderAtSideAndSubticks returns the first level order at a specific side and subticks for the passed in
 // orderbook, along with a boolean indicating whether any order was found. If there are no orders on that side of
 // the orderbook, the returned boolean will be `false` to indicate this.
-func (m *memclobOpenOrders) getFirstOrderAtSideAndSubticks(
+func (m *openOrders) getFirstOrderAtSideAndSubticks(
 	orderbook *types.Orderbook,
 	isBuy bool,
 	subticks types.Subticks,
@@ -191,7 +192,7 @@ func (m *memclobOpenOrders) getFirstOrderAtSideAndSubticks(
 }
 
 // hasOrder returns true if the order by ID exists on the book.
-func (m *memclobOpenOrders) hasOrder(
+func (m *openOrders) hasOrder(
 	ctx sdk.Context,
 	orderId types.OrderId,
 ) bool {
@@ -200,7 +201,7 @@ func (m *memclobOpenOrders) hasOrder(
 }
 
 // getOrder gets an order by ID and returns it.
-func (m *memclobOpenOrders) getOrder(
+func (m *openOrders) getOrder(
 	ctx sdk.Context,
 	orderId types.OrderId,
 ) (order types.Order, found bool) {
@@ -214,7 +215,7 @@ func (m *memclobOpenOrders) getOrder(
 
 // getSubaccountOrders gets all of a subaccount's order on a specific CLOB and side.
 // This function will panic if `side` is invalid or if the orderbook does not exist.
-func (m *memclobOpenOrders) getSubaccountOrders(
+func (m *openOrders) getSubaccountOrders(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,
 	subaccountId satypes.SubaccountId,
@@ -261,7 +262,7 @@ func (m *memclobOpenOrders) getSubaccountOrders(
 
 // createOrderbook is used for updating memclob internal data structures to mark an orderbook as created.
 // This function will panic if `clobPairId` already exists in any of the memclob's internal data structures.
-func (m *memclobOpenOrders) createOrderbook(
+func (m *openOrders) createOrderbook(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,
 	subticksPerTick types.SubticksPerTick,
@@ -297,7 +298,7 @@ func (m *memclobOpenOrders) createOrderbook(
 // that do not already exist.
 // This function assumes that it will only be called with Short-Term orders that have passed order validation
 // in the CLOB keeper and the `validateNewOrder` function.
-func (m *memclobOpenOrders) mustAddShortTermOrderToBlockExpirationsForOrders(
+func (m *openOrders) mustAddShortTermOrderToBlockExpirationsForOrders(
 	ctx sdk.Context,
 	order types.Order,
 ) {
@@ -325,7 +326,7 @@ func (m *memclobOpenOrders) mustAddShortTermOrderToBlockExpirationsForOrders(
 // This function assumes that it will only be called with orders that have passed order validation
 // in the CLOB keeper and the `validateNewOrder` function.
 // If `order.Side` is an invalid side or `order.ClobPairId` does not reference a valid CLOB, this function will panic.
-func (m *memclobOpenOrders) mustAddOrderToSubaccountOrders(
+func (m *openOrders) mustAddOrderToSubaccountOrders(
 	ctx sdk.Context,
 	order types.Order,
 ) {
@@ -360,7 +361,7 @@ func (m *memclobOpenOrders) mustAddOrderToSubaccountOrders(
 // This function will assume that all order validation has already been done.
 // If `forceToFrontOfLevel` is true, places the order at the head of the level,
 // otherwise places it at the tail.
-func (m *memclobOpenOrders) mustAddOrderToOrderbook(
+func (m *openOrders) mustAddOrderToOrderbook(
 	ctx sdk.Context,
 	newOrder types.Order,
 	forceToFrontOfLevel bool,
@@ -447,12 +448,12 @@ func (m *memclobOpenOrders) mustAddOrderToOrderbook(
 // open orders in the memclob. If the order does not exist, this method will panic.
 // NOTE: `mustRemoveOrder` does _not_ remove cancels.
 // TODO(DEC-847): Remove stateful orders properly.
-func (m *memclobOpenOrders) mustRemoveOrder(
+func (m *openOrders) mustRemoveOrder(
 	ctx sdk.Context,
 	levelOrder *types.LevelOrder,
 ) {
 	// Define variables related to this order for more succinct reference.
-	order := levelOrder.Value.Order
+	order := levelOrder.Value
 	orderId := order.OrderId
 	subaccountId := orderId.SubaccountId
 	clobPairId := order.GetClobPairId()
@@ -481,15 +482,16 @@ func (m *memclobOpenOrders) mustRemoveOrder(
 
 	delete(m.orderIdToLevelOrder, orderId)
 
-	// If this is a reduce-only order, remove it from the open reduce-only orders for
-	// this subaccount. If the subaccount has no more open reduce-only orders, delete the inner map.
-	// TODO(DEC-847): Remove stateful reduce-only orders properly.
-	if order.IsReduceOnly() {
-		delete(m.orderbooksMap[clobPairId].SubaccountOpenReduceOnlyOrders[subaccountId], orderId)
-		if len(m.orderbooksMap[clobPairId].SubaccountOpenReduceOnlyOrders[subaccountId]) == 0 {
-			delete(m.orderbooksMap[clobPairId].SubaccountOpenReduceOnlyOrders, subaccountId)
-		}
-	}
+	// TOOD: do not support reduce-only for now.
+	// // If this is a reduce-only order, remove it from the open reduce-only orders for
+	// // this subaccount. If the subaccount has no more open reduce-only orders, delete the inner map.
+	// // TODO(DEC-847): Remove stateful reduce-only orders properly.
+	// if order.IsReduceOnly() {
+	// 	delete(m.orderbooksMap[clobPairId].SubaccountOpenReduceOnlyOrders[subaccountId], orderId)
+	// 	if len(m.orderbooksMap[clobPairId].SubaccountOpenReduceOnlyOrders[subaccountId]) == 0 {
+	// 		delete(m.orderbooksMap[clobPairId].SubaccountOpenReduceOnlyOrders, subaccountId)
+	// 	}
+	// }
 
 	// Next we'll remove the order from the orderbook. This process involves the following steps:
 	// 1. Fetch the relevant orderbook and side for this order via the `orderbooksMap`.

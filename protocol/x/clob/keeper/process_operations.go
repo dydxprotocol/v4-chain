@@ -159,8 +159,7 @@ func (k Keeper) ProcessInternalOperations(
 	// All short term orders in this map have passed validation.
 	placedShortTermOrders := make(map[types.OrderId]types.Order, 0)
 
-	// Orderbook will be lazily decoded and stored here if there's a an order on the book.
-	clobPairIdToOrderbook := make(map[types.ClobPairId]*types.Orderbook)
+	openOrders := newOpenOrders()
 
 	// Write the matches to state if all stateful validation passes.
 	for _, operation := range operations {
@@ -189,7 +188,7 @@ func (k Keeper) ProcessInternalOperations(
 				return err
 			}
 			placedShortTermOrders[order.GetOrderId()] = order
-			return k.PlaceOrderDeliverTx(ctx, order, clobPairIdToOrderbook)
+			return k.PlaceOrderDeliverTx(ctx, order, openOrders)
 		case *types.InternalOperation_OrderRemoval:
 			orderRemoval := castedOperation.OrderRemoval
 
@@ -380,7 +379,7 @@ func (k Keeper) validateNewOrder(
 func (k Keeper) PlaceOrderDeliverTx(
 	ctx sdk.Context,
 	order types.Order,
-	clobPairIdToOrderbook map[types.ClobPairId]*types.Orderbook,
+	clobPairIdToOrderbook openOrders,
 ) (
 	// orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 	// orderStatus types.OrderStatus,
