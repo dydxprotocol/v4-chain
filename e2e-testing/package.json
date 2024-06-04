@@ -11,7 +11,10 @@
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
-    "test": "NODE_ENV=test jest --runInBand --forceExit"
+    "test": "NODE_ENV=test jest --runInBand --forceExit",
+    "clean": "docker stop $(docker ps -q) && docker rm $(docker ps -a -q) && docker rmi $(docker images -q) && docker network prune -f && docker volume prune -f && docker system prune -a -f",
+    "e2e-test-setup": "./run-containerized-env.sh",
+    "e2e-test-run": "pnpm build && pnpm test"
   },
   "author": "",
   "license": "AGPL-3.0",
