@@ -238,7 +238,7 @@ func CleanupCustomNetwork() {
 }
 
 func QueryCustomNetwork(query string) ([]byte, string, error) {
-	cmd := exec.Command("bash", "-c", query)
+	cmd := exec.Command("bash", "-c", query+" --node tcp://7.7.8.253:26658 -o json")
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out

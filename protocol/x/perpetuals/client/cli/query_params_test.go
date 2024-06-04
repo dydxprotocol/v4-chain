@@ -17,7 +17,7 @@ func TestParams(t *testing.T) {
 	network.DeployCustomNetwork(genesisChanges)
 	cfg := network.DefaultConfig(nil)
 
-	perpQuery := "docker exec interchain-security-instance-setup interchain-security-cd query perpetuals get-params --node tcp://7.7.8.4:26658 -o json"
+	perpQuery := "docker exec interchain-security-instance-setup interchain-security-cd query perpetuals get-params"
 	data, _, err := network.QueryCustomNetwork(perpQuery)
 	require.NoError(t, err)
 

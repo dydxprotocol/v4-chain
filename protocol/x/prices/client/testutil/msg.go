@@ -19,7 +19,7 @@ func MsgQueryAllMarketParamExec(clientCtx client.Context) (testutil.BufferWriter
 
 // MsgQueryAllMarketPriceExec lists all markets prices in `Prices`.
 func MsgQueryAllMarketPriceExec() ([]byte, error) {
-	query := "docker exec interchain-security-instance interchain-security-cd query prices list-market-price  --node tcp://7.7.8.4:26658 -o json"
+	query := "docker exec interchain-security-instance interchain-security-cd query prices list-market-price"
 	data, _, err := network.QueryCustomNetwork(query)
 	return data, err
 }

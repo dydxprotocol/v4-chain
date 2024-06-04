@@ -3,11 +3,9 @@
 package cli_test
 
 import (
-	"bytes"
 	"fmt"
 	"math"
 	"math/big"
-	"os/exec"
 	"strconv"
 	"testing"
 	"time"
@@ -99,7 +97,7 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 
 	goodTilBlock := uint32(0)
-	query := "docker exec interchain-security-instance interchain-security-cd query block --type=height 0 --node tcp://7.7.8.4:26658 -o json"
+	query := "docker exec interchain-security-instance interchain-security-cd query block --type=height 0"
 	data, _, err := network.QueryCustomNetwork(query)
 	var resp blocktypes.Block
 	require.NoError(s.T(), s.cfg.Codec.UnmarshalJSON(data, &resp))
@@ -108,19 +106,19 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 	goodTilBlock = uint32(blockHeight) + types.ShortBlockWindow
 	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
 
-	buyTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658"
+	buyTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
 	_, _, err = network.QueryCustomNetwork(buyTx)
 	s.Require().NoError(err)
 
-	cancelTx := "docker exec interchain-security-instance interchain-security-cd tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658"
+	cancelTx := "docker exec interchain-security-instance interchain-security-cd tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
 	_, _, err = network.QueryCustomNetwork(cancelTx)
 	s.Require().NoError(err)
 
-	sellTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 1 1 0 2 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658"
+	sellTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 1 1 0 2 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
 	_, _, err = network.QueryCustomNetwork(sellTx)
 	s.Require().NoError(err)
 
-	cancelUknownTx := "docker exec interchain-security-instance interchain-security-cd tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 10 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658"
+	cancelUknownTx := "docker exec interchain-security-instance interchain-security-cd tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 10 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
 	_, _, err = network.QueryCustomNetwork(cancelUknownTx)
 	s.Require().NoError(err)
 
@@ -160,16 +158,6 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 	)
 
 	network.CleanupCustomNetwork()
-
-	// // Check that the `distribution` module account USDC balance has not changed.
-	// distrModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
-	// 	val,
-	// 	s.network.Config.Codec,
-	// 	distrtypes.ModuleName,
-	// )
-
-	// s.Require().NoError(err)
-	// s.Require().Equal(int64(0), distrModuleUSDCBalance)
 }
 
 // TestCLICancelMatchingOrders places two matching orders from two different subaccounts (with the
@@ -178,111 +166,45 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 // The subaccounts are then queried and assertions are performed on their QuoteBalance and PerpetualPositions.
 // The account which places the orders is also the validator's AccAddress.
 func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
-	// val := s.network.Validators[0]
-	// ctx := val.ClientCtx
-
-	// currentHeight, err := s.network.LatestHeight()
-	// s.Require().NoError(err)
-
 	goodTilBlock := uint32(0)
 
-	blockHeightCmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query block --type=height 0 --node tcp://7.7.8.4:26658 -o json")
-	var heightOut bytes.Buffer
-	blockHeightCmd.Stdout = &heightOut
-	err := blockHeightCmd.Run()
+	blockHeightQuery := "docker exec interchain-security-instance interchain-security-cd query block --type=height 0"
+	data, _, err := network.QueryCustomNetwork(blockHeightQuery)
 	if err != nil {
-		s.T().Fatalf("Failed to get block height: %v, stdout: %s", err, heightOut.String())
+		s.T().Fatalf("Failed to get block height: %v", err)
 	}
 	var resp blocktypes.Block
-	data := heightOut.Bytes()
 	require.NoError(s.T(), s.cfg.Codec.UnmarshalJSON(data, &resp))
 	blockHeight := resp.LastCommit.Height
 
 	goodTilBlock = uint32(blockHeight) + types.ShortBlockWindow
 	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
-	// clientId := uint64(2)
 	quantums := satypes.BaseQuantums(1_000)
 	subticks := types.Subticks(50_000_000_000)
 
-	// // Place the first order.
-	// _, err = cli_testutil.MsgPlaceOrderExec(
-	// 	ctx,
-	// 	s.validatorAddress,
-	// 	cancelsSubaccountNumberZero,
-	// 	clientId,
-	// 	constants.ClobPair_Btc.Id,
-	// 	types.Order_SIDE_BUY,
-	// 	quantums,
-	// 	subticks.ToUint64(),
-	// 	goodTilBlock,
-	// )
-	// s.Require().NoError(err)
-
-	placeBuyCmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 2 0 1 1000 50000000000 "+goodTilBlockStr+" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658")
-	var placeBuyOut bytes.Buffer
-	placeBuyCmd.Stdout = &placeBuyOut
-	err = placeBuyCmd.Run()
-	if err != nil {
-		s.T().Fatalf("Failed to place order: %v, stdout: %s", err, placeBuyOut.String())
+	placeBuyTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 2 0 1 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
+	_, _, buyerr := network.QueryCustomNetwork(placeBuyTx)
+	if buyerr != nil {
+		s.T().Fatalf("Failed to place order: %v", buyerr)
 	}
-	s.Require().NoError(err)
+	s.Require().NoError(buyerr)
 
-	// // Place the second order.
-	// _, err = cli_testutil.MsgPlaceOrderExec(
-	// 	ctx,
-	// 	s.validatorAddress,
-	// 	cancelsSubaccountNumberOne,
-	// 	clientId,
-	// 	constants.ClobPair_Btc.Id,
-	// 	types.Order_SIDE_SELL,
-	// 	quantums,
-	// 	subticks.ToUint64(),
-	// 	goodTilBlock,
-	// )
-	// s.Require().NoError(err)
-	placeSellCmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 1 2 0 2 1000 50000000000 "+goodTilBlockStr+" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658")
-	var placeSellOut bytes.Buffer
-	placeSellCmd.Stdout = &placeSellOut
-	err = placeSellCmd.Run()
-	if err != nil {
-		s.T().Fatalf("Failed to place order: %v, stdout: %s", err, placeSellOut.String())
+	placeSellTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 1 2 0 2 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
+	_, _, sellerr := network.QueryCustomNetwork(placeSellTx)
+	if sellerr != nil {
+		s.T().Fatalf("Failed to place order: %v", sellerr)
 	}
-	s.Require().NoError(err)
-
-	// currentHeight, err = s.network.LatestHeight()
-	// s.Require().NoError(err)
-
-	// // Wait for a few blocks.
-	// _, err = s.network.WaitForHeight(currentHeight + 3)
-	// s.Require().NoError(err)
+	s.Require().NoError(sellerr)
 
 	time.Sleep(5 * time.Second)
 
-	// // Cancel the first order.
-	// _, err = cli_testutil.MsgCancelOrderExec(
-	// 	ctx,
-	// 	s.validatorAddress,
-	// 	cancelsSubaccountNumberZero,
-	// 	clientId,
-	// 	goodTilBlock,
-	// )
-	// s.Require().NoError(err)
+	cancelBuyTx := "docker exec interchain-security-instance interchain-security-cd tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 2 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
+	_, _, cancelerr := network.QueryCustomNetwork(cancelBuyTx)
 
-	cancelBuyCmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 2 "+goodTilBlockStr+" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658")
-	var cancelBuyOut bytes.Buffer
-	cancelBuyCmd.Stdout = &cancelBuyOut
-	err = cancelBuyCmd.Run()
-	if err != nil {
-		s.T().Fatalf("Failed to cancel order: %v, stdout: %s", err, cancelBuyOut.String())
+	if cancelerr != nil {
+		s.T().Fatalf("Failed to cancel order: %v", cancelerr)
 	}
-	s.Require().NoError(err)
-
-	// currentHeight, err = s.network.LatestHeight()
-	// s.Require().NoError(err)
-
-	// // Wait for a few blocks.
-	// _, err = s.network.WaitForHeight(currentHeight + 3)
-	// s.Require().NoError(err)
+	s.Require().NoError(cancelerr)
 
 	time.Sleep(5 * time.Second)
 
@@ -345,13 +267,4 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
 	)
 
 	network.CleanupCustomNetwork()
-	// Check that the `distribution` module account USDC balance has not changed.
-	// distrModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
-	// 	val,
-	// 	s.network.Config.Codec,
-	// 	distrtypes.ModuleName,
-	// )
-
-	// s.Require().NoError(err)
-	// s.Require().Equal(makerFee+takerFee, distrModuleUSDCBalance)
 }

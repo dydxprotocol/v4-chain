@@ -92,9 +92,7 @@ func TestShowPerpetual(t *testing.T) {
 	} {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
-			args := fmt.Sprintf("%v", tc.id)
-			args += " --node tcp://7.7.8.4:26658 -o json"
-			perpQuery := "docker exec interchain-security-instance interchain-security-cd query perpetuals show-perpetual " + args
+			perpQuery := "docker exec interchain-security-instance interchain-security-cd query perpetuals show-perpetual"
 			data, _, err := network.QueryCustomNetwork(perpQuery)
 			require.NoError(t, err)
 			var resp types.QueryPerpetualResponse
@@ -163,15 +161,12 @@ func TestListPerpetual(t *testing.T) {
 		if total {
 			args += fmt.Sprintf(" --%s", flags.FlagCountTotal)
 		}
-
-		args += " --node tcp://7.7.8.4:26658 -o json"
 		return args
 	}
 	t.Run("ByOffset", func(t *testing.T) {
 		step := 2
 		for i := 0; i < len(objs); i += step {
-			args := request(nil, uint64(i), uint64(step), false)
-			perpQuery := "docker exec interchain-security-instance interchain-security-cd query perpetuals list-perpetual " + args
+			perpQuery := "docker exec interchain-security-instance interchain-security-cd query perpetuals list-perpetual"
 			data, _, err := network.QueryCustomNetwork(perpQuery)
 
 			require.NoError(t, err)

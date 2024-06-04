@@ -23,7 +23,7 @@ func TestCmdGetEquityTierLimitConfig(t *testing.T) {
 	networkWithClobPairObjects(t, 2)
 
 	cfg := network.DefaultConfig(nil)
-	query := "docker exec interchain-security-instance interchain-security-cd query clob get-equity-tier-limit-config  --node tcp://7.7.8.4:26658 -o json"
+	query := "docker exec interchain-security-instance interchain-security-cd query clob get-equity-tier-limit-config"
 	data, _, err := network.QueryCustomNetwork(query)
 
 	require.NoError(t, err)

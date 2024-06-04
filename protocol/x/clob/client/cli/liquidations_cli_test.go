@@ -218,7 +218,7 @@ func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
 	// quantums := satypes.BaseQuantums(1_000)
 	subticks := types.Subticks(50_000_000_000)
 
-	blockHeightQuery := "docker exec interchain-security-instance interchain-security-cd query block --type=height 0 --node tcp://7.7.8.4:26658 -o json"
+	blockHeightQuery := "docker exec interchain-security-instance interchain-security-cd query block --type=height 0"
 	data, _, err := network.QueryCustomNetwork(blockHeightQuery)
 	var resp blocktypes.Block
 	require.NoError(s.T(), s.cfg.Codec.UnmarshalJSON(data, &resp))
@@ -227,30 +227,10 @@ func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
 	goodTilBlock = uint32(blockHeight) + types.ShortBlockWindow
 	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
 
-	buyTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 100000000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y --node tcp://7.7.8.4:26658"
+	buyTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 100000000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
 	_, _, err = network.QueryCustomNetwork(buyTx)
 	s.Require().NoError(err)
-	// // Place the maker order that should be filled by the liquidation order.
-	// _, err = testutil.MsgPlaceOrderExec(
-	// 	ctx,
-	// 	s.validatorAddress,
-	// 	liqTestSubaccountNumberZero,
-	// 	clientId,
-	// 	constants.ClobPair_Btc.Id,
-	// 	types.Order_SIDE_BUY,
-	// 	liqTestMakerOrderQuantums,
-	// 	subticks.ToUint64(),
-	// 	goodTilBlock,
-	// )
-	// s.Require().NoError(err)
 
-	// currentHeight, err = s.network.LatestHeight()
-	// s.Require().NoError(err)
-
-	// // Wait for a few blocks to ensure the liquidation order was placed, matched, and included
-	// // in a block.
-	// _, err = s.network.WaitForHeight(currentHeight + 3)
-	// s.Require().NoError(err)
 	time.Sleep(5 * time.Second)
 
 	// Query both subaccounts.

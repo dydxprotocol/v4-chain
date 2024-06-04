@@ -3,10 +3,7 @@
 package cli_test
 
 import (
-	"bytes"
-	"fmt"
 	"math/big"
-	"os/exec"
 	"strconv"
 	"testing"
 
@@ -15,7 +12,6 @@ import (
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	ratelimitutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
-	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,16 +22,11 @@ func TestQueryCapacityByDenom(t *testing.T) {
 
 	cfg := network.DefaultConfig(nil)
 
-	param := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
-
-	cmd := exec.Command("docker", "exec", "interchain-security-instance-setup", "interchain-security-cd", "query", "ratelimit", "capacity-by-denom", param, assettypes.AssetUsdc.Denom, "--node", "tcp://7.7.8.4:26658", "-o json")
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
+	rateQuery := "docker exec interchain-security-instance-setup interchain-security-cd query ratelimit capacity-by-denom " + assettypes.AssetUsdc.Denom
+	data, _, err := network.QueryCustomNetwork(rateQuery)
 
 	require.NoError(t, err)
 	var resp types.QueryCapacityByDenomResponse
-	data := out.Bytes()
 	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 	require.Equal(t,
 		// LimiterCapacity resulting from default limiter params and 0 TVL.

@@ -86,7 +86,7 @@ func TestShowSubaccount(t *testing.T) {
 			}
 
 			fmt.Println("Args:", args)
-			subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts show-subaccount " + args[0] + " " + args[1] + " --node tcp://7.7.8.4:26658 -o json"
+			subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts show-subaccount " + args[0] + " " + args[1]
 			data, _, err := network.QueryCustomNetwork(subQuery)
 			require.NoError(t, err)
 			var resp types.QuerySubaccountResponse
@@ -138,7 +138,7 @@ func TestListSubaccount(t *testing.T) {
 			args += fmt.Sprintf(" --%s", flags.FlagCountTotal)
 		}
 
-		args += " --node tcp://7.7.8.4:26658 -o json"
+		args += " --node tcp://253:26658 -o json"
 		return args
 	}
 	t.Run("ByOffset", func(t *testing.T) {

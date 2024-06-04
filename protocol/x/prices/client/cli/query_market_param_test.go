@@ -11,7 +11,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	cli_util "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/prices/cli"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/stretchr/testify/require"
 
@@ -21,41 +20,30 @@ import (
 func TestShowMarketParam(t *testing.T) {
 	_, objs, _ := cli_util.NetworkWithMarketObjects(t, 2)
 
-	// ctx := net.Validators[0].ClientCtx
-	common := []string{
-		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-	}
 	for _, tc := range []struct {
 		desc string
 		id   uint32
 
-		args []string
-		err  string
-		obj  types.MarketParam
+		err string
+		obj types.MarketParam
 	}{
 		{
 			desc: "found",
 			id:   objs[0].Id,
 
-			args: common,
-			obj:  objs[0],
+			obj: objs[0],
 		},
 		{
 			desc: "not found",
 			id:   uint32(100000),
 
-			args: common,
-			err:  "not found",
+			err: "not found",
 		},
 	} {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
-			args := []string{
-				fmt.Sprintf("%v", tc.id),
-			}
-			args = append(args, tc.args...)
 			cfg := network.DefaultConfig(nil)
-			query := "docker exec interchain-security-instance interchain-security-cd query prices show-market-param " + fmt.Sprintf("%d", tc.id) + " --node tcp://7.7.8.4:26658 -o json"
+			query := "docker exec interchain-security-instance interchain-security-cd query prices show-market-param " + fmt.Sprintf("%d", tc.id)
 			data, stderrOutput, err := network.QueryCustomNetwork(query)
 			if tc.err != "" {
 				require.Error(t, err)
@@ -80,9 +68,7 @@ func TestListMarketParam(t *testing.T) {
 	cfg := network.DefaultConfig(nil)
 	// ctx := net.Validators[0].ClientCtx
 	request := func(next []byte, offset, limit uint64, total bool) []string {
-		args := []string{
-			fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-		}
+		args := []string{}
 		if next == nil {
 			args = append(args, fmt.Sprintf("--%s=%d", flags.FlagOffset, offset))
 		} else {
@@ -99,7 +85,7 @@ func TestListMarketParam(t *testing.T) {
 		for i := 0; i < len(objs); i += step {
 			args := request(nil, uint64(i), uint64(step), false)
 			argsString := strings.Join(args, " ")
-			commandString := "docker exec interchain-security-instance interchain-security-cd query prices list-market-param --node tcp://7.7.8.4:26658 " + argsString
+			commandString := "docker exec interchain-security-instance interchain-security-cd query prices list-market-param " + argsString
 			data, _, err := network.QueryCustomNetwork(commandString)
 
 			require.NoError(t, err)
@@ -119,7 +105,7 @@ func TestListMarketParam(t *testing.T) {
 			}
 			args := request([]byte(nextKeyStr), 0, uint64(step), false)
 			argsString := strings.Join(args, " ")
-			commandString := "docker exec interchain-security-instance interchain-security-cd query prices list-market-param --node tcp://7.7.8.4:26658 " + argsString
+			commandString := "docker exec interchain-security-instance interchain-security-cd query prices list-market-param " + argsString
 			data, _, err := network.QueryCustomNetwork(commandString)
 
 			require.NoError(t, err)
@@ -134,7 +120,7 @@ func TestListMarketParam(t *testing.T) {
 		args := request(nil, 0, uint64(len(objs)), true)
 
 		argsString := strings.Join(args, " ")
-		commandString := "docker exec interchain-security-instance interchain-security-cd query prices list-market-param --node tcp://7.7.8.4:26658 " + argsString
+		commandString := "docker exec interchain-security-instance interchain-security-cd query prices list-market-param " + argsString
 		data, _, err := network.QueryCustomNetwork(commandString)
 		require.NoError(t, err)
 		var resp types.QueryAllMarketParamsResponse

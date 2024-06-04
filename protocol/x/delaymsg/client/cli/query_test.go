@@ -44,7 +44,7 @@ func TestQueryNextDelayedMessageId(t *testing.T) {
 			genesisChanges := getDelayedGenesisChanges(name)
 
 			network.DeployCustomNetwork(genesisChanges)
-			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-next-delayed-message-id --node tcp://7.7.8.4:26658 -o json"
+			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-next-delayed-message-id"
 			data, _, _ := network.QueryCustomNetwork(delaymsgQuery)
 			var resp types.QueryNextDelayedMessageIdResponse
 			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
@@ -99,7 +99,7 @@ func TestQueryMessage(t *testing.T) {
 			network.DeployCustomNetwork(genesisChanges)
 
 			cfg := network.DefaultConfig(nil)
-			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-message 0 --node tcp://7.7.8.4:26658 -o json"
+			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-message 0"
 			data, stdQueryErr, err := network.QueryCustomNetwork(delaymsgQuery)
 
 			if name == "Default: 0" {
@@ -155,7 +155,7 @@ func TestQueryBlockMessageIds(t *testing.T) {
 			network.DeployCustomNetwork(genesisChanges)
 
 			cfg := network.DefaultConfig(nil)
-			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-block-message-ids 1000 --node tcp://7.7.8.4:26658 -o json"
+			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-block-message-ids 1000"
 			data, stdQueryErr, err := network.QueryCustomNetwork(delaymsgQuery)
 
 			if name == "Default: 0" {
@@ -179,7 +179,6 @@ func getGenesisChanges(testCase string) string {
 	case "Default: 0":
 		return "\".app_state.delaymsg.delayed_messages = [] | .app_state.delaymsg.next_delayed_message_id = \"0\"\" \"\""
 	case "Non-zero":
-		// setup(".app_state.delaymsg.delayed_messages[0] = {\"id\": \"0\", \"msg\": {\"@type\": \"/dydxprotocol.perpetuals.MsgUpdateParams\", \"authority\": \"dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr\", \"params\": {\"funding_rate_clamp_factor_ppm\": \"6000000\", \"premium_vote_clamp_factor_ppm\": \"60000000\", \"min_num_votes_per_sample\": \"15\"}}, \"block_height\": \"10\"} | .app_state.delaymsg.next_delayed_message_id = \"20\"", "")
 		return "\".app_state.delaymsg.delayed_messages[0] = {\\\"id\\\": \\\"0\\\", \\\"msg\\\": {\\\"@type\\\": \\\"/dydxprotocol.perpetuals.MsgUpdateParams\\\", \\\"authority\\\": \\\"dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr\\\", \\\"params\\\": {\\\"funding_rate_clamp_factor_ppm\\\": \\\"6000000\\\", \\\"premium_vote_clamp_factor_ppm\\\": \\\"60000000\\\", \\\"min_num_votes_per_sample\\\": \\\"15\\\"}}, \\\"block_height\\\": \\\"1000\\\"} | .app_state.delaymsg.next_delayed_message_id = \\\"20\\\"\" \"\""
 
 	default:

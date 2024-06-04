@@ -24,7 +24,7 @@ func GetModuleAccUsdcBalance(
 ) {
 	moduleAddress := authtypes.NewModuleAddress(moduleName)
 
-	query := "docker exec interchain-security-instance interchain-security-cd query bank balances " + moduleAddress.String() + "  --node tcp://7.7.8.4:26658 -o json"
+	query := "docker exec interchain-security-instance interchain-security-cd query bank balances " + moduleAddress.String()
 	transferOut, _, err := network.QueryCustomNetwork(query)
 	if err != nil {
 		return 0, err

@@ -98,8 +98,7 @@ func TestShowEpochInfo(t *testing.T) {
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
-			epochQuery := "docker exec interchain-security-instance-setup interchain-security-cd query epochs show-epoch-info " + tc.id + " --node tcp://7.7.8.4:26658 -o json"
-			// cmd := exec.Command("bash", "-c", "docker exec interchain-security-instance-setup interchain-security-cd query epochs show-epoch-info "+tc.id+" --node tcp://7.7.8.4:26658 -o json")
+			epochQuery := "docker exec interchain-security-instance-setup interchain-security-cd query epochs show-epoch-info " + tc.id
 			data, stdQueryErr, err := network.QueryCustomNetwork(epochQuery)
 
 			if tc.err != nil {
@@ -139,14 +138,13 @@ func TestListEpochInfo(t *testing.T) {
 		if total {
 			args += fmt.Sprintf(" --%s", flags.FlagCountTotal)
 		}
-		args += " --node tcp://7.7.8.4:26658 -o json"
 		return args
 	}
 	t.Run("ByOffset", func(t *testing.T) {
 		step := 2
 		for i := 0; i < len(objs); i += step {
 			args := request(nil, uint64(i), uint64(step), false)
-			epochQuery := "docker exec interchain-security-instance-setup interchain-security-cd query epochs list-epoch-info" + args
+			epochQuery := "docker exec interchain-security-instance-setup interchain-security-cd query epochs list-epoch-info " + args
 			data, _, err := network.QueryCustomNetwork(epochQuery)
 
 			require.NoError(t, err)
@@ -165,7 +163,7 @@ func TestListEpochInfo(t *testing.T) {
 		for i := 0; i < len(objs); i += step {
 			args := request(next, 0, uint64(step), false)
 
-			epochQuery := "docker exec interchain-security-instance-setup interchain-security-cd query epochs list-epoch-info" + args
+			epochQuery := "docker exec interchain-security-instance-setup interchain-security-cd query epochs list-epoch-info " + args
 			data, _, err := network.QueryCustomNetwork(epochQuery)
 			require.NoError(t, err)
 			var resp types.QueryEpochInfoAllResponse
@@ -181,7 +179,7 @@ func TestListEpochInfo(t *testing.T) {
 	t.Run("Total", func(t *testing.T) {
 		args := request(nil, 0, uint64(len(objs)), true)
 
-		epochQuery := "docker exec interchain-security-instance-setup interchain-security-cd query epochs list-epoch-info" + args
+		epochQuery := "docker exec interchain-security-instance-setup interchain-security-cd query epochs list-epoch-info " + args
 		data, _, err := network.QueryCustomNetwork(epochQuery)
 		require.NoError(t, err)
 

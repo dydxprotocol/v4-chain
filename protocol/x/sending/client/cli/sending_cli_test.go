@@ -113,7 +113,7 @@ func (s *SendingIntegrationTestSuite) sendTransferAndVerifyBalance(
 ) {
 
 	cfg := network.DefaultConfig(nil)
-	transferTx := fmt.Sprintf("docker exec interchain-security-instance interchain-security-cd tx sending create-transfer dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 %d dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 %d %d --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --node tcp://7.7.8.4:26658 --keyring-backend test -y -o json", senderSubaccountNumber, recipientSubaccountNumber, amount)
+	transferTx := fmt.Sprintf("docker exec interchain-security-instance interchain-security-cd tx sending create-transfer dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 %d dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 %d %d --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y", senderSubaccountNumber, recipientSubaccountNumber, amount)
 	_, _, err := network.QueryCustomNetwork(transferTx)
 	if err != nil {
 		s.T().Fatalf("failed to send transfer: %v", err)
