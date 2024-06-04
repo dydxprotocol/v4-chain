@@ -855,6 +855,7 @@
         "port": "icahost"
       }
     },
+    "listing": {},
     "params": null,
     "perpetuals": {
       "liquidity_tiers": [
