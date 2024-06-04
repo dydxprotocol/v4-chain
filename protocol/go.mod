@@ -60,7 +60,7 @@ require (
 	github.com/cosmos/rosetta v0.50.3
 	github.com/deckarep/golang-set/v2 v2.3.0
 	github.com/ethereum/go-ethereum v1.14.0
-	github.com/ethos-works/ethos/ethos-chain v0.0.0-20240427014547-bab686cfb261
+	github.com/ethos-works/ethos/ethos-chain v0.0.0-00010101000000-000000000000
 	github.com/go-kit/log v0.2.1
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/ory/dockertest/v3 v3.10.0
@@ -426,6 +426,11 @@ replace (
 	//github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240408175732-0fca9d69cbc4
 	github.com/ethos-works/ethos-avs => ./ethos/ethos-avs
 	github.com/ethos-works/ethos/ethos-chain => ./ethos/ethos-chain
+
+	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.18.0
+	github.com/prometheus/client_model => github.com/prometheus/client_model v0.6.0
+	github.com/prometheus/common => github.com/prometheus/common v0.47.0
+	github.com/prometheus/procfs => github.com/prometheus/procfs v0.12.0
 )
 
 replace (
