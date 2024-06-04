@@ -201,9 +201,16 @@ export class OrderRemoveHandler extends Handler {
         message: 'Could not find order for stateful order cancelation',
         orderId: orderRemove.removedOrderId,
         orderRemove,
+        removeOrderResult,
       });
       return;
     }
+    logger.info({
+      at: 'orderRemoveHandler#handleStatefulOrderCancelation',
+      message: 'Stateful order removal',
+      orderId: orderRemove.removedOrderId,
+      orderRemove,
+    });
 
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromClobPairId(
@@ -258,6 +265,14 @@ export class OrderRemoveHandler extends Handler {
     removeOrderResult: RemoveOrderResult,
     headers: IHeaders,
   ): Promise<void> {
+    logger.info({
+      at: 'orderRemoveHandler#handleOrderRemoval',
+      message: 'Short term order removal',
+      orderId: orderRemove.removedOrderId,
+      orderRemove,
+      removeOrderResult,
+    });
+
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromClobPairId(orderRemove.removedOrderId!.clobPairId.toString());
     if (perpetualMarket === undefined) {
