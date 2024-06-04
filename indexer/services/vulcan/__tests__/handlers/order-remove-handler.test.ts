@@ -215,7 +215,7 @@ describe('OrderRemoveHandler', () => {
       );
 
       expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'orderRemoveHandler#handleOrderRemoval',
+        at: 'OrderRemoveHandler#handleOrderRemoval',
         message: 'Unable to find order',
         orderId: defaultOrderRemove.removedOrderId,
       }));
@@ -235,7 +235,7 @@ describe('OrderRemoveHandler', () => {
       );
 
       expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'orderRemoveHandler#handleOrderRemoval',
+        at: 'OrderRemoveHandler#handleOrderRemoval',
         message: 'Unable to find order',
         orderId: defaultOrderRemove.removedOrderId,
       }));
@@ -283,7 +283,7 @@ describe('OrderRemoveHandler', () => {
         );
 
         expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
-          at: 'orderRemoveHandler#handleOrderRemoval',
+          at: 'OrderRemoveHandler#handleOrderRemoval',
           message: 'Unable to find order',
           orderId: defaultOrderRemove.removedOrderId,
         }));
@@ -344,7 +344,7 @@ describe('OrderRemoveHandler', () => {
 
       const clobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
       expect(logger.error).toHaveBeenCalledWith({
-        at: 'orderRemoveHandler#handle',
+        at: 'OrderRemoveHandler#handle',
         message: `Unable to find perpetual market with clobPairId: ${clobPairId}`,
       });
       expectTimingStats();
@@ -1155,7 +1155,7 @@ describe('OrderRemoveHandler', () => {
 
       expect(producerSendSpy).not.toHaveBeenCalled();
       expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'orderRemoveHandler#handleStatefulOrderCancelation',
+        at: 'OrderRemoveHandler#handleStatefulOrderCancelation',
         message: expect.stringContaining('Could not find order for stateful order cancelation'),
         orderRemove: statefulCancelationOrderRemove,
       }));
@@ -1905,7 +1905,7 @@ describe('OrderRemoveHandler', () => {
 
         expect(producerSendSpy).not.toHaveBeenCalled();
         expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
-          at: 'orderRemoveHandler#isOrderExpired',
+          at: 'OrderRemoveHandler#isOrderExpired',
           message: expect.stringContaining('Unable to find latest block'),
           orderRemove: orderRemoveJson,
         }));
@@ -2051,7 +2051,7 @@ describe('OrderRemoveHandler', () => {
 
       expect(producerSendSpy).not.toHaveBeenCalled();
       expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'orderRemoveHandler#isOrderExpired',
+        at: 'OrderRemoveHandler#isOrderExpired',
         message: expect.stringContaining(
           'Long-term order retrieved during Indexer-expired expiry verification',
         ),

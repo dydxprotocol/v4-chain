@@ -197,7 +197,7 @@ export class OrderRemoveHandler extends Handler {
     );
     if (order === undefined) {
       logger.error({
-        at: 'orderRemoveHandler#handleStatefulOrderCancelation',
+        at: 'OrderRemoveHandler#handleStatefulOrderCancelation',
         message: 'Could not find order for stateful order cancelation',
         orderId: orderRemove.removedOrderId,
         orderRemove,
@@ -206,7 +206,7 @@ export class OrderRemoveHandler extends Handler {
       return;
     }
     logger.info({
-      at: 'orderRemoveHandler#handleStatefulOrderCancelation',
+      at: 'OrderRemoveHandler#handleStatefulOrderCancelation',
       message: 'Stateful order removal',
       orderId: orderRemove.removedOrderId,
       orderRemove,
@@ -218,7 +218,7 @@ export class OrderRemoveHandler extends Handler {
       );
     if (perpetualMarket === undefined) {
       logger.error({
-        at: 'orderRemoveHandler#handleStatefulOrderCancelation',
+        at: 'OrderRemoveHandler#handleStatefulOrderCancelation',
         message: `Unable to find the perpetual market with clobPairId: ${order.clobPairId}`,
         order,
         orderRemove,
@@ -266,7 +266,7 @@ export class OrderRemoveHandler extends Handler {
     headers: IHeaders,
   ): Promise<void> {
     logger.info({
-      at: 'orderRemoveHandler#handleOrderRemoval',
+      at: 'OrderRemoveHandler#handleOrderRemoval',
       message: 'Short term order removal',
       orderId: orderRemove.removedOrderId,
       orderRemove,
@@ -278,7 +278,7 @@ export class OrderRemoveHandler extends Handler {
     if (perpetualMarket === undefined) {
       const clobPairId: string = orderRemove.removedOrderId!.clobPairId.toString();
       logger.error({
-        at: 'orderRemoveHandler#handle',
+        at: 'OrderRemoveHandler#handle',
         message: `Unable to find perpetual market with clobPairId: ${clobPairId}`,
       });
       return;
@@ -286,7 +286,7 @@ export class OrderRemoveHandler extends Handler {
     // This can happen for short term orders if the order place message was not received.
     if (!removeOrderResult.removed) {
       logger.info({
-        at: 'orderRemoveHandler#handleOrderRemoval',
+        at: 'OrderRemoveHandler#handleOrderRemoval',
         message: 'Unable to find order',
         orderId: orderRemove.removedOrderId,
         orderRemove,
@@ -449,7 +449,7 @@ export class OrderRemoveHandler extends Handler {
       );
     } catch {
       logger.error({
-        at: 'orderRemoveHandler#isOrderExpired',
+        at: 'OrderRemoveHandler#isOrderExpired',
         message: 'Unable to find latest block',
         orderRemove,
       });
@@ -464,7 +464,7 @@ export class OrderRemoveHandler extends Handler {
     if (redisOrder === null) {
       stats.increment(`${config.SERVICE_NAME}.indexer_expired_order_not_found`, 1);
       logger.info({
-        at: 'orderRemoveHandler#isOrderExpired',
+        at: 'OrderRemoveHandler#isOrderExpired',
         message: 'Could not find order for Indexer-expired expiry verification',
         orderRemove,
       });
@@ -476,7 +476,7 @@ export class OrderRemoveHandler extends Handler {
     // Indexer should only ever send expiration messages for short-term orders
     if (order.orderId!.orderFlags !== ORDER_FLAG_SHORT_TERM) {
       logger.error({
-        at: 'orderRemoveHandler#isOrderExpired',
+        at: 'OrderRemoveHandler#isOrderExpired',
         message: 'Long-term order retrieved during Indexer-expired expiry verification',
         orderRemove,
         redisOrder,
@@ -488,7 +488,7 @@ export class OrderRemoveHandler extends Handler {
     if (order.goodTilBlock! >= +block.blockHeight) {
       stats.increment(`${config.SERVICE_NAME}.indexer_expired_order_is_not_expired`, 1);
       logger.info({
-        at: 'orderRemoveHandler#isOrderExpired',
+        at: 'OrderRemoveHandler#isOrderExpired',
         message: 'Indexer marked order that is not yet expired as expired',
         orderRemove,
         redisOrder,
@@ -560,7 +560,7 @@ export class OrderRemoveHandler extends Handler {
     // confirmed this case no longer happens normally.
     if (sizeDelta.gt(0)) {
       logger.info({
-        at: 'orderRemoveHandler#getSizeDeltaInQuantums',
+        at: 'OrderRemoveHandler#getSizeDeltaInQuantums',
         message: 'Total filled of order exceeds quantums of order',
         totalFilled: removeOrderResult.totalFilledQuantums!.toString(),
         quantums: redisOrder.order!.quantums.toString(),
@@ -786,7 +786,7 @@ export class OrderRemoveHandler extends Handler {
     const reason: OrderRemovalReason = orderRemove.reason;
 
     logger.info({
-      at: 'orderRemoveHandler#shouldSendSubaccountMessage',
+      at: 'OrderRemoveHandler#shouldSendSubaccountMessage',
       message: 'Compared state filled quantums and size',
       stateRemainingQuantums: stateRemainingQuantums.toFixed(),
       removeOrderResult,
