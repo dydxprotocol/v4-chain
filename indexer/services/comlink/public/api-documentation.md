@@ -3195,28 +3195,6 @@ This operation does not require authentication
 |---|---|---|---|---|
 |candles|[[CandleResponseObject](#schemacandleresponseobject)]|true|none|none|
 
-## ComplianceResponse
-
-<a id="schemacomplianceresponse"></a>
-<a id="schema_ComplianceResponse"></a>
-<a id="tocScomplianceresponse"></a>
-<a id="tocscomplianceresponse"></a>
-
-```json
-{
-  "restricted": true,
-  "reason": "string"
-}
-
-```
-
-### Properties
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|restricted|boolean|true|none|none|
-|reason|string|false|none|none|
-
 ## ComplianceStatus
 
 <a id="schemacompliancestatus"></a>
