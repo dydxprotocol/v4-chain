@@ -134,7 +134,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 				perpetual.Params.LiquidityTier,
 			)
 			require.NoError(t, err)
-			
+
 			//Set up the Alice subaccount and the equity tiers for limit and stateful orders
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, constants.Alice_Num0_10_000USD)
 
