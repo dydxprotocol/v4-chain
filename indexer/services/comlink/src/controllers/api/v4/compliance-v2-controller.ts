@@ -3,7 +3,10 @@ import {
 } from '@cosmjs/crypto';
 import { toBech32 } from '@cosmjs/encoding';
 import { logger, stats, TooManyRequestsError } from '@dydxprotocol-indexer/base';
-import { CountryHeaders, isRestrictedCountryHeaders, ComplianceClientResponse, INDEXER_COMPLIANCE_BLOCKED_PAYLOAD  } from '@dydxprotocol-indexer/compliance';
+import {
+  CountryHeaders, isRestrictedCountryHeaders, ComplianceClientResponse,
+  INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
+} from '@dydxprotocol-indexer/compliance';
 import {
   ComplianceReason,
   ComplianceStatus,
@@ -19,7 +22,11 @@ import {
   Controller, Get, Path, Route, Query,
 } from 'tsoa';
 
-import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import {
+  getReqRateLimiter,
+  screenProviderLimiter,
+  screenProviderGlobalLimiter,
+} from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
 import { getGeoComplianceReason } from '../../../helpers/compliance/compliance-utils';
@@ -30,13 +37,9 @@ import { getIpAddr } from '../../../lib/utils';
 import { CheckAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
-import { ComplianceRequest, ComplianceV2Response, SetComplianceStatusRequest } from '../../../types';
-
 import {
-  screenProviderLimiter,
-  screenProviderGlobalLimiter,
-} from '../../../caches/rate-limiters';
-import {ComplianceResponse } from '../../../types';
+  ComplianceRequest, ComplianceV2Response, SetComplianceStatusRequest, ComplianceResponse,
+} from '../../../types';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'compliance-v2-controller';
@@ -54,7 +57,6 @@ const COMPLIANCE_PROGRESSION: Partial<Record<ComplianceStatus, ComplianceStatus>
   [ComplianceStatus.COMPLIANT]: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
   [ComplianceStatus.FIRST_STRIKE]: ComplianceStatus.CLOSE_ONLY,
 };
-
 
 export class ComplianceControllerHelper extends Controller {
   private ipAddress: string;
