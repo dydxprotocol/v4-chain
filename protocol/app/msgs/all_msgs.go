@@ -277,6 +277,8 @@ var (
 		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParamsResponse":              {},
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":                            {},
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse":                    {},
+		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafe":			    {},
+		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafeResponse":            	    {},
 	}
 
 	// DisallowMsgs are messages that cannot be externally submitted.

@@ -96,6 +96,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// ibc
 		*icahosttypes.MsgUpdateParams,
+		*icahosttypes.MsgModuleQuerySafe,
 		*ibctransfer.MsgUpdateParams,
 		*ibcclient.MsgUpdateParams,
 		*ibcconn.MsgUpdateParams:

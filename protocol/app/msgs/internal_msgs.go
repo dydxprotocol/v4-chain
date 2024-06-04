@@ -69,14 +69,16 @@ var (
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse": nil,
 
 		// ibc
-		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":         &icahosttypes.MsgUpdateParams{},
-		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse": nil,
-		"/ibc.applications.transfer.v1.MsgUpdateParams":                         &ibctransfer.MsgUpdateParams{},
-		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse":                 nil,
-		"/ibc.core.client.v1.MsgUpdateParams":                                   &ibcclient.MsgUpdateParams{},
-		"/ibc.core.client.v1.MsgUpdateParamsResponse":                           nil,
-		"/ibc.core.connection.v1.MsgUpdateParams":                               &ibcconn.MsgUpdateParams{},
-		"/ibc.core.connection.v1.MsgUpdateParamsResponse":                       nil,
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":         	&icahosttypes.MsgUpdateParams{},
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse": 	nil,
+		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafe":		 	&icahosttypes.MsgModuleQuerySafe{},
+		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafeResponse": nil,
+		"/ibc.applications.transfer.v1.MsgUpdateParams":                         	&ibctransfer.MsgUpdateParams{},
+		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse":                 	nil,
+		"/ibc.core.client.v1.MsgUpdateParams":                                   	&ibcclient.MsgUpdateParams{},
+		"/ibc.core.client.v1.MsgUpdateParamsResponse":                           	nil,
+		"/ibc.core.connection.v1.MsgUpdateParams":                               	&ibcconn.MsgUpdateParams{},
+		"/ibc.core.connection.v1.MsgUpdateParamsResponse":                       	nil,
 	}
 
 	// Custom modules
