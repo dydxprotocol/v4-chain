@@ -146,8 +146,8 @@ export class OrderUpdateHandler extends Handler {
         at: 'OrderUpdateHandler#sendingOrderbookMessage',
         message: 'Sending websocket orderbook message',
         txHash: this.txHash,
-        clobPair: clobPairId,
-        orderId: orderUpdate.orderId
+        clobPair: perpetualMarket.clobPairId,
+        orderId: orderUpdate.orderId,
       });
       sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
     }
