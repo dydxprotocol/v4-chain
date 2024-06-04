@@ -254,7 +254,7 @@ test-container-build:
 	$(MAKE) localnet-build
 	@docker build . -t dydxprotocol-container-test -f testing/containertest/Dockerfile --no-cache
 
-.PHONY: test test-all test-cover test-unit test-race test-container
+.PHONY: test test-all test-cover test-unit test-race test-container test-slow
 	\ container-test-build-base container-test-build-local
 
 ###############################################################################
