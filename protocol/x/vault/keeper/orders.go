@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -180,7 +181,8 @@ func (k Keeper) GetVaultClobOrders(
 		marketPrice.GetPrice(),
 		marketPrice.GetExponent(),
 	)
-	leverage := new(big.Rat).SetFrac(openNotional, equity)
+	leveragePpm := new(big.Int).Mul(openNotional, lib.BigIntOneMillion())
+	leveragePpm.Quo(leveragePpm, equity)
 
 	// Get parameters.
 	params := k.GetParams(ctx)
@@ -213,10 +215,10 @@ func (k Keeper) GetVaultClobOrders(
 	}
 
 	// Calculate spread.
-	spreadPpm := lib.Max(
+	spreadPpm := lib.BigU(lib.Max(
 		params.SpreadMinPpm,
 		params.SpreadBufferPpm+marketParam.MinPriceChangePpm,
-	)
+	))
 	// Get oracle price in subticks.
 	oracleSubticks := clobtypes.PriceToSubticks(
 		marketPrice,
@@ -228,69 +230,75 @@ func (k Keeper) GetVaultClobOrders(
 	goodTilBlockTime := &clobtypes.Order_GoodTilBlockTime{
 		GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + params.OrderExpirationSeconds,
 	}
-	// Initialize spreadBaseMultiplier and spreadMultiplier as `1 + spread`.
-	spreadBaseMultiplier := new(big.Rat).SetFrac(
-		new(big.Int).SetUint64(uint64(lib.OneMillion+spreadPpm)),
-		lib.BigIntOneMillion(),
-	)
-	spreadMultiplier := new(big.Rat).Set(spreadBaseMultiplier)
+	skewFactorPpm := lib.BigU(params.SkewFactorPpm)
+
 	// Construct one ask and one bid for each layer.
 	constructOrder := func(
 		side clobtypes.Order_Side,
 		layer uint32,
-		spreadMultipler *big.Rat,
 	) *clobtypes.Order {
-		// Calculate size that will have been filled before this layer is matched.
-		sizeFilledByThisLayer := new(big.Rat).SetFrac(
-			new(big.Int).SetUint64(uint64(params.OrderSizePctPpm*layer)),
-			lib.BigIntOneMillion(),
-		)
-
 		// Ask: leverage_i = leverage - i * order_size_pct
 		// Bid: leverage_i = leverage + i * order_size_pct
-		var leverageI *big.Rat
-		if side == clobtypes.Order_SIDE_SELL {
-			leverageI = new(big.Rat).Sub(
-				leverage,
-				sizeFilledByThisLayer,
-			)
-		} else {
-			leverageI = new(big.Rat).Add(
-				leverage,
-				sizeFilledByThisLayer,
-			)
-		}
-
 		// skew_i = -leverage_i * spread * skew_factor
-		skewI := lib.BigRatMulPpm(leverageI, spreadPpm)
-		skewI = lib.BigRatMulPpm(skewI, params.SkewFactorPpm)
-		skewI = skewI.Neg(skewI)
-
-		// Ask: price = oracle price * (1 + skew_i) * (1 + spread)^(i+1)
-		// Bid: price = oracle price * (1 + skew_i) / (1 + spread)^(i+1)
-		orderSubticks := new(big.Rat).Add(skewI, new(big.Rat).SetUint64(1))
-		orderSubticks = orderSubticks.Mul(orderSubticks, oracleSubticks)
+		leveragePpmI := lib.BigU(layer)
+		leveragePpmI.Mul(leveragePpmI, orderSizePctPpm)
 		if side == clobtypes.Order_SIDE_SELL {
-			orderSubticks = orderSubticks.Mul(
-				orderSubticks,
-				spreadMultipler,
-			)
-
-			// Ensure the ask is greater than or equal to the oracle price.
-			if orderSubticks.Cmp(oracleSubticks) < 0 {
-				orderSubticks.Set(oracleSubticks)
-			}
-		} else {
-			orderSubticks = orderSubticks.Quo(
-				orderSubticks,
-				spreadMultipler,
-			)
-
-			// Ensure the bid is less than or equal to the oracle price.
-			if orderSubticks.Cmp(oracleSubticks) > 0 {
-				orderSubticks.Set(oracleSubticks)
-			}
+			leveragePpmI.Neg(leveragePpmI)
 		}
+		leveragePpmI.Add(leveragePpmI, leveragePpm)
+		skewPpmI := leveragePpmI.
+			Mul(leveragePpmI, spreadPpm).
+			Mul(leveragePpmI, skewFactorPpm).
+			Quo(leveragePpmI, lib.BigIntOneMillion()).
+			Quo(leveragePpmI, lib.BigIntOneMillion()).
+			Neg(leveragePpmI)
+
+		// spread_i = spread * (layer+1)
+		// negated for buys
+		spreadPpmI := lib.BigU(layer + 1)
+		spreadPpmI.Mul(spreadPpmI, spreadPpm)
+		if side == clobtypes.Order_SIDE_BUY {
+			spreadPpmI.Neg(spreadPpmI)
+		}
+
+		// price = oracleprice * (1 + skew_i + spread_i)
+		// price <= oracleprice for buys
+		// price >= oracleprice for sells
+		spreadSkewPpm := new(big.Int).Add(spreadPpmI, skewPpmI)
+		if side == clobtypes.Order_SIDE_SELL && spreadSkewPpm.Sign() < 0 {
+			spreadSkewPpm.SetUint64(0)
+		} else if side == clobtypes.Order_SIDE_BUY && spreadSkewPpm.Sign() > 0 {
+			spreadSkewPpm.SetUint64(0)
+		}
+		spreadSkewPpm.Add(spreadSkewPpm, lib.BigIntOneMillion())
+		orderSubticksNum := lib.BigMulPpm(
+			oracleSubticks.Num(),
+			spreadSkewPpm,
+			side == clobtypes.Order_SIDE_SELL,
+		)
+
+		// Determine the subticks.
+		var subticks *big.Int
+		if side == clobtypes.Order_SIDE_SELL {
+			subticks = lib.BigDivCeil(orderSubticksNum, oracleSubticks.Denom())
+		} else {
+			subticks = new(big.Int).Quo(orderSubticksNum, oracleSubticks.Denom())
+		}
+		// Bound subticks between the minimum and maximum subticks.
+		subticksPerTick := lib.BigU(clobPair.SubticksPerTick)
+		subticks = lib.BigIntRoundToMultiple(
+			subticks,
+			subticksPerTick,
+			side == clobtypes.Order_SIDE_SELL,
+		)
+
+		minSubticks := uint64(clobPair.SubticksPerTick)
+		maxSubticks := uint64(math.MaxUint64 - (uint64(math.MaxUint64) % uint64(clobPair.SubticksPerTick)))
+		subticksRounded := lib.BigUint64Clamp(
+			subticks,
+			minSubticks,
+			maxSubticks,
+		)
 
 		return &clobtypes.Order{
 			OrderId: clobtypes.OrderId{
@@ -299,34 +307,20 @@ func (k Keeper) GetVaultClobOrders(
 				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 				ClobPairId:   clobPair.Id,
 			},
-			Side:     side,
-			Quantums: orderSize.Uint64(), // Validated to be a uint64 above.
-			Subticks: lib.BigRatRoundToNearestMultiple(
-				orderSubticks,
-				clobPair.SubticksPerTick,
-				side == clobtypes.Order_SIDE_SELL, // round up for asks and down for bids.
-			),
+			Side:         side,
+			Quantums:     orderSize.Uint64(), // Validated to be a uint64 above.
+			Subticks:     subticksRounded,
 			GoodTilOneof: goodTilBlockTime,
 		}
 	}
+
 	orders = make([]*clobtypes.Order, 2*params.Layers)
 	for i := uint32(0); i < params.Layers; i++ {
 		// Construct ask at this layer.
-		orders[2*i] = constructOrder(
-			clobtypes.Order_SIDE_SELL,
-			i,
-			spreadMultiplier,
-		)
+		orders[2*i] = constructOrder(clobtypes.Order_SIDE_SELL, i)
 
 		// Construct bid at this layer.
-		orders[2*i+1] = constructOrder(
-			clobtypes.Order_SIDE_BUY,
-			i,
-			spreadMultiplier,
-		)
-
-		// Update spreadMultiplier for next layer.
-		spreadMultiplier = spreadMultiplier.Mul(spreadMultiplier, spreadBaseMultiplier)
+		orders[2*i+1] = constructOrder(clobtypes.Order_SIDE_BUY, i)
 	}
 
 	return orders, nil
