@@ -696,7 +696,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 				},
 			},
 		},
-		"Success: Replace in same block on opposite side": {
+		"Fail: Replace in same block on opposite side": {
 			blocks: []blockOrdersAndExpectations{
 				{
 					ordersToPlace: []clobtypes.MsgPlaceOrder{
@@ -704,9 +704,9 @@ func TestShortTermOrderReplacements(t *testing.T) {
 						PlaceOrder_Alice_Num0_Id0_Clob0_Sell6_Price10_GTB21,
 					},
 					orderIdsExpectations: map[clobtypes.OrderId]orderIdExpectations{
-						PlaceOrder_Alice_Num0_Id0_Clob0_Sell6_Price10_GTB21.Order.OrderId: {
+						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId: {
 							shouldExistOnMemclob: true,
-							expectedOrder:        PlaceOrder_Alice_Num0_Id0_Clob0_Sell6_Price10_GTB21.Order,
+							expectedOrder:        PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order,
 						},
 					},
 				},
@@ -835,49 +835,6 @@ func TestShortTermOrderReplacements(t *testing.T) {
 							shouldExistOnMemclob: true,
 							expectedOrder:        PlaceOrder_Alice_Num0_Id0_Clob0_Buy7_Price10_GTB21.Order,
 							expectedFillAmount:   PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.Quantums / 2,
-						},
-					},
-				},
-			},
-		},
-		"Success: Replacement order swaps side in next block after partial fill": {
-			blocks: []blockOrdersAndExpectations{
-				{
-					ordersToPlace: []clobtypes.MsgPlaceOrder{
-						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
-						*clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
-							clobtypes.Order{
-								OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
-								Side:         clobtypes.Order_SIDE_SELL,
-								Quantums:     3,
-								Subticks:     10,
-								GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
-							},
-							testapp.DefaultGenesis(),
-						)),
-					},
-					orderIdsExpectations: map[clobtypes.OrderId]orderIdExpectations{
-						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId: {
-							shouldExistOnMemclob: true,
-							expectedOrder:        PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order,
-							expectedFillAmount:   PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.Quantums / 2,
-						},
-						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId: {
-							shouldExistOnMemclob: true,
-							expectedOrder:        PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order,
-							expectedFillAmount:   PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.Quantums / 2,
-						},
-					},
-				},
-				{
-					ordersToPlace: []clobtypes.MsgPlaceOrder{
-						PlaceOrder_Alice_Num0_Id0_Clob0_Sell6_Price10_GTB21,
-					},
-					orderIdsExpectations: map[clobtypes.OrderId]orderIdExpectations{
-						PlaceOrder_Alice_Num0_Id0_Clob0_Buy7_Price10_GTB21.Order.OrderId: {
-							shouldExistOnMemclob: true,
-							expectedOrder:        PlaceOrder_Alice_Num0_Id0_Clob0_Sell6_Price10_GTB21.Order,
-							expectedFillAmount:   PlaceOrder_Alice_Num0_Id0_Clob0_Sell6_Price10_GTB21.Order.Quantums / 2,
 						},
 					},
 				},
@@ -1015,7 +972,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 				},
 			},
 		},
-		"Success: Replacing order with FOK which does not fully match results in order being removed from the book": {
+		"Fail: Replacing order with FOK fails": {
 			blocks: []blockOrdersAndExpectations{
 				{
 					ordersToPlace: []clobtypes.MsgPlaceOrder{
@@ -1024,13 +981,14 @@ func TestShortTermOrderReplacements(t *testing.T) {
 					},
 					orderIdsExpectations: map[clobtypes.OrderId]orderIdExpectations{
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId: {
-							shouldExistOnMemclob: false,
+							shouldExistOnMemclob: true,
+							expectedOrder:        PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order,
 						},
 					},
 				},
 			},
 		},
-		"Success: Replacing order with IOC which does not fully match results in order being removed from the book": {
+		"Fail: Replacing order with IOC fails": {
 			blocks: []blockOrdersAndExpectations{
 				{
 					ordersToPlace: []clobtypes.MsgPlaceOrder{
@@ -1039,7 +997,8 @@ func TestShortTermOrderReplacements(t *testing.T) {
 					},
 					orderIdsExpectations: map[clobtypes.OrderId]orderIdExpectations{
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId: {
-							shouldExistOnMemclob: false,
+							shouldExistOnMemclob: true,
+							expectedOrder:        PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order,
 						},
 					},
 				},

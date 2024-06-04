@@ -88,8 +88,7 @@ var (
 	ErrInvalidReplacement = errorsmod.Register(
 		ModuleName,
 		20,
-		"An order with the same `OrderId` already exists for this CLOB with a greater-than-or-equal `GoodTilBlock` "+
-			"or Order Hash",
+		"Replacing an existing order failed",
 	)
 	ErrClobPairAndPerpetualDoNotMatch = errorsmod.Register(
 		ModuleName,
