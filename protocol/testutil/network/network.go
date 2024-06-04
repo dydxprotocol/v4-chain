@@ -208,7 +208,7 @@ func NewTestNetworkFixture() network.TestFixture {
 }
 
 func DeployCustomNetwork(genesis string) {
-	setupCmd := exec.Command("bash", "-c", "cd ../../../../ethos/ethos-chain && ./e2e-setup -setup false "+genesis)
+	setupCmd := exec.Command("bash", "-c", `cd ../../../../ethos/ethos-chain && ./e2e-setup -setup "false" `+genesis)
 
 	fmt.Println("Running setup command", setupCmd.String())
 	var out bytes.Buffer
