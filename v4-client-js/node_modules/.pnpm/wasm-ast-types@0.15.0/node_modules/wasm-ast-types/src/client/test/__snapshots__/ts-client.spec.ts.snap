@@ -1,0 +1,723 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`all_nft_info_response 1`] = `
+"export interface AllNftInfoResponse {
+  access: OwnerOfResponse;
+  info: NftInfoResponse_for_Empty;
+}"
+`;
+
+exports[`approval_response 1`] = `
+"export interface ApprovalResponse {
+  approval: Approval;
+}"
+`;
+
+exports[`approvals_response 1`] = `
+"export interface ApprovalsResponse {
+  approvals: Approval[];
+}"
+`;
+
+exports[`collection_info_response 1`] = `
+"export interface CollectionInfoResponse {
+  creator: string;
+  description: string;
+  externalLink?: string;
+  image: string;
+  royaltyInfo?: RoyaltyInfoResponse;
+}"
+`;
+
+exports[`contract_info_response 1`] = `
+"export interface ContractInfoResponse {
+  name: string;
+  symbol: string;
+}"
+`;
+
+exports[`execute classes 1`] = `
+"export class SG721Client extends SG721QueryClient implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    super(client, contractAddress);
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+    this.transferNft = this.transferNft.bind(this);
+    this.sendNft = this.sendNft.bind(this);
+    this.approve = this.approve.bind(this);
+    this.revoke = this.revoke.bind(this);
+    this.approveAll = this.approveAll.bind(this);
+    this.revokeAll = this.revokeAll.bind(this);
+    this.mint = this.mint.bind(this);
+    this.burn = this.burn.bind(this);
+  }
+
+  transferNft = async ({
+    recipient,
+    tokenId
+  }: {
+    recipient: string;
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      transfer_nft: {
+        recipient,
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+  sendNft = async ({
+    contract,
+    msg,
+    tokenId
+  }: {
+    contract: string;
+    msg: Binary;
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      send_nft: {
+        contract,
+        msg,
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+  approve = async ({
+    expires,
+    spender,
+    tokenId
+  }: {
+    expires?: Expiration;
+    spender: string;
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      approve: {
+        expires,
+        spender,
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+  revoke = async ({
+    spender,
+    tokenId
+  }: {
+    spender: string;
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      revoke: {
+        spender,
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+  approveAll = async ({
+    expires,
+    operator
+  }: {
+    expires?: Expiration;
+    operator: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      approve_all: {
+        expires,
+        operator
+      }
+    }, fee, memo, funds);
+  };
+  revokeAll = async ({
+    operator
+  }: {
+    operator: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      revoke_all: {
+        operator
+      }
+    }, fee, memo, funds);
+  };
+  mint = async ({
+    extension,
+    owner,
+    tokenId,
+    tokenUri
+  }: {
+    extension: Empty;
+    owner: string;
+    tokenId: string;
+    tokenUri?: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      mint: {
+        extension,
+        owner,
+        token_id: tokenId,
+        token_uri: tokenUri
+      }
+    }, fee, memo, funds);
+  };
+  burn = async ({
+    tokenId
+  }: {
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      burn: {
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+}"
+`;
+
+exports[`execute classes array types 1`] = `
+"export class SG721Client implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+    this.update = this.update.bind(this);
+    this.removeGroup = this.removeGroup.bind(this);
+    this.updateOwner = this.updateOwner.bind(this);
+  }
+
+  update = async ({
+    addressesToAdd,
+    addressesToRemove,
+    group
+  }: {
+    addressesToAdd?: string[];
+    addressesToRemove?: string[];
+    group: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      update: {
+        addresses_to_add: addressesToAdd,
+        addresses_to_remove: addressesToRemove,
+        group
+      }
+    }, fee, memo, funds);
+  };
+  removeGroup = async ({
+    group
+  }: {
+    group: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      remove_group: {
+        group
+      }
+    }, fee, memo, funds);
+  };
+  updateOwner = async ({
+    owner
+  }: {
+    owner: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      update_owner: {
+        owner
+      }
+    }, fee, memo, funds);
+  };
+}"
+`;
+
+exports[`execute classes no extends 1`] = `
+"export class SG721Client implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+    this.transferNft = this.transferNft.bind(this);
+    this.sendNft = this.sendNft.bind(this);
+    this.approve = this.approve.bind(this);
+    this.revoke = this.revoke.bind(this);
+    this.approveAll = this.approveAll.bind(this);
+    this.revokeAll = this.revokeAll.bind(this);
+    this.mint = this.mint.bind(this);
+    this.burn = this.burn.bind(this);
+  }
+
+  transferNft = async ({
+    recipient,
+    tokenId
+  }: {
+    recipient: string;
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      transfer_nft: {
+        recipient,
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+  sendNft = async ({
+    contract,
+    msg,
+    tokenId
+  }: {
+    contract: string;
+    msg: Binary;
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      send_nft: {
+        contract,
+        msg,
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+  approve = async ({
+    expires,
+    spender,
+    tokenId
+  }: {
+    expires?: Expiration;
+    spender: string;
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      approve: {
+        expires,
+        spender,
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+  revoke = async ({
+    spender,
+    tokenId
+  }: {
+    spender: string;
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      revoke: {
+        spender,
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+  approveAll = async ({
+    expires,
+    operator
+  }: {
+    expires?: Expiration;
+    operator: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      approve_all: {
+        expires,
+        operator
+      }
+    }, fee, memo, funds);
+  };
+  revokeAll = async ({
+    operator
+  }: {
+    operator: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      revoke_all: {
+        operator
+      }
+    }, fee, memo, funds);
+  };
+  mint = async ({
+    extension,
+    owner,
+    tokenId,
+    tokenUri
+  }: {
+    extension: Empty;
+    owner: string;
+    tokenId: string;
+    tokenUri?: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      mint: {
+        extension,
+        owner,
+        token_id: tokenId,
+        token_uri: tokenUri
+      }
+    }, fee, memo, funds);
+  };
+  burn = async ({
+    tokenId
+  }: {
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      burn: {
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+}"
+`;
+
+exports[`execute interfaces no extends 1`] = `
+"export interface SG721Instance {
+  contractAddress: string;
+  sender: string;
+  transferNft: ({
+    recipient,
+    tokenId
+  }: {
+    recipient: string;
+    tokenId: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  sendNft: ({
+    contract,
+    msg,
+    tokenId
+  }: {
+    contract: string;
+    msg: Binary;
+    tokenId: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  approve: ({
+    expires,
+    spender,
+    tokenId
+  }: {
+    expires?: Expiration;
+    spender: string;
+    tokenId: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  revoke: ({
+    spender,
+    tokenId
+  }: {
+    spender: string;
+    tokenId: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  approveAll: ({
+    expires,
+    operator
+  }: {
+    expires?: Expiration;
+    operator: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  revokeAll: ({
+    operator
+  }: {
+    operator: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  mint: ({
+    extension,
+    owner,
+    tokenId,
+    tokenUri
+  }: {
+    extension: Empty;
+    owner: string;
+    tokenId: string;
+    tokenUri?: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  burn: ({
+    tokenId
+  }: {
+    tokenId: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+}"
+`;
+
+exports[`instantiate_msg 1`] = `
+"export interface InstantiateMsg {
+  collectionInfo: CollectionInfo_for_RoyaltyInfoResponse;
+  minter: string;
+  name: string;
+  symbol: string;
+}"
+`;
+
+exports[`nft_info_response 1`] = `
+"export interface NftInfoResponse {
+  extension: Empty;
+  tokenUri?: string;
+}"
+`;
+
+exports[`num_tokens_response 1`] = `
+"export interface NumTokensResponse {
+  count: number;
+}"
+`;
+
+exports[`operators_response 1`] = `
+"export interface OperatorsResponse {
+  operators: Approval[];
+}"
+`;
+
+exports[`owner_of_response 1`] = `
+"export interface OwnerOfResponse {
+  approvals: Approval[];
+  owner: string;
+}"
+`;
+
+exports[`query classes 1`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+    this.ownerOf = this.ownerOf.bind(this);
+    this.approval = this.approval.bind(this);
+    this.approvals = this.approvals.bind(this);
+    this.allOperators = this.allOperators.bind(this);
+    this.numTokens = this.numTokens.bind(this);
+    this.contractInfo = this.contractInfo.bind(this);
+    this.nftInfo = this.nftInfo.bind(this);
+    this.allNftInfo = this.allNftInfo.bind(this);
+    this.tokens = this.tokens.bind(this);
+    this.allTokens = this.allTokens.bind(this);
+    this.minter = this.minter.bind(this);
+    this.collectionInfo = this.collectionInfo.bind(this);
+  }
+
+  ownerOf = async ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }): Promise<OwnerOfResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      owner_of: {
+        include_expired: includeExpired,
+        token_id: tokenId
+      }
+    });
+  };
+  approval = async ({
+    includeExpired,
+    spender,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    spender: string;
+    tokenId: string;
+  }): Promise<ApprovalResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      approval: {
+        include_expired: includeExpired,
+        spender,
+        token_id: tokenId
+      }
+    });
+  };
+  approvals = async ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }): Promise<ApprovalsResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      approvals: {
+        include_expired: includeExpired,
+        token_id: tokenId
+      }
+    });
+  };
+  allOperators = async ({
+    includeExpired,
+    limit,
+    owner,
+    startAfter
+  }: {
+    includeExpired?: boolean;
+    limit?: number;
+    owner: string;
+    startAfter?: string;
+  }): Promise<AllOperatorsResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      all_operators: {
+        include_expired: includeExpired,
+        limit,
+        owner,
+        start_after: startAfter
+      }
+    });
+  };
+  numTokens = async (): Promise<NumTokensResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      num_tokens: {}
+    });
+  };
+  contractInfo = async (): Promise<ContractInfoResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      contract_info: {}
+    });
+  };
+  nftInfo = async ({
+    tokenId
+  }: {
+    tokenId: string;
+  }): Promise<NftInfoResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      nft_info: {
+        token_id: tokenId
+      }
+    });
+  };
+  allNftInfo = async ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }): Promise<AllNftInfoResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      all_nft_info: {
+        include_expired: includeExpired,
+        token_id: tokenId
+      }
+    });
+  };
+  tokens = async ({
+    limit,
+    owner,
+    startAfter
+  }: {
+    limit?: number;
+    owner: string;
+    startAfter?: string;
+  }): Promise<TokensResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      tokens: {
+        limit,
+        owner,
+        start_after: startAfter
+      }
+    });
+  };
+  allTokens = async ({
+    limit,
+    startAfter
+  }: {
+    limit?: number;
+    startAfter?: string;
+  }): Promise<AllTokensResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      all_tokens: {
+        limit,
+        start_after: startAfter
+      }
+    });
+  };
+  minter = async (): Promise<MinterResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      minter: {}
+    });
+  };
+  collectionInfo = async (): Promise<CollectionInfoResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      collection_info: {}
+    });
+  };
+}"
+`;
+
+exports[`query interfaces 1`] = `
+"export interface SG721ReadOnlyInstance {
+  contractAddress: string;
+  ownerOf: ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }) => Promise<OwnerOfResponse>;
+  approval: ({
+    includeExpired,
+    spender,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    spender: string;
+    tokenId: string;
+  }) => Promise<ApprovalResponse>;
+  approvals: ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }) => Promise<ApprovalsResponse>;
+  allOperators: ({
+    includeExpired,
+    limit,
+    owner,
+    startAfter
+  }: {
+    includeExpired?: boolean;
+    limit?: number;
+    owner: string;
+    startAfter?: string;
+  }) => Promise<AllOperatorsResponse>;
+  numTokens: () => Promise<NumTokensResponse>;
+  contractInfo: () => Promise<ContractInfoResponse>;
+  nftInfo: ({
+    tokenId
+  }: {
+    tokenId: string;
+  }) => Promise<NftInfoResponse>;
+  allNftInfo: ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }) => Promise<AllNftInfoResponse>;
+  tokens: ({
+    limit,
+    owner,
+    startAfter
+  }: {
+    limit?: number;
+    owner: string;
+    startAfter?: string;
+  }) => Promise<TokensResponse>;
+  allTokens: ({
+    limit,
+    startAfter
+  }: {
+    limit?: number;
+    startAfter?: string;
+  }) => Promise<AllTokensResponse>;
+  minter: () => Promise<MinterResponse>;
+  collectionInfo: () => Promise<CollectionInfoResponse>;
+}"
+`;
+
+exports[`tokens_response 1`] = `
+"export interface TokensResponse {
+  tokens: string[];
+}"
+`;

@@ -1,0 +1,12 @@
+import { StdFee } from '@cosmjs/stargate';
+export declare const BECH32_PREFIX = "dydx";
+export declare const NOBLE_BECH32_PREFIX = "noble";
+export declare const BROADCAST_POLL_INTERVAL_MS: number;
+export declare const BROADCAST_TIMEOUT_MS: number;
+export declare const API_TIMEOUT_DEFAULT_MS: number;
+export declare const GAS_MULTIPLIER: number;
+export declare const ZERO_FEE: StdFee;
+export declare const MAX_UINT_32 = 4294967295;
+export declare const MAX_SUBACCOUNT_NUMBER = 127;
+export declare const DEFAULT_SEQUENCE: number;
+export declare const SERIALIZED_INT_ZERO: Uint8Array;

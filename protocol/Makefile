@@ -224,7 +224,13 @@ compile-testing-files: compile-e2e-setup
 
 e2e-setup: compile-testing-files
 	@echo "Setting up environment..."
-	@cd ethos/ethos-chain && ./e2e-setup -setup
+	@cd ethos/ethos-chain && ./e2e-setup -setup 
+	
+custom-e2e-setup: compile-testing-files
+	@echo "Setting up environment..."
+	echo "logging custom genesis"
+	echo $(GENESIS)
+	@cd ethos/ethos-chain && ./e2e-setup -setup true $(GENESIS)
 
 test: test-unit
 
@@ -386,6 +392,9 @@ localnet-init:
 	# Build the base image.
 	make localnet-build
 
+build-e2e-ethos-test:
+	cd ethos/ethos-chain && docker build -t cosmos-ics:local -f Dockerfile.ics ../
+	docker run -d --name interchain-security-instance --cap-add=NET_ADMIN --privileged cosmos-ics:local /bin/bash /testnet-scripts/beacon.sh
 localnet-compose-up:
 	@echo "Launching localnet at commit ${GIT_COMMIT_HASH}"
 	@docker build . -t local:dydxprotocol -f testing/testnet-local/Dockerfile --no-cache

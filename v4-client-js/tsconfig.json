@@ -1,0 +1,20 @@
+{
+  "extends": "./node_modules/@dydxprotocol/node-service-base-dev/tsconfig.json",
+  "exclude": [
+    "src/codegen/**/*.ts",
+    "__native__/*.js",
+    "__native__/__ios__/*.js"
+  ],
+  "include": [
+    "__tests__",
+    "examples",
+    "scripts",
+    "src", 
+    "codegen.js",
+    "node_modules/@dydxprotocol/v4-proto/**/**.ts"
+  ],
+  "compilerOptions": {
+    "outDir": "build",
+    "noFallthroughCasesInSwitch": false
+  }
+}
