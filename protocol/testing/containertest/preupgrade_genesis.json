@@ -1170,6 +1170,7 @@
       "votes": []
     },
     "govplus": {},
+    "listing": {},
     "ibc": {
       "channel_genesis": {
         "ack_sequences": [],
