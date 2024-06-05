@@ -85,7 +85,7 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 	}
 	orderExpirationSeconds := k.GetParams(ctx).OrderExpirationSeconds
 	replacedOrders := make([]*clobtypes.Order, len(ordersToCancel))
-	for _, order := range ordersToCancel {
+	for i, order := range ordersToCancel {
 		if oldOrderPlacement, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId); exists {
 			err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
 				order.OrderId,
@@ -94,7 +94,7 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 			if err != nil {
 				log.ErrorLogWithError(ctx, "Failed to cancel order", err, "order", order, "vaultId", vaultId)
 			}
-			replacedOrders = append(replacedOrders, &oldOrderPlacement.Order)
+			replacedOrders[i] = &oldOrderPlacement.Order
 			vaultId.IncrCounterWithLabels(
 				metrics.VaultCancelOrder,
 				metrics.GetLabelForBoolValue(metrics.Success, err == nil),
@@ -103,11 +103,11 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 	}
 	// Place new CLOB orders.
 	ordersToPlace, err := k.GetVaultClobOrders(ctx, vaultId)
-
 	if err != nil {
 		log.ErrorLogWithError(ctx, "Failed to get vault clob orders to place", err, "vaultId", vaultId)
 		return err
 	}
+
 	for i, order := range ordersToPlace {
 		err := k.PlaceVaultClobOrder(ctx, order)
 		if err != nil {
@@ -122,8 +122,7 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		// If the price of the old and new orders are different, send a cancel and a place message
 		// Otherwise, send an order place message only.
 		replacedOrder := replacedOrders[i]
-		if replacedOrder != nil && replacedOrder.Subticks != order.Subticks {
-			fmt.Printf("Different subticks: %v, %v\n", replacedOrder.Subticks, order.Subticks)
+		if replacedOrder != nil && replacedOrder.OrderId == order.OrderId && replacedOrder.Subticks != order.Subticks {
 			vaultId.IncrCounter(
 				metrics.VaultPlaceOrderDifferentPrice,
 			)
