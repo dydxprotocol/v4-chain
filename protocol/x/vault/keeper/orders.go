@@ -133,7 +133,7 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 				indexer_manager.GetBytes(
 					indexerevents.NewStatefulOrderRemovalEvent(
 						replacedOrder.OrderId,
-						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
+						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 					),
 				),
 			)
