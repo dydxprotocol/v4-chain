@@ -81,21 +81,9 @@ func (k Keeper) SetOrderFillAmount(
 		orderId.ToStateKey(),
 		orderFillStateBytes,
 	)
-
-	// Retrieve an instance of the memStore.
-	memStore := prefix.NewStore(
-		ctx.KVStore(k.memKey),
-		[]byte(types.OrderAmountFilledKeyPrefix),
-	)
-
-	// Write `orderFillStateBytes` to memStore.
-	memStore.Set(
-		orderId.ToStateKey(),
-		orderFillStateBytes,
-	)
 }
 
-// GetOrderFillAmount returns the total `fillAmount` and `prunableBlockHeight` from the memStore.
+// GetOrderFillAmount returns the total `fillAmount` and `prunableBlockHeight` from state.
 func (k Keeper) GetOrderFillAmount(
 	ctx sdk.Context,
 	orderId types.OrderId,
@@ -104,16 +92,15 @@ func (k Keeper) GetOrderFillAmount(
 	fillAmount satypes.BaseQuantums,
 	prunableBlockHeight uint32,
 ) {
-	memStore := ctx.KVStore(k.memKey)
+	store := ctx.KVStore(k.storeKey)
 
-	// Retrieve an instance of the memStore.
-	memPrefixStore := prefix.NewStore(
-		memStore,
+	prefixStore := prefix.NewStore(
+		store,
 		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 
 	// Retrieve the `OrderFillState` bytes from the store.
-	orderFillStateBytes := memPrefixStore.Get(
+	orderFillStateBytes := prefixStore.Get(
 		orderId.ToStateKey(),
 	)
 
@@ -259,8 +246,8 @@ func (k Keeper) MigratePruneableOrders(ctx sdk.Context) {
 	}
 }
 
-// RemoveOrderFillAmount removes the fill amount of an Order from state and the memstore.
-// This function is a no-op if no order fill amount exists in state and the mem store with `orderId`.
+// RemoveOrderFillAmount removes the fill amount of an Order from state.
+// This function is a no-op if no order fill amount exists in state with `orderId`.
 func (k Keeper) RemoveOrderFillAmount(ctx sdk.Context, orderId types.OrderId) {
 	// Delete the fill amount from the state store.
 	orderAmountFilledStore := prefix.NewStore(
@@ -269,13 +256,6 @@ func (k Keeper) RemoveOrderFillAmount(ctx sdk.Context, orderId types.OrderId) {
 	)
 
 	orderAmountFilledStore.Delete(orderId.ToStateKey())
-
-	// Delete the fill amount from the mem store.
-	memStore := prefix.NewStore(
-		ctx.KVStore(k.memKey),
-		[]byte(types.OrderAmountFilledKeyPrefix),
-	)
-	memStore.Delete(orderId.ToStateKey())
 
 	// If grpc stream is on, zero out the fill amount.
 	if k.GetGrpcStreamingManager().Enabled() {
