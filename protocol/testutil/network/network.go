@@ -245,5 +245,4 @@ func QueryCustomNetwork(query string) ([]byte, string, error) {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	return out.Bytes(), stderr.String(), err
-
 }
