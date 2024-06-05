@@ -118,7 +118,11 @@ func (t *Testnet) initialize() (err error) {
 		if err := t.pool.Retry(func() error {
 			return node.WaitUntilBlockHeight(2)
 		}); err != nil {
-			return fmt.Errorf("could not connect to node: %s", moniker)
+			return fmt.Errorf(
+				"could not connect to node: %s, %+v",
+				moniker,
+				err,
+			)
 		}
 	}
 	return nil
