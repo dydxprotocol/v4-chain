@@ -343,12 +343,9 @@ func (k Keeper) GetVaultClobOrderClientId(
 	sideBit := uint32(side - 1)
 	sideBit <<= 31
 
-	blockHeightBit := uint32(ctx.BlockHeight() % 2)
-	blockHeightBit <<= 30
+	layerBits := uint32(layer) << 23
 
-	layerBits := uint32(layer) << 22
-
-	return sideBit | blockHeightBit | layerBits
+	return sideBit | layerBits
 }
 
 // PlaceVaultClobOrder places a vault CLOB order as an order internal to the protocol,
