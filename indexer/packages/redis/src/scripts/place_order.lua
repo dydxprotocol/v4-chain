@@ -65,7 +65,7 @@ else
   -- of the older order.
   redis.call("set", orderKey, newOrder)
   -- refer to the above comment on order data format
-  redis.call("set", orderDataKey, newOrderExpiry .. "_" .. oldTotalFilledQuantums .. "_false")
+  redis.call("set", orderDataKey, newOrderExpiry .. "_" .. oldTotalFilledQuantums .. "_true")
   -- Long-term orders will be on-chain, so we only need to store expiry data for short-term orders
   if isShortTermOrder then
     -- The expiry is guaranteed to be different, so overwrite the old one from the expiry cache
