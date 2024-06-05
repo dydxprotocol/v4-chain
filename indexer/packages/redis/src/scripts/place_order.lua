@@ -62,11 +62,10 @@ else
 
   -- update the order if the new order has a greater expiry (good-til-block or sequence number) than
   -- the order in the cache, also update the order data with the new expiry and the total filled
-  -- of the older order. As the order is replaced, it is no longer resting on the book, so set the
-  -- to "false".
+  -- of the older order.
   redis.call("set", orderKey, newOrder)
   -- refer to the above comment on order data format
-  redis.call("set", orderDataKey, newOrderExpiry .. "_" .. oldTotalFilledQuantums .. "_false")
+  redis.call("set", orderDataKey, newOrderExpiry .. "_" .. oldTotalFilledQuantums .. "_true")
   -- Long-term orders will be on-chain, so we only need to store expiry data for short-term orders
   if isShortTermOrder then
     -- The expiry is guaranteed to be different, so overwrite the old one from the expiry cache
