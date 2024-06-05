@@ -75,7 +75,7 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedToReplaceOrder: false,
 		},
 		`Can place a new sell order on an orderbook with asks at same price level, and best ask is not updated but total
-			level quantums is updated`: {
+				level quantums is updated`: {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
 			},
@@ -87,7 +87,7 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedToReplaceOrder: false,
 		},
 		`Can place a new buy order on an orderbook with bids at same price level, and best bid is not updated but total
-				level quantums is updated`: {
+					level quantums is updated`: {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num1_Id2_Clob1_Buy67_Price5_GTB20,
 			},
@@ -204,16 +204,15 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedOrderStatus:    types.Success,
 			expectedToReplaceOrder: true,
 		},
-		"Replacing an order succeeds if GoodTilBlock is greater than existing order and changes sides": {
+		"Replacing an order fails if GoodTilBlock is greater than existing order and changes sides": {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
 			},
 
 			order: constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 
-			collateralizationCheck: satypes.Success,
-			expectedOrderStatus:    types.Success,
-			expectedToReplaceOrder: true,
+			expectedErr:            types.ErrInvalidReplacement,
+			expectedToReplaceOrder: false,
 		},
 		"Replacing an order succeeds if GoodTilBlock is greater than existing order and changes price": {
 			existingOrders: []types.MatchableOrder{
@@ -253,18 +252,6 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			},
 
 			order: constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20,
-
-			collateralizationCheck: satypes.Success,
-			expectedOrderStatus:    types.Success,
-			expectedToReplaceOrder: true,
-		},
-		`Replacing an order succeeds and old order is skipped during matching if GoodTilBlock is greater
-			than existing order and the new replacement order is on the opposite side of the existing order`: {
-			existingOrders: []types.MatchableOrder{
-				&constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
-			},
-
-			order: constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 
 			collateralizationCheck: satypes.Success,
 			expectedOrderStatus:    types.Success,
@@ -327,7 +314,8 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 				// If this is an order replacement and it was successful, we assert that the old order being replaced
 				// is no longer on the book.
 				matchableOrderOrder := matchableOrder.MustGetOrder()
-				if matchableOrderOrder.OrderId == tc.order.OrderId && tc.order.MustCmpReplacementOrder(&matchableOrderOrder) > 0 {
+				if tc.expectedToReplaceOrder && matchableOrderOrder.OrderId == tc.order.OrderId &&
+					tc.order.MustCmpReplacementOrder(&matchableOrderOrder) > 0 {
 					if matchableOrderOrder.Subticks != tc.order.Subticks {
 						expectedReplacementOrderPriceChanged = true
 					}
@@ -2199,28 +2187,37 @@ func TestPlaceOrder_MatchOrders_PreexistingMatches(t *testing.T) {
 
 			expectedErr: types.ErrInvalidReplacement,
 		},
-		"IOC Taker replaces unfilled non IOC order": {
+		"IOC Taker cannot replace unfilled non IOC order": {
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+			},
+			expectedRemainingAsks: []OrderWithRemainingSize{
+				{
+					Order:         constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+					RemainingSize: 10,
+				},
 			},
 
 			order:                      constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB21_IOC,
 			expectedInternalOperations: []types.InternalOperation{},
 
-			expectedOrderStatus:    types.ImmediateOrCancelWouldRestOnBook,
-			expectedToReplaceOrder: true,
+			expectedErr: types.ErrInvalidReplacement,
 		},
-		"FOK Taker replaces unfilled non IOC order": {
+		"FOK Taker cannot replace unfilled non IOC order": {
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+			},
+			expectedRemainingAsks: []OrderWithRemainingSize{
+				{
+					Order:         constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
+					RemainingSize: 10,
+				},
 			},
 
 			order:                      constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB21_FOK,
 			expectedInternalOperations: []types.InternalOperation{},
 
-			expectedOrderStatus:    types.InternalError,
-			expectedToReplaceOrder: true,
-			expectedErr:            types.ErrFokOrderCouldNotBeFullyFilled,
+			expectedErr: types.ErrInvalidReplacement,
 		},
 	}
 

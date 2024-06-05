@@ -19,11 +19,6 @@
       "ticker": "COMPUSD"
     },
     {
-      "exchangeName": "Mexc",
-      "ticker": "COMP_USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Okx",
       "ticker": "COMP-USDT",
       "adjustByMarket": "USDT-USD"

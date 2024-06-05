@@ -24,11 +24,6 @@
       "ticker": "FILUSD"
     },
     {
-      "exchangeName": "Mexc",
-      "ticker": "FIL_USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Okx",
       "ticker": "FIL-USDT",
       "adjustByMarket": "USDT-USD"

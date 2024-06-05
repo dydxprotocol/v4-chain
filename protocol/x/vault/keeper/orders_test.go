@@ -307,9 +307,9 @@ func TestGetVaultClobOrders(t *testing.T) {
 		"Success - Get orders from Vault for Clob Pair 0": {
 			vaultParams: vaulttypes.Params{
 				Layers:                           2,       // 2 layers
-				SpreadMinPpm:                     3_000,   // 30 bps
+				SpreadMinPpm:                     3_123,   // 31.23 bps
 				SpreadBufferPpm:                  1_500,   // 15 bps
-				SkewFactorPpm:                    500_000, // 0.5
+				SkewFactorPpm:                    554_321, // 0.554321
 				OrderSizePctPpm:                  100_000, // 10%
 				OrderExpirationSeconds:           2,       // 2 seconds
 				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
@@ -319,48 +319,49 @@ func TestGetVaultClobOrders(t *testing.T) {
 			vaultInventoryBaseQuantums: big.NewInt(0),
 			clobPair:                   constants.ClobPair_Btc,
 			marketParam:                constants.TestMarketParams[0],
-			marketPrice:                constants.TestMarketPrices[0],
-			perpetual:                  constants.BtcUsd_0DefaultFunding_10AtomicResolution,
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    5_000_000, // $50
+			},
+			perpetual: constants.BtcUsd_0DefaultFunding_10AtomicResolution,
 			// To calculate order subticks:
 			// 1. spread = max(spread_min, spread_buffer + min_price_change)
 			// 2. leverage = open_notional / equity
 			// 3. leverage_i = leverage +/- i * order_size_pct (- for ask and + for bid)
 			// 4. skew_i = -leverage_i * spread * skew_factor
-			// 5. a_i = max(oracle_price * (1 + skew_i) * (1 + spread)^{i+1}, oracle_price)
-			//    b_i = min(oracle_price * (1 + skew_i) / (1 + spread)^{i+1}, oracle_price)
+			// 5. a_i = max(oracle_price * (1 + skew_i + spread * {i+1}), oracle_price)
+			//    b_i = min(oracle_price * (1 + skew_i - spread * {i+1}), oracle_price)
 			// 6. subticks needs to be a multiple of subticks_per_tick (round up for asks, round down for bids)
 			// To calculate size of each order
 			// 1. `order_size_pct_ppm * equity / oracle_price`.
 			expectedOrderSubticks: []uint64{
-				// spreadPpm = max(3_000, 1_500 + 50) = 3_000
-				// spread = 0.003
+				// spreadPpm = max(3_123, 1_500 + 50) = 3_123
+				// spread = 0.003123
 				// leverage = 0 / 1_000 = 0
-				// oracleSubticks = 5_000_000_000 * 10^(-5 - (-8) + (-10) - (-6)) = 5 * 10^8
+				// oracleSubticks = 5_000_000_000 * 10^(-5 - (-8) + (-10) - (-6)) = 5e8
 				// leverage_0 = leverage = 0
-				// skew_0 = -0 * 3_000 * 0.5 = 0
-				// a_0 = 5 * 10^8 * (1 + 0) * (1 + 0.003)^1 = 501_500_000
-				501_500_000,
-				// b_0 = 5 * 10^8 * (1 + 0) / (1 + 0.003)^1 = 498_504_486
-				// round down to nearest multiple of subticks_per_tick=5.
-				498_504_485,
+				// skew_0 = -0 * 3_123 * 0.554321 = 0
+				// a_0 = 5e5 * (1 + 0 + 0.003123*1) = 501_561.5 = 501_565 (rounded up to 5)
+				501_565,
+				// b_0 = 5e5 * (1 + 0 - 0.003123*1) = 498_438.5 = 498435 (rounded down to 5)
+				498_435,
 				// leverage_1 = leverage - 0.1 = -0.1
-				// skew_1 = 0.1 * 0.003 * 0.5 = 0.00015
-				// a_1 = 5 * 10^8 * (1 + 0.00015) * (1 + 0.003)^2 = 503_079_950.675
-				// round up to nearest multiple of subticks_per_tick=5.
-				503_079_955,
+				// skew_1 = 0.1 * 0.003123 * 0.554321 ~= 0.000173
+				// a_1 = 5e5 * (1 + 0.000173 + 0.003123*2) = 503209.5 ~= 503_210 (rounded up to 5)
+				503_210,
 				// leverage_1 = leverage + 0.1 = 0.1
-				// skew_1 = -0.1 * 0.003 * 0.5 = -0.00015
-				// b_2 = 5 * 10^8 * (1 - 0.00015) / (1 + 0.003)^2 ~= 496_938_894.184
-				// round down to nearest multiple of subticks_per_tick=5.
-				496_938_890,
+				// skew_1 = -0.1 * 0.003123 * 0.554321 = -0.000173
+				// b_2 = 5e5 * (1 - 0.000173 - 0.003123*2) = 496790.5 ~= 496_790 (rounded down to 5)
+				496_790,
 			},
-			// order_size = 10% * 1_000 / 50_000 = 0.002
-			// order_size_base_quantums = 0.002 * 10^10 = 20_000_000
+			// order_size = 10% * $1_000 / $50 = 2
+			// order_size_base_quantums = 2 * 10^10 = 20_000_000_000
 			expectedOrderQuantums: []uint64{
-				20_000_000,
-				20_000_000,
-				20_000_000,
-				20_000_000,
+				20_000_000_000,
+				20_000_000_000,
+				20_000_000_000,
+				20_000_000_000,
 			},
 		},
 		"Success - Get orders from Vault for Clob Pair 1, bids bounded by oracle price.": {
@@ -385,8 +386,8 @@ func TestGetVaultClobOrders(t *testing.T) {
 			// 2. leverage = open_notional / equity
 			// 3. leverage_i = leverage +/- i * order_size_pct (- for ask and + for bid)
 			// 4. skew_i = -leverage_i * spread * skew_factor
-			// 5. a_i = max(oracle_price * (1 + skew_i) * (1 + spread)^{i+1}, oracle_price)
-			//    b_i = min(oracle_price * (1 + skew_i) / (1 + spread)^{i+1}, oracle_price)
+			// 5. a_i = max(oracle_price * (1 + skew_i + spread*{i+1}), oracle_price)
+			//    b_i = min(oracle_price * (1 + skew_i - spread*{i+1}), oracle_price)
 			// 6. subticks needs to be a multiple of subticks_per_tick (round up for asks, round down for bids)
 			// To calculate size of each order
 			// 1. `order_size_pct_ppm * equity / oracle_price`.
@@ -395,44 +396,38 @@ func TestGetVaultClobOrders(t *testing.T) {
 				// spread = 0.00855
 				// open_notional = -500_000_000 * 10^-9 * 3_000 * 10^6 = -1_500_000_000
 				// leverage = -1_500_000_000 / (2_000_000_000 - 1_500_000_000) = -3
-				// oracleSubticks = 3_000_000_000 * 10^(-6 - (-9) + (-9) - (-6)) = 3 * 10^9
+				// oracleSubticks = 3_000_000_000 * 10^(-6 - (-9) + (-9) - (-6)) = 3e9
 				// leverage_0 = leverage - 0 * 0.2 = -3
 				// skew_0 = 3 * 0.00855 * 0.9
-				// a_0 = 3 * 10^9 * (1 + skew_0) * (1 + 0.00855)^1 = 3_095_497_130.25
-				// a_0 = max(a_0, oracle_price) = max(3_095_497_130.25, 3_000_000_000) = 3_095_497_130.25
-				// round up to nearest multiple of subticks_per_tick=1_000.
-				3_095_498_000,
-				// b_0 = 3 * 10^9 * (1 + skew_0) / (1 + 0.00855)^1 ~= 3_043_235_337.86
-				// b_0 = min(b_0, oracle_price) = min(3_043_235_337.86, 3_000_000_000) = 3_000_000_000
-				// round down to nearest multiple of subticks_per_tick=1_000.
+				// a_0 = 3e9 * (1 + skew_0 + 0.00855*1) = 3_094_905_000
+				// a_0 = max(a_0, oracle_price) = 3_094_905_000
+				3_094_905_000,
+				// b_0 = 3e9 * (1 + skew_0 - 0.00855*1) = 3_043_605_000
+				// b_0 = min(b_0, oracle_price) = 3e9 (bound)
 				3_000_000_000,
 				// leverage_1 = leverage - 1 * 0.2
 				// skew_1 = -leverage_1 * 0.00855 * 0.9
-				// a_1 = 3 * 10^9 * (1 + skew_1) * (1 + 0.00855)^2 ~= 3_126_659_918.93
-				// a_1 = max(a_1, oracle_price) = max(3_126_659_918.93, 3_000_000_000) = 3_126_659_918.93
-				// round up to nearest multiple of subticks_per_tick=1_000.
-				3_126_660_000,
+				// a_1 = 3e9 * (1 + skew_1 + 0.00855*2) = 3_125_172_000
+				// a_1 = max(a_1, oracle_price) = 3_125_172_000
+				3_125_172_000,
 				// leverage_1 = leverage + 1 * 0.2
 				// skew_1 = -leverage_1 * 0.00855 * 0.9
-				// b_1 = 3 * 10^9 * (1 + skew_1) / (1 + 0.00855)^2 ~= 3_012_897_207.43
-				// b_1 = min(b_1, oracle_price) = min(3_012_897_207.43, 3_000_000_000) = 3_000_000_000
-				// round down to nearest multiple of subticks_per_tick=5.
+				// b_1 = 3e9 * (1 + skew_1 - 0.00855*2) = 3_013_338_000
+				// b_1 = min(b_1, oracle_price) = 3e9 (bound)
 				3_000_000_000,
 				// leverage_2 = leverage - 2 * 0.2
 				// skew_2 = -leverage_2 * 0.00855 * 0.9
-				// a_2 = 3 * 10^9 * (1 + skew_2) * (1 + 0.00855)^3 ~= 3_158_129_302.71
-				// a_2 = max(a_2, oracle_price) = max(3_158_129_302.71, 3_000_000_000) = 3_158_129_302.71
-				// round up to nearest multiple of subticks_per_tick=1_000.
-				3_158_130_000,
+				// a_2 = 3e9 * (1 + skew_2 + 0.00855*3) = 3_155_439_000
+				// a_2 = max(a_2, oracle_price) = 3_155_439_000
+				3_155_439_000,
 				// leverage_2 = leverage + 2 * 0.2
 				// skew_2 = -leverage_2 * 0.00855 * 0.9
-				// b_2 = 3 * 10^9 * (1 + skew_2) / (1 + 0.00855)^3 ~= 2_982_854_748.91
-				// b_2 = min(b_2, oracle_price) = min(2_982_854_748.91, 3_000_000_000) = 2_982_854_748.91
-				// round down to nearest multiple of subticks_per_tick=1_000.
-				2_982_854_000,
+				// b_2 = 3e9 * (1 + skew_2 - 0.00855*3) = 2_983_071_000
+				// b_2 = min(b_2, oracle_price) = 2_983_071_000
+				2_983_071_000,
 			},
 			// order_size = 20% * 500 / 3000 ~= 0.0333333333
-			// order_size_base_quantums = 0.0333333333 * 10^9 ~= 33_333_333.33
+			// order_size_base_quantums = 0.0333333333e9 ~= 33_333_333.33
 			// round down to nearest multiple of step_base_quantums=1_000.
 			expectedOrderQuantums: []uint64{
 				33_333_000,
@@ -465,8 +460,8 @@ func TestGetVaultClobOrders(t *testing.T) {
 			// 2. leverage = open_notional / equity
 			// 3. leverage_i = leverage +/- i * order_size_pct (- for ask and + for bid)
 			// 4. skew_i = -leverage_i * spread * skew_factor
-			// 5. a_i = max(oracle_price * (1 + skew_i) * (1 + spread)^{i+1}, oracle_price)
-			//    b_i = min(oracle_price * (1 + skew_i) / (1 + spread)^{i+1}, oracle_price)
+			// 5. a_i = max(oracle_price * (1 + skew_i + spread*{i+1}), oracle_price)
+			//    b_i = min(oracle_price * (1 + skew_i - spread*{i+1}), oracle_price)
 			// 6. subticks needs to be a multiple of subticks_per_tick (round up for asks, round down for bids)
 			// To calculate size of each order
 			// 1. `order_size_pct_ppm * equity / oracle_price`.
@@ -475,32 +470,28 @@ func TestGetVaultClobOrders(t *testing.T) {
 				// spread = 0.003
 				// open_notional = 1_000_000_000 * 10^-9 * 3_000 * 10^6 = 3_000_000_000
 				// leverage = 3_000_000_000 / (-2_000_000_000 + 3_000_000_000) = 3
-				// oracleSubticks = 3_000_000_000 * 10^(-6 - (-9) + (-9) - (-6)) = 3 * 10^9
+				// oracleSubticks = 3_000_000_000 * 10^(-6 - (-9) + (-9) - (-6)) = 3e9
 				// leverage_0 = leverage - 0 * 1 = 3
 				// skew_0 = -3 * 0.003 * 0.5
-				// a_0 = 3 * 10^9 * (1 + skew_0) * (1 + 0.003)^1 = 2_995_459_500
-				// a_0 = max(a_0, oracle_price) = max(2_995_459_500, 3_000_000_000) = 3_000_000_000
-				// round up to nearest multiple of subticks_per_tick=1_000.
+				// a_0 = 3e9 * (1 + skew_0 + 0.003*1) = 2_995_500_000
+				// a_0 = max(a_0, oracle_price) = 3e9 (bound)
 				3_000_000_000,
-				// b_0 = 3 * 10^9 * (1 + skew_0) / (1 + 0.003)^1 ~= 2_977_567_298.11
-				// b_0 = min(b_0, oracle_price) = min(2_977_567_298.11, 3_000_000_000) = 2_977_567_298.11
-				// round down to nearest multiple of subticks_per_tick=1_000.
-				2_977_567_000,
+				// b_0 = 3e9 * (1 + skew_0 - 0.003*1) = 2_977_500_000
+				// b_0 = min(b_0, oracle_price) = 2_977_500_000
+				2_977_500_000,
 				// leverage_1 = leverage - 1 * 1 = 2
 				// skew_1 = -2 * 0.003 * .5
-				// a_1 = 3 * 10^9 * (1 + skew_1) * (1 + 0.003)^2 ~= 3_008_972_919
-				// a_1 = max(a_1, oracle_price) = max(3_008_972_919, 3_000_000_000) = 3_008_972_919
-				// round up to nearest multiple of subticks_per_tick=1_000.
-				3_008_973_000,
+				// a_1 = 3e9 * (1 + skew_1 + 0.003*2) = 3_009_000_000
+				// a_1 = max(a_1, oracle_price) = 3_009_000_000
+				3_009_000_000,
 				// leverage_1 = leverage + 1 * 1 = 4
 				// skew_1 = -4 * 0.003 * .5
-				// b_1 = 3 * 10^9 * (1 + skew_1) / (1 + 0.003)^2 ~= 2_964_188_193.15
-				// b_1 = min(b_1, oracle_price) = min(2_964_188_193.15, 3_000_000_000) = 2_964_188_193.15
-				// round down to nearest multiple of subticks_per_tick=5.
-				2_964_188_000,
+				// b_1 = 3e9 * (1 + skew_1 - 0.003*2) = 2_964_000_000
+				// b_1 = min(b_1, oracle_price) = 2_964_000_000
+				2_964_000_000,
 			},
 			// order_size = 100% * 1000 / 3000 ~= 0.333333333
-			// order_size_base_quantums = 0.333333333 * 10^9 ~= 333_333_333.33
+			// order_size_base_quantums = 0.333333333e9 ~= 333_333_333.33
 			// round down to nearest multiple of step_base_quantums=1_000.
 			expectedOrderQuantums: []uint64{
 				333_333_000,
@@ -528,7 +519,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 			perpetual:                  constants.EthUsd_0DefaultFunding_9AtomicResolution,
 			expectedOrderSubticks:      []uint64{},
 			// order_size = 0.1% * 1 / 3_000 ~= 0.00000033333
-			// order_size_base_quantums = 0.000033333 * 10^9 = 333
+			// order_size_base_quantums = 0.000033333e9 = 333
 			// round down to nearest multiple of step_base_quantums=1_000.
 			// order size is 0.
 			expectedOrderQuantums: []uint64{},
