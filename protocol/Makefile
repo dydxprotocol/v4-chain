@@ -255,7 +255,7 @@ test-race:
 test-cover:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 12m -coverprofile=coverage.out -covermode=atomic -coverpkg=github.com/dydxprotocol/v4-chain/protocol/... -tags='test_ledger_mock $(build_tags)' ./...
 
-test-unit-and-integration:
+test-unit-and-integration: e2e-setup
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 30m ./...
 
 test-unit-and-integration-linux: e2e-setup-linux 
