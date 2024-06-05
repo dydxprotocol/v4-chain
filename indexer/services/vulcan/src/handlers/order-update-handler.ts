@@ -148,6 +148,7 @@ export class OrderUpdateHandler extends Handler {
         txHash: this.txHash,
         clobPair: perpetualMarket.clobPairId,
         orderUpdate,
+        orderbookMessage,
       });
       sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
     }

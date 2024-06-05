@@ -400,6 +400,7 @@ export class OrderRemoveHandler extends Handler {
       txHash: this.txHash,
       clobPair: perpetualMarket.clobPairId,
       orderId: removeOrderResult.removedOrder!.order!.orderId,
+      orderbookMessage,
     });
     sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
   }
