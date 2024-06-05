@@ -83,8 +83,9 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		return err
 	}
 	orderExpirationSeconds := k.GetParams(ctx).OrderExpirationSeconds
+	replacedOrders := make([]*clobtypes.Order, len(ordersToCancel))
 	for _, order := range ordersToCancel {
-		if _, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId); exists {
+		if oldOrderPlacement, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId); exists {
 			err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
 				order.OrderId,
 				uint32(ctx.BlockTime().Unix())+orderExpirationSeconds,
@@ -92,13 +93,13 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 			if err != nil {
 				log.ErrorLogWithError(ctx, "Failed to cancel order", err, "order", order, "vaultId", vaultId)
 			}
+			replacedOrders = append(replacedOrders, &oldOrderPlacement.Order)
 			vaultId.IncrCounterWithLabels(
 				metrics.VaultCancelOrder,
 				metrics.GetLabelForBoolValue(metrics.Success, err == nil),
 			)
 		}
 	}
-
 	// Place new CLOB orders.
 	ordersToPlace, err := k.GetVaultClobOrders(ctx, vaultId)
 
@@ -119,12 +120,12 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		// Send indexer messages.
 		// If the price of the old and new orders are different, send a cancel and a place message
 		// Otherwise, send an order place message only.
-		replacedOrder := ordersToCancel[i]
-		if replacedOrder.Subticks != order.Subticks {
+		replacedOrder := replacedOrders[i]
+		if replacedOrder != nil && replacedOrder.Subticks != order.Subticks {
+			fmt.Printf("Different subticks: %v, %v\n", replacedOrder.Subticks, order.Subticks)
 			vaultId.IncrCounter(
 				metrics.VaultPlaceOrderDifferentPrice,
 			)
-
 			k.GetIndexerEventManager().AddTxnEvent(
 				ctx,
 				indexerevents.SubtypeStatefulOrder,
@@ -136,31 +137,18 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 					),
 				),
 			)
-			k.GetIndexerEventManager().AddTxnEvent(
-				ctx,
-				indexerevents.SubtypeStatefulOrder,
-				indexerevents.StatefulOrderEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewLongTermOrderPlacementEvent(
-						*order,
-					),
-				),
-			)
-		} else {
-			vaultId.IncrCounter(
-				metrics.VaultPlaceOrderDifferentPrice,
-			)
-			k.GetIndexerEventManager().AddTxnEvent(
-				ctx,
-				indexerevents.SubtypeStatefulOrder,
-				indexerevents.StatefulOrderEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewLongTermOrderPlacementEvent(
-						*order,
-					),
-				),
-			)
 		}
+
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeStatefulOrder,
+			indexerevents.StatefulOrderEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewLongTermOrderPlacementEvent(
+					*order,
+				),
+			),
+		)
 	}
 	return nil
 }
