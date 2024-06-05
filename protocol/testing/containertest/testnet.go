@@ -119,7 +119,7 @@ func (t *Testnet) initialize() (err error) {
 			return node.WaitUntilBlockHeight(2)
 		}); err != nil {
 			return fmt.Errorf(
-				"could not connect to node: %s, %+v",
+				"could not connect to node: %s, %w",
 				moniker,
 				err,
 			)
