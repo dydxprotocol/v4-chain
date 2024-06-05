@@ -16,7 +16,6 @@ const (
 	// by the pricefeed daemon. This number was chosen to supply the minimum number of prices required to
 	// compute an index price for a market, given exchange unavailability due to exchange geo-fencing,
 	// downtime, etc.
-	// Ok to drop this to 5 for some markets if needed, but 5 is better.
 	MinimumRequiredExchangesPerMarket = 5
 )
 
