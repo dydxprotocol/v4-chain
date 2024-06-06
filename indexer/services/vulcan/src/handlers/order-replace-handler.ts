@@ -105,7 +105,9 @@ export class OrderReplaceHandler extends Handler {
     ) {
       // Don't send orderbook message if price is the same to prevent flickering because
       // the order update will send the correct size update
-      const sendOrderbookMessage = (redisOrder.price !== removeOrderResult.removedOrder!.price);
+      const sendOrderbookMessage = (
+        redisOrder.order!.subticks !== removeOrderResult.removedOrder!.order!.subticks
+      );
       await this.removeOldOrderFromOrderbook(
         removeOrderResult,
         perpetualMarket,
