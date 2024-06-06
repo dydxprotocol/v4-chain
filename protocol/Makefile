@@ -234,7 +234,7 @@ custom-e2e-setup: compile-testing-files
 
 delete-anvil:
 	@echo "deleting anvil"
-	cd ethos/ethos-chain/tests/e2e/testnet-scripts && ./delete-anvil.sh 
+	cd ethos/ethos-chain/tests/e2e/testnet-scripts && chmod +x delete-anvil.sh && ./delete-anvil.sh 
 
 test: test-unit
 
