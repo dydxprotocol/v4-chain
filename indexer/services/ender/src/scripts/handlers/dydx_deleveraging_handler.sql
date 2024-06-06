@@ -28,6 +28,7 @@ DECLARE
     liquidated_subaccount_uuid uuid;
     offsetting_subaccount_uuid uuid;
     perpetual_market_record perpetual_markets%ROWTYPE;
+    market_record markets%ROWTYPE;
     liquidated_fill_record fills%ROWTYPE;
     offsetting_fill_record fills%ROWTYPE;
     liquidated_perpetual_position_record perpetual_positions%ROWTYPE;
@@ -48,6 +49,15 @@ BEGIN
         WHEN TOO_MANY_ROWS THEN
             /** This should never happen and if it ever were to would indicate that the table has malformed data. */
             RAISE EXCEPTION 'Found multiple perpetual markets with perpetualId %', perpetual_id;
+    END;
+    BEGIN
+        SELECT * INTO STRICT market_record FROM markets WHERE "id" = perpetual_market_record."marketId";
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE EXCEPTION 'Unable to find market with id %', perpetual_market_record."marketId";
+        WHEN TOO_MANY_ROWS THEN
+            /** This should never happen and if it ever were to would indicate that the table has malformed data. */
+            RAISE EXCEPTION 'Found multiple markets with id %', perpetual_market_record."marketId";
     END;
     /**
       Calculate sizes, prices, and fill amounts.
@@ -129,6 +139,8 @@ BEGIN
             dydx_to_jsonb(offsetting_fill_record),
             'perpetual_market',
             dydx_to_jsonb(perpetual_market_record),
+            'market',
+            dydx_to_jsonb(market_record),
             'liquidated_perpetual_position',
             dydx_to_jsonb(liquidated_perpetual_position_record),
             'offsetting_perpetual_position',

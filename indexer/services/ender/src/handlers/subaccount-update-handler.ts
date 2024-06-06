@@ -56,10 +56,13 @@ export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
       MarketColumns.id,
     );
     for (let i = 0; i < updateObjects.length; i++) {
+      const marketId: number = perpetualMarketRefresher.getPerpetualMarketsMap()[
+        updateObjects[i].perpetualId
+      ].marketId;
       updateObjects[i] = annotateWithPnl(
         updateObjects[i],
         perpetualMarketRefresher.getPerpetualMarketsMap(),
-        marketIdToMarket,
+        marketIdToMarket[marketId],
       );
     }
 

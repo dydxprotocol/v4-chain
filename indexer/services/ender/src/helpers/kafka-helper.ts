@@ -10,8 +10,8 @@ import {
   liquidityTierRefresher,
   LiquidityTiersFromDatabase,
   LiquidityTiersMap,
+  MarketFromDatabase,
   MarketMessageContents,
-  MarketsMap,
   OraclePriceFromDatabase,
   OrderFromDatabase,
   OrderSubaccountMessageContents,
@@ -133,7 +133,7 @@ export function generateAssetPositionsContents(
 export function getPnl(
   updateObject: UpdatedPerpetualPositionSubaccountKafkaObject,
   perpetualMarket: PerpetualMarketFromDatabase,
-  marketIdToMarket: MarketsMap,
+  market: MarketFromDatabase,
 ): { realizedPnl: string | undefined, unrealizedPnl: string | undefined } {
   let realizedPnl: string | undefined;
   let unrealizedPnl: string | undefined;
@@ -145,7 +145,11 @@ export function getPnl(
       .mul(updateObject.sumClose)
       .plus(updateObject.settledFunding)
       .toFixed();
-    unrealizedPnl = helpers.getUnrealizedPnl(updateObject, perpetualMarket, marketIdToMarket);
+    unrealizedPnl = helpers.getUnrealizedPnl(
+      updateObject,
+      perpetualMarket,
+      market,
+    );
   }
   return { realizedPnl, unrealizedPnl };
 }
@@ -160,11 +164,11 @@ export function getPnl(
 export function annotateWithPnl(
   updateObject: UpdatedPerpetualPositionSubaccountKafkaObject,
   perpetualMarketMap: PerpetualMarketsMap,
-  marketIdToMarket: MarketsMap,
+  market: MarketFromDatabase,
 ): UpdatedPerpetualPositionSubaccountKafkaObject {
   return {
     ...updateObject,
-    ...getPnl(updateObject, perpetualMarketMap[updateObject.perpetualId], marketIdToMarket),
+    ...getPnl(updateObject, perpetualMarketMap[updateObject.perpetualId], market),
   };
 }
 

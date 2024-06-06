@@ -97,7 +97,8 @@ export function perpetualPositionToResponseObject(
     exitPrice: position.exitPrice && Big(position.exitPrice).toFixed(),
     realizedPnl,
     unrealizedPnl: helpers.getUnrealizedPnl(
-      position, perpetualMarketsMap[position.perpetualId], marketsMap,
+      position, perpetualMarketsMap[position.perpetualId],
+      marketsMap[perpetualMarketsMap[position.perpetualId].marketId],
     ),
     createdAt: position.createdAt,
     createdAtHeight: position.createdAtHeight,
