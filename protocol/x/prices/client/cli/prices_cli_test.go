@@ -105,27 +105,6 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 	// Set min gas prices to zero so that we can submit transactions with zero gas price.
 	s.cfg.MinGasPrices = fmt.Sprintf("0%s", sdk.DefaultBondDenom)
 
-	// Setting genesis state for Prices.
-	// state := genesisState
-
-	// buf, err := s.cfg.Codec.MarshalJSON(&state)
-	// s.NoError(err)
-	// s.cfg.GenesisState[types.ModuleName] = buf
-
-	// Ensure that no funding-related epochs will occur during this test.
-	// epstate := constants.GenerateEpochGenesisStateWithoutFunding()
-
-	// feeTiersState := feetierstypes.GenesisState{}
-	// feeTiersState.Params = constants.PerpetualFeeParams
-
-	// feeTiersBuf, err := s.cfg.Codec.MarshalJSON(&feeTiersState)
-	// s.Require().NoError(err)
-	// s.cfg.GenesisState[feetierstypes.ModuleName] = feeTiersBuf
-
-	// epbuf, err := s.cfg.Codec.MarshalJSON(&epstate)
-	// s.Require().NoError(err)
-	// s.cfg.GenesisState[epochstypes.ModuleName] = epbuf
-
 	// // Gock setup.
 	defer gock.Off()         // Flush pending mocks after test execution.
 	gock.DisableNetworking() // Disables real networking.
@@ -147,8 +126,6 @@ func (s *PricesIntegrationTestSuite) expectMarketPricesWithTimeout(prices map[ui
 
 		time.Sleep(100 * time.Millisecond)
 
-		// val := s.network.Validators[0]
-		// ctx := val.ClientCtx
 		resp, err := testutil.MsgQueryAllMarketPriceExec()
 		s.Require().NoError(err)
 

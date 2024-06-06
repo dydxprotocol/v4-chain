@@ -186,17 +186,4 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 	)
 
 	network.CleanupCustomNetwork()
-	// Check that the `distribution` module account has expected remaining USDC balance.
-	// During `BeginBlock()`, the `fee-collector` module account will send all fees
-	// to the `distribution` module account, and the fees will stay in `distribution`
-	// until withdrawn. More details at:
-	// https://docs.cosmos.network/v0.45/modules/distribution/03_begin_block.html#the-distribution-scheme
-	// distrModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
-	// 	val,
-	// 	s.network.Config.Codec,
-	// 	distrtypes.ModuleName,
-	// )
-
-	// s.Require().NoError(err)
-	// s.Require().Equal(makerFee+takerFee, distrModuleUSDCBalance)
 }

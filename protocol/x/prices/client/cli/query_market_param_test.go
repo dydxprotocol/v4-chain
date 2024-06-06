@@ -66,7 +66,6 @@ func TestShowMarketParam(t *testing.T) {
 func TestListMarketParam(t *testing.T) {
 	_, objs, _ := cli_util.NetworkWithMarketObjects(t, 5)
 	cfg := network.DefaultConfig(nil)
-	// ctx := net.Validators[0].ClientCtx
 	request := func(next []byte, offset, limit uint64, total bool) []string {
 		args := []string{}
 		if next == nil {

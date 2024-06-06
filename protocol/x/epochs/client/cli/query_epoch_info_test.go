@@ -68,7 +68,6 @@ func getDefaultGenesisEpochById(t *testing.T, id string) types.EpochInfo {
 }
 
 func TestShowEpochInfo(t *testing.T) {
-	//cfg := networkWithEpochInfoObjects(t)
 	genesis := "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"1\\\"}, \\\"margin_enabled\\\": false}]\" \"\""
 	network.DeployCustomNetwork(genesis)
 	cfg := network.DefaultConfig(nil)
