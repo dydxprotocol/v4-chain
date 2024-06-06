@@ -111,16 +111,3 @@ func (id *VaultId) addLabels(labels ...metrics.Label) []metrics.Label {
 		),
 	)
 }
-
-func (id *VaultId) getDefaultVaultLabels() []metrics.Label {
-	return []metrics.Label{
-		metrics.GetLabelForIntValue(
-			metrics.VaultType,
-			int(id.Type),
-		),
-		metrics.GetLabelForIntValue(
-			metrics.VaultId,
-			int(id.Number),
-		),
-	}
-}
