@@ -141,26 +141,16 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 							Snapshot: snapshot,
 						},
 					},
-					BlockHeight: blockHeight,
-					ExecMode:    uint32(execMode),
 				},
-<<<<<<< HEAD
-			},
-		}
-	}
-
-	sm.sendStreamUpdate(
-		updatesByClobPairId,
-		blockHeight,
-		execMode,
-	)
-=======
 			}
 		}
 	}
 
-	sm.sendStreamUpdate(updatesBySubscriptionId)
->>>>>>> cd974a2f (Consolidate orderbook updates into a single stream update (#1634))
+	sm.sendStreamUpdate(
+		updatesBySubscriptionId,
+		blockHeight,
+		execMode,
+	)
 }
 
 // SendOrderbookFillUpdates groups fills by their clob pair ids and
@@ -195,13 +185,6 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 		updatesByClobPairId[clobPairId] = append(updatesByClobPairId[clobPairId], streamUpdate)
 	}
 
-<<<<<<< HEAD
-	sm.sendStreamUpdate(
-		updatesByClobPairId,
-		blockHeight,
-		execMode,
-	)
-=======
 	updatesBySubscriptionId := make(map[uint32][]clobtypes.StreamUpdate)
 	for id, subscription := range sm.orderbookSubscriptions {
 		streamUpdatesForSubscription := make([]clobtypes.StreamUpdate, 0)
@@ -214,19 +197,18 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 		updatesBySubscriptionId[id] = streamUpdatesForSubscription
 	}
 
-	sm.sendStreamUpdate(updatesBySubscriptionId)
->>>>>>> cd974a2f (Consolidate orderbook updates into a single stream update (#1634))
+	sm.sendStreamUpdate(
+		updatesBySubscriptionId,
+		blockHeight,
+		execMode,
+	)
 }
 
 // sendStreamUpdate takes in a map of clob pair id to stream updates and emits them to subscribers.
 func (sm *GrpcStreamingManagerImpl) sendStreamUpdate(
-<<<<<<< HEAD
-	updatesByClobPairId map[uint32][]clobtypes.StreamUpdate,
+	updatesBySubscriptionId map[uint32][]clobtypes.StreamUpdate,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
-=======
-	updatesBySubscriptionId map[uint32][]clobtypes.StreamUpdate,
->>>>>>> cd974a2f (Consolidate orderbook updates into a single stream update (#1634))
 ) {
 	metrics.IncrCounter(
 		metrics.GrpcEmitProtocolUpdateCount,
@@ -239,28 +221,6 @@ func (sm *GrpcStreamingManagerImpl) sendStreamUpdate(
 	// Send updates to subscribers.
 	idsToRemove := make([]uint32, 0)
 	for id, subscription := range sm.orderbookSubscriptions {
-<<<<<<< HEAD
-		streamUpdatesForSubscription := make([]clobtypes.StreamUpdate, 0)
-		for _, clobPairId := range subscription.clobPairIds {
-			if update, ok := updatesByClobPairId[clobPairId]; ok {
-				streamUpdatesForSubscription = append(streamUpdatesForSubscription, update...)
-			}
-		}
-
-		if len(streamUpdatesForSubscription) > 0 {
-			metrics.IncrCounter(
-				metrics.GrpcSendResponseToSubscriberCount,
-				1,
-			)
-			if err := subscription.srv.Send(
-				&clobtypes.StreamOrderbookUpdatesResponse{
-					Updates:     streamUpdatesForSubscription,
-					BlockHeight: blockHeight,
-					ExecMode:    uint32(execMode),
-				},
-			); err != nil {
-				idsToRemove = append(idsToRemove, id)
-=======
 		if streamUpdatesForSubscription, ok := updatesBySubscriptionId[id]; ok {
 			if len(streamUpdatesForSubscription) > 0 {
 				metrics.IncrCounter(
@@ -269,12 +229,13 @@ func (sm *GrpcStreamingManagerImpl) sendStreamUpdate(
 				)
 				if err := subscription.srv.Send(
 					&clobtypes.StreamOrderbookUpdatesResponse{
-						Updates: streamUpdatesForSubscription,
+						Updates:     streamUpdatesForSubscription,
+						BlockHeight: blockHeight,
+						ExecMode:    uint32(execMode),
 					},
 				); err != nil {
 					idsToRemove = append(idsToRemove, id)
 				}
->>>>>>> cd974a2f (Consolidate orderbook updates into a single stream update (#1634))
 			}
 		}
 	}
