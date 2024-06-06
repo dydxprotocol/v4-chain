@@ -45,10 +45,12 @@ import { Handler } from './handler';
 /**
  * Handler for OrderReplace messages.
  * The behavior is as follows:
- * - Add the order to the OrdersCache, OrdersDataCache, and SubaccountOrderIdsCache
+ * - Remove the old order
+ *  - this is done using the `removeOrder` function from the `redis` package
+ * - Add the new order to the OrdersCache, OrdersDataCache, and SubaccountOrderIdsCache
  *  - this is done using the `placeOrder` function from the `redis` package
  *  - Remove the order from the CanceledOrdersCache if it exists
- * - If the order is a stateful order, attempt to remove any cached order update from the
+ * - Because the order is a stateful order, attempt to remove any cached order update from the
  *   StatefulOrderUpdatesCache, and then queue the order update to be re-sent and re-processed
  * - If the order doesn't already exist in the caches, return
  * - If the order exists in the caches, but was not replaced due to the expiry of the existing order
@@ -67,27 +69,13 @@ export class OrderReplaceHandler extends Handler {
     const oldOrderId: IndexerOrderId = orderReplace.oldOrderId!;
 
     /* Remove old order */
-    const removeOrderResult: RemoveOrderResult = await runFuncWithTimingStat(
-      removeOrder({
-        removedOrderId: oldOrderId!,
-        client: redisClient,
-      }),
-      this.generateTimingStatsOptions('remove_order'),
-    );
-    logger.info({
-      at: 'OrderReplaceHandler#handle',
-      message: 'removeOrder processed',
-      oldOrderId,
-      removeOrderResult,
-    });
+    const removeOrderResult: RemoveOrderResult = await this.removeOldOrder(oldOrderId);
 
     /* Place new order */
     const order: IndexerOrder = orderReplace.order!;
     const placementStatus: OrderPlaceV1_OrderPlacementStatus = orderReplace.placementStatus;
-
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromClobPairId(order.orderId!.clobPairId.toString());
-
     if (perpetualMarket === undefined) {
       this.logAndThrowParseMessageError(
         'Order in OrderReplace has invalid clobPairId',
@@ -98,25 +86,13 @@ export class OrderReplaceHandler extends Handler {
       // Needed so TS compiler knows `perpetualMarket` is defined
       return;
     }
-
     const redisOrder: RedisOrder = convertToRedisOrder(order, perpetualMarket);
-    const placeOrderResult: PlaceOrderResult = await runFuncWithTimingStat(
-      placeOrder({
-        redisOrder,
-        client: redisClient,
-      }),
-      this.generateTimingStatsOptions('place_order_cache_update'),
-    );
-    await this.removeOrderFromCanceledOrdersCache(
-      OrderTable.orderIdToUuid(redisOrder.order?.orderId!),
-    );
-    logger.info({
-      at: 'OrderReplaceHandler#handle',
-      message: 'placeOrder processed',
-      order,
-      placeOrderResult,
-    });
-
+    const placeOrderResult: PlaceOrderResult = await this.placeNewOrder(redisOrder);
+    if (placeOrderResult.replaced) {
+      // This is not expected because the replaced orders either have different order IDs or
+      // should have been removed before being placed again
+      stats.increment(`${config.SERVICE_NAME}.replace_order_handler.place_order_result_replaced_order`, 1);
+    }
     // If an order was removed from the Orders cache and was resting on the book, update the
     // orderbook levels cache
     // Orders that require immediate execution do not rest on the book, and also should not lead
@@ -127,7 +103,7 @@ export class OrderReplaceHandler extends Handler {
       !requiresImmediateExecution(removeOrderResult.removedOrder!.order!.timeInForce)
     ) {
       // Don't send orderbook message if price is the same to prevent flickering because
-      // the order update will send the correct update
+      // the order update will send the correct size update
       const sendOrderbookMessage = (redisOrder.price === removeOrderResult.removedOrder!.price);
       await this.removeOldOrderFromOrderbook(
         removeOrderResult,
@@ -136,8 +112,6 @@ export class OrderReplaceHandler extends Handler {
         sendOrderbookMessage,
       );
     }
-
-    stats.increment(`${config.SERVICE_NAME}.replace_order_handler.replaced_order`, 1);
 
     // TODO(CLOB-597): Remove this logic and log erorrs once best-effort-open is not sent for
     // stateful orders in the protocol
@@ -178,21 +152,6 @@ export class OrderReplaceHandler extends Handler {
     }
   }
 
-  /**
-   * Gets the remaining size of the old order if the order was replaced.
-   * @param result Result of placing an order, should be for a replaced order so both `oldOrder` and
-   * `oldTotalFilledQuantums` properties should exist on the place order result.
-   * @returns Remaining size of the old order that was replaced.
-   */
-  protected getRemainingSizeDeltaInQuantums(result: PlaceOrderResult): Big {
-    const sizeDeltaInQuantums: Big = Big(
-      result.oldOrder!.order!.quantums.toString(),
-    ).minus(
-      result.oldTotalFilledQuantums!,
-    );
-    return sizeDeltaInQuantums;
-  }
-
   protected validateOrderReplace(orderReplace: OrderReplaceV1): void {
     if (orderReplace.order === undefined) {
       this.logAndThrowParseMessageError('Invalid OrderReplace, order is undefined');
@@ -214,6 +173,43 @@ export class OrderReplaceHandler extends Handler {
     ) {
       this.logAndThrowParseMessageError('Invalid OrderReplace, placement status is UNSPECIFIED');
     }
+  }
+
+  protected async removeOldOrder(oldOrderId: IndexerOrderId): Promise<RemoveOrderResult> {
+    const removeOrderResult: RemoveOrderResult = await runFuncWithTimingStat(
+      removeOrder({
+        removedOrderId: oldOrderId,
+        client: redisClient,
+      }),
+      this.generateTimingStatsOptions('remove_order'),
+    );
+    logger.info({
+      at: 'OrderReplaceHandler#handle',
+      message: 'removeOrder processed',
+      oldOrderId,
+      removeOrderResult,
+    });
+    return removeOrderResult;
+  }
+
+  protected async placeNewOrder(redisOrder: RedisOrder): Promise<PlaceOrderResult> {
+    const placeOrderResult: PlaceOrderResult = await runFuncWithTimingStat(
+      placeOrder({
+        redisOrder,
+        client: redisClient,
+      }),
+      this.generateTimingStatsOptions('place_order_cache_update'),
+    );
+    await this.removeOrderFromCanceledOrdersCache(
+      OrderTable.orderIdToUuid(redisOrder.order?.orderId!),
+    );
+    logger.info({
+      at: 'OrderReplaceHandler#handle',
+      message: 'placeOrder processed',
+      redisOrder,
+      placeOrderResult,
+    });
+    return placeOrderResult;
   }
 
   /**
@@ -261,7 +257,6 @@ export class OrderReplaceHandler extends Handler {
    * Removes the order from the cancelled orders cache in Redis.
    *
    * @param orderId
-   * @param blockHeight
    * @protected
    */
   protected async removeOrderFromCanceledOrdersCache(
