@@ -6,6 +6,7 @@ import {
   OrderTable,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
+  protocolTranslations,
 } from '@dydxprotocol-indexer/postgres';
 import {
   CanceledOrdersCache,
@@ -13,12 +14,14 @@ import {
   PlaceOrderResult,
   StatefulOrderUpdatesCache,
   convertToRedisOrder,
+  OrderbookLevelsCache,
 } from '@dydxprotocol-indexer/redis';
 import {
   getOrderIdHash,
   isLongTermOrder,
   isStatefulOrder,
   ORDER_FLAG_SHORT_TERM,
+  requiresImmediateExecution,
 } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
@@ -28,6 +31,7 @@ import {
   OrderUpdateV1,
   RedisOrder,
 } from '@dydxprotocol-indexer/v4-protos';
+import Big from 'big.js';
 import { IHeaders, Message } from 'kafkajs';
 
 import config from '../config';
@@ -96,6 +100,12 @@ export class OrderPlaceHandler extends Handler {
       stats.increment(`${config.SERVICE_NAME}.place_order_handler.replaced_order`, 1);
     }
 
+    await this.updatePriceLevel(
+      placeOrderResult,
+      perpetualMarket,
+      update,
+    );
+
     // TODO(CLOB-597): Remove this logic and log erorrs once best-effort-open is not sent for
     // stateful orders in the protocol
     if (this.shouldSendSubaccountMessage(
@@ -156,6 +166,83 @@ export class OrderPlaceHandler extends Handler {
     ) {
       this.logAndThrowParseMessageError('Invalid OrderPlace, placement status is UNSPECIFIED');
     }
+  }
+
+  /**
+   * Updates the price level given the result of calling `placeOrder`.
+   * @param result `PlaceOrderResult` from calling `placeOrder`
+   * @param perpetualMarket Perpetual market object corresponding to the perpetual market of the
+   * order
+   * @param update Off-chain update
+   * @returns
+   */
+  // eslint-disable-next-line @typescript-eslint/require-await
+  protected async updatePriceLevel(
+    result: PlaceOrderResult,
+    perpetualMarket: PerpetualMarketFromDatabase,
+    update: OffChainUpdateV1,
+  ): Promise<number | undefined> {
+    // TODO(DEC-1339): Update price levels based on if the order is reduce-only and if the replaced
+    // order is reduce-only.
+    if (
+      result.replaced !== true ||
+      result.restingOnBook !== true ||
+      requiresImmediateExecution(result.oldOrder!.order!.timeInForce)
+    ) {
+      return undefined;
+    }
+
+    const remainingSizeDeltaInQuantums: Big = this.getRemainingSizeDeltaInQuantums(result);
+
+    if (remainingSizeDeltaInQuantums.eq(0)) {
+      // No update to the price level if remaining quantums = 0
+      // An order could have remaining quantums = 0 intra-block, as an order is only considered
+      // filled once the fills are committed in a block
+      return undefined;
+    }
+
+    if (remainingSizeDeltaInQuantums.lt(0)) {
+      // Log error and skip updating orderbook levels if old order had negative remaining
+      // quantums
+      logger.info({
+        at: 'OrderPlaceHandler#handle',
+        message: 'Total filled of order in Redis exceeds order quantums.',
+        placeOrderResult: result,
+        update,
+      });
+      stats.increment(`${config.SERVICE_NAME}.order_place_total_filled_exceeds_size`, 1);
+      return undefined;
+    }
+
+    // If the remaining size is not equal or less than 0, it must be greater than 0.
+    // Remove the remaining size of the replaced order from the orderbook, by decrementing
+    // the total size of orders at the price of the replaced order
+    return runFuncWithTimingStat(
+      OrderbookLevelsCache.updatePriceLevel({
+        ticker: perpetualMarket.ticker,
+        side: protocolTranslations.protocolOrderSideToOrderSide(result.oldOrder!.order!.side),
+        humanPrice: result.oldOrder!.price,
+        // Delta should be -1 * remaining size of order in quantums and an integer
+        sizeDeltaInQuantums: remainingSizeDeltaInQuantums.mul(-1).toFixed(0),
+        client: redisClient,
+      }),
+      this.generateTimingStatsOptions('update_price_level'),
+    );
+  }
+
+  /**
+   * Gets the remaining size of the old order if the order was replaced.
+   * @param result Result of placing an order, should be for a replaced order so both `oldOrder` and
+   * `oldTotalFilledQuantums` properties should exist on the place order result.
+   * @returns Remaining size of the old order that was replaced.
+   */
+  protected getRemainingSizeDeltaInQuantums(result: PlaceOrderResult): Big {
+    const sizeDeltaInQuantums: Big = Big(
+      result.oldOrder!.order!.quantums.toString(),
+    ).minus(
+      result.oldTotalFilledQuantums!,
+    );
+    return sizeDeltaInQuantums;
   }
 
   /**
