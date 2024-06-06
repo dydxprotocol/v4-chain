@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -234,6 +235,10 @@ func CleanupCustomNetwork() {
 		panic(fmt.Sprintf("Failed to remove Docker container: %v", err))
 	}
 	fmt.Println("Removed Docker container")
+
+	if isAnvilRunning() {
+		cleanUpAnvil()
+	}
 	time.Sleep(5 * time.Second)
 }
 
@@ -245,4 +250,37 @@ func QueryCustomNetwork(query string) ([]byte, string, error) {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	return out.Bytes(), stderr.String(), err
+}
+
+func isAnvilRunning() bool {
+	cmd := exec.Command("bash", "-c", "docker ps --format '{{.Names}}'")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to check if anvil is running: %v", err))
+	}
+
+	containers := strings.Split(out.String(), "\n")
+	for _, container := range containers {
+		if container == "anvil" {
+			return true
+		}
+	}
+	return false
+
+}
+
+func cleanUpAnvil() {
+	stopCmd := exec.Command("bash", "-c", "docker stop anvil")
+	if err := stopCmd.Run(); err != nil {
+		panic(fmt.Sprintf("Failed to stop anvil container: %v", err))
+	}
+	fmt.Println("Stopped anvil container")
+	// Remove the Docker container
+	removeCmd := exec.Command("bash", "-c", "docker rm anvil")
+	if err := removeCmd.Run(); err != nil {
+		panic(fmt.Sprintf("Failed to remove anvil container: %v", err))
+	}
+	fmt.Println("Removed anvil container")
 }
