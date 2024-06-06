@@ -351,6 +351,8 @@ export interface HistoricalFundingPaymentResponse {
 
 export interface HistoricalFundingPaymentResponseObject {
   ticker: string,
+  payment: string,
+  effectiveAt: IsoString
 }
 
 /* ------- GET REQUEST TYPES ------- */
@@ -480,6 +482,8 @@ export interface SparklinesRequest {
 
 export interface HistoricalFundingRequest extends LimitAndEffectiveBeforeRequest {
   ticker: string,
+  address: string,
+  subaccountNumber: number;
 }
 
 /* ------- COLLATERALIZATION TYPES ------- */

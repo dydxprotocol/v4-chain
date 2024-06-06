@@ -607,10 +607,18 @@
         "properties": {
           "ticker": {
             "type": "string"
+          },
+          "payment": {
+            "type": "string"
+          },
+          "effectiveAt": {
+            "$ref": "#/components/schemas/IsoString"
           }
         },
         "required": [
-          "ticker"
+          "ticker",
+          "payment",
+          "effectiveAt"
         ],
         "type": "object",
         "additionalProperties": false
@@ -1936,6 +1944,23 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
             }
           }
         ]

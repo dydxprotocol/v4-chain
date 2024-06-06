@@ -1151,7 +1151,9 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/historicalFundingPayment/{ticker}', headers = headers)
+r = requests.get('https://dydx-testnet.imperator.co/v4/historicalFundingPayment/{ticker}', params={
+  'address': 'string',  'subaccountNumber': '0'
+}, headers = headers)
 
 print(r.json())
 
@@ -1163,7 +1165,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://dydx-testnet.imperator.co/v4/historicalFundingPayment/{ticker}',
+fetch('https://dydx-testnet.imperator.co/v4/historicalFundingPayment/{ticker}?address=string&subaccountNumber=0',
 {
   method: 'GET',
 
@@ -1184,6 +1186,8 @@ fetch('https://dydx-testnet.imperator.co/v4/historicalFundingPayment/{ticker}',
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
 |ticker|path|string|true|none|
+|address|query|string|true|none|
+|subaccountNumber|query|number(double)|true|none|
 
 > Example responses
 
@@ -1193,7 +1197,9 @@ fetch('https://dydx-testnet.imperator.co/v4/historicalFundingPayment/{ticker}',
 {
   "historicalFundingPayments": [
     {
-      "ticker": "string"
+      "ticker": "string",
+      "payment": "string",
+      "effectiveAt": "string"
     }
   ]
 }
@@ -3804,7 +3810,9 @@ This operation does not require authentication
 
 ```json
 {
-  "ticker": "string"
+  "ticker": "string",
+  "payment": "string",
+  "effectiveAt": "string"
 }
 
 ```
@@ -3814,6 +3822,8 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |ticker|string|true|none|none|
+|payment|string|true|none|none|
+|effectiveAt|[IsoString](#schemaisostring)|true|none|none|
 
 ## HistoricalFundingPaymentResponse
 
@@ -3826,7 +3836,9 @@ This operation does not require authentication
 {
   "historicalFundingPayments": [
     {
-      "ticker": "string"
+      "ticker": "string",
+      "payment": "string",
+      "effectiveAt": "string"
     }
   ]
 }

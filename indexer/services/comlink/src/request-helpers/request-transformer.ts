@@ -27,6 +27,8 @@ import {
   TransferFromDatabase,
   TransferType,
   parentSubaccountHelpers,
+  IsoString,
+  PerpetualPositionFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, PriceLevel } from '@dydxprotocol-indexer/redis';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
@@ -40,6 +42,7 @@ import {
   CandleResponseObject,
   FillResponseObject,
   HistoricalBlockTradingReward,
+  HistoricalFundingPaymentResponseObject,
   HistoricalFundingResponseObject,
   HistoricalTradingRewardAggregation,
   MarketAndTypeByClobPairId,
@@ -179,6 +182,18 @@ export function historicalFundingToResponseObject(
     price: funding.oraclePrice,
     effectiveAtHeight: funding.effectiveAtHeight,
     effectiveAt: funding.effectiveAt,
+  };
+}
+
+export function perpetualPositionToFundingPaymentResponseObject(
+  ticker: string,
+  payment: string,
+  effectiveAt: string,
+): HistoricalFundingPaymentResponseObject {
+  return {
+    ticker,
+    payment,
+    effectiveAt,
   };
 }
 
