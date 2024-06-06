@@ -127,14 +127,14 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 						Snapshot: snapshot,
 					},
 				},
+				BlockHeight: blockHeight,
+				ExecMode:    uint32(execMode),
 			},
 		}
 	}
 
 	sm.sendStreamUpdate(
 		updatesByClobPairId,
-		blockHeight,
-		execMode,
 	)
 }
 
@@ -166,22 +166,20 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 			UpdateMessage: &clobtypes.StreamUpdate_OrderFill{
 				OrderFill: &orderbookFill,
 			},
+			BlockHeight: blockHeight,
+			ExecMode:    uint32(execMode),
 		}
 		updatesByClobPairId[clobPairId] = append(updatesByClobPairId[clobPairId], streamUpdate)
 	}
 
 	sm.sendStreamUpdate(
 		updatesByClobPairId,
-		blockHeight,
-		execMode,
 	)
 }
 
 // sendStreamUpdate takes in a map of clob pair id to stream updates and emits them to subscribers.
 func (sm *GrpcStreamingManagerImpl) sendStreamUpdate(
 	updatesByClobPairId map[uint32][]clobtypes.StreamUpdate,
-	blockHeight uint32,
-	execMode sdk.ExecMode,
 ) {
 	metrics.IncrCounter(
 		metrics.GrpcEmitProtocolUpdateCount,
@@ -208,9 +206,7 @@ func (sm *GrpcStreamingManagerImpl) sendStreamUpdate(
 			)
 			if err := subscription.srv.Send(
 				&clobtypes.StreamOrderbookUpdatesResponse{
-					Updates:     streamUpdatesForSubscription,
-					BlockHeight: blockHeight,
-					ExecMode:    uint32(execMode),
+					Updates: streamUpdatesForSubscription,
 				},
 			); err != nil {
 				idsToRemove = append(idsToRemove, id)
