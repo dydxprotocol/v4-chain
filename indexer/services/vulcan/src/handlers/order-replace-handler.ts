@@ -131,7 +131,7 @@ export class OrderReplaceHandler extends Handler {
         dbOrder = await OrderTable.findById(orderUuid);
         if (dbOrder === undefined) {
           logger.crit({
-            at: 'OrderPlaceHandler#createSubaccountWebsocketMessage',
+            at: 'OrderReplaceHandler#createSubaccountWebsocketMessage',
             message: 'Stateful order not found in database',
           });
           throw new Error(`Stateful order not found in database: ${orderUuid}`);
