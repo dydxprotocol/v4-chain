@@ -124,16 +124,17 @@ export class OrderReplaceHandler extends Handler {
     if (
       removeOrderResult.removed &&
       removeOrderResult.restingOnBook === true &&
-      !requiresImmediateExecution(removeOrderResult.removedOrder!.order!.timeInForce)) {
-
-      if (redisOrder.price === removeOrderResult.removedOrder!.price) {
-        // Don't send orderbook message to prevent flickering because the order update will send the
-        // correct update
-        await this.removeOldOrderFromOrderbook(removeOrderResult, perpetualMarket, headers, false);
-
-      } else {
-        await this.removeOldOrderFromOrderbook(removeOrderResult, perpetualMarket, headers, true);
-      }
+      !requiresImmediateExecution(removeOrderResult.removedOrder!.order!.timeInForce)
+    ) {
+      // Don't send orderbook message if price is the same to prevent flickering because
+      // the order update will send the correct update
+      const sendOrderbookMessage = (redisOrder.price === removeOrderResult.removedOrder!.price);
+      await this.removeOldOrderFromOrderbook(
+        removeOrderResult,
+        perpetualMarket,
+        headers,
+        sendOrderbookMessage,
+      );
     }
 
     stats.increment(`${config.SERVICE_NAME}.replace_order_handler.replaced_order`, 1);
