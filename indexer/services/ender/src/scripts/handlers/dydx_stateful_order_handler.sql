@@ -141,8 +141,8 @@ BEGIN
     ELSE
         RAISE EXCEPTION 'Unkonwn sub-event type %', event_data;
     END IF;
-END;
-BEGIN /* For order replacement, remove old order */
+
+    /* For order replacement, remove old order */
     IF event_data->'orderReplacement' IS NOT NULL THEN
         order_id = event_data->'orderReplacement'->'oldOrderId';
         order_record."status" = 'CANCELED';
