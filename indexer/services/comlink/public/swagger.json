@@ -605,18 +605,14 @@
       },
       "HistoricalFundingPaymentResponseObject": {
         "properties": {
-          "ticker": {
-            "type": "string"
-          },
           "payment": {
             "type": "string"
           },
           "effectiveAt": {
-            "$ref": "#/components/schemas/IsoString"
+            "type": "string"
           }
         },
         "required": [
-          "ticker",
           "payment",
           "effectiveAt"
         ],
@@ -625,7 +621,10 @@
       },
       "HistoricalFundingPaymentResponse": {
         "properties": {
-          "historicalFundingPayments": {
+          "ticker": {
+            "type": "string"
+          },
+          "fundingPayments": {
             "items": {
               "$ref": "#/components/schemas/HistoricalFundingPaymentResponseObject"
             },
@@ -633,7 +632,8 @@
           }
         },
         "required": [
-          "historicalFundingPayments"
+          "ticker",
+          "fundingPayments"
         ],
         "type": "object",
         "additionalProperties": false

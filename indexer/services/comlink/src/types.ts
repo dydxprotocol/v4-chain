@@ -346,13 +346,13 @@ export interface HistoricalFundingResponseObject {
 }
 
 export interface HistoricalFundingPaymentResponse {
-  historicalFundingPayments: HistoricalFundingPaymentResponseObject[],
+  ticker: string,
+  fundingPayments: HistoricalFundingPaymentResponseObject[],
 }
 
 export interface HistoricalFundingPaymentResponseObject {
-  ticker: string,
   payment: string,
-  effectiveAt: IsoString
+  effectiveAt: string,
 }
 
 /* ------- GET REQUEST TYPES ------- */

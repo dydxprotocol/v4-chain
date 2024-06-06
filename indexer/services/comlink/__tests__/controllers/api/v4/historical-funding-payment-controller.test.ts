@@ -12,7 +12,12 @@ import {
   PerpetualPositionTable,
   PerpetualPositionCreateObject,
 } from '@dydxprotocol-indexer/postgres';
-import { defaultPerpetualPosition } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import {
+  defaultPerpetualPosition,
+  defaultClosedPerpetualPosition,
+  createdDateTime,
+} from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import { create } from 'lodash';
 
 describe('historical-funding-payment-controller#V4', () => {
   // TODO:(ADAM) - Clean up this, see which updates you actually need
@@ -54,22 +59,23 @@ describe('historical-funding-payment-controller#V4', () => {
     ]);
     await perpetualMarketRefresher.updatePerpetualMarkets();
 
-    const perpetualPosition1: PerpetualPositionCreateObject = {
-      ...testConstants.defaultPerpetualPosition,
+    const closedPosition1: PerpetualPositionCreateObject = {
+      ...testConstants.defaultClosedPerpetualPosition,
       openEventId: testConstants.defaultTendermintEventId2,
       settledFunding: '100',
     };
 
-    const perpetualPosition2: PerpetualPositionCreateObject = {
-      ...testConstants.defaultPerpetualPosition,
+    const closedPosition2: PerpetualPositionCreateObject = {
+      ...testConstants.defaultClosedPerpetualPosition,
       openEventId: testConstants.defaultTendermintEventId3,
       settledFunding: '200',
     };
 
+
     await Promise.all([
       PerpetualPositionTable.create(defaultPerpetualPosition),
-      PerpetualPositionTable.create(perpetualPosition1),
-      PerpetualPositionTable.create(perpetualPosition2),
+      PerpetualPositionTable.create(closedPosition1),
+      PerpetualPositionTable.create(closedPosition2),
       PerpetualPositionTable.create({
         ...defaultPerpetualPosition,
         subaccountId: testConstants.defaultSubaccountId2,
@@ -91,11 +97,17 @@ describe('historical-funding-payment-controller#V4', () => {
     });
 
     const res = {
-      historicalFundingPayments: [{
-        ticker: testConstants.defaultPerpetualMarket.ticker,
-        payment: '200',
-        effectiveAt: '2021-01-01T00:00:00.000Z',
-      }],
+      ticker: testConstants.defaultPerpetualMarket.ticker,
+      fundingPayments: [
+        {
+          payment: '200',
+          effectiveAt: createdDateTime.toISO(),
+        },
+        {
+          payment: '100',
+          effectiveAt: createdDateTime.toISO(),
+        },
+      ],
     };
 
     expect(response.body).toEqual(res);

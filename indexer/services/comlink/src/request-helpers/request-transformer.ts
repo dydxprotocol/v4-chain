@@ -185,18 +185,6 @@ export function historicalFundingToResponseObject(
   };
 }
 
-export function perpetualPositionToFundingPaymentResponseObject(
-  ticker: string,
-  payment: string,
-  effectiveAt: string,
-): HistoricalFundingPaymentResponseObject {
-  return {
-    ticker,
-    payment,
-    effectiveAt,
-  };
-}
-
 export function fillToTradeResponseObject(
   fill: FillFromDatabase,
 ): TradeResponseObject {

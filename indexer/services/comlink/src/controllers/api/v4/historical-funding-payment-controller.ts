@@ -4,6 +4,7 @@ import {
   DEFAULT_POSTGRES_OPTIONS,
   PerpetualMarketFromDatabase,
   PerpetualMarketTable,
+  PerpetualPositionStatus,
   PerpetualPositionTable,
   SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
@@ -37,8 +38,6 @@ class HistoricalFundingPaymentController extends Controller {
   ): Promise<HistoricalFundingPaymentResponse> {
     const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
 
-    log(subaccountId);
-
     const perpetualMarket: (
       PerpetualMarketFromDatabase | undefined
     ) = await PerpetualMarketTable.findByTicker(ticker);
@@ -47,23 +46,25 @@ class HistoricalFundingPaymentController extends Controller {
       throw new NotFoundError(`${ticker} not found in markets of type ${MarketType.PERPETUAL}`);
     }
 
-    const settledFunding = await PerpetualPositionTable.findAll({
+    const settledPositions = await PerpetualPositionTable.findAll({
       subaccountId: [subaccountId],
       perpetualId: [perpetualMarket?.id],
+      status: [PerpetualPositionStatus.CLOSED],
     },
     [],
     {
       ...DEFAULT_POSTGRES_OPTIONS,
     },
     );
-    log(settledFunding);
 
     return {
-      historicalFundingPayments: [{
-        ticker,
-        payment: '200',
-        effectiveAt: '2021-01-01T00:00:00.000Z',
-      }],
+      ticker,
+      fundingPayments: settledPositions.map((position) => {
+        return {
+          payment: position.settledFunding,
+          effectiveAt: position.closedAt!,
+        };
+      }),
     };
   }
 }

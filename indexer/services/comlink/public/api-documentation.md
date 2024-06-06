@@ -1195,9 +1195,9 @@ fetch('https://dydx-testnet.imperator.co/v4/historicalFundingPayment/{ticker}?ad
 
 ```json
 {
-  "historicalFundingPayments": [
+  "ticker": "string",
+  "fundingPayments": [
     {
-      "ticker": "string",
       "payment": "string",
       "effectiveAt": "string"
     }
@@ -3810,7 +3810,6 @@ This operation does not require authentication
 
 ```json
 {
-  "ticker": "string",
   "payment": "string",
   "effectiveAt": "string"
 }
@@ -3821,9 +3820,8 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|ticker|string|true|none|none|
 |payment|string|true|none|none|
-|effectiveAt|[IsoString](#schemaisostring)|true|none|none|
+|effectiveAt|string|true|none|none|
 
 ## HistoricalFundingPaymentResponse
 
@@ -3834,9 +3832,9 @@ This operation does not require authentication
 
 ```json
 {
-  "historicalFundingPayments": [
+  "ticker": "string",
+  "fundingPayments": [
     {
-      "ticker": "string",
       "payment": "string",
       "effectiveAt": "string"
     }
@@ -3849,7 +3847,8 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|historicalFundingPayments|[[HistoricalFundingPaymentResponseObject](#schemahistoricalfundingpaymentresponseobject)]|true|none|none|
+|ticker|string|true|none|none|
+|fundingPayments|[[HistoricalFundingPaymentResponseObject](#schemahistoricalfundingpaymentresponseobject)]|true|none|none|
 
 ## PnlTicksResponseObject
 
