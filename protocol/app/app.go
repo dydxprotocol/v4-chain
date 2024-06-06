@@ -1106,7 +1106,6 @@ func New(
 		keys[listingmoduletypes.StoreKey],
 		[]string{
 			lib.GovModuleAddress.String(),
-			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
