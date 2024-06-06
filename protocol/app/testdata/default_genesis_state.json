@@ -338,6 +338,7 @@
       "port": "icahost"
     }
   },
+  "listing": {},
   "params": null,
   "perpetuals": {
     "perpetuals": [],

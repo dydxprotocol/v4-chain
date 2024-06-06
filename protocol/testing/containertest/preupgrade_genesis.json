@@ -1180,6 +1180,7 @@
       "constitution": ""
     },
     "govplus": {},
+    "listing": {},
     "ibc": {
       "client_genesis": {
         "clients": [],

@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	listingmodule "github.com/dydxprotocol/v4-chain/protocol/x/listing"
+
 	evidencemodule "cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
@@ -214,6 +216,7 @@ func TestModuleBasics(t *testing.T) {
 		epochsmodule.AppModuleBasic{},
 		ratelimitmodule.AppModuleBasic{},
 		vaultmodule.AppModuleBasic{},
+		listingmodule.AppModuleBasic{},
 	)
 
 	app := testapp.DefaultTestApp(nil)
