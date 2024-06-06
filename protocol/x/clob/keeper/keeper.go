@@ -215,7 +215,6 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 
 	// Initialize all the necessary memory stores.
 	for _, keyPrefix := range []string{
-		types.OrderAmountFilledKeyPrefix,
 		types.StatefulOrderKeyPrefix,
 	} {
 		// Retrieve an instance of the memstore.
