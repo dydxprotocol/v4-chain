@@ -123,9 +123,6 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		// Otherwise, send an order place message only.
 		replacedOrder := replacedOrders[i]
 		if replacedOrder != nil && replacedOrder.OrderId == order.OrderId && replacedOrder.Subticks != order.Subticks {
-			vaultId.IncrCounter(
-				metrics.VaultPlaceOrderDifferentPrice,
-			)
 			k.GetIndexerEventManager().AddTxnEvent(
 				ctx,
 				indexerevents.SubtypeStatefulOrder,
