@@ -3,13 +3,19 @@ import { DeepPartial } from "../../helpers";
 /** GenesisState defines `x/listing`'s genesis state. */
 
 export interface GenesisState {
-  /** permissionless_listing_enabled defines whether permissionless listing is enabled. */
+  /**
+   * permissionless_listing_enabled defines whether permissionless listing is
+   * enabled.
+   */
   permissionlessListingEnabled: boolean;
 }
 /** GenesisState defines `x/listing`'s genesis state. */
 
 export interface GenesisStateSDKType {
-  /** permissionless_listing_enabled defines whether permissionless listing is enabled. */
+  /**
+   * permissionless_listing_enabled defines whether permissionless listing is
+   * enabled.
+   */
   permissionless_listing_enabled: boolean;
 }
 

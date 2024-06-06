@@ -1,6 +1,9 @@
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
-/** MsgEnablePermissionlessMarketListing is used to enable/disable permissionless // market listing */
+/**
+ * MsgEnablePermissionlessMarketListing is used to enable/disable permissionless
+ * market listing
+ */
 
 export interface MsgEnablePermissionlessMarketListing {
   authority: string;
@@ -8,7 +11,10 @@ export interface MsgEnablePermissionlessMarketListing {
 
   enablePermissionlessMarketListing: boolean;
 }
-/** MsgEnablePermissionlessMarketListing is used to enable/disable permissionless // market listing */
+/**
+ * MsgEnablePermissionlessMarketListing is used to enable/disable permissionless
+ * market listing
+ */
 
 export interface MsgEnablePermissionlessMarketListingSDKType {
   authority: string;
@@ -16,10 +22,16 @@ export interface MsgEnablePermissionlessMarketListingSDKType {
 
   enable_permissionless_market_listing: boolean;
 }
-/** MsgEnablePermissionlessMarketListingResponse defines the MsgEnablePermissionlessMarketListing response */
+/**
+ * MsgEnablePermissionlessMarketListingResponse defines the
+ * MsgEnablePermissionlessMarketListing response
+ */
 
 export interface MsgEnablePermissionlessMarketListingResponse {}
-/** MsgEnablePermissionlessMarketListingResponse defines the MsgEnablePermissionlessMarketListing response */
+/**
+ * MsgEnablePermissionlessMarketListingResponse defines the
+ * MsgEnablePermissionlessMarketListing response
+ */
 
 export interface MsgEnablePermissionlessMarketListingResponseSDKType {}
 

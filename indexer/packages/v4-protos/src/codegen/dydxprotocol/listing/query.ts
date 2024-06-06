@@ -9,11 +9,13 @@ export interface QueryPermissionlessMarketListingStatusSDKType {}
 /** Response type indicating if permissionless listings are enabled */
 
 export interface QueryPermissionlessMarketListingStatusResponse {
+  /** Response type indicating if permissionless listings are enabled */
   enabled: boolean;
 }
 /** Response type indicating if permissionless listings are enabled */
 
 export interface QueryPermissionlessMarketListingStatusResponseSDKType {
+  /** Response type indicating if permissionless listings are enabled */
   enabled: boolean;
 }
 
