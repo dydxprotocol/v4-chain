@@ -366,6 +366,11 @@ func (k Keeper) GetVaultClobOrders(
 // GetVaultClobOrderClientId returns the client ID for a CLOB order where
 // - 1st bit is `side-1` (subtract 1 as buy_side = 1, sell_side = 2)
 //
+// - 2nd bit is `block height % 2`
+//   - block height bit alternates between 0 and 1 to ensure that client IDs
+//     are different in two consecutive blocks (otherwise, order placement would
+//     fail because the same order IDs are already marked for cancellation)
+//
 // - next 8 bits are `layer`
 func (k Keeper) GetVaultClobOrderClientId(
 	ctx sdk.Context,
@@ -375,9 +380,12 @@ func (k Keeper) GetVaultClobOrderClientId(
 	sideBit := uint32(side - 1)
 	sideBit <<= 31
 
-	layerBits := uint32(layer) << 23
+	blockHeightBit := uint32(ctx.BlockHeight() % 2)
+	blockHeightBit <<= 30
 
-	return sideBit | layerBits
+	layerBits := uint32(layer) << 22
+
+	return sideBit | blockHeightBit | layerBits
 }
 
 // PlaceVaultClobOrder places a vault CLOB order as an order internal to the protocol,
