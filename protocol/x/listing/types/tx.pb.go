@@ -29,7 +29,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgEnablePermissionlessMarketListing is used to enable/disable permissionless // market listing
+// MsgEnablePermissionlessMarketListing is used to enable/disable permissionless
+// market listing
 type MsgEnablePermissionlessMarketListing struct {
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// boolean flag to enable/disable permissionless market listing
@@ -83,7 +84,8 @@ func (m *MsgEnablePermissionlessMarketListing) GetEnablePermissionlessMarketList
 	return false
 }
 
-// MsgEnablePermissionlessMarketListingResponse defines the MsgEnablePermissionlessMarketListing response
+// MsgEnablePermissionlessMarketListingResponse defines the
+// MsgEnablePermissionlessMarketListing response
 type MsgEnablePermissionlessMarketListingResponse struct {
 }
 
@@ -167,7 +169,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// EnablePermissionlessMarketListing enables/disables permissionless market listing
+	// EnablePermissionlessMarketListing enables/disables permissionless market
+	// listing
 	EnablePermissionlessMarketListing(ctx context.Context, in *MsgEnablePermissionlessMarketListing, opts ...grpc.CallOption) (*MsgEnablePermissionlessMarketListingResponse, error)
 }
 
@@ -190,7 +193,8 @@ func (c *msgClient) EnablePermissionlessMarketListing(ctx context.Context, in *M
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// EnablePermissionlessMarketListing enables/disables permissionless market listing
+	// EnablePermissionlessMarketListing enables/disables permissionless market
+	// listing
 	EnablePermissionlessMarketListing(context.Context, *MsgEnablePermissionlessMarketListing) (*MsgEnablePermissionlessMarketListingResponse, error)
 }
 

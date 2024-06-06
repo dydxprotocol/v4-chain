@@ -24,7 +24,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines `x/listing`'s genesis state.
 type GenesisState struct {
-	// permissionless_listing_enabled defines whether permissionless listing is enabled.
+	// permissionless_listing_enabled defines whether permissionless listing is
+	// enabled.
 	PermissionlessListingEnabled bool `protobuf:"varint,1,opt,name=permissionless_listing_enabled,json=permissionlessListingEnabled,proto3" json:"permissionless_listing_enabled,omitempty"`
 }
 
