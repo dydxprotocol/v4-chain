@@ -72,7 +72,6 @@ func NewGrpcStreamingManager(
 		for {
 			select {
 			case <-grpcStreamingManager.ticker.C:
-				// fix this with values
 				grpcStreamingManager.FlushStreamUpdates()
 			case <-grpcStreamingManager.done:
 				return

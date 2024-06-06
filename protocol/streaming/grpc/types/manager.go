@@ -7,7 +7,7 @@ import (
 
 type GrpcStreamingManager interface {
 	Enabled() bool
-
+	Stop()
 	// L3+ Orderbook updates.
 	Subscribe(
 		req clobtypes.StreamOrderbookUpdatesRequest,

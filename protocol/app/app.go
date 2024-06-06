@@ -458,6 +458,9 @@ func New(
 			if app.SlinkyClient != nil {
 				app.SlinkyClient.Stop()
 			}
+			if app.GrpcStreamingManager != nil {
+				app.GrpcStreamingManager.Stop()
+			}
 			return nil
 		},
 	)

@@ -46,3 +46,6 @@ func (sm *NoopGrpcStreamingManager) SendOrderbookFillUpdates(
 func (sm *NoopGrpcStreamingManager) GetUninitializedClobPairIds() []uint32 {
 	return []uint32{}
 }
+
+func (sm *NoopGrpcStreamingManager) Stop() {
+}
