@@ -40,7 +40,6 @@ import {
   SubaccountOrderIdsCache,
   CanceledOrdersCache,
   updateOrder,
-  StatefulOrderUpdatesCache,
   CanceledOrderStatus,
 } from '@dydxprotocol-indexer/redis';
 import {
@@ -51,7 +50,6 @@ import {
   RedisOrder,
   SubaccountId,
   SubaccountMessage,
-  OrderUpdateV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import Long from 'long';
@@ -59,7 +57,7 @@ import { redisClient, redisClient as client } from '../../src/helpers/redis/redi
 import { onMessage } from '../../src/lib/on-message';
 import { expectCanceledOrderStatus, handleInitialOrderPlace } from '../helpers/helpers';
 import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
-import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
+import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import { defaultKafkaHeaders } from '../helpers/constants';
 import config from '../../src/config';
 import { defaultOrderId, defaultOrderIdConditional, defaultOrderIdGoodTilBlockTime } from '@dydxprotocol-indexer/redis/build/__tests__/helpers/constants';
@@ -666,7 +664,7 @@ describe('order-replace-handler', () => {
       [
         'missing order id',
         {
-            orderReplace: {
+          orderReplace: {
             ...redisTestConstants.orderReplace.orderReplace,
             order: {
               ...redisTestConstants.defaultOrder,
@@ -679,7 +677,7 @@ describe('order-replace-handler', () => {
       [
         'missing order id',
         {
-            orderReplace: {
+          orderReplace: {
             ...redisTestConstants.orderReplace.orderReplace,
             order: {
               ...redisTestConstants.defaultOrder,
