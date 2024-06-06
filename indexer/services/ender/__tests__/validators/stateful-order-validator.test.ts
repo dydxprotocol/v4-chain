@@ -59,7 +59,7 @@ describe('stateful-order-validator', () => {
         'does not contain any event',
         {},
         'One of orderPlace, orderRemoval, conditionalOrderPlacement, ' +
-        'conditionalOrderTriggered, longTermOrderPlacement must be defined in StatefulOrderEvent',
+        'conditionalOrderTriggered, longTermOrderPlacement, orderReplacement must be defined in StatefulOrderEvent',
       ],
 
       // TODO(IND-334): Remove tests after deprecating StatefulOrderPlacement events
