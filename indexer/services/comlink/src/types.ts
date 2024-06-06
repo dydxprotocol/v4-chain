@@ -345,6 +345,14 @@ export interface HistoricalFundingResponseObject {
   effectiveAtHeight: string,
 }
 
+export interface HistoricalFundingPaymentResponse {
+  historicalFundingPayments: HistoricalFundingPaymentResponseObject[],
+}
+
+export interface HistoricalFundingPaymentResponseObject {
+  ticker: string,
+}
+
 /* ------- GET REQUEST TYPES ------- */
 
 export interface AddressRequest {

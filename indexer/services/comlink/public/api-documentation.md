@@ -1139,6 +1139,76 @@ fetch('https://dydx-testnet.imperator.co/v4/historicalFunding/{ticker}',
 This operation does not require authentication
 </aside>
 
+## GetHistoricalFundingPayment
+
+<a id="opIdGetHistoricalFundingPayment"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://dydx-testnet.imperator.co/v4/historicalFundingPayment/{ticker}', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://dydx-testnet.imperator.co/v4/historicalFundingPayment/{ticker}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /historicalFundingPayment/{ticker}`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|ticker|path|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "historicalFundingPayments": [
+    {
+      "ticker": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[HistoricalFundingPaymentResponse](#schemahistoricalfundingpaymentresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetHistoricalPnl
 
 <a id="opIdGetHistoricalPnl"></a>
@@ -3724,6 +3794,50 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |historicalFunding|[[HistoricalFundingResponseObject](#schemahistoricalfundingresponseobject)]|true|none|none|
+
+## HistoricalFundingPaymentResponseObject
+
+<a id="schemahistoricalfundingpaymentresponseobject"></a>
+<a id="schema_HistoricalFundingPaymentResponseObject"></a>
+<a id="tocShistoricalfundingpaymentresponseobject"></a>
+<a id="tocshistoricalfundingpaymentresponseobject"></a>
+
+```json
+{
+  "ticker": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|ticker|string|true|none|none|
+
+## HistoricalFundingPaymentResponse
+
+<a id="schemahistoricalfundingpaymentresponse"></a>
+<a id="schema_HistoricalFundingPaymentResponse"></a>
+<a id="tocShistoricalfundingpaymentresponse"></a>
+<a id="tocshistoricalfundingpaymentresponse"></a>
+
+```json
+{
+  "historicalFundingPayments": [
+    {
+      "ticker": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|historicalFundingPayments|[[HistoricalFundingPaymentResponseObject](#schemahistoricalfundingpaymentresponseobject)]|true|none|none|
 
 ## PnlTicksResponseObject
 

@@ -603,6 +603,33 @@
         "type": "object",
         "additionalProperties": false
       },
+      "HistoricalFundingPaymentResponseObject": {
+        "properties": {
+          "ticker": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticker"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "HistoricalFundingPaymentResponse": {
+        "properties": {
+          "historicalFundingPayments": {
+            "items": {
+              "$ref": "#/components/schemas/HistoricalFundingPaymentResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "historicalFundingPayments"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "PnlTicksResponseObject": {
         "properties": {
           "id": {
@@ -1881,6 +1908,34 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    },
+    "/historicalFundingPayment/{ticker}": {
+      "get": {
+        "operationId": "GetHistoricalFundingPayment",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoricalFundingPaymentResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticker",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ]
