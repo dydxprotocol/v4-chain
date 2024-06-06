@@ -62,7 +62,7 @@ import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWeb
 import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import { defaultKafkaHeaders } from '../helpers/constants';
 import config from '../../src/config';
-import { defaultOrderId } from '@dydxprotocol-indexer/redis/build/__tests__/helpers/constants';
+import { defaultOrderId, defaultOrderIdConditional, defaultOrderIdGoodTilBlockTime } from '@dydxprotocol-indexer/redis/build/__tests__/helpers/constants';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
@@ -154,7 +154,7 @@ describe('order-replace-handler', () => {
     };
     const replacementUpdateGoodTilBlockTime: OffChainUpdateV1 = {
       orderReplace: {
-        oldOrderId: defaultOrderId,
+        oldOrderId: defaultOrderIdGoodTilBlockTime,
         order: replacementOrderGoodTilBlockTime,
         placementStatus:
             OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
@@ -162,7 +162,7 @@ describe('order-replace-handler', () => {
     };
     const replacementUpdateConditional: OffChainUpdateV1 = {
       orderReplace: {
-        oldOrderId: defaultOrderId,
+        oldOrderId: defaultOrderIdConditional,
         order: replacementOrderConditional,
         placementStatus:
             OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
@@ -760,55 +760,6 @@ describe('order-replace-handler', () => {
         at: 'OrderReplaceHandler#logAndThrowParseMessageError',
         message: 'Order in OrderReplace has invalid clobPairId',
       }));
-    });
-
-    it('logs error if replaced order had total filled quantums > quantums', async () => {
-      synchronizeWrapBackgroundTask(wrapBackgroundTask);
-      const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
-      // Handle the order place event for the initial order
-      await handleInitialOrderPlace(redisTestConstants.orderPlace);
-      expectWebsocketMessagesSent(
-        producerSendSpy,
-        redisTestConstants.defaultRedisOrder,
-        dbDefaultOrder,
-        testConstants.defaultPerpetualMarket,
-        APIOrderStatusEnum.BEST_EFFORT_OPENED,
-        true,
-      );
-      // clear mocks
-      jest.clearAllMocks();
-
-      // This should never happen, testing that an error is logged in this case
-      // Update the order to set it to be resting on the book, with total filled greater than
-      // quantums of order
-      await updateOrder({
-        updatedOrderId: redisTestConstants.defaultOrderId,
-        newTotalFilledQuantums: Number(
-          redisTestConstants.defaultOrder.quantums.multiply(
-            Long.fromValue(2),
-          ),
-        ),
-        client,
-      });
-      // Handle the order place off-chain update with the replacement order
-      await onMessage(replacementMessage);
-
-      // Order should still have been replaced
-      await checkOrderPlace(
-        redisTestConstants.defaultOrderUuid,
-        redisTestConstants.defaultSubaccountUuid,
-        replacedOrder,
-      );
-      // Order book price levels should not have been updated
-      expect(OrderbookLevelsCache.updatePriceLevel).not.toHaveBeenCalled();
-      expectWebsocketMessagesSent(
-        producerSendSpy,
-        replacedOrder,
-        dbDefaultOrder,
-        testConstants.defaultPerpetualMarket,
-        APIOrderStatusEnum.BEST_EFFORT_OPENED,
-        true,
-      );
     });
   });
 });

@@ -93,6 +93,7 @@ export class OrderReplaceHandler extends Handler {
       // should have been removed before being placed again
       stats.increment(`${config.SERVICE_NAME}.replace_order_handler.place_order_result_replaced_order`, 1);
     }
+
     // If an order was removed from the Orders cache and was resting on the book, update the
     // orderbook levels cache
     // Orders that require immediate execution do not rest on the book, and also should not lead
