@@ -4,4 +4,14 @@ package dydxprotocol.listing;
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/listing/types";
 
 // Query defines the gRPC querier service.
-service Query {}
+service Query {
+  rpc PermissionlessMarketListingStatus(QueryPermissionlessMarketListingStatus) returns (QueryPermissionlessMarketListingStatusResponse);
+}
+
+// Queries if permissionless listings are enabled
+message QueryPermissionlessMarketListingStatus {}
+
+// Response type indicating if permissionless listings are enabled
+message QueryPermissionlessMarketListingStatusResponse {
+  bool enabled = 1;
+}

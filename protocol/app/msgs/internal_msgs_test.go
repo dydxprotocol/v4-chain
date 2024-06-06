@@ -101,6 +101,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.govplus.MsgSlashValidator",
 		"/dydxprotocol.govplus.MsgSlashValidatorResponse",
 
+		// listing
+		"/dydxprotocol.listing.MsgEnablePermissionlessMarketListing",
+		"/dydxprotocol.listing.MsgEnablePermissionlessMarketListingResponse",
+
 		// perpeutals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual",
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse",

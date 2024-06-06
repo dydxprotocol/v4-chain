@@ -196,6 +196,10 @@ var (
 		"/dydxprotocol.govplus.MsgSlashValidator":         {},
 		"/dydxprotocol.govplus.MsgSlashValidatorResponse": {},
 
+		// listing
+		"/dydxprotocol.listing.MsgEnablePermissionlessMarketListing":         {},
+		"/dydxprotocol.listing.MsgEnablePermissionlessMarketListingResponse": {},
+
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":               {},
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse":       {},

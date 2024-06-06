@@ -4,4 +4,7 @@ package dydxprotocol.listing;
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/listing/types";
 
 // GenesisState defines `x/listing`'s genesis state.
-message GenesisState {}
+message GenesisState {
+  // permissionless_listing_enabled defines whether permissionless listing is enabled.
+  bool permissionless_listing_enabled = 1;
+}

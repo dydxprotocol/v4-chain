@@ -8,3 +8,9 @@ const (
 	// StoreKey defines the primary module store key.
 	StoreKey = ModuleName
 )
+
+// State.
+const (
+	// PermissionlessListingEnableKey is the key to retrieve the permissionless listing enable flag.
+	PermissionlessListingEnableKey = "PermissionlessListingEnabled"
+)

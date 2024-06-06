@@ -11,6 +11,7 @@ export const createRPCMsgClient = async ({
     delaymsg: new (await import("./delaymsg/tx.rpc.msg")).MsgClientImpl(rpc),
     feetiers: new (await import("./feetiers/tx.rpc.msg")).MsgClientImpl(rpc),
     govplus: new (await import("./govplus/tx.rpc.msg")).MsgClientImpl(rpc),
+    listing: new (await import("./listing/tx.rpc.msg")).MsgClientImpl(rpc),
     perpetuals: new (await import("./perpetuals/tx.rpc.msg")).MsgClientImpl(rpc),
     prices: new (await import("./prices/tx.rpc.msg")).MsgClientImpl(rpc),
     ratelimit: new (await import("./ratelimit/tx.rpc.msg")).MsgClientImpl(rpc),

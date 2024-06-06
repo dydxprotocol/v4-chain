@@ -1,7 +1,26 @@
 syntax = "proto3";
 package dydxprotocol.listing;
 
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
+import "gogoproto/gogo.proto";
+
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/listing/types";
 
 // Msg defines the Msg service.
-service Msg {}
+service Msg {
+  rpc EnablePermissionlessMarketListing(MsgEnablePermissionlessMarketListing) returns (MsgEnablePermissionlessMarketListingResponse);
+}
+
+// MsgEnablePermissionlessMarketListing is used to enable/disable permissionless // market listing
+message MsgEnablePermissionlessMarketListing {
+  // The address that controls the module (the gov module account).
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // boolean flag to enable/disable permissionless market listing
+  bool enablePermissionlessMarketListing = 2;
+}
+
+message MsgEnablePermissionlessMarketListingResponse {}

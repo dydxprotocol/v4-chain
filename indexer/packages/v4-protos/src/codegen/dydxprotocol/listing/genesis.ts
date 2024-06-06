@@ -2,17 +2,29 @@ import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** GenesisState defines `x/listing`'s genesis state. */
 
-export interface GenesisState {}
+export interface GenesisState {
+  /** permissionless_listing_enabled defines whether permissionless listing is enabled. */
+  permissionlessListingEnabled: boolean;
+}
 /** GenesisState defines `x/listing`'s genesis state. */
 
-export interface GenesisStateSDKType {}
+export interface GenesisStateSDKType {
+  /** permissionless_listing_enabled defines whether permissionless listing is enabled. */
+  permissionless_listing_enabled: boolean;
+}
 
 function createBaseGenesisState(): GenesisState {
-  return {};
+  return {
+    permissionlessListingEnabled: false
+  };
 }
 
 export const GenesisState = {
-  encode(_: GenesisState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+  encode(message: GenesisState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.permissionlessListingEnabled === true) {
+      writer.uint32(8).bool(message.permissionlessListingEnabled);
+    }
+
     return writer;
   },
 
@@ -25,6 +37,10 @@ export const GenesisState = {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
+        case 1:
+          message.permissionlessListingEnabled = reader.bool();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -34,8 +50,9 @@ export const GenesisState = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<GenesisState>): GenesisState {
+  fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = createBaseGenesisState();
+    message.permissionlessListingEnabled = object.permissionlessListingEnabled ?? false;
     return message;
   }
 
