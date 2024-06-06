@@ -117,19 +117,21 @@ export class OrderReplaceHandler extends Handler {
       placeOrderResult,
     });
 
-    if (redisOrder.price === removeOrderResult.removedOrder!.price) {
-      // Don't send orderbook message to prevent flickering because the order update will send the
-      // correct update
-      await this.removeOldOrderFromOrderbook(removeOrderResult, perpetualMarket, headers, false);
-    } else {
-      // If an order was removed from the Orders cache and was resting on the book, update the
-      // orderbook levels cache
-      // Orders that require immediate execution do not rest on the book, and also should not lead
-      // to an update to the orderbook levels cache
-      if (
-        removeOrderResult.removed &&
-        removeOrderResult.restingOnBook === true &&
-        !requiresImmediateExecution(removeOrderResult.removedOrder!.order!.timeInForce)) {
+    // If an order was removed from the Orders cache and was resting on the book, update the
+    // orderbook levels cache
+    // Orders that require immediate execution do not rest on the book, and also should not lead
+    // to an update to the orderbook levels cache
+    if (
+      removeOrderResult.removed &&
+      removeOrderResult.restingOnBook === true &&
+      !requiresImmediateExecution(removeOrderResult.removedOrder!.order!.timeInForce)) {
+
+      if (redisOrder.price === removeOrderResult.removedOrder!.price) {
+        // Don't send orderbook message to prevent flickering because the order update will send the
+        // correct update
+        await this.removeOldOrderFromOrderbook(removeOrderResult, perpetualMarket, headers, false);
+
+      } else {
         await this.removeOldOrderFromOrderbook(removeOrderResult, perpetualMarket, headers, true);
       }
     }
