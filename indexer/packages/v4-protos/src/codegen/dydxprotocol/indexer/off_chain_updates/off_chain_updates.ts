@@ -289,7 +289,7 @@ export interface OrderReplaceV1 {
 /** OrderReplace messages contain the old order ID and the replacement order. */
 
 export interface OrderReplaceV1SDKType {
-  oldOrderId?: IndexerOrderIdSDKType;
+  old_order_id?: IndexerOrderIdSDKType;
   order?: IndexerOrderSDKType;
   placement_status: OrderPlaceV1_OrderPlacementStatusSDKType;
   time_stamp?: Date;
