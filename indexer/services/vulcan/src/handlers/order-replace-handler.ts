@@ -118,6 +118,8 @@ export class OrderReplaceHandler extends Handler {
     });
 
     if (redisOrder.price === removeOrderResult.removedOrder!.price) {
+      // Don't send orderbook message to prevent flickering because the order update will send the
+      // correct update
       await this.removeOldOrderFromOrderbook(removeOrderResult, perpetualMarket, headers, false);
     } else {
       // If an order was removed from the Orders cache and was resting on the book, update the
