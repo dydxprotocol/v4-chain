@@ -21,29 +21,11 @@ func (k Keeper) GetLongTermOrderPlacementStore(ctx sdk.Context) prefix.Store {
 	)
 }
 
-// GetLongTermOrderPlacementMemStore fetches a state store used for creating,
-// reading, updating, and deleting a stateful order placement from state.
-func (k Keeper) GetLongTermOrderPlacementMemStore(ctx sdk.Context) prefix.Store {
-	return prefix.NewStore(
-		ctx.KVStore(k.memKey),
-		[]byte(types.LongTermOrderPlacementKeyPrefix),
-	)
-}
-
 // GetUntriggeredConditionalOrderPlacementStore fetches a state store used for creating,
 // reading, updating, and deleting untriggered conditional order placement from state.
 func (k Keeper) GetUntriggeredConditionalOrderPlacementStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		[]byte(types.UntriggeredConditionalOrderKeyPrefix),
-	)
-}
-
-// GetUntriggeredConditionalOrderPlacementMemStore fetches a state store used for creating,
-// reading, updating, and deleting a stateful order placement from state.
-func (k Keeper) GetUntriggeredConditionalOrderPlacementMemStore(ctx sdk.Context) prefix.Store {
-	return prefix.NewStore(
-		ctx.KVStore(k.memKey),
 		[]byte(types.UntriggeredConditionalOrderKeyPrefix),
 	)
 }
@@ -96,6 +78,7 @@ func (k Keeper) GetTriggeredConditionalOrderPlacementStore(ctx sdk.Context) pref
 	)
 }
 
+<<<<<<< HEAD
 // GetTriggeredConditionalOrderPlacementMemStore fetches a state store used for creating,
 // reading, updating, and deleting a stateful order placement from state.
 func (k Keeper) GetTriggeredConditionalOrderPlacementMemStore(ctx sdk.Context) prefix.Store {
@@ -105,6 +88,10 @@ func (k Keeper) GetTriggeredConditionalOrderPlacementMemStore(ctx sdk.Context) p
 	)
 }
 
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> 242271b9 (Remove unneeded memstores (#1631))
 // getStatefulOrdersTimeSliceStore fetches a state store used for creating,
 // reading, updating, and deleting a stateful order time slice from state.
 func (k Keeper) getStatefulOrdersTimeSliceStore(ctx sdk.Context) prefix.Store {
@@ -114,6 +101,10 @@ func (k Keeper) getStatefulOrdersTimeSliceStore(ctx sdk.Context) prefix.Store {
 	)
 }
 
+<<<<<<< HEAD
+=======
+>>>>>>> 6fe08938 (Remove unneeded memstores (#1631))
+>>>>>>> 242271b9 (Remove unneeded memstores (#1631))
 // getTransientStore fetches a transient store used for reading and
 // updating the transient store.
 func (k Keeper) getTransientStore(ctx sdk.Context) storetypes.KVStore {
@@ -129,21 +120,17 @@ func (k Keeper) getTransientStore(ctx sdk.Context) storetypes.KVStore {
 func (k Keeper) fetchStateStoresForOrder(
 	ctx sdk.Context,
 	orderId types.OrderId,
-) (store prefix.Store, memstore prefix.Store) {
+) prefix.Store {
 	orderId.MustBeStatefulOrder()
 
 	if orderId.IsConditionalOrder() {
 		triggered := k.IsConditionalOrderTriggered(ctx, orderId)
 		if triggered {
-			store = k.GetTriggeredConditionalOrderPlacementStore(ctx)
-			memstore = k.GetTriggeredConditionalOrderPlacementMemStore(ctx)
-			return store, memstore
+			return k.GetTriggeredConditionalOrderPlacementStore(ctx)
 		}
-		store = k.GetUntriggeredConditionalOrderPlacementStore(ctx)
-		memstore = k.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
-		return store, memstore
+		return k.GetUntriggeredConditionalOrderPlacementStore(ctx)
 	} else if orderId.IsLongTermOrder() {
-		return k.GetLongTermOrderPlacementStore(ctx), k.GetLongTermOrderPlacementMemStore(ctx)
+		return k.GetLongTermOrderPlacementStore(ctx)
 	}
 	panic(
 		fmt.Sprintf(

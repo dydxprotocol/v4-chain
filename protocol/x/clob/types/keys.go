@@ -58,8 +58,6 @@ const (
 	StatefulOrdersTimeSlicePrefix = "ExpTm:"
 )
 
-// Store / Memstore
-const (
 	// TriggeredConditionalOrderKeyPrefix is the key to retrieve an triggered conditional order and
 	// information about when it was triggered.
 	TriggeredConditionalOrderKeyPrefix = PlacedStatefulOrderKeyPrefix + "T:"

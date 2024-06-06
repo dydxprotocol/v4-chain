@@ -582,10 +582,6 @@ func TestRemoveOrderFillAmount(t *testing.T) {
 					string(constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20.OrderId.ToStateKey()),
 				types.OrderAmountFilledKeyPrefix +
 					string(constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20.OrderId.ToStateKey()),
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20.OrderId.ToStateKey()),
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.Order_Alice_Num1_Clob0_Id4_Buy10_Price45_GTB20.OrderId.ToStateKey()),
 			},
 		},
 		"SetOrderFillAmount twice and then RemoveOrderFillAmount removes the fill amount": {
@@ -617,12 +613,6 @@ func TestRemoveOrderFillAmount(t *testing.T) {
 					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.ToStateKey()),
 				types.OrderAmountFilledKeyPrefix +
 					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.ToStateKey()),
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.ToStateKey()),
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.ToStateKey()),
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.ToStateKey()),
 			},
 		},
 		"RemoveOrderFillAmount with non-existent order": {
@@ -632,8 +622,6 @@ func TestRemoveOrderFillAmount(t *testing.T) {
 			},
 			expectedExists: false,
 			expectedMultiStoreWrites: []string{
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.ToStateKey()),
 				types.OrderAmountFilledKeyPrefix +
 					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.ToStateKey()),
 			},
@@ -662,12 +650,6 @@ func TestRemoveOrderFillAmount(t *testing.T) {
 			expectedExists:     true,
 			expectedFillAmount: 50,
 			expectedMultiStoreWrites: []string{
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.ToStateKey()),
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.ToStateKey()),
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.ToStateKey()),
 				types.OrderAmountFilledKeyPrefix +
 					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.ToStateKey()),
 				types.OrderAmountFilledKeyPrefix +
@@ -704,12 +686,6 @@ func TestRemoveOrderFillAmount(t *testing.T) {
 			expectedMultiStoreWrites: []string{
 				types.OrderAmountFilledKeyPrefix +
 					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.ToStateKey()),
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId.ToStateKey()),
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId.ToStateKey()),
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId.ToStateKey()),
 				types.OrderAmountFilledKeyPrefix +
 					string(constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId.ToStateKey()),
 				types.OrderAmountFilledKeyPrefix +
