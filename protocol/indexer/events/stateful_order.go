@@ -20,6 +20,23 @@ func NewLongTermOrderPlacementEvent(
 	}
 }
 
+func NewLongTermOrderReplacementEvent(
+	oldOrderId clobtypes.OrderId,
+	order clobtypes.Order,
+) *StatefulOrderEventV1 {
+	oldIndexerOrderId := v1.OrderIdToIndexerOrderId(oldOrderId)
+	indexerOrder := v1.OrderToIndexerOrder(order)
+	orderReplace := StatefulOrderEventV1_LongTermOrderReplacementV1{
+		OldOrderId: &oldIndexerOrderId,
+		Order:      &indexerOrder,
+	}
+	return &StatefulOrderEventV1{
+		Event: &StatefulOrderEventV1_OrderReplace{
+			OrderReplace: &orderReplace,
+		},
+	}
+}
+
 func NewStatefulOrderRemovalEvent(
 	removedOrderId clobtypes.OrderId,
 	reason sharedtypes.OrderRemovalReason,

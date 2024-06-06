@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -84,9 +83,8 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		return err
 	}
 	orderExpirationSeconds := k.GetParams(ctx).OrderExpirationSeconds
-	replacedOrders := make([]*clobtypes.Order, len(ordersToCancel))
-	for i, order := range ordersToCancel {
-		if oldOrderPlacement, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId); exists {
+	for _, order := range ordersToCancel {
+		if _, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId); exists {
 			err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
 				order.OrderId,
 				uint32(ctx.BlockTime().Unix())+orderExpirationSeconds,
@@ -94,7 +92,6 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 			if err != nil {
 				log.ErrorLogWithError(ctx, "Failed to cancel order", err, "order", order, "vaultId", vaultId)
 			}
-			replacedOrders[i] = &oldOrderPlacement.Order
 			vaultId.IncrCounterWithLabels(
 				metrics.VaultCancelOrder,
 				metrics.GetLabelForBoolValue(metrics.Success, err == nil),
@@ -113,38 +110,21 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		if err != nil {
 			log.ErrorLogWithError(ctx, "Failed to place order", err, "order", order, "vaultId", vaultId)
 		}
+
 		vaultId.IncrCounterWithLabels(
 			metrics.VaultPlaceOrder,
 			metrics.GetLabelForBoolValue(metrics.Success, err == nil),
 		)
 
-		// Send indexer messages.
-		// If the price of the old and new orders are different, send a cancel and a place message
-		// Otherwise, send an order place message only.
-		replacedOrder := replacedOrders[i]
-		if replacedOrder != nil && replacedOrder.OrderId == order.OrderId && replacedOrder.Subticks != order.Subticks {
-			vaultId.IncrCounter(
-				metrics.VaultPlaceOrderDifferentPrice,
-			)
-			k.GetIndexerEventManager().AddTxnEvent(
-				ctx,
-				indexerevents.SubtypeStatefulOrder,
-				indexerevents.StatefulOrderEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewStatefulOrderRemovalEvent(
-						replacedOrder.OrderId,
-						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
-					),
-				),
-			)
-		}
-
+		// Send indexer order replace messages.
+		replacedOrder := ordersToCancel[i]
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
 			indexerevents.StatefulOrderEventVersion,
 			indexer_manager.GetBytes(
-				indexerevents.NewLongTermOrderPlacementEvent(
+				indexerevents.NewLongTermOrderReplacementEvent(
+					replacedOrder.OrderId,
 					*order,
 				),
 			),
