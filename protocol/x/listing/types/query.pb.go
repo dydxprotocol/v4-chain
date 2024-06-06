@@ -153,6 +153,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
+	// Queries if permissionless listings are enabled
 	PermissionlessMarketListingStatus(ctx context.Context, in *QueryPermissionlessMarketListingStatus, opts ...grpc.CallOption) (*QueryPermissionlessMarketListingStatusResponse, error)
 }
 
@@ -175,6 +176,7 @@ func (c *queryClient) PermissionlessMarketListingStatus(ctx context.Context, in 
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
+	// Queries if permissionless listings are enabled
 	PermissionlessMarketListingStatus(context.Context, *QueryPermissionlessMarketListingStatus) (*QueryPermissionlessMarketListingStatusResponse, error)
 }
 

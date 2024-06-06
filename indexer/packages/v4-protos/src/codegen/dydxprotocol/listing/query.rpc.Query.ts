@@ -5,6 +5,7 @@ import { QueryPermissionlessMarketListingStatus, QueryPermissionlessMarketListin
 /** Query defines the gRPC querier service. */
 
 export interface Query {
+  /** Queries if permissionless listings are enabled */
   permissionlessMarketListingStatus(request?: QueryPermissionlessMarketListingStatus): Promise<QueryPermissionlessMarketListingStatusResponse>;
 }
 export class QueryClientImpl implements Query {

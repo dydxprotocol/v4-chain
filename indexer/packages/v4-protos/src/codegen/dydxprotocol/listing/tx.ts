@@ -14,9 +14,13 @@ export interface MsgEnablePermissionlessMarketListingSDKType {
   authority: string;
   /** boolean flag to enable/disable permissionless market listing */
 
-  enablePermissionlessMarketListing: boolean;
+  enable_permissionless_market_listing: boolean;
 }
+/** MsgEnablePermissionlessMarketListingResponse defines the MsgEnablePermissionlessMarketListing response */
+
 export interface MsgEnablePermissionlessMarketListingResponse {}
+/** MsgEnablePermissionlessMarketListingResponse defines the MsgEnablePermissionlessMarketListing response */
+
 export interface MsgEnablePermissionlessMarketListingResponseSDKType {}
 
 function createBaseMsgEnablePermissionlessMarketListing(): MsgEnablePermissionlessMarketListing {

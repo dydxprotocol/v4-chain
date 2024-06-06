@@ -15,7 +15,8 @@ func TestQueryPMLEnabledStatus(t *testing.T) {
 	k := tApp.App.ListingKeeper
 
 	// set permissionless listing to true for test
-	k.SetPermissionlessListingEnable(ctx, true)
+	err := k.SetPermissionlessListingEnable(ctx, true)
+	require.NoError(t, err)
 
 	// query permissionless market listing status
 	resp, err := k.PermissionlessMarketListingStatus(ctx, &types.QueryPermissionlessMarketListingStatus{})
