@@ -461,6 +461,26 @@ export const defaultPerpetualPosition: PerpetualPositionCreateObject = {
   settledFunding: '200000',
 };
 
+export const defaultClosedPerpetualPosition: PerpetualPositionCreateObject = {
+  subaccountId: defaultSubaccountId,
+  perpetualId: defaultPerpetualMarket.id,
+  side: PositionSide.LONG,
+  status: PerpetualPositionStatus.CLOSED,
+  size: '10',
+  maxSize: '25',
+  entryPrice: '20000',
+  sumOpen: '10',
+  sumClose: '0',
+  createdAt: createdDateTime.toISO(),
+  closedAt: createdDateTime.toISO(),
+  createdAtHeight: createdHeight,
+  closedAtHeight: createdHeight + 1,
+  openEventId: defaultTendermintEventId,
+  lastEventId: defaultTendermintEventId2,
+  closeEventId: defaultTendermintEventId2,
+  settledFunding: '200000',
+};
+
 export const defaultPerpetualPositionId: string = PerpetualPositionTable.uuid(
   defaultPerpetualPosition.subaccountId,
   defaultPerpetualPosition.openEventId,
