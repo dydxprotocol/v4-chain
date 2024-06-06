@@ -8,11 +8,14 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/listing/types";
 
 // Msg defines the Msg service.
 service Msg {
-  // EnablePermissionlessMarketListing enables/disables permissionless market listing
-  rpc EnablePermissionlessMarketListing(MsgEnablePermissionlessMarketListing) returns (MsgEnablePermissionlessMarketListingResponse);
+  // EnablePermissionlessMarketListing enables/disables permissionless market
+  // listing
+  rpc EnablePermissionlessMarketListing(MsgEnablePermissionlessMarketListing)
+      returns (MsgEnablePermissionlessMarketListingResponse);
 }
 
-// MsgEnablePermissionlessMarketListing is used to enable/disable permissionless // market listing
+// MsgEnablePermissionlessMarketListing is used to enable/disable permissionless
+// market listing
 message MsgEnablePermissionlessMarketListing {
   // The address that controls the module (the gov module account).
   option (cosmos.msg.v1.signer) = "authority";
@@ -23,5 +26,6 @@ message MsgEnablePermissionlessMarketListing {
   bool enable_permissionless_market_listing = 2;
 }
 
-// MsgEnablePermissionlessMarketListingResponse defines the MsgEnablePermissionlessMarketListing response
+// MsgEnablePermissionlessMarketListingResponse defines the
+// MsgEnablePermissionlessMarketListing response
 message MsgEnablePermissionlessMarketListingResponse {}

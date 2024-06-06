@@ -12,7 +12,6 @@ import (
 )
 
 func TestMsgEnablePermissionlessMarketListing(t *testing.T) {
-
 	tests := map[string]struct {
 		// Msg.
 		msg *types.MsgEnablePermissionlessMarketListing
