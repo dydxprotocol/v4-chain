@@ -31,8 +31,8 @@ func NewLongTermOrderReplacementEvent(
 		Order:      &indexerOrder,
 	}
 	return &StatefulOrderEventV1{
-		Event: &StatefulOrderEventV1_OrderReplace{
-			OrderReplace: &orderReplace,
+		Event: &StatefulOrderEventV1_OrderReplacement{
+			OrderReplacement: &orderReplace,
 		},
 	}
 }
