@@ -88,16 +88,15 @@ func (k Keeper) HandleMsgPlaceOrder(
 
 	// 2. Return an error if an associated cancellation or removal already exists in the current block.
 	processProposerMatchesEvents := k.GetProcessProposerMatchesEvents(ctx)
-	if !isInternalOrder { // If vault order, we allow the order to replace a cancelled order with the same order ID
-		cancelledOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
-		if _, found := cancelledOrderIds[order.GetOrderId()]; found {
-			return errorsmod.Wrapf(
-				types.ErrStatefulOrderPreviouslyCancelled,
-				"PlaceOrder: order (%+v)",
-				order,
-			)
-		}
+	cancelledOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
+	if _, found := cancelledOrderIds[order.GetOrderId()]; found {
+		return errorsmod.Wrapf(
+			types.ErrStatefulOrderPreviouslyCancelled,
+			"PlaceOrder: order (%+v)",
+			order,
+		)
 	}
+
 	removedOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
 	if _, found := removedOrderIds[order.GetOrderId()]; found {
 		return errorsmod.Wrapf(

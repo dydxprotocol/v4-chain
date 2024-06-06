@@ -435,12 +435,13 @@ func TestHandleMsgPlaceOrder(t *testing.T) {
 			removalExists:         false,
 			equityTierLimitExists: true,
 		},
-		"Success - Place an Internal Order, Order Already Cancelled": {
+		"Error - Place an Internal Order, Order Already Cancelled": {
 			isInternalOrder:       true,
 			assetQuantums:         -1_000_000_000,
 			cancellationExists:    true,
 			removalExists:         false,
 			equityTierLimitExists: true,
+			expectedError:         types.ErrStatefulOrderPreviouslyCancelled,
 		},
 		"Error - Place an Internal Order, Order Already Removed": {
 			isInternalOrder:       true,
