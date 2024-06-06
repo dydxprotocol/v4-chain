@@ -1933,8 +1933,8 @@ func getGrpcStreamingManagerFromOptions(
 		logger.Info("GRPC streaming is enabled")
 		return streaming.NewGrpcStreamingManager(
 			logger,
-			10,
-			10,
+			appFlags.GrpcStreamingFlushIntervalMs,
+			appFlags.GrpcStreamingMaxBufferSize,
 		)
 	}
 	return streaming.NewNoopGrpcStreamingManager()
