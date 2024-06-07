@@ -871,6 +871,7 @@ const GenesisState = `{
         }
       }
     },
+    "listing": {},
     "perpetuals": {
       "liquidity_tiers": [
         {

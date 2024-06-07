@@ -157,6 +157,9 @@ import (
 	govplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/govplus"
 	govplusmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/govplus/keeper"
 	govplusmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/govplus/types"
+	listingmodule "github.com/dydxprotocol/v4-chain/protocol/x/listing"
+	listingmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
+	listingmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	perpetualsmodule "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	perpetualsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -299,6 +302,8 @@ type App struct {
 
 	FeeTiersKeeper feetiersmodulekeeper.Keeper
 
+	ListingKeeper listingmodulekeeper.Keeper
+
 	PerpetualsKeeper *perpetualsmodulekeeper.Keeper
 
 	VestKeeper vestmodulekeeper.Keeper
@@ -414,6 +419,7 @@ func New(
 		blocktimemoduletypes.StoreKey,
 		bridgemoduletypes.StoreKey,
 		feetiersmoduletypes.StoreKey,
+		listingmoduletypes.StoreKey,
 		perpetualsmoduletypes.StoreKey,
 		satypes.StoreKey,
 		statsmoduletypes.StoreKey,
@@ -1098,6 +1104,15 @@ func New(
 	)
 	vaultModule := vaultmodule.NewAppModule(appCodec, app.VaultKeeper)
 
+	app.ListingKeeper = *listingmodulekeeper.NewKeeper(
+		appCodec,
+		keys[listingmoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+	)
+	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -1166,6 +1181,7 @@ func New(
 		epochsModule,
 		rateLimitModule,
 		vaultModule,
+		listingModule,
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
@@ -1213,6 +1229,7 @@ func New(
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
+		listingmoduletypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
@@ -1253,6 +1270,7 @@ func New(
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
+		listingmoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
@@ -1297,6 +1315,7 @@ func New(
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
+		listingmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
 
@@ -1337,6 +1356,7 @@ func New(
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
+		listingmoduletypes.ModuleName,
 		authz.ModuleName,
 
 		// Auth must be migrated after staking.
