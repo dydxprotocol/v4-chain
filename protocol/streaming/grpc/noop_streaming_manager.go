@@ -27,9 +27,15 @@ func (sm *NoopGrpcStreamingManager) Subscribe(
 	return clobtypes.ErrGrpcStreamingManagerNotEnabled
 }
 
+func (sm *NoopGrpcStreamingManager) SendSnapshot(
+	updates *clobtypes.OffchainUpdates,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
+}
+
 func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
 	updates *clobtypes.OffchainUpdates,
-	snapshot bool,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {

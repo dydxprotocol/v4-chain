@@ -16,9 +16,13 @@ type GrpcStreamingManager interface {
 		err error,
 	)
 	GetUninitializedClobPairIds() []uint32
+	SendSnapshot(
+		offchainUpdates *clobtypes.OffchainUpdates,
+		blockHeight uint32,
+		execMode sdk.ExecMode,
+	)
 	SendOrderbookUpdates(
 		offchainUpdates *clobtypes.OffchainUpdates,
-		snapshot bool,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)

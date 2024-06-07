@@ -130,8 +130,6 @@ func (sm *GrpcStreamingManagerImpl) Stop() {
 // and bypasses the buffer.
 func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 	offchainUpdates *clobtypes.OffchainUpdates,
-	// remove
-	snapshot bool,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
@@ -204,7 +202,6 @@ func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 // sends messages to the subscribers.
 func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	offchainUpdates *clobtypes.OffchainUpdates,
-	snapshot bool,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
@@ -236,7 +233,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 				UpdateMessage: &clobtypes.StreamUpdate_OrderbookUpdate{
 					OrderbookUpdate: &clobtypes.StreamOrderbookUpdate{
 						Updates:  v1updates,
-						Snapshot: snapshot,
+						Snapshot: false,
 					},
 				},
 				BlockHeight: blockHeight,
