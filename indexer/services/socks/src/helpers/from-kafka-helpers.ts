@@ -104,8 +104,6 @@ export function getMessageToForward(
 }
 
 export function getMessagesToForward(topic: string, message: KafkaMessage): MessageToForward[] {
-  // const channels: Channel[] = getChannels(topic);
-
   if (!message || !message.value) {
     throw new InvalidForwardMessageError('Got empty kafka message');
   }

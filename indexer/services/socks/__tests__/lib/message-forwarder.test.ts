@@ -181,7 +181,6 @@ describe('message-forwarder', () => {
 
   beforeAll(async () => {
     await dbHelpers.migrate();
-    await dbHelpers.clearData();
     await testMocks.seedData();
     await Promise.all([
       perpetualMarketRefresher.updatePerpetualMarkets(),
