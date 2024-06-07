@@ -158,4 +158,5 @@ type ClobKeeper interface {
 		offchainUpdates *OffchainUpdates,
 	)
 	MigratePruneableOrders(ctx sdk.Context)
+	GetAllStatefulOrders(ctx sdk.Context) []Order
 }

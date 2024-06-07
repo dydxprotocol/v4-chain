@@ -4,6 +4,7 @@ package v_6_0_0_test
 
 import (
 	"testing"
+	"time"
 
 	v_6_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v6.0.0"
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
@@ -182,6 +183,60 @@ func placeOrders(node *containertest.Node, t *testing.T) {
 		},
 		constants.DaveAccAddress.String(),
 	))
+
+	// FOK order setups.
+	require.NoError(t, containertest.BroadcastTx(
+		node,
+		&clobtypes.MsgPlaceOrder{
+			Order: clobtypes.Order{
+				OrderId: clobtypes.OrderId{
+					ClientId: 100,
+					SubaccountId: satypes.SubaccountId{
+						Owner:  constants.AliceAccAddress.String(),
+						Number: 0,
+					},
+					ClobPairId: 0,
+					OrderFlags: clobtypes.OrderIdFlags_Conditional,
+				},
+				Side:                            clobtypes.Order_SIDE_BUY,
+				Quantums:                        AliceBobBTCQuantums,
+				Subticks:                        5_000_000,
+				TimeInForce:                     clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL,
+				ConditionType:                   clobtypes.Order_CONDITION_TYPE_STOP_LOSS,
+				ConditionalOrderTriggerSubticks: 4_000_000,
+				GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+					GoodTilBlockTime: uint32(time.Now().Unix() + 300),
+				},
+			},
+		},
+		constants.AliceAccAddress.String(),
+	))
+	require.NoError(t, containertest.BroadcastTx(
+		node,
+		&clobtypes.MsgPlaceOrder{
+			Order: clobtypes.Order{
+				OrderId: clobtypes.OrderId{
+					ClientId: 101,
+					SubaccountId: satypes.SubaccountId{
+						Owner:  constants.AliceAccAddress.String(),
+						Number: 0,
+					},
+					ClobPairId: 0,
+					OrderFlags: clobtypes.OrderIdFlags_Conditional,
+				},
+				Side:                            clobtypes.Order_SIDE_SELL,
+				Quantums:                        AliceBobBTCQuantums,
+				Subticks:                        5_050_000,
+				ConditionType:                   clobtypes.Order_CONDITION_TYPE_TAKE_PROFIT,
+				ConditionalOrderTriggerSubticks: 6_000_000,
+				GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+					GoodTilBlockTime: uint32(time.Now().Unix() + 300),
+				},
+			},
+		},
+		constants.AliceAccAddress.String(),
+	))
+
 	err := node.Wait(2)
 	require.NoError(t, err)
 }
