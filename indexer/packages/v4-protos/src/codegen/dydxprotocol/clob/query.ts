@@ -7,6 +7,7 @@ import { LiquidationsConfig, LiquidationsConfigSDKType } from "./liquidations_co
 import { OffChainUpdateV1, OffChainUpdateV1SDKType } from "../indexer/off_chain_updates/off_chain_updates";
 import { ClobMatch, ClobMatchSDKType } from "./matches";
 import { Order, OrderSDKType } from "./order";
+import { Perpetual, PerpetualSDKType } from "../perpetuals/perpetual";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
 /** QueryGetClobPairRequest is request type for the ClobPair method. */
@@ -354,6 +355,30 @@ export interface StreamOrderbookFillSDKType {
   /** Resulting fill amounts for each order in the orders array. */
 
   fill_amounts: Long[];
+}
+/** QueryPerpetualClobDetails is a response message that contains the perpetual clob details. */
+
+export interface QueryPerpetualClobDetails {
+  clobPair?: ClobPair;
+  perpetual?: Perpetual;
+}
+/** QueryPerpetualClobDetails is a response message that contains the perpetual clob details. */
+
+export interface QueryPerpetualClobDetailsSDKType {
+  clob_pair?: ClobPairSDKType;
+  perpetual?: PerpetualSDKType;
+}
+/** QueryGetPerpetualClobDetailsRequest is request type to get the perpetual clob details. */
+
+export interface QueryGetPerpetualClobDetailsRequest {
+  /** QueryGetPerpetualClobDetailsRequest is request type to get the perpetual clob details. */
+  id: number;
+}
+/** QueryGetPerpetualClobDetailsRequest is request type to get the perpetual clob details. */
+
+export interface QueryGetPerpetualClobDetailsRequestSDKType {
+  /** QueryGetPerpetualClobDetailsRequest is request type to get the perpetual clob details. */
+  id: number;
 }
 
 function createBaseQueryGetClobPairRequest(): QueryGetClobPairRequest {
@@ -1252,6 +1277,106 @@ export const StreamOrderbookFill = {
     message.clobMatch = object.clobMatch !== undefined && object.clobMatch !== null ? ClobMatch.fromPartial(object.clobMatch) : undefined;
     message.orders = object.orders?.map(e => Order.fromPartial(e)) || [];
     message.fillAmounts = object.fillAmounts?.map(e => Long.fromValue(e)) || [];
+    return message;
+  }
+
+};
+
+function createBaseQueryPerpetualClobDetails(): QueryPerpetualClobDetails {
+  return {
+    clobPair: undefined,
+    perpetual: undefined
+  };
+}
+
+export const QueryPerpetualClobDetails = {
+  encode(message: QueryPerpetualClobDetails, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.clobPair !== undefined) {
+      ClobPair.encode(message.clobPair, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.perpetual !== undefined) {
+      Perpetual.encode(message.perpetual, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryPerpetualClobDetails {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryPerpetualClobDetails();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.clobPair = ClobPair.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.perpetual = Perpetual.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryPerpetualClobDetails>): QueryPerpetualClobDetails {
+    const message = createBaseQueryPerpetualClobDetails();
+    message.clobPair = object.clobPair !== undefined && object.clobPair !== null ? ClobPair.fromPartial(object.clobPair) : undefined;
+    message.perpetual = object.perpetual !== undefined && object.perpetual !== null ? Perpetual.fromPartial(object.perpetual) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryGetPerpetualClobDetailsRequest(): QueryGetPerpetualClobDetailsRequest {
+  return {
+    id: 0
+  };
+}
+
+export const QueryGetPerpetualClobDetailsRequest = {
+  encode(message: QueryGetPerpetualClobDetailsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== 0) {
+      writer.uint32(8).uint32(message.id);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryGetPerpetualClobDetailsRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryGetPerpetualClobDetailsRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.id = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryGetPerpetualClobDetailsRequest>): QueryGetPerpetualClobDetailsRequest {
+    const message = createBaseQueryGetPerpetualClobDetailsRequest();
+    message.id = object.id ?? 0;
     return message;
   }
 
