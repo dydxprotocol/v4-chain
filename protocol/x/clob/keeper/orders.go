@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"math"
 	"math/big"
 	"time"
 
@@ -300,28 +299,30 @@ func (k Keeper) PlaceStatefulOrder(
 
 	// 4. Perform a collateralization check for the full size of the order to mitigate spam.
 	// TODO(CLOB-725): Consider using a pessimistic collateralization check.
-	_, successPerSubaccountUpdate := k.AddOrderToOrderbookCollatCheck(
-		ctx,
-		order.GetClobPairId(),
-		map[satypes.SubaccountId][]types.PendingOpenOrder{
-			order.OrderId.SubaccountId: {
-				{
-					RemainingQuantums: order.GetBaseQuantums(),
-					IsBuy:             order.IsBuy(),
-					Subticks:          order.GetOrderSubticks(),
-					ClobPairId:        order.GetClobPairId(),
+	if !order.IsConditionalOrder() {
+		_, successPerSubaccountUpdate := k.AddOrderToOrderbookCollatCheck(
+			ctx,
+			order.GetClobPairId(),
+			map[satypes.SubaccountId][]types.PendingOpenOrder{
+				order.OrderId.SubaccountId: {
+					{
+						RemainingQuantums: order.GetBaseQuantums(),
+						IsBuy:             order.IsBuy(),
+						Subticks:          order.GetOrderSubticks(),
+						ClobPairId:        order.GetClobPairId(),
+					},
 				},
 			},
-		},
-	)
-
-	if !successPerSubaccountUpdate[order.OrderId.SubaccountId].IsSuccess() {
-		return errorsmod.Wrapf(
-			types.ErrStatefulOrderCollateralizationCheckFailed,
-			"PlaceStatefulOrder: order (%+v), result (%s)",
-			order,
-			successPerSubaccountUpdate[order.OrderId.SubaccountId].String(),
 		)
+
+		if !successPerSubaccountUpdate[order.OrderId.SubaccountId].IsSuccess() {
+			return errorsmod.Wrapf(
+				types.ErrStatefulOrderCollateralizationCheckFailed,
+				"PlaceStatefulOrder: order (%+v), result (%s)",
+				order,
+				successPerSubaccountUpdate[order.OrderId.SubaccountId].String(),
+			)
+		}
 	}
 
 	// 5. If we are in `deliverTx` then we write the order to committed state otherwise add the order to uncommitted
@@ -962,11 +963,7 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 	pendingUpdates := types.NewPendingUpdates()
 
 	// Retrieve the associated `PerpetualId` for the `ClobPair`.
-	oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
 	perpetualId := clobPair.MustGetPerpetualId()
-
-	// TODO(DEC-1713): Complete as many calculations from getPessimisticCollateralCheckPrice as possible here
-	// so we aren't recalculating the same thing within the loop.
 
 	iterateOverOpenOrdersStart := time.Now()
 	for subaccountId, openOrders := range subaccountOpenOrders {
@@ -984,37 +981,7 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 				panic(fmt.Sprintf("Order `ClobPairId` must equal `clobPairId` for order %+v", openOrder))
 			}
 
-			// We don't want to allow users to place orders to improve their collateralization, so we choose between the
-			// order price (user-input) or the oracle price (sane default) and select the price that results in the
-			// most pessimistic collateral-check outcome.
-			collatCheckPriceSubticks, err := getPessimisticCollateralCheckPrice(
-				oraclePriceSubticksRat,
-				openOrder.Subticks,
-				openOrder.IsBuy,
-			)
-			if satypes.ErrIntegerOverflow.Is(err) {
-				// TODO(DEC-1701): Determine best action to take if the oracle price overflows max uint64
-				log.ErrorLog(
-					ctx,
-					fmt.Sprintf(
-						"Integer overflow: oracle price (subticks) exceeded uint64 max. "+
-							"perpetual ID = (%d), oracle price = (%+v), is buy = (%t)",
-						perpetualId,
-						oraclePriceSubticksRat,
-						openOrder.IsBuy,
-					),
-				)
-			} else if err != nil {
-				panic(
-					errorsmod.Wrapf(
-						err,
-						"perpetual id = (%d), oracle price = (%+v), is buy = (%t)",
-						perpetualId,
-						oraclePriceSubticksRat,
-						openOrder.IsBuy,
-					),
-				)
-			}
+			collatCheckPriceSubticks := openOrder.Subticks
 
 			bigFillQuoteQuantums, err := getFillQuoteQuantums(
 				clobPair,
@@ -1276,42 +1243,6 @@ func (k Keeper) SendOffchainMessages(
 		}
 		k.GetIndexerEventManager().SendOffchainData(update)
 	}
-}
-
-// getPessimisticCollateralCheckPrice returns the price in subticks we should use for collateralization checks.
-// It pessimistically rounds oraclePriceSubticksRat (up for buys, down for sells) and then pessimistically
-// chooses the subticks value to return: the highest for buys, the lowest for sells.
-//
-// Returns an error if:
-// - the oraclePriceSubticksRat, after being rounded pessimistically, overflows a uint64
-func getPessimisticCollateralCheckPrice(
-	oraclePriceSubticksRat *big.Rat,
-	makerOrderSubticks types.Subticks,
-	isBuy bool,
-) (price types.Subticks, err error) {
-	// TODO(DEC-1713): Move this rounding to before the PendingOpenOrders loop.
-	// The oracle price is guaranteed to be >= 0. Since we are using this value for a collateralization check,
-	// we want to round pessimistically (up for buys, down for sells).
-	oraclePriceSubticksInt := lib.BigRatRound(oraclePriceSubticksRat, isBuy)
-
-	// TODO(DEC-1701): Determine best action to take if the oracle price overflows max uint64
-	var oraclePriceSubticks types.Subticks
-	if oraclePriceSubticksInt.IsUint64() {
-		oraclePriceSubticks = types.Subticks(lib.Max(1, oraclePriceSubticksInt.Uint64()))
-	} else {
-		// Clamping the oracle price here should be fine because there are 2 outcomes:
-		// 1. This is a sell order, in which case we choose the lowest value, so we choose the maker sell price which
-		// would be identical to the old logic.
-		// 2. This is a buy order, and we select uint64 max as the price, which will fail the collateral check in any
-		// real-world example.
-		oraclePriceSubticks = types.Subticks(math.MaxUint64)
-		err = satypes.ErrIntegerOverflow
-	}
-
-	if isBuy {
-		return lib.Max(makerOrderSubticks, oraclePriceSubticks), err
-	}
-	return lib.Min(makerOrderSubticks, oraclePriceSubticks), err
 }
 
 // getFillQuoteQuantums returns the total fillAmount price in quote quantums based on the maker subticks.

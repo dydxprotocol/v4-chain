@@ -36,7 +36,10 @@ RUN chown dydx -R /home/dydx/app
 USER dydx
 
 # Install npm modules using pnpm
-RUN pnpm i --loglevel warn  --frozen-lockfile
+
+# NOTE: For prod testing, use "RUN pnpm i --loglevel warn --production --frozen-lockfile"
+RUN pnpm i --loglevel warn --frozen-lockfile
+
 
 WORKDIR /home/dydx/app/packages/postgres
 

@@ -5,7 +5,7 @@ import (
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/upgrades"
-	v4_0_0 "github.com/StreamFinance-Protocol/stream-chain/protocol/app/upgrades/v4.0.0"
+	v4_1_0 "github.com/StreamFinance-Protocol/stream-chain/protocol/app/upgrades/v4.1.0"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,7 +13,7 @@ var (
 	// `Upgrades` defines the upgrade handlers and store loaders for the application.
 	// New upgrades should be added to this slice after they are implemented.
 	Upgrades = []upgrades.Upgrade{
-		v4_0_0.Upgrade,
+		v4_1_0.Upgrade,
 	}
 	Forks = []upgrades.Fork{}
 )
@@ -21,15 +21,14 @@ var (
 // setupUpgradeHandlers registers the upgrade handlers to perform custom upgrade
 // logic and state migrations for software upgrades.
 func (app *App) setupUpgradeHandlers() {
-	if app.UpgradeKeeper.HasHandler(v4_0_0.UpgradeName) {
-		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v4_0_0.UpgradeName))
+	if app.UpgradeKeeper.HasHandler(v4_1_0.UpgradeName) {
+		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v4_1_0.UpgradeName))
 	}
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v4_0_0.UpgradeName,
-		v4_0_0.CreateUpgradeHandler(
+		v4_1_0.UpgradeName,
+		v4_1_0.CreateUpgradeHandler(
 			app.ModuleManager,
 			app.configurator,
-			app.RatelimitKeeper,
 		),
 	)
 }

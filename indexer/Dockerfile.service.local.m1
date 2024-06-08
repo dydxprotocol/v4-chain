@@ -1,0 +1,49 @@
+# Dockerfile to containerize services locally
+FROM dydxprotocol/indexer-node:16-alpine-m1
+ENV NODE_ENV=development
+ARG service
+
+RUN apk add --no-cache bash jq aws-cli
+RUN adduser -S dydx
+RUN mkdir -p /home/dydx/app
+RUN chown dydx -R /home/dydx/app
+
+WORKDIR /home/dydx/app
+
+# Copy pnpm lock and workspace and package.json from base directory
+COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
+
+# Copy package.json from all packages being run
+COPY ./packages/base/package.json ./packages/base/
+COPY ./packages/kafka/package.json ./packages/kafka/
+COPY ./packages/postgres/package.json ./packages/postgres/
+COPY ./packages/redis/package.json ./packages/redis/
+COPY ./packages/v4-protos/package.json ./packages/v4-protos/
+COPY ./packages/v4-proto-parser/package.json ./packages/v4-proto-parser/package.json
+COPY ./packages/compliance/package.json ./packages/compliance/
+
+# Copy build files from all packages being run
+COPY ./packages/base/build ./packages/base/build/
+COPY ./packages/kafka/build ./packages/kafka/build/
+COPY ./packages/postgres/build ./packages/postgres/build/
+COPY ./packages/redis/build ./packages/redis/build/
+COPY ./packages/v4-protos/build ./packages/v4-protos/build/
+COPY ./packages/v4-proto-parser/build ./packages/v4-proto-parser/build/
+COPY ./packages/compliance/build ./packages/compliance/build/
+
+# Copy package.json, build files, and environment files from service being run
+COPY ./services/${service}/package.json ./services/${service}/
+COPY ./services/${service}/build ./services/${service}/build
+COPY ./services/${service}/.env* ./services/${service}/
+
+# Copy container start script
+COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
+
+RUN chown dydx -R /home/dydx/app
+
+USER dydx
+RUN pnpm i --loglevel warn --production --frozen-lockfile
+
+WORKDIR /home/dydx/app/services/$service
+
+CMD ["sh", "-c", "bash ./scripts/container-run.sh"]
