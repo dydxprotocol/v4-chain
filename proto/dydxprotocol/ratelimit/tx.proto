@@ -1,3 +1,4 @@
+
 syntax = "proto3";
 package dydxprotocol.ratelimit;
 
@@ -9,6 +10,7 @@ import "gogoproto/gogo.proto";
 
 // Msg defines the Msg service.
 service Msg {
+    option (cosmos.msg.v1.service) = true;
   // SetLimitParams sets a `LimitParams` object in state.
   rpc SetLimitParams(MsgSetLimitParams) returns (MsgSetLimitParamsResponse);
 }

@@ -15,9 +15,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
@@ -32,20 +29,6 @@ var (
 
 		// Bank messages
 		sdk.MsgTypeURL(&banktypes.MsgSend{}),
-
-		// Staking messages
-		sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}),
-		sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}),
-		sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}),
-		sdk.MsgTypeURL(&stakingtypes.MsgCancelUnbondingDelegation{}),
-
-		// Distribution messages
-		sdk.MsgTypeURL(&distrtypes.MsgSetWithdrawAddress{}),
-		sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}),
-		sdk.MsgTypeURL(&distrtypes.MsgFundCommunityPool{}),
-
-		// Gov messages
-		sdk.MsgTypeURL(&govtypesv1.MsgVote{}),
 	}
 	// List of module accounts to check in state.
 	// These include all dYdX custom module accounts.

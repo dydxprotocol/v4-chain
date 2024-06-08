@@ -48,6 +48,7 @@ func initAppConfig() (string, *DydxAppConfig) {
 	//   own app.toml to override, or use this default value.
 	//
 	// In simapp, we set the min gas prices to 0.
+
 	srvCfg.MinGasPrices = MinGasPrice
 
 	appConfig := DydxAppConfig{

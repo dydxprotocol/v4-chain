@@ -37,25 +37,9 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/cosmos.crisis.v1beta1.MsgUpdateParams",
 		"/cosmos.crisis.v1beta1.MsgUpdateParamsResponse",
 
-		// distribution
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpend",
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse",
-		"/cosmos.distribution.v1beta1.MsgUpdateParams",
-		"/cosmos.distribution.v1beta1.MsgUpdateParamsResponse",
-
-		// gov
-		"/cosmos.gov.v1.MsgExecLegacyContent",
-		"/cosmos.gov.v1.MsgExecLegacyContentResponse",
-		"/cosmos.gov.v1.MsgUpdateParams",
-		"/cosmos.gov.v1.MsgUpdateParamsResponse",
-
 		// slashing
 		"/cosmos.slashing.v1beta1.MsgUpdateParams",
 		"/cosmos.slashing.v1beta1.MsgUpdateParamsResponse",
-
-		// staking
-		"/cosmos.staking.v1beta1.MsgUpdateParams",
-		"/cosmos.staking.v1beta1.MsgUpdateParamsResponse",
 
 		// upgrade
 		"/cosmos.upgrade.v1beta1.MsgCancelUpgrade",
@@ -86,10 +70,6 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// feetiers
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",
-
-		// govplus
-		"/dydxprotocol.govplus.MsgSlashValidator",
-		"/dydxprotocol.govplus.MsgSlashValidatorResponse",
 
 		// perpeutals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual",
@@ -130,6 +110,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.vest.MsgSetVestEntryResponse",
 
 		// ibc
+		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafe",
+		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafeResponse",
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams",
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse",
 		"/ibc.applications.transfer.v1.MsgUpdateParams",

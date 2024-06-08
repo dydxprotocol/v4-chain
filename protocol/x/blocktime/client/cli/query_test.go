@@ -6,69 +6,45 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 )
 
 // Prevent strconv unused error
 var _ = strconv.IntSize
 
-func setupNetwork(
-	t *testing.T,
-) (
-	*network.Network,
-	client.Context,
-) {
-	t.Helper()
+func TestQueryParams(t *testing.T) {
+
 	cfg := network.DefaultConfig(nil)
 
-	// Init state.
-	state := types.GenesisState{}
-	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
-
-	state = *types.DefaultGenesis()
-
-	buf, err := cfg.Codec.MarshalJSON(&state)
-	require.NoError(t, err)
-	cfg.GenesisState[types.ModuleName] = buf
-	net := network.New(t, cfg)
-	ctx := net.Validators[0].ClientCtx
-
-	return net, ctx
-}
-
-func TestQueryDowntimeParams(t *testing.T) {
-	net, ctx := setupNetwork(t)
-
-	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryDowntimeParams(), []string{})
+	blockQuery := "docker exec interchain-security-instance-setup interchain-security-cd query blocktime get-downtime-params"
+	data, _, err := network.QueryCustomNetwork(blockQuery)
 
 	require.NoError(t, err)
 	var resp types.QueryDowntimeParamsResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }
 
 func TestQueryAllDowntimeInfo(t *testing.T) {
-	net, ctx := setupNetwork(t)
+	cfg := network.DefaultConfig(nil)
 
-	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryAllDowntimeInfo(), []string{})
+	blockQuery := "docker exec interchain-security-instance-setup interchain-security-cd query blocktime get-all-downtime-info"
+	data, _, err := network.QueryCustomNetwork(blockQuery)
 
 	require.NoError(t, err)
 	var resp types.QueryAllDowntimeInfoResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 }
 
 func TestQueryPreviousBlockInfo(t *testing.T) {
-	net, ctx := setupNetwork(t)
+	cfg := network.DefaultConfig(nil)
 
-	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryPreviousBlockInfo(), []string{})
-
+	blockQuery := "docker exec interchain-security-instance-setup interchain-security-cd query blocktime get-previous-block-info"
+	data, _, err := network.QueryCustomNetwork(blockQuery)
 	require.NoError(t, err)
 	var resp types.QueryPreviousBlockInfoResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 }

@@ -45,19 +45,6 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.crypto.secp256k1.PubKey",
 		"/cosmos.crypto.secp256r1.PubKey",
 
-		// distribution
-		"/cosmos.distribution.v1beta1.CommunityPoolSpendProposal",
-		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool",
-		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPoolResponse",
-		"/cosmos.distribution.v1beta1.MsgFundCommunityPool",
-		"/cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse",
-		"/cosmos.distribution.v1beta1.MsgSetWithdrawAddress",
-		"/cosmos.distribution.v1beta1.MsgSetWithdrawAddressResponse",
-		"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
-		"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse",
-		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission",
-		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse",
-
 		// evidence
 		"/cosmos.evidence.v1beta1.Equivocation",
 		"/cosmos.evidence.v1beta1.MsgSubmitEvidence",
@@ -74,42 +61,12 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.feegrant.v1beta1.MsgRevokeAllowanceResponse",
 		"/cosmos.feegrant.v1beta1.PeriodicAllowance",
 
-		// gov
-		"/cosmos.gov.v1.MsgDeposit",
-		"/cosmos.gov.v1.MsgDepositResponse",
-		"/cosmos.gov.v1.MsgVote",
-		"/cosmos.gov.v1.MsgVoteResponse",
-		"/cosmos.gov.v1.MsgVoteWeighted",
-		"/cosmos.gov.v1.MsgVoteWeightedResponse",
-		"/cosmos.gov.v1beta1.MsgDeposit",
-		"/cosmos.gov.v1beta1.MsgDepositResponse",
-		"/cosmos.gov.v1beta1.MsgVote",
-		"/cosmos.gov.v1beta1.MsgVoteResponse",
-		"/cosmos.gov.v1beta1.MsgVoteWeighted",
-		"/cosmos.gov.v1beta1.MsgVoteWeightedResponse",
-		"/cosmos.gov.v1beta1.TextProposal",
-
 		// params
 		"/cosmos.params.v1beta1.ParameterChangeProposal",
 
 		// slashing
 		"/cosmos.slashing.v1beta1.MsgUnjail",
 		"/cosmos.slashing.v1beta1.MsgUnjailResponse",
-
-		// staking
-		"/cosmos.staking.v1beta1.MsgBeginRedelegate",
-		"/cosmos.staking.v1beta1.MsgBeginRedelegateResponse",
-		"/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation",
-		"/cosmos.staking.v1beta1.MsgCancelUnbondingDelegationResponse",
-		"/cosmos.staking.v1beta1.MsgCreateValidator",
-		"/cosmos.staking.v1beta1.MsgCreateValidatorResponse",
-		"/cosmos.staking.v1beta1.MsgDelegate",
-		"/cosmos.staking.v1beta1.MsgDelegateResponse",
-		"/cosmos.staking.v1beta1.MsgEditValidator",
-		"/cosmos.staking.v1beta1.MsgEditValidatorResponse",
-		"/cosmos.staking.v1beta1.MsgUndelegate",
-		"/cosmos.staking.v1beta1.MsgUndelegateResponse",
-		"/cosmos.staking.v1beta1.StakeAuthorization",
 
 		// tx
 		"/cosmos.tx.v1beta1.Tx",
@@ -161,12 +118,30 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/ibc.core.channel.v1.MsgChannelOpenInitResponse",
 		"/ibc.core.channel.v1.MsgChannelOpenTry",
 		"/ibc.core.channel.v1.MsgChannelOpenTryResponse",
+		"/ibc.core.channel.v1.MsgChannelUpgradeAck",
+		"/ibc.core.channel.v1.MsgChannelUpgradeAckResponse",
+		"/ibc.core.channel.v1.MsgChannelUpgradeCancel",
+		"/ibc.core.channel.v1.MsgChannelUpgradeCancelResponse",
+		"/ibc.core.channel.v1.MsgChannelUpgradeConfirm",
+		"/ibc.core.channel.v1.MsgChannelUpgradeConfirmResponse",
+		"/ibc.core.channel.v1.MsgChannelUpgradeInit",
+		"/ibc.core.channel.v1.MsgChannelUpgradeInitResponse",
+		"/ibc.core.channel.v1.MsgChannelUpgradeOpen",
+		"/ibc.core.channel.v1.MsgChannelUpgradeOpenResponse",
+		"/ibc.core.channel.v1.MsgChannelUpgradeTimeout",
+		"/ibc.core.channel.v1.MsgChannelUpgradeTimeoutResponse",
+		"/ibc.core.channel.v1.MsgChannelUpgradeTry",
+		"/ibc.core.channel.v1.MsgChannelUpgradeTryResponse",
+		"/ibc.core.channel.v1.MsgPruneAcknowledgements",
+		"/ibc.core.channel.v1.MsgPruneAcknowledgementsResponse",
 		"/ibc.core.channel.v1.MsgRecvPacket",
 		"/ibc.core.channel.v1.MsgRecvPacketResponse",
 		"/ibc.core.channel.v1.MsgTimeout",
 		"/ibc.core.channel.v1.MsgTimeoutOnClose",
 		"/ibc.core.channel.v1.MsgTimeoutOnCloseResponse",
 		"/ibc.core.channel.v1.MsgTimeoutResponse",
+		"/ibc.core.channel.v1.MsgUpdateParams",
+		"/ibc.core.channel.v1.MsgUpdateParamsResponse",
 		"/ibc.core.channel.v1.Packet",
 
 		// ibc.core.client

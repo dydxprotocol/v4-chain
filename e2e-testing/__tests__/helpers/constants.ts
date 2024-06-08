@@ -5,10 +5,10 @@ import Long from 'long';
 
 import { OrderDetails } from './types';
 
-export const DYDX_LOCAL_ADDRESS = 'dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4';
-export const DYDX_LOCAL_MNEMONIC = 'merge panther lobster crazy road hollow amused security before critic about cliff exhibit cause coyote talent happy where lion river tobacco option coconut small';
-export const DYDX_LOCAL_ADDRESS_2 = 'dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs';
-export const DYDX_LOCAL_MNEMONIC_2 = 'color habit donor nurse dinosaur stable wonder process post perfect raven gold census inside worth inquiry mammal panic olive toss shadow strong name drum';
+export const DYDX_LOCAL_ADDRESS = 'dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6';
+export const DYDX_LOCAL_MNEMONIC = 'exile install vapor thing little toss immune notable lounge december final easy strike title end program interest quote cloth forget forward job october twenty';
+export const DYDX_LOCAL_ADDRESS_2 = 'dydx1q90l6j6lzzgt460ehjj56azknlt5yrd4egfh9f';
+export const DYDX_LOCAL_MNEMONIC_2 = 'grunt list hour endless observe better spoil penalty lab duck only layer vague fantasy satoshi record demise topple space shaft solar practice donor sphere';
 
 export const MNEMONIC_TO_ADDRESS: Record<string, string> = {
   [DYDX_LOCAL_MNEMONIC]: DYDX_LOCAL_ADDRESS,

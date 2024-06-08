@@ -10,6 +10,7 @@ import "gogoproto/gogo.proto";
 
 // Msg defines the Msg service.
 service Msg {
+    option (cosmos.msg.v1.service) = true;
   // UpdateDowntimeParams updates the DowntimeParams in state.
   rpc UpdateDowntimeParams(MsgUpdateDowntimeParams)
       returns (MsgUpdateDowntimeParamsResponse);

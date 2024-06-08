@@ -14,10 +14,6 @@ func TestNestedMsgs_Key(t *testing.T) {
 		// authz
 		"/cosmos.authz.v1beta1.MsgExec",
 		"/cosmos.authz.v1beta1.MsgExecResponse",
-
-		// gov
-		"/cosmos.gov.v1.MsgSubmitProposal",
-		"/cosmos.gov.v1.MsgSubmitProposalResponse",
 	}
 	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.NestedMsgSamples))
 }

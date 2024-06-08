@@ -21,8 +21,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/gogoproto/proto"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 )
@@ -117,31 +115,6 @@ func TestAuthz(t *testing.T) {
 				)
 			},
 		},
-		"Fail (external): Bob tries to vote on behalf of Alice without permission.": {
-			subaccounts: []satypes.Subaccount{
-				constants.Alice_Num0_100_000USD,
-				constants.Bob_Num0_100_000USD,
-			},
-
-			msgGrant: nil,
-
-			msgExec: &authz.MsgExec{
-				Grantee: constants.BobAccAddress.String(),
-				Msgs: []*codectypes.Any{
-					newAny(
-						&govtypesv1.MsgVote{
-							ProposalId: 0,
-							Voter:      constants.AliceAccAddress.String(),
-						},
-					),
-				},
-			},
-
-			expectedMsgExecCheckTxSuccess:   true,
-			expectedMsgExecCheckTxCode:      abcitypes.CodeTypeOK,
-			expectedMsgExecDeliverTxSuccess: false,
-			expectedMsgExecDeliverTxCode:    authz.ErrNoAuthorizationFound.ABCICode(),
-		},
 		"Fail (internal): Granting permissions to execute internal messages doesn't allow execution": {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_100_000USD,
@@ -174,58 +147,7 @@ func TestAuthz(t *testing.T) {
 			expectedMsgExecDeliverTxSuccess: false,
 			expectedMsgExecDeliverTxCode:    authz.ErrNoAuthorizationFound.ABCICode(),
 		},
-		"Fail (internal): Bob tries to update gov params (authority = gov)": {
-			subaccounts: []satypes.Subaccount{
-				constants.Alice_Num0_100_000USD,
-				constants.Bob_Num0_100_000USD,
-			},
 
-			msgGrant: nil,
-
-			msgExec: &authz.MsgExec{
-				Grantee: constants.BobAccAddress.String(),
-				Msgs: []*codectypes.Any{
-					newAny(
-						&govtypesv1.MsgUpdateParams{
-							// Authority = gov
-							Authority: lib.GovModuleAddress.String(),
-						},
-					),
-				},
-			},
-
-			expectedMsgExecCheckTxSuccess:   true,
-			expectedMsgExecCheckTxCode:      abcitypes.CodeTypeOK,
-			expectedMsgExecDeliverTxSuccess: false,
-			expectedMsgExecDeliverTxCode:    authz.ErrNoAuthorizationFound.ABCICode(),
-		},
-		"Fail (internal): Bob tries to update gov params (authority = bob)": {
-			subaccounts: []satypes.Subaccount{
-				constants.Alice_Num0_100_000USD,
-				constants.Bob_Num0_100_000USD,
-			},
-
-			msgGrant: nil,
-
-			msgExec: &authz.MsgExec{
-				Grantee: constants.BobAccAddress.String(),
-				Msgs: []*codectypes.Any{
-					newAny(
-						&govtypesv1.MsgUpdateParams{
-							// Authority = bob
-							Authority: constants.BobAccAddress.String(),
-						},
-					),
-				},
-			},
-
-			expectedMsgExecCheckTxSuccess:   true,
-			expectedMsgExecCheckTxCode:      abcitypes.CodeTypeOK,
-			expectedMsgExecDeliverTxSuccess: false,
-			// This fails because Bob is not authorized to create clob pairs (not in the
-			// list of authorities defined in clobkeeper.authorities).
-			expectedMsgExecDeliverTxCode: govtypes.ErrInvalidSigner.ABCICode(),
-		},
 		//
 		// Below tests fail during CheckTx since the ante handler would reject these transactions.
 		//

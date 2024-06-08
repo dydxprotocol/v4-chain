@@ -3,18 +3,15 @@
 package cli_test
 
 import (
-	"fmt"
 	"math/big"
 	"strconv"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	ratelimitutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
-	tmcli "github.com/cometbft/cometbft/libs/cli"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,18 +19,15 @@ import (
 var _ = strconv.IntSize
 
 func TestQueryCapacityByDenom(t *testing.T) {
-	net, ctx := setupNetwork(t)
 
-	out, err := clitestutil.ExecTestCLICmd(ctx,
-		cli.CmdQueryCapacityByDenom(),
-		[]string{
-			fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			assettypes.AssetUsdc.Denom,
-		})
+	cfg := network.DefaultConfig(nil)
+
+	rateQuery := "docker exec interchain-security-instance-setup interchain-security-cd query ratelimit capacity-by-denom " + assettypes.AssetUsdc.Denom
+	data, _, err := network.QueryCustomNetwork(rateQuery)
 
 	require.NoError(t, err)
 	var resp types.QueryCapacityByDenomResponse
-	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 	require.Equal(t,
 		// LimiterCapacity resulting from default limiter params and 0 TVL.
 		[]types.LimiterCapacity{

@@ -1,0 +1,452 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`execute classes array types 1`] = `
+"export class SG721Client implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+    this.createEdge = this.createEdge.bind(this);
+    this.editEdge = this.editEdge.bind(this);
+    this.removeEdge = this.removeEdge.bind(this);
+    this.createGraph = this.createGraph.bind(this);
+    this.createGraphSimplified = this.createGraphSimplified.bind(this);
+    this.editGraphSimplified = this.editGraphSimplified.bind(this);
+    this.removeGraph = this.removeGraph.bind(this);
+    this.updateEdges = this.updateEdges.bind(this);
+    this.findSavings = this.findSavings.bind(this);
+    this.findSavingsInAGraph = this.findSavingsInAGraph.bind(this);
+    this.reset = this.reset.bind(this);
+    this.saveNetworkToFile = this.saveNetworkToFile.bind(this);
+    this.createGraphFromFile = this.createGraphFromFile.bind(this);
+    this.applySetOffFromFile = this.applySetOffFromFile.bind(this);
+  }
+
+  createEdge = async ({
+    amount,
+    creditor
+  }: {
+    amount: number;
+    creditor: Addr;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      create_edge: {
+        amount,
+        creditor
+      }
+    }, fee, memo, funds);
+  };
+  editEdge = async ({
+    amount,
+    creditor,
+    edgeId
+  }: {
+    amount: number;
+    creditor: Addr;
+    edgeId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      edit_edge: {
+        amount,
+        creditor,
+        edge_id: edgeId
+      }
+    }, fee, memo, funds);
+  };
+  removeEdge = async ({
+    edgeId
+  }: {
+    edgeId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      remove_edge: {
+        edge_id: edgeId
+      }
+    }, fee, memo, funds);
+  };
+  createGraph = async ({
+    graph
+  }: {
+    graph: Edge[];
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      create_graph: {
+        graph
+      }
+    }, fee, memo, funds);
+  };
+  createGraphSimplified = async ({
+    graph,
+    graphId
+  }: {
+    graph: Addr[][];
+    graphId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      create_graph_simplified: {
+        graph,
+        graph_id: graphId
+      }
+    }, fee, memo, funds);
+  };
+  editGraphSimplified = async ({
+    graph,
+    graphId
+  }: {
+    graph: Addr[][];
+    graphId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      edit_graph_simplified: {
+        graph,
+        graph_id: graphId
+      }
+    }, fee, memo, funds);
+  };
+  removeGraph = async ({
+    graphId
+  }: {
+    graphId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      remove_graph: {
+        graph_id: graphId
+      }
+    }, fee, memo, funds);
+  };
+  updateEdges = async ({
+    edges
+  }: {
+    edges: number[][];
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      update_edges: {
+        edges
+      }
+    }, fee, memo, funds);
+  };
+  findSavings = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      find_savings: {}
+    }, fee, memo, funds);
+  };
+  findSavingsInAGraph = async ({
+    graphId
+  }: {
+    graphId: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      find_savings_in_a_graph: {
+        graph_id: graphId
+      }
+    }, fee, memo, funds);
+  };
+  reset = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      reset: {}
+    }, fee, memo, funds);
+  };
+  saveNetworkToFile = async ({
+    filepath
+  }: {
+    filepath: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      save_network_to_file: {
+        filepath
+      }
+    }, fee, memo, funds);
+  };
+  createGraphFromFile = async ({
+    filepath
+  }: {
+    filepath: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      create_graph_from_file: {
+        filepath
+      }
+    }, fee, memo, funds);
+  };
+  applySetOffFromFile = async ({
+    filepath
+  }: {
+    filepath: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      apply_set_off_from_file: {
+        filepath
+      }
+    }, fee, memo, funds);
+  };
+}"
+`;
+
+exports[`execute interfaces no extends 1`] = `
+"export interface SG721Instance {
+  contractAddress: string;
+  sender: string;
+  createEdge: ({
+    amount,
+    creditor
+  }: {
+    amount: number;
+    creditor: Addr;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  editEdge: ({
+    amount,
+    creditor,
+    edgeId
+  }: {
+    amount: number;
+    creditor: Addr;
+    edgeId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  removeEdge: ({
+    edgeId
+  }: {
+    edgeId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  createGraph: ({
+    graph
+  }: {
+    graph: Edge[];
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  createGraphSimplified: ({
+    graph,
+    graphId
+  }: {
+    graph: Addr[][];
+    graphId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  editGraphSimplified: ({
+    graph,
+    graphId
+  }: {
+    graph: Addr[][];
+    graphId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  removeGraph: ({
+    graphId
+  }: {
+    graphId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  updateEdges: ({
+    edges
+  }: {
+    edges: number[][];
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  findSavings: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  findSavingsInAGraph: ({
+    graphId
+  }: {
+    graphId: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  reset: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  saveNetworkToFile: ({
+    filepath
+  }: {
+    filepath: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  createGraphFromFile: ({
+    filepath
+  }: {
+    filepath: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  applySetOffFromFile: ({
+    filepath
+  }: {
+    filepath: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+}"
+`;
+
+exports[`execute_msg_for__empty 1`] = `"export type ExecuteMsg = ExecuteMsg;"`;
+
+exports[`query classes 1`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+    this.createEdge = this.createEdge.bind(this);
+    this.editEdge = this.editEdge.bind(this);
+    this.removeEdge = this.removeEdge.bind(this);
+    this.createGraph = this.createGraph.bind(this);
+    this.createGraphSimplified = this.createGraphSimplified.bind(this);
+    this.editGraphSimplified = this.editGraphSimplified.bind(this);
+    this.removeGraph = this.removeGraph.bind(this);
+    this.updateEdges = this.updateEdges.bind(this);
+    this.findSavings = this.findSavings.bind(this);
+    this.findSavingsInAGraph = this.findSavingsInAGraph.bind(this);
+    this.reset = this.reset.bind(this);
+    this.saveNetworkToFile = this.saveNetworkToFile.bind(this);
+    this.createGraphFromFile = this.createGraphFromFile.bind(this);
+    this.applySetOffFromFile = this.applySetOffFromFile.bind(this);
+  }
+
+  createEdge = async ({
+    amount,
+    creditor
+  }: {
+    amount: number;
+    creditor: Addr;
+  }): Promise<CreateEdgeResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      create_edge: {
+        amount,
+        creditor
+      }
+    });
+  };
+  editEdge = async ({
+    amount,
+    creditor,
+    edgeId
+  }: {
+    amount: number;
+    creditor: Addr;
+    edgeId: number;
+  }): Promise<EditEdgeResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      edit_edge: {
+        amount,
+        creditor,
+        edge_id: edgeId
+      }
+    });
+  };
+  removeEdge = async ({
+    edgeId
+  }: {
+    edgeId: number;
+  }): Promise<RemoveEdgeResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      remove_edge: {
+        edge_id: edgeId
+      }
+    });
+  };
+  createGraph = async ({
+    graph
+  }: {
+    graph: Edge[];
+  }): Promise<CreateGraphResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      create_graph: {
+        graph
+      }
+    });
+  };
+  createGraphSimplified = async ({
+    graph,
+    graphId
+  }: {
+    graph: Addr[][];
+    graphId: number;
+  }): Promise<CreateGraphSimplifiedResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      create_graph_simplified: {
+        graph,
+        graph_id: graphId
+      }
+    });
+  };
+  editGraphSimplified = async ({
+    graph,
+    graphId
+  }: {
+    graph: Addr[][];
+    graphId: number;
+  }): Promise<EditGraphSimplifiedResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      edit_graph_simplified: {
+        graph,
+        graph_id: graphId
+      }
+    });
+  };
+  removeGraph = async ({
+    graphId
+  }: {
+    graphId: number;
+  }): Promise<RemoveGraphResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      remove_graph: {
+        graph_id: graphId
+      }
+    });
+  };
+  updateEdges = async ({
+    edges
+  }: {
+    edges: number[][];
+  }): Promise<UpdateEdgesResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      update_edges: {
+        edges
+      }
+    });
+  };
+  findSavings = async (): Promise<FindSavingsResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      find_savings: {}
+    });
+  };
+  findSavingsInAGraph = async ({
+    graphId
+  }: {
+    graphId: number;
+  }): Promise<FindSavingsInAGraphResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      find_savings_in_a_graph: {
+        graph_id: graphId
+      }
+    });
+  };
+  reset = async (): Promise<ResetResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      reset: {}
+    });
+  };
+  saveNetworkToFile = async ({
+    filepath
+  }: {
+    filepath: string;
+  }): Promise<SaveNetworkToFileResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      save_network_to_file: {
+        filepath
+      }
+    });
+  };
+  createGraphFromFile = async ({
+    filepath
+  }: {
+    filepath: string;
+  }): Promise<CreateGraphFromFileResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      create_graph_from_file: {
+        filepath
+      }
+    });
+  };
+  applySetOffFromFile = async ({
+    filepath
+  }: {
+    filepath: string;
+  }): Promise<ApplySetOffFromFileResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      apply_set_off_from_file: {
+        filepath
+      }
+    });
+  };
+}"
+`;

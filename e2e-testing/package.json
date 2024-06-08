@@ -11,7 +11,11 @@
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
-    "test": "NODE_ENV=test jest --runInBand --forceExit"
+    "test": "NODE_ENV=test jest --runInBand --forceExit",
+    "clean": "docker stop $(docker ps -q) && docker rm $(docker ps -a -q) && docker rmi $(docker images -q) && docker network prune -f && docker volume prune -f && docker system prune -a -f",
+    "clean-light": "docker stop $(docker ps -q) && docker rm $(docker ps -a -q) && docker network prune -f",
+    "e2e-test-setup": "./run-containerized-env.sh",
+    "e2e-test-run": "pnpm build && pnpm test"
   },
   "author": "",
   "license": "AGPL-3.0",
@@ -21,7 +25,7 @@
     "@dydxprotocol-indexer/postgres": "file:../indexer/packages/postgres",
     "@dydxprotocol-indexer/v4-proto-parser": "file:../indexer/packages/v4-proto-parser",
     "@dydxprotocol-indexer/v4-protos": "file:../indexer/packages/v4-protos",
-    "@dydxprotocol/v4-client-js": "^1.0.12",
+    "@dydxprotocol/v4-client-js": "file:../v4-client-js",
     "big.js": "^6.0.2",
     "dotenv-flow": "^3.2.0",
     "kafkajs": "^2.1.0",

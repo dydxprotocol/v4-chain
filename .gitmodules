@@ -1,0 +1,3 @@
+[submodule "protocol/ethos"]
+	path = protocol/ethos
+	url = https://github.com/StreamFinance-Protocol/stream-ethos.git

@@ -10,6 +10,7 @@ import "gogoproto/gogo.proto";
 
 // Msg defines the Msg service.
 service Msg {
+    option (cosmos.msg.v1.service) = true;
   // UpdateParams updates the Params in state.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }

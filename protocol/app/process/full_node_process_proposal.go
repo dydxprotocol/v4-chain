@@ -12,7 +12,6 @@ import (
 func FullNodeProcessProposalHandler(
 	txConfig client.TxConfig,
 	clobKeeper ProcessClobKeeper,
-	stakingKeeper ProcessStakingKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
 	pricesKeeper ProcessPricesKeeper,
 ) sdk.ProcessProposalHandler {
@@ -46,10 +45,10 @@ func FullNodeProcessProposalHandler(
 			return response, nil
 		}
 
-		// Measure MEV metrics if enabled.
-		if clobKeeper.RecordMevMetricsIsEnabled() {
-			clobKeeper.RecordMevMetrics(ctx, stakingKeeper, perpetualKeeper, txs.ProposedOperationsTx.msg)
-		}
+		// // Measure MEV metrics if enabled.
+		// if clobKeeper.RecordMevMetricsIsEnabled() {
+		// 	clobKeeper.RecordMevMetrics(ctx, stakingKeeper, perpetualKeeper, txs.ProposedOperationsTx.msg)
+		// }
 
 		return response, nil
 	}

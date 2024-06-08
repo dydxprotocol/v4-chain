@@ -1,0 +1,497 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`execute classes array types 1`] = `
+"export class SG721Client implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+    this.proposedNewOwner = this.proposedNewOwner.bind(this);
+    this.allowedVaults = this.allowedVaults.bind(this);
+    this.allDebtShares = this.allDebtShares.bind(this);
+    this.allPreviousOwners = this.allPreviousOwners.bind(this);
+    this.ownerOf = this.ownerOf.bind(this);
+    this.approval = this.approval.bind(this);
+    this.approvals = this.approvals.bind(this);
+    this.allOperators = this.allOperators.bind(this);
+    this.numTokens = this.numTokens.bind(this);
+    this.contractInfo = this.contractInfo.bind(this);
+    this.nftInfo = this.nftInfo.bind(this);
+    this.allNftInfo = this.allNftInfo.bind(this);
+    this.tokens = this.tokens.bind(this);
+    this.allTokens = this.allTokens.bind(this);
+    this.minter = this.minter.bind(this);
+  }
+
+  proposedNewOwner = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      proposed_new_owner: {}
+    }, fee, memo, funds);
+  };
+  allowedVaults = async ({
+    limit,
+    startAfter
+  }: {
+    limit?: number;
+    startAfter?: VaultBase_for_String;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      allowed_vaults: {
+        limit,
+        start_after: startAfter
+      }
+    }, fee, memo, funds);
+  };
+  allDebtShares = async ({
+    limit,
+    startAfter
+  }: {
+    limit?: number;
+    startAfter?: string[][];
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      all_debt_shares: {
+        limit,
+        start_after: startAfter
+      }
+    }, fee, memo, funds);
+  };
+  allPreviousOwners = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      all_previous_owners: {}
+    }, fee, memo, funds);
+  };
+  ownerOf = async ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      owner_of: {
+        include_expired: includeExpired,
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+  approval = async ({
+    includeExpired,
+    spender,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    spender: string;
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      approval: {
+        include_expired: includeExpired,
+        spender,
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+  approvals = async ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      approvals: {
+        include_expired: includeExpired,
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+  allOperators = async ({
+    includeExpired,
+    limit,
+    owner,
+    startAfter
+  }: {
+    includeExpired?: boolean;
+    limit?: number;
+    owner: string;
+    startAfter?: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      all_operators: {
+        include_expired: includeExpired,
+        limit,
+        owner,
+        start_after: startAfter
+      }
+    }, fee, memo, funds);
+  };
+  numTokens = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      num_tokens: {}
+    }, fee, memo, funds);
+  };
+  contractInfo = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      contract_info: {}
+    }, fee, memo, funds);
+  };
+  nftInfo = async ({
+    tokenId
+  }: {
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      nft_info: {
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+  allNftInfo = async ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      all_nft_info: {
+        include_expired: includeExpired,
+        token_id: tokenId
+      }
+    }, fee, memo, funds);
+  };
+  tokens = async ({
+    limit,
+    owner,
+    startAfter
+  }: {
+    limit?: number;
+    owner: string;
+    startAfter?: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      tokens: {
+        limit,
+        owner,
+        start_after: startAfter
+      }
+    }, fee, memo, funds);
+  };
+  allTokens = async ({
+    limit,
+    startAfter
+  }: {
+    limit?: number;
+    startAfter?: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      all_tokens: {
+        limit,
+        start_after: startAfter
+      }
+    }, fee, memo, funds);
+  };
+  minter = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      minter: {}
+    }, fee, memo, funds);
+  };
+}"
+`;
+
+exports[`execute interfaces no extends 1`] = `
+"export interface SG721Instance {
+  contractAddress: string;
+  sender: string;
+  proposedNewOwner: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  allowedVaults: ({
+    limit,
+    startAfter
+  }: {
+    limit?: number;
+    startAfter?: VaultBase_for_String;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  allDebtShares: ({
+    limit,
+    startAfter
+  }: {
+    limit?: number;
+    startAfter?: string[][];
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  allPreviousOwners: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  ownerOf: ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  approval: ({
+    includeExpired,
+    spender,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    spender: string;
+    tokenId: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  approvals: ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  allOperators: ({
+    includeExpired,
+    limit,
+    owner,
+    startAfter
+  }: {
+    includeExpired?: boolean;
+    limit?: number;
+    owner: string;
+    startAfter?: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  numTokens: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  contractInfo: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  nftInfo: ({
+    tokenId
+  }: {
+    tokenId: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  allNftInfo: ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  tokens: ({
+    limit,
+    owner,
+    startAfter
+  }: {
+    limit?: number;
+    owner: string;
+    startAfter?: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  allTokens: ({
+    limit,
+    startAfter
+  }: {
+    limit?: number;
+    startAfter?: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  minter: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+}"
+`;
+
+exports[`execute_msg_for__empty 1`] = `"export type QueryMsg = QueryMsg;"`;
+
+exports[`query classes 1`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+    this.proposedNewOwner = this.proposedNewOwner.bind(this);
+    this.allowedVaults = this.allowedVaults.bind(this);
+    this.allDebtShares = this.allDebtShares.bind(this);
+    this.allPreviousOwners = this.allPreviousOwners.bind(this);
+    this.ownerOf = this.ownerOf.bind(this);
+    this.approval = this.approval.bind(this);
+    this.approvals = this.approvals.bind(this);
+    this.allOperators = this.allOperators.bind(this);
+    this.numTokens = this.numTokens.bind(this);
+    this.contractInfo = this.contractInfo.bind(this);
+    this.nftInfo = this.nftInfo.bind(this);
+    this.allNftInfo = this.allNftInfo.bind(this);
+    this.tokens = this.tokens.bind(this);
+    this.allTokens = this.allTokens.bind(this);
+    this.minter = this.minter.bind(this);
+  }
+
+  proposedNewOwner = async (): Promise<ProposedNewOwnerResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      proposed_new_owner: {}
+    });
+  };
+  allowedVaults = async ({
+    limit,
+    startAfter
+  }: {
+    limit?: number;
+    startAfter?: VaultBase_for_String;
+  }): Promise<AllowedVaultsResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      allowed_vaults: {
+        limit,
+        start_after: startAfter
+      }
+    });
+  };
+  allDebtShares = async ({
+    limit,
+    startAfter
+  }: {
+    limit?: number;
+    startAfter?: string[][];
+  }): Promise<AllDebtSharesResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      all_debt_shares: {
+        limit,
+        start_after: startAfter
+      }
+    });
+  };
+  allPreviousOwners = async (): Promise<AllPreviousOwnersResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      all_previous_owners: {}
+    });
+  };
+  ownerOf = async ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }): Promise<OwnerOfResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      owner_of: {
+        include_expired: includeExpired,
+        token_id: tokenId
+      }
+    });
+  };
+  approval = async ({
+    includeExpired,
+    spender,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    spender: string;
+    tokenId: string;
+  }): Promise<ApprovalResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      approval: {
+        include_expired: includeExpired,
+        spender,
+        token_id: tokenId
+      }
+    });
+  };
+  approvals = async ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }): Promise<ApprovalsResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      approvals: {
+        include_expired: includeExpired,
+        token_id: tokenId
+      }
+    });
+  };
+  allOperators = async ({
+    includeExpired,
+    limit,
+    owner,
+    startAfter
+  }: {
+    includeExpired?: boolean;
+    limit?: number;
+    owner: string;
+    startAfter?: string;
+  }): Promise<AllOperatorsResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      all_operators: {
+        include_expired: includeExpired,
+        limit,
+        owner,
+        start_after: startAfter
+      }
+    });
+  };
+  numTokens = async (): Promise<NumTokensResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      num_tokens: {}
+    });
+  };
+  contractInfo = async (): Promise<ContractInfoResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      contract_info: {}
+    });
+  };
+  nftInfo = async ({
+    tokenId
+  }: {
+    tokenId: string;
+  }): Promise<NftInfoResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      nft_info: {
+        token_id: tokenId
+      }
+    });
+  };
+  allNftInfo = async ({
+    includeExpired,
+    tokenId
+  }: {
+    includeExpired?: boolean;
+    tokenId: string;
+  }): Promise<AllNftInfoResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      all_nft_info: {
+        include_expired: includeExpired,
+        token_id: tokenId
+      }
+    });
+  };
+  tokens = async ({
+    limit,
+    owner,
+    startAfter
+  }: {
+    limit?: number;
+    owner: string;
+    startAfter?: string;
+  }): Promise<TokensResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      tokens: {
+        limit,
+        owner,
+        start_after: startAfter
+      }
+    });
+  };
+  allTokens = async ({
+    limit,
+    startAfter
+  }: {
+    limit?: number;
+    startAfter?: string;
+  }): Promise<AllTokensResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      all_tokens: {
+        limit,
+        start_after: startAfter
+      }
+    });
+  };
+  minter = async (): Promise<MinterResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      minter: {}
+    });
+  };
+}"
+`;

@@ -1,0 +1,42 @@
+[
+    {
+        "timeInForce": "DEFAULT",
+        "side": "BUY",
+        "price": 40000
+    },
+    {
+        "timeInForce": "DEFAULT",
+        "side": "SELL",
+        "price": 1000
+    },
+    {
+        "timeInForce": "FOK",
+        "side": "BUY",
+        "price": 1000
+    },
+    {
+        "timeInForce": "FOK",
+        "side": "SELL",
+        "price": 40000
+    },
+    {
+        "timeInForce": "IOC",
+        "side": "BUY",
+        "price": 40000
+    },
+    {
+        "timeInForce": "IOC",
+        "side": "SELL",
+        "price": 1000
+    },
+    {
+        "timeInForce": "POST_ONLY",
+        "side": "BUY",
+        "price": 1000
+    },
+    {
+        "timeInForce": "POST_ONLY",
+        "side": "SELL",
+        "price": 40000
+    }
+]

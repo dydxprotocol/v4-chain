@@ -213,7 +213,31 @@ clean:
 include sims.mk
 include ./mocks/Makefile
 
+GO_BIN_DIR := $(HOME)/go/bin
+SCRIPT_DIR := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
+compile-e2e-setup:
+	cd $(SCRIPT_DIR)/ethos/ethos-chain/tests/e2e && go install
+	mv $(GO_BIN_DIR)/e2e $(SCRIPT_DIR)/ethos/ethos-chain/e2e-setup
+
+compile-testing-files: compile-e2e-setup
+	make -f ethos/ethos-chain/Makefile install-ics-cd
+
+e2e-setup: compile-testing-files
+	@echo "Setting up environment..."
+	@cd ethos/ethos-chain && ./e2e-setup -setup 
+	
+custom-e2e-setup: compile-testing-files
+	@echo "Setting up environment..."
+	echo "logging custom genesis"
+	echo $(GENESIS)
+	@cd ethos/ethos-chain && ./e2e-setup -setup true $(GENESIS)
+
+delete-anvil:
+	@echo "deleting anvil"
+	cd ethos/ethos-chain/tests/e2e/testnet-scripts && chmod +x delete-anvil.sh && ./delete-anvil.sh 
+
 test: test-unit
+
 
 test-ci: test-unit-and-integration
 
@@ -235,10 +259,10 @@ test-race:
 test-cover:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 12m -coverprofile=coverage.out -covermode=atomic -coverpkg=github.com/dydxprotocol/v4-chain/protocol/... -tags='test_ledger_mock $(build_tags)' ./...
 
-test-exchanges:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock exchange_tests $(build_tags)' github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/handler -run "TestQueryingActualExchanges"
+test-unit-and-integration: e2e-setup delete-anvil
+	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 30m -run TestShowEpochInfo ./x/epochs/client/cli/...
 
-test-unit-and-integration:
+test-unit-and-integration-linux: e2e-setup-linux 
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...
 
 benchmark:
@@ -373,6 +397,9 @@ localnet-init:
 	# Build the base image.
 	make localnet-build
 
+build-e2e-ethos-test:
+	cd ethos/ethos-chain && docker build -t cosmos-ics:local -f Dockerfile.ics ../
+	docker run -d --name interchain-security-instance --cap-add=NET_ADMIN --privileged cosmos-ics:local /bin/bash /testnet-scripts/beacon.sh
 localnet-compose-up:
 	@echo "Launching localnet at commit ${GIT_COMMIT_HASH}"
 	@docker build . -t local:dydxprotocol -f testing/testnet-local/Dockerfile --no-cache

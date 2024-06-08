@@ -1,0 +1,432 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`execute class /issues/71/execute_msg.json 1`] = `
+"export class SG721Client implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+    this.receive = this.receive.bind(this);
+    this.updateConfig = this.updateConfig.bind(this);
+    this.updatePoolConfig = this.updatePoolConfig.bind(this);
+    this.addToRegistery = this.addToRegistery.bind(this);
+    this.createPoolInstance = this.createPoolInstance.bind(this);
+    this.joinPool = this.joinPool.bind(this);
+    this.swap = this.swap.bind(this);
+    this.proposeNewOwner = this.proposeNewOwner.bind(this);
+    this.dropOwnershipProposal = this.dropOwnershipProposal.bind(this);
+    this.claimOwnership = this.claimOwnership.bind(this);
+  }
+
+  receive = async ({
+    amount,
+    msg,
+    sender
+  }: {
+    amount: Uint128;
+    msg: Binary;
+    sender: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      receive: {
+        amount,
+        msg,
+        sender
+      }
+    }, fee, memo, funds);
+  };
+  updateConfig = async ({
+    feeCollector,
+    generatorAddress,
+    lpTokenCodeId
+  }: {
+    feeCollector?: string;
+    generatorAddress?: string;
+    lpTokenCodeId?: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      update_config: {
+        fee_collector: feeCollector,
+        generator_address: generatorAddress,
+        lp_token_code_id: lpTokenCodeId
+      }
+    }, fee, memo, funds);
+  };
+  updatePoolConfig = async ({
+    isDisabled,
+    newFeeInfo,
+    poolType
+  }: {
+    isDisabled?: boolean;
+    newFeeInfo?: FeeInfo;
+    poolType: PoolType;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      update_pool_config: {
+        is_disabled: isDisabled,
+        new_fee_info: newFeeInfo,
+        pool_type: poolType
+      }
+    }, fee, memo, funds);
+  };
+  addToRegistery = async ({
+    newPoolConfig
+  }: {
+    newPoolConfig: PoolConfig;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      add_to_registery: {
+        new_pool_config: newPoolConfig
+      }
+    }, fee, memo, funds);
+  };
+  createPoolInstance = async ({
+    assetInfos,
+    initParams,
+    lpTokenName,
+    lpTokenSymbol,
+    poolType
+  }: {
+    assetInfos: AssetInfo[];
+    initParams?: Binary;
+    lpTokenName?: string;
+    lpTokenSymbol?: string;
+    poolType: PoolType;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      create_pool_instance: {
+        asset_infos: assetInfos,
+        init_params: initParams,
+        lp_token_name: lpTokenName,
+        lp_token_symbol: lpTokenSymbol,
+        pool_type: poolType
+      }
+    }, fee, memo, funds);
+  };
+  joinPool = async ({
+    assets,
+    autoStake,
+    lpToMint,
+    poolId,
+    recipient,
+    slippageTolerance
+  }: {
+    assets?: Asset[];
+    autoStake?: boolean;
+    lpToMint?: Uint128;
+    poolId: Uint128;
+    recipient?: string;
+    slippageTolerance?: Decimal;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      join_pool: {
+        assets,
+        auto_stake: autoStake,
+        lp_to_mint: lpToMint,
+        pool_id: poolId,
+        recipient,
+        slippage_tolerance: slippageTolerance
+      }
+    }, fee, memo, funds);
+  };
+  swap = async ({
+    recipient,
+    swapRequest
+  }: {
+    recipient?: string;
+    swapRequest: SingleSwapRequest;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      swap: {
+        recipient,
+        swap_request: swapRequest
+      }
+    }, fee, memo, funds);
+  };
+  proposeNewOwner = async ({
+    expiresIn,
+    owner
+  }: {
+    expiresIn: number;
+    owner: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      propose_new_owner: {
+        expires_in: expiresIn,
+        owner
+      }
+    }, fee, memo, funds);
+  };
+  dropOwnershipProposal = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      drop_ownership_proposal: {}
+    }, fee, memo, funds);
+  };
+  claimOwnership = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      claim_ownership: {}
+    }, fee, memo, funds);
+  };
+}"
+`;
+
+exports[`execute interface /issues/71/execute_msg.json 1`] = `
+"export interface SG721Instance {
+  contractAddress: string;
+  sender: string;
+  receive: ({
+    amount,
+    msg,
+    sender
+  }: {
+    amount: Uint128;
+    msg: Binary;
+    sender: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  updateConfig: ({
+    feeCollector,
+    generatorAddress,
+    lpTokenCodeId
+  }: {
+    feeCollector?: string;
+    generatorAddress?: string;
+    lpTokenCodeId?: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  updatePoolConfig: ({
+    isDisabled,
+    newFeeInfo,
+    poolType
+  }: {
+    isDisabled?: boolean;
+    newFeeInfo?: FeeInfo;
+    poolType: PoolType;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  addToRegistery: ({
+    newPoolConfig
+  }: {
+    newPoolConfig: PoolConfig;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  createPoolInstance: ({
+    assetInfos,
+    initParams,
+    lpTokenName,
+    lpTokenSymbol,
+    poolType
+  }: {
+    assetInfos: AssetInfo[];
+    initParams?: Binary;
+    lpTokenName?: string;
+    lpTokenSymbol?: string;
+    poolType: PoolType;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  joinPool: ({
+    assets,
+    autoStake,
+    lpToMint,
+    poolId,
+    recipient,
+    slippageTolerance
+  }: {
+    assets?: Asset[];
+    autoStake?: boolean;
+    lpToMint?: Uint128;
+    poolId: Uint128;
+    recipient?: string;
+    slippageTolerance?: Decimal;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  swap: ({
+    recipient,
+    swapRequest
+  }: {
+    recipient?: string;
+    swapRequest: SingleSwapRequest;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  proposeNewOwner: ({
+    expiresIn,
+    owner
+  }: {
+    expiresIn: number;
+    owner: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  dropOwnershipProposal: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  claimOwnership: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+}"
+`;
+
+exports[`execute_msg_for__empty /issues/71/execute_msg.json 1`] = `"export type ExecuteMsg = ExecuteMsg;"`;
+
+exports[`query classes /issues/71/execute_msg.json 1`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+    this.receive = this.receive.bind(this);
+    this.updateConfig = this.updateConfig.bind(this);
+    this.updatePoolConfig = this.updatePoolConfig.bind(this);
+    this.addToRegistery = this.addToRegistery.bind(this);
+    this.createPoolInstance = this.createPoolInstance.bind(this);
+    this.joinPool = this.joinPool.bind(this);
+    this.swap = this.swap.bind(this);
+    this.proposeNewOwner = this.proposeNewOwner.bind(this);
+    this.dropOwnershipProposal = this.dropOwnershipProposal.bind(this);
+    this.claimOwnership = this.claimOwnership.bind(this);
+  }
+
+  receive = async ({
+    amount,
+    msg,
+    sender
+  }: {
+    amount: Uint128;
+    msg: Binary;
+    sender: string;
+  }): Promise<ReceiveResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      receive: {
+        amount,
+        msg,
+        sender
+      }
+    });
+  };
+  updateConfig = async ({
+    feeCollector,
+    generatorAddress,
+    lpTokenCodeId
+  }: {
+    feeCollector?: string;
+    generatorAddress?: string;
+    lpTokenCodeId?: number;
+  }): Promise<UpdateConfigResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      update_config: {
+        fee_collector: feeCollector,
+        generator_address: generatorAddress,
+        lp_token_code_id: lpTokenCodeId
+      }
+    });
+  };
+  updatePoolConfig = async ({
+    isDisabled,
+    newFeeInfo,
+    poolType
+  }: {
+    isDisabled?: boolean;
+    newFeeInfo?: FeeInfo;
+    poolType: PoolType;
+  }): Promise<UpdatePoolConfigResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      update_pool_config: {
+        is_disabled: isDisabled,
+        new_fee_info: newFeeInfo,
+        pool_type: poolType
+      }
+    });
+  };
+  addToRegistery = async ({
+    newPoolConfig
+  }: {
+    newPoolConfig: PoolConfig;
+  }): Promise<AddToRegisteryResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      add_to_registery: {
+        new_pool_config: newPoolConfig
+      }
+    });
+  };
+  createPoolInstance = async ({
+    assetInfos,
+    initParams,
+    lpTokenName,
+    lpTokenSymbol,
+    poolType
+  }: {
+    assetInfos: AssetInfo[];
+    initParams?: Binary;
+    lpTokenName?: string;
+    lpTokenSymbol?: string;
+    poolType: PoolType;
+  }): Promise<CreatePoolInstanceResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      create_pool_instance: {
+        asset_infos: assetInfos,
+        init_params: initParams,
+        lp_token_name: lpTokenName,
+        lp_token_symbol: lpTokenSymbol,
+        pool_type: poolType
+      }
+    });
+  };
+  joinPool = async ({
+    assets,
+    autoStake,
+    lpToMint,
+    poolId,
+    recipient,
+    slippageTolerance
+  }: {
+    assets?: Asset[];
+    autoStake?: boolean;
+    lpToMint?: Uint128;
+    poolId: Uint128;
+    recipient?: string;
+    slippageTolerance?: Decimal;
+  }): Promise<JoinPoolResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      join_pool: {
+        assets,
+        auto_stake: autoStake,
+        lp_to_mint: lpToMint,
+        pool_id: poolId,
+        recipient,
+        slippage_tolerance: slippageTolerance
+      }
+    });
+  };
+  swap = async ({
+    recipient,
+    swapRequest
+  }: {
+    recipient?: string;
+    swapRequest: SingleSwapRequest;
+  }): Promise<SwapResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      swap: {
+        recipient,
+        swap_request: swapRequest
+      }
+    });
+  };
+  proposeNewOwner = async ({
+    expiresIn,
+    owner
+  }: {
+    expiresIn: number;
+    owner: string;
+  }): Promise<ProposeNewOwnerResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      propose_new_owner: {
+        expires_in: expiresIn,
+        owner
+      }
+    });
+  };
+  dropOwnershipProposal = async (): Promise<DropOwnershipProposalResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      drop_ownership_proposal: {}
+    });
+  };
+  claimOwnership = async (): Promise<ClaimOwnershipResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      claim_ownership: {}
+    });
+  };
+}"
+`;

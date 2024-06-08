@@ -3,16 +3,15 @@
 package cli_test
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
-	"github.com/cosmos/cosmos-sdk/client"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
@@ -23,33 +22,6 @@ const (
 
 // Prevent strconv unused error
 var _ = strconv.IntSize
-
-func setupNetwork(
-	t *testing.T,
-	state *types.GenesisState,
-) (
-	*network.Network,
-	client.Context,
-) {
-	t.Helper()
-	cfg := network.DefaultConfig(nil)
-
-	// Init state.
-	// Validate global genesis state contains a delaymsg genesis state.
-	configDefaultGenesisState := types.GenesisState{}
-	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &configDefaultGenesisState))
-
-	// Update global genesis state with specified delaymsg genesis state.
-	buf, err := cfg.Codec.MarshalJSON(state)
-	require.NoError(t, err)
-	cfg.GenesisState[types.ModuleName] = buf
-
-	// Create network.
-	net := network.New(t, cfg)
-	ctx := net.Validators[0].ClientCtx
-
-	return net, ctx
-}
 
 func TestQueryNextDelayedMessageId(t *testing.T) {
 	tests := map[string]struct {
@@ -67,13 +39,31 @@ func TestQueryNextDelayedMessageId(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, ctx := setupNetwork(t, tc.state)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryNextDelayedMessageId(), []string{})
-			require.NoError(t, err)
+
+			cfg := network.DefaultConfig(nil)
+			genesisChanges := getDelayedGenesisChanges(name)
+
+			network.DeployCustomNetwork(genesisChanges)
+			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-next-delayed-message-id"
+			data, _, _ := network.QueryCustomNetwork(delaymsgQuery)
 			var resp types.QueryNextDelayedMessageIdResponse
-			require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
+			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 			require.Equal(t, tc.state.NextDelayedMessageId, resp.NextDelayedMessageId)
+
+			network.CleanupCustomNetwork()
 		})
+	}
+}
+
+func getDelayedGenesisChanges(testCase string) string {
+	switch testCase {
+	case "Default: 0":
+		return "\".app_state.delaymsg.delayed_messages = [] | .app_state.delaymsg.next_delayed_message_id = \"0\"\" \"\""
+	case "Non-zero":
+		return "\".app_state.delaymsg.delayed_messages = [] | .app_state.delaymsg.next_delayed_message_id = \"20\"\" \"\""
+
+	default:
+		panic("unknown case")
 	}
 }
 
@@ -100,22 +90,37 @@ func TestQueryMessage(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, ctx := setupNetwork(t, tc.state)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryMessage(), []string{"0"})
-			if tc.expectedMsg == nil {
-				require.ErrorContains(t, err, GrpcNotFoundError)
+
+			fmt.Println("PRINTING TEST CASE", name)
+
+			genesisChanges := getGenesisChanges(name)
+
+			network.DeployCustomNetwork(genesisChanges)
+
+			cfg := network.DefaultConfig(nil)
+			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-message 0"
+			data, stdQueryErr, err := network.QueryCustomNetwork(delaymsgQuery)
+
+			if name == "Default: 0" {
+				fmt.Println("Printing error", stdQueryErr)
+				require.True(t, strings.Contains(stdQueryErr, GrpcNotFoundError))
 			} else {
+
 				require.NoError(t, err)
 				var resp types.QueryMessageResponse
-				require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
 
-				err := resp.Message.UnpackInterfaces(ctx.Codec)
+				require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
+
+				err := resp.Message.UnpackInterfaces(cfg.Codec)
 				require.NoError(t, err)
 				msg, err := resp.Message.GetMessage()
 				require.NoError(t, err)
 
 				require.Equal(t, tc.expectedMsg, msg)
+
 			}
+
+			network.CleanupCustomNetwork()
 		})
 	}
 }
@@ -144,16 +149,38 @@ func TestQueryBlockMessageIds(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, ctx := setupNetwork(t, tc.state)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryBlockMessageIds(), []string{"10"})
-			if tc.expectedBlockMessageIds == nil {
-				require.ErrorContains(t, err, GrpcNotFoundError)
+
+			genesisChanges := getGenesisChanges(name)
+			network.DeployCustomNetwork(genesisChanges)
+
+			cfg := network.DefaultConfig(nil)
+			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-block-message-ids 1000"
+			data, stdQueryErr, err := network.QueryCustomNetwork(delaymsgQuery)
+
+			if name == "Default: 0" {
+				require.True(t, strings.Contains(stdQueryErr, GrpcNotFoundError))
+
 			} else {
+
 				require.NoError(t, err)
 				var resp types.QueryBlockMessageIdsResponse
-				require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
+
+				require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 				require.Equal(t, tc.expectedBlockMessageIds, resp.MessageIds)
 			}
+			network.CleanupCustomNetwork()
 		})
+	}
+}
+
+func getGenesisChanges(testCase string) string {
+	switch testCase {
+	case "Default: 0":
+		return "\".app_state.delaymsg.delayed_messages = [] | .app_state.delaymsg.next_delayed_message_id = \"0\"\" \"\""
+	case "Non-zero":
+		return "\".app_state.delaymsg.delayed_messages[0] = {\\\"id\\\": \\\"0\\\", \\\"msg\\\": {\\\"@type\\\": \\\"/dydxprotocol.perpetuals.MsgUpdateParams\\\", \\\"authority\\\": \\\"dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr\\\", \\\"params\\\": {\\\"funding_rate_clamp_factor_ppm\\\": \\\"6000000\\\", \\\"premium_vote_clamp_factor_ppm\\\": \\\"60000000\\\", \\\"min_num_votes_per_sample\\\": \\\"15\\\"}}, \\\"block_height\\\": \\\"1000\\\"} | .app_state.delaymsg.next_delayed_message_id = \\\"20\\\"\" \"\""
+
+	default:
+		panic("unknown case")
 	}
 }

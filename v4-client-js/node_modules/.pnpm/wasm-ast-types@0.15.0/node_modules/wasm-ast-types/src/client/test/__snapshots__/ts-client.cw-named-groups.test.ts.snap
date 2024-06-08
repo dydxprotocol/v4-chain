@@ -1,0 +1,141 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`execute classes array types 1`] = `
+"export class SG721Client implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+    this.update = this.update.bind(this);
+    this.removeGroup = this.removeGroup.bind(this);
+    this.updateOwner = this.updateOwner.bind(this);
+  }
+
+  update = async ({
+    addressesToAdd,
+    addressesToRemove,
+    group
+  }: {
+    addressesToAdd?: string[];
+    addressesToRemove?: string[];
+    group: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      update: {
+        addresses_to_add: addressesToAdd,
+        addresses_to_remove: addressesToRemove,
+        group
+      }
+    }, fee, memo, funds);
+  };
+  removeGroup = async ({
+    group
+  }: {
+    group: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      remove_group: {
+        group
+      }
+    }, fee, memo, funds);
+  };
+  updateOwner = async ({
+    owner
+  }: {
+    owner: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      update_owner: {
+        owner
+      }
+    }, fee, memo, funds);
+  };
+}"
+`;
+
+exports[`execute interfaces no extends 1`] = `
+"export interface SG721Instance {
+  contractAddress: string;
+  sender: string;
+  update: ({
+    addressesToAdd,
+    addressesToRemove,
+    group
+  }: {
+    addressesToAdd?: string[];
+    addressesToRemove?: string[];
+    group: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  removeGroup: ({
+    group
+  }: {
+    group: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  updateOwner: ({
+    owner
+  }: {
+    owner: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+}"
+`;
+
+exports[`execute_msg 1`] = `"export type ExecuteMsg = ExecuteMsg;"`;
+
+exports[`query classes 1`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+    this.update = this.update.bind(this);
+    this.removeGroup = this.removeGroup.bind(this);
+    this.updateOwner = this.updateOwner.bind(this);
+  }
+
+  update = async ({
+    addressesToAdd,
+    addressesToRemove,
+    group
+  }: {
+    addressesToAdd?: string[];
+    addressesToRemove?: string[];
+    group: string;
+  }): Promise<UpdateResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      update: {
+        addresses_to_add: addressesToAdd,
+        addresses_to_remove: addressesToRemove,
+        group
+      }
+    });
+  };
+  removeGroup = async ({
+    group
+  }: {
+    group: string;
+  }): Promise<RemoveGroupResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      remove_group: {
+        group
+      }
+    });
+  };
+  updateOwner = async ({
+    owner
+  }: {
+    owner: string;
+  }): Promise<UpdateOwnerResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      update_owner: {
+        owner
+      }
+    });
+  };
+}"
+`;

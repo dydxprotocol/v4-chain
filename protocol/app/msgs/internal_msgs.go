@@ -7,7 +7,6 @@ import (
 	clob "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	delaymsg "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	feetiers "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
-	govplus "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/types"
 	perpetuals "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimit "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
@@ -20,10 +19,7 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensus "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	distribution "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
@@ -62,25 +58,9 @@ var (
 		"/cosmos.crisis.v1beta1.MsgUpdateParams":         &crisis.MsgUpdateParams{},
 		"/cosmos.crisis.v1beta1.MsgUpdateParamsResponse": nil,
 
-		// distribution
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpend":         &distribution.MsgCommunityPoolSpend{},
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse": nil,
-		"/cosmos.distribution.v1beta1.MsgUpdateParams":               &distribution.MsgUpdateParams{},
-		"/cosmos.distribution.v1beta1.MsgUpdateParamsResponse":       nil,
-
-		// gov
-		"/cosmos.gov.v1.MsgExecLegacyContent":         &gov.MsgExecLegacyContent{},
-		"/cosmos.gov.v1.MsgExecLegacyContentResponse": nil,
-		"/cosmos.gov.v1.MsgUpdateParams":              &gov.MsgUpdateParams{},
-		"/cosmos.gov.v1.MsgUpdateParamsResponse":      nil,
-
 		// slashing
 		"/cosmos.slashing.v1beta1.MsgUpdateParams":         &slashing.MsgUpdateParams{},
 		"/cosmos.slashing.v1beta1.MsgUpdateParamsResponse": nil,
-
-		// staking
-		"/cosmos.staking.v1beta1.MsgUpdateParams":         &staking.MsgUpdateParams{},
-		"/cosmos.staking.v1beta1.MsgUpdateParamsResponse": nil,
 
 		// upgrade
 		"/cosmos.upgrade.v1beta1.MsgCancelUpgrade":           &upgrade.MsgCancelUpgrade{},
@@ -89,14 +69,16 @@ var (
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse": nil,
 
 		// ibc
-		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":         &icahosttypes.MsgUpdateParams{},
-		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse": nil,
-		"/ibc.applications.transfer.v1.MsgUpdateParams":                         &ibctransfer.MsgUpdateParams{},
-		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse":                 nil,
-		"/ibc.core.client.v1.MsgUpdateParams":                                   &ibcclient.MsgUpdateParams{},
-		"/ibc.core.client.v1.MsgUpdateParamsResponse":                           nil,
-		"/ibc.core.connection.v1.MsgUpdateParams":                               &ibcconn.MsgUpdateParams{},
-		"/ibc.core.connection.v1.MsgUpdateParamsResponse":                       nil,
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":         	&icahosttypes.MsgUpdateParams{},
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse": 	nil,
+		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafe":		 	&icahosttypes.MsgModuleQuerySafe{},
+		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafeResponse": nil,
+		"/ibc.applications.transfer.v1.MsgUpdateParams":                         	&ibctransfer.MsgUpdateParams{},
+		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse":                 	nil,
+		"/ibc.core.client.v1.MsgUpdateParams":                                   	&ibcclient.MsgUpdateParams{},
+		"/ibc.core.client.v1.MsgUpdateParamsResponse":                           	nil,
+		"/ibc.core.connection.v1.MsgUpdateParams":                               	&ibcconn.MsgUpdateParams{},
+		"/ibc.core.connection.v1.MsgUpdateParamsResponse":                       	nil,
 	}
 
 	// Custom modules
@@ -124,10 +106,6 @@ var (
 		// feetiers
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         &feetiers.MsgUpdatePerpetualFeeParams{},
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": nil,
-
-		// govplus
-		"/dydxprotocol.govplus.MsgSlashValidator":         &govplus.MsgSlashValidator{},
-		"/dydxprotocol.govplus.MsgSlashValidatorResponse": nil,
 
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual":               &perpetuals.MsgCreatePerpetual{},

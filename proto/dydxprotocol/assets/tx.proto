@@ -4,9 +4,10 @@ package dydxprotocol.assets;
 // this line is used by starport scaffolding # proto/tx/import
 
 option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types";
-
+import "cosmos/msg/v1/msg.proto";
 // Msg defines the Msg service.
 service Msg {
+    option (cosmos.msg.v1.service) = true;
   // this line is used by starport scaffolding # proto/tx/rpc
 }
 

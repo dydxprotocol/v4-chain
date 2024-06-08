@@ -1,0 +1,13 @@
+import Long from 'long';
+import { OrderType, OrderSide, OrderTimeInForce, OrderExecution } from '../constants';
+import { Order_ConditionType, Order_Side, Order_TimeInForce } from '../modules/proto-includes';
+import { OrderFlags } from '../types';
+export declare function round(input: number, base: number): number;
+export declare function calculateQuantums(size: number, atomicResolution: number, stepBaseQuantums: number): Long;
+export declare function calculateSubticks(price: number, atomicResolution: number, quantumConversionExponent: number, subticksPerTick: number): Long;
+export declare function calculateSide(side: OrderSide): Order_Side;
+export declare function calculateTimeInForce(type: OrderType, timeInForce?: OrderTimeInForce, execution?: OrderExecution, postOnly?: boolean): Order_TimeInForce;
+export declare function calculateOrderFlags(type: OrderType, timeInForce?: OrderTimeInForce): OrderFlags;
+export declare function calculateClientMetadata(orderType: OrderType): number;
+export declare function calculateConditionType(orderType: OrderType): Order_ConditionType;
+export declare function calculateConditionalOrderTriggerSubticks(orderType: OrderType, atomicResolution: number, quantumConversionExponent: number, subticksPerTick: number, triggerPrice?: number): Long;

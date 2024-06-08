@@ -18,6 +18,7 @@ option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/c
 
 // Msg defines the Msg service.
 service Msg {
+    option (cosmos.msg.v1.service) = true;
   // ProposedOperations is a temporary message used by block proposers
   // for matching orders as part of the ABCI++ workaround.
   rpc ProposedOperations(MsgProposedOperations)

@@ -1,8 +1,9 @@
 package process_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/process"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -45,34 +46,7 @@ func TestDecodeOtherMsgsTx(t *testing.T) {
 				"Invalid msg type or content in OtherTxs *types.MsgSoftwareUpgrade",
 			),
 		},
-		"Error: unsupported msg type is not allowed": {
-			txBytes: testmsgs.GovBetaMsgSubmitProposalTxBytes,
-			expectedErr: errorsmod.Wrap(
-				process.ErrUnexpectedMsgType,
-				"Invalid msg type or content in OtherTxs *v1beta1.MsgSubmitProposal",
-			),
-		},
-		"Error: nested msg type with unsupported inner is not allowed": {
-			txBytes: testmsgs.MsgSubmitProposalWithUnsupportedInnerTxBytes,
-			expectedErr: errorsmod.Wrap(
-				process.ErrUnexpectedMsgType,
-				"Invalid msg type or content in OtherTxs *v1.MsgSubmitProposal",
-			),
-		},
-		"Error: nested msg type with app-injected inner is not allowed": {
-			txBytes: testmsgs.MsgSubmitProposalWithAppInjectedInnerTxBytes,
-			expectedErr: errorsmod.Wrap(
-				process.ErrUnexpectedMsgType,
-				"Invalid msg type or content in OtherTxs *v1.MsgSubmitProposal",
-			),
-		},
-		"Error: nested msg type with double-nested inner is not allowed": {
-			txBytes: testmsgs.MsgSubmitProposalWithDoubleNestedInnerTxBytes,
-			expectedErr: errorsmod.Wrap(
-				process.ErrUnexpectedMsgType,
-				"Invalid msg type or content in OtherTxs *v1.MsgSubmitProposal",
-			),
-		},
+
 		"Error: place order is not allowed": {
 			txBytes: constants.Msg_PlaceOrder_TxBtyes,
 			expectedErr: errorsmod.Wrap(

@@ -4,9 +4,10 @@ package dydxprotocol.sending;
 import "dydxprotocol/sending/transfer.proto";
 
 option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types";
-
+import "cosmos/msg/v1/msg.proto";
 // Msg defines the Msg service.
 service Msg {
+      option (cosmos.msg.v1.service) = true;
   // CreateTransfer initiates a new transfer between subaccounts.
   rpc CreateTransfer(MsgCreateTransfer) returns (MsgCreateTransferResponse);
   // DepositToSubaccount initiates a new transfer from an `x/bank` account

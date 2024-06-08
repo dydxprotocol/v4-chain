@@ -33,11 +33,7 @@ func TestIsDisallowExternalSubmitMsg(t *testing.T) {
 }
 
 func TestIsDisallowExternalSubmitMsg_InvalidInnerMsgs(t *testing.T) {
-	containsInvalidInnerMsgs := []sdk.Msg{
-		testmsgs.MsgSubmitProposalWithUnsupportedInner,
-		testmsgs.MsgSubmitProposalWithAppInjectedInner,
-		testmsgs.MsgSubmitProposalWithDoubleNestedInner,
-	}
+	containsInvalidInnerMsgs := []sdk.Msg{}
 
 	for _, msg := range containsInvalidInnerMsgs {
 		require.True(t, ante.IsDisallowExternalSubmitMsg(msg))
