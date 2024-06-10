@@ -3,7 +3,6 @@ import {
   logger,
   InfoObject,
   safeJsonStringify,
-  STATS_NO_SAMPLING,
 } from '@dydxprotocol-indexer/base';
 import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
@@ -12,7 +11,7 @@ import _ from 'lodash';
 import config from '../config';
 import {
   getChannels,
-  getMessagesToForward,
+  getMessageToForward,
 } from '../helpers/from-kafka-helpers';
 import {
   createChannelDataMessage,
@@ -114,9 +113,21 @@ export class MessageForwarder {
     }
     errProps.channels = channels;
 
-    // Decode the message based on the topic
-    const messagesToForward = getMessagesToForward(topic, message);
-    for (const messageToForward of messagesToForward) {
+    for (const channel of channels) {
+      let messageToForward: MessageToForward;
+      try {
+        messageToForward = getMessageToForward(channel, message);
+      } catch (error) {
+        logger.error({
+          ...errProps,
+          at: loggerAt,
+          message: 'Failed to get message to forward from kafka message',
+          kafkaMessage: safeJsonStringify(message),
+          error,
+        });
+        return;
+      }
+
       const startForwardMessage: number = Date.now();
       this.forwardMessage(messageToForward);
       const end: number = Date.now();
@@ -126,7 +137,7 @@ export class MessageForwarder {
         config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
         {
           topic,
-          channel: String(messageToForward.channel),
+          channel: String(channel),
         },
       );
 
@@ -135,7 +146,7 @@ export class MessageForwarder {
         stats.timing(
           `${config.SERVICE_NAME}.message_time_since_received`,
           startForwardMessage - Number(originalMessageTimestamp),
-          STATS_NO_SAMPLING,
+          config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
           {
             topic,
             event_type: String(message.headers?.event_type),
@@ -154,13 +165,13 @@ export class MessageForwarder {
 
     if (!this.subscriptions.subscriptions[message.channel] &&
       !this.subscriptions.batchedSubscriptions[message.channel]) {
-      // logger.debug({
-      //   at: 'message-forwarder#forwardMessage',
-      //   message: 'No clients to forward to',
-      //   messageId: message.id,
-      //   messageChannel: message.channel,
-      //   contents: message.contents,
-      // });
+      logger.debug({
+        at: 'message-forwarder#forwardMessage',
+        message: 'No clients to forward to',
+        messageId: message.id,
+        messageChannel: message.channel,
+        contents: message.contents,
+      });
       return;
     }
 
@@ -171,25 +182,25 @@ export class MessageForwarder {
     }
     let forwardedToSubscribers: boolean = false;
 
-    // if (subscriptions.length > 0) {
-    //   if (message.channel !== Channel.V4_ORDERBOOK ||
-    //       (
-    //         // Don't log orderbook messages unless enabled
-    //         message.channel === Channel.V4_ORDERBOOK && config.ENABLE_ORDERBOOK_LOGS
-    //       )
-    //   ) {
-    //     logger.debug({
-    //       at: 'message-forwarder#forwardMessage',
-    //       message: 'Forwarding message to clients..',
-    //       messageContents: message,
-    //       connectionIds: subscriptions.map((s: SubscriptionInfo) => s.connectionId),
-    //     });
-    //   }
-    // }
+    if (subscriptions.length > 0) {
+      if (message.channel !== Channel.V4_ORDERBOOK ||
+          (
+            // Don't log orderbook messages unless enabled
+            message.channel === Channel.V4_ORDERBOOK && config.ENABLE_ORDERBOOK_LOGS
+          )
+      ) {
+        logger.debug({
+          at: 'message-forwarder#forwardMessage',
+          message: 'Forwarding message to clients..',
+          messageContents: message,
+          connectionIds: subscriptions.map((s: SubscriptionInfo) => s.connectionId),
+        });
+      }
+    }
 
     // Buffer messages if the subscription is for batched messages
     if (this.subscriptions.batchedSubscriptions[message.channel] &&
-      this.subscriptions.batchedSubscriptions[message.channel][message.id]) {
+       this.subscriptions.batchedSubscriptions[message.channel][message.id]) {
       const bufferKey: string = this.getMessageBufferKey(
         message.channel,
         message.id,
