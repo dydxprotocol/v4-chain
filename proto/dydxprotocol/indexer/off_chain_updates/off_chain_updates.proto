@@ -90,7 +90,8 @@ message OrderUpdateV1 {
 
 // OrderReplace messages contain the old order ID and the replacement order.
 message OrderReplaceV1 {
-  dydxprotocol.indexer.protocol.v1.IndexerOrderId old_order_id = 1;
+  dydxprotocol.indexer.protocol.v1.IndexerOrderId old_order_id =
+      1; // vault replaces orders with a different order ID
   dydxprotocol.indexer.protocol.v1.IndexerOrder order = 2;
   dydxprotocol.indexer.off_chain_updates.OrderPlaceV1.OrderPlacementStatus
       placement_status = 3;

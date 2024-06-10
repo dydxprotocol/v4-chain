@@ -19,11 +19,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Mexc",
-      "ticker": "MKR_USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Okx",
       "ticker": "MKR-USDT",
       "adjustByMarket": "USDT-USD"

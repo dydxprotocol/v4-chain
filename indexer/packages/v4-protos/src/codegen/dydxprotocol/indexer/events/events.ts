@@ -722,12 +722,14 @@ export interface StatefulOrderEventV1_LongTermOrderPlacementV1SDKType {
 /** A long term order replacement contains an old order ID and the new order. */
 
 export interface StatefulOrderEventV1_LongTermOrderReplacementV1 {
+  /** vault replaces orders with a different order ID */
   oldOrderId?: IndexerOrderId;
   order?: IndexerOrder;
 }
 /** A long term order replacement contains an old order ID and the new order. */
 
 export interface StatefulOrderEventV1_LongTermOrderReplacementV1SDKType {
+  /** vault replaces orders with a different order ID */
   old_order_id?: IndexerOrderIdSDKType;
   order?: IndexerOrderSDKType;
 }

@@ -24,11 +24,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Mexc",
-      "ticker": "XLM_USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Okx",
       "ticker": "XLM-USDT",
       "adjustByMarket": "USDT-USD"

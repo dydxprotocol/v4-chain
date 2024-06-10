@@ -29,11 +29,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Mexc",
-      "ticker": "ATOM_USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Okx",
       "ticker": "ATOM-USDT",
       "adjustByMarket": "USDT-USD"

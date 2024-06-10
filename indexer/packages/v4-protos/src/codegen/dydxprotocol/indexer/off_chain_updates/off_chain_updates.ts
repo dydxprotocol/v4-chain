@@ -281,6 +281,7 @@ export interface OrderUpdateV1SDKType {
 /** OrderReplace messages contain the old order ID and the replacement order. */
 
 export interface OrderReplaceV1 {
+  /** vault replaces orders with a different order ID */
   oldOrderId?: IndexerOrderId;
   order?: IndexerOrder;
   placementStatus: OrderPlaceV1_OrderPlacementStatus;
@@ -289,6 +290,7 @@ export interface OrderReplaceV1 {
 /** OrderReplace messages contain the old order ID and the replacement order. */
 
 export interface OrderReplaceV1SDKType {
+  /** vault replaces orders with a different order ID */
   old_order_id?: IndexerOrderIdSDKType;
   order?: IndexerOrderSDKType;
   placement_status: OrderPlaceV1_OrderPlacementStatusSDKType;

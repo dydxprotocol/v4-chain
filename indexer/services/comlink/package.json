@@ -38,7 +38,7 @@
     "cors": "^2.8.5",
     "dd-trace": "^3.32.1",
     "dotenv-flow": "^3.2.0",
-    "dydx-widdershins": "^4.0.1",
+    "dydx-widdershins": "^4.0.7",
     "express": "^4.18.1",
     "express-request-id": "^1.4.0",
     "express-validator": "^6.14.2",
