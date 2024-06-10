@@ -11,38 +11,15 @@ import {
   testMocks,
   PerpetualPositionTable,
   PerpetualPositionCreateObject,
+  PerpetualPositionStatus,
 } from '@dydxprotocol-indexer/postgres';
 import {
   defaultPerpetualPosition,
-  defaultClosedPerpetualPosition,
   createdDateTime,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
-import { create } from 'lodash';
+import { DateTime } from 'luxon';
 
 describe('historical-funding-payment-controller#V4', () => {
-  // TODO:(ADAM) - Clean up this, see which updates you actually need
-  // I think you just need to call update perpetual markets
-
-  const fundingIndexUpdate2: FundingIndexUpdatesCreateObject = {
-    ...testConstants.defaultFundingIndexUpdate,
-    oraclePrice: '1000000',
-    eventId: testConstants.defaultTendermintEventId2,
-    effectiveAtHeight: '5',
-  };
-  const fundingIndexUpdate3: FundingIndexUpdatesCreateObject = {
-    ...testConstants.defaultFundingIndexUpdate,
-    perpetualId: testConstants.defaultPerpetualMarket2.id,
-    oraclePrice: '100',
-  };
-  const fundingIndexUpdate4: FundingIndexUpdatesCreateObject = {
-    ...testConstants.defaultFundingIndexUpdate,
-    perpetualId: testConstants.defaultPerpetualMarket2.id,
-    eventId: testConstants.defaultTendermintEventId2,
-    oraclePrice: '200',
-    effectiveAtHeight: '5',
-  };
-
-  // create PerpetualPositions
   beforeAll(async () => {
     await dbHelpers.migrate();
     await testMocks.seedData();
@@ -51,11 +28,18 @@ describe('historical-funding-payment-controller#V4', () => {
       time: '2000-05-25T00:00:00.000Z',
     });
 
+    const fundingIndexUpdate: FundingIndexUpdatesCreateObject = {
+      ...testConstants.defaultFundingIndexUpdate,
+      oraclePrice: '1000000',
+      eventId: testConstants.defaultTendermintEventId2,
+      fundingIndex: '1000',
+      effectiveAt: DateTime.utc().plus({ days: 1 }).toISO(),
+      effectiveAtHeight: '5',
+    };
+
     await Promise.all([
       FundingIndexUpdatesTable.create(testConstants.defaultFundingIndexUpdate),
-      FundingIndexUpdatesTable.create(fundingIndexUpdate2),
-      FundingIndexUpdatesTable.create(fundingIndexUpdate3),
-      FundingIndexUpdatesTable.create(fundingIndexUpdate4),
+      FundingIndexUpdatesTable.create(fundingIndexUpdate),
     ]);
     await perpetualMarketRefresher.updatePerpetualMarkets();
 
@@ -70,7 +54,6 @@ describe('historical-funding-payment-controller#V4', () => {
       openEventId: testConstants.defaultTendermintEventId3,
       settledFunding: '200',
     };
-
 
     await Promise.all([
       PerpetualPositionTable.create(defaultPerpetualPosition),
@@ -88,7 +71,7 @@ describe('historical-funding-payment-controller#V4', () => {
     await dbHelpers.teardown();
   });
 
-  it('Get /historicalFundingPayment', async () => {
+  it('Get /historicalFundingPayment returns settled and unsettled funding payments', async () => {
     const response: request.Response = await sendRequest({
       type: RequestMethod.GET,
       path: `/v4/historicalFundingPayment/${testConstants.defaultPerpetualMarket.ticker}` +
@@ -99,6 +82,57 @@ describe('historical-funding-payment-controller#V4', () => {
     const res = {
       ticker: testConstants.defaultPerpetualMarket.ticker,
       fundingPayments: [
+        {
+          // Default position size is 10
+          // Default funding index is 10050 (last updated)
+          // Second funding event index is 1000 (latest)
+          // 10 * (10050 - 1000) = 90500
+          payment: '90500',
+          effectiveAt: createdDateTime.toISO(),
+        },
+        {
+          payment: '200',
+          effectiveAt: createdDateTime.toISO(),
+        },
+        {
+          payment: '100',
+          effectiveAt: createdDateTime.toISO(),
+        },
+      ],
+    };
+
+    expect(response.body).toEqual(res);
+  });
+
+  it('Get /historicalFundingPayment returns funding for liquidated positions', async () => {
+    await PerpetualPositionTable.create({
+      ...testConstants.defaultClosedPerpetualPosition,
+      openEventId: testConstants.defaultTendermintEventId4,
+      status: PerpetualPositionStatus.LIQUIDATED,
+    });
+
+    const response: request.Response = await sendRequest({
+      type: RequestMethod.GET,
+      path: `/v4/historicalFundingPayment/${testConstants.defaultPerpetualMarket.ticker}` +
+       `?address=${testConstants.defaultAddress}` +
+       `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}`,
+    });
+
+    const res = {
+      ticker: testConstants.defaultPerpetualMarket.ticker,
+      fundingPayments: [
+        {
+          // Default position size is 10
+          // Default funding index is 10050 (last updated)
+          // Second funding event index is 1000 (latest)
+          // 10 * (10050 - 1000) = 90500
+          payment: '90500',
+          effectiveAt: createdDateTime.toISO(),
+        },
+        {
+          payment: '200000',
+          effectiveAt: createdDateTime.toISO(),
+        },
         {
           payment: '200',
           effectiveAt: createdDateTime.toISO(),
