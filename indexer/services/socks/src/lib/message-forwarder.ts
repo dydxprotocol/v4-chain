@@ -2,7 +2,6 @@ import {
   stats,
   logger,
   InfoObject,
-  STATS_NO_SAMPLING,
 } from '@dydxprotocol-indexer/base';
 import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
@@ -134,7 +133,7 @@ export class MessageForwarder {
         stats.timing(
           `${config.SERVICE_NAME}.message_time_since_received`,
           startForwardMessage - Number(originalMessageTimestamp),
-          STATS_NO_SAMPLING,
+          config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
           {
             topic,
             event_type: String(message.headers?.event_type),

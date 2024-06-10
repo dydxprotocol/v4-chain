@@ -5,7 +5,6 @@
 import winston from 'winston';
 
 import config from './config';
-import { redact } from './sanitization';
 import { InfoObject } from './types';
 
 // Fix types. The methods available depend on the levels used. We're using syslog levels, so these
@@ -38,8 +37,7 @@ const logger: LoggerExport = winston.createLogger({
     winston.format((info) => {
       return {
         ...info,           // info contains some symbols that are lost when the object is cloned.
-        ...redact(info),
-        error: info.error, // cloning with redact() may break the error object
+        error: info.error,
       };
     })(),
     winston.format.json(),
