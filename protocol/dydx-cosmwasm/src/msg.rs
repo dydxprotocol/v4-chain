@@ -8,6 +8,8 @@ use cosmwasm_std::{
 
 use crate::SubaccountId;
 
+// TODO(affan): handle issue with `GoodTilOneof` in `PlaceOrder` and `CancelOrder` not serializing correctly
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Transfer {
   pub sender: SubaccountId,
@@ -55,16 +57,21 @@ pub struct Order {
   pub side: OrderSide,
   pub quantums: u64,
   pub subticks: u64,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub good_til_block: Option<u32>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub good_til_block_time: Option<u32>,
+  pub good_til_oneof: GoodTilOneof,
   pub time_in_force: OrderTimeInForce,
   pub reduce_only: bool,
   pub client_metadata: u32,
   pub condition_type: OrderConditionType,
   pub conditional_order_trigger_subticks: u64,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum GoodTilOneof {
+    GoodTilBlock(u32),
+    GoodTilBlockTime(u32),
+}
+
 
 #[non_exhaustive]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -90,10 +97,7 @@ pub enum DydxMsg {
   },
   CancelOrder {
     order_id: OrderId,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    good_til_block: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    good_til_block_time: Option<u32>,
+    good_til_oneof: GoodTilOneof,
   }
 }
 
