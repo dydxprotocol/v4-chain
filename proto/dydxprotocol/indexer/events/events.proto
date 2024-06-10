@@ -284,7 +284,8 @@ message StatefulOrderEventV1 {
 
   // A long term order replacement contains an old order ID and the new order.
   message LongTermOrderReplacementV1 {
-    dydxprotocol.indexer.protocol.v1.IndexerOrderId old_order_id = 1; // vault replaces orders with a different order ID
+    dydxprotocol.indexer.protocol.v1.IndexerOrderId old_order_id =
+        1; // vault replaces orders with a different order ID
     dydxprotocol.indexer.protocol.v1.IndexerOrder order = 2;
   }
 }
