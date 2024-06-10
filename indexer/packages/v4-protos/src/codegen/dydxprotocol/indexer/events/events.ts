@@ -719,14 +719,18 @@ export interface StatefulOrderEventV1_LongTermOrderPlacementV1 {
 export interface StatefulOrderEventV1_LongTermOrderPlacementV1SDKType {
   order?: IndexerOrderSDKType;
 }
-/** A long term order placement contains an order. */
+/** A long term order replacement contains an old order ID and the new order. */
 
 export interface StatefulOrderEventV1_LongTermOrderReplacementV1 {
+  /** vault replaces orders with a different order ID */
+  oldOrderId?: IndexerOrderId;
   order?: IndexerOrder;
 }
-/** A long term order placement contains an order. */
+/** A long term order replacement contains an old order ID and the new order. */
 
 export interface StatefulOrderEventV1_LongTermOrderReplacementV1SDKType {
+  /** vault replaces orders with a different order ID */
+  old_order_id?: IndexerOrderIdSDKType;
   order?: IndexerOrderSDKType;
 }
 /**
@@ -2733,14 +2737,19 @@ export const StatefulOrderEventV1_LongTermOrderPlacementV1 = {
 
 function createBaseStatefulOrderEventV1_LongTermOrderReplacementV1(): StatefulOrderEventV1_LongTermOrderReplacementV1 {
   return {
+    oldOrderId: undefined,
     order: undefined
   };
 }
 
 export const StatefulOrderEventV1_LongTermOrderReplacementV1 = {
   encode(message: StatefulOrderEventV1_LongTermOrderReplacementV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.oldOrderId !== undefined) {
+      IndexerOrderId.encode(message.oldOrderId, writer.uint32(10).fork()).ldelim();
+    }
+
     if (message.order !== undefined) {
-      IndexerOrder.encode(message.order, writer.uint32(10).fork()).ldelim();
+      IndexerOrder.encode(message.order, writer.uint32(18).fork()).ldelim();
     }
 
     return writer;
@@ -2756,6 +2765,10 @@ export const StatefulOrderEventV1_LongTermOrderReplacementV1 = {
 
       switch (tag >>> 3) {
         case 1:
+          message.oldOrderId = IndexerOrderId.decode(reader, reader.uint32());
+          break;
+
+        case 2:
           message.order = IndexerOrder.decode(reader, reader.uint32());
           break;
 
@@ -2770,6 +2783,7 @@ export const StatefulOrderEventV1_LongTermOrderReplacementV1 = {
 
   fromPartial(object: DeepPartial<StatefulOrderEventV1_LongTermOrderReplacementV1>): StatefulOrderEventV1_LongTermOrderReplacementV1 {
     const message = createBaseStatefulOrderEventV1_LongTermOrderReplacementV1();
+    message.oldOrderId = object.oldOrderId !== undefined && object.oldOrderId !== null ? IndexerOrderId.fromPartial(object.oldOrderId) : undefined;
     message.order = object.order !== undefined && object.order !== null ? IndexerOrder.fromPartial(object.order) : undefined;
     return message;
   }
