@@ -106,12 +106,12 @@ export class OrderReplaceHandler extends Handler {
       // Don't send orderbook message if price is the same to prevent flickering because
       // the order update will send the correct size update
       const sendOrderbookMessage: boolean = (
-        redisOrder.order!.subticks !== removeOrderResult.removedOrder!.order!.subticks
+        redisOrder.order!.subticks.neq(removeOrderResult.removedOrder!.order!.subticks)
       );
       if (sendOrderbookMessage) {
         logger.info({
           at: 'OrderReplaceHandler#handle',
-          message: 'Sending orderbook message because price is the same',
+          message: 'Sending orderbook message because price is different',
           redisOrder,
           removedOrder: removeOrderResult.removedOrder!.order,
         });
