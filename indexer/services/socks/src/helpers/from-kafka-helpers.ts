@@ -30,6 +30,7 @@ export function getChannels(topic: string): Channel[] {
   return TOPIC_TO_CHANNEL[topicEnum];
 }
 
+// TODO: remove this function and fix all tests to use getMessagesToForward instead
 export function getMessageToForward(
   channel: Channel,
   message: KafkaMessage,
@@ -165,8 +166,6 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
     default:
       throw new InvalidForwardMessageError(`Unknown topic: ${topic}`);
   }
-
-  return [] as MessageToForward[];
 }
 
 function getTickerOrThrow(clobPairId: string): string {
