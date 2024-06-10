@@ -52,6 +52,7 @@ export async function getPnlTicksCreateObjects(
   blockHeight: string,
   blockTime: IsoString,
   txId: number,
+  targetSubaccountId?: string,
 ): Promise<PnlTicksCreateObject[]> {
   try {
     const startGetPnlTicksCreateObjects: number = Date.now();
@@ -66,16 +67,31 @@ export async function getPnlTicksCreateObjects(
       getMostRecentPnlTicksForEachAccount(),
       SubaccountTable.getSubaccountsWithTransfers(blockHeight, { readReplica: true, txId }),
     ]);
-    logger.info({
-      at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
-      message: 'mostRecentPnlTicks',
-      mostRecentPnlTicks,
-    });
-    logger.info({
-      at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
-      message: 'subaccountsWithTransfers',
-      subaccountsWithTransfers,
-    });
+    // check if targetSubaccountId is in subaccountsWithTransfers
+    if (targetSubaccountId !== undefined) {
+      const targetSubaccount: SubaccountFromDatabase | undefined = subaccountsWithTransfers.find(
+        (subaccount) => subaccount.id === targetSubaccountId,
+      );
+      if (targetSubaccount !== undefined) {
+        logger.info({
+          at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+          message: 'targetSubaccountId found in subaccountsWithTransfers',
+          targetSubaccount,
+        });
+      }
+    }
+    // check if targetSubaccountId is in mostRecentPnlTicks
+    if (targetSubaccountId !== undefined) {
+      const targetPnlTick:
+      PnlTicksCreateObject | undefined = mostRecentPnlTicks[targetSubaccountId];
+      if (targetPnlTick !== undefined) {
+        logger.info({
+          at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+          message: 'targetSubaccountId found in mostRecentPnlTicks',
+          targetPnlTick,
+        });
+      }
+    }
     stats.timing(
       `${config.SERVICE_NAME}_get_ticks_relevant_accounts`,
       new Date().getTime() - startGetPnlTicksCreateObjects,
@@ -93,19 +109,27 @@ export async function getPnlTicksCreateObjects(
       subaccountIdsWithTranfers, _.keys(accountToLastUpdatedBlockTime),
     );
     // get accounts to update based on last updated block height
-    const accountsToUpdate: string[] = [
+    let accountsToUpdate: string[] = [
       ...getAccountsToUpdate(accountToLastUpdatedBlockTime, blockTime),
       ...newSubaccountIds,
-    ].slice(0, 65000);
+    ];
     stats.gauge(
       `${config.SERVICE_NAME}_get_ticks_accounts_to_update`,
       accountsToUpdate.length,
     );
-    logger.info({
-      at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
-      message: 'Got accounts to update',
-      accountsToUpdate,
-    });
+    // check if targetSubaccountId is in accountsToUpdate
+    if (targetSubaccountId !== undefined) {
+      const targetSubaccountIndex: number = accountsToUpdate.indexOf(targetSubaccountId);
+      if (targetSubaccountIndex !== -1) {
+        logger.info({
+          at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+          message: 'targetSubaccountId found in accountsToUpdate',
+          targetSubaccountId,
+          targetSubaccountIndex,
+        });
+        accountsToUpdate = [targetSubaccountId];
+      }
+    }
     const idToSubaccount: _.Dictionary<SubaccountFromDatabase> = _.keyBy(
       subaccountsWithTransfers,
       'id',
@@ -182,7 +206,6 @@ export async function getPnlTicksCreateObjects(
       at: 'pnl-ticks-helper#computePnl',
       message: 'got subaccountTotalTransfersMap',
     });
-
 
     // Find open positions for subaccounts
     const openPerpetualPositions: SubaccountToPerpetualPositionsMap = await
