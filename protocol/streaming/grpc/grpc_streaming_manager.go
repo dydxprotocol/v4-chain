@@ -88,6 +88,10 @@ func (sm *GrpcStreamingManagerImpl) Enabled() bool {
 
 func (sm *GrpcStreamingManagerImpl) EmitMetrics() {
 	metrics.SetGauge(
+		metrics.GrpcStreamNumUpdatesBuffered,
+		float32(sm.numUpdatesInCache),
+	)
+	metrics.SetGauge(
 		metrics.GrpcStreamSubscriberCount,
 		float32(len(sm.orderbookSubscriptions)),
 	)
@@ -135,7 +139,7 @@ func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 ) {
 	defer metrics.ModuleMeasureSince(
 		metrics.FullNodeGrpc,
-		metrics.GrpcSendOrderbookUpdatesLatency,
+		metrics.GrpcSendOrderbookSnapshotLatency,
 		time.Now(),
 	)
 
@@ -158,6 +162,9 @@ func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 		}
 		updatesByClobPairId[clobPairId] = v1updates
 	}
+
+	sm.Lock()
+	defer sm.Unlock()
 
 	idsToRemove := make([]uint32, 0)
 	for id, subscription := range sm.orderbookSubscriptions {
@@ -282,30 +289,6 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 	sm.AddUpdatesToCache(updatesByClobPairId, uint32(len(orderbookFills)))
 }
 
-// // sendStreamUpdate takes in a map of clob pair id to stream updates and emits them to subscribers.
-// func (sm *GrpcStreamingManagerImpl) sendStreamUpdate(
-// 	updatesBySubscriptionId map[uint32][]clobtypes.StreamUpdate,
-// ) {
-// 	sm.Lock()
-// 	defer sm.Unlock()
-
-// 	for clobPairId, streamUpdates := range updatesByClobPairId {
-// 		sm.streamUpdateCache[clobPairId] = append(sm.streamUpdateCache[clobPairId], streamUpdates...)
-// 	}
-// 	sm.numUpdatesInCache += numUpdatesToAdd
-
-// 	// Remove all subscriptions and wipe the buffer if buffer overflows.
-// 	if sm.numUpdatesInCache > sm.maxUpdatesInCache {
-// 		sm.logger.Error("GRPC Streaming buffer full capacity. Dropping messages and all subscriptions. " +
-// 			"Disconnect all clients and increase buffer size via the grpc-stream-buffer-size flag.")
-// 		for id := range sm.orderbookSubscriptions {
-// 			delete(sm.orderbookSubscriptions, id)
-// 		}
-// 		clear(sm.streamUpdateCache)
-// 		sm.numUpdatesInCache = 0
-// 	}
-// }
-
 func (sm *GrpcStreamingManagerImpl) AddUpdatesToCache(
 	updatesByClobPairId map[uint32][]clobtypes.StreamUpdate,
 	numUpdatesToAdd uint32,
@@ -332,6 +315,12 @@ func (sm *GrpcStreamingManagerImpl) AddUpdatesToCache(
 
 // FlushStreamUpdates takes in a map of clob pair id to stream updates and emits them to subscribers.
 func (sm *GrpcStreamingManagerImpl) FlushStreamUpdates() {
+	defer metrics.ModuleMeasureSince(
+		metrics.FullNodeGrpc,
+		metrics.GrpcFlushUpdatesLatency,
+		time.Now(),
+	)
+
 	sm.Lock()
 	defer sm.Unlock()
 
