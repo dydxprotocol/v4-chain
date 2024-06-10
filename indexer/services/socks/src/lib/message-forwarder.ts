@@ -2,7 +2,6 @@ import {
   stats,
   logger,
   InfoObject,
-  safeJsonStringify,
 } from '@dydxprotocol-indexer/base';
 import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
@@ -11,7 +10,7 @@ import _ from 'lodash';
 import config from '../config';
 import {
   getChannels,
-  getMessageToForward,
+  getMessagesToForward,
 } from '../helpers/from-kafka-helpers';
 import {
   createChannelDataMessage,
@@ -113,21 +112,9 @@ export class MessageForwarder {
     }
     errProps.channels = channels;
 
-    for (const channel of channels) {
-      let messageToForward: MessageToForward;
-      try {
-        messageToForward = getMessageToForward(channel, message);
-      } catch (error) {
-        logger.error({
-          ...errProps,
-          at: loggerAt,
-          message: 'Failed to get message to forward from kafka message',
-          kafkaMessage: safeJsonStringify(message),
-          error,
-        });
-        return;
-      }
-
+    // Decode the message based on the topic
+    const messagesToForward = getMessagesToForward(topic, message);
+    for (const messageToForward of messagesToForward) {
       const startForwardMessage: number = Date.now();
       this.forwardMessage(messageToForward);
       const end: number = Date.now();
@@ -137,7 +124,7 @@ export class MessageForwarder {
         config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
         {
           topic,
-          channel: String(channel),
+          channel: String(messageToForward.channel),
         },
       );
 
