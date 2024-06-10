@@ -35,7 +35,7 @@ async function main() {
   });
   try {
     const newTicksToCreate: PnlTicksCreateObject[] = await
-    getPnlTicksCreateObjects(latestBlockHeight, latestBlockTime, txId);
+    getPnlTicksCreateObjects(latestBlockHeight, latestBlockTime, txId, '306fe2fb-a398-595a-88fc-1cfa180e7a3e');
     logger.info({
       at: 'create-pnl-ticks#runTask',
       message: 'New PNL ticks created',
