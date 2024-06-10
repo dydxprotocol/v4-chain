@@ -2,11 +2,8 @@ import {
   stats,
   logger,
   InfoObject,
-<<<<<<< HEAD
   safeJsonStringify,
   STATS_NO_SAMPLING,
-=======
->>>>>>> aefa183b (decode message in socks only once (#1646))
 } from '@dydxprotocol-indexer/base';
 import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
