@@ -464,6 +464,9 @@ func New(
 			if app.SlinkyClient != nil {
 				app.SlinkyClient.Stop()
 			}
+			if app.GrpcStreamingManager != nil {
+				app.GrpcStreamingManager.Stop()
+			}
 			return nil
 		},
 	)
@@ -1649,6 +1652,8 @@ func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
 
 // PreBlocker application updates before each begin block.
 func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	app.scheduleForkUpgrade(ctx)
+
 	// Set gas meter to the free gas meter.
 	// This is because there is currently non-deterministic gas usage in the
 	// pre-blocker, e.g. due to hydration of in-memory data structures.
@@ -1667,7 +1672,6 @@ func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	proposerAddr := sdk.ConsAddress(ctx.BlockHeader().ProposerAddress)
 	middleware.Logger = ctx.Logger().With("proposer_cons_addr", proposerAddr.String())
 
-	app.scheduleForkUpgrade(ctx)
 	return app.ModuleManager.BeginBlock(ctx)
 }
 
@@ -1951,7 +1955,11 @@ func getGrpcStreamingManagerFromOptions(
 ) (manager streamingtypes.GrpcStreamingManager) {
 	if appFlags.GrpcStreamingEnabled {
 		logger.Info("GRPC streaming is enabled")
-		return streaming.NewGrpcStreamingManager(logger)
+		return streaming.NewGrpcStreamingManager(
+			logger,
+			appFlags.GrpcStreamingFlushIntervalMs,
+			appFlags.GrpcStreamingMaxBufferSize,
+		)
 	}
 	return streaming.NewNoopGrpcStreamingManager()
 }

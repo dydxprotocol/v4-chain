@@ -55,14 +55,11 @@ func (k Keeper) SetLongTermOrderPlacement(
 	longTermOrderPlacementBytes := k.cdc.MustMarshal(&longTermOrderPlacement)
 
 	// For setting long term order placements, always set conditional orders to the untriggered state store.
-	store, memStore := k.fetchStateStoresForOrder(ctx, order.OrderId)
+	store := k.fetchStateStoresForOrder(ctx, order.OrderId)
 	orderKey := order.OrderId.ToStateKey()
 
 	// Write the `LongTermOrderPlacement` to state.
 	store.Set(orderKey, longTermOrderPlacementBytes)
-
-	// Write the `LongTermOrderPlacement` to memstore.
-	memStore.Set(orderKey, longTermOrderPlacementBytes)
 
 	if !found {
 		// Increment the stateful order count.
@@ -83,15 +80,15 @@ func (k Keeper) SetLongTermOrderPlacement(
 	}
 }
 
-// GetTriggeredConditionalOrderPlacement gets an triggered conditional order placement from the memstore.
-// Returns false if no triggered conditional order exists in memstore with `orderId`.
+// GetTriggeredConditionalOrderPlacement gets an triggered conditional order placement from the store.
+// Returns false if no triggered conditional order exists in store with `orderId`.
 func (k Keeper) GetTriggeredConditionalOrderPlacement(
 	ctx sdk.Context,
 	orderId types.OrderId,
 ) (val types.LongTermOrderPlacement, found bool) {
-	memStore := k.GetTriggeredConditionalOrderPlacementMemStore(ctx)
+	store := k.GetTriggeredConditionalOrderPlacementStore(ctx)
 
-	b := memStore.Get(orderId.ToStateKey())
+	b := store.Get(orderId.ToStateKey())
 	if b == nil {
 		return val, false
 	}
@@ -100,15 +97,15 @@ func (k Keeper) GetTriggeredConditionalOrderPlacement(
 	return val, true
 }
 
-// GetUntriggeredConditionalOrderPlacement gets an untriggered conditional order placement from the memstore.
-// Returns false if no untriggered conditional order exists in memstore with `orderId`.
+// GetUntriggeredConditionalOrderPlacement gets an untriggered conditional order placement from the store.
+// Returns false if no untriggered conditional order exists in store with `orderId`.
 func (k Keeper) GetUntriggeredConditionalOrderPlacement(
 	ctx sdk.Context,
 	orderId types.OrderId,
 ) (val types.LongTermOrderPlacement, found bool) {
-	memStore := k.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
+	store := k.GetUntriggeredConditionalOrderPlacementStore(ctx)
 
-	b := memStore.Get(orderId.ToStateKey())
+	b := store.Get(orderId.ToStateKey())
 	if b == nil {
 		return val, false
 	}
@@ -127,9 +124,9 @@ func (k Keeper) GetLongTermOrderPlacement(
 	// If this is a Short-Term order, panic.
 	orderId.MustBeStatefulOrder()
 
-	_, memStore := k.fetchStateStoresForOrder(ctx, orderId)
+	store := k.fetchStateStoresForOrder(ctx, orderId)
 
-	b := memStore.Get(orderId.ToStateKey())
+	b := store.Get(orderId.ToStateKey())
 	if b == nil {
 		return val, false
 	}
@@ -148,15 +145,13 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 	// If this is a Short-Term order, panic.
 	orderId.MustBeStatefulOrder()
 
-	store, memStore := k.fetchStateStoresForOrder(ctx, orderId)
+	store := k.fetchStateStoresForOrder(ctx, orderId)
 
-	// Note that since store reads/writes can cost gas we need to ensure that the number of operations is the
-	// same regardless of whether the memstore has the order or not.
 	count := k.GetStatefulOrderCount(ctx, orderId.SubaccountId)
 	orderKey := orderId.ToStateKey()
-	if memStore.Has(orderKey) {
+	if store.Has(orderKey) {
 		if count == 0 {
-			log.ErrorLog(ctx, "Stateful order count is zero but order is in the memstore. Underflow",
+			log.ErrorLog(ctx, "Stateful order count is zero but order is in the store. Underflow",
 				"orderId", cometbftlog.NewLazySprintf("%+v", orderId),
 			)
 		} else {
@@ -166,9 +161,6 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 
 	// Delete the `StatefulOrderPlacement` from state.
 	store.Delete(orderKey)
-
-	// Delete the `StatefulOrderPlacement` from memstore.
-	memStore.Delete(orderKey)
 
 	// Set the count.
 	k.SetStatefulOrderCount(ctx, orderId.SubaccountId, count)
@@ -239,10 +231,9 @@ func (k Keeper) MustTriggerConditionalOrder(
 
 	blockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight())
 
-	untriggeredConditionalOrderMemStore := k.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
 	untriggeredConditionalOrderStore := k.GetUntriggeredConditionalOrderPlacementStore(ctx)
 
-	bytes := untriggeredConditionalOrderMemStore.Get(orderId.ToStateKey())
+	bytes := untriggeredConditionalOrderStore.Get(orderId.ToStateKey())
 	if bytes == nil {
 		panic(
 			fmt.Sprintf(
@@ -262,17 +253,14 @@ func (k Keeper) MustTriggerConditionalOrder(
 		TransactionIndex: nextStatefulOrderTransactionIndex,
 	}
 
-	// Write the StatefulOrderPlacement to the Triggered state store/memstore.
+	// Write the StatefulOrderPlacement to the Triggered state store.
 	longTermOrderPlacementBytes := k.cdc.MustMarshal(&longTermOrderPlacement)
-	triggeredConditionalOrderMemStore := k.GetTriggeredConditionalOrderPlacementMemStore(ctx)
 	triggeredConditionalOrderStore := k.GetTriggeredConditionalOrderPlacementStore(ctx)
 	orderKey := orderId.ToStateKey()
 	triggeredConditionalOrderStore.Set(orderKey, longTermOrderPlacementBytes)
-	triggeredConditionalOrderMemStore.Set(orderKey, longTermOrderPlacementBytes)
 
-	// Delete the `StatefulOrderPlacement` from Untriggered state store/memstore.
+	// Delete the `StatefulOrderPlacement` from Untriggered state store.
 	untriggeredConditionalOrderStore.Delete(orderKey)
-	untriggeredConditionalOrderMemStore.Delete(orderKey)
 }
 
 // MustAddOrderToStatefulOrdersTimeSlice adds a new `OrderId` to an existing time slice, or creates a new time slice
@@ -367,9 +355,9 @@ func (k Keeper) IsConditionalOrderTriggered(
 ) (triggered bool) {
 	// If this is not a conditional order, panic.
 	orderId.MustBeConditionalOrder()
-	triggeredMemstore := k.GetTriggeredConditionalOrderPlacementMemStore(ctx)
+	store := k.GetTriggeredConditionalOrderPlacementStore(ctx)
 	orderKey := orderId.ToStateKey()
-	return triggeredMemstore.Has(orderKey)
+	return store.Has(orderKey)
 }
 
 // RemoveExpiredStatefulOrdersTimeSlices iterates all time slices from 0 until the time specified by

@@ -144,13 +144,9 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				types.PrunableOrdersKeyPrefix,
 				// Update taker order fill amount
 				types.OrderAmountFilledKeyPrefix,
-				// Update taker order fill amount in memStore
-				types.OrderAmountFilledKeyPrefix,
 				// Update prunable block height for maker fill amount
 				types.PrunableOrdersKeyPrefix,
 				// Update maker order fill amount
-				types.OrderAmountFilledKeyPrefix,
-				// Update maker order fill amount in memStore
 				types.OrderAmountFilledKeyPrefix,
 			},
 			expectedOpenInterests: map[uint32]*big.Int{
@@ -396,13 +392,9 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				types.PrunableOrdersKeyPrefix,
 				// Update taker order fill amount
 				types.OrderAmountFilledKeyPrefix,
-				// Update taker order fill amount in memStore
-				types.OrderAmountFilledKeyPrefix,
 				// Update prunable block height for maker fill amount
 				types.PrunableOrdersKeyPrefix,
 				// Update maker order fill amount
-				types.OrderAmountFilledKeyPrefix,
-				// Update maker order fill amount in memStore
 				types.OrderAmountFilledKeyPrefix,
 			},
 			expectedOpenInterests: map[uint32]*big.Int{
@@ -754,14 +746,10 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 				indexer_manager.IndexerEventsCountKey,
 				// Update block stats
 				statstypes.BlockStatsKey,
-				// Update taker order fill amount to state and memStore.
+				// Update taker order fill amount to state.
 				types.OrderAmountFilledKeyPrefix +
 					string(constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId.ToStateKey()),
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId.ToStateKey()),
-				// Update maker order fill amount to state and memStore.
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId.ToStateKey()),
+				// Update maker order fill amount to state.
 				types.OrderAmountFilledKeyPrefix +
 					string(constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId.ToStateKey()),
 			},
@@ -2434,11 +2422,9 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 				longTermOrderPlacementBytes := ks.Cdc.MustMarshal(&longTermOrderPlacement)
 
 				store := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementStore(ctx)
-				memstore := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementMemStore(ctx)
 
 				orderKey := order.OrderId.ToStateKey()
 				store.Set(orderKey, longTermOrderPlacementBytes)
-				memstore.Set(orderKey, longTermOrderPlacementBytes)
 			}
 
 			// Write to untriggered orders state
@@ -2449,11 +2435,9 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 				longTermOrderPlacementBytes := ks.Cdc.MustMarshal(&longTermOrderPlacement)
 
 				store := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementStore(ctx)
-				memstore := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
 
 				orderKey := order.OrderId.ToStateKey()
 				store.Set(orderKey, longTermOrderPlacementBytes)
-				memstore.Set(orderKey, longTermOrderPlacementBytes)
 			}
 
 			// Assert expected order placement memclob calls.
