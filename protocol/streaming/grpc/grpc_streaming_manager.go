@@ -199,8 +199,6 @@ func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 									Snapshot: true,
 								},
 							},
-							BlockHeight: blockHeight,
-							ExecMode:    uint32(execMode),
 						},
 					},
 				},
@@ -214,13 +212,6 @@ func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 		}
 	}
 
-<<<<<<< HEAD
-	sm.sendStreamUpdate(
-		updatesBySubscriptionId,
-		blockHeight,
-		execMode,
-	)
-=======
 	// Clean up subscriptions that have been closed.
 	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
 	for _, id := range idsToRemove {
@@ -266,14 +257,11 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 						Snapshot: false,
 					},
 				},
-				BlockHeight: blockHeight,
-				ExecMode:    uint32(execMode),
 			},
 		}
 	}
 
 	sm.AddUpdatesToCache(updatesByClobPairId, uint32(len(updates)))
->>>>>>> 5aa268eb (GRPC Streaming Batching (#1633))
 }
 
 // SendOrderbookFillUpdates groups fills by their clob pair ids and
@@ -308,39 +296,12 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 		updatesByClobPairId[clobPairId] = append(updatesByClobPairId[clobPairId], streamUpdate)
 	}
 
-<<<<<<< HEAD
-	updatesBySubscriptionId := make(map[uint32][]clobtypes.StreamUpdate)
-	for id, subscription := range sm.orderbookSubscriptions {
-		streamUpdatesForSubscription := make([]clobtypes.StreamUpdate, 0)
-		for _, clobPairId := range subscription.clobPairIds {
-			if update, ok := updatesByClobPairId[clobPairId]; ok {
-				streamUpdatesForSubscription = append(streamUpdatesForSubscription, update...)
-			}
-		}
-
-		updatesBySubscriptionId[id] = streamUpdatesForSubscription
-	}
-
-	sm.sendStreamUpdate(
-		updatesBySubscriptionId,
-		blockHeight,
-		execMode,
-	)
-}
-
-// sendStreamUpdate takes in a map of clob pair id to stream updates and emits them to subscribers.
-func (sm *GrpcStreamingManagerImpl) sendStreamUpdate(
-	updatesBySubscriptionId map[uint32][]clobtypes.StreamUpdate,
-	blockHeight uint32,
-	execMode sdk.ExecMode,
-=======
 	sm.AddUpdatesToCache(updatesByClobPairId, uint32(len(orderbookFills)))
 }
 
 func (sm *GrpcStreamingManagerImpl) AddUpdatesToCache(
 	updatesByClobPairId map[uint32][]clobtypes.StreamUpdate,
 	numUpdatesToAdd uint32,
->>>>>>> 5aa268eb (GRPC Streaming Batching (#1633))
 ) {
 	sm.Lock()
 	defer sm.Unlock()
@@ -402,19 +363,7 @@ func (sm *GrpcStreamingManagerImpl) FlushStreamUpdates() {
 					fmt.Sprintf("Error sending out update for grpc streaming subscription %+v", id),
 					"err", err,
 				)
-<<<<<<< HEAD
-				if err := subscription.srv.Send(
-					&clobtypes.StreamOrderbookUpdatesResponse{
-						Updates:     streamUpdatesForSubscription,
-						BlockHeight: blockHeight,
-						ExecMode:    uint32(execMode),
-					},
-				); err != nil {
-					idsToRemove = append(idsToRemove, id)
-				}
-=======
 				idsToRemove = append(idsToRemove, id)
->>>>>>> 5aa268eb (GRPC Streaming Batching (#1633))
 			}
 		}
 	}
