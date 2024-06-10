@@ -88,13 +88,15 @@ message OrderUpdateV1 {
   uint64 total_filled_quantums = 2;
 }
 
-// OrderReplace messages contain the replacement order.
+// OrderReplace messages contain the old order ID and the replacement order.
 message OrderReplaceV1 {
-  dydxprotocol.indexer.protocol.v1.IndexerOrder order = 1;
+  dydxprotocol.indexer.protocol.v1.IndexerOrderId old_order_id =
+      1; // vault replaces orders with a different order ID
+  dydxprotocol.indexer.protocol.v1.IndexerOrder order = 2;
   dydxprotocol.indexer.off_chain_updates.OrderPlaceV1.OrderPlacementStatus
-      placement_status = 2;
+      placement_status = 3;
 
-  google.protobuf.Timestamp time_stamp = 3
+  google.protobuf.Timestamp time_stamp = 4
       [ (gogoproto.nullable) = true, (gogoproto.stdtime) = true ];
 }
 
