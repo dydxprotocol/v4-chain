@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -125,6 +126,17 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 	return nil
 }
 
+// removeSubscription removes a subscription from the grpc streaming manager.
+// The streaming manager's lock should already be acquired from the thread running this.
+func (sm *GrpcStreamingManagerImpl) removeSubscription(
+	subscriptionIdToRemove uint32,
+) {
+	delete(sm.orderbookSubscriptions, subscriptionIdToRemove)
+	sm.logger.Info(
+		fmt.Sprintf("Removed grpc streaming subscription id %+v", subscriptionIdToRemove),
+	)
+}
+
 func (sm *GrpcStreamingManagerImpl) Stop() {
 	sm.done <- true
 }
@@ -193,6 +205,10 @@ func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 					},
 				},
 			); err != nil {
+				sm.logger.Error(
+					fmt.Sprintf("Error sending out update for grpc streaming subscription %+v", id),
+					"err", err,
+				)
 				idsToRemove = append(idsToRemove, id)
 			}
 		}
@@ -201,7 +217,7 @@ func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 	// Clean up subscriptions that have been closed.
 	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
 	for _, id := range idsToRemove {
-		delete(sm.orderbookSubscriptions, id)
+		sm.removeSubscription(id)
 	}
 }
 
@@ -306,7 +322,7 @@ func (sm *GrpcStreamingManagerImpl) AddUpdatesToCache(
 		sm.logger.Error("GRPC Streaming buffer full capacity. Dropping messages and all subscriptions. " +
 			"Disconnect all clients and increase buffer size via the grpc-stream-buffer-size flag.")
 		for id := range sm.orderbookSubscriptions {
-			delete(sm.orderbookSubscriptions, id)
+			sm.removeSubscription(id)
 		}
 		clear(sm.streamUpdateCache)
 		sm.numUpdatesInCache = 0
@@ -349,7 +365,10 @@ func (sm *GrpcStreamingManagerImpl) FlushStreamUpdates() {
 					Updates: streamUpdatesForSubscription,
 				},
 			); err != nil {
-				sm.logger.Error("Error sending out update", "err", err)
+				sm.logger.Error(
+					fmt.Sprintf("Error sending out update for grpc streaming subscription %+v", id),
+					"err", err,
+				)
 				idsToRemove = append(idsToRemove, id)
 			}
 		}
@@ -358,7 +377,7 @@ func (sm *GrpcStreamingManagerImpl) FlushStreamUpdates() {
 	// Clean up subscriptions that have been closed.
 	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
 	for _, id := range idsToRemove {
-		delete(sm.orderbookSubscriptions, id)
+		sm.removeSubscription(id)
 	}
 
 	clear(sm.streamUpdateCache)
