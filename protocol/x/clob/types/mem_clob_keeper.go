@@ -110,7 +110,6 @@ type MemClobKeeper interface {
 	SendOrderbookUpdates(
 		ctx sdk.Context,
 		offchainUpdates *OffchainUpdates,
-		snapshot bool,
 	)
 	SendOrderbookFillUpdates(
 		ctx sdk.Context,
