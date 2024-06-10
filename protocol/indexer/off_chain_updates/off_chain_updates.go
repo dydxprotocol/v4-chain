@@ -48,7 +48,7 @@ func CreateOrderPlaceMessage(
 		return msgsender.Message{}, false
 	}
 
-	update, err := newOrderPlaceMessage(order)
+	update, err := NewOrderPlaceMessage(order)
 	if err != nil {
 		log.ErrorLogWithError(
 			ctx,
@@ -92,7 +92,7 @@ func CreateOrderReplaceMessage(
 		return msgsender.Message{}, false
 	}
 
-	update, err := newOrderReplaceMessage(order)
+	update, err := NewOrderReplaceMessage(order)
 	if err != nil {
 		log.ErrorLogWithError(
 			ctx,
@@ -139,7 +139,7 @@ func CreateOrderUpdateMessage(
 		return msgsender.Message{}, false
 	}
 
-	update, err := newOrderUpdateMessage(orderId, totalFilled)
+	update, err := NewOrderUpdateMessage(orderId, totalFilled)
 	if err != nil {
 		log.ErrorLogWithError(
 			ctx,
@@ -192,7 +192,7 @@ func CreateOrderRemoveMessageWithReason(
 		return msgsender.Message{}, false
 	}
 
-	update, err := newOrderRemoveMessage(orderId, reason, removalStatus)
+	update, err := NewOrderRemoveMessage(orderId, reason, removalStatus)
 	if err != nil {
 		log.ErrorLogWithError(
 			ctx,
@@ -284,9 +284,9 @@ func CreateOrderRemoveMessageWithDefaultReason(
 	return CreateOrderRemoveMessageWithReason(ctx, orderId, reason, removalStatus)
 }
 
-// newOrderPlaceMessage returns an `OffChainUpdate` struct populated with an `OrderPlace` struct
+// NewOrderPlaceMessage returns an `OffChainUpdate` struct populated with an `OrderPlace` struct
 // as the `UpdateMessage` parameter, encoded as a byte slice.
-func newOrderPlaceMessage(
+func NewOrderPlaceMessage(
 	order clobtypes.Order,
 ) ([]byte, error) {
 	indexerOrder := v1.OrderToIndexerOrder(order)
@@ -302,10 +302,10 @@ func newOrderPlaceMessage(
 	return proto.Marshal(&update)
 }
 
-// newOrderPlaceMessage returns an `OffChainUpdate` struct populated with an `OrderRemove`
+// NewOrderRemoveMessage returns an `OffChainUpdate` struct populated with an `OrderRemove`
 // struct as the `UpdateMessage` parameter, encoded as a byte slice.
 // The `OrderRemove` struct is instantiated with the given orderId, reason and status parameters.
-func newOrderRemoveMessage(
+func NewOrderRemoveMessage(
 	orderId clobtypes.OrderId,
 	reason sharedtypes.OrderRemovalReason,
 	status ocutypes.OrderRemoveV1_OrderRemovalStatus,
@@ -326,7 +326,7 @@ func newOrderRemoveMessage(
 // NewOrderUpdateMessage returns an `OffChainUpdate` struct populated with an `OrderUpdate`
 // struct as the `UpdateMessage` parameter, encoded as a byte slice.
 // The `OrderUpdate` struct is instantiated with the given orderId and totalFilled parameters.
-func newOrderUpdateMessage(
+func NewOrderUpdateMessage(
 	orderId clobtypes.OrderId,
 	totalFilled satypes.BaseQuantums,
 ) ([]byte, error) {
@@ -342,9 +342,9 @@ func newOrderUpdateMessage(
 	return proto.Marshal(&update)
 }
 
-// newOrderReplaceMessage returns an `OffChainUpdate` struct populated with an `OrderReplace` struct
+// NewOrderReplaceMessage returns an `OffChainUpdate` struct populated with an `OrderReplace` struct
 // as the `UpdateMessage` parameter, encoded as a byte slice.
-func newOrderReplaceMessage(
+func NewOrderReplaceMessage(
 	order clobtypes.Order,
 ) ([]byte, error) {
 	indexerOrder := v1.OrderToIndexerOrder(order)
