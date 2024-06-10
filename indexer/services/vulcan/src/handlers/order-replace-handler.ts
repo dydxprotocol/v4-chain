@@ -105,9 +105,17 @@ export class OrderReplaceHandler extends Handler {
     ) {
       // Don't send orderbook message if price is the same to prevent flickering because
       // the order update will send the correct size update
-      const sendOrderbookMessage = (
+      const sendOrderbookMessage: boolean = (
         redisOrder.order!.subticks !== removeOrderResult.removedOrder!.order!.subticks
       );
+      if (sendOrderbookMessage) {
+        logger.info({
+          at: 'OrderReplaceHandler#handle',
+          message: 'Sending orderbook message because price is the same',
+          redisOrder,
+          removedOrder: removeOrderResult.removedOrder!.order,
+        });
+      }
       await this.removeOldOrderFromOrderbook(
         removeOrderResult,
         perpetualMarket,
@@ -369,7 +377,7 @@ export class OrderReplaceHandler extends Handler {
     // confirmed this case no longer happens normally.
     if (sizeDelta.gt(0)) {
       logger.info({
-        at: 'orderRemoveHandler#getSizeDeltaInQuantums',
+        at: 'OrderReplaceHandler#getSizeDeltaInQuantums',
         message: 'Total filled of order exceeds quantums of order',
         totalFilled: removeOrderResult.totalFilledQuantums!.toString(),
         quantums: redisOrder.order!.quantums.toString(),
