@@ -265,16 +265,20 @@ export interface OrderUpdateV1SDKType {
   order_id?: IndexerOrderIdSDKType;
   total_filled_quantums: Long;
 }
-/** OrderReplace messages contain the replacement order. */
+/** OrderReplace messages contain the old order ID and the replacement order. */
 
 export interface OrderReplaceV1 {
+  /** vault replaces orders with a different order ID */
+  oldOrderId?: IndexerOrderId;
   order?: IndexerOrder;
   placementStatus: OrderPlaceV1_OrderPlacementStatus;
   timeStamp?: Date;
 }
-/** OrderReplace messages contain the replacement order. */
+/** OrderReplace messages contain the old order ID and the replacement order. */
 
 export interface OrderReplaceV1SDKType {
+  /** vault replaces orders with a different order ID */
+  old_order_id?: IndexerOrderIdSDKType;
   order?: IndexerOrderSDKType;
   placement_status: OrderPlaceV1_OrderPlacementStatusSDKType;
   time_stamp?: Date;
@@ -479,6 +483,7 @@ export const OrderUpdateV1 = {
 
 function createBaseOrderReplaceV1(): OrderReplaceV1 {
   return {
+    oldOrderId: undefined,
     order: undefined,
     placementStatus: 0,
     timeStamp: undefined
@@ -487,16 +492,20 @@ function createBaseOrderReplaceV1(): OrderReplaceV1 {
 
 export const OrderReplaceV1 = {
   encode(message: OrderReplaceV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.oldOrderId !== undefined) {
+      IndexerOrderId.encode(message.oldOrderId, writer.uint32(10).fork()).ldelim();
+    }
+
     if (message.order !== undefined) {
-      IndexerOrder.encode(message.order, writer.uint32(10).fork()).ldelim();
+      IndexerOrder.encode(message.order, writer.uint32(18).fork()).ldelim();
     }
 
     if (message.placementStatus !== 0) {
-      writer.uint32(16).int32(message.placementStatus);
+      writer.uint32(24).int32(message.placementStatus);
     }
 
     if (message.timeStamp !== undefined) {
-      Timestamp.encode(toTimestamp(message.timeStamp), writer.uint32(26).fork()).ldelim();
+      Timestamp.encode(toTimestamp(message.timeStamp), writer.uint32(34).fork()).ldelim();
     }
 
     return writer;
@@ -512,14 +521,18 @@ export const OrderReplaceV1 = {
 
       switch (tag >>> 3) {
         case 1:
-          message.order = IndexerOrder.decode(reader, reader.uint32());
+          message.oldOrderId = IndexerOrderId.decode(reader, reader.uint32());
           break;
 
         case 2:
-          message.placementStatus = (reader.int32() as any);
+          message.order = IndexerOrder.decode(reader, reader.uint32());
           break;
 
         case 3:
+          message.placementStatus = (reader.int32() as any);
+          break;
+
+        case 4:
           message.timeStamp = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
           break;
 
@@ -534,6 +547,7 @@ export const OrderReplaceV1 = {
 
   fromPartial(object: DeepPartial<OrderReplaceV1>): OrderReplaceV1 {
     const message = createBaseOrderReplaceV1();
+    message.oldOrderId = object.oldOrderId !== undefined && object.oldOrderId !== null ? IndexerOrderId.fromPartial(object.oldOrderId) : undefined;
     message.order = object.order !== undefined && object.order !== null ? IndexerOrder.fromPartial(object.order) : undefined;
     message.placementStatus = object.placementStatus ?? 0;
     message.timeStamp = object.timeStamp ?? undefined;
