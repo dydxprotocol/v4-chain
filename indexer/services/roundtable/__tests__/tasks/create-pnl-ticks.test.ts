@@ -277,9 +277,16 @@ describe('create-pnl-ticks', () => {
         ...testConstants.defaultPnlTick,
         blockTime: testConstants.defaultBlock.time,
       });
-      const blockTimeIsoString: string = await PnlTicksTable.findLatestProcessedBlocktime();
+      const {
+        maxBlockTime,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        count,
+      }: {
+        maxBlockTime: string,
+        count: number,
+      } = await PnlTicksTable.findLatestProcessedBlocktimeAndCount();
 
-      const date: number = Date.parse(blockTimeIsoString).valueOf();
+      const date: number = Date.parse(maxBlockTime).valueOf();
       jest.spyOn(Date, 'now').mockImplementation(() => date);
       jest.spyOn(DateTime, 'utc').mockImplementation(() => dateTime);
       jest.spyOn(logger, 'info');
@@ -305,7 +312,7 @@ describe('create-pnl-ticks', () => {
       expect(pnlTicks.length).toEqual(1);
       expect(logger.info).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: 'Skipping run because update interval has not been reached',
+          message: 'Skipping run because update interval has not been reached and all subaccounts have been processed',
         }),
       );
     });
