@@ -439,9 +439,9 @@ func (_m *MemClobKeeper) SendOrderbookFillUpdates(ctx types.Context, orderbookFi
 	_m.Called(ctx, orderbookFills)
 }
 
-// SendOrderbookUpdates provides a mock function with given fields: ctx, offchainUpdates, snapshot
-func (_m *MemClobKeeper) SendOrderbookUpdates(ctx types.Context, offchainUpdates *clobtypes.OffchainUpdates, snapshot bool) {
-	_m.Called(ctx, offchainUpdates, snapshot)
+// SendOrderbookUpdates provides a mock function with given fields: ctx, offchainUpdates
+func (_m *MemClobKeeper) SendOrderbookUpdates(ctx types.Context, offchainUpdates *clobtypes.OffchainUpdates) {
+	_m.Called(ctx, offchainUpdates)
 }
 
 // SetLongTermOrderPlacement provides a mock function with given fields: ctx, order, blockHeight

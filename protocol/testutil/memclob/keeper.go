@@ -515,7 +515,6 @@ func (f *FakeMemClobKeeper) Logger(ctx sdk.Context) log.Logger {
 func (f *FakeMemClobKeeper) SendOrderbookUpdates(
 	ctx sdk.Context,
 	offchainUpdates *types.OffchainUpdates,
-	snapshot bool,
 ) {
 }
 
