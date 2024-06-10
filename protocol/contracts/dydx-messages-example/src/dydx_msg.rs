@@ -21,12 +21,12 @@ pub enum SendingMsg {
     asset_id: u32,
     quantums: u64,
   },
-    WithdrawFromSubaccount {
-        sender: SubaccountId,
-        recipient: String,
-        asset_id: u32,
-        quantums: u64,
-    },
+  WithdrawFromSubaccount {
+      sender: SubaccountId,
+      recipient: String,
+      asset_id: u32,
+      quantums: u64,
+  },
   PlaceOrder {
     order: Order,
   },

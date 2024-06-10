@@ -42,8 +42,6 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response<SendingMsg>, ContractError> {
     match msg {
-        ExecuteMsg::Approve { quantity } => execute_approve(deps, env, info, quantity),
-        ExecuteMsg::Refund {} => execute_refund(deps, env, info),
         ExecuteMsg::DepositToSubaccount { sender, recipient, asset_id, quantums } => {
             let deposit = SendingMsg::DepositToSubaccount {
                 sender: sender,

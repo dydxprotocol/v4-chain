@@ -242,7 +242,7 @@ func (m *CustomMessenger) placeOrder(
 		return nil, nil, errors.New("short term orders are not supported for contracts")
 	} else {
 		order.GoodTilOneof = &clobtypes.Order_GoodTilBlockTime{
-			GoodTilBlockTime: lib.MustConvertIntegerToUint32(1705794828),
+			GoodTilBlockTime: lib.MustConvertIntegerToUint32(placeOrder.Order.GoodTilBlockTime),
 		}
 
 		if ctx.IsCheckTx() || ctx.IsReCheckTx() {
@@ -337,7 +337,6 @@ func (m *CustomMessenger) cancelOrder(
 
 		fmt.Printf("Cancelling stateful order: %+v\n", orderId)
 
-		// setting is internal order to false since this is being placed from a contract
 		if err := m.clob.CancelStatefulOrder(ctx, &clobtypes.MsgCancelOrder{OrderId: orderId}); err != nil {
 			return nil, nil, err
 		}
