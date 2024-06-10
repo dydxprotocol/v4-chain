@@ -12,6 +12,8 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -48,6 +50,7 @@ func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	// Add test for your upgrade handler logic below
+	postUpgradeStatefulOrderCheck(node, t)
 }
 
 func placeOrders(node *containertest.Node, t *testing.T) {
@@ -185,7 +188,7 @@ func placeOrders(node *containertest.Node, t *testing.T) {
 	))
 
 	// FOK order setups.
-	require.NoError(t, containertest.BroadcastTx(
+	require.NoError(t, containertest.BroadcastTxWithoutValidateBasic(
 		node,
 		&clobtypes.MsgPlaceOrder{
 			Order: clobtypes.Order{
@@ -211,7 +214,11 @@ func placeOrders(node *containertest.Node, t *testing.T) {
 		},
 		constants.AliceAccAddress.String(),
 	))
-	require.NoError(t, containertest.BroadcastTx(
+
+	err := node.Wait(1)
+	require.NoError(t, err)
+
+	require.NoError(t, containertest.BroadcastTxWithoutValidateBasic(
 		node,
 		&clobtypes.MsgPlaceOrder{
 			Order: clobtypes.Order{
@@ -226,7 +233,7 @@ func placeOrders(node *containertest.Node, t *testing.T) {
 				},
 				Side:                            clobtypes.Order_SIDE_SELL,
 				Quantums:                        AliceBobBTCQuantums,
-				Subticks:                        5_050_000,
+				Subticks:                        5_500_000,
 				ConditionType:                   clobtypes.Order_CONDITION_TYPE_TAKE_PROFIT,
 				ConditionalOrderTriggerSubticks: 6_000_000,
 				GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
@@ -237,6 +244,84 @@ func placeOrders(node *containertest.Node, t *testing.T) {
 		constants.AliceAccAddress.String(),
 	))
 
-	err := node.Wait(2)
+	err = node.Wait(1)
 	require.NoError(t, err)
+}
+
+func postUpgradeStatefulOrderCheck(node *containertest.Node, t *testing.T) {
+	// Check that all stateful orders are present before the upgrade.
+	_, err := containertest.QueryAtHeight(
+		node,
+		clobtypes.NewQueryClient,
+		clobtypes.QueryClient.StatefulOrder,
+		&clobtypes.QueryStatefulOrderRequest{
+			OrderId: clobtypes.OrderId{
+				ClientId: 100,
+				SubaccountId: satypes.SubaccountId{
+					Owner:  constants.AliceAccAddress.String(),
+					Number: 0,
+				},
+				ClobPairId: 0,
+				OrderFlags: clobtypes.OrderIdFlags_Conditional,
+			},
+		},
+		9,
+	)
+	require.NoError(t, err)
+
+	_, err = containertest.QueryAtHeight(
+		node,
+		clobtypes.NewQueryClient,
+		clobtypes.QueryClient.StatefulOrder,
+		&clobtypes.QueryStatefulOrderRequest{
+			OrderId: clobtypes.OrderId{
+				ClientId: 101,
+				SubaccountId: satypes.SubaccountId{
+					Owner:  constants.AliceAccAddress.String(),
+					Number: 0,
+				},
+				ClobPairId: 0,
+				OrderFlags: clobtypes.OrderIdFlags_Conditional,
+			},
+		},
+		9,
+	)
+	require.NoError(t, err)
+
+	// Check that all stateful orders are removed.
+	_, err = containertest.Query(
+		node,
+		clobtypes.NewQueryClient,
+		clobtypes.QueryClient.StatefulOrder,
+		&clobtypes.QueryStatefulOrderRequest{
+			OrderId: clobtypes.OrderId{
+				ClientId: 100,
+				SubaccountId: satypes.SubaccountId{
+					Owner:  constants.AliceAccAddress.String(),
+					Number: 0,
+				},
+				ClobPairId: 0,
+				OrderFlags: clobtypes.OrderIdFlags_Conditional,
+			},
+		},
+	)
+	require.ErrorIs(t, err, status.Error(codes.NotFound, "not found"))
+
+	_, err = containertest.Query(
+		node,
+		clobtypes.NewQueryClient,
+		clobtypes.QueryClient.StatefulOrder,
+		&clobtypes.QueryStatefulOrderRequest{
+			OrderId: clobtypes.OrderId{
+				ClientId: 101,
+				SubaccountId: satypes.SubaccountId{
+					Owner:  constants.AliceAccAddress.String(),
+					Number: 0,
+				},
+				ClobPairId: 0,
+				OrderFlags: clobtypes.OrderIdFlags_Conditional,
+			},
+		},
+	)
+	require.ErrorIs(t, err, status.Error(codes.NotFound, "not found"))
 }
