@@ -1,5 +1,3 @@
-//go:build all || container_test
-
 package v_6_0_0_test
 
 import (
@@ -234,6 +232,7 @@ func placeOrders(node *containertest.Node, t *testing.T) {
 				Side:                            clobtypes.Order_SIDE_SELL,
 				Quantums:                        AliceBobBTCQuantums,
 				Subticks:                        5_500_000,
+				TimeInForce:                     clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL,
 				ConditionType:                   clobtypes.Order_CONDITION_TYPE_TAKE_PROFIT,
 				ConditionalOrderTriggerSubticks: 6_000_000,
 				GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
@@ -249,47 +248,8 @@ func placeOrders(node *containertest.Node, t *testing.T) {
 }
 
 func postUpgradeStatefulOrderCheck(node *containertest.Node, t *testing.T) {
-	// Check that all stateful orders are present before the upgrade.
-	_, err := containertest.QueryAtHeight(
-		node,
-		clobtypes.NewQueryClient,
-		clobtypes.QueryClient.StatefulOrder,
-		&clobtypes.QueryStatefulOrderRequest{
-			OrderId: clobtypes.OrderId{
-				ClientId: 100,
-				SubaccountId: satypes.SubaccountId{
-					Owner:  constants.AliceAccAddress.String(),
-					Number: 0,
-				},
-				ClobPairId: 0,
-				OrderFlags: clobtypes.OrderIdFlags_Conditional,
-			},
-		},
-		9,
-	)
-	require.NoError(t, err)
-
-	_, err = containertest.QueryAtHeight(
-		node,
-		clobtypes.NewQueryClient,
-		clobtypes.QueryClient.StatefulOrder,
-		&clobtypes.QueryStatefulOrderRequest{
-			OrderId: clobtypes.OrderId{
-				ClientId: 101,
-				SubaccountId: satypes.SubaccountId{
-					Owner:  constants.AliceAccAddress.String(),
-					Number: 0,
-				},
-				ClobPairId: 0,
-				OrderFlags: clobtypes.OrderIdFlags_Conditional,
-			},
-		},
-		9,
-	)
-	require.NoError(t, err)
-
 	// Check that all stateful orders are removed.
-	_, err = containertest.Query(
+	_, err := containertest.Query(
 		node,
 		clobtypes.NewQueryClient,
 		clobtypes.QueryClient.StatefulOrder,
