@@ -165,13 +165,13 @@ export class MessageForwarder {
 
     if (!this.subscriptions.subscriptions[message.channel] &&
       !this.subscriptions.batchedSubscriptions[message.channel]) {
-      logger.debug({
-        at: 'message-forwarder#forwardMessage',
-        message: 'No clients to forward to',
-        messageId: message.id,
-        messageChannel: message.channel,
-        contents: message.contents,
-      });
+      // logger.debug({
+      //   at: 'message-forwarder#forwardMessage',
+      //   message: 'No clients to forward to',
+      //   messageId: message.id,
+      //   messageChannel: message.channel,
+      //   contents: message.contents,
+      // });
       return;
     }
 
@@ -182,21 +182,21 @@ export class MessageForwarder {
     }
     let forwardedToSubscribers: boolean = false;
 
-    if (subscriptions.length > 0) {
-      if (message.channel !== Channel.V4_ORDERBOOK ||
-          (
-            // Don't log orderbook messages unless enabled
-            message.channel === Channel.V4_ORDERBOOK && config.ENABLE_ORDERBOOK_LOGS
-          )
-      ) {
-        logger.debug({
-          at: 'message-forwarder#forwardMessage',
-          message: 'Forwarding message to clients..',
-          messageContents: message,
-          connectionIds: subscriptions.map((s: SubscriptionInfo) => s.connectionId),
-        });
-      }
-    }
+    // if (subscriptions.length > 0) {
+    //   if (message.channel !== Channel.V4_ORDERBOOK ||
+    //       (
+    //         // Don't log orderbook messages unless enabled
+    //         message.channel === Channel.V4_ORDERBOOK && config.ENABLE_ORDERBOOK_LOGS
+    //       )
+    //   ) {
+    //     logger.debug({
+    //       at: 'message-forwarder#forwardMessage',
+    //       message: 'Forwarding message to clients..',
+    //       messageContents: message,
+    //       connectionIds: subscriptions.map((s: SubscriptionInfo) => s.connectionId),
+    //     });
+    //   }
+    // }
 
     // Buffer messages if the subscription is for batched messages
     if (this.subscriptions.batchedSubscriptions[message.channel] &&
