@@ -1,16 +1,41 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { IsoString, PnlTicksCreateObject, Transaction } from '@dydxprotocol-indexer/postgres';
+import {
+  BlockFromDatabase,
+  BlockTable,
+  IsoString,
+  PnlTicksCreateObject, PnlTicksTable,
+  Transaction
+} from '@dydxprotocol-indexer/postgres';
 
 import { getPnlTicksCreateObjects } from './helpers/pnl-ticks-helper';
 
 async function main() {
 
-  const blockHeight: string = '12428756';
-  const blockTime: IsoString = '2024-05-15T20:36:34.543Z';
+  // const blockHeight: string = '12428756';
+  // const blockTime: IsoString = '2024-05-15T20:36:34.543Z';
   const txId: number = await Transaction.start();
+  const [
+    block,
+    ,
+  ]: [
+    BlockFromDatabase,
+    string,
+  ] = await Promise.all([
+    BlockTable.getLatest({ readReplica: true }),
+    PnlTicksTable.findLatestProcessedBlocktime(),
+  ]);
+  const latestBlockTime: string = block.time;
+  const latestBlockHeight: string = block.blockHeight;
+  logger.info({
+    at: 'create-pnl-ticks#runTask',
+    message: 'Latest block time',
+    latestBlockTime,
+    latestBlockHeight,
+    txId,
+  });
   try {
     const newTicksToCreate: PnlTicksCreateObject[] = await
-    getPnlTicksCreateObjects(blockHeight, blockTime, txId);
+    getPnlTicksCreateObjects(latestBlockHeight, latestBlockTime, txId);
     logger.info({
       at: 'create-pnl-ticks#runTask',
       message: 'New PNL ticks created',

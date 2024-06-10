@@ -66,6 +66,16 @@ export async function getPnlTicksCreateObjects(
       getMostRecentPnlTicksForEachAccount(),
       SubaccountTable.getSubaccountsWithTransfers(blockHeight, { readReplica: true, txId }),
     ]);
+    logger.info({
+      at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+      message: 'mostRecentPnlTicks',
+      mostRecentPnlTicks,
+    });
+    logger.info({
+      at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+      message: 'subaccountsWithTransfers',
+      subaccountsWithTransfers,
+    });
     stats.timing(
       `${config.SERVICE_NAME}_get_ticks_relevant_accounts`,
       new Date().getTime() - startGetPnlTicksCreateObjects,
@@ -94,6 +104,7 @@ export async function getPnlTicksCreateObjects(
     logger.info({
       at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
       message: 'Got accounts to update',
+      accountsToUpdate,
     });
     const idToSubaccount: _.Dictionary<SubaccountFromDatabase> = _.keyBy(
       subaccountsWithTransfers,
