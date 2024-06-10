@@ -10,16 +10,33 @@ import (
 )
 
 func TestQueryPMLEnabledStatus(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder(t).Build()
-	ctx := tApp.InitChain()
-	k := tApp.App.ListingKeeper
+	tests := map[string]struct {
+		pmlEnabled bool
+	}{
+		"PML enabled true": {
+			pmlEnabled: true,
+		},
+		"PML enabled false": {
+			pmlEnabled: false,
+		},
+	}
 
-	// set permissionless listing to true for test
-	err := k.SetPermissionlessListingEnable(ctx, true)
-	require.NoError(t, err)
+	for name, tc := range tests {
+		t.Run(
+			name, func(t *testing.T) {
+				tApp := testapp.NewTestAppBuilder(t).Build()
+				ctx := tApp.InitChain()
+				k := tApp.App.ListingKeeper
 
-	// query permissionless market listing status
-	resp, err := k.PermissionlessMarketListingStatus(ctx, &types.QueryPermissionlessMarketListingStatus{})
-	require.NoError(t, err)
-	require.True(t, resp.Enabled)
+				// set permissionless listing to true for test
+				err := k.SetPermissionlessListingEnable(ctx, tc.pmlEnabled)
+				require.NoError(t, err)
+
+				// query permissionless market listing status
+				resp, err := k.PermissionlessMarketListingStatus(ctx, &types.QueryPermissionlessMarketListingStatus{})
+				require.NoError(t, err)
+				require.Equal(t, resp.Enabled, tc.pmlEnabled)
+			},
+		)
+	}
 }
