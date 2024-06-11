@@ -103,6 +103,11 @@ describe('stateful-order-replacement-handler', () => {
     emitSubaccountMessage: boolean,
     transactionIndex: number,
   ) => {
+    await OrderTable.create({
+      ...testConstants.defaultOrder,
+      clientId: '0',
+      orderFlags: ORDER_FLAG_LONG_TERM.toString(),
+    });
     config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = emitSubaccountMessage;
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       statefulOrderEvent,
@@ -110,6 +115,14 @@ describe('stateful-order-replacement-handler', () => {
     );
 
     await onMessage(kafkaMessage);
+
+    const oldOrder: OrderFromDatabase | undefined = await OrderTable.findById(oldOrderUuid);
+    expect(oldOrder).toBeDefined();
+    expect(oldOrder).toEqual(expect.objectContaining({
+      status: OrderStatus.CANCELED,
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
+    }));
 
     const newOrder: OrderFromDatabase | undefined = await OrderTable.findById(newOrderUuid);
     expect(newOrder).toEqual({

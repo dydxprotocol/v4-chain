@@ -21,7 +21,6 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
-import config from '../../config';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
 
@@ -29,7 +28,7 @@ export class StatefulOrderReplacementHandler
   extends AbstractStatefulOrderHandler<StatefulOrderEventV1> {
   eventType: string = 'StatefulOrderEvent';
 
-  public getOrderId(): string {
+  private getOrderId(): string {
     const orderId = OrderTable.orderIdToUuid(this.event.orderReplacement!.order!.orderId!);
     return orderId;
   }
@@ -74,31 +73,31 @@ export class StatefulOrderReplacementHandler
       },
     ));
 
-    if (config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS) {
-      const perpetualMarket: PerpetualMarketFromDatabase = perpetualMarketRefresher
-        .getPerpetualMarketFromClobPairId(order.orderId!.clobPairId.toString())!;
-      const dbOrder: OrderFromDatabase = OrderModel.fromJson(resultRow.order) as OrderFromDatabase;
-      const redisOrder: RedisOrder = convertToRedisOrder(order, perpetualMarket);
-      const subaccountContent: SubaccountMessageContents = generateSubaccountMessageContents(
-        redisOrder,
-        dbOrder,
-        perpetualMarket,
-        OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
-        this.block.height.toString(),
-      );
+    // send subaccount websocket message
+    const perpetualMarket: PerpetualMarketFromDatabase = perpetualMarketRefresher
+      .getPerpetualMarketFromClobPairId(order.orderId!.clobPairId.toString())!;
+    const dbOrder: OrderFromDatabase = OrderModel.fromJson(resultRow.order) as OrderFromDatabase;
+    const redisOrder: RedisOrder = convertToRedisOrder(order, perpetualMarket);
+    const subaccountContent: SubaccountMessageContents = generateSubaccountMessageContents(
+      redisOrder,
+      dbOrder,
+      perpetualMarket,
+      OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
+      this.block.height.toString(),
+    );
 
-      const subaccountIdProto: SubaccountId = {
-        owner: this.getSubaccountId().owner,
-        number: this.getSubaccountId().number,
-      };
-      kafkaEvents.push(this.generateConsolidatedSubaccountKafkaEvent(
-        JSON.stringify(subaccountContent),
-        subaccountIdProto,
-        this.getOrderId(),
-        false,
-        subaccountContent,
-      ));
-    }
+    const subaccountIdProto: SubaccountId = {
+      owner: this.getSubaccountId().owner,
+      number: this.getSubaccountId().number,
+    };
+    kafkaEvents.push(this.generateConsolidatedSubaccountKafkaEvent(
+      JSON.stringify(subaccountContent),
+      subaccountIdProto,
+      this.getOrderId(),
+      false,
+      subaccountContent,
+    ));
+
     return kafkaEvents;
   }
 }

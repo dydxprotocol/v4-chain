@@ -22,6 +22,37 @@ DECLARE
     order_record orders%ROWTYPE;
     subaccount_record subaccounts%ROWTYPE;
 BEGIN
+    /* For order replacement, remove old order first and don't return immediately */
+    IF event_data->'orderReplacement' IS NOT NULL THEN
+        order_id = event_data->'orderReplacement'->'oldOrderId';
+        order_record."status" = 'CANCELED';
+
+        clob_pair_id = (order_id->'clobPairId')::bigint;
+        perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
+
+        subaccount_id = dydx_uuid_from_subaccount_id(order_id->'subaccountId');
+        SELECT * INTO subaccount_record FROM subaccounts WHERE "id" = subaccount_id;
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'Subaccount for order not found: %', order_;
+        END IF;
+
+        order_record."id" = dydx_uuid_from_order_id(order_id);
+        order_record."updatedAt" = block_time;
+        order_record."updatedAtHeight" = block_height;
+        UPDATE orders
+        SET
+            "status" = order_record."status",
+            "updatedAt" = order_record."updatedAt",
+            "updatedAtHeight" = order_record."updatedAtHeight"
+        WHERE "id" = order_record."id"
+        RETURNING * INTO order_record;
+
+        IF NOT FOUND THEN
+            RAISE NOTICE 'Unable to cancel replaced order because not found with orderId: %', dydx_uuid_from_order_id(order_id);
+        END IF;
+    END IF;
+    order_record := NULL; /* Reset order_record so the order place below doesn't carry over any values set above. */
+
     /** TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent. */
     IF event_data->'orderPlace' IS NOT NULL OR event_data->'longTermOrderPlacement' IS NOT NULL OR event_data->'conditionalOrderPlacement' IS NOT NULL OR event_data->'orderReplacement' IS NOT NULL THEN
         order_ = coalesce(event_data->'orderPlace'->'order', event_data->'longTermOrderPlacement'->'order', event_data->'conditionalOrderPlacement'->'order', event_data->'orderReplacement'->'order');
@@ -50,6 +81,7 @@ BEGIN
         order_record."reduceOnly" = (order_->>'reduceOnly')::boolean;
         order_record."orderFlags" = (order_->'orderId'->'orderFlags')::bigint;
         order_record."goodTilBlockTime" = to_timestamp((order_->'goodTilBlockTime')::double precision);
+
         order_record."clientMetadata" = (order_->'clientMetadata')::bigint;
         order_record."createdAtHeight" = block_height;
         order_record."updatedAt" = block_time;
@@ -139,46 +171,7 @@ BEGIN
                 dydx_to_jsonb(subaccount_record)
             );
     ELSE
-        RAISE EXCEPTION 'Unkonwn sub-event type %', event_data;
-    END IF;
-
-    /* For order replacement, remove old order */
-    IF event_data->'orderReplacement' IS NOT NULL THEN
-        order_id = event_data->'orderReplacement'->'oldOrderId';
-        order_record."status" = 'CANCELED';
-
-        clob_pair_id = (order_id->'clobPairId')::bigint;
-        perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
-
-        subaccount_id = dydx_uuid_from_subaccount_id(order_id->'subaccountId');
-        SELECT * INTO subaccount_record FROM subaccounts WHERE "id" = subaccount_id;
-        IF NOT FOUND THEN
-            RAISE EXCEPTION 'Subaccount for order not found: %', order_;
-        END IF;
-
-        order_record."id" = dydx_uuid_from_order_id(order_id);
-        order_record."updatedAt" = block_time;
-        order_record."updatedAtHeight" = block_height;
-        UPDATE orders
-        SET
-            "status" = order_record."status",
-            "updatedAt" = order_record."updatedAt",
-            "updatedAtHeight" = order_record."updatedAtHeight"
-        WHERE "id" = order_record."id"
-        RETURNING * INTO order_record;
-
-        IF NOT FOUND THEN
-            RAISE EXCEPTION 'Unable to update order status with orderId: %', dydx_uuid_from_order_id(order_id);
-        END IF;
-
-        RETURN jsonb_build_object(
-                'order',
-                dydx_to_jsonb(order_record),
-                'perpetual_market',
-                dydx_to_jsonb(perpetual_market_record),
-                'subaccount',
-                dydx_to_jsonb(subaccount_record)
-            );
+        RAISE EXCEPTION 'Unknown sub-event type %', event_data;
     END IF;
 END;
 $$ LANGUAGE plpgsql;
