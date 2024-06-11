@@ -239,7 +239,7 @@ delete-anvil:
 remove-container:
 	@echo "removing containers"
 	cd ../e2e-testing && pnpm clean
-	
+
 test: test-unit
 
 
@@ -265,7 +265,7 @@ test-cover:
 
 test-unit-and-integration: e2e-setup delete-anvil
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 80m ./...
-	remove-container
+	$(MAKE) remove-container
 
 test-unit-and-integration-linux: e2e-setup-linux 
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...
