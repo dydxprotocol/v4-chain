@@ -625,7 +625,7 @@ export interface StatefulOrderEventV1 {
   conditionalOrderPlacement?: StatefulOrderEventV1_ConditionalOrderPlacementV1;
   conditionalOrderTriggered?: StatefulOrderEventV1_ConditionalOrderTriggeredV1;
   longTermOrderPlacement?: StatefulOrderEventV1_LongTermOrderPlacementV1;
-  orderReplace?: StatefulOrderEventV1_LongTermOrderReplacementV1;
+  orderReplacement?: StatefulOrderEventV1_LongTermOrderReplacementV1;
 }
 /**
  * StatefulOrderEvent message contains information about a change to a stateful
@@ -641,7 +641,7 @@ export interface StatefulOrderEventV1SDKType {
   conditional_order_placement?: StatefulOrderEventV1_ConditionalOrderPlacementV1SDKType;
   conditional_order_triggered?: StatefulOrderEventV1_ConditionalOrderTriggeredV1SDKType;
   long_term_order_placement?: StatefulOrderEventV1_LongTermOrderPlacementV1SDKType;
-  order_replace?: StatefulOrderEventV1_LongTermOrderReplacementV1SDKType;
+  order_replacement?: StatefulOrderEventV1_LongTermOrderReplacementV1SDKType;
 }
 /**
  * A stateful order placement contains an order.
@@ -2412,7 +2412,7 @@ function createBaseStatefulOrderEventV1(): StatefulOrderEventV1 {
     conditionalOrderPlacement: undefined,
     conditionalOrderTriggered: undefined,
     longTermOrderPlacement: undefined,
-    orderReplace: undefined
+    orderReplacement: undefined
   };
 }
 
@@ -2438,8 +2438,8 @@ export const StatefulOrderEventV1 = {
       StatefulOrderEventV1_LongTermOrderPlacementV1.encode(message.longTermOrderPlacement, writer.uint32(58).fork()).ldelim();
     }
 
-    if (message.orderReplace !== undefined) {
-      StatefulOrderEventV1_LongTermOrderReplacementV1.encode(message.orderReplace, writer.uint32(66).fork()).ldelim();
+    if (message.orderReplacement !== undefined) {
+      StatefulOrderEventV1_LongTermOrderReplacementV1.encode(message.orderReplacement, writer.uint32(66).fork()).ldelim();
     }
 
     return writer;
@@ -2475,7 +2475,7 @@ export const StatefulOrderEventV1 = {
           break;
 
         case 8:
-          message.orderReplace = StatefulOrderEventV1_LongTermOrderReplacementV1.decode(reader, reader.uint32());
+          message.orderReplacement = StatefulOrderEventV1_LongTermOrderReplacementV1.decode(reader, reader.uint32());
           break;
 
         default:
@@ -2494,7 +2494,7 @@ export const StatefulOrderEventV1 = {
     message.conditionalOrderPlacement = object.conditionalOrderPlacement !== undefined && object.conditionalOrderPlacement !== null ? StatefulOrderEventV1_ConditionalOrderPlacementV1.fromPartial(object.conditionalOrderPlacement) : undefined;
     message.conditionalOrderTriggered = object.conditionalOrderTriggered !== undefined && object.conditionalOrderTriggered !== null ? StatefulOrderEventV1_ConditionalOrderTriggeredV1.fromPartial(object.conditionalOrderTriggered) : undefined;
     message.longTermOrderPlacement = object.longTermOrderPlacement !== undefined && object.longTermOrderPlacement !== null ? StatefulOrderEventV1_LongTermOrderPlacementV1.fromPartial(object.longTermOrderPlacement) : undefined;
-    message.orderReplace = object.orderReplace !== undefined && object.orderReplace !== null ? StatefulOrderEventV1_LongTermOrderReplacementV1.fromPartial(object.orderReplace) : undefined;
+    message.orderReplacement = object.orderReplacement !== undefined && object.orderReplacement !== null ? StatefulOrderEventV1_LongTermOrderReplacementV1.fromPartial(object.orderReplacement) : undefined;
     return message;
   }
 
