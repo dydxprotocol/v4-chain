@@ -9,7 +9,7 @@ ARG GOLANG_1_22_ALPINE_DIGEST="d1a601b64de09e2fa38c95e55838961811d5ca11062a8f423
 # Builder
 # --------------------------------------------------------
 
-FROM golang:1.22-alpine3.18 as builder
+FROM golang@sha256:${GOLANG_1_22_ALPINE_DIGEST} as builder
 ARG VERSION
 ARG COMMIT
 
@@ -57,7 +57,7 @@ RUN echo "Ensuring binary is statically linked ..." \
 # Runner
 # --------------------------------------------------------
 
-FROM golang:1.22-alpine3.18
+FROM golang@sha256:${GOLANG_1_22_ALPINE_DIGEST}
 
 RUN apk add --no-cache bash
 
