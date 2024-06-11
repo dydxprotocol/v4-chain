@@ -193,26 +193,6 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 			},
 			err: ErrLongTermOrdersCannotRequireImmediateExecution,
 		},
-		"long-term: cannot be FOK": {
-			msg: MsgPlaceOrder{
-				Order: Order{
-					OrderId: OrderId{
-						SubaccountId: satypes.SubaccountId{
-							Owner:  sample.AccAddress(),
-							Number: uint32(0),
-						},
-						OrderFlags: OrderIdFlags_LongTerm,
-					},
-					Side:     Order_SIDE_BUY,
-					Quantums: uint64(42),
-					GoodTilOneof: &Order_GoodTilBlockTime{
-						GoodTilBlockTime: uint32(100),
-					},
-					TimeInForce: Order_TIME_IN_FORCE_FILL_OR_KILL,
-				},
-			},
-			err: ErrLongTermOrdersCannotRequireImmediateExecution,
-		},
 		"zero subticks": {
 			msg: MsgPlaceOrder{
 				Order: Order{
@@ -245,7 +225,7 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 				},
 			},
 		},
-		"success with fill-or-kill order": {
+		"fill-or-kill orders are deprecated": {
 			msg: MsgPlaceOrder{
 				Order: Order{
 					OrderId: OrderId{
@@ -262,25 +242,7 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 					ReduceOnly:   false,
 				},
 			},
-		},
-		"short-term FOK reduce-only success": {
-			msg: MsgPlaceOrder{
-				Order: Order{
-					OrderId: OrderId{
-						SubaccountId: satypes.SubaccountId{
-							Owner:  sample.AccAddress(),
-							Number: uint32(0),
-						},
-						OrderFlags: OrderIdFlags_ShortTerm,
-					},
-					Side:         Order_SIDE_BUY,
-					Quantums:     uint64(42),
-					GoodTilOneof: &Order_GoodTilBlock{GoodTilBlock: uint32(100)},
-					Subticks:     uint64(10),
-					TimeInForce:  Order_TIME_IN_FORCE_FILL_OR_KILL,
-					ReduceOnly:   true,
-				},
-			},
+			err: ErrDeprecatedField,
 		},
 		"short-term IOC reduce-only success": {
 			msg: MsgPlaceOrder{

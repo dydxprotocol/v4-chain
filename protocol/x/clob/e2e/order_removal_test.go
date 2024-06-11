@@ -57,26 +57,6 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				true, // P0 order should be removed
 			},
 		},
-		"conditional fill-or-kill order does not fully match and is removed": {
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_10000USD,
-				constants.Dave_Num0_10000USD,
-			},
-			orders: []clobtypes.Order{
-				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50000_GTBT10,
-				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK,
-			},
-
-			priceUpdate: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_400_000),
-				},
-			},
-			expectedOrderRemovals: []bool{
-				false,
-				true, // non fully filled FOK order should be removed
-			},
-		},
 		"conditional IOC order does not fully match and is removed": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_10000USD,
@@ -441,78 +421,6 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 		// 	expectedErrType: clobtypes.ErrInvalidOrderRemoval,
 		// 	expectedErr:     "Order must be reduce only",
 		// },
-		"invalid proposal: conditional fok order cannot be removed when untriggered": {
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_10000USD,
-			},
-			orders: []clobtypes.Order{
-				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK,
-			},
-			msgProposedOperations: &clobtypes.MsgProposedOperations{
-				OperationsQueue: []clobtypes.OperationRaw{
-					clobtestutils.NewOrderRemovalOperationRaw(
-						constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK.OrderId,
-						clobtypes.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED,
-					),
-				},
-			},
-			expectedErr: "does not exist in triggered conditional state",
-		},
-		"invalid proposal: conditional fok order removal is for non fok order": {
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_10000USD,
-			},
-			orders: []clobtypes.Order{
-				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC,
-			},
-			priceUpdate: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_400_000),
-				},
-			},
-			msgProposedOperations: &clobtypes.MsgProposedOperations{
-				OperationsQueue: []clobtypes.OperationRaw{
-					clobtestutils.NewOrderRemovalOperationRaw(
-						constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId,
-						clobtypes.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED,
-					),
-				},
-			},
-			expectedErr: "Order is not fill-or-kill",
-		},
-		"invalid proposal: conditional fok order cannot be removed when fully filled": {
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_10000USD,
-				constants.Dave_Num0_10000USD,
-			},
-			orders: []clobtypes.Order{
-				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
-				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK,
-			},
-			priceUpdate: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_400_000),
-				},
-			},
-			msgProposedOperations: &clobtypes.MsgProposedOperations{
-				OperationsQueue: []clobtypes.OperationRaw{
-					clobtestutils.NewMatchOperationRaw(
-						&constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK,
-						[]clobtypes.MakerFill{
-							{
-								FillAmount:   50_000_000,
-								MakerOrderId: constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
-							},
-						},
-					),
-					clobtestutils.NewOrderRemovalOperationRaw(
-						constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK.OrderId,
-						clobtypes.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED,
-					),
-				},
-			},
-			expectedErr: "Fill-or-kill order is fully filled",
-		},
 		"invalid proposal: conditional ioc order cannot be removed when untriggered": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_10000USD,
@@ -535,7 +443,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 				constants.Carl_Num0_10000USD,
 			},
 			orders: []clobtypes.Order{
-				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK,
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003,
 			},
 			priceUpdate: &prices.MsgUpdateMarketPrices{
 				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
@@ -545,7 +453,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			msgProposedOperations: &clobtypes.MsgProposedOperations{
 				OperationsQueue: []clobtypes.OperationRaw{
 					clobtestutils.NewOrderRemovalOperationRaw(
-						constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK.OrderId,
+						constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003.OrderId,
 						clobtypes.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK,
 					),
 				},
