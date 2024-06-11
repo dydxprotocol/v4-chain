@@ -1151,15 +1151,6 @@ const GenesisState = `{
         }
       ]
     },
-    "rewards": {
-      "params": {
-        "treasury_account":"rewards_treasury",
-        "denom":"adv4tnt",
-        "denom_exponent":-18,
-        "market_id":1,
-        "fee_multiplier_ppm":990000
-      }
-    },
     "ratelimit": {
       "limit_params_list": [
         {
@@ -1278,24 +1269,6 @@ const GenesisState = `{
       },
       "port_id": "transfer"
     },
-    "upgrade": {},
-    "vest": {
-      "vest_entries": [
-        {
-          "denom": "adv4tnt",
-          "end_time": "2025-01-01T00:00:00Z",
-          "start_time": "2023-01-01T00:00:00Z",
-          "treasury_account": "community_treasury",
-          "vester_account": "community_vester"
-        },
-        {
-          "denom": "adv4tnt",
-          "end_time": "2025-01-01T00:00:00Z",
-          "start_time": "2023-01-01T00:00:00Z",
-          "treasury_account": "rewards_treasury",
-          "vester_account": "rewards_vester"
-        }
-      ]
-    }
+    "upgrade": {}
   }
 }`

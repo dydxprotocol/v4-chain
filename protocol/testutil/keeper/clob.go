@@ -22,7 +22,6 @@ import (
 	feetierskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/keeper"
 	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
-	rewardskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/keeper"
 	statskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/keeper"
 	subkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
@@ -43,7 +42,6 @@ type ClobKeepersTestContext struct {
 	FeeTiersKeeper    *feetierskeeper.Keeper
 	PerpetualsKeeper  *perpkeeper.Keeper
 	StatsKeeper       *statskeeper.Keeper
-	RewardsKeeper     *rewardskeeper.Keeper
 	SubaccountsKeeper *subkeeper.Keeper
 	StoreKey          storetypes.StoreKey
 	MemKey            storetypes.StoreKey
@@ -112,16 +110,6 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			db,
 			cdc,
 		)
-		ks.RewardsKeeper, _ = createRewardsKeeper(
-			stateStore,
-			ks.AssetsKeeper,
-			bankKeeper,
-			ks.FeeTiersKeeper,
-			ks.PricesKeeper,
-			indexerEventManager,
-			db,
-			cdc,
-		)
 		ks.SubaccountsKeeper, _ = createSubaccountsKeeper(
 			stateStore,
 			db,
@@ -145,7 +133,6 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.PerpetualsKeeper,
 			ks.PricesKeeper,
 			ks.StatsKeeper,
-			ks.RewardsKeeper,
 			ks.SubaccountsKeeper,
 			indexerEventManager,
 			indexerEventsTransientStoreKey,
@@ -182,7 +169,6 @@ func createClobKeeper(
 	perpKeeper *perpkeeper.Keeper,
 	pricesKeeper *priceskeeper.Keeper,
 	statsKeeper *statskeeper.Keeper,
-	rewardsKeeper types.RewardsKeeper,
 	saKeeper *subkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	indexerEventsTransientStoreKey storetypes.StoreKey,
@@ -213,7 +199,6 @@ func createClobKeeper(
 		perpKeeper,
 		pricesKeeper,
 		statsKeeper,
-		rewardsKeeper,
 		indexerEventManager,
 		streaming.NewNoopGrpcStreamingManager(),
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
