@@ -35,7 +35,7 @@ export default async function runTask(): Promise<void> {
   );
 
   // Check last PNL computation for each subaccount
-  const staleSubaccounts: string[] = [];
+  const stalePnlSubaccounts: string[] = [];
   const subaccountsWithPnl: string[] = Object.keys(mostRecentPnlTicks);
   subaccountIds.forEach((id: string) => {
     const lastPnlTick: string = mostRecentPnlTicks[id];
@@ -44,7 +44,7 @@ export default async function runTask(): Promise<void> {
       const hoursSinceLastPnl = startTaskTime.diff(lastPnlTime, 'hours').hours;
 
       if (hoursSinceLastPnl >= 2) {
-        staleSubaccounts.push(id);
+        stalePnlSubaccounts.push(id);
       }
     }
   });
@@ -60,6 +60,7 @@ export default async function runTask(): Promise<void> {
     subaccountsWithoutPnl,
   );
 
+  const staleTransferSubaccounts: string[] = [];
   // Check last transfer time for each subaccount without PNL data
   // If the last transfer time is more than 2 hours ago, add to stale subaccounts
   Object.entries(transferTimes).forEach(([subaccountId, time]) => {
@@ -67,21 +68,19 @@ export default async function runTask(): Promise<void> {
     const hoursSinceLastTransfer = startTaskTime.diff(lastTransferTime, 'hours').hours;
 
     if (hoursSinceLastTransfer >= 2) {
-      staleSubaccounts.push(subaccountId);
+      staleTransferSubaccounts.push(subaccountId);
     }
   });
 
-  statPnl(staleSubaccounts);
-
-}
-
-function statPnl(
-  staleSubaccounts: string[],
-): void {
-  stats.gauge('pnl_stale_subaccounts', staleSubaccounts.length);
-  logger.info({
-    at: 'pnl-instrumentation#statPnl',
-    message: 'Subaccount ids with stale PNL data',
-    staleSubaccounts,
-  });
+  stats.gauge('pnl_stale_subaccounts', stalePnlSubaccounts.length + staleTransferSubaccounts.length);
+  stats.gauge('pnl_stale_subaccounts_with_prior_pnl', stalePnlSubaccounts.length);
+  stats.gauge('pnl_stale_subaccounts_without_prior_pnl', staleTransferSubaccounts.length);
+  if (stalePnlSubaccounts.length > 0 || staleTransferSubaccounts.length > 0) {
+    logger.error({
+      at: 'pnl-instrumentation#statPnl',
+      message: 'Subaccount ids with stale PNL data',
+      stalePnlSubaccounts,
+      staleTransferSubaccounts,
+    });
+  }
 }
