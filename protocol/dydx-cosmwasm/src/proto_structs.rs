@@ -43,6 +43,7 @@ pub struct Subaccount {
     pub asset_positions: Vec<AssetPosition>,
     #[serde(default)]
     pub perpetual_positions: Vec<PerpetualPosition>,
+    #[serde(default)]
     pub margin_enabled: bool,
 }
 
