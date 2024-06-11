@@ -458,9 +458,6 @@ func New(
 			if app.SlinkyClient != nil {
 				app.SlinkyClient.Stop()
 			}
-			if app.GrpcStreamingManager != nil {
-				app.GrpcStreamingManager.Stop()
-			}
 			return nil
 		},
 	)
@@ -1933,11 +1930,7 @@ func getGrpcStreamingManagerFromOptions(
 ) (manager streamingtypes.GrpcStreamingManager) {
 	if appFlags.GrpcStreamingEnabled {
 		logger.Info("GRPC streaming is enabled")
-		return streaming.NewGrpcStreamingManager(
-			logger,
-			appFlags.GrpcStreamingFlushIntervalMs,
-			appFlags.GrpcStreamingMaxBufferSize,
-		)
+		return streaming.NewGrpcStreamingManager(logger)
 	}
 	return streaming.NewNoopGrpcStreamingManager()
 }

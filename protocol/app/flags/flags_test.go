@@ -32,12 +32,6 @@ func TestAddFlagsToCommand(t *testing.T) {
 		fmt.Sprintf("Has %s flag", flags.GrpcStreamingEnabled): {
 			flagName: flags.GrpcStreamingEnabled,
 		},
-		fmt.Sprintf("Has %s flag", flags.GrpcStreamingFlushIntervalMs): {
-			flagName: flags.GrpcStreamingFlushIntervalMs,
-		},
-		fmt.Sprintf("Has %s flag", flags.GrpcStreamingMaxBufferSize): {
-			flagName: flags.GrpcStreamingMaxBufferSize,
-		},
 	}
 
 	for name, tc := range tests {
@@ -69,11 +63,9 @@ func TestValidate(t *testing.T) {
 		},
 		"success - gRPC streaming enabled for validating nodes": {
 			flags: flags.Flags{
-				NonValidatingFullNode:        false,
-				GrpcEnable:                   true,
-				GrpcStreamingEnabled:         true,
-				GrpcStreamingFlushIntervalMs: 100,
-				GrpcStreamingMaxBufferSize:   10000,
+				NonValidatingFullNode: false,
+				GrpcEnable:            true,
+				GrpcStreamingEnabled:  true,
 			},
 		},
 		"failure - gRPC disabled": {
@@ -89,26 +81,6 @@ func TestValidate(t *testing.T) {
 				GrpcStreamingEnabled:  true,
 			},
 			expectedErr: fmt.Errorf("grpc.enable must be set to true - grpc streaming requires gRPC server"),
-		},
-		"failure - gRPC streaming enabled with zero buffer size": {
-			flags: flags.Flags{
-				NonValidatingFullNode:        true,
-				GrpcEnable:                   true,
-				GrpcStreamingEnabled:         true,
-				GrpcStreamingFlushIntervalMs: 100,
-				GrpcStreamingMaxBufferSize:   0,
-			},
-			expectedErr: fmt.Errorf("grpc streaming buffer size must be positive number"),
-		},
-		"failure - gRPC streaming enabled with zero flush interval ms": {
-			flags: flags.Flags{
-				NonValidatingFullNode:        true,
-				GrpcEnable:                   true,
-				GrpcStreamingEnabled:         true,
-				GrpcStreamingFlushIntervalMs: 0,
-				GrpcStreamingMaxBufferSize:   10000,
-			},
-			expectedErr: fmt.Errorf("grpc streaming flush interval must be positive number"),
 		},
 	}
 	for name, tc := range tests {
@@ -135,8 +107,6 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 		expectedGrpcAddress               string
 		expectedGrpcEnable                bool
 		expectedGrpcStreamingEnable       bool
-		expectedGrpcStreamingFlushMs      uint32
-		expectedGrpcStreamingBufferSize   uint32
 	}{
 		"Sets to default if unset": {
 			expectedNonValidatingFullNodeFlag: false,
@@ -145,19 +115,15 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcAddress:               "localhost:9090",
 			expectedGrpcEnable:                true,
 			expectedGrpcStreamingEnable:       false,
-			expectedGrpcStreamingFlushMs:      50,
-			expectedGrpcStreamingBufferSize:   10000,
 		},
 		"Sets values from options": {
 			optsMap: map[string]any{
-				flags.NonValidatingFullNodeFlag:    true,
-				flags.DdAgentHost:                  "agentHostTest",
-				flags.DdTraceAgentPort:             uint16(777),
-				flags.GrpcEnable:                   false,
-				flags.GrpcAddress:                  "localhost:9091",
-				flags.GrpcStreamingEnabled:         "true",
-				flags.GrpcStreamingFlushIntervalMs: uint32(408),
-				flags.GrpcStreamingMaxBufferSize:   uint32(650),
+				flags.NonValidatingFullNodeFlag: true,
+				flags.DdAgentHost:               "agentHostTest",
+				flags.DdTraceAgentPort:          uint16(777),
+				flags.GrpcEnable:                false,
+				flags.GrpcAddress:               "localhost:9091",
+				flags.GrpcStreamingEnabled:      "true",
 			},
 			expectedNonValidatingFullNodeFlag: true,
 			expectedDdAgentHost:               "agentHostTest",
@@ -165,8 +131,6 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcEnable:                false,
 			expectedGrpcAddress:               "localhost:9091",
 			expectedGrpcStreamingEnable:       true,
-			expectedGrpcStreamingFlushMs:      408,
-			expectedGrpcStreamingBufferSize:   650,
 		},
 	}
 
@@ -203,21 +167,6 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 				t,
 				tc.expectedGrpcAddress,
 				flags.GrpcAddress,
-			)
-			require.Equal(
-				t,
-				tc.expectedGrpcStreamingEnable,
-				flags.GrpcStreamingEnabled,
-			)
-			require.Equal(
-				t,
-				tc.expectedGrpcStreamingFlushMs,
-				flags.GrpcStreamingFlushIntervalMs,
-			)
-			require.Equal(
-				t,
-				tc.expectedGrpcStreamingBufferSize,
-				flags.GrpcStreamingMaxBufferSize,
 			)
 		})
 	}

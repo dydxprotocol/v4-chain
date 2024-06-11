@@ -74,7 +74,7 @@ func (k Keeper) ProcessProposerOperations(
 			orderbookUpdate := k.MemClob.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
 			allUpdates.Append(orderbookUpdate)
 		}
-		k.SendOrderbookUpdates(ctx, allUpdates)
+		k.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 
 	log.DebugLog(ctx, "Processing operations queue",
