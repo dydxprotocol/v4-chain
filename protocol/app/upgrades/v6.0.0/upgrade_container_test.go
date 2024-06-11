@@ -46,6 +46,7 @@ func preUpgradeSetups(node *containertest.Node, t *testing.T) {
 
 func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 	// Add test for your upgrade handler logic below
+	preUpgradeStatefulOrderCheck(node, t)
 }
 
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
@@ -203,10 +204,10 @@ func placeOrders(node *containertest.Node, t *testing.T) {
 				},
 				Side:                            clobtypes.Order_SIDE_BUY,
 				Quantums:                        AliceBobBTCQuantums,
-				Subticks:                        5_000_000,
+				Subticks:                        6_000_000,
 				TimeInForce:                     clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL,
-				ConditionType:                   clobtypes.Order_CONDITION_TYPE_STOP_LOSS,
-				ConditionalOrderTriggerSubticks: 4_000_000,
+				ConditionType:                   clobtypes.Order_CONDITION_TYPE_TAKE_PROFIT,
+				ConditionalOrderTriggerSubticks: 6_000_000,
 				GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
 					GoodTilBlockTime: uint32(time.Now().Unix() + 300),
 				},
@@ -233,9 +234,9 @@ func placeOrders(node *containertest.Node, t *testing.T) {
 				},
 				Side:                            clobtypes.Order_SIDE_SELL,
 				Quantums:                        AliceBobBTCQuantums,
-				Subticks:                        5_500_000,
+				Subticks:                        6_000_000,
 				TimeInForce:                     clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL,
-				ConditionType:                   clobtypes.Order_CONDITION_TYPE_TAKE_PROFIT,
+				ConditionType:                   clobtypes.Order_CONDITION_TYPE_STOP_LOSS,
 				ConditionalOrderTriggerSubticks: 6_000_000,
 				GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
 					GoodTilBlockTime: uint32(time.Now().Unix() + 300),
@@ -245,7 +246,46 @@ func placeOrders(node *containertest.Node, t *testing.T) {
 		constants.AliceAccAddress.String(),
 	))
 
-	err = node.Wait(1)
+	err = node.Wait(2)
+	require.NoError(t, err)
+}
+
+func preUpgradeStatefulOrderCheck(node *containertest.Node, t *testing.T) {
+	// Check that all stateful orders are present.
+	_, err := containertest.Query(
+		node,
+		clobtypes.NewQueryClient,
+		clobtypes.QueryClient.StatefulOrder,
+		&clobtypes.QueryStatefulOrderRequest{
+			OrderId: clobtypes.OrderId{
+				ClientId: 100,
+				SubaccountId: satypes.SubaccountId{
+					Owner:  constants.AliceAccAddress.String(),
+					Number: 0,
+				},
+				ClobPairId: 0,
+				OrderFlags: clobtypes.OrderIdFlags_Conditional,
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	_, err = containertest.Query(
+		node,
+		clobtypes.NewQueryClient,
+		clobtypes.QueryClient.StatefulOrder,
+		&clobtypes.QueryStatefulOrderRequest{
+			OrderId: clobtypes.OrderId{
+				ClientId: 101,
+				SubaccountId: satypes.SubaccountId{
+					Owner:  constants.AliceAccAddress.String(),
+					Number: 0,
+				},
+				ClobPairId: 0,
+				OrderFlags: clobtypes.OrderIdFlags_Conditional,
+			},
+		},
+	)
 	require.NoError(t, err)
 }
 
