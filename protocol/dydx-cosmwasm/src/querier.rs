@@ -27,8 +27,6 @@ impl<'a> DydxQuerier<'a> {
     }
 
     pub fn query_subaccount(&self, owner: String, number: u32) -> StdResult<SubaccountResponse> {
-        // print the owner and number
-        println!("owner: {}, number: {}", owner, number);
         let request = DydxQueryWrapper {
             route: DydxRoute::Subaccount,
             query_data: DydxQuery::Subaccount { 

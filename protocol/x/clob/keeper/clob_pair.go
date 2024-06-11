@@ -694,6 +694,7 @@ func (k Keeper) IsPerpetualClobPairActive(
 	return clobPair.Status == types.ClobPair_STATUS_ACTIVE, nil
 }
 
+// TODO(OTE-415): Add unit test for this function.
 func (k Keeper) GetPerpetualClobDetails(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,
