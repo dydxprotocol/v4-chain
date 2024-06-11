@@ -20,7 +20,7 @@ func RegisterCustomPlugins(
 		Custom: CustomQuerier(wasmQueryPlugin),
 	})
 	messengerDecoratorOpt := wasmkeeper.WithMessageHandlerDecorator(
-		CustomMessageDecorator(sendingKeeper),
+		CustomMessageDecorator(sendingKeeper, clobKeeper),
 	)
 
 	return []wasmkeeper.Option{

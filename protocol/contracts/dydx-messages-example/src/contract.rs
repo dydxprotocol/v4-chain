@@ -9,8 +9,8 @@ use crate::error::ContractError;
 use crate::msg::{ArbiterResponse, ExecuteMsg, InstantiateMsg};
 use crate::state::{Config, CONFIG};
 use cw2::set_contract_version;
-use crate::dydx_msg::{SendingMsg, SubaccountId};
-use dydx_cosmwasm::{DydxQuerier, DydxQueryWrapper};
+use crate::dydx_msg::{SendingMsg};
+use dydx_cosmwasm::{DydxQuerier, DydxQueryWrapper, SubaccountId};
 use dydx_cosmwasm::DydxQuery;
 
 // version info for migration info
@@ -36,8 +36,38 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response<SendingMsg>, ContractError> {
     match msg {
-        ExecuteMsg::Approve { quantity } => execute_approve(deps, env, info, quantity),
-        ExecuteMsg::Refund {} => execute_refund(deps, env, info),
+        ExecuteMsg::DepositToSubaccount { sender, recipient, asset_id, quantums } => {
+            let deposit = SendingMsg::DepositToSubaccount {
+                sender: sender,
+                recipient: recipient,
+                asset_id: asset_id,
+                quantums: quantums,
+            };
+            Ok(Response::new().add_message(deposit))
+        }
+        ExecuteMsg::WithdrawFromSubaccount { sender, recipient, asset_id, quantums } => {
+            let withdraw = SendingMsg::WithdrawFromSubaccount {
+                sender: sender,
+                recipient: recipient,
+                asset_id: asset_id,
+                quantums: quantums,
+            };
+            Ok(Response::new().add_message(withdraw))
+        }
+        ExecuteMsg::PlaceOrder { order } => {
+            let place_order = SendingMsg::PlaceOrder {
+                order: order,
+            };
+            Ok(Response::new().add_message(place_order))
+        }
+        ExecuteMsg::CancelOrder { order_id, good_til_block, good_til_block_time } => {
+            let cancel_order = SendingMsg::CancelOrder {
+                order_id: order_id,
+                good_til_block: good_til_block,
+                good_til_block_time: good_til_block_time,
+            };
+            Ok(Response::new().add_message(cancel_order))
+        }
     }
 }
 

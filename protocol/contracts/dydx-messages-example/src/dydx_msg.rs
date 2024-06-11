@@ -6,20 +6,7 @@ use cosmwasm_std::{
   CosmosMsg,
   CustomMsg,
 };
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct SubaccountId {
-  pub owner: String,
-  pub number: u32,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct Transfer {
-  pub sender: SubaccountId,
-  pub recipient: SubaccountId,
-  pub asset_id: u32,
-  pub amount: u64,
-}
+use dydx_cosmwasm::{OrderConditionType, OrderSide, OrderTimeInForce, SubaccountId, Order, OrderId, Transfer};
 
 #[non_exhaustive]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -34,6 +21,22 @@ pub enum SendingMsg {
     asset_id: u32,
     quantums: u64,
   },
+  WithdrawFromSubaccount {
+      sender: SubaccountId,
+      recipient: String,
+      asset_id: u32,
+      quantums: u64,
+  },
+  PlaceOrder {
+    order: Order,
+  },
+  CancelOrder {
+    order_id: OrderId,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    good_til_block: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    good_til_block_time: Option<u32>,
+  }
 }
 
 impl From<SendingMsg> for CosmosMsg<SendingMsg> {

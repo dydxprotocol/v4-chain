@@ -1,5 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Coin};
+use dydx_cosmwasm::{OrderConditionType, OrderSide, OrderTimeInForce, SubaccountId, Order, OrderId, Transfer};
 use cw_utils::Expiration;
 use dydx_cosmwasm::MarketPriceResponse;
 
@@ -9,12 +10,26 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    Approve {
-        // release some coins - if quantity is None, release all coins in balance
-        quantity: Option<u64>,
-        //quantity: Option<Vec<Coin>>,
-    },
-    Refund {},
+    DepositToSubaccount {
+        sender: String,
+        recipient: SubaccountId,
+        asset_id: u32,
+        quantums: u64,
+      },
+        WithdrawFromSubaccount {
+            sender: SubaccountId,
+            recipient: String,
+            asset_id: u32,
+            quantums: u64,
+        },
+      PlaceOrder {
+        order: Order,
+      },
+      CancelOrder {
+        order_id: OrderId,
+        good_til_block: Option<u32>,
+        good_til_block_time: Option<u32>,
+      },
 }
 
 #[cw_serde]

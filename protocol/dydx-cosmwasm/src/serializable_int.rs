@@ -4,7 +4,7 @@ use num_bigint::BigInt;
 use schemars::schema::{Schema, SchemaObject, InstanceType};
 use std::fmt;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct SerializableInt {
     i: BigInt,
 }

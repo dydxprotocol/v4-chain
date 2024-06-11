@@ -3,7 +3,9 @@ use serde::{Deserialize, Serialize};
 use crate::serializable_int::SerializableInt;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, )]
+// TODO(OTE-408): standardize proto compilation
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct MarketPrice {
     #[serde(default)]
     pub id: u32,
@@ -11,7 +13,7 @@ pub struct MarketPrice {
     pub price: u64,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct AssetPosition {
     #[serde(default)]
     pub asset_id: u32,
@@ -20,22 +22,21 @@ pub struct AssetPosition {
     pub index: u64,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PerpetualPosition {
     pub perpetual_id: u32,
     pub quantums: SerializableInt,
     pub funding_index: SerializableInt,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SubaccountId {
     pub owner: String,
     // go uses omit empty, so we need to provide a default value if not set(which is 0 for u32)
     #[serde(default)]
     pub number: u32,
 }
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Subaccount {
     pub id: Option<SubaccountId>,
     #[serde(default)]
@@ -45,7 +46,7 @@ pub struct Subaccount {
     pub margin_enabled: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct ClobPair {
     pub id: u32,
     // metadata first letter is capitalized to match JSON
@@ -57,25 +58,25 @@ pub struct ClobPair {
     pub status: Status,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")] // Ensure field names match JSON case
 pub enum Metadata {
     PerpetualClobMetadata(PerpetualClobMetadata),
     SpotClobMetadata(SpotClobMetadata),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PerpetualClobMetadata {
     pub perpetual_id: u32,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SpotClobMetadata {
     pub base_asset_id: u32,
     pub quote_asset_id: u32,
 }
 
-#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u8)]
 #[serde(rename_all = "lowercase")]
 pub enum Status {
@@ -88,14 +89,13 @@ pub enum Status {
     FinalSettlement = 6,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Perpetual {
     pub params: PerpetualParams,
     pub funding_index: SerializableInt,
     pub open_interest: SerializableInt,
 }
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PerpetualParams {
     pub id: u32,
     pub ticker: String,
@@ -108,7 +108,7 @@ pub struct PerpetualParams {
     pub market_type: PerpetualMarketType,
 }
 
-#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u8)]
 #[serde(rename_all = "lowercase")]
 pub enum PerpetualMarketType {
@@ -117,7 +117,7 @@ pub enum PerpetualMarketType {
     Isolated = 2,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PerpetualClobDetails {
     pub perpetual: Perpetual,
     pub clob_pair: ClobPair,
