@@ -116,7 +116,7 @@ func (k Keeper) HandleMsgPlaceOrder(
 
 	// 4. Emit the new order placement indexer event.
 	if order.IsConditionalOrder() {
-		if !isInternalOrder {
+		if !isInternalOrder { // vault order indexer event logic is handled elsewhere
 			k.GetIndexerEventManager().AddTxnEvent(
 				ctx,
 				indexerevents.SubtypeStatefulOrder,
@@ -133,7 +133,7 @@ func (k Keeper) HandleMsgPlaceOrder(
 			order.OrderId,
 		)
 	} else {
-		if !isInternalOrder {
+		if !isInternalOrder { // vault order indexer event logic is handled elsewhere
 			k.GetIndexerEventManager().AddTxnEvent(
 				ctx,
 				indexerevents.SubtypeStatefulOrder,
