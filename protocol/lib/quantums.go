@@ -29,12 +29,24 @@ func BaseToQuoteQuantums(
 	priceValue uint64,
 	priceExponent int32,
 ) (bigNotional *big.Int) {
-	return multiplyByPrice(
-		new(big.Rat).SetInt(bigBaseQuantums),
-		baseCurrencyAtomicResolution,
-		priceValue,
-		priceExponent,
-	)
+	// Multiply all numerators.
+	numResult := new(big.Int).SetUint64(priceValue)
+	numResult.Mul(numResult, bigBaseQuantums)
+	exponent := priceExponent + baseCurrencyAtomicResolution - QuoteCurrencyAtomicResolution
+
+	// Special case: if the exponent is zero, we can return early.
+	if exponent == 0 {
+		return numResult
+	}
+
+	// Otherwise multiply or divide by the 1e^exponent.
+	ePow := bigPow10Helper(uint64(AbsInt32(exponent)))
+	if exponent > 0 {
+		return numResult.Mul(numResult, ePow)
+	} else {
+		// Trucated division (towards zero) instead of Euclidean division.
+		return numResult.Quo(numResult, ePow)
+	}
 }
 
 // QuoteToBaseQuantums converts an amount denoted in quote quantums, to an equivalent amount denoted in base

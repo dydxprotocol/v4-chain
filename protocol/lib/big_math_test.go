@@ -378,6 +378,26 @@ func TestBigRatMulPpm(t *testing.T) {
 			ppm:            10_000,
 			expectedResult: big_testutil.MustFirst(new(big.Rat).SetString("10000000000000000000000")),
 		},
+		"Positive with a common divisor": {
+			input:          big.NewRat(3, 1),
+			ppm:            500_000,
+			expectedResult: big.NewRat(3, 2),
+		},
+		"Negative with a common divisor": {
+			input:          big.NewRat(-3, 1),
+			ppm:            500_000,
+			expectedResult: big.NewRat(-3, 2),
+		},
+		"Positive with no common divisor": {
+			input:          big.NewRat(117, 61),
+			ppm:            419,
+			expectedResult: big.NewRat(49023, 61000000),
+		},
+		"Negative with no common divisor": {
+			input:          big.NewRat(-117, 61),
+			ppm:            419,
+			expectedResult: big.NewRat(-49023, 61000000),
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
