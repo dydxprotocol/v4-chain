@@ -22,8 +22,6 @@ import {
   SubaccountFromDatabase,
   SubaccountTable,
   TimeInForce,
-  TradingRewardAggregationFromDatabase,
-  TradingRewardFromDatabase,
   TransferFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, PriceLevel } from '@dydxprotocol-indexer/redis';
@@ -37,9 +35,7 @@ import {
   AssetPositionsMap,
   CandleResponseObject,
   FillResponseObject,
-  HistoricalBlockTradingReward,
   HistoricalFundingResponseObject,
-  HistoricalTradingRewardAggregation,
   MarketAndTypeByClobPairId,
   OrderbookResponseObject,
   OrderbookResponsePriceLevel,
@@ -452,27 +448,4 @@ export function candlesToSparklineResponseObject(
       return accumulator;
     }, response,
   );
-}
-
-export function tradingRewardAggregationToResponse(
-  aggregation: TradingRewardAggregationFromDatabase,
-): HistoricalTradingRewardAggregation {
-  return {
-    tradingReward: aggregation.amount,
-    startedAt: aggregation.startedAt,
-    startedAtHeight: aggregation.startedAtHeight,
-    endedAt: aggregation.endedAt,
-    endedAtHeight: aggregation.endedAtHeight,
-    period: aggregation.period,
-  };
-}
-
-export function tradingRewardToResponse(
-  tradingReward: TradingRewardFromDatabase,
-): HistoricalBlockTradingReward {
-  return {
-    tradingReward: tradingReward.amount,
-    createdAt: tradingReward.blockTime,
-    createdAtHeight: tradingReward.blockHeight,
-  };
 }

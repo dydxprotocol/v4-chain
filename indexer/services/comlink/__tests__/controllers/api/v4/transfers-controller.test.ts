@@ -37,10 +37,6 @@ describe('transfers-controller#V4', () => {
         createdAt: testConstants.createdDateTime.toISO(),
         createdAtHeight: testConstants.createdHeight,
       };
-      await WalletTable.create({
-        address: testConstants.defaultWalletAddress,
-        totalTradingRewards: '0',
-      });
       await Promise.all([
         TransferTable.create(testConstants.defaultTransfer),
         TransferTable.create(transfer2),

@@ -9,7 +9,6 @@ import {
   PerpetualMarketCreateEventV1,
   StatefulOrderEventV1,
   SubaccountUpdateEventV1,
-  TradingRewardsEventV1,
   TransferEventV1,
   UpdateClobPairEventV1,
   UpdatePerpetualEventV1,
@@ -97,13 +96,6 @@ export function annotateIndexerTendermintEvent(
         ...event,
         dataBytes: new Uint8Array(),
         data: JSON.stringify(UpdateClobPairEventV1.decode(eventDataBinary)),
-      };
-    }
-    case (DydxIndexerSubtypes.TRADING_REWARD.toString()): {
-      return {
-        ...event,
-        dataBytes: new Uint8Array(),
-        data: JSON.stringify(TradingRewardsEventV1.decode(eventDataBinary)),
       };
     }
     default: {

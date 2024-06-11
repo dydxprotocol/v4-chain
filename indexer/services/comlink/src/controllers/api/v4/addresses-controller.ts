@@ -160,7 +160,6 @@ class AddressesController extends Controller {
 
     return {
       subaccounts: subaccountResponses,
-      totalTradingRewards: wallet !== undefined ? wallet.totalTradingRewards : '0',
     };
   }
 

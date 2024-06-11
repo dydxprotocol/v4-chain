@@ -1,6 +1,5 @@
 import { logger, startBugsnag, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
 import { producer } from '@dydxprotocol-indexer/kafka';
-import { TradingRewardAggregationPeriod } from '@dydxprotocol-indexer/postgres';
 
 import config from './config';
 import { complianceProvider } from './helpers/compliance-clients';
@@ -9,7 +8,6 @@ import {
   redisClient,
   connect as connectToRedis,
 } from './helpers/redis';
-import aggregateTradingRewardsTasks from './tasks/aggregate-trading-rewards';
 import cancelStaleOrdersTask from './tasks/cancel-stale-orders';
 import createPnlTicksTask from './tasks/create-pnl-ticks';
 import deleteOldFastSyncSnapshots from './tasks/delete-old-fast-sync-snapshots';
@@ -139,30 +137,6 @@ async function start(): Promise<void> {
       removeOldOrderUpdatesTask,
       'remove_old_order_updates',
       config.LOOPS_INTERVAL_MS_REMOVE_OLD_ORDER_UPDATES,
-    );
-  }
-
-  if (config.LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_DAILY) {
-    startLoop(
-      aggregateTradingRewardsTasks(TradingRewardAggregationPeriod.DAILY),
-      'aggregate_trading_rewards_daily',
-      config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS,
-    );
-  }
-
-  if (config.LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_WEEKLY) {
-    startLoop(
-      aggregateTradingRewardsTasks(TradingRewardAggregationPeriod.WEEKLY),
-      'aggregate_trading_rewards_weekly',
-      config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS,
-    );
-  }
-
-  if (config.LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_MONTHLY) {
-    startLoop(
-      aggregateTradingRewardsTasks(TradingRewardAggregationPeriod.MONTHLY),
-      'aggregate_trading_rewards_monthly',
-      config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS,
     );
   }
 

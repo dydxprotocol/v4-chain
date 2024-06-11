@@ -33,7 +33,6 @@ const (
 	UpdatePerpetualEventVersion  uint32 = 1
 	UpdateClobPairEventVersion   uint32 = 1
 	DeleveragingEventVersion     uint32 = 1
-	TradingRewardVersion         uint32 = 1
 )
 
 var OnChainEventSubtypes = []string{

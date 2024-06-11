@@ -136,21 +136,3 @@ export const CheckTickerParamSchema = checkSchema({
 export const CheckTickerOptionalQuerySchema = checkSchema({
   ticker: checkTickerOptionalQuerySchema,
 });
-
-export const CheckHistoricalBlockTradingRewardsSchema = checkSchema({
-  ...checkAddressSchemaRecord,
-  ...limitSchemaRecord,
-  startingBeforeOrAt: {
-    in: ['query'],
-    optional: true,
-    isISO8601: true,
-  },
-  startingBeforeOrAtHeight: {
-    in: ['query'],
-    optional: true,
-    isInt: {
-      options: { gt: -1 },
-    },
-    errorMessage: 'startingBeforeOrAtHeight must be a non-negative integer',
-  },
-});
