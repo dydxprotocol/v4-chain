@@ -265,10 +265,6 @@ describe('Transfer store', () => {
   });
 
   it('Recipient/sender must exist', async () => {
-    await WalletTable.create({
-      address: defaultWalletAddress,
-      totalTradingRewards: '0',
-    });
     const invalidDeposit: TransferCreateObject = {
       ...defaultDeposit,
       recipientWalletAddress: defaultWalletAddress,
@@ -296,10 +292,6 @@ describe('Transfer store', () => {
   });
 
   it('Successfully creates/finds a transfer/deposit/withdrawal', async () => {
-    await WalletTable.create({
-      address: defaultWalletAddress,
-      totalTradingRewards: '0',
-    });
     await Promise.all([
       TransferTable.create(defaultTransfer),
       TransferTable.create(defaultDeposit),

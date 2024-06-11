@@ -164,12 +164,6 @@ export interface TransferSubaccountMessageContents {
   createdAtHeight: string;
 }
 
-export interface TradingRewardSubaccountMessageContents {
-  tradingReward: string;
-  createdAtHeight: string;
-  createdAt: string;
-}
-
 /* ------- TradeMessageContents ------- */
 
 export interface TradeMessageContents {

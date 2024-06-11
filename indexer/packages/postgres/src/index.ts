@@ -14,8 +14,6 @@ export { default as OrderModel } from './models/order-model';
 export { default as PerpetualMarketModel } from './models/perpetual-market-model';
 export { default as PerpetualPositionModel } from './models/perpetual-position-model';
 export { default as TransferModel } from './models/transfer-model';
-export { default as TradingRewardModel } from './models/trading-reward-model';
-export { default as TradingRewardAggregationModel } from './models/trading-reward-aggregation-model';
 
 export * as AssetTable from './stores/asset-table';
 export * as AssetPositionTable from './stores/asset-position-table';
@@ -36,8 +34,6 @@ export * as FundingIndexUpdatesTable from './stores/funding-index-updates-table'
 export * as LiquidityTiersTable from './stores/liquidity-tiers-table';
 export * as WalletTable from './stores/wallet-table';
 export * as ComplianceTable from './stores/compliance-table';
-export * as TradingRewardTable from './stores/trading-reward-table';
-export * as TradingRewardAggregationTable from './stores/trading-reward-aggregation-table';
 
 export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
 export * as assetRefresher from './loops/asset-refresher';

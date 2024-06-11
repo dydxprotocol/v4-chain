@@ -9,7 +9,6 @@ import {
 import { PerpetualMarketStatus } from './perpetual-market-types';
 import { PerpetualPositionStatus } from './perpetual-position-types';
 import { PositionSide } from './position-types';
-import { TradingRewardAggregationPeriod } from './trading-reward-aggregation-types';
 
 type IsoString = string;
 
@@ -22,11 +21,6 @@ export interface SubaccountFromDatabase extends IdBasedModelFromDatabase {
   subaccountNumber: number,
   updatedAt: IsoString,
   updatedAtHeight: string,
-}
-
-export interface WalletFromDatabase {
-  address: string,
-  totalTradingRewards: string,
 }
 
 export interface PerpetualPositionFromDatabase extends IdBasedModelFromDatabase {
@@ -221,25 +215,6 @@ export interface ComplianceDataFromDatabase {
   blocked: boolean;
   riskScore?: string;
   updatedAt: string;
-}
-
-export interface TradingRewardFromDatabase {
-  id: string;
-  address: string;
-  blockTime: IsoString;
-  blockHeight: string;
-  amount: string;
-}
-
-export interface TradingRewardAggregationFromDatabase {
-  id: string;
-  address: string;
-  startedAt: IsoString;
-  startedAtHeight: string;
-  endedAt?: IsoString;
-  endedAtHeight?: string;
-  period: TradingRewardAggregationPeriod;
-  amount: string;
 }
 
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
