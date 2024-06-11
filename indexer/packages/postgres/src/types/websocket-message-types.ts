@@ -36,7 +36,6 @@ export interface SubaccountMessageContents {
   orders?: OrderSubaccountMessageContents[],
   fills?: FillSubaccountMessageContents[],
   transfers?: TransferSubaccountMessageContents,
-  tradingReward?: TradingRewardSubaccountMessageContents,
 }
 
 export interface PerpetualPositionSubaccountMessageContents {

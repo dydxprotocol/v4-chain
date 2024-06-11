@@ -299,14 +299,6 @@ describe('transferHandler', () => {
       newTransfer,
       asset,
     );
-    // Confirm the wallet was created
-    const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
-      defaultWalletAddress,
-    );
-    expect(wallet).toEqual({
-      address: defaultWalletAddress,
-      totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(0),
-    });
   });
 
   it('creates new deposit for previously non-existent subaccount', async () => {
@@ -346,19 +338,6 @@ describe('transferHandler', () => {
       newTransfer,
       asset,
     );
-    // Confirm the wallet was created
-    const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
-      defaultWalletAddress,
-    );
-    const newRecipientSubaccount: SubaccountFromDatabase | undefined = await
-    SubaccountTable.findById(
-      defaultRecipientSubaccountId,
-    );
-    expect(newRecipientSubaccount).toBeDefined();
-    expect(wallet).toEqual({
-      address: defaultWalletAddress,
-      totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(0),
-    });
   });
 
   it('creates new withdrawal for existing subaccount', async () => {
@@ -404,14 +383,6 @@ describe('transferHandler', () => {
       newTransfer,
       asset,
     );
-    // Confirm the wallet was created
-    const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
-      defaultWalletAddress,
-    );
-    expect(wallet).toEqual({
-      address: defaultWalletAddress,
-      totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(0),
-    });
   });
 
   it('creates new transfer and the recipient subaccount', async () => {
