@@ -8,7 +8,8 @@ use crate::error::ContractError;
 use crate::msg::{ArbiterResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, CONFIG};
 use cw2::set_contract_version;
-use crate::dydx_msg::{SendingMsg, SubaccountId};
+use crate::dydx_msg::{SendingMsg};
+use dydx_cosmwasm::SubaccountId;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:dydx-messages-example";
@@ -21,12 +22,7 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    let config = Config {
-        arbiter: deps.api.addr_validate(&msg.arbiter)?,
-        recipient: deps.api.addr_validate(&msg.recipient)?,
-        source: info.sender,
-        expiration: msg.expiration,
-    };
+
 
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
@@ -35,7 +31,6 @@ pub fn instantiate(
             return Err(ContractError::Expired { expiration });
         }
     }
-    CONFIG.save(deps.storage, &config)?;
     Ok(Response::default())
 }
 
@@ -47,8 +42,38 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response<SendingMsg>, ContractError> {
     match msg {
-        ExecuteMsg::Approve { quantity } => execute_approve(deps, env, info, quantity),
-        ExecuteMsg::Refund {} => execute_refund(deps, env, info),
+        ExecuteMsg::DepositToSubaccount { sender, recipient, asset_id, quantums } => {
+            let deposit = SendingMsg::DepositToSubaccount {
+                sender: sender,
+                recipient: recipient,
+                asset_id: asset_id,
+                quantums: quantums,
+            };
+            Ok(Response::new().add_message(deposit))
+        }
+        ExecuteMsg::WithdrawFromSubaccount { sender, recipient, asset_id, quantums } => {
+            let withdraw = SendingMsg::WithdrawFromSubaccount {
+                sender: sender,
+                recipient: recipient,
+                asset_id: asset_id,
+                quantums: quantums,
+            };
+            Ok(Response::new().add_message(withdraw))
+        }
+        ExecuteMsg::PlaceOrder { order } => {
+            let place_order = SendingMsg::PlaceOrder {
+                order: order,
+            };
+            Ok(Response::new().add_message(place_order))
+        }
+        ExecuteMsg::CancelOrder { order_id, good_til_block, good_til_block_time } => {
+            let cancel_order = SendingMsg::CancelOrder {
+                order_id: order_id,
+                good_til_block: good_til_block,
+                good_til_block_time: good_til_block_time,
+            };
+            Ok(Response::new().add_message(cancel_order))
+        }
     }
 }
 

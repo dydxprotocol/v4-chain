@@ -1125,13 +1125,13 @@ func New(
 
 	// AllCapabilities returns all capabilities available with the current wasmvm
 	// See https://github.com/CosmWasm/cosmwasm/blob/main/docs/CAPABILITIES-BUILT-IN.md
-	supportedFeatures := "iterator,staking,stargate,osmosis,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_4"
+	supportedFeatures := "iterator,staking,stargate,osmosis,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_4,dydx"
 
-	wasmbinding.RegisterCustomPlugins(&app.PricesKeeper, &app.SendingKeeper)
+	wasmbinding.RegisterCustomPlugins(&app.PricesKeeper, &app.SendingKeeper, app.ClobKeeper)
 
 	wasmOpts := []wasmmodulekeeper.Option{}
 
-	wasmOpts = append(wasmbinding.RegisterCustomPlugins(&app.PricesKeeper, &app.SendingKeeper), wasmOpts...)
+	wasmOpts = append(wasmbinding.RegisterCustomPlugins(&app.PricesKeeper, &app.SendingKeeper, app.ClobKeeper), wasmOpts...)
 
 	app.WasmKeeper = wasmmodulekeeper.NewKeeper(
 		appCodec,

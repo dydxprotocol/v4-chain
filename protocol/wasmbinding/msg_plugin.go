@@ -13,15 +13,19 @@ import (
 	sendingkeeper "github.com/dydxprotocol/v4-chain/protocol/x/sending/keeper"
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	clobkeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
+// TODO(OTE-409): add checks for contract addresses
+
 // CustomMessageDecorator returns decorator for custom CosmWasm bindings messages
-func CustomMessageDecorator(sending *sendingkeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
+func CustomMessageDecorator(sending *sendingkeeper.Keeper, clob *clobkeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
 	return func(old wasmkeeper.Messenger) wasmkeeper.Messenger {
 		return &CustomMessenger{
 			wrapped: old,
 			sending: sending,
+			clob:    clob,
 		}
 	}
 }
@@ -29,6 +33,7 @@ func CustomMessageDecorator(sending *sendingkeeper.Keeper) func(wasmkeeper.Messe
 type CustomMessenger struct {
 	wrapped wasmkeeper.Messenger
 	sending *sendingkeeper.Keeper
+	clob    *clobkeeper.Keeper
 }
 
 var _ wasmkeeper.Messenger = (*CustomMessenger)(nil)
@@ -39,8 +44,9 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		// only handle the happy path where this is really creating / minting / swapping ...
 		// leave everything else for the wrapped version
 		var contractMsg bindings.SendingMsg
+		// print the custom message in string format
 		if err := json.Unmarshal(msg.Custom, &contractMsg); err != nil {
-			return nil, nil, errorsmod.Wrap(err, "sending msg")
+			return nil, nil, errorsmod.Wrap(err, "Error Unmarshalling Custom Message")
 		}
 		if contractMsg.CreateTransfer != nil {
 			return m.createTransfer(ctx, contractAddr, contractMsg.CreateTransfer)
@@ -48,85 +54,45 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		if contractMsg.DepositToSubaccount != nil {
 			return m.depositToSubaccount(ctx, contractAddr, contractMsg.DepositToSubaccount)
 		}
+		if contractMsg.WithdrawFromSubaccount != nil {
+			return m.withdrawFromSubaccount(ctx, contractAddr, contractMsg.WithdrawFromSubaccount)
+		}
+		if contractMsg.PlaceOrder != nil {
+			return m.placeOrder(ctx, contractAddr, contractMsg.PlaceOrder)
+		}
+		if contractMsg.CancelOrder != nil {
+			return m.cancelOrder(ctx, contractAddr, contractMsg.CancelOrder)
+		}
+		return nil, nil, wasmvmtypes.InvalidRequest{Err: "Unknown custom message"}
 	}
 	return m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
 }
 
-func (m *CustomMessenger) createTransfer(ctx sdk.Context, contractAddr sdk.AccAddress, createTransfer *bindings.CreateTransfer) ([]sdk.Event, [][]byte, error) {
+func (m *CustomMessenger) createTransfer(ctx sdk.Context, contractAddr sdk.AccAddress, createTransfer *sendingtypes.MsgCreateTransfer) ([]sdk.Event, [][]byte, error) {
 	if createTransfer == nil {
-		return nil, nil, wasmvmtypes.InvalidRequest{Err: "create transfer null transfer"}
+		return nil, nil, wasmvmtypes.InvalidRequest{Err: "Invalid create transfer request: No transfer data provided"}
 	}
-
-	senderAddress, err := parseAddress(createTransfer.Transfer.Sender.Owner)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	senderNumber := createTransfer.Transfer.Sender.Number
-
-	rcptAddress, err := parseAddress(createTransfer.Transfer.Recipient.Owner)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	rcptNumber := createTransfer.Transfer.Recipient.Number
-
-	pendingTransfer := sendingtypes.Transfer{
-		Sender: satypes.SubaccountId{
-			Owner:  senderAddress.String(),
-			Number: senderNumber,
-		},
-		Recipient: satypes.SubaccountId{
-			Owner:  rcptAddress.String(),
-			Number: rcptNumber,
-		},
-		AssetId: createTransfer.Transfer.AssetId,
-		Amount:  createTransfer.Transfer.Amount,
-	}
-
-	err = m.sending.ProcessTransfer(ctx, &pendingTransfer)
-
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return nil, nil, nil
+	err := m.sending.ProcessTransfer(ctx, createTransfer.Transfer)
+	return nil, nil, err
 }
 
-func (m *CustomMessenger) depositToSubaccount(ctx sdk.Context, contractAddr sdk.AccAddress, depositToSubaccount *bindings.DepositToSubaccount) ([]sdk.Event, [][]byte, error) {
+func (m *CustomMessenger) depositToSubaccount(ctx sdk.Context, contractAddr sdk.AccAddress, depositToSubaccount *sendingtypes.MsgDepositToSubaccount) ([]sdk.Event, [][]byte, error) {
 	if depositToSubaccount == nil {
-		return nil, nil, wasmvmtypes.InvalidRequest{Err: "deposit to subaccount null deposit"}
+		return nil, nil, wasmvmtypes.InvalidRequest{Err: "Invalid deposit to subaccount request: No deposit data provided"}
 	}
 
-	senderAddress, err := parseAddress(depositToSubaccount.Sender)
-	if err != nil {
-		return nil, nil, err
+	err := m.sending.ProcessDepositToSubaccount(ctx, depositToSubaccount)
+	return nil, nil, err
+}
+
+func (m *CustomMessenger) withdrawFromSubaccount(ctx sdk.Context, contractAddr sdk.AccAddress, withdrawFromSubaccount *sendingtypes.MsgWithdrawFromSubaccount) ([]sdk.Event, [][]byte, error) {
+	if withdrawFromSubaccount == nil {
+		return nil, nil, wasmvmtypes.InvalidRequest{Err: "Invalid withdraw from subaccount request: No withdraw data provided"}
 	}
 
-	rcptAddress, err := parseAddress(depositToSubaccount.Recipient.Owner)
-	if err != nil {
-		return nil, nil, err
-	}
+	err := m.sending.ProcessWithdrawFromSubaccount(ctx, withdrawFromSubaccount)
+	return nil, nil, err
 
-	rcptNumber := depositToSubaccount.Recipient.Number
-
-	deposit := sendingtypes.MsgDepositToSubaccount{
-		Sender: senderAddress.String(),
-		Recipient: satypes.SubaccountId{
-			Owner:  rcptAddress.String(),
-			Number: rcptNumber,
-		},
-		AssetId:  depositToSubaccount.AssetId,
-		Quantums: depositToSubaccount.Quantums,
-	}
-
-	err = m.sending.ProcessDepositToSubaccount(ctx, &deposit)
-
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return nil, nil, nil
 }
 
 func parseAddress(addr string) (sdk.AccAddress, error) {
@@ -139,4 +105,34 @@ func parseAddress(addr string) (sdk.AccAddress, error) {
 		return nil, err
 	}
 	return parsed, nil
+}
+
+func (m *CustomMessenger) placeOrder(
+	ctx sdk.Context,
+	contractAddr sdk.AccAddress,
+	placeOrder *clobtypes.MsgPlaceOrder,
+) ([]sdk.Event, [][]byte, error) {
+	if placeOrder == nil {
+		return nil, nil, wasmvmtypes.InvalidRequest{Err: "Invalid place order request: No order data provided"}
+	}
+	if ctx.IsCheckTx() || ctx.IsReCheckTx() {
+		return nil, nil, nil
+	}
+	err := m.clob.HandleMsgPlaceOrder(ctx, placeOrder, false)
+	return nil, nil, err
+}
+
+func (m *CustomMessenger) cancelOrder(
+	ctx sdk.Context,
+	contractAddr sdk.AccAddress,
+	cancelOrder *clobtypes.MsgCancelOrder,
+) ([]sdk.Event, [][]byte, error) {
+	if cancelOrder == nil {
+		return nil, nil, wasmvmtypes.InvalidRequest{Err: "Invalid cancel order request: No order data provided"}
+	}
+	if ctx.IsCheckTx() || ctx.IsReCheckTx() {
+		return nil, nil, nil
+	}
+	err := m.clob.HandleMsgCancelOrder(ctx, cancelOrder)
+	return nil, nil, err
 }

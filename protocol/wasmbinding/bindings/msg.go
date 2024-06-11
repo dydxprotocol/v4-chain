@@ -1,29 +1,15 @@
 package bindings
 
+import (
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+)
+
 type SendingMsg struct {
-	CreateTransfer      *CreateTransfer      `json:"create_transfer,omitempty"`
-	DepositToSubaccount *DepositToSubaccount `json:"deposit_to_subaccount,omitempty"`
-}
-
-type SubaccountId struct {
-	Owner  string `json:"owner"`
-	Number uint32 `json:"number"`
-}
-
-type CreateTransfer struct {
-	Transfer *Transfer `json:"transfer,omitempty"`
-}
-
-type Transfer struct {
-	Sender    *SubaccountId `json:"sender,omitempty"`
-	Recipient *SubaccountId `json:"recipient,omitempty"`
-	AssetId   uint32        `json:"asset_id,omitempty"`
-	Amount    uint64        `json:"amount,omitempty"`
-}
-
-type DepositToSubaccount struct {
-	Sender    string        `json:"sender"`
-	Recipient *SubaccountId `json:"recipient,omitempty"`
-	AssetId   uint32        `json:"asset_id,omitempty"`
-	Quantums  uint64        `json:"quantums,omitempty"`
+	CreateTransfer         *sendingtypes.MsgCreateTransfer         `json:"create_transfer,omitempty"`
+	DepositToSubaccount    *sendingtypes.MsgDepositToSubaccount    `json:"deposit_to_subaccount,omitempty"`
+	WithdrawFromSubaccount *sendingtypes.MsgWithdrawFromSubaccount `json:"withdraw_from_subaccount,omitempty"`
+	PlaceOrder             *clobtypes.MsgPlaceOrder                `json:"place_order,omitempty"`
+	CancelOrder            *clobtypes.MsgCancelOrder               `json:"cancel_order,omitempty"`
 }
