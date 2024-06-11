@@ -75,9 +75,15 @@ func NewGrpcStreamingManager(
 			case <-grpcStreamingManager.ticker.C:
 				grpcStreamingManager.FlushStreamUpdates()
 			case <-grpcStreamingManager.done:
+				grpcStreamingManager.logger.Info(
+					"GRPC Stream poller goroutine returning",
+				)
 				return
 			}
 		}
+		grpcStreamingManager.logger.Error(
+			"Should never see this ever",
+		)
 	}()
 
 	return grpcStreamingManager
@@ -119,7 +125,9 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 
 	sm.Lock()
 	defer sm.Unlock()
-
+	sm.logger.Info(
+		fmt.Sprintf("New subscription id %+v for clob pair ids: %+v", sm.nextSubscriptionId, clobPairIds),
+	)
 	sm.orderbookSubscriptions[sm.nextSubscriptionId] = subscription
 	sm.nextSubscriptionId++
 	sm.EmitMetrics()
@@ -312,6 +320,11 @@ func (sm *GrpcStreamingManagerImpl) AddUpdatesToCache(
 	sm.Lock()
 	defer sm.Unlock()
 
+	metrics.IncrCounter(
+		metrics.GrpcAddUpdateToBufferCount,
+		1,
+	)
+
 	for clobPairId, streamUpdates := range updatesByClobPairId {
 		sm.streamUpdateCache[clobPairId] = append(sm.streamUpdateCache[clobPairId], streamUpdates...)
 	}
@@ -327,6 +340,7 @@ func (sm *GrpcStreamingManagerImpl) AddUpdatesToCache(
 		clear(sm.streamUpdateCache)
 		sm.numUpdatesInCache = 0
 	}
+	sm.EmitMetrics()
 }
 
 // FlushStreamUpdates takes in a map of clob pair id to stream updates and emits them to subscribers.
@@ -339,11 +353,6 @@ func (sm *GrpcStreamingManagerImpl) FlushStreamUpdates() {
 
 	sm.Lock()
 	defer sm.Unlock()
-
-	metrics.IncrCounter(
-		metrics.GrpcEmitProtocolUpdateCount,
-		1,
-	)
 
 	// Send updates to subscribers.
 	idsToRemove := make([]uint32, 0)
