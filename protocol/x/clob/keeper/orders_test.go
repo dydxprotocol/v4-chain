@@ -29,7 +29,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices"
-	rewardtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	statstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -123,9 +122,6 @@ func TestPlaceShortTermOrder(t *testing.T) {
 					string(constants.Dave_Num0.ToStateKey()),
 				// Indexer event
 				indexer_manager.IndexerEventsKey,
-				// Update rewards
-				rewardtypes.RewardShareKeyPrefix + constants.Carl_Num0.Owner,
-				rewardtypes.RewardShareKeyPrefix + constants.Dave_Num0.Owner,
 				// Update block stats
 				statstypes.BlockStatsKey,
 				// Update prunable block height for taker fill amount

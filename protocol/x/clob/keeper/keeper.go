@@ -40,7 +40,6 @@ type (
 		perpetualsKeeper  types.PerpetualsKeeper
 		pricesKeeper      types.PricesKeeper
 		statsKeeper       types.StatsKeeper
-		rewardsKeeper     types.RewardsKeeper
 
 		indexerEventManager indexer_manager.IndexerEventManager
 		streamingManager    streamingtypes.GrpcStreamingManager
@@ -83,7 +82,6 @@ func NewKeeper(
 	perpetualsKeeper types.PerpetualsKeeper,
 	pricesKeeper types.PricesKeeper,
 	statsKeeper types.StatsKeeper,
-	rewardsKeeper types.RewardsKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	grpcStreamingManager streamingtypes.GrpcStreamingManager,
 	txDecoder sdk.TxDecoder,
@@ -109,7 +107,6 @@ func NewKeeper(
 		perpetualsKeeper:             perpetualsKeeper,
 		pricesKeeper:                 pricesKeeper,
 		statsKeeper:                  statsKeeper,
-		rewardsKeeper:                rewardsKeeper,
 		indexerEventManager:          indexerEventManager,
 		streamingManager:             grpcStreamingManager,
 		memStoreInitialized:          &atomic.Bool{},
