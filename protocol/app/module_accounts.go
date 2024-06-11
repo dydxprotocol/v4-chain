@@ -7,9 +7,7 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
 	clobmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-	rewardsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
-	vestmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	ibcconsumertypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 	"golang.org/x/exp/maps"
 )
@@ -33,14 +31,6 @@ var (
 		satypes.ModuleName: nil,
 		// clob insurance fund account manages insurance fund for liquidations.
 		clobmoduletypes.InsuranceFundName: nil,
-		// rewards treasury account distribute funds trading accounts.
-		rewardsmoduletypes.TreasuryAccountName: nil,
-		// rewards vester account vest rewards tokens into the rewards treasury.
-		rewardsmoduletypes.VesterAccountName: nil,
-		// community treasury account holds funds for community use.
-		vestmoduletypes.CommunityTreasuryAccountName: nil,
-		// community vester account vests funds into the community treasury.
-		vestmoduletypes.CommunityVesterAccountName: nil,
 	}
 	// Blocked module accounts which cannot receive external funds.
 	// By default, all non-custom modules (except for gov) are blocked. This prevents
