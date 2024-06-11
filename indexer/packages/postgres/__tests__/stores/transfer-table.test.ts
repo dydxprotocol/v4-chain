@@ -23,6 +23,7 @@ import {
   defaultSubaccountId3,
   defaultTendermintEventId,
   defaultTendermintEventId2,
+  defaultTendermintEventId3,
   defaultTransfer,
   defaultTransfer2,
   defaultTransfer3,
@@ -31,6 +32,7 @@ import {
 } from '../helpers/constants';
 import Big from 'big.js';
 import { CheckViolationError } from 'objection';
+import { DateTime } from 'luxon';
 
 describe('Transfer store', () => {
   beforeEach(async () => {
@@ -565,5 +567,45 @@ describe('Transfer store', () => {
       [defaultAsset.id]: Big('-5.2'),
       [defaultAsset2.id]: Big('-5.3'),
     });
+  });
+
+  it('Successfully gets the latest createdAt for subaccounts', async () => {
+    const now = DateTime.utc();
+
+    const transfer2 = {
+      senderSubaccountId: defaultSubaccountId2,
+      recipientSubaccountId: defaultSubaccountId,
+      assetId: defaultAsset2.id,
+      size: '5',
+      eventId: defaultTendermintEventId3,
+      transactionHash: '', // TODO: Add a real transaction Hash
+      createdAt: now.minus({ hours: 2 }).toISO(),
+      createdAtHeight: createdHeight,
+    };
+
+    const transfer3 = {
+      senderSubaccountId: defaultSubaccountId2,
+      recipientSubaccountId: defaultSubaccountId,
+      assetId: defaultAsset2.id,
+      size: '5',
+      eventId: defaultTendermintEventId2,
+      transactionHash: '', // TODO: Add a real transaction Hash
+      createdAt: now.minus({ hours: 1 }).toISO(),
+      createdAtHeight: createdHeight,
+    };
+
+    await Promise.all([
+      TransferTable.create(defaultTransfer),
+      TransferTable.create(transfer2),
+      TransferTable.create(transfer3),
+    ]);
+
+    const transferTimes: { [subaccountId: string]: string } = await
+    TransferTable.getLastTransferTimeForSubaccounts(
+      [defaultSubaccountId, defaultSubaccountId2],
+    );
+
+    expect(transferTimes[defaultSubaccountId]).toEqual(defaultTransfer.createdAt);
+    expect(transferTimes[defaultSubaccountId2]).toEqual(defaultTransfer.createdAt);
   });
 });

@@ -270,4 +270,83 @@ describe('PnlTicks store', () => {
     expect(mostRecent[defaultSubaccountId].equity).toEqual('1014');
     expect(mostRecent[defaultSubaccountId2].equity).toEqual('200');
   });
+
+  it('createMany PnlTicks, find most recent pnl tick times for each account', async () => {
+    const now = DateTime.utc();
+
+    await Promise.all([
+      BlockTable.create({
+        blockHeight: '3',
+        time: defaultBlock.time,
+      }),
+      BlockTable.create({
+        blockHeight: '5',
+        time: defaultBlock.time,
+      }),
+    ]);
+
+    await PnlTicksTable.createMany([
+      {
+        subaccountId: defaultSubaccountId,
+        equity: '1092',
+        createdAt: now.minus({ hours: 1 }).toISO(),
+        totalPnl: '1000',
+        netTransfers: '50',
+        blockHeight: defaultBlock.blockHeight,
+        blockTime: defaultBlock.time,
+      },
+      {
+        subaccountId: defaultSubaccountId,
+        equity: '1097',
+        createdAt: now.minus({ hours: 3 }).toISO(),
+        totalPnl: '1000',
+        netTransfers: '50',
+        blockHeight: '3',
+        blockTime: defaultBlock.time,
+      },
+      {
+        subaccountId: defaultSubaccountId,
+        equity: '1011',
+        createdAt: now.minus({ hours: 11 }).toISO(),
+        totalPnl: '1000',
+        netTransfers: '50',
+        blockHeight: '5',
+        blockTime: defaultBlock.time,
+      },
+      {
+        subaccountId: defaultSubaccountId,
+        equity: '1014',
+        createdAt: now.minus({ hours: 9 }).toISO(),
+        totalPnl: '1000',
+        netTransfers: '50',
+        blockHeight: '5',
+        blockTime: defaultBlock.time,
+      },
+      {
+        subaccountId: defaultSubaccountId2,
+        equity: '100',
+        createdAt: now.toISO(),
+        totalPnl: '1000',
+        netTransfers: '50',
+        blockHeight: '2',
+        blockTime: defaultBlock2.time,
+      },
+      {
+        subaccountId: defaultSubaccountId2,
+        equity: '200',
+        createdAt: now.minus({ hours: 9 }).toISO(),
+        totalPnl: '1000',
+        netTransfers: '50',
+        blockHeight: '5',
+        blockTime: defaultBlock.time,
+      },
+    ]);
+
+    const mostRecentTimes: {
+      [accountId: string]: string
+    } = await PnlTicksTable.findMostRecentPnlTickTimeForEachAccount('3');
+
+    expect(mostRecentTimes[defaultSubaccountId]).toEqual(now.minus({ hours: 9 }).toISO());
+    expect(mostRecentTimes[defaultSubaccountId2]).toEqual(now.minus({ hours: 9 }).toISO());
+  });
 });
