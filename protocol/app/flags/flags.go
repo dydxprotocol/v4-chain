@@ -21,11 +21,8 @@ type Flags struct {
 	GrpcEnable  bool
 
 	// Grpc Streaming
-	GrpcStreamingEnabled         bool
-	GrpcStreamingFlushIntervalMs uint32
-	GrpcStreamingMaxBufferSize   uint32
-
-	VEOracleEnabled bool // Slinky Vote Extensions
+	GrpcStreamingEnabled bool
+	VEOracleEnabled      bool // Slinky Vote Extensions
 }
 
 // List of CLI flags.
@@ -40,9 +37,7 @@ const (
 	GrpcEnable  = "grpc.enable"
 
 	// Grpc Streaming
-	GrpcStreamingEnabled         = "grpc-streaming-enabled"
-	GrpcStreamingFlushIntervalMs = "grpc-streaming-flush-interval-ms"
-	GrpcStreamingMaxBufferSize   = "grpc-streaming-max-buffer-size"
+	GrpcStreamingEnabled = "grpc-streaming-enabled"
 
 	// Slinky VEs enabled
 	VEOracleEnabled = "slinky-vote-extension-oracle-enabled"
@@ -55,11 +50,8 @@ const (
 	DefaultNonValidatingFullNode = false
 	DefaultDdErrorTrackingFormat = false
 
-	DefaultGrpcStreamingEnabled         = false
-	DefaultGrpcStreamingFlushIntervalMs = 50
-	DefaultGrpcStreamingMaxBufferSize   = 10000
-
-	DefaultVEOracleEnabled = true
+	DefaultGrpcStreamingEnabled = false
+	DefaultVEOracleEnabled      = true
 )
 
 // AddFlagsToCmd adds flags to app initialization.
@@ -93,16 +85,6 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		DefaultGrpcStreamingEnabled,
 		"Whether to enable grpc streaming for full nodes",
 	)
-	cmd.Flags().Uint32(
-		GrpcStreamingFlushIntervalMs,
-		DefaultGrpcStreamingFlushIntervalMs,
-		"Flush interval (in ms) for grpc streaming",
-	)
-	cmd.Flags().Uint32(
-		GrpcStreamingMaxBufferSize,
-		DefaultGrpcStreamingMaxBufferSize,
-		"Maximum buffer size before grpc streaming cancels all connections",
-	)
 	cmd.Flags().Bool(
 		VEOracleEnabled,
 		DefaultVEOracleEnabled,
@@ -121,12 +103,6 @@ func (f *Flags) Validate() error {
 	if f.GrpcStreamingEnabled {
 		if !f.GrpcEnable {
 			return fmt.Errorf("grpc.enable must be set to true - grpc streaming requires gRPC server")
-		}
-		if f.GrpcStreamingMaxBufferSize == 0 {
-			return fmt.Errorf("grpc streaming buffer size must be positive number")
-		}
-		if f.GrpcStreamingFlushIntervalMs == 0 {
-			return fmt.Errorf("grpc streaming flush interval must be positive number")
 		}
 	}
 	return nil
@@ -148,11 +124,8 @@ func GetFlagValuesFromOptions(
 		GrpcAddress: config.DefaultGRPCAddress,
 		GrpcEnable:  true,
 
-		GrpcStreamingEnabled:         DefaultGrpcStreamingEnabled,
-		GrpcStreamingFlushIntervalMs: DefaultGrpcStreamingFlushIntervalMs,
-		GrpcStreamingMaxBufferSize:   DefaultGrpcStreamingMaxBufferSize,
-
-		VEOracleEnabled: true,
+		GrpcStreamingEnabled: DefaultGrpcStreamingEnabled,
+		VEOracleEnabled:      true,
 	}
 
 	// Populate the flags if they exist.
@@ -195,18 +168,6 @@ func GetFlagValuesFromOptions(
 	if option := appOpts.Get(GrpcStreamingEnabled); option != nil {
 		if v, err := cast.ToBoolE(option); err == nil {
 			result.GrpcStreamingEnabled = v
-		}
-	}
-
-	if option := appOpts.Get(GrpcStreamingFlushIntervalMs); option != nil {
-		if v, err := cast.ToUint32E(option); err == nil {
-			result.GrpcStreamingFlushIntervalMs = v
-		}
-	}
-
-	if option := appOpts.Get(GrpcStreamingMaxBufferSize); option != nil {
-		if v, err := cast.ToUint32E(option); err == nil {
-			result.GrpcStreamingMaxBufferSize = v
 		}
 	}
 

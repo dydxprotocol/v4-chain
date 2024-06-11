@@ -902,7 +902,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 			updates := m.GetOrderbookUpdatesForOrderUpdate(ctx, fill.MakerOrderId)
 			allUpdates.Append(updates)
 		}
-		m.clobKeeper.SendOrderbookUpdates(ctx, allUpdates)
+		m.clobKeeper.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 
 	return takerOrderStatus, offchainUpdates, makerOrdersToRemove, matchingErr
@@ -1569,7 +1569,7 @@ func (m *MemClobPriceTimePriority) mustAddOrderToOrderbook(
 	if m.generateOrderbookUpdates {
 		// Send an orderbook update to grpc streams.
 		orderbookUpdate := m.GetOrderbookUpdatesForOrderPlacement(ctx, newOrder)
-		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate)
+		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
 	}
 }
 
@@ -2008,7 +2008,7 @@ func (m *MemClobPriceTimePriority) mustRemoveOrder(
 	if m.generateOrderbookUpdates {
 		// Send an orderbook update to grpc streams.
 		orderbookUpdate := m.GetOrderbookUpdatesForOrderRemoval(ctx, order.OrderId)
-		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate)
+		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
 	}
 }
 
