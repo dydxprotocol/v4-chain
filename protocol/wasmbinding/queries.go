@@ -67,11 +67,6 @@ func (qp QueryPlugin) HandleSubaccountsQuery(ctx sdk.Context, queryData json.Raw
 		return nil, errorsmod.Wrap(err, "Error encoding Subaccount as JSON")
 	}
 
-	fmt.Println("bz values", string(bz))
-	if err != nil {
-		return nil, errorsmod.Wrap(err, "Error encoding Subaccount as JSON")
-	}
-
 	return bz, nil
 }
 
