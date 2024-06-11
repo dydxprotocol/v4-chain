@@ -688,15 +688,15 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			}
 		}
 
-		// Branch the state to calculate the new OIMF after OI increase.
-		// The branched state is only needed for this purpose and is always discarded.
-		branchedContext, _ := ctx.CacheContext()
-
-		// Temporily apply open interest delta to perpetuals, so IMF is calculated based on open interest after the update.
-		// `perpOpenInterestDeltas` is only present for `Match` update type.
-		if perpOpenInterestDelta != nil {
+		var oiContext sdk.Context
+		if perpOpenInterestDelta != nil && perpOpenInterestDelta.BaseQuantums.Sign() != 0 {
+			// Branch the state to calculate the new OIMF after OI increase.
+			// The branched state is only needed for this purpose and is always discarded.
+			oiContext, _ := ctx.CacheContext()
+			// Temporily apply open interest delta to perpetuals, so IMF is calculated based on open interest after the update.
+			// `perpOpenInterestDeltas` is only present for `Match` update type.
 			if err := k.perpetualsKeeper.ModifyOpenInterest(
-				branchedContext,
+				oiContext,
 				perpOpenInterestDelta.PerpetualId,
 				perpOpenInterestDelta.BaseQuantums,
 			); err != nil {
@@ -709,13 +709,16 @@ func (k Keeper) internalCanUpdateSubaccounts(
 					err,
 				)
 			}
+		} else {
+			oiContext = ctx
 		}
+
 		// Get the new collateralization and margin requirements with the update applied.
 		bigNewNetCollateral,
 			bigNewInitialMargin,
 			bigNewMaintenanceMargin,
 			err := k.internalGetNetCollateralAndMarginRequirements(
-			branchedContext,
+			oiContext,
 			u,
 		)
 
