@@ -35,7 +35,7 @@ export class StatefulOrderReplacementHandler
   }
 
   public getSubaccountId(): IndexerSubaccountId {
-    const subaccountId = this.event.longTermOrderPlacement!.order!.orderId!.subaccountId!;
+    const subaccountId = this.event.orderReplacement!.order!.orderId!.subaccountId!;
     return subaccountId;
   }
 
