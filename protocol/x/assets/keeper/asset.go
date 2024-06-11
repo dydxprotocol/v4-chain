@@ -299,22 +299,19 @@ func (k Keeper) ConvertAssetToCoin(
 		)
 	}
 
-	bigRatDenomAmount := lib.BigMulPow10(
-		quantums,
-		asset.AtomicResolution-asset.DenomExponent,
-	)
+	exponent := asset.AtomicResolution - asset.DenomExponent
+	p10, inverse := lib.BigPow10(exponent)
+	var resultDenom *big.Int
+	var resultQuantums *big.Int
+	if inverse {
+		resultDenom = new(big.Int).Div(quantums, p10)
+		resultQuantums = new(big.Int).Mul(resultDenom, p10)
+	} else {
+		resultDenom = new(big.Int).Mul(quantums, p10)
+		resultQuantums = new(big.Int).Div(resultDenom, p10)
+	}
 
-	// round down to get denom amount that was converted.
-	bigConvertedDenomAmount := lib.BigRatRound(bigRatDenomAmount, false)
-
-	bigRatConvertedQuantums := lib.BigMulPow10(
-		bigConvertedDenomAmount,
-		asset.DenomExponent-asset.AtomicResolution,
-	)
-
-	bigConvertedQuantums := bigRatConvertedQuantums.Num()
-
-	return bigConvertedQuantums, sdk.NewCoin(asset.Denom, sdkmath.NewIntFromBigInt(bigConvertedDenomAmount)), nil
+	return resultQuantums, sdk.NewCoin(asset.Denom, sdkmath.NewIntFromBigInt(resultDenom)), nil
 }
 
 // IsPositionUpdatable returns whether position of an asset is updatable.

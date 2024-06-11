@@ -33,26 +33,8 @@ func FillAmountToQuoteQuantums(
 	bigSubticks := subticks.ToBigInt()
 	bigBaseQuantums := baseQuantums.ToBigInt()
 
-	bigSubticksMulBaseQuantums := new(big.Int).Mul(bigSubticks, bigBaseQuantums)
-
-	exponent := int64(quantumConversionExponent)
-
-	// To ensure we are always doing math with integers, we take the absolute
-	// value of the exponent. If `exponent` is non-negative, then `10^exponent` is an
-	// integer and we can multiply by it. Else, `10^exponent` is less than 1 and we should
-	// multiply by `1 / 10^exponent` (which must be an integer if `exponent < 0`).
-	bigExponentValue := lib.BigPow10(lib.AbsInt64(exponent))
-
-	bigQuoteQuantums := new(big.Int)
-	if exponent < 0 {
-		// `1 / 10^exponent` is an integer.
-		bigQuoteQuantums.Div(bigSubticksMulBaseQuantums, bigExponentValue)
-	} else {
-		// `10^exponent` is an integer.
-		bigQuoteQuantums.Mul(bigSubticksMulBaseQuantums, bigExponentValue)
-	}
-
-	return bigQuoteQuantums
+	result := new(big.Int).Mul(bigSubticks, bigBaseQuantums)
+	return lib.BigIntMulPow10(result, quantumConversionExponent, false)
 }
 
 // GetAveragePriceSubticks computes the average price (in subticks) of filled
@@ -73,10 +55,13 @@ func GetAveragePriceSubticks(
 	if bigBaseQuantums.Sign() == 0 {
 		panic(errors.New("GetAveragePriceSubticks: bigBaseQuantums = 0"))
 	}
-
-	result := lib.BigMulPow10(bigQuoteQuantums, -quantumConversionExponent)
-	return result.Quo(
-		result,
-		new(big.Rat).SetInt(bigBaseQuantums),
-	)
+	numerator := new(big.Int).Set(bigQuoteQuantums)
+	denominator := new(big.Int).Set(bigBaseQuantums)
+	p10, inverse := lib.BigPow10(-quantumConversionExponent)
+	if inverse {
+		denominator.Mul(denominator, p10)
+	} else {
+		numerator.Mul(numerator, p10)
+	}
+	return new(big.Rat).SetFrac(numerator, denominator)
 }
