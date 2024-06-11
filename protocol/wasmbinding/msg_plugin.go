@@ -17,7 +17,7 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-// TODO(affan): add checks for contract addresses
+// TODO(OTE-409): add checks for contract addresses
 
 // CustomMessageDecorator returns decorator for custom CosmWasm bindings messages
 func CustomMessageDecorator(sending *sendingkeeper.Keeper, clob *clobkeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {

@@ -8,7 +8,7 @@ use cosmwasm_std::{
 
 use crate::SubaccountId;
 
-// TODO(affan): handle issue with `GoodTilOneof` in `PlaceOrder` and `CancelOrder` not serializing correctly
+// TODO(OTE-407): handle issue with `GoodTilOneof` in `PlaceOrder` and `CancelOrder` not serializing correctly
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Transfer {

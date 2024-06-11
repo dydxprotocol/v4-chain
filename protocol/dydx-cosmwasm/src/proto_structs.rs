@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::Uint64;
 
-// TODO(affan): standardize proto compilation
+// TODO(OTE-408): standardize proto compilation
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct MarketPrice {
