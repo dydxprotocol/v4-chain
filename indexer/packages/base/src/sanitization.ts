@@ -1,31 +1,6 @@
 import traverse from 'traverse';
 
-// Common request headers which should be redacted. Normalized to all-lowercase.
-export const DEFAULT_SECRET_KEYS = [
-  'Authorization',
-  'X-Routing-Key', // Used by PagerDuty.
-];
-
-const DEFAULT_REDACTED_PLACEHOLDER = '[REDACTED]';
 const JSON_CIRCULAR_PLACEHOLDER = '[CIRCULAR]';
-
-/**
- * Creates a deep copy of an object with values redacted where the key matches `secretKeys`.
- */
-export function redact<T>(
-  obj: T,
-  secretKeys: string[] = DEFAULT_SECRET_KEYS,
-  placeholder: string = DEFAULT_REDACTED_PLACEHOLDER,
-): T {
-  const normalizedSecretKeys = secretKeys.map((s) => s.toLowerCase());
-
-  // eslint-disable-next-line array-callback-return
-  return traverse(obj).map(function traverseFunction(this: traverse.TraverseContext, value: {}) {
-    if (normalizedSecretKeys.includes(this.key?.toLowerCase() as string) && value !== null) {
-      this.update(placeholder);
-    }
-  });
-}
 
 /**
  * Creates a deep copy of an object with circular references removed or replaced.

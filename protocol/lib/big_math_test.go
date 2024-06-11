@@ -146,146 +146,29 @@ func TestBigMulPpm(t *testing.T) {
 
 func TestBigPow10(t *testing.T) {
 	tests := map[string]struct {
-		exponent       uint64
-		expectedResult *big.Int
+		exponent        int64
+		expectedValue   *big.Int
+		expectedInverse bool
 	}{
-		"Regular exponent": {
-			exponent:       3,
-			expectedResult: new(big.Int).SetUint64(1000),
-		},
-		"Zero exponent": {
-			exponent:       0,
-			expectedResult: new(big.Int).SetUint64(1),
-		},
-		"One exponent": {
-			exponent:       1,
-			expectedResult: new(big.Int).SetUint64(10),
-		},
-		"Power of 2": {
-			exponent:       8,
-			expectedResult: new(big.Int).SetUint64(100_000_000),
-		},
-		"Non-power of 2": {
-			exponent:       6,
-			expectedResult: new(big.Int).SetUint64(1_000_000),
-		},
-		"Greater than max uint64": {
-			exponent:       20,
-			expectedResult: big_testutil.MustFirst(new(big.Int).SetString("100000000000000000000", 10)),
-		},
+		"0":   {0, big.NewInt(1), false},
+		"1":   {1, big.NewInt(10), false},
+		"2":   {2, big.NewInt(100), false},
+		"3":   {3, big.NewInt(1000), false},
+		"4":   {4, big.NewInt(10000), false},
+		"5":   {5, big.NewInt(100000), false},
+		"20":  {20, big_testutil.MustFirst(new(big.Int).SetString("100000000000000000000", 10)), false},
+		"-1":  {-1, big.NewInt(10), true},
+		"-2":  {-2, big.NewInt(100), true},
+		"-3":  {-3, big.NewInt(1000), true},
+		"-4":  {-4, big.NewInt(10000), true},
+		"-5":  {-5, big.NewInt(100000), true},
+		"-20": {-20, big_testutil.MustFirst(new(big.Int).SetString("100000000000000000000", 10)), true},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := lib.BigPow10(tc.exponent)
-			require.Equal(t, tc.expectedResult, result)
-		})
-	}
-}
-
-func TestBigMulPow10(t *testing.T) {
-	tests := map[string]struct {
-		val            *big.Int
-		exponent       int32
-		expectedResult *big.Rat
-	}{
-		"exponent = 2": {
-			val:            new(big.Int).SetUint64(12345678),
-			exponent:       2,
-			expectedResult: big.NewRat(1234567800, 1),
-		},
-		"exponent = 10": {
-			val:            new(big.Int).SetUint64(12345678),
-			exponent:       10,
-			expectedResult: big.NewRat(123456780000000000, 1),
-		},
-		"exponent = 0": {
-			val:            new(big.Int).SetUint64(12345678),
-			exponent:       0,
-			expectedResult: big.NewRat(12345678, 1),
-		},
-		"exponent = -1": {
-			val:            new(big.Int).SetUint64(12345678),
-			exponent:       -1,
-			expectedResult: big.NewRat(12345678, 10),
-		},
-		"exponent = -3": {
-			val:            new(big.Int).SetUint64(12345678),
-			exponent:       -3,
-			expectedResult: big.NewRat(12345678, 1000),
-		},
-		"exponent = -8": {
-			val:            new(big.Int).SetUint64(12345678),
-			exponent:       -8,
-			expectedResult: big.NewRat(12345678, 100000000),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			result := lib.BigMulPow10(tc.val, tc.exponent)
-			require.Equal(t, tc.expectedResult, result)
-		})
-	}
-}
-
-func TestRatPow10(t *testing.T) {
-	tests := map[string]struct {
-		exponent       int32
-		expectedResult *big.Rat
-	}{
-		"Positive exponent": {
-			exponent:       3,
-			expectedResult: new(big.Rat).SetUint64(1000),
-		},
-		"Negative exponent": {
-			exponent:       -3,
-			expectedResult: new(big.Rat).SetFrac64(1, 1000),
-		},
-		"Zero exponent": {
-			exponent:       0,
-			expectedResult: new(big.Rat).SetUint64(1),
-		},
-		"One exponent": {
-			exponent:       1,
-			expectedResult: new(big.Rat).SetUint64(10),
-		},
-		"Negative one exponent": {
-			exponent:       -1,
-			expectedResult: new(big.Rat).SetFrac64(1, 10),
-		},
-		"Power of 2": {
-			exponent:       8,
-			expectedResult: new(big.Rat).SetUint64(100_000_000),
-		},
-		"Negative power of 2": {
-			exponent:       -8,
-			expectedResult: new(big.Rat).SetFrac64(1, 100_000_000),
-		},
-		"Non-power of 2": {
-			exponent:       6,
-			expectedResult: new(big.Rat).SetUint64(1_000_000),
-		},
-		"Negative non-power of 2": {
-			exponent:       -6,
-			expectedResult: new(big.Rat).SetFrac64(1, 1_000_000),
-		},
-		"Greater than max uint64": {
-			exponent:       20,
-			expectedResult: big_testutil.MustFirst(new(big.Rat).SetString("100000000000000000000")),
-		},
-		"Denom greater than max uint64": {
-			exponent: -20,
-			expectedResult: new(big.Rat).SetFrac(
-				new(big.Int).SetInt64(1),
-				big_testutil.MustFirst(
-					new(big.Int).SetString("100000000000000000000", 10),
-				),
-			),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			result := lib.RatPow10(tc.exponent)
-			require.Equal(t, tc.expectedResult, result)
+			value, inverse := lib.BigPow10(tc.exponent)
+			require.Equal(t, tc.expectedValue, value)
+			require.Equal(t, tc.expectedInverse, inverse)
 		})
 	}
 }
@@ -293,10 +176,11 @@ func TestRatPow10(t *testing.T) {
 func TestBigPow10AllValuesInMemo(t *testing.T) {
 	exponentString := "1"
 	for i := 0; i < 100; i++ {
-		bigValue, ok := new(big.Int).SetString(exponentString, 0)
+		expected, ok := new(big.Int).SetString(exponentString, 10)
 
 		require.True(t, ok)
-		require.Equal(t, lib.BigPow10(uint64(i)), bigValue)
+		result, _ := lib.BigPow10(i)
+		require.Equal(t, expected, result)
 
 		exponentString = exponentString + "0"
 	}
@@ -304,9 +188,10 @@ func TestBigPow10AllValuesInMemo(t *testing.T) {
 
 func TestBigPow10AllValueNotInMemo(t *testing.T) {
 	exponentString := "1" + strings.Repeat("0", 110)
-	bigValue, ok := new(big.Int).SetString(exponentString, 0)
+	expected, ok := new(big.Int).SetString(exponentString, 10)
 	require.True(t, ok)
-	require.Equal(t, lib.BigPow10(uint64(110)), bigValue)
+	result, _ := lib.BigPow10(110)
+	require.Equal(t, expected, result)
 }
 
 func TestBigIntMulPpm(t *testing.T) {

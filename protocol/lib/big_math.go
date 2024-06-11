@@ -27,43 +27,44 @@ func BigMulPpm(val *big.Int, ppm *big.Int, roundUp bool) *big.Int {
 	}
 }
 
-// BigMulPow10 returns the result of `val * 10^exponent`, in *big.Rat.
-func BigMulPow10(
-	val *big.Int,
-	exponent int32,
-) (
-	result *big.Rat,
-) {
-	ratPow10 := RatPow10(exponent)
-	return ratPow10.Mul(
-		new(big.Rat).SetInt(val),
-		ratPow10,
-	)
-}
-
 // bigPow10Memo is a cache of the most common exponent value requests. Since bigPow10Memo will be
 // accessed from different go-routines, the map should only ever be read from or collision
 // could occur.
 var bigPow10Memo = warmCache()
 
-// BigPow10 returns the result of `10^exponent`. Caches all calculated values and
-// re-uses cached values in any following calls to BigPow10.
-func BigPow10(exponent uint64) *big.Int {
-	result := bigPow10Helper(exponent)
-	// Copy the result, such that no values can be modified by reference in the
-	// `bigPow10Memo` cache.
-	copy := new(big.Int).Set(result)
-	return copy
+// BigPow10 returns the result of `10^abs(exponent)` and whether the exponent is non-negative.
+func BigPow10[T int | int32 | int64 | uint | uint32 | uint64](
+	exponent T,
+) (
+	result *big.Int,
+	inverse bool,
+) {
+	inverse = exponent < 0
+	var absExponent uint64
+	if inverse {
+		absExponent = uint64(-exponent)
+	} else {
+		absExponent = uint64(exponent)
+	}
+
+	return new(big.Int).Set(bigPow10Helper(absExponent)), inverse
 }
 
-// RatPow10 returns the result of `10^exponent`. Re-uses the cached values by
-// calling bigPow10Helper.
-func RatPow10(exponent int32) *big.Rat {
-	result := new(big.Rat).SetInt(bigPow10Helper(uint64(AbsInt32(exponent))))
-	if exponent < 0 {
-		result.Inv(result)
+// BigIntMulPow10 returns the result of `input * 10^exponent`, rounding in the direction indicated.
+// There is no rounding if `exponent` is non-negative.
+func BigIntMulPow10[T int | int32 | int64 | uint | uint32 | uint64](
+	input *big.Int,
+	exponent T,
+	roundUp bool,
+) *big.Int {
+	p10, inverse := BigPow10(exponent)
+	if inverse {
+		if roundUp {
+			return BigDivCeil(input, p10)
+		}
+		return new(big.Int).Div(input, p10)
 	}
-	return result
+	return new(big.Int).Mul(p10, input)
 }
 
 // BigIntMulPpm takes a `big.Int` and returns the result of `input * ppm / 1_000_000`. This method rounds towards

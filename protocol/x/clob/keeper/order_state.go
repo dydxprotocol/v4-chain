@@ -267,7 +267,7 @@ func (k Keeper) RemoveOrderFillAmount(ctx sdk.Context, orderId types.OrderId) {
 		); success {
 			allUpdates.AddUpdateMessage(orderId, message)
 		}
-		k.SendOrderbookUpdates(ctx, allUpdates, false)
+		k.SendOrderbookUpdates(ctx, allUpdates)
 	}
 }
 

@@ -17,7 +17,8 @@ func TestMustHumanSizeToBaseQuantums(t *testing.T) {
 		{"1.123", -8, 112_300_000, false},
 		{"0.55", -9, 550_000_000, false},
 		{"0.00000001", -8, 1, false},
-		{"235", 1, 2350, false},
+		{"235", -1, 2350, false},
+		{"235", 1, 23, false},
 		{"1", -10, 10_000_000_000, false},
 		{"0.0000000001", -10, 1, false},
 		{"abc", -8, 0, true}, // Invalid humanSize

@@ -156,7 +156,7 @@ type ClobKeeper interface {
 	SendOrderbookUpdates(
 		ctx sdk.Context,
 		offchainUpdates *OffchainUpdates,
-		snapshot bool,
 	)
 	MigratePruneableOrders(ctx sdk.Context)
+	GetAllStatefulOrders(ctx sdk.Context) []Order
 }
