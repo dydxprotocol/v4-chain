@@ -40,12 +40,12 @@ func BaseToQuoteQuantums(
 	}
 
 	// Otherwise multiply or divide by the 1e^exponent.
-	ePow := bigPow10Helper(uint64(AbsInt32(exponent)))
-	if exponent > 0 {
-		return numResult.Mul(numResult, ePow)
-	} else {
+	pow10, inverse := BigPow10(exponent)
+	if inverse {
 		// Trucated division (towards zero) instead of Euclidean division.
-		return numResult.Quo(numResult, ePow)
+		return numResult.Quo(numResult, pow10)
+	} else {
+		return numResult.Mul(numResult, pow10)
 	}
 }
 
@@ -75,11 +75,11 @@ func QuoteToBaseQuantums(
 
 	// Divide result (towards zero) by 10^(exponent).
 	exponent := priceExponent + baseCurrencyAtomicResolution - QuoteCurrencyAtomicResolution
-	power10Exponent := BigPow10(uint64(AbsInt32(exponent)))
-	if exponent > 0 {
-		result.Quo(result, power10Exponent)
+	p10, inverse := BigPow10(exponent)
+	if inverse {
+		result.Mul(result, p10)
 	} else {
-		result.Mul(result, power10Exponent)
+		result.Quo(result, p10)
 	}
 
 	// Divide result (towards zero) by priceValue.

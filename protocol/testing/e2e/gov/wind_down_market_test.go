@@ -102,9 +102,6 @@ func TestWindDownMarketProposal(t *testing.T) {
 					Order: constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16,
 				},
 				{
-					Order: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB20_FOK,
-				},
-				{
 					Order: constants.Order_Alice_Num0_Id1_Clob0_Buy5_Price15_GTB20_IOC,
 				},
 				{

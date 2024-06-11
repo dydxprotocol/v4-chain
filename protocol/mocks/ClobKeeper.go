@@ -200,6 +200,26 @@ func (_m *ClobKeeper) GetAllClobPairs(ctx types.Context) []clobtypes.ClobPair {
 	return r0
 }
 
+// GetAllStatefulOrders provides a mock function with given fields: ctx
+func (_m *ClobKeeper) GetAllStatefulOrders(ctx types.Context) []clobtypes.Order {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllStatefulOrders")
+	}
+
+	var r0 []clobtypes.Order
+	if rf, ok := ret.Get(0).(func(types.Context) []clobtypes.Order); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]clobtypes.Order)
+		}
+	}
+
+	return r0
+}
+
 // GetBankruptcyPriceInQuoteQuantums provides a mock function with given fields: ctx, subaccountId, perpetualId, deltaQuantums
 func (_m *ClobKeeper) GetBankruptcyPriceInQuoteQuantums(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, deltaQuantums *big.Int) (*big.Int, error) {
 	ret := _m.Called(ctx, subaccountId, perpetualId, deltaQuantums)

@@ -35,14 +35,14 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 			Subticks:     10,
 			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 5},
 		})
-	PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price10_GTB5_FOK := *clobtypes.NewMsgPlaceOrder(
+	PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price10_GTB5_IOC := *clobtypes.NewMsgPlaceOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 3},
 			Side:         clobtypes.Order_SIDE_BUY,
 			Quantums:     uint64(orderQuantums),
 			Subticks:     10,
 			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 5},
-			TimeInForce:  clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL,
+			TimeInForce:  clobtypes.Order_TIME_IN_FORCE_IOC,
 		})
 	PlaceOrder_Bob_Num0_Id0_Clob3_Sell_1ISO_Price10_GTB5 := *clobtypes.NewMsgPlaceOrder(
 		clobtypes.Order{
@@ -481,7 +481,7 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountConstraints.ABCICode(),
 			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
 		},
-		`Subaccount with isolated perpetual position fails to place FOK order for cross perpetual`: {
+		`Subaccount with isolated perpetual position fails to place IOC order for cross perpetual`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_1ISO_LONG_10_000USD,
 				constants.Bob_Num0_10_000USD,
@@ -497,9 +497,9 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 				constants.ClobPair_3_Iso,
 			},
 			orders: []clobtypes.MsgPlaceOrder{
-				// Liquidity to match the FOK order
+				// Liquidity to match the IOC order
 				*clobtypes.NewMsgPlaceOrder(constants.Order_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10),
-				*clobtypes.NewMsgPlaceOrder(constants.Order_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10_FOK),
+				*clobtypes.NewMsgPlaceOrder(constants.Order_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10_IOC),
 			},
 			collateralPoolBalances: map[string]int64{
 				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
@@ -522,7 +522,7 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountConstraints.ABCICode(),
 			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
 		},
-		`Subaccount with cross perpetual position fails to place FOK order for isolated perpetual`: {
+		`Subaccount with cross perpetual position fails to place IOC order for isolated perpetual`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_1BTC_LONG_10_000USD,
 				constants.Bob_Num0_10_000USD,
@@ -538,9 +538,9 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 				constants.ClobPair_3_Iso,
 			},
 			orders: []clobtypes.MsgPlaceOrder{
-				// Liquidity to match the FOK order
+				// Liquidity to match the IOC order
 				PlaceOrder_Bob_Num0_Id0_Clob3_Sell_1ISO_Price10_GTB5,
-				PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price10_GTB5_FOK,
+				PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price10_GTB5_IOC,
 			},
 			collateralPoolBalances: map[string]int64{
 				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
