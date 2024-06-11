@@ -5,5 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum DydxRoute {
-    Oracle,
+    MarketPrice,
+    Subaccount,
+    PerpetualClobDetails,
 }
