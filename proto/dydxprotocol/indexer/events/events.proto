@@ -249,7 +249,7 @@ message StatefulOrderEventV1 {
     ConditionalOrderPlacementV1 conditional_order_placement = 5;
     ConditionalOrderTriggeredV1 conditional_order_triggered = 6;
     LongTermOrderPlacementV1 long_term_order_placement = 7;
-    LongTermOrderReplacementV1 order_replace = 8;
+    LongTermOrderReplacementV1 order_replacement = 8;
   }
 
   // A stateful order placement contains an order.
