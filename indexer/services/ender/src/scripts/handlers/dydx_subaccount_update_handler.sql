@@ -14,6 +14,7 @@ CREATE OR REPLACE FUNCTION dydx_subaccount_update_handler(
     - subaccount: The upserted subaccount in subaccount-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/subaccount-model.ts).
     - perpetual_positions: A JSON array of upserted perpetual positions in perpetual-position-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-position-model.ts).
     - asset_positions: A JSON array of upserted asset positions in asset-position-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/asset-position-model.ts).
+    - markets: A JSON object mapping market ids to market records.
 
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
@@ -25,6 +26,7 @@ DECLARE
     perpetual_position_record_updates jsonb[];
     asset_position_update jsonb;
     asset_position_record_updates jsonb[];
+    market_map jsonb;
 BEGIN
     event_id = dydx_event_id_from_parts(
             block_height, transaction_index, event_index);
@@ -167,10 +169,13 @@ BEGIN
         END;
     END LOOP;
 
+    -- Fetch all markets
+    market_map := (SELECT jsonb_object_agg(id, dydx_to_jsonb(markets)) FROM markets);
     RETURN jsonb_build_object(
         'subaccount', dydx_to_jsonb(subaccount_record),
         'perpetual_positions', to_jsonb(perpetual_position_record_updates),
-        'asset_positions', to_jsonb(asset_position_record_updates)
+        'asset_positions', to_jsonb(asset_position_record_updates),
+        'markets', market_map
         );
 END;
 $$ LANGUAGE plpgsql;
