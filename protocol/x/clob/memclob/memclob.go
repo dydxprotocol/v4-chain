@@ -638,6 +638,40 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, nil
 	}
 
+	// The taker order has unfilled size which will be added to the orderbook as a maker order.
+	// Verify the maker order can be added to the orderbook by performing the add-to-orderbook
+	// subaccount updates check.
+	addOrderOrderStatus := m.addOrderToOrderbookSubaccountUpdatesCheck(
+		ctx,
+		order,
+	)
+
+	// If the add order to orderbook subaccount updates check failed, we cannot add the order to the orderbook.
+	if !addOrderOrderStatus.IsSuccess() {
+		if m.generateOffchainUpdates {
+			// Send an off-chain update message indicating the order should be removed from the orderbook
+			// on the Indexer.
+			if message, success := off_chain_updates.CreateOrderRemoveMessage(
+				ctx,
+				order.OrderId,
+				addOrderOrderStatus,
+				nil,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			); success {
+				offchainUpdates.AddRemoveMessage(order.OrderId, message)
+			}
+		}
+
+		// remove stateful orders which fail collateralization check while being added to orderbook
+		if order.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
+			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+				order.OrderId,
+				types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+			)
+		}
+		return orderSizeOptimisticallyFilledFromMatchingQuantums, addOrderOrderStatus, offchainUpdates, nil
+	}
+
 	// If this is a Short-Term order and it's not in the operations queue, add the TX bytes to the
 	// operations to propose.
 	if order.IsShortTermOrder() &&
@@ -1452,6 +1486,59 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	}
 
 	return nil
+}
+
+// addOrderToOrderbookSubaccountUpdatesCheck will perform a check to verify that the subaccount updates
+// if the new maker order were to be fully filled are valid.
+// It returns the result of this subaccount updates check. If the check returns an error, it will return
+// the  error so that it can be surfaced to the client.
+//
+// This function will assume that all prior order validation has passed, including the pre-requisite validation of
+// `validateNewOrder` and the actual validation performed within `validateNewOrder`.
+// Note that this is a loose check, mainly for the purposes of spam mitigation. We perform an additional
+// check on the subaccount updates for orders when we attempt to match them.
+func (m *MemClobPriceTimePriority) addOrderToOrderbookSubaccountUpdatesCheck(
+	ctx sdk.Context,
+	order types.Order,
+) types.OrderStatus {
+	defer telemetry.ModuleMeasureSince(
+		types.ModuleName,
+		time.Now(),
+		metrics.PlaceOrder,
+		metrics.Memclob,
+		metrics.AddToOrderbookCollateralizationCheck,
+		metrics.Latency,
+	)
+
+	orderId := order.OrderId
+	subaccountId := orderId.SubaccountId
+
+	// For the collateralization check, use the remaining amount of the order that is resting on the book.
+	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
+	if !hasRemainingAmount {
+		panic(fmt.Sprintf("addOrderToOrderbookSubaccountUpdatesCheck: order has no remaining amount %v", order))
+	}
+
+	pendingOpenOrder := types.PendingOpenOrder{
+		RemainingQuantums: remainingAmount,
+		IsBuy:             order.IsBuy(),
+		Subticks:          order.GetOrderSubticks(),
+		ClobPairId:        order.GetClobPairId(),
+	}
+
+	// Temporarily construct the subaccountOpenOrders with a single PendingOpenOrder.
+	subaccountOpenOrders := make(map[satypes.SubaccountId][]types.PendingOpenOrder)
+	subaccountOpenOrders[subaccountId] = []types.PendingOpenOrder{pendingOpenOrder}
+
+	// TODO(DEC-1896): AddOrderToOrderbookSubaccountUpdatesCheck should accept a single PendingOpenOrder as a
+	// parameter rather than the subaccountOpenOrders map.
+	_, successPerSubaccountUpdate := m.clobKeeper.AddOrderToOrderbookSubaccountUpdatesCheck(
+		ctx,
+		order.GetClobPairId(),
+		subaccountOpenOrders,
+	)
+
+	return updateResultToOrderStatus(successPerSubaccountUpdate[subaccountId])
 }
 
 // mustAddOrderToOrderbook will add the order to the resting orderbook.

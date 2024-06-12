@@ -183,6 +183,35 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			// TODO(CORE-858): Re-enable determinism checks once non-determinism issue is found and resolved.
 			disableNonDeterminismChecks: true,
 		},
+		"under-collateralized conditional taker when adding to book is removed": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_100000USD,
+				constants.Dave_Num0_10000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTBT10,
+				// Does not cross with best bid.
+				constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_50003,
+			},
+			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
+				Sender:    constants.Dave_Num0,
+				Recipient: constants.DaveAccAddress.String(),
+				AssetId:   constants.Usdc.Id,
+				Quantums:  10_000_000_000,
+			},
+			priceUpdate: &prices.MsgUpdateMarketPrices{
+				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
+					prices.NewMarketPriceUpdate(0, 5_000_250_000),
+				},
+			},
+
+			expectedOrderRemovals: []bool{
+				false,
+				true, // taker order fails add-to-orderbook collateralization check
+			},
+			// TODO(CORE-858): Re-enable determinism checks once non-determinism issue is found and resolved.
+			disableNonDeterminismChecks: true,
+		},
 		"under-collateralized conditional maker is removed": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_10000USD,
@@ -776,6 +805,27 @@ func TestOrderRemoval(t *testing.T) {
 
 			expectedFirstOrderRemoved:  false,
 			expectedSecondOrderRemoved: true, // taker order fails collateralization check during matching
+			// TODO(CORE-858): Re-enable determinism checks once non-determinism issue is found and resolved.
+			disableNonDeterminismChecks: true,
+		},
+		"under-collateralized taker when adding to book is removed": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_10000USD,
+				constants.Dave_Num0_10000USD,
+			},
+			firstOrder: constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTBT10,
+			// Does not cross with best bid.
+			secondOrder: constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+
+			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
+				Sender:    constants.Dave_Num0,
+				Recipient: constants.DaveAccAddress.String(),
+				AssetId:   constants.Usdc.Id,
+				Quantums:  10_000_000_000,
+			},
+
+			expectedFirstOrderRemoved:  false,
+			expectedSecondOrderRemoved: true, // taker order fails add-to-orderbook collateralization check
 			// TODO(CORE-858): Re-enable determinism checks once non-determinism issue is found and resolved.
 			disableNonDeterminismChecks: true,
 		},

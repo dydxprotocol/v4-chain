@@ -102,6 +102,26 @@ func createCollatCheckExpectationsFromPendingMatches(
 		expectedCollatChecks[i] = expectedPendingMatchesForCollatCheck
 	}
 
+	expectedMatchingCollateralizationChecks := len(expectedPendingMatches)
+
+	// If this is not a liquidation and taker order size will be added to the book, populate the
+	// expected parameters of the collateralization check for adding an order to the orderbook.
+	if !order.IsLiquidation() && addToOrderbookSize > 0 {
+		orderbookPendingMatches := []types.PendingOpenOrder{
+			{
+				RemainingQuantums: addToOrderbookSize,
+				IsBuy:             order.IsBuy(),
+				Subticks:          order.GetOrderSubticks(),
+				ClobPairId:        clobPairId,
+			},
+		}
+
+		expectedCollatChecks[expectedMatchingCollateralizationChecks] =
+			map[satypes.SubaccountId][]types.PendingOpenOrder{
+				order.GetSubaccountId(): orderbookPendingMatches,
+			}
+	}
+
 	return expectedCollatChecks
 }
 
