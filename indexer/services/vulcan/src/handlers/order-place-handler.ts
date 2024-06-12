@@ -9,17 +9,12 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import {
   CanceledOrdersCache,
+  convertToRedisOrder,
   placeOrder,
   PlaceOrderResult,
   StatefulOrderUpdatesCache,
-  convertToRedisOrder,
 } from '@dydxprotocol-indexer/redis';
-import {
-  getOrderIdHash,
-  isLongTermOrder,
-  isStatefulOrder,
-  ORDER_FLAG_SHORT_TERM,
-} from '@dydxprotocol-indexer/v4-proto-parser';
+import { getOrderIdHash, isStatefulOrder, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
   OffChainUpdateV1,
@@ -102,7 +97,6 @@ export class OrderPlaceHandler extends Handler {
       orderPlace,
       placeOrderResult,
       placementStatus,
-      redisOrder,
     )) {
       // TODO(IND-171): Determine whether we should always be sending a message, even when the cache
       // isn't updated.
@@ -168,15 +162,7 @@ export class OrderPlaceHandler extends Handler {
     orderPlace: OrderPlaceV1,
     placeOrderResult: PlaceOrderResult,
     placementStatus: OrderPlaceV1_OrderPlacementStatus,
-    redisOrder: RedisOrder,
   ): boolean {
-    if (
-      isLongTermOrder(redisOrder.order!.orderId!.orderFlags) &&
-      !config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS
-    ) {
-      return false;
-    }
-
     const orderFlags: number = orderPlace.order!.orderId!.orderFlags;
     const status: OrderPlaceV1_OrderPlacementStatus = orderPlace.placementStatus;
     // Best-effort-opened status should only be sent for short-term orders
