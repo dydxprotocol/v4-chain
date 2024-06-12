@@ -93,14 +93,13 @@ describe('stateful-order-replacement-handler', () => {
   let producerSendMock: jest.SpyInstance;
 
   it.each([
-    ['stateful order placement as txn event', defaultStatefulOrderReplacementEvent, false, 0],
-    ['stateful order placement as txn event', defaultStatefulOrderReplacementEvent, true, 0],
-    ['stateful order placement as block event', defaultStatefulOrderReplacementEvent, false, -1],
-    ['stateful order placement as block event', defaultStatefulOrderReplacementEvent, true, -1],
+    ['stateful order placement as txn event', defaultStatefulOrderReplacementEvent, 0],
+    ['stateful order placement as txn event', defaultStatefulOrderReplacementEvent, 0],
+    ['stateful order placement as block event', defaultStatefulOrderReplacementEvent, -1],
+    ['stateful order placement as block event', defaultStatefulOrderReplacementEvent, -1],
   ])('successfully places order with %s (emit subaccount websocket msg: %s)', async (
     _name: string,
     statefulOrderEvent: StatefulOrderEventV1,
-    emitSubaccountMessage: boolean,
     transactionIndex: number,
   ) => {
     await OrderTable.create({
@@ -108,7 +107,6 @@ describe('stateful-order-replacement-handler', () => {
       clientId: '0',
       orderFlags: ORDER_FLAG_LONG_TERM.toString(),
     });
-    config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = emitSubaccountMessage;
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       statefulOrderEvent,
       transactionIndex,
@@ -161,19 +159,17 @@ describe('stateful-order-replacement-handler', () => {
       offchainUpdate: expectedOffchainUpdate,
       headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderReplacement' },
     });
-    if (emitSubaccountMessage) {
-      expectOrderSubaccountKafkaMessage(
-        producerSendMock,
-        defaultNewOrder.orderId!.subaccountId!,
-        newOrder!,
-        defaultHeight.toString(),
-        transactionIndex,
-      );
-    }
+    expectOrderSubaccountKafkaMessage(
+      producerSendMock,
+      defaultNewOrder.orderId!.subaccountId!,
+      newOrder!,
+      defaultHeight.toString(),
+      transactionIndex,
+    );
   });
 
   it.each([
-    ['stateful order replacement', defaultStatefulOrderReplacementEvent],
+    ['stateful order replacement where old order ID is the same as new order ID', defaultStatefulOrderReplacementEvent],
   ])('successfully upserts order with %s', async (
     _name: string,
     statefulOrderReplacementEvent: StatefulOrderEventV1,
