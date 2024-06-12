@@ -35,19 +35,12 @@ func (k msgServer) DepositToVault(
 	// shares calculation to be correct.
 	err = k.sendingKeeper.ProcessTransfer(
 		ctx,
-<<<<<<< HEAD
-		*msg.SubaccountId,
-		*msg.VaultId.ToSubaccountId(),
-		assettypes.AssetUsdc.Id,
-		quoteQuantums,
-=======
 		&sendingtypes.Transfer{
 			Sender:    *msg.SubaccountId,
 			Recipient: *msg.VaultId.ToSubaccountId(),
 			AssetId:   assettypes.AssetUsdc.Id,
-			Amount:    msg.QuoteQuantums.BigInt().Uint64(),
+			Amount:    quoteQuantums.Uint64(),
 		},
->>>>>>> c9957874 (emit transfer indexer event on vault deposit (#1343))
 	)
 	if err != nil {
 		return nil, err
