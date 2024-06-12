@@ -32,8 +32,24 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 		expectedErr                error
 	}{
 		"Can place a valid Long-Term buy order on an empty orderbook": {
-			placedMatchableOrders:  []types.MatchableOrder{},
-			collateralizationCheck: map[int]testutil_memclob.CollateralizationCheck{},
+			placedMatchableOrders: []types.MatchableOrder{},
+			collateralizationCheck: map[int]testutil_memclob.CollateralizationCheck{
+				0: {
+					CollatCheck: map[satypes.SubaccountId][]types.PendingOpenOrder{
+						constants.Alice_Num0: {
+							{
+								RemainingQuantums: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetBaseQuantums(),
+								IsBuy:             constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.IsBuy(),
+								Subticks:          constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderSubticks(),
+								ClobPairId:        constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetClobPairId(),
+							},
+						},
+					},
+					Result: map[satypes.SubaccountId]satypes.UpdateResult{
+						constants.Alice_Num0: satypes.Success,
+					},
+				},
+			},
 
 			order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 
@@ -81,6 +97,21 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 					Result: map[satypes.SubaccountId]satypes.UpdateResult{
 						constants.Alice_Num0: satypes.Success,
 						constants.Bob_Num0:   satypes.Success,
+					},
+				},
+				1: {
+					CollatCheck: map[satypes.SubaccountId][]types.PendingOpenOrder{
+						constants.Bob_Num0: {
+							{
+								RemainingQuantums: 15,
+								IsBuy:             true,
+								Subticks:          30,
+								ClobPairId:        0,
+							},
+						},
+					},
+					Result: map[satypes.SubaccountId]satypes.UpdateResult{
+						constants.Bob_Num0: satypes.Success,
 					},
 				},
 			},
@@ -442,6 +473,98 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 			expectedRemainingBids: []OrderWithRemainingSize{},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
 		},
+		`A Long-Term sell order can partially match with a Long-Term buy order, fail collateralization
+			checks when adding to orderbook, and all existing matches are considered valid`: {
+			placedMatchableOrders: []types.MatchableOrder{
+				&constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+			},
+			collateralizationCheck: map[int]testutil_memclob.CollateralizationCheck{
+				0: {
+					CollatCheck: map[satypes.SubaccountId][]types.PendingOpenOrder{
+						constants.Alice_Num0: {
+							{
+								RemainingQuantums: 25,
+								IsBuy:             false,
+								Subticks:          30,
+								ClobPairId:        0,
+							},
+						},
+						constants.Bob_Num0: {
+							{
+								RemainingQuantums: 25,
+								IsBuy:             true,
+								Subticks:          30,
+								ClobPairId:        0,
+							},
+						},
+					},
+					Result: map[satypes.SubaccountId]satypes.UpdateResult{
+						constants.Alice_Num0: satypes.Success,
+						constants.Bob_Num0:   satypes.Success,
+					},
+				},
+				1: {
+					CollatCheck: map[satypes.SubaccountId][]types.PendingOpenOrder{
+						constants.Alice_Num0: {
+							{
+								RemainingQuantums: 40,
+								IsBuy:             false,
+								Subticks:          10,
+								ClobPairId:        0,
+							},
+						},
+					},
+					Result: map[satypes.SubaccountId]satypes.UpdateResult{
+						constants.Alice_Num0: satypes.NewlyUndercollateralized,
+					},
+				},
+			},
+
+			order: constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
+
+			expectedFilledSize:  25,
+			expectedOrderStatus: types.Undercollateralized,
+			expectedOperations: []types.Operation{
+				clobtest.NewOrderPlacementOperation(
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+				),
+				clobtest.NewOrderPlacementOperation(
+					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
+				),
+				clobtest.NewMatchOperation(
+					&constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+							FillAmount:   25,
+						},
+					},
+				),
+			},
+			expectedInternalOperations: []types.InternalOperation{
+				types.NewPreexistingStatefulOrderPlacementInternalOperation(
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+				),
+				types.NewPreexistingStatefulOrderPlacementInternalOperation(
+					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
+				),
+				types.NewMatchOrdersInternalOperation(
+					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
+					[]types.MakerFill{
+						{
+							MakerOrderId: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+							FillAmount:   25,
+						},
+					},
+				),
+				types.NewOrderRemovalInternalOperation(
+					constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+				),
+			},
+			expectedRemainingBids: []OrderWithRemainingSize{},
+			expectedRemainingAsks: []OrderWithRemainingSize{},
+		},
 		`A Long-Term post-only sell order can partially match with a Long-Term buy order,
 				all existing matches are reverted and it's not added to pendingStatefulOrders`: {
 			placedMatchableOrders: []types.MatchableOrder{
@@ -503,7 +626,23 @@ func TestPlaceOrder_LongTerm(t *testing.T) {
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 			},
-			collateralizationCheck: map[int]testutil_memclob.CollateralizationCheck{},
+			collateralizationCheck: map[int]testutil_memclob.CollateralizationCheck{
+				0: {
+					CollatCheck: map[satypes.SubaccountId][]types.PendingOpenOrder{
+						constants.Alice_Num0: {
+							{
+								RemainingQuantums: constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.GetBaseQuantums(),
+								IsBuy:             constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.IsBuy(),
+								Subticks:          constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.GetOrderSubticks(),
+								ClobPairId:        constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25.GetClobPairId(),
+							},
+						},
+					},
+					Result: map[satypes.SubaccountId]satypes.UpdateResult{
+						constants.Alice_Num0: satypes.Success,
+					},
+				},
+			},
 
 			order: constants.LongTermOrder_Alice_Num0_Id2_Clob0_Sell65_Price10_GTBT25,
 
@@ -567,7 +706,23 @@ func TestPlaceOrder_PreexistingStatefulOrder(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
 	ctx = ctx.WithIsCheckTx(true)
 	longTermOrder := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15
-	collateralizationCheck := map[int]testutil_memclob.CollateralizationCheck{}
+	collateralizationCheck := map[int]testutil_memclob.CollateralizationCheck{
+		0: {
+			CollatCheck: map[satypes.SubaccountId][]types.PendingOpenOrder{
+				constants.Alice_Num0: {
+					{
+						RemainingQuantums: 5,
+						IsBuy:             true,
+						Subticks:          10,
+						ClobPairId:        0,
+					},
+				},
+			},
+			Result: map[satypes.SubaccountId]satypes.UpdateResult{
+				constants.Alice_Num0: satypes.Success,
+			},
+		},
+	}
 	memclob, fakeMemClobKeeper, expectedNumCollateralizationChecks, numCollateralChecks := simplePlaceOrderTestSetup(
 		t,
 		ctx,

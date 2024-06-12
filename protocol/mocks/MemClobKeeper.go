@@ -24,6 +24,36 @@ type MemClobKeeper struct {
 	mock.Mock
 }
 
+// AddOrderToOrderbookSubaccountUpdatesCheck provides a mock function with given fields: ctx, clobPairId, subaccountOpenOrders
+func (_m *MemClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(ctx types.Context, clobPairId clobtypes.ClobPairId, subaccountOpenOrders map[subaccountstypes.SubaccountId][]clobtypes.PendingOpenOrder) (bool, map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult) {
+	ret := _m.Called(ctx, clobPairId, subaccountOpenOrders)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddOrderToOrderbookSubaccountUpdatesCheck")
+	}
+
+	var r0 bool
+	var r1 map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId, map[subaccountstypes.SubaccountId][]clobtypes.PendingOpenOrder) (bool, map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult)); ok {
+		return rf(ctx, clobPairId, subaccountOpenOrders)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId, map[subaccountstypes.SubaccountId][]clobtypes.PendingOpenOrder) bool); ok {
+		r0 = rf(ctx, clobPairId, subaccountOpenOrders)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.ClobPairId, map[subaccountstypes.SubaccountId][]clobtypes.PendingOpenOrder) map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult); ok {
+		r1 = rf(ctx, clobPairId, subaccountOpenOrders)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult)
+		}
+	}
+
+	return r0, r1
+}
+
 // AddPreexistingStatefulOrder provides a mock function with given fields: ctx, order, memclob
 func (_m *MemClobKeeper) AddPreexistingStatefulOrder(ctx types.Context, order *clobtypes.Order, memclob clobtypes.MemClob) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error) {
 	ret := _m.Called(ctx, order, memclob)
