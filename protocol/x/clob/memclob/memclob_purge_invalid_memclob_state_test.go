@@ -260,19 +260,12 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				case *types.Operation_ShortTermOrderPlacement:
 					order := operation.GetShortTermOrderPlacement().Order
 					orderId := order.OrderId
-					// Mock out the first 4 calls to GetOrderFillAmount, which is called during test setup.
+					// Mock out calls to GetOrderFillAmount during test setup.
 					mockMemClobKeeper.On("GetOrderFillAmount", mock.Anything, orderId).Return(
 						false,
 						satypes.BaseQuantums(0),
 						uint32(0),
-					).Times(5)
-					mockMemClobKeeper.On("AddOrderToOrderbookSubaccountUpdatesCheck", mock.Anything, mock.Anything, mock.Anything).
-						Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult)).Once()
-
-					// Mock out all remaining calls to GetOrderFillAmount, which is called in
-					// `memclob.PurgeInvalidMemclobState` and during test assertions.
-					fillAmount, exists := tc.newOrderFillAmounts[orderId]
-					mockMemClobKeeper.On("GetOrderFillAmount", mock.Anything, orderId).Return(exists, fillAmount, uint32(5))
+					)
 				}
 			}
 
@@ -292,6 +285,19 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				tc.placedOperations,
 				mockMemClobKeeper,
 			)
+
+			for _, operation := range tc.placedOperations {
+				switch operation.Operation.(type) {
+				case *types.Operation_ShortTermOrderPlacement:
+					order := operation.GetShortTermOrderPlacement().Order
+					orderId := order.OrderId
+					// Mock out all remaining calls to GetOrderFillAmount, which is called in
+					// `memclob.PurgeInvalidMemclobState` and during test assertions.
+					fillAmount, exists := tc.newOrderFillAmounts[orderId]
+					mockMemClobKeeper.On("GetOrderFillAmount", mock.Anything, orderId).Unset()
+					mockMemClobKeeper.On("GetOrderFillAmount", mock.Anything, orderId).Return(exists, fillAmount, uint32(5))
+				}
+			}
 
 			// Run the test.
 			ctx = ctx.WithBlockHeight(10)
