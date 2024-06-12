@@ -83,7 +83,6 @@ BEGIN
         order_record."reduceOnly" = (order_->>'reduceOnly')::boolean;
         order_record."orderFlags" = (order_->'orderId'->'orderFlags')::bigint;
         order_record."goodTilBlockTime" = to_timestamp((order_->'goodTilBlockTime')::double precision);
-
         order_record."clientMetadata" = (order_->'clientMetadata')::bigint;
         order_record."createdAtHeight" = block_height;
         order_record."updatedAt" = block_time;

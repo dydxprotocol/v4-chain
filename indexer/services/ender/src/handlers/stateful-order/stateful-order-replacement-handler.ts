@@ -34,6 +34,9 @@ export class StatefulOrderReplacementHandler
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const oldOrderId = this.event.orderReplacement!.oldOrderId!;
     const order = this.event.orderReplacement!.order!;
+
+    // Only one error is expected that's related to order replacement.
+    // If more errors are added to `dydx_stateful_order_handler.sql`, this will need to be updated.
     if (resultRow.errors != null) {
       logger.error({
         at: 'StatefulOrderReplacementHandler#handleOrderReplacement',
