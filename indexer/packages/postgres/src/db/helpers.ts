@@ -6,7 +6,6 @@ import { NUM_SECONDS_IN_CANDLE_RESOLUTIONS, ONE_MILLION } from '../constants';
 import {
   CandleResolution,
   FundingIndexMap, MarketFromDatabase,
-  MarketsMap,
   PerpetualMarketFromDatabase,
   PerpetualPositionFromDatabase,
   TransferFromDatabase,
