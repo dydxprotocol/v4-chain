@@ -17,11 +17,6 @@ import (
 
 var _ types.GrpcStreamingManager = (*GrpcStreamingManagerImpl)(nil)
 
-const (
-	// TODO CHANGE THIS CONFIGURABLE
-	MAX_BUFF_LEN = 1000
-)
-
 // GrpcStreamingManagerImpl is an implementation for managing gRPC streaming subscriptions.
 type GrpcStreamingManagerImpl struct {
 	sync.Mutex
@@ -39,7 +34,8 @@ type GrpcStreamingManagerImpl struct {
 	streamUpdateCache map[uint32][]clobtypes.StreamUpdate
 	numUpdatesInCache uint32
 
-	maxUpdatesInCache uint32
+	maxUpdatesInCache          uint32
+	maxSubscriptionChannelSize uint32
 }
 
 // OrderbookSubscription represents a active subscription to the orderbook updates stream.
@@ -63,6 +59,7 @@ func NewGrpcStreamingManager(
 	logger log.Logger,
 	flushIntervalMs uint32,
 	maxUpdatesInCache uint32,
+	maxSubscriptionChannelSize uint32,
 ) *GrpcStreamingManagerImpl {
 	logger = logger.With(log.ModuleKey, "grpc-streaming")
 	grpcStreamingManager := &GrpcStreamingManagerImpl{
@@ -75,7 +72,8 @@ func NewGrpcStreamingManager(
 		streamUpdateCache: make(map[uint32][]clobtypes.StreamUpdate),
 		numUpdatesInCache: 0,
 
-		maxUpdatesInCache: maxUpdatesInCache,
+		maxUpdatesInCache:          maxUpdatesInCache,
+		maxSubscriptionChannelSize: maxSubscriptionChannelSize,
 	}
 
 	// Start the goroutine for pushing order updates through.
@@ -137,7 +135,7 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 		subscriptionId: sm.nextSubscriptionId,
 		clobPairIds:    clobPairIds,
 		srv:            srv,
-		updatesChannel: make(chan []clobtypes.StreamUpdate, MAX_BUFF_LEN),
+		updatesChannel: make(chan []clobtypes.StreamUpdate, sm.maxSubscriptionChannelSize),
 	}
 
 	sm.logger.Info(
