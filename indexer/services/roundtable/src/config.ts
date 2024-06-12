@@ -46,9 +46,6 @@ export const configSchema = {
   LOOPS_ENABLED_DELETE_OLD_FAST_SYNC_SNAPSHOTS: parseBoolean({ default: true }),
   LOOPS_ENABLED_TRACK_LAG: parseBoolean({ default: false }),
   LOOPS_ENABLED_REMOVE_OLD_ORDER_UPDATES: parseBoolean({ default: true }),
-  LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_DAILY: parseBoolean({ default: true }),
-  LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_WEEKLY: parseBoolean({ default: true }),
-  LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_MONTHLY: parseBoolean({ default: true }),
 
   // Loop Timing
   LOOPS_INTERVAL_MS_MARKET_UPDATER: parseInteger({
@@ -85,9 +82,6 @@ export const configSchema = {
     default: TEN_SECONDS_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_REMOVE_OLD_ORDER_UPDATES: parseInteger({
-    default: THIRTY_SECONDS_IN_MILLISECONDS,
-  }),
-  LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
 
@@ -145,11 +139,6 @@ export const configSchema = {
   // Remove old cached order updates
   OLD_CACHED_ORDER_UPDATES_WINDOW_MS: parseInteger({ default: 30 * ONE_SECOND_IN_MILLISECONDS }),
 
-  // Aggregate Trading Rewards
-  AGGREGATE_TRADING_REWARDS_MAX_INTERVAL_SIZE_MS: parseInteger({
-    default: ONE_HOUR_IN_MILLISECONDS,
-  }),
-  AGGREGATE_TRADING_REWARDS_CHUNK_SIZE: parseInteger({ default: 50 }),
 };
 
 export default parseSchema(configSchema);

@@ -20,5 +20,4 @@ export enum DydxIndexerSubtypes {
   LIQUIDITY_TIER = 'liquidity_tier',
   UPDATE_PERPETUAL = 'update_perpetual',
   UPDATE_CLOB_PAIR = 'update_clob_pair',
-  TRADING_REWARD = 'trading_reward',
 }
