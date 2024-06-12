@@ -17,6 +17,7 @@ import {
   IndexerSubaccountId,
   IndexerOrder_ConditionType,
   OrderRemovalReason,
+  OrderReplaceV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 
@@ -24,16 +25,25 @@ export type OffChainUpdateOrderPlaceUpdateMessage = {
   orderUpdate: undefined,
   orderRemove: undefined,
   orderPlace: OrderPlaceV1,
+  orderReplace: undefined
 };
 export type OffChainUpdateOrderRemoveUpdateMessage = {
   orderUpdate: undefined,
   orderRemove: OrderRemoveV1,
   orderPlace: undefined,
+  orderReplace: undefined
 };
 export type OffChainUpdateOrderUpdateUpdateMessage = {
   orderUpdate: OrderUpdateV1,
   orderRemove: undefined,
   orderPlace: undefined,
+  orderReplace: undefined
+};
+export type OffChainUpdateOrderReplaceUpdateMessage = {
+  orderUpdate: undefined,
+  orderRemove: undefined,
+  orderPlace: undefined,
+  orderReplace: OrderReplaceV1,
 };
 
 export const defaultSubaccountId: IndexerSubaccountId = {
@@ -150,6 +160,7 @@ export const orderPlace: OffChainUpdateOrderPlaceUpdateMessage = {
     order: defaultOrder,
     placementStatus: OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
   },
+  orderReplace: undefined,
 };
 export const orderRemove: OffChainUpdateOrderRemoveUpdateMessage = {
   orderPlace: undefined,
@@ -159,6 +170,7 @@ export const orderRemove: OffChainUpdateOrderRemoveUpdateMessage = {
     reason: OrderRemovalReason.ORDER_REMOVAL_REASON_INTERNAL_ERROR,
     removalStatus: OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
   },
+  orderReplace: undefined,
 };
 export const orderUpdate: OffChainUpdateOrderUpdateUpdateMessage = {
   orderPlace: undefined,
@@ -166,6 +178,17 @@ export const orderUpdate: OffChainUpdateOrderUpdateUpdateMessage = {
   orderUpdate: {
     orderId: defaultOrderId,
     totalFilledQuantums: Long.fromValue(250_500, true),
+  },
+  orderReplace: undefined,
+};
+export const orderReplace: OffChainUpdateOrderReplaceUpdateMessage = {
+  orderPlace: undefined,
+  orderRemove: undefined,
+  orderUpdate: undefined,
+  orderReplace: {
+    oldOrderId: defaultOrderId,
+    order: defaultOrder,
+    placementStatus: OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
   },
 };
 
