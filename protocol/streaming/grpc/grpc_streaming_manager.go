@@ -17,6 +17,11 @@ import (
 
 var _ types.GrpcStreamingManager = (*GrpcStreamingManagerImpl)(nil)
 
+const (
+	// TODO CHANGE THIS CONFIGURABLE
+	MAX_BUFF_LEN = 1000
+)
+
 // GrpcStreamingManagerImpl is an implementation for managing gRPC streaming subscriptions.
 type GrpcStreamingManagerImpl struct {
 	sync.Mutex
@@ -39,6 +44,8 @@ type GrpcStreamingManagerImpl struct {
 
 // OrderbookSubscription represents a active subscription to the orderbook updates stream.
 type OrderbookSubscription struct {
+	subscriptionId uint32
+
 	// Initialize the subscription with orderbook snapshots.
 	initialize sync.Once
 
@@ -47,6 +54,9 @@ type OrderbookSubscription struct {
 
 	// Stream
 	srv clobtypes.Query_StreamOrderbookUpdatesServer
+
+	// Channel to buffer writes before the stream
+	updatesChannel chan []clobtypes.StreamUpdate
 }
 
 func NewGrpcStreamingManager(
@@ -68,7 +78,8 @@ func NewGrpcStreamingManager(
 		maxUpdatesInCache: maxUpdatesInCache,
 	}
 
-	// Start the goroutine for pushing order updates through
+	// Start the goroutine for pushing order updates through.
+	// Sender goroutine for the
 	go func() {
 		for {
 			select {
@@ -118,27 +129,68 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 		return clobtypes.ErrInvalidGrpcStreamingRequest
 	}
 
+	sm.Lock()
 	subscription := &OrderbookSubscription{
-		clobPairIds: clobPairIds,
-		srv:         srv,
+		subscriptionId: sm.nextSubscriptionId,
+		clobPairIds:    clobPairIds,
+		srv:            srv,
+		updatesChannel: make(chan []clobtypes.StreamUpdate, MAX_BUFF_LEN),
 	}
 
-	sm.Lock()
-	defer sm.Unlock()
 	sm.logger.Info(
-		fmt.Sprintf("New subscription id %+v for clob pair ids: %+v", sm.nextSubscriptionId, clobPairIds),
+		fmt.Sprintf(
+			"New subscription id %+v for clob pair ids: %+v",
+			subscription.subscriptionId,
+			clobPairIds,
+		),
 	)
-	sm.orderbookSubscriptions[sm.nextSubscriptionId] = subscription
+	sm.orderbookSubscriptions[subscription.subscriptionId] = subscription
 	sm.nextSubscriptionId++
 	sm.EmitMetrics()
-	return nil
+	sm.Unlock()
+
+	// Use current goroutine to consistently poll subscription channel for updates
+	// to send through stream.
+	for updates := range subscription.updatesChannel {
+		err = subscription.srv.Send(
+			&clobtypes.StreamOrderbookUpdatesResponse{
+				Updates: updates,
+			},
+		)
+		if err != nil {
+			// On error, remove the subscription from the streaming manager
+			sm.logger.Error(
+				fmt.Sprintf(
+					"Error sending out update for grpc streaming subscription %+v. Dropping subsciption connection.",
+					subscription.subscriptionId,
+				),
+				"err", err,
+			)
+			sm.Lock()
+			sm.removeSubscription(subscription.subscriptionId)
+			sm.Unlock()
+		}
+	}
+
+	sm.logger.Info(
+		fmt.Sprintf(
+			"Terminating poller for subscription id %+v",
+			subscription.subscriptionId,
+		),
+	)
+	return err
 }
 
 // removeSubscription removes a subscription from the grpc streaming manager.
-// The streaming manager's lock should already be acquired from the thread running this.
+// The streaming manager's lock should already be acquired before calling this.
 func (sm *GrpcStreamingManagerImpl) removeSubscription(
 	subscriptionIdToRemove uint32,
 ) {
+	subscription := sm.orderbookSubscriptions[subscriptionIdToRemove]
+	if subscription == nil {
+		return
+	}
+	close(subscription.updatesChannel)
 	delete(sm.orderbookSubscriptions, subscriptionIdToRemove)
 	sm.logger.Info(
 		fmt.Sprintf("Removed grpc streaming subscription id %+v", subscriptionIdToRemove),
@@ -354,7 +406,8 @@ func (sm *GrpcStreamingManagerImpl) FlushStreamUpdates() {
 	sm.Lock()
 	defer sm.Unlock()
 
-	// Send updates to subscribers.
+	// Non-blocking send updates through subscriber's buffered channel.
+	// If the buffer is full, drop the subscription.
 	idsToRemove := make([]uint32, 0)
 	for id, subscription := range sm.orderbookSubscriptions {
 		streamUpdatesForSubscription := make([]clobtypes.StreamUpdate, 0)
@@ -369,28 +422,26 @@ func (sm *GrpcStreamingManagerImpl) FlushStreamUpdates() {
 				metrics.GrpcSendResponseToSubscriberCount,
 				1,
 			)
-			if err := subscription.srv.Send(
-				&clobtypes.StreamOrderbookUpdatesResponse{
-					Updates: streamUpdatesForSubscription,
-				},
-			); err != nil {
-				sm.logger.Error(
-					fmt.Sprintf("Error sending out update for grpc streaming subscription %+v", id),
-					"err", err,
-				)
+			select {
+			case subscription.updatesChannel <- streamUpdatesForSubscription:
+			default:
 				idsToRemove = append(idsToRemove, id)
 			}
 		}
 	}
 
-	// Clean up subscriptions that have been closed.
-	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
-	for _, id := range idsToRemove {
-		sm.removeSubscription(id)
-	}
-
 	clear(sm.streamUpdateCache)
 	sm.numUpdatesInCache = 0
+
+	for _, id := range idsToRemove {
+		sm.logger.Error(
+			fmt.Sprintf(
+				"GRPC Streaming subscription id %+v channel full capacity. Dropping subscription connection.",
+				id,
+			),
+		)
+		sm.removeSubscription(id)
+	}
 
 	sm.EmitMetrics()
 }
