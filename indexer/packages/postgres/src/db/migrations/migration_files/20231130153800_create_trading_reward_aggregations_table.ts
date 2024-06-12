@@ -21,7 +21,6 @@ export async function up(knex: Knex): Promise<void> {
       table.decimal('amount').notNullable();
 
       // Foreign
-      table.foreign('address').references('wallets.address');
       table.foreign('startedAtHeight').references('blocks.blockHeight');
 
       // Indices

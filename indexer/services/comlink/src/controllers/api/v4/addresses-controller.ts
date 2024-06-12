@@ -22,8 +22,6 @@ import {
   Options,
   FundingIndexUpdatesTable,
   FundingIndexMap,
-  WalletTable,
-  WalletFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
@@ -83,10 +81,9 @@ class AddressesController extends Controller {
     @Path() address: string,
   ): Promise<AddressResponse> {
     // TODO(IND-189): Use a transaction across all the DB queries
-    const [subaccounts, latestBlock, wallet]: [
+    const [subaccounts, latestBlock]: [
       SubaccountFromDatabase[],
       BlockFromDatabase,
-      WalletFromDatabase | undefined,
     ] = await Promise.all([
       SubaccountTable.findAll(
         {
@@ -95,7 +92,6 @@ class AddressesController extends Controller {
         [],
       ),
       BlockTable.getLatest(),
-      WalletTable.findById(address),
     ]);
 
     if (subaccounts.length === 0) {

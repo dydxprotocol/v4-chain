@@ -23,8 +23,6 @@ import {
   protocolTranslations,
   SubaccountMessageContents,
   assetRefresher,
-  WalletTable,
-  WalletFromDatabase,
   testConversionHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';

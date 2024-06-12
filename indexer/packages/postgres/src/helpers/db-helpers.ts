@@ -21,7 +21,6 @@ const layer1Tables = [
   'assets',
   'candles',
   'liquidity_tiers',
-  'wallets',
   'compliance_data',
   'trading_rewards',
   'trading_reward_aggregations',

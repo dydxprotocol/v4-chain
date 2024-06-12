@@ -32,7 +32,6 @@ export * as OraclePriceTable from './stores/oracle-price-table';
 export * as CandleTable from './stores/candle-table';
 export * as FundingIndexUpdatesTable from './stores/funding-index-updates-table';
 export * as LiquidityTiersTable from './stores/liquidity-tiers-table';
-export * as WalletTable from './stores/wallet-table';
 export * as ComplianceTable from './stores/compliance-table';
 
 export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';

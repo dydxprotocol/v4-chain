@@ -5,7 +5,6 @@ import {
   TransferCreateObject,
   TransferTable,
   TransferType,
-  WalletTable,
 } from '@dydxprotocol-indexer/postgres';
 import { RequestMethod, TransferResponseObject } from '../../../../src/types';
 import request from 'supertest';

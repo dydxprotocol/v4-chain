@@ -7,7 +7,6 @@ import {
 } from '../../src/types';
 import * as TransferTable from '../../src/stores/transfer-table';
 import { AssetTransferMap } from '../../src/stores/transfer-table';
-import * as WalletTable from '../../src/stores/wallet-table';
 import * as SubaccountTable from '../../src/stores/subaccount-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { seedData } from '../helpers/mock-generators';

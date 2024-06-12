@@ -45,7 +45,6 @@ import {
   TimeInForce,
   TransactionCreateObject,
   TransferCreateObject,
-  WalletCreateObject,
 } from '../../src/types';
 import { denomToHumanReadableConversion } from './conversion-helpers';
 

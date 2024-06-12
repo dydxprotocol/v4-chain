@@ -20,8 +20,6 @@ CREATE OR REPLACE FUNCTION dydx_transfer_handler(
 DECLARE
     asset_record assets%ROWTYPE;
     recipient_subaccount_record subaccounts%ROWTYPE;
-    recipient_wallet_record wallets%ROWTYPE;
-    sender_wallet_record wallets%ROWTYPE;
     transfer_record transfers%ROWTYPE;
 BEGIN
     asset_record."id" = event_data->>'assetId';

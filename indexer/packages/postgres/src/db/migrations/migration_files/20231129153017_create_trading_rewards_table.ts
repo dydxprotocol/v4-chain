@@ -10,9 +10,6 @@ export async function up(knex: Knex): Promise<void> {
       table.bigInteger('blockHeight').notNullable();
       table.decimal('amount').notNullable();
 
-      // Foreign
-      table.foreign('address').references('wallets.address');
-
       // Indices
       table.index(['address']);
       table.index(['blockTime']);
