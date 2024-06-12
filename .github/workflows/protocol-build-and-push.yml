@@ -6,7 +6,6 @@ on:  # yamllint disable-line rule:truthy
       - main
       - 'release/protocol/v[0-9]+.[0-9]+.x'  # e.g. release/protocol/v0.1.x
       - 'release/protocol/v[0-9]+.x'  # e.g. release/protocol/v1.x
-      - 'jonfung/**'  # e.g. jonfung/hi
 
 jobs:
   build-and-push-dev:
