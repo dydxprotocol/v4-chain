@@ -31,22 +31,6 @@ export default class TransferModel extends Model {
         to: 'subaccounts.id',
       },
     },
-    recipientWallet: {
-      relation: Model.BelongsToOneRelation,
-      modelClass: path.join(__dirname, 'wallet-model'),
-      join: {
-        from: 'transfers.recipientWalletAddress',
-        to: 'wallets.address',
-      },
-    },
-    senderWallet: {
-      relation: Model.BelongsToOneRelation,
-      modelClass: path.join(__dirname, 'wallet-model'),
-      join: {
-        from: 'transfers.senderWalletAddress',
-        to: 'wallets.address',
-      },
-    },
     asset: {
       relation: Model.BelongsToOneRelation,
       modelClass: path.join(__dirname, 'asset-model'),
