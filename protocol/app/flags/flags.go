@@ -21,9 +21,10 @@ type Flags struct {
 	GrpcEnable  bool
 
 	// Grpc Streaming
-	GrpcStreamingEnabled         bool
-	GrpcStreamingFlushIntervalMs uint32
-	GrpcStreamingMaxBufferSize   uint32
+	GrpcStreamingEnabled              bool
+	GrpcStreamingFlushIntervalMs      uint32
+	GrpcStreamingMaxBatchSize         uint32
+	GrpcStreamingMaxChannelBufferSize uint32
 
 	VEOracleEnabled bool // Slinky Vote Extensions
 }
@@ -40,9 +41,10 @@ const (
 	GrpcEnable  = "grpc.enable"
 
 	// Grpc Streaming
-	GrpcStreamingEnabled         = "grpc-streaming-enabled"
-	GrpcStreamingFlushIntervalMs = "grpc-streaming-flush-interval-ms"
-	GrpcStreamingMaxBufferSize   = "grpc-streaming-max-buffer-size"
+	GrpcStreamingEnabled              = "grpc-streaming-enabled"
+	GrpcStreamingFlushIntervalMs      = "grpc-streaming-flush-interval-ms"
+	GrpcStreamingMaxBatchSize         = "grpc-streaming-max-batch-size"
+	GrpcStreamingMaxChannelBufferSize = "grpc-streaming-max-channel-buffer-size"
 
 	// Slinky VEs enabled
 	VEOracleEnabled = "slinky-vote-extension-oracle-enabled"
@@ -55,9 +57,10 @@ const (
 	DefaultNonValidatingFullNode = false
 	DefaultDdErrorTrackingFormat = false
 
-	DefaultGrpcStreamingEnabled         = false
-	DefaultGrpcStreamingFlushIntervalMs = 50
-	DefaultGrpcStreamingMaxBufferSize   = 10000
+	DefaultGrpcStreamingEnabled              = false
+	DefaultGrpcStreamingFlushIntervalMs      = 50
+	DefaultGrpcStreamingMaxBatchSize         = 10000
+	DefaultGrpcStreamingMaxChannelBufferSize = 10000
 
 	DefaultVEOracleEnabled = true
 )
@@ -99,9 +102,14 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		"Flush interval (in ms) for grpc streaming",
 	)
 	cmd.Flags().Uint32(
-		GrpcStreamingMaxBufferSize,
-		DefaultGrpcStreamingMaxBufferSize,
-		"Maximum buffer size before grpc streaming cancels all connections",
+		GrpcStreamingMaxBatchSize,
+		DefaultGrpcStreamingMaxBatchSize,
+		"Maximum batch size before grpc streaming cancels all subscriptions",
+	)
+	cmd.Flags().Uint32(
+		GrpcStreamingMaxChannelBufferSize,
+		DefaultGrpcStreamingMaxChannelBufferSize,
+		"Maximum per-subscription channel size before grpc streaming cancels a singular subscription",
 	)
 	cmd.Flags().Bool(
 		VEOracleEnabled,
@@ -122,11 +130,14 @@ func (f *Flags) Validate() error {
 		if !f.GrpcEnable {
 			return fmt.Errorf("grpc.enable must be set to true - grpc streaming requires gRPC server")
 		}
-		if f.GrpcStreamingMaxBufferSize == 0 {
-			return fmt.Errorf("grpc streaming buffer size must be positive number")
+		if f.GrpcStreamingMaxBatchSize == 0 {
+			return fmt.Errorf("grpc streaming batch size must be positive number")
 		}
 		if f.GrpcStreamingFlushIntervalMs == 0 {
 			return fmt.Errorf("grpc streaming flush interval must be positive number")
+		}
+		if f.GrpcStreamingMaxChannelBufferSize == 0 {
+			return fmt.Errorf("grpc streaming channel size must be positive number")
 		}
 	}
 	return nil
@@ -148,9 +159,10 @@ func GetFlagValuesFromOptions(
 		GrpcAddress: config.DefaultGRPCAddress,
 		GrpcEnable:  true,
 
-		GrpcStreamingEnabled:         DefaultGrpcStreamingEnabled,
-		GrpcStreamingFlushIntervalMs: DefaultGrpcStreamingFlushIntervalMs,
-		GrpcStreamingMaxBufferSize:   DefaultGrpcStreamingMaxBufferSize,
+		GrpcStreamingEnabled:              DefaultGrpcStreamingEnabled,
+		GrpcStreamingFlushIntervalMs:      DefaultGrpcStreamingFlushIntervalMs,
+		GrpcStreamingMaxBatchSize:         DefaultGrpcStreamingMaxBatchSize,
+		GrpcStreamingMaxChannelBufferSize: DefaultGrpcStreamingMaxChannelBufferSize,
 
 		VEOracleEnabled: true,
 	}
@@ -204,9 +216,15 @@ func GetFlagValuesFromOptions(
 		}
 	}
 
-	if option := appOpts.Get(GrpcStreamingMaxBufferSize); option != nil {
+	if option := appOpts.Get(GrpcStreamingMaxBatchSize); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
-			result.GrpcStreamingMaxBufferSize = v
+			result.GrpcStreamingMaxBatchSize = v
+		}
+	}
+
+	if option := appOpts.Get(GrpcStreamingMaxChannelBufferSize); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.GrpcStreamingMaxChannelBufferSize = v
 		}
 	}
 
