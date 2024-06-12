@@ -14,7 +14,7 @@ import (
 // been updated. This will include any asset postions that were closed due to an update.
 // TODO(DEC-1295): look into reducing code duplication here using Generics+Reflect.
 func getUpdatedAssetPositions(
-	update SettledUpdate,
+	update types.SettledUpdate,
 ) []*types.AssetPosition {
 	assetIdToPositionMap := make(map[uint32]*types.AssetPosition)
 	for _, assetPosition := range update.SettledSubaccount.AssetPositions {
@@ -55,7 +55,7 @@ func getUpdatedAssetPositions(
 // been updated. This will include any perpetual postions that were closed due to an update or that
 // received / paid out funding payments..
 func getUpdatedPerpetualPositions(
-	update SettledUpdate,
+	update types.SettledUpdate,
 	fundingPayments map[uint32]dtypes.SerializableInt,
 ) []*types.PerpetualPosition {
 	perpetualIdToPositionMap := make(map[uint32]*types.PerpetualPosition)
@@ -104,7 +104,7 @@ func getUpdatedPerpetualPositions(
 // to reflect settledUpdate.PerpetualUpdates.
 // For newly created positions, use `perpIdToFundingIndex` map to populate the `FundingIndex` field.
 func UpdatePerpetualPositions(
-	settledUpdates []SettledUpdate,
+	settledUpdates []types.SettledUpdate,
 	perpInfos map[uint32]perptypes.PerpInfo,
 ) {
 	// Apply the updates.
@@ -168,7 +168,7 @@ func UpdatePerpetualPositions(
 // For each settledUpdate in settledUpdates, updates its SettledSubaccount.AssetPositions
 // to reflect settledUpdate.AssetUpdates.
 func UpdateAssetPositions(
-	settledUpdates []SettledUpdate,
+	settledUpdates []types.SettledUpdate,
 ) {
 	// Apply the updates.
 	for i, u := range settledUpdates {
