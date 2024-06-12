@@ -79,7 +79,7 @@ func NewGrpcStreamingManager(
 	}
 
 	// Start the goroutine for pushing order updates through.
-	// Sender goroutine for the
+	// Sender goroutine for the subscription channels.
 	go func() {
 		for {
 			select {
@@ -113,6 +113,12 @@ func (sm *GrpcStreamingManagerImpl) EmitMetrics() {
 		metrics.GrpcStreamSubscriberCount,
 		float32(len(sm.orderbookSubscriptions)),
 	)
+	for _, subscription := range sm.orderbookSubscriptions {
+		metrics.AddSample(
+			metrics.GrpcSubscriptionChannelLength,
+			float32(len(subscription.updatesChannel)),
+		)
+	}
 }
 
 // Subscribe subscribes to the orderbook updates stream.

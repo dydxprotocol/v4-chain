@@ -74,6 +74,7 @@ const (
 	GrpcStreamSubscriberCount         = "grpc_stream_subscriber_count"
 	GrpcStreamNumUpdatesBuffered      = "grpc_stream_num_updates_buffered"
 	GrpcFlushUpdatesLatency           = "grpc_flush_updates_latency"
+	GrpcSubscriptionChannelLength     = "grpc_subscription_channel_length"
 
 	EndBlocker    = "end_blocker"
 	EndBlockerLag = "end_blocker_lag"
