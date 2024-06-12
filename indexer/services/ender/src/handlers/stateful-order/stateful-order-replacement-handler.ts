@@ -35,15 +35,18 @@ export class StatefulOrderReplacementHandler
     const oldOrderId = this.event.orderReplacement!.oldOrderId!;
     const order = this.event.orderReplacement!.order!;
 
-    // Only one error is expected that's related to order replacement.
-    // If more errors are added to `dydx_stateful_order_handler.sql`, this will need to be updated.
     if (resultRow.errors != null) {
-      logger.error({
-        at: 'StatefulOrderReplacementHandler#handleOrderReplacement',
-        message: resultRow.errors[0],
-        orderId: oldOrderId,
-      });
-      stats.increment(`${config.SERVICE_NAME}.handle_stateful_order_replacement.old_order_id_not_found_in_db`, 1);
+      // We expect the first error to be related to order replacement.
+      // If more errors are added to `dydx_stateful_order_handler.sql`, this may need to be updated
+      const errorMessage = resultRow.errors[0];
+      if (errorMessage.includes('StatefulOrderReplacementHandler#')) {
+        logger.error({
+          at: 'StatefulOrderReplacementHandler#handleOrderReplacement',
+          message: errorMessage,
+          orderId: oldOrderId,
+        });
+        stats.increment(`${config.SERVICE_NAME}.handle_stateful_order_replacement.old_order_id_not_found_in_db`, 1);
+      }
     }
 
     return this.createKafkaEvents(oldOrderId, order);

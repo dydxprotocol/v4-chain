@@ -50,7 +50,7 @@ BEGIN
         RETURNING * INTO order_record;
 
         IF NOT FOUND THEN
-            errors_response = array_append(errors_response, '"Unable to cancel replaced order because orderId not found"'::jsonb);
+            errors_response = array_append(errors_response, '"StatefulOrderReplacementHandler#Unable to cancel replaced order because orderId not found"'::jsonb);
         END IF;
     END IF;
     order_record := NULL; /* Reset order_record so the order place below doesn't carry over any values set above. */

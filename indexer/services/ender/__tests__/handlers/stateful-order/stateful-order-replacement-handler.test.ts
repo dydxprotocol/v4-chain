@@ -217,7 +217,7 @@ describe('stateful-order-replacement-handler', () => {
 
     expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
       at: 'StatefulOrderReplacementHandler#handleOrderReplacement',
-      message: 'Unable to cancel replaced order because orderId not found',
+      message: 'StatefulOrderReplacementHandler#Unable to cancel replaced order because orderId not found',
       orderId: defaultStatefulOrderReplacementEvent.orderReplacement!.oldOrderId,
     }));
 
