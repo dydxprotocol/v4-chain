@@ -69,7 +69,7 @@ func GetMarginRequirementsInQuoteQuantums(
 	bigMaintenanceMarginQuoteQuantums *big.Int,
 ) {
 	// Always consider the magnitude of the position regardless of whether it is long/short.
-	bigAbsQuantums := new(big.Int).Set(bigQuantums).Abs(bigQuantums)
+	bigAbsQuantums := new(big.Int).Abs(bigQuantums)
 
 	// Calculate the notional value of the position in quote quantums.
 	bigQuoteQuantums := lib.BaseToQuoteQuantums(
