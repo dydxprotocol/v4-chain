@@ -137,13 +137,9 @@ describe('statefulOrderPlacementHandler', () => {
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
     ['stateful order placement as txn event', defaultStatefulOrderEvent, 0],
     ['stateful long term order placement as txn event', defaultStatefulOrderLongTermEvent, 0],
-    ['stateful order placement as txn event', defaultStatefulOrderEvent, 0],
-    ['stateful long term order placement as txn event', defaultStatefulOrderLongTermEvent, 0],
     ['stateful order placement as block event', defaultStatefulOrderEvent, -1],
     ['stateful long term order placement as block event', defaultStatefulOrderLongTermEvent, -1],
-    ['stateful order placement as block event', defaultStatefulOrderEvent, -1],
-    ['stateful long term order placement as block event', defaultStatefulOrderLongTermEvent, -1],
-  ])('successfully places order with %s (emit subaccount websocket msg: %s)', async (
+  ])('successfully places order with %s', async (
     _name: string,
     statefulOrderEvent: StatefulOrderEventV1,
     transactionIndex: number,
