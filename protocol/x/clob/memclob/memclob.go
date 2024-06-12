@@ -1218,7 +1218,18 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 
 	// Remove all fully-filled order IDs from the memclob if they exist.
 	for _, orderId := range filledOrderIds {
-		m.RemoveOrderIfFilled(ctx, orderId)
+		if m.RemoveOrderIfFilled(ctx, orderId) {
+			if m.generateOffchainUpdates {
+				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+					ctx,
+					orderId,
+					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_FILLED,
+				); success {
+					existingOffchainUpdates.AddRemoveMessage(orderId, message)
+				}
+			}
+		}
 	}
 
 	// Remove all canceled stateful order IDs from the memclob if they exist.
@@ -1232,6 +1243,20 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 		// is possible that when they are canceled they will not exist on the orderbook.
 		if orderbook.hasOrder(statefulOrderId) {
 			m.mustRemoveOrder(ctx, statefulOrderId)
+
+			if m.generateOffchainUpdates {
+				// Send an off-chain update message indicating the stateful order should be removed from the
+				// orderbook on the Indexer. As the order is expired, the status of the order is canceled
+				// and not best-effort-canceled.
+				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+					ctx,
+					statefulOrderId,
+					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
+				); success {
+					existingOffchainUpdates.AddRemoveMessage(statefulOrderId, message)
+				}
+			}
 		}
 	}
 
@@ -1288,13 +1313,21 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	}
 
 	// Remove all forcefully removed stateful order IDs from the memclob if they exist.
-	// Indexer events are sent during DeliverTx and therefore do not need to be sent here.
 	for _, statefulOrderId := range removedStatefulOrderIds {
 		statefulOrderId.MustBeStatefulOrder()
 		orderbook := m.mustGetOrderbook(types.ClobPairId(statefulOrderId.GetClobPairId()))
 
 		if orderbook.hasOrder(statefulOrderId) {
 			m.mustRemoveOrder(ctx, statefulOrderId)
+
+			if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+				ctx,
+				statefulOrderId,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_UNSPECIFIED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
+			); success {
+				existingOffchainUpdates.AddRemoveMessage(statefulOrderId, message)
+			}
 		}
 	}
 
@@ -1942,14 +1975,6 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 		panic("Total filled size of maker order greater than the order size")
 	}
 
-	// If the order is fully filled, remove it from the orderbook.
-	// Note we shouldn't remove Short-Term order hashes from `ShortTermOrderTxBytes` here since
-	// the order was matched.
-	if newTotalFilledAmount == makerOrderBaseQuantums {
-		makerOrderId := makerOrder.OrderId
-		m.mustRemoveOrder(ctx, makerOrderId)
-	}
-
 	if m.generateOffchainUpdates {
 		// Send an off-chain update message to the indexer to update the total filled size of the maker
 		// order.
@@ -1959,6 +1984,25 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 			newTotalFilledAmount,
 		); success {
 			offchainUpdates.AddUpdateMessage(makerOrder.OrderId, message)
+		}
+	}
+
+	// If the order is fully filled, remove it from the orderbook.
+	// Note we shouldn't remove Short-Term order hashes from `ShortTermOrderTxBytes` here since
+	// the order was matched.
+	if newTotalFilledAmount == makerOrderBaseQuantums {
+		makerOrderId := makerOrder.OrderId
+		m.mustRemoveOrder(ctx, makerOrderId)
+
+		if m.generateOffchainUpdates {
+			if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+				ctx,
+				makerOrderId,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			); success {
+				offchainUpdates.AddRemoveMessage(makerOrderId, message)
+			}
 		}
 	}
 
@@ -2004,7 +2048,7 @@ func (m *MemClobPriceTimePriority) GetOrderRemainingAmount(
 func (m *MemClobPriceTimePriority) RemoveOrderIfFilled(
 	ctx sdk.Context,
 	orderId types.OrderId,
-) {
+) bool {
 	orderbook := m.mustGetOrderbook(types.ClobPairId(orderId.GetClobPairId()))
 
 	// Get LevelOrder.
@@ -2012,7 +2056,7 @@ func (m *MemClobPriceTimePriority) RemoveOrderIfFilled(
 
 	// If order is not on the book, return early.
 	if !levelExists {
-		return
+		return false
 	}
 
 	// Get current fill amount for this order.
@@ -2030,14 +2074,16 @@ func (m *MemClobPriceTimePriority) RemoveOrderIfFilled(
 				log.OrderId, orderId,
 			)
 		}
-		return
+		return false
 	}
 
 	// Case: order is now completely filled and can be removed.
 	order := levelOrder.Value.Order
 	if orderStateFillAmount >= order.GetBaseQuantums() {
 		m.mustRemoveOrder(ctx, order.OrderId)
+		return true
 	}
+	return false
 }
 
 // maybeCancelReduceOnlyOrders cancels all open reduce-only orders on the CLOB pair if the new fill would change the

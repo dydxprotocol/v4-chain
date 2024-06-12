@@ -84,7 +84,7 @@ type MemClob interface {
 	RemoveOrderIfFilled(
 		ctx sdk.Context,
 		orderId OrderId,
-	)
+	) bool
 	GetPricePremium(
 		ctx sdk.Context,
 		clobPair ClobPair,

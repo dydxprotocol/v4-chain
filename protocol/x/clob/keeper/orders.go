@@ -568,10 +568,6 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 		}
 	}
 
-	// Clear place messages as BEST_EFFORT_OPEN messages should not be
-	// sent for stateful order placements.
-	existingOffchainUpdates.CondenseMessagesForReplay()
-
 	return existingOffchainUpdates
 }
 

@@ -1,7 +1,6 @@
 package clob_test
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
 	"time"
@@ -17,6 +16,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
+	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
+	indexersharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobtestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
@@ -695,10 +696,11 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					// Note there are no headers because these events are generated in PrepareCheckState
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
 						// maker
-						off_chain_updates.MustCreateOrderUpdateMessage(
+						off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
-							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
+							indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+							ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 						),
 						// taker
 						off_chain_updates.MustCreateOrderUpdateMessage(
@@ -1032,10 +1034,11 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					},
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
 						// maker fully filled
-						off_chain_updates.MustCreateOrderUpdateMessage(
+						off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
-							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
+							indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+							ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 						),
 						// taker, partially filled
 						off_chain_updates.MustCreateOrderUpdateMessage(
@@ -1237,6 +1240,15 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							Key:   msgsender.TransactionHashHeaderKey,
 							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id1_Sell1_Price50000_GTB20.Tx),
 						}),
+						off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+							ctx,
+							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.OrderId,
+							indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+							ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+						).AddHeader(msgsender.MessageHeader{
+							Key:   msgsender.TransactionHashHeaderKey,
+							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id1_Sell1_Price50000_GTB20.Tx),
+						}),
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							ctx,
 							PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
@@ -1425,8 +1437,6 @@ func TestPlaceLongTermOrder(t *testing.T) {
 				)
 				msgSender.Clear()
 
-				messages := msgSender.GetOnchainMessages()
-				fmt.Println("Onchain messages", messages)
 				// Block Processing
 				ctx = tApp.AdvanceToBlock(ordersAndExpectations.blockHeight, testapp.AdvanceToBlockOptions{})
 				require.ElementsMatch(
@@ -1616,10 +1626,11 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 					// Note there are no headers because these events are generated in PrepareCheckState
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
 						// maker
-						off_chain_updates.MustCreateOrderUpdateMessage(
+						off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 							ctx,
 							LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
-							LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
+							indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+							ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 						),
 						// taker
 						off_chain_updates.MustCreateOrderUpdateMessage(

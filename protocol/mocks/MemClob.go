@@ -561,8 +561,21 @@ func (_m *MemClob) RemoveAndClearOperationsQueue(ctx types.Context, localValidat
 }
 
 // RemoveOrderIfFilled provides a mock function with given fields: ctx, orderId
-func (_m *MemClob) RemoveOrderIfFilled(ctx types.Context, orderId clobtypes.OrderId) {
-	_m.Called(ctx, orderId)
+func (_m *MemClob) RemoveOrderIfFilled(ctx types.Context, orderId clobtypes.OrderId) bool {
+	ret := _m.Called(ctx, orderId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveOrderIfFilled")
+	}
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) bool); ok {
+		r0 = rf(ctx, orderId)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
 }
 
 // ReplayOperations provides a mock function with given fields: ctx, localOperations, shortTermOrderTxBytes, existingOffchainUpdates

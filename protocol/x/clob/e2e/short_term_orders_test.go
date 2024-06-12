@@ -13,6 +13,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
+	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
+	indexersharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobtestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
@@ -117,6 +119,15 @@ func TestPlaceOrder(t *testing.T) {
 				off_chain_updates.MustCreateOrderPlaceMessage(
 					ctx,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell5_Price10_GTB20.Tx),
+				}),
+				off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+					ctx,
+					PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.OrderId,
+					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell5_Price10_GTB20.Tx),
@@ -472,6 +483,15 @@ func TestPlaceOrder(t *testing.T) {
 					ctx,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.OrderId,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num0_Id0_Buy6_Price10_GTB20.Tx),
+				}),
+				off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+					ctx,
+					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.OrderId,
+					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num0_Id0_Buy6_Price10_GTB20.Tx),

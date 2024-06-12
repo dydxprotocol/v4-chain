@@ -12,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
+	indexersharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testutil_memclob "github.com/dydxprotocol/v4-chain/protocol/testutil/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -1405,6 +1406,20 @@ func assertPlaceOrderOffchainMessages(
 			expectedOffchainMessages,
 			updateMessage,
 		)
+
+		if totalFilled == makerOrder.GetBaseQuantums() {
+			removeMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+				ctx,
+				makerOrderId,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			)
+			expectedOffchainMessages = append(
+				expectedOffchainMessages,
+				removeMessage,
+			)
+		}
+
 		require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
 	}
 

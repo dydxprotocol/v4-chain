@@ -30,10 +30,10 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 		removedStatefulOrderIds  []types.OrderId
 
 		// Expectations.
-		expectedRemainingBids          []OrderWithRemainingSize
-		expectedRemovedExpiredOrderIds []types.OrderId
-		expectedRemainingAsks          []OrderWithRemainingSize
-		expectedCancels                []*types.MsgCancelOrder
+		expectedRemainingBids   []OrderWithRemainingSize
+		expectedRemovedOrderIds []types.OrderId
+		expectedRemainingAsks   []OrderWithRemainingSize
+		expectedCancels         []*types.MsgCancelOrder
 	}{
 		`Empty memclob and no fully-filled or expired order IDs`: {
 			placedOperations:    []types.Operation{},
@@ -66,7 +66,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				&constants.CancelOrder_Alice_Num1_Id11_Clob1_GTB20,
 				&constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30,
 			},
-			expectedRemovedExpiredOrderIds: []types.OrderId{
+			expectedRemovedOrderIds: []types.OrderId{
 				constants.Order_Bob_Num0_Id2_Clob0_Sell25_Price95_GTB10.OrderId,
 				constants.Order_Bob_Num1_Id1_Clob1_Sell25_Price85_GTB10.OrderId,
 			},
@@ -93,7 +93,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				constants.Order_Alice_Num0_Id1_Clob0_Buy15_Price10_GTB18_PO.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId,
 			},
-			expectedRemovedExpiredOrderIds: []types.OrderId{},
+			expectedRemovedOrderIds: []types.OrderId{},
 			expiredStatefulOrderIds: []types.OrderId{
 				constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId,
@@ -116,7 +116,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				constants.Order_Alice_Num0_Id1_Clob0_Buy15_Price10_GTB18_PO.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId,
 			},
-			expectedRemovedExpiredOrderIds: []types.OrderId{},
+			expectedRemovedOrderIds: []types.OrderId{},
 			expiredStatefulOrderIds: []types.OrderId{
 				constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId,
@@ -157,8 +157,10 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				constants.Order_Alice_Num0_Id1_Clob0_Buy15_Price10_GTB18_PO.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId, // This order is on the memclob.
 			},
-			expectedRemovedExpiredOrderIds: []types.OrderId{
+			expectedRemovedOrderIds: []types.OrderId{
 				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId, // This order is on the memclob.
+				constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32.OrderId,
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 			},
 			expiredStatefulOrderIds: []types.OrderId{
 				constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId,
@@ -186,8 +188,8 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32.OrderId, // This order is on the memclob.
 			},
 
-			expectedRemovedExpiredOrderIds: []types.OrderId{},
-			expiredStatefulOrderIds:        []types.OrderId{},
+			expectedRemovedOrderIds: []types.OrderId{},
+			expiredStatefulOrderIds: []types.OrderId{},
 			expectedRemainingBids: []OrderWithRemainingSize{
 				{
 					Order:         constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32,
@@ -207,10 +209,12 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 
 			fullyFilledOrderIds: []types.OrderId{},
 
-			expectedRemovedExpiredOrderIds: []types.OrderId{},
-			expiredStatefulOrderIds:        []types.OrderId{},
-			expectedRemainingBids:          []OrderWithRemainingSize{},
-			expectedRemainingAsks:          []OrderWithRemainingSize{},
+			expectedRemovedOrderIds: []types.OrderId{
+				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
+			},
+			expiredStatefulOrderIds: []types.OrderId{},
+			expectedRemainingBids:   []OrderWithRemainingSize{},
+			expectedRemainingAsks:   []OrderWithRemainingSize{},
 		},
 		`An order is canceled, but it is not present on the memclob so it is a no-op`: {
 			placedOperations:    []types.Operation{},
@@ -221,10 +225,10 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 
 			fullyFilledOrderIds: []types.OrderId{},
 
-			expectedRemovedExpiredOrderIds: []types.OrderId{},
-			expiredStatefulOrderIds:        []types.OrderId{},
-			expectedRemainingBids:          []OrderWithRemainingSize{},
-			expectedRemainingAsks:          []OrderWithRemainingSize{},
+			expectedRemovedOrderIds: []types.OrderId{},
+			expiredStatefulOrderIds: []types.OrderId{},
+			expectedRemainingBids:   []OrderWithRemainingSize{},
+			expectedRemainingAsks:   []OrderWithRemainingSize{},
 		},
 		"An order in RemovedStatefulOrderIds is removed from the memclob": {
 			placedOperations: []types.Operation{
@@ -237,10 +241,12 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 
 			fullyFilledOrderIds: []types.OrderId{},
 
-			expectedRemovedExpiredOrderIds: []types.OrderId{},
-			expiredStatefulOrderIds:        []types.OrderId{},
-			expectedRemainingBids:          []OrderWithRemainingSize{},
-			expectedRemainingAsks:          []OrderWithRemainingSize{},
+			expectedRemovedOrderIds: []types.OrderId{
+				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
+			},
+			expiredStatefulOrderIds: []types.OrderId{},
+			expectedRemainingBids:   []OrderWithRemainingSize{},
+			expectedRemainingAsks:   []OrderWithRemainingSize{},
 		},
 	}
 
@@ -315,10 +321,10 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 			require.Equal(
 				t,
 				memclobtest.MessageCountOfType(offchainUpdates, types.RemoveMessageType),
-				len(tc.expectedRemovedExpiredOrderIds),
+				len(tc.expectedRemovedOrderIds),
 			)
 
-			for _, orderId := range tc.expectedRemovedExpiredOrderIds {
+			for _, orderId := range tc.expectedRemovedOrderIds {
 				require.True(
 					t,
 					memclobtest.HasMessage(offchainUpdates, orderId, types.RemoveMessageType),
