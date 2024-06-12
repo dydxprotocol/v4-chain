@@ -273,6 +273,10 @@ describe('PnlTicks store', () => {
 
   it('createMany PnlTicks, find most recent pnl tick times for each account', async () => {
     const now = DateTime.utc();
+    const nowMinusOneHour = now.minus({ hours: 1 });
+    const nowMinusThreeHours = now.minus({ hours: 3 });
+    const nowMinusNineHours = now.minus({ hours: 9 });
+    const nowMinusElevenHours = now.minus({ hours: 11 });
 
     await Promise.all([
       BlockTable.create({
@@ -289,7 +293,7 @@ describe('PnlTicks store', () => {
       {
         subaccountId: defaultSubaccountId,
         equity: '1092',
-        createdAt: now.minus({ hours: 1 }).toISO(),
+        createdAt: nowMinusOneHour.toISO(),
         totalPnl: '1000',
         netTransfers: '50',
         blockHeight: defaultBlock.blockHeight,
@@ -298,7 +302,7 @@ describe('PnlTicks store', () => {
       {
         subaccountId: defaultSubaccountId,
         equity: '1097',
-        createdAt: now.minus({ hours: 3 }).toISO(),
+        createdAt: nowMinusThreeHours.toISO(),
         totalPnl: '1000',
         netTransfers: '50',
         blockHeight: '3',
@@ -307,7 +311,7 @@ describe('PnlTicks store', () => {
       {
         subaccountId: defaultSubaccountId,
         equity: '1011',
-        createdAt: now.minus({ hours: 11 }).toISO(),
+        createdAt: nowMinusElevenHours.toISO(),
         totalPnl: '1000',
         netTransfers: '50',
         blockHeight: '5',
@@ -316,7 +320,7 @@ describe('PnlTicks store', () => {
       {
         subaccountId: defaultSubaccountId,
         equity: '1014',
-        createdAt: now.minus({ hours: 9 }).toISO(),
+        createdAt: nowMinusNineHours.toISO(),
         totalPnl: '1000',
         netTransfers: '50',
         blockHeight: '5',
@@ -334,7 +338,7 @@ describe('PnlTicks store', () => {
       {
         subaccountId: defaultSubaccountId2,
         equity: '200',
-        createdAt: now.minus({ hours: 9 }).toISO(),
+        createdAt: nowMinusNineHours.toISO(),
         totalPnl: '1000',
         netTransfers: '50',
         blockHeight: '5',
@@ -346,7 +350,7 @@ describe('PnlTicks store', () => {
       [accountId: string]: string
     } = await PnlTicksTable.findMostRecentPnlTickTimeForEachAccount('3');
 
-    expect(mostRecentTimes[defaultSubaccountId]).toEqual(now.minus({ hours: 9 }).toISO());
-    expect(mostRecentTimes[defaultSubaccountId2]).toEqual(now.minus({ hours: 9 }).toISO());
+    expect(mostRecentTimes[defaultSubaccountId]).toEqual(nowMinusThreeHours.toISO());
+    expect(mostRecentTimes[defaultSubaccountId2]).toEqual(nowMinusNineHours.toISO());
   });
 });

@@ -263,7 +263,7 @@ export async function findMostRecentPnlTickTimeForEachAccount(
     SELECT DISTINCT ON ("subaccountId") "subaccountId", "createdAt"
     FROM "pnl_ticks"
     WHERE "blockHeight" >= '${createdOnOrAfterHeight}'
-    ORDER BY "subaccountId" ASC, "blockHeight" DESC, "createdAt" DESC;
+    ORDER BY "subaccountId" ASC, "createdAt" DESC;
     `,
   ) as unknown as { rows: { subaccountId: string, createdAt: string }[] };
 
