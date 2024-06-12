@@ -37,7 +37,7 @@ export const configSchema = {
   // Loop Enablement
   LOOPS_ENABLED_MARKET_UPDATER: parseBoolean({ default: true }),
   LOOPS_ENABLED_DELETE_ZERO_PRICE_LEVELS: parseBoolean({ default: true }),
-  LOOPS_ENABLED_UNCROSS_ORDERBOOK: parseBoolean({ default: false }),
+  LOOPS_ENABLED_UNCROSS_ORDERBOOK: parseBoolean({ default: true }),
   LOOPS_ENABLED_PNL_TICKS: parseBoolean({ default: true }),
   LOOPS_ENABLED_REMOVE_EXPIRED_ORDERS: parseBoolean({ default: true }),
   LOOPS_ORDERBOOK_INSTRUMENTATION: parseBoolean({ default: true }),
