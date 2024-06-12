@@ -1936,7 +1936,8 @@ func getGrpcStreamingManagerFromOptions(
 		return streaming.NewGrpcStreamingManager(
 			logger,
 			appFlags.GrpcStreamingFlushIntervalMs,
-			appFlags.GrpcStreamingMaxBufferSize,
+			appFlags.GrpcStreamingMaxBatchSize,
+			appFlags.GrpcStreamingMaxChannelBufferSize,
 		)
 	}
 	return streaming.NewNoopGrpcStreamingManager()
