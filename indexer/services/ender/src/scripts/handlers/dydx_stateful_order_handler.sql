@@ -21,6 +21,8 @@ DECLARE
     perpetual_market_record perpetual_markets%ROWTYPE;
     order_record orders%ROWTYPE;
     subaccount_record subaccounts%ROWTYPE;
+
+    errors_response jsonb[]; /* Array of error responses to return to the client. */
 BEGIN
     /* For order replacement, remove old order first and don't return immediately */
     IF event_data->'orderReplacement' IS NOT NULL THEN
@@ -48,7 +50,7 @@ BEGIN
         RETURNING * INTO order_record;
 
         IF NOT FOUND THEN
-            RAISE NOTICE 'Unable to cancel replaced order because not found with orderId: %', dydx_uuid_from_order_id(order_id);
+            errors_response = array_append(errors_response, '"Unable to cancel replaced order because orderId not found"'::jsonb);
         END IF;
     END IF;
     order_record := NULL; /* Reset order_record so the order place below doesn't carry over any values set above. */
@@ -126,7 +128,9 @@ BEGIN
                 'order',
                 dydx_to_jsonb(order_record),
                 'perpetual_market',
-                dydx_to_jsonb(perpetual_market_record)
+                dydx_to_jsonb(perpetual_market_record),
+                'errors',
+                to_jsonb(errors_response)
             );
     ELSIF event_data->'conditionalOrderTriggered' IS NOT NULL OR event_data->'orderRemoval' IS NOT NULL THEN
         CASE
@@ -168,7 +172,9 @@ BEGIN
                 'perpetual_market',
                 dydx_to_jsonb(perpetual_market_record),
                 'subaccount',
-                dydx_to_jsonb(subaccount_record)
+                dydx_to_jsonb(subaccount_record),
+                'errors',
+                to_jsonb(errors_response)
             );
     ELSE
         RAISE EXCEPTION 'Unknown sub-event type %', event_data;

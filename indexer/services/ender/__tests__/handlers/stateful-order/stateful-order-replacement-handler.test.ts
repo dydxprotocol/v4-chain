@@ -10,7 +10,6 @@ import {
   SubaccountTable,
   testConstants,
   testMocks,
-  TimeInForce,
 } from '@dydxprotocol-indexer/postgres';
 import {
   OffChainUpdateV1,
@@ -30,14 +29,13 @@ import {
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
-  expectOrderSubaccountKafkaMessage,
   expectVulcanKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
 import { getPrice, getSize } from '../../../src/lib/helper';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
-import config from '../../../src/config';
+import { logger } from '@dydxprotocol-indexer/base';
 
 describe('stateful-order-replacement-handler', () => {
   beforeAll(async () => {
@@ -50,6 +48,7 @@ describe('stateful-order-replacement-handler', () => {
     updateBlockCache(defaultPreviousHeight);
     await perpetualMarketRefresher.updatePerpetualMarkets();
     producerSendMock = jest.spyOn(producer, 'send');
+    jest.spyOn(logger, 'error');
   });
 
   afterEach(async () => {
@@ -95,7 +94,7 @@ describe('stateful-order-replacement-handler', () => {
       order: {
         ...defaultNewOrder,
         orderId: defaultOldOrder.orderId,
-      }
+      },
     },
   };
 
@@ -172,12 +171,7 @@ describe('stateful-order-replacement-handler', () => {
     });
   });
 
-  it.each([
-    ['stateful order replacement where old order ID is the same as new order ID', statefulOrderReplacementEventSameId],
-  ])('successfully replaces order with %s', async (
-    _name: string,
-    statefulOrderReplacementEvent: StatefulOrderEventV1,
-  ) => {
+  it('successfully replaces order where old order ID is the same as new order ID', async () => {
     // create existing order with the same ID as the one we will cancel and place again
     await OrderTable.create({
       ...testConstants.defaultOrderGoodTilBlockTime,
@@ -185,7 +179,7 @@ describe('stateful-order-replacement-handler', () => {
     });
 
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
-      statefulOrderReplacementEvent,
+      statefulOrderReplacementEventSameId,
     );
 
     await onMessage(kafkaMessage);
@@ -193,6 +187,45 @@ describe('stateful-order-replacement-handler', () => {
     expect(order).toEqual({
       id: oldOrderUuid,
       subaccountId: SubaccountTable.subaccountIdToUuid(defaultOldOrder.orderId!.subaccountId!),
+      clientId: defaultNewOrder.orderId!.clientId.toString(),
+      clobPairId: defaultNewOrder.orderId!.clobPairId.toString(),
+      side: OrderSide.BUY,
+      size: getSize(defaultNewOrder, testConstants.defaultPerpetualMarket),
+      totalFilled: '0',
+      price: getPrice(defaultNewOrder, testConstants.defaultPerpetualMarket),
+      type: OrderType.LIMIT, // TODO: Add additional order types once we support
+      status: OrderStatus.OPEN,
+      timeInForce: protocolTranslations.protocolOrderTIFToTIF(defaultNewOrder.timeInForce),
+      reduceOnly: defaultNewOrder.reduceOnly,
+      orderFlags: defaultNewOrder.orderId!.orderFlags.toString(),
+      goodTilBlock: null,
+      goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(defaultNewOrder),
+      createdAtHeight: '3',
+      clientMetadata: '0',
+      triggerPrice: null,
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
+    });
+  });
+
+  it('logs error if old order ID does not exist in DB', async () => {
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
+      defaultStatefulOrderReplacementEvent,
+    );
+
+    await onMessage(kafkaMessage);
+
+    expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
+      at: 'StatefulOrderReplacementHandler#handleOrderReplacement',
+      message: 'Unable to cancel replaced order because orderId not found',
+      orderId: defaultStatefulOrderReplacementEvent.orderReplacement!.oldOrderId,
+    }));
+
+    // We still expect new order to be created
+    const newOrder: OrderFromDatabase | undefined = await OrderTable.findById(newOrderUuid);
+    expect(newOrder).toEqual({
+      id: newOrderUuid,
+      subaccountId: SubaccountTable.subaccountIdToUuid(defaultNewOrder.orderId!.subaccountId!),
       clientId: defaultNewOrder.orderId!.clientId.toString(),
       clobPairId: defaultNewOrder.orderId!.clobPairId.toString(),
       side: OrderSide.BUY,

@@ -1,26 +1,18 @@
-import { generateSubaccountMessageContents } from '@dydxprotocol-indexer/kafka';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
-  OrderFromDatabase,
-  OrderModel,
   OrderTable,
-  PerpetualMarketFromDatabase,
-  perpetualMarketRefresher,
-  SubaccountMessageContents,
 } from '@dydxprotocol-indexer/postgres';
-import { convertToRedisOrder } from '@dydxprotocol-indexer/redis';
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
   IndexerOrderId,
-  IndexerSubaccountId,
   OffChainUpdateV1,
   OrderPlaceV1_OrderPlacementStatus,
-  RedisOrder,
   StatefulOrderEventV1,
-  SubaccountId,
 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
+import config from '../../config';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
 
@@ -39,9 +31,18 @@ export class StatefulOrderReplacementHandler
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  public async internalHandle(_: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
+  public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const oldOrderId = this.event.orderReplacement!.oldOrderId!;
     const order = this.event.orderReplacement!.order!;
+    if (resultRow.errors != null) {
+      logger.error({
+        at: 'StatefulOrderReplacementHandler#handleOrderReplacement',
+        message: resultRow.errors[0],
+        orderId: oldOrderId,
+      });
+      stats.increment(`${config.SERVICE_NAME}.handle_stateful_order_replacement.old_order_id_not_found_in_db`, 1);
+    }
+
     return this.createKafkaEvents(oldOrderId, order);
   }
 
