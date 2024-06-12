@@ -32,8 +32,8 @@ export class StatefulOrderPlacementHandler
     return this.getParallelizationIdsFromOrderId(this.getOrderId());
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await,@typescript-eslint/no-unused-vars
-  public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
     let order: IndexerOrder;
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
     if (this.event.orderPlace !== undefined) {
