@@ -47,7 +47,6 @@ func (k Keeper) HandleMsgCancelOrder(
 		log.Callback, lib.TxMode(ctx),
 		log.BlockHeight, ctx.BlockHeight(),
 		log.Handler, log.CancelOrder,
-		log.Msg, msg,
 	)
 
 	defer func() {
