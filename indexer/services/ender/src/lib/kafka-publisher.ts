@@ -20,7 +20,11 @@ import _ from 'lodash';
 import config from '../config';
 import { convertToSubaccountMessage } from './helper';
 import {
-  AnnotatedSubaccountMessage, ConsolidatedKafkaEvent, SingleTradeMessage, VulcanMessage,
+  AnnotatedSubaccountMessage,
+  BlockHeightMessage,
+  ConsolidatedKafkaEvent,
+  SingleTradeMessage,
+  VulcanMessage,
 } from './types';
 
 type TopicKafkaMessages = {
@@ -31,9 +35,10 @@ type TopicKafkaMessages = {
 type OrderedMessage = AnnotatedSubaccountMessage | SingleTradeMessage;
 
 type Message = AnnotatedSubaccountMessage | SingleTradeMessage | MarketMessage |
-CandleMessage | VulcanMessage;
+CandleMessage | VulcanMessage | BlockHeightMessage;
 
 export class KafkaPublisher {
+  blockHeightMessages: BlockHeightMessage[];
   subaccountMessages: AnnotatedSubaccountMessage[];
   tradeMessages: SingleTradeMessage[];
   marketMessages: MarketMessage[];
@@ -41,6 +46,7 @@ export class KafkaPublisher {
   vulcanMessages: VulcanMessage[];
 
   constructor() {
+    this.blockHeightMessages = [];
     this.subaccountMessages = [];
     this.tradeMessages = [];
     this.marketMessages = [];
@@ -76,6 +82,8 @@ export class KafkaPublisher {
         return this.candleMessages;
       case KafkaTopics.TO_VULCAN:
         return this.vulcanMessages;
+      case KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT:
+        return this.blockHeightMessages;
       default:
         throw new Error('Invalid Topic');
     }
@@ -199,6 +207,17 @@ export class KafkaPublisher {
 
   private generateAllTopicKafkaMessages(): TopicKafkaMessages[] {
     const allTopicKafkaMessages: TopicKafkaMessages[] = [];
+    if (this.blockHeightMessages.length > 0) {
+      allTopicKafkaMessages.push({
+        topic: KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
+        messages: _.map(this.blockHeightMessages, (message: BlockHeightMessage) => {
+          return {
+            value: Buffer.from(Uint8Array.from([])),
+          };
+        }),
+      });
+    }
+
     if (this.subaccountMessages.length > 0) {
       this.aggregateFillEventsForSubaccountMessages();
       allTopicKafkaMessages.push({

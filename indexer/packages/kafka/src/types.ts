@@ -14,4 +14,5 @@ export enum KafkaTopics {
   TO_WEBSOCKETS_TRADES = 'to-websockets-trades',
   TO_WEBSOCKETS_MARKETS = 'to-websockets-markets',
   TO_WEBSOCKETS_CANDLES = 'to-websockets-candles',
+  TO_WEBSOCKETS_BLOCK_HEIGHT = 'to-websockets-block-height',
 }

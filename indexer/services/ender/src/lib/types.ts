@@ -243,6 +243,11 @@ export interface VulcanMessage {
   headers?: IHeaders,
 }
 
+export interface BlockHeightMessage {
+  height: number,
+  time: string,
+}
+
 export type ConsolidatedKafkaEvent = {
   topic: KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS,
   message: AnnotatedSubaccountMessage,
@@ -258,6 +263,9 @@ export type ConsolidatedKafkaEvent = {
 } | {
   topic: KafkaTopics.TO_VULCAN,
   message: VulcanMessage,
+} | {
+  topic: KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
+  message: BlockHeightMessage
 };
 
 export enum TransferEventType {
