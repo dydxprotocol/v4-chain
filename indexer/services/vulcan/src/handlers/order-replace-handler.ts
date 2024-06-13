@@ -43,7 +43,7 @@ import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
 
 /**
- * Handler for OrderReplace messages.
+ * Handler for OrderReplace messages. This is currently only expected for stateful vault orders.
  * The behavior is as follows:
  * - Remove the old order
  *  - this is done using the `removeOrder` function from the `redis` package
@@ -54,7 +54,7 @@ import { Handler } from './handler';
  *   StatefulOrderUpdatesCache, and then queue the order update to be re-sent and re-processed
  * - If the order doesn't already exist in the caches, return
  * - If the order exists in the caches, but was not replaced due to the expiry of the existing order
- *   being greater than or equal to the expiry of the order in the OrderPlace message, return
+ *   being greater than or equal to the expiry of the order in the OrderReplace message, return
  */
 export class OrderReplaceHandler extends Handler {
   protected async handle(update: OffChainUpdateV1, headers: IHeaders): Promise<void> {
@@ -225,7 +225,7 @@ export class OrderReplaceHandler extends Handler {
 
   /**
    * Determine whether to send a subaccount websocket message given the order place.
-   * @param orderPlace
+   * @param orderReplace
    * @returns TODO(CLOB-597): Remove once best-effort-opened messages are not sent for stateful
    * orders.
    */
@@ -252,7 +252,7 @@ export class OrderReplaceHandler extends Handler {
       return false;
     }
 
-    // In the case where a stateful orderPlace is opened with a more recent expiry than an
+    // In the case where a stateful orderReplace is opened with a more recent expiry than an
     // existing order on the indexer, then the order will not have been placed or replaced and
     // no subaccount message should be sent.
     if (placeOrderResult.placed === false &&
