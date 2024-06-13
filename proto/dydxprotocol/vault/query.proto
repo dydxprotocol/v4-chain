@@ -51,8 +51,16 @@ message QueryVaultResponse {
   VaultId vault_id = 1 [ (gogoproto.nullable) = false ];
   dydxprotocol.subaccounts.SubaccountId subaccount_id = 2
       [ (gogoproto.nullable) = false ];
-  uint64 equity = 3;
-  uint64 inventory = 4;
+  bytes equity = 3 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+  bytes inventory = 4 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
   uint64 total_shares = 5;
 }
 
