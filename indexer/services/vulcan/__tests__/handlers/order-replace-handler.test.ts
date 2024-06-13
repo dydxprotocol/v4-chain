@@ -10,6 +10,7 @@ import {
   producer,
   SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
   getTriggerPrice,
+  ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
 } from '@dydxprotocol-indexer/kafka';
 import {
   APIOrderStatus,
@@ -18,6 +19,7 @@ import {
   blockHeightRefresher,
   BlockTable,
   dbHelpers,
+  OrderbookMessageContents,
   OrderFromDatabase,
   OrderTable,
   PerpetualMarketFromDatabase,
@@ -59,7 +61,7 @@ import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWeb
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import { defaultKafkaHeaders } from '../helpers/constants';
 import config from '../../src/config';
-import { defaultOrderId, defaultOrderIdGoodTilBlockTime } from '@dydxprotocol-indexer/redis/build/__tests__/helpers/constants';
+import { OrderbookSide } from '../../src/lib/types';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
@@ -90,6 +92,11 @@ describe('order-replace-handler', () => {
     const replacementOrder: IndexerOrder = redisTestConstants.defaultReplacementOrder;
     // eslint-disable-next-line max-len
     const replacementOrderGoodTilBlockTime: IndexerOrder = redisTestConstants.defaultReplacementOrderGTBT;
+    const replacementOrderDifferentPrice: IndexerOrder = {
+      ...replacementOrderGoodTilBlockTime,
+      subticks: replacementOrderGoodTilBlockTime.subticks.mul(2),
+    };
+
     const replacedOrder: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrder,
       testConstants.defaultPerpetualMarket,
@@ -98,9 +105,14 @@ describe('order-replace-handler', () => {
       replacementOrderGoodTilBlockTime,
       testConstants.defaultPerpetualMarket,
     );
+    const replacedOrderDifferentPrice: RedisOrder = redisPackage.convertToRedisOrder(
+      replacementOrderDifferentPrice,
+      testConstants.defaultPerpetualMarket,
+    );
+
     const replacementUpdate: OffChainUpdateV1 = {
       orderReplace: {
-        oldOrderId: defaultOrderId,
+        oldOrderId: redisTestConstants.defaultOrderId,
         order: replacementOrder,
         placementStatus:
             OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
@@ -108,12 +120,21 @@ describe('order-replace-handler', () => {
     };
     const replacementUpdateGoodTilBlockTime: OffChainUpdateV1 = {
       orderReplace: {
-        oldOrderId: defaultOrderIdGoodTilBlockTime,
+        oldOrderId: redisTestConstants.defaultOrderIdGoodTilBlockTime,
         order: replacementOrderGoodTilBlockTime,
         placementStatus:
             OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
       },
     };
+    const replacementUpdateDifferentPrice: OffChainUpdateV1 = {
+      orderReplace: {
+        oldOrderId: redisTestConstants.defaultOrderIdGoodTilBlockTime,
+        order: replacementOrderDifferentPrice,
+        placementStatus:
+            OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+      },
+    };
+
     const replacementMessage: KafkaMessage = createKafkaMessage(
       Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(replacementUpdate).finish())),
     );
@@ -122,7 +143,14 @@ describe('order-replace-handler', () => {
         OffChainUpdateV1.encode(replacementUpdateGoodTilBlockTime).finish(),
       )),
     );
-    [replacementMessage, replacementMessageGoodTilBlockTime].forEach((message) => {
+    const replacementMessageDifferentPrice: KafkaMessage = createKafkaMessage(
+      Buffer.from(Uint8Array.from(
+        OffChainUpdateV1.encode(replacementUpdateDifferentPrice).finish(),
+      )),
+    );
+
+    [replacementMessage, replacementMessageGoodTilBlockTime,
+      replacementMessageDifferentPrice].forEach((message) => {
       // eslint-disable-next-line no-param-reassign
       message.headers = defaultKafkaHeaders;
     });
@@ -300,6 +328,7 @@ describe('order-replace-handler', () => {
         replacedOrder,
         true,
         true,
+        false,
       ],
       [
         'goodTilBlockTime',
@@ -311,6 +340,20 @@ describe('order-replace-handler', () => {
         redisTestConstants.defaultReplacementOrderUuidGTBT,
         replacedOrderGoodTilBlockTime,
         false,
+        true,
+        false,
+      ],
+      [
+        'goodTilBlockTime different price',
+        redisTestConstants.defaultOrderGoodTilBlockTime,
+        replacementMessageDifferentPrice,
+        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+        dbOrderGoodTilBlockTime,
+        redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        redisTestConstants.defaultReplacementOrderUuidGTBT,
+        replacedOrderDifferentPrice,
+        false,
+        true,
         true,
       ],
     ])('handles order replace (with %s), resting on book', async (
@@ -324,6 +367,7 @@ describe('order-replace-handler', () => {
       expectedReplacedOrder: RedisOrder,
       expectSubaccountMessage: boolean,
       expectOrderBookUpdate: boolean,
+      expectOrderBookMessage: boolean,
     ) => {
       const oldOrderTotalFilled: number = 10;
       const oldPriceLevelInitialQuantums: number = Number(initialOrderToPlace.quantums) * 2;
@@ -337,6 +381,10 @@ describe('order-replace-handler', () => {
         quantums: expectedPriceLevelQuantums.toString(),
         lastUpdated: expect.stringMatching(/^[0-9]{10}$/),
       };
+      const expectedPriceLevelSize: string = protocolTranslations.quantumsToHumanFixedString(
+        expectedPriceLevelQuantums.toString(),
+        testConstants.defaultPerpetualMarket.atomicResolution,
+      );
 
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
@@ -400,6 +448,12 @@ describe('order-replace-handler', () => {
       }
 
       expect(logger.error).not.toHaveBeenCalled();
+      const orderbookContents: OrderbookMessageContents = {
+        [OrderbookSide.BIDS]: [[
+          redisTestConstants.defaultPrice,
+          expectedPriceLevelSize,
+        ]],
+      };
       expectWebsocketMessagesSent(
         producerSendSpy,
         expectedReplacedOrder,
@@ -407,6 +461,12 @@ describe('order-replace-handler', () => {
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         expectSubaccountMessage,
+        expectOrderBookMessage
+          ? OrderbookMessage.fromPartial({
+            contents: JSON.stringify(orderbookContents),
+            clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+            version: ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
+          }) : undefined,
       );
       expectStats(true);
     });
