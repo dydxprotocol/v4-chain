@@ -319,9 +319,16 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(
 			name, func(t *testing.T) {
+				perpInfos := make(map[uint32]types.PerpInfo, len(tc.perpetuals))
+				for _, perp := range tc.perpetuals {
+					perpInfos[perp.Params.Id] = types.PerpInfo{
+						Perpetual: perp,
+					}
+				}
+
 				stateTransition, err := keeper.GetIsolatedPerpetualStateTransition(
 					tc.settledUpdateWithUpdatedSubaccount,
-					tc.perpetuals,
+					perpInfos,
 				)
 				if tc.expectedErr != nil {
 					require.Error(t, tc.expectedErr, err)

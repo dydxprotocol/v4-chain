@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"fmt"
 	"sort"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -103,7 +104,7 @@ func getUpdatedPerpetualPositions(
 // For newly created positions, use `perpIdToFundingIndex` map to populate the `FundingIndex` field.
 func UpdatePerpetualPositions(
 	settledUpdates []SettledUpdate,
-	perpIdToFundingIndex map[uint32]dtypes.SerializableInt,
+	perpInfos map[uint32]types.PerpInfo,
 ) {
 	// Apply the updates.
 	for i, u := range settledUpdates {
@@ -131,16 +132,16 @@ func UpdatePerpetualPositions(
 			} else {
 				// This subaccount does not have a matching position for this update.
 				// Create the new position.
-				fundingIndex, exists := perpIdToFundingIndex[pu.PerpetualId]
+				perpInfo, exists := perpInfos[pu.PerpetualId]
 				if !exists {
-					// Invariant: `perpIdToFundingIndex` contains all existing perpetauls,
+					// Invariant: `perpInfos` contains all existing perpetauls,
 					// and perpetual position update must refer to an existing perpetual.
-					panic(fmt.Sprintf("perpetual id %d not found in perpIdToFundingIndex", pu.PerpetualId))
+					panic(errorsmod.Wrapf(types.ErrPerpetualInfoDoesNotExist, "%d", pu.PerpetualId))
 				}
 				perpetualPosition := &types.PerpetualPosition{
 					PerpetualId:  pu.PerpetualId,
 					Quantums:     dtypes.NewIntFromBigInt(pu.GetBigQuantums()),
-					FundingIndex: fundingIndex,
+					FundingIndex: perpInfo.Perpetual.FundingIndex,
 				}
 
 				// Add the new position to the map.

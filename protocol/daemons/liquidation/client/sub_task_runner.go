@@ -56,9 +56,7 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 
 	// 1. Fetch all information needed to calculate total net collateral and margin requirements.
 	subaccounts,
-		marketPrices,
-		perpetuals,
-		liquidityTiers,
+		perpInfos,
 		err := daemonClient.FetchApplicationStateAtBlockHeight(
 		ctx,
 		lastCommittedBlockHeight,
@@ -73,9 +71,7 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 		negativeTncSubaccountIds,
 		err := daemonClient.GetLiquidatableSubaccountIds(
 		subaccounts,
-		marketPrices,
-		perpetuals,
-		liquidityTiers,
+		perpInfos,
 	)
 	if err != nil {
 		return err
@@ -111,9 +107,7 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 	liqFlags flags.LiquidationFlags,
 ) (
 	subaccounts []satypes.Subaccount,
-	marketPricesMap map[uint32]pricestypes.MarketPrice,
-	perpetualsMap map[uint32]perptypes.Perpetual,
-	liquidityTiersMap map[uint32]perptypes.LiquidityTier,
+	perpInfos map[uint32]satypes.PerpInfo,
 	err error,
 ) {
 	defer telemetry.ModuleMeasureSince(
@@ -129,46 +123,66 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 	// Subaccounts
 	subaccounts, err = c.GetAllSubaccounts(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	// Market prices
 	marketPrices, err := c.GetAllMarketPrices(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
-	marketPricesMap = lib.UniqueSliceToMap(marketPrices, func(m pricestypes.MarketPrice) uint32 {
+	marketPricesMap := lib.UniqueSliceToMap(marketPrices, func(m pricestypes.MarketPrice) uint32 {
 		return m.Id
 	})
 
 	// Perpetuals
 	perpetuals, err := c.GetAllPerpetuals(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
-	perpetualsMap = lib.UniqueSliceToMap(perpetuals, func(p perptypes.Perpetual) uint32 {
-		return p.Params.Id
-	})
 
 	// Liquidity tiers
 	liquidityTiers, err := c.GetAllLiquidityTiers(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
-	liquidityTiersMap = lib.UniqueSliceToMap(liquidityTiers, func(l perptypes.LiquidityTier) uint32 {
+	liquidityTiersMap := lib.UniqueSliceToMap(liquidityTiers, func(l perptypes.LiquidityTier) uint32 {
 		return l.Id
 	})
 
-	return subaccounts, marketPricesMap, perpetualsMap, liquidityTiersMap, nil
+	perpInfos = make(map[uint32]satypes.PerpInfo, len(perpetuals))
+	for _, perp := range perpetuals {
+		price, ok := marketPricesMap[perp.Params.MarketId]
+		if !ok {
+			return nil, nil, errorsmod.Wrapf(
+				pricestypes.ErrMarketPriceDoesNotExist,
+				"%d",
+				perp.Params.MarketId,
+			)
+		}
+		liquidityTier, ok := liquidityTiersMap[perp.Params.LiquidityTier]
+		if !ok {
+			return nil, nil, errorsmod.Wrapf(
+				perptypes.ErrLiquidityTierDoesNotExist,
+				"%d",
+				perp.Params.LiquidityTier,
+			)
+		}
+		perpInfos[perp.Params.Id] = satypes.PerpInfo{
+			Perpetual:     perp,
+			Price:         price,
+			LiquidityTier: liquidityTier,
+		}
+	}
+
+	return subaccounts, perpInfos, nil
 }
 
 // GetLiquidatableSubaccountIds verifies collateralization statuses of subaccounts with
 // at least one open position and returns a list of unique and potentially liquidatable subaccount ids.
 func (c *Client) GetLiquidatableSubaccountIds(
 	subaccounts []satypes.Subaccount,
-	marketPrices map[uint32]pricestypes.MarketPrice,
-	perpetuals map[uint32]perptypes.Perpetual,
-	liquidityTiers map[uint32]perptypes.LiquidityTier,
+	perpInfos map[uint32]satypes.PerpInfo,
 ) (
 	liquidatableSubaccountIds []satypes.SubaccountId,
 	negativeTncSubaccountIds []satypes.SubaccountId,
@@ -192,9 +206,7 @@ func (c *Client) GetLiquidatableSubaccountIds(
 		// Check if the subaccount is liquidatable.
 		isLiquidatable, hasNegativeTnc, err := c.CheckSubaccountCollateralization(
 			subaccount,
-			marketPrices,
-			perpetuals,
-			liquidityTiers,
+			perpInfos,
 		)
 		if err != nil {
 			c.logger.Error("Error checking collateralization status", "error", err)
@@ -278,9 +290,7 @@ func (c *Client) GetSubaccountOpenPositionInfo(
 // is not yet implemented.
 func (c *Client) CheckSubaccountCollateralization(
 	unsettledSubaccount satypes.Subaccount,
-	marketPrices map[uint32]pricestypes.MarketPrice,
-	perpetuals map[uint32]perptypes.Perpetual,
-	liquidityTiers map[uint32]perptypes.LiquidityTier,
+	perpInfos map[uint32]satypes.PerpInfo,
 ) (
 	isLiquidatable bool,
 	hasNegativeTnc bool,
@@ -297,7 +307,7 @@ func (c *Client) CheckSubaccountCollateralization(
 	// to ensure that the funding payments are included in the net collateral calculation.
 	settledSubaccount, _, err := sakeeper.GetSettledSubaccountWithPerpetuals(
 		unsettledSubaccount,
-		perpetuals,
+		perpInfos,
 	)
 	if err != nil {
 		return false, false, err
@@ -323,44 +333,30 @@ func (c *Client) CheckSubaccountCollateralization(
 
 	// Calculate the net collateral and maintenance margin for each of the perpetual positions.
 	for _, perpetualPosition := range settledSubaccount.PerpetualPositions {
-		perpetual, ok := perpetuals[perpetualPosition.PerpetualId]
+		perpInfo, ok := perpInfos[perpetualPosition.PerpetualId]
 		if !ok {
 			return false, false, errorsmod.Wrapf(
-				perptypes.ErrPerpetualDoesNotExist,
-				"Perpetual not found for perpetual id %d",
+				satypes.ErrPerpetualInfoDoesNotExist,
+				"%d",
 				perpetualPosition.PerpetualId,
-			)
-		}
-
-		marketPrice, ok := marketPrices[perpetual.Params.MarketId]
-		if !ok {
-			return false, false, errorsmod.Wrapf(
-				pricestypes.ErrMarketPriceDoesNotExist,
-				"MarketPrice not found for perpetual %+v",
-				perpetual,
 			)
 		}
 
 		bigQuantums := perpetualPosition.GetBigQuantums()
 
 		// Get the net collateral for the position.
-		bigNetCollateralQuoteQuantums := perplib.GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums)
+		bigNetCollateralQuoteQuantums := perplib.GetNetNotionalInQuoteQuantums(
+			perpInfo.Perpetual,
+			perpInfo.Price,
+			bigQuantums,
+		)
 		bigTotalNetCollateral.Add(bigTotalNetCollateral, bigNetCollateralQuoteQuantums)
-
-		liquidityTier, ok := liquidityTiers[perpetual.Params.LiquidityTier]
-		if !ok {
-			return false, false, errorsmod.Wrapf(
-				perptypes.ErrLiquidityTierDoesNotExist,
-				"LiquidityTier not found for perpetual %+v",
-				perpetual,
-			)
-		}
 
 		// Get the maintenance margin requirement for the position.
 		_, bigMaintenanceMarginQuoteQuantums := perplib.GetMarginRequirementsInQuoteQuantums(
-			perpetual,
-			marketPrice,
-			liquidityTier,
+			perpInfo.Perpetual,
+			perpInfo.Price,
+			perpInfo.LiquidityTier,
 			bigQuantums,
 		)
 		bigTotalMaintenanceMargin.Add(bigTotalMaintenanceMargin, bigMaintenanceMarginQuoteQuantums)
