@@ -68,6 +68,18 @@ export const defaultOrderIdConditional: IndexerOrderId = {
   clobPairId: parseInt(testConstants.defaultPerpetualMarket.clobPairId, 10),
   orderFlags: ORDER_FLAG_CONDITIONAL,
 };
+export const defaultReplacementOrderId: IndexerOrderId = {
+  subaccountId: defaultSubaccountId,
+  clientId: 4,
+  clobPairId: parseInt(testConstants.defaultPerpetualMarket.clobPairId, 10),
+  orderFlags: ORDER_FLAG_SHORT_TERM,
+};
+export const defaultReplacementOrderIdGTBT: IndexerOrderId = {
+  subaccountId: defaultSubaccountId,
+  clientId: 5,
+  clobPairId: parseInt(testConstants.defaultPerpetualMarket.clobPairId, 10),
+  orderFlags: ORDER_FLAG_LONG_TERM,
+};
 
 export const defaultSubaccountUuid: string = SubaccountTable.uuid(
   defaultSubaccountId.owner,
@@ -89,10 +101,22 @@ export const defaultOrder: IndexerOrder = {
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   conditionalOrderTriggerSubticks: Long.fromValue(0, true),
 };
+export const defaultReplacementOrder: IndexerOrder = {
+  ...defaultOrder,
+  orderId: defaultReplacementOrderId,
+  quantums: Long.fromValue(1_500_000, true),
+  goodTilBlock: 1160,
+};
 export const defaultOrderGoodTilBlockTime: IndexerOrder = {
   ...defaultOrder,
   orderId: defaultOrderIdGoodTilBlockTime,
   goodTilBlockTime: 1_200_000_000,
+  goodTilBlock: undefined,
+};
+export const defaultReplacementOrderGTBT: IndexerOrder = {
+  ...defaultOrder,
+  orderId: defaultReplacementOrderIdGTBT,
+  goodTilBlockTime: 1_300_000_000,
   goodTilBlock: undefined,
 };
 export const defaultConditionalOrder: IndexerOrder = {
@@ -116,6 +140,12 @@ export const defaultOrderUuidGoodTilBlockTime: string = OrderTable.orderIdToUuid
 );
 export const defaultOrderUuidConditional: string = OrderTable.orderIdToUuid(
   defaultOrderIdConditional,
+);
+export const defaultReplacementOrderUuid: string = OrderTable.orderIdToUuid(
+  defaultReplacementOrderId,
+);
+export const defaultReplacementOrderUuidGTBT: string = OrderTable.orderIdToUuid(
+  defaultReplacementOrderIdGTBT,
 );
 
 export const defaultPrice = protocolTranslations.subticksToPrice(
