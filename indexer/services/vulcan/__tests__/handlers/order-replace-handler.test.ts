@@ -219,7 +219,7 @@ describe('order-replace-handler', () => {
         false,
         true,
       ],
-    ])('handles order place for replacing order (with %s), not resting on book', async (
+    ])('handles replacement (with %s), not resting on book', async (
       _name: string,
       initialOrderToPlace: IndexerOrder,
       orderReplacementMessage: KafkaMessage,
@@ -240,7 +240,7 @@ describe('order-replace-handler', () => {
       }
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
-      // Handle the order place off-chain update for the initial order
+      // Handle the order place event for the initial order that will get replaced
       await handleInitialOrderPlace({
         ...redisTestConstants.orderPlace,
         orderPlace: {
@@ -261,7 +261,7 @@ describe('order-replace-handler', () => {
       // clear mocks
       jest.clearAllMocks();
 
-      // Handle the order place off-chain update with the replacement order
+      // Handle the order replacement off-chain update with the replacement order
       await onMessage(orderReplacementMessage);
 
       await checkOrderReplace(
@@ -288,8 +288,6 @@ describe('order-replace-handler', () => {
       expectStats(true);
     });
 
-    // TODO(IND-68): Remove this test once order replacement logic does not change price levels as
-    // orders are removed before being re-placed.
     it.each([
       [
         'goodTilBlock',
@@ -315,7 +313,7 @@ describe('order-replace-handler', () => {
         false,
         true,
       ],
-    ])('handles order place for replacing order (with %s), resting on book', async (
+    ])('handles order replace (with %s), resting on book', async (
       _name: string,
       initialOrderToPlace: IndexerOrder,
       orderReplacementMessage: KafkaMessage,
@@ -342,7 +340,7 @@ describe('order-replace-handler', () => {
 
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
-      // Handle the order place event for the initial order
+      // Handle the order place event for the initial order that will get replaced
       await handleInitialOrderPlace({
         ...redisTestConstants.orderPlace,
         orderPlace: {
@@ -380,7 +378,7 @@ describe('order-replace-handler', () => {
         client,
       });
 
-      // Handle the order place off-chain update with the replacement order
+      // Handle the order replacement off-chain update with the replacement order
       await onMessage(orderReplacementMessage);
 
       await checkOrderReplace(
@@ -413,8 +411,6 @@ describe('order-replace-handler', () => {
       expectStats(true);
     });
 
-    // TODO(IND-68): Remove this test once order replacement logic does not change price levels as
-    // orders are removed before being re-placed.
     it.each([
       [
         'goodTilBlock',
@@ -438,7 +434,7 @@ describe('order-replace-handler', () => {
         replacedOrderGoodTilBlockTime,
         false,
       ],
-    ])('handles order place for replacing order (with %s), resting on book, 0 remaining quantums',
+    ])('handles order replacement (with %s), resting on book, 0 remaining quantums',
       async (
         _name: string,
         initialOrderToPlace: IndexerOrder,
@@ -452,7 +448,7 @@ describe('order-replace-handler', () => {
       ) => {
         synchronizeWrapBackgroundTask(wrapBackgroundTask);
         const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
-        // Handle the order place event for the initial order
+        // Handle the order place event for the initial order that will get replaced
         await handleInitialOrderPlace({
           ...redisTestConstants.orderPlace,
           orderPlace: {
@@ -479,7 +475,7 @@ describe('order-replace-handler', () => {
           newTotalFilledQuantums: Number(initialOrderToPlace.quantums),
           client,
         });
-        // Handle the order place off-chain update with the replacement order
+        // Handle the order replacement off-chain update with the replacement order
         await onMessage(orderReplacementMessage);
 
         await checkOrderReplace(
@@ -552,7 +548,7 @@ describe('order-replace-handler', () => {
         },
         'Invalid OrderReplace, placement status is UNSPECIFIED',
       ],
-    ])('logs error and does not update caches on invalid order place off-chain update: %s', async (
+    ])('logs error and does not update caches on invalid order replacement off-chain update: %s', async (
       _name: string,
       updateMessage: any,
       errorMsg: string,

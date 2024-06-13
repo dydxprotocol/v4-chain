@@ -111,7 +111,7 @@ export class OrderReplaceHandler extends Handler {
       if (sendOrderbookMessage) {
         logger.info({
           at: 'OrderReplaceHandler#handle',
-          message: 'Sending orderbook message because price is the same',
+          message: 'Sending orderbook message because price is different',
           redisOrder,
           removedOrder: removeOrderResult.removedOrder!.order,
         });
