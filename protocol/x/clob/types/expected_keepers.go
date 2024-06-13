@@ -105,21 +105,13 @@ type PerpetualsKeeper interface {
 		bigBaseQuantums *big.Int,
 		err error,
 	)
-	GetNetCollateral(
+	GetPerpetualAndMarketPriceAndLiquidityTier(
 		ctx sdk.Context,
-		id uint32,
-		bigQuantums *big.Int,
+		perpetualId uint32,
 	) (
-		bigNetCollateralQuoteQuantums *big.Int,
-		err error,
-	)
-	GetMarginRequirements(
-		ctx sdk.Context,
-		id uint32,
-		bigQuantums *big.Int,
-	) (
-		bigInitialMarginQuoteQuantums *big.Int,
-		bigMaintenanceMarginQuoteQuantums *big.Int,
+		perpetual perpetualsmoduletypes.Perpetual,
+		price pricestypes.MarketPrice,
+		liquidityTier perpetualsmoduletypes.LiquidityTier,
 		err error,
 	)
 	GetPerpetual(

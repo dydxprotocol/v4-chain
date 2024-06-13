@@ -931,51 +931,47 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 		return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
 	}
 
-	// The calculate function increments `netCollateral`, `initialMargin`, and `maintenanceMargin`
-	// given a `ProductKeeper` and a `PositionSize`.
-	calculate := func(pk types.ProductKeeper, size types.PositionSize) error {
+	// Iterate over all assets and updates and calculate change to net collateral and margin requirements.
+	for _, size := range assetSizes {
 		id := size.GetId()
 		bigQuantums := size.GetBigQuantums()
 
-		bigNetCollateralQuoteQuantums, err := pk.GetNetCollateral(ctx, id, bigQuantums)
+		nc, err := k.assetsKeeper.GetNetCollateral(ctx, id, bigQuantums)
 		if err != nil {
-			return err
+			return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
 		}
 
-		bigNetCollateral.Add(bigNetCollateral, bigNetCollateralQuoteQuantums)
-
-		bigInitialMarginRequirements,
-			bigMaintenanceMarginRequirements,
-			err := pk.GetMarginRequirements(
+		imr, mmr, err := k.assetsKeeper.GetMarginRequirements(
 			ctx,
 			id,
 			bigQuantums,
 		)
 		if err != nil {
-			return err
-		}
-
-		bigInitialMargin.Add(bigInitialMargin, bigInitialMarginRequirements)
-		bigMaintenanceMargin.Add(bigMaintenanceMargin, bigMaintenanceMarginRequirements)
-
-		return nil
-	}
-
-	// Iterate over all assets and updates and calculate change to net collateral and margin requirements.
-	for _, size := range assetSizes {
-		err := calculate(k.assetsKeeper, size)
-		if err != nil {
 			return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
 		}
+		bigNetCollateral.Add(bigNetCollateral, nc)
+		bigInitialMargin.Add(bigInitialMargin, imr)
+		bigMaintenanceMargin.Add(bigMaintenanceMargin, mmr)
 	}
 
 	// Iterate over all perpetuals and updates and calculate change to net collateral and margin requirements.
-	// TODO(DEC-110): `perp.GetSettlement()`, factor in unsettled funding.
 	for _, size := range perpetualSizes {
-		err := calculate(k.perpetualsKeeper, size)
+		perpetual,
+			marketPrice,
+			liquidityTier,
+			err := k.perpetualsKeeper.GetPerpetualAndMarketPriceAndLiquidityTier(ctx, size.GetId())
 		if err != nil {
 			return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
 		}
+		nc, imr, mmr := perplib.GetNetCollateralAndMarginRequirements(
+			perpetual,
+			marketPrice,
+			liquidityTier,
+			size.GetBigQuantums(),
+		)
+		bigNetCollateral.Add(bigNetCollateral, nc)
+		bigInitialMargin.Add(bigInitialMargin, imr)
+		bigMaintenanceMargin.Add(bigMaintenanceMargin, mmr)
 	}
 
 	return bigNetCollateral, bigInitialMargin, bigMaintenanceMargin, nil
