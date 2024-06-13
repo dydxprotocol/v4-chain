@@ -13,7 +13,7 @@ import (
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobkeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
+	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	sakeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
@@ -344,7 +344,7 @@ func (c *Client) CheckSubaccountCollateralization(
 		bigQuantums := perpetualPosition.GetBigQuantums()
 
 		// Get the net collateral for the position.
-		bigNetCollateralQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums)
+		bigNetCollateralQuoteQuantums := perplib.GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums)
 		bigTotalNetCollateral.Add(bigTotalNetCollateral, bigNetCollateralQuoteQuantums)
 
 		liquidityTier, ok := liquidityTiers[perpetual.Params.LiquidityTier]
@@ -357,7 +357,7 @@ func (c *Client) CheckSubaccountCollateralization(
 		}
 
 		// Get the maintenance margin requirement for the position.
-		_, bigMaintenanceMarginQuoteQuantums := perpkeeper.GetMarginRequirementsInQuoteQuantums(
+		_, bigMaintenanceMarginQuoteQuantums := perplib.GetMarginRequirementsInQuoteQuantums(
 			perpetual,
 			marketPrice,
 			liquidityTier,
