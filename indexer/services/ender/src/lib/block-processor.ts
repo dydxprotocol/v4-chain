@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
 import { logger, stats, STATS_NO_SAMPLING } from '@dydxprotocol-indexer/base';
+import { KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
   storeHelpers,
 } from '@dydxprotocol-indexer/postgres';
@@ -33,6 +34,8 @@ import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTra
 import { KafkaPublisher } from './kafka-publisher';
 import { SyncHandlers, SYNCHRONOUS_SUBTYPES } from './sync-handlers';
 import {
+  BlockHeightMessage,
+  ConsolidatedKafkaEvent,
   DydxIndexerSubtypes, EventMessage, EventProtoWithTypeAndVersion, GroupedEvents,
 } from './types';
 
@@ -225,6 +228,17 @@ export class BlockProcessor {
     });
   }
 
+  createBlockHeightMsg(): ConsolidatedKafkaEvent {
+    const message: BlockHeightMessage = {
+      height: this.block.height,
+      time: this.block.time?.toISOString() ?? '',
+    };
+    return {
+      topic: KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
+      message,
+    };
+  }
+
   private async processEvents(): Promise<KafkaPublisher> {
     const kafkaPublisher: KafkaPublisher = new KafkaPublisher();
 
@@ -273,6 +287,7 @@ export class BlockProcessor {
 
     // in genesis, handle sync events first, then batched events.
     // in other blocks, handle batched events first, then sync events.
+    kafkaPublisher.addEvent(this.createBlockHeightMsg());
     if (this.block.height === 0) {
       await this.syncHandlers.process(kafkaPublisher, resultRow);
       await this.batchedHandlers.process(kafkaPublisher, resultRow);
