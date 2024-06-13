@@ -122,45 +122,6 @@ func (_m *PerpetualsKeeper) GetAllPerpetuals(ctx types.Context) []perpetualstype
 	return r0
 }
 
-// GetMarginRequirements provides a mock function with given fields: ctx, id, bigQuantums
-func (_m *PerpetualsKeeper) GetMarginRequirements(ctx types.Context, id uint32, bigQuantums *big.Int) (*big.Int, *big.Int, error) {
-	ret := _m.Called(ctx, id, bigQuantums)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetMarginRequirements")
-	}
-
-	var r0 *big.Int
-	var r1 *big.Int
-	var r2 error
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, *big.Int) (*big.Int, *big.Int, error)); ok {
-		return rf(ctx, id, bigQuantums)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, *big.Int) *big.Int); ok {
-		r0 = rf(ctx, id, bigQuantums)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, *big.Int) *big.Int); ok {
-		r1 = rf(ctx, id, bigQuantums)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*big.Int)
-		}
-	}
-
-	if rf, ok := ret.Get(2).(func(types.Context, uint32, *big.Int) error); ok {
-		r2 = rf(ctx, id, bigQuantums)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
-}
-
 // GetNetCollateral provides a mock function with given fields: ctx, id, bigQuantums
 func (_m *PerpetualsKeeper) GetNetCollateral(ctx types.Context, id uint32, bigQuantums *big.Int) (*big.Int, error) {
 	ret := _m.Called(ctx, id, bigQuantums)

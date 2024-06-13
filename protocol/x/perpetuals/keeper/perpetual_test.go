@@ -674,6 +674,7 @@ func TestModifyOpenInterest_Mixed(t *testing.T) {
 	}
 }
 
+<<<<<<< HEAD
 func TestGetMarginRequirements_Success(t *testing.T) {
 	oneBip := math.Pow10(2)
 	tests := map[string]struct {
@@ -980,18 +981,20 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 }
 
 func TestGetMarginRequirements_PerpetualNotFound(t *testing.T) {
+=======
+func TestGetPerpetualAndMarketPriceAndLiquidityTier_PerpetualNotFound(t *testing.T) {
+>>>>>>> edcc82b7 ([Performance] Remove the need to get each perpetual and price twice when checking collateralization (#1681))
 	pc := keepertest.PerpetualsKeepers(t)
 	nonExistentPerpetualId := uint32(0)
-	_, _, err := pc.PerpetualsKeeper.GetMarginRequirements(
+	_, _, _, err := pc.PerpetualsKeeper.GetPerpetualAndMarketPriceAndLiquidityTier(
 		pc.Ctx,
 		nonExistentPerpetualId,
-		big.NewInt(-1),
 	)
 	require.EqualError(t, err, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
 }
 
-func TestGetMarginRequirements_MarketNotFound(t *testing.T) {
+func TestGetPerpetualAndMarketPriceAndLiquidityTier_MarketNotFound(t *testing.T) {
 	pc := keepertest.PerpetualsKeepers(t)
 
 	// Create liquidity tiers and perpetuals,
@@ -1007,22 +1010,20 @@ func TestGetMarginRequirements_MarketNotFound(t *testing.T) {
 	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
-	_, _, err := pc.PerpetualsKeeper.GetMarginRequirements(
+	_, _, _, err := pc.PerpetualsKeeper.GetPerpetualAndMarketPriceAndLiquidityTier(
 		pc.Ctx,
 		perpetual.Params.Id,
-		big.NewInt(-1),
 	)
 
-	expectedErrorStr := fmt.Sprintf(
-		"Market ID %d does not exist on perpetual ID %d",
-		perpetual.Params.MarketId,
-		perpetual.Params.Id,
+	require.EqualError(
+		t,
+		err,
+		errorsmod.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(nonExistentMarketId)).Error(),
 	)
-	require.EqualError(t, err, errorsmod.Wrap(types.ErrMarketDoesNotExist, expectedErrorStr).Error())
-	require.ErrorIs(t, err, types.ErrMarketDoesNotExist)
+	require.ErrorIs(t, err, pricestypes.ErrMarketPriceDoesNotExist)
 }
 
-func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
+func TestGetPerpetualAndMarketPriceAndLiquidityTier_LiquidityTierNotFound(t *testing.T) {
 	pc := keepertest.PerpetualsKeepers(t)
 
 	// Create liquidity tiers and perpetuals,
@@ -1038,10 +1039,9 @@ func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
 	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
 
 	// Getting margin requirements for perpetual with bad LiquidityTier should return an error.
-	_, _, err := pc.PerpetualsKeeper.GetMarginRequirements(
+	_, _, _, err := pc.PerpetualsKeeper.GetPerpetualAndMarketPriceAndLiquidityTier(
 		pc.Ctx,
 		perpetual.Params.Id,
-		big.NewInt(-1),
 	)
 
 	require.EqualError(
