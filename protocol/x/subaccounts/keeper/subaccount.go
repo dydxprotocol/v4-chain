@@ -22,7 +22,7 @@ import (
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
+	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	gometrics "github.com/hashicorp/go-metrics"
@@ -488,7 +488,7 @@ func GetSettledSubaccountWithPerpetuals(
 		}
 
 		// Call the stateless utility function to get the net settlement and new funding index.
-		bigNetSettlementPpm, newFundingIndex := perpkeeper.GetSettlementPpmWithPerpetual(
+		bigNetSettlementPpm, newFundingIndex := perplib.GetSettlementPpmWithPerpetual(
 			perpetual,
 			p.GetBigQuantums(),
 			p.FundingIndex.BigInt(),

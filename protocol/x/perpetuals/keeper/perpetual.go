@@ -27,6 +27,11 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
+<<<<<<< HEAD
+=======
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/funding"
+	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
+>>>>>>> 87a919e6 ([chore] Move `perpetuals/keeper` helper functions to `perpetuals/lib` (#1678))
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	gometrics "github.com/hashicorp/go-metrics"
@@ -850,31 +855,7 @@ func (k Keeper) GetNetNotional(
 		return new(big.Int), err
 	}
 
-	return GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums), nil
-}
-
-// GetNetNotionalInQuoteQuantums returns the net notional in quote quantums, which can be
-// represented by the following equation:
-//
-// `quantums / 10^baseAtomicResolution * marketPrice * 10^marketExponent * 10^quoteAtomicResolution`.
-// Note that longs are positive, and shorts are negative.
-//
-// Also note that this is a stateless function.
-func GetNetNotionalInQuoteQuantums(
-	perpetual types.Perpetual,
-	marketPrice pricestypes.MarketPrice,
-	bigQuantums *big.Int,
-) (
-	bigNetNotionalQuoteQuantums *big.Int,
-) {
-	bigQuoteQuantums := lib.BaseToQuoteQuantums(
-		bigQuantums,
-		perpetual.Params.AtomicResolution,
-		marketPrice.Price,
-		marketPrice.Exponent,
-	)
-
-	return bigQuoteQuantums
+	return perplib.GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums), nil
 }
 
 // GetNotionalInBaseQuantums returns the net notional in base quantums, which can be represented
@@ -979,7 +960,7 @@ func (k Keeper) GetMarginRequirements(
 	}
 
 	bigInitialMarginQuoteQuantums,
-		bigMaintenanceMarginQuoteQuantums = GetMarginRequirementsInQuoteQuantums(
+		bigMaintenanceMarginQuoteQuantums = perplib.GetMarginRequirementsInQuoteQuantums(
 		perpetual,
 		marketPrice,
 		liquidityTier,
@@ -988,6 +969,7 @@ func (k Keeper) GetMarginRequirements(
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
 }
 
+<<<<<<< HEAD
 // GetMarginRequirementsInQuoteQuantums returns initial and maintenance margin requirements
 // in quote quantums, given the position size in base quantums.
 //
@@ -1040,6 +1022,8 @@ func GetMarginRequirementsInQuoteQuantums(
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums
 }
 
+=======
+>>>>>>> 87a919e6 ([chore] Move `perpetuals/keeper` helper functions to `perpetuals/lib` (#1678))
 // GetSettlementPpm returns the net settlement amount ppm (in quote quantums) given
 // the perpetual Id and position size (in base quantums).
 // When handling rounding, always round positive settlement amount to zero, and
@@ -1066,7 +1050,7 @@ func (k Keeper) GetSettlementPpm(
 		return big.NewInt(0), big.NewInt(0), err
 	}
 
-	bigNetSettlementPpm, newFundingIndex = GetSettlementPpmWithPerpetual(
+	bigNetSettlementPpm, newFundingIndex = perplib.GetSettlementPpmWithPerpetual(
 		perpetual,
 		quantums,
 		index,
@@ -1074,6 +1058,7 @@ func (k Keeper) GetSettlementPpm(
 	return bigNetSettlementPpm, newFundingIndex, nil
 }
 
+<<<<<<< HEAD
 // GetSettlementPpm returns the net settlement amount ppm (in quote quantums) given
 // the perpetual and position size (in base quantums).
 //
@@ -1103,6 +1088,8 @@ func GetSettlementPpmWithPerpetual(
 	return bigNetSettlementPpm, perpetual.FundingIndex.BigInt()
 }
 
+=======
+>>>>>>> 87a919e6 ([chore] Move `perpetuals/keeper` helper functions to `perpetuals/lib` (#1678))
 // GetPremiumSamples reads premium samples from the current `funding-tick` epoch,
 // stored in a `PremiumStore` struct.
 func (k Keeper) GetPremiumSamples(ctx sdk.Context) (
