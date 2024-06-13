@@ -91,7 +91,7 @@ func GetMarginRequirementsInQuoteQuantums(
 		bigQuoteQuantums,
 		big.NewInt(0), // pass in 0 as open interest to get base IMR.
 	)
-	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
+	// Maintenance margin requirement quote quantums = size in quote quantums * maintenance fraction PPM.
 	bigMaintenanceMarginQuoteQuantums = lib.BigMulPpm(
 		bigBaseInitialMarginQuoteQuantums,
 		lib.BigU(liquidityTier.MaintenanceFractionPpm),
