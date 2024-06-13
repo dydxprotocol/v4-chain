@@ -16,8 +16,6 @@ import {
 import request from 'supertest';
 import {
   INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
-  INDEXER_GEOBLOCKED_PAYLOAD,
-  isRestrictedCountryHeaders,
 } from '@dydxprotocol-indexer/compliance';
 import config from '../../src/config';
 
@@ -25,14 +23,6 @@ jest.mock('@dydxprotocol-indexer/compliance');
 
 // Create a router to test the middleware with
 const router: express.Router = express.Router();
-
-const restrictedHeaders = {
-  'cf-ipcountry': 'US',
-};
-
-const nonRestrictedHeaders = {
-  'cf-ipcountry': 'SA',
-};
 
 router.get(
   '/check-compliance-query',
@@ -45,7 +35,7 @@ router.get(
   }),
   handleValidationErrors,
   complianceAndGeoCheck,
-  (req: express.Request, res: express.Response) => {
+  (_req: express.Request, res: express.Response) => {
     res.sendStatus(200);
   },
 );
@@ -60,7 +50,7 @@ router.get(
   }),
   handleValidationErrors,
   complianceAndGeoCheck,
-  (req: express.Request, res: express.Response) => {
+  (_req: express.Request, res: express.Response) => {
     res.sendStatus(200);
   },
 );
@@ -68,15 +58,12 @@ router.get(
 export const complianceCheckApp = Server(router);
 
 describe('compliance-check', () => {
-  let isRestrictedCountrySpy: jest.SpyInstance;
-
   beforeAll(async () => {
     config.INDEXER_LEVEL_GEOBLOCKING_ENABLED = true;
     await dbHelpers.migrate();
   });
 
   beforeEach(async () => {
-    isRestrictedCountrySpy = isRestrictedCountryHeaders as unknown as jest.Mock;
     await testMocks.seedData();
   });
 
@@ -90,7 +77,6 @@ describe('compliance-check', () => {
   });
 
   it('does not return 403 if no address in request', async () => {
-    isRestrictedCountrySpy.mockReturnValueOnce(false);
     await sendRequestToApp({
       type: RequestMethod.GET,
       path: '/v4/check-compliance-query',
@@ -106,29 +92,11 @@ describe('compliance-check', () => {
     _name: string,
     path: string,
   ) => {
-    isRestrictedCountrySpy.mockReturnValueOnce(false);
     await sendRequestToApp({
       type: RequestMethod.GET,
       path,
       expressApp: complianceCheckApp,
       expectedStatus: 200,
-    });
-  });
-
-  it.each([
-    ['query', '/v4/check-compliance-query?address=random'],
-    ['param', '/v4/check-compliance-param/random'],
-  ])('does not return 403 if address in request is not in database (%s) and non-restricted country', async (
-    _name: string,
-    path: string,
-  ) => {
-    isRestrictedCountrySpy.mockReturnValueOnce(false);
-    await sendRequestToApp({
-      type: RequestMethod.GET,
-      path,
-      expressApp: complianceCheckApp,
-      expectedStatus: 200,
-      headers: nonRestrictedHeaders,
     });
   });
 
@@ -139,7 +107,6 @@ describe('compliance-check', () => {
     _name: string,
     path: string,
   ) => {
-    isRestrictedCountrySpy.mockReturnValueOnce(false);
     await ComplianceStatusTable.create(testConstants.compliantStatusData);
     await sendRequestToApp({
       type: RequestMethod.GET,
@@ -156,7 +123,6 @@ describe('compliance-check', () => {
     _name: string,
     path: string,
   ) => {
-    isRestrictedCountrySpy.mockReturnValueOnce(false);
     await ComplianceStatusTable.create({
       ...testConstants.compliantStatusData,
       status: ComplianceStatus.CLOSE_ONLY,
@@ -167,50 +133,6 @@ describe('compliance-check', () => {
       expressApp: complianceCheckApp,
       expectedStatus: 200,
     });
-  });
-
-  it.each([
-    ['query', `/v4/check-compliance-query?address=${testConstants.defaultAddress}`],
-    ['param', `/v4/check-compliance-param/${testConstants.defaultAddress}`],
-  ])('does not return 403 if address in request is in CLOSE_ONLY and from restricted country (%s)', async (
-    _name: string,
-    path: string,
-  ) => {
-    isRestrictedCountrySpy.mockReturnValueOnce(true);
-    await ComplianceStatusTable.create({
-      ...testConstants.compliantStatusData,
-      status: ComplianceStatus.CLOSE_ONLY,
-    });
-    await sendRequestToApp({
-      type: RequestMethod.GET,
-      path,
-      expressApp: complianceCheckApp,
-      expectedStatus: 200,
-    });
-  });
-
-  it.each([
-    ['query', `/v4/check-compliance-query?address=${testConstants.defaultAddress}`],
-    ['param', `/v4/check-compliance-param/${testConstants.defaultAddress}`],
-  ])('does return 403 if request is from restricted country (%s)', async (
-    _name: string,
-    path: string,
-  ) => {
-    isRestrictedCountrySpy.mockReturnValueOnce(true);
-    const response: request.Response = await sendRequestToApp({
-      type: RequestMethod.GET,
-      path,
-      expressApp: complianceCheckApp,
-      expectedStatus: 403,
-      headers: restrictedHeaders,
-    });
-
-    expect(response.body).toEqual(expect.objectContaining({
-      errors: expect.arrayContaining([{
-        msg: INDEXER_GEOBLOCKED_PAYLOAD,
-        code: BlockedCode.GEOBLOCKED,
-      }]),
-    }));
   });
 
   it.each([
@@ -220,7 +142,6 @@ describe('compliance-check', () => {
     _name: string,
     path: string,
   ) => {
-    isRestrictedCountrySpy.mockReturnValueOnce(false);
     await ComplianceStatusTable.create(testConstants.noncompliantStatusData);
     const response: request.Response = await sendRequestToApp({
       type: RequestMethod.GET,

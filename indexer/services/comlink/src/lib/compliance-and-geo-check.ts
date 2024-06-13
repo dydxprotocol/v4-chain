@@ -1,7 +1,4 @@
 import {
-  CountryHeaders,
-  isRestrictedCountryHeaders,
-  INDEXER_GEOBLOCKED_PAYLOAD,
   INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
 } from '@dydxprotocol-indexer/compliance';
 import {
@@ -58,15 +55,6 @@ export async function complianceAndGeoCheck(
         );
       }
     }
-  }
-
-  if (isRestrictedCountryHeaders(req.headers as CountryHeaders)) {
-    return create4xxResponse(
-      res,
-      INDEXER_GEOBLOCKED_PAYLOAD,
-      403,
-      { code: BlockedCode.GEOBLOCKED },
-    );
   }
 
   return next();
