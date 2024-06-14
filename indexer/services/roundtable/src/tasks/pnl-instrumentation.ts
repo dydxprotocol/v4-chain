@@ -9,11 +9,18 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
 
+import config from '../config';
+
 /**
  * Instrument data on PNL to be used for analytics.
  */
 export default async function runTask(): Promise<void> {
   const startTaskTime = DateTime.utc();
+  logger.info({
+    at: 'pnl-instrumentation#runTask',
+    message: 'Starting PNL instrumentation task',
+    startTaskTime,
+  });
 
   const block: BlockFromDatabase = await
   BlockTable.getLatest({ readReplica: true });
@@ -72,9 +79,12 @@ export default async function runTask(): Promise<void> {
     }
   });
 
-  stats.gauge('pnl_stale_subaccounts', stalePnlSubaccounts.length + staleTransferSubaccounts.length);
-  stats.gauge('pnl_stale_subaccounts_with_prior_pnl', stalePnlSubaccounts.length);
-  stats.gauge('pnl_stale_subaccounts_without_prior_pnl', staleTransferSubaccounts.length);
+  stats.gauge(
+    `${config.SERVICE_NAME}.pnl_stale_subaccounts`,
+    stalePnlSubaccounts.length + staleTransferSubaccounts.length,
+  );
+  stats.gauge(`${config.SERVICE_NAME}.pnl_stale_subaccounts_with_prior_pnl`, stalePnlSubaccounts.length);
+  stats.gauge(`${config.SERVICE_NAME}.pnl_stale_subaccounts_without_prior_pnl`, staleTransferSubaccounts.length);
   if (stalePnlSubaccounts.length > 0 || staleTransferSubaccounts.length > 0) {
     logger.error({
       at: 'pnl-instrumentation#statPnl',
