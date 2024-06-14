@@ -212,17 +212,24 @@ function convertPnlTicksFromDatabaseToPnlTicksCreateObject(
   return _.omit(pnlTicksFromDatabase, PnlTicksColumns.id);
 }
 
-export async function findLatestProcessedBlocktime(): Promise<string> {
+export async function findLatestProcessedBlocktimeAndCount(): Promise<{
+  maxBlockTime: string,
+  count: number,
+}> {
   const result: {
-    rows: [{ max: string }]
+    rows: [{ max: string, count: number }]
   } = await knexReadReplica.getConnection().raw(
     `
-    SELECT MAX("blockTime")
+    SELECT MAX("blockTime") as max, COUNT(*) as count
     FROM "pnl_ticks"
     `
     ,
-  ) as unknown as { rows: [{ max: string }] };
-  return result.rows[0].max || ZERO_TIME_ISO_8601;
+  ) as unknown as { rows: [{ max: string, count: number }] };
+
+  return {
+    maxBlockTime: result.rows[0].max || ZERO_TIME_ISO_8601,
+    count: Number(result.rows[0].count) || 0,
+  };
 }
 
 export async function findMostRecentPnlTickForEachAccount(
