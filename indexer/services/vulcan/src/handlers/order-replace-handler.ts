@@ -50,7 +50,7 @@ import { Handler } from './handler';
  * - Add the new order to the OrdersCache, OrdersDataCache, and SubaccountOrderIdsCache
  *  - this is done using the `placeOrder` function from the `redis` package
  *  - Remove the order from the CanceledOrdersCache if it exists
- * - Because the order is a stateful order, attempt to remove any cached order update from the
+ * - If the order is a stateful order, attempt to remove any cached order update from the
  *   StatefulOrderUpdatesCache, and then queue the order update to be re-sent and re-processed
  * - If the order doesn't already exist in the caches, return
  * - If the order exists in the caches, but was not replaced due to the expiry of the existing order
