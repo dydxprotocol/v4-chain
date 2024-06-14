@@ -39,7 +39,7 @@ import { ConditionalOrderTriggeredHandler } from '../../../src/handlers/stateful
 import { defaultPerpetualMarket } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
-describe('conditionalOrderTriggeredHandler', () => {
+describe('conditional-order-triggered-handler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();

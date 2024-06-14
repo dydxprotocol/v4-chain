@@ -18,6 +18,7 @@ import {
   defaultOrderId,
   defaultStatefulOrderPlacementEvent,
   defaultStatefulOrderRemovalEvent,
+  defaultStatefulOrderReplacementEvent,
   defaultTime,
   defaultTxHash,
 } from '../helpers/constants';
@@ -42,6 +43,7 @@ describe('stateful-order-validator', () => {
       ['conditional order placement', defaultConditionalOrderPlacementEvent],
       ['conditional order triggered', defaultConditionalOrderTriggeredEvent],
       ['long term order placement', defaultLongTermOrderPlacementEvent],
+      ['stateful order replacement', defaultStatefulOrderReplacementEvent],
     ])('does not throw error on valid %s', (_message: string, event: StatefulOrderEventV1) => {
       const validator: StatefulOrderValidator = new StatefulOrderValidator(
         event,

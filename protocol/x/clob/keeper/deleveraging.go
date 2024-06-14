@@ -6,8 +6,6 @@ import (
 	"math/big"
 	"time"
 
-	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 
@@ -19,6 +17,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -592,11 +592,12 @@ func (k Keeper) ProcessDeleveraging(
 	}
 
 	// Stat quantums deleveraged in quote quantums.
-	if deleveragedQuoteQuantums, err := k.perpetualsKeeper.GetNetCollateral(
-		ctx,
-		perpetualId,
-		new(big.Int).Abs(deltaBaseQuantums),
-	); err == nil {
+	if perpetual, marketPrice, err := k.perpetualsKeeper.GetPerpetualAndMarketPrice(ctx, perpetualId); err == nil {
+		deleveragedQuoteQuantums := perplib.GetNetNotionalInQuoteQuantums(
+			perpetual,
+			marketPrice,
+			new(big.Int).Abs(deltaBaseQuantums),
+		)
 		labels := []metrics.Label{
 			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
 			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
