@@ -170,6 +170,9 @@
           },
           "updatedAtHeight": {
             "type": "string"
+          },
+          "latestProcessedBlockHeight": {
+            "type": "string"
           }
         },
         "required": [
@@ -180,7 +183,8 @@
           "openPerpetualPositions",
           "assetPositions",
           "marginEnabled",
-          "updatedAtHeight"
+          "updatedAtHeight",
+          "latestProcessedBlockHeight"
         ],
         "type": "object",
         "additionalProperties": false

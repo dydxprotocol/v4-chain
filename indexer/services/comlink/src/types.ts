@@ -64,6 +64,7 @@ export interface SubaccountResponseObject {
   assetPositions: AssetPositionsMap,
   marginEnabled: boolean,
   updatedAtHeight: string,
+  latestProcessedBlockHeight: string,
 }
 
 export interface ParentSubaccountResponse {
