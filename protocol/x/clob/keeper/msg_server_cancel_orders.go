@@ -111,7 +111,7 @@ func (k Keeper) HandleMsgCancelOrder(
 	k.MustSetProcessProposerMatchesEvents(ctx, processProposerMatchesEvents)
 
 	// 4. Add the relevant on-chain Indexer event for the cancellation.
-	if !isInternalOrder {
+	if !isInternalOrder { // vault order indexer event logic is handled elsewhere
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
