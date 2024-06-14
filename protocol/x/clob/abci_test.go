@@ -666,7 +666,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
-			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
+			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 
 			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 			// the indexer event manager to expect these events.
@@ -700,7 +700,7 @@ func TestEndBlocker_Success(t *testing.T) {
 				constants.ClobPair_Btc.Status,
 			)
 			require.NoError(t, err)
-			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Eth).Return()
+			memClob.On("CreateOrderbook", constants.ClobPair_Eth).Return()
 			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 			// the indexer event manager to expect these events.
 			mockIndexerEventManager.On("AddTxnEvent",
@@ -807,11 +807,11 @@ func TestEndBlocker_Success(t *testing.T) {
 			for _, triggeredConditionalOrderId := range actualProcessProposerMatchesEvents.
 				ConditionalOrderIdsTriggeredInLastBlock {
 				// TODO(CLOB-746) Once R/W methods are created, substitute those methods here.
-				triggeredConditionalOrderMemstore := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementMemStore(ctx)
-				untriggeredConditionalOrderMemstore := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
-				exists := triggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.ToStateKey())
+				triggeredConditionalOrderStore := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementStore(ctx)
+				untriggeredConditionalOrderStore := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementStore(ctx)
+				exists := triggeredConditionalOrderStore.Has(triggeredConditionalOrderId.ToStateKey())
 				require.True(t, exists)
-				exists = untriggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.ToStateKey())
+				exists = untriggeredConditionalOrderStore.Has(triggeredConditionalOrderId.ToStateKey())
 				require.False(t, exists)
 			}
 

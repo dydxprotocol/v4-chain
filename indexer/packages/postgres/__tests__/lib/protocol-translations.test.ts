@@ -230,12 +230,6 @@ describe('protocolTranslations', () => {
   describe('orderTypeToProtocolConditionType', () => {
     it.each([
       ['LIMIT', OrderType.LIMIT, IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED],
-      ['HARD_TRADE', OrderType.HARD_TRADE, IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED],
-      [
-        'FAILED_HARD_TRADE',
-        OrderType.FAILED_HARD_TRADE,
-        IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
-      ],
       ['MARKET', OrderType.MARKET, IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED],
       [
         'TRAILING_STOP',

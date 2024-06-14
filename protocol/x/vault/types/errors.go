@@ -70,4 +70,9 @@ var (
 		13,
 		"ActivationThresholdQuoteQuantums must be non-negative",
 	)
+	ErrInvalidOrderSize = errorsmod.Register(
+		ModuleName,
+		14,
+		"OrderSize is invalid",
+	)
 )

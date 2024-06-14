@@ -1,23 +1,20 @@
 import {
-  logger,
-  stats,
-  STATS_FUNCTION_NAME,
-  wrapBackgroundTask,
+  logger, stats, STATS_FUNCTION_NAME, wrapBackgroundTask,
 } from '@dydxprotocol-indexer/base';
 import { synchronizeWrapBackgroundTask } from '@dydxprotocol-indexer/dev';
 import {
   createKafkaMessage,
-  ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
+  getTriggerPrice,
   producer,
   SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
-  getTriggerPrice,
 } from '@dydxprotocol-indexer/kafka';
 import {
   APIOrderStatus,
   APIOrderStatusEnum,
   apiTranslations,
+  blockHeightRefresher,
+  BlockTable,
   dbHelpers,
-  OrderbookMessageContents,
   OrderFromDatabase,
   OrderTable,
   PerpetualMarketFromDatabase,
@@ -31,39 +28,40 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import * as redisPackage from '@dydxprotocol-indexer/redis';
 import {
-  OpenOrdersCache,
-  PriceLevel,
-  OrdersCache,
+  CanceledOrdersCache,
+  CanceledOrderStatus,
   OrderbookLevels,
   OrderbookLevelsCache,
+  OrdersCache,
+  PriceLevel,
   redis,
   redisTestConstants,
-  SubaccountOrderIdsCache,
-  CanceledOrdersCache,
-  updateOrder,
   StatefulOrderUpdatesCache,
-  CanceledOrderStatus,
+  SubaccountOrderIdsCache,
+  updateOrder,
 } from '@dydxprotocol-indexer/redis';
 import {
-  OffChainUpdateV1,
   IndexerOrder,
+  OffChainUpdateV1,
   OrderbookMessage,
   OrderPlaceV1_OrderPlacementStatus,
+  OrderUpdateV1,
   RedisOrder,
   SubaccountId,
   SubaccountMessage,
-  OrderUpdateV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import Long from 'long';
 import { redisClient, redisClient as client } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
-import { expectCanceledOrderStatus, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';
-import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
-import { OrderbookSide } from '../../src/lib/types';
-import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
+import { expectCanceledOrderStatus, handleInitialOrderPlace } from '../helpers/helpers';
+import {
+  expectOffchainUpdateMessage,
+  expectWebsocketOrderbookMessage,
+  expectWebsocketSubaccountMessage,
+} from '../helpers/websocket-helpers';
+import { getOrderIdHash, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import { defaultKafkaHeaders } from '../helpers/constants';
-import config from '../../src/config';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
@@ -76,16 +74,14 @@ interface OffchainUpdateRecord {
 }
 
 describe('order-place-handler', () => {
-  beforeAll(() => {
+  beforeAll(async () => {
+    await BlockTable.create(testConstants.defaultBlock);
+    await blockHeightRefresher.updateBlockHeight();
     jest.useFakeTimers();
   });
 
   afterAll(() => {
     jest.useRealTimers();
-  });
-
-  afterEach(() => {
-    config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = true;
   });
 
   describe('handle', () => {
@@ -147,35 +143,35 @@ describe('order-place-handler', () => {
       orderPlace: {
         order: replacementOrder,
         placementStatus:
-          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+        OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
       },
     };
     const replacementUpdateGoodTilBlockTime: OffChainUpdateV1 = {
       orderPlace: {
         order: replacementOrderGoodTilBlockTime,
         placementStatus:
-          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+        OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
       },
     };
     const replacementUpdateConditional: OffChainUpdateV1 = {
       orderPlace: {
         order: replacementOrderConditional,
         placementStatus:
-          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+        OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
       },
     };
     const replacementUpdateFok: OffChainUpdateV1 = {
       orderPlace: {
         order: replacementOrderFok,
         placementStatus:
-          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+        OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
       },
     };
     const replacementUpdateIoc: OffChainUpdateV1 = {
       orderPlace: {
         order: replacementOrderIoc,
         placementStatus:
-          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+        OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
       },
     };
     const replacementMessage: KafkaMessage = createKafkaMessage(
@@ -233,8 +229,12 @@ describe('order-place-handler', () => {
     });
 
     beforeEach(async () => {
+      await dbHelpers.clearData();
       await testMocks.seedData();
-      await perpetualMarketRefresher.updatePerpetualMarkets();
+      await Promise.all([
+        perpetualMarketRefresher.updatePerpetualMarkets(),
+        blockHeightRefresher.updateBlockHeight(),
+      ]);
       await Promise.all([
         OrderTable.create(dbDefaultOrder),
         OrderTable.create(dbOrderGoodTilBlockTime),
@@ -301,7 +301,7 @@ describe('order-place-handler', () => {
         orderPlace: {
           order: orderToPlace,
           placementStatus:
-            OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
         },
       });
 
@@ -420,7 +420,7 @@ describe('order-place-handler', () => {
         orderPlace: {
           order: initialOrderToPlace,
           placementStatus:
-            OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
         },
       });
       expectWebsocketMessagesSent(
@@ -532,18 +532,9 @@ describe('order-place-handler', () => {
     ) => {
       const oldOrderTotalFilled: number = 10;
       const oldPriceLevelInitialQuantums: number = Number(initialOrderToPlace.quantums) * 2;
-      // After replacing the order the quantums at the price level of the old order should be:
-      // initial quantums - (old order quantums - old order total filled)
-      const expectedPriceLevelQuantums: number = (
-        oldPriceLevelInitialQuantums - (Number(initialOrderToPlace.quantums) - oldOrderTotalFilled)
-      );
-      const expectedPriceLevelSize: string = protocolTranslations.quantumsToHumanFixedString(
-        expectedPriceLevelQuantums.toString(),
-        testConstants.defaultPerpetualMarket.atomicResolution,
-      );
       const expectedPriceLevel: PriceLevel = {
         humanPrice: expectedRedisOrder.price,
-        quantums: expectedPriceLevelQuantums.toString(),
+        quantums: oldPriceLevelInitialQuantums.toString(),
         lastUpdated: expect.stringMatching(/^[0-9]{10}$/),
       };
 
@@ -555,7 +546,7 @@ describe('order-place-handler', () => {
         orderPlace: {
           order: initialOrderToPlace,
           placementStatus:
-            OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
         },
       });
       expectWebsocketMessagesSent(
@@ -575,6 +566,7 @@ describe('order-place-handler', () => {
         newTotalFilledQuantums: oldOrderTotalFilled,
         client,
       });
+
       // Update the price level in the order book to a value larger than the quantums of the order
       await OrderbookLevelsCache.updatePriceLevel({
         ticker: testConstants.defaultPerpetualMarket.ticker,
@@ -585,16 +577,6 @@ describe('order-place-handler', () => {
         sizeDeltaInQuantums: oldPriceLevelInitialQuantums.toString(),
         client,
       });
-      // Add the order to the open orders cache to check if it is removed after replacement
-      await OpenOrdersCache.addOpenOrder(
-        expectedRedisOrder.id,
-        testConstants.defaultPerpetualMarket.clobPairId.toString(),
-        client,
-      );
-      await expectOpenOrderIds(
-        testConstants.defaultPerpetualMarket.clobPairId,
-        [expectedRedisOrder.id],
-      );
 
       // Handle the order place off-chain update with the replacement order
       await onMessage(orderReplacementMessage);
@@ -616,16 +598,7 @@ describe('order-place-handler', () => {
         expect(orderbook.bids).toContainEqual(expectedPriceLevel);
       }
 
-      // Check the order was removed from the open orders cache
-      await expectOpenOrderIds(testConstants.defaultPerpetualMarket.clobPairId, []);
-
       expect(logger.error).not.toHaveBeenCalled();
-      const orderbookContents: OrderbookMessageContents = {
-        [OrderbookSide.BIDS]: [[
-          redisTestConstants.defaultPrice,
-          expectedPriceLevelSize,
-        ]],
-      };
       expectWebsocketMessagesSent(
         producerSendSpy,
         expectedReplacedOrder,
@@ -633,12 +606,6 @@ describe('order-place-handler', () => {
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         expectSubaccountMessage,
-        expectOrderBookUpdate
-          ? OrderbookMessage.fromPartial({
-            contents: JSON.stringify(orderbookContents),
-            clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
-            version: ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
-          }) : undefined,
       );
       expectStats(true);
     });
@@ -695,7 +662,7 @@ describe('order-place-handler', () => {
           orderPlace: {
             order: initialOrderToPlace,
             placementStatus:
-              OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+            OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
           },
         });
         expectWebsocketMessagesSent(
@@ -810,7 +777,7 @@ describe('order-place-handler', () => {
         orderPlace: {
           order: orderToPlace,
           placementStatus:
-            OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
+          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
         },
       });
 
@@ -842,38 +809,31 @@ describe('order-place-handler', () => {
         redisTestConstants.defaultOrderGoodTilBlockTime,
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         dbOrderGoodTilBlockTime,
-        false,
       ],
       [
         'conditional',
         redisTestConstants.defaultConditionalOrder,
         redisTestConstants.defaultRedisOrderConditional,
         dbConditionalOrder,
-        false,
       ],
       [
         'good-til-block-time',
         redisTestConstants.defaultOrderGoodTilBlockTime,
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         dbOrderGoodTilBlockTime,
-        true,
       ],
       [
         'conditional',
         redisTestConstants.defaultConditionalOrder,
         redisTestConstants.defaultRedisOrderConditional,
         dbConditionalOrder,
-        true,
       ],
     ])('handles order place with OPEN placement status, exists initially (with %s)', async (
       _name: string,
       orderToPlace: IndexerOrder,
       expectedRedisOrder: RedisOrder,
       placedOrder: OrderFromDatabase,
-      sendSubaccountWebsocketMessage: boolean,
     ) => {
-      // eslint-disable-next-line max-len
-      config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = sendSubaccountWebsocketMessage;
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
       // Handle the order place event for the initial order with BEST_EFFORT_OPENED
@@ -882,7 +842,7 @@ describe('order-place-handler', () => {
         orderPlace: {
           order: orderToPlace,
           placementStatus:
-            OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
         },
       });
       expectWebsocketMessagesSent(
@@ -904,7 +864,7 @@ describe('order-place-handler', () => {
         orderPlace: {
           order: orderToPlace,
           placementStatus:
-            OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
+          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
         },
       });
       expectWebsocketMessagesSent(
@@ -914,9 +874,7 @@ describe('order-place-handler', () => {
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.OPEN,
         // Subaccount messages should be sent for stateful order with OPEN status
-        !(
-          isLongTermOrder(expectedRedisOrder.order!.orderId!.orderFlags) &&
-          !sendSubaccountWebsocketMessage),
+        true,
       );
 
       expect(logger.error).not.toHaveBeenCalled();
@@ -1043,7 +1001,7 @@ describe('order-place-handler', () => {
             },
           },
           placementStatus:
-            OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
         },
       };
       const message: KafkaMessage = createKafkaMessage(
@@ -1111,11 +1069,6 @@ describe('order-place-handler', () => {
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         true,
       );
-
-      expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'OrderPlaceHandler#handle',
-        message: 'Total filled of order in Redis exceeds order quantums.',
-      }));
     });
   });
 });
@@ -1225,6 +1178,7 @@ function expectWebsocketMessagesSent(
           triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
         },
       ],
+      blockHeight: blockHeightRefresher.getLatestBlockHeight(),
     };
     const subaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({
       contents: JSON.stringify(contents),

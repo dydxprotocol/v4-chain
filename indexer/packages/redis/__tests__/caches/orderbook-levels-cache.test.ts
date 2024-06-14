@@ -10,6 +10,8 @@ import {
   getOrderBookLevels,
   getKey,
   deleteZeroPriceLevel,
+  getLastUpdatedKey,
+  deleteStalePriceLevel,
 } from '../../src/caches/orderbook-levels-cache';
 import { OrderSide } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, PriceLevel } from '../../src/types';
@@ -604,6 +606,80 @@ describe('orderbookLevelsCache', () => {
       });
 
       size = await hGetAsync(
+        {
+          hash: getKey(ticker, OrderSide.BUY),
+          key: humanPrice,
+        },
+        client,
+      );
+
+      expect(deleted).toEqual(false);
+      expect(size).toEqual('10');
+    });
+  });
+
+  describe('deleteStalePriceLevel', () => {
+    const humanPrice: string = '45100';
+
+    it('deletes stale price level', async () => {
+      await updatePriceLevel({
+        ticker,
+        side: OrderSide.BUY,
+        humanPrice,
+        sizeDeltaInQuantums: '100',
+        client,
+      });
+
+      client.hset(getLastUpdatedKey(ticker, OrderSide.BUY), humanPrice, (Date.now() / 1000) - 20);
+
+      let size: string | null = await hGetAsync(
+        {
+          hash: getKey(ticker, OrderSide.BUY),
+          key: humanPrice,
+        },
+        client,
+      );
+
+      expect(size).toEqual('100');
+
+      const deleted: boolean = await deleteStalePriceLevel({
+        ticker,
+        side: OrderSide.BUY,
+        humanPrice,
+        timeThreshold: 10,
+        client,
+      });
+
+      size = await hGetAsync(
+        {
+          hash: getKey(ticker, OrderSide.BUY),
+          key: humanPrice,
+        },
+        client,
+      );
+
+      expect(deleted).toEqual(true);
+      expect(size).toBeNull();
+    });
+
+    it('does not delete recent price level', async () => {
+      await updatePriceLevel({
+        ticker,
+        side: OrderSide.BUY,
+        humanPrice,
+        sizeDeltaInQuantums: '10',
+        client,
+      });
+
+      const deleted: boolean = await deleteStalePriceLevel({
+        ticker,
+        side: OrderSide.BUY,
+        humanPrice,
+        timeThreshold: 10,
+        client,
+      });
+
+      const size: string | null = await hGetAsync(
         {
           hash: getKey(ticker, OrderSide.BUY),
           key: humanPrice,

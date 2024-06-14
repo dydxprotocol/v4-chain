@@ -34,11 +34,14 @@ func PriceToSubticks(
 	exponent := int32(
 		marketPrice.Exponent - clobPair.QuantumConversionExponent + baseAtomicResolution - quoteAtomicResolution,
 	)
-	return lib.BigMulPow10(
-		// TODO(DEC-1256): Use index price from the price daemon, instead of oracle price.
-		new(big.Int).SetUint64(marketPrice.Price),
-		exponent,
-	)
+	// TODO(DEC-1256): Use index price from the price daemon, instead of oracle price.
+	bigPrice := new(big.Int).SetUint64(marketPrice.Price)
+	p10, inverse := lib.BigPow10(exponent)
+	if inverse {
+		return new(big.Rat).SetFrac(bigPrice, p10)
+	} else {
+		return new(big.Rat).SetInt(bigPrice.Mul(bigPrice, p10))
+	}
 }
 
 // SubticksToPrice converts subticks into price value from Prices module.
@@ -71,12 +74,9 @@ func SubticksToPrice(
 	exponent := int32(
 		-marketPriceExponent + clobPair.QuantumConversionExponent - baseAtomicResolution + quoteAtomicResolution,
 	)
-	return lib.BigRatRound(
-		lib.BigMulPow10(
-			// TODO(DEC-1256): Use index price from the price daemon, instead of oracle price.
-			new(big.Int).SetUint64(uint64(subticks)),
-			exponent,
-		),
-		false,
-	).Uint64()
+	result := lib.BigIntMulPow10(new(big.Int).SetUint64(uint64(subticks)), exponent, false)
+	if !result.IsUint64() {
+		panic("SubticksToPrice: result is not a uint64")
+	}
+	return result.Uint64()
 }

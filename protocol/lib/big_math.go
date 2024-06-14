@@ -6,18 +6,25 @@ import (
 	"math/big"
 )
 
-// BigMulPow10 returns the result of `val * 10^exponent`, in *big.Rat.
-func BigMulPow10(
-	val *big.Int,
-	exponent int32,
-) (
-	result *big.Rat,
-) {
-	ratPow10 := RatPow10(exponent)
-	return ratPow10.Mul(
-		new(big.Rat).SetInt(val),
-		ratPow10,
-	)
+// BigU returns a new big.Int from the input unsigned integer.
+func BigU[T uint | uint32 | uint64](u T) *big.Int {
+	return new(big.Int).SetUint64(uint64(u))
+}
+
+// BigI returns a new big.Int from the input signed integer.
+func BigI[T int | int32 | int64](i T) *big.Int {
+	return big.NewInt(int64(i))
+}
+
+// BigMulPpm returns the result of `val * ppm / 1_000_000`, rounding in the direction indicated.
+func BigMulPpm(val *big.Int, ppm *big.Int, roundUp bool) *big.Int {
+	result := new(big.Int).Mul(val, ppm)
+	oneMillion := BigIntOneMillion()
+	if roundUp {
+		return BigDivCeil(result, oneMillion)
+	} else {
+		return result.Div(result, oneMillion)
+	}
 }
 
 // bigPow10Memo is a cache of the most common exponent value requests. Since bigPow10Memo will be
@@ -25,24 +32,39 @@ func BigMulPow10(
 // could occur.
 var bigPow10Memo = warmCache()
 
-// BigPow10 returns the result of `10^exponent`. Caches all calculated values and
-// re-uses cached values in any following calls to BigPow10.
-func BigPow10(exponent uint64) *big.Int {
-	result := bigPow10Helper(exponent)
-	// Copy the result, such that no values can be modified by reference in the
-	// `bigPow10Memo` cache.
-	copy := new(big.Int).Set(result)
-	return copy
+// BigPow10 returns the result of `10^abs(exponent)` and whether the exponent is non-negative.
+func BigPow10[T int | int32 | int64 | uint | uint32 | uint64](
+	exponent T,
+) (
+	result *big.Int,
+	inverse bool,
+) {
+	inverse = exponent < 0
+	var absExponent uint64
+	if inverse {
+		absExponent = uint64(-exponent)
+	} else {
+		absExponent = uint64(exponent)
+	}
+
+	return new(big.Int).Set(bigPow10Helper(absExponent)), inverse
 }
 
-// RatPow10 returns the result of `10^exponent`. Re-uses the cached values by
-// calling bigPow10Helper.
-func RatPow10(exponent int32) *big.Rat {
-	result := new(big.Rat).SetInt(bigPow10Helper(uint64(AbsInt32(exponent))))
-	if exponent < 0 {
-		result.Inv(result)
+// BigIntMulPow10 returns the result of `input * 10^exponent`, rounding in the direction indicated.
+// There is no rounding if `exponent` is non-negative.
+func BigIntMulPow10[T int | int32 | int64 | uint | uint32 | uint64](
+	input *big.Int,
+	exponent T,
+	roundUp bool,
+) *big.Int {
+	p10, inverse := BigPow10(exponent)
+	if inverse {
+		if roundUp {
+			return BigDivCeil(input, p10)
+		}
+		return new(big.Int).Div(input, p10)
 	}
-	return result
+	return new(big.Int).Mul(p10, input)
 }
 
 // BigIntMulPpm takes a `big.Int` and returns the result of `input * ppm / 1_000_000`. This method rounds towards
@@ -51,17 +73,6 @@ func BigIntMulPpm(input *big.Int, ppm uint32) *big.Int {
 	result := new(big.Int)
 	result.Mul(input, big.NewInt(int64(ppm)))
 	return result.Div(result, big.NewInt(int64(OneMillion)))
-}
-
-// BigIntMulSignedPpm takes a `big.Int` and returns the result of `input * ppm / 1_000_000`.
-func BigIntMulSignedPpm(input *big.Int, ppm int32, roundUp bool) *big.Int {
-	result := new(big.Rat)
-	result.Mul(
-		new(big.Rat).SetInt(input),
-		new(big.Rat).SetInt64(int64(ppm)),
-	)
-	result.Quo(result, BigRatOneMillion())
-	return BigRatRound(result, roundUp)
 }
 
 // BigMin takes two `big.Int` as parameters and returns the smaller one.
@@ -92,13 +103,9 @@ func BigMax(a, b *big.Int) *big.Int {
 
 // BigRatMulPpm takes a `big.Rat` and returns the result of `input * ppm / 1_000_000`.
 func BigRatMulPpm(input *big.Rat, ppm uint32) *big.Rat {
-	return new(big.Rat).Mul(
-		input,
-		new(big.Rat).SetFrac64(
-			int64(ppm),
-			int64(OneMillion),
-		),
-	)
+	num := new(big.Int).Mul(input.Num(), big.NewInt(int64(ppm)))
+	den := new(big.Int).Mul(input.Denom(), big.NewInt(int64(OneMillion)))
+	return new(big.Rat).SetFrac(num, den)
 }
 
 // bigGenericClamp is a helper function for BigRatClamp and BigIntClamp
@@ -139,6 +146,19 @@ func BigRatClamp(n *big.Rat, lowerBound *big.Rat, upperBound *big.Rat) *big.Rat 
 // See `bigGenericClamp` for specification.
 func BigIntClamp(n *big.Int, lowerBound *big.Int, upperBound *big.Int) *big.Int {
 	return bigGenericClamp(n, lowerBound, upperBound)
+}
+
+// BigDivCeil returns the ceiling of `a / b`.
+func BigDivCeil(a *big.Int, b *big.Int) *big.Int {
+	result, remainder := new(big.Int).QuoRem(a, b, new(big.Int))
+
+	// If the value was rounded (i.e. there is a remainder), and the exact result would be positive,
+	// then add 1 to the result.
+	if remainder.Sign() != 0 && (a.Sign() == b.Sign()) {
+		result.Add(result, big.NewInt(1))
+	}
+
+	return result
 }
 
 // BigRatRound takes an input and a direction to round (true for up, false for down).
@@ -264,28 +284,4 @@ func warmCache() map[uint64]*big.Int {
 	}
 
 	return bigExponentValues
-}
-
-// BigRatRoundToNearestMultiple rounds `value` up/down to the nearest multiple of `base`.
-// Returns 0 if `base` is 0.
-func BigRatRoundToNearestMultiple(
-	value *big.Rat,
-	base uint32,
-	up bool,
-) uint64 {
-	if base == 0 {
-		return 0
-	}
-
-	quotient := new(big.Rat).Quo(
-		value,
-		new(big.Rat).SetUint64(uint64(base)),
-	)
-	quotientFloored := new(big.Int).Div(quotient.Num(), quotient.Denom())
-
-	if up && quotientFloored.Cmp(quotient.Num()) != 0 {
-		return (quotientFloored.Uint64() + 1) * uint64(base)
-	}
-
-	return quotientFloored.Uint64() * uint64(base)
 }

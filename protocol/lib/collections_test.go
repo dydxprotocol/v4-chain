@@ -67,6 +67,24 @@ func TestDedupeSlice(t *testing.T) {
 	}
 }
 
+func BenchmarkContainsDuplicates_True(b *testing.B) {
+	var result bool
+	input := []uint32{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 3, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+	for i := 0; i < b.N; i++ {
+		result = lib.ContainsDuplicates(input)
+	}
+	require.True(b, result)
+}
+
+func BenchmarkContainsDuplicates_False(b *testing.B) {
+	var result bool
+	input := []uint32{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+	for i := 0; i < b.N; i++ {
+		result = lib.ContainsDuplicates(input)
+	}
+	require.False(b, result)
+}
+
 func TestContainsDuplicates(t *testing.T) {
 	tests := map[string]struct {
 		input    []uint32
@@ -80,11 +98,11 @@ func TestContainsDuplicates(t *testing.T) {
 			input:    []uint32{},
 			expected: false,
 		},
-		"True": {
+		"False": {
 			input:    []uint32{1, 2, 3, 4},
 			expected: false,
 		},
-		"False": {
+		"True": {
 			input:    []uint32{1, 2, 3, 4, 3},
 			expected: true,
 		},

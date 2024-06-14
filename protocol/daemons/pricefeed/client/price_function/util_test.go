@@ -261,54 +261,6 @@ func TestGetUint64MedianFromShiftedBigFloatValues(t *testing.T) {
 	}
 }
 
-func TestReverseShiftBigFloatWithPow10(t *testing.T) {
-	tests := map[string]struct {
-		// parameters
-		floatValue *big.Float
-		exponent   int32
-
-		// expectations
-		expectedUpdatedFloatValue *big.Float
-	}{
-		"Success with negative exponent": {
-			floatValue:                new(big.Float).SetPrec(64).SetFloat64(100.123),
-			exponent:                  -3,
-			expectedUpdatedFloatValue: new(big.Float).SetPrec(64).SetFloat64(100_123),
-		},
-		"Success with positive exponent": {
-			floatValue:                new(big.Float).SetPrec(64).SetFloat64(100.1),
-			exponent:                  1,
-			expectedUpdatedFloatValue: new(big.Float).SetPrec(64).SetFloat64(10.01),
-		},
-		"Success with exponent of 0": {
-			floatValue:                new(big.Float).SetPrec(64).SetFloat64(100),
-			exponent:                  0,
-			expectedUpdatedFloatValue: new(big.Float).SetPrec(64).SetFloat64(100),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			unsignedExponent := lib.AbsInt32(tc.exponent)
-
-			pow10 := new(big.Float).SetInt(lib.BigPow10(uint64(unsignedExponent)))
-
-			updatedFloatValue := reverseShiftFloatWithPow10(
-				tc.floatValue,
-				pow10,
-				tc.exponent,
-			)
-
-			require.InDeltaSlice(
-				t,
-				bigSliceToFloatSlice([]*big.Float{tc.expectedUpdatedFloatValue}),
-				bigSliceToFloatSlice([]*big.Float{updatedFloatValue}),
-				deltaPrecision,
-			)
-		})
-	}
-}
-
 func TestReverseShiftBigFloatSlice(t *testing.T) {
 	tests := map[string]struct {
 		// parameters

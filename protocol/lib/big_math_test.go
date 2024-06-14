@@ -12,148 +12,163 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBigPow10(t *testing.T) {
-	tests := map[string]struct {
-		exponent       uint64
-		expectedResult *big.Int
-	}{
-		"Regular exponent": {
-			exponent:       3,
-			expectedResult: new(big.Int).SetUint64(1000),
-		},
-		"Zero exponent": {
-			exponent:       0,
-			expectedResult: new(big.Int).SetUint64(1),
-		},
-		"One exponent": {
-			exponent:       1,
-			expectedResult: new(big.Int).SetUint64(10),
-		},
-		"Power of 2": {
-			exponent:       8,
-			expectedResult: new(big.Int).SetUint64(100_000_000),
-		},
-		"Non-power of 2": {
-			exponent:       6,
-			expectedResult: new(big.Int).SetUint64(1_000_000),
-		},
-		"Greater than max uint64": {
-			exponent:       20,
-			expectedResult: big_testutil.MustFirst(new(big.Int).SetString("100000000000000000000", 10)),
-		},
+func BenchmarkBigI(b *testing.B) {
+	var result *big.Int
+	for i := 0; i < b.N; i++ {
+		result = lib.BigI(int64(i))
 	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			result := lib.BigPow10(tc.exponent)
-			require.Equal(t, tc.expectedResult, result)
-		})
-	}
+	require.Equal(b, result, result)
 }
 
-func TestBigMulPow10(t *testing.T) {
+func BenchmarkBigU(b *testing.B) {
+	var result *big.Int
+	for i := 0; i < b.N; i++ {
+		result = lib.BigU(uint32(i))
+	}
+	require.Equal(b, result, result)
+}
+
+func TestBigI(t *testing.T) {
+	require.Equal(t, big.NewInt(-123), lib.BigI(int(-123)))
+	require.Equal(t, big.NewInt(-123), lib.BigI(int32(-123)))
+	require.Equal(t, big.NewInt(-123), lib.BigI(int64(-123)))
+	require.Equal(t, big.NewInt(math.MaxInt64), lib.BigI(math.MaxInt64))
+}
+
+func TestBigU(t *testing.T) {
+	require.Equal(t, big.NewInt(123), lib.BigU(uint(123)))
+	require.Equal(t, big.NewInt(123), lib.BigU(uint32(123)))
+	require.Equal(t, big.NewInt(123), lib.BigU(uint64(123)))
+	require.Equal(t, new(big.Int).SetUint64(math.MaxUint64), lib.BigU(uint64(math.MaxUint64)))
+}
+
+func BenchmarkBigMulPpm_RoundDown(b *testing.B) {
+	val := big.NewInt(543_211)
+	ppm := big.NewInt(876_543)
+	var result *big.Int
+	for i := 0; i < b.N; i++ {
+		result = lib.BigMulPpm(val, ppm, false)
+	}
+	require.Equal(b, big.NewInt(476147), result)
+}
+
+func BenchmarkBigMulPpm_RoundUp(b *testing.B) {
+	val := big.NewInt(543_211)
+	ppm := big.NewInt(876_543)
+	var result *big.Int
+	for i := 0; i < b.N; i++ {
+		result = lib.BigMulPpm(val, ppm, true)
+	}
+	require.Equal(b, big.NewInt(476148), result)
+}
+
+func TestBigMulPpm(t *testing.T) {
 	tests := map[string]struct {
 		val            *big.Int
-		exponent       int32
-		expectedResult *big.Rat
+		ppm            *big.Int
+		roundUp        bool
+		expectedResult *big.Int
 	}{
-		"exponent = 2": {
-			val:            new(big.Int).SetUint64(12345678),
-			exponent:       2,
-			expectedResult: big.NewRat(1234567800, 1),
+		"Positive round down": {
+			val:            big.NewInt(543_211),
+			ppm:            big.NewInt(876_543),
+			roundUp:        false,
+			expectedResult: big.NewInt(476147),
 		},
-		"exponent = 10": {
-			val:            new(big.Int).SetUint64(12345678),
-			exponent:       10,
-			expectedResult: big.NewRat(123456780000000000, 1),
+		"Negative round down": {
+			val:            big.NewInt(-543_211),
+			ppm:            big.NewInt(876_543),
+			roundUp:        false,
+			expectedResult: big.NewInt(-476148),
 		},
-		"exponent = 0": {
-			val:            new(big.Int).SetUint64(12345678),
-			exponent:       0,
-			expectedResult: big.NewRat(12345678, 1),
+		"Positive round up": {
+			val:            big.NewInt(543_211),
+			ppm:            big.NewInt(876_543),
+			roundUp:        true,
+			expectedResult: big.NewInt(476148),
 		},
-		"exponent = -1": {
-			val:            new(big.Int).SetUint64(12345678),
-			exponent:       -1,
-			expectedResult: big.NewRat(12345678, 10),
+		"Negative round up": {
+			val:            big.NewInt(-543_211),
+			ppm:            big.NewInt(876_543),
+			roundUp:        true,
+			expectedResult: big.NewInt(-476147),
 		},
-		"exponent = -3": {
-			val:            new(big.Int).SetUint64(12345678),
-			exponent:       -3,
-			expectedResult: big.NewRat(12345678, 1000),
+		"Zero val": {
+			val:            big.NewInt(0),
+			ppm:            big.NewInt(876_543),
+			roundUp:        true,
+			expectedResult: big.NewInt(0),
 		},
-		"exponent = -8": {
-			val:            new(big.Int).SetUint64(12345678),
-			exponent:       -8,
-			expectedResult: big.NewRat(12345678, 100000000),
+		"Zero ppm": {
+			val:            big.NewInt(543_211),
+			ppm:            big.NewInt(0),
+			roundUp:        true,
+			expectedResult: big.NewInt(0),
+		},
+		"Zero val and ppm": {
+			val:            big.NewInt(0),
+			ppm:            big.NewInt(0),
+			roundUp:        true,
+			expectedResult: big.NewInt(0),
+		},
+		"Negative val": {
+			val:            big.NewInt(-543_211),
+			ppm:            big.NewInt(876_543),
+			roundUp:        true,
+			expectedResult: big.NewInt(-476147),
+		},
+		"Negative ppm": {
+			val:            big.NewInt(543_211),
+			ppm:            big.NewInt(-876_543),
+			roundUp:        true,
+			expectedResult: big.NewInt(-476147),
+		},
+		"Negative val and ppm": {
+			val:            big.NewInt(-543_211),
+			ppm:            big.NewInt(-876_543),
+			roundUp:        true,
+			expectedResult: big.NewInt(476148),
+		},
+		"Greater than max int64": {
+			val:            big_testutil.MustFirst(new(big.Int).SetString("1000000000000000000000000", 10)),
+			ppm:            big.NewInt(10_000),
+			roundUp:        true,
+			expectedResult: big_testutil.MustFirst(new(big.Int).SetString("10000000000000000000000", 10)),
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := lib.BigMulPow10(tc.val, tc.exponent)
+			result := lib.BigMulPpm(tc.val, tc.ppm, tc.roundUp)
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}
 }
 
-func TestRatPow10(t *testing.T) {
+func TestBigPow10(t *testing.T) {
 	tests := map[string]struct {
-		exponent       int32
-		expectedResult *big.Rat
+		exponent        int64
+		expectedValue   *big.Int
+		expectedInverse bool
 	}{
-		"Positive exponent": {
-			exponent:       3,
-			expectedResult: new(big.Rat).SetUint64(1000),
-		},
-		"Negative exponent": {
-			exponent:       -3,
-			expectedResult: new(big.Rat).SetFrac64(1, 1000),
-		},
-		"Zero exponent": {
-			exponent:       0,
-			expectedResult: new(big.Rat).SetUint64(1),
-		},
-		"One exponent": {
-			exponent:       1,
-			expectedResult: new(big.Rat).SetUint64(10),
-		},
-		"Negative one exponent": {
-			exponent:       -1,
-			expectedResult: new(big.Rat).SetFrac64(1, 10),
-		},
-		"Power of 2": {
-			exponent:       8,
-			expectedResult: new(big.Rat).SetUint64(100_000_000),
-		},
-		"Negative power of 2": {
-			exponent:       -8,
-			expectedResult: new(big.Rat).SetFrac64(1, 100_000_000),
-		},
-		"Non-power of 2": {
-			exponent:       6,
-			expectedResult: new(big.Rat).SetUint64(1_000_000),
-		},
-		"Negative non-power of 2": {
-			exponent:       -6,
-			expectedResult: new(big.Rat).SetFrac64(1, 1_000_000),
-		},
-		"Greater than max uint64": {
-			exponent:       20,
-			expectedResult: big_testutil.MustFirst(new(big.Rat).SetString("100000000000000000000")),
-		},
-		"Denom greater than max uint64": {
-			exponent: -20,
-			expectedResult: new(big.Rat).SetFrac(
-				new(big.Int).SetInt64(1),
-				big_testutil.MustFirst(
-					new(big.Int).SetString("100000000000000000000", 10),
-				),
-			),
-		},
+		"0":   {0, big.NewInt(1), false},
+		"1":   {1, big.NewInt(10), false},
+		"2":   {2, big.NewInt(100), false},
+		"3":   {3, big.NewInt(1000), false},
+		"4":   {4, big.NewInt(10000), false},
+		"5":   {5, big.NewInt(100000), false},
+		"20":  {20, big_testutil.MustFirst(new(big.Int).SetString("100000000000000000000", 10)), false},
+		"-1":  {-1, big.NewInt(10), true},
+		"-2":  {-2, big.NewInt(100), true},
+		"-3":  {-3, big.NewInt(1000), true},
+		"-4":  {-4, big.NewInt(10000), true},
+		"-5":  {-5, big.NewInt(100000), true},
+		"-20": {-20, big_testutil.MustFirst(new(big.Int).SetString("100000000000000000000", 10)), true},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := lib.RatPow10(tc.exponent)
-			require.Equal(t, tc.expectedResult, result)
+			value, inverse := lib.BigPow10(tc.exponent)
+			require.Equal(t, tc.expectedValue, value)
+			require.Equal(t, tc.expectedInverse, inverse)
 		})
 	}
 }
@@ -161,10 +176,11 @@ func TestRatPow10(t *testing.T) {
 func TestBigPow10AllValuesInMemo(t *testing.T) {
 	exponentString := "1"
 	for i := 0; i < 100; i++ {
-		bigValue, ok := new(big.Int).SetString(exponentString, 0)
+		expected, ok := new(big.Int).SetString(exponentString, 10)
 
 		require.True(t, ok)
-		require.Equal(t, lib.BigPow10(uint64(i)), bigValue)
+		result, _ := lib.BigPow10(i)
+		require.Equal(t, expected, result)
 
 		exponentString = exponentString + "0"
 	}
@@ -172,9 +188,10 @@ func TestBigPow10AllValuesInMemo(t *testing.T) {
 
 func TestBigPow10AllValueNotInMemo(t *testing.T) {
 	exponentString := "1" + strings.Repeat("0", 110)
-	bigValue, ok := new(big.Int).SetString(exponentString, 0)
+	expected, ok := new(big.Int).SetString(exponentString, 10)
 	require.True(t, ok)
-	require.Equal(t, lib.BigPow10(uint64(110)), bigValue)
+	result, _ := lib.BigPow10(110)
+	require.Equal(t, expected, result)
 }
 
 func TestBigIntMulPpm(t *testing.T) {
@@ -378,6 +395,26 @@ func TestBigRatMulPpm(t *testing.T) {
 			ppm:            10_000,
 			expectedResult: big_testutil.MustFirst(new(big.Rat).SetString("10000000000000000000000")),
 		},
+		"Positive with a common divisor": {
+			input:          big.NewRat(3, 1),
+			ppm:            500_000,
+			expectedResult: big.NewRat(3, 2),
+		},
+		"Negative with a common divisor": {
+			input:          big.NewRat(-3, 1),
+			ppm:            500_000,
+			expectedResult: big.NewRat(-3, 2),
+		},
+		"Positive with no common divisor": {
+			input:          big.NewRat(117, 61),
+			ppm:            419,
+			expectedResult: big.NewRat(49023, 61000000),
+		},
+		"Negative with no common divisor": {
+			input:          big.NewRat(-117, 61),
+			ppm:            419,
+			expectedResult: big.NewRat(-49023, 61000000),
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -385,6 +422,16 @@ func TestBigRatMulPpm(t *testing.T) {
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}
+}
+
+func BenchmarkBigRatMulPpm(b *testing.B) {
+	input := big.NewRat(1_000_000, 1_234_567)
+	ppm := uint32(5)
+	var result *big.Rat
+	for i := 0; i < b.N; i++ {
+		result = lib.BigRatMulPpm(input, ppm)
+	}
+	require.Equal(b, big.NewRat(5, 1_234_567), result)
 }
 
 func TestBigRatClamp(t *testing.T) {
@@ -498,6 +545,89 @@ func TestBigIntClamp(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			result := lib.BigIntClamp(tc.input, tc.lower, tc.upper)
+			require.Equal(t, tc.expectedResult, result)
+		})
+	}
+}
+
+func BenchmarkBigDivCeil(b *testing.B) {
+	numerator := big.NewInt(10)
+	denominator := big.NewInt(3)
+	var result *big.Int
+	for i := 0; i < b.N; i++ {
+		result = lib.BigDivCeil(numerator, denominator)
+	}
+	require.Equal(b, big.NewInt(4), result)
+}
+
+func TestBigDivCeil(t *testing.T) {
+	tests := map[string]struct {
+		numerator      *big.Int
+		denominator    *big.Int
+		expectedResult *big.Int
+	}{
+		"Divides evenly": {
+			numerator:      big.NewInt(10),
+			denominator:    big.NewInt(5),
+			expectedResult: big.NewInt(2),
+		},
+		"Doesn't divide evenly": {
+			numerator:      big.NewInt(10),
+			denominator:    big.NewInt(3),
+			expectedResult: big.NewInt(4),
+		},
+		"Negative numerator": {
+			numerator:      big.NewInt(-10),
+			denominator:    big.NewInt(3),
+			expectedResult: big.NewInt(-3),
+		},
+		"Negative numerator 2": {
+			numerator:      big.NewInt(-1),
+			denominator:    big.NewInt(2),
+			expectedResult: big.NewInt(0),
+		},
+		"Negative denominator": {
+			numerator:      big.NewInt(10),
+			denominator:    big.NewInt(-3),
+			expectedResult: big.NewInt(-3),
+		},
+		"Negative denominator 2": {
+			numerator:      big.NewInt(1),
+			denominator:    big.NewInt(-2),
+			expectedResult: big.NewInt(0),
+		},
+		"Negative numerator and denominator": {
+			numerator:      big.NewInt(-10),
+			denominator:    big.NewInt(-3),
+			expectedResult: big.NewInt(4),
+		},
+		"Negative numerator and denominator 2": {
+			numerator:      big.NewInt(-1),
+			denominator:    big.NewInt(-2),
+			expectedResult: big.NewInt(1),
+		},
+		"Zero numerator": {
+			numerator:      big.NewInt(0),
+			denominator:    big.NewInt(3),
+			expectedResult: big.NewInt(0),
+		},
+		"Zero denominator": {
+			numerator:      big.NewInt(10),
+			denominator:    big.NewInt(0),
+			expectedResult: nil,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Panics if the expected result is nil
+			if tc.expectedResult == nil {
+				require.Panics(t, func() {
+					lib.BigDivCeil(tc.numerator, tc.denominator)
+				})
+				return
+			}
+			// Otherwise test the result
+			result := lib.BigDivCeil(tc.numerator, tc.denominator)
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}
@@ -865,98 +995,6 @@ func TestMustConvertBigIntToInt32(t *testing.T) {
 				return
 			}
 			result := lib.MustConvertBigIntToInt32(tc.input)
-			require.Equal(t, tc.expectedResult, result)
-		})
-	}
-}
-
-func TestBigRatRoundToNearestMultiple(t *testing.T) {
-	tests := map[string]struct {
-		value          *big.Rat
-		base           uint32
-		up             bool
-		expectedResult uint64
-	}{
-		"Round 5 down to a multiple of 2": {
-			value:          big.NewRat(5, 1),
-			base:           2,
-			up:             false,
-			expectedResult: 4,
-		},
-		"Round 5 up to a multiple of 2": {
-			value:          big.NewRat(5, 1),
-			base:           2,
-			up:             true,
-			expectedResult: 6,
-		},
-		"Round 7 down to a multiple of 14": {
-			value:          big.NewRat(7, 1),
-			base:           14,
-			up:             false,
-			expectedResult: 0,
-		},
-		"Round 7 up to a multiple of 14": {
-			value:          big.NewRat(7, 1),
-			base:           14,
-			up:             true,
-			expectedResult: 14,
-		},
-		"Round 123 down to a multiple of 123": {
-			value:          big.NewRat(123, 1),
-			base:           123,
-			up:             false,
-			expectedResult: 123,
-		},
-		"Round 123 up to a multiple of 123": {
-			value:          big.NewRat(123, 1),
-			base:           123,
-			up:             true,
-			expectedResult: 123,
-		},
-		"Round 100/6 down to a multiple of 3": {
-			value:          big.NewRat(100, 6),
-			base:           3,
-			up:             false,
-			expectedResult: 15,
-		},
-		"Round 100/6 up to a multiple of 3": {
-			value:          big.NewRat(100, 6),
-			base:           3,
-			up:             true,
-			expectedResult: 18,
-		},
-		"Round 7/2 down to a multiple of 1": {
-			value:          big.NewRat(7, 2),
-			base:           1,
-			up:             false,
-			expectedResult: 3,
-		},
-		"Round 7/2 up to a multiple of 1": {
-			value:          big.NewRat(7, 2),
-			base:           1,
-			up:             true,
-			expectedResult: 4,
-		},
-		"Round 10 down to a multiple of 0": {
-			value:          big.NewRat(10, 1),
-			base:           0,
-			up:             false,
-			expectedResult: 0,
-		},
-		"Round 10 up to a multiple of 0": {
-			value:          big.NewRat(10, 1),
-			base:           0,
-			up:             true,
-			expectedResult: 0,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			result := lib.BigRatRoundToNearestMultiple(
-				tc.value,
-				tc.base,
-				tc.up,
-			)
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}

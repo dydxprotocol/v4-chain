@@ -157,6 +157,9 @@ import (
 	govplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/govplus"
 	govplusmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/govplus/keeper"
 	govplusmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/govplus/types"
+	listingmodule "github.com/dydxprotocol/v4-chain/protocol/x/listing"
+	listingmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
+	listingmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	perpetualsmodule "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	perpetualsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -299,6 +302,8 @@ type App struct {
 
 	FeeTiersKeeper feetiersmodulekeeper.Keeper
 
+	ListingKeeper listingmodulekeeper.Keeper
+
 	PerpetualsKeeper *perpetualsmodulekeeper.Keeper
 
 	VestKeeper vestmodulekeeper.Keeper
@@ -414,6 +419,7 @@ func New(
 		blocktimemoduletypes.StoreKey,
 		bridgemoduletypes.StoreKey,
 		feetiersmoduletypes.StoreKey,
+		listingmoduletypes.StoreKey,
 		perpetualsmoduletypes.StoreKey,
 		satypes.StoreKey,
 		statsmoduletypes.StoreKey,
@@ -457,6 +463,9 @@ func New(
 			}
 			if app.SlinkyClient != nil {
 				app.SlinkyClient.Stop()
+			}
+			if app.GrpcStreamingManager != nil {
+				app.GrpcStreamingManager.Stop()
 			}
 			return nil
 		},
@@ -824,7 +833,8 @@ func New(
 					appFlags,
 					logger,
 				)
-				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient, maxDaemonUnhealthyDuration)
+				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient.GetMarketPairHC(), maxDaemonUnhealthyDuration)
+				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient.GetPriceHC(), maxDaemonUnhealthyDuration)
 			}
 		}
 
@@ -1094,6 +1104,15 @@ func New(
 	)
 	vaultModule := vaultmodule.NewAppModule(appCodec, app.VaultKeeper)
 
+	app.ListingKeeper = *listingmodulekeeper.NewKeeper(
+		appCodec,
+		keys[listingmoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+	)
+	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -1162,6 +1181,7 @@ func New(
 		epochsModule,
 		rateLimitModule,
 		vaultModule,
+		listingModule,
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
@@ -1209,6 +1229,7 @@ func New(
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
+		listingmoduletypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
@@ -1249,6 +1270,7 @@ func New(
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
+		listingmoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
@@ -1293,6 +1315,7 @@ func New(
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
+		listingmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
 
@@ -1333,6 +1356,7 @@ func New(
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
+		listingmoduletypes.ModuleName,
 		authz.ModuleName,
 
 		// Auth must be migrated after staking.
@@ -1628,6 +1652,8 @@ func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
 
 // PreBlocker application updates before each begin block.
 func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	app.scheduleForkUpgrade(ctx)
+
 	// Set gas meter to the free gas meter.
 	// This is because there is currently non-deterministic gas usage in the
 	// pre-blocker, e.g. due to hydration of in-memory data structures.
@@ -1646,7 +1672,6 @@ func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	proposerAddr := sdk.ConsAddress(ctx.BlockHeader().ProposerAddress)
 	middleware.Logger = ctx.Logger().With("proposer_cons_addr", proposerAddr.String())
 
-	app.scheduleForkUpgrade(ctx)
 	return app.ModuleManager.BeginBlock(ctx)
 }
 
@@ -1930,7 +1955,12 @@ func getGrpcStreamingManagerFromOptions(
 ) (manager streamingtypes.GrpcStreamingManager) {
 	if appFlags.GrpcStreamingEnabled {
 		logger.Info("GRPC streaming is enabled")
-		return streaming.NewGrpcStreamingManager()
+		return streaming.NewGrpcStreamingManager(
+			logger,
+			appFlags.GrpcStreamingFlushIntervalMs,
+			appFlags.GrpcStreamingMaxBatchSize,
+			appFlags.GrpcStreamingMaxChannelBufferSize,
+		)
 	}
 	return streaming.NewNoopGrpcStreamingManager()
 }

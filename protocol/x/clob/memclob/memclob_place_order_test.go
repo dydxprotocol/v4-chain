@@ -75,7 +75,7 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedToReplaceOrder: false,
 		},
 		`Can place a new sell order on an orderbook with asks at same price level, and best ask is not updated but total
-			level quantums is updated`: {
+				level quantums is updated`: {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
 			},
@@ -87,7 +87,7 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedToReplaceOrder: false,
 		},
 		`Can place a new buy order on an orderbook with bids at same price level, and best bid is not updated but total
-				level quantums is updated`: {
+					level quantums is updated`: {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num1_Id2_Clob1_Buy67_Price5_GTB20,
 			},
@@ -177,24 +177,6 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedOrderStatus:    types.Success,
 			expectedToReplaceOrder: false,
 		},
-		"Placing an order that causes the account to be undercollateralized fails": {
-			existingOrders:         []types.MatchableOrder{},
-			collateralizationCheck: satypes.NewlyUndercollateralized,
-
-			order: constants.Order_Bob_Num0_Id1_Clob1_Sell11_Price16_GTB20,
-
-			expectedOrderStatus:    types.Undercollateralized,
-			expectedToReplaceOrder: false,
-		},
-		"Placing an order that throws an error from the collateralization check fails": {
-			existingOrders:         []types.MatchableOrder{},
-			collateralizationCheck: satypes.UpdateCausedError,
-
-			order: constants.Order_Bob_Num0_Id1_Clob1_Sell11_Price16_GTB20,
-
-			expectedOrderStatus:    types.InternalError,
-			expectedToReplaceOrder: false,
-		},
 		"Replacing an order fails if GoodTilBlock is lower than existing order": {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Bob_Num0_Id1_Clob1_Sell11_Price16_GTB20,
@@ -222,16 +204,15 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedOrderStatus:    types.Success,
 			expectedToReplaceOrder: true,
 		},
-		"Replacing an order succeeds if GoodTilBlock is greater than existing order and changes sides": {
+		"Replacing an order fails if GoodTilBlock is greater than existing order and changes sides": {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
 			},
 
 			order: constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 
-			collateralizationCheck: satypes.Success,
-			expectedOrderStatus:    types.Success,
-			expectedToReplaceOrder: true,
+			expectedErr:            types.ErrInvalidReplacement,
+			expectedToReplaceOrder: false,
 		},
 		"Replacing an order succeeds if GoodTilBlock is greater than existing order and changes price": {
 			existingOrders: []types.MatchableOrder{
@@ -276,30 +257,6 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedOrderStatus:    types.Success,
 			expectedToReplaceOrder: true,
 		},
-		`Old order is removed from the book if GoodTilBlock is greater than existing order, the order
-		passes initial validation, and new replacement order fails collateralization checks`: {
-			existingOrders: []types.MatchableOrder{
-				&constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
-			},
-
-			order: constants.Order_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
-
-			collateralizationCheck: satypes.NewlyUndercollateralized,
-			expectedOrderStatus:    types.Undercollateralized,
-			expectedToReplaceOrder: true,
-		},
-		`Replacing an order succeeds and old order is skipped during matching if GoodTilBlock is greater
-			than existing order and the new replacement order is on the opposite side of the existing order`: {
-			existingOrders: []types.MatchableOrder{
-				&constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
-			},
-
-			order: constants.Order_Alice_Num0_Id0_Clob0_Sell5_Price10_GTB20,
-
-			collateralizationCheck: satypes.Success,
-			expectedOrderStatus:    types.Success,
-			expectedToReplaceOrder: true,
-		},
 	}
 
 	for name, tc := range tests {
@@ -333,7 +290,8 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 
 			// Mark the current order as canceled if necessary.
 			if tc.canceledOrderGTB != 0 {
-				memclob.cancels.addShortTermCancel(tc.order.OrderId, tc.canceledOrderGTB)
+				orderbook := memclob.mustGetOrderbook(tc.order.GetClobPairId())
+				orderbook.addShortTermCancel(tc.order.OrderId, tc.canceledOrderGTB)
 			}
 
 			// TODO(DEC-1640): Explicitly specify expected remaining orders on the book in test case.
@@ -348,6 +306,7 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 				ordersOnBook = append(ordersOnBook, &order)
 			}
 
+			expectedReplacementOrderPriceChanged := false
 			for _, matchableOrder := range ordersOnBook {
 				// Note we assume these are regular orders since liquidation orders cannot rest on
 				// the book.
@@ -355,7 +314,11 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 				// If this is an order replacement and it was successful, we assert that the old order being replaced
 				// is no longer on the book.
 				matchableOrderOrder := matchableOrder.MustGetOrder()
-				if matchableOrderOrder.OrderId == tc.order.OrderId && tc.order.MustCmpReplacementOrder(&matchableOrderOrder) > 0 {
+				if tc.expectedToReplaceOrder && matchableOrderOrder.OrderId == tc.order.OrderId &&
+					tc.order.MustCmpReplacementOrder(&matchableOrderOrder) > 0 {
+					if matchableOrderOrder.Subticks != tc.order.Subticks {
+						expectedReplacementOrderPriceChanged = true
+					}
 					continue
 				}
 
@@ -407,6 +370,7 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 				[]expectedMatch{},
 				[]types.OrderId{},
 				tc.expectedToReplaceOrder,
+				expectedReplacementOrderPriceChanged,
 			)
 		})
 	}
@@ -2163,89 +2127,21 @@ func TestPlaceOrder_MatchOrders_PreexistingMatches(t *testing.T) {
 
 			expectedErr: types.ErrInvalidReplacement,
 		},
-		"Error: Taker is FOK replacement for partially filled order": {
+		"IOC Taker replaces unfilled non IOC order": {
 			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
 				&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
-			},
-
-			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB21_FOK,
-
-			expectedTotalFilledSize: 5,
-			expectedOrderStatus:     types.InternalError,
-			expectedExistingMatches: []expectedMatch{
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
-					matchedQuantums: 5,
-				},
 			},
 			expectedRemainingAsks: []OrderWithRemainingSize{
 				{
 					Order:         constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
-					RemainingSize: 5,
+					RemainingSize: 10,
 				},
-			},
-			expectedOperations: []types.Operation{
-				clobtest.NewOrderPlacementOperation(
-					constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
-				),
-				clobtest.NewOrderPlacementOperation(
-					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
-				),
-				clobtest.NewMatchOperation(
-					&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
-					[]types.MakerFill{
-						{
-							MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId,
-							FillAmount:   5,
-						},
-					},
-				),
-			},
-			expectedInternalOperations: []types.InternalOperation{
-				types.NewShortTermOrderPlacementInternalOperation(
-					constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
-				),
-				types.NewShortTermOrderPlacementInternalOperation(
-					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
-				),
-				types.NewMatchOrdersInternalOperation(
-					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
-					[]types.MakerFill{
-						{
-							MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId,
-							FillAmount:   5,
-						},
-					},
-				),
-			},
-
-			expectedErr: types.ErrInvalidReplacement,
-		},
-		"IOC Taker replaces unfilled non IOC order": {
-			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
 			},
 
 			order:                      constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB21_IOC,
 			expectedInternalOperations: []types.InternalOperation{},
 
-			expectedOrderStatus:    types.ImmediateOrCancelWouldRestOnBook,
-			expectedToReplaceOrder: true,
-		},
-		"FOK Taker replaces unfilled non IOC order": {
-			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
-			},
-
-			order:                      constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB21_FOK,
-			expectedInternalOperations: []types.InternalOperation{},
-
-			expectedOrderStatus:    types.InternalError,
-			expectedToReplaceOrder: true,
-
-			expectedErr: types.ErrFokOrderCouldNotBeFullyFilled,
+			expectedErr: types.ErrInvalidReplacement,
 		},
 	}
 
@@ -2304,6 +2200,7 @@ func TestPlaceOrder_MatchOrders_PreexistingMatches(t *testing.T) {
 				tc.expectedNewMatches,
 				[]types.OrderId{},
 				tc.expectedToReplaceOrder,
+				false,
 			)
 		})
 	}
@@ -2820,10 +2717,8 @@ func TestAddOrderToOrderbook_ErrorPlaceNewFullyFilledOrder(t *testing.T) {
 	memClobKeeper := mocks.MemClobKeeper{}
 	memclob := NewMemClobPriceTimePriority(false)
 	memclob.SetClobKeeper(&memClobKeeper)
-	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 
-	memClobKeeper.On("AddOrderToOrderbookSubaccountUpdatesCheck", mock.Anything, mock.Anything, mock.Anything).
-		Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult))
 	memClobKeeper.On("GetStatePosition", mock.Anything, mock.Anything, mock.Anything).
 		Return(big.NewInt(0))
 	memClobKeeper.On("ValidateSubaccountEquityTierLimitForNewOrder", mock.Anything, mock.Anything).
@@ -2856,9 +2751,6 @@ func TestAddOrderToOrderbook_PanicsIfFullyFilled(t *testing.T) {
 	orderId := order.OrderId
 	quantums := order.GetBaseQuantums()
 
-	memClobKeeper.On("AddOrderToOrderbookSubaccountUpdatesCheck", mock.Anything, mock.Anything, mock.Anything).
-		Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult))
-
 	memClobKeeper.On("GetStatePosition", mock.Anything, mock.Anything, mock.Anything).
 		Return(big.NewInt(0))
 
@@ -2868,26 +2760,6 @@ func TestAddOrderToOrderbook_PanicsIfFullyFilled(t *testing.T) {
 
 	require.Panics(t, func() {
 		memclob.mustAddOrderToOrderbook(ctx, order, false)
-	})
-}
-
-func TestAddOrderToSubaccountOrders_PanicsOnInvalidSide(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-	ctx = ctx.WithIsCheckTx(true)
-	memclob := NewMemClobPriceTimePriority(false)
-
-	require.Panics(t, func() {
-		memclob.openOrders.mustAddOrderToSubaccountOrders(ctx, types.Order{})
-	})
-}
-
-func TestAddOrderToSubaccountOrders_PanicsOnInvalidClob(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-	ctx = ctx.WithIsCheckTx(true)
-	memclob := NewMemClobPriceTimePriority(false)
-
-	require.Panics(t, func() {
-		memclob.openOrders.mustAddOrderToSubaccountOrders(ctx, types.Order{Side: types.Order_SIDE_BUY})
 	})
 }
 
@@ -3300,6 +3172,7 @@ func TestPlaceOrder_PostOnly(t *testing.T) {
 				[]expectedMatch{},
 				[]types.OrderId{},
 				false,
+				false,
 			)
 		})
 	}
@@ -3443,679 +3316,6 @@ func TestPlaceOrder_ImmediateOrCancel(t *testing.T) {
 				tc.expectedCollatCheck,
 				[]types.OrderId{},
 				false,
-			)
-		})
-	}
-}
-
-func TestPlaceOrder_FillOrKill(t *testing.T) {
-	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-	ctx = ctx.WithIsCheckTx(true)
-	tests := map[string]struct {
-		// State.
-		placedMatchableOrders          []types.MatchableOrder
-		collateralizationCheckFailures map[int]map[satypes.SubaccountId]satypes.UpdateResult
-		// (SubaccountId, ClobPairId) tuples to state position size in quantums.
-		statePositionSizes map[satypes.SubaccountId]map[uint32]int64
-
-		// Parameters.
-		order types.Order
-
-		// Expectations.
-		expectedErr                error
-		expectedOrderStatus        types.OrderStatus
-		expectedCollatCheck        []expectedMatch
-		expectedRemainingBids      []OrderWithRemainingSize
-		expectedRemainingAsks      []OrderWithRemainingSize
-		expectedOperations         []types.Operation
-		expectedInternalOperations []types.InternalOperation
-	}{
-		`Can place a fill-or-kill order on an empty book and it's canceled`: {
-			placedMatchableOrders:          []types.MatchableOrder{},
-			collateralizationCheckFailures: map[int]map[satypes.SubaccountId]satypes.UpdateResult{},
-
-			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK,
-
-			expectedErr:           types.ErrFokOrderCouldNotBeFullyFilled,
-			expectedRemainingBids: []OrderWithRemainingSize{},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-		},
-		`An fill-Internalor-kill order can beInternal fully matched`: {
-			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-				&constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-			},
-
-			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK,
-
-			expectedOrderStatus: types.Success,
-			expectedRemainingBids: []OrderWithRemainingSize{
-				{
-					Order:         constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					RemainingSize: 15,
-				},
-			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedCollatCheck: []expectedMatch{
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK,
-					matchedQuantums: 5,
-				},
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK,
-					matchedQuantums: 5,
-				},
-			},
-			expectedOperations: []types.Operation{
-				clobtest.NewOrderPlacementOperation(
-					constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-				),
-				clobtest.NewOrderPlacementOperation(
-					constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-				),
-				clobtest.NewOrderPlacementOperation(
-					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK,
-				),
-				clobtest.NewMatchOperation(
-					&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK,
-					[]types.MakerFill{
-						{
-							MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32.OrderId,
-							FillAmount:   5,
-						},
-						{
-							MakerOrderId: constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22.OrderId,
-							FillAmount:   5,
-						},
-					},
-				),
-			},
-			expectedInternalOperations: []types.InternalOperation{
-				types.NewShortTermOrderPlacementInternalOperation(
-					constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-				),
-				types.NewShortTermOrderPlacementInternalOperation(
-					constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-				),
-				types.NewShortTermOrderPlacementInternalOperation(
-					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK,
-				),
-				types.NewMatchOrdersInternalOperation(
-					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK,
-					[]types.MakerFill{
-						{
-							MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32.OrderId,
-							FillAmount:   5,
-						},
-						{
-							MakerOrderId: constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22.OrderId,
-							FillAmount:   5,
-						},
-					},
-				),
-			},
-		},
-		`If an fill-or-kill order is only partially matched, the whole order is canceled`: {
-			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Alice_Num0_Id4_Clob1_Buy25_Price5_GTB20,
-				&constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-			},
-
-			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK,
-
-			expectedErr: types.ErrFokOrderCouldNotBeFullyFilled,
-			expectedRemainingBids: []OrderWithRemainingSize{
-				{
-					Order:         constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-					RemainingSize: 5,
-				},
-				{
-					Order:         constants.Order_Alice_Num0_Id4_Clob1_Buy25_Price5_GTB20,
-					RemainingSize: 25,
-				},
-			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedCollatCheck: []expectedMatch{
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK,
-					matchedQuantums: 5,
-				},
-			},
-		},
-		`A partially matched fill-or-kill buy order is canceled, and all crossing maker orders that
-				failed collateralization checks are removed`: {
-			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15,
-				&constants.Order_Alice_Num0_Id3_Clob1_Sell5_Price10_GTB15,
-				&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
-			},
-			collateralizationCheckFailures: map[int]map[satypes.SubaccountId]satypes.UpdateResult{
-				0: {
-					constants.Alice_Num0: satypes.NewlyUndercollateralized,
-				},
-				1: {
-					constants.Alice_Num0: satypes.StillUndercollateralized,
-				},
-			},
-
-			order: constants.Order_Bob_Num0_Id1_Clob1_Buy20_Price35_GTB22_FOK,
-
-			expectedErr:           types.ErrFokOrderCouldNotBeFullyFilled,
-			expectedRemainingBids: []OrderWithRemainingSize{},
-			expectedRemainingAsks: []OrderWithRemainingSize{
-				{
-					Order:         constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
-					RemainingSize: 10,
-				},
-			},
-			expectedCollatCheck: []expectedMatch{
-				{
-					makerOrder:      &constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15,
-					takerOrder:      &constants.Order_Bob_Num0_Id1_Clob1_Buy20_Price35_GTB22_FOK,
-					matchedQuantums: 5,
-				},
-				{
-					makerOrder:      &constants.Order_Alice_Num0_Id3_Clob1_Sell5_Price10_GTB15,
-					takerOrder:      &constants.Order_Bob_Num0_Id1_Clob1_Buy20_Price35_GTB22_FOK,
-					matchedQuantums: 5,
-				},
-				{
-					makerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
-					takerOrder:      &constants.Order_Bob_Num0_Id1_Clob1_Buy20_Price35_GTB22_FOK,
-					matchedQuantums: 10,
-				},
-			},
-		},
-		`A fill-or-kill reduce only order with order size less than position size fully matched`: {
-			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-				&constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-			},
-
-			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-			statePositionSizes: map[satypes.SubaccountId]map[uint32]int64{
-				constants.Alice_Num1: {
-					constants.ClobPair_Eth.Id: 100_000, // position larger than order
-				},
-			},
-
-			expectedOrderStatus: types.Success,
-			expectedRemainingBids: []OrderWithRemainingSize{
-				{
-					Order:         constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					RemainingSize: 15,
-				},
-			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedCollatCheck: []expectedMatch{
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-					matchedQuantums: 5,
-				},
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-					matchedQuantums: 5,
-				},
-			},
-			expectedOperations: []types.Operation{
-				clobtest.NewOrderPlacementOperation(
-					constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-				),
-				clobtest.NewOrderPlacementOperation(
-					constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-				),
-				clobtest.NewOrderPlacementOperation(
-					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-				),
-				clobtest.NewMatchOperation(
-					&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-					[]types.MakerFill{
-						{
-							MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32.OrderId,
-							FillAmount:   5,
-						},
-						{
-							MakerOrderId: constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22.OrderId,
-							FillAmount:   5,
-						},
-					},
-				),
-			},
-			expectedInternalOperations: []types.InternalOperation{
-				types.NewShortTermOrderPlacementInternalOperation(
-					constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-				),
-				types.NewShortTermOrderPlacementInternalOperation(
-					constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-				),
-				types.NewShortTermOrderPlacementInternalOperation(
-					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-				),
-				types.NewMatchOrdersInternalOperation(
-					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-					[]types.MakerFill{
-						{
-							MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32.OrderId,
-							FillAmount:   5,
-						},
-						{
-							MakerOrderId: constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22.OrderId,
-							FillAmount:   5,
-						},
-					},
-				),
-			},
-		},
-		`A fill-or-kill reduce only order with size equal to position size and order fully matched`: {
-			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-				&constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-			},
-
-			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-			statePositionSizes: map[satypes.SubaccountId]map[uint32]int64{
-				constants.Alice_Num1: {
-					constants.ClobPair_Eth.Id: 10, // position equal to order
-				},
-			},
-
-			expectedOrderStatus: types.Success,
-			expectedRemainingBids: []OrderWithRemainingSize{
-				{
-					Order:         constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					RemainingSize: 15,
-				},
-			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedCollatCheck: []expectedMatch{
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-					matchedQuantums: 5,
-				},
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-					matchedQuantums: 5,
-				},
-			},
-			expectedOperations: []types.Operation{
-				clobtest.NewOrderPlacementOperation(
-					constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-				),
-				clobtest.NewOrderPlacementOperation(
-					constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-				),
-				clobtest.NewOrderPlacementOperation(
-					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-				),
-				clobtest.NewMatchOperation(
-					&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-					[]types.MakerFill{
-						{
-							MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32.OrderId,
-							FillAmount:   5,
-						},
-						{
-							MakerOrderId: constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22.OrderId,
-							FillAmount:   5,
-						},
-					},
-				),
-			},
-			expectedInternalOperations: []types.InternalOperation{
-				types.NewShortTermOrderPlacementInternalOperation(
-					constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-				),
-				types.NewShortTermOrderPlacementInternalOperation(
-					constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-				),
-				types.NewShortTermOrderPlacementInternalOperation(
-					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-				),
-				types.NewMatchOrdersInternalOperation(
-					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-					[]types.MakerFill{
-						{
-							MakerOrderId: constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32.OrderId,
-							FillAmount:   5,
-						},
-						{
-							MakerOrderId: constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22.OrderId,
-							FillAmount:   5,
-						},
-					},
-				),
-			},
-		},
-		`A fill-or-kill reduce only order with order size less than position size results in the order being partially filled
-			and the remaining size is canceled`: {
-			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Alice_Num0_Id4_Clob1_Buy25_Price5_GTB20,
-				&constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-			},
-
-			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-			statePositionSizes: map[satypes.SubaccountId]map[uint32]int64{
-				constants.Alice_Num1: {
-					constants.ClobPair_Eth.Id: 100_000, // position larger than order
-				},
-			},
-
-			expectedErr: types.ErrFokOrderCouldNotBeFullyFilled,
-			expectedRemainingBids: []OrderWithRemainingSize{
-				{
-					Order:         constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-					RemainingSize: 5,
-				},
-				{
-					Order:         constants.Order_Alice_Num0_Id4_Clob1_Buy25_Price5_GTB20,
-					RemainingSize: 25,
-				},
-			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedCollatCheck: []expectedMatch{
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK,
-					matchedQuantums: 5,
-				},
-			},
-		},
-		// FOK+RO order to sell 10, but position is 5. Resulting in FOK order not filled
-		// and a cancellation. Should have been full match otherwise.
-		`A fill-or-kill reduce only order with order size greater than position size gets reduced and fails`: {
-			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-				&constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-			},
-
-			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-			statePositionSizes: map[satypes.SubaccountId]map[uint32]int64{
-				constants.Alice_Num1: {
-					constants.ClobPair_Eth.Id: 5, // position smaller than order
-				},
-			},
-
-			expectedErr: types.ErrFokOrderCouldNotBeFullyFilled,
-			expectedRemainingBids: []OrderWithRemainingSize{
-				{
-					Order:         constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					RemainingSize: 20, // untouched size
-				},
-				{
-					Order:         constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-					RemainingSize: 5, // untouched size
-				},
-			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedCollatCheck: []expectedMatch{
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-					matchedQuantums: 5, // reduction min(ordersize, position) = 5
-				},
-			},
-		},
-		`A fill-or-kill reduce only order on the same side as the user's position gets cancelled`: {
-			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-				&constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-			},
-
-			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-			statePositionSizes: map[satypes.SubaccountId]map[uint32]int64{
-				constants.Alice_Num1: {
-					constants.ClobPair_Eth.Id: -85, // same side as sell
-				},
-			},
-
-			expectedErr: types.ErrReduceOnlyWouldIncreasePositionSize,
-			expectedRemainingBids: []OrderWithRemainingSize{
-				{
-					Order:         constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					RemainingSize: 20,
-				},
-				{
-					Order:         constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-					RemainingSize: 5,
-				},
-			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedCollatCheck:   []expectedMatch{}, // no matches since order doesn't go through
-		},
-		// FOK+RO order to sell 10, but failed collateralization causes it to be cancelled.
-		// Should have been full match otherwise.
-		`A fill-or-kill reduce only order with order size less than position size fails collateralization
-		    results in the order being cancelled`: {
-			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-			},
-
-			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-			statePositionSizes: map[satypes.SubaccountId]map[uint32]int64{
-				constants.Alice_Num1: {
-					constants.ClobPair_Eth.Id: 100_000, // position greater than order
-				},
-			},
-
-			expectedErr:         types.ErrFokOrderCouldNotBeFullyFilled,
-			expectedOrderStatus: types.Undercollateralized,
-			expectedRemainingBids: []OrderWithRemainingSize{
-				{
-					Order:         constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					RemainingSize: 20, // untouched size
-				},
-			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedCollatCheck: []expectedMatch{
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-					matchedQuantums: 10,
-				},
-			},
-			collateralizationCheckFailures: map[int]map[satypes.SubaccountId]satypes.UpdateResult{
-				0: {
-					constants.Alice_Num1: satypes.NewlyUndercollateralized,
-				},
-			},
-		},
-		// FOK+RO order to sell 10 with position size of 5 fails collateralization causes it to be cancelled.
-		// Should have been full match otherwise.
-		`A fill-or-kill reduce only order with order size greater than position size fails collateralization
-		    results in the order being cancelled`: {
-			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-			},
-
-			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-			statePositionSizes: map[satypes.SubaccountId]map[uint32]int64{
-				constants.Alice_Num1: {
-					constants.ClobPair_Eth.Id: 5, // position smaller than order
-				},
-			},
-
-			expectedErr:         types.ErrFokOrderCouldNotBeFullyFilled,
-			expectedOrderStatus: types.Undercollateralized,
-			expectedRemainingBids: []OrderWithRemainingSize{
-				{
-					Order:         constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					RemainingSize: 20, // untouched size
-				},
-			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedCollatCheck: []expectedMatch{
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-					matchedQuantums: 5, // reduction min(ordersize, position) = 5
-				},
-			},
-			collateralizationCheckFailures: map[int]map[satypes.SubaccountId]satypes.UpdateResult{
-				0: {
-					constants.Alice_Num1: satypes.NewlyUndercollateralized,
-				},
-			},
-		},
-		`A fill-or-kill order that fails collateralization results in the order being cancelled`: {
-			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-			},
-
-			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-			statePositionSizes: map[satypes.SubaccountId]map[uint32]int64{
-				constants.Alice_Num1: {
-					constants.ClobPair_Eth.Id: 100_000,
-				},
-			},
-
-			expectedErr:         types.ErrFokOrderCouldNotBeFullyFilled,
-			expectedOrderStatus: types.Undercollateralized,
-			expectedRemainingBids: []OrderWithRemainingSize{
-				{
-					Order:         constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					RemainingSize: 20, // untouched size
-				},
-			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedCollatCheck: []expectedMatch{
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-					matchedQuantums: 10,
-				},
-			},
-			collateralizationCheckFailures: map[int]map[satypes.SubaccountId]satypes.UpdateResult{
-				0: {
-					constants.Alice_Num1: satypes.NewlyUndercollateralized,
-				},
-			},
-		},
-		`A fill-or-kill order that matches one maker order then
-			fails collateralization when matching the second maker order results in the order being cancelled`: {
-			placedMatchableOrders: []types.MatchableOrder{
-				&constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-				&constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-			},
-
-			order: constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-			statePositionSizes: map[satypes.SubaccountId]map[uint32]int64{
-				constants.Alice_Num1: {
-					constants.ClobPair_Eth.Id: 100_000,
-				},
-			},
-
-			expectedErr:         types.ErrFokOrderCouldNotBeFullyFilled,
-			expectedOrderStatus: types.Undercollateralized,
-			expectedRemainingBids: []OrderWithRemainingSize{
-				{
-					Order:         constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					RemainingSize: 20, // untouched size
-				},
-				{
-					Order:         constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-					RemainingSize: 5, // untouched size
-				},
-			},
-			expectedRemainingAsks: []OrderWithRemainingSize{},
-			expectedCollatCheck: []expectedMatch{
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-					matchedQuantums: 5,
-				},
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
-					matchedQuantums: 5,
-				},
-			},
-			collateralizationCheckFailures: map[int]map[satypes.SubaccountId]satypes.UpdateResult{
-				1: {
-					constants.Alice_Num1: satypes.NewlyUndercollateralized,
-				},
-			},
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			// Setup memclob state and test expectations.
-			addOrderToOrderbookSize := satypes.BaseQuantums(0)
-			order := tc.order
-			expectedFilledSize := order.GetBaseQuantums()
-			expectedMatches := tc.expectedCollatCheck
-			if !tc.expectedOrderStatus.IsSuccess() || tc.expectedErr != nil {
-				expectedFilledSize = 0
-				expectedMatches = []expectedMatch{}
-			}
-			require.Equal(t, types.Order_TIME_IN_FORCE_FILL_OR_KILL, order.TimeInForce)
-
-			getStatePositionFn := func(
-				subaccountId satypes.SubaccountId,
-				clobPairId types.ClobPairId,
-			) (positionSizeQuantums *big.Int) {
-				return big.NewInt(tc.statePositionSizes[subaccountId][clobPairId.ToUint32()])
-			}
-			if tc.statePositionSizes == nil {
-				getStatePositionFn = constants.GetStatePosition_ZeroPositionSize
-			}
-
-			memclob, fakeMemClobKeeper, expectedNumCollateralizationChecks, numCollateralChecks := placeOrderTestSetup(
-				t,
-				ctx,
-				tc.placedMatchableOrders,
-				&order,
-				tc.expectedCollatCheck,
-				tc.expectedOrderStatus,
-				addOrderToOrderbookSize,
-				tc.expectedErr,
-				tc.collateralizationCheckFailures,
-				getStatePositionFn,
-			)
-
-			// Run the test case and verify expectations.
-			offchainUpdates := placeOrderAndVerifyExpectations(
-				t,
-				ctx,
-				memclob,
-				order,
-				numCollateralChecks,
-				expectedFilledSize,
-				expectedFilledSize,
-				tc.expectedOrderStatus,
-				tc.expectedErr,
-				expectedNumCollateralizationChecks,
-				tc.expectedRemainingBids,
-				tc.expectedRemainingAsks,
-				expectedMatches,
-				fakeMemClobKeeper,
-			)
-
-			// Note: This length check exists here, because testify/require considers a nil and empty slice to be unequal.
-			// For this reason, if there are no expected operations, we do a `Empty` check instead of an `Equal` check.
-
-			// TODO(CLOB-656): Update test assertions to assert on operations queue.
-
-			assertPlaceOrderOffchainMessages(
-				t,
-				ctx,
-				offchainUpdates,
-				order,
-				tc.placedMatchableOrders,
-				tc.collateralizationCheckFailures,
-				tc.expectedErr,
-				expectedFilledSize,
-				tc.expectedOrderStatus,
-				[]expectedMatch{},
-				expectedMatches,
-				[]types.OrderId{},
 				false,
 			)
 		})
@@ -4158,7 +3358,7 @@ func TestPlaceOrder_Telemetry(t *testing.T) {
 	}
 
 	// Create the orderbook.
-	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 
 	// Create all orders.
 	createAllOrders(
@@ -4209,7 +3409,7 @@ func TestPlaceOrder_GenerateOffchainUpdatesFalse_NoMessagesSent(t *testing.T) {
 	order := constants.Order_Bob_Num0_Id13_Clob0_Sell35_Price35_GTB30
 
 	// Create the orderbook.
-	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 
 	// Place a new order.
 	_, _, offchainUpdates, err := memclob.PlaceOrder(ctx, order)
@@ -4229,7 +3429,7 @@ func TestPlaceOrder_DuplicateOrder(t *testing.T) {
 	memclob := NewMemClobPriceTimePriority(false)
 	memclob.SetClobKeeper(memClobKeeper)
 
-	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
+	memclob.CreateOrderbook(constants.ClobPair_Btc)
 
 	order := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15
 	_, _, _, err := memclob.PlaceOrder(ctx, order)

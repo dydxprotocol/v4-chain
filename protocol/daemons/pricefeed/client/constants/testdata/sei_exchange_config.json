@@ -28,11 +28,6 @@
       "exchangeName": "Kucoin",
       "ticker": "SEI-USDT",
       "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Mexc",
-      "ticker": "SEI_USDT",
-      "adjustByMarket": "USDT-USD"
     }
   ]
 }

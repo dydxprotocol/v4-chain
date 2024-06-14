@@ -25,7 +25,7 @@ const persistentPeers = "17e5e45691f0d01449c84fd4ae87279578cdd7ec@testnet-local-
 const resourceLifetimeSecs = 600
 
 // The version of that we're upgrading to (aka the current commit)
-const UpgradeToVersion = "v5.0.0"
+const UpgradeToVersion = "v6.0.0"
 
 func monikers() map[string]string {
 	return map[string]string{
@@ -118,7 +118,11 @@ func (t *Testnet) initialize() (err error) {
 		if err := t.pool.Retry(func() error {
 			return node.WaitUntilBlockHeight(2)
 		}); err != nil {
-			return fmt.Errorf("could not connect to node: %s", moniker)
+			return fmt.Errorf(
+				"could not connect to node: %s, %w",
+				moniker,
+				err,
+			)
 		}
 	}
 	return nil

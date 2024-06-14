@@ -86,7 +86,7 @@ func (l EquityTierLimit) validate(field string, maxOrders uint32) error {
 			l,
 		)
 	}
-	if l.UsdTncRequired.IsNil() || l.UsdTncRequired.BigInt().Sign() < 0 {
+	if l.UsdTncRequired.IsNil() || l.UsdTncRequired.Sign() < 0 {
 		return errorsmod.Wrapf(
 			ErrInvalidEquityTierLimitConfig,
 			"%d is not a valid UsdTncRequired for %s equity tier limit %+v",

@@ -57,7 +57,7 @@ func (i SerializableInt) String() string {
 	if i.IsNil() {
 		return "nil"
 	}
-	return i.BigInt().String()
+	return i.i.String()
 }
 
 // Cmp compares x and y and returns:
@@ -77,7 +77,15 @@ func (i SerializableInt) Cmp(j SerializableInt) int {
 	if j.IsNil() {
 		return 1
 	}
-	return i.BigInt().Cmp(j.BigInt())
+	return i.i.Cmp(j.i)
+}
+
+// Sign returns zero if nil, otherwise returns the sign of the Int.
+func (i SerializableInt) Sign() int {
+	if i.IsNil() {
+		return 0
+	}
+	return i.i.Sign()
 }
 
 // Marshal implements the gogo proto custom type interface.

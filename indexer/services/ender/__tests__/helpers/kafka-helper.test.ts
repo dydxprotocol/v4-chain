@@ -36,6 +36,8 @@ import { updateBlockCache } from '../../src/caches/block-cache';
 import { defaultPreviousHeight, defaultWalletAddress } from './constants';
 
 describe('kafka-helper', () => {
+  const blockHeight: string = '5';
+
   describe('addPositionsToContents', () => {
     const defaultPerpetualPosition: PerpetualPositionFromDatabase = {
       id: '',
@@ -81,10 +83,12 @@ describe('kafka-helper', () => {
         {},
         [],
         {},
+        blockHeight,
       );
 
       expect(contents.perpetualPositions).toEqual(undefined);
       expect(contents.assetPositions).toEqual(undefined);
+      expect(contents.blockHeight).toEqual(blockHeight);
     });
 
     it('successfully adds one asset position and one perp position', () => {
@@ -100,6 +104,7 @@ describe('kafka-helper', () => {
         { [defaultPerpetualMarket.id]: defaultPerpetualMarket },
         [defaultAssetPosition],
         { [defaultAsset.id]: defaultAsset },
+        blockHeight,
       );
 
       expect(contents.perpetualPositions!.length).toEqual(1);
@@ -129,6 +134,7 @@ describe('kafka-helper', () => {
         side: 'LONG',
         size: defaultAssetPosition.size,
       });
+      expect(contents.blockHeight).toEqual(blockHeight);
     });
 
     it('successfully adds one asset position', () => {
@@ -144,6 +150,7 @@ describe('kafka-helper', () => {
         {},
         [defaultAssetPosition],
         { [defaultAsset.id]: defaultAsset },
+        blockHeight,
       );
 
       expect(contents.perpetualPositions).toBeUndefined();
@@ -158,6 +165,7 @@ describe('kafka-helper', () => {
         side: 'LONG',
         size: defaultAssetPosition.size,
       });
+      expect(contents.blockHeight).toEqual(blockHeight);
     });
 
     it('successfully adds one perp position', () => {
@@ -173,6 +181,7 @@ describe('kafka-helper', () => {
         { [defaultPerpetualMarket.id]: defaultPerpetualMarket },
         [],
         {},
+        blockHeight,
       );
 
       expect(contents.perpetualPositions!.length).toEqual(1);
@@ -193,6 +202,7 @@ describe('kafka-helper', () => {
       });
 
       expect(contents.assetPositions).toBeUndefined();
+      expect(contents.blockHeight).toEqual(blockHeight);
     });
 
     it('successfully adds multiple positions', () => {
@@ -222,6 +232,7 @@ describe('kafka-helper', () => {
           },
         ],
         { [defaultAsset.id]: defaultAsset },
+        blockHeight,
       );
 
       // check perpetual positions
@@ -277,6 +288,7 @@ describe('kafka-helper', () => {
         side: 'LONG',
         size: assetSize,
       });
+      expect(contents.blockHeight).toEqual(blockHeight);
     });
   });
 
@@ -343,6 +355,7 @@ describe('kafka-helper', () => {
         senderSubaccountId,
         senderSubaccountId,
         recipientSubaccountId,
+        transfer.createdAtHeight,
       );
 
       expect(contents.transfers).toEqual({
@@ -361,6 +374,7 @@ describe('kafka-helper', () => {
         createdAtHeight: transfer.createdAtHeight,
         transactionHash: transfer.transactionHash,
       });
+      expect(contents.blockHeight).toEqual(transfer.createdAtHeight);
     });
 
     it('successfully adds a transfer_in', () => {

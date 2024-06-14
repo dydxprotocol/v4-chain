@@ -267,17 +267,8 @@ export interface StreamOrderbookUpdatesRequestSDKType {
  */
 
 export interface StreamOrderbookUpdatesResponse {
-  /** Orderbook updates for the clob pair. */
+  /** Batch of updates for the clob pair. */
   updates: StreamUpdate[];
-  /**
-   * ---Additional fields used to debug issues---
-   * Block height of the updates.
-   */
-
-  blockHeight: number;
-  /** Exec mode of the updates. */
-
-  execMode: number;
 }
 /**
  * StreamOrderbookUpdatesResponse is a response message for the
@@ -285,17 +276,8 @@ export interface StreamOrderbookUpdatesResponse {
  */
 
 export interface StreamOrderbookUpdatesResponseSDKType {
-  /** Orderbook updates for the clob pair. */
+  /** Batch of updates for the clob pair. */
   updates: StreamUpdateSDKType[];
-  /**
-   * ---Additional fields used to debug issues---
-   * Block height of the updates.
-   */
-
-  block_height: number;
-  /** Exec mode of the updates. */
-
-  exec_mode: number;
 }
 /**
  * StreamUpdate is an update that will be pushed through the
@@ -305,6 +287,12 @@ export interface StreamOrderbookUpdatesResponseSDKType {
 export interface StreamUpdate {
   orderbookUpdate?: StreamOrderbookUpdate;
   orderFill?: StreamOrderbookFill;
+  /** Block height of the update. */
+
+  blockHeight: number;
+  /** Exec mode of the update. */
+
+  execMode: number;
 }
 /**
  * StreamUpdate is an update that will be pushed through the
@@ -314,6 +302,12 @@ export interface StreamUpdate {
 export interface StreamUpdateSDKType {
   orderbook_update?: StreamOrderbookUpdateSDKType;
   order_fill?: StreamOrderbookFillSDKType;
+  /** Block height of the update. */
+
+  block_height: number;
+  /** Exec mode of the update. */
+
+  exec_mode: number;
 }
 /**
  * StreamOrderbookUpdate provides information on an orderbook update. Used in
@@ -328,8 +322,8 @@ export interface StreamOrderbookUpdate {
   updates: OffChainUpdateV1[];
   /**
    * Snapshot indicates if the response is from a snapshot of the orderbook.
-   * This is true for the initial response and false for all subsequent updates.
-   * Note that if the snapshot is true, then all previous entries should be
+   * All updates should be ignored until snapshot is recieved.
+   * If the snapshot is true, then all previous entries should be
    * discarded and the orderbook should be resynced.
    */
 
@@ -348,8 +342,8 @@ export interface StreamOrderbookUpdateSDKType {
   updates: OffChainUpdateV1SDKType[];
   /**
    * Snapshot indicates if the response is from a snapshot of the orderbook.
-   * This is true for the initial response and false for all subsequent updates.
-   * Note that if the snapshot is true, then all previous entries should be
+   * All updates should be ignored until snapshot is recieved.
+   * If the snapshot is true, then all previous entries should be
    * discarded and the orderbook should be resynced.
    */
 
@@ -363,7 +357,7 @@ export interface StreamOrderbookUpdateSDKType {
 export interface StreamOrderbookFill {
   /**
    * Clob match. Provides information on which orders were matched
-   * and the type of order. Fill amounts here are relative.
+   * and the type of order.
    */
   clobMatch?: ClobMatch;
   /**
@@ -384,7 +378,7 @@ export interface StreamOrderbookFill {
 export interface StreamOrderbookFillSDKType {
   /**
    * Clob match. Provides information on which orders were matched
-   * and the type of order. Fill amounts here are relative.
+   * and the type of order.
    */
   clob_match?: ClobMatchSDKType;
   /**
@@ -1159,9 +1153,7 @@ export const StreamOrderbookUpdatesRequest = {
 
 function createBaseStreamOrderbookUpdatesResponse(): StreamOrderbookUpdatesResponse {
   return {
-    updates: [],
-    blockHeight: 0,
-    execMode: 0
+    updates: []
   };
 }
 
@@ -1169,14 +1161,6 @@ export const StreamOrderbookUpdatesResponse = {
   encode(message: StreamOrderbookUpdatesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.updates) {
       StreamUpdate.encode(v!, writer.uint32(10).fork()).ldelim();
-    }
-
-    if (message.blockHeight !== 0) {
-      writer.uint32(16).uint32(message.blockHeight);
-    }
-
-    if (message.execMode !== 0) {
-      writer.uint32(24).uint32(message.execMode);
     }
 
     return writer;
@@ -1195,14 +1179,6 @@ export const StreamOrderbookUpdatesResponse = {
           message.updates.push(StreamUpdate.decode(reader, reader.uint32()));
           break;
 
-        case 2:
-          message.blockHeight = reader.uint32();
-          break;
-
-        case 3:
-          message.execMode = reader.uint32();
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -1215,8 +1191,6 @@ export const StreamOrderbookUpdatesResponse = {
   fromPartial(object: DeepPartial<StreamOrderbookUpdatesResponse>): StreamOrderbookUpdatesResponse {
     const message = createBaseStreamOrderbookUpdatesResponse();
     message.updates = object.updates?.map(e => StreamUpdate.fromPartial(e)) || [];
-    message.blockHeight = object.blockHeight ?? 0;
-    message.execMode = object.execMode ?? 0;
     return message;
   }
 
@@ -1225,7 +1199,9 @@ export const StreamOrderbookUpdatesResponse = {
 function createBaseStreamUpdate(): StreamUpdate {
   return {
     orderbookUpdate: undefined,
-    orderFill: undefined
+    orderFill: undefined,
+    blockHeight: 0,
+    execMode: 0
   };
 }
 
@@ -1237,6 +1213,14 @@ export const StreamUpdate = {
 
     if (message.orderFill !== undefined) {
       StreamOrderbookFill.encode(message.orderFill, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.blockHeight !== 0) {
+      writer.uint32(24).uint32(message.blockHeight);
+    }
+
+    if (message.execMode !== 0) {
+      writer.uint32(32).uint32(message.execMode);
     }
 
     return writer;
@@ -1259,6 +1243,14 @@ export const StreamUpdate = {
           message.orderFill = StreamOrderbookFill.decode(reader, reader.uint32());
           break;
 
+        case 3:
+          message.blockHeight = reader.uint32();
+          break;
+
+        case 4:
+          message.execMode = reader.uint32();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -1272,6 +1264,8 @@ export const StreamUpdate = {
     const message = createBaseStreamUpdate();
     message.orderbookUpdate = object.orderbookUpdate !== undefined && object.orderbookUpdate !== null ? StreamOrderbookUpdate.fromPartial(object.orderbookUpdate) : undefined;
     message.orderFill = object.orderFill !== undefined && object.orderFill !== null ? StreamOrderbookFill.fromPartial(object.orderFill) : undefined;
+    message.blockHeight = object.blockHeight ?? 0;
+    message.execMode = object.execMode ?? 0;
     return message;
   }
 

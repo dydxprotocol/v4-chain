@@ -62,10 +62,7 @@ const ORDER_TYPE_TO_CONDITION_TYPE_MAP: Record<OrderType, IndexerOrder_Condition
 
   // TODO(IND-356): Remove irrelevant order types
   // Unused order types
-  [OrderType.HARD_TRADE]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
-  [OrderType.FAILED_HARD_TRADE]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   [OrderType.MARKET]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
-  [OrderType.TRANSFER_PLACEHOLDER]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   [OrderType.TRAILING_STOP]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
 };
 

@@ -47,15 +47,6 @@ type PerpetualsKeeper interface {
 		bigNetCollateralQuoteQuantums *big.Int,
 		err error,
 	)
-	GetMarginRequirements(
-		ctx sdk.Context,
-		id uint32,
-		bigQuantums *big.Int,
-	) (
-		bigInitialMarginQuoteQuantums *big.Int,
-		bigMaintenanceMarginQuoteQuantums *big.Int,
-		err error,
-	)
 	GetAddPremiumVotes(
 		ctx sdk.Context,
 	) (

@@ -47,6 +47,7 @@ export class ConditionalOrderPlacementHandler extends
       orders: [
         generateOrderSubaccountMessage(conditionalOrder, perpetualMarket.ticker),
       ],
+      blockHeight: this.block.height.toString(),
     };
 
     return [
