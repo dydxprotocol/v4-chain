@@ -70,6 +70,13 @@ export class OrderReplaceHandler extends Handler {
 
     /* Remove old order */
     const removeOrderResult: RemoveOrderResult = await this.removeOldOrder(oldOrderId);
+    if (!removeOrderResult.removed) {
+      logger.info({
+        at: 'OrderReplaceHandler#handle',
+        message: 'Old order not found in cache',
+        oldOrderId,
+      });
+    }
 
     /* Place new order */
     const order: IndexerOrder = orderReplace.order!;
