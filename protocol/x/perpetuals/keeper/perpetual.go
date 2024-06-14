@@ -28,6 +28,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/funding"
+	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	gometrics "github.com/hashicorp/go-metrics"
@@ -817,31 +818,7 @@ func (k Keeper) GetNetNotional(
 		return new(big.Int), err
 	}
 
-	return GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums), nil
-}
-
-// GetNetNotionalInQuoteQuantums returns the net notional in quote quantums, which can be
-// represented by the following equation:
-//
-// `quantums / 10^baseAtomicResolution * marketPrice * 10^marketExponent * 10^quoteAtomicResolution`.
-// Note that longs are positive, and shorts are negative.
-//
-// Also note that this is a stateless function.
-func GetNetNotionalInQuoteQuantums(
-	perpetual types.Perpetual,
-	marketPrice pricestypes.MarketPrice,
-	bigQuantums *big.Int,
-) (
-	bigNetNotionalQuoteQuantums *big.Int,
-) {
-	bigQuoteQuantums := lib.BaseToQuoteQuantums(
-		bigQuantums,
-		perpetual.Params.AtomicResolution,
-		marketPrice.Price,
-		marketPrice.Exponent,
-	)
-
-	return bigQuoteQuantums
+	return perplib.GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums), nil
 }
 
 // GetNotionalInBaseQuantums returns the net notional in base quantums, which can be represented
@@ -897,114 +874,6 @@ func (k Keeper) GetNetCollateral(
 	return k.GetNetNotional(ctx, id, bigQuantums)
 }
 
-// GetMarginRequirements returns initial and maintenance margin requirements in quote quantums, given the position
-// size in base quantums.
-//
-// Margin requirements are a function of the absolute value of the open notional of the position as well as
-// the parameters of the relevant `LiquidityTier` of the perpetual.
-// Initial margin requirement is determined by multiplying `InitialMarginPpm` and `notionalValue`.
-// `notionalValue` is determined by multiplying the size of the position by the oracle price of the position.
-// Maintenance margin requirement is then simply a fraction (`maintenanceFractionPpm`) of initial margin requirement.
-//
-// Returns an error if a perpetual with `id`, `perpetual.Params.MarketId`, or
-// `perpetual.Params.LiquidityTier` does not exist.
-//
-// Note that this function is getting called very frequently; metrics in this function
-// should be sampled to reduce CPU time.
-func (k Keeper) GetMarginRequirements(
-	ctx sdk.Context,
-	id uint32,
-	bigQuantums *big.Int,
-) (
-	bigInitialMarginQuoteQuantums *big.Int,
-	bigMaintenanceMarginQuoteQuantums *big.Int,
-	err error,
-) {
-	if rand.Float64() < metrics.LatencyMetricSampleRate {
-		defer metrics.ModuleMeasureSinceWithLabels(
-			types.ModuleName,
-			[]string{metrics.GetMarginRequirements, metrics.Latency},
-			time.Now(),
-			[]gometrics.Label{
-				metrics.GetLabelForStringValue(
-					metrics.SampleRate,
-					fmt.Sprintf("%f", metrics.LatencyMetricSampleRate),
-				),
-			},
-		)
-	}
-
-	// Get perpetual and market price.
-	perpetual, marketPrice, err := k.GetPerpetualAndMarketPrice(ctx, id)
-	if err != nil {
-		return nil, nil, err
-	}
-	// Get perpetual's liquidity tier.
-	liquidityTier, err := k.GetLiquidityTier(ctx, perpetual.Params.LiquidityTier)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	bigInitialMarginQuoteQuantums,
-		bigMaintenanceMarginQuoteQuantums = GetMarginRequirementsInQuoteQuantums(
-		perpetual,
-		marketPrice,
-		liquidityTier,
-		bigQuantums,
-	)
-	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
-}
-
-// GetMarginRequirementsInQuoteQuantums returns initial and maintenance margin requirements
-// in quote quantums, given the position size in base quantums.
-//
-// Note that this is a stateless function.
-func GetMarginRequirementsInQuoteQuantums(
-	perpetual types.Perpetual,
-	marketPrice pricestypes.MarketPrice,
-	liquidityTier types.LiquidityTier,
-	bigQuantums *big.Int,
-) (
-	bigInitialMarginQuoteQuantums *big.Int,
-	bigMaintenanceMarginQuoteQuantums *big.Int,
-) {
-	// Always consider the magnitude of the position regardless of whether it is long/short.
-	bigAbsQuantums := new(big.Int).Set(bigQuantums).Abs(bigQuantums)
-
-	// Calculate the notional value of the position in quote quantums.
-	bigQuoteQuantums := lib.BaseToQuoteQuantums(
-		bigAbsQuantums,
-		perpetual.Params.AtomicResolution,
-		marketPrice.Price,
-		marketPrice.Exponent,
-	)
-	// Calculate the perpetual's open interest in quote quantums.
-	openInterestQuoteQuantums := lib.BaseToQuoteQuantums(
-		perpetual.OpenInterest.BigInt(), // OpenInterest is represented as base quantums.
-		perpetual.Params.AtomicResolution,
-		marketPrice.Price,
-		marketPrice.Exponent,
-	)
-
-	// Initial margin requirement quote quantums = size in quote quantums * initial margin PPM.
-	bigBaseInitialMarginQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(
-		bigQuoteQuantums,
-		big.NewInt(0), // pass in 0 as open interest to get base IMR.
-	)
-	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
-	bigMaintenanceMarginQuoteQuantums = lib.BigMulPpm(
-		bigBaseInitialMarginQuoteQuantums,
-		lib.BigU(liquidityTier.MaintenanceFractionPpm),
-		true,
-	)
-
-	bigInitialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantums(
-		bigQuoteQuantums,
-		openInterestQuoteQuantums, // pass in current OI to get scaled IMR.
-	)
-	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums
-}
-
 // GetSettlementPpm returns the net settlement amount ppm (in quote quantums) given
 // the perpetual Id and position size (in base quantums).
 // When handling rounding, always round positive settlement amount to zero, and
@@ -1031,41 +900,12 @@ func (k Keeper) GetSettlementPpm(
 		return big.NewInt(0), big.NewInt(0), err
 	}
 
-	bigNetSettlementPpm, newFundingIndex = GetSettlementPpmWithPerpetual(
+	bigNetSettlementPpm, newFundingIndex = perplib.GetSettlementPpmWithPerpetual(
 		perpetual,
 		quantums,
 		index,
 	)
 	return bigNetSettlementPpm, newFundingIndex, nil
-}
-
-// GetSettlementPpm returns the net settlement amount ppm (in quote quantums) given
-// the perpetual and position size (in base quantums).
-//
-// Note that this function is a stateless utility function.
-func GetSettlementPpmWithPerpetual(
-	perpetual types.Perpetual,
-	quantums *big.Int,
-	index *big.Int,
-) (
-	bigNetSettlementPpm *big.Int,
-	newFundingIndex *big.Int,
-) {
-	indexDelta := new(big.Int).Sub(perpetual.FundingIndex.BigInt(), index)
-
-	// if indexDelta is zero, then net settlement is zero.
-	if indexDelta.Sign() == 0 {
-		return big.NewInt(0), perpetual.FundingIndex.BigInt()
-	}
-
-	bigNetSettlementPpm = new(big.Int).Mul(indexDelta, quantums)
-
-	// `bigNetSettlementPpm` carries sign. `indexDelta` is the increase in `fundingIndex`, so if
-	// the position is long (positive), the net settlement should be short (negative), and vice versa.
-	// Thus, always negate `bigNetSettlementPpm` here.
-	bigNetSettlementPpm = bigNetSettlementPpm.Neg(bigNetSettlementPpm)
-
-	return bigNetSettlementPpm, perpetual.FundingIndex.BigInt()
 }
 
 // GetPremiumSamples reads premium samples from the current `funding-tick` epoch,
@@ -1344,6 +1184,32 @@ func (k Keeper) GetPerpetualAndMarketPrice(
 	}
 
 	return perpetual, marketPrice, nil
+}
+
+// GetPerpetualAndMarketPriceAndLiquidityTier retrieves a Perpetual by its id, its corresponding MarketPrice,
+// and its corresponding LiquidityTier.
+func (k Keeper) GetPerpetualAndMarketPriceAndLiquidityTier(
+	ctx sdk.Context,
+	perpetualId uint32,
+) (
+	types.Perpetual,
+	pricestypes.MarketPrice,
+	types.LiquidityTier,
+	error,
+) {
+	perpetual, err := k.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return perpetual, pricestypes.MarketPrice{}, types.LiquidityTier{}, err
+	}
+	marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perpetual.Params.MarketId)
+	if err != nil {
+		return perpetual, marketPrice, types.LiquidityTier{}, err
+	}
+	liquidityTier, err := k.GetLiquidityTier(ctx, perpetual.Params.LiquidityTier)
+	if err != nil {
+		return perpetual, marketPrice, liquidityTier, err
+	}
+	return perpetual, marketPrice, liquidityTier, nil
 }
 
 // Performs the following validation (stateful and stateless) on a `Perpetual`

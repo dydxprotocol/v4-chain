@@ -214,202 +214,6 @@ func TestReduceOnlyOrders(t *testing.T) {
 				},
 			},
 		},
-		"FOK Reduce only order fully matches short term order second block, maker order partially filled": {
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_100000USD,
-				constants.Alice_Num1_1BTC_Long_500_000USD,
-			},
-			ordersForFirstBlock: []clobtypes.Order{
-				testapp.MustScaleOrder(
-					constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20,
-					testapp.DefaultGenesis(),
-				),
-			},
-			ordersForSecondBlock: []clobtypes.Order{
-				testapp.MustScaleOrder(
-					constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_FOK_RO,
-					testapp.DefaultGenesis(),
-				),
-			},
-
-			// Crashing app checks have to be disabled because the FOK order will not match
-			// with an empty orderbook and fail to be placed.
-			crashingAppCheckTxNonDeterminismChecksDisabled: true,
-
-			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
-				constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20.OrderId:          true,
-				constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_FOK_RO.OrderId: false,
-			},
-			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
-				constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20.OrderId: 150,
-			},
-			expectedSubaccounts: []satypes.Subaccount{
-				{
-					Id: &constants.Carl_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(9_250_0825_000),
-						},
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(150),
-							FundingIndex: dtypes.NewInt(0),
-						},
-					},
-				},
-				{
-					Id: &constants.Alice_Num1,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(507_496_250_000),
-						},
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(99_999_850),
-							FundingIndex: dtypes.NewInt(0),
-						},
-					},
-				},
-			},
-		},
-		"FOK Reduce only order fully matches short term order same block, maker order partially filled": {
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_100000USD,
-				constants.Alice_Num1_1BTC_Long_500_000USD,
-			},
-			ordersForFirstBlock: []clobtypes.Order{
-				testapp.MustScaleOrder(
-					constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20,
-					testapp.DefaultGenesis(),
-				),
-				testapp.MustScaleOrder(
-					constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_FOK_RO,
-					testapp.DefaultGenesis(),
-				),
-			},
-			ordersForSecondBlock: []clobtypes.Order{},
-
-			// Crashing app checks don't need to be disabled since matches occur in same block.
-			crashingAppCheckTxNonDeterminismChecksDisabled: false,
-
-			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
-				constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20.OrderId:          true,
-				constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_FOK_RO.OrderId: false,
-			},
-			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
-				constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20.OrderId: 150,
-			},
-			expectedSubaccounts: []satypes.Subaccount{
-				{
-					Id: &constants.Carl_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(9_250_0825_000),
-						},
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(150),
-							FundingIndex: dtypes.NewInt(0),
-						},
-					},
-				},
-				{
-					Id: &constants.Alice_Num1,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(507_496_250_000),
-						},
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(99_999_850),
-							FundingIndex: dtypes.NewInt(0),
-						},
-					},
-				},
-			},
-		},
-		"Conditional FOK Reduce only order fully matches short term order same block, maker order partially filled": {
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_500000USD,
-				constants.Alice_Num1_1BTC_Long_500_000USD,
-			},
-			ordersForFirstBlock: []clobtypes.Order{
-				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_FOK_RO,
-				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price500000_GTB10,
-			},
-			ordersForSecondBlock: []clobtypes.Order{},
-
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_300_000),
-				},
-			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
-
-			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
-				2: {
-					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_FOK_RO.OrderId: true,
-				},
-				3: {
-					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_FOK_RO.OrderId: true,
-				},
-			},
-
-			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
-				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price500000_GTB10.OrderId:                                true,
-				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_FOK_RO.OrderId: false,
-			},
-			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
-				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price500000_GTB10.OrderId:                                50_000_000,
-				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_FOK_RO.OrderId: 50_000_000,
-			},
-			expectedSubaccounts: []satypes.Subaccount{
-				{
-					Id: &constants.Carl_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(250_027_500_000),
-						},
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(50_000_000),
-							FundingIndex: dtypes.NewInt(0),
-						},
-					},
-				},
-				{
-					Id: &constants.Alice_Num1,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(749_875_000_000),
-						},
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(50_000_000),
-							FundingIndex: dtypes.NewInt(0),
-						},
-					},
-				},
-			},
-		},
 		"Conditional IOC Reduce only order partially matches short term order same block, maker order fully filled": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_500000USD,
@@ -627,7 +431,7 @@ func TestReduceOnlyOrderFailure(t *testing.T) {
 		"Zero perpetual position subaccount position cannot place sell RO order": {
 			orders: []clobtypes.Order{
 				testapp.MustScaleOrder(
-					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
+					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC_RO,
 					testapp.DefaultGenesis(),
 				),
 			},
@@ -638,40 +442,12 @@ func TestReduceOnlyOrderFailure(t *testing.T) {
 		"Zero perpetual position subaccount position cannot place buy RO order": {
 			orders: []clobtypes.Order{
 				testapp.MustScaleOrder(
-					constants.Order_Alice_Num1_Id1_Clob1_Buy10_Price15_GTB20_FOK_RO,
+					constants.Order_Alice_Num1_Id1_Clob1_Buy10_Price15_GTB20_IOC_RO,
 					testapp.DefaultGenesis(),
 				),
 			},
 			errorMsg: []string{
 				clobtypes.ErrReduceOnlyWouldIncreasePositionSize.Error(),
-			},
-		},
-		"FOK Reduce only order is placed but does not match immediately and is cancelled.": {
-			subaccounts: []satypes.Subaccount{
-				constants.Alice_Num1_1BTC_Short_100_000USD,
-			},
-			orders: []clobtypes.Order{
-				testapp.MustScaleOrder(
-					constants.Order_Alice_Num1_Id1_Clob0_Buy10_Price15_GTB20_FOK_RO,
-					testapp.DefaultGenesis(),
-				),
-			},
-			errorMsg: []string{
-				clobtypes.ErrFokOrderCouldNotBeFullyFilled.Error(),
-			},
-		},
-		"Conditional FOK Reduce only order is placed successfully.": {
-			subaccounts: []satypes.Subaccount{
-				constants.Alice_Num1_1BTC_Short_100_000USD,
-			},
-			orders: []clobtypes.Order{
-				testapp.MustScaleOrder(
-					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO,
-					testapp.DefaultGenesis(),
-				),
-			},
-			errorMsg: []string{
-				"",
 			},
 		},
 		"Regular Reduce only order fails because disabled": {

@@ -7,7 +7,7 @@ set -eo pipefail
 source "./genesis.sh"
 
 CHAIN_ID="localdydxprotocol"
-PREUPGRADE_VERSION="v5.0.0"
+PREUPGRADE_VERSION="v5.0.2"
 
 # Define mnemonics for all validators.
 MNEMONICS=(

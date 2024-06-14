@@ -51,7 +51,6 @@ func (k Keeper) HandleMsgPlaceOrder(
 		log.Callback, lib.TxMode(ctx),
 		log.BlockHeight, ctx.BlockHeight(),
 		log.Handler, log.PlaceOrder,
-		log.Msg, msg,
 	)
 
 	if !isInternalOrder {

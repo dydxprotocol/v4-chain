@@ -17,6 +17,7 @@ import {
   IndexerSubaccountId,
   IndexerOrder_ConditionType,
   OrderRemovalReason,
+  OrderReplaceV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 
@@ -24,16 +25,25 @@ export type OffChainUpdateOrderPlaceUpdateMessage = {
   orderUpdate: undefined,
   orderRemove: undefined,
   orderPlace: OrderPlaceV1,
+  orderReplace: undefined
 };
 export type OffChainUpdateOrderRemoveUpdateMessage = {
   orderUpdate: undefined,
   orderRemove: OrderRemoveV1,
   orderPlace: undefined,
+  orderReplace: undefined
 };
 export type OffChainUpdateOrderUpdateUpdateMessage = {
   orderUpdate: OrderUpdateV1,
   orderRemove: undefined,
   orderPlace: undefined,
+  orderReplace: undefined
+};
+export type OffChainUpdateOrderReplaceUpdateMessage = {
+  orderUpdate: undefined,
+  orderRemove: undefined,
+  orderPlace: undefined,
+  orderReplace: OrderReplaceV1,
 };
 
 export const defaultSubaccountId: IndexerSubaccountId = {
@@ -58,6 +68,18 @@ export const defaultOrderIdConditional: IndexerOrderId = {
   clobPairId: parseInt(testConstants.defaultPerpetualMarket.clobPairId, 10),
   orderFlags: ORDER_FLAG_CONDITIONAL,
 };
+export const defaultReplacementOrderId: IndexerOrderId = {
+  subaccountId: defaultSubaccountId,
+  clientId: 4,
+  clobPairId: parseInt(testConstants.defaultPerpetualMarket.clobPairId, 10),
+  orderFlags: ORDER_FLAG_SHORT_TERM,
+};
+export const defaultReplacementOrderIdGTBT: IndexerOrderId = {
+  subaccountId: defaultSubaccountId,
+  clientId: 5,
+  clobPairId: parseInt(testConstants.defaultPerpetualMarket.clobPairId, 10),
+  orderFlags: ORDER_FLAG_LONG_TERM,
+};
 
 export const defaultSubaccountUuid: string = SubaccountTable.uuid(
   defaultSubaccountId.owner,
@@ -79,10 +101,22 @@ export const defaultOrder: IndexerOrder = {
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   conditionalOrderTriggerSubticks: Long.fromValue(0, true),
 };
+export const defaultReplacementOrder: IndexerOrder = {
+  ...defaultOrder,
+  orderId: defaultReplacementOrderId,
+  quantums: Long.fromValue(1_500_000, true),
+  goodTilBlock: 1160,
+};
 export const defaultOrderGoodTilBlockTime: IndexerOrder = {
   ...defaultOrder,
   orderId: defaultOrderIdGoodTilBlockTime,
   goodTilBlockTime: 1_200_000_000,
+  goodTilBlock: undefined,
+};
+export const defaultReplacementOrderGTBT: IndexerOrder = {
+  ...defaultOrder,
+  orderId: defaultReplacementOrderIdGTBT,
+  goodTilBlockTime: 1_300_000_000,
   goodTilBlock: undefined,
 };
 export const defaultConditionalOrder: IndexerOrder = {
@@ -106,6 +140,12 @@ export const defaultOrderUuidGoodTilBlockTime: string = OrderTable.orderIdToUuid
 );
 export const defaultOrderUuidConditional: string = OrderTable.orderIdToUuid(
   defaultOrderIdConditional,
+);
+export const defaultReplacementOrderUuid: string = OrderTable.orderIdToUuid(
+  defaultReplacementOrderId,
+);
+export const defaultReplacementOrderUuidGTBT: string = OrderTable.orderIdToUuid(
+  defaultReplacementOrderIdGTBT,
 );
 
 export const defaultPrice = protocolTranslations.subticksToPrice(
@@ -150,6 +190,7 @@ export const orderPlace: OffChainUpdateOrderPlaceUpdateMessage = {
     order: defaultOrder,
     placementStatus: OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
   },
+  orderReplace: undefined,
 };
 export const orderRemove: OffChainUpdateOrderRemoveUpdateMessage = {
   orderPlace: undefined,
@@ -159,6 +200,7 @@ export const orderRemove: OffChainUpdateOrderRemoveUpdateMessage = {
     reason: OrderRemovalReason.ORDER_REMOVAL_REASON_INTERNAL_ERROR,
     removalStatus: OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
   },
+  orderReplace: undefined,
 };
 export const orderUpdate: OffChainUpdateOrderUpdateUpdateMessage = {
   orderPlace: undefined,
@@ -166,6 +208,17 @@ export const orderUpdate: OffChainUpdateOrderUpdateUpdateMessage = {
   orderUpdate: {
     orderId: defaultOrderId,
     totalFilledQuantums: Long.fromValue(250_500, true),
+  },
+  orderReplace: undefined,
+};
+export const orderReplace: OffChainUpdateOrderReplaceUpdateMessage = {
+  orderPlace: undefined,
+  orderRemove: undefined,
+  orderUpdate: undefined,
+  orderReplace: {
+    oldOrderId: defaultOrderId,
+    order: defaultOrder,
+    placementStatus: OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
   },
 };
 

@@ -184,14 +184,27 @@ describe('PnlTicks store', () => {
       }),
     ]);
 
-    const latestBlocktime: string = await PnlTicksTable.findLatestProcessedBlocktime();
+    const {
+      maxBlockTime, count,
+    }: {
+      maxBlockTime: string,
+      count: number
+    } = await PnlTicksTable.findLatestProcessedBlocktimeAndCount();
 
-    expect(latestBlocktime).toEqual(blockTime);
+    expect(maxBlockTime).toEqual(blockTime);
+    expect(count).toEqual(2);
   });
 
   it('Successfully finds latest block time without any pnl ticks', async () => {
-    const latestBlocktime: string = await PnlTicksTable.findLatestProcessedBlocktime();
-    expect(latestBlocktime).toEqual(ZERO_TIME_ISO_8601);
+    const {
+      maxBlockTime, count,
+    }: {
+      maxBlockTime: string,
+      count: number
+    } = await PnlTicksTable.findLatestProcessedBlocktimeAndCount();
+
+    expect(maxBlockTime).toEqual(ZERO_TIME_ISO_8601);
+    expect(count).toEqual(0);
   });
 
   it('createMany PnlTicks, find most recent pnl ticks for each account', async () => {
