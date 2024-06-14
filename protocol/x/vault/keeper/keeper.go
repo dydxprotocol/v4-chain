@@ -18,7 +18,6 @@ type (
 		clobKeeper        types.ClobKeeper
 		perpetualsKeeper  types.PerpetualsKeeper
 		pricesKeeper      types.PricesKeeper
-		sendingKeeper     types.SendingKeeper
 		subaccountsKeeper types.SubaccountsKeeper
 		authorities       map[string]struct{}
 	}
@@ -30,7 +29,6 @@ func NewKeeper(
 	clobKeeper types.ClobKeeper,
 	perpetualsKeeper types.PerpetualsKeeper,
 	pricesKeeper types.PricesKeeper,
-	sendingKeeper types.SendingKeeper,
 	subaccountsKeeper types.SubaccountsKeeper,
 	authorities []string,
 ) *Keeper {
@@ -40,7 +38,6 @@ func NewKeeper(
 		clobKeeper:        clobKeeper,
 		perpetualsKeeper:  perpetualsKeeper,
 		pricesKeeper:      pricesKeeper,
-		sendingKeeper:     sendingKeeper,
 		subaccountsKeeper: subaccountsKeeper,
 		authorities:       lib.UniqueSliceToSet(authorities),
 	}

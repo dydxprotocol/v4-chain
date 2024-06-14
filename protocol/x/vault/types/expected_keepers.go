@@ -7,7 +7,6 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -49,13 +48,6 @@ type PricesKeeper interface {
 	) (pricestypes.MarketPrice, error)
 }
 
-type SendingKeeper interface {
-	ProcessTransfer(
-		ctx sdk.Context,
-		pendingTransfer *sendingtypes.Transfer,
-	) (err error)
-}
-
 type SubaccountsKeeper interface {
 	GetNetCollateralAndMarginRequirements(
 		ctx sdk.Context,
@@ -70,4 +62,11 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		id satypes.SubaccountId,
 	) satypes.Subaccount
+	TransferFundsFromSubaccountToSubaccount(
+		ctx sdk.Context,
+		senderSubaccountId satypes.SubaccountId,
+		recipientSubaccountId satypes.SubaccountId,
+		assetId uint32,
+		quantums *big.Int,
+	) (err error)
 }
