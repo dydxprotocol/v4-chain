@@ -154,7 +154,6 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 					),
 				)
 			}
-
 		}
 	}
 	return nil
