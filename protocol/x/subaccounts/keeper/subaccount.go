@@ -211,7 +211,7 @@ func (k Keeper) getRandomBytes(ctx sdk.Context, rand *rand.Rand) ([]byte, error)
 func (k Keeper) getSettledUpdates(
 	ctx sdk.Context,
 	updates []types.Update,
-	perpInfos map[uint32]types.PerpInfo,
+	perpInfos map[uint32]perptypes.PerpInfo,
 	requireUniqueSubaccount bool,
 ) (
 	settledUpdates []SettledUpdate,
@@ -443,7 +443,7 @@ func (k Keeper) CanUpdateSubaccounts(
 // Note that this is a stateless utility function.
 func GetSettledSubaccountWithPerpetuals(
 	subaccount types.Subaccount,
-	perpInfos map[uint32]types.PerpInfo,
+	perpInfos map[uint32]perptypes.PerpInfo,
 ) (
 	settledSubaccount types.Subaccount,
 	fundingPayments map[uint32]dtypes.SerializableInt,
@@ -550,7 +550,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	ctx sdk.Context,
 	settledUpdates []SettledUpdate,
 	updateType types.UpdateType,
-	perpInfos map[uint32]types.PerpInfo,
+	perpInfos map[uint32]perptypes.PerpInfo,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
@@ -642,13 +642,12 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 	// Temporily apply open interest delta to perpetuals, so IMF is calculated based on open interest after the update.
 	// `perpOpenInterestDeltas` is only present for `Match` update type.
-	existingValue := new(big.Int)
 	if perpOpenInterestDelta != nil {
 		perpInfo, ok := perpInfos[perpOpenInterestDelta.PerpetualId]
 		if !ok {
 			return false, nil, errorsmod.Wrapf(types.ErrPerpetualInfoDoesNotExist, "%d", perpOpenInterestDelta.PerpetualId)
 		}
-		existingValue.SetUint64(0)
+		existingValue := big.NewInt(0)
 		if !perpInfo.Perpetual.OpenInterest.IsNil() {
 			existingValue.Set(perpInfo.Perpetual.OpenInterest.BigInt())
 		}
@@ -878,7 +877,7 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	ctx sdk.Context,
 	settledUpdate SettledUpdate,
-	perpInfos map[uint32]types.PerpInfo,
+	perpInfos map[uint32]perptypes.PerpInfo,
 ) (
 	bigNetCollateral *big.Int,
 	bigInitialMargin *big.Int,
@@ -1025,7 +1024,7 @@ func (k Keeper) GetAllRelevantPerpetuals(
 	ctx sdk.Context,
 	updates []types.Update,
 ) (
-	map[uint32]types.PerpInfo,
+	map[uint32]perptypes.PerpInfo,
 	error,
 ) {
 	subaccountIds := make(map[types.SubaccountId]struct{})
@@ -1049,7 +1048,7 @@ func (k Keeper) GetAllRelevantPerpetuals(
 	}
 
 	// Get all perpetual information from state.
-	perpetuals := make(map[uint32]types.PerpInfo, len(perpIds))
+	perpetuals := make(map[uint32]perptypes.PerpInfo, len(perpIds))
 	for perpId := range perpIds {
 		perpetual,
 			price,
@@ -1058,7 +1057,7 @@ func (k Keeper) GetAllRelevantPerpetuals(
 		if err != nil {
 			return nil, err
 		}
-		perpetuals[perpId] = types.PerpInfo{
+		perpetuals[perpId] = perptypes.PerpInfo{
 			Perpetual:     perpetual,
 			Price:         price,
 			LiquidityTier: liquidityTier,

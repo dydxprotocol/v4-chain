@@ -6,6 +6,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -104,7 +105,7 @@ func getUpdatedPerpetualPositions(
 // For newly created positions, use `perpIdToFundingIndex` map to populate the `FundingIndex` field.
 func UpdatePerpetualPositions(
 	settledUpdates []SettledUpdate,
-	perpInfos map[uint32]types.PerpInfo,
+	perpInfos map[uint32]perptypes.PerpInfo,
 ) {
 	// Apply the updates.
 	for i, u := range settledUpdates {
@@ -134,8 +135,8 @@ func UpdatePerpetualPositions(
 				// Create the new position.
 				perpInfo, exists := perpInfos[pu.PerpetualId]
 				if !exists {
-					// Invariant: `perpInfos` contains all existing perpetauls,
-					// and perpetual position update must refer to an existing perpetual.
+					// Invariant: `perpInfos` should all relevant perpetuals, which includes all
+					// perpetuals that are updated.
 					panic(errorsmod.Wrapf(types.ErrPerpetualInfoDoesNotExist, "%d", pu.PerpetualId))
 				}
 				perpetualPosition := &types.PerpetualPosition{

@@ -107,7 +107,7 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 	liqFlags flags.LiquidationFlags,
 ) (
 	subaccounts []satypes.Subaccount,
-	perpInfos map[uint32]satypes.PerpInfo,
+	perpInfos map[uint32]perptypes.PerpInfo,
 	err error,
 ) {
 	defer telemetry.ModuleMeasureSince(
@@ -150,7 +150,7 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 		return l.Id
 	})
 
-	perpInfos = make(map[uint32]satypes.PerpInfo, len(perpetuals))
+	perpInfos = make(map[uint32]perptypes.PerpInfo, len(perpetuals))
 	for _, perp := range perpetuals {
 		price, ok := marketPricesMap[perp.Params.MarketId]
 		if !ok {
@@ -168,7 +168,7 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 				perp.Params.LiquidityTier,
 			)
 		}
-		perpInfos[perp.Params.Id] = satypes.PerpInfo{
+		perpInfos[perp.Params.Id] = perptypes.PerpInfo{
 			Perpetual:     perp,
 			Price:         price,
 			LiquidityTier: liquidityTier,
@@ -182,7 +182,7 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 // at least one open position and returns a list of unique and potentially liquidatable subaccount ids.
 func (c *Client) GetLiquidatableSubaccountIds(
 	subaccounts []satypes.Subaccount,
-	perpInfos map[uint32]satypes.PerpInfo,
+	perpInfos map[uint32]perptypes.PerpInfo,
 ) (
 	liquidatableSubaccountIds []satypes.SubaccountId,
 	negativeTncSubaccountIds []satypes.SubaccountId,
@@ -290,7 +290,7 @@ func (c *Client) GetSubaccountOpenPositionInfo(
 // is not yet implemented.
 func (c *Client) CheckSubaccountCollateralization(
 	unsettledSubaccount satypes.Subaccount,
-	perpInfos map[uint32]satypes.PerpInfo,
+	perpInfos map[uint32]perptypes.PerpInfo,
 ) (
 	isLiquidatable bool,
 	hasNegativeTnc bool,

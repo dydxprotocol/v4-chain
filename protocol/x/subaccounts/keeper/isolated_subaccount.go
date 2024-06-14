@@ -24,7 +24,7 @@ import (
 func (k Keeper) checkIsolatedSubaccountConstraints(
 	ctx sdk.Context,
 	settledUpdates []SettledUpdate,
-	perpInfos map[uint32]types.PerpInfo,
+	perpInfos map[uint32]perptypes.PerpInfo,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
@@ -60,7 +60,7 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 //     perpetuals or a combination of isolated and non-isolated perpetuals
 func isValidIsolatedPerpetualUpdates(
 	settledUpdate SettledUpdate,
-	perpInfos map[uint32]types.PerpInfo,
+	perpInfos map[uint32]perptypes.PerpInfo,
 ) (types.UpdateResult, error) {
 	// If there are no perpetual updates, then this update does not violate constraints for isolated
 	// markets.
@@ -142,7 +142,7 @@ func isValidIsolatedPerpetualUpdates(
 // so all the updates must have been applied already to the subaccount.
 func GetIsolatedPerpetualStateTransition(
 	settledUpdateWithUpdatedSubaccount SettledUpdate,
-	perpInfos map[uint32]types.PerpInfo,
+	perpInfos map[uint32]perptypes.PerpInfo,
 ) (*types.IsolatedPerpetualPositionStateTransition, error) {
 	// This subaccount needs to have had the updates in the `settledUpdate` already applied to it.
 	updatedSubaccount := settledUpdateWithUpdatedSubaccount.SettledSubaccount
@@ -318,7 +318,7 @@ func (k *Keeper) transferCollateralForIsolatedPerpetual(
 func (k *Keeper) computeAndExecuteCollateralTransfer(
 	ctx sdk.Context,
 	settledUpdateWithUpdatedSubaccount SettledUpdate,
-	perpInfos map[uint32]types.PerpInfo,
+	perpInfos map[uint32]perptypes.PerpInfo,
 ) error {
 	// The subaccount in `settledUpdateWithUpdatedSubaccount` already has the perpetual updates
 	// and asset updates applied to it.
