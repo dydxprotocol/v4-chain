@@ -17,9 +17,13 @@ export class Wss {
   constructor() {
     this.started = false;
     this.closed = false;
-    this.wss = new WebSocket.Server({
+
+    const serverOptions: WebSocket.ServerOptions = {
       port: config.WS_PORT,
-    });
+      allowSynchronousEvents: true,
+      autoPong: true,
+    };
+    this.wss = new WebSocket.Server(serverOptions);
   }
 
   public async start(): Promise<void> {

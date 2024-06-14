@@ -16,6 +16,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -455,51 +456,36 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 		)
 	}
 
+	perpetual,
+		marketPrice,
+		liquidityTier,
+		err := k.perpetualsKeeper.
+		GetPerpetualAndMarketPriceAndLiquidityTier(ctx, perpetualId)
+	if err != nil {
+		return nil, err
+	}
+
 	// `DNNV = PNNVAD - PNNV`, where `PNNVAD` is the perpetual's net notional
 	// with a position size of `PS + deltaQuantums`.
 	// Note that we are intentionally not calculating `DNNV` from `deltaQuantums`
 	// directly to avoid rounding errors.
-	pnnvBig, err := k.perpetualsKeeper.GetNetNotional(
-		ctx,
-		perpetualId,
+	pnnvBig, _, pmmrBig := perplib.GetNetCollateralAndMarginRequirements(
+		perpetual,
+		marketPrice,
+		liquidityTier,
 		psBig,
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	pnnvadBig, err := k.perpetualsKeeper.GetNetNotional(
-		ctx,
-		perpetualId,
+	pnnvadBig, _, pmmradBig := perplib.GetNetCollateralAndMarginRequirements(
+		perpetual,
+		marketPrice,
+		liquidityTier,
 		new(big.Int).Add(psBig, deltaQuantums),
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	dnnvBig := new(big.Int).Sub(pnnvadBig, pnnvBig)
-
 	// `DMMR = PMMRAD - PMMR`, where `PMMRAD` is the perpetual's maintenance margin requirement
 	// with a position size of `PS + deltaQuantums`.
 	// Note that we cannot directly calculate `DMMR` from `deltaQuantums` because the maintenance
 	// margin requirement function could be non-linear.
-	_, pmmrBig, err := k.perpetualsKeeper.GetMarginRequirements(ctx, perpetualId, psBig)
-	if err != nil {
-		return nil, err
-	}
-
-	_, pmmradBig, err := k.perpetualsKeeper.GetMarginRequirements(
-		ctx,
-		perpetualId,
-		new(big.Int).Add(
-			psBig,
-			deltaQuantums,
-		),
-	)
-	if err != nil {
-		return nil, err
-	}
-
+	dnnvBig := new(big.Int).Sub(pnnvadBig, pnnvBig)
 	dmmrBig := new(big.Int).Sub(pmmradBig, pmmrBig)
 	// `dmmrBig` should never be positive if `| PS | >= | PS + deltaQuantums |`. If it is, panic.
 	if dmmrBig.Sign() == 1 {
@@ -565,15 +551,20 @@ func (k Keeper) GetFillablePrice(
 		)
 	}
 
-	pnnvBig, err := k.perpetualsKeeper.GetNetCollateral(ctx, perpetualId, psBig)
+	perpetual,
+		marketPrice,
+		liquidityTier,
+		err := k.perpetualsKeeper.GetPerpetualAndMarketPriceAndLiquidityTier(ctx, perpetualId)
 	if err != nil {
 		return nil, err
 	}
 
-	_, pmmrBig, err := k.perpetualsKeeper.GetMarginRequirements(ctx, perpetualId, psBig)
-	if err != nil {
-		return nil, err
-	}
+	pnnvBig, _, pmmrBig := perplib.GetNetCollateralAndMarginRequirements(
+		perpetual,
+		marketPrice,
+		liquidityTier,
+		psBig,
+	)
 
 	tncBig,
 		_,

@@ -5,6 +5,7 @@ import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../src/lib/on-message';
 import { OrderPlaceHandler } from '../../src/handlers/order-place-handler';
 import { OrderRemoveHandler } from '../../src/handlers/order-remove-handler';
+import { OrderReplaceHandler } from '../../src/handlers/order-replace-handler';
 import { OrderUpdateHandler } from '../../src/handlers/order-update-handler';
 import { redisTestConstants } from '@dydxprotocol-indexer/redis';
 import { setTransactionHash } from '../helpers/helpers';
@@ -12,12 +13,14 @@ import { setTransactionHash } from '../helpers/helpers';
 jest.mock('../../src/handlers/order-place-handler');
 jest.mock('../../src/handlers/order-remove-handler');
 jest.mock('../../src/handlers/order-update-handler');
+jest.mock('../../src/handlers/order-replace-handler');
 
 describe('onMessage', () => {
   const handlerMocks: jest.Mock[] = [
     (OrderPlaceHandler as jest.Mock),
     (OrderRemoveHandler as jest.Mock),
     (OrderUpdateHandler as jest.Mock),
+    (OrderReplaceHandler as jest.Mock),
   ];
   const testTxhash: Buffer = Buffer.from('testTxhash');
   let handleUpdateMock: jest.Mock;
@@ -44,6 +47,7 @@ describe('onMessage', () => {
     ['orderPlace', redisTestConstants.orderPlace, (OrderPlaceHandler as jest.Mock)],
     ['orderRemove', redisTestConstants.orderRemove, (OrderRemoveHandler as jest.Mock)],
     ['orderUpdate', redisTestConstants.orderUpdate, (OrderUpdateHandler as jest.Mock)],
+    ['orderReplace', redisTestConstants.orderReplace, (OrderReplaceHandler as jest.Mock)],
   ])('processes updates with the correct handler: %s', async (
     messageType: string,
     updateMessage: any,
