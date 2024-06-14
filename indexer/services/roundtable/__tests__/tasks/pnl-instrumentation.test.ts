@@ -9,6 +9,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import runTask from '../../src/tasks/pnl-instrumentation';
 import { DateTime } from 'luxon';
+import config from '../../src/config';
 
 describe('pnl-instrumentation', () => {
   beforeAll(async () => {
@@ -49,9 +50,9 @@ describe('pnl-instrumentation', () => {
 
     await runTask();
 
-    expect(stats.gauge).toHaveBeenCalledWith('pnl_stale_subaccounts', 0);
-    expect(stats.gauge).toHaveBeenCalledWith('pnl_stale_subaccounts_with_prior_pnl', 0);
-    expect(stats.gauge).toHaveBeenCalledWith('pnl_stale_subaccounts_without_prior_pnl', 0);
+    expect(stats.gauge).toHaveBeenCalledWith(`${config.SERVICE_NAME}.pnl_stale_subaccounts`, 0);
+    expect(stats.gauge).toHaveBeenCalledWith(`${config.SERVICE_NAME}.pnl_stale_subaccounts_with_prior_pnl`, 0);
+    expect(stats.gauge).toHaveBeenCalledWith(`${config.SERVICE_NAME}.pnl_stale_subaccounts_without_prior_pnl`, 0);
     expect(logger.error).toHaveBeenCalledTimes(0);
   });
 
@@ -72,9 +73,9 @@ describe('pnl-instrumentation', () => {
 
     await runTask();
 
-    expect(stats.gauge).toHaveBeenCalledWith('pnl_stale_subaccounts', 2);
-    expect(stats.gauge).toHaveBeenCalledWith('pnl_stale_subaccounts_with_prior_pnl', 2);
-    expect(stats.gauge).toHaveBeenCalledWith('pnl_stale_subaccounts_without_prior_pnl', 0);
+    expect(stats.gauge).toHaveBeenCalledWith(`${config.SERVICE_NAME}.pnl_stale_subaccounts`, 2);
+    expect(stats.gauge).toHaveBeenCalledWith(`${config.SERVICE_NAME}.pnl_stale_subaccounts_with_prior_pnl`, 2);
+    expect(stats.gauge).toHaveBeenCalledWith(`${config.SERVICE_NAME}.pnl_stale_subaccounts_without_prior_pnl`, 0);
     expect(logger.error).toHaveBeenCalledWith({
       at: 'pnl-instrumentation#statPnl',
       message: 'Subaccount ids with stale PNL data',
@@ -103,9 +104,9 @@ describe('pnl-instrumentation', () => {
 
     await runTask();
 
-    expect(stats.gauge).toHaveBeenCalledWith('pnl_stale_subaccounts', 1);
-    expect(stats.gauge).toHaveBeenCalledWith('pnl_stale_subaccounts_with_prior_pnl', 0);
-    expect(stats.gauge).toHaveBeenCalledWith('pnl_stale_subaccounts_without_prior_pnl', 1);
+    expect(stats.gauge).toHaveBeenCalledWith(`${config.SERVICE_NAME}.pnl_stale_subaccounts`, 1);
+    expect(stats.gauge).toHaveBeenCalledWith(`${config.SERVICE_NAME}.pnl_stale_subaccounts_with_prior_pnl`, 0);
+    expect(stats.gauge).toHaveBeenCalledWith(`${config.SERVICE_NAME}.pnl_stale_subaccounts_without_prior_pnl`, 1);
     expect(logger.error).toHaveBeenCalledWith({
       at: 'pnl-instrumentation#statPnl',
       message: 'Subaccount ids with stale PNL data',
