@@ -76,6 +76,7 @@ export class OrderReplaceHandler extends Handler {
         message: 'Old order not found in cache',
         oldOrderId,
       });
+      stats.increment(`${config.SERVICE_NAME}.replace_order_handler.old_order_not_found_in_cache`, 1);
     }
 
     /* Place new order */

@@ -117,8 +117,7 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		)
 
 		// Send indexer order replace messages.
-		replacedOrder := ordersToCancel[i]
-		if replacedOrder == nil {
+		if i < len(ordersToCancel) {
 			k.GetIndexerEventManager().AddTxnEvent(
 				ctx,
 				indexerevents.SubtypeStatefulOrder,
@@ -130,17 +129,32 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 				),
 			)
 		} else {
-			k.GetIndexerEventManager().AddTxnEvent(
-				ctx,
-				indexerevents.SubtypeStatefulOrder,
-				indexerevents.StatefulOrderEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewLongTermOrderReplacementEvent(
-						replacedOrder.OrderId,
-						*order,
+			replacedOrder := ordersToCancel[i]
+			if replacedOrder == nil {
+				k.GetIndexerEventManager().AddTxnEvent(
+					ctx,
+					indexerevents.SubtypeStatefulOrder,
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewLongTermOrderPlacementEvent(
+							*order,
+						),
 					),
-				),
-			)
+				)
+			} else {
+				k.GetIndexerEventManager().AddTxnEvent(
+					ctx,
+					indexerevents.SubtypeStatefulOrder,
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewLongTermOrderReplacementEvent(
+							replacedOrder.OrderId,
+							*order,
+						),
+					),
+				)
+			}
+
 		}
 	}
 	return nil
