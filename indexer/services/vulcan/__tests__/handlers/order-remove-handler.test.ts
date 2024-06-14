@@ -853,6 +853,7 @@ describe('OrderRemoveHandler', () => {
             orderId: removedRedisOrder.order!.orderId!,
             totalFilledQuantums: removedRedisOrder.order!.quantums.add(Long.fromValue(100, true)),
           },
+          orderReplace: undefined,
         };
         await handleOrderUpdate(exceedsFilledUpdate);
 
@@ -1006,6 +1007,7 @@ describe('OrderRemoveHandler', () => {
         const fullyFilledUpdate: redisTestConstants.OffChainUpdateOrderUpdateUpdateMessage = {
           orderPlace: undefined,
           orderRemove: undefined,
+          orderReplace: undefined,
           orderUpdate: {
             orderId: removedRedisOrder.order!.orderId!,
             totalFilledQuantums: removedRedisOrder.order!.quantums,
@@ -1555,6 +1557,7 @@ describe('OrderRemoveHandler', () => {
       const exceedsFilledUpdate: redisTestConstants.OffChainUpdateOrderUpdateUpdateMessage = {
         orderPlace: undefined,
         orderRemove: undefined,
+        orderReplace: undefined,
         orderUpdate: {
           orderId: removedRedisOrder.order!.orderId!,
           totalFilledQuantums: defaultQuantums.add(Long.fromValue(100, true)),
