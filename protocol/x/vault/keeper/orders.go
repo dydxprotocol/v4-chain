@@ -116,8 +116,9 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 			metrics.GetLabelForBoolValue(metrics.Success, err == nil),
 		)
 
-		// Send indexer order replace messages.
-		if i < len(ordersToCancel) {
+		// Send indexer messages.
+		// If there are fewer orders to cancel than to place, send Order Placement event instead of Replacement
+		if i >= len(ordersToCancel) {
 			k.GetIndexerEventManager().AddTxnEvent(
 				ctx,
 				indexerevents.SubtypeStatefulOrder,
