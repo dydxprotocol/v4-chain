@@ -82,6 +82,11 @@ describe('addresses-controller#V4', () => {
           equity: getFixedRepresentation(159500),
           freeCollateral: getFixedRepresentation(152000),
           marginEnabled: true,
+<<<<<<< HEAD
+=======
+          updatedAtHeight: testConstants.defaultSubaccount.updatedAtHeight,
+          latestProcessedBlockHeight: latestHeight,
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
           openPerpetualPositions: {
             [testConstants.defaultPerpetualMarket.ticker]: {
               market: testConstants.defaultPerpetualMarket.ticker,
@@ -159,6 +164,11 @@ describe('addresses-controller#V4', () => {
           equity: getFixedRepresentation(10000),
           freeCollateral: getFixedRepresentation(10000),
           marginEnabled: true,
+<<<<<<< HEAD
+=======
+          updatedAtHeight: testConstants.defaultSubaccount.updatedAtHeight,
+          latestProcessedBlockHeight: latestHeight,
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
           openPerpetualPositions: {},
           assetPositions: {
             [testConstants.defaultAsset.symbol]: {
@@ -243,6 +253,11 @@ describe('addresses-controller#V4', () => {
             equity: getFixedRepresentation(159500),
             freeCollateral: getFixedRepresentation(152000),
             marginEnabled: true,
+<<<<<<< HEAD
+=======
+            updatedAtHeight: testConstants.defaultSubaccount.updatedAtHeight,
+            latestProcessedBlockHeight: latestHeight,
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
             openPerpetualPositions: {
               [testConstants.defaultPerpetualMarket.ticker]: {
                 market: testConstants.defaultPerpetualMarket.ticker,
@@ -293,6 +308,11 @@ describe('addresses-controller#V4', () => {
             equity: getFixedRepresentation(0),
             freeCollateral: getFixedRepresentation(0),
             marginEnabled: true,
+<<<<<<< HEAD
+=======
+            updatedAtHeight: testConstants.defaultSubaccount2.updatedAtHeight,
+            latestProcessedBlockHeight: latestHeight,
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
             openPerpetualPositions: {},
             assetPositions: {},
           },
@@ -302,6 +322,11 @@ describe('addresses-controller#V4', () => {
             equity: getFixedRepresentation(0),
             freeCollateral: getFixedRepresentation(0),
             marginEnabled: true,
+<<<<<<< HEAD
+=======
+            updatedAtHeight: testConstants.isolatedSubaccount.updatedAtHeight,
+            latestProcessedBlockHeight: latestHeight,
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
             openPerpetualPositions: {},
             assetPositions: {},
           },
@@ -311,6 +336,11 @@ describe('addresses-controller#V4', () => {
             equity: getFixedRepresentation(0),
             freeCollateral: getFixedRepresentation(0),
             marginEnabled: true,
+<<<<<<< HEAD
+=======
+            updatedAtHeight: testConstants.isolatedSubaccount2.updatedAtHeight,
+            latestProcessedBlockHeight: latestHeight,
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
             openPerpetualPositions: {},
             assetPositions: {},
           },
@@ -348,6 +378,11 @@ describe('addresses-controller#V4', () => {
             equity: getFixedRepresentation(0),
             freeCollateral: getFixedRepresentation(0),
             marginEnabled: true,
+<<<<<<< HEAD
+=======
+            updatedAtHeight: testConstants.defaultSubaccount.updatedAtHeight,
+            latestProcessedBlockHeight: latestHeight,
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
             assetPositions: {},
             openPerpetualPositions: {},
           },
@@ -431,6 +466,11 @@ describe('addresses-controller#V4', () => {
               equity: getFixedRepresentation(159500),
               freeCollateral: getFixedRepresentation(152000),
               marginEnabled: true,
+<<<<<<< HEAD
+=======
+              updatedAtHeight: testConstants.defaultSubaccount.updatedAtHeight,
+              latestProcessedBlockHeight: latestHeight,
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
               openPerpetualPositions: {
                 [testConstants.defaultPerpetualMarket.ticker]: {
                   market: testConstants.defaultPerpetualMarket.ticker,
@@ -481,6 +521,11 @@ describe('addresses-controller#V4', () => {
               equity: getFixedRepresentation(5000),
               freeCollateral: getFixedRepresentation(5000),
               marginEnabled: true,
+<<<<<<< HEAD
+=======
+              updatedAtHeight: testConstants.isolatedSubaccount.updatedAtHeight,
+              latestProcessedBlockHeight: latestHeight,
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
               openPerpetualPositions: {},
               assetPositions: {
                 [testConstants.defaultAsset.symbol]: {
@@ -498,6 +543,11 @@ describe('addresses-controller#V4', () => {
               equity: getFixedRepresentation(0),
               freeCollateral: getFixedRepresentation(0),
               marginEnabled: true,
+<<<<<<< HEAD
+=======
+              updatedAtHeight: testConstants.isolatedSubaccount2.updatedAtHeight,
+              latestProcessedBlockHeight: latestHeight,
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
               openPerpetualPositions: {},
               assetPositions: {},
             },

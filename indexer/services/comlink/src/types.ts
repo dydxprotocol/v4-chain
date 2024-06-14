@@ -63,6 +63,11 @@ export interface SubaccountResponseObject {
   openPerpetualPositions: PerpetualPositionsMap,
   assetPositions: AssetPositionsMap,
   marginEnabled: boolean,
+<<<<<<< HEAD
+=======
+  updatedAtHeight: string,
+  latestProcessedBlockHeight: string,
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
 }
 
 export interface ParentSubaccountResponse {

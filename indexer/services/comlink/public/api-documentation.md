@@ -123,7 +123,13 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
           "subaccountNumber": 0
         }
       },
+<<<<<<< HEAD
       "marginEnabled": true
+=======
+      "marginEnabled": true,
+      "updatedAtHeight": "string",
+      "latestProcessedBlockHeight": "string"
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
     }
   ],
   "totalTradingRewards": "string"
@@ -251,7 +257,13 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber
       "subaccountNumber": 0
     }
   },
+<<<<<<< HEAD
   "marginEnabled": true
+=======
+  "marginEnabled": true,
+  "updatedAtHeight": "string",
+  "latestProcessedBlockHeight": "string"
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
 }
 ```
 
@@ -382,7 +394,13 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccount
           "subaccountNumber": 0
         }
       },
+<<<<<<< HEAD
       "marginEnabled": true
+=======
+      "marginEnabled": true,
+      "updatedAtHeight": "string",
+      "latestProcessedBlockHeight": "string"
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
     }
   ]
 }
@@ -2982,7 +3000,13 @@ This operation does not require authentication
       "subaccountNumber": 0
     }
   },
+<<<<<<< HEAD
   "marginEnabled": true
+=======
+  "marginEnabled": true,
+  "updatedAtHeight": "string",
+  "latestProcessedBlockHeight": "string"
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
 }
 
 ```
@@ -2998,6 +3022,11 @@ This operation does not require authentication
 |openPerpetualPositions|[PerpetualPositionsMap](#schemaperpetualpositionsmap)|true|none|none|
 |assetPositions|[AssetPositionsMap](#schemaassetpositionsmap)|true|none|none|
 |marginEnabled|boolean|true|none|none|
+<<<<<<< HEAD
+=======
+|updatedAtHeight|string|true|none|none|
+|latestProcessedBlockHeight|string|true|none|none|
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
 
 ## AddressResponse
 
@@ -3068,7 +3097,13 @@ This operation does not require authentication
           "subaccountNumber": 0
         }
       },
+<<<<<<< HEAD
       "marginEnabled": true
+=======
+      "marginEnabled": true,
+      "updatedAtHeight": "string",
+      "latestProcessedBlockHeight": "string"
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
     }
   ],
   "totalTradingRewards": "string"
@@ -3156,7 +3191,13 @@ This operation does not require authentication
           "subaccountNumber": 0
         }
       },
+<<<<<<< HEAD
       "marginEnabled": true
+=======
+      "marginEnabled": true,
+      "updatedAtHeight": "string",
+      "latestProcessedBlockHeight": "string"
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
     }
   ]
 }

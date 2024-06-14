@@ -311,12 +311,14 @@ export function subaccountToResponseObject({
   subaccount,
   equity,
   freeCollateral,
+  latestBlockHeight,
   openPerpetualPositions = {},
   assetPositions = {},
 }: {
   subaccount: SubaccountFromDatabase,
   equity: string,
   freeCollateral: string,
+  latestBlockHeight: string,
   openPerpetualPositions: PerpetualPositionsMap,
   assetPositions: AssetPositionsMap,
 }): SubaccountResponseObject {
@@ -329,6 +331,11 @@ export function subaccountToResponseObject({
     assetPositions,
     // TODO(DEC-687): Track `marginEnabled` for subaccounts.
     marginEnabled: true,
+<<<<<<< HEAD
+=======
+    updatedAtHeight: subaccount.updatedAtHeight,
+    latestProcessedBlockHeight: latestBlockHeight,
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
   };
 }
 

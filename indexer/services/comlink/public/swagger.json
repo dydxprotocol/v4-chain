@@ -167,6 +167,15 @@
           },
           "marginEnabled": {
             "type": "boolean"
+<<<<<<< HEAD
+=======
+          },
+          "updatedAtHeight": {
+            "type": "string"
+          },
+          "latestProcessedBlockHeight": {
+            "type": "string"
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
           }
         },
         "required": [
@@ -176,7 +185,13 @@
           "freeCollateral",
           "openPerpetualPositions",
           "assetPositions",
+<<<<<<< HEAD
           "marginEnabled"
+=======
+          "marginEnabled",
+          "updatedAtHeight",
+          "latestProcessedBlockHeight"
+>>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
         ],
         "type": "object",
         "additionalProperties": false
