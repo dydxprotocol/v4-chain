@@ -134,6 +134,7 @@ describe('order-replace-handler', () => {
             OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
       },
     };
+
     const replacementMessage: KafkaMessage = createKafkaMessage(
       Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(replacementUpdate).finish())),
     );

@@ -178,44 +178,5 @@ BEGIN
     ELSE
         RAISE EXCEPTION 'Unknown sub-event type %', event_data;
     END IF;
-
-    /* For order replacement, remove old order */
-    IF event_data->'orderReplacement' IS NOT NULL THEN
-        order_id = event_data->'orderReplacement'->'oldOrderId';
-        order_record."status" = 'CANCELED';
-
-        clob_pair_id = (order_id->'clobPairId')::bigint;
-        perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
-
-        subaccount_id = dydx_uuid_from_subaccount_id(order_id->'subaccountId');
-        SELECT * INTO subaccount_record FROM subaccounts WHERE "id" = subaccount_id;
-        IF NOT FOUND THEN
-            RAISE EXCEPTION 'Subaccount for order not found: %', order_;
-        END IF;
-
-        order_record."id" = dydx_uuid_from_order_id(order_id);
-        order_record."updatedAt" = block_time;
-        order_record."updatedAtHeight" = block_height;
-        UPDATE orders
-        SET
-            "status" = order_record."status",
-            "updatedAt" = order_record."updatedAt",
-            "updatedAtHeight" = order_record."updatedAtHeight"
-        WHERE "id" = order_record."id"
-        RETURNING * INTO order_record;
-
-        IF NOT FOUND THEN
-            RAISE EXCEPTION 'Unable to update order status with orderId: %', dydx_uuid_from_order_id(order_id);
-        END IF;
-
-        RETURN jsonb_build_object(
-                'order',
-                dydx_to_jsonb(order_record),
-                'perpetual_market',
-                dydx_to_jsonb(perpetual_market_record),
-                'subaccount',
-                dydx_to_jsonb(subaccount_record)
-            );
-    END IF;
 END;
 $$ LANGUAGE plpgsql;
