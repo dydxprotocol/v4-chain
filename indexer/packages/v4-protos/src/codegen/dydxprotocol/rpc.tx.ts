@@ -13,9 +13,7 @@ export const createRPCMsgClient = async ({
     perpetuals: new (await import("./perpetuals/tx.rpc.msg")).MsgClientImpl(rpc),
     prices: new (await import("./prices/tx.rpc.msg")).MsgClientImpl(rpc),
     ratelimit: new (await import("./ratelimit/tx.rpc.msg")).MsgClientImpl(rpc),
-    rewards: new (await import("./rewards/tx.rpc.msg")).MsgClientImpl(rpc),
     sending: new (await import("./sending/tx.rpc.msg")).MsgClientImpl(rpc),
-    stats: new (await import("./stats/tx.rpc.msg")).MsgClientImpl(rpc),
-    vest: new (await import("./vest/tx.rpc.msg")).MsgClientImpl(rpc)
+    stats: new (await import("./stats/tx.rpc.msg")).MsgClientImpl(rpc)
   }
 });

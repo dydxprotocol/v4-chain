@@ -19,11 +19,9 @@ export const createRPCQueryClient = async ({
       perpetuals: (await import("./perpetuals/query.rpc.Query")).createRpcQueryExtension(client),
       prices: (await import("./prices/query.rpc.Query")).createRpcQueryExtension(client),
       ratelimit: (await import("./ratelimit/query.rpc.Query")).createRpcQueryExtension(client),
-      rewards: (await import("./rewards/query.rpc.Query")).createRpcQueryExtension(client),
       sending: (await import("./sending/query.rpc.Query")).createRpcQueryExtension(client),
       stats: (await import("./stats/query.rpc.Query")).createRpcQueryExtension(client),
-      subaccounts: (await import("./subaccounts/query.rpc.Query")).createRpcQueryExtension(client),
-      vest: (await import("./vest/query.rpc.Query")).createRpcQueryExtension(client)
+      subaccounts: (await import("./subaccounts/query.rpc.Query")).createRpcQueryExtension(client)
     }
   };
 };
