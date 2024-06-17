@@ -12,8 +12,8 @@ message AssetPosition {
   uint32 asset_id = 1;
   // The absolute size of the position in base quantums.
   bytes quantums = 2 [
-    (gogoproto.customtype) =
-        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.customtype) = "github.com/StreamFinance-Protocol/stream-chain/"
+                             "protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
   // The `Index` (either `LongIndex` or `ShortIndex`) of the `Asset` the last

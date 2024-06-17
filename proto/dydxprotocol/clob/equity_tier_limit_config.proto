@@ -22,8 +22,8 @@ message EquityTierLimitConfiguration {
 message EquityTierLimit {
   // The total net collateral in USDC quote quantums of equity required.
   bytes usd_tnc_required = 1 [
-    (gogoproto.customtype) =
-        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.customtype) = "github.com/StreamFinance-Protocol/stream-chain/"
+                             "protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 

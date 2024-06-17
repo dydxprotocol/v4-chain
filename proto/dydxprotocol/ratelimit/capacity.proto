@@ -15,8 +15,8 @@ message DenomCapacity {
   // on the denom. This list has a 1:1 mapping to `limiter` list under
   // `LimitParams`.
   repeated bytes capacity_list = 2 [
-    (gogoproto.customtype) =
-        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.customtype) = "github.com/StreamFinance-Protocol/stream-chain/"
+                             "protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 }
@@ -25,8 +25,8 @@ message DenomCapacity {
 message LimiterCapacity {
   Limiter limiter = 1 [ (gogoproto.nullable) = false ];
   bytes capacity = 2 [
-    (gogoproto.customtype) =
-        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.customtype) = "github.com/StreamFinance-Protocol/stream-chain/"
+                             "protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 }

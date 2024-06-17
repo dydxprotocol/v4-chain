@@ -13,8 +13,8 @@ message Perpetual {
   // The current index determined by the cumulative all-time
   // history of the funding mechanism. Starts at zero.
   bytes funding_index = 2 [
-    (gogoproto.customtype) =
-        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.customtype) = "github.com/StreamFinance-Protocol/stream-chain/"
+                             "protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 }
