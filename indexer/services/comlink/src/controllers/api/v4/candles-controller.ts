@@ -26,10 +26,10 @@ class CandleController extends Controller {
   @Get('/perpetualMarkets/:ticker')
   async getCandles(
     @Path() ticker: string,
-    @Query() resolution: CandleResolution,
-    @Query() limit: number,
-    @Query() fromISO?: string,
-    @Query() toISO?: string,
+      @Query() resolution: CandleResolution,
+      @Query() limit: number,
+      @Query() fromISO?: string,
+      @Query() toISO?: string,
   ): Promise<CandleResponse> {
     const candles: CandleFromDatabase[] = await CandleTable.findAll(
       {
