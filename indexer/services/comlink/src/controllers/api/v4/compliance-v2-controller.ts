@@ -9,8 +9,11 @@ import {
   ComplianceStatus,
   ComplianceStatusFromDatabase,
   ComplianceStatusTable,
+<<<<<<< HEAD
   WalletFromDatabase,
   WalletTable,
+=======
+>>>>>>> ba2525de (Revert "[OTE-138] Deprecate screen endpoint (#1624)" (#1706))
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
@@ -31,9 +34,13 @@ import { getIpAddr } from '../../../lib/utils';
 import { CheckAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
+<<<<<<< HEAD
 import {
   ComplianceRequest, ComplianceV2Response, SetComplianceStatusRequest,
 } from '../../../types';
+=======
+import { ComplianceRequest, ComplianceV2Response, SetComplianceStatusRequest } from '../../../types';
+>>>>>>> ba2525de (Revert "[OTE-138] Deprecate screen endpoint (#1624)" (#1706))
 import { ComplianceControllerHelper } from './compliance-controller';
 
 const router: express.Router = express.Router();
