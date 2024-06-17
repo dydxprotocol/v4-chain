@@ -15,4 +15,7 @@ pub enum ContractError {
 
     #[error("Escrow not expired")]
     NotExpired {},
+
+    #[error("invalid dydx message")]
+    InvalidDydxMsg {},
 }
