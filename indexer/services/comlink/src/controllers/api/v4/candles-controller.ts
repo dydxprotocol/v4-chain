@@ -18,7 +18,7 @@ import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import { candleToResponseObject } from '../../../request-helpers/request-transformer';
 import { CandleRequest, CandleResponse } from '../../../types';
 
-const router = express.Router();
+const router: any = express.Router();
 const controllerName: string = 'candles-controller';
 
 @Route('candles')
@@ -26,10 +26,10 @@ class CandleController extends Controller {
   @Get('/perpetualMarkets/:ticker')
   async getCandles(
     @Path() ticker: string,
-      @Query() resolution: CandleResolution,
-      @Query() limit: number,
-      @Query() fromISO?: string,
-      @Query() toISO?: string,
+    @Query() resolution: CandleResolution,
+    @Query() limit: number,
+    @Query() fromISO?: string,
+    @Query() toISO?: string,
   ): Promise<CandleResponse> {
     const candles: CandleFromDatabase[] = await CandleTable.findAll(
       {
