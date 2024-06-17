@@ -17,6 +17,7 @@ import deleteZeroPriceLevelsTask from './tasks/delete-zero-price-levels';
 import marketUpdaterTask from './tasks/market-updater';
 import orderbookInstrumentationTask from './tasks/orderbook-instrumentation';
 import performComplianceStatusTransitionsTask from './tasks/perform-compliance-status-transitions';
+import pnlInstrumentationTask from './tasks/pnl-instrumentation';
 import removeExpiredOrdersTask from './tasks/remove-expired-orders';
 import removeOldOrderUpdatesTask from './tasks/remove-old-order-updates';
 import takeFastSyncSnapshotTask from './tasks/take-fast-sync-snapshot';
@@ -96,6 +97,14 @@ async function start(): Promise<void> {
       orderbookInstrumentationTask,
       'orderbook_instrumentation',
       config.LOOPS_INTERVAL_MS_ORDERBOOK_INSTRUMENTATION,
+    );
+  }
+
+  if (config.LOOPS_PNL_INSTRUMENTATION) {
+    startLoop(
+      pnlInstrumentationTask,
+      'pnl_instrumentation',
+      config.LOOPS_INTERVAL_MS_PNL_INSTRUMENTATION,
     );
   }
 
