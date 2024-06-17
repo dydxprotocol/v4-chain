@@ -59,6 +59,9 @@ func EndBlocker(
 	// Prune any fill amounts from state which are now past their `pruneableBlockHeight`.
 	keeper.PruneStateFillAmountsForShortTermOrders(ctx)
 
+	// Prune expired XOrders from state.
+	keeper.ExpireXOrders(ctx)
+
 	// Prune expired stateful orders completely from state.
 	expiredStatefulOrderIds := keeper.RemoveExpiredStatefulOrdersTimeSlices(ctx, ctx.BlockTime())
 	for _, orderId := range expiredStatefulOrderIds {
@@ -109,6 +112,10 @@ func EndBlocker(
 		lib.UniqueSliceToSet(processProposerMatchesEvents.GetPlacedStatefulCancellationOrderIds()),
 		lib.UniqueSliceToSet(expiredStatefulOrderIds),
 	)
+
+	// Trigger X Orders.
+	err := keeper.TriggerXOrders(ctx)
+	ctx.Logger().Error("TriggerXOrders", "err", err)
 
 	// Poll out all triggered conditional orders from `UntriggeredConditionalOrders` and update state.
 	triggeredConditionalOrderIds := keeper.MaybeTriggerConditionalOrders(ctx)

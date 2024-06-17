@@ -93,7 +93,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		validateMemo:             ante.NewValidateMemoDecorator(options.AccountKeeper),
 		validateBasic:            ante.NewValidateBasicDecorator(),
 		validateSigCount:         ante.NewValidateSigCountDecorator(options.AccountKeeper),
-		incrementSequence:        ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		sigVerification:          customante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		consumeTxSizeGas:         ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		deductFee: ante.NewDeductFeeDecorator(
@@ -127,7 +126,6 @@ type lockingAnteHandler struct {
 	validateMemo             ante.ValidateMemoDecorator
 	validateBasic            ante.ValidateBasicDecorator
 	validateSigCount         ante.ValidateSigCountDecorator
-	incrementSequence        ante.IncrementSequenceDecorator
 	sigVerification          customante.SigVerificationDecorator
 	consumeTxSizeGas         ante.ConsumeTxSizeGasDecorator
 	deductFee                ante.DeductFeeDecorator
@@ -218,16 +216,6 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	}
 	if ctx, err = h.sigVerification.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
-	}
-
-	var isShortTerm bool
-	if isShortTerm, err = clobante.IsShortTermClobMsgTx(ctx, tx); err != nil {
-		return ctx, err
-	}
-	if !isShortTerm {
-		if ctx, err = h.incrementSequence.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
-			return ctx, err
-		}
 	}
 
 	// We now acquire the global ante handler since the clob decorator is not thread safe and performs
@@ -375,9 +363,6 @@ func (h *lockingAnteHandler) otherMsgAnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		return ctx, err
 	}
 	if ctx, err = h.sigVerification.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
-		return ctx, err
-	}
-	if ctx, err = h.incrementSequence.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
 	}
 

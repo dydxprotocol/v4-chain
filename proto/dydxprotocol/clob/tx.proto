@@ -11,6 +11,7 @@ import "dydxprotocol/clob/matches.proto";
 import "dydxprotocol/clob/order.proto";
 import "dydxprotocol/clob/order_removals.proto";
 import "dydxprotocol/clob/liquidations_config.proto";
+import "dydxprotocol/clob/xorder.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 
 // this line is used by starport scaffolding # proto/tx/import
@@ -47,6 +48,8 @@ service Msg {
   // UpdateLiquidationsConfig updates the liquidations configuration in state.
   rpc UpdateLiquidationsConfig(MsgUpdateLiquidationsConfig)
       returns (MsgUpdateLiquidationsConfigResponse);
+
+  rpc XOperate(MsgXOperate) returns (MsgXOperateResponse);
 }
 
 // MsgCreateClobPair is a message used by x/gov for creating a new clob pair.
@@ -211,3 +214,20 @@ message MsgUpdateLiquidationsConfig {
 
 // MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig response type.
 message MsgUpdateLiquidationsConfigResponse {}
+
+message MsgXOperate {
+	fixed64 sid = 1;
+
+	// Cancel all orders for the given clob_id.
+	repeated uint32 cancel_alls = 2;
+
+	// Cancel orders by individual id.
+	repeated XIID cancels = 3
+		[ (gogoproto.nullable) = false ];
+
+	// Place orders.
+	repeated XPlaceOrder orders = 4
+		[ (gogoproto.nullable) = false ];
+}
+
+message MsgXOperateResponse {}

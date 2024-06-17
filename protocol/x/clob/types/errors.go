@@ -225,6 +225,11 @@ var (
 		48,
 		"This field has been deprecated",
 	)
+	ErrOcoIsSameAsOrder = errorsmod.Register(
+		ModuleName,
+		55,
+		"OCO order is the same as the order",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(

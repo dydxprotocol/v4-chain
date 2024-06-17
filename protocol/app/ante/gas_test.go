@@ -46,6 +46,10 @@ func TestValidateMsgType_FreeInfiniteGasDecorator(t *testing.T) {
 
 			expectFreeInfiniteGasMeter: true,
 		},
+		"yes freeInfiniteGasMeter: single msg, MsgXOperate": {
+			msgOne:                     constants.Msg_XOperate,
+			expectFreeInfiniteGasMeter: true,
+		},
 		"yes freeInfiniteGasMeter: single msg, MsgUpdateMarketPrices": {
 			msgOne: &pricestypes.MsgUpdateMarketPrices{}, // app-injected.
 

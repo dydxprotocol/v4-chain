@@ -183,6 +183,8 @@ var (
 		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse": {},
 		"/dydxprotocol.clob.MsgUpdateLiquidationsConfig":                   {},
 		"/dydxprotocol.clob.MsgUpdateLiquidationsConfigResponse":           {},
+		"/dydxprotocol.clob.MsgXOperate":                                   {},
+		"/dydxprotocol.clob.MsgXOperateResponse":                           {},
 
 		// delaymsg
 		"/dydxprotocol.delaymsg.MsgDelayMessage":         {},

@@ -222,6 +222,8 @@ var (
 		"/dydxprotocol.clob.MsgCancelOrderResponse": nil,
 		"/dydxprotocol.clob.MsgPlaceOrder":          &clob.MsgPlaceOrder{},
 		"/dydxprotocol.clob.MsgPlaceOrderResponse":  nil,
+		"/dydxprotocol.clob.MsgXOperate":            &clob.MsgXOperate{},
+		"/dydxprotocol.clob.MsgXOperateResponse":    nil,
 
 		// perpetuals
 

@@ -93,6 +93,11 @@ func (_m *ClobKeeper) BatchCancelShortTermOrder(ctx types.Context, msg *clobtype
 	return r0, r1, r2
 }
 
+// CancelAllOrders provides a mock function with given fields: ctx, sid, clobId
+func (_m *ClobKeeper) CancelAllOrders(ctx types.Context, sid uint64, clobId uint32) {
+	_m.Called(ctx, sid, clobId)
+}
+
 // CancelShortTermOrder provides a mock function with given fields: ctx, msg
 func (_m *ClobKeeper) CancelShortTermOrder(ctx types.Context, msg *clobtypes.MsgCancelOrder) error {
 	ret := _m.Called(ctx, msg)
@@ -1020,6 +1025,41 @@ func (_m *ClobKeeper) PlaceStatefulOrder(ctx types.Context, msg *clobtypes.MsgPl
 	return r0
 }
 
+// ProcessOrder provides a mock function with given fields: ctx, order, placeFlags
+func (_m *ClobKeeper) ProcessOrder(ctx types.Context, order clobtypes.XOrder, placeFlags uint32) (uint64, uint64, error) {
+	ret := _m.Called(ctx, order, placeFlags)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ProcessOrder")
+	}
+
+	var r0 uint64
+	var r1 uint64
+	var r2 error
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.XOrder, uint32) (uint64, uint64, error)); ok {
+		return rf(ctx, order, placeFlags)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.XOrder, uint32) uint64); ok {
+		r0 = rf(ctx, order, placeFlags)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.XOrder, uint32) uint64); ok {
+		r1 = rf(ctx, order, placeFlags)
+	} else {
+		r1 = ret.Get(1).(uint64)
+	}
+
+	if rf, ok := ret.Get(2).(func(types.Context, clobtypes.XOrder, uint32) error); ok {
+		r2 = rf(ctx, order, placeFlags)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // ProcessProposerOperations provides a mock function with given fields: ctx, operations
 func (_m *ClobKeeper) ProcessProposerOperations(ctx types.Context, operations []clobtypes.OperationRaw) error {
 	ret := _m.Called(ctx, operations)
@@ -1159,6 +1199,24 @@ func (_m *ClobKeeper) RemoveExpiredStatefulOrdersTimeSlices(ctx types.Context, b
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]clobtypes.OrderId)
 		}
+	}
+
+	return r0
+}
+
+// RemoveOrderById provides a mock function with given fields: ctx, uidBytes
+func (_m *ClobKeeper) RemoveOrderById(ctx types.Context, uidBytes []byte) bool {
+	ret := _m.Called(ctx, uidBytes)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveOrderById")
+	}
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(types.Context, []byte) bool); ok {
+		r0 = rf(ctx, uidBytes)
+	} else {
+		r0 = ret.Get(0).(bool)
 	}
 
 	return r0

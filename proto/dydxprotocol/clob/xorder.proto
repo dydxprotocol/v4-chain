@@ -1,0 +1,66 @@
+syntax = "proto3";
+package dydxprotocol.clob;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
+
+// Individual Order ID
+message XIID {
+	uint32 clob_id = 1;
+	fixed32 client_id = 2;
+}
+
+// Universal ID
+message XUID {
+	// SubaccountID
+	// account number (5 bytes) + subaccount nonce (3 bytes)
+	fixed64 sid = 1;
+	XIID iid = 2
+		[ (gogoproto.nullable) = false ];
+}
+
+message XOrder {
+	XUID uid = 1
+		[ (gogoproto.nullable) = false ];
+	XBase base = 2
+		[ (gogoproto.nullable) = false ];
+}
+
+message XBase {
+	uint64 subticks = 1;
+	uint64 quantums = 2;
+	uint32 flags = 3;
+	// bitmask 0000001: side
+	// 	0 = sell
+	//  1 = buy
+	// bitmask 0000110: time-in-force
+	// 	0 = gtc/gtt (default)
+	//  1 = post-only
+	//  2 = ioc
+	//  3 = ioc & reduce-only
+	// bitmask 0001000: stop_side
+	//  0 = stop_sell
+	//  1 = stop_buy
+	// bitmask 0110000: self-trade prevention
+	// 	0 = expire maker (default)
+	//  1 = expire taker
+	//  2 = expire both
+
+	optional uint64 stop_subticks = 4;
+	optional fixed32 good_til_time = 5;
+	optional fixed32 oco_client_id = 6;
+}
+
+message XPlaceOrder {
+	XIID iid = 1
+		[ (gogoproto.nullable) = false ];
+	XBase base = 2
+		[ (gogoproto.nullable) = false ];
+	uint32 place_flags = 3;
+	// bitmask 00000011: update type
+	//  0 = new-only
+	//  1 = upsert use new size
+	//  2 = +delta
+	//  3 = -delta
+}

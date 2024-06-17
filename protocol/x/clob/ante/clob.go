@@ -167,7 +167,7 @@ func IsSingleClobMsgTx(tx sdk.Tx) (bool, error) {
 
 	for _, msg := range msgs {
 		switch msg.(type) {
-		case *types.MsgCancelOrder, *types.MsgPlaceOrder, *types.MsgBatchCancel:
+		case *types.MsgCancelOrder, *types.MsgPlaceOrder, *types.MsgBatchCancel, *types.MsgXOperate:
 			hasMessage = true
 		}
 
@@ -185,55 +185,6 @@ func IsSingleClobMsgTx(tx sdk.Tx) (bool, error) {
 		return false, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"a transaction containing MsgCancelOrder or MsgPlaceOrder or MsgBatchCancel may not contain more than one message",
-		)
-	}
-
-	return true, nil
-}
-
-// IsShortTermClobMsgTx returns `true` if the supplied `tx` consist of a single clob message
-// (`MsgPlaceOrder` or `MsgCancelOrder` or `MsgBatchCancel`) which references a Short-Term Order.
-// If `msgs` consist of multiple clob messages, or a mix of on-chain and clob messages, an error is returned.
-func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
-	msgs := tx.GetMsgs()
-
-	var isShortTermOrder = false
-
-	for _, msg := range msgs {
-		switch msg := msg.(type) {
-		case *types.MsgCancelOrder:
-			{
-				if msg.OrderId.IsShortTermOrder() {
-					isShortTermOrder = true
-				}
-			}
-		case *types.MsgPlaceOrder:
-			{
-				if msg.Order.OrderId.IsShortTermOrder() {
-					isShortTermOrder = true
-				}
-			}
-		case *types.MsgBatchCancel:
-			{
-				// MsgBatchCancel processes only short term orders for now.
-				isShortTermOrder = true
-			}
-		}
-
-		if isShortTermOrder {
-			break
-		}
-	}
-
-	if !isShortTermOrder {
-		return false, nil
-	}
-
-	numMsgs := len(msgs)
-	if numMsgs > 1 {
-		return false, errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"a transaction containing MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
 		)
 	}
 

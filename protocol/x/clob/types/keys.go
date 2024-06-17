@@ -115,3 +115,12 @@ const (
 	// This is meant to be used for improved conditional order triggering.
 	MaxTradePricePrefix = "MaxTrade:"
 )
+
+// X Store
+const (
+	XTimestampKeyPrefix = "XT:"
+	XOrderKeyPrefix     = "XO:"
+	XStopKeyPrefix      = "XS:"
+	XRestingKeyPrefix   = "XR:"
+	XExpiryKeyPrefix    = "XE:"
+)

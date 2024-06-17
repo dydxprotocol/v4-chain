@@ -159,4 +159,17 @@ type ClobKeeper interface {
 	)
 	MigratePruneableOrders(ctx sdk.Context)
 	GetAllStatefulOrders(ctx sdk.Context) []Order
+
+	// XOrders
+	CancelAllOrders(ctx sdk.Context, sid uint64, clobId uint32)
+	RemoveOrderById(ctx sdk.Context, uidBytes []byte) bool
+	ProcessOrder(
+		ctx sdk.Context,
+		order XOrder,
+		placeFlags uint32,
+	) (
+		sizeSum uint64,
+		sizeRem uint64,
+		err error,
+	)
 }

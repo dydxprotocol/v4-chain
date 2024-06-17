@@ -147,6 +147,7 @@ type StatsKeeper interface {
 // AccountKeeper defines the expected account keeper used for simulations.
 type AccountKeeper interface {
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	GetAccountByNumber(ctx context.Context, number uint64) (sdk.AccAddress, error)
 }
 
 // BankKeeper defines the expected bank keeper used for simulations.

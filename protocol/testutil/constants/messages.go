@@ -75,6 +75,15 @@ var (
 	Msg_PlaceOrder_Conditional = &clobtypes.MsgPlaceOrder{
 		Order: ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 	}
+
+	Msg_XOperate = &clobtypes.MsgXOperate{
+		Sid:        1,
+		CancelAlls: []uint32{0},
+		Cancels:    []clobtypes.XIID{{ClobId: 0, ClientId: 0}},
+		Orders:     []clobtypes.XPlaceOrder{},
+	}
+	Msg_XOperate_TxBytes []byte
+
 	Msg_Transfer = &sendingtypes.MsgCreateTransfer{
 		Transfer: &sendingtypes.Transfer{
 			Sender:    Carl_Num0,
