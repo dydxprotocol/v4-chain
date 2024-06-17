@@ -265,6 +265,26 @@ export interface CandleMessageSDKType {
 
   version: string;
 }
+export interface BlockHeightMessage {
+  /** Block height where the contents occur. */
+  blockHeight: string;
+  /** ISO formatted time of the block height. */
+
+  time: string;
+  /** Version of the websocket message. */
+
+  version: string;
+}
+export interface BlockHeightMessageSDKType {
+  /** Block height where the contents occur. */
+  block_height: string;
+  /** ISO formatted time of the block height. */
+
+  time: string;
+  /** Version of the websocket message. */
+
+  version: string;
+}
 
 function createBaseOrderbookMessage(): OrderbookMessage {
   return {
@@ -625,6 +645,71 @@ export const CandleMessage = {
     message.contents = object.contents ?? "";
     message.clobPairId = object.clobPairId ?? "";
     message.resolution = object.resolution ?? 0;
+    message.version = object.version ?? "";
+    return message;
+  }
+
+};
+
+function createBaseBlockHeightMessage(): BlockHeightMessage {
+  return {
+    blockHeight: "",
+    time: "",
+    version: ""
+  };
+}
+
+export const BlockHeightMessage = {
+  encode(message: BlockHeightMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.blockHeight !== "") {
+      writer.uint32(10).string(message.blockHeight);
+    }
+
+    if (message.time !== "") {
+      writer.uint32(18).string(message.time);
+    }
+
+    if (message.version !== "") {
+      writer.uint32(26).string(message.version);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): BlockHeightMessage {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseBlockHeightMessage();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.blockHeight = reader.string();
+          break;
+
+        case 2:
+          message.time = reader.string();
+          break;
+
+        case 3:
+          message.version = reader.string();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<BlockHeightMessage>): BlockHeightMessage {
+    const message = createBaseBlockHeightMessage();
+    message.blockHeight = object.blockHeight ?? "";
+    message.time = object.time ?? "";
     message.version = object.version ?? "";
     return message;
   }
