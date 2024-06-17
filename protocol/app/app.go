@@ -33,6 +33,7 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/client"
 	cosmosflags "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -382,6 +383,14 @@ func New(
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
+
+	// Enable optimistic block execution.
+	if appFlags.OptimisticExecutionEnabled {
+		// TODO: remove, test only.
+		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution(oe.WithAbortRate(
+			5,
+		)))
+	}
 
 	bApp := baseapp.NewBaseApp(appconstants.AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -1667,8 +1676,6 @@ func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 	if err != nil {
 		return response, err
 	}
-	block := app.IndexerEventManager.ProduceBlock(ctx)
-	app.IndexerEventManager.SendOnchainData(block)
 	return response, err
 }
 
@@ -1677,6 +1684,8 @@ func (app *App) Precommitter(ctx sdk.Context) {
 	if err := app.ModuleManager.Precommit(ctx); err != nil {
 		panic(err)
 	}
+	block := app.IndexerEventManager.ProduceBlock(ctx)
+	app.IndexerEventManager.SendOnchainData(block)
 }
 
 // PrepareCheckStater application updates after commit and before any check state is invoked.
