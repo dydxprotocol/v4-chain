@@ -255,3 +255,27 @@ export async function findMostRecentPnlTickForEachAccount(
     'subaccountId',
   );
 }
+
+export async function findMostRecentPnlTickTimeForEachAccount(
+  createdOnOrAfterHeight: string,
+): Promise<{
+  [subaccountId: string]: string
+}> {
+  verifyAllInjectableVariables([createdOnOrAfterHeight]);
+
+  const result: {
+    rows: { subaccountId: string, createdAt: string }[]
+  } = await knexReadReplica.getConnection().raw(
+    `
+    SELECT DISTINCT ON ("subaccountId") "subaccountId", "createdAt"
+    FROM "pnl_ticks"
+    WHERE "blockHeight" >= '${createdOnOrAfterHeight}'
+    ORDER BY "subaccountId" ASC, "createdAt" DESC;
+    `,
+  ) as unknown as { rows: { subaccountId: string, createdAt: string }[] };
+
+  return result.rows.reduce((acc, row) => {
+    acc[row.subaccountId] = row.createdAt;
+    return acc;
+  }, {} as { [subaccountId: string]: string });
+}
