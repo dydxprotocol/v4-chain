@@ -12,9 +12,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	upgrade "cosmossdk.io/x/upgrade/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
-	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	assets "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
@@ -23,7 +21,6 @@ import (
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/assert"
@@ -282,55 +279,4 @@ func TestMarketPrices(t *testing.T) {
 		exchange_config.MARKET_LINK_USD: "initialLINKPrice",
 	}
 	assertPricesWithTimeout(t, node, expectedPrices, 30*time.Second)
-}
-
-func TestUpgrade(t *testing.T) {
-	testnet, err := NewTestnetWithPreupgradeGenesis()
-	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
-	err = testnet.Start()
-	require.NoError(t, err)
-	defer testnet.MustCleanUp()
-	node := testnet.Nodes["alice"]
-
-	proposal, err := gov.NewMsgSubmitProposal(
-		[]sdk.Msg{
-			&upgrade.MsgSoftwareUpgrade{
-				Authority: govModuleAddress,
-				Plan: upgrade.Plan{
-					Name:   UpgradeToVersion,
-					Height: 10,
-				},
-			},
-		},
-		testapp.TestDeposit,
-		constants.AliceAccAddress.String(),
-		testapp.TestMetadata,
-		testapp.TestTitle,
-		testapp.TestSummary,
-		false,
-	)
-	require.NoError(t, err)
-
-	require.NoError(t, BroadcastTx(
-		node,
-		proposal,
-		constants.AliceAccAddress.String(),
-	))
-	err = node.Wait(2)
-	require.NoError(t, err)
-
-	for _, address := range nodeAddresses {
-		require.NoError(t, BroadcastTx(
-			node,
-			&gov.MsgVote{
-				ProposalId: 1,
-				Voter:      address,
-				Option:     gov.VoteOption_VOTE_OPTION_YES,
-			},
-			address,
-		))
-	}
-
-	err = node.WaitUntilBlockHeight(12)
-	require.NoError(t, err)
 }
