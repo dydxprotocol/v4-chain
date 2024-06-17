@@ -20,6 +20,8 @@ func TestMustHumanPriceToMarketPrice(t *testing.T) {
 		{"0.00000001", -8, 1, false},
 		{"1", -10, 10_000_000_000, false},
 		{"0.0000000001", -10, 1, false},
+		{"500", 2, 5, false},
+		{"500", 0, 500, false},
 		{"abc", -8, 0, true}, // Invalid humanPrice
 	}
 

@@ -68,7 +68,7 @@ func TestClearOperationsQueue(t *testing.T) {
 }
 
 func TestMustAddShortTermOrderTxBytes(t *testing.T) {
-	shortTermOrder1 := constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_FOK
+	shortTermOrder1 := constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_IOC
 	shortTermOrder2 := constants.Order_Carl_Num1_Id1_Clob0_Buy1kQtBTC_Price50000
 	shortTermOrder3 := constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50000
 	shortTermOrder4 := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
@@ -166,7 +166,7 @@ func TestMustAddShortTermOrderTxBytes_PanicsOnOrderInShortTermOrderHashToTxBytes
 }
 
 func TestMustAddShortTermOrderPlacementToOperationsQueue(t *testing.T) {
-	shortTermOrder1 := constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_FOK
+	shortTermOrder1 := constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_IOC
 	shortTermOrder2 := constants.Order_Carl_Num1_Id1_Clob0_Buy1kQtBTC_Price50000
 	shortTermOrder3 := constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50000
 	shortTermOrder4 := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
@@ -252,7 +252,7 @@ func TestMustAddShortTermOrderPlacementToOperationsQueue_PanicsOnOrderNotInShort
 }
 
 func TestRemoveShortTermOrderTxBytes(t *testing.T) {
-	shortTermOrder1 := constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_FOK
+	shortTermOrder1 := constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_IOC
 	shortTermOrder2 := constants.Order_Carl_Num1_Id1_Clob0_Buy1kQtBTC_Price50000
 	shortTermOrder3 := constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50000
 	shortTermOrder4 := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
@@ -415,7 +415,7 @@ func TestMustAddStatefulOrderPlacementToOperationsQueue_PanicsOnOrderInOrderHash
 }
 
 func TestMustAddMatchToOperationsQueue(t *testing.T) {
-	shortTermOrder1 := constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_FOK
+	shortTermOrder1 := constants.Order_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTB10_IOC
 	shortTermOrder2 := constants.Order_Carl_Num1_Id1_Clob0_Buy1kQtBTC_Price50000
 	shortTermOrder3 := constants.Order_Carl_Num0_Id0_Clob0_Sell1BTC_Price500000_GTB10
 	longTermOrder1 := constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10

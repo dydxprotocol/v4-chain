@@ -37,8 +37,8 @@ export interface QueryVaultRequestSDKType {
 export interface QueryVaultResponse {
   vaultId?: VaultId;
   subaccountId?: SubaccountId;
-  equity: Long;
-  inventory: Long;
+  equity: Uint8Array;
+  inventory: Uint8Array;
   totalShares: Long;
 }
 /** QueryVaultResponse is a response type for the Vault RPC method. */
@@ -46,8 +46,8 @@ export interface QueryVaultResponse {
 export interface QueryVaultResponseSDKType {
   vault_id?: VaultIdSDKType;
   subaccount_id?: SubaccountIdSDKType;
-  equity: Long;
-  inventory: Long;
+  equity: Uint8Array;
+  inventory: Uint8Array;
   total_shares: Long;
 }
 /** QueryAllVaultsRequest is a request type for the AllVaults RPC method. */
@@ -249,8 +249,8 @@ function createBaseQueryVaultResponse(): QueryVaultResponse {
   return {
     vaultId: undefined,
     subaccountId: undefined,
-    equity: Long.UZERO,
-    inventory: Long.UZERO,
+    equity: new Uint8Array(),
+    inventory: new Uint8Array(),
     totalShares: Long.UZERO
   };
 }
@@ -265,12 +265,12 @@ export const QueryVaultResponse = {
       SubaccountId.encode(message.subaccountId, writer.uint32(18).fork()).ldelim();
     }
 
-    if (!message.equity.isZero()) {
-      writer.uint32(24).uint64(message.equity);
+    if (message.equity.length !== 0) {
+      writer.uint32(26).bytes(message.equity);
     }
 
-    if (!message.inventory.isZero()) {
-      writer.uint32(32).uint64(message.inventory);
+    if (message.inventory.length !== 0) {
+      writer.uint32(34).bytes(message.inventory);
     }
 
     if (!message.totalShares.isZero()) {
@@ -298,11 +298,11 @@ export const QueryVaultResponse = {
           break;
 
         case 3:
-          message.equity = (reader.uint64() as Long);
+          message.equity = reader.bytes();
           break;
 
         case 4:
-          message.inventory = (reader.uint64() as Long);
+          message.inventory = reader.bytes();
           break;
 
         case 5:
@@ -322,8 +322,8 @@ export const QueryVaultResponse = {
     const message = createBaseQueryVaultResponse();
     message.vaultId = object.vaultId !== undefined && object.vaultId !== null ? VaultId.fromPartial(object.vaultId) : undefined;
     message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? SubaccountId.fromPartial(object.subaccountId) : undefined;
-    message.equity = object.equity !== undefined && object.equity !== null ? Long.fromValue(object.equity) : Long.UZERO;
-    message.inventory = object.inventory !== undefined && object.inventory !== null ? Long.fromValue(object.inventory) : Long.UZERO;
+    message.equity = object.equity ?? new Uint8Array();
+    message.inventory = object.inventory ?? new Uint8Array();
     message.totalShares = object.totalShares !== undefined && object.totalShares !== null ? Long.fromValue(object.totalShares) : Long.UZERO;
     return message;
   }

@@ -11,6 +11,9 @@ WORKDIR /home/dydx/app
 # Copy pnpm lock and workspace and package.json from base directory
 COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
 
+# Copy patches
+COPY ./patches ./patches
+
 # Copy package.json from postgres and imported packages being run
 COPY ./packages/base/package.json ./packages/base/
 COPY ./packages/postgres/package.json ./packages/postgres/
@@ -37,7 +40,7 @@ RUN chown dydx -R /home/dydx/app
 USER dydx
 
 # Install npm modules using pnpm
-RUN pnpm i --loglevel warn --production --frozen-lockfile
+RUN pnpm i --loglevel warn --production --frozen-lockfile --unsafe-perm
 
 WORKDIR /home/dydx/app/packages/postgres
 

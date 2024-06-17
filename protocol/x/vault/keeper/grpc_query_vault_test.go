@@ -31,7 +31,7 @@ func TestVault(t *testing.T) {
 		req *vaulttypes.QueryVaultRequest
 
 		/* --- Expectations --- */
-		expectedEquity uint64
+		expectedEquity *big.Int
 		expectedErr    string
 	}{
 		"Success": {
@@ -44,7 +44,19 @@ func TestVault(t *testing.T) {
 			perpId:         0,
 			inventory:      big.NewInt(200),
 			totalShares:    big.NewInt(300),
-			expectedEquity: 500,
+			expectedEquity: big.NewInt(500),
+		},
+		"Success: negative inventory and equity": {
+			req: &vaulttypes.QueryVaultRequest{
+				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+				Number: 0,
+			},
+			vaultId:        constants.Vault_Clob_0,
+			asset:          big.NewInt(100),
+			perpId:         0,
+			inventory:      big.NewInt(-200),
+			totalShares:    big.NewInt(300),
+			expectedEquity: big.NewInt(-300),
 		},
 		"Error: query non-existent vault": {
 			req: &vaulttypes.QueryVaultRequest{
@@ -113,8 +125,8 @@ func TestVault(t *testing.T) {
 				expectedResponse := vaulttypes.QueryVaultResponse{
 					VaultId:      tc.vaultId,
 					SubaccountId: *tc.vaultId.ToSubaccountId(),
-					Equity:       tc.expectedEquity,
-					Inventory:    tc.inventory.Uint64(),
+					Equity:       dtypes.NewIntFromBigInt(tc.expectedEquity),
+					Inventory:    dtypes.NewIntFromBigInt(tc.inventory),
 					TotalShares:  tc.totalShares.Uint64(),
 				}
 				require.Equal(t, expectedResponse, *response)

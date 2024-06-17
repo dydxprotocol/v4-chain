@@ -35,8 +35,11 @@ func TestAddFlagsToCommand(t *testing.T) {
 		fmt.Sprintf("Has %s flag", flags.GrpcStreamingFlushIntervalMs): {
 			flagName: flags.GrpcStreamingFlushIntervalMs,
 		},
-		fmt.Sprintf("Has %s flag", flags.GrpcStreamingMaxBufferSize): {
-			flagName: flags.GrpcStreamingMaxBufferSize,
+		fmt.Sprintf("Has %s flag", flags.GrpcStreamingMaxBatchSize): {
+			flagName: flags.GrpcStreamingMaxBatchSize,
+		},
+		fmt.Sprintf("Has %s flag", flags.GrpcStreamingMaxChannelBufferSize): {
+			flagName: flags.GrpcStreamingMaxChannelBufferSize,
 		},
 	}
 
@@ -69,11 +72,12 @@ func TestValidate(t *testing.T) {
 		},
 		"success - gRPC streaming enabled for validating nodes": {
 			flags: flags.Flags{
-				NonValidatingFullNode:        false,
-				GrpcEnable:                   true,
-				GrpcStreamingEnabled:         true,
-				GrpcStreamingFlushIntervalMs: 100,
-				GrpcStreamingMaxBufferSize:   10000,
+				NonValidatingFullNode:             false,
+				GrpcEnable:                        true,
+				GrpcStreamingEnabled:              true,
+				GrpcStreamingFlushIntervalMs:      100,
+				GrpcStreamingMaxBatchSize:         10000,
+				GrpcStreamingMaxChannelBufferSize: 10000,
 			},
 		},
 		"failure - gRPC disabled": {
@@ -90,15 +94,15 @@ func TestValidate(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("grpc.enable must be set to true - grpc streaming requires gRPC server"),
 		},
-		"failure - gRPC streaming enabled with zero buffer size": {
+		"failure - gRPC streaming enabled with zero batch size": {
 			flags: flags.Flags{
 				NonValidatingFullNode:        true,
 				GrpcEnable:                   true,
 				GrpcStreamingEnabled:         true,
 				GrpcStreamingFlushIntervalMs: 100,
-				GrpcStreamingMaxBufferSize:   0,
+				GrpcStreamingMaxBatchSize:    0,
 			},
-			expectedErr: fmt.Errorf("grpc streaming buffer size must be positive number"),
+			expectedErr: fmt.Errorf("grpc streaming batch size must be positive number"),
 		},
 		"failure - gRPC streaming enabled with zero flush interval ms": {
 			flags: flags.Flags{
@@ -106,9 +110,20 @@ func TestValidate(t *testing.T) {
 				GrpcEnable:                   true,
 				GrpcStreamingEnabled:         true,
 				GrpcStreamingFlushIntervalMs: 0,
-				GrpcStreamingMaxBufferSize:   10000,
+				GrpcStreamingMaxBatchSize:    10000,
 			},
 			expectedErr: fmt.Errorf("grpc streaming flush interval must be positive number"),
+		},
+		"failure - gRPC streaming enabled with zero channel size ms": {
+			flags: flags.Flags{
+				NonValidatingFullNode:             true,
+				GrpcEnable:                        true,
+				GrpcStreamingEnabled:              true,
+				GrpcStreamingFlushIntervalMs:      100,
+				GrpcStreamingMaxBatchSize:         10000,
+				GrpcStreamingMaxChannelBufferSize: 0,
+			},
+			expectedErr: fmt.Errorf("grpc streaming channel size must be positive number"),
 		},
 	}
 	for name, tc := range tests {
@@ -129,44 +144,48 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 		optsMap map[string]any
 
 		// Expectations.
-		expectedNonValidatingFullNodeFlag bool
-		expectedDdAgentHost               string
-		expectedDdTraceAgentPort          uint16
-		expectedGrpcAddress               string
-		expectedGrpcEnable                bool
-		expectedGrpcStreamingEnable       bool
-		expectedGrpcStreamingFlushMs      uint32
-		expectedGrpcStreamingBufferSize   uint32
+		expectedNonValidatingFullNodeFlag         bool
+		expectedDdAgentHost                       string
+		expectedDdTraceAgentPort                  uint16
+		expectedGrpcAddress                       string
+		expectedGrpcEnable                        bool
+		expectedGrpcStreamingEnable               bool
+		expectedGrpcStreamingFlushMs              uint32
+		expectedGrpcStreamingBatchSize            uint32
+		expectedGrpcStreamingMaxChannelBufferSize uint32
 	}{
 		"Sets to default if unset": {
-			expectedNonValidatingFullNodeFlag: false,
-			expectedDdAgentHost:               "",
-			expectedDdTraceAgentPort:          8126,
-			expectedGrpcAddress:               "localhost:9090",
-			expectedGrpcEnable:                true,
-			expectedGrpcStreamingEnable:       false,
-			expectedGrpcStreamingFlushMs:      50,
-			expectedGrpcStreamingBufferSize:   10000,
+			expectedNonValidatingFullNodeFlag:         false,
+			expectedDdAgentHost:                       "",
+			expectedDdTraceAgentPort:                  8126,
+			expectedGrpcAddress:                       "localhost:9090",
+			expectedGrpcEnable:                        true,
+			expectedGrpcStreamingEnable:               false,
+			expectedGrpcStreamingFlushMs:              50,
+			expectedGrpcStreamingBatchSize:            10000,
+			expectedGrpcStreamingMaxChannelBufferSize: 10000,
 		},
 		"Sets values from options": {
 			optsMap: map[string]any{
-				flags.NonValidatingFullNodeFlag:    true,
-				flags.DdAgentHost:                  "agentHostTest",
-				flags.DdTraceAgentPort:             uint16(777),
-				flags.GrpcEnable:                   false,
-				flags.GrpcAddress:                  "localhost:9091",
-				flags.GrpcStreamingEnabled:         "true",
-				flags.GrpcStreamingFlushIntervalMs: uint32(408),
-				flags.GrpcStreamingMaxBufferSize:   uint32(650),
+				flags.NonValidatingFullNodeFlag:         true,
+				flags.DdAgentHost:                       "agentHostTest",
+				flags.DdTraceAgentPort:                  uint16(777),
+				flags.GrpcEnable:                        false,
+				flags.GrpcAddress:                       "localhost:9091",
+				flags.GrpcStreamingEnabled:              "true",
+				flags.GrpcStreamingFlushIntervalMs:      uint32(408),
+				flags.GrpcStreamingMaxBatchSize:         uint32(650),
+				flags.GrpcStreamingMaxChannelBufferSize: uint32(972),
 			},
-			expectedNonValidatingFullNodeFlag: true,
-			expectedDdAgentHost:               "agentHostTest",
-			expectedDdTraceAgentPort:          777,
-			expectedGrpcEnable:                false,
-			expectedGrpcAddress:               "localhost:9091",
-			expectedGrpcStreamingEnable:       true,
-			expectedGrpcStreamingFlushMs:      408,
-			expectedGrpcStreamingBufferSize:   650,
+			expectedNonValidatingFullNodeFlag:         true,
+			expectedDdAgentHost:                       "agentHostTest",
+			expectedDdTraceAgentPort:                  777,
+			expectedGrpcEnable:                        false,
+			expectedGrpcAddress:                       "localhost:9091",
+			expectedGrpcStreamingEnable:               true,
+			expectedGrpcStreamingFlushMs:              408,
+			expectedGrpcStreamingBatchSize:            650,
+			expectedGrpcStreamingMaxChannelBufferSize: 972,
 		},
 	}
 
@@ -216,8 +235,13 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			)
 			require.Equal(
 				t,
-				tc.expectedGrpcStreamingBufferSize,
-				flags.GrpcStreamingMaxBufferSize,
+				tc.expectedGrpcStreamingBatchSize,
+				flags.GrpcStreamingMaxBatchSize,
+			)
+			require.Equal(
+				t,
+				tc.expectedGrpcStreamingMaxChannelBufferSize,
+				flags.GrpcStreamingMaxChannelBufferSize,
 			)
 		})
 	}

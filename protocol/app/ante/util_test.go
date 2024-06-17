@@ -28,6 +28,12 @@ func TestSkipSequenceValidation(t *testing.T) {
 			},
 			shouldSkipValidation: true,
 		},
+		"single batch cancel message": {
+			msgs: []sdk.Msg{
+				constants.Msg_BatchCancel,
+			},
+			shouldSkipValidation: true,
+		},
 		"single transfer message": {
 			msgs: []sdk.Msg{
 				constants.Msg_Transfer,
@@ -82,6 +88,13 @@ func TestSkipSequenceValidation(t *testing.T) {
 		"mix of conditional orders and short term orders": {
 			msgs: []sdk.Msg{
 				constants.Msg_PlaceOrder,
+				constants.Msg_PlaceOrder_Conditional,
+			},
+			shouldSkipValidation: false,
+		},
+		"mix of conditional orders and short term batch cancel orders": {
+			msgs: []sdk.Msg{
+				constants.Msg_BatchCancel,
 				constants.Msg_PlaceOrder_Conditional,
 			},
 			shouldSkipValidation: false,

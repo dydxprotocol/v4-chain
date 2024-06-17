@@ -528,17 +528,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		if order.IsStatefulOrder() {
 			var removalReason types.OrderRemoval_RemovalReason
 
-			if errors.Is(err, types.ErrFokOrderCouldNotBeFullyFilled) {
-				if !order.IsConditionalOrder() {
-					panic(
-						fmt.Sprintf(
-							"PlaceOrder: stateful FOK order must be conditional. Order %+v",
-							order,
-						),
-					)
-				}
-				removalReason = types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED
-			} else if errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder) {
+			if errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder) {
 				removalReason = types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER
 			} else if errors.Is(err, types.ErrWouldViolateIsolatedSubaccountConstraints) {
 				removalReason = types.OrderRemoval_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS
@@ -819,23 +809,6 @@ func (m *MemClobPriceTimePriority) matchOrder(
 	}
 
 	var matchingErr error
-
-	// If this is a fill-or-kill order and it wasn't fully filled, set the matching error
-	// so that the order is canceled. We check the taker order status since the order may
-	// have been unsuccessful for other reasons which would be the true root cause
-	// (e.g. failed a collateralization check).
-	if !order.IsLiquidation() &&
-		order.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_FILL_OR_KILL &&
-		takerOrderStatus.RemainingQuantums > 0 {
-		// FOK orders _must_ return an error here if they are not fully filled regardless
-		// of the reason why they were not fully filled. If an error is not returned here, then
-		// any partial matches that occurred during matching will be committed to state, and included
-		// in the operations queue. This violates the invariant of FOK orders that they must be fully
-		// filled or not filled at all.
-		// TODO(CLOB-267): Create more granular error types here that indicate why the order was not
-		// fully filled (i.e. undercollateralized, reduce only resized, etc).
-		matchingErr = types.ErrFokOrderCouldNotBeFullyFilled
-	}
 
 	// If the order is post only and it's not the rewind step, then it cannot be filled.
 	// Set the matching error so that the order is canceled.
@@ -1458,10 +1431,10 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 		)
 	}
 
-	// Immediate-or-cancel and fill-or-kill orders may only be filled once. The remaining size becomes unfillable.
+	// Immediate-or-cancel orders may only be filled once. The remaining size becomes unfillable.
 	// This prevents the case where an IOC order is partially filled multiple times over the course of multiple blocks.
 	if order.RequiresImmediateExecution() && remainingAmount < order.GetBaseQuantums() {
-		// Prevent IOC/FOK orders from replacing partially filled orders.
+		// Prevent IOC orders from replacing partially filled orders.
 		if restingOrderExists {
 			return errorsmod.Wrapf(
 				types.ErrInvalidReplacement,

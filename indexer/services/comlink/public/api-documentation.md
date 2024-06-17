@@ -124,7 +124,8 @@ fetch('/addresses/{address}',
         }
       },
       "marginEnabled": true,
-      "updatedAtHeight": "string"
+      "updatedAtHeight": "string",
+      "latestProcessedBlockHeight": "string"
     }
   ],
   "totalTradingRewards": "string"
@@ -253,7 +254,8 @@ fetch('/addresses/{address}/subaccountNumber/{subaccountNumber}',
     }
   },
   "marginEnabled": true,
-  "updatedAtHeight": "string"
+  "updatedAtHeight": "string",
+  "latestProcessedBlockHeight": "string"
 }
 ```
 
@@ -385,7 +387,8 @@ fetch('/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}',
         }
       },
       "marginEnabled": true,
-      "updatedAtHeight": "string"
+      "updatedAtHeight": "string",
+      "latestProcessedBlockHeight": "string"
     }
   ]
 }
@@ -2974,7 +2977,8 @@ This operation does not require authentication
     }
   },
   "marginEnabled": true,
-  "updatedAtHeight": "string"
+  "updatedAtHeight": "string",
+  "latestProcessedBlockHeight": "string"
 }
 
 ```
@@ -2991,6 +2995,7 @@ This operation does not require authentication
 |assetPositions|[AssetPositionsMap](#schemaassetpositionsmap)|true|none|none|
 |marginEnabled|boolean|true|none|none|
 |updatedAtHeight|string|true|none|none|
+|latestProcessedBlockHeight|string|true|none|none|
 
 ## AddressResponse
 
@@ -3062,7 +3067,8 @@ This operation does not require authentication
         }
       },
       "marginEnabled": true,
-      "updatedAtHeight": "string"
+      "updatedAtHeight": "string",
+      "latestProcessedBlockHeight": "string"
     }
   ],
   "totalTradingRewards": "string"
@@ -3151,7 +3157,8 @@ This operation does not require authentication
         }
       },
       "marginEnabled": true,
-      "updatedAtHeight": "string"
+      "updatedAtHeight": "string",
+      "latestProcessedBlockHeight": "string"
     }
   ]
 }
@@ -3302,6 +3309,28 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |candles|[[CandleResponseObject](#schemacandleresponseobject)]|true|none|none|
+
+## ComplianceResponse
+
+<a id="schemacomplianceresponse"></a>
+<a id="schema_ComplianceResponse"></a>
+<a id="tocScomplianceresponse"></a>
+<a id="tocscomplianceresponse"></a>
+
+```json
+{
+  "restricted": true,
+  "reason": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|restricted|boolean|true|none|none|
+|reason|string|false|none|none|
 
 ## ComplianceStatus
 

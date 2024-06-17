@@ -277,9 +277,16 @@ describe('create-pnl-ticks', () => {
         ...testConstants.defaultPnlTick,
         blockTime: testConstants.defaultBlock.time,
       });
-      const blockTimeIsoString: string = await PnlTicksTable.findLatestProcessedBlocktime();
+      const {
+        maxBlockTime,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        count,
+      }: {
+        maxBlockTime: string,
+        count: number,
+      } = await PnlTicksTable.findLatestProcessedBlocktimeAndCount();
 
-      const date: number = Date.parse(blockTimeIsoString).valueOf();
+      const date: number = Date.parse(maxBlockTime).valueOf();
       jest.spyOn(Date, 'now').mockImplementation(() => date);
       jest.spyOn(DateTime, 'utc').mockImplementation(() => dateTime);
       jest.spyOn(logger, 'info');
@@ -305,8 +312,48 @@ describe('create-pnl-ticks', () => {
       expect(pnlTicks.length).toEqual(1);
       expect(logger.info).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: 'Skipping run because update interval has not been reached',
+          message: 'Skipping run because update interval has not been reached and all subaccounts have been processed',
         }),
       );
+    });
+
+  it(
+    'calculates pnl per subaccount if last run hit subaccount limit',
+    async () => {
+      const pnlTicksHelper = require('../../src/helpers/pnl-ticks-helper');
+      const getPnlTicksCreateObjectsSpy = jest.spyOn(pnlTicksHelper, 'getPnlTicksCreateObjects');
+      config.PNL_TICK_UPDATE_INTERVAL_MS = 3_600_000;
+      config.PNL_TICK_MAX_ACCOUNTS_PER_RUN = 1;
+      await PnlTicksTable.create({
+        ...testConstants.defaultPnlTick,
+        blockTime: testConstants.defaultBlock.time,
+      });
+      const {
+        maxBlockTime,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        count,
+      }: {
+        maxBlockTime: string,
+        count: number,
+      } = await PnlTicksTable.findLatestProcessedBlocktimeAndCount();
+
+      const date: number = Date.parse(maxBlockTime).valueOf();
+      jest.spyOn(Date, 'now').mockImplementation(() => date);
+      jest.spyOn(DateTime, 'utc').mockImplementation(() => dateTime);
+      jest.spyOn(logger, 'info');
+      await LatestAccountPnlTicksCache.set(
+        pnlTickForSubaccounts,
+        redisClient,
+      );
+      await Promise.all([
+        PerpetualPositionTable.create(testConstants.defaultPerpetualPosition),
+        PerpetualPositionTable.create({
+          ...testConstants.defaultPerpetualPosition,
+          perpetualId: testConstants.defaultPerpetualMarket2.id,
+          openEventId: testConstants.defaultTendermintEventId2,
+        }),
+      ]);
+      await createPnlTicksTask();
+      expect(getPnlTicksCreateObjectsSpy).toHaveBeenCalledTimes(1);
     });
 });

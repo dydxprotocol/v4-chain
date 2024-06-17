@@ -1,6 +1,7 @@
 package perpetuals
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
@@ -88,42 +90,23 @@ func GeneratePerpetual(optionalModifications ...PerpetualModifierOption) *perpty
 	return perpetual
 }
 
+// MustHumanSizeToBaseQuantums converts a human-readable size to quantums.
+// It uses the inverse of the exponent to convert the human size to quantums,
+// since the exponent applies to the quantums to derive the human-readable size.
 func MustHumanSizeToBaseQuantums(
 	humanSize string,
 	atomicResolution int32,
 ) (baseQuantums uint64) {
-	// Parse the humanSize string to a big rational
-	ratValue, ok := new(big.Rat).SetString(humanSize)
+	ratio, ok := new(big.Rat).SetString(humanSize)
 	if !ok {
-		panic("Failed to parse humanSize to big.Rat")
+		panic(fmt.Sprintf("MustHumanSizeToBaseQuantums: Failed to parse humanSize: %s", humanSize))
 	}
-
-	// Convert atomicResolution to int64 for calculations
-	resolution := int64(atomicResolution)
-
-	// Create a multiplier which is 10 raised to the power of the absolute atomicResolution
-	multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(abs(resolution)), nil)
-
-	// Depending on the sign of atomicResolution, multiply or divide
-	if atomicResolution > 0 {
-		ratValue.Mul(ratValue, new(big.Rat).SetInt(multiplier))
-	} else if atomicResolution < 0 {
-		divisor := new(big.Rat).SetInt(multiplier)
-		ratValue.Mul(ratValue, divisor)
+	result := lib.BigIntMulPow10(ratio.Num(), -atomicResolution, false)
+	result.Quo(result, ratio.Denom())
+	if !result.IsUint64() {
+		panic("MustHumanSizeToBaseQuantums: result is not a uint64")
 	}
-
-	// Convert the result to an unsigned 64-bit integer
-	resultInt := ratValue.Num() // Get the numerator which now represents the whole value
-
-	return resultInt.Uint64()
-}
-
-// Helper function to get the absolute value of an int64
-func abs(n int64) int64 {
-	if n < 0 {
-		return -n
-	}
-	return n
+	return result.Uint64()
 }
 
 // Helper function to set up default open interest for input perpetuals.

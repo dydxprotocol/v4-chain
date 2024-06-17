@@ -37,10 +37,11 @@ export const configSchema = {
   // Loop Enablement
   LOOPS_ENABLED_MARKET_UPDATER: parseBoolean({ default: true }),
   LOOPS_ENABLED_DELETE_ZERO_PRICE_LEVELS: parseBoolean({ default: true }),
-  LOOPS_ENABLED_UNCROSS_ORDERBOOK: parseBoolean({ default: false }),
+  LOOPS_ENABLED_UNCROSS_ORDERBOOK: parseBoolean({ default: true }),
   LOOPS_ENABLED_PNL_TICKS: parseBoolean({ default: true }),
   LOOPS_ENABLED_REMOVE_EXPIRED_ORDERS: parseBoolean({ default: true }),
   LOOPS_ORDERBOOK_INSTRUMENTATION: parseBoolean({ default: true }),
+  LOOPS_PNL_INSTRUMENTATION: parseBoolean({ default: true }),
   LOOPS_CANCEL_STALE_ORDERS: parseBoolean({ default: true }),
   LOOPS_ENABLED_UPDATE_RESEARCH_ENVIRONMENT: parseBoolean({ default: false }),
   LOOPS_ENABLED_TAKE_FAST_SYNC_SNAPSHOTS: parseBoolean({ default: true }),
@@ -69,6 +70,9 @@ export const configSchema = {
   }),
   LOOPS_INTERVAL_MS_ORDERBOOK_INSTRUMENTATION: parseInteger({
     default: 5 * ONE_SECOND_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_PNL_INSTRUMENTATION: parseInteger({
+    default: ONE_HOUR_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_CANCEL_STALE_ORDERS: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,

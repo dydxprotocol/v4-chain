@@ -212,17 +212,24 @@ function convertPnlTicksFromDatabaseToPnlTicksCreateObject(
   return _.omit(pnlTicksFromDatabase, PnlTicksColumns.id);
 }
 
-export async function findLatestProcessedBlocktime(): Promise<string> {
+export async function findLatestProcessedBlocktimeAndCount(): Promise<{
+  maxBlockTime: string,
+  count: number,
+}> {
   const result: {
-    rows: [{ max: string }]
+    rows: [{ max: string, count: number }]
   } = await knexReadReplica.getConnection().raw(
     `
-    SELECT MAX("blockTime")
+    SELECT MAX("blockTime") as max, COUNT(*) as count
     FROM "pnl_ticks"
     `
     ,
-  ) as unknown as { rows: [{ max: string }] };
-  return result.rows[0].max || ZERO_TIME_ISO_8601;
+  ) as unknown as { rows: [{ max: string, count: number }] };
+
+  return {
+    maxBlockTime: result.rows[0].max || ZERO_TIME_ISO_8601,
+    count: Number(result.rows[0].count) || 0,
+  };
 }
 
 export async function findMostRecentPnlTickForEachAccount(
@@ -247,4 +254,28 @@ export async function findMostRecentPnlTickForEachAccount(
     result.rows.map(convertPnlTicksFromDatabaseToPnlTicksCreateObject),
     'subaccountId',
   );
+}
+
+export async function findMostRecentPnlTickTimeForEachAccount(
+  createdOnOrAfterHeight: string,
+): Promise<{
+  [subaccountId: string]: string
+}> {
+  verifyAllInjectableVariables([createdOnOrAfterHeight]);
+
+  const result: {
+    rows: { subaccountId: string, createdAt: string }[]
+  } = await knexReadReplica.getConnection().raw(
+    `
+    SELECT DISTINCT ON ("subaccountId") "subaccountId", "createdAt"
+    FROM "pnl_ticks"
+    WHERE "blockHeight" >= '${createdOnOrAfterHeight}'
+    ORDER BY "subaccountId" ASC, "createdAt" DESC;
+    `,
+  ) as unknown as { rows: { subaccountId: string, createdAt: string }[] };
+
+  return result.rows.reduce((acc, row) => {
+    acc[row.subaccountId] = row.createdAt;
+    return acc;
+  }, {} as { [subaccountId: string]: string });
 }

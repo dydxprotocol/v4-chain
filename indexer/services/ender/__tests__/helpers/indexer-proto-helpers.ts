@@ -692,7 +692,7 @@ export async function expectFillSubaccountKafkaMessageFromLiquidationEvent(
   const positionUpdate = annotateWithPnl(
     convertPerpetualPosition(position!),
     perpetualMarketRefresher.getPerpetualMarketsMap(),
-    marketIdToMarket,
+    marketIdToMarket[parseInt(position!.perpetualId, 10)],
   );
 
   const contents: SubaccountMessageContents = {
@@ -834,7 +834,7 @@ export async function expectOrderFillAndPositionSubaccountKafkaMessageFromIds(
     const positionUpdate: UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
       convertPerpetualPosition(position),
       perpetualMarketRefresher.getPerpetualMarketsMap(),
-      marketIdToMarket,
+      marketIdToMarket[parseInt(position.perpetualId, 10)],
     );
     contents.perpetualPositions = generatePerpetualPositionsContents(
       subaccountIdProto,

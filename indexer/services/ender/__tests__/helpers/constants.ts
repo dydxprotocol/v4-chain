@@ -448,6 +448,20 @@ export const defaultLongTermOrderPlacementEvent: StatefulOrderEventV1 = {
   },
 };
 
+export const defaultStatefulOrderReplacementEvent: StatefulOrderEventV1 = {
+  orderReplacement: {
+    oldOrderId: defaultOrderId2,
+    order: {
+      ...defaultMakerOrder,
+      orderId: {
+        ...defaultMakerOrder.orderId!,
+        orderFlags: ORDER_FLAG_LONG_TERM,
+      },
+      goodTilBlockTime: 123,
+    },
+  },
+};
+
 export const defaultTradingRewardsEvent: TradingRewardsEventV1 = {
   tradingRewards: [
     {
