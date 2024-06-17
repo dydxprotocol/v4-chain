@@ -13,7 +13,6 @@ func MsgQuerySubaccountExec(
 	owner string,
 	number uint32,
 ) (testutil.BufferWriter, error) {
-
 	queryCmd := exec.Command("bash", "-c", "docker exec interchain-security-instance interchain-security-cd query subaccounts show-subaccount "+owner+" "+fmt.Sprint(number)+" --node tcp://7.7.8.253:26658 -o json")
 	var transferOut bytes.Buffer
 	var stdTransferErr bytes.Buffer

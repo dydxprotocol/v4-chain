@@ -26,7 +26,6 @@ func init() {
 
 	_ = testTxBuilder.SetMsgs(&MsgExecWithDydxMessage)
 	MsgExecWithDydxMessageTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
-
 }
 
 const (
