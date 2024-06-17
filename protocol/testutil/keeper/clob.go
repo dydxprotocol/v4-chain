@@ -227,7 +227,7 @@ func createClobKeeper(
 }
 
 func CreateTestClobPairs(
-	t *testing.T,
+	t testing.TB,
 	ctx sdk.Context,
 	clobKeeper *keeper.Keeper,
 	clobPairs []types.ClobPair,
@@ -247,7 +247,7 @@ func CreateTestClobPairs(
 }
 
 func CreateNClobPair(
-	t *testing.T,
+	t testing.TB,
 	keeper *keeper.Keeper,
 	perpKeeper *perpkeeper.Keeper,
 	pricesKeeper *priceskeeper.Keeper,

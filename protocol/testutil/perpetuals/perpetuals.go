@@ -111,7 +111,7 @@ func MustHumanSizeToBaseQuantums(
 
 // Helper function to set up default open interest for input perpetuals.
 func SetUpDefaultPerpOIsForTest(
-	t *testing.T,
+	t testing.TB,
 	ctx sdk.Context,
 	k perptypes.PerpetualsKeeper,
 	perps []perptypes.Perpetual,

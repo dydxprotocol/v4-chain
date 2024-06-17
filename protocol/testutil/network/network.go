@@ -37,7 +37,7 @@ var fileLock = flock.New("/tmp/test-cosmos-network.lock")
 
 // New creates instance with fully configured cosmos network.
 // Accepts optional config, that will be used in place of the DefaultConfig() if provided.
-func New(t *testing.T, configs ...network.Config) *network.Network {
+func New(t testing.TB, configs ...network.Config) *network.Network {
 	// This is a workaround for an issue in the cosmos-sdk `testutil/network` package.
 	// Specifically, the `testutil/network` package attempts to use a package-level lock to ensure that only one
 	// test network is running at a time. This is problematic when running tests in parallel, as `go test`
