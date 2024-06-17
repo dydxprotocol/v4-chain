@@ -33,6 +33,7 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/client"
 	cosmosflags "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -385,7 +386,10 @@ func New(
 
 	// Enable optimistic block execution.
 	if appFlags.OptimisticExecutionEnabled {
-		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
+		// TODO: remove, test only.
+		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution(oe.WithAbortRate(
+			5,
+		)))
 	}
 
 	bApp := baseapp.NewBaseApp(appconstants.AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
