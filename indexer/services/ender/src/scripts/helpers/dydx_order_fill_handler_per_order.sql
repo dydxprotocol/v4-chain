@@ -30,6 +30,7 @@ DECLARE
     clob_pair_id bigint;
     subaccount_uuid uuid;
     perpetual_market_record perpetual_markets%ROWTYPE;
+    market_record markets%ROWTYPE;
     order_record orders%ROWTYPE;
     fill_record fills%ROWTYPE;
     perpetual_position_record perpetual_positions%ROWTYPE;
@@ -49,6 +50,7 @@ BEGIN
     maker_order = event_data->'makerOrder';
     clob_pair_id = jsonb_extract_path(order_, 'orderId', 'clobPairId')::bigint;
     perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
+    market_record = dydx_get_market_for_id(perpetual_market_record."marketId");
 
     BEGIN
         SELECT * INTO STRICT asset_record FROM assets WHERE "id" = usdc_asset_id;
@@ -175,6 +177,8 @@ BEGIN
             dydx_to_jsonb(fill_record),
             'perpetual_market',
             dydx_to_jsonb(perpetual_market_record),
+            'market',
+            dydx_to_jsonb(market_record),
             'perpetual_position',
             dydx_to_jsonb(perpetual_position_record)
         );
