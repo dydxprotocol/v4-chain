@@ -39,7 +39,7 @@ func (b BlockAdvancementWithErrors) AdvanceToBlock(
 	ctx sdktypes.Context,
 	blockHeight uint32,
 	tApp *TestApp,
-	t *testing.T,
+	t testing.TB,
 ) sdktypes.Context {
 	advanceToBlockOptions := AdvanceToBlockOptions{
 		ValidateFinalizeBlock: func(

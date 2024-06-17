@@ -145,7 +145,7 @@ func createPerpetualsKeeper(
 // For each perpetual in the given perpetuals, insert the same list of testFundingSamples
 // into state.
 func PopulateTestPremiumStore(
-	t *testing.T,
+	t testing.TB,
 	ctx sdk.Context,
 	k *keeper.Keeper,
 	perpetuals []types.Perpetual,
@@ -169,7 +169,7 @@ func PopulateTestPremiumStore(
 	}
 }
 
-func CreateTestPerpetuals(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
+func CreateTestPerpetuals(t testing.TB, ctx sdk.Context, k *keeper.Keeper) {
 	for _, p := range constants.TestMarketPerpetuals {
 		_, err := k.CreatePerpetual(
 			ctx,
@@ -185,7 +185,7 @@ func CreateTestPerpetuals(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 	}
 }
 
-func CreateTestLiquidityTiers(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
+func CreateTestLiquidityTiers(t testing.TB, ctx sdk.Context, k *keeper.Keeper) {
 	for _, l := range constants.LiquidityTiers {
 		_, err := k.SetLiquidityTier(
 			ctx,
@@ -229,7 +229,7 @@ func GetLiquidityTierUpsertEventsFromIndexerBlock(
 }
 
 func CreateNPerpetuals(
-	t *testing.T,
+	t testing.TB,
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
 	pricesKeeper *priceskeeper.Keeper,
@@ -272,7 +272,7 @@ func CreateNPerpetuals(
 }
 
 func CreateLiquidityTiersAndNPerpetuals(
-	t *testing.T,
+	t testing.TB,
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
 	pricesKeeper *priceskeeper.Keeper,
@@ -289,7 +289,7 @@ func CreateLiquidityTiersAndNPerpetuals(
 // CreateTestPricesAndPerpetualMarkets is a test utility function that creates list of given
 // prices and perpetual markets in state.
 func CreateTestPricesAndPerpetualMarkets(
-	t *testing.T,
+	t testing.TB,
 	ctx sdk.Context,
 	perpKeeper *keeper.Keeper,
 	pricesKeeper *priceskeeper.Keeper,

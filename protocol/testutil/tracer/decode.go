@@ -59,7 +59,7 @@ func (td *TraceDecoder) GetWriteOperations() (operations []TraceOperation) {
 }
 
 func (td *TraceDecoder) RequireKeyPrefixWrittenInSequence(
-	t *testing.T,
+	t testing.TB,
 	keys []string,
 ) {
 	writeOperations := td.GetWriteOperations()
@@ -100,7 +100,7 @@ func (td *TraceDecoder) RequireKeyPrefixWrittenInSequence(
 }
 
 func (td *TraceDecoder) RequireReadWriteInSequence(
-	t *testing.T,
+	t testing.TB,
 	expectedOperations []TraceOperation,
 ) {
 	operations := td.GetOperations()
@@ -129,7 +129,7 @@ func (td *TraceDecoder) RequireReadWriteInSequence(
 // a deterministic ordering, i.e when state is branched and written back to.
 // TODO(CLOB-851) update this function to assert ordering of key prefixes within stores.
 func (td *TraceDecoder) RequireKeyPrefixesWritten(
-	t *testing.T,
+	t testing.TB,
 	keys []string,
 ) {
 	writeOperations := td.GetWriteOperations()

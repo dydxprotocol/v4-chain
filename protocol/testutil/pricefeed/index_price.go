@@ -29,7 +29,7 @@ func GetTestMarketPriceUpdates(n int) (indexPrices []*pricefeedapi.MarketPriceUp
 }
 
 func UpdateIndexPrice(
-	t *testing.T,
+	t testing.TB,
 	ctx sdk.Context,
 	tApp *app.App,
 	marketId uint32,

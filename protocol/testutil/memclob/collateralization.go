@@ -22,7 +22,7 @@ type CollateralizationCheck struct {
 // increments it after each performed collateralization check such that the caller can assert the expected number of
 // collateralization checks are performed.
 func CreateCollatCheckFunction(
-	t *testing.T,
+	t testing.TB,
 	collateralCheckCounter *int,
 	expectedCollatCheckParams map[int]map[satypes.SubaccountId][]clobtypes.PendingOpenOrder,
 	collatCheckFailures map[int]map[satypes.SubaccountId]satypes.UpdateResult,
@@ -118,7 +118,7 @@ func AlwaysSuccessfulCollatCheckFn(
 // increments it after each performed collateralization check such that the caller can assert the expected number of
 // collateralization checks are performed.
 func CreateSimpleCollatCheckFunction(
-	t *testing.T,
+	t testing.TB,
 	collateralCheckCounter *int,
 	expectedCollatCheck map[int]CollateralizationCheck,
 ) (
