@@ -122,6 +122,9 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 		updatesByClobPairId[clobPairId] = v1updates
 	}
 
+	sm.Lock()
+	defer sm.Unlock()
+
 	updatesBySubscriptionId := make(map[uint32][]clobtypes.StreamUpdate)
 	for id, subscription := range sm.orderbookSubscriptions {
 		// Consolidate orderbook updates into a single `StreamUpdate`.
@@ -185,6 +188,9 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 		updatesByClobPairId[clobPairId] = append(updatesByClobPairId[clobPairId], streamUpdate)
 	}
 
+	sm.Lock()
+	defer sm.Unlock()
+
 	updatesBySubscriptionId := make(map[uint32][]clobtypes.StreamUpdate)
 	for id, subscription := range sm.orderbookSubscriptions {
 		streamUpdatesForSubscription := make([]clobtypes.StreamUpdate, 0)
@@ -214,9 +220,6 @@ func (sm *GrpcStreamingManagerImpl) sendStreamUpdate(
 		metrics.GrpcEmitProtocolUpdateCount,
 		1,
 	)
-
-	sm.Lock()
-	defer sm.Unlock()
 
 	// Send updates to subscribers.
 	idsToRemove := make([]uint32, 0)
