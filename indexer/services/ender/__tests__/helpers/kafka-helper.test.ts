@@ -4,22 +4,21 @@ import {
   dbHelpers,
   MarketFromDatabase,
   MarketMessageContents,
-  MarketsMap,
   OraclePriceFromDatabase,
   OraclePriceTable,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
   PerpetualPositionFromDatabase,
   PerpetualPositionStatus,
+  PerpetualPositionTable,
   PositionSide,
   SubaccountMessageContents,
+  SubaccountTable,
   testConstants,
   testMocks,
   TransferFromDatabase,
-  PerpetualPositionTable,
-  UpdatedPerpetualPositionSubaccountKafkaObject,
   TransferType,
-  SubaccountTable,
+  UpdatedPerpetualPositionSubaccountKafkaObject,
 } from '@dydxprotocol-indexer/postgres';
 import { IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import { DateTime } from 'luxon';
@@ -492,9 +491,6 @@ describe('kafka-helper', () => {
   });
 
   describe('pnl', () => {
-    const defaultMarketMap: MarketsMap = {
-      [testConstants.defaultMarket.id]: testConstants.defaultMarket,
-    };
     const updatedObject: UpdatedPerpetualPositionSubaccountKafkaObject = {
       perpetualId: '0',
       maxSize: '25',
@@ -545,7 +541,7 @@ describe('kafka-helper', () => {
       } = getPnl(
         updatedObject,
         perpetualMarketRefresher.getPerpetualMarketsMap()[updatedObject.perpetualId],
-        defaultMarketMap,
+        testConstants.defaultMarket,
       );
       expect(realizedPnl).toEqual('-199998');  // 0*0-199998
       expect(unrealizedPnl).toEqual('1.5');  // 0.0001*(15000-0)
@@ -566,7 +562,7 @@ describe('kafka-helper', () => {
       } = getPnl(
         updatedObject2,
         perpetualMarketRefresher.getPerpetualMarketsMap()[updatedObject2.perpetualId],
-        defaultMarketMap,
+        testConstants.defaultMarket,
       );
       expect(realizedPnl).toEqual('-199993');  // 1*5-199998
       expect(unrealizedPnl).toEqual('1.5');  // 0.0001*(15000-0)
@@ -608,7 +604,7 @@ describe('kafka-helper', () => {
       const updatedObjectWithPnl: UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
         updatedObject2,
         perpetualMarketRefresher.getPerpetualMarketsMap(),
-        defaultMarketMap,
+        testConstants.defaultMarket,
       );
       expect(
         updatedObjectWithPnl,

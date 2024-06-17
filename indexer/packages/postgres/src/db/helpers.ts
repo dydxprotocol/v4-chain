@@ -5,8 +5,7 @@ import { DateTime } from 'luxon';
 import { NUM_SECONDS_IN_CANDLE_RESOLUTIONS, ONE_MILLION } from '../constants';
 import {
   CandleResolution,
-  FundingIndexMap,
-  MarketsMap,
+  FundingIndexMap, MarketFromDatabase,
   PerpetualMarketFromDatabase,
   PerpetualPositionFromDatabase,
   TransferFromDatabase,
@@ -73,22 +72,15 @@ export function getUnsettledFunding(
  * @param position Perpetual position object from the database, or the updated
  * perpetual position subaccountKafkaObject.
  * @param perpetualMarketsMap Map of perpetual ids to perpetual market objects from the database.
+ * @param market Market object from the database.
  * @returns Unrealized pnl of the position.
  */
 export function getUnrealizedPnl(
   position: PerpetualPositionFromDatabase | UpdatedPerpetualPositionSubaccountKafkaObject,
   perpetualMarket: PerpetualMarketFromDatabase,
-  marketsMap: MarketsMap,
+  market: MarketFromDatabase,
 ): string {
-  if (marketsMap[perpetualMarket.marketId] === undefined) {
-    logger.error({
-      at: 'getUnrealizedPnl',
-      message: 'Market is undefined',
-      marketId: perpetualMarket.marketId,
-    });
-    return Big(0).toFixed();
-  }
-  if (marketsMap[perpetualMarket.marketId].oraclePrice === undefined) {
+  if (market.oraclePrice === undefined) {
     logger.error({
       at: 'getUnrealizedPnl',
       message: 'Oracle price is undefined for market',
@@ -98,7 +90,7 @@ export function getUnrealizedPnl(
   }
   return (
     Big(position.size).times(
-      Big(marketsMap[perpetualMarket.marketId].oraclePrice!).minus(position.entryPrice),
+      Big(market.oraclePrice!).minus(position.entryPrice),
     )
   ).toFixed();
 }
