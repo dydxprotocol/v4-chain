@@ -74,7 +74,7 @@ export default async function runTask(): Promise<void> {
     const lastTransferTime: DateTime = DateTime.fromISO(time);
     const hoursSinceLastTransfer = startTaskTime.diff(lastTransferTime, 'hours').hours;
 
-    if (hoursSinceLastTransfer >= 2) {
+    if (hoursSinceLastTransfer > 2) {
       staleTransferSubaccounts.push(subaccountId);
     }
   });
