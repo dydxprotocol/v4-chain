@@ -11,6 +11,7 @@ import {
   MAX_PARENT_SUBACCOUNTS,
 } from '@dydxprotocol-indexer/postgres';
 import {
+  BlockHeightMessage,
   CandleMessage,
   CandleMessage_Resolution,
   MarketMessage,
@@ -19,6 +20,7 @@ import {
   SubaccountMessage,
   TradeMessage,
 } from '@dydxprotocol-indexer/v4-protos';
+import { version } from 'os';
 
 export const btcClobPairId: string = '1';
 export const ethClobPairId: string = '2';
@@ -120,4 +122,10 @@ export const defaultTransferContents: TransferSubaccountMessageContents = {
   transactionHash: '0x1',
   createdAt: '2023-10-05T14:48:00.000Z',
   createdAtHeight: '10',
+};
+
+export const defaultBlockHeightMessage: BlockHeightMessage = {
+  blockHeight: defaultBlockHeight,
+  time: '2023-10-05T14:48:00.000Z',
+  version: '1.0.0',
 };

@@ -18,6 +18,7 @@ const KAFKA_TOPICS: KafkaTopics[] = [
   KafkaTopics.TO_WEBSOCKETS_TRADES,
   KafkaTopics.TO_WEBSOCKETS_MARKETS,
   KafkaTopics.TO_WEBSOCKETS_CANDLES,
+  KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
 ];
 
 const DEFAULT_NUM_REPLICAS: number = 3;
@@ -30,6 +31,7 @@ const KAFKA_TOPICS_TO_PARTITIONS: { [key in KafkaTopics]: number } = {
   [KafkaTopics.TO_WEBSOCKETS_TRADES]: 1,
   [KafkaTopics.TO_WEBSOCKETS_MARKETS]: 1,
   [KafkaTopics.TO_WEBSOCKETS_CANDLES]: 1,
+  [KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT]: 1,
 };
 
 export interface BazookaEventJson {

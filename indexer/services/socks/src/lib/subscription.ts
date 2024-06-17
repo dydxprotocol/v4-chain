@@ -388,8 +388,9 @@ export class Subscriptions {
    * @returns
    */
   private validateSubscription(channel: Channel, id?: string): boolean {
-    // Only markets channel does not require an id to subscribe to.
-    if (channel !== Channel.V4_MARKETS && id === undefined) {
+    // Only markets & block height channels do not require an id to subscribe to.
+    if ((channel !== Channel.V4_MARKETS && channel !== Channel.V4_BLOCK_HEIGHT) &&
+      id === undefined) {
       return false;
     }
     switch (channel) {
@@ -399,6 +400,7 @@ export class Subscriptions {
           MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER,
         );
       }
+      case (Channel.V4_BLOCK_HEIGHT):
       case (Channel.V4_MARKETS): {
         return true;
       }
@@ -485,6 +487,9 @@ export class Subscriptions {
       }
       case (Channel.V4_MARKETS): {
         return `${COMLINK_URL}/v4/perpetualMarkets`;
+      }
+      case (Channel.V4_BLOCK_HEIGHT): {
+        return `${COMLINK_URL}/v4/blockHeight`;
       }
       case (Channel.V4_ORDERBOOK): {
         if (id === undefined) {
