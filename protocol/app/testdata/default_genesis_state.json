@@ -483,5 +483,17 @@
         "vester_account": "rewards_vester"
       }
     ]
+  },
+  "wasm": {
+    "codes": [],
+    "contracts": [],
+    "params": {
+      "code_upload_access": {
+        "addresses": [],
+        "permission": "Everybody"
+      },
+      "instantiate_default_permission": "Everybody"
+    },
+    "sequences": []
   }
 }

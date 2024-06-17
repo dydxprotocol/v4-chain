@@ -12,6 +12,7 @@ ARG GOLANG_1_22_ALPINE_DIGEST="d1a601b64de09e2fa38c95e55838961811d5ca11062a8f423
 FROM golang@sha256:${GOLANG_1_22_ALPINE_DIGEST} as builder
 ARG VERSION
 ARG COMMIT
+ARG WASMVM_VERSION=v1.5.2
 
 RUN set -eux; apk add --no-cache ca-certificates build-base; apk add git linux-headers bash binutils-gold
 
@@ -26,10 +27,13 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 COPY . .
 
 # See https://github.com/CosmWasm/wasmvm/releases
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.5.2/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
-
-# Copy the library you want to the final location that will be found by the linker flag `-lwasmvm_muslc`
-RUN cp /lib/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.a
+ADD https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
+ADD https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.x86_64.a
+RUN rm -f /lib/libwasmvm_muslc.a
+RUN cp "/lib/libwasmvm_muslc.$(uname -m).a" /lib/libwasmvm_muslc.a
+# check that the file is there
+RUN ls -l /lib/libwasmvm_muslc.a
+RUN uname -m 
 
 # Build dydxprotocold binary
 # force it to use static lib (from above) not standard libgo_cosmwasm.so file

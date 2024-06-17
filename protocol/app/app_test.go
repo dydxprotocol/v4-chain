@@ -9,6 +9,7 @@ import (
 	evidencemodule "cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
+	wasmmodule "github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -214,6 +215,7 @@ func TestModuleBasics(t *testing.T) {
 		epochsmodule.AppModuleBasic{},
 		ratelimitmodule.AppModuleBasic{},
 		vaultmodule.AppModuleBasic{},
+		wasmmodule.AppModuleBasic{},
 	)
 
 	app := testapp.DefaultTestApp(nil)
