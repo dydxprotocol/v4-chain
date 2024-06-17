@@ -135,7 +135,8 @@ fetch(`${baseURL}/addresses/{address}`,
         }
       },
       "marginEnabled": true,
-      "updatedAtHeight": "string"
+      "updatedAtHeight": "string",
+      "latestProcessedBlockHeight": "string"
     }
   ],
   "totalTradingRewards": "string"
@@ -272,7 +273,8 @@ fetch(`${baseURL}/addresses/{address}/subaccountNumber/{subaccountNumber}`,
     }
   },
   "marginEnabled": true,
-  "updatedAtHeight": "string"
+  "updatedAtHeight": "string",
+  "latestProcessedBlockHeight": "string"
 }
 ```
 
@@ -412,7 +414,8 @@ fetch(`${baseURL}/addresses/{address}/parentSubaccountNumber/{parentSubaccountNu
         }
       },
       "marginEnabled": true,
-      "updatedAtHeight": "string"
+      "updatedAtHeight": "string",
+      "latestProcessedBlockHeight": "string"
     }
   ]
 }
@@ -3193,7 +3196,8 @@ This operation does not require authentication
     }
   },
   "marginEnabled": true,
-  "updatedAtHeight": "string"
+  "updatedAtHeight": "string",
+  "latestProcessedBlockHeight": "string"
 }
 
 ```
@@ -3210,6 +3214,7 @@ This operation does not require authentication
 |assetPositions|[AssetPositionsMap](#schemaassetpositionsmap)|true|none|none|
 |marginEnabled|boolean|true|none|none|
 |updatedAtHeight|string|true|none|none|
+|latestProcessedBlockHeight|string|true|none|none|
 
 ## AddressResponse
 
@@ -3281,7 +3286,8 @@ This operation does not require authentication
         }
       },
       "marginEnabled": true,
-      "updatedAtHeight": "string"
+      "updatedAtHeight": "string",
+      "latestProcessedBlockHeight": "string"
     }
   ],
   "totalTradingRewards": "string"
@@ -3370,7 +3376,8 @@ This operation does not require authentication
         }
       },
       "marginEnabled": true,
-      "updatedAtHeight": "string"
+      "updatedAtHeight": "string",
+      "latestProcessedBlockHeight": "string"
     }
   ]
 }
