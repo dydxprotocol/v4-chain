@@ -74,7 +74,7 @@ jobs:
         # For push and PR cases, there's a different way to fetch the branch to compare with
       - name: check-bc-breaking
         run: |
-          git config --global --add safe.directory /__w/v4-chain/v4-chain
+          git config --global --add safe.directory /__w/stream-chain/stream-chain
           git fetch origin ${{ github.event.pull_request.base.sha || github.event.before }}
           buf breaking --against .git#branch=${{ github.event.pull_request.base.sha || github.event.before }}
   protocol-gen:
