@@ -23,14 +23,14 @@ var (
 
 func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 	tests := map[string]struct {
-		settledUpdates []keeper.SettledUpdate
+		settledUpdates []types.SettledUpdate
 		updateType     types.UpdateType
 		expectedVal    *perptypes.OpenInterestDelta
 		panicErr       string
 	}{
 		"Invalid: 1 update": {
 			updateType: types.Match,
-			settledUpdates: []keeper.SettledUpdate{
+			settledUpdates: []types.SettledUpdate{
 				{
 					SettledSubaccount: types.Subaccount{},
 					PerpetualUpdates: []types.PerpetualUpdate{
@@ -45,7 +45,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 		},
 		"Invalid: one of the updates contains no perp update": {
 			updateType: types.Match,
-			settledUpdates: []keeper.SettledUpdate{
+			settledUpdates: []types.SettledUpdate{
 				{
 					SettledSubaccount: types.Subaccount{
 						Id: aliceSubaccountId,
@@ -67,7 +67,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 		},
 		"Invalid: updates are on different perpetuals": {
 			updateType: types.Match,
-			settledUpdates: []keeper.SettledUpdate{
+			settledUpdates: []types.SettledUpdate{
 				{
 					SettledSubaccount: types.Subaccount{
 						Id: aliceSubaccountId,
@@ -95,7 +95,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 		},
 		"Invalid: updates don't have opposite signs": {
 			updateType: types.Match,
-			settledUpdates: []keeper.SettledUpdate{
+			settledUpdates: []types.SettledUpdate{
 				{
 					SettledSubaccount: types.Subaccount{
 						Id: aliceSubaccountId,
@@ -123,7 +123,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 		},
 		"Invalid: updates don't have equal absolute base quantums": {
 			updateType: types.Match,
-			settledUpdates: []keeper.SettledUpdate{
+			settledUpdates: []types.SettledUpdate{
 				{
 					SettledSubaccount: types.Subaccount{
 						Id: aliceSubaccountId,
@@ -151,7 +151,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 		},
 		"Valid: 0 -> -500, 0 -> 500, delta = 500": {
 			updateType: types.Match,
-			settledUpdates: []keeper.SettledUpdate{
+			settledUpdates: []types.SettledUpdate{
 				{
 					SettledSubaccount: types.Subaccount{
 						Id: aliceSubaccountId,
@@ -182,7 +182,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 		},
 		"Valid: 500 -> 0, 0 -> 500, delta = 0": {
 			updateType: types.Match,
-			settledUpdates: []keeper.SettledUpdate{
+			settledUpdates: []types.SettledUpdate{
 				{
 					SettledSubaccount: types.Subaccount{
 						Id:                 aliceSubaccountId,
@@ -217,7 +217,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 		},
 		"Not Match update, return nil": {
 			updateType: types.CollatCheck,
-			settledUpdates: []keeper.SettledUpdate{
+			settledUpdates: []types.SettledUpdate{
 				{
 					SettledSubaccount: types.Subaccount{
 						Id:                 aliceSubaccountId,
@@ -235,7 +235,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 		},
 		"Valid: 500 -> 350, 0 -> 150, delta = 0": {
 			updateType: types.Match,
-			settledUpdates: []keeper.SettledUpdate{
+			settledUpdates: []types.SettledUpdate{
 				{
 					SettledSubaccount: types.Subaccount{
 						Id: aliceSubaccountId,
@@ -270,7 +270,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 		},
 		"Valid: -100 -> 200, 250 -> -50, delta = -50": {
 			updateType: types.Match,
-			settledUpdates: []keeper.SettledUpdate{
+			settledUpdates: []types.SettledUpdate{
 				{
 					SettledSubaccount: types.Subaccount{
 						Id: aliceSubaccountId,
@@ -313,7 +313,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 		},
 		"Valid: -3100 -> -5000, 1000 -> 2900, delta = 1900": {
 			updateType: types.Match,
-			settledUpdates: []keeper.SettledUpdate{
+			settledUpdates: []types.SettledUpdate{
 				{
 					SettledSubaccount: types.Subaccount{
 						Id: aliceSubaccountId,
