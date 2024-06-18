@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/store"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	tmtypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -133,6 +134,7 @@ var genesisModuleOrder = []string{
 	rewardsmodule.ModuleName,
 	epochstypes.ModuleName,
 	blocktimetypes.ModuleName,
+	wasmtypes.ModuleName,
 }
 
 var skippedGenesisModules = map[string]interface{}{
