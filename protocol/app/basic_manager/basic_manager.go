@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/ibc-go/modules/capability"
 	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
+	listingmodule "github.com/dydxprotocol/v4-chain/protocol/x/listing"
 
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
@@ -93,5 +94,6 @@ var (
 		ratelimitmodule.AppModuleBasic{},
 		govplusmodule.AppModuleBasic{},
 		vaultmodule.AppModuleBasic{},
+		listingmodule.AppModuleBasic{},
 	)
 )
