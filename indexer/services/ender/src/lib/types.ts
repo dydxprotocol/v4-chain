@@ -35,6 +35,7 @@ import {
   DeleveragingEventV1,
   TradingRewardsEventV1,
   OpenInterestUpdateEventV1,
+  BlockHeightMessage,
 } from '@dydxprotocol-indexer/v4-protos';
 import { IHeaders } from 'kafkajs';
 import Long from 'long';
@@ -241,11 +242,6 @@ export interface VulcanMessage {
   key: Buffer,
   value: OffChainUpdateV1,
   headers?: IHeaders,
-}
-
-export interface BlockHeightMessage {
-  height: number,
-  time: string,
 }
 
 export type ConsolidatedKafkaEvent = {

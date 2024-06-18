@@ -8,6 +8,7 @@ import {
 } from '@dydxprotocol-indexer/kafka';
 import { FillSubaccountMessageContents, TradeMessageContents } from '@dydxprotocol-indexer/postgres';
 import {
+  BlockHeightMessage,
   CandleMessage,
   MarketMessage,
   OffChainUpdateV1,
@@ -21,7 +22,6 @@ import config from '../config';
 import { convertToSubaccountMessage } from './helper';
 import {
   AnnotatedSubaccountMessage,
-  BlockHeightMessage,
   ConsolidatedKafkaEvent,
   SingleTradeMessage,
   VulcanMessage,
@@ -212,7 +212,7 @@ export class KafkaPublisher {
         topic: KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
         messages: _.map(this.blockHeightMessages, (message: BlockHeightMessage) => {
           return {
-            value: Buffer.from(Uint8Array.from([])),
+            value: Buffer.from(Uint8Array.from(BlockHeightMessage.encode(message).finish())),
           };
         }),
       });

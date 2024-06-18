@@ -20,7 +20,6 @@ import {
   SubaccountMessage,
   TradeMessage,
 } from '@dydxprotocol-indexer/v4-protos';
-import { version } from 'os';
 
 export const btcClobPairId: string = '1';
 export const ethClobPairId: string = '2';
