@@ -3383,6 +3383,7 @@ This operation does not require authentication
 |*anonymous*|MANUAL|
 |*anonymous*|US_GEO|
 |*anonymous*|CA_GEO|
+|*anonymous*|GB_GEO|
 |*anonymous*|SANCTIONED_GEO|
 |*anonymous*|COMPLIANCE_PROVIDER|
 
