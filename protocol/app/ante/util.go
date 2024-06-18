@@ -34,6 +34,10 @@ func ShouldSkipSequenceValidation(msgs []sdk.Msg) (shouldSkipValidation bool) {
 			}
 			// This is a `GoodTilBlock` message, continue to check the next message.
 			continue
+		case
+			*clobtypes.MsgBatchCancel:
+			// MsgBatchCancel only supports short term orders.
+			continue
 		default:
 			// Early return for messages that require sequence number validation.
 			return false
