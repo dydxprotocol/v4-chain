@@ -1,9 +1,9 @@
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
-/** GenesisState defines `x/listing`'s genesis state. */
+/** GenesisState defines `x/revshare`'s genesis state. */
 
 export interface GenesisState {}
-/** GenesisState defines `x/listing`'s genesis state. */
+/** GenesisState defines `x/revshare`'s genesis state. */
 
 export interface GenesisStateSDKType {}
 
