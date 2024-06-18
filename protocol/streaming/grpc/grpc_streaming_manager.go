@@ -171,7 +171,8 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 				),
 				"err", err,
 			)
-			delete(sm.orderbookSubscriptions, subscription.subscriptionId)
+			// Break out of the loop, stopping this goroutine.
+			// The channel will fill up and the main thread will prune the subscription.
 			break
 		}
 	}
@@ -328,6 +329,8 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 						Snapshot: false,
 					},
 				},
+				BlockHeight: blockHeight,
+				ExecMode:    uint32(execMode),
 			},
 		}
 	}
