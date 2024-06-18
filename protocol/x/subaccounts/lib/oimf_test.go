@@ -1,4 +1,4 @@
-package keeper_test
+package lib_test
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	keeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
+	salib "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
@@ -364,7 +364,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 						tc.panicErr,
 						tc.settledUpdates,
 					), func() {
-						keeper.GetDeltaOpenInterestFromUpdates(
+						salib.GetDeltaOpenInterestFromUpdates(
 							tc.settledUpdates,
 							tc.updateType,
 						)
@@ -373,7 +373,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 				return
 			}
 
-			perpOpenInterestDelta := keeper.GetDeltaOpenInterestFromUpdates(
+			perpOpenInterestDelta := salib.GetDeltaOpenInterestFromUpdates(
 				tc.settledUpdates,
 				tc.updateType,
 			)
