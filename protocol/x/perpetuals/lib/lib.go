@@ -18,21 +18,23 @@ func GetSettlementPpmWithPerpetual(
 	bigNetSettlementPpm *big.Int,
 	newFundingIndex *big.Int,
 ) {
-	indexDelta := new(big.Int).Sub(perpetual.FundingIndex.BigInt(), index)
+	fundingIndex := perpetual.FundingIndex.BigInt()
 
-	// if indexDelta is zero, then net settlement is zero.
-	if indexDelta.Sign() == 0 {
-		return big.NewInt(0), perpetual.FundingIndex.BigInt()
+	// Sets the index delta to the result.
+	result := new(big.Int).Sub(fundingIndex, index)
+
+	// If no change in funding, return 0.
+	if result.Sign() == 0 {
+		return result, fundingIndex
 	}
 
-	bigNetSettlementPpm = new(big.Int).Mul(indexDelta, quantums)
+	// The settlement is a signed value.
+	// If the index delta is positive and the quantums is positive (long), then settlement is negative.
+	// Thus, always negate the value of the multiplication of the index delta and the quantums.
+	result = result.Mul(result, quantums)
+	result = result.Neg(result)
 
-	// `bigNetSettlementPpm` carries sign. `indexDelta` is the increase in `fundingIndex`, so if
-	// the position is long (positive), the net settlement should be short (negative), and vice versa.
-	// Thus, always negate `bigNetSettlementPpm` here.
-	bigNetSettlementPpm = bigNetSettlementPpm.Neg(bigNetSettlementPpm)
-
-	return bigNetSettlementPpm, perpetual.FundingIndex.BigInt()
+	return result, fundingIndex
 }
 
 // GetNetCollateralAndMarginRequirements returns the net collateral, initial margin requirement,
