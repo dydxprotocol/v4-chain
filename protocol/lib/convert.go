@@ -26,7 +26,7 @@ func ConvertBigFloatToUint64(value *big.Float) (uint64, error) {
 		return 0, errors.New("value overflows uint64")
 	}
 
-	if value.Cmp(BigFloat0()) == -1 {
+	if value.Sign() < 0 {
 		return 0, errors.New("value underflows uint64")
 	}
 
