@@ -103,7 +103,6 @@ func TestShowEpochInfo(t *testing.T) {
 
 			if tc.err != nil {
 				require.Contains(t, stdQueryErr, "not found")
-
 			} else {
 				require.NoError(t, err)
 

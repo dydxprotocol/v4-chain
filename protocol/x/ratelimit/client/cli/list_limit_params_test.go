@@ -17,7 +17,6 @@ import (
 var _ = strconv.IntSize
 
 func TestListLimiterParams(t *testing.T) {
-
 	cfg := network.DefaultConfig(nil)
 
 	param := fmt.Sprintf("--%s=json", tmcli.OutputFlag)

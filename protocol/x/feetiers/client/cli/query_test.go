@@ -16,7 +16,6 @@ import (
 var _ = strconv.IntSize
 
 func TestQueryPerpetualFeeParams(t *testing.T) {
-
 	cfg := network.DefaultConfig(nil)
 
 	feeQuery := "docker exec interchain-security-instance-setup interchain-security-cd query feetiers get-perpetual-fee-params"
@@ -28,7 +27,6 @@ func TestQueryPerpetualFeeParams(t *testing.T) {
 }
 
 func TestQueryUserFeeTier(t *testing.T) {
-
 	cfg := network.DefaultConfig(nil)
 
 	feeQuery := "docker exec interchain-security-instance-setup interchain-security-cd query feetiers get-user-fee-tier alice"

@@ -39,7 +39,6 @@ func TestQueryNextDelayedMessageId(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			cfg := network.DefaultConfig(nil)
 			genesisChanges := getDelayedGenesisChanges(name)
 
@@ -90,7 +89,6 @@ func TestQueryMessage(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			fmt.Println("PRINTING TEST CASE", name)
 
 			genesisChanges := getGenesisChanges(name)
@@ -105,7 +103,6 @@ func TestQueryMessage(t *testing.T) {
 				fmt.Println("Printing error", stdQueryErr)
 				require.True(t, strings.Contains(stdQueryErr, GrpcNotFoundError))
 			} else {
-
 				require.NoError(t, err)
 				var resp types.QueryMessageResponse
 
@@ -117,7 +114,6 @@ func TestQueryMessage(t *testing.T) {
 				require.NoError(t, err)
 
 				require.Equal(t, tc.expectedMsg, msg)
-
 			}
 
 			network.CleanupCustomNetwork()
@@ -149,7 +145,6 @@ func TestQueryBlockMessageIds(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			genesisChanges := getGenesisChanges(name)
 			network.DeployCustomNetwork(genesisChanges)
 
@@ -159,7 +154,6 @@ func TestQueryBlockMessageIds(t *testing.T) {
 
 			if name == "Default: 0" {
 				require.True(t, strings.Contains(stdQueryErr, GrpcNotFoundError))
-
 			} else {
 
 				require.NoError(t, err)

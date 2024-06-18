@@ -90,7 +90,6 @@ func TestShowClobPair(t *testing.T) {
 	} {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
-
 			cfg := network.DefaultConfig(nil)
 			query := "docker exec interchain-security-instance interchain-security-cd query clob show-clob-pair " + fmt.Sprintf("%d", tc.id)
 			data, stderrOutput, err := network.QueryCustomNetwork(query)

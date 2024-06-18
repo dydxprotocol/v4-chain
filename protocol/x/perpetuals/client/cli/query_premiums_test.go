@@ -44,5 +44,4 @@ func TestQueryPremiumVotes(t *testing.T) {
 	require.NotNil(t, resp.PremiumVotes)
 	require.Equal(t, []types.MarketPremiums{}, resp.PremiumVotes.AllMarketPremiums)
 	network.CleanupCustomNetwork()
-
 }

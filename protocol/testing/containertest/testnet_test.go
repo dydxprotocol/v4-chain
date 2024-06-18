@@ -28,15 +28,8 @@ import (
 )
 
 const expectDirName = "expect"
-const govModuleAddress = "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky"
 
 var acceptFlag = flag.Bool("accept", false, "Accept new values for expect files")
-var nodeAddresses = []string{
-	constants.AliceAccAddress.String(),
-	constants.BobAccAddress.String(),
-	constants.CarlAccAddress.String(),
-	constants.DaveAccAddress.String(),
-}
 
 // Compare a message against an expected output. Use flag `-accept` to write or modify expected output.
 // Expected output will read/written from `expect/{testName}_{tag}.expect`.

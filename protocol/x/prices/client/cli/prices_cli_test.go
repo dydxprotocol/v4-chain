@@ -187,7 +187,6 @@ func (s *PricesIntegrationTestSuite) TestCLIPrices_PartialResponses_PartialPrice
 	// Verify.
 	s.expectMarketPricesWithTimeout(expectedPricesWithPartialUpdate, 30*time.Second)
 	network.CleanupCustomNetwork()
-
 }
 
 func (s *PricesIntegrationTestSuite) TestCLIPrices_AllValidResponses_ValidPriceUpdate() {
@@ -199,5 +198,4 @@ func (s *PricesIntegrationTestSuite) TestCLIPrices_AllValidResponses_ValidPriceU
 	// Verify.
 	s.expectMarketPricesWithTimeout(expectedPricesWithFullUpdate, 30*time.Second)
 	network.CleanupCustomNetwork()
-
 }

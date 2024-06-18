@@ -56,7 +56,6 @@ func (s *SendingIntegrationTestSuite) SetupTest() {
 
 	genesisChanges := "\".app_state.subaccounts.subaccounts = [{\\\"id\\\": {\\\"number\\\": \\\"0\\\", \\\"owner\\\": \\\"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6\\\"}, \\\"asset_positions\\\": [{\\\"asset_id\\\": \\\"0\\\", \\\"quantums\\\": \\\"500000000\\\"}], \\\"perpetual_positions\\\": []}, {\\\"id\\\": {\\\"number\\\": \\\"1\\\", \\\"owner\\\": \\\"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6\\\"}, \\\"asset_positions\\\": [{\\\"asset_id\\\": \\\"0\\\", \\\"quantums\\\": \\\"500000000\\\"}], \\\"perpetual_positions\\\": []}] | .app_state.epochs.epoch_info_list = [{\\\"name\\\": \\\"funding-sample\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"funding-tick\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"stats-epoch\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}]\" \"\""
 	network.DeployCustomNetwork(genesisChanges)
-
 }
 
 // TestCLISending_Success sends a transfer from one subaccount to another (with the same owner and different numbers).
@@ -111,7 +110,6 @@ func (s *SendingIntegrationTestSuite) sendTransferAndVerifyBalance(
 	expectedSenderQuoteBalance *big.Int,
 	expectedRecipientQuoteBalance *big.Int,
 ) {
-
 	cfg := network.DefaultConfig(nil)
 	transferTx := fmt.Sprintf("docker exec interchain-security-instance interchain-security-cd tx sending create-transfer dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 %d dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 %d %d --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y", senderSubaccountNumber, recipientSubaccountNumber, amount)
 	_, _, err := network.QueryCustomNetwork(transferTx)

@@ -12,7 +12,6 @@ import (
 )
 
 func TestPendingSendPackets(t *testing.T) {
-
 	cfg := network.DefaultConfig(nil)
 
 	rateQuery := "docker exec interchain-security-instance-setup interchain-security-cd query ratelimit pending-send-packets"

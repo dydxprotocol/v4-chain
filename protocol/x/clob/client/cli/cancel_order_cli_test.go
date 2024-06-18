@@ -95,10 +95,9 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 // The subaccounts are then queried and assertions are performed on their QuoteBalance and PerpetualPositions.
 // The account which places the orders is also the validator's AccAddress.
 func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
-
 	goodTilBlock := uint32(0)
 	query := "docker exec interchain-security-instance interchain-security-cd query block --type=height 0"
-	data, _, err := network.QueryCustomNetwork(query)
+	data, _, _ := network.QueryCustomNetwork(query)
 	var resp blocktypes.Block
 	require.NoError(s.T(), s.cfg.Codec.UnmarshalJSON(data, &resp))
 	blockHeight := resp.LastCommit.Height

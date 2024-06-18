@@ -114,12 +114,11 @@ func (s *LiquidationsIntegrationTestSuite) SetupSuite() {
 // QuoteBalance and PerpetualPositions, along with the balances of the Subaccounts module,
 // Distribution module, and insurance fund.
 func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
-
 	goodTilBlock := uint32(0)
 	subticks := types.Subticks(50_000_000_000)
 
 	blockHeightQuery := "docker exec interchain-security-instance interchain-security-cd query block --type=height 0"
-	data, _, err := network.QueryCustomNetwork(blockHeightQuery)
+	data, _, _ := network.QueryCustomNetwork(blockHeightQuery)
 	var resp blocktypes.Block
 	require.NoError(s.T(), s.cfg.Codec.UnmarshalJSON(data, &resp))
 	blockHeight := resp.LastCommit.Height

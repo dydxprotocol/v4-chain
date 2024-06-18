@@ -56,7 +56,7 @@ func transformToNew(jsonRaw []byte, ctx client.Context) (json.RawMessage, error)
 	oldConsumerGenesis := consumerTypes.GenesisState{}
 	err := ctx.Codec.UnmarshalJSON(jsonRaw, &oldConsumerGenesis)
 	if err != nil {
-		return nil, fmt.Errorf("reading consumer genesis data failed: %s", err)
+		return nil, fmt.Errorf("reading consumer genesis data failed: %w", err)
 	}
 
 	initialValSet := oldConsumerGenesis.InitialValSet
@@ -94,7 +94,7 @@ func transformToNew(jsonRaw []byte, ctx client.Context) (json.RawMessage, error)
 
 	newJson, err := ctx.Codec.MarshalJSON(&newGenesis)
 	if err != nil {
-		return nil, fmt.Errorf("failed marshalling data to new type: %s", err)
+		return nil, fmt.Errorf("failed marshalling data to new type: %w", err)
 	}
 	return newJson, nil
 }
@@ -106,7 +106,7 @@ func transformToV33(jsonRaw []byte, ctx client.Context) ([]byte, error) {
 	srcConGen := consumerTypes.GenesisState{}
 	err := ctx.Codec.UnmarshalJSON(jsonRaw, &srcConGen)
 	if err != nil {
-		return nil, fmt.Errorf("reading consumer genesis data failed: %s", err)
+		return nil, fmt.Errorf("reading consumer genesis data failed: %w", err)
 	}
 
 	// Remove retry_delay_period from 'params'

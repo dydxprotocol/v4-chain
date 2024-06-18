@@ -16,7 +16,6 @@ import (
 var _ = strconv.IntSize
 
 func TestQueryParams(t *testing.T) {
-
 	cfg := network.DefaultConfig(nil)
 
 	statsQuery := "docker exec interchain-security-instance-setup interchain-security-cd query stats get-params"
@@ -29,7 +28,6 @@ func TestQueryParams(t *testing.T) {
 }
 
 func TestQueryStatsMetadata(t *testing.T) {
-
 	cfg := network.DefaultConfig(nil)
 
 	statsQuery := "docker exec interchain-security-instance-setup interchain-security-cd query stats get-stats-metadata"
@@ -41,7 +39,6 @@ func TestQueryStatsMetadata(t *testing.T) {
 }
 
 func TestQueryGlobalStats(t *testing.T) {
-
 	cfg := network.DefaultConfig(nil)
 
 	statsQuery := "docker exec interchain-security-instance-setup interchain-security-cd query stats get-global-stats"
@@ -53,12 +50,10 @@ func TestQueryGlobalStats(t *testing.T) {
 }
 
 func TestQueryUserStats(t *testing.T) {
-
 	cfg := network.DefaultConfig(nil)
 
 	statsQuery := "docker exec interchain-security-instance-setup interchain-security-cd query stats get-user-stats alice"
 	data, _, err := network.QueryCustomNetwork(statsQuery)
-
 
 	require.NoError(t, err)
 	var resp types.QueryUserStatsResponse

@@ -103,13 +103,12 @@ func (s *PlaceOrderIntegrationTestSuite) SetupSuite() {
 // The orders placed are expected to match, and after matching, the subaccounts are queried and assertions
 // are performed on their QuoteBalance and PerpetualPositions.
 func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
-
 	goodTilBlock := uint32(0)
 	quantums := satypes.BaseQuantums(1_000)
 	subticks := types.Subticks(50_000_000_000)
 
 	blockHeightQuery := "docker exec interchain-security-instance interchain-security-cd query block --type=height 0"
-	data, _, err := network.QueryCustomNetwork(blockHeightQuery)
+	data, _, _ := network.QueryCustomNetwork(blockHeightQuery)
 	var resp blocktypes.Block
 	require.NoError(s.T(), s.cfg.Codec.UnmarshalJSON(data, &resp))
 	blockHeight := resp.LastCommit.Height

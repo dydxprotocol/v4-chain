@@ -201,7 +201,6 @@ var (
 func init() {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
-
 		panic(err)
 	}
 

@@ -13,8 +13,8 @@ import (
 	"regexp"
 	"strings"
 
-	idbm "github.com/cosmos/iavl/db"
 	"github.com/cosmos/iavl"
+	idbm "github.com/cosmos/iavl/db"
 	"github.com/spf13/cobra"
 )
 

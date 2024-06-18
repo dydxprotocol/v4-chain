@@ -16,7 +16,6 @@ import (
 var _ = strconv.IntSize
 
 func TestQueryParams(t *testing.T) {
-
 	cfg := network.DefaultConfig(nil)
 
 	blockQuery := "docker exec interchain-security-instance-setup interchain-security-cd query blocktime get-downtime-params"
