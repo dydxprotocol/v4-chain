@@ -24,7 +24,7 @@ import { BatchedHandlers } from '../../src/lib/batched-handlers';
 import { SyncHandlers } from '../../src/lib/sync-handlers';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
-import { KafkaTopics } from '@dydxprotocol-indexer/kafka';
+import { BLOCK_HEIGHT_WEBSOCKET_MESSAGE_VERSION, KafkaTopics } from '@dydxprotocol-indexer/kafka';
 
 describe('block-processor', () => {
   let batchedHandlers: MockProxy<BatchedHandlers>;
@@ -184,7 +184,9 @@ describe('block-processor', () => {
     const processor = await blockProcessor.process();
     await Transaction.commit(txId);
     expect(processor.blockHeightMessages).toHaveLength(1);
-    expect(processor.blockHeightMessages[0].height).toEqual(defaultHeight);
+    expect(processor.blockHeightMessages[0].blockHeight).toEqual(String(defaultHeight));
+    expect(processor.blockHeightMessages[0].version)
+      .toEqual(BLOCK_HEIGHT_WEBSOCKET_MESSAGE_VERSION);
     expect(processor.blockHeightMessages[0].time).toEqual(defaultDateTime.toString());
   });
 
@@ -211,8 +213,9 @@ describe('block-processor', () => {
     expect(msg).toEqual({
       topic: KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
       message: {
-        height: defaultHeight,
+        blockHeight: String(defaultHeight),
         time: defaultDateTime.toString(),
+        version: BLOCK_HEIGHT_WEBSOCKET_MESSAGE_VERSION,
       },
     });
   });

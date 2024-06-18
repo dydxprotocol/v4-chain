@@ -1,10 +1,11 @@
 /* eslint-disable max-len */
 import { logger, stats, STATS_NO_SAMPLING } from '@dydxprotocol-indexer/base';
-import { KafkaTopics } from '@dydxprotocol-indexer/kafka';
+import { BLOCK_HEIGHT_WEBSOCKET_MESSAGE_VERSION, KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
   storeHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import {
+  BlockHeightMessage,
   IndexerTendermintBlock,
   IndexerTendermintEvent,
 } from '@dydxprotocol-indexer/v4-protos';
@@ -34,7 +35,6 @@ import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTra
 import { KafkaPublisher } from './kafka-publisher';
 import { SyncHandlers, SYNCHRONOUS_SUBTYPES } from './sync-handlers';
 import {
-  BlockHeightMessage,
   ConsolidatedKafkaEvent,
   DydxIndexerSubtypes, EventMessage, EventProtoWithTypeAndVersion, GroupedEvents,
 } from './types';
@@ -230,7 +230,8 @@ export class BlockProcessor {
 
   createBlockHeightMsg(): ConsolidatedKafkaEvent {
     const message: BlockHeightMessage = {
-      height: this.block.height,
+      blockHeight: String(this.block.height),
+      version: BLOCK_HEIGHT_WEBSOCKET_MESSAGE_VERSION,
       time: this.block.time?.toISOString() ?? '',
     };
     return {
