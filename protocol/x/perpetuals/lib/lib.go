@@ -20,17 +20,15 @@ func GetSettlementPpmWithPerpetual(
 ) {
 	fundingIndex := perpetual.FundingIndex.BigInt()
 
-	// Sets the index delta to the result.
-	result := new(big.Int).Sub(fundingIndex, index)
-
 	// If no change in funding, return 0.
-	if result.Sign() == 0 {
-		return result, fundingIndex
+	if fundingIndex.Cmp(index) == 0 {
+		return big.NewInt(0), fundingIndex
 	}
 
 	// The settlement is a signed value.
 	// If the index delta is positive and the quantums is positive (long), then settlement is negative.
 	// Thus, always negate the value of the multiplication of the index delta and the quantums.
+	result := new(big.Int).Sub(fundingIndex, index)
 	result = result.Mul(result, quantums)
 	result = result.Neg(result)
 
