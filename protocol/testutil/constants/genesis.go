@@ -1350,6 +1350,7 @@ const GenesisState = `{
         }
       ]
     },
+    "revshare": {},
     "rewards": {
       "params": {
         "treasury_account":"rewards_treasury",

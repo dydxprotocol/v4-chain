@@ -33,6 +33,7 @@ import (
 	perpetualsmodule "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	pricesmodule "github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	ratelimitmodule "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit"
+	revsharemodule "github.com/dydxprotocol/v4-chain/protocol/x/revshare"
 	rewardsmodule "github.com/dydxprotocol/v4-chain/protocol/x/rewards"
 	sendingmodule "github.com/dydxprotocol/v4-chain/protocol/x/sending"
 	statsmodule "github.com/dydxprotocol/v4-chain/protocol/x/stats"
@@ -94,6 +95,7 @@ var (
 		ratelimitmodule.AppModuleBasic{},
 		govplusmodule.AppModuleBasic{},
 		vaultmodule.AppModuleBasic{},
+		revsharemodule.AppModuleBasic{},
 		listingmodule.AppModuleBasic{},
 	)
 )
