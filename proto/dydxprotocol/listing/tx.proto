@@ -23,7 +23,6 @@ message MsgSetMarketsHardCap {
 
   // Hard cap for the total number of markets listed
   uint32 hard_cap_for_markets = 2;
-
 }
 
 // MsgSetMarketsHardCapResponse defines the MsgSetMarketsHardCap response

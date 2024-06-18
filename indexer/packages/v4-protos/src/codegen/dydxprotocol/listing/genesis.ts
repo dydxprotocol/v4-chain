@@ -3,13 +3,19 @@ import { DeepPartial } from "../../helpers";
 /** GenesisState defines `x/listing`'s genesis state. */
 
 export interface GenesisState {
-  /** hard_cap_for_markets is the hard cap for the number of markets that can be listed */
+  /**
+   * hard_cap_for_markets is the hard cap for the number of markets that can be
+   * listed
+   */
   hardCapForMarkets: number;
 }
 /** GenesisState defines `x/listing`'s genesis state. */
 
 export interface GenesisStateSDKType {
-  /** hard_cap_for_markets is the hard cap for the number of markets that can be listed */
+  /**
+   * hard_cap_for_markets is the hard cap for the number of markets that can be
+   * listed
+   */
   hard_cap_for_markets: number;
 }
 

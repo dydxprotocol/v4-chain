@@ -24,7 +24,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines `x/listing`'s genesis state.
 type GenesisState struct {
-	// hard_cap_for_markets is the hard cap for the number of markets that can be listed
+	// hard_cap_for_markets is the hard cap for the number of markets that can be
+	// listed
 	HardCapForMarkets uint32 `protobuf:"varint,1,opt,name=hard_cap_for_markets,json=hardCapForMarkets,proto3" json:"hard_cap_for_markets,omitempty"`
 }
 
