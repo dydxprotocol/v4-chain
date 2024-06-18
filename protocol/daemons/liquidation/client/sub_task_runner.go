@@ -305,13 +305,10 @@ func (c *Client) CheckSubaccountCollateralization(
 
 	// Funding payments are lazily settled, so get the settled subaccount
 	// to ensure that the funding payments are included in the net collateral calculation.
-	settledSubaccount, _, err := salib.GetSettledSubaccountWithPerpetuals(
+	settledSubaccount, _ := salib.GetSettledSubaccountWithPerpetuals(
 		unsettledSubaccount,
 		perpInfos,
 	)
-	if err != nil {
-		return false, false, err
-	}
 
 	bigTotalNetCollateral := big.NewInt(0)
 	bigTotalMaintenanceMargin := big.NewInt(0)

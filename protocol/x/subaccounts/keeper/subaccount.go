@@ -236,10 +236,7 @@ func (k Keeper) getSettledUpdates(
 		// idToSettledSubaccount map.
 		if !exists {
 			subaccount := k.GetSubaccount(ctx, u.SubaccountId)
-			settledSubaccount, fundingPayments, err = salib.GetSettledSubaccountWithPerpetuals(subaccount, perpInfos)
-			if err != nil {
-				return nil, nil, err
-			}
+			settledSubaccount, fundingPayments = salib.GetSettledSubaccountWithPerpetuals(subaccount, perpInfos)
 
 			idToSettledSubaccount[u.SubaccountId] = settledSubaccount
 			subaccountIdToFundingPayments[u.SubaccountId] = fundingPayments
@@ -487,14 +484,11 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	// TODO(TRA-99): Add integration / E2E tests on order placement / matching with this new
 	// constraint.
 	// Check if the updates satisfy the isolated perpetual constraints.
-	success, successPerUpdate, err = k.checkIsolatedSubaccountConstraints(
+	success, successPerUpdate = k.checkIsolatedSubaccountConstraints(
 		ctx,
 		settledUpdates,
 		perpInfos,
 	)
-	if err != nil {
-		return false, nil, err
-	}
 	if !success {
 		return success, successPerUpdate, nil
 	}
@@ -702,10 +696,7 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	settledSubaccount, _, err := salib.GetSettledSubaccountWithPerpetuals(subaccount, perpInfos)
-	if err != nil {
-		return nil, nil, nil, err
-	}
+	settledSubaccount, _ := salib.GetSettledSubaccountWithPerpetuals(subaccount, perpInfos)
 
 	settledUpdate := types.SettledUpdate{
 		SettledSubaccount: settledSubaccount,

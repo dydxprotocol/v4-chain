@@ -23,7 +23,6 @@ func GetSettledSubaccountWithPerpetuals(
 ) (
 	settledSubaccount types.Subaccount,
 	fundingPayments map[uint32]dtypes.SerializableInt,
-	err error,
 ) {
 	totalNetSettlementPpm := big.NewInt(0)
 
@@ -78,7 +77,7 @@ func GetSettledSubaccountWithPerpetuals(
 	)
 	// TODO(CLOB-993): Remove this function and use `UpdateAssetPositions` instead.
 	newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
-	return newSubaccount, fundingPayments, nil
+	return newSubaccount, fundingPayments
 }
 
 // IsValidStateTransitionForUndercollateralizedSubaccount returns an `UpdateResult`

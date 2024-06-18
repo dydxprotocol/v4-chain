@@ -28,16 +28,12 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
-	err error,
 ) {
 	success = true
 	successPerUpdate = make([]types.UpdateResult, len(settledUpdates))
 
 	for i, u := range settledUpdates {
-		result, err := isValidIsolatedPerpetualUpdates(u, perpInfos)
-		if err != nil {
-			return false, nil, err
-		}
+		result := isValidIsolatedPerpetualUpdates(u, perpInfos)
 		if result != types.Success {
 			success = false
 		}
@@ -45,7 +41,7 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 		successPerUpdate[i] = result
 	}
 
-	return success, successPerUpdate, nil
+	return success, successPerUpdate
 }
 
 // Checks whether the perpetual updates to a settled subaccount violates constraints for isolated
@@ -61,11 +57,11 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 func isValidIsolatedPerpetualUpdates(
 	settledUpdate types.SettledUpdate,
 	perpInfos perptypes.PerpInfos,
-) (types.UpdateResult, error) {
+) types.UpdateResult {
 	// If there are no perpetual updates, then this update does not violate constraints for isolated
 	// markets.
 	if len(settledUpdate.PerpetualUpdates) == 0 {
-		return types.Success, nil
+		return types.Success
 	}
 
 	// Check if the updates contain an update to an isolated perpetual.
@@ -99,19 +95,19 @@ func isValidIsolatedPerpetualUpdates(
 	// A subaccount with a perpetual position in an isolated perpetual cannot have updates to other
 	// non-isolated perpetuals.
 	if isIsolatedSubaccount && !hasIsolatedUpdate {
-		return types.ViolatesIsolatedSubaccountConstraints, nil
+		return types.ViolatesIsolatedSubaccountConstraints
 	}
 
 	// A subaccount with perpetual positions in non-isolated perpetuals cannot have an update
 	// to an isolated perpetual.
 	if !isIsolatedSubaccount && hasPerpetualPositions && hasIsolatedUpdate {
-		return types.ViolatesIsolatedSubaccountConstraints, nil
+		return types.ViolatesIsolatedSubaccountConstraints
 	}
 
 	// There cannot be more than a single perpetual update if an update to an isolated perpetual
 	// exists in the slice of perpetual updates.
 	if hasIsolatedUpdate && len(settledUpdate.PerpetualUpdates) > 1 {
-		return types.ViolatesIsolatedSubaccountConstraints, nil
+		return types.ViolatesIsolatedSubaccountConstraints
 	}
 
 	// Note we can assume that if `hasIsolatedUpdate` is true, there is only a single perpetual
@@ -121,10 +117,10 @@ func isValidIsolatedPerpetualUpdates(
 	if isIsolatedSubaccount &&
 		hasIsolatedUpdate &&
 		isolatedPositionPerpetualId != isolatedUpdatePerpetualId {
-		return types.ViolatesIsolatedSubaccountConstraints, nil
+		return types.ViolatesIsolatedSubaccountConstraints
 	}
 
-	return types.Success, nil
+	return types.Success
 }
 
 // GetIsolatedPerpetualStateTransition computes whether an isolated perpetual position will be
