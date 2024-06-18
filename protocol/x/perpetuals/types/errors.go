@@ -122,6 +122,11 @@ var (
 		25,
 		"open interest would become negative after update",
 	)
+	ErrPerpetualInfoDoesNotExist = errorsmod.Register(
+		ModuleName,
+		26,
+		"PerpetualInfo does not exist",
+	)
 
 	// Errors for Not Implemented
 	ErrNotImplementedFunding = errorsmod.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")
