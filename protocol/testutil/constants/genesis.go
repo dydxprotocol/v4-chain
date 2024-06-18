@@ -1357,6 +1357,7 @@ const GenesisState = `{
         "fee_multiplier_ppm":990000
       }
     },
+    "revshare": {},
     "ratelimit": {
       "limit_params_list": [
         {

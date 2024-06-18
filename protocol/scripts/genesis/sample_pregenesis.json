@@ -1760,6 +1760,7 @@
         "treasury_account": "rewards_treasury"
       }
     },
+    "revshare": {},
     "sending": {},
     "slashing": {
       "missed_blocks": [],

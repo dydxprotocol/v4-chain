@@ -1,0 +1,7 @@
+syntax = "proto3";
+package dydxprotocol.revshare;
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types";
+
+// GenesisState defines `x/listing`'s genesis state.
+message GenesisState {}

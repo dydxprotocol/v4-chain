@@ -2187,6 +2187,7 @@
         "fee_multiplier_ppm": 990000
       }
     },
+    "revshare": {},
     "sending": {},
     "slashing": {
       "params": {
