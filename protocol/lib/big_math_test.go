@@ -790,14 +790,6 @@ func TestBigIntRoundToMultiple(t *testing.T) {
 	}
 }
 
-func TestBigInt0(t *testing.T) {
-	require.Equal(t, big.NewInt(0), lib.BigInt0())
-}
-
-func TestBigFloat0(t *testing.T) {
-	require.Equal(t, big.NewFloat(0), lib.BigFloat0())
-}
-
 func TestBigFloatMaxUint64(t *testing.T) {
 	require.Equal(t, new(big.Float).SetUint64(math.MaxUint64), lib.BigFloatMaxUint64())
 }

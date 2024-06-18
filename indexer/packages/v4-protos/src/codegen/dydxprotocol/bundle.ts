@@ -144,17 +144,18 @@ import * as _154 from "./clob/tx.rpc.msg";
 import * as _155 from "./delaymsg/tx.rpc.msg";
 import * as _156 from "./feetiers/tx.rpc.msg";
 import * as _157 from "./govplus/tx.rpc.msg";
-import * as _158 from "./perpetuals/tx.rpc.msg";
-import * as _159 from "./prices/tx.rpc.msg";
-import * as _160 from "./ratelimit/tx.rpc.msg";
-import * as _161 from "./rewards/tx.rpc.msg";
-import * as _162 from "./sending/tx.rpc.msg";
-import * as _163 from "./stats/tx.rpc.msg";
-import * as _164 from "./vault/tx.rpc.msg";
-import * as _165 from "./vest/tx.rpc.msg";
-import * as _166 from "./lcd";
-import * as _167 from "./rpc.query";
-import * as _168 from "./rpc.tx";
+import * as _158 from "./listing/tx.rpc.msg";
+import * as _159 from "./perpetuals/tx.rpc.msg";
+import * as _160 from "./prices/tx.rpc.msg";
+import * as _161 from "./ratelimit/tx.rpc.msg";
+import * as _162 from "./rewards/tx.rpc.msg";
+import * as _163 from "./sending/tx.rpc.msg";
+import * as _164 from "./stats/tx.rpc.msg";
+import * as _165 from "./vault/tx.rpc.msg";
+import * as _166 from "./vest/tx.rpc.msg";
+import * as _167 from "./lcd";
+import * as _168 from "./rpc.query";
+import * as _169 from "./rpc.tx";
 export namespace dydxprotocol {
   export const assets = { ..._5,
     ..._6,
@@ -260,7 +261,8 @@ export namespace dydxprotocol {
   export const listing = { ..._61,
     ..._62,
     ..._63,
-    ..._141
+    ..._141,
+    ..._158
   };
   export const perpetuals = { ..._64,
     ..._65,
@@ -269,7 +271,7 @@ export namespace dydxprotocol {
     ..._68,
     ..._125,
     ..._142,
-    ..._158
+    ..._159
   };
   export const prices = { ..._69,
     ..._70,
@@ -278,7 +280,7 @@ export namespace dydxprotocol {
     ..._73,
     ..._126,
     ..._143,
-    ..._159
+    ..._160
   };
   export const ratelimit = { ..._74,
     ..._75,
@@ -288,7 +290,7 @@ export namespace dydxprotocol {
     ..._79,
     ..._127,
     ..._144,
-    ..._160
+    ..._161
   };
   export const revshare = { ..._80,
     ..._81,
@@ -302,14 +304,14 @@ export namespace dydxprotocol {
     ..._87,
     ..._128,
     ..._146,
-    ..._161
+    ..._162
   };
   export const sending = { ..._88,
     ..._89,
     ..._90,
     ..._91,
     ..._147,
-    ..._162
+    ..._163
   };
   export const stats = { ..._92,
     ..._93,
@@ -318,7 +320,7 @@ export namespace dydxprotocol {
     ..._96,
     ..._129,
     ..._148,
-    ..._163
+    ..._164
   };
   export const subaccounts = { ..._97,
     ..._98,
@@ -335,7 +337,7 @@ export namespace dydxprotocol {
     ..._106,
     ..._131,
     ..._150,
-    ..._164
+    ..._165
   };
   export const vest = { ..._107,
     ..._108,
@@ -343,10 +345,10 @@ export namespace dydxprotocol {
     ..._110,
     ..._132,
     ..._151,
-    ..._165
+    ..._166
   };
-  export const ClientFactory = { ..._166,
-    ..._167,
-    ..._168
+  export const ClientFactory = { ..._167,
+    ..._168,
+    ..._169
   };
 }

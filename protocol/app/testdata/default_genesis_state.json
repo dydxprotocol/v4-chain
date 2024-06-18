@@ -338,7 +338,9 @@
       "port": "icahost"
     }
   },
-  "listing": {},
+  "listing": {
+    "hard_cap_for_markets": 0
+  },
   "params": null,
   "perpetuals": {
     "perpetuals": [],

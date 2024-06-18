@@ -55,16 +55,6 @@ type AssetsKeeper interface {
 
 type PerpetualsKeeper interface {
 	ProductKeeper
-	GetSettlementPpm(
-		ctx sdk.Context,
-		perpetualId uint32,
-		quantums *big.Int,
-		index *big.Int,
-	) (
-		bigNetSettlement *big.Int,
-		newFundingIndex *big.Int,
-		err error,
-	)
 	GetPerpetual(
 		ctx sdk.Context,
 		perpetualId uint32,

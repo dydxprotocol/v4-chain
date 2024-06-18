@@ -141,7 +141,7 @@ func (k Keeper) AddRewardSharesForFill(
 		bigTakerFeeQuoteQuantums,
 		makerRebateMulTakerVolume,
 	)
-	if takerWeight.Cmp(lib.BigInt0()) > 0 {
+	if takerWeight.Sign() > 0 {
 		// We aren't concerned with errors here because we've already validated the weight is positive.
 		if err := k.AddRewardShareToAddress(
 			ctx,
@@ -158,7 +158,7 @@ func (k Keeper) AddRewardSharesForFill(
 
 	// Process reward weight for maker.
 	makerWeight := new(big.Int).Set(bigMakerFeeQuoteQuantums)
-	if makerWeight.Cmp(lib.BigInt0()) > 0 {
+	if makerWeight.Sign() > 0 {
 		// We aren't concerned with errors here because we've already validated the weight is positive.
 		if err := k.AddRewardShareToAddress(
 			ctx,
@@ -182,7 +182,7 @@ func (k Keeper) AddRewardShareToAddress(
 	address string,
 	weight *big.Int,
 ) error {
-	if weight.Cmp(lib.BigInt0()) <= 0 {
+	if weight.Sign() <= 0 {
 		return errorsmod.Wrapf(
 			types.ErrNonpositiveWeight,
 			"Invalid weight %v",
