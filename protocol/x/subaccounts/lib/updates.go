@@ -46,7 +46,7 @@ func GetSettledSubaccountWithPerpetuals(
 		// Record non-zero funding payment (to be later emitted in SubaccountUpdateEvent to indexer).
 		// Note: Funding payment is the negative of settlement, i.e. positive settlement is equivalent
 		// to a negative funding payment (position received funding payment) and vice versa.
-		if bigNetSettlementPpm.Cmp(lib.BigInt0()) != 0 {
+		if bigNetSettlementPpm.BitLen() != 0 {
 			fundingPayments[p.PerpetualId] = dtypes.NewIntFromBigInt(
 				new(big.Int).Neg(
 					new(big.Int).Div(bigNetSettlementPpm, lib.BigIntOneMillion()),
