@@ -171,7 +171,9 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 				),
 				"err", err,
 			)
+			sm.Lock()
 			delete(sm.orderbookSubscriptions, subscription.subscriptionId)
+			sm.Unlock()
 			break
 		}
 	}
