@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMsgEnablePermissionlessMarketListing(t *testing.T) {
+func TestMsgSetMarketsHardCap(t *testing.T) {
 	tests := map[string]struct {
 		// Msg.
 		msg *types.MsgSetMarketsHardCap

@@ -10,7 +10,7 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.InitializeForGenesis(ctx)
 
-	if err := k.SetMarketsHardCap(ctx, 0); err != nil {
+	if err := k.SetMarketsHardCap(ctx, genState.HardCapForMarkets); err != nil {
 		panic(err)
 	}
 }

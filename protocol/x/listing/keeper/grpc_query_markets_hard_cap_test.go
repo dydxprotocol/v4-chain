@@ -9,14 +9,14 @@ import (
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 )
 
-func TestQueryPMLEnabledStatus(t *testing.T) {
+func TestQueryMarketsHardCap(t *testing.T) {
 	tests := map[string]struct {
 		hardCap uint32
 	}{
-		"Hard cap - 0": {
+		"Hard cap: 0": {
 			hardCap: 0,
 		},
-		"Hard cap - 100": {
+		"Hard cap: 100": {
 			hardCap: 100,
 		},
 	}
@@ -28,11 +28,11 @@ func TestQueryPMLEnabledStatus(t *testing.T) {
 				ctx := tApp.InitChain()
 				k := tApp.App.ListingKeeper
 
-				// set permissionless listing to true for test
+				// set hard cap for markets for test
 				err := k.SetMarketsHardCap(ctx, tc.hardCap)
 				require.NoError(t, err)
 
-				// query permissionless market listing status
+				// query hard cap for markets
 				resp, err := k.MarketsHardCap(ctx, &types.QueryMarketsHardCap{})
 				require.NoError(t, err)
 				require.Equal(t, resp.HardCap, tc.hardCap)
