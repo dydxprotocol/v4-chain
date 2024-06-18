@@ -27,14 +27,15 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 COPY . .
 
 # See https://github.com/CosmWasm/wasmvm/releases
-ADD https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
-ADD https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.x86_64.a
-RUN rm -f /lib/libwasmvm_muslc.a
-RUN cp "/lib/libwasmvm_muslc.$(uname -m).a" /lib/libwasmvm_muslc.a
-# check that the file is there
-RUN ls -l /lib/libwasmvm_muslc.a
-RUN uname -m 
+RUN if [ "$(uname -m)" = "aarch64" ]; then \
+  wget -O /lib/libwasmvm_muslc.a https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.aarch64.a; \
+    elif [ "$(uname -m)" = "x86_64" ]; then \
+  wget -O /lib/libwasmvm_muslc.a https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.x86_64.a; \
+    else \
+  echo "Unsupported architecture"; \
+    fi
 
+    
 # Build dydxprotocold binary
 # force it to use static lib (from above) not standard libgo_cosmwasm.so file
 RUN --mount=type=cache,target=/root/.cache/go-build \
