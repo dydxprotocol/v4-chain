@@ -32,7 +32,7 @@ var (
 //     -- All validators vote for the proposal.
 //     -- The proposal is tallied after voting period ends.
 func SubmitAndTallyProposal(
-	t *testing.T,
+	t testing.TB,
 	ctx sdk.Context,
 	tApp *TestApp,
 	messages []sdk.Msg,

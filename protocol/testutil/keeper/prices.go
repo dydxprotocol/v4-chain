@@ -94,7 +94,7 @@ func createPricesKeeper(
 // CreateTestMarkets creates a standard set of test markets for testing.
 // This function assumes no markets exist and will create markets as id `0`, `1`, and `2`, ... using markets
 // defined in constants.TestMarkets.
-func CreateTestMarkets(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
+func CreateTestMarkets(t testing.TB, ctx sdk.Context, k *keeper.Keeper) {
 	for i, marketParam := range constants.TestMarketParams {
 		_, err := k.CreateMarket(
 			ctx,
@@ -113,7 +113,7 @@ func CreateTestMarkets(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 }
 
 // CreateNMarkets creates N MarketParam, MarketPrice pairs for testing.
-func CreateNMarkets(t *testing.T, ctx sdk.Context, keeper *keeper.Keeper, n int) []types.MarketParamPrice {
+func CreateNMarkets(t testing.TB, ctx sdk.Context, keeper *keeper.Keeper, n int) []types.MarketParamPrice {
 	items := make([]types.MarketParamPrice, n)
 	numExistingMarkets := GetNumMarkets(t, ctx, keeper)
 	for i := range items {
@@ -144,7 +144,7 @@ func CreateNMarkets(t *testing.T, ctx sdk.Context, keeper *keeper.Keeper, n int)
 // AssertPriceUpdateEventsInIndexerBlock verifies that the market update has a corresponding price update
 // event included in the Indexer block message.
 func AssertPriceUpdateEventsInIndexerBlock(
-	t *testing.T,
+	t testing.TB,
 	k *keeper.Keeper,
 	ctx sdk.Context,
 	updatedMarketPrices []types.MarketPrice,
@@ -158,7 +158,7 @@ func AssertPriceUpdateEventsInIndexerBlock(
 
 // AssertMarketEventsNotInIndexerBlock verifies that no market events were included in the Indexer block message.
 func AssertMarketEventsNotInIndexerBlock(
-	t *testing.T,
+	t testing.TB,
 	k *keeper.Keeper,
 	ctx sdk.Context,
 ) {
@@ -168,7 +168,7 @@ func AssertMarketEventsNotInIndexerBlock(
 
 // AssertNMarketEventsNotInIndexerBlock verifies that N market events were included in the Indexer block message.
 func AssertNMarketEventsNotInIndexerBlock(
-	t *testing.T,
+	t testing.TB,
 	k *keeper.Keeper,
 	ctx sdk.Context,
 	n int,
@@ -201,7 +201,7 @@ func getMarketEventsFromIndexerBlock(
 // AssertMarketModifyEventInIndexerBlock verifies that the market update has a corresponding market modify
 // event included in the Indexer block message.
 func AssertMarketModifyEventInIndexerBlock(
-	t *testing.T,
+	t testing.TB,
 	k *keeper.Keeper,
 	ctx sdk.Context,
 	updatedMarketParam types.MarketParam,
@@ -218,7 +218,7 @@ func AssertMarketModifyEventInIndexerBlock(
 // AssertMarketCreateEventInIndexerBlock verifies that the market create has a corresponding market create
 // event included in the Indexer block message.
 func AssertMarketCreateEventInIndexerBlock(
-	t *testing.T,
+	t testing.TB,
 	k *keeper.Keeper,
 	ctx sdk.Context,
 	createdMarketParam types.MarketParam,
@@ -234,7 +234,7 @@ func AssertMarketCreateEventInIndexerBlock(
 }
 
 func AssertMarketPriceUpdateEventInIndexerBlock(
-	t *testing.T,
+	t testing.TB,
 	k *keeper.Keeper,
 	ctx sdk.Context,
 	updatedMarketPrice types.MarketPrice,
@@ -250,7 +250,7 @@ func AssertMarketPriceUpdateEventInIndexerBlock(
 // CreateTestPriceMarkets is a test utility function that creates list of given
 // price markets in state.
 func CreateTestPriceMarkets(
-	t *testing.T,
+	t testing.TB,
 	ctx sdk.Context,
 	pricesKeeper *keeper.Keeper,
 	markets []types.MarketParamPrice,
@@ -268,7 +268,7 @@ func CreateTestPriceMarkets(
 	}
 }
 
-func GetNumMarkets(t *testing.T, ctx sdk.Context, keeper *keeper.Keeper) uint32 {
+func GetNumMarkets(t testing.TB, ctx sdk.Context, keeper *keeper.Keeper) uint32 {
 	allMarkets, err := keeper.GetAllMarketParamPrices(ctx)
 	require.NoError(t, err)
 	return lib.MustConvertIntegerToUint32(len(allMarkets))
