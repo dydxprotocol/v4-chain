@@ -122,16 +122,6 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 		perpetualId uint32,
 	) (perpetualsmoduletypes.Perpetual, pricestypes.MarketPrice, error)
-	GetSettlementPpm(
-		ctx sdk.Context,
-		perpetualId uint32,
-		quantums *big.Int,
-		index *big.Int,
-	) (
-		bigNetSettlement *big.Int,
-		newFundingIndex *big.Int,
-		err error,
-	)
 	MaybeProcessNewFundingTickEpoch(ctx sdk.Context)
 	GetInsuranceFundModuleAddress(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error)
 }
