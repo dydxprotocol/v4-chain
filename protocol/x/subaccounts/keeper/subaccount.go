@@ -309,7 +309,7 @@ func (k Keeper) UpdateSubaccounts(
 	}
 
 	// Get OpenInterestDelta from the updates, and persist the OI change if any.
-	perpOpenInterestDelta := GetDeltaOpenInterestFromUpdates(settledUpdates, updateType)
+	perpOpenInterestDelta := salib.GetDeltaOpenInterestFromUpdates(settledUpdates, updateType)
 	if perpOpenInterestDelta != nil {
 		if err := k.perpetualsKeeper.ModifyOpenInterest(
 			ctx,
@@ -328,13 +328,13 @@ func (k Keeper) UpdateSubaccounts(
 	}
 
 	// Apply the updates to perpetual positions.
-	UpdatePerpetualPositions(
+	salib.UpdatePerpetualPositions(
 		settledUpdates,
 		perpInfos,
 	)
 
 	// Apply the updates to asset positions.
-	UpdateAssetPositions(settledUpdates)
+	salib.UpdateAssetPositions(settledUpdates)
 
 	// Transfer collateral between collateral pools for any isolated perpetual positions that changed
 	// state due to an update.
@@ -364,11 +364,11 @@ func (k Keeper) UpdateSubaccounts(
 			indexer_manager.GetBytes(
 				indexerevents.NewSubaccountUpdateEvent(
 					u.SettledSubaccount.Id,
-					getUpdatedPerpetualPositions(
+					salib.GetUpdatedPerpetualPositions(
 						u,
 						fundingPayments,
 					),
-					getUpdatedAssetPositions(u),
+					salib.GetUpdatedAssetPositions(u),
 					fundingPayments,
 				),
 			),
@@ -566,7 +566,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	// Get delta open interest from the updates.
 	// `perpOpenInterestDelta` is nil if the update type is not `Match` or if the updates
 	// do not result in OI changes.
-	perpOpenInterestDelta := GetDeltaOpenInterestFromUpdates(settledUpdates, updateType)
+	perpOpenInterestDelta := salib.GetDeltaOpenInterestFromUpdates(settledUpdates, updateType)
 
 	// Temporily apply open interest delta to perpetuals, so IMF is calculated based on open interest after the update.
 	// `perpOpenInterestDeltas` is only present for `Match` update type.
