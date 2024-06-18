@@ -400,6 +400,7 @@
       }
     ]
   },
+  "revshare": {},
   "rewards": {
     "params": {
       "treasury_account": "rewards_treasury",
@@ -409,7 +410,6 @@
       "fee_multiplier_ppm": 990000
     }
   },
-  "revshare": {},
   "sending": {},
   "slashing": {
     "params": {

@@ -5,15 +5,15 @@ import (
 	"testing"
 
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	"github.com/stretchr/testify/require"
 )
 
 func setupMsgServer(t *testing.T) (keeper.Keeper, types.MsgServer, context.Context) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
-	k := tApp.App.VaultKeeper
+	k := tApp.App.ListingKeeper
 
 	return k, keeper.NewMsgServerImpl(k), ctx
 }

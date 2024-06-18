@@ -13,7 +13,7 @@ import (
 func setupMsgServer(t *testing.T) (keeper.Keeper, types.MsgServer, context.Context) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
-	k := tApp.App.VaultKeeper
+	k := tApp.App.RevShareKeeper
 
 	return k, keeper.NewMsgServerImpl(k), ctx
 }

@@ -1348,6 +1348,7 @@ const GenesisState = `{
         }
       ]
     },
+    "revshare": {},
     "rewards": {
       "params": {
         "treasury_account":"rewards_treasury",
@@ -1357,7 +1358,6 @@ const GenesisState = `{
         "fee_multiplier_ppm":990000
       }
     },
-    "revshare": {},
     "ratelimit": {
       "limit_params_list": [
         {
