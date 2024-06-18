@@ -5,13 +5,13 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/listing/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Queries if permissionless listings are enabled
-  rpc PermissionlessMarketListingStatus(QueryPermissionlessMarketListingStatus)
-      returns (QueryPermissionlessMarketListingStatusResponse);
+  // Queries for the hard cap number of listed markets
+  rpc MarketsHardCap(QueryMarketsHardCap)
+      returns (QueryMarketsHardCapResponse);
 }
 
-// Queries if permissionless listings are enabled
-message QueryPermissionlessMarketListingStatus {}
+// Queries for the hard cap on listed markets
+message QueryMarketsHardCap {}
 
-// Response type indicating if permissionless listings are enabled
-message QueryPermissionlessMarketListingStatusResponse { bool enabled = 1; }
+// Response type indicating the hard cap on listed markets
+message QueryMarketsHardCapResponse { uint32 hard_cap = 1; }

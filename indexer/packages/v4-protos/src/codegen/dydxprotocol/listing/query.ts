@@ -1,37 +1,37 @@
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
-/** Queries if permissionless listings are enabled */
+/** Queries for the hard cap on listed markets */
 
-export interface QueryPermissionlessMarketListingStatus {}
-/** Queries if permissionless listings are enabled */
+export interface QueryMarketsHardCap {}
+/** Queries for the hard cap on listed markets */
 
-export interface QueryPermissionlessMarketListingStatusSDKType {}
-/** Response type indicating if permissionless listings are enabled */
+export interface QueryMarketsHardCapSDKType {}
+/** Response type indicating the hard cap on listed markets */
 
-export interface QueryPermissionlessMarketListingStatusResponse {
-  /** Response type indicating if permissionless listings are enabled */
-  enabled: boolean;
+export interface QueryMarketsHardCapResponse {
+  /** Response type indicating the hard cap on listed markets */
+  hardCap: number;
 }
-/** Response type indicating if permissionless listings are enabled */
+/** Response type indicating the hard cap on listed markets */
 
-export interface QueryPermissionlessMarketListingStatusResponseSDKType {
-  /** Response type indicating if permissionless listings are enabled */
-  enabled: boolean;
+export interface QueryMarketsHardCapResponseSDKType {
+  /** Response type indicating the hard cap on listed markets */
+  hard_cap: number;
 }
 
-function createBaseQueryPermissionlessMarketListingStatus(): QueryPermissionlessMarketListingStatus {
+function createBaseQueryMarketsHardCap(): QueryMarketsHardCap {
   return {};
 }
 
-export const QueryPermissionlessMarketListingStatus = {
-  encode(_: QueryPermissionlessMarketListingStatus, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const QueryMarketsHardCap = {
+  encode(_: QueryMarketsHardCap, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryPermissionlessMarketListingStatus {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryMarketsHardCap {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryPermissionlessMarketListingStatus();
+    const message = createBaseQueryMarketsHardCap();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -46,39 +46,39 @@ export const QueryPermissionlessMarketListingStatus = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<QueryPermissionlessMarketListingStatus>): QueryPermissionlessMarketListingStatus {
-    const message = createBaseQueryPermissionlessMarketListingStatus();
+  fromPartial(_: DeepPartial<QueryMarketsHardCap>): QueryMarketsHardCap {
+    const message = createBaseQueryMarketsHardCap();
     return message;
   }
 
 };
 
-function createBaseQueryPermissionlessMarketListingStatusResponse(): QueryPermissionlessMarketListingStatusResponse {
+function createBaseQueryMarketsHardCapResponse(): QueryMarketsHardCapResponse {
   return {
-    enabled: false
+    hardCap: 0
   };
 }
 
-export const QueryPermissionlessMarketListingStatusResponse = {
-  encode(message: QueryPermissionlessMarketListingStatusResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.enabled === true) {
-      writer.uint32(8).bool(message.enabled);
+export const QueryMarketsHardCapResponse = {
+  encode(message: QueryMarketsHardCapResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.hardCap !== 0) {
+      writer.uint32(8).uint32(message.hardCap);
     }
 
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryPermissionlessMarketListingStatusResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryMarketsHardCapResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryPermissionlessMarketListingStatusResponse();
+    const message = createBaseQueryMarketsHardCapResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
         case 1:
-          message.enabled = reader.bool();
+          message.hardCap = reader.uint32();
           break;
 
         default:
@@ -90,9 +90,9 @@ export const QueryPermissionlessMarketListingStatusResponse = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<QueryPermissionlessMarketListingStatusResponse>): QueryPermissionlessMarketListingStatusResponse {
-    const message = createBaseQueryPermissionlessMarketListingStatusResponse();
-    message.enabled = object.enabled ?? false;
+  fromPartial(object: DeepPartial<QueryMarketsHardCapResponse>): QueryMarketsHardCapResponse {
+    const message = createBaseQueryMarketsHardCapResponse();
+    message.hardCap = object.hardCap ?? 0;
     return message;
   }
 

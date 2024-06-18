@@ -197,8 +197,8 @@ var (
 		"/dydxprotocol.govplus.MsgSlashValidatorResponse": {},
 
 		// listing
-		"/dydxprotocol.listing.MsgEnablePermissionlessMarketListing":         {},
-		"/dydxprotocol.listing.MsgEnablePermissionlessMarketListingResponse": {},
+		"/dydxprotocol.listing.MsgSetMarketsHardCap":         {},
+		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse": {},
 
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":               {},

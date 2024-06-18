@@ -143,8 +143,8 @@ var (
 		"/dydxprotocol.govplus.MsgSlashValidatorResponse": nil,
 
 		// listing
-		"/dydxprotocol.listing.MsgEnablePermissionlessMarketListing":         &listing.MsgEnablePermissionlessMarketListing{},
-		"/dydxprotocol.listing.MsgEnablePermissionlessMarketListingResponse": nil,
+		"/dydxprotocol.listing.MsgSetMarketsHardCap":         &listing.MsgSetMarketsHardCap{},
+		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse": nil,
 
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual":               &perpetuals.MsgCreatePerpetual{},

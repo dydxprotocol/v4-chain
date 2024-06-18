@@ -95,7 +95,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*govplus.MsgSlashValidator,
 
 		// listing
-		*listing.MsgEnablePermissionlessMarketListing,
+		*listing.MsgSetMarketsHardCap,
 
 		// perpetuals
 		*perpetuals.MsgCreatePerpetual,

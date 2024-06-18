@@ -3,32 +3,26 @@ import { DeepPartial } from "../../helpers";
 /** GenesisState defines `x/listing`'s genesis state. */
 
 export interface GenesisState {
-  /**
-   * permissionless_listing_enabled defines whether permissionless listing is
-   * enabled.
-   */
-  permissionlessListingEnabled: boolean;
+  /** hard_cap_for_markets is the hard cap for the number of markets that can be listed */
+  hardCapForMarkets: number;
 }
 /** GenesisState defines `x/listing`'s genesis state. */
 
 export interface GenesisStateSDKType {
-  /**
-   * permissionless_listing_enabled defines whether permissionless listing is
-   * enabled.
-   */
-  permissionless_listing_enabled: boolean;
+  /** hard_cap_for_markets is the hard cap for the number of markets that can be listed */
+  hard_cap_for_markets: number;
 }
 
 function createBaseGenesisState(): GenesisState {
   return {
-    permissionlessListingEnabled: false
+    hardCapForMarkets: 0
   };
 }
 
 export const GenesisState = {
   encode(message: GenesisState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.permissionlessListingEnabled === true) {
-      writer.uint32(8).bool(message.permissionlessListingEnabled);
+    if (message.hardCapForMarkets !== 0) {
+      writer.uint32(8).uint32(message.hardCapForMarkets);
     }
 
     return writer;
@@ -44,7 +38,7 @@ export const GenesisState = {
 
       switch (tag >>> 3) {
         case 1:
-          message.permissionlessListingEnabled = reader.bool();
+          message.hardCapForMarkets = reader.uint32();
           break;
 
         default:
@@ -58,7 +52,7 @@ export const GenesisState = {
 
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = createBaseGenesisState();
-    message.permissionlessListingEnabled = object.permissionlessListingEnabled ?? false;
+    message.hardCapForMarkets = object.hardCapForMarkets ?? 0;
     return message;
   }
 

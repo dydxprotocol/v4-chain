@@ -11,13 +11,13 @@ import (
 
 func TestQueryPMLEnabledStatus(t *testing.T) {
 	tests := map[string]struct {
-		pmlEnabled bool
+		hardCap uint32
 	}{
-		"PML enabled true": {
-			pmlEnabled: true,
+		"Hard cap - 0": {
+			hardCap: 0,
 		},
-		"PML enabled false": {
-			pmlEnabled: false,
+		"Hard cap - 100": {
+			hardCap: 100,
 		},
 	}
 
@@ -29,13 +29,13 @@ func TestQueryPMLEnabledStatus(t *testing.T) {
 				k := tApp.App.ListingKeeper
 
 				// set permissionless listing to true for test
-				err := k.SetPermissionlessListingEnable(ctx, tc.pmlEnabled)
+				err := k.SetMarketsHardCap(ctx, tc.hardCap)
 				require.NoError(t, err)
 
 				// query permissionless market listing status
-				resp, err := k.PermissionlessMarketListingStatus(ctx, &types.QueryPermissionlessMarketListingStatus{})
+				resp, err := k.MarketsHardCap(ctx, &types.QueryMarketsHardCap{})
 				require.NoError(t, err)
-				require.Equal(t, resp.Enabled, tc.pmlEnabled)
+				require.Equal(t, resp.HardCap, tc.hardCap)
 			},
 		)
 	}

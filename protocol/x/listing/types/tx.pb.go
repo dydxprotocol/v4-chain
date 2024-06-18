@@ -29,26 +29,26 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgEnablePermissionlessMarketListing is used to enable/disable permissionless
-// market listing
-type MsgEnablePermissionlessMarketListing struct {
+// MsgSetMarketsHardCap is used to set a hard cap on the number of markets
+// listed
+type MsgSetMarketsHardCap struct {
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	// boolean flag to enable/disable permissionless market listing
-	EnablePermissionlessMarketListing bool `protobuf:"varint,2,opt,name=enable_permissionless_market_listing,json=enablePermissionlessMarketListing,proto3" json:"enable_permissionless_market_listing,omitempty"`
+	// Hard cap for the total number of markets listed
+	HardCapForMarkets uint32 `protobuf:"varint,2,opt,name=hard_cap_for_markets,json=hardCapForMarkets,proto3" json:"hard_cap_for_markets,omitempty"`
 }
 
-func (m *MsgEnablePermissionlessMarketListing) Reset()         { *m = MsgEnablePermissionlessMarketListing{} }
-func (m *MsgEnablePermissionlessMarketListing) String() string { return proto.CompactTextString(m) }
-func (*MsgEnablePermissionlessMarketListing) ProtoMessage()    {}
-func (*MsgEnablePermissionlessMarketListing) Descriptor() ([]byte, []int) {
+func (m *MsgSetMarketsHardCap) Reset()         { *m = MsgSetMarketsHardCap{} }
+func (m *MsgSetMarketsHardCap) String() string { return proto.CompactTextString(m) }
+func (*MsgSetMarketsHardCap) ProtoMessage()    {}
+func (*MsgSetMarketsHardCap) Descriptor() ([]byte, []int) {
 	return fileDescriptor_144a579c1e2dcb94, []int{0}
 }
-func (m *MsgEnablePermissionlessMarketListing) XXX_Unmarshal(b []byte) error {
+func (m *MsgSetMarketsHardCap) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgEnablePermissionlessMarketListing) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgSetMarketsHardCap) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgEnablePermissionlessMarketListing.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgSetMarketsHardCap.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -58,53 +58,48 @@ func (m *MsgEnablePermissionlessMarketListing) XXX_Marshal(b []byte, determinist
 		return b[:n], nil
 	}
 }
-func (m *MsgEnablePermissionlessMarketListing) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgEnablePermissionlessMarketListing.Merge(m, src)
+func (m *MsgSetMarketsHardCap) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetMarketsHardCap.Merge(m, src)
 }
-func (m *MsgEnablePermissionlessMarketListing) XXX_Size() int {
+func (m *MsgSetMarketsHardCap) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgEnablePermissionlessMarketListing) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgEnablePermissionlessMarketListing.DiscardUnknown(m)
+func (m *MsgSetMarketsHardCap) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetMarketsHardCap.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgEnablePermissionlessMarketListing proto.InternalMessageInfo
+var xxx_messageInfo_MsgSetMarketsHardCap proto.InternalMessageInfo
 
-func (m *MsgEnablePermissionlessMarketListing) GetAuthority() string {
+func (m *MsgSetMarketsHardCap) GetAuthority() string {
 	if m != nil {
 		return m.Authority
 	}
 	return ""
 }
 
-func (m *MsgEnablePermissionlessMarketListing) GetEnablePermissionlessMarketListing() bool {
+func (m *MsgSetMarketsHardCap) GetHardCapForMarkets() uint32 {
 	if m != nil {
-		return m.EnablePermissionlessMarketListing
+		return m.HardCapForMarkets
 	}
-	return false
+	return 0
 }
 
-// MsgEnablePermissionlessMarketListingResponse defines the
-// MsgEnablePermissionlessMarketListing response
-type MsgEnablePermissionlessMarketListingResponse struct {
+// MsgSetMarketsHardCapResponse defines the MsgSetMarketsHardCap response
+type MsgSetMarketsHardCapResponse struct {
 }
 
-func (m *MsgEnablePermissionlessMarketListingResponse) Reset() {
-	*m = MsgEnablePermissionlessMarketListingResponse{}
-}
-func (m *MsgEnablePermissionlessMarketListingResponse) String() string {
-	return proto.CompactTextString(m)
-}
-func (*MsgEnablePermissionlessMarketListingResponse) ProtoMessage() {}
-func (*MsgEnablePermissionlessMarketListingResponse) Descriptor() ([]byte, []int) {
+func (m *MsgSetMarketsHardCapResponse) Reset()         { *m = MsgSetMarketsHardCapResponse{} }
+func (m *MsgSetMarketsHardCapResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetMarketsHardCapResponse) ProtoMessage()    {}
+func (*MsgSetMarketsHardCapResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_144a579c1e2dcb94, []int{1}
 }
-func (m *MsgEnablePermissionlessMarketListingResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgSetMarketsHardCapResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgEnablePermissionlessMarketListingResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgSetMarketsHardCapResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgEnablePermissionlessMarketListingResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgSetMarketsHardCapResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -114,47 +109,47 @@ func (m *MsgEnablePermissionlessMarketListingResponse) XXX_Marshal(b []byte, det
 		return b[:n], nil
 	}
 }
-func (m *MsgEnablePermissionlessMarketListingResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgEnablePermissionlessMarketListingResponse.Merge(m, src)
+func (m *MsgSetMarketsHardCapResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetMarketsHardCapResponse.Merge(m, src)
 }
-func (m *MsgEnablePermissionlessMarketListingResponse) XXX_Size() int {
+func (m *MsgSetMarketsHardCapResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgEnablePermissionlessMarketListingResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgEnablePermissionlessMarketListingResponse.DiscardUnknown(m)
+func (m *MsgSetMarketsHardCapResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetMarketsHardCapResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgEnablePermissionlessMarketListingResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgSetMarketsHardCapResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgEnablePermissionlessMarketListing)(nil), "dydxprotocol.listing.MsgEnablePermissionlessMarketListing")
-	proto.RegisterType((*MsgEnablePermissionlessMarketListingResponse)(nil), "dydxprotocol.listing.MsgEnablePermissionlessMarketListingResponse")
+	proto.RegisterType((*MsgSetMarketsHardCap)(nil), "dydxprotocol.listing.MsgSetMarketsHardCap")
+	proto.RegisterType((*MsgSetMarketsHardCapResponse)(nil), "dydxprotocol.listing.MsgSetMarketsHardCapResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/listing/tx.proto", fileDescriptor_144a579c1e2dcb94) }
 
 var fileDescriptor_144a579c1e2dcb94 = []byte{
-	// 319 bytes of a gzipped FileDescriptorProto
+	// 310 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4d, 0xa9, 0x4c, 0xa9,
 	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0xcf, 0xc9, 0x2c, 0x2e, 0xc9, 0xcc, 0x4b,
 	0xd7, 0x2f, 0xa9, 0xd0, 0x03, 0x8b, 0x09, 0x89, 0x20, 0x4b, 0xeb, 0x41, 0xa5, 0xa5, 0x24, 0x93,
 	0xf3, 0x8b, 0x73, 0xf3, 0x8b, 0xe3, 0xc1, 0x12, 0xfa, 0x10, 0x0e, 0x44, 0x83, 0x94, 0x38, 0x84,
-	0xa7, 0x9f, 0x5b, 0x9c, 0xae, 0x5f, 0x66, 0x08, 0xa2, 0x20, 0x12, 0x4a, 0xfb, 0x19, 0xb9, 0x54,
-	0x7c, 0x8b, 0xd3, 0x5d, 0xf3, 0x12, 0x93, 0x72, 0x52, 0x03, 0x52, 0x8b, 0x72, 0x33, 0x8b, 0x8b,
-	0x33, 0xf3, 0xf3, 0x72, 0x52, 0x8b, 0x8b, 0x7d, 0x13, 0x8b, 0xb2, 0x53, 0x4b, 0x7c, 0x20, 0x86,
-	0x0b, 0x99, 0x71, 0x71, 0x26, 0x96, 0x96, 0x64, 0xe4, 0x17, 0x65, 0x96, 0x54, 0x4a, 0x30, 0x2a,
-	0x30, 0x6a, 0x70, 0x3a, 0x49, 0x5c, 0xda, 0xa2, 0x2b, 0x02, 0xb5, 0xc6, 0x31, 0x25, 0xa5, 0x28,
-	0xb5, 0xb8, 0x38, 0xb8, 0xa4, 0x28, 0x33, 0x2f, 0x3d, 0x08, 0xa1, 0x54, 0xc8, 0x9f, 0x4b, 0x25,
-	0x15, 0x6c, 0x78, 0x7c, 0x01, 0x8a, 0xe9, 0xf1, 0xb9, 0x60, 0xe3, 0xe3, 0xa1, 0x8e, 0x97, 0x60,
-	0x52, 0x60, 0xd4, 0xe0, 0x08, 0x52, 0x4c, 0x25, 0xe4, 0x10, 0x2b, 0xbe, 0xa6, 0xe7, 0x1b, 0xb4,
-	0x10, 0x16, 0x28, 0xe9, 0x71, 0xe9, 0x10, 0xe3, 0x81, 0xa0, 0xd4, 0xe2, 0x82, 0xfc, 0xbc, 0xe2,
-	0x54, 0xa3, 0xd5, 0x8c, 0x5c, 0xcc, 0xbe, 0xc5, 0xe9, 0x42, 0x8b, 0x19, 0xb9, 0x14, 0x09, 0x7b,
-	0xdb, 0x4a, 0x0f, 0x5b, 0x50, 0xeb, 0x11, 0x63, 0xa3, 0x94, 0x13, 0xf9, 0x7a, 0x61, 0xae, 0x75,
-	0x0a, 0x3e, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c,
-	0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0xcb, 0xf4, 0xcc, 0x92,
-	0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0x7d, 0x94, 0xd4, 0x52, 0x66, 0xa2, 0x9b, 0x9c, 0x91,
-	0x98, 0x99, 0xa7, 0x0f, 0x17, 0xa9, 0x40, 0xa4, 0xa0, 0xca, 0x82, 0xd4, 0xe2, 0x24, 0x36, 0xb0,
-	0x8c, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x01, 0x34, 0x86, 0x2b, 0x66, 0x02, 0x00, 0x00,
+	0xa7, 0x9f, 0x5b, 0x9c, 0xae, 0x5f, 0x66, 0x08, 0xa2, 0x20, 0x12, 0x4a, 0xfd, 0x8c, 0x5c, 0x22,
+	0xbe, 0xc5, 0xe9, 0xc1, 0xa9, 0x25, 0xbe, 0x89, 0x45, 0xd9, 0xa9, 0x25, 0xc5, 0x1e, 0x89, 0x45,
+	0x29, 0xce, 0x89, 0x05, 0x42, 0x66, 0x5c, 0x9c, 0x89, 0xa5, 0x25, 0x19, 0xf9, 0x45, 0x99, 0x25,
+	0x95, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0x9c, 0x4e, 0x12, 0x97, 0xb6, 0xe8, 0x8a, 0x40, 0x8d, 0x75,
+	0x4c, 0x49, 0x29, 0x4a, 0x2d, 0x2e, 0x0e, 0x2e, 0x29, 0xca, 0xcc, 0x4b, 0x0f, 0x42, 0x28, 0x15,
+	0xd2, 0xe7, 0x12, 0xc9, 0x48, 0x2c, 0x4a, 0x89, 0x4f, 0x4e, 0x2c, 0x88, 0x4f, 0xcb, 0x2f, 0x8a,
+	0xcf, 0x85, 0x18, 0x2b, 0xc1, 0xa4, 0xc0, 0xa8, 0xc1, 0x1b, 0x24, 0x98, 0x01, 0x31, 0xde, 0x2d,
+	0xbf, 0x08, 0x6a, 0x9f, 0x15, 0x5f, 0xd3, 0xf3, 0x0d, 0x5a, 0x08, 0x03, 0x94, 0xe4, 0xb8, 0x64,
+	0xb0, 0x39, 0x28, 0x28, 0xb5, 0xb8, 0x20, 0x3f, 0xaf, 0x38, 0xd5, 0xa8, 0x8a, 0x8b, 0xd9, 0xb7,
+	0x38, 0x5d, 0xa8, 0x98, 0x4b, 0x10, 0xd3, 0xd1, 0x5a, 0x7a, 0xd8, 0x02, 0x46, 0x0f, 0x9b, 0x79,
+	0x52, 0x46, 0xc4, 0xab, 0x85, 0xd9, 0xed, 0x14, 0x7c, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72,
+	0x8c, 0x0f, 0x1e, 0xc9, 0x31, 0x4e, 0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7,
+	0x72, 0x0c, 0x51, 0x96, 0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0x28,
+	0x71, 0x57, 0x66, 0xa2, 0x9b, 0x9c, 0x91, 0x98, 0x99, 0xa7, 0x0f, 0x17, 0xa9, 0x40, 0xc4, 0x67,
+	0x65, 0x41, 0x6a, 0x71, 0x12, 0x1b, 0x58, 0xc6, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0xea, 0x0c,
+	0xfe, 0xfa, 0xf4, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -169,9 +164,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// EnablePermissionlessMarketListing enables/disables permissionless market
-	// listing
-	EnablePermissionlessMarketListing(ctx context.Context, in *MsgEnablePermissionlessMarketListing, opts ...grpc.CallOption) (*MsgEnablePermissionlessMarketListingResponse, error)
+	// SetMarketsHardCap sets a hard cap on the number of markets listed
+	SetMarketsHardCap(ctx context.Context, in *MsgSetMarketsHardCap, opts ...grpc.CallOption) (*MsgSetMarketsHardCapResponse, error)
 }
 
 type msgClient struct {
@@ -182,9 +176,9 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) EnablePermissionlessMarketListing(ctx context.Context, in *MsgEnablePermissionlessMarketListing, opts ...grpc.CallOption) (*MsgEnablePermissionlessMarketListingResponse, error) {
-	out := new(MsgEnablePermissionlessMarketListingResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.listing.Msg/EnablePermissionlessMarketListing", in, out, opts...)
+func (c *msgClient) SetMarketsHardCap(ctx context.Context, in *MsgSetMarketsHardCap, opts ...grpc.CallOption) (*MsgSetMarketsHardCapResponse, error) {
+	out := new(MsgSetMarketsHardCapResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.listing.Msg/SetMarketsHardCap", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -193,37 +187,36 @@ func (c *msgClient) EnablePermissionlessMarketListing(ctx context.Context, in *M
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// EnablePermissionlessMarketListing enables/disables permissionless market
-	// listing
-	EnablePermissionlessMarketListing(context.Context, *MsgEnablePermissionlessMarketListing) (*MsgEnablePermissionlessMarketListingResponse, error)
+	// SetMarketsHardCap sets a hard cap on the number of markets listed
+	SetMarketsHardCap(context.Context, *MsgSetMarketsHardCap) (*MsgSetMarketsHardCapResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) EnablePermissionlessMarketListing(ctx context.Context, req *MsgEnablePermissionlessMarketListing) (*MsgEnablePermissionlessMarketListingResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method EnablePermissionlessMarketListing not implemented")
+func (*UnimplementedMsgServer) SetMarketsHardCap(ctx context.Context, req *MsgSetMarketsHardCap) (*MsgSetMarketsHardCapResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetMarketsHardCap not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_EnablePermissionlessMarketListing_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgEnablePermissionlessMarketListing)
+func _Msg_SetMarketsHardCap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetMarketsHardCap)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).EnablePermissionlessMarketListing(ctx, in)
+		return srv.(MsgServer).SetMarketsHardCap(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dydxprotocol.listing.Msg/EnablePermissionlessMarketListing",
+		FullMethod: "/dydxprotocol.listing.Msg/SetMarketsHardCap",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).EnablePermissionlessMarketListing(ctx, req.(*MsgEnablePermissionlessMarketListing))
+		return srv.(MsgServer).SetMarketsHardCap(ctx, req.(*MsgSetMarketsHardCap))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -233,15 +226,15 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "EnablePermissionlessMarketListing",
-			Handler:    _Msg_EnablePermissionlessMarketListing_Handler,
+			MethodName: "SetMarketsHardCap",
+			Handler:    _Msg_SetMarketsHardCap_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "dydxprotocol/listing/tx.proto",
 }
 
-func (m *MsgEnablePermissionlessMarketListing) Marshal() (dAtA []byte, err error) {
+func (m *MsgSetMarketsHardCap) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -251,23 +244,18 @@ func (m *MsgEnablePermissionlessMarketListing) Marshal() (dAtA []byte, err error
 	return dAtA[:n], nil
 }
 
-func (m *MsgEnablePermissionlessMarketListing) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgSetMarketsHardCap) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgEnablePermissionlessMarketListing) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgSetMarketsHardCap) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.EnablePermissionlessMarketListing {
-		i--
-		if m.EnablePermissionlessMarketListing {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
+	if m.HardCapForMarkets != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.HardCapForMarkets))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -281,7 +269,7 @@ func (m *MsgEnablePermissionlessMarketListing) MarshalToSizedBuffer(dAtA []byte)
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgEnablePermissionlessMarketListingResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgSetMarketsHardCapResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -291,12 +279,12 @@ func (m *MsgEnablePermissionlessMarketListingResponse) Marshal() (dAtA []byte, e
 	return dAtA[:n], nil
 }
 
-func (m *MsgEnablePermissionlessMarketListingResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgSetMarketsHardCapResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgEnablePermissionlessMarketListingResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgSetMarketsHardCapResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -315,7 +303,7 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgEnablePermissionlessMarketListing) Size() (n int) {
+func (m *MsgSetMarketsHardCap) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -325,13 +313,13 @@ func (m *MsgEnablePermissionlessMarketListing) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.EnablePermissionlessMarketListing {
-		n += 2
+	if m.HardCapForMarkets != 0 {
+		n += 1 + sovTx(uint64(m.HardCapForMarkets))
 	}
 	return n
 }
 
-func (m *MsgEnablePermissionlessMarketListingResponse) Size() (n int) {
+func (m *MsgSetMarketsHardCapResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -346,7 +334,7 @@ func sovTx(x uint64) (n int) {
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *MsgEnablePermissionlessMarketListing) Unmarshal(dAtA []byte) error {
+func (m *MsgSetMarketsHardCap) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -369,10 +357,10 @@ func (m *MsgEnablePermissionlessMarketListing) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgEnablePermissionlessMarketListing: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgSetMarketsHardCap: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgEnablePermissionlessMarketListing: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgSetMarketsHardCap: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -409,9 +397,9 @@ func (m *MsgEnablePermissionlessMarketListing) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EnablePermissionlessMarketListing", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field HardCapForMarkets", wireType)
 			}
-			var v int
+			m.HardCapForMarkets = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -421,12 +409,11 @@ func (m *MsgEnablePermissionlessMarketListing) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= int(b&0x7F) << shift
+				m.HardCapForMarkets |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.EnablePermissionlessMarketListing = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -448,7 +435,7 @@ func (m *MsgEnablePermissionlessMarketListing) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgEnablePermissionlessMarketListingResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgSetMarketsHardCapResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -471,10 +458,10 @@ func (m *MsgEnablePermissionlessMarketListingResponse) Unmarshal(dAtA []byte) er
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgEnablePermissionlessMarketListingResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgSetMarketsHardCapResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgEnablePermissionlessMarketListingResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgSetMarketsHardCapResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

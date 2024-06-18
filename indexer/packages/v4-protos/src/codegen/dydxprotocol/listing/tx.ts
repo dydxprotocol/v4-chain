@@ -1,64 +1,58 @@
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
- * MsgEnablePermissionlessMarketListing is used to enable/disable permissionless
- * market listing
+ * MsgSetMarketsHardCap is used to set a hard cap on the number of markets
+ * listed
  */
 
-export interface MsgEnablePermissionlessMarketListing {
+export interface MsgSetMarketsHardCap {
   authority: string;
-  /** boolean flag to enable/disable permissionless market listing */
+  /** Hard cap for the total number of markets listed */
 
-  enablePermissionlessMarketListing: boolean;
+  hardCapForMarkets: number;
 }
 /**
- * MsgEnablePermissionlessMarketListing is used to enable/disable permissionless
- * market listing
+ * MsgSetMarketsHardCap is used to set a hard cap on the number of markets
+ * listed
  */
 
-export interface MsgEnablePermissionlessMarketListingSDKType {
+export interface MsgSetMarketsHardCapSDKType {
   authority: string;
-  /** boolean flag to enable/disable permissionless market listing */
+  /** Hard cap for the total number of markets listed */
 
-  enable_permissionless_market_listing: boolean;
+  hard_cap_for_markets: number;
 }
-/**
- * MsgEnablePermissionlessMarketListingResponse defines the
- * MsgEnablePermissionlessMarketListing response
- */
+/** MsgSetMarketsHardCapResponse defines the MsgSetMarketsHardCap response */
 
-export interface MsgEnablePermissionlessMarketListingResponse {}
-/**
- * MsgEnablePermissionlessMarketListingResponse defines the
- * MsgEnablePermissionlessMarketListing response
- */
+export interface MsgSetMarketsHardCapResponse {}
+/** MsgSetMarketsHardCapResponse defines the MsgSetMarketsHardCap response */
 
-export interface MsgEnablePermissionlessMarketListingResponseSDKType {}
+export interface MsgSetMarketsHardCapResponseSDKType {}
 
-function createBaseMsgEnablePermissionlessMarketListing(): MsgEnablePermissionlessMarketListing {
+function createBaseMsgSetMarketsHardCap(): MsgSetMarketsHardCap {
   return {
     authority: "",
-    enablePermissionlessMarketListing: false
+    hardCapForMarkets: 0
   };
 }
 
-export const MsgEnablePermissionlessMarketListing = {
-  encode(message: MsgEnablePermissionlessMarketListing, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const MsgSetMarketsHardCap = {
+  encode(message: MsgSetMarketsHardCap, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.authority !== "") {
       writer.uint32(10).string(message.authority);
     }
 
-    if (message.enablePermissionlessMarketListing === true) {
-      writer.uint32(16).bool(message.enablePermissionlessMarketListing);
+    if (message.hardCapForMarkets !== 0) {
+      writer.uint32(16).uint32(message.hardCapForMarkets);
     }
 
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgEnablePermissionlessMarketListing {
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetMarketsHardCap {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgEnablePermissionlessMarketListing();
+    const message = createBaseMsgSetMarketsHardCap();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -69,7 +63,7 @@ export const MsgEnablePermissionlessMarketListing = {
           break;
 
         case 2:
-          message.enablePermissionlessMarketListing = reader.bool();
+          message.hardCapForMarkets = reader.uint32();
           break;
 
         default:
@@ -81,28 +75,28 @@ export const MsgEnablePermissionlessMarketListing = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<MsgEnablePermissionlessMarketListing>): MsgEnablePermissionlessMarketListing {
-    const message = createBaseMsgEnablePermissionlessMarketListing();
+  fromPartial(object: DeepPartial<MsgSetMarketsHardCap>): MsgSetMarketsHardCap {
+    const message = createBaseMsgSetMarketsHardCap();
     message.authority = object.authority ?? "";
-    message.enablePermissionlessMarketListing = object.enablePermissionlessMarketListing ?? false;
+    message.hardCapForMarkets = object.hardCapForMarkets ?? 0;
     return message;
   }
 
 };
 
-function createBaseMsgEnablePermissionlessMarketListingResponse(): MsgEnablePermissionlessMarketListingResponse {
+function createBaseMsgSetMarketsHardCapResponse(): MsgSetMarketsHardCapResponse {
   return {};
 }
 
-export const MsgEnablePermissionlessMarketListingResponse = {
-  encode(_: MsgEnablePermissionlessMarketListingResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const MsgSetMarketsHardCapResponse = {
+  encode(_: MsgSetMarketsHardCapResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgEnablePermissionlessMarketListingResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetMarketsHardCapResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgEnablePermissionlessMarketListingResponse();
+    const message = createBaseMsgSetMarketsHardCapResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -117,8 +111,8 @@ export const MsgEnablePermissionlessMarketListingResponse = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<MsgEnablePermissionlessMarketListingResponse>): MsgEnablePermissionlessMarketListingResponse {
-    const message = createBaseMsgEnablePermissionlessMarketListingResponse();
+  fromPartial(_: DeepPartial<MsgSetMarketsHardCapResponse>): MsgSetMarketsHardCapResponse {
+    const message = createBaseMsgSetMarketsHardCapResponse();
     return message;
   }
 

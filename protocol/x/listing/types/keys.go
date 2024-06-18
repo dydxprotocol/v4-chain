@@ -11,6 +11,6 @@ const (
 
 // State.
 const (
-	// PermissionlessListingEnableKey is the key to retrieve the permissionless listing enable flag.
-	PermissionlessListingEnableKey = "PermissionlessListingEnabled"
+	// HardCapForMarketsKey is the key to retrieve the hard cap for listed markets.
+	HardCapForMarketsKey = "HardCapForMarkets"
 )

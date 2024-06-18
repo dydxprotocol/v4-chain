@@ -14,26 +14,32 @@ import (
 func TestMsgEnablePermissionlessMarketListing(t *testing.T) {
 	tests := map[string]struct {
 		// Msg.
-		msg *types.MsgEnablePermissionlessMarketListing
+		msg *types.MsgSetMarketsHardCap
 		// Expected error
 		expectedErr string
 	}{
-		"Success - Enabled": {
-			msg: &types.MsgEnablePermissionlessMarketListing{
-				Authority:                         lib.GovModuleAddress.String(),
-				EnablePermissionlessMarketListing: true,
+		"Success - Hard cap to 100": {
+			msg: &types.MsgSetMarketsHardCap{
+				Authority:         lib.GovModuleAddress.String(),
+				HardCapForMarkets: 100,
 			},
 		},
 		"Success - Disabled": {
-			msg: &types.MsgEnablePermissionlessMarketListing{
-				Authority:                         lib.GovModuleAddress.String(),
-				EnablePermissionlessMarketListing: false,
+			msg: &types.MsgSetMarketsHardCap{
+				Authority:         lib.GovModuleAddress.String(),
+				HardCapForMarkets: 0,
 			},
 		},
 		"Failure - Invalid Authority": {
-			msg: &types.MsgEnablePermissionlessMarketListing{
-				Authority:                         constants.AliceAccAddress.String(),
-				EnablePermissionlessMarketListing: true,
+			msg: &types.MsgSetMarketsHardCap{
+				Authority:         constants.AliceAccAddress.String(),
+				HardCapForMarkets: 100,
+			},
+			expectedErr: "invalid authority",
+		},
+		"Failure - Empty authority": {
+			msg: &types.MsgSetMarketsHardCap{
+				HardCapForMarkets: 100,
 			},
 			expectedErr: "invalid authority",
 		},
@@ -45,14 +51,14 @@ func TestMsgEnablePermissionlessMarketListing(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.ListingKeeper
 			ms := keeper.NewMsgServerImpl(k)
-			_, err := ms.EnablePermissionlessMarketListing(ctx, tc.msg)
+			_, err := ms.SetMarketsHardCap(ctx, tc.msg)
 			if tc.expectedErr != "" {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.expectedErr)
 			} else {
-				enabledFlag, err := k.IsPermissionlessListingEnabled(ctx)
+				enabledFlag, err := k.GetMarketsHardCap(ctx)
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.EnablePermissionlessMarketListing, enabledFlag)
+				require.Equal(t, tc.msg.HardCapForMarkets, enabledFlag)
 			}
 		})
 	}
