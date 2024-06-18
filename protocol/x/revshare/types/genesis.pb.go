@@ -22,7 +22,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// GenesisState defines `x/listing`'s genesis state.
+// GenesisState defines `x/revshare`'s genesis state.
 type GenesisState struct {
 }
 
