@@ -171,9 +171,8 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 				),
 				"err", err,
 			)
-			sm.Lock()
-			delete(sm.orderbookSubscriptions, subscription.subscriptionId)
-			sm.Unlock()
+			// Break out of the loop, stopping this goroutine.
+			// The channel will fill up and the main thread will prune the subscription.
 			break
 		}
 	}
