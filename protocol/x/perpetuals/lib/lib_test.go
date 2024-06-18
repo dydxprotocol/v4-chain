@@ -36,7 +36,6 @@ func TestGetSettlementPpmWithPerpetual(t *testing.T) {
 		quantums                 *big.Int
 		index                    *big.Int
 		expectedNetSettlementPpm *big.Int
-		expectedNewFundingIndex  *big.Int
 	}{
 		"zero indexDelta": {
 			perpetual: types.Perpetual{
@@ -45,7 +44,6 @@ func TestGetSettlementPpmWithPerpetual(t *testing.T) {
 			quantums:                 big.NewInt(1_000_000),
 			index:                    big.NewInt(4_000_000_000),
 			expectedNetSettlementPpm: big.NewInt(0),
-			expectedNewFundingIndex:  big.NewInt(4_000_000_000),
 		},
 		"positive indexDelta, positive quantums": {
 			perpetual: types.Perpetual{
@@ -54,7 +52,6 @@ func TestGetSettlementPpmWithPerpetual(t *testing.T) {
 			quantums:                 big.NewInt(1_000_000),
 			index:                    big.NewInt(100_000_000_000),
 			expectedNetSettlementPpm: big.NewInt(-23_456_789_123_000_000),
-			expectedNewFundingIndex:  big.NewInt(123_456_789_123),
 		},
 		"positive indexDelta, negative quantums": {
 			perpetual: types.Perpetual{
@@ -63,7 +60,6 @@ func TestGetSettlementPpmWithPerpetual(t *testing.T) {
 			quantums:                 big.NewInt(-1_000_000),
 			index:                    big.NewInt(100_000_000_000),
 			expectedNetSettlementPpm: big.NewInt(23_456_789_123_000_000),
-			expectedNewFundingIndex:  big.NewInt(123_456_789_123),
 		},
 		"negative indexDelta, positive quantums": {
 			perpetual: types.Perpetual{
@@ -72,7 +68,6 @@ func TestGetSettlementPpmWithPerpetual(t *testing.T) {
 			quantums:                 big.NewInt(1_000_000),
 			index:                    big.NewInt(-100_000_000_000),
 			expectedNetSettlementPpm: big.NewInt(23_456_789_123_000_000),
-			expectedNewFundingIndex:  big.NewInt(-123_456_789_123),
 		},
 		"negative indexDelta, negative quantums": {
 			perpetual: types.Perpetual{
@@ -81,7 +76,54 @@ func TestGetSettlementPpmWithPerpetual(t *testing.T) {
 			quantums:                 big.NewInt(-1_000_000),
 			index:                    big.NewInt(-100_000_000_000),
 			expectedNetSettlementPpm: big.NewInt(-23_456_789_123_000_000),
-			expectedNewFundingIndex:  big.NewInt(-123_456_789_123),
+		},
+		"is long, index went from negative to positive": {
+			perpetual:                types.Perpetual{FundingIndex: dtypes.NewInt(100)},
+			quantums:                 big.NewInt(30_000),
+			index:                    big.NewInt(-100),
+			expectedNetSettlementPpm: big.NewInt(-6_000_000),
+		},
+		"is long, index unchanged": {
+			perpetual:                types.Perpetual{FundingIndex: dtypes.NewInt(100)},
+			quantums:                 big.NewInt(1_000_000),
+			index:                    big.NewInt(100),
+			expectedNetSettlementPpm: big.NewInt(0),
+		},
+		"is long, index went from positive to zero": {
+			perpetual:                types.Perpetual{FundingIndex: dtypes.NewInt(0)},
+			quantums:                 big.NewInt(10_000_000),
+			index:                    big.NewInt(100),
+			expectedNetSettlementPpm: big.NewInt(1_000_000_000),
+		},
+		"is long, index went from positive to negative": {
+			perpetual:                types.Perpetual{FundingIndex: dtypes.NewInt(-200)},
+			quantums:                 big.NewInt(10_000_000),
+			index:                    big.NewInt(100),
+			expectedNetSettlementPpm: big.NewInt(3_000_000_000),
+		},
+		"is short, index went from negative to positive": {
+			perpetual:                types.Perpetual{FundingIndex: dtypes.NewInt(100)},
+			quantums:                 big.NewInt(-30_000),
+			index:                    big.NewInt(-100),
+			expectedNetSettlementPpm: big.NewInt(6_000_000),
+		},
+		"is short, index unchanged": {
+			perpetual:                types.Perpetual{FundingIndex: dtypes.NewInt(100)},
+			quantums:                 big.NewInt(-1_000),
+			index:                    big.NewInt(100),
+			expectedNetSettlementPpm: big.NewInt(0),
+		},
+		"is short, index went from positive to zero": {
+			perpetual:                types.Perpetual{FundingIndex: dtypes.NewInt(0)},
+			quantums:                 big.NewInt(-5_000_000),
+			index:                    big.NewInt(100),
+			expectedNetSettlementPpm: big.NewInt(-500_000_000),
+		},
+		"is short, index went from positive to negative": {
+			perpetual:                types.Perpetual{FundingIndex: dtypes.NewInt(-50)},
+			quantums:                 big.NewInt(-5_000_000),
+			index:                    big.NewInt(100),
+			expectedNetSettlementPpm: big.NewInt(-750_000_000),
 		},
 	}
 	for name, test := range tests {
@@ -92,7 +134,7 @@ func TestGetSettlementPpmWithPerpetual(t *testing.T) {
 				test.index,
 			)
 			require.Equal(t, test.expectedNetSettlementPpm, netSettlementPpm)
-			require.Equal(t, test.expectedNewFundingIndex, newFundingIndex)
+			require.Equal(t, test.perpetual.FundingIndex.BigInt(), newFundingIndex)
 		})
 	}
 }

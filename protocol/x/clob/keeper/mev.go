@@ -13,6 +13,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/mev_telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -786,16 +787,15 @@ func (k Keeper) AddSettlementForPositionDelta(
 			}
 
 			// Get the funding payment for this position delta.
-			bigNetSettlementPpm, _, err := perpetualKeeper.GetSettlementPpm(
-				ctx,
-				perpetualId,
-				deltaQuantums,
-				// Use the position's old funding index to calculate the funding payment.
-				fundingIndex,
-			)
+			perpetual, err := perpetualKeeper.GetPerpetual(ctx, perpetualId)
 			if err != nil {
 				return err
 			}
+			bigNetSettlementPpm, _ := perplib.GetSettlementPpmWithPerpetual(
+				perpetual,
+				deltaQuantums,
+				fundingIndex,
+			)
 
 			// Add the settlement to the subaccount.
 			// Note: Funding payment is the negative of settlement, i.e. positive settlement is equivalent
