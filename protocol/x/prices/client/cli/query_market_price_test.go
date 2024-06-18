@@ -49,9 +49,6 @@ func TestShowMarketPrice(t *testing.T) {
 	} {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
-			args := []string{
-				fmt.Sprintf("%v", tc.id),
-			}
 			query := "docker exec interchain-security-instance interchain-security-cd query prices show-market-price " + fmt.Sprintf("%d", tc.id)
 			data, stderrOutput, err := network.QueryCustomNetwork(query)
 

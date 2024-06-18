@@ -53,18 +53,6 @@ var (
 		sdkerrors.ErrInvalidRequest,
 		"internal msg cannot be submitted externally",
 	)
-	invalidReqErrNestedUnsupportedMsg = errorsmod.Wrap(
-		sdkerrors.ErrInvalidRequest,
-		fmt.Errorf("Invalid nested msg: unsupported msg type").Error(),
-	)
-	invalidReqErrNestedAppInjectedMsg = errorsmod.Wrap(
-		sdkerrors.ErrInvalidRequest,
-		fmt.Errorf("Invalid nested msg: app-injected msg type").Error(),
-	)
-	invalidReqErrNestedDoubleNested = errorsmod.Wrap(
-		sdkerrors.ErrInvalidRequest,
-		fmt.Errorf("Invalid nested msg: double-nested msg type").Error(),
-	)
 	invalidReqErrUnsupportedMsg = errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unsupported msg")
 )
 

@@ -45,19 +45,6 @@ func checkExpectedEpoch(
 	)
 }
 
-func networkWithEpochInfoObjects(t *testing.T) network.Config {
-	t.Helper()
-	cfg := network.DefaultConfig(nil)
-	state := types.GenesisState{}
-	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
-
-	buf, err := cfg.Codec.MarshalJSON(&state)
-	require.NoError(t, err)
-	cfg.GenesisState[types.ModuleName] = buf
-
-	return cfg
-}
-
 func getDefaultGenesisEpochById(t *testing.T, id string) types.EpochInfo {
 	for _, epochInfo := range types.DefaultGenesis().GetEpochInfoList() {
 		if epochInfo.Name == id {

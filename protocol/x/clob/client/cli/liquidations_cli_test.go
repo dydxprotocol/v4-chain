@@ -32,10 +32,7 @@ import (
 )
 
 var (
-	liqTestMakerOrderQuantums                = satypes.BaseQuantums(100_000_000) // 1 BTC.
-	liqTestInitialSubaccountModuleAccBalance = int64(
-		10_000 * constants.QuoteBalance_OneDollar, // $10,000.
-	)
+	liqTestMakerOrderQuantums   = satypes.BaseQuantums(100_000_000) // 1 BTC.
 	liqTestSubaccountNumberZero = uint32(0)
 	liqTestSubaccountNumberOne  = uint32(1)
 	liqTestUnixSocketAddress    = "/tmp/liquidations_cli_test.sock"
@@ -46,7 +43,6 @@ type LiquidationsIntegrationTestSuite struct {
 
 	validatorAddress sdk.AccAddress
 	cfg              network.Config
-	network          *network.Network
 }
 
 func TestLiquidationOrderIntegrationTestSuite(t *testing.T) {
@@ -127,7 +123,7 @@ func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
 	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
 
 	buyTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 100000000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
-	_, _, err = network.QueryCustomNetwork(buyTx)
+	_, _, err := network.QueryCustomNetwork(buyTx)
 	s.Require().NoError(err)
 
 	time.Sleep(5 * time.Second)

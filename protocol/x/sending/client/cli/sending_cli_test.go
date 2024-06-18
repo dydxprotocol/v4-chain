@@ -28,7 +28,6 @@ type SendingIntegrationTestSuite struct {
 
 	validatorAddress sdk.AccAddress
 	cfg              network.Config
-	network          *network.Network
 }
 
 func TestSendingIntegrationTestSuite(t *testing.T) {

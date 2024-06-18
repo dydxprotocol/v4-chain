@@ -40,7 +40,6 @@ type PlaceOrderIntegrationTestSuite struct {
 
 	validatorAddress sdk.AccAddress
 	cfg              network.Config
-	network          *network.Network
 }
 
 func TestPlaceOrderIntegrationTestSuite(t *testing.T) {
@@ -117,7 +116,7 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
 
 	buyTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
-	_, _, err = network.QueryCustomNetwork(buyTx)
+	_, _, err := network.QueryCustomNetwork(buyTx)
 	s.Require().NoError(err)
 
 	sellTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 1 1 0 2 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"

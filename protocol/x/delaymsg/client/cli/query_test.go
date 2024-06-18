@@ -155,10 +155,8 @@ func TestQueryBlockMessageIds(t *testing.T) {
 			if name == "Default: 0" {
 				require.True(t, strings.Contains(stdQueryErr, GrpcNotFoundError))
 			} else {
-
 				require.NoError(t, err)
 				var resp types.QueryBlockMessageIdsResponse
-
 				require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 				require.Equal(t, tc.expectedBlockMessageIds, resp.MessageIds)
 			}

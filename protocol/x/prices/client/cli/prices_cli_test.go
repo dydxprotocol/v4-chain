@@ -57,7 +57,6 @@ type PricesIntegrationTestSuite struct {
 
 	validatorAddress sdk.AccAddress
 	cfg              network.Config
-	network          *network.Network
 }
 
 func TestPricesIntegrationTestSuite(t *testing.T) {

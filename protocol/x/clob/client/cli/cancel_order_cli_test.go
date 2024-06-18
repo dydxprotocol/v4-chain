@@ -37,10 +37,7 @@ const (
 
 type CancelOrderIntegrationTestSuite struct {
 	suite.Suite
-
-	validatorAddress sdk.AccAddress
-	cfg              network.Config
-	network          *network.Network
+	cfg network.Config
 }
 
 func TestCancelOrderIntegrationTestSuite(t *testing.T) {
@@ -106,7 +103,7 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
 
 	buyTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
-	_, _, err = network.QueryCustomNetwork(buyTx)
+	_, _, err := network.QueryCustomNetwork(buyTx)
 	s.Require().NoError(err)
 
 	cancelTx := "docker exec interchain-security-instance interchain-security-cd tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
