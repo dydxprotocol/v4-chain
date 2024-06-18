@@ -1129,7 +1129,8 @@ func New(
 
 	wasmOpts := []wasmmodulekeeper.Option{}
 
-	wasmOpts = append(wasmbinding.RegisterCustomPlugins(&app.PricesKeeper, &app.SendingKeeper, &app.SubaccountsKeeper, app.ClobKeeper), wasmOpts...)
+	wasmOpts = append(wasmbinding.RegisterCustomPlugins(&app.PricesKeeper, &app.SendingKeeper,
+		&app.SubaccountsKeeper, app.ClobKeeper), wasmOpts...)
 
 	app.WasmKeeper = wasmmodulekeeper.NewKeeper(
 		appCodec,
