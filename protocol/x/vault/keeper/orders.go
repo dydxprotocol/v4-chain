@@ -116,9 +116,10 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 			metrics.GetLabelForBoolValue(metrics.Success, err == nil),
 		)
 
-		// Send indexer messages.
-		// If there are fewer orders to cancel than to place, send Order Placement event instead of Replacement
-		if i >= len(ordersToCancel) {
+		// Send indexer messages. We expect ordersToCancel and ordersToPlace to have the same length
+		// and the order to place at each index to be a replacement of the order to cancel at the same index.
+		replacedOrder := ordersToCancel[i]
+		if replacedOrder == nil {
 			k.GetIndexerEventManager().AddTxnEvent(
 				ctx,
 				indexerevents.SubtypeStatefulOrder,
@@ -130,31 +131,17 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 				),
 			)
 		} else {
-			replacedOrder := ordersToCancel[i]
-			if replacedOrder == nil {
-				k.GetIndexerEventManager().AddTxnEvent(
-					ctx,
-					indexerevents.SubtypeStatefulOrder,
-					indexerevents.StatefulOrderEventVersion,
-					indexer_manager.GetBytes(
-						indexerevents.NewLongTermOrderPlacementEvent(
-							*order,
-						),
+			k.GetIndexerEventManager().AddTxnEvent(
+				ctx,
+				indexerevents.SubtypeStatefulOrder,
+				indexerevents.StatefulOrderEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewLongTermOrderReplacementEvent(
+						replacedOrder.OrderId,
+						*order,
 					),
-				)
-			} else {
-				k.GetIndexerEventManager().AddTxnEvent(
-					ctx,
-					indexerevents.SubtypeStatefulOrder,
-					indexerevents.StatefulOrderEventVersion,
-					indexer_manager.GetBytes(
-						indexerevents.NewLongTermOrderReplacementEvent(
-							replacedOrder.OrderId,
-							*order,
-						),
-					),
-				)
-			}
+				),
+			)
 		}
 	}
 	return nil
