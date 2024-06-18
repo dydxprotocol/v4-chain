@@ -1,5 +1,5 @@
 package types
 
 var (
-// Add x/listing specific errors here
+// Add x/revshare specific errors here
 )
