@@ -77,7 +77,7 @@ func TestValidate(t *testing.T) {
 				GrpcStreamingEnabled:              true,
 				GrpcStreamingFlushIntervalMs:      100,
 				GrpcStreamingMaxBatchSize:         10000,
-				GrpcStreamingMaxChannelBufferSize: 10000,
+				GrpcStreamingMaxChannelBufferSize: 2000,
 			},
 		},
 		"failure - gRPC disabled": {
@@ -163,7 +163,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcStreamingEnable:               false,
 			expectedGrpcStreamingFlushMs:              50,
 			expectedGrpcStreamingBatchSize:            10000,
-			expectedGrpcStreamingMaxChannelBufferSize: 10000,
+			expectedGrpcStreamingMaxChannelBufferSize: 2000,
 		},
 		"Sets values from options": {
 			optsMap: map[string]any{
