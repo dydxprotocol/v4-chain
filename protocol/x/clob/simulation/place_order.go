@@ -122,7 +122,7 @@ func SimulateMsgPlaceOrder(
 				"Subaccount does not have enough free collateral to place minimum order",
 			), nil, nil
 		}
-		if bigMinOrderQuoteQuantums.Cmp(lib.BigInt0()) == 0 {
+		if bigMinOrderQuoteQuantums.BitLen() == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
 				typeMsgPlaceOrder,
@@ -263,7 +263,7 @@ func generateValidPlaceOrder(
 	// Handle special order conditions.
 	if reduceOnly {
 		// Reduce only must be opposite of current positions in clob pair.
-		curPositionSign := currentPositionSizeQuantums.Cmp(lib.BigInt0())
+		curPositionSign := currentPositionSizeQuantums.Sign()
 		if curPositionSign < 0 {
 			// currently short, order should go long
 			orderSide = types.Order_SIDE_BUY
