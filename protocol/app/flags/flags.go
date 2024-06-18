@@ -57,7 +57,7 @@ const (
 	DefaultNonValidatingFullNode = false
 	DefaultDdErrorTrackingFormat = false
 
-	DefaultGrpcStreamingEnabled              = false
+	DefaultGrpcStreamingEnabled              = true
 	DefaultGrpcStreamingFlushIntervalMs      = 50
 	DefaultGrpcStreamingMaxBatchSize         = 10000
 	DefaultGrpcStreamingMaxChannelBufferSize = 2000

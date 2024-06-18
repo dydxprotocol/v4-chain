@@ -48,9 +48,6 @@ type OrderbookSubscription struct {
 	// Clob pair ids to subscribe to.
 	clobPairIds []uint32
 
-	// Stream
-	srv clobtypes.Query_StreamOrderbookUpdatesServer
-
 	// Channel to buffer writes before the stream
 	updatesChannel chan []clobtypes.StreamUpdate
 }
@@ -134,7 +131,6 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 	subscription := &OrderbookSubscription{
 		subscriptionId: sm.nextSubscriptionId,
 		clobPairIds:    clobPairIds,
-		srv:            srv,
 		updatesChannel: make(chan []clobtypes.StreamUpdate, sm.maxSubscriptionChannelSize),
 	}
 
@@ -157,7 +153,7 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 			metrics.GrpcSendResponseToSubscriberCount,
 			1,
 		)
-		err = subscription.srv.Send(
+		err = srv.Send(
 			&clobtypes.StreamOrderbookUpdatesResponse{
 				Updates: updates,
 			},
