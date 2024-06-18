@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 	"testing"
@@ -105,7 +106,6 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			activationThresholdQuoteQuantums: big.NewInt(123_456_789),
 		},
 	}
-
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Initialize tApp and ctx (in deliverTx mode).
@@ -160,6 +160,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 
 			// Simulate vault orders placed in last block.
 			numPreviousOrders := 0
+			previousOrders := make(map[vaulttypes.VaultId][]*clobtypes.Order)
 			for i, vaultId := range tc.vaultIds {
 				if tc.totalShares[i].Sign() > 0 && tc.assetQuantums[i].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
 					orders, err := tApp.App.VaultKeeper.GetVaultClobOrders(
@@ -171,6 +172,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 						err := tApp.App.VaultKeeper.PlaceVaultClobOrder(ctx, order)
 						require.NoError(t, err)
 					}
+					previousOrders[vaultId] = orders
 					numPreviousOrders += len(orders)
 				}
 			}
@@ -188,9 +190,12 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 					expectedOrders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, vaultId)
 					require.NoError(t, err)
 					numExpectedOrders += len(expectedOrders)
+					// ordersToCancel := previousOrders[vaultId]
 					for _, order := range expectedOrders {
 						allExpectedOrderIds[order.OrderId] = true
+						// orderToCancel := ordersToCancel[order_index]
 					}
+
 				}
 			}
 			allStatefulOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
@@ -198,6 +203,10 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			for _, order := range allStatefulOrders {
 				require.True(t, allExpectedOrderIds[order.OrderId])
 			}
+
+			block := tApp.App.IndexerEventManager.ProduceBlock(ctx)
+			fmt.Printf("Indexer events: %+v\n", block)
+
 		})
 	}
 }
