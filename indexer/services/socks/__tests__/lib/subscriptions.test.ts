@@ -68,7 +68,7 @@ describe('Subscriptions', () => {
       '/v4/addresses/.+/parentSubaccountNumber/.+',
       '/v4/orders/parentSubaccountNumber?.+parentSubaccountNumber.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED,BEST_EFFORT_CANCELED',
     ],
-    [Channel.V4_BLOCK_HEIGHT]: ['v4/blockHeight'],
+    [Channel.V4_BLOCK_HEIGHT]: ['v4/height'],
   };
   const initialMessage: Object = { a: 'b' };
   const country: string = 'AR';

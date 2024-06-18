@@ -489,7 +489,7 @@ export class Subscriptions {
         return `${COMLINK_URL}/v4/perpetualMarkets`;
       }
       case (Channel.V4_BLOCK_HEIGHT): {
-        return `${COMLINK_URL}/v4/blockHeight`;
+        return `${COMLINK_URL}/v4/height`;
       }
       case (Channel.V4_ORDERBOOK): {
         if (id === undefined) {
