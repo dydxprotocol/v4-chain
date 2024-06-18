@@ -56,8 +56,7 @@ func TestMsgSetMarketsHardCap(t *testing.T) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.expectedErr)
 			} else {
-				enabledFlag, err := k.GetMarketsHardCap(ctx)
-				require.NoError(t, err)
+				enabledFlag := k.GetMarketsHardCap(ctx)
 				require.Equal(t, tc.msg.HardCapForMarkets, enabledFlag)
 			}
 		})

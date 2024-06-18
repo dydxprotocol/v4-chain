@@ -11,8 +11,8 @@ func (k Keeper) MarketsHardCap(
 	ctx context.Context,
 	req *types.QueryMarketsHardCap,
 ) (*types.QueryMarketsHardCapResponse, error) {
-	hardCap, err := k.GetMarketsHardCap(sdk.UnwrapSDKContext(ctx))
+	hardCap := k.GetMarketsHardCap(sdk.UnwrapSDKContext(ctx))
 	return &types.QueryMarketsHardCapResponse{
 		HardCap: hardCap,
-	}, err
+	}, nil
 }

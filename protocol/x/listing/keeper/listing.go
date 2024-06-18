@@ -16,10 +16,10 @@ func (k Keeper) SetMarketsHardCap(ctx sdk.Context, hardCap uint32) error {
 }
 
 // Function to get hard cap on listed markets from module store
-func (k Keeper) GetMarketsHardCap(ctx sdk.Context) (hardCap uint32, err error) {
+func (k Keeper) GetMarketsHardCap(ctx sdk.Context) (hardCap uint32) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get([]byte(types.HardCapForMarketsKey))
 	var result gogotypes.UInt32Value
 	k.cdc.MustUnmarshal(b, &result)
-	return result.Value, nil
+	return result.Value
 }
