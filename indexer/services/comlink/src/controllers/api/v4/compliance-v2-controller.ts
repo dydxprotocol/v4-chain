@@ -255,7 +255,7 @@ router.post(
 
       const updatedAt: string = DateTime.utc().toISO();
       const complianceStatusFromDatabase:
-      ComplianceStatusFromDatabase | undefined = await upsertComplicanceStatus(
+      ComplianceStatusFromDatabase | undefined = await upsertComplianceStatus(
         req,
         action,
         address,
@@ -324,7 +324,7 @@ function generateAddress(pubkeyArray: Uint8Array): string {
  *  - set the status to CLOSE_ONLY
  */
 // eslint-disable-next-line @typescript-eslint/require-await
-async function upsertComplicanceStatus(
+async function upsertComplianceStatus(
   req: express.Request,
   action: ComplianceAction,
   address: string,
