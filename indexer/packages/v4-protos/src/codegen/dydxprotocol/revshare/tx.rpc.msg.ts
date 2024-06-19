@@ -4,7 +4,10 @@ import { MsgSetMarketMapperRevenueShare, MsgSetMarketMapperRevenueShareResponse 
 /** Msg defines the Msg service. */
 
 export interface Msg {
-  /** SetMarketMapperRevenueShare creates a new revenue share for a market mapper. */
+  /**
+   * SetMarketMapperRevenueShare creates a new revenue share for a market
+   * mapper.
+   */
   setMarketMapperRevenueShare(request: MsgSetMarketMapperRevenueShare): Promise<MsgSetMarketMapperRevenueShareResponse>;
 }
 export class MsgClientImpl implements Msg {
