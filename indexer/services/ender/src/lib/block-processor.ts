@@ -286,9 +286,11 @@ export class BlockProcessor {
       );
     }
 
+    // Create a block message from the current block
+    kafkaPublisher.addEvent(this.createBlockHeightMsg());
+
     // in genesis, handle sync events first, then batched events.
     // in other blocks, handle batched events first, then sync events.
-    kafkaPublisher.addEvent(this.createBlockHeightMsg());
     if (this.block.height === 0) {
       await this.syncHandlers.process(kafkaPublisher, resultRow);
       await this.batchedHandlers.process(kafkaPublisher, resultRow);
