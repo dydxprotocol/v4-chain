@@ -10,6 +10,8 @@ export function getGeoComplianceReason(
       return ComplianceReason.US_GEO;
     } else if (country === 'CA') {
       return ComplianceReason.CA_GEO;
+    } else if (country === 'GB') {
+      return ComplianceReason.GB_GEO;
     } else {
       return ComplianceReason.SANCTIONED_GEO;
     }

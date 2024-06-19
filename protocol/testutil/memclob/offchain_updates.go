@@ -14,7 +14,7 @@ import (
 )
 
 func RequireCancelOrderOffchainUpdate(
-	t *testing.T,
+	t testing.TB,
 	ctx sdk.Context,
 	offchainUpdate *types.OffchainUpdates,
 	orderId types.OrderId,
@@ -24,7 +24,7 @@ func RequireCancelOrderOffchainUpdate(
 	RequireCancelOrderMessage(t, ctx, &messages[0], orderId)
 }
 
-func RequireCancelOrderMessage(t *testing.T, ctx sdk.Context, message *msgsender.Message, orderId types.OrderId) {
+func RequireCancelOrderMessage(t testing.TB, ctx sdk.Context, message *msgsender.Message, orderId types.OrderId) {
 	expectedMessage, _ := off_chain_updates.CreateOrderRemoveMessageWithReason(
 		ctx,
 		orderId,

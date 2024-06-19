@@ -874,40 +874,6 @@ func (k Keeper) GetNetCollateral(
 	return k.GetNetNotional(ctx, id, bigQuantums)
 }
 
-// GetSettlementPpm returns the net settlement amount ppm (in quote quantums) given
-// the perpetual Id and position size (in base quantums).
-// When handling rounding, always round positive settlement amount to zero, and
-// negative amount to negative infinity. This ensures total amount of value does
-// not increase after settlement.
-// Example:
-// For a round of funding payments, accounts A, B are to receive 102.5 quote quantums;
-// account C is to pay 205 quote quantums.
-// After settlement, accounts A, B are credited 102 quote quantum each; account C
-// is debited 205 quote quantums.
-func (k Keeper) GetSettlementPpm(
-	ctx sdk.Context,
-	perpetualId uint32,
-	quantums *big.Int,
-	index *big.Int,
-) (
-	bigNetSettlementPpm *big.Int,
-	newFundingIndex *big.Int,
-	err error,
-) {
-	// Get the perpetual for newest FundingIndex.
-	perpetual, err := k.GetPerpetual(ctx, perpetualId)
-	if err != nil {
-		return big.NewInt(0), big.NewInt(0), err
-	}
-
-	bigNetSettlementPpm, newFundingIndex = perplib.GetSettlementPpmWithPerpetual(
-		perpetual,
-		quantums,
-		index,
-	)
-	return bigNetSettlementPpm, newFundingIndex, nil
-}
-
 // GetPremiumSamples reads premium samples from the current `funding-tick` epoch,
 // stored in a `PremiumStore` struct.
 func (k Keeper) GetPremiumSamples(ctx sdk.Context) (

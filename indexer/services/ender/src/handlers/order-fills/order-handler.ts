@@ -2,28 +2,23 @@ import {
   FillFromDatabase,
   FillModel,
   Liquidity,
+  MarketFromDatabase,
+  MarketModel,
   OrderFromDatabase,
   OrderModel,
+  OrderStatus,
   OrderTable,
   PerpetualMarketFromDatabase,
   PerpetualMarketModel,
+  perpetualMarketRefresher,
   PerpetualPositionFromDatabase,
   PerpetualPositionModel,
   SubaccountTable,
-  OrderStatus,
-  MarketFromDatabase,
-  MarketTable,
-  MarketsMap,
-  MarketColumns,
-  perpetualMarketRefresher,
   UpdatedPerpetualPositionSubaccountKafkaObject,
 } from '@dydxprotocol-indexer/postgres';
 import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
-import {
-  IndexerOrderId, IndexerSubaccountId, IndexerOrder,
-} from '@dydxprotocol-indexer/v4-protos';
-import _ from 'lodash';
+import { IndexerOrder, IndexerOrderId, IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import * as pg from 'pg';
 
@@ -77,6 +72,8 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       resultRow[field].fill) as FillFromDatabase;
     const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
       resultRow[field].perpetual_market) as PerpetualMarketFromDatabase;
+    const market: MarketFromDatabase = MarketModel.fromJson(
+      resultRow[field].market) as MarketFromDatabase;
     const position: PerpetualPositionFromDatabase = PerpetualPositionModel.fromJson(
       resultRow[field].perpetual_position) as PerpetualPositionFromDatabase;
 
@@ -86,19 +83,10 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
     } else {
       subaccountId = castedOrderFillEventMessage.order.orderId!.subaccountId!;
     }
-    const markets: MarketFromDatabase[] = await MarketTable.findAll(
-      {},
-      [],
-      { txId: this.txId },
-    );
-    const marketIdToMarket: MarketsMap = _.keyBy(
-      markets,
-      MarketColumns.id,
-    );
     const positionUpdate: UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
       convertPerpetualPosition(position),
       perpetualMarketRefresher.getPerpetualMarketsMap(),
-      marketIdToMarket,
+      market,
     );
     kafkaEvents.push(
       this.generateConsolidatedKafkaEvent(

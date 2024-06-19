@@ -169,6 +169,9 @@ import (
 	ratelimitmodule "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit"
 	ratelimitmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/keeper"
 	ratelimitmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
+	revsharemodule "github.com/dydxprotocol/v4-chain/protocol/x/revshare"
+	revsharemodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/revshare/keeper"
+	revsharemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	rewardsmodule "github.com/dydxprotocol/v4-chain/protocol/x/rewards"
 	rewardsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
@@ -310,6 +313,8 @@ type App struct {
 
 	RewardsKeeper rewardsmodulekeeper.Keeper
 
+	RevShareKeeper revsharemodulekeeper.Keeper
+
 	StatsKeeper statsmodulekeeper.Keeper
 
 	SubaccountsKeeper subaccountsmodulekeeper.Keeper
@@ -431,6 +436,7 @@ func New(
 		epochsmoduletypes.StoreKey,
 		govplusmoduletypes.StoreKey,
 		vaultmoduletypes.StoreKey,
+		revsharemoduletypes.StoreKey,
 	)
 	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
 	tkeys := storetypes.NewTransientStoreKeys(
@@ -1114,6 +1120,15 @@ func New(
 	)
 	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
 
+	app.RevShareKeeper = *revsharemodulekeeper.NewKeeper(
+		appCodec,
+		keys[revsharemoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+	)
+	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -1183,6 +1198,7 @@ func New(
 		rateLimitModule,
 		vaultModule,
 		listingModule,
+		revShareModule,
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
@@ -1231,6 +1247,7 @@ func New(
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
+		revsharemoduletypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
@@ -1272,6 +1289,7 @@ func New(
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
+		revsharemoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
@@ -1317,6 +1335,7 @@ func New(
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
+		revsharemoduletypes.ModuleName,
 		authz.ModuleName,
 	)
 
@@ -1358,6 +1377,7 @@ func New(
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
+		revsharemoduletypes.ModuleName,
 		authz.ModuleName,
 
 		// Auth must be migrated after staking.
@@ -1693,8 +1713,6 @@ func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 	if err != nil {
 		return response, err
 	}
-	block := app.IndexerEventManager.ProduceBlock(ctx)
-	app.IndexerEventManager.SendOnchainData(block)
 	return response, err
 }
 
@@ -1703,6 +1721,8 @@ func (app *App) Precommitter(ctx sdk.Context) {
 	if err := app.ModuleManager.Precommit(ctx); err != nil {
 		panic(err)
 	}
+	block := app.IndexerEventManager.ProduceBlock(ctx)
+	app.IndexerEventManager.SendOnchainData(block)
 }
 
 // PrepareCheckStater application updates after commit and before any check state is invoked.

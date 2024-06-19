@@ -97,7 +97,8 @@ export function perpetualPositionToResponseObject(
     exitPrice: position.exitPrice && Big(position.exitPrice).toFixed(),
     realizedPnl,
     unrealizedPnl: helpers.getUnrealizedPnl(
-      position, perpetualMarketsMap[position.perpetualId], marketsMap,
+      position, perpetualMarketsMap[position.perpetualId],
+      marketsMap[perpetualMarketsMap[position.perpetualId].marketId],
     ),
     createdAt: position.createdAt,
     createdAtHeight: position.createdAtHeight,
@@ -310,12 +311,14 @@ export function subaccountToResponseObject({
   subaccount,
   equity,
   freeCollateral,
+  latestBlockHeight,
   openPerpetualPositions = {},
   assetPositions = {},
 }: {
   subaccount: SubaccountFromDatabase,
   equity: string,
   freeCollateral: string,
+  latestBlockHeight: string,
   openPerpetualPositions: PerpetualPositionsMap,
   assetPositions: AssetPositionsMap,
 }): SubaccountResponseObject {
@@ -329,6 +332,7 @@ export function subaccountToResponseObject({
     // TODO(DEC-687): Track `marginEnabled` for subaccounts.
     marginEnabled: true,
     updatedAtHeight: subaccount.updatedAtHeight,
+    latestProcessedBlockHeight: latestBlockHeight,
   };
 }
 

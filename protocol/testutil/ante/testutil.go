@@ -56,7 +56,7 @@ type AnteTestSuite struct {
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
-func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
+func SetupTestSuite(t testing.TB, isCheckTx bool) *AnteTestSuite {
 	suite := &AnteTestSuite{}
 	ctrl := gomock.NewController(t)
 	suite.BankKeeper = authtestutil.NewMockBankKeeper(ctrl)
@@ -162,7 +162,7 @@ func (t TestCaseArgs) WithAccountsInfo(accs []TestAccount) TestCaseArgs {
 // DeliverMsgs constructs a tx and runs it through the ante handler. This is used to set the context for a
 // test case, for example to test for replay protection.
 func (suite *AnteTestSuite) DeliverMsgs(
-	t *testing.T,
+	t testing.TB,
 	privs []cryptotypes.PrivKey,
 	msgs []sdk.Msg,
 	feeAmount sdk.Coins,
@@ -183,7 +183,7 @@ func (suite *AnteTestSuite) DeliverMsgs(
 	return suite.AnteHandler(bytesCtx, tx, simulate)
 }
 
-func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCaseArgs) {
+func (suite *AnteTestSuite) RunTestCase(t testing.TB, tc TestCase, args TestCaseArgs) {
 	require.NoError(t, suite.TxBuilder.SetMsgs(args.msgs...))
 	suite.TxBuilder.SetFeeAmount(args.feeAmount)
 	suite.TxBuilder.SetGasLimit(args.gasLimit)

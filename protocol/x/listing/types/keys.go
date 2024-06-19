@@ -8,3 +8,9 @@ const (
 	// StoreKey defines the primary module store key.
 	StoreKey = ModuleName
 )
+
+// State.
+const (
+	// HardCapForMarketsKey is the key to retrieve the hard cap for listed markets.
+	HardCapForMarketsKey = "HardCapForMarkets"
+)

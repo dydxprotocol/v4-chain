@@ -82,6 +82,7 @@ describe('addresses-controller#V4', () => {
           freeCollateral: getFixedRepresentation(152000),
           marginEnabled: true,
           updatedAtHeight: testConstants.defaultSubaccount.updatedAtHeight,
+          latestProcessedBlockHeight: latestHeight,
           openPerpetualPositions: {
             [testConstants.defaultPerpetualMarket.ticker]: {
               market: testConstants.defaultPerpetualMarket.ticker,
@@ -160,6 +161,7 @@ describe('addresses-controller#V4', () => {
           freeCollateral: getFixedRepresentation(10000),
           marginEnabled: true,
           updatedAtHeight: testConstants.defaultSubaccount.updatedAtHeight,
+          latestProcessedBlockHeight: latestHeight,
           openPerpetualPositions: {},
           assetPositions: {
             [testConstants.defaultAsset.symbol]: {
@@ -245,6 +247,7 @@ describe('addresses-controller#V4', () => {
             freeCollateral: getFixedRepresentation(152000),
             marginEnabled: true,
             updatedAtHeight: testConstants.defaultSubaccount.updatedAtHeight,
+            latestProcessedBlockHeight: latestHeight,
             openPerpetualPositions: {
               [testConstants.defaultPerpetualMarket.ticker]: {
                 market: testConstants.defaultPerpetualMarket.ticker,
@@ -296,6 +299,7 @@ describe('addresses-controller#V4', () => {
             freeCollateral: getFixedRepresentation(0),
             marginEnabled: true,
             updatedAtHeight: testConstants.defaultSubaccount2.updatedAtHeight,
+            latestProcessedBlockHeight: latestHeight,
             openPerpetualPositions: {},
             assetPositions: {},
           },
@@ -306,6 +310,7 @@ describe('addresses-controller#V4', () => {
             freeCollateral: getFixedRepresentation(0),
             marginEnabled: true,
             updatedAtHeight: testConstants.isolatedSubaccount.updatedAtHeight,
+            latestProcessedBlockHeight: latestHeight,
             openPerpetualPositions: {},
             assetPositions: {},
           },
@@ -316,6 +321,7 @@ describe('addresses-controller#V4', () => {
             freeCollateral: getFixedRepresentation(0),
             marginEnabled: true,
             updatedAtHeight: testConstants.isolatedSubaccount2.updatedAtHeight,
+            latestProcessedBlockHeight: latestHeight,
             openPerpetualPositions: {},
             assetPositions: {},
           },
@@ -354,6 +360,7 @@ describe('addresses-controller#V4', () => {
             freeCollateral: getFixedRepresentation(0),
             marginEnabled: true,
             updatedAtHeight: testConstants.defaultSubaccount.updatedAtHeight,
+            latestProcessedBlockHeight: latestHeight,
             assetPositions: {},
             openPerpetualPositions: {},
           },
@@ -438,6 +445,7 @@ describe('addresses-controller#V4', () => {
               freeCollateral: getFixedRepresentation(152000),
               marginEnabled: true,
               updatedAtHeight: testConstants.defaultSubaccount.updatedAtHeight,
+              latestProcessedBlockHeight: latestHeight,
               openPerpetualPositions: {
                 [testConstants.defaultPerpetualMarket.ticker]: {
                   market: testConstants.defaultPerpetualMarket.ticker,
@@ -489,6 +497,7 @@ describe('addresses-controller#V4', () => {
               freeCollateral: getFixedRepresentation(5000),
               marginEnabled: true,
               updatedAtHeight: testConstants.isolatedSubaccount.updatedAtHeight,
+              latestProcessedBlockHeight: latestHeight,
               openPerpetualPositions: {},
               assetPositions: {
                 [testConstants.defaultAsset.symbol]: {
@@ -507,6 +516,7 @@ describe('addresses-controller#V4', () => {
               freeCollateral: getFixedRepresentation(0),
               marginEnabled: true,
               updatedAtHeight: testConstants.isolatedSubaccount2.updatedAtHeight,
+              latestProcessedBlockHeight: latestHeight,
               openPerpetualPositions: {},
               assetPositions: {},
             },
