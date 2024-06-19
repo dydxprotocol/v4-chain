@@ -96,6 +96,7 @@ describe('order-replace-handler', () => {
       ...replacementOrderGoodTilBlockTime,
       subticks: replacementOrderGoodTilBlockTime.subticks.mul(2),
     };
+
     const replacedOrder: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrder,
       testConstants.defaultPerpetualMarket,
@@ -184,7 +185,6 @@ describe('order-replace-handler', () => {
       jest.spyOn(CanceledOrdersCache, 'removeOrderFromCaches');
       jest.spyOn(stats, 'increment');
       jest.spyOn(redisPackage, 'placeOrder');
-      jest.spyOn(redisPackage, 'removeOrder');
       jest.spyOn(logger, 'error');
       jest.spyOn(logger, 'info');
     });
@@ -559,22 +559,6 @@ describe('order-replace-handler', () => {
       },
     );
 
-    it('replaces order successfully where old order does not exist', async () => {
-      synchronizeWrapBackgroundTask(wrapBackgroundTask);
-      const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
-      await onMessage(replacementMessage);
-
-      expect(redisPackage.removeOrder).toHaveBeenCalled();
-      expect(redisPackage.placeOrder).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'OrderReplaceHandler#handle',
-        message: 'Old order not found in cache',
-        oldOrderId: redisTestConstants.defaultOrderId,
-      }));
-      expect(OrderbookLevelsCache.updatePriceLevel).not.toHaveBeenCalled();
-      expectWebsocketMessagesNotSent(producerSendSpy);
-    });
-
     it.each([
       [
         'missing order',
@@ -691,11 +675,9 @@ async function checkOrderReplace(
   placedSubaccountId: string,
   expectedOrder: RedisOrder,
 ): Promise<void> {
-  expect(redisPackage.removeOrder).toHaveBeenCalled();
   const oldRedisOrder: RedisOrder | null = await OrdersCache.getOrder(oldOrderId, client);
   expect(oldRedisOrder).toBeNull();
 
-  expect(redisPackage.placeOrder).toHaveBeenCalled();
   const newRedisOrder: RedisOrder | null = await OrdersCache.getOrder(placedOrderId, client);
   const orderIdsForSubaccount: string[] = await SubaccountOrderIdsCache.getOrderIdsForSubaccount(
     placedSubaccountId,

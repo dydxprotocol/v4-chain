@@ -71,17 +71,6 @@ export class OrderReplaceHandler extends Handler {
     /* Remove old order */
     const removeOrderResult: RemoveOrderResult = await this.removeOldOrder(oldOrderId);
 
-    /* We don't want to fail if old order is not found (new order should still be placed),
-    so log and track metric */
-    if (!removeOrderResult.removed) {
-      logger.info({
-        at: 'OrderReplaceHandler#handle',
-        message: 'Old order not found in cache',
-        oldOrderId,
-      });
-      stats.increment(`${config.SERVICE_NAME}.replace_order_handler.old_order_not_found_in_cache`, 1);
-    }
-
     /* Place new order */
     const order: IndexerOrder = orderReplace.order!;
     const placementStatus: OrderPlaceV1_OrderPlacementStatus = orderReplace.placementStatus;
