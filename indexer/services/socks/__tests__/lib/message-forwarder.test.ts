@@ -549,7 +549,7 @@ describe('message-forwarder', () => {
 
   it('forwards block height messages', (done: jest.DoneCallback) => {
     const channel: Channel = Channel.V4_BLOCK_HEIGHT;
-    const id: string = 'v4_markets';
+    const id: string = 'v4_block_height';
 
     const blockHeightMessage2 = {
       ...defaultBlockHeightMessage,
@@ -610,12 +610,20 @@ describe('message-forwarder', () => {
 
       if (msg.message_id === 2) {
         expect(forwardedMsg.contents)
-          .toEqual(JSON.parse(defaultBlockHeightMessage.blockHeight).toString());
+          .toEqual(
+            {
+              blockHeight: defaultBlockHeightMessage.blockHeight,
+              time: defaultBlockHeightMessage.time,
+            });
       }
 
       if (msg.message_id === 3) {
         expect(forwardedMsg.contents)
-          .toEqual(JSON.parse(blockHeightMessage2.blockHeight).toString());
+          .toEqual(
+            {
+              blockHeight: blockHeightMessage2.blockHeight,
+              time: blockHeightMessage2.time,
+            });
         done();
       }
     });
