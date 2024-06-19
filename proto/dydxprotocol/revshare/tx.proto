@@ -1,7 +1,32 @@
 syntax = "proto3";
 package dydxprotocol.revshare;
 
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
+import "gogoproto/gogo.proto";
+import "dydxprotocol/revshare/params.proto";
+
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types";
 
 // Msg defines the Msg service.
-service Msg {}
+service Msg {
+  // SetMarketMapperRevenueShare creates a new revenue share for a market mapper.
+  rpc SetMarketMapperRevenueShare(MsgSetMarketMapperRevenueShare)
+      returns (MsgSetMarketMapperRevenueShareResponse);
+}
+
+// Message to create a blanket market mapper revenue share
+message MsgSetMarketMapperRevenueShare {
+  // The address that controls the module (the gov module account).
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // Parameters for the revenue share
+  MarketMapperRevenueShareParams params = 2 [ (gogoproto.nullable) = false ];
+}
+
+// Response to a MsgSetMarketMapperRevenueShare
+message MsgSetMarketMapperRevenueShareResponse {}
+
+

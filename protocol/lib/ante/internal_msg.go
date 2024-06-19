@@ -25,6 +25,7 @@ import (
 	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	ratelimit "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
+	revshare "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -110,6 +111,9 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		// ratelimit
 		*ratelimit.MsgSetLimitParams,
 		*ratelimit.MsgSetLimitParamsResponse,
+
+		// revshare
+		*revshare.MsgSetMarketMapperRevenueShare,
 
 		// rewards
 		*rewards.MsgUpdateParams,
