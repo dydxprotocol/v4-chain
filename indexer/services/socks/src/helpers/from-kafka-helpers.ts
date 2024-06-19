@@ -17,7 +17,7 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 
-import { TOPIC_TO_CHANNEL, V4_MARKETS_ID } from '../lib/constants';
+import { TOPIC_TO_CHANNEL, V4_BLOCK_HEIGHT, V4_MARKETS_ID } from '../lib/constants';
 import { InvalidForwardMessageError, InvalidTopicError } from '../lib/errors';
 import { Channel, MessageToForward, WebsocketTopics } from '../types';
 
@@ -168,9 +168,12 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
       const blockHeightMessage: BlockHeightMessage = BlockHeightMessage.decode(messageBinary);
       return [{
         channel: Channel.V4_BLOCK_HEIGHT,
-        id: V4_MARKETS_ID,
-        contents: blockHeightMessage.blockHeight,
+        id: V4_BLOCK_HEIGHT,
         version: blockHeightMessage.version,
+        contents: {
+          blockHeight: blockHeightMessage.blockHeight,
+          time: blockHeightMessage.time,
+        },
       }];
     }
     default:

@@ -19,6 +19,7 @@ export const ERR_INVALID_WEBSOCKET_FRAME: string = 'Invalid WebSocket frame';
 export const WEBSOCKET_NOT_OPEN: string = 'ws not open';
 
 export const V4_MARKETS_ID: string = 'v4_markets';
+export const V4_BLOCK_HEIGHT: string = 'v4_block_height';
 
 export const TOPIC_TO_CHANNEL: Record<WebsocketTopics, Channel[]> = {
   [WebsocketTopics.TO_WEBSOCKETS_CANDLES]: [Channel.V4_CANDLES],
