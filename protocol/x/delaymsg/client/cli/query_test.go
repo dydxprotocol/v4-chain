@@ -58,9 +58,11 @@ func TestQueryNextDelayedMessageId(t *testing.T) {
 func getDelayedGenesisChanges(testCase string) string {
 	switch testCase {
 	case "Default: 0":
-		return "\".app_state.delaymsg.delayed_messages = [] | .app_state.delaymsg.next_delayed_message_id = \"0\"\" \"\""
+		return "\".app_state.delaymsg.delayed_messages = [] |" +
+			" .app_state.delaymsg.next_delayed_message_id = \"0\"\" \"\""
 	case "Non-zero":
-		return "\".app_state.delaymsg.delayed_messages = [] | .app_state.delaymsg.next_delayed_message_id = \"20\"\" \"\""
+		return "\".app_state.delaymsg.delayed_messages = [] |" +
+			" .app_state.delaymsg.next_delayed_message_id = \"20\"\" \"\""
 
 	default:
 		panic("unknown case")
@@ -171,9 +173,15 @@ func TestQueryBlockMessageIds(t *testing.T) {
 func getGenesisChanges(testCase string) string {
 	switch testCase {
 	case "Default: 0":
-		return "\".app_state.delaymsg.delayed_messages = [] | .app_state.delaymsg.next_delayed_message_id = \"0\"\" \"\""
+		return "\".app_state.delaymsg.delayed_messages = [] |" +
+			" .app_state.delaymsg.next_delayed_message_id = \"0\"\" \"\""
 	case "Non-zero":
-		return "\".app_state.delaymsg.delayed_messages[0] = {\\\"id\\\": \\\"0\\\", \\\"msg\\\": {\\\"@type\\\": \\\"/dydxprotocol.perpetuals.MsgUpdateParams\\\", \\\"authority\\\": \\\"dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr\\\", \\\"params\\\": {\\\"funding_rate_clamp_factor_ppm\\\": \\\"6000000\\\", \\\"premium_vote_clamp_factor_ppm\\\": \\\"60000000\\\", \\\"min_num_votes_per_sample\\\": \\\"15\\\"}}, \\\"block_height\\\": \\\"1000\\\"} | .app_state.delaymsg.next_delayed_message_id = \\\"20\\\"\" \"\""
+		return "\".app_state.delaymsg.delayed_messages[0] =" +
+			" {\\\"id\\\": \\\"0\\\", \\\"msg\\\": {\\\"@type\\\": \\\"/dydxprotocol.perpetuals.MsgUpdateParams\\\"," +
+			" \\\"authority\\\": \\\"dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr\\\", \\\"params\\\":" +
+			" {\\\"funding_rate_clamp_factor_ppm\\\": \\\"6000000\\\", \\\"premium_vote_clamp_factor_ppm\\\":" +
+			" \\\"60000000\\\", \\\"min_num_votes_per_sample\\\": \\\"15\\\"}}, \\\"block_height\\\": \\\"1000\\\"} |" +
+			" .app_state.delaymsg.next_delayed_message_id = \\\"20\\\"\" \"\""
 
 	default:
 		panic("unknown case")
