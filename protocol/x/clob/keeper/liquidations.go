@@ -362,22 +362,7 @@ func (k Keeper) IsLiquidatable(
 		return false, err
 	}
 
-	return CanLiquidateSubaccount(risk.NC, risk.MMR), nil
-}
-
-// CanLiquidateSubaccount returns true if a subaccount is liquidatable given its total net collateral and
-// maintenance margin requirement.
-//
-// The subaccount is liquidatable if both of the following are true:
-// - The maintenance margin requirements are greater than zero (note that they can never be negative).
-// - The maintenance margin requirements are greater than the subaccount's net collateral.
-//
-// Note that this is a stateless function.
-func CanLiquidateSubaccount(
-	bigNetCollateral *big.Int,
-	bigMaintenanceMargin *big.Int,
-) bool {
-	return bigMaintenanceMargin.Sign() > 0 && bigMaintenanceMargin.Cmp(bigNetCollateral) == 1
+	return risk.IsLiquidatable(), nil
 }
 
 // EnsureIsLiquidatable returns an error if the subaccount is not liquidatable.
@@ -482,7 +467,7 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// with a position size of `PS + deltaQuantums`.
 	// Note that we cannot directly calculate `DMMR` from `deltaQuantums` because the maintenance
 	// margin requirement function could be non-linear.
-	deltaNC := new(big.Int).Sub(riskPosNew.MMR, riskPosOld.NC)
+	deltaNC := new(big.Int).Sub(riskPosNew.NC, riskPosOld.NC)
 	deltaMMR := new(big.Int).Sub(riskPosNew.MMR, riskPosOld.MMR)
 	// `deltaMMR` should never be positive if `| PS | >= | PS + deltaQuantums |`. If it is, panic.
 	if deltaMMR.Sign() == 1 {

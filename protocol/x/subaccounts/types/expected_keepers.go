@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -26,14 +25,6 @@ type ProductKeeper interface {
 
 type AssetsKeeper interface {
 	ProductKeeper
-	GetNetCollateralAndMarginRequirements(
-		ctx sdk.Context,
-		id uint32,
-		bigQuantums *big.Int,
-	) (
-		risk margin.Risk,
-		err error,
-	)
 	ConvertAssetToCoin(
 		ctx sdk.Context,
 		assetId uint32,

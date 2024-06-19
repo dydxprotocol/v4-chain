@@ -13,6 +13,7 @@ import (
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
+	assetslib "github.com/dydxprotocol/v4-chain/protocol/x/assets/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -343,6 +344,14 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			expectedMMR: big.NewInt(0),
 			expectedErr: nil,
 		},
+		"USDC asset. Zero Balance": {
+			assetId:     types.AssetUsdc.Id,
+			bigQuantums: big.NewInt(0),
+			expectedNC:  big.NewInt(0),
+			expectedIMR: big.NewInt(0),
+			expectedMMR: big.NewInt(0),
+			expectedErr: nil,
+		},
 		"Non USDC asset. Positive Balance": {
 			assetId:     uint32(1),
 			bigQuantums: big.NewInt(100),
@@ -359,6 +368,14 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			expectedMMR: big.NewInt(0),
 			expectedErr: types.ErrNotImplementedMargin,
 		},
+		"Non USDC asset. Zero Balance": {
+			assetId:     uint32(1),
+			bigQuantums: big.NewInt(0),
+			expectedNC:  big.NewInt(0),
+			expectedIMR: big.NewInt(0),
+			expectedMMR: big.NewInt(0),
+			expectedErr: nil,
+		},
 	}
 
 	for name, tc := range tests {
@@ -367,8 +384,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			_, err := createNAssets(t, ctx, keeper, pricesKeeper, 2)
 			require.NoError(t, err)
 
-			risk, err := keeper.GetNetCollateralAndMarginRequirements(
-				ctx,
+			risk, err := assetslib.GetNetCollateralAndMarginRequirements(
 				tc.assetId,
 				tc.bigQuantums,
 			)

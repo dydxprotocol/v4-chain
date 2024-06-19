@@ -9,6 +9,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
+	assetslib "github.com/dydxprotocol/v4-chain/protocol/x/assets/lib"
 	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -411,4 +412,71 @@ func UpdateAssetPositions(
 
 		settledUpdates[i].SettledSubaccount.AssetPositions = assetPositions
 	}
+}
+
+// GetRiskForSubaccount returns the risk value of the `Subaccount` after updates are applied.
+// It is used to get information about speculative changes to the `Subaccount`.
+// The input subaccount must be settled.
+//
+// The provided update can also be "zeroed" in order to get information about
+// the current state of the subaccount (i.e. with no changes).
+//
+// If two position updates reference the same position, an error is returned.
+func GetRiskForSubaccount(
+	settledUpdate types.SettledUpdate,
+	perpInfos perptypes.PerpInfos,
+) (
+	risk margin.Risk,
+	err error,
+) {
+	// Initialize return values.
+	risk = margin.Risk{
+		MMR: big.NewInt(0),
+		IMR: big.NewInt(0),
+		NC:  big.NewInt(0),
+	}
+
+	// Merge updates and assets.
+	assetSizes, err := ApplyUpdatesToPositions(
+		settledUpdate.SettledSubaccount.AssetPositions,
+		settledUpdate.AssetUpdates,
+	)
+	if err != nil {
+		return risk, err
+	}
+
+	// Merge updates and perpetuals.
+	perpetualSizes, err := ApplyUpdatesToPositions(
+		settledUpdate.SettledSubaccount.PerpetualPositions,
+		settledUpdate.PerpetualUpdates,
+	)
+	if err != nil {
+		return risk, err
+	}
+
+	// Iterate over all assets and updates and calculate change to net collateral and margin requirements.
+	for _, size := range assetSizes {
+		r, err := assetslib.GetNetCollateralAndMarginRequirements(
+			size.GetId(),
+			size.GetBigQuantums(),
+		)
+		if err != nil {
+			return risk, err
+		}
+		risk.AddInPlace(r)
+	}
+
+	// Iterate over all perpetuals and updates and calculate change to net collateral and margin requirements.
+	for _, size := range perpetualSizes {
+		perpInfo := perpInfos.MustGet(size.GetId())
+		r := perplib.GetNetCollateralAndMarginRequirements(
+			perpInfo.Perpetual,
+			perpInfo.Price,
+			perpInfo.LiquidityTier,
+			size.GetBigQuantums(),
+		)
+		risk.AddInPlace(r)
+	}
+
+	return risk, nil
 }

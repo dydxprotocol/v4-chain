@@ -15,7 +15,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -23,7 +22,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	salib "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -604,8 +602,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		}
 
 		// Get the new collateralization and margin requirements with the update applied.
-		riskNew, err := k.internalGetNetCollateralAndMarginRequirements(
-			ctx,
+		riskNew, err := salib.GetRiskForSubaccount(
 			u,
 			perpInfos,
 		)
@@ -631,8 +628,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 			// Cache the current collateralization and margin requirements for the subaccount.
 			if _, ok := riskCurMap[saKey]; !ok {
-				riskCurMap[saKey], err = k.internalGetNetCollateralAndMarginRequirements(
-					ctx,
+				riskCurMap[saKey], err = salib.GetRiskForSubaccount(
 					emptyUpdate,
 					perpInfos,
 				)
@@ -690,90 +686,10 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 		PerpetualUpdates:  update.PerpetualUpdates,
 	}
 
-	return k.internalGetNetCollateralAndMarginRequirements(
-		ctx,
+	return salib.GetRiskForSubaccount(
 		settledUpdate,
 		perpInfos,
 	)
-}
-
-// internalGetNetCollateralAndMarginRequirements returns the total net collateral, total initial margin
-// requirement, and total maintenance margin requirement for the `Subaccount` as if unsettled funding
-// of existing positions were settled, and the `bigQuoteBalanceDeltaQuantums`, `assetUpdates`, and
-// `perpetualUpdates` were applied. It is used to get information about speculative changes to the
-// `Subaccount`.
-// The input subaccounts must be settled.
-//
-// The provided update can also be "zeroed" in order to get information about
-// the current state of the subaccount (i.e. with no changes).
-//
-// If two position updates reference the same position, an error is returned.
-func (k Keeper) internalGetNetCollateralAndMarginRequirements(
-	ctx sdk.Context,
-	settledUpdate types.SettledUpdate,
-	perpInfos perptypes.PerpInfos,
-) (
-	risk margin.Risk,
-	err error,
-) {
-	defer telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		time.Now(),
-		metrics.GetNetCollateralAndMarginRequirements,
-		metrics.Latency,
-	)
-
-	// Initialize return values.
-	risk = margin.Risk{
-		MMR: big.NewInt(0),
-		IMR: big.NewInt(0),
-		NC:  big.NewInt(0),
-	}
-
-	// Merge updates and assets.
-	assetSizes, err := salib.ApplyUpdatesToPositions(
-		settledUpdate.SettledSubaccount.AssetPositions,
-		settledUpdate.AssetUpdates,
-	)
-	if err != nil {
-		return risk, err
-	}
-
-	// Merge updates and perpetuals.
-	perpetualSizes, err := salib.ApplyUpdatesToPositions(
-		settledUpdate.SettledSubaccount.PerpetualPositions,
-		settledUpdate.PerpetualUpdates,
-	)
-	if err != nil {
-		return risk, err
-	}
-
-	// Iterate over all assets and updates and calculate change to net collateral and margin requirements.
-	for _, size := range assetSizes {
-		r, err := k.assetsKeeper.GetNetCollateralAndMarginRequirements(
-			ctx,
-			size.GetId(),
-			size.GetBigQuantums(),
-		)
-		if err != nil {
-			return risk, err
-		}
-		risk.AddInPlace(r)
-	}
-
-	// Iterate over all perpetuals and updates and calculate change to net collateral and margin requirements.
-	for _, size := range perpetualSizes {
-		perpInfo := perpInfos.MustGet(size.GetId())
-		r := perplib.GetNetCollateralAndMarginRequirements(
-			perpInfo.Perpetual,
-			perpInfo.Price,
-			perpInfo.LiquidityTier,
-			size.GetBigQuantums(),
-		)
-		risk.AddInPlace(r)
-	}
-
-	return risk, nil
 }
 
 // GetAllRelevantPerpetuals returns all relevant perpetual information for a given set of updates.

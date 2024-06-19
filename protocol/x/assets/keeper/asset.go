@@ -12,7 +12,6 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 )
 
@@ -181,53 +180,6 @@ func (k Keeper) GetAllAssets(
 	})
 
 	return list
-}
-
-// GetNetCollateralAndMarginRequirements returns the net collateral, initial margin, and maintenance margin
-// that a given position (quantums) for a given assetId contributes to an account.
-func (k Keeper) GetNetCollateralAndMarginRequirements(
-	ctx sdk.Context,
-	id uint32,
-	bigQuantums *big.Int,
-) (
-	risk margin.Risk,
-	err error,
-) {
-	risk = margin.Risk{
-		NC:  big.NewInt(0),
-		IMR: big.NewInt(0),
-		MMR: big.NewInt(0),
-	}
-	if id == types.AssetUsdc.Id {
-		risk.NC = new(big.Int).Set(bigQuantums)
-		return risk, nil
-	}
-
-	// Get asset
-	_, exists := k.GetAsset(ctx, id)
-	if !exists {
-		return risk, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.UintToString(id))
-	}
-
-	// Balance is zero.
-	if bigQuantums.BitLen() == 0 {
-		return risk, nil
-	}
-
-	// Balance is positive.
-	// TODO(DEC-581): add multi-collateral support.
-	if bigQuantums.Sign() == 1 {
-		return risk, types.ErrNotImplementedMulticollateral
-	}
-
-	// Balance is zero.
-	if bigQuantums.Sign() == 0 {
-		return risk, nil
-	}
-
-	// Balance is negative.
-	// TODO(DEC-582): margin-trading
-	return risk, types.ErrNotImplementedMargin
 }
 
 // ConvertAssetToCoin converts the given `assetId` and `quantums` used in `x/asset`,
