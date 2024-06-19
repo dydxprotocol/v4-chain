@@ -33,7 +33,7 @@ import {
   SubaccountMessage,
   TradeMessage,
 } from '@dydxprotocol-indexer/v4-protos';
-import { V4_BLOCK_HEIGHT, V4_MARKETS_ID } from '../../src/lib/constants';
+import { V4_MARKETS_ID } from '../../src/lib/constants';
 import {
   dbHelpers,
   testMocks,
