@@ -57,6 +57,7 @@ func createVaultKeeper(
 		&mocks.PerpetualsKeeper{},
 		&mocks.PricesKeeper{},
 		&mocks.SubaccountsKeeper{},
+		&mocks.IndexerEventManager{},
 		[]string{
 			lib.GovModuleAddress.String(),
 			delaymsgtypes.ModuleAddress.String(),

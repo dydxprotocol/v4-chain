@@ -1090,6 +1090,7 @@ func New(
 		app.PerpetualsKeeper,
 		app.PricesKeeper,
 		app.SubaccountsKeeper,
+		app.IndexerEventManager,
 		[]string{
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
