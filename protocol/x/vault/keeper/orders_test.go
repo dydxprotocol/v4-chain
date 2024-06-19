@@ -7,6 +7,10 @@ import (
 
 	"github.com/cometbft/cometbft/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -105,11 +109,16 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			activationThresholdQuoteQuantums: big.NewInt(123_456_789),
 		},
 	}
-
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			// Enable testapp's indexer event manager
+			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
+			appOpts := map[string]interface{}{
+				indexer.MsgSenderInstanceForTest: msgSender,
+			}
+
 			// Initialize tApp and ctx (in deliverTx mode).
-			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				// Initialize each vault with quote quantums to be able to place orders.
 				testapp.UpdateGenesisDocWithAppStateForModule(
@@ -160,6 +169,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 
 			// Simulate vault orders placed in last block.
 			numPreviousOrders := 0
+			previousOrders := make(map[vaulttypes.VaultId][]*clobtypes.Order)
 			for i, vaultId := range tc.vaultIds {
 				if tc.totalShares[i].Sign() > 0 && tc.assetQuantums[i].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
 					orders, err := tApp.App.VaultKeeper.GetVaultClobOrders(
@@ -171,6 +181,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 						err := tApp.App.VaultKeeper.PlaceVaultClobOrder(ctx, order)
 						require.NoError(t, err)
 					}
+					previousOrders[vaultId] = orders
 					numPreviousOrders += len(orders)
 				}
 			}
@@ -183,13 +194,33 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			// cancelled and orders from this block have been placed.
 			numExpectedOrders := 0
 			allExpectedOrderIds := make(map[clobtypes.OrderId]bool)
-			for i, vaultId := range tc.vaultIds {
-				if tc.totalShares[i].Sign() > 0 && tc.assetQuantums[i].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
+			expectedIndexerEvents := make([]indexer_manager.IndexerTendermintEvent, 0)
+			indexerEventIndex := 0
+			for vault_index, vaultId := range tc.vaultIds {
+				if tc.totalShares[vault_index].Sign() > 0 && tc.assetQuantums[vault_index].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
 					expectedOrders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, vaultId)
 					require.NoError(t, err)
 					numExpectedOrders += len(expectedOrders)
-					for _, order := range expectedOrders {
+					ordersToCancel := previousOrders[vaultId]
+					for i, order := range expectedOrders {
 						allExpectedOrderIds[order.OrderId] = true
+						orderToCancel := ordersToCancel[i]
+						event := indexer_manager.IndexerTendermintEvent{
+							Subtype: indexerevents.SubtypeStatefulOrder,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{
+								TransactionIndex: 0,
+							},
+							EventIndex: uint32(indexerEventIndex),
+							Version:    indexerevents.StatefulOrderEventVersion,
+							DataBytes: indexer_manager.GetBytes(
+								indexerevents.NewLongTermOrderReplacementEvent(
+									orderToCancel.OrderId,
+									*order,
+								),
+							),
+						}
+						indexerEventIndex += 1
+						expectedIndexerEvents = append(expectedIndexerEvents, event)
 					}
 				}
 			}
@@ -197,6 +228,13 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			require.Len(t, allStatefulOrders, numExpectedOrders)
 			for _, order := range allStatefulOrders {
 				require.True(t, allExpectedOrderIds[order.OrderId])
+			}
+
+			// test that the indexer events emitted are as expected
+			block := tApp.App.VaultKeeper.GetIndexerEventManager().ProduceBlock(ctx)
+			require.Len(t, block.Events, numExpectedOrders)
+			for i, event := range block.Events {
+				require.Equal(t, expectedIndexerEvents[i], *event)
 			}
 		})
 	}
