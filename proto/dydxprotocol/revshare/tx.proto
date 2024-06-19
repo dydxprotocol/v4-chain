@@ -10,7 +10,8 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 
 // Msg defines the Msg service.
 service Msg {
-  // SetMarketMapperRevenueShare creates a new revenue share for a market mapper.
+  // SetMarketMapperRevenueShare creates a new revenue share for a market
+  // mapper.
   rpc SetMarketMapperRevenueShare(MsgSetMarketMapperRevenueShare)
       returns (MsgSetMarketMapperRevenueShareResponse);
 }
@@ -28,5 +29,3 @@ message MsgSetMarketMapperRevenueShare {
 
 // Response to a MsgSetMarketMapperRevenueShare
 message MsgSetMarketMapperRevenueShareResponse {}
-
-
