@@ -197,7 +197,8 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			expectedIndexerEvents := make([]indexer_manager.IndexerTendermintEvent, 0)
 			indexerEventIndex := 0
 			for vault_index, vaultId := range tc.vaultIds {
-				if tc.totalShares[vault_index].Sign() > 0 && tc.assetQuantums[vault_index].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
+				if tc.totalShares[vault_index].Sign() > 0 &&
+					tc.assetQuantums[vault_index].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
 					expectedOrders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, vaultId)
 					require.NoError(t, err)
 					numExpectedOrders += len(expectedOrders)

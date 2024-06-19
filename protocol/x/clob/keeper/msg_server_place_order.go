@@ -95,7 +95,6 @@ func (k Keeper) HandleMsgPlaceOrder(
 			order,
 		)
 	}
-
 	removedOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
 	if _, found := removedOrderIds[order.GetOrderId()]; found {
 		return errorsmod.Wrapf(
