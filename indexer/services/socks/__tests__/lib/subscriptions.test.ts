@@ -43,7 +43,8 @@ describe('Subscriptions', () => {
     [Channel.V4_PARENT_ACCOUNTS]: mockSubaccountId,
     [Channel.V4_BLOCK_HEIGHT]: defaultId,
   };
-  const invalidIdsMap: Record<Exclude<Channel, Channel.V4_MARKETS>, string[]> = {
+  const invalidIdsMap:
+  Record<Exclude<Channel, Channel.V4_MARKETS | Channel.V4_BLOCK_HEIGHT>, string[]> = {
     [Channel.V4_ACCOUNTS]: [invalidTicker],
     [Channel.V4_CANDLES]: [
       `${invalidTicker}/${CandleResolution.ONE_DAY}`,
@@ -53,7 +54,6 @@ describe('Subscriptions', () => {
     [Channel.V4_ORDERBOOK]: [invalidTicker],
     [Channel.V4_TRADES]: [invalidTicker],
     [Channel.V4_PARENT_ACCOUNTS]: [`address/${MAX_PARENT_SUBACCOUNTS}`],
-    [Channel.V4_BLOCK_HEIGHT]: [],
   };
   const initialResponseUrlPatterns: Record<Channel, string[] | undefined> = {
     [Channel.V4_ACCOUNTS]: [
@@ -156,7 +156,6 @@ describe('Subscriptions', () => {
       [Channel.V4_ORDERBOOK, invalidIdsMap[Channel.V4_ORDERBOOK]],
       [Channel.V4_TRADES, invalidIdsMap[Channel.V4_TRADES]],
       [Channel.V4_PARENT_ACCOUNTS, invalidIdsMap[Channel.V4_PARENT_ACCOUNTS]],
-      [Channel.V4_BLOCK_HEIGHT, invalidIdsMap[Channel.V4_BLOCK_HEIGHT]],
     ])('sends error message if invalid subscription request to channel %s', async (
       channel: Channel,
       invalidIds: string[],

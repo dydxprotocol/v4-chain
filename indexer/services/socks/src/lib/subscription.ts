@@ -26,7 +26,7 @@ import {
   SubscriptionInfo,
 } from '../types';
 import { axiosRequest } from './axios';
-import { V4_MARKETS_ID, WS_CLOSE_CODE_POLICY_VIOLATION } from './constants';
+import { V4_BLOCK_HEIGHT, V4_MARKETS_ID, WS_CLOSE_CODE_POLICY_VIOLATION } from './constants';
 import { BlockedError, InvalidChannelError } from './errors';
 import { RateLimiter } from './rate-limit';
 
@@ -112,7 +112,7 @@ export class Subscriptions {
       return;
     }
 
-    const subscriptionId: string = this.normalizeSubscriptionId(id);
+    const subscriptionId: string = this.normalizeSubscriptionId(channel, id);
     const duration: number = this.subscribeRateLimiter.rateLimit({
       connectionId,
       key: channel + subscriptionId,
@@ -303,7 +303,7 @@ export class Subscriptions {
     channel: Channel,
     id?: string,
   ): void {
-    const subscriptionId: string = this.normalizeSubscriptionId(id);
+    const subscriptionId: string = this.normalizeSubscriptionId(channel, id);
     if (this.subscriptionLists[connectionId]) {
       this.subscriptionLists[connectionId] = this.subscriptionLists[connectionId].filter(
         (e: Subscription) => (e.channel !== channel || e.id !== subscriptionId),
@@ -439,12 +439,16 @@ export class Subscriptions {
 
   /**
    * Normalizes subscription ids. If the id is undefined, returns the default id for the markets
-   * channel, which is the only channel that does not have specific ids to subscribe to.
+   * channel or block height channel which are the only channels that don't
+   * have specific ids to subscribe to.
    * NOTE: Validation of the id and channel will happen in other functions.
    * @param id Subscription id to normalize.
    * @returns Normalized subscription id.
    */
-  private normalizeSubscriptionId(id?: string): string {
+  private normalizeSubscriptionId(channel: Channel, id?: string): string {
+    if (channel === Channel.V4_BLOCK_HEIGHT) {
+      return id ?? V4_BLOCK_HEIGHT;
+    }
     return id ?? V4_MARKETS_ID;
   }
 
