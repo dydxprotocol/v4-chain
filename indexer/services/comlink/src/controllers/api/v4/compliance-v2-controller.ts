@@ -323,6 +323,7 @@ function generateAddress(pubkeyArray: Uint8Array): string {
  * - if the request is from a restricted country:
  *  - set the status to CLOSE_ONLY
  */
+// eslint-disable-next-line @typescript-eslint/require-await
 async function upsertComplicanceStatus(
   req: express.Request,
   action: ComplianceAction,
