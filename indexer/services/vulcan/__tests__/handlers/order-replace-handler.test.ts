@@ -21,6 +21,7 @@ import {
   dbHelpers,
   OrderbookMessageContents,
   OrderFromDatabase,
+  OrderStatus,
   OrderTable,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
@@ -52,12 +53,13 @@ import {
   RedisOrder,
   SubaccountId,
   SubaccountMessage,
+  OrderRemovalReason,
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import { redisClient, redisClient as client } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
 import { expectCanceledOrderStatus, handleInitialOrderPlace } from '../helpers/helpers';
-import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
+import { expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import { defaultKafkaHeaders } from '../helpers/constants';
 import config from '../../src/config';
@@ -67,11 +69,6 @@ jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
   wrapBackgroundTask: jest.fn(),
 }));
-
-interface OffchainUpdateRecord {
-  key: Buffer,
-  offchainUpdate: OffChainUpdateV1
-}
 
 describe('order-replace-handler', () => {
   beforeAll(async () => {
@@ -96,16 +93,15 @@ describe('order-replace-handler', () => {
       ...replacementOrderGoodTilBlockTime,
       subticks: replacementOrderGoodTilBlockTime.subticks.mul(2),
     };
-
-    const replacedOrder: RedisOrder = redisPackage.convertToRedisOrder(
+    const replacementRedisOrder: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrder,
       testConstants.defaultPerpetualMarket,
     );
-    const replacedOrderGoodTilBlockTime: RedisOrder = redisPackage.convertToRedisOrder(
+    const replacementRedisOrderGoodTilBlockTime: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrderGoodTilBlockTime,
       testConstants.defaultPerpetualMarket,
     );
-    const replacedOrderDifferentPrice: RedisOrder = redisPackage.convertToRedisOrder(
+    const replacementRedisOrderDifferentPrice: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrderDifferentPrice,
       testConstants.defaultPerpetualMarket,
     );
@@ -207,7 +203,7 @@ describe('order-replace-handler', () => {
         dbDefaultOrder,
         redisTestConstants.defaultOrderUuid,
         redisTestConstants.defaultReplacementOrderUuid,
-        replacedOrder,
+        replacementRedisOrder,
         true,
         false,
       ],
@@ -219,7 +215,7 @@ describe('order-replace-handler', () => {
         dbOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
         redisTestConstants.defaultReplacementOrderUuidGTBT,
-        replacedOrderGoodTilBlockTime,
+        replacementRedisOrderGoodTilBlockTime,
         false,
         false,
       ],
@@ -231,7 +227,7 @@ describe('order-replace-handler', () => {
         dbDefaultOrder,
         redisTestConstants.defaultOrderUuid,
         redisTestConstants.defaultReplacementOrderUuid,
-        replacedOrder,
+        replacementRedisOrder,
         true,
         true,
       ],
@@ -243,7 +239,7 @@ describe('order-replace-handler', () => {
         dbOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
         redisTestConstants.defaultReplacementOrderUuidGTBT,
-        replacedOrderGoodTilBlockTime,
+        replacementRedisOrderGoodTilBlockTime,
         false,
         true,
       ],
@@ -255,7 +251,7 @@ describe('order-replace-handler', () => {
       dbOrder: OrderFromDatabase,
       expectedOldOrderUuid: string,
       expectedNewOrderUuid: string,
-      expectedReplacedOrder: RedisOrder,
+      expectedReplacementOrder: RedisOrder,
       expectSubaccountMessage: boolean,
       hasCanceledOrderId: boolean,
     ) => {
@@ -286,7 +282,6 @@ describe('order-replace-handler', () => {
         expectSubaccountMessage,
       );
       expectStats();
-      // clear mocks
       jest.clearAllMocks();
 
       // Handle the order replacement off-chain update with the replacement order
@@ -296,22 +291,29 @@ describe('order-replace-handler', () => {
         expectedOldOrderUuid,
         expectedNewOrderUuid,
         redisTestConstants.defaultSubaccountUuid,
-        expectedReplacedOrder,
+        expectedReplacementOrder,
       );
       expect(OrderbookLevelsCache.updatePriceLevel).not.toHaveBeenCalled();
       if (hasCanceledOrderId) {
         expect(CanceledOrdersCache.removeOrderFromCaches).toHaveBeenCalled();
       }
-      await expectCanceledOrderStatus(expectedOldOrderUuid, CanceledOrderStatus.NOT_CANCELED);
+      await expectCanceledOrderStatus(expectedOldOrderUuid, CanceledOrderStatus.CANCELED);
+      await expectCanceledOrderStatus(expectedNewOrderUuid, CanceledOrderStatus.NOT_CANCELED);
 
       expect(logger.error).not.toHaveBeenCalled();
+      const initialRedisOrder = redisPackage.convertToRedisOrder(
+        initialOrderToPlace,
+        testConstants.defaultPerpetualMarket,
+      );
       expectWebsocketMessagesSent(
         producerSendSpy,
-        expectedReplacedOrder,
+        expectedReplacementOrder,
         dbOrder,
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         expectSubaccountMessage,
+        initialRedisOrder,
+        0,
       );
       expectStats(true);
     });
@@ -325,7 +327,7 @@ describe('order-replace-handler', () => {
         dbDefaultOrder,
         redisTestConstants.defaultOrderUuid,
         redisTestConstants.defaultReplacementOrderUuid,
-        replacedOrder,
+        replacementRedisOrder,
         true,
         true,
         false,
@@ -338,7 +340,7 @@ describe('order-replace-handler', () => {
         dbOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
         redisTestConstants.defaultReplacementOrderUuidGTBT,
-        replacedOrderGoodTilBlockTime,
+        replacementRedisOrderGoodTilBlockTime,
         false,
         true,
         false,
@@ -351,7 +353,7 @@ describe('order-replace-handler', () => {
         dbOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
         redisTestConstants.defaultReplacementOrderUuidGTBT,
-        replacedOrderDifferentPrice,
+        replacementRedisOrderDifferentPrice,
         false,
         true,
         true,
@@ -364,7 +366,7 @@ describe('order-replace-handler', () => {
       dbOrder: OrderFromDatabase,
       expectedOldOrderUuid: string,
       expectedNewOrderUuid: string,
-      expectedReplacedOrder: RedisOrder,
+      expectedReplacementOrder: RedisOrder,
       expectSubaccountMessage: boolean,
       expectOrderBookUpdate: boolean,
       expectOrderBookMessage: boolean,
@@ -405,7 +407,6 @@ describe('order-replace-handler', () => {
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         expectSubaccountMessage,
       );
-      // clear mocks
       jest.clearAllMocks();
 
       // Update the order to set it to be resting on the book
@@ -433,8 +434,9 @@ describe('order-replace-handler', () => {
         expectedOldOrderUuid,
         expectedNewOrderUuid,
         redisTestConstants.defaultSubaccountUuid,
-        expectedReplacedOrder,
+        expectedReplacementOrder,
       );
+      expect(OrderbookLevelsCache.updatePriceLevel).toHaveBeenCalled();
       const orderbook: OrderbookLevels = await OrderbookLevelsCache.getOrderBookLevels(
         testConstants.defaultPerpetualMarket.ticker,
         client,
@@ -448,6 +450,10 @@ describe('order-replace-handler', () => {
       }
 
       expect(logger.error).not.toHaveBeenCalled();
+      const initialRedisOrder = redisPackage.convertToRedisOrder(
+        initialOrderToPlace,
+        testConstants.defaultPerpetualMarket,
+      );
       const orderbookContents: OrderbookMessageContents = {
         [OrderbookSide.BIDS]: [[
           redisTestConstants.defaultPrice,
@@ -456,11 +462,13 @@ describe('order-replace-handler', () => {
       };
       expectWebsocketMessagesSent(
         producerSendSpy,
-        expectedReplacedOrder,
+        expectedReplacementOrder,
         dbOrder,
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         expectSubaccountMessage,
+        initialRedisOrder,
+        oldOrderTotalFilled,
         expectOrderBookMessage
           ? OrderbookMessage.fromPartial({
             contents: JSON.stringify(orderbookContents),
@@ -480,7 +488,7 @@ describe('order-replace-handler', () => {
         dbDefaultOrder,
         redisTestConstants.defaultOrderUuid,
         redisTestConstants.defaultReplacementOrderUuid,
-        replacedOrder,
+        replacementRedisOrder,
         true,
       ],
       [
@@ -491,7 +499,7 @@ describe('order-replace-handler', () => {
         dbOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
         redisTestConstants.defaultReplacementOrderUuidGTBT,
-        replacedOrderGoodTilBlockTime,
+        replacementRedisOrderGoodTilBlockTime,
         false,
       ],
     ])('handles order replacement (with %s), resting on book, 0 remaining quantums',
@@ -503,7 +511,7 @@ describe('order-replace-handler', () => {
         dbOrder: OrderFromDatabase,
         expectedOldOrderUuid: string,
         expectedNewOrderUuid: string,
-        expectedReplacedOrder: RedisOrder,
+        expectedReplacementOrder: RedisOrder,
         expectSubaccountMessage: boolean,
       ) => {
         synchronizeWrapBackgroundTask(wrapBackgroundTask);
@@ -526,7 +534,6 @@ describe('order-replace-handler', () => {
           expectSubaccountMessage,
         );
         expectStats();
-        // clear mocks
         jest.clearAllMocks();
 
         // Update the order to set it to be resting on the book
@@ -542,18 +549,24 @@ describe('order-replace-handler', () => {
           expectedOldOrderUuid,
           expectedNewOrderUuid,
           redisTestConstants.defaultSubaccountUuid,
-          expectedReplacedOrder,
+          expectedReplacementOrder,
         );
-        // expect(OrderbookLevelsCache.updatePriceLevel).not.toHaveBeenCalled();
+        expect(OrderbookLevelsCache.updatePriceLevel).toHaveBeenCalled();
 
         expect(logger.error).not.toHaveBeenCalled();
+        const initialRedisOrder = redisPackage.convertToRedisOrder(
+          initialOrderToPlace,
+          testConstants.defaultPerpetualMarket,
+        );
         expectWebsocketMessagesSent(
           producerSendSpy,
-          expectedReplacedOrder,
+          expectedReplacementOrder,
           dbOrder,
           testConstants.defaultPerpetualMarket,
           APIOrderStatusEnum.BEST_EFFORT_OPENED,
           expectSubaccountMessage,
+          initialRedisOrder,
+          Number(initialOrderToPlace.quantums),
         );
         expectStats(true);
       },
@@ -708,88 +721,137 @@ function expectStats(orderWasReplaced: boolean = false): void {
 
 function expectWebsocketMessagesSent(
   producerSendSpy: jest.SpyInstance,
-  redisOrder: RedisOrder,
+  replacementRedisOrder: RedisOrder,
   dbOrder: OrderFromDatabase,
   perpetualMarket: PerpetualMarketFromDatabase,
   placementStatus: APIOrderStatus,
-  expectSubaccountMessage: boolean,
+  expectPlaceSubaccountMessage: boolean,
+  oldRedisOrder?: RedisOrder,
+  oldOrderTotalFilled?: number,
   expectedOrderbookMessage?: OrderbookMessage,
-  expectedOffchainUpdate?: OffchainUpdateRecord,
 ): void {
   jest.runOnlyPendingTimers();
-  // expect one subaccount update message being sent
+  // expect subaccount message for removing order to be sent
   let numMessages: number = 0;
-  if (expectSubaccountMessage) {
+  if (oldRedisOrder !== undefined || expectPlaceSubaccountMessage) {
     numMessages += 1;
   }
   if (expectedOrderbookMessage !== undefined) {
     numMessages += 1;
   }
-  if (expectedOffchainUpdate !== undefined) {
-    numMessages += 1;
-  }
+
   expect(producerSendSpy).toHaveBeenCalledTimes(numMessages);
 
+  const expectedSubaccountMessages: SubaccountMessage[] = [];
   let callIndex: number = 0;
-
-  if (expectedOffchainUpdate) {
-    expectOffchainUpdateMessage(
-      producerSendSpy.mock.calls[callIndex][0],
-      expectedOffchainUpdate.key,
-      expectedOffchainUpdate.offchainUpdate,
+  if (oldRedisOrder !== undefined) {
+    const initialOrderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
+      oldRedisOrder.order!.timeInForce,
     );
-    callIndex += 1;
+    const isStateful: boolean = isStatefulOrder(oldRedisOrder.order!.orderId!.orderFlags);
+
+    const subaccountRemoveOrderContents: SubaccountMessageContents = {
+      orders: [{
+        id: OrderTable.orderIdToUuid(oldRedisOrder.order!.orderId!),
+        subaccountId: SubaccountTable.subaccountIdToUuid(
+          oldRedisOrder.order!.orderId!.subaccountId!,
+        ),
+        clientId: oldRedisOrder.order!.orderId!.clientId.toString(),
+        clobPairId: testConstants.defaultOrderGoodTilBlockTime.clobPairId,
+        side: protocolTranslations.protocolOrderSideToOrderSide(oldRedisOrder.order!.side),
+        size: oldRedisOrder.size,
+        totalOptimisticFilled: protocolTranslations.quantumsToHumanFixedString(
+          oldOrderTotalFilled!.toString(),
+          perpetualMarket.atomicResolution,
+        ),
+        price: oldRedisOrder.price,
+        type: protocolTranslations.protocolConditionTypeToOrderType(
+          oldRedisOrder.order!.conditionType,
+        ),
+        status: OrderStatus.CANCELED,
+        timeInForce: apiTranslations.orderTIFToAPITIF(initialOrderTIF),
+        postOnly: apiTranslations.isOrderTIFPostOnly(initialOrderTIF),
+        reduceOnly: oldRedisOrder.order!.reduceOnly,
+        orderFlags: oldRedisOrder.order!.orderId!.orderFlags.toString(),
+        ...(isStateful && {
+          goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(oldRedisOrder.order!),
+        }),
+        ...(!isStateful && {
+          goodTilBlock: protocolTranslations.getGoodTilBlock(oldRedisOrder.order!)!.toString(),
+        }),
+        ticker: oldRedisOrder.ticker,
+        removalReason: OrderRemovalReason[OrderRemovalReason.ORDER_REMOVAL_REASON_USER_CANCELED],
+        createdAtHeight: dbOrder.createdAtHeight,
+        updatedAt: dbOrder.updatedAt,
+        updatedAtHeight: dbOrder.updatedAtHeight,
+        clientMetadata: oldRedisOrder!.order!.clientMetadata.toString(),
+        triggerPrice: getTriggerPrice(oldRedisOrder.order!, perpetualMarket),
+      }],
+      blockHeight: blockHeightRefresher.getLatestBlockHeight(),
+    };
+
+    const orderRemoveSubaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({
+      contents: JSON.stringify(subaccountRemoveOrderContents),
+      subaccountId: redisTestConstants.defaultSubaccountId,
+      version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+    });
+    expectedSubaccountMessages.push(orderRemoveSubaccountMessage);
   }
 
-  if (expectSubaccountMessage) {
+  if (expectPlaceSubaccountMessage) {
     const orderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
-      redisOrder.order!.timeInForce,
+      replacementRedisOrder.order!.timeInForce,
     );
-    const isStateful: boolean = isStatefulOrder(redisOrder.order!.orderId!.orderFlags);
+    const isStateful: boolean = isStatefulOrder(replacementRedisOrder.order!.orderId!.orderFlags);
     const contents: SubaccountMessageContents = {
       orders: [
         {
           id: OrderTable.orderIdToUuid(
-            redisOrder.order!.orderId!,
+            replacementRedisOrder.order!.orderId!,
           ),
           subaccountId: SubaccountTable.subaccountIdToUuid(
-            redisOrder.order!.orderId!.subaccountId!,
+            replacementRedisOrder.order!.orderId!.subaccountId!,
           ),
-          clientId: redisOrder.order!.orderId!.clientId.toString(),
+          clientId: replacementRedisOrder.order!.orderId!.clientId.toString(),
           clobPairId: perpetualMarket.clobPairId,
-          side: protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
-          size: redisOrder.size,
-          price: redisOrder.price,
+          side: protocolTranslations.protocolOrderSideToOrderSide(
+            replacementRedisOrder.order!.side,
+          ),
+          size: replacementRedisOrder.size,
+          price: replacementRedisOrder.price,
           status: placementStatus,
           type: protocolTranslations.protocolConditionTypeToOrderType(
-            redisOrder.order!.conditionType,
+            replacementRedisOrder.order!.conditionType,
           ),
           timeInForce: apiTranslations.orderTIFToAPITIF(orderTIF),
           postOnly: apiTranslations.isOrderTIFPostOnly(orderTIF),
-          reduceOnly: redisOrder.order!.reduceOnly,
-          orderFlags: redisOrder.order!.orderId!.orderFlags.toString(),
-          goodTilBlock: protocolTranslations.getGoodTilBlock(redisOrder.order!)
+          reduceOnly: replacementRedisOrder.order!.reduceOnly,
+          orderFlags: replacementRedisOrder.order!.orderId!.orderFlags.toString(),
+          goodTilBlock: protocolTranslations.getGoodTilBlock(replacementRedisOrder.order!)
             ?.toString(),
-          goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(redisOrder.order!),
-          ticker: redisOrder.ticker,
+          goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(replacementRedisOrder.order!),
+          ticker: replacementRedisOrder.ticker,
           ...(isStateful && { createdAtHeight: dbOrder.createdAtHeight }),
           ...(isStateful && { updatedAt: dbOrder.updatedAt }),
           ...(isStateful && { updatedAtHeight: dbOrder.updatedAtHeight }),
-          clientMetadata: redisOrder.order!.clientMetadata.toString(),
-          triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
+          clientMetadata: replacementRedisOrder.order!.clientMetadata.toString(),
+          triggerPrice: getTriggerPrice(replacementRedisOrder.order!, perpetualMarket),
         },
       ],
       blockHeight: blockHeightRefresher.getLatestBlockHeight(),
     };
-    const subaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({
+    const orderPlaceSubaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({
       contents: JSON.stringify(contents),
-      subaccountId: SubaccountId.fromPartial(redisOrder.order!.orderId!.subaccountId!),
+      subaccountId: SubaccountId.fromPartial(replacementRedisOrder.order!.orderId!.subaccountId!),
       version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
     });
+    expectedSubaccountMessages.push(orderPlaceSubaccountMessage);
+  }
 
+  if (expectedSubaccountMessages.length > 0) {
     expectWebsocketSubaccountMessage(
       producerSendSpy.mock.calls[callIndex][0],
-      subaccountMessage,
+      expectedSubaccountMessages,
       defaultKafkaHeaders,
     );
     callIndex += 1;

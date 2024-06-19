@@ -2221,7 +2221,7 @@ describe('OrderRemoveHandler', () => {
       const subaccountProducerRecord: ProducerRecord = producerSendSpy.mock.calls[0][0];
       expectWebsocketSubaccountMessage(
         subaccountProducerRecord,
-        expectedSubaccountMessage,
+        [expectedSubaccountMessage],
         defaultKafkaHeaders,
       );
     }
