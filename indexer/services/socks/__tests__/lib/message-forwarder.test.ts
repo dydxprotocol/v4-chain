@@ -180,6 +180,7 @@ describe('message-forwarder', () => {
   };
 
   beforeAll(async () => {
+    await dbHelpers.clearData();
     await dbHelpers.migrate();
     await testMocks.seedData();
     await Promise.all([
@@ -235,7 +236,7 @@ describe('message-forwarder', () => {
     const channel: Channel = Channel.V4_TRADES;
     const id: string = btcTicker;
 
-    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
+    const messageForwarder: MessageForwarder = MessageForwarder.getInstance(subscriptions, index);
     subscriptions.start(messageForwarder.forwardToClient);
     messageForwarder.start();
 
@@ -316,7 +317,7 @@ describe('message-forwarder', () => {
     const channel: Channel = Channel.V4_ACCOUNTS;
     const id: string = `${defaultSubaccountId.owner}/${defaultSubaccountId.number}`;
 
-    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
+    const messageForwarder: MessageForwarder = MessageForwarder.getInstance(subscriptions, index);
     subscriptions.start(messageForwarder.forwardToClient);
     messageForwarder.start();
 
@@ -387,7 +388,7 @@ describe('message-forwarder', () => {
     const channel: Channel = Channel.V4_PARENT_ACCOUNTS;
     const id: string = `${defaultSubaccountId.owner}/${defaultSubaccountId.number}`;
 
-    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
+    const messageForwarder: MessageForwarder = MessageForwarder.getInstance(subscriptions, index);
     subscriptions.start(messageForwarder.forwardToClient);
     messageForwarder.start();
 
@@ -475,7 +476,7 @@ describe('message-forwarder', () => {
     const channel: Channel = Channel.V4_TRADES;
     const id: string = ethTicker;
 
-    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
+    const messageForwarder: MessageForwarder = MessageForwarder.getInstance(subscriptions, index);
     subscriptions.start(messageForwarder.forwardToClient);
     messageForwarder.start();
 

@@ -1,27 +1,11 @@
-import {
-  stats,
-  logger,
-  InfoObject,
-} from '@dydxprotocol-indexer/base';
-import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
-import { KafkaMessage } from 'kafkajs';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import _ from 'lodash';
 
 import config from '../config';
-import {
-  getChannels,
-  getMessagesToForward,
-} from '../helpers/from-kafka-helpers';
-import {
-  createChannelDataMessage,
-  createChannelBatchDataMessage,
-} from '../helpers/message';
+import { createChannelBatchDataMessage, createChannelDataMessage } from '../helpers/message';
 import { sendMessage } from '../helpers/wss';
 import {
-  MessageToForward,
-  Channel,
-  SubscriptionInfo,
-  Connection,
+  Channel, Connection, MessageToForward, SubscriptionInfo,
 } from '../types';
 import { Index } from '../websocket/index';
 import { MAX_TIMEOUT_INTEGER } from './constants';
@@ -37,110 +21,38 @@ type VersionedContents = {
 };
 
 export class MessageForwarder {
+  private static instance: MessageForwarder;
   private subscriptions: Subscriptions;
   private index: Index;
-  private started: boolean;
-  private stopped: boolean;
   private messageBuffer: { [key: string]: VersionedContents[] };
   private batchSending: NodeJS.Timeout;
 
-  constructor(
-    subscriptions: Subscriptions,
-    index: Index,
-  ) {
+  private constructor(subscriptions: Subscriptions, index: Index) {
     this.subscriptions = subscriptions;
     this.index = index;
-    this.started = false;
-    this.stopped = false;
     this.messageBuffer = {};
-    this.batchSending = setTimeout(() => {}, MAX_TIMEOUT_INTEGER);
+    this.batchSending = setTimeout(() => {
+    }, MAX_TIMEOUT_INTEGER);
+  }
+
+  public static getInstance(subscriptions: Subscriptions, index: Index): MessageForwarder {
+    if (!MessageForwarder.instance) {
+      MessageForwarder.instance = new MessageForwarder(subscriptions, index);
+    }
+    return MessageForwarder.instance;
   }
 
   public start(): void {
-    if (this.started) {
-      throw new Error('MessageForwarder already started');
-    }
-
-    // Kafkajs requires the function passed into `eachMessage` be an async function.
-    // eslint-disable-next-line @typescript-eslint/require-await
-    updateOnMessageFunction(async (topic, message): Promise<void> => {
-      return this.onMessage(topic, message);
-    });
-
-    this.started = true;
     this.batchSending = setInterval(
-      () => { this.forwardBatchedMessages(); },
+      () => {
+        this.forwardBatchedMessages();
+      },
       BATCH_SEND_INTERVAL_MS,
     );
   }
 
   public stop(): void {
-    if (this.stopped) {
-      throw new Error('MessageForwarder already stopped');
-    }
-    if (!this.started) {
-      throw new Error('MessageForwarder not started');
-    }
     clearInterval(this.batchSending);
-  }
-
-  public onMessage(topic: string, message: KafkaMessage): void {
-    const start: number = Date.now();
-    stats.timing(
-      `${config.SERVICE_NAME}.message_time_in_queue`,
-      start - Number(message.timestamp),
-      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
-      {
-        topic,
-      },
-    );
-
-    const loggerAt: string = 'MessageForwarder#onMessage';
-    const errProps: Partial<InfoObject> = {
-      topic,
-      offset: message.offset,
-    };
-
-    const channels: Channel[] = getChannels(topic);
-    if (channels.length === 0) {
-      logger.error({
-        ...errProps,
-        at: loggerAt,
-        message: `Unknown kafka topic: ${topic}.`,
-      });
-      return;
-    }
-    errProps.channels = channels;
-
-    // Decode the message based on the topic
-    const messagesToForward = getMessagesToForward(topic, message);
-    for (const messageToForward of messagesToForward) {
-      const startForwardMessage: number = Date.now();
-      this.forwardMessage(messageToForward);
-      const end: number = Date.now();
-      stats.timing(
-        `${config.SERVICE_NAME}.forward_message`,
-        end - startForwardMessage,
-        config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
-        {
-          topic,
-          channel: String(messageToForward.channel),
-        },
-      );
-
-      const originalMessageTimestamp = message.headers?.message_received_timestamp;
-      if (originalMessageTimestamp !== undefined) {
-        stats.timing(
-          `${config.SERVICE_NAME}.message_time_since_received`,
-          startForwardMessage - Number(originalMessageTimestamp),
-          config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
-          {
-            topic,
-            event_type: String(message.headers?.event_type),
-          },
-        );
-      }
-    }
   }
 
   public forwardMessage(message: MessageToForward): void {
@@ -152,13 +64,6 @@ export class MessageForwarder {
 
     if (!this.subscriptions.subscriptions[message.channel] &&
       !this.subscriptions.batchedSubscriptions[message.channel]) {
-      // logger.debug({
-      //   at: 'message-forwarder#forwardMessage',
-      //   message: 'No clients to forward to',
-      //   messageId: message.id,
-      //   messageChannel: message.channel,
-      //   contents: message.contents,
-      // });
       return;
     }
 
@@ -169,25 +74,8 @@ export class MessageForwarder {
     }
     let forwardedToSubscribers: boolean = false;
 
-    // if (subscriptions.length > 0) {
-    //   if (message.channel !== Channel.V4_ORDERBOOK ||
-    //       (
-    //         // Don't log orderbook messages unless enabled
-    //         message.channel === Channel.V4_ORDERBOOK && config.ENABLE_ORDERBOOK_LOGS
-    //       )
-    //   ) {
-    //     logger.debug({
-    //       at: 'message-forwarder#forwardMessage',
-    //       message: 'Forwarding message to clients..',
-    //       messageContents: message,
-    //       connectionIds: subscriptions.map((s: SubscriptionInfo) => s.connectionId),
-    //     });
-    //   }
-    // }
-
-    // Buffer messages if the subscription is for batched messages
     if (this.subscriptions.batchedSubscriptions[message.channel] &&
-       this.subscriptions.batchedSubscriptions[message.channel][message.id]) {
+      this.subscriptions.batchedSubscriptions[message.channel][message.id]) {
       const bufferKey: string = this.getMessageBufferKey(
         message.channel,
         message.id,
@@ -203,7 +91,6 @@ export class MessageForwarder {
       forwardedToSubscribers = true;
     }
 
-    // Send message to client if the subscription is not batched
     if (subscriptions.length > 0) {
       let numClientsForwarded: number = 0;
       subscriptions.forEach(
@@ -223,7 +110,6 @@ export class MessageForwarder {
       forwardedToSubscribers = true;
     }
 
-    // Don't double count a message that has both batched subscribers and non-batched subscribers
     if (forwardedToSubscribers) {
       stats.increment(
         `${config.SERVICE_NAME}.forward_message_with_subscribers`,
