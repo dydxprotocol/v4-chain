@@ -65,11 +65,6 @@ var (
 		403,
 		"cannot revert perpetual open interest for OIMF calculation",
 	)
-	ErrPerpetualInfoDoesNotExist = errorsmod.Register(
-		ModuleName,
-		404,
-		"PerpetualInfo does not exist in map",
-	)
 
 	// 500 - 599: transfer related.
 	ErrAssetTransferQuantumsNotPositive = errorsmod.Register(

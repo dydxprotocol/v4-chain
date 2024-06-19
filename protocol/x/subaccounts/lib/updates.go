@@ -19,11 +19,10 @@ import (
 // payment as value (for emitting funding payments to indexer).
 func GetSettledSubaccountWithPerpetuals(
 	subaccount types.Subaccount,
-	perpInfos map[uint32]perptypes.PerpInfo,
+	perpInfos perptypes.PerpInfos,
 ) (
 	settledSubaccount types.Subaccount,
 	fundingPayments map[uint32]dtypes.SerializableInt,
-	err error,
 ) {
 	totalNetSettlementPpm := big.NewInt(0)
 
@@ -32,10 +31,7 @@ func GetSettledSubaccountWithPerpetuals(
 
 	// Iterate through and settle all perpetual positions.
 	for _, p := range subaccount.PerpetualPositions {
-		perpInfo, found := perpInfos[p.PerpetualId]
-		if !found {
-			return types.Subaccount{}, nil, errorsmod.Wrapf(types.ErrPerpetualInfoDoesNotExist, "%d", p.PerpetualId)
-		}
+		perpInfo := perpInfos.MustGet(p.PerpetualId)
 
 		// Call the stateless utility function to get the net settlement and new funding index.
 		bigNetSettlementPpm, newFundingIndex := perplib.GetSettlementPpmWithPerpetual(
@@ -81,7 +77,7 @@ func GetSettledSubaccountWithPerpetuals(
 	)
 	// TODO(CLOB-993): Remove this function and use `UpdateAssetPositions` instead.
 	newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
-	return newSubaccount, fundingPayments, nil
+	return newSubaccount, fundingPayments
 }
 
 // IsValidStateTransitionForUndercollateralizedSubaccount returns an `UpdateResult`
@@ -306,7 +302,7 @@ func GetUpdatedPerpetualPositions(
 // For newly created positions, use `perpIdToFundingIndex` map to populate the `FundingIndex` field.
 func UpdatePerpetualPositions(
 	settledUpdates []types.SettledUpdate,
-	perpInfos map[uint32]perptypes.PerpInfo,
+	perpInfos perptypes.PerpInfos,
 ) {
 	// Apply the updates.
 	for i, u := range settledUpdates {
@@ -334,12 +330,7 @@ func UpdatePerpetualPositions(
 			} else {
 				// This subaccount does not have a matching position for this update.
 				// Create the new position.
-				perpInfo, exists := perpInfos[pu.PerpetualId]
-				if !exists {
-					// Invariant: `perpInfos` should all relevant perpetuals, which includes all
-					// perpetuals that are updated.
-					panic(errorsmod.Wrapf(types.ErrPerpetualInfoDoesNotExist, "%d", pu.PerpetualId))
-				}
+				perpInfo := perpInfos.MustGet(pu.PerpetualId)
 				perpetualPosition := &types.PerpetualPosition{
 					PerpetualId:  pu.PerpetualId,
 					Quantums:     dtypes.NewIntFromBigInt(pu.GetBigQuantums()),

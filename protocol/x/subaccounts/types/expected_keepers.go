@@ -62,12 +62,27 @@ type PerpetualsKeeper interface {
 		perpetual perptypes.Perpetual,
 		err error,
 	)
+	GetPerpetualAndMarketPrice(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (
+		perptypes.Perpetual,
+		pricestypes.MarketPrice,
+		error,
+	)
 	GetPerpetualAndMarketPriceAndLiquidityTier(
 		ctx sdk.Context,
 		perpetualId uint32,
 	) (
 		perptypes.Perpetual,
 		pricestypes.MarketPrice,
+		perptypes.LiquidityTier,
+		error,
+	)
+	GetLiquidityTier(
+		ctx sdk.Context,
+		id uint32,
+	) (
 		perptypes.LiquidityTier,
 		error,
 	)
