@@ -7,6 +7,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -25,6 +27,7 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 	defer totalSharesIterator.Close()
 	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
 		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
+
 		if err != nil {
 			log.ErrorLogWithError(ctx, "Failed to get vault ID from state key", err)
 			continue
@@ -85,7 +88,7 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 			err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
 				order.OrderId,
 				uint32(ctx.BlockTime().Unix())+orderExpirationSeconds,
-			))
+			), true)
 			if err != nil {
 				log.ErrorLogWithError(ctx, "Failed to cancel order", err, "order", order, "vaultId", vaultId)
 			}
@@ -95,24 +98,52 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 			)
 		}
 	}
-
 	// Place new CLOB orders.
 	ordersToPlace, err := k.GetVaultClobOrders(ctx, vaultId)
 	if err != nil {
 		log.ErrorLogWithError(ctx, "Failed to get vault clob orders to place", err, "vaultId", vaultId)
 		return err
 	}
-	for _, order := range ordersToPlace {
+
+	for i, order := range ordersToPlace {
 		err := k.PlaceVaultClobOrder(ctx, order)
 		if err != nil {
 			log.ErrorLogWithError(ctx, "Failed to place order", err, "order", order, "vaultId", vaultId)
 		}
+
 		vaultId.IncrCounterWithLabels(
 			metrics.VaultPlaceOrder,
 			metrics.GetLabelForBoolValue(metrics.Success, err == nil),
 		)
-	}
 
+		// Send indexer messages. We expect ordersToCancel and ordersToPlace to have the same length
+		// and the order to place at each index to be a replacement of the order to cancel at the same index.
+		replacedOrder := ordersToCancel[i]
+		if replacedOrder == nil {
+			k.GetIndexerEventManager().AddTxnEvent(
+				ctx,
+				indexerevents.SubtypeStatefulOrder,
+				indexerevents.StatefulOrderEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewLongTermOrderPlacementEvent(
+						*order,
+					),
+				),
+			)
+		} else {
+			k.GetIndexerEventManager().AddTxnEvent(
+				ctx,
+				indexerevents.SubtypeStatefulOrder,
+				indexerevents.StatefulOrderEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewLongTermOrderReplacementEvent(
+						replacedOrder.OrderId,
+						*order,
+					),
+				),
+			)
+		}
+	}
 	return nil
 }
 
