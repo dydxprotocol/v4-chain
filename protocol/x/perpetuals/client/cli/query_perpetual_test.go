@@ -92,7 +92,8 @@ func TestShowPerpetual(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			args := fmt.Sprintf("%v", tc.id)
-			perpQuery := "docker exec interchain-security-instance interchain-security-cd query perpetuals show-perpetual " + args
+			perpQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query perpetuals show-perpetual " + args
 			data, _, err := network.QueryCustomNetwork(perpQuery)
 			require.NoError(t, err)
 			var resp types.QueryPerpetualResponse
@@ -155,7 +156,8 @@ func TestListPerpetual(t *testing.T) {
 		step := 2
 		for i := 0; i < len(objs); i += step {
 			args := request(nil, uint64(i), uint64(step), false)
-			perpQuery := "docker exec interchain-security-instance interchain-security-cd query perpetuals list-perpetual " + args
+			perpQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query perpetuals list-perpetual " + args
 			data, _, err := network.QueryCustomNetwork(perpQuery)
 
 			require.NoError(t, err)
@@ -173,7 +175,8 @@ func TestListPerpetual(t *testing.T) {
 		var next []byte
 		for i := 0; i < len(objs); i += step {
 			args := request(next, 0, uint64(step), false)
-			perpQuery := "docker exec interchain-security-instance interchain-security-cd query perpetuals list-perpetual " + args
+			perpQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query perpetuals list-perpetual " + args
 			data, _, err := network.QueryCustomNetwork(perpQuery)
 
 			require.NoError(t, err)
@@ -188,7 +191,8 @@ func TestListPerpetual(t *testing.T) {
 	})
 	t.Run("Total", func(t *testing.T) {
 		args := request(nil, 0, uint64(len(objs)), true)
-		perpQuery := "docker exec interchain-security-instance interchain-security-cd query perpetuals list-perpetual " + args
+		perpQuery := "docker exec interchain-security-instance interchain-security-cd" +
+			" query perpetuals list-perpetual " + args
 		data, _, err := network.QueryCustomNetwork(perpQuery)
 		require.NoError(t, err)
 		var resp types.QueryAllPerpetualsResponse

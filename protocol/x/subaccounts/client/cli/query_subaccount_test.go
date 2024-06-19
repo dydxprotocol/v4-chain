@@ -84,7 +84,8 @@ func TestShowSubaccount(t *testing.T) {
 			}
 
 			fmt.Println("Args:", args)
-			subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts show-subaccount " + args[0] + " " + args[1]
+			subQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query subaccounts show-subaccount " + args[0] + " " + args[1]
 			data, _, err := network.QueryCustomNetwork(subQuery)
 			require.NoError(t, err)
 			var resp types.QuerySubaccountResponse
@@ -140,7 +141,8 @@ func TestListSubaccount(t *testing.T) {
 		step := 2
 		for i := 0; i < len(objs); i += step {
 			args := request(nil, uint64(i), uint64(step), false)
-			subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts list-subaccount" + args
+			subQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query subaccounts list-subaccount" + args
 			data, _, err := network.QueryCustomNetwork(subQuery)
 
 			require.NoError(t, err)
@@ -158,7 +160,8 @@ func TestListSubaccount(t *testing.T) {
 		var next []byte
 		for i := 0; i < len(objs); i += step {
 			args := request(next, 0, uint64(step), false)
-			subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts list-subaccount " + args
+			subQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query subaccounts list-subaccount " + args
 			data, _, err := network.QueryCustomNetwork(subQuery)
 			require.NoError(t, err)
 			var resp types.QuerySubaccountAllResponse
@@ -173,7 +176,8 @@ func TestListSubaccount(t *testing.T) {
 	})
 	t.Run("Total", func(t *testing.T) {
 		args := request(nil, 0, uint64(len(objs)), true)
-		subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts list-subaccount " + args
+		subQuery := "docker exec interchain-security-instance interchain-security-cd" +
+			" query subaccounts list-subaccount " + args
 		data, _, err := network.QueryCustomNetwork(subQuery)
 		require.NoError(t, err)
 		var resp types.QuerySubaccountAllResponse

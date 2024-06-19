@@ -91,7 +91,8 @@ func TestShowClobPair(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			cfg := network.DefaultConfig(nil)
-			query := "docker exec interchain-security-instance interchain-security-cd query clob show-clob-pair " + fmt.Sprintf("%d", tc.id)
+			query := "docker exec interchain-security-instance interchain-security-cd" +
+				" query clob show-clob-pair " + fmt.Sprintf("%d", tc.id)
 			data, stderrOutput, err := network.QueryCustomNetwork(query)
 
 			if tc.err != "" {
@@ -136,7 +137,8 @@ func TestListClobPair(t *testing.T) {
 		for i := 0; i < len(objs); i += step {
 			args := request(nil, uint64(i), uint64(step), false)
 			argsString := strings.Join(args, " ")
-			commandString := "docker exec interchain-security-instance interchain-security-cd query clob list-clob-pair " + argsString
+			commandString := "docker exec interchain-security-instance interchain-security-cd" +
+				" query clob list-clob-pair " + argsString
 			data, _, err := network.QueryCustomNetwork(commandString)
 			require.NoError(t, err)
 			var resp types.QueryClobPairAllResponse
@@ -158,7 +160,8 @@ func TestListClobPair(t *testing.T) {
 			}
 			args := request([]byte(nextKeyStr), 0, uint64(step), false)
 			argsString := strings.Join(args, " ")
-			commandString := "docker exec interchain-security-instance interchain-security-cd query clob list-clob-pair " + argsString
+			commandString := "docker exec interchain-security-instance interchain-security-cd" +
+				" query clob list-clob-pair " + argsString
 			data, _, err := network.QueryCustomNetwork(commandString)
 			require.NoError(t, err)
 			var resp types.QueryClobPairAllResponse
@@ -174,7 +177,8 @@ func TestListClobPair(t *testing.T) {
 	t.Run("Total", func(t *testing.T) {
 		args := request(nil, 0, uint64(len(objs)), true)
 		argsString := strings.Join(args, " ")
-		commandString := "docker exec interchain-security-instance interchain-security-cd query clob list-clob-pair " + argsString
+		commandString := "docker exec interchain-security-instance interchain-security-cd" +
+			" query clob list-clob-pair " + argsString
 		data, _, err := network.QueryCustomNetwork(commandString)
 
 		require.NoError(t, err)

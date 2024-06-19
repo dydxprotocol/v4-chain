@@ -43,7 +43,8 @@ func TestQueryNextDelayedMessageId(t *testing.T) {
 			genesisChanges := getDelayedGenesisChanges(name)
 
 			network.DeployCustomNetwork(genesisChanges)
-			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-next-delayed-message-id"
+			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query delaymsg get-next-delayed-message-id"
 			data, _, _ := network.QueryCustomNetwork(delaymsgQuery)
 			var resp types.QueryNextDelayedMessageIdResponse
 			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
@@ -96,7 +97,8 @@ func TestQueryMessage(t *testing.T) {
 			network.DeployCustomNetwork(genesisChanges)
 
 			cfg := network.DefaultConfig(nil)
-			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-message 0"
+			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query delaymsg get-message 0"
 			data, stdQueryErr, err := network.QueryCustomNetwork(delaymsgQuery)
 
 			if name == "Default: 0" {
@@ -149,7 +151,8 @@ func TestQueryBlockMessageIds(t *testing.T) {
 			network.DeployCustomNetwork(genesisChanges)
 
 			cfg := network.DefaultConfig(nil)
-			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd query delaymsg get-block-message-ids 1000"
+			delaymsgQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query delaymsg get-block-message-ids 1000"
 			data, stdQueryErr, err := network.QueryCustomNetwork(delaymsgQuery)
 
 			if name == "Default: 0" {

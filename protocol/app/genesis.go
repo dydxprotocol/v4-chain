@@ -248,7 +248,8 @@ func transformToV2(jsonRaw []byte, ctx client.Context, removePreHashKey bool) (j
 }
 
 // transformGenesis transforms ccv consumer genesis data to the specified target version
-// Returns the transformed data or an error in case the transformation failed or the format is not supported by current implementation
+// Returns the transformed data or an error in case the transformation failed or the
+// format is not supported by current implementation
 func transformGenesis(ctx client.Context, targetVersion IcsVersion, jsonRaw []byte) (json.RawMessage, error) {
 	var newConsumerGenesis json.RawMessage = nil
 	var err error
@@ -332,10 +333,12 @@ func GetConsumerGenesisTransformCmd() *cobra.Command {
 		Short: "Transform CCV consumer genesis data exported to a specific target format",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`
-Transform the consumer genesis data exported from a provider version v1,v2, v3, v4 to a specified consumer target version.
+Transform the consumer genesis data exported from a provider
+version v1,v2, v3, v4 to a specified consumer target version.
 The result is printed to STDOUT.
 
-Note: Content to be transformed is not the consumer genesis file itself but the exported content from provider chain which is used to patch the consumer genesis file!
+Note: Content to be transformed is not the consumer genesis file itself
+but the exported content from provider chain which is used to patch the consumer genesis file!
 
 Example:
 $ %s transform /path/to/ccv_consumer_genesis.json

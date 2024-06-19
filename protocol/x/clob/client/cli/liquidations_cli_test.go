@@ -122,21 +122,31 @@ func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
 	goodTilBlock = uint32(blockHeight) + types.ShortBlockWindow
 	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
 
-	buyTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 100000000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
+	buyTx := "docker exec interchain-security-instance interchain-security-cd" +
+		" tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
+		" 0 1 0 1 100000000 50000000000 " + goodTilBlockStr +
+		" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
+		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
 	_, _, err := network.QueryCustomNetwork(buyTx)
 	s.Require().NoError(err)
 
 	time.Sleep(5 * time.Second)
 
 	// Query both subaccounts.
-	accResp, accErr := sa_testutil.MsgQuerySubaccountExec("dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6", liqTestSubaccountNumberZero)
+	accResp, accErr := sa_testutil.MsgQuerySubaccountExec(
+		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
+		liqTestSubaccountNumberZero,
+	)
 	s.Require().NoError(accErr)
 
 	var subaccountResp satypes.QuerySubaccountResponse
 	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(accResp.Bytes(), &subaccountResp))
 	subaccountZero := subaccountResp.Subaccount
 
-	accResp, err = sa_testutil.MsgQuerySubaccountExec("dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6", liqTestSubaccountNumberOne)
+	accResp, _ = sa_testutil.MsgQuerySubaccountExec(
+		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
+		liqTestSubaccountNumberOne,
+	)
 	s.Require().NoError(accErr)
 
 	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(accResp.Bytes(), &subaccountResp))

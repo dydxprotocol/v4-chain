@@ -14,7 +14,8 @@ import (
 func TestPendingSendPackets(t *testing.T) {
 	cfg := network.DefaultConfig(nil)
 
-	rateQuery := "docker exec interchain-security-instance-setup interchain-security-cd query ratelimit pending-send-packets"
+	rateQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
+		" query ratelimit pending-send-packets"
 	data, _, err := network.QueryCustomNetwork(rateQuery)
 
 	require.NoError(t, err)

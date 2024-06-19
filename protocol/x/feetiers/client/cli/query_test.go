@@ -18,7 +18,8 @@ var _ = strconv.IntSize
 func TestQueryPerpetualFeeParams(t *testing.T) {
 	cfg := network.DefaultConfig(nil)
 
-	feeQuery := "docker exec interchain-security-instance-setup interchain-security-cd query feetiers get-perpetual-fee-params"
+	feeQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
+		" query feetiers get-perpetual-fee-params"
 	data, _, err := network.QueryCustomNetwork(feeQuery)
 	require.NoError(t, err)
 	var resp types.QueryPerpetualFeeParamsResponse
@@ -29,7 +30,8 @@ func TestQueryPerpetualFeeParams(t *testing.T) {
 func TestQueryUserFeeTier(t *testing.T) {
 	cfg := network.DefaultConfig(nil)
 
-	feeQuery := "docker exec interchain-security-instance-setup interchain-security-cd query feetiers get-user-fee-tier alice"
+	feeQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
+		" query feetiers get-user-fee-tier alice"
 	data, _, err := network.QueryCustomNetwork(feeQuery)
 	require.NoError(t, err)
 	var resp types.QueryUserFeeTierResponse

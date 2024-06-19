@@ -21,7 +21,8 @@ func TestListLimiterParams(t *testing.T) {
 
 	param := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
 
-	rateQuery := "docker exec interchain-security-instance-setup interchain-security-cd query ratelimit list-limit-params " + param
+	rateQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
+		" query ratelimit list-limit-params " + param
 	data, _, err := network.QueryCustomNetwork(rateQuery)
 
 	require.NoError(t, err)

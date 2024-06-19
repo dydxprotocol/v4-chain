@@ -15,7 +15,8 @@ func TestQueryPremiumSamples(t *testing.T) {
 	network.DeployCustomNetwork(genesisChanges)
 	cfg := network.DefaultConfig(nil)
 
-	perpQuery := "docker exec interchain-security-instance-setup interchain-security-cd query perpetuals get-premium-samples"
+	perpQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
+		" query perpetuals get-premium-samples"
 	data, _, err := network.QueryCustomNetwork(perpQuery)
 	require.NoError(t, err)
 
@@ -34,7 +35,8 @@ func TestQueryPremiumVotes(t *testing.T) {
 	genesisChanges := GetPerpetualGenesisShort()
 	network.DeployCustomNetwork(genesisChanges)
 	cfg := network.DefaultConfig(nil)
-	perpQuery := "docker exec interchain-security-instance-setup interchain-security-cd query perpetuals get-premium-votes"
+	perpQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
+		" query perpetuals get-premium-votes"
 	data, _, err := network.QueryCustomNetwork(perpQuery)
 
 	require.NoError(t, err)
