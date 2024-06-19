@@ -319,7 +319,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(
 			name, func(t *testing.T) {
-				perpInfos := make(map[uint32]perptypes.PerpInfo, len(tc.perpetuals))
+				perpInfos := make(perptypes.PerpInfos, len(tc.perpetuals))
 				for _, perp := range tc.perpetuals {
 					perpInfos[perp.Params.Id] = perptypes.PerpInfo{
 						Perpetual: perp,
