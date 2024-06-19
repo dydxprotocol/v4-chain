@@ -181,6 +181,7 @@ describe('order-replace-handler', () => {
       jest.spyOn(CanceledOrdersCache, 'removeOrderFromCaches');
       jest.spyOn(stats, 'increment');
       jest.spyOn(redisPackage, 'placeOrder');
+      jest.spyOn(redisPackage, 'removeOrder');
       jest.spyOn(logger, 'error');
       jest.spyOn(logger, 'info');
     });
@@ -572,6 +573,22 @@ describe('order-replace-handler', () => {
       },
     );
 
+    it('replaces order successfully where old order does not exist', async () => {
+      synchronizeWrapBackgroundTask(wrapBackgroundTask);
+      const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
+      await onMessage(replacementMessage);
+
+      expect(redisPackage.removeOrder).toHaveBeenCalled();
+      expect(redisPackage.placeOrder).toHaveBeenCalled();
+      expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
+        at: 'OrderReplaceHandler#handle',
+        message: 'Old order not found in cache',
+        oldOrderId: redisTestConstants.defaultOrderId,
+      }));
+      expect(OrderbookLevelsCache.updatePriceLevel).not.toHaveBeenCalled();
+      expectWebsocketMessagesNotSent(producerSendSpy);
+    });
+
     it.each([
       [
         'missing order',
@@ -688,6 +705,7 @@ async function checkOrderReplace(
   placedSubaccountId: string,
   expectedOrder: RedisOrder,
 ): Promise<void> {
+  expect(redisPackage.removeOrder).toHaveBeenCalled();
   const oldRedisOrder: RedisOrder | null = await OrdersCache.getOrder(oldOrderId, client);
   expect(oldRedisOrder).toBeNull();
 
@@ -697,6 +715,7 @@ async function checkOrderReplace(
     client,
   );
 
+  expect(redisPackage.placeOrder).toHaveBeenCalled();
   expect(newRedisOrder).toEqual(expectedOrder);
   expect(orderIdsForSubaccount).toEqual([placedOrderId]);
 }
