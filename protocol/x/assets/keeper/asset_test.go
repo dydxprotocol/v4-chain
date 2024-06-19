@@ -318,63 +318,72 @@ func TestGetAllAssets_Success(t *testing.T) {
 	)
 }
 
-func TestGetNetCollateral(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
-	_, err := createNAssets(t, ctx, keeper, pricesKeeper, 2)
-	require.NoError(t, err)
+func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
+	tests := map[string]struct {
+		assetId     uint32
+		bigQuantums *big.Int
+		expectedNC  *big.Int
+		expectedIMR *big.Int
+		expectedMMR *big.Int
+		expectedErr error
+	}{
+		"USDC asset. Positive Balance": {
+			assetId:     types.AssetUsdc.Id,
+			bigQuantums: big.NewInt(100),
+			expectedNC:  big.NewInt(100),
+			expectedIMR: big.NewInt(0),
+			expectedMMR: big.NewInt(0),
+			expectedErr: nil,
+		},
+		"USDC asset. Negative Balance": {
+			assetId:     types.AssetUsdc.Id,
+			bigQuantums: big.NewInt(-100),
+			expectedNC:  big.NewInt(-100),
+			expectedIMR: big.NewInt(0),
+			expectedMMR: big.NewInt(0),
+			expectedErr: nil,
+		},
+		"Non USDC asset. Positive Balance": {
+			assetId:     uint32(1),
+			bigQuantums: big.NewInt(100),
+			expectedNC:  big.NewInt(0),
+			expectedIMR: big.NewInt(0),
+			expectedMMR: big.NewInt(0),
+			expectedErr: types.ErrNotImplementedMulticollateral,
+		},
+		"Non USDC asset. Negative Balance": {
+			assetId:     uint32(1),
+			bigQuantums: big.NewInt(-100),
+			expectedNC:  big.NewInt(0),
+			expectedIMR: big.NewInt(0),
+			expectedMMR: big.NewInt(0),
+			expectedErr: types.ErrNotImplementedMargin,
+		},
+	}
 
-	netCollateral, err := keeper.GetNetCollateral(
-		ctx,
-		types.AssetUsdc.Id,
-		new(big.Int).SetInt64(100),
-	)
-	require.NoError(t, err)
-	require.Equal(t, new(big.Int).SetInt64(100), netCollateral)
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
+			_, err := createNAssets(t, ctx, keeper, pricesKeeper, 2)
+			require.NoError(t, err)
 
-	_, err = keeper.GetNetCollateral(
-		ctx,
-		uint32(1),
-		new(big.Int).SetInt64(100),
-	)
-	require.EqualError(t, types.ErrNotImplementedMulticollateral, err.Error())
+			risk, err := keeper.GetNetCollateralAndMarginRequirements(
+				ctx,
+				tc.assetId,
+				tc.bigQuantums,
+			)
 
-	_, err = keeper.GetNetCollateral(
-		ctx,
-		uint32(1),
-		new(big.Int).SetInt64(-100),
-	)
-	require.EqualError(t, types.ErrNotImplementedMargin, err.Error())
-}
+			require.Equal(t, tc.expectedNC, risk.NC)
+			require.Equal(t, tc.expectedIMR, risk.IMR)
+			require.Equal(t, tc.expectedMMR, risk.MMR)
 
-func TestGetMarginRequirements(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _, _ := keepertest.AssetsKeepers(t, true)
-	_, err := createNAssets(t, ctx, keeper, pricesKeeper, 2)
-	require.NoError(t, err)
-
-	initial, maintenance, err := keeper.GetMarginRequirements(
-		ctx,
-		types.AssetUsdc.Id,
-		new(big.Int).SetInt64(100),
-	)
-	require.NoError(t, err)
-	require.Equal(t, new(big.Int), initial)
-	require.Equal(t, new(big.Int), maintenance)
-
-	initial, maintenance, err = keeper.GetMarginRequirements(
-		ctx,
-		uint32(1),
-		new(big.Int).SetInt64(100),
-	)
-	require.NoError(t, err)
-	require.Equal(t, new(big.Int), initial)
-	require.Equal(t, new(big.Int), maintenance)
-
-	_, _, err = keeper.GetMarginRequirements(
-		ctx,
-		uint32(1),
-		new(big.Int).SetInt64(-100),
-	)
-	require.EqualError(t, types.ErrNotImplementedMargin, err.Error())
+			if tc.expectedErr != nil {
+				require.ErrorIs(t, err, tc.expectedErr)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestConvertAssetToCoin_Success(t *testing.T) {

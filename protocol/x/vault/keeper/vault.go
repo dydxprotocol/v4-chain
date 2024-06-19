@@ -16,7 +16,7 @@ func (k Keeper) GetVaultEquity(
 	ctx sdk.Context,
 	vaultId types.VaultId,
 ) (*big.Int, error) {
-	netCollateral, _, _, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+	risk, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{
 			SubaccountId: *vaultId.ToSubaccountId(),
@@ -25,7 +25,7 @@ func (k Keeper) GetVaultEquity(
 	if err != nil {
 		return nil, err
 	}
-	return netCollateral, nil
+	return risk.NC, nil
 }
 
 // GetVaultInventory returns the inventory of a vault in a given perpeutal (in base quantums).

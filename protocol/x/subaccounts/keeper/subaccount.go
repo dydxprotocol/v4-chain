@@ -21,6 +21,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -582,9 +583,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		}()
 	}
 
-	bigCurNetCollateral := make(map[string]*big.Int)
-	bigCurInitialMargin := make(map[string]*big.Int)
-	bigCurMaintenanceMargin := make(map[string]*big.Int)
+	riskCurMap := make(map[string]margin.Risk)
 
 	// Iterate over all updates.
 	for i, u := range settledUpdates {
@@ -605,16 +604,11 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		}
 
 		// Get the new collateralization and margin requirements with the update applied.
-		bigNewNetCollateral,
-			bigNewInitialMargin,
-			bigNewMaintenanceMargin,
-			err := k.internalGetNetCollateralAndMarginRequirements(
+		riskNew, err := k.internalGetNetCollateralAndMarginRequirements(
 			ctx,
 			u,
 			perpInfos,
 		)
-
-		// if `internalGetNetCollateralAndMarginRequirements`, returns error.
 		if err != nil {
 			return false, nil, err
 		}
@@ -623,7 +617,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 		// The subaccount is not well-collateralized after the update.
 		// We must now check if the state transition is valid.
-		if bigNewInitialMargin.Cmp(bigNewNetCollateral) > 0 {
+		if !riskNew.IsInitialCollateralized() {
 			// Get the current collateralization and margin requirements without the update applied.
 			emptyUpdate := types.SettledUpdate{
 				SettledSubaccount: u.SettledSubaccount,
@@ -636,11 +630,8 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			saKey := string(bytes)
 
 			// Cache the current collateralization and margin requirements for the subaccount.
-			if _, ok := bigCurNetCollateral[saKey]; !ok {
-				bigCurNetCollateral[saKey],
-					bigCurInitialMargin[saKey],
-					bigCurMaintenanceMargin[saKey],
-					err = k.internalGetNetCollateralAndMarginRequirements(
+			if _, ok := riskCurMap[saKey]; !ok {
+				riskCurMap[saKey], err = k.internalGetNetCollateralAndMarginRequirements(
 					ctx,
 					emptyUpdate,
 					perpInfos,
@@ -652,11 +643,8 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 			// Determine whether the state transition is valid.
 			result = salib.IsValidStateTransitionForUndercollateralizedSubaccount(
-				bigCurNetCollateral[saKey],
-				bigCurInitialMargin[saKey],
-				bigCurMaintenanceMargin[saKey],
-				bigNewNetCollateral,
-				bigNewMaintenanceMargin,
+				riskCurMap[saKey],
+				riskNew,
 			)
 		}
 
@@ -685,16 +673,14 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 	ctx sdk.Context,
 	update types.Update,
 ) (
-	bigNetCollateral *big.Int,
-	bigInitialMargin *big.Int,
-	bigMaintenanceMargin *big.Int,
+	risk margin.Risk,
 	err error,
 ) {
 	subaccount := k.GetSubaccount(ctx, update.SubaccountId)
 
 	perpInfos, err := k.GetAllRelevantPerpetuals(ctx, []types.Update{update})
 	if err != nil {
-		return nil, nil, nil, err
+		return risk, err
 	}
 	settledSubaccount, _ := salib.GetSettledSubaccountWithPerpetuals(subaccount, perpInfos)
 
@@ -727,9 +713,7 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	settledUpdate types.SettledUpdate,
 	perpInfos perptypes.PerpInfos,
 ) (
-	bigNetCollateral *big.Int,
-	bigInitialMargin *big.Int,
-	bigMaintenanceMargin *big.Int,
+	risk margin.Risk,
 	err error,
 ) {
 	defer telemetry.ModuleMeasureSince(
@@ -740,9 +724,11 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	)
 
 	// Initialize return values.
-	bigNetCollateral = big.NewInt(0)
-	bigInitialMargin = big.NewInt(0)
-	bigMaintenanceMargin = big.NewInt(0)
+	risk = margin.Risk{
+		MMR: big.NewInt(0),
+		IMR: big.NewInt(0),
+		NC:  big.NewInt(0),
+	}
 
 	// Merge updates and assets.
 	assetSizes, err := salib.ApplyUpdatesToPositions(
@@ -750,7 +736,7 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 		settledUpdate.AssetUpdates,
 	)
 	if err != nil {
-		return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+		return risk, err
 	}
 
 	// Merge updates and perpetuals.
@@ -759,47 +745,35 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 		settledUpdate.PerpetualUpdates,
 	)
 	if err != nil {
-		return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+		return risk, err
 	}
 
 	// Iterate over all assets and updates and calculate change to net collateral and margin requirements.
 	for _, size := range assetSizes {
-		id := size.GetId()
-		bigQuantums := size.GetBigQuantums()
-
-		nc, err := k.assetsKeeper.GetNetCollateral(ctx, id, bigQuantums)
-		if err != nil {
-			return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
-		}
-
-		imr, mmr, err := k.assetsKeeper.GetMarginRequirements(
+		r, err := k.assetsKeeper.GetNetCollateralAndMarginRequirements(
 			ctx,
-			id,
-			bigQuantums,
+			size.GetId(),
+			size.GetBigQuantums(),
 		)
 		if err != nil {
-			return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+			return risk, err
 		}
-		bigNetCollateral.Add(bigNetCollateral, nc)
-		bigInitialMargin.Add(bigInitialMargin, imr)
-		bigMaintenanceMargin.Add(bigMaintenanceMargin, mmr)
+		risk.AddInPlace(r)
 	}
 
 	// Iterate over all perpetuals and updates and calculate change to net collateral and margin requirements.
 	for _, size := range perpetualSizes {
 		perpInfo := perpInfos.MustGet(size.GetId())
-		nc, imr, mmr := perplib.GetNetCollateralAndMarginRequirements(
+		r := perplib.GetNetCollateralAndMarginRequirements(
 			perpInfo.Perpetual,
 			perpInfo.Price,
 			perpInfo.LiquidityTier,
 			size.GetBigQuantums(),
 		)
-		bigNetCollateral.Add(bigNetCollateral, nc)
-		bigInitialMargin.Add(bigInitialMargin, imr)
-		bigMaintenanceMargin.Add(bigMaintenanceMargin, mmr)
+		risk.AddInPlace(r)
 	}
 
-	return bigNetCollateral, bigInitialMargin, bigMaintenanceMargin, nil
+	return risk, nil
 }
 
 // GetAllRelevantPerpetuals returns all relevant perpetual information for a given set of updates.

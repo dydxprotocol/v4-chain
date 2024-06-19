@@ -302,7 +302,7 @@ func getMaxSubaccountOrderQuoteQuantums(
 	sk types.SubaccountsKeeper,
 	subaccountId satypes.SubaccountId,
 ) *big.Int {
-	bigNetCollateral, bigInitialMargin, _, err := sk.GetNetCollateralAndMarginRequirements(
+	risk, err := sk.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{
 			SubaccountId: subaccountId,
@@ -312,6 +312,6 @@ func getMaxSubaccountOrderQuoteQuantums(
 		panic(err)
 	}
 
-	maxQuoteQuantums := new(big.Int).Sub(bigNetCollateral, bigInitialMargin)
+	maxQuoteQuantums := new(big.Int).Sub(risk.NC, risk.IMR)
 	return lib.BigMin(maxQuoteQuantums, maxNonOverflowOrderQuoteQuantums)
 }

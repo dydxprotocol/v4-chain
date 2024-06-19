@@ -8,6 +8,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
 	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -100,29 +101,26 @@ func GetSettledSubaccountWithPerpetuals(
 // has divide-by-zero issue when margin requirements are zero. To make sure the state
 // transition is valid, we special case this scenario and only allow state transition that improves net collateral.
 func IsValidStateTransitionForUndercollateralizedSubaccount(
-	bigCurNetCollateral *big.Int,
-	bigCurInitialMargin *big.Int,
-	bigCurMaintenanceMargin *big.Int,
-	bigNewNetCollateral *big.Int,
-	bigNewMaintenanceMargin *big.Int,
+	riskCur margin.Risk,
+	riskNew margin.Risk,
 ) types.UpdateResult {
 	// Determine whether the subaccount was previously undercollateralized before the update.
 	var underCollateralizationResult = types.StillUndercollateralized
-	if bigCurInitialMargin.Cmp(bigCurNetCollateral) <= 0 {
+	if riskCur.IMR.Cmp(riskCur.NC) <= 0 {
 		underCollateralizationResult = types.NewlyUndercollateralized
 	}
 
 	// If the maintenance margin is increasing, then the subaccount is undercollateralized.
-	if bigNewMaintenanceMargin.Cmp(bigCurMaintenanceMargin) > 0 {
+	if riskNew.MMR.Cmp(riskCur.MMR) > 0 {
 		return underCollateralizationResult
 	}
 
 	// If the maintenance margin is zero, it means the subaccount must have no open positions, and negative net
 	// collateral. If the net collateral is not improving then this transition is not valid.
-	if bigNewMaintenanceMargin.BitLen() == 0 || bigCurMaintenanceMargin.BitLen() == 0 {
-		if bigNewMaintenanceMargin.BitLen() == 0 &&
-			bigCurMaintenanceMargin.BitLen() == 0 &&
-			bigNewNetCollateral.Cmp(bigCurNetCollateral) > 0 {
+	if riskNew.MMR.BitLen() == 0 || riskCur.MMR.BitLen() == 0 {
+		if riskNew.MMR.BitLen() == 0 &&
+			riskCur.MMR.BitLen() == 0 &&
+			riskNew.NC.Cmp(riskCur.NC) > 0 {
 			return types.Success
 		}
 
@@ -133,12 +131,12 @@ func IsValidStateTransitionForUndercollateralizedSubaccount(
 	// `newNetCollateral / newMaintenanceMargin >= curNetCollateral / curMaintenanceMargin`.
 	// However, to avoid rounding errors, we factor this as
 	// `newNetCollateral * curMaintenanceMargin >= curNetCollateral * newMaintenanceMargin`.
-	bigCurRisk := new(big.Int).Mul(bigNewNetCollateral, bigCurMaintenanceMargin)
-	bigNewRisk := new(big.Int).Mul(bigCurNetCollateral, bigNewMaintenanceMargin)
+	newNcOldMmr := new(big.Int).Mul(riskNew.NC, riskCur.MMR)
+	oldNcNewMmr := new(big.Int).Mul(riskCur.NC, riskNew.MMR)
 
 	// The subaccount is not well-collateralized, and the state transition leaves the subaccount in a
 	// "more-risky" state (collateral relative to margin requirements is decreasing).
-	if bigNewRisk.Cmp(bigCurRisk) > 0 {
+	if oldNcNewMmr.Cmp(newNcOldMmr) > 0 {
 		return underCollateralizationResult
 	}
 

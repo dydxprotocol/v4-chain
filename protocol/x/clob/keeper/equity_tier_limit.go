@@ -62,7 +62,7 @@ func (k Keeper) getEquityTierLimitForSubaccount(
 	ctx sdk.Context, subaccountId satypes.SubaccountId,
 	equityTierLimits []types.EquityTierLimit,
 ) (equityTier types.EquityTierLimit, bigNetCollateral *big.Int, err error) {
-	netCollateral, _, _, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+	risk, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{
 			SubaccountId: subaccountId,
@@ -74,7 +74,7 @@ func (k Keeper) getEquityTierLimitForSubaccount(
 
 	var equityTierLimit types.EquityTierLimit
 	for _, limit := range equityTierLimits {
-		if netCollateral.Cmp(limit.UsdTncRequired.BigInt()) < 0 {
+		if risk.NC.Cmp(limit.UsdTncRequired.BigInt()) < 0 {
 			break
 		}
 		equityTierLimit = limit
@@ -87,7 +87,7 @@ func (k Keeper) getEquityTierLimitForSubaccount(
 			"Opening order would exceed equity tier limit of %d, for subaccount %+v with net collateral %+v",
 			equityTierLimit.Limit,
 			subaccountId,
-			netCollateral,
+			risk.NC,
 		)
 	}
 

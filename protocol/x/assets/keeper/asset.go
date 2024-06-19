@@ -12,6 +12,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 )
 
@@ -182,73 +183,51 @@ func (k Keeper) GetAllAssets(
 	return list
 }
 
-// GetNetCollateral returns the net collateral that a given position (quantums)
-// for a given assetId contributes to an account.
-func (k Keeper) GetNetCollateral(
+// GetNetCollateralAndMarginRequirements returns the net collateral, initial margin, and maintenance margin
+// that a given position (quantums) for a given assetId contributes to an account.
+func (k Keeper) GetNetCollateralAndMarginRequirements(
 	ctx sdk.Context,
 	id uint32,
 	bigQuantums *big.Int,
 ) (
-	bigNetCollateralQuoteQuantums *big.Int,
+	risk margin.Risk,
 	err error,
 ) {
+	risk = margin.Risk{
+		NC:  big.NewInt(0),
+		IMR: big.NewInt(0),
+		MMR: big.NewInt(0),
+	}
 	if id == types.AssetUsdc.Id {
-		return new(big.Int).Set(bigQuantums), nil
+		risk.NC = new(big.Int).Set(bigQuantums)
+		return risk, nil
 	}
 
 	// Get asset
 	_, exists := k.GetAsset(ctx, id)
 	if !exists {
-		return big.NewInt(0), errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.UintToString(id))
+		return risk, errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.UintToString(id))
 	}
 
 	// Balance is zero.
 	if bigQuantums.BitLen() == 0 {
-		return big.NewInt(0), nil
+		return risk, nil
 	}
 
 	// Balance is positive.
 	// TODO(DEC-581): add multi-collateral support.
 	if bigQuantums.Sign() == 1 {
-		return big.NewInt(0), types.ErrNotImplementedMulticollateral
+		return risk, types.ErrNotImplementedMulticollateral
 	}
 
-	// Balance is negative.
-	// TODO(DEC-582): add margin-trading support.
-	return big.NewInt(0), types.ErrNotImplementedMargin
-}
-
-// GetMarginRequirements returns the initial and maintenance margin-
-// requirements for a given position size for a given assetId.
-func (k Keeper) GetMarginRequirements(
-	ctx sdk.Context,
-	id uint32,
-	bigQuantums *big.Int,
-) (
-	bigInitialMarginQuoteQuantums *big.Int,
-	bigMaintenanceMarginQuoteQuantums *big.Int,
-	err error,
-) {
-	// QuoteBalance does not contribute to any margin requirements.
-	if id == types.AssetUsdc.Id {
-		return big.NewInt(0), big.NewInt(0), nil
-	}
-
-	// Get asset
-	_, exists := k.GetAsset(ctx, id)
-	if !exists {
-		return big.NewInt(0), big.NewInt(0), errorsmod.Wrap(
-			types.ErrAssetDoesNotExist, lib.UintToString(id))
-	}
-
-	// Balance is zero or positive.
-	if bigQuantums.Sign() >= 0 {
-		return big.NewInt(0), big.NewInt(0), nil
+	// Balance is zero.
+	if bigQuantums.Sign() == 0 {
+		return risk, nil
 	}
 
 	// Balance is negative.
 	// TODO(DEC-582): margin-trading
-	return big.NewInt(0), big.NewInt(0), types.ErrNotImplementedMargin
+	return risk, types.ErrNotImplementedMargin
 }
 
 // ConvertAssetToCoin converts the given `assetId` and `quantums` used in `x/asset`,
