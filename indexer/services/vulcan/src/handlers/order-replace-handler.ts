@@ -1,9 +1,22 @@
-import { logger, runFuncWithTimingStat, stats } from '@dydxprotocol-indexer/base';
-import { createSubaccountWebsocketMessage, KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
+  ParseMessageError, logger, runFuncWithTimingStat, stats,
+} from '@dydxprotocol-indexer/base';
+import {
+  createSubaccountWebsocketMessage,
+  getTriggerPrice,
+  KafkaTopics,
+  SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+} from '@dydxprotocol-indexer/kafka';
+import {
+  IsoString,
   OrderFromDatabase,
+  OrderStatus,
   OrderTable,
   PerpetualMarketFromDatabase,
+  SubaccountMessageContents,
+  SubaccountTable,
+  TimeInForce,
+  apiTranslations,
   blockHeightRefresher,
   perpetualMarketRefresher,
   protocolTranslations,
@@ -30,9 +43,11 @@ import {
   IndexerOrderId,
   OffChainUpdateV1,
   OrderPlaceV1_OrderPlacementStatus,
+  OrderRemovalReason,
   OrderReplaceV1,
   OrderUpdateV1,
   RedisOrder,
+  SubaccountMessage,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { IHeaders, Message } from 'kafkajs';
@@ -41,6 +56,7 @@ import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
+import { getStateRemainingQuantums } from './helpers';
 
 /**
  * Handler for OrderReplace messages. This is currently only expected for stateful vault orders.
@@ -69,7 +85,25 @@ export class OrderReplaceHandler extends Handler {
     const oldOrderId: IndexerOrderId = orderReplace.oldOrderId!;
 
     /* Remove old order */
-    const removeOrderResult: RemoveOrderResult = await this.removeOldOrder(oldOrderId);
+    let removeOrderResult: RemoveOrderResult = { removed: false };
+    try {
+      removeOrderResult = await this.removeOldOrder(oldOrderId, headers);
+    } catch (error) {
+      if (error instanceof ParseMessageError) {
+        return;
+      }
+    }
+
+    /* We don't want to fail if old order is not found (new order should still be placed),
+    so log and track metric */
+    if (!removeOrderResult.removed) {
+      logger.info({
+        at: 'OrderReplaceHandler#handle',
+        message: 'Old order not found in cache',
+        oldOrderId,
+      });
+      stats.increment(`${config.SERVICE_NAME}.replace_order_handler.old_order_not_found_in_cache`, 1);
+    }
 
     /* Place new order */
     const order: IndexerOrder = orderReplace.order!;
@@ -88,6 +122,10 @@ export class OrderReplaceHandler extends Handler {
     }
     const redisOrder: RedisOrder = convertToRedisOrder(order, perpetualMarket);
     const placeOrderResult: PlaceOrderResult = await this.placeNewOrder(redisOrder);
+    await this.removeOrderFromCanceledOrdersCache(
+      OrderTable.orderIdToUuid(redisOrder.order?.orderId!),
+    );
+
     if (placeOrderResult.replaced) {
       // This is not expected because the replaced orders either have different order IDs or
       // should have been removed before being placed again
@@ -161,6 +199,11 @@ export class OrderReplaceHandler extends Handler {
       };
       sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
+
+    await this.addOrderToCanceledOrdersCache(
+      oldOrderId,
+      Date.now(),
+    );
   }
 
   protected validateOrderReplace(orderReplace: OrderReplaceV1): void {
@@ -186,7 +229,38 @@ export class OrderReplaceHandler extends Handler {
     }
   }
 
-  protected async removeOldOrder(oldOrderId: IndexerOrderId): Promise<RemoveOrderResult> {
+  protected async removeOldOrder(
+    oldOrderId: IndexerOrderId,
+    headers: IHeaders,
+  ): Promise<RemoveOrderResult> {
+    const order: OrderFromDatabase | undefined = await runFuncWithTimingStat(
+      OrderTable.findById(
+        OrderTable.orderIdToUuid(oldOrderId),
+      ),
+      this.generateTimingStatsOptions('find_order_for_stateful_cancelation'),
+    );
+    if (order === undefined) {
+      logger.error({
+        at: 'OrderReplaceHandler#removeOldOrder',
+        message: 'Could not find old order ID to remove in DB',
+        orderId: oldOrderId,
+      });
+      throw new ParseMessageError(`Could not find old order ID to remove in DB: ${oldOrderId}`);
+    }
+
+    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
+      .getPerpetualMarketFromClobPairId(
+        order.clobPairId,
+      );
+    if (perpetualMarket === undefined) {
+      logger.error({
+        at: 'OrderReplaceHandler#removeOldOrder',
+        message: `Unable to find the perpetual market with clobPairId: ${order.clobPairId}`,
+        order,
+      });
+      throw new ParseMessageError(`Unable to find the perpetual market with clobPairId: ${order.clobPairId}`);
+    }
+
     const removeOrderResult: RemoveOrderResult = await runFuncWithTimingStat(
       removeOrder({
         removedOrderId: oldOrderId,
@@ -200,7 +274,112 @@ export class OrderReplaceHandler extends Handler {
       oldOrderId,
       removeOrderResult,
     });
+
+    const stateRemainingQuantums: Big = await getStateRemainingQuantums(
+      removeOrderResult.removedOrder!,
+    );
+
+    // If the remaining amount of the order in state is <= 0, the order is filled and
+    // does not need to have it's status updated
+    let canceledOrder: OrderFromDatabase | undefined;
+    if (stateRemainingQuantums.gt(0)) {
+      canceledOrder = await runFuncWithTimingStat(
+        this.cancelOrderInPostgres(oldOrderId),
+        this.generateTimingStatsOptions('cancel_order_in_postgres'),
+      );
+    } else {
+      canceledOrder = await runFuncWithTimingStat(
+        OrderTable.findById(OrderTable.orderIdToUuid(oldOrderId)),
+        this.generateTimingStatsOptions('find_order'),
+      );
+    }
+
+    const subaccountMessage: Message = {
+      value: this.createSubaccountWebsocketMessageFromRemoveOrderResult(
+        removeOrderResult,
+        canceledOrder,
+        oldOrderId,
+        perpetualMarket,
+        blockHeightRefresher.getLatestBlockHeight(),
+      ),
+      headers,
+    };
+
+    sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
+
     return removeOrderResult;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  protected async cancelOrderInPostgres(
+    oldOrderId: IndexerOrderId,
+  ): Promise<OrderFromDatabase | undefined> {
+    return OrderTable.update({
+      id: OrderTable.orderIdToUuid(oldOrderId),
+      status: OrderStatus.CANCELED,
+    });
+  }
+
+  protected createSubaccountWebsocketMessageFromRemoveOrderResult(
+    removeOrderResult: RemoveOrderResult,
+    canceledOrder: OrderFromDatabase | undefined,
+    oldOrderId: IndexerOrderId,
+    perpetualMarket: PerpetualMarketFromDatabase,
+    blockHeight: string | undefined,
+  ): Buffer {
+    const redisOrder: RedisOrder = removeOrderResult.removedOrder!;
+    const orderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
+      redisOrder.order!.timeInForce,
+    );
+    const createdAtHeight: string | undefined = canceledOrder?.createdAtHeight;
+    const updatedAt: IsoString | undefined = canceledOrder?.updatedAt;
+    const updatedAtHeight: string | undefined = canceledOrder?.updatedAtHeight;
+    const contents: SubaccountMessageContents = {
+      orders: [
+        {
+          id: OrderTable.orderIdToUuid(redisOrder.order!.orderId!),
+          subaccountId: SubaccountTable.subaccountIdToUuid(
+            oldOrderId.subaccountId!,
+          ),
+          clientId: oldOrderId.clientId.toString(),
+          clobPairId: perpetualMarket.clobPairId,
+          side: protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
+          size: redisOrder.size,
+          totalOptimisticFilled: protocolTranslations.quantumsToHumanFixedString(
+            removeOrderResult.totalFilledQuantums!.toString(),
+            perpetualMarket.atomicResolution,
+          ),
+          price: redisOrder.price,
+          type: protocolTranslations.protocolConditionTypeToOrderType(
+            redisOrder.order!.conditionType,
+          ),
+          status: OrderStatus.CANCELED,
+          timeInForce: apiTranslations.orderTIFToAPITIF(orderTIF),
+          postOnly: apiTranslations.isOrderTIFPostOnly(orderTIF),
+          reduceOnly: redisOrder.order!.reduceOnly,
+          orderFlags: redisOrder.order!.orderId!.orderFlags.toString(),
+          goodTilBlock: protocolTranslations.getGoodTilBlock(redisOrder.order!)
+            ?.toString(),
+          goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(redisOrder.order!),
+          ticker: redisOrder.ticker,
+          removalReason: OrderRemovalReason[OrderRemovalReason.ORDER_REMOVAL_REASON_USER_CANCELED],
+          ...(createdAtHeight && { createdAtHeight }),
+          ...(updatedAt && { updatedAt }),
+          ...(updatedAtHeight && { updatedAtHeight }),
+          clientMetadata: redisOrder.order!.clientMetadata.toString(),
+          triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
+        },
+      ],
+      ...(blockHeight && { blockHeight }),
+    };
+
+    const subaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({
+      contents: JSON.stringify(contents),
+      subaccountId: oldOrderId.subaccountId!,
+      version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+    });
+
+    return Buffer.from(Uint8Array.from(SubaccountMessage.encode(subaccountMessage).finish()));
   }
 
   protected async placeNewOrder(redisOrder: RedisOrder): Promise<PlaceOrderResult> {
@@ -390,4 +569,22 @@ export class OrderReplaceHandler extends Handler {
     return sizeDelta.toFixed();
   }
 
+  /**
+   * Adds the removed order to the cancelled orders cache in Redis.
+   *
+   * @param orderId
+   * @param timestampMs
+   * @protected
+   */
+  protected async addOrderToCanceledOrdersCache(
+    oldOrderId: IndexerOrderId,
+    timestampMs: number,
+  ): Promise<void> {
+    const orderId: string = OrderTable.orderIdToUuid(oldOrderId);
+
+    await runFuncWithTimingStat(
+      CanceledOrdersCache.addCanceledOrderId(orderId, timestampMs, redisClient),
+      this.generateTimingStatsOptions('add_order_to_canceled_order_cache'),
+    );
+  }
 }
