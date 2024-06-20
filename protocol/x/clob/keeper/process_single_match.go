@@ -51,16 +51,16 @@ func (k Keeper) ProcessSingleMatch(
 		defer func() {
 			if errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) && !takerUpdateResult.IsSuccess() {
 				takerSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, matchWithOrders.TakerOrder.GetSubaccountId())
-				takerTnc, takerIMR, takerMMR, _ := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+				riskTaker, _ := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 					ctx,
 					satypes.Update{SubaccountId: *takerSubaccount.Id},
 				)
 				log.ErrorLog(ctx,
 					"collateralization check failed for liquidation",
 					"takerSubaccount", fmt.Sprintf("%+v", takerSubaccount),
-					"takerTNC", takerTnc,
-					"takerIMR", takerIMR,
-					"takerMMR", takerMMR,
+					"takerTNC", riskTaker.NC,
+					"takerIMR", riskTaker.IMR,
+					"takerMMR", riskTaker.MMR,
 					"liquidationOrder", fmt.Sprintf("%+v", matchWithOrders.TakerOrder),
 					"makerOrder", fmt.Sprintf("%+v", matchWithOrders.MakerOrder),
 					"fillAmount", matchWithOrders.FillAmount,

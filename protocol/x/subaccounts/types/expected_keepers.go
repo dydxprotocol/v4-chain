@@ -25,23 +25,6 @@ type ProductKeeper interface {
 
 type AssetsKeeper interface {
 	ProductKeeper
-	GetNetCollateral(
-		ctx sdk.Context,
-		id uint32,
-		bigQuantums *big.Int,
-	) (
-		bigNetCollateralQuoteQuantums *big.Int,
-		err error,
-	)
-	GetMarginRequirements(
-		ctx sdk.Context,
-		id uint32,
-		bigQuantums *big.Int,
-	) (
-		bigInitialMarginQuoteQuantums *big.Int,
-		bigMaintenanceMarginQuoteQuantums *big.Int,
-		err error,
-	)
 	ConvertAssetToCoin(
 		ctx sdk.Context,
 		assetId uint32,

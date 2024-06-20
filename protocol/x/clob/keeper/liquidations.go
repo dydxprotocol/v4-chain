@@ -354,10 +354,7 @@ func (k Keeper) IsLiquidatable(
 	bool,
 	error,
 ) {
-	bigNetCollateral,
-		_,
-		bigMaintenanceMargin,
-		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+	risk, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
 	)
@@ -365,22 +362,7 @@ func (k Keeper) IsLiquidatable(
 		return false, err
 	}
 
-	return CanLiquidateSubaccount(bigNetCollateral, bigMaintenanceMargin), nil
-}
-
-// CanLiquidateSubaccount returns true if a subaccount is liquidatable given its total net collateral and
-// maintenance margin requirement.
-//
-// The subaccount is liquidatable if both of the following are true:
-// - The maintenance margin requirements are greater than zero (note that they can never be negative).
-// - The maintenance margin requirements are greater than the subaccount's net collateral.
-//
-// Note that this is a stateless function.
-func CanLiquidateSubaccount(
-	bigNetCollateral *big.Int,
-	bigMaintenanceMargin *big.Int,
-) bool {
-	return bigMaintenanceMargin.Sign() > 0 && bigMaintenanceMargin.Cmp(bigNetCollateral) == 1
+	return risk.IsLiquidatable(), nil
 }
 
 // EnsureIsLiquidatable returns an error if the subaccount is not liquidatable.
@@ -430,7 +412,7 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// - DMMR (delta maintenance margin requirement).
 	// - TMMR (total maintenance margin requirement).
 
-	tncBig, _, tmmrBig, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+	riskTotal, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
 	)
@@ -469,13 +451,13 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// with a position size of `PS + deltaQuantums`.
 	// Note that we are intentionally not calculating `DNNV` from `deltaQuantums`
 	// directly to avoid rounding errors.
-	pnnvBig, _, pmmrBig := perplib.GetNetCollateralAndMarginRequirements(
+	riskPosOld := perplib.GetNetCollateralAndMarginRequirements(
 		perpetual,
 		marketPrice,
 		liquidityTier,
 		psBig,
 	)
-	pnnvadBig, _, pmmradBig := perplib.GetNetCollateralAndMarginRequirements(
+	riskPosNew := perplib.GetNetCollateralAndMarginRequirements(
 		perpetual,
 		marketPrice,
 		liquidityTier,
@@ -485,26 +467,26 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// with a position size of `PS + deltaQuantums`.
 	// Note that we cannot directly calculate `DMMR` from `deltaQuantums` because the maintenance
 	// margin requirement function could be non-linear.
-	dnnvBig := new(big.Int).Sub(pnnvadBig, pnnvBig)
-	dmmrBig := new(big.Int).Sub(pmmradBig, pmmrBig)
-	// `dmmrBig` should never be positive if `| PS | >= | PS + deltaQuantums |`. If it is, panic.
-	if dmmrBig.Sign() == 1 {
+	deltaNC := new(big.Int).Sub(riskPosNew.NC, riskPosOld.NC)
+	deltaMMR := new(big.Int).Sub(riskPosNew.MMR, riskPosOld.MMR)
+	// `deltaMMR` should never be positive if `| PS | >= | PS + deltaQuantums |`. If it is, panic.
+	if deltaMMR.Sign() == 1 {
 		panic("GetBankruptcyPriceInQuoteQuantums: DMMR is positive")
 	}
 
 	// Calculate `TNC * abs(DMMR) / TMMR`.
-	tncMulDmmrBig := new(big.Int).Mul(tncBig, new(big.Int).Abs(dmmrBig))
+	tncMulDmmrBig := new(big.Int).Mul(riskTotal.NC, new(big.Int).Abs(deltaMMR))
 	// This calculation is intentionally rounded down to negative infinity to ensure the
 	// final result is rounded towards positive-infinity. This works because of the following:
 	// - This is the only division in the equation.
 	// - This calculation is subtracted from `-DNNV` to get the final result.
 	// - The dividend `TNC * abs(DMMR)` is the only number that can be negative, and `Div` uses
 	//   Euclidean division so even if `TNC < 0` this will still round towards negative infinity.
-	quoteQuantumsBeforeBankruptcyBig := new(big.Int).Div(tncMulDmmrBig, tmmrBig)
+	quoteQuantumsBeforeBankruptcyBig := new(big.Int).Div(tncMulDmmrBig, riskTotal.MMR)
 
 	// Calculate `-DNNV - TNC * abs(DMMR) / TMMR`.
 	bankruptcyPriceQuoteQuantumsBig := new(big.Int).Sub(
-		new(big.Int).Neg(dnnvBig),
+		new(big.Int).Neg(deltaNC),
 		quoteQuantumsBeforeBankruptcyBig,
 	)
 
@@ -559,17 +541,14 @@ func (k Keeper) GetFillablePrice(
 		return nil, err
 	}
 
-	pnnvBig, _, pmmrBig := perplib.GetNetCollateralAndMarginRequirements(
+	riskPos := perplib.GetNetCollateralAndMarginRequirements(
 		perpetual,
 		marketPrice,
 		liquidityTier,
 		psBig,
 	)
 
-	tncBig,
-		_,
-		tmmrBig,
-		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+	riskTotal, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
 	)
@@ -579,7 +558,7 @@ func (k Keeper) GetFillablePrice(
 
 	// stat liquidation order for negative TNC
 	// TODO(CLOB-906) Prevent duplicated stat emissions for liquidation orders in PrepareCheckState.
-	if tncBig.Sign() < 0 {
+	if riskTotal.NC.Sign() < 0 {
 		callback := metrics.PrepareCheckState
 		if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
 			callback = metrics.DeliverTx
@@ -601,7 +580,7 @@ func (k Keeper) GetFillablePrice(
 		ctx.Logger().Info(
 			"GetFillablePrice: Subaccount has negative TNC. SubaccountId: %+v, TNC: %+v",
 			subaccountId,
-			tncBig,
+			riskTotal.NC,
 		)
 	}
 
@@ -610,7 +589,7 @@ func (k Keeper) GetFillablePrice(
 	smmr := liquidationsConfig.FillablePriceConfig.SpreadToMaintenanceMarginRatioPpm
 
 	// Calculate the ABR (adjusted bankruptcy rating).
-	tncDivTmmrRat := new(big.Rat).SetFrac(tncBig, tmmrBig)
+	tncDivTmmrRat := new(big.Rat).SetFrac(riskTotal.NC, riskTotal.MMR)
 	unboundedAbrRat := lib.BigRatMulPpm(
 		new(big.Rat).Sub(
 			lib.BigRat1(),
@@ -624,7 +603,7 @@ func (k Keeper) GetFillablePrice(
 
 	// Calculate `SMMR * PMMR` (the maximum liquidation spread in quote quantums).
 	maxLiquidationSpreadQuoteQuantumsRat := lib.BigRatMulPpm(
-		new(big.Rat).SetInt(pmmrBig),
+		new(big.Rat).SetInt(riskPos.MMR),
 		smmr,
 	)
 
@@ -636,7 +615,7 @@ func (k Keeper) GetFillablePrice(
 	// For shorts, `pnnvRat < 0` meaning the fillable price in quote quantums will be higher than
 	// the oracle price (in this case the result will be negative, but dividing by `positionSize` below
 	// will make it positive since `positionSize < 0` for shorts).
-	pnnvRat := new(big.Rat).SetInt(pnnvBig)
+	pnnvRat := new(big.Rat).SetInt(riskPos.NC)
 	fillablePriceQuoteQuantumsRat := new(big.Rat).Sub(pnnvRat, fillablePriceOracleDeltaQuoteQuantumsRat)
 
 	// Calculate the fillable price by dividing by `PS`.

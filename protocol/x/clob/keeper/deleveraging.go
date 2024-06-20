@@ -178,10 +178,7 @@ func (k Keeper) CanDeleverageSubaccount(
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
 ) (shouldDeleverageAtBankruptcyPrice bool, shouldDeleverageAtOraclePrice bool, err error) {
-	bigNetCollateral,
-		_,
-		_,
-		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+	risk, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
 	)
@@ -190,7 +187,7 @@ func (k Keeper) CanDeleverageSubaccount(
 	}
 
 	// Negative TNC, deleverage at bankruptcy price.
-	if bigNetCollateral.Sign() == -1 {
+	if risk.NC.Sign() == -1 {
 		return true, false, nil
 	}
 
@@ -226,10 +223,7 @@ func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 	foundNegativeTncSubaccount := false
 	var negativeTncSubaccountId satypes.SubaccountId
 	for _, subaccountId := range negativeTncSubaccountIds {
-		bigNetCollateral,
-			_,
-			_,
-			err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+		risk, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 			ctx,
 			satypes.Update{SubaccountId: subaccountId},
 		)
@@ -238,7 +232,7 @@ func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 		}
 
 		// If the subaccount has negative TNC, mark that a negative TNC subaccount was found.
-		if bigNetCollateral.Sign() == -1 {
+		if risk.NC.Sign() == -1 {
 			foundNegativeTncSubaccount = true
 			negativeTncSubaccountId = subaccountId
 			break
