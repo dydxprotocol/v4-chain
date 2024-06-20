@@ -1,7 +1,21 @@
 syntax = "proto3";
 package dydxprotocol.revshare;
 
+import "dydxprotocol/revshare/revshare.proto";
+
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types";
 
 // Query defines the gRPC querier service.
-service Query {}
+service Query {
+  // Queries market mapper revenue share details for a specific market
+  rpc MarketMapperRevShareDetails(QueryMarketMapperRevShareDetails)
+      returns (QueryMarketMapperRevShareDetailsResponse);
+}
+
+// Queries market mapper revenue share details for a specific market
+message QueryMarketMapperRevShareDetails { uint32 market_id = 1; }
+
+// Response type for QueryMarketMapperRevShareDetails
+message QueryMarketMapperRevShareDetailsResponse {
+  MarketMapperRevShareDetails details = 1;
+}
