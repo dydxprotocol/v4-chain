@@ -41,6 +41,16 @@ func TestSetMarketMapperRevenueShareParams(t *testing.T) {
 			},
 			expectedErr: "invalid authority",
 		},
+		"Failure - Empty Authority": {
+			msg: &types.MsgSetMarketMapperRevenueShare{
+				Params: types.MarketMapperRevenueShareParams{
+					Address:         constants.AliceAccAddress.String(),
+					RevenueSharePpm: 100_000,
+					ValidDays:       240,
+				},
+			},
+			expectedErr: "invalid authority",
+		},
 		"Failure - Invalid revenue share address": {
 			msg: &types.MsgSetMarketMapperRevenueShare{
 				Authority: lib.GovModuleAddress.String(),

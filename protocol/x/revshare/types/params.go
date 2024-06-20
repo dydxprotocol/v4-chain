@@ -8,7 +8,6 @@ import (
 // DefaultParams returns a default set of `x/revshare` market mapper parameters.
 func DefaultParams() MarketMapperRevenueShareParams {
 	return MarketMapperRevenueShareParams{
-		// TODO: is there a diff address this can be set to?
 		Address:         authtypes.NewModuleAddress(authtypes.FeeCollectorName).String(),
 		RevenueSharePpm: 0,
 		ValidDays:       0,

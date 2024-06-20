@@ -30,7 +30,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Message to create a blanket market mapper revenue share
+// Message to set the market mapper revenue share
 type MsgSetMarketMapperRevenueShare struct {
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// Parameters for the revenue share
@@ -167,7 +167,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// SetMarketMapperRevenueShare creates a new revenue share for a market
+	// SetMarketMapperRevenueShare sets the revenue share for a market
 	// mapper.
 	SetMarketMapperRevenueShare(ctx context.Context, in *MsgSetMarketMapperRevenueShare, opts ...grpc.CallOption) (*MsgSetMarketMapperRevenueShareResponse, error)
 }
@@ -191,7 +191,7 @@ func (c *msgClient) SetMarketMapperRevenueShare(ctx context.Context, in *MsgSetM
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// SetMarketMapperRevenueShare creates a new revenue share for a market
+	// SetMarketMapperRevenueShare sets the revenue share for a market
 	// mapper.
 	SetMarketMapperRevenueShare(context.Context, *MsgSetMarketMapperRevenueShare) (*MsgSetMarketMapperRevenueShareResponse, error)
 }

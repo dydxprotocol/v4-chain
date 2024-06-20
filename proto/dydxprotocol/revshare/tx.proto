@@ -10,13 +10,13 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 
 // Msg defines the Msg service.
 service Msg {
-  // SetMarketMapperRevenueShare creates a new revenue share for a market
+  // SetMarketMapperRevenueShare sets the revenue share for a market
   // mapper.
   rpc SetMarketMapperRevenueShare(MsgSetMarketMapperRevenueShare)
       returns (MsgSetMarketMapperRevenueShareResponse);
 }
 
-// Message to create a blanket market mapper revenue share
+// Message to set the market mapper revenue share
 message MsgSetMarketMapperRevenueShare {
   // The address that controls the module (the gov module account).
   option (cosmos.msg.v1.signer) = "authority";

@@ -5,7 +5,7 @@ import { MsgSetMarketMapperRevenueShare, MsgSetMarketMapperRevenueShareResponse 
 
 export interface Msg {
   /**
-   * SetMarketMapperRevenueShare creates a new revenue share for a market
+   * SetMarketMapperRevenueShare sets the revenue share for a market
    * mapper.
    */
   setMarketMapperRevenueShare(request: MsgSetMarketMapperRevenueShare): Promise<MsgSetMarketMapperRevenueShareResponse>;

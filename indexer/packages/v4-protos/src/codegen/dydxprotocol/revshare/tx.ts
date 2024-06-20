@@ -1,7 +1,7 @@
 import { MarketMapperRevenueShareParams, MarketMapperRevenueShareParamsSDKType } from "./params";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
-/** Message to create a blanket market mapper revenue share */
+/** Message to set the market mapper revenue share */
 
 export interface MsgSetMarketMapperRevenueShare {
   authority: string;
@@ -9,7 +9,7 @@ export interface MsgSetMarketMapperRevenueShare {
 
   params?: MarketMapperRevenueShareParams;
 }
-/** Message to create a blanket market mapper revenue share */
+/** Message to set the market mapper revenue share */
 
 export interface MsgSetMarketMapperRevenueShareSDKType {
   authority: string;
