@@ -15,9 +15,14 @@ type GrpcStreamingManager interface {
 	) (
 		err error,
 	)
-	GetUninitializedClobPairIds() []uint32
+	InitializeNewGrpcStreams(
+		getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
+		blockHeight uint32,
+		execMode sdk.ExecMode,
+	)
 	SendSnapshot(
 		offchainUpdates *clobtypes.OffchainUpdates,
+		subscriptionId uint32,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
