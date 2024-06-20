@@ -8,7 +8,8 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 
 // Query defines the gRPC querier service.
 service Query {
-  // MarketMapperRevenueShareParams queries the revenue share params for the market mapper
+  // MarketMapperRevenueShareParams queries the revenue share params for the
+  // market mapper
   rpc MarketMapperRevenueShareParams(QueryMarketMapperRevenueShareParams)
       returns (QueryMarketMapperRevenueShareParamsResponse);
 }
