@@ -8,7 +8,7 @@ on:  # yamllint disable-line rule:truthy
       - "protocol/v[0-9]+.[0-9]+.[0-9]+"  # e.g.: protocol/v1.0.1
       - "protocol/v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+"  # e.g.: protocol/v1.0.1-rc1
       - "protocol/v[0-9]+.[0-9]+.[0-9]+-dev[0-9]+"  # e.g.: protocol/v1.0.1-dev1
-      - "chenyao/test-vault-order-replace"
+      - "protocol/chenyao/test-vault-order-replace"
 
 jobs:
   protocol-release:
