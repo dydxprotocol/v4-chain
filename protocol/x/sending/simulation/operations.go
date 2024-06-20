@@ -82,7 +82,7 @@ func SimulateMsgCreateTransfer(
 			), nil, nil
 		}
 
-		bigNetCollateral, bigInitialMargin, _, err := sk.GetNetCollateralAndMarginRequirements(
+		risk, err := sk.GetNetCollateralAndMarginRequirements(
 			ctx,
 			satypes.Update{
 				SubaccountId: *senderAccount.GetId(),
@@ -111,7 +111,7 @@ func SimulateMsgCreateTransfer(
 		)
 
 		// Calculate the maximum amount that can be sent without making the subaccount under-collateralized.
-		bigAmountPayable := new(big.Int).Sub(bigNetCollateral, bigInitialMargin)
+		bigAmountPayable := new(big.Int).Sub(risk.NC, risk.IMR)
 
 		bigMaxAmountToSend := lib.BigMin(bigAmountPayable, bigAmountReceivable)
 		if bigMaxAmountToSend.Sign() <= 0 {

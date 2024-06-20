@@ -5826,8 +5826,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 				PerpetualUpdates: tc.perpetualUpdates,
 			}
 
-			netCollateral, initialMargin, maintenanceMargin, err :=
-				keeper.GetNetCollateralAndMarginRequirements(ctx, update)
+			risk, err := keeper.GetNetCollateralAndMarginRequirements(ctx, update)
 
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, tc.expectedErr, err)
@@ -5836,13 +5835,13 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 				// https://github.com/stretchr/testify/issues/1116
 				// for that reason we convert to strings here to make the output more readable
 				if tc.expectedNetCollateral != nil {
-					require.Equal(t, tc.expectedNetCollateral.String(), netCollateral.String())
+					require.Equal(t, tc.expectedNetCollateral.String(), risk.NC.String())
 				}
 				if tc.expectedInitialMargin != nil {
-					require.Equal(t, tc.expectedInitialMargin.String(), initialMargin.String())
+					require.Equal(t, tc.expectedInitialMargin.String(), risk.IMR.String())
 				}
 				if tc.expectedMaintenanceMargin != nil {
-					require.Equal(t, tc.expectedMaintenanceMargin.String(), maintenanceMargin.String())
+					require.Equal(t, tc.expectedMaintenanceMargin.String(), risk.MMR.String())
 				}
 				require.NoError(t, err)
 			}

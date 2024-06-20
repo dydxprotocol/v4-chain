@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"math/big"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -10,10 +9,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	clobkeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	salib "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/lib"
@@ -310,49 +306,12 @@ func (c *Client) CheckSubaccountCollateralization(
 		perpInfos,
 	)
 
-	bigTotalNetCollateral := big.NewInt(0)
-	bigTotalMaintenanceMargin := big.NewInt(0)
+	risk, err := salib.GetRiskForSubaccount(
+		satypes.SettledUpdate{
+			SettledSubaccount: settledSubaccount,
+		},
+		perpInfos,
+	)
 
-	// Calculate the net collateral and maintenance margin for each of the asset positions.
-	// Note that we only expect USDC before multi-collateral support is added.
-	for _, assetPosition := range settledSubaccount.AssetPositions {
-		if assetPosition.AssetId != assetstypes.AssetUsdc.Id {
-			return false, false, errorsmod.Wrapf(
-				assetstypes.ErrNotImplementedMulticollateral,
-				"Asset %d is not supported",
-				assetPosition.AssetId,
-			)
-		}
-		// Net collateral for USDC is the quantums of the position.
-		// Margin requirements for USDC are zero.
-		bigTotalNetCollateral.Add(bigTotalNetCollateral, assetPosition.GetBigQuantums())
-	}
-
-	// Calculate the net collateral and maintenance margin for each of the perpetual positions.
-	for _, perpetualPosition := range settledSubaccount.PerpetualPositions {
-		perpInfo := perpInfos.MustGet(perpetualPosition.PerpetualId)
-
-		bigQuantums := perpetualPosition.GetBigQuantums()
-
-		// Get the net collateral for the position.
-		bigNetCollateralQuoteQuantums := perplib.GetNetNotionalInQuoteQuantums(
-			perpInfo.Perpetual,
-			perpInfo.Price,
-			bigQuantums,
-		)
-		bigTotalNetCollateral.Add(bigTotalNetCollateral, bigNetCollateralQuoteQuantums)
-
-		// Get the maintenance margin requirement for the position.
-		_, bigMaintenanceMarginQuoteQuantums := perplib.GetMarginRequirementsInQuoteQuantums(
-			perpInfo.Perpetual,
-			perpInfo.Price,
-			perpInfo.LiquidityTier,
-			bigQuantums,
-		)
-		bigTotalMaintenanceMargin.Add(bigTotalMaintenanceMargin, bigMaintenanceMarginQuoteQuantums)
-	}
-
-	return clobkeeper.CanLiquidateSubaccount(bigTotalNetCollateral, bigTotalMaintenanceMargin),
-		bigTotalNetCollateral.Sign() == -1,
-		nil
+	return risk.IsLiquidatable(), risk.NC.Sign() < 0, nil
 }

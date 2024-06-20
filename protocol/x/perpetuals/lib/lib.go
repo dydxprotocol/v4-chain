@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
@@ -43,22 +44,24 @@ func GetNetCollateralAndMarginRequirements(
 	liquidityTier types.LiquidityTier,
 	quantums *big.Int,
 ) (
-	nc *big.Int,
-	imr *big.Int,
-	mmr *big.Int,
+	risk margin.Risk,
 ) {
-	nc = GetNetNotionalInQuoteQuantums(
+	nc := GetNetNotionalInQuoteQuantums(
 		perpetual,
 		marketPrice,
 		quantums,
 	)
-	imr, mmr = GetMarginRequirementsInQuoteQuantums(
+	imr, mmr := GetMarginRequirementsInQuoteQuantums(
 		perpetual,
 		marketPrice,
 		liquidityTier,
 		quantums,
 	)
-	return nc, imr, mmr
+	return margin.Risk{
+		NC:  nc,
+		IMR: imr,
+		MMR: mmr,
+	}
 }
 
 // GetNetNotionalInQuoteQuantums returns the net notional in quote quantums, which can be

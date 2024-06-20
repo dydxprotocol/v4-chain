@@ -4,9 +4,11 @@ package mocks
 
 import (
 	big "math/big"
-	rand "math/rand"
 
+	margin "github.com/dydxprotocol/v4-chain/protocol/lib/margin"
 	mock "github.com/stretchr/testify/mock"
+
+	rand "math/rand"
 
 	subaccountstypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
@@ -129,51 +131,31 @@ func (_m *SubaccountsKeeper) GetNegativeTncSubaccountSeenAtBlock(ctx types.Conte
 }
 
 // GetNetCollateralAndMarginRequirements provides a mock function with given fields: ctx, update
-func (_m *SubaccountsKeeper) GetNetCollateralAndMarginRequirements(ctx types.Context, update subaccountstypes.Update) (*big.Int, *big.Int, *big.Int, error) {
+func (_m *SubaccountsKeeper) GetNetCollateralAndMarginRequirements(ctx types.Context, update subaccountstypes.Update) (margin.Risk, error) {
 	ret := _m.Called(ctx, update)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetNetCollateralAndMarginRequirements")
 	}
 
-	var r0 *big.Int
-	var r1 *big.Int
-	var r2 *big.Int
-	var r3 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.Update) (*big.Int, *big.Int, *big.Int, error)); ok {
+	var r0 margin.Risk
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.Update) (margin.Risk, error)); ok {
 		return rf(ctx, update)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.Update) *big.Int); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.Update) margin.Risk); ok {
 		r0 = rf(ctx, update)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
-		}
+		r0 = ret.Get(0).(margin.Risk)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.Update) *big.Int); ok {
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.Update) error); ok {
 		r1 = rf(ctx, update)
 	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*big.Int)
-		}
+		r1 = ret.Error(1)
 	}
 
-	if rf, ok := ret.Get(2).(func(types.Context, subaccountstypes.Update) *big.Int); ok {
-		r2 = rf(ctx, update)
-	} else {
-		if ret.Get(2) != nil {
-			r2 = ret.Get(2).(*big.Int)
-		}
-	}
-
-	if rf, ok := ret.Get(3).(func(types.Context, subaccountstypes.Update) error); ok {
-		r3 = rf(ctx, update)
-	} else {
-		r3 = ret.Error(3)
-	}
-
-	return r0, r1, r2, r3
+	return r0, r1
 }
 
 // GetRandomSubaccount provides a mock function with given fields: ctx, _a1

@@ -192,15 +192,15 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 				test.liquidityTier,
 				test.quantums,
 			)
-			nc, imr, mmr := lib.GetNetCollateralAndMarginRequirements(
+			risk := lib.GetNetCollateralAndMarginRequirements(
 				test.perpetual,
 				test.marketPrice,
 				test.liquidityTier,
 				test.quantums,
 			)
-			require.Equal(t, enc, nc)
-			require.Equal(t, eimr, imr)
-			require.Equal(t, emmr, mmr)
+			require.Equal(t, enc, risk.NC)
+			require.Equal(t, eimr, risk.IMR)
+			require.Equal(t, emmr, risk.MMR)
 		})
 	}
 }

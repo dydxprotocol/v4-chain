@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
 )
 
 type SubaccountsKeeper interface {
@@ -14,9 +15,7 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		update Update,
 	) (
-		bigNetCollateral *big.Int,
-		bigInitialMargin *big.Int,
-		bigMaintenanceMargin *big.Int,
+		risk margin.Risk,
 		err error,
 	)
 	CanUpdateSubaccounts(
