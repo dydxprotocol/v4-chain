@@ -1,7 +1,22 @@
 syntax = "proto3";
 package dydxprotocol.revshare;
 
+import "gogoproto/gogo.proto";
+import "dydxprotocol/revshare/params.proto";
+
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types";
 
 // Query defines the gRPC querier service.
-service Query {}
+service Query {
+  // MarketMapperRevenueShareParams queries the revenue share params for the market mapper
+  rpc MarketMapperRevenueShareParams(QueryMarketMapperRevenueShareParams)
+      returns (QueryMarketMapperRevenueShareParamsResponse);
+}
+
+// Queries for the default market mapper revenue share params
+message QueryMarketMapperRevenueShareParams {}
+
+// Response type for QueryMarketMapperRevenueShareParams
+message QueryMarketMapperRevenueShareParamsResponse {
+  MarketMapperRevenueShareParams params = 1 [ (gogoproto.nullable) = false ];
+}
