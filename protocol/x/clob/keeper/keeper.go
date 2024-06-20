@@ -260,20 +260,14 @@ func (k *Keeper) SetAnteHandler(anteHandler sdk.AnteHandler) {
 // by sending the corresponding orderbook snapshots.
 func (k Keeper) InitializeNewGrpcStreams(ctx sdk.Context) {
 	streamingManager := k.GetGrpcStreamingManager()
-	allUpdates := types.NewOffchainUpdates()
 
-	uninitializedClobPairIds := streamingManager.GetUninitializedClobPairIds()
-	for _, clobPairId := range uninitializedClobPairIds {
-		update := k.MemClob.GetOffchainUpdatesForOrderbookSnapshot(
-			ctx,
-			types.ClobPairId(clobPairId),
-		)
-
-		allUpdates.Append(update)
-	}
-
-	streamingManager.SendSnapshot(
-		allUpdates,
+	streamingManager.InitializeNewGrpcStreams(
+		func(clobPairId types.ClobPairId) *types.OffchainUpdates {
+			return k.MemClob.GetOffchainUpdatesForOrderbookSnapshot(
+				ctx,
+				clobPairId,
+			)
+		},
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
 	)

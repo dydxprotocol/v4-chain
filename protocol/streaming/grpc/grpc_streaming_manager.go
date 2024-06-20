@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -211,6 +210,7 @@ func (sm *GrpcStreamingManagerImpl) Stop() {
 // and bypasses the buffer.
 func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 	offchainUpdates *clobtypes.OffchainUpdates,
+	subscriptionId uint32,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
@@ -220,74 +220,56 @@ func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 		time.Now(),
 	)
 
-	// Group updates by clob pair id.
-	updates := make(map[uint32]*clobtypes.OffchainUpdates)
-	for _, message := range offchainUpdates.Messages {
-		clobPairId := message.OrderId.ClobPairId
-		if _, ok := updates[clobPairId]; !ok {
-			updates[clobPairId] = clobtypes.NewOffchainUpdates()
-		}
-		updates[clobPairId].Messages = append(updates[clobPairId].Messages, message)
+	v1updates, err := GetOffchainUpdatesV1(offchainUpdates)
+	if err != nil {
+		panic(err)
 	}
 
-	// Unmarshal each per-clob pair message to v1 updates.
-	updatesByClobPairId := make(map[uint32][]ocutypes.OffChainUpdateV1)
-	for clobPairId, update := range updates {
-		v1updates, err := GetOffchainUpdatesV1(update)
-		if err != nil {
-			panic(err)
-		}
-		updatesByClobPairId[clobPairId] = v1updates
-	}
-
-	sm.Lock()
-	defer sm.Unlock()
-
-	idsToRemove := make([]uint32, 0)
-	for id, subscription := range sm.orderbookSubscriptions {
-		// Consolidate orderbook updates into a single `StreamUpdate`.
-		v1updates := make([]ocutypes.OffChainUpdateV1, 0)
-		for _, clobPairId := range subscription.clobPairIds {
-			if update, ok := updatesByClobPairId[clobPairId]; ok {
-				v1updates = append(v1updates, update...)
-			}
-		}
-
-		if len(v1updates) > 0 {
-			streamUpdates := []clobtypes.StreamUpdate{
-				{
-					UpdateMessage: &clobtypes.StreamUpdate_OrderbookUpdate{
-						OrderbookUpdate: &clobtypes.StreamOrderbookUpdate{
-							Updates:  v1updates,
-							Snapshot: true,
-						},
-					},
-					BlockHeight: blockHeight,
-					ExecMode:    uint32(execMode),
-				},
-			}
-			metrics.IncrCounter(
-				metrics.GrpcAddToSubscriptionChannelCount,
-				1,
+	removeSubscription := false
+	if len(v1updates) > 0 {
+		subscription, ok := sm.orderbookSubscriptions[subscriptionId]
+		if !ok {
+			sm.logger.Error(
+				fmt.Sprintf(
+					"GRPC Streaming subscription id %+v not found. This should not happen.",
+					subscriptionId,
+				),
 			)
-			select {
-			case subscription.updatesChannel <- streamUpdates:
-			default:
-				sm.logger.Error(
-					fmt.Sprintf(
-						"GRPC Streaming subscription id %+v channel full capacity. Dropping subscription connection.",
-						id,
-					),
-				)
-				idsToRemove = append(idsToRemove, subscription.subscriptionId)
-			}
+			return
+		}
+		streamUpdates := []clobtypes.StreamUpdate{
+			{
+				UpdateMessage: &clobtypes.StreamUpdate_OrderbookUpdate{
+					OrderbookUpdate: &clobtypes.StreamOrderbookUpdate{
+						Updates:  v1updates,
+						Snapshot: true,
+					},
+				},
+				BlockHeight: blockHeight,
+				ExecMode:    uint32(execMode),
+			},
+		}
+		metrics.IncrCounter(
+			metrics.GrpcAddToSubscriptionChannelCount,
+			1,
+		)
+		select {
+		case subscription.updatesChannel <- streamUpdates:
+		default:
+			sm.logger.Error(
+				fmt.Sprintf(
+					"GRPC Streaming subscription id %+v channel full capacity. Dropping subscription connection.",
+					subscriptionId,
+				),
+			)
+			removeSubscription = true
 		}
 	}
 
 	// Clean up subscriptions that have been closed.
 	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
-	for _, id := range idsToRemove {
-		sm.removeSubscription(id)
+	if removeSubscription {
+		sm.removeSubscription(subscriptionId)
 	}
 }
 
@@ -456,23 +438,30 @@ func (sm *GrpcStreamingManagerImpl) FlushStreamUpdates() {
 	sm.EmitMetrics()
 }
 
-// GetUninitializedClobPairIds returns the clob pair ids that have not been initialized.
-func (sm *GrpcStreamingManagerImpl) GetUninitializedClobPairIds() []uint32 {
+func (sm *GrpcStreamingManagerImpl) InitializeNewGrpcStreams(
+	getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
 	sm.Lock()
 	defer sm.Unlock()
 
-	clobPairIds := make(map[uint32]bool)
-	for _, subscription := range sm.orderbookSubscriptions {
+	updatesByClobPairId := make(map[uint32]*clobtypes.OffchainUpdates)
+	for subscriptionId, subscription := range sm.orderbookSubscriptions {
 		subscription.initialize.Do(
 			func() {
+				allUpdates := clobtypes.NewOffchainUpdates()
 				for _, clobPairId := range subscription.clobPairIds {
-					clobPairIds[clobPairId] = true
+					if _, ok := updatesByClobPairId[clobPairId]; !ok {
+						updatesByClobPairId[clobPairId] = getOrderbookSnapshot(clobtypes.ClobPairId(clobPairId))
+					}
+					allUpdates.Append(updatesByClobPairId[clobPairId])
 				}
+
+				sm.SendSnapshot(allUpdates, subscriptionId, blockHeight, execMode)
 			},
 		)
 	}
-
-	return lib.GetSortedKeys[lib.Sortable[uint32]](clobPairIds)
 }
 
 // GetOffchainUpdatesV1 unmarshals messages in offchain updates to OffchainUpdateV1.
