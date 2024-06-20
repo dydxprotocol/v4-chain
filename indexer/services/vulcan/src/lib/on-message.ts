@@ -12,6 +12,7 @@ import { Handler } from 'src/handlers/handler';
 import config from '../config';
 import { OrderPlaceHandler } from '../handlers/order-place-handler';
 import { OrderRemoveHandler } from '../handlers/order-remove-handler';
+import { OrderReplaceHandler } from '../handlers/order-replace-handler';
 import { OrderUpdateHandler } from '../handlers/order-update-handler';
 import { DydxRecordHeaderKeys } from './types';
 
@@ -26,6 +27,8 @@ function getHandler(update: OffChainUpdateV1): HandlerInitializer | undefined {
     return OrderPlaceHandler;
   } else if (update.orderRemove !== undefined) {
     return OrderRemoveHandler;
+  } else if (update.orderReplace !== undefined) {
+    return OrderReplaceHandler;
   }
   return undefined;
 }
@@ -37,6 +40,8 @@ function getMessageType(update: OffChainUpdateV1): string {
     return 'orderPlace';
   } else if (update.orderRemove !== undefined) {
     return 'orderRemove';
+  } else if (update.orderReplace !== undefined) {
+    return 'orderReplace';
   }
   return 'unknown';
 }
@@ -116,6 +121,8 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
         headers.event_type = 'ShortTermOrderRemoval';
       } else if (update.orderUpdate) {
         headers.event_type = 'ShortTermOrderUpdate';
+      } else if (update.orderUpdate) {
+        headers.event_type = 'ShortTermOrderReplacement';
       }
     }
 
@@ -183,8 +190,9 @@ function getOffChainUpdate(messageValue: Buffer, offset: string): OffChainUpdate
 function validateOffChainUpdate(update: OffChainUpdateV1) {
   if (update.orderUpdate === undefined &&
     update.orderPlace === undefined &&
-    update.orderRemove === undefined) {
-    throw new ParseMessageError('Message does not contain an order update, place, or remove');
+    update.orderRemove === undefined &&
+    update.orderReplace === undefined) {
+    throw new ParseMessageError('Message does not contain an order update, place, remove, or replace');
   }
 }
 
