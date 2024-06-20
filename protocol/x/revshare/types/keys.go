@@ -8,3 +8,9 @@ const (
 	// StoreKey defines the primary module store key.
 	StoreKey = ModuleName
 )
+
+// State
+const (
+	// Key for MarketMapperRevenueShareParams
+	MarketMapperRevenueShareParamsKey = "MarketMapperRevenueShareParams"
+)
