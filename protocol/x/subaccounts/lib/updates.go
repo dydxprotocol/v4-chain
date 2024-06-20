@@ -430,11 +430,7 @@ func GetRiskForSubaccount(
 	err error,
 ) {
 	// Initialize return values.
-	risk = margin.Risk{
-		MMR: big.NewInt(0),
-		IMR: big.NewInt(0),
-		NC:  big.NewInt(0),
-	}
+	risk = margin.ZeroRisk()
 
 	// Merge updates and assets.
 	assetSizes, err := ApplyUpdatesToPositions(

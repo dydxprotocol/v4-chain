@@ -16,11 +16,7 @@ func GetNetCollateralAndMarginRequirements(
 	risk margin.Risk,
 	err error,
 ) {
-	risk = margin.Risk{
-		NC:  big.NewInt(0),
-		IMR: big.NewInt(0),
-		MMR: big.NewInt(0),
-	}
+	risk = margin.ZeroRisk()
 
 	// Balance is zero.
 	if bigQuantums.BitLen() == 0 {
