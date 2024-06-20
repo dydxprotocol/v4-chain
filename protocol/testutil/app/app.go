@@ -43,11 +43,9 @@ import (
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
-	rewardstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	stattypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
-	vesttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/mempool"
@@ -183,8 +181,6 @@ type GenesisStates interface {
 		perptypes.GenesisState |
 		feetiertypes.GenesisState |
 		stattypes.GenesisState |
-		vesttypes.GenesisState |
-		rewardstypes.GenesisState |
 		blocktimetypes.GenesisState |
 		clobtypes.GenesisState |
 		pricestypes.GenesisState |
@@ -225,10 +221,6 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = feetiertypes.ModuleName
 	case pricestypes.GenesisState:
 		moduleName = pricestypes.ModuleName
-	case rewardstypes.GenesisState:
-		moduleName = rewardstypes.ModuleName
-	case vesttypes.GenesisState:
-		moduleName = vesttypes.ModuleName
 	case stattypes.GenesisState:
 		moduleName = stattypes.ModuleName
 	case satypes.GenesisState:

@@ -157,16 +157,6 @@ var (
 		"/dydxprotocol.stats.MsgUpdateParams":         {},
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": {},
 
-		// vest
-		"/dydxprotocol.vest.MsgSetVestEntry":            {},
-		"/dydxprotocol.vest.MsgSetVestEntryResponse":    {},
-		"/dydxprotocol.vest.MsgDeleteVestEntry":         {},
-		"/dydxprotocol.vest.MsgDeleteVestEntryResponse": {},
-
-		// rewards
-		"/dydxprotocol.rewards.MsgUpdateParams":         {},
-		"/dydxprotocol.rewards.MsgUpdateParamsResponse": {},
-
 		// ibc.applications
 		"/ibc.applications.transfer.v1.MsgTransfer":             {},
 		"/ibc.applications.transfer.v1.MsgTransferResponse":     {},
@@ -277,8 +267,8 @@ var (
 		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParamsResponse":              {},
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":                            {},
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse":                    {},
-		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafe":			    {},
-		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafeResponse":            	    {},
+		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafe":                         {},
+		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafeResponse":                 {},
 	}
 
 	// DisallowMsgs are messages that cannot be externally submitted.

@@ -73,18 +73,6 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 			},
 			err: fmt.Errorf("invalid denom: %s", "7coin"),
 		},
-		"Invalid coin amount": {
-			msg: types.MsgSendFromModuleToAccount{
-				Authority:        validAuthority,
-				SenderModuleName: "rewards",
-				Recipient:        constants.CarlAccAddress.String(),
-				Coin: sdk.Coin{
-					Denom:  "random/coin",
-					Amount: sdkmath.NewInt(-1),
-				},
-			},
-			err: fmt.Errorf("negative coin amount: %v", -1),
-		},
 	}
 
 	for name, tc := range tests {

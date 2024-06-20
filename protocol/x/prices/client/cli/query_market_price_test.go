@@ -49,11 +49,8 @@ func TestShowMarketPrice(t *testing.T) {
 	} {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
-			args := []string{
-				fmt.Sprintf("%v", tc.id),
-			}
-			args = append(args, tc.args...)
-			query := "docker exec interchain-security-instance interchain-security-cd query prices show-market-price " + fmt.Sprintf("%d", tc.id)
+			query := "docker exec interchain-security-instance interchain-security-cd" +
+				" query prices show-market-price " + fmt.Sprintf("%d", tc.id)
 			data, stderrOutput, err := network.QueryCustomNetwork(query)
 
 			if tc.err != "" {
@@ -93,7 +90,8 @@ func TestListMarketPrice(t *testing.T) {
 		for i := 0; i < len(objs); i += step {
 			args := request(nil, uint64(i), uint64(step), false)
 			argsString := strings.Join(args, " ")
-			commandString := "docker exec interchain-security-instance interchain-security-cd query prices list-market-price " + argsString
+			commandString := "docker exec interchain-security-instance interchain-security-cd" +
+				" query prices list-market-price " + argsString
 			data, _, err := network.QueryCustomNetwork(commandString)
 			require.NoError(t, err)
 			var resp types.QueryAllMarketPricesResponse
@@ -112,7 +110,8 @@ func TestListMarketPrice(t *testing.T) {
 			}
 			args := request([]byte(nextKeyStr), 0, uint64(step), false)
 			argsString := strings.Join(args, " ")
-			commandString := "docker exec interchain-security-instance interchain-security-cd query prices list-market-price " + argsString
+			commandString := "docker exec interchain-security-instance interchain-security-cd" +
+				" query prices list-market-price " + argsString
 			data, _, err := network.QueryCustomNetwork(commandString)
 			require.NoError(t, err)
 			var resp types.QueryAllMarketPricesResponse
@@ -125,7 +124,8 @@ func TestListMarketPrice(t *testing.T) {
 	t.Run("Total", func(t *testing.T) {
 		args := request(nil, 0, uint64(len(objs)), true)
 		argsString := strings.Join(args, " ")
-		commandString := "docker exec interchain-security-instance interchain-security-cd query prices list-market-price " + argsString
+		commandString := "docker exec interchain-security-instance interchain-security-cd" +
+			" query prices list-market-price " + argsString
 		data, _, err := network.QueryCustomNetwork(commandString)
 		require.NoError(t, err)
 		var resp types.QueryAllMarketPricesResponse

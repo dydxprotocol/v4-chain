@@ -91,10 +91,6 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.ratelimit.MsgSetLimitParams",
 		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse",
 
-		// rewards
-		"/dydxprotocol.rewards.MsgUpdateParams",
-		"/dydxprotocol.rewards.MsgUpdateParamsResponse",
-
 		// sending
 		"/dydxprotocol.sending.MsgSendFromModuleToAccount",
 		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse",
@@ -102,12 +98,6 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams",
 		"/dydxprotocol.stats.MsgUpdateParamsResponse",
-
-		// vest
-		"/dydxprotocol.vest.MsgDeleteVestEntry",
-		"/dydxprotocol.vest.MsgDeleteVestEntryResponse",
-		"/dydxprotocol.vest.MsgSetVestEntry",
-		"/dydxprotocol.vest.MsgSetVestEntryResponse",
 
 		// ibc
 		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafe",

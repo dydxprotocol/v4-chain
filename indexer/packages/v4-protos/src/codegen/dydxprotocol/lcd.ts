@@ -36,16 +36,10 @@ export const createLCDClient = async ({
       ratelimit: new (await import("./ratelimit/query.lcd")).LCDQueryClient({
         requestClient
       }),
-      rewards: new (await import("./rewards/query.lcd")).LCDQueryClient({
-        requestClient
-      }),
       stats: new (await import("./stats/query.lcd")).LCDQueryClient({
         requestClient
       }),
       subaccounts: new (await import("./subaccounts/query.lcd")).LCDQueryClient({
-        requestClient
-      }),
-      vest: new (await import("./vest/query.lcd")).LCDQueryClient({
         requestClient
       })
     }

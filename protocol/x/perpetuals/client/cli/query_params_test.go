@@ -12,7 +12,6 @@ import (
 )
 
 func TestParams(t *testing.T) {
-
 	genesisChanges := GetPerpetualGenesisShort()
 	network.DeployCustomNetwork(genesisChanges)
 	cfg := network.DefaultConfig(nil)

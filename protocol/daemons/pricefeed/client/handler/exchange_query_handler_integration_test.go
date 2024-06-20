@@ -23,9 +23,6 @@ func TestQueryingActualExchanges(t *testing.T) {
 		"Binance": {
 			url: CreateRequestUrl(binance.BinanceDetails.Url, []string{`"ETHUSDT"`}),
 		},
-		"BinanceUS": {
-			url: CreateRequestUrl(binance.BinanceUSDetails.Url, []string{`"BTCUSD"`}),
-		},
 		"Bitfinex": {
 			url: CreateRequestUrl(bitfinex.BitfinexDetails.Url, []string{"tBTCUSD"}),
 		},

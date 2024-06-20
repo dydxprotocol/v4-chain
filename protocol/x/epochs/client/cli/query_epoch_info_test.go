@@ -45,19 +45,6 @@ func checkExpectedEpoch(
 	)
 }
 
-func networkWithEpochInfoObjects(t *testing.T) network.Config {
-	t.Helper()
-	cfg := network.DefaultConfig(nil)
-	state := types.GenesisState{}
-	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
-
-	buf, err := cfg.Codec.MarshalJSON(&state)
-	require.NoError(t, err)
-	cfg.GenesisState[types.ModuleName] = buf
-
-	return cfg
-}
-
 func getDefaultGenesisEpochById(t *testing.T, id string) types.EpochInfo {
 	for _, epochInfo := range types.DefaultGenesis().GetEpochInfoList() {
 		if epochInfo.Name == id {
@@ -98,12 +85,12 @@ func TestShowEpochInfo(t *testing.T) {
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
-			epochQuery := "docker exec interchain-security-instance interchain-security-cd query epochs show-epoch-info " + tc.id
+			epochQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query epochs show-epoch-info " + tc.id
 			data, stdQueryErr, err := network.QueryCustomNetwork(epochQuery)
 
 			if tc.err != nil {
 				require.Contains(t, stdQueryErr, "not found")
-
 			} else {
 				require.NoError(t, err)
 
@@ -146,7 +133,8 @@ func TestListEpochInfo(t *testing.T) {
 		step := 2
 		for i := 0; i < len(objs); i += step {
 			args := request(nil, uint64(i), uint64(step), false)
-			epochQuery := "docker exec interchain-security-instance interchain-security-cd query epochs list-epoch-info " + args
+			epochQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query epochs list-epoch-info " + args
 			data, _, err := network.QueryCustomNetwork(epochQuery)
 
 			require.NoError(t, err)
@@ -165,7 +153,8 @@ func TestListEpochInfo(t *testing.T) {
 		for i := 0; i < len(objs); i += step {
 			args := request(next, 0, uint64(step), false)
 
-			epochQuery := "docker exec interchain-security-instance interchain-security-cd query epochs list-epoch-info " + args
+			epochQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query epochs list-epoch-info " + args
 			data, _, err := network.QueryCustomNetwork(epochQuery)
 			require.NoError(t, err)
 			var resp types.QueryEpochInfoAllResponse
@@ -181,7 +170,8 @@ func TestListEpochInfo(t *testing.T) {
 	t.Run("Total", func(t *testing.T) {
 		args := request(nil, 0, uint64(len(objs)), true)
 
-		epochQuery := "docker exec interchain-security-instance interchain-security-cd query epochs list-epoch-info " + args
+		epochQuery := "docker exec interchain-security-instance interchain-security-cd" +
+			" query epochs list-epoch-info " + args
 		data, _, err := network.QueryCustomNetwork(epochQuery)
 		require.NoError(t, err)
 

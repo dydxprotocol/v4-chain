@@ -18,7 +18,7 @@ import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import { candleToResponseObject } from '../../../request-helpers/request-transformer';
 import { CandleRequest, CandleResponse } from '../../../types';
 
-const router = express.Router();
+const router: express.Router = express.Router();
 const controllerName: string = 'candles-controller';
 
 @Route('candles')

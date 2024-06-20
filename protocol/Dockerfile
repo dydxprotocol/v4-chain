@@ -1,6 +1,6 @@
 # NB: This is a digest for a multi-arch manifest list, you will want to get this by running
-# `docker buildx imagetools inspect golang:1.21-alpine`
-ARG GOLANG_1_21_ALPINE_DIGEST="926f7f7e1ab8509b4e91d5ec6d5916ebb45155b0c8920291ba9f361d65385806"
+# `docker buildx imagetools inspect golang:1.22-alpine`
+ARG GOLANG_1_22_ALPINE_DIGEST="6522f0ca555a7b14c46a2c9f50b86604a234cdc72452bf6a268cae6461d9000b"
 
 # This Dockerfile is a stateless build of the `dydxprotocold` binary as a Docker container.
 # It does not include any configuration, state, or genesis information.
@@ -9,7 +9,7 @@ ARG GOLANG_1_21_ALPINE_DIGEST="926f7f7e1ab8509b4e91d5ec6d5916ebb45155b0c8920291b
 # Builder
 # --------------------------------------------------------
 
-FROM golang@sha256:${GOLANG_1_21_ALPINE_DIGEST} as builder
+FROM golang@sha256:${GOLANG_1_22_ALPINE_DIGEST} as builder
 ARG VERSION
 ARG COMMIT
 
@@ -21,6 +21,7 @@ RUN set -eux; apk add --no-cache ca-certificates build-base; apk add git linux-h
 # Download go dependencies
 WORKDIR /dydxprotocol
 COPY go.* ./
+COPY ethos/ ethos/
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
     go mod download
@@ -32,23 +33,23 @@ COPY . .
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
     go build \
-      -mod=readonly \
-      -tags "netgo,ledger,muslc" \
-      -ldflags "-X github.com/cosmos/cosmos-sdk/version.Name="dydxprotocol" \
-              -X github.com/cosmos/cosmos-sdk/version.AppName="dydxprotocold" \
-              -X github.com/cosmos/cosmos-sdk/version.Version=$VERSION \
-              -X github.com/cosmos/cosmos-sdk/version.Commit=$COMMIT \
-              -X github.com/cosmos/cosmos-sdk/version.BuildTags='netgo,ledger,muslc' \
-              -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
-      -trimpath \
-      -o /dydxprotocol/build/ \
-      ./...
+    -mod=readonly \
+    -tags "netgo,ledger,muslc" \
+    -ldflags "-X github.com/cosmos/cosmos-sdk/version.Name="dydxprotocol" \
+    -X github.com/cosmos/cosmos-sdk/version.AppName="dydxprotocold" \
+    -X github.com/cosmos/cosmos-sdk/version.Version=$VERSION \
+    -X github.com/cosmos/cosmos-sdk/version.Commit=$COMMIT \
+    -X github.com/cosmos/cosmos-sdk/version.BuildTags='netgo,ledger,muslc' \
+    -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
+    -trimpath \
+    -o /dydxprotocol/build/ \
+    ./...
 
 # --------------------------------------------------------
 # Runner
 # --------------------------------------------------------
 
-FROM golang@sha256:${GOLANG_1_21_ALPINE_DIGEST}
+FROM golang@sha256:${GOLANG_1_22_ALPINE_DIGEST}
 
 RUN apk add --no-cache bash
 

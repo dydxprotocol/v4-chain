@@ -40,7 +40,6 @@ type PlaceOrderIntegrationTestSuite struct {
 
 	validatorAddress sdk.AccAddress
 	cfg              network.Config
-	network          *network.Network
 }
 
 func TestPlaceOrderIntegrationTestSuite(t *testing.T) {
@@ -103,13 +102,12 @@ func (s *PlaceOrderIntegrationTestSuite) SetupSuite() {
 // The orders placed are expected to match, and after matching, the subaccounts are queried and assertions
 // are performed on their QuoteBalance and PerpetualPositions.
 func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
-
 	goodTilBlock := uint32(0)
 	quantums := satypes.BaseQuantums(1_000)
 	subticks := types.Subticks(50_000_000_000)
 
 	blockHeightQuery := "docker exec interchain-security-instance interchain-security-cd query block --type=height 0"
-	data, _, err := network.QueryCustomNetwork(blockHeightQuery)
+	data, _, _ := network.QueryCustomNetwork(blockHeightQuery)
 	var resp blocktypes.Block
 	require.NoError(s.T(), s.cfg.Codec.UnmarshalJSON(data, &resp))
 	blockHeight := resp.LastCommit.Height
@@ -117,11 +115,19 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 	goodTilBlock = uint32(blockHeight) + types.ShortBlockWindow
 	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
 
-	buyTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
-	_, _, err = network.QueryCustomNetwork(buyTx)
+	buyTx := "docker exec interchain-security-instance interchain-security-cd" +
+		" tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
+		" 0 1 0 1 1000 50000000000 " + goodTilBlockStr +
+		" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
+		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
+	_, _, err := network.QueryCustomNetwork(buyTx)
 	s.Require().NoError(err)
 
-	sellTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 1 1 0 2 1000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
+	sellTx := "docker exec interchain-security-instance interchain-security-cd" +
+		" tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
+		" 1 1 0 2 1000 50000000000 " + goodTilBlockStr +
+		" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
+		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
 	_, _, err = network.QueryCustomNetwork(sellTx)
 	s.Require().NoError(err)
 

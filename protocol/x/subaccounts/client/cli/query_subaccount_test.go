@@ -45,9 +45,7 @@ func networkWithSubaccountObjects(t *testing.T, n int) []types.Subaccount {
 }
 
 func getSubaccountGenesisShort() string {
-
 	return "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"1\\\"}, \\\"margin_enabled\\\": false}]\" \"\""
-
 }
 
 func TestShowSubaccount(t *testing.T) {
@@ -86,7 +84,8 @@ func TestShowSubaccount(t *testing.T) {
 			}
 
 			fmt.Println("Args:", args)
-			subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts show-subaccount " + args[0] + " " + args[1]
+			subQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query subaccounts show-subaccount " + args[0] + " " + args[1]
 			data, _, err := network.QueryCustomNetwork(subQuery)
 			require.NoError(t, err)
 			var resp types.QuerySubaccountResponse
@@ -96,7 +95,6 @@ func TestShowSubaccount(t *testing.T) {
 				nullify.Fill(&tc.obj),          //nolint:staticcheck
 				nullify.Fill(&resp.Subaccount), //nolint:staticcheck
 			)
-
 		})
 	}
 
@@ -104,9 +102,7 @@ func TestShowSubaccount(t *testing.T) {
 }
 
 func getSubaccountGenesisList() string {
-
 	return "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"0\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"1\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"2\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"3\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"4\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}]\" \"\""
-
 }
 
 func removeNewlines(data []byte) []byte {
@@ -145,7 +141,8 @@ func TestListSubaccount(t *testing.T) {
 		step := 2
 		for i := 0; i < len(objs); i += step {
 			args := request(nil, uint64(i), uint64(step), false)
-			subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts list-subaccount" + args
+			subQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query subaccounts list-subaccount" + args
 			data, _, err := network.QueryCustomNetwork(subQuery)
 
 			require.NoError(t, err)
@@ -163,7 +160,8 @@ func TestListSubaccount(t *testing.T) {
 		var next []byte
 		for i := 0; i < len(objs); i += step {
 			args := request(next, 0, uint64(step), false)
-			subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts list-subaccount " + args
+			subQuery := "docker exec interchain-security-instance interchain-security-cd" +
+				" query subaccounts list-subaccount " + args
 			data, _, err := network.QueryCustomNetwork(subQuery)
 			require.NoError(t, err)
 			var resp types.QuerySubaccountAllResponse
@@ -178,7 +176,8 @@ func TestListSubaccount(t *testing.T) {
 	})
 	t.Run("Total", func(t *testing.T) {
 		args := request(nil, 0, uint64(len(objs)), true)
-		subQuery := "docker exec interchain-security-instance interchain-security-cd query subaccounts list-subaccount " + args
+		subQuery := "docker exec interchain-security-instance interchain-security-cd" +
+			" query subaccounts list-subaccount " + args
 		data, _, err := network.QueryCustomNetwork(subQuery)
 		require.NoError(t, err)
 		var resp types.QuerySubaccountAllResponse

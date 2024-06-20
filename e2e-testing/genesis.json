@@ -2104,15 +2104,6 @@
         }
       ]
     },
-    "rewards": {
-      "params": {
-        "denom": "adv4tnt",
-        "denom_exponent": -18,
-        "fee_multiplier_ppm": 990000,
-        "market_id": 11,
-        "treasury_account": "rewards_treasury"
-      }
-    },
     "sending": {},
     "slashing": {
       "missed_blocks": [],
@@ -2230,25 +2221,7 @@
       "port_id": "transfer",
       "total_escrowed": []
     },
-    "upgrade": {},
-    "vest": {
-      "vest_entries": [
-        {
-          "denom": "adv4tnt",
-          "end_time": "2025-01-01T00:00:00Z",
-          "start_time": "2023-01-01T00:00:00Z",
-          "treasury_account": "community_treasury",
-          "vester_account": "community_vester"
-        },
-        {
-          "denom": "adv4tnt",
-          "end_time": "2025-01-01T00:00:00Z",
-          "start_time": "2023-01-01T00:00:00Z",
-          "treasury_account": "rewards_treasury",
-          "vester_account": "rewards_vester"
-        }
-      ]
-    }
+    "upgrade": {}
   },
   "consensus": {
     "params": {

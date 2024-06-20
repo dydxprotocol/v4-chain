@@ -49,14 +49,14 @@
       "blocks_per_distribution_transmission": "1000",
       "distribution_transmission_channel": "",
       "provider_fee_pool_addr_str": "",
-      "ccv_timeout_period": "2419200s", 
+      "ccv_timeout_period": "2419200s",
       "transfer_timeout_period": "3600s",
       "consumer_redistribution_fraction": "0.75",
       "historical_entries": "10000",
-      "unbonding_period":  "1209600s", 
+      "unbonding_period": "1209600s",
       "reward_denoms": [],
       "provider_reward_denoms": [],
-      "retry_delay_period":  "3600s" 
+      "retry_delay_period": "3600s"
     },
     "new_chain": false,
     "provider": {
@@ -231,7 +231,9 @@
       "clients_consensus": [],
       "clients_metadata": [],
       "params": {
-        "allowed_clients": ["*"]
+        "allowed_clients": [
+          "*"
+        ]
       },
       "create_localhost": false,
       "next_client_sequence": "0"
@@ -346,15 +348,6 @@
       }
     ]
   },
-  "rewards": {
-    "params": {
-      "treasury_account": "rewards_treasury",
-      "denom": "adv4tnt",
-      "denom_exponent": -18,
-      "market_id": 1,
-      "fee_multiplier_ppm": 990000
-    }
-  },
   "sending": {},
   "slashing": {
     "params": {
@@ -384,23 +377,5 @@
     },
     "total_escrowed": []
   },
-  "upgrade": {},
-  "vest": {
-    "vest_entries": [
-      {
-        "denom": "adv4tnt",
-        "end_time": "2025-01-01T00:00:00Z",
-        "start_time": "2023-01-01T00:00:00Z",
-        "treasury_account": "community_treasury",
-        "vester_account": "community_vester"
-      },
-      {
-        "denom": "adv4tnt",
-        "end_time": "2025-01-01T00:00:00Z",
-        "start_time": "2023-01-01T00:00:00Z",
-        "treasury_account": "rewards_treasury",
-        "vester_account": "rewards_vester"
-      }
-    ]
-  }
+  "upgrade": {}
 }

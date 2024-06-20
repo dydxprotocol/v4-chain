@@ -9,10 +9,8 @@ import (
 	perpetuals "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimit "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
-	rewards "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	sending "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	stats "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
-	vest "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -81,18 +79,11 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*ratelimit.MsgSetLimitParams,
 		*ratelimit.MsgSetLimitParamsResponse,
 
-		// rewards
-		*rewards.MsgUpdateParams,
-
 		// sending
 		*sending.MsgSendFromModuleToAccount,
 
 		// stats
 		*stats.MsgUpdateParams,
-
-		// vest
-		*vest.MsgDeleteVestEntry,
-		*vest.MsgSetVestEntry,
 
 		// ibc
 		*icahosttypes.MsgUpdateParams,

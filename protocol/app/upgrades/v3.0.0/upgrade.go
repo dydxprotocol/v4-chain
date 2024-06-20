@@ -7,9 +7,7 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	clobmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-	rewardsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
-	vestmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -35,10 +33,6 @@ var (
 	ModuleAccsToInitialize = []string{
 		satypes.ModuleName,
 		clobmoduletypes.InsuranceFundName,
-		rewardsmoduletypes.TreasuryAccountName,
-		rewardsmoduletypes.VesterAccountName,
-		vestmoduletypes.CommunityTreasuryAccountName,
-		vestmoduletypes.CommunityVesterAccountName,
 	}
 )
 

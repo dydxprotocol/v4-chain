@@ -236,6 +236,10 @@ delete-anvil:
 	@echo "deleting anvil"
 	cd ethos/ethos-chain/tests/e2e/testnet-scripts && chmod +x delete-anvil.sh && ./delete-anvil.sh 
 
+remove-container:
+	@echo "removing containers"
+	cd ../e2e-testing && pnpm clean
+
 test: test-unit
 
 
@@ -244,11 +248,10 @@ test-ci: test-unit-and-integration
 test-all: test-unit test-race test-cover test-unit-and-integration
 
 test-slow:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' -p 1 -count=1 ./...
-	@VERSION=$(VERSION) go test -mod=readonly -timeout 20m -race -tags='test_ledger_mock $(build_tags)' -p 1 -count=1 ./...
-	@VERSION=$(VERSION) go test -mod=readonly -timeout 12m -coverprofile=coverage.out -covermode=atomic -coverpkg=github.com/dydxprotocol/v4-chain/protocol/... -tags='test_ledger_mock $(build_tags)' -p 1 -count=1 ./...
-	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -count=1 ./...
-	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock exchange_tests $(build_tags)' -p 1 -count=1 github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/handler -run "TestQueryingActualExchanges"
+	$(MAKE) test-unit-and-integration
+	$(MAKE) test-race-slow
+	$(MAKE) test-cover-slow
+	$(MAKE) test-exchange-slow
 
 test-unit:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' ./...
@@ -256,11 +259,21 @@ test-unit:
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 20m -race -tags='test_ledger_mock $(build_tags)' ./...
 
+test-race-slow:
+	@VERSION=$(VERSION) go test -mod=readonly -timeout 20m -race -tags='test_ledger_mock $(build_tags)' -p 1 -count=1 ./...
+
 test-cover:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 12m -coverprofile=coverage.out -covermode=atomic -coverpkg=github.com/dydxprotocol/v4-chain/protocol/... -tags='test_ledger_mock $(build_tags)' ./...
 
+test-cover-slow:
+	@VERSION=$(VERSION) go test -mod=readonly -timeout 12m -coverprofile=coverage.out -covermode=atomic -coverpkg=github.com/dydxprotocol/v4-chain/protocol/... -tags='test_ledger_mock $(build_tags)' -p 1 -count=1 ./...
+
+test-exchange-slow:
+	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock exchange_tests $(build_tags)' -p 1 -count=1 github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/handler -run "TestQueryingActualExchanges"
+
 test-unit-and-integration: e2e-setup delete-anvil
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 80m ./...
+	$(MAKE) remove-container
 
 test-unit-and-integration-linux: e2e-setup-linux 
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...

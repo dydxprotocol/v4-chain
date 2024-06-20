@@ -22,11 +22,9 @@ import (
 	perpetualsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals"
 	pricesmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices"
 	ratelimitmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit"
-	rewardsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards"
 	sendingmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending"
 	statsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats"
 	subaccountsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts"
-	vestmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -199,8 +197,6 @@ func TestModuleBasics(t *testing.T) {
 		statsmodule.AppModuleBasic{},
 		subaccountsmodule.AppModuleBasic{},
 		clobmodule.AppModuleBasic{},
-		vestmodule.AppModuleBasic{},
-		rewardsmodule.AppModuleBasic{},
 		sendingmodule.AppModuleBasic{},
 		delaymsgmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},

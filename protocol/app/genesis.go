@@ -56,7 +56,7 @@ func transformToNew(jsonRaw []byte, ctx client.Context) (json.RawMessage, error)
 	oldConsumerGenesis := consumerTypes.GenesisState{}
 	err := ctx.Codec.UnmarshalJSON(jsonRaw, &oldConsumerGenesis)
 	if err != nil {
-		return nil, fmt.Errorf("reading consumer genesis data failed: %s", err)
+		return nil, fmt.Errorf("reading consumer genesis data failed: %w", err)
 	}
 
 	initialValSet := oldConsumerGenesis.InitialValSet
@@ -94,7 +94,7 @@ func transformToNew(jsonRaw []byte, ctx client.Context) (json.RawMessage, error)
 
 	newJson, err := ctx.Codec.MarshalJSON(&newGenesis)
 	if err != nil {
-		return nil, fmt.Errorf("failed marshalling data to new type: %s", err)
+		return nil, fmt.Errorf("failed marshalling data to new type: %w", err)
 	}
 	return newJson, nil
 }
@@ -106,7 +106,7 @@ func transformToV33(jsonRaw []byte, ctx client.Context) ([]byte, error) {
 	srcConGen := consumerTypes.GenesisState{}
 	err := ctx.Codec.UnmarshalJSON(jsonRaw, &srcConGen)
 	if err != nil {
-		return nil, fmt.Errorf("reading consumer genesis data failed: %s", err)
+		return nil, fmt.Errorf("reading consumer genesis data failed: %w", err)
 	}
 
 	// Remove retry_delay_period from 'params'
@@ -116,7 +116,7 @@ func transformToV33(jsonRaw []byte, ctx client.Context) ([]byte, error) {
 	}
 	tmp := map[string]json.RawMessage{}
 	if err := json.Unmarshal(params, &tmp); err != nil {
-		return nil, fmt.Errorf("unmarshalling 'params' failed: %v", err)
+		return nil, fmt.Errorf("unmarshalling 'params' failed: %w", err)
 	}
 	_, exists := tmp["retry_delay_period"]
 	if exists {
@@ -134,13 +134,13 @@ func transformToV33(jsonRaw []byte, ctx client.Context) ([]byte, error) {
 	}
 	genState := map[string]json.RawMessage{}
 	if err := json.Unmarshal(result, &genState); err != nil {
-		return nil, fmt.Errorf("unmarshalling 'GenesisState' failed: %v", err)
+		return nil, fmt.Errorf("unmarshalling 'GenesisState' failed: %w", err)
 	}
 	genState["params"] = params
 
 	result, err = json.Marshal(genState)
 	if err != nil {
-		return nil, fmt.Errorf("marshalling transformation result failed: %v", err)
+		return nil, fmt.Errorf("marshalling transformation result failed: %w", err)
 	}
 	return result, nil
 }
@@ -153,7 +153,7 @@ func transformToV2(jsonRaw []byte, ctx client.Context, removePreHashKey bool) (j
 	srcConGen := consumerTypes.GenesisState{}
 	err := ctx.Codec.UnmarshalJSON(jsonRaw, &srcConGen)
 	if err != nil {
-		return nil, fmt.Errorf("reading consumer genesis data failed: %s", err)
+		return nil, fmt.Errorf("reading consumer genesis data failed: %w", err)
 	}
 
 	// remove retry_delay_period from 'params' if present (introduced in v4.x)
@@ -163,7 +163,7 @@ func transformToV2(jsonRaw []byte, ctx client.Context, removePreHashKey bool) (j
 	}
 	paramsMap := map[string]json.RawMessage{}
 	if err := json.Unmarshal(params, &paramsMap); err != nil {
-		return nil, fmt.Errorf("unmarshalling 'params' failed: %v", err)
+		return nil, fmt.Errorf("unmarshalling 'params' failed: %w", err)
 	}
 	_, exists := paramsMap["retry_delay_period"]
 	if exists {
@@ -181,17 +181,17 @@ func transformToV2(jsonRaw []byte, ctx client.Context, removePreHashKey bool) (j
 	}
 	genState := map[string]json.RawMessage{}
 	if err := json.Unmarshal(result, &genState); err != nil {
-		return nil, fmt.Errorf("unmarshalling 'GenesisState' failed: %v", err)
+		return nil, fmt.Errorf("unmarshalling 'GenesisState' failed: %w", err)
 	}
 	genState["params"] = params
 
 	provider, err := ctx.Codec.MarshalJSON(&srcConGen.Provider)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshalling 'Provider' failed: %v", err)
+		return nil, fmt.Errorf("unmarshalling 'Provider' failed: %w", err)
 	}
 	providerMap := map[string]json.RawMessage{}
 	if err := json.Unmarshal(provider, &providerMap); err != nil {
-		return nil, fmt.Errorf("unmarshalling 'provider' failed: %v", err)
+		return nil, fmt.Errorf("unmarshalling 'provider' failed: %w", err)
 	}
 
 	// patch .initial_val_set form .provider.initial_val_set if needed
@@ -236,7 +236,7 @@ func transformToV2(jsonRaw []byte, ctx client.Context, removePreHashKey bool) (j
 	// Marshall final result
 	result, err = json.Marshal(genState)
 	if err != nil {
-		return nil, fmt.Errorf("marshalling transformation result failed: %v", err)
+		return nil, fmt.Errorf("marshalling transformation result failed: %w", err)
 	}
 
 	if removePreHashKey {
@@ -248,7 +248,8 @@ func transformToV2(jsonRaw []byte, ctx client.Context, removePreHashKey bool) (j
 }
 
 // transformGenesis transforms ccv consumer genesis data to the specified target version
-// Returns the transformed data or an error in case the transformation failed or the format is not supported by current implementation
+// Returns the transformed data or an error in case the transformation failed or the
+// format is not supported by current implementation
 func transformGenesis(ctx client.Context, targetVersion IcsVersion, jsonRaw []byte) (json.RawMessage, error) {
 	var newConsumerGenesis json.RawMessage = nil
 	var err error
@@ -270,7 +271,7 @@ func transformGenesis(ctx client.Context, targetVersion IcsVersion, jsonRaw []by
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("transformation failed: %v", err)
+		return nil, fmt.Errorf("transformation failed: %w", err)
 	}
 	return newConsumerGenesis, err
 }
@@ -292,7 +293,7 @@ func TransformConsumerGenesis(cmd *cobra.Command, args []string) error {
 	clientCtx := client.GetClientContextFromCmd(cmd)
 	version, err := cmd.Flags().GetString("to")
 	if err != nil {
-		return fmt.Errorf("error getting targetVersion %v", err)
+		return fmt.Errorf("error getting targetVersion %w", err)
 	}
 	targetVersion, exists := TransformationVersions[version]
 	if !exists {
@@ -307,12 +308,12 @@ func TransformConsumerGenesis(cmd *cobra.Command, args []string) error {
 
 	bz, err := newConsumerGenesis.MarshalJSON()
 	if err != nil {
-		return fmt.Errorf("failed exporting new consumer genesis to JSON: %s", err)
+		return fmt.Errorf("failed exporting new consumer genesis to JSON: %w", err)
 	}
 
 	sortedBz, err := sdk.SortJSON(bz)
 	if err != nil {
-		return fmt.Errorf("failed sorting transformed consumer genesis JSON: %s", err)
+		return fmt.Errorf("failed sorting transformed consumer genesis JSON: %w", err)
 	}
 
 	cmd.Println(string(sortedBz))
@@ -332,10 +333,12 @@ func GetConsumerGenesisTransformCmd() *cobra.Command {
 		Short: "Transform CCV consumer genesis data exported to a specific target format",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`
-Transform the consumer genesis data exported from a provider version v1,v2, v3, v4 to a specified consumer target version.
+Transform the consumer genesis data exported from a provider
+version v1,v2, v3, v4 to a specified consumer target version.
 The result is printed to STDOUT.
 
-Note: Content to be transformed is not the consumer genesis file itself but the exported content from provider chain which is used to patch the consumer genesis file!
+Note: Content to be transformed is not the consumer genesis file itself
+but the exported content from provider chain which is used to patch the consumer genesis file!
 
 Example:
 $ %s transform /path/to/ccv_consumer_genesis.json

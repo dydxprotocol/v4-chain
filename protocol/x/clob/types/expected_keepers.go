@@ -159,14 +159,3 @@ type BankKeeper interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
-
-type RewardsKeeper interface {
-	AddRewardSharesForFill(
-		ctx sdk.Context,
-		takerAddress string,
-		makerAddress string,
-		bigFillQuoteQuantums *big.Int,
-		bigTakerFeeQuoteQuantums *big.Int,
-		bigMakerFeeQuoteQuantums *big.Int,
-	)
-}

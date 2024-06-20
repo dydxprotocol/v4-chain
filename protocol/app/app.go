@@ -146,9 +146,6 @@ import (
 	ratelimitmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit"
 	ratelimitmodulekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	ratelimitmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
-	rewardsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards"
-	rewardsmodulekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/keeper"
-	rewardsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	sendingmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending"
 	sendingmodulekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/keeper"
 	sendingmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
@@ -158,9 +155,6 @@ import (
 	subaccountsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts"
 	subaccountsmodulekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
-	vestmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest"
-	vestmodulekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/keeper"
-	vestmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 
 	// IBC
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
@@ -207,7 +201,6 @@ var (
 func init() {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
-
 		panic(err)
 	}
 
@@ -272,10 +265,6 @@ type App struct {
 	FeeTiersKeeper feetiersmodulekeeper.Keeper
 
 	PerpetualsKeeper *perpetualsmodulekeeper.Keeper
-
-	VestKeeper vestmodulekeeper.Keeper
-
-	RewardsKeeper rewardsmodulekeeper.Keeper
 
 	StatsKeeper statsmodulekeeper.Keeper
 
@@ -378,8 +367,6 @@ func New(
 		perpetualsmoduletypes.StoreKey,
 		satypes.StoreKey,
 		statsmoduletypes.StoreKey,
-		vestmoduletypes.StoreKey,
-		rewardsmoduletypes.StoreKey,
 		clobmoduletypes.StoreKey,
 		sendingmoduletypes.StoreKey,
 		delaymsgmoduletypes.StoreKey,
@@ -389,7 +376,6 @@ func New(
 		paramstypes.TStoreKey,
 		clobmoduletypes.TransientStoreKey,
 		statsmoduletypes.TransientStoreKey,
-		rewardsmoduletypes.TransientStoreKey,
 		indexer_manager.TransientStoreKey,
 	)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, clobmoduletypes.MemStoreKey)
@@ -865,36 +851,6 @@ func New(
 	)
 	feeTiersModule := feetiersmodule.NewAppModule(appCodec, app.FeeTiersKeeper)
 
-	app.VestKeeper = *vestmodulekeeper.NewKeeper(
-		appCodec,
-		keys[vestmoduletypes.StoreKey],
-		app.BankKeeper,
-		app.BlockTimeKeeper,
-		// set the governance and delaymsg module accounts as the authority for conducting upgrades
-		[]string{
-			lib.GovModuleAddress.String(),
-			delaymsgmoduletypes.ModuleAddress.String(),
-		},
-	)
-	vestModule := vestmodule.NewAppModule(appCodec, app.VestKeeper)
-
-	app.RewardsKeeper = *rewardsmodulekeeper.NewKeeper(
-		appCodec,
-		keys[rewardsmoduletypes.StoreKey],
-		tkeys[rewardsmoduletypes.TransientStoreKey],
-		app.AssetsKeeper,
-		app.BankKeeper,
-		app.FeeTiersKeeper,
-		app.PricesKeeper,
-		app.IndexerEventManager,
-		// set the governance and delaymsg module accounts as the authority for conducting upgrades
-		[]string{
-			lib.GovModuleAddress.String(),
-			delaymsgmoduletypes.ModuleAddress.String(),
-		},
-	)
-	rewardsModule := rewardsmodule.NewAppModule(appCodec, app.RewardsKeeper)
-
 	app.SubaccountsKeeper = *subaccountsmodulekeeper.NewKeeper(
 		appCodec,
 		keys[satypes.StoreKey],
@@ -934,7 +890,6 @@ func New(
 		app.PerpetualsKeeper,
 		app.PricesKeeper,
 		app.StatsKeeper,
-		app.RewardsKeeper,
 		app.IndexerEventManager,
 		app.GrpcStreamingManager,
 		txConfig.TxDecoder(),
@@ -1015,8 +970,6 @@ func New(
 		feeTiersModule,
 		perpetualsModule,
 		statsModule,
-		vestModule,
-		rewardsModule,
 		subaccountsModule,
 		clobModule,
 		sendingModule,
@@ -1059,8 +1012,6 @@ func New(
 		statsmoduletypes.ModuleName,
 		satypes.ModuleName,
 		clobmoduletypes.ModuleName,
-		vestmoduletypes.ModuleName,
-		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 	)
@@ -1094,8 +1045,6 @@ func New(
 		satypes.ModuleName,
 		clobmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
-		vestmoduletypes.ModuleName,
-		rewardsmoduletypes.ModuleName,
 		epochsmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
@@ -1133,8 +1082,6 @@ func New(
 		statsmoduletypes.ModuleName,
 		satypes.ModuleName,
 		clobmoduletypes.ModuleName,
-		vestmoduletypes.ModuleName,
-		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		authz.ModuleName,
@@ -1169,8 +1116,6 @@ func New(
 		statsmoduletypes.ModuleName,
 		satypes.ModuleName,
 		clobmoduletypes.ModuleName,
-		vestmoduletypes.ModuleName,
-		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		authz.ModuleName,
