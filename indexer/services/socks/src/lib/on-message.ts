@@ -1,13 +1,28 @@
 import { InfoObject, logger, stats } from '@dydxprotocol-indexer/base';
 import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
+import { Worker } from 'worker_threads';
 
 import config from '../config';
 import { getChannels, getMessagesToForward } from '../helpers/from-kafka-helpers';
-import { Channel } from '../types';
+import { Channel, MessageToForward } from '../types';
 import { Index } from '../websocket';
 import { MessageForwarder } from './message-forwarder';
 import { Subscriptions } from './subscription';
+
+const NUM_WORKERS = 4;
+const getMessagesToForwardWorkers: Worker[] = [];
+const forwardMessageWorkers: Worker[] = [];
+
+for (let i = 0; i < NUM_WORKERS; i++) {
+  getMessagesToForwardWorkers.push(new Worker('./workers/getMessagesToForwardWorker.ts'));
+  forwardMessageWorkers.push(new Worker('./workers/forwardMessageWorker.ts'));
+}
+
+function getRandomWorker(workers: Worker[]): Worker {
+  const randomIndex = Math.floor(Math.random() * workers.length);
+  return workers[randomIndex];
+}
 
 export function start(
   subscriptions: Subscriptions, index: Index,
@@ -17,14 +32,15 @@ export function start(
     return onMessage(topic, message, subscriptions, index);
   });
   MessageForwarder.getInstance(subscriptions, index).start();
+
 }
 
-export function onMessage(
+export async function onMessage(
   topic: string,
   message: KafkaMessage,
   subscriptions: Subscriptions,
   index: Index,
-): void {
+): Promise<void> {
   const startTime: number = Date.now();
   stats.timing(
     `${config.SERVICE_NAME}.message_time_in_queue`,
@@ -53,10 +69,21 @@ export function onMessage(
   errProps.channels = channels;
 
   // Decode the message based on the topic
-  const messagesToForward = getMessagesToForward(topic, message);
+  // const messagesToForward = getMessagesToForward(topic, message);
+  const getMessagesToForwardWorker = getRandomWorker(getMessagesToForwardWorkers);
+  const messagesToForward: MessageToForward[] = await new Promise((resolve, _) => {
+    getMessagesToForwardWorker.once('message', resolve);
+    getMessagesToForwardWorker.postMessage({ topic, message });
+  });
+
   for (const messageToForward of messagesToForward) {
     const startForwardMessage: number = Date.now();
-    MessageForwarder.getInstance(subscriptions, index).forwardMessage(messageToForward);
+    const forwardMessageWorker = getRandomWorker(forwardMessageWorkers);
+    await new Promise((resolve, _) => {
+      forwardMessageWorker.once('message', resolve);
+      forwardMessageWorker.postMessage({ subscriptions, index, messageToForward });
+    });
+    // MessageForwarder.getInstance(subscriptions, index).forwardMessage(messageToForward);
     const end: number = Date.now();
     stats.timing(
       `${config.SERVICE_NAME}.forward_message`,

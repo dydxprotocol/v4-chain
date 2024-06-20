@@ -9,7 +9,7 @@ import {
 } from './helpers/kafka/kafka-controller';
 import { Wss } from './helpers/wss';
 import { MessageForwarder } from './lib/message-forwarder';
-import {onMessage, start as startProcessingMessages} from './lib/on-message';
+import { onMessage } from './lib/on-message';
 import { Subscriptions } from './lib/subscription';
 import Server from './server';
 import { Index } from './websocket';
@@ -66,11 +66,11 @@ async function start(): Promise<void> {
 
   const subscriptions: Subscriptions = new Subscriptions();
   index = new Index(wss, subscriptions);
+  MessageForwarder.getInstance(subscriptions, index).start();
   // eslint-disable-next-line @typescript-eslint/require-await
   updateOnMessageFunction(async (topic, message): Promise<void> => {
     return onMessage(topic, message, subscriptions, index);
   });
-  MessageForwarder.getInstance(subscriptions, index).start();
   subscriptions.start(messageForwarder.forwardToClient);
 
   logger.info({
