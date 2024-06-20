@@ -15,8 +15,8 @@ const getMessagesToForwardWorkers: Worker[] = [];
 const forwardMessageWorkers: Worker[] = [];
 
 for (let i = 0; i < NUM_WORKERS; i++) {
-  getMessagesToForwardWorkers.push(new Worker('./workers/getMessagesToForwardWorker.ts'));
-  forwardMessageWorkers.push(new Worker('./workers/forwardMessageWorker.ts'));
+  getMessagesToForwardWorkers.push(new Worker('./src/lib/workers/getMessagesToForwardWorker.ts'));
+  forwardMessageWorkers.push(new Worker('./src/lib/workers/forwardMessageWorker.ts'));
 }
 
 function getRandomWorker(workers: Worker[]): Worker {
