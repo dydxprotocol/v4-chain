@@ -1139,3 +1139,28 @@ func TestClobPairValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestGetPerpetualClobPair(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	mockIndexerEventManager := &mocks.IndexerEventManager{}
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+	items := keepertest.CreateNClobPair(t,
+		ks.ClobKeeper,
+		ks.PerpetualsKeeper,
+		ks.PricesKeeper,
+		ks.Ctx,
+		2,
+		mockIndexerEventManager,
+	)
+
+	for _, item := range items {
+		perpetualClobItem, err := ks.ClobKeeper.GetPerpetualClobDetails(ks.Ctx,
+			item.GetClobPairId(),
+		)
+		require.NoError(t, err)
+		perpetual, err := ks.PerpetualsKeeper.GetPerpetual(ks.Ctx, clobtest.MustPerpetualId(item))
+		require.NoError(t, err)
+		require.Equal(t, perpetualClobItem.ClobPair, item)
+		require.Equal(t, perpetualClobItem.Perpetual, perpetual)
+	}
+}
