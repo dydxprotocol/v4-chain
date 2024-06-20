@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/crypto/tmhash"
-
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -564,8 +562,11 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					},
 					// No offchain messages in CheckTx because stateful MsgPlaceOrder is not placed in CheckTx
 					expectedOffchainMessagesCheckTx: []msgsender.Message{},
-					// Order update message, note order place messages are skipped for stateful orders
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
+						off_chain_updates.MustCreateOrderPlaceMessage(
+							ctx,
+							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
+						),
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							ctx,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId,
@@ -679,34 +680,40 @@ func TestPlaceLongTermOrder(t *testing.T) {
 						off_chain_updates.MustCreateOrderPlaceMessage(
 							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
-						).AddHeader(msgsender.MessageHeader{
-							Key:   msgsender.TransactionHashHeaderKey,
-							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell1_Price50000_GTB20.Tx),
-						}),
+						),
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 							0,
-						).AddHeader(msgsender.MessageHeader{
-							Key:   msgsender.TransactionHashHeaderKey,
-							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell1_Price50000_GTB20.Tx),
-						}),
+						),
 					},
 					// Short term order update for fill amount, stateful order update for fill amount
-					// Note there are no headers because these events are generated in PrepareCheckState
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
-						// maker
+						off_chain_updates.MustCreateOrderPlaceMessage(
+							ctx,
+							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
+						),
+						off_chain_updates.MustCreateOrderUpdateMessage(
+							ctx,
+							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
+						),
 						off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 							indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
 							ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 						),
-						// taker
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							ctx,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
+						),
+						off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+							ctx,
+							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId,
+							indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+							ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 						),
 					},
 					// Stateful order placement
@@ -887,21 +894,19 @@ func TestPlaceLongTermOrder(t *testing.T) {
 						off_chain_updates.MustCreateOrderPlaceMessage(
 							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
-						).AddHeader(msgsender.MessageHeader{
-							Key:   msgsender.TransactionHashHeaderKey,
-							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell1_Price50000_GTB20.Tx),
-						}),
+						),
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 							0,
-						).AddHeader(msgsender.MessageHeader{
-							Key:   msgsender.TransactionHashHeaderKey,
-							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell1_Price50000_GTB20.Tx),
-						}),
+						),
 					},
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
 						// post-only shouldn't match and will have 0 fill size in update message
+						off_chain_updates.MustCreateOrderPlaceMessage(
+							ctx,
+							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy10_Price49999_GTBT15_PO.Order,
+						),
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							ctx,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy10_Price49999_GTBT15_PO.Order.OrderId,
@@ -1019,28 +1024,29 @@ func TestPlaceLongTermOrder(t *testing.T) {
 						off_chain_updates.MustCreateOrderPlaceMessage(
 							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
-						).AddHeader(msgsender.MessageHeader{
-							Key:   msgsender.TransactionHashHeaderKey,
-							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell1_Price50000_GTB20.Tx),
-						}),
+						),
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 							0,
-						).AddHeader(msgsender.MessageHeader{
-							Key:   msgsender.TransactionHashHeaderKey,
-							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell1_Price50000_GTB20.Tx),
-						}),
+						),
 					},
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
-						// maker fully filled
+						off_chain_updates.MustCreateOrderPlaceMessage(
+							ctx,
+							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order,
+						),
+						off_chain_updates.MustCreateOrderUpdateMessage(
+							ctx,
+							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
+						),
 						off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 							indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
 							ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 						),
-						// taker, partially filled
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							ctx,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.OrderId,
@@ -1079,6 +1085,16 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
 						// attempt to replay the stateful order in PrepareCheckState after advancing the block, fill amount
 						// will stay constant
+						off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+							ctx,
+							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.OrderId,
+							indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLAY_OPERATIONS,
+							ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+						),
+						off_chain_updates.MustCreateOrderPlaceMessage(
+							ctx,
+							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order,
+						),
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							ctx,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.OrderId,
@@ -1228,35 +1244,29 @@ func TestPlaceLongTermOrder(t *testing.T) {
 						off_chain_updates.MustCreateOrderPlaceMessage(
 							ctx,
 							PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order,
-						).AddHeader(msgsender.MessageHeader{
-							Key:   msgsender.TransactionHashHeaderKey,
-							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id1_Sell1_Price50000_GTB20.Tx),
-						}),
+						),
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							ctx,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.OrderId,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.GetBaseQuantums(),
-						).AddHeader(msgsender.MessageHeader{
-							Key:   msgsender.TransactionHashHeaderKey,
-							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id1_Sell1_Price50000_GTB20.Tx),
-						}),
+						),
 						off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 							ctx,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.OrderId,
 							indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
 							ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-						).AddHeader(msgsender.MessageHeader{
-							Key:   msgsender.TransactionHashHeaderKey,
-							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id1_Sell1_Price50000_GTB20.Tx),
-						}),
+						),
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							ctx,
 							PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 							PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
-						).AddHeader(msgsender.MessageHeader{
-							Key:   msgsender.TransactionHashHeaderKey,
-							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id1_Sell1_Price50000_GTB20.Tx),
-						}),
+						),
+						off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+							ctx,
+							PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+							indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+							ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+						),
 					},
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{},
 					expectedOnchainMessagesAfterBlock: []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
@@ -1453,6 +1463,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					"Block height: %d",
 					ordersAndExpectations.blockHeight,
 				)
+
 				msgSender.Clear()
 			}
 
@@ -1621,22 +1632,45 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 						Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
 					},
 					// Short term order placement results in Create and Update with 0 fill amount
-					expectedOffchainMessagesCheckTx: []msgsender.Message{},
+					expectedOffchainMessagesCheckTx: []msgsender.Message{
+						off_chain_updates.MustCreateOrderPlaceMessage(
+							ctx,
+							LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
+						),
+						off_chain_updates.MustCreateOrderUpdateMessage(
+							ctx,
+							LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+							0,
+						),
+					},
 					// Short term order update for fill amount, stateful order update for fill amount
 					// Note there are no headers because these events are generated in PrepareCheckState
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
-						// maker
+						off_chain_updates.MustCreateOrderPlaceMessage(
+							ctx,
+							Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
+						),
+						off_chain_updates.MustCreateOrderUpdateMessage(
+							ctx,
+							LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+							LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
+						),
 						off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 							ctx,
 							LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 							indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
 							ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 						),
-						// taker
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							ctx,
 							Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId,
 							Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
+						),
+						off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+							ctx,
+							Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId,
+							indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+							ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 						),
 					},
 					// Stateful order placement
@@ -1820,7 +1854,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 				time.Unix(5, 0),
 				LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 			)
-			_, _, _, err := tApp.App.ClobKeeper.MemClob.PlaceOrder(
+			_, _, err := tApp.App.ClobKeeper.MemClob.PlaceOrder(
 				tApp.App.NewUncachedContext(true, tmproto.Header{}),
 				LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
 			)

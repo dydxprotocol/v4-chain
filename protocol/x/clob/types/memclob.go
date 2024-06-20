@@ -17,7 +17,7 @@ type MemClob interface {
 	CancelOrder(
 		ctx sdk.Context,
 		msgCancelOrder *MsgCancelOrder,
-	) (offchainUpdates *OffchainUpdates, err error)
+	) error
 	CreateOrderbook(
 		clobPair ClobPair,
 	)
@@ -61,14 +61,13 @@ type MemClob interface {
 	PlaceOrder(
 		ctx sdk.Context,
 		order Order,
-	) (satypes.BaseQuantums, OrderStatus, *OffchainUpdates, error)
+	) (satypes.BaseQuantums, OrderStatus, error)
 	PlacePerpetualLiquidation(
 		ctx sdk.Context,
 		liquidationOrder LiquidationOrder,
 	) (
 		orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 		orderStatus OrderStatus,
-		offchainUpdates *OffchainUpdates,
 		err error,
 	)
 	DeleverageSubaccount(
@@ -84,7 +83,7 @@ type MemClob interface {
 	RemoveOrderIfFilled(
 		ctx sdk.Context,
 		orderId OrderId,
-	) bool
+	)
 	GetPricePremium(
 		ctx sdk.Context,
 		clobPair ClobPair,
@@ -103,14 +102,12 @@ type MemClob interface {
 		expiredStatefulOrderIds []OrderId,
 		canceledStatefulOrderIds []OrderId,
 		removedStatefulOrderIds []OrderId,
-		existingOffchainUpdates *OffchainUpdates,
-	) (offchainUpdates *OffchainUpdates)
+	)
 	ReplayOperations(
 		ctx sdk.Context,
 		localOperations []InternalOperation,
 		shortTermOrderTxBytes map[OrderHash][]byte,
-		existingOffchainUpdates *OffchainUpdates,
-	) (offchainUpdates *OffchainUpdates)
+	)
 	SetMemclobGauges(
 		ctx sdk.Context,
 	)

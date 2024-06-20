@@ -8,13 +8,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	gometrics "github.com/hashicorp/go-metrics"
 
-	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
-	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
-	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -147,16 +143,10 @@ func (k Keeper) CancelShortTermOrder(
 	}
 
 	// Update in-memory orderbook to remove short term order.
-	offchainUpdates, err := k.MemClob.CancelOrder(ctx, msgCancelOrder)
+	err := k.MemClob.CancelOrder(ctx, msgCancelOrder)
 	if err != nil {
 		return err
 	}
-
-	k.sendOffchainMessagesWithTxHash(
-		offchainUpdates,
-		tmhash.Sum(ctx.TxBytes()),
-		metrics.SendCancelOrderOffchainUpdates,
-	)
 
 	return nil
 }
@@ -208,19 +198,9 @@ func (k Keeper) PlaceShortTermOrder(
 	}
 
 	// Place the order on the memclob and return the result.
-	orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, err := k.MemClob.PlaceOrder(
+	orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, err = k.MemClob.PlaceOrder(
 		ctx,
 		msg.Order,
-	)
-
-	// Send off-chain updates generated from placing the order. `SendOffchainData` enqueues the
-	// the messages to be sent in a channel and should be non-blocking.
-	// Off-chain update messages should be only be returned if the `IndexerMessageSender`
-	// is enabled (`msgSender.Enabled()` returns true).
-	k.sendOffchainMessagesWithTxHash(
-		offchainUpdates,
-		tmhash.Sum(ctx.TxBytes()),
-		metrics.SendPlaceOrderOffchainUpdates,
 	)
 
 	if orderSizeOptimisticallyFilledFromMatchingQuantums > 0 {
@@ -433,9 +413,7 @@ func (k Keeper) ReplayPlaceOrder(
 ) (
 	orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 	orderStatus types.OrderStatus,
-	offchainUpdates *types.OffchainUpdates,
-	err error,
-) {
+	err error) {
 	order := msg.GetOrder()
 
 	// Use the height of the next block. Check if this order would be valid if it were included
@@ -445,16 +423,16 @@ func (k Keeper) ReplayPlaceOrder(
 	// Perform stateful validation.
 	err = k.PerformStatefulOrderValidation(ctx, &order, nextBlockHeight, true)
 	if err != nil {
-		return 0, 0, nil, err
+		return 0, 0, err
 	}
 
 	// Place the order on the memclob and return the result.
-	orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, err = k.MemClob.PlaceOrder(
+	orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, err = k.MemClob.PlaceOrder(
 		ctx,
 		msg.Order,
 	)
 
-	return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, err
+	return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, err
 }
 
 // AddPreexistingStatefulOrder performs stateful validation on an order and adds it to the specified memclob.
@@ -467,7 +445,6 @@ func (k Keeper) AddPreexistingStatefulOrder(
 ) (
 	orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 	orderStatus types.OrderStatus,
-	offchainUpdates *types.OffchainUpdates,
 	err error,
 ) {
 	order.MustBeStatefulOrder()
@@ -475,7 +452,7 @@ func (k Keeper) AddPreexistingStatefulOrder(
 	// Block height is not used when validating stateful orders, so always pass in zero.
 	err = k.PerformStatefulOrderValidation(ctx, order, 0, true)
 	if err != nil {
-		return 0, 0, nil, err
+		return 0, 0, err
 	}
 
 	// Place the order on the memclob and return the result. Note that we shouldn't perform
@@ -498,9 +475,6 @@ func (k Keeper) AddPreexistingStatefulOrder(
 func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 	ctx sdk.Context,
 	placedStatefulOrderIds []types.OrderId,
-	existingOffchainUpdates *types.OffchainUpdates,
-) (
-	offchainUpdates *types.OffchainUpdates,
 ) {
 	lib.AssertCheckTxMode(ctx)
 
@@ -525,7 +499,7 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 
 		order := orderPlacement.GetOrder()
 		// Validate and place order.
-		_, orderStatus, placeOrderOffchainUpdates, err := k.AddPreexistingStatefulOrder(
+		_, _, err := k.AddPreexistingStatefulOrder(
 			ctx,
 			&order,
 			k.MemClob,
@@ -539,36 +513,8 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 					order,
 				),
 			)
-
-			// Note: Currently, the error returned from placing the order determines whether an order
-			// removal message is sent to the Indexer. This may change later on to be a check on whether
-			// the order has an existing nonce.
-			if k.indexerEventManager.Enabled() && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
-				// If the stateful order is dropped while adding it to the book, return an off-chain order remove
-				// message for the order. It's possible that this validator already knows about this order, in which
-				// case an `ErrInvalidReplacement` error would be returned here.
-
-				// It's possible that this is a new stateful order that this validator has never learned about,
-				// but the validator failed to place on it on the book, even though it does exist in state.
-				// In this case, Indexer could be learning of this order for the first
-				// time with this removal.
-				if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-					ctx,
-					order.OrderId,
-					orderStatus,
-					err,
-					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
-				); success {
-					existingOffchainUpdates.AddRemoveMessage(order.OrderId, message)
-				}
-			}
-		} else if k.indexerEventManager.Enabled() {
-			existingOffchainUpdates.Append(placeOrderOffchainUpdates)
 		}
 	}
-
-	return existingOffchainUpdates
 }
 
 // PlaceConditionalOrdersTriggeredInLastBlock takes in a list of conditional order ids that were triggered
@@ -577,9 +523,6 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 func (k Keeper) PlaceConditionalOrdersTriggeredInLastBlock(
 	ctx sdk.Context,
 	conditionalOrderIdsTriggeredInLastBlock []types.OrderId,
-	existingOffchainUpdates *types.OffchainUpdates,
-) (
-	offchainUpdates *types.OffchainUpdates,
 ) {
 	defer telemetry.MeasureSince(
 		time.Now(),
@@ -607,7 +550,7 @@ func (k Keeper) PlaceConditionalOrdersTriggeredInLastBlock(
 		}
 	}
 
-	return k.PlaceStatefulOrdersFromLastBlock(ctx, conditionalOrderIdsTriggeredInLastBlock, existingOffchainUpdates)
+	k.PlaceStatefulOrdersFromLastBlock(ctx, conditionalOrderIdsTriggeredInLastBlock)
 }
 
 // PerformOrderCancellationStatefulValidation performs stateful validation on an order cancellation.
@@ -1202,7 +1145,7 @@ func (k Keeper) InitStatefulOrders(
 		// Place the order on the memclob and return the result.
 		// Note that we skip stateful validation since these orders are already in state and don't
 		// need to be statefully validated.
-		orderSizeOptimisticallyFilledFromMatchingQuantums, _, offchainUpdates, err := k.MemClob.PlaceOrder(
+		orderSizeOptimisticallyFilledFromMatchingQuantums, _, err := k.MemClob.PlaceOrder(
 			placeOrderCtx,
 			statefulOrder,
 		)
@@ -1226,12 +1169,6 @@ func (k Keeper) InitStatefulOrders(
 				err,
 			)
 		}
-
-		// Send off-chain updates generated from placing the order. `SendOffchainData` enqueues the
-		// the messages to be sent in a channel and should be non-blocking.
-		// Off-chain update messages should be only be returned if the `IndexerMessageSender`
-		// is enabled (`msgSender.Enabled()` returns true).
-		k.SendOffchainMessages(offchainUpdates, nil, metrics.SendPlaceOrderOffchainUpdates)
 
 		if orderSizeOptimisticallyFilledFromMatchingQuantums > 0 {
 			telemetry.IncrCounter(1, types.ModuleName, metrics.PlaceOrder, metrics.Hydrate, metrics.Matched)
@@ -1271,39 +1208,14 @@ func (k Keeper) HydrateUntriggeredConditionalOrders(
 	)
 }
 
-// sendOffchainMessagesWithTxHash sends all the `Message` in the offchainUpdates passed in along with
-// an additional header for the transaction hash passed in.
-func (k Keeper) sendOffchainMessagesWithTxHash(
-	offchainUpdates *types.OffchainUpdates,
-	txHash []byte,
-	metric string,
-) {
-	k.SendOffchainMessages(
-		offchainUpdates,
-		[]msgsender.MessageHeader{
-			{
-				Key:   msgsender.TransactionHashHeaderKey,
-				Value: txHash,
-			},
-		},
-		metric,
-	)
-}
-
 // SendOffchainMessages sends all the `Message` in the offchainUpdates passed in along with
 // any additional headers passed in. No headers will be added if a `nil` or empty list of additional
 // headers is passed in.
 func (k Keeper) SendOffchainMessages(
-	offchainUpdates *types.OffchainUpdates,
+	ctx sdk.Context,
 	additionalHeaders []msgsender.MessageHeader,
-	metric string,
+	offchainUpdates *types.OffchainUpdates,
 ) {
-	defer telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		time.Now(),
-		metric,
-		metrics.Latency,
-	)
 	for _, update := range offchainUpdates.GetMessages() {
 		for _, header := range additionalHeaders {
 			update = update.AddHeader(header)

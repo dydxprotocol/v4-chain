@@ -8,7 +8,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	memclobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/memclob"
 	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -260,6 +259,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 			memclob.SetClobKeeper(mockMemClobKeeper)
 			mockMemClobKeeper.On("Logger", mock.Anything).Return(log.NewNopLogger()).Maybe()
 			mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
+			mockMemClobKeeper.On("SendOffchainMessages", mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
 
 			for _, operation := range tc.placedOperations {
 				switch operation.Operation.(type) {
@@ -307,27 +307,19 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 
 			// Run the test.
 			ctx = ctx.WithBlockHeight(10)
-			offchainUpdates := types.NewOffchainUpdates()
 			memclob.PurgeInvalidMemclobState(
 				ctx,
 				tc.fullyFilledOrderIds,
 				tc.expiredStatefulOrderIds,
 				tc.canceledStatefulOrderIds,
 				tc.removedStatefulOrderIds,
-				offchainUpdates,
-			)
-
-			// Verify that all removed orders have an associated off-chain removal.
-			require.Equal(
-				t,
-				memclobtest.MessageCountOfType(offchainUpdates, types.RemoveMessageType),
-				len(tc.expectedRemovedOrderIds),
 			)
 
 			for _, orderId := range tc.expectedRemovedOrderIds {
-				require.True(
+				orderbook := memclob.mustGetOrderbook(types.ClobPairId(orderId.ClobPairId))
+				require.False(
 					t,
-					memclobtest.HasMessage(offchainUpdates, orderId, types.RemoveMessageType),
+					orderbook.hasOrder(orderId),
 				)
 			}
 
@@ -356,6 +348,7 @@ func TestPurgeInvalidMemclobState_DoesNotPanicWhenCalledWithDuplicateCanceledSta
 	memclob.SetClobKeeper(mockMemClobKeeper)
 	memclob.CreateOrderbook(constants.ClobPair_Btc)
 	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return().Maybe()
+	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
 
 	canceledStatefulOrderIds := []types.OrderId{
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
@@ -371,7 +364,6 @@ func TestPurgeInvalidMemclobState_DoesNotPanicWhenCalledWithDuplicateCanceledSta
 				[]types.OrderId{},
 				canceledStatefulOrderIds,
 				[]types.OrderId{},
-				types.NewOffchainUpdates(),
 			)
 		},
 	)
@@ -386,6 +378,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenNonStatefulOrderIsCanceled(t *testin
 	memclob.SetClobKeeper(mockMemClobKeeper)
 	memclob.CreateOrderbook(constants.ClobPair_Btc)
 	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return().Maybe()
+	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
 
 	shortTermOrderId := constants.Order_Alice_Num0_Id0_Clob2_Buy5_Price10_GTB15.OrderId
 
@@ -402,7 +395,6 @@ func TestPurgeInvalidMemclobState_PanicsWhenNonStatefulOrderIsCanceled(t *testin
 				[]types.OrderId{},
 				[]types.OrderId{shortTermOrderId},
 				[]types.OrderId{},
-				types.NewOffchainUpdates(),
 			)
 		},
 	)
@@ -418,6 +410,7 @@ func TestPurgeInvalidMemclobState_DoesNotPanicWhenCalledWithDuplicateExpiredStat
 	memclob.SetClobKeeper(mockMemClobKeeper)
 	memclob.CreateOrderbook(constants.ClobPair_Btc)
 	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return().Maybe()
+	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
 
 	expiredStatefulOrderIds := []types.OrderId{
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
@@ -433,7 +426,6 @@ func TestPurgeInvalidMemclobState_DoesNotPanicWhenCalledWithDuplicateExpiredStat
 				expiredStatefulOrderIds,
 				[]types.OrderId{},
 				[]types.OrderId{},
-				types.NewOffchainUpdates(),
 			)
 		},
 	)
@@ -448,6 +440,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenCalledWithShortTermExpiredStatefulOr
 	mockMemClobKeeper := &mocks.MemClobKeeper{}
 	memclob.SetClobKeeper(mockMemClobKeeper)
 	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return().Maybe()
+	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
 
 	shortTermOrderId := constants.Order_Alice_Num0_Id0_Clob2_Buy5_Price10_GTB15.OrderId
 
@@ -464,7 +457,6 @@ func TestPurgeInvalidMemclobState_PanicsWhenCalledWithShortTermExpiredStatefulOr
 				[]types.OrderId{shortTermOrderId},
 				[]types.OrderId{},
 				[]types.OrderId{},
-				types.NewOffchainUpdates(),
 			)
 		},
 	)

@@ -8,7 +8,6 @@ import (
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -29,13 +28,12 @@ func TestShortTermCancelOrder_Success(t *testing.T) {
 	ctx := ks.Ctx.WithBlockHeight(14)
 	ctx = ctx.WithIsCheckTx(true)
 	nextBlock := uint32(15)
-	offchainUpdates := types.NewOffchainUpdates()
 
 	// With a `GoodTilBlock` 0 blocks in the future.
 	memClob.On("CancelOrder", ctx, types.NewMsgCancelOrderShortTerm(
 		order.OrderId,
 		uint32(nextBlock),
-	)).Return(offchainUpdates, nil)
+	)).Return(nil)
 	err := ks.ClobKeeper.CancelShortTermOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, nextBlock))
 	require.NoError(t, err)
 	indexerMessageSender.AssertExpectations(t)
@@ -44,41 +42,11 @@ func TestShortTermCancelOrder_Success(t *testing.T) {
 	memClob.On("CancelOrder", ctx, types.NewMsgCancelOrderShortTerm(
 		order.OrderId,
 		nextBlock+types.ShortBlockWindow,
-	)).Return(offchainUpdates, nil)
+	)).Return(nil)
 	err = ks.ClobKeeper.CancelShortTermOrder(
 		ctx,
 		types.NewMsgCancelOrderShortTerm(order.OrderId, nextBlock+types.ShortBlockWindow),
 	)
-	require.NoError(t, err)
-	indexerMessageSender.AssertExpectations(t)
-	memClob.AssertExpectations(t)
-}
-
-func TestShortTermCancelOrder_SuccessfullySendsOffchainData(t *testing.T) {
-	memClob := &mocks.MemClob{}
-	indexerMessageSender := &mocks.IndexerEventManager{}
-	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerMessageSender)
-	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
-	ctx := ks.Ctx.WithBlockHeight(14).WithTxBytes(constants.TestTxBytes)
-	ctx = ctx.WithIsCheckTx(true)
-	nextBlock := uint32(15)
-	offchainUpdates := types.NewOffchainUpdates()
-	message := msgsender.Message{
-		Key:   []byte("key"),
-		Value: []byte("value"),
-	}
-	offchainUpdates.AddRemoveMessage(order.OrderId, message)
-
-	memClob.On("CancelOrder", ctx, types.NewMsgCancelOrderShortTerm(
-		order.OrderId,
-		nextBlock,
-	)).Return(offchainUpdates, nil)
-	indexerMessageSender.On(
-		"SendOffchainData",
-		message.AddHeader(constants.TestTxHashHeader),
-	).Return().Once()
-	err := ks.ClobKeeper.CancelShortTermOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, nextBlock))
 	require.NoError(t, err)
 	indexerMessageSender.AssertExpectations(t)
 	memClob.AssertExpectations(t)
@@ -140,7 +108,7 @@ func TestCancelOrder_KeeperForwardsErrorsFromMemclob(t *testing.T) {
 	memClob.On("CancelOrder", ctx, types.NewMsgCancelOrderShortTerm(
 		shortTermOrder.OrderId,
 		uint32(15),
-	)).Return(nil, types.ErrMemClobCancelAlreadyExists)
+	)).Return(types.ErrMemClobCancelAlreadyExists)
 	err := ks.ClobKeeper.CancelShortTermOrder(ctx, types.NewMsgCancelOrderShortTerm(shortTermOrder.OrderId, 15))
 	require.ErrorIs(t, err, types.ErrMemClobCancelAlreadyExists)
 
@@ -154,7 +122,7 @@ func TestCancelOrder_KeeperForwardsErrorsFromMemclob(t *testing.T) {
 	memClob.On("CancelOrder", ctx, types.NewMsgCancelOrderStateful(
 		longTermOrder.OrderId,
 		uint32(100),
-	)).Return(nil, types.ErrMemClobCancelAlreadyExists)
+	)).Return(types.ErrMemClobCancelAlreadyExists)
 	err = ks.ClobKeeper.CancelShortTermOrder(ctx, types.NewMsgCancelOrderStateful(longTermOrder.OrderId, 100))
 	require.ErrorIs(t, err, types.ErrMemClobCancelAlreadyExists)
 

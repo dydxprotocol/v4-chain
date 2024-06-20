@@ -21,33 +21,21 @@ type MemClob struct {
 }
 
 // CancelOrder provides a mock function with given fields: ctx, msgCancelOrder
-func (_m *MemClob) CancelOrder(ctx types.Context, msgCancelOrder *clobtypes.MsgCancelOrder) (*clobtypes.OffchainUpdates, error) {
+func (_m *MemClob) CancelOrder(ctx types.Context, msgCancelOrder *clobtypes.MsgCancelOrder) error {
 	ret := _m.Called(ctx, msgCancelOrder)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CancelOrder")
 	}
 
-	var r0 *clobtypes.OffchainUpdates
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgCancelOrder) (*clobtypes.OffchainUpdates, error)); ok {
-		return rf(ctx, msgCancelOrder)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgCancelOrder) *clobtypes.OffchainUpdates); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgCancelOrder) error); ok {
 		r0 = rf(ctx, msgCancelOrder)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*clobtypes.OffchainUpdates)
-		}
+		r0 = ret.Error(0)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, *clobtypes.MsgCancelOrder) error); ok {
-		r1 = rf(ctx, msgCancelOrder)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // CreateOrderbook provides a mock function with given fields: clobPair
@@ -448,7 +436,7 @@ func (_m *MemClob) MaybeCreateOrderbook(clobPair clobtypes.ClobPair) {
 }
 
 // PlaceOrder provides a mock function with given fields: ctx, order
-func (_m *MemClob) PlaceOrder(ctx types.Context, order clobtypes.Order) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error) {
+func (_m *MemClob) PlaceOrder(ctx types.Context, order clobtypes.Order) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, error) {
 	ret := _m.Called(ctx, order)
 
 	if len(ret) == 0 {
@@ -457,9 +445,8 @@ func (_m *MemClob) PlaceOrder(ctx types.Context, order clobtypes.Order) (subacco
 
 	var r0 subaccountstypes.BaseQuantums
 	var r1 clobtypes.OrderStatus
-	var r2 *clobtypes.OffchainUpdates
-	var r3 error
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error)); ok {
+	var r2 error
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, error)); ok {
 		return rf(ctx, order)
 	}
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) subaccountstypes.BaseQuantums); ok {
@@ -474,25 +461,17 @@ func (_m *MemClob) PlaceOrder(ctx types.Context, order clobtypes.Order) (subacco
 		r1 = ret.Get(1).(clobtypes.OrderStatus)
 	}
 
-	if rf, ok := ret.Get(2).(func(types.Context, clobtypes.Order) *clobtypes.OffchainUpdates); ok {
+	if rf, ok := ret.Get(2).(func(types.Context, clobtypes.Order) error); ok {
 		r2 = rf(ctx, order)
 	} else {
-		if ret.Get(2) != nil {
-			r2 = ret.Get(2).(*clobtypes.OffchainUpdates)
-		}
+		r2 = ret.Error(2)
 	}
 
-	if rf, ok := ret.Get(3).(func(types.Context, clobtypes.Order) error); ok {
-		r3 = rf(ctx, order)
-	} else {
-		r3 = ret.Error(3)
-	}
-
-	return r0, r1, r2, r3
+	return r0, r1, r2
 }
 
 // PlacePerpetualLiquidation provides a mock function with given fields: ctx, liquidationOrder
-func (_m *MemClob) PlacePerpetualLiquidation(ctx types.Context, liquidationOrder clobtypes.LiquidationOrder) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error) {
+func (_m *MemClob) PlacePerpetualLiquidation(ctx types.Context, liquidationOrder clobtypes.LiquidationOrder) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, error) {
 	ret := _m.Called(ctx, liquidationOrder)
 
 	if len(ret) == 0 {
@@ -501,9 +480,8 @@ func (_m *MemClob) PlacePerpetualLiquidation(ctx types.Context, liquidationOrder
 
 	var r0 subaccountstypes.BaseQuantums
 	var r1 clobtypes.OrderStatus
-	var r2 *clobtypes.OffchainUpdates
-	var r3 error
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.LiquidationOrder) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error)); ok {
+	var r2 error
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.LiquidationOrder) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, error)); ok {
 		return rf(ctx, liquidationOrder)
 	}
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.LiquidationOrder) subaccountstypes.BaseQuantums); ok {
@@ -518,41 +496,18 @@ func (_m *MemClob) PlacePerpetualLiquidation(ctx types.Context, liquidationOrder
 		r1 = ret.Get(1).(clobtypes.OrderStatus)
 	}
 
-	if rf, ok := ret.Get(2).(func(types.Context, clobtypes.LiquidationOrder) *clobtypes.OffchainUpdates); ok {
+	if rf, ok := ret.Get(2).(func(types.Context, clobtypes.LiquidationOrder) error); ok {
 		r2 = rf(ctx, liquidationOrder)
 	} else {
-		if ret.Get(2) != nil {
-			r2 = ret.Get(2).(*clobtypes.OffchainUpdates)
-		}
+		r2 = ret.Error(2)
 	}
 
-	if rf, ok := ret.Get(3).(func(types.Context, clobtypes.LiquidationOrder) error); ok {
-		r3 = rf(ctx, liquidationOrder)
-	} else {
-		r3 = ret.Error(3)
-	}
-
-	return r0, r1, r2, r3
+	return r0, r1, r2
 }
 
-// PurgeInvalidMemclobState provides a mock function with given fields: ctx, fullyFilledOrderIds, expiredStatefulOrderIds, canceledStatefulOrderIds, removedStatefulOrderIds, existingOffchainUpdates
-func (_m *MemClob) PurgeInvalidMemclobState(ctx types.Context, fullyFilledOrderIds []clobtypes.OrderId, expiredStatefulOrderIds []clobtypes.OrderId, canceledStatefulOrderIds []clobtypes.OrderId, removedStatefulOrderIds []clobtypes.OrderId, existingOffchainUpdates *clobtypes.OffchainUpdates) *clobtypes.OffchainUpdates {
-	ret := _m.Called(ctx, fullyFilledOrderIds, expiredStatefulOrderIds, canceledStatefulOrderIds, removedStatefulOrderIds, existingOffchainUpdates)
-
-	if len(ret) == 0 {
-		panic("no return value specified for PurgeInvalidMemclobState")
-	}
-
-	var r0 *clobtypes.OffchainUpdates
-	if rf, ok := ret.Get(0).(func(types.Context, []clobtypes.OrderId, []clobtypes.OrderId, []clobtypes.OrderId, []clobtypes.OrderId, *clobtypes.OffchainUpdates) *clobtypes.OffchainUpdates); ok {
-		r0 = rf(ctx, fullyFilledOrderIds, expiredStatefulOrderIds, canceledStatefulOrderIds, removedStatefulOrderIds, existingOffchainUpdates)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*clobtypes.OffchainUpdates)
-		}
-	}
-
-	return r0
+// PurgeInvalidMemclobState provides a mock function with given fields: ctx, fullyFilledOrderIds, expiredStatefulOrderIds, canceledStatefulOrderIds, removedStatefulOrderIds
+func (_m *MemClob) PurgeInvalidMemclobState(ctx types.Context, fullyFilledOrderIds []clobtypes.OrderId, expiredStatefulOrderIds []clobtypes.OrderId, canceledStatefulOrderIds []clobtypes.OrderId, removedStatefulOrderIds []clobtypes.OrderId) {
+	_m.Called(ctx, fullyFilledOrderIds, expiredStatefulOrderIds, canceledStatefulOrderIds, removedStatefulOrderIds)
 }
 
 // RemoveAndClearOperationsQueue provides a mock function with given fields: ctx, localValidatorOperationsQueue
@@ -561,41 +516,13 @@ func (_m *MemClob) RemoveAndClearOperationsQueue(ctx types.Context, localValidat
 }
 
 // RemoveOrderIfFilled provides a mock function with given fields: ctx, orderId
-func (_m *MemClob) RemoveOrderIfFilled(ctx types.Context, orderId clobtypes.OrderId) bool {
-	ret := _m.Called(ctx, orderId)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RemoveOrderIfFilled")
-	}
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) bool); ok {
-		r0 = rf(ctx, orderId)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	return r0
+func (_m *MemClob) RemoveOrderIfFilled(ctx types.Context, orderId clobtypes.OrderId) {
+	_m.Called(ctx, orderId)
 }
 
-// ReplayOperations provides a mock function with given fields: ctx, localOperations, shortTermOrderTxBytes, existingOffchainUpdates
-func (_m *MemClob) ReplayOperations(ctx types.Context, localOperations []clobtypes.InternalOperation, shortTermOrderTxBytes map[clobtypes.OrderHash][]byte, existingOffchainUpdates *clobtypes.OffchainUpdates) *clobtypes.OffchainUpdates {
-	ret := _m.Called(ctx, localOperations, shortTermOrderTxBytes, existingOffchainUpdates)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ReplayOperations")
-	}
-
-	var r0 *clobtypes.OffchainUpdates
-	if rf, ok := ret.Get(0).(func(types.Context, []clobtypes.InternalOperation, map[clobtypes.OrderHash][]byte, *clobtypes.OffchainUpdates) *clobtypes.OffchainUpdates); ok {
-		r0 = rf(ctx, localOperations, shortTermOrderTxBytes, existingOffchainUpdates)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*clobtypes.OffchainUpdates)
-		}
-	}
-
-	return r0
+// ReplayOperations provides a mock function with given fields: ctx, localOperations, shortTermOrderTxBytes
+func (_m *MemClob) ReplayOperations(ctx types.Context, localOperations []clobtypes.InternalOperation, shortTermOrderTxBytes map[clobtypes.OrderHash][]byte) {
+	_m.Called(ctx, localOperations, shortTermOrderTxBytes)
 }
 
 // SetClobKeeper provides a mock function with given fields: keeper

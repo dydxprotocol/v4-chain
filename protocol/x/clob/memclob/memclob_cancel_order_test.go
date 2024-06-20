@@ -31,29 +31,28 @@ func TestShortTermCancelOrder_CancelAlreadyExists(t *testing.T) {
 		[]types.Order{order},
 	)
 
-	offchainUpdates, err := memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, 100))
+	err := memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, 100))
 	require.NoError(t, err)
-	testutil_memclob.RequireCancelOrderOffchainUpdate(t, ctx, offchainUpdates, order.OrderId)
-	_, err = memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, 99))
+	err = memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, 99))
 	require.Equal(t, types.ErrMemClobCancelAlreadyExists, err)
-	_, err = memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, 100))
+	err = memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, 100))
 	require.Equal(t, types.ErrMemClobCancelAlreadyExists, err)
-	offchainUpdates, err = memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, 101))
+	err = memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(order.OrderId, 101))
 	require.NoError(t, err)
-	testutil_memclob.RequireCancelOrderOffchainUpdate(t, ctx, offchainUpdates, order.OrderId)
 }
 
 func TestShortTermCancelOrder_OrdersTilBlockExceedsCancels(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
 	ctx = ctx.WithIsCheckTx(true)
-	memClobKeeper := testutil_memclob.NewFakeMemClobKeeper()
+	fakeKeeper := testutil_memclob.NewFakeMemClobKeeper()
 	memclob := NewMemClobPriceTimePriority(true)
-	memclob.SetClobKeeper(memClobKeeper)
+	memclob.SetClobKeeper(fakeKeeper)
 
 	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
 	orderId := order.OrderId
 	cancelGoodTilBlock1 := order.GetGoodTilBlock() - 2
 	cancelGoodTilBlock2 := order.GetGoodTilBlock() - 1
+	cancelGoodTilBlock3 := order.GetGoodTilBlock() + 1
 
 	// Create all unique orderbooks.
 	createAllOrderbooksForOrders(
@@ -63,21 +62,19 @@ func TestShortTermCancelOrder_OrdersTilBlockExceedsCancels(t *testing.T) {
 		[]types.Order{order},
 	)
 
-	_, _, _, err := memclob.PlaceOrder(ctx, order)
+	_, _, err := memclob.PlaceOrder(ctx, order)
 	require.NoError(t, err)
 
 	// Cancel without error once.
-	offchainUpdates, err := memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(orderId, cancelGoodTilBlock1))
+	err = memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(orderId, cancelGoodTilBlock1))
 	require.NoError(t, err)
-	testutil_memclob.RequireCancelOrderOffchainUpdate(t, ctx, offchainUpdates, order.OrderId)
 	cancelBlock, isCanceled := memclob.GetCancelOrder(orderId)
 	require.True(t, isCanceled)
 	require.Equal(t, cancelGoodTilBlock1, cancelBlock)
 
 	// Cancel without error again.
-	offchainUpdates, err = memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(orderId, cancelGoodTilBlock2))
+	err = memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(orderId, cancelGoodTilBlock2))
 	require.NoError(t, err)
-	testutil_memclob.RequireCancelOrderOffchainUpdate(t, ctx, offchainUpdates, order.OrderId)
 	cancelBlock, isCanceled = memclob.GetCancelOrder(orderId)
 	require.True(t, isCanceled)
 	require.Equal(t, cancelGoodTilBlock2, cancelBlock)
@@ -86,6 +83,19 @@ func TestShortTermCancelOrder_OrdersTilBlockExceedsCancels(t *testing.T) {
 	gottenOrder, found := memclob.GetOrder(orderId)
 	require.True(t, found)
 	require.Equal(t, order, gottenOrder)
+
+	fakeKeeper.ResetOffchainMessages()
+	err = memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(orderId, cancelGoodTilBlock3))
+	require.NoError(t, err)
+	offchainUpdates := fakeKeeper.GetAndResetOffchainMessages()
+	testutil_memclob.RequireCancelOrderOffchainUpdate(t, ctx, offchainUpdates, order.OrderId)
+	cancelBlock, isCanceled = memclob.GetCancelOrder(orderId)
+	require.True(t, isCanceled)
+	require.Equal(t, cancelGoodTilBlock3, cancelBlock)
+
+	// Order is not on book
+	_, found = memclob.GetOrder(orderId)
+	require.False(t, found)
 }
 
 func TestCancelOrder_PanicsOnStatefulOrder(t *testing.T) {
@@ -119,6 +129,7 @@ func TestCancelOrder(t *testing.T) {
 		goodTilBlock uint32
 
 		// Expectations.
+		expectedOrderRemoved                         bool
 		expectedBestBid                              types.Subticks
 		expectedBestAsk                              types.Subticks
 		expectedTotalLevels                          int
@@ -138,6 +149,7 @@ func TestCancelOrder(t *testing.T) {
 			order:        constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
 			goodTilBlock: 123,
 
+			expectedOrderRemoved:                         true,
 			expectedTotalLevels:                          0,
 			expectedBestBid:                              0,
 			expectedBestAsk:                              math.MaxUint64,
@@ -154,6 +166,7 @@ func TestCancelOrder(t *testing.T) {
 			order:          constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
 			goodTilBlock:   123,
 
+			expectedOrderRemoved:                         false,
 			expectedTotalLevels:                          0,
 			expectedBestBid:                              0,
 			expectedBestAsk:                              math.MaxUint64,
@@ -176,6 +189,7 @@ func TestCancelOrder(t *testing.T) {
 			order:        constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
 			goodTilBlock: 124,
 
+			expectedOrderRemoved:                         false,
 			expectedTotalLevels:                          0,
 			expectedBestBid:                              0,
 			expectedBestAsk:                              math.MaxUint64,
@@ -207,6 +221,7 @@ func TestCancelOrder(t *testing.T) {
 			order:        constants.Order_Bob_Num0_Id7_Clob0_Buy20_Price10000_GTB22,
 			goodTilBlock: 123,
 
+			expectedOrderRemoved:                         false,
 			expectedTotalLevels:                          2,
 			expectedBestBid:                              1000,
 			expectedBestAsk:                              math.MaxUint64,
@@ -238,6 +253,7 @@ func TestCancelOrder(t *testing.T) {
 			order:        constants.Order_Bob_Num0_Id7_Clob0_Buy20_Price10000_GTB22,
 			goodTilBlock: 123,
 
+			expectedOrderRemoved:                         false,
 			expectedTotalLevels:                          2,
 			expectedBestBid:                              1000,
 			expectedBestAsk:                              math.MaxUint64,
@@ -255,7 +271,8 @@ func TestCancelOrder(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup the memclob state.
 			memclob := NewMemClobPriceTimePriority(true)
-			memclob.SetClobKeeper(testutil_memclob.NewFakeMemClobKeeper())
+			fakeKeeper := testutil_memclob.NewFakeMemClobKeeper()
+			memclob.SetClobKeeper(fakeKeeper)
 
 			// Create all unique orderbooks.
 			createAllOrderbooksForOrders(
@@ -267,24 +284,27 @@ func TestCancelOrder(t *testing.T) {
 
 			// Place all existing orders on the orderbook.
 			for _, order := range tc.existingOrders {
-				_, _, _, err := memclob.PlaceOrder(ctx, order)
+				_, _, err := memclob.PlaceOrder(ctx, order)
 				require.NoError(t, err)
 			}
 
 			// Place all existing cancels on the orderbook.
 			for _, cancel := range tc.existingCancels {
-				offchainUpdates, err := memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(
+				err := memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(
 					cancel.OrderId,
 					cancel.GetGoodTilBlock(),
 				))
 				require.NoError(t, err)
-				testutil_memclob.RequireCancelOrderOffchainUpdate(t, ctx, offchainUpdates, cancel.OrderId)
 			}
 
 			// Run the test case.
-			offchainUpdates, err := memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(tc.order.OrderId, tc.goodTilBlock))
+			fakeKeeper.ResetOffchainMessages()
+			err := memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(tc.order.OrderId, tc.goodTilBlock))
 			require.NoError(t, err)
-			testutil_memclob.RequireCancelOrderOffchainUpdate(t, ctx, offchainUpdates, tc.order.OrderId)
+			offchainUpdates := fakeKeeper.GetOffchainMessages()
+			if tc.expectedOrderRemoved {
+				testutil_memclob.RequireCancelOrderOffchainUpdate(t, ctx, offchainUpdates, tc.order.OrderId)
+			}
 
 			// Verify that the memclob orderbook has the correct state.
 			requireOrderDoesNotExistInMemclob(t, ctx, tc.order, memclob)
@@ -340,8 +360,9 @@ func TestCancelOrder_Telemetry(t *testing.T) {
 
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
 	ctx = ctx.WithIsCheckTx(true)
+	fakeKeeper := testutil_memclob.NewFakeMemClobKeeper()
 	memclob := NewMemClobPriceTimePriority(true)
-	memclob.SetClobKeeper(testutil_memclob.NewFakeMemClobKeeper())
+	memclob.SetClobKeeper(fakeKeeper)
 
 	orderOne := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
 	orderTwo := constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20
@@ -354,17 +375,20 @@ func TestCancelOrder_Telemetry(t *testing.T) {
 		[]types.Order{orderOne, orderTwo},
 	)
 
-	_, _, _, err = memclob.PlaceOrder(ctx, orderOne)
+	_, _, err = memclob.PlaceOrder(ctx, orderOne)
 	require.NoError(t, err)
-	_, _, _, err = memclob.PlaceOrder(ctx, orderTwo)
+	_, _, err = memclob.PlaceOrder(ctx, orderTwo)
 	require.NoError(t, err)
 
 	// Cancel both orders.
-	offchainUpdates, err := memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(orderOne.OrderId, 100))
+	fakeKeeper.ResetOffchainMessages()
+	err = memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(orderOne.OrderId, 100))
 	require.NoError(t, err)
+	offchainUpdates := fakeKeeper.GetAndResetOffchainMessages()
 	testutil_memclob.RequireCancelOrderOffchainUpdate(t, ctx, offchainUpdates, orderOne.OrderId)
-	offchainUpdates, err = memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(orderTwo.OrderId, 100))
+	err = memclob.CancelOrder(ctx, types.NewMsgCancelOrderShortTerm(orderTwo.OrderId, 100))
 	require.NoError(t, err)
+	offchainUpdates = fakeKeeper.GetAndResetOffchainMessages()
 	testutil_memclob.RequireCancelOrderOffchainUpdate(t, ctx, offchainUpdates, orderTwo.OrderId)
 
 	gr, err := m.Gather(telemetry.FormatText)
