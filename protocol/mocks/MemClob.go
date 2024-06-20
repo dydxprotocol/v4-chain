@@ -506,7 +506,7 @@ func (_m *MemClob) PlacePerpetualLiquidation(ctx types.Context, liquidationOrder
 }
 
 // PurgeInvalidMemclobState provides a mock function with given fields: ctx, fullyFilledOrderIds, expiredStatefulOrderIds, canceledStatefulOrderIds, removedStatefulOrderIds
-func (_m *MemClob) PurgeInvalidMemclobState(ctx types.Context, fullyFilledOrderIds []clobtypes.OrderId, expiredStatefulOrderIds []clobtypes.OrderId, canceledStatefulOrderIds []clobtypes.OrderId, removedStatefulOrderIds []clobtypes.OrderId) {
+func (_m *MemClob) PurgeInvalidMemclobState(ctx types.Context, fullyFilledOrderIds []clobtypes.OrderId, expiredStatefulOrderIds []clobtypes.OrderId, canceledStatefulOrderIds []clobtypes.OrderId, removedStatefulOrderIds []clobtypes.OrderRemoval) {
 	_m.Called(ctx, fullyFilledOrderIds, expiredStatefulOrderIds, canceledStatefulOrderIds, removedStatefulOrderIds)
 }
 

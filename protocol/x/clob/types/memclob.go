@@ -101,7 +101,7 @@ type MemClob interface {
 		fullyFilledOrderIds []OrderId,
 		expiredStatefulOrderIds []OrderId,
 		canceledStatefulOrderIds []OrderId,
-		removedStatefulOrderIds []OrderId,
+		removedStatefulOrderIds []OrderRemoval,
 	)
 	ReplayOperations(
 		ctx sdk.Context,

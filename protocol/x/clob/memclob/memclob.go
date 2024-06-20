@@ -1093,7 +1093,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	filledOrderIds []types.OrderId,
 	expiredStatefulOrderIds []types.OrderId,
 	canceledStatefulOrderIds []types.OrderId,
-	removedStatefulOrderIds []types.OrderId,
+	removedStatefulOrders []types.OrderRemoval,
 ) {
 	lib.AssertCheckTxMode(ctx)
 
@@ -1165,14 +1165,14 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	}
 
 	// Remove all forcefully removed stateful order IDs from the memclob if they exist.
-	for _, statefulOrderId := range removedStatefulOrderIds {
-		statefulOrderId.MustBeStatefulOrder()
-		orderbook := m.mustGetOrderbook(types.ClobPairId(statefulOrderId.GetClobPairId()))
+	for _, statefulOrderRemoval := range removedStatefulOrders {
+		statefulOrderRemoval.OrderId.MustBeStatefulOrder()
+		orderbook := m.mustGetOrderbook(types.ClobPairId(statefulOrderRemoval.OrderId.GetClobPairId()))
 
-		if orderbook.hasOrder(statefulOrderId) {
+		if orderbook.hasOrder(statefulOrderRemoval.OrderId) {
 			m.mustRemoveOrder(ctx,
-				statefulOrderId,
-				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_UNSPECIFIED,
+				statefulOrderRemoval.OrderId,
+				indexersharedtypes.OrderRemovalReason(statefulOrderRemoval.RemovalReason),
 				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
 			)
 		}

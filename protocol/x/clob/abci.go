@@ -170,7 +170,7 @@ func PrepareCheckState(
 		processProposerMatchesEvents.OrderIdsFilledInLastBlock,
 		processProposerMatchesEvents.ExpiredStatefulOrderIds,
 		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
-		processProposerMatchesEvents.RemovedStatefulOrderIds,
+		processProposerMatchesEvents.RemovedStatefulOrders,
 	)
 
 	// 3. Place all stateful order placements included in the last block on the memclob.

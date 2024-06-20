@@ -26,7 +26,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 		fullyFilledOrderIds      []types.OrderId
 		expiredStatefulOrderIds  []types.OrderId
 		canceledStatefulOrderIds []types.OrderId
-		removedStatefulOrderIds  []types.OrderId
+		removedStatefulOrders    []types.OrderRemoval
 
 		// Expectations.
 		expectedRemainingBids   []OrderWithRemainingSize
@@ -234,10 +234,12 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				clobtest.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10),
 			},
 			newOrderFillAmounts: map[types.OrderId]satypes.BaseQuantums{},
-			removedStatefulOrderIds: []types.OrderId{
-				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
+			removedStatefulOrders: []types.OrderRemoval{
+				{
+					OrderId:       constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
+					RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+				},
 			},
-
 			fullyFilledOrderIds: []types.OrderId{},
 
 			expectedRemovedOrderIds: []types.OrderId{
@@ -312,7 +314,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				tc.fullyFilledOrderIds,
 				tc.expiredStatefulOrderIds,
 				tc.canceledStatefulOrderIds,
-				tc.removedStatefulOrderIds,
+				tc.removedStatefulOrders,
 			)
 
 			for _, orderId := range tc.expectedRemovedOrderIds {
@@ -363,7 +365,7 @@ func TestPurgeInvalidMemclobState_DoesNotPanicWhenCalledWithDuplicateCanceledSta
 				[]types.OrderId{},
 				[]types.OrderId{},
 				canceledStatefulOrderIds,
-				[]types.OrderId{},
+				[]types.OrderRemoval{},
 			)
 		},
 	)
@@ -394,7 +396,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenNonStatefulOrderIsCanceled(t *testin
 				[]types.OrderId{},
 				[]types.OrderId{},
 				[]types.OrderId{shortTermOrderId},
-				[]types.OrderId{},
+				[]types.OrderRemoval{},
 			)
 		},
 	)
@@ -425,7 +427,7 @@ func TestPurgeInvalidMemclobState_DoesNotPanicWhenCalledWithDuplicateExpiredStat
 				[]types.OrderId{},
 				expiredStatefulOrderIds,
 				[]types.OrderId{},
-				[]types.OrderId{},
+				[]types.OrderRemoval{},
 			)
 		},
 	)
@@ -456,7 +458,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenCalledWithShortTermExpiredStatefulOr
 				[]types.OrderId{},
 				[]types.OrderId{shortTermOrderId},
 				[]types.OrderId{},
-				[]types.OrderId{},
+				[]types.OrderRemoval{},
 			)
 		},
 	)

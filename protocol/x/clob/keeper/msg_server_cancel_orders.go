@@ -65,7 +65,12 @@ func (k Keeper) HandleMsgCancelOrder(
 			// TODO(CLOB-778): Prevent invalid MsgCancelOrder messages from being included in the block.
 			if errors.Is(err, types.ErrStatefulOrderDoesNotExist) {
 				processProposerMatchesEvents := k.GetProcessProposerMatchesEvents(ctx)
-				removedOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
+				removedOrderIds := lib.UniqueSliceToSet(lib.MapSlice(
+					processProposerMatchesEvents.RemovedStatefulOrders,
+					func(removal types.OrderRemoval) types.OrderId {
+						return removal.OrderId
+					}),
+				)
 				if _, found := removedOrderIds[msg.GetOrderId()]; found {
 					telemetry.IncrCounterWithLabels(
 						[]string{

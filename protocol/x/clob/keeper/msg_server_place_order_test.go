@@ -44,7 +44,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 		StatefulOrders              []types.Order
 		StatefulOrderPlacement      types.Order
 		PlacedStatefulCancellations []types.OrderId
-		RemovedOrderIds             []types.OrderId
+		RemovedOrders               []types.OrderRemoval
 		ExpectedError               error
 	}{
 		"Returns an error when validation fails": {
@@ -76,8 +76,11 @@ func TestPlaceOrder_Error(t *testing.T) {
 		},
 		"Returns an error when order has already been removed": {
 			StatefulOrderPlacement: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
-			RemovedOrderIds: []types.OrderId{
-				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+			RemovedOrders: []types.OrderRemoval{
+				{
+					OrderId:       constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+					RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+				},
 			},
 			ExpectedError: types.ErrStatefulOrderPreviouslyRemoved,
 		},
@@ -214,7 +217,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 			processProposerMatchesEvents := types.ProcessProposerMatchesEvents{
 				BlockHeight:                        6,
 				PlacedStatefulCancellationOrderIds: tc.PlacedStatefulCancellations,
-				RemovedStatefulOrderIds:            tc.RemovedOrderIds,
+				RemovedStatefulOrders:              tc.RemovedOrders,
 			}
 			ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
 				ctx,
@@ -535,7 +538,12 @@ func TestHandleMsgPlaceOrder(t *testing.T) {
 				ppme.PlacedStatefulCancellationOrderIds = []types.OrderId{testOrder.OrderId}
 			}
 			if tc.removalExists {
-				ppme.RemovedStatefulOrderIds = []types.OrderId{testOrder.OrderId}
+				ppme.RemovedStatefulOrders = []types.OrderRemoval{
+					{
+						OrderId:       testOrder.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
+				}
 			}
 			k.MustSetProcessProposerMatchesEvents(ctx, ppme)
 
