@@ -1,5 +1,6 @@
-import {parentPort} from 'worker_threads';
-import {MessageForwarder} from '../message-forwarder';
+import { parentPort } from 'worker_threads';
+
+import { MessageForwarder } from '../message-forwarder';
 
 parentPort?.on('message', async (data) => {
   const { subscriptions, index, messageToForward } = data;

@@ -1,10 +1,11 @@
+import { Worker } from 'worker_threads';
+
 import { InfoObject, logger, stats } from '@dydxprotocol-indexer/base';
 import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
-import { Worker } from 'worker_threads';
 
 import config from '../config';
-import { getChannels, getMessagesToForward } from '../helpers/from-kafka-helpers';
+import { getChannels } from '../helpers/from-kafka-helpers';
 import { Channel, MessageToForward } from '../types';
 import { Index } from '../websocket';
 import { MessageForwarder } from './message-forwarder';
@@ -15,8 +16,8 @@ const getMessagesToForwardWorkers: Worker[] = [];
 const forwardMessageWorkers: Worker[] = [];
 
 for (let i = 0; i < NUM_WORKERS; i++) {
-  getMessagesToForwardWorkers.push(new Worker('./src/lib/workers/getMessagesToForwardWorker.ts'));
-  forwardMessageWorkers.push(new Worker('./src/lib/workers/forwardMessageWorker.ts'));
+  getMessagesToForwardWorkers.push(new Worker('./build/src/lib/workers/getMessagesToForwardWorker.js'));
+  forwardMessageWorkers.push(new Worker('./build/src/lib/workers/forwardMessageWorker.js'));
 }
 
 function getRandomWorker(workers: Worker[]): Worker {

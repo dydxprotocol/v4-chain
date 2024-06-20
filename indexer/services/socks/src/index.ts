@@ -1,5 +1,5 @@
 import { logger, startBugsnag, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
-import {startConsumer, updateOnMessageFunction} from '@dydxprotocol-indexer/kafka';
+import { startConsumer, updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
 import { blockHeightRefresher, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 
 import config from './config';
@@ -71,7 +71,7 @@ async function start(): Promise<void> {
   updateOnMessageFunction(async (topic, message): Promise<void> => {
     return onMessage(topic, message, subscriptions, index);
   });
-  subscriptions.start(messageForwarder.forwardToClient);
+  subscriptions.start(MessageForwarder.getInstance(subscriptions, index).forwardToClient);
 
   logger.info({
     at: 'index#start',
