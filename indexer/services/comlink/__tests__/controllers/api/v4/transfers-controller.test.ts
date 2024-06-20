@@ -5,7 +5,6 @@ import {
   TransferCreateObject,
   TransferTable,
   TransferType,
-  WalletTable,
 } from '@dydxprotocol-indexer/postgres';
 import { RequestMethod, TransferResponseObject } from '../../../../src/types';
 import request from 'supertest';
@@ -37,10 +36,6 @@ describe('transfers-controller#V4', () => {
         createdAt: testConstants.createdDateTime.toISO(),
         createdAtHeight: testConstants.createdHeight,
       };
-      await WalletTable.create({
-        address: testConstants.defaultWalletAddress,
-        totalTradingRewards: '0',
-      });
       await Promise.all([
         TransferTable.create(testConstants.defaultTransfer),
         TransferTable.create(transfer2),

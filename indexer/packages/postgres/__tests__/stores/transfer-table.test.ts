@@ -7,7 +7,6 @@ import {
 } from '../../src/types';
 import * as TransferTable from '../../src/stores/transfer-table';
 import { AssetTransferMap } from '../../src/stores/transfer-table';
-import * as WalletTable from '../../src/stores/wallet-table';
 import * as SubaccountTable from '../../src/stores/subaccount-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { seedData } from '../helpers/mock-generators';
@@ -265,10 +264,6 @@ describe('Transfer store', () => {
   });
 
   it('Recipient/sender must exist', async () => {
-    await WalletTable.create({
-      address: defaultWalletAddress,
-      totalTradingRewards: '0',
-    });
     const invalidDeposit: TransferCreateObject = {
       ...defaultDeposit,
       recipientWalletAddress: defaultWalletAddress,
@@ -296,10 +291,6 @@ describe('Transfer store', () => {
   });
 
   it('Successfully creates/finds a transfer/deposit/withdrawal', async () => {
-    await WalletTable.create({
-      address: defaultWalletAddress,
-      totalTradingRewards: '0',
-    });
     await Promise.all([
       TransferTable.create(defaultTransfer),
       TransferTable.create(defaultDeposit),

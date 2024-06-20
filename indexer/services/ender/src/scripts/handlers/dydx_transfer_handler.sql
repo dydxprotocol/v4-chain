@@ -20,8 +20,6 @@ CREATE OR REPLACE FUNCTION dydx_transfer_handler(
 DECLARE
     asset_record assets%ROWTYPE;
     recipient_subaccount_record subaccounts%ROWTYPE;
-    recipient_wallet_record wallets%ROWTYPE;
-    sender_wallet_record wallets%ROWTYPE;
     transfer_record transfers%ROWTYPE;
 BEGIN
     asset_record."id" = event_data->>'assetId';
@@ -54,18 +52,10 @@ BEGIN
 
     IF event_data->'recipient'->'address' IS NOT NULL THEN
         transfer_record."recipientWalletAddress" = event_data->'recipient'->>'address';
-
-        recipient_wallet_record."address" = transfer_record."recipientWalletAddress";
-        recipient_wallet_record."totalTradingRewards" = '0';
-        INSERT INTO wallets VALUES (recipient_wallet_record.*) ON CONFLICT DO NOTHING;
     END IF;
 
     IF event_data->'sender'->'address' IS NOT NULL THEN
         transfer_record."senderWalletAddress" = event_data->'sender'->>'address';
-
-        sender_wallet_record."address" = transfer_record."senderWalletAddress";
-        sender_wallet_record."totalTradingRewards" = '0';
-        INSERT INTO wallets VALUES (sender_wallet_record.*) ON CONFLICT DO NOTHING;
     END IF;
 
     transfer_record."assetId" = event_data->>'assetId';

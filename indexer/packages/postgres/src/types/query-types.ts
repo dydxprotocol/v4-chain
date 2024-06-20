@@ -5,7 +5,6 @@ import { Liquidity } from './fill-types';
 import { OrderSide, OrderStatus, OrderType } from './order-types';
 import { PerpetualPositionStatus } from './perpetual-position-types';
 import { PositionSide } from './position-types';
-import { TradingRewardAggregationPeriod } from './trading-reward-aggregation-types';
 import { IsoString } from './utility-types';
 
 export enum QueryableField {
@@ -275,23 +274,4 @@ export interface ComplianceDataQueryConfig extends QueryConfig {
   [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
   [QueryableField.PROVIDER]?: string;
   [QueryableField.BLOCKED]?: boolean;
-}
-
-export interface TradingRewardQueryConfig extends QueryConfig {
-  [QueryableField.ADDRESS]?: string;
-  [QueryableField.BLOCK_HEIGHT]?: string;
-  [QueryableField.BLOCK_TIME_BEFORE_OR_AT]?: IsoString;
-  [QueryableField.BLOCK_TIME_AFTER_OR_AT]?: IsoString;
-  [QueryableField.BLOCK_TIME_BEFORE]?: IsoString;
-  [QueryableField.BLOCK_HEIGHT_BEFORE_OR_AT]?: IsoString;
-}
-
-export interface TradingRewardAggregationQueryConfig extends QueryConfig {
-  [QueryableField.ADDRESS]?: string;
-  [QueryableField.ADDRESSES]?: string[];
-  [QueryableField.STARTED_AT_HEIGHT]?: string;
-  [QueryableField.STARTED_AT_HEIGHT_OR_AFTER]?: string;
-  [QueryableField.PERIOD]?: TradingRewardAggregationPeriod;
-  [QueryableField.STARTED_AT_BEFORE_OR_AT]?: IsoString;
-  [QueryableField.STARTED_AT_HEIGHT_BEFORE_OR_AT]?: string;
 }

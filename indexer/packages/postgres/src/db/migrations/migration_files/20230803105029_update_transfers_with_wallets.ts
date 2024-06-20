@@ -9,19 +9,11 @@ export async function up(knex: Knex): Promise<void> {
     // Add nullable columns recipientWalletAddress and senderWalletAddress
     table.string('recipientWalletAddress').nullable();
     table.string('senderWalletAddress').nullable();
-
-    // Foreign key constraints for new columns
-    table.foreign('recipientWalletAddress').references('wallets.address');
-    table.foreign('senderWalletAddress').references('wallets.address');
   });
 }
 
 export async function down(knex: Knex): Promise<void> {
   return knex.schema.alterTable('transfers', (table) => {
-    // Remove the foreign key constraints
-    table.dropForeign(['recipientWalletAddress']);
-    table.dropForeign(['senderWalletAddress']);
-
     // Drop the new columns
     table.dropColumn('recipientWalletAddress');
     table.dropColumn('senderWalletAddress');
