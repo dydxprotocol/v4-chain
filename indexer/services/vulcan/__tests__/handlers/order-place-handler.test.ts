@@ -1229,7 +1229,7 @@ function expectWebsocketMessagesSent(
 
     expectWebsocketSubaccountMessage(
       producerSendSpy.mock.calls[callIndex][0],
-      subaccountMessage,
+      [subaccountMessage],
       defaultKafkaHeaders,
     );
     callIndex += 1;
