@@ -250,6 +250,10 @@ var (
 		"/dydxprotocol.vest.MsgDeleteVestEntry":         {},
 		"/dydxprotocol.vest.MsgDeleteVestEntryResponse": {},
 
+		// revshare
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShare":         {},
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse": {},
+
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         {},
 		"/dydxprotocol.rewards.MsgUpdateParamsResponse": {},

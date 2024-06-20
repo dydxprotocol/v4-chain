@@ -26,6 +26,7 @@ import (
 	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	ratelimit "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
+	revshare "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -165,6 +166,10 @@ var (
 		// ratelimit
 		"/dydxprotocol.ratelimit.MsgSetLimitParams":         &ratelimit.MsgSetLimitParams{},
 		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse": nil,
+
+		// revshare
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShare":         &revshare.MsgSetMarketMapperRevenueShare{},
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse": nil,
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         &rewards.MsgUpdateParams{},

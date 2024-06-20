@@ -1350,7 +1350,13 @@ const GenesisState = `{
         }
       ]
     },
-    "revshare": {},
+    "revshare": {
+      "params": {
+        "address": "dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt2",
+        "revenue_share_ppm": 0,
+        "valid_days": 0
+      }
+  	},
     "rewards": {
       "params": {
         "treasury_account":"rewards_treasury",

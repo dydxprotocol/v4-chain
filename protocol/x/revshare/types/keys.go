@@ -11,6 +11,9 @@ const (
 
 // State
 const (
+	// Key for MarketMapperRevenueShareParams
+	MarketMapperRevenueShareParamsKey = "MarketMapperRevenueShareParams"
+
 	// Key prefix for storing MarketMapperRevShareDetails per market
 	MarketMapperRevSharePrefix = "MarketMapperRevShare:"
 )
