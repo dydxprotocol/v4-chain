@@ -204,9 +204,9 @@ func (sm *GrpcStreamingManagerImpl) Stop() {
 	sm.done <- true
 }
 
-// SendSnapshot groups updates by their clob pair ids and
-// sends messages to the subscribers. It groups out updates differently
-// and bypasses the buffer.
+// SendSnapshot sends messages to a particular subscriber without buffering.
+// Note this method requires the lock and assumes that the lock has already been
+// acquired by the caller.
 func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 	offchainUpdates *clobtypes.OffchainUpdates,
 	subscriptionId uint32,
@@ -386,16 +386,21 @@ func (sm *GrpcStreamingManagerImpl) AddUpdatesToCache(
 	sm.EmitMetrics()
 }
 
-// FlushStreamUpdates takes in a map of clob pair id to stream updates and emits them to subscribers.
 func (sm *GrpcStreamingManagerImpl) FlushStreamUpdates() {
+	sm.Lock()
+	defer sm.Unlock()
+	sm.FlushStreamUpdatesWithLock()
+}
+
+// FlushStreamUpdatesWithLock takes in a map of clob pair id to stream updates and emits them to subscribers.
+// Note this method requires the lock and assumes that the lock has already been
+// acquired by the caller.
+func (sm *GrpcStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 	defer metrics.ModuleMeasureSince(
 		metrics.FullNodeGrpc,
 		metrics.GrpcFlushUpdatesLatency,
 		time.Now(),
 	)
-
-	sm.Lock()
-	defer sm.Unlock()
 
 	// Non-blocking send updates through subscriber's buffered channel.
 	// If the buffer is full, drop the subscription.
@@ -444,6 +449,10 @@ func (sm *GrpcStreamingManagerImpl) InitializeNewGrpcStreams(
 ) {
 	sm.Lock()
 	defer sm.Unlock()
+
+	// Flush any pending updates before sending the snapshot to avoid
+	// race conditions with the snapshot.
+	sm.FlushStreamUpdatesWithLock()
 
 	updatesByClobPairId := make(map[uint32]*clobtypes.OffchainUpdates)
 	for subscriptionId, subscription := range sm.orderbookSubscriptions {
