@@ -26,18 +26,9 @@ func init() {
 
 	_ = testTxBuilder.SetMsgs(&MsgExecWithDydxMessage)
 	MsgExecWithDydxMessageTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
-
 }
 
-const (
-	testMetadata = "test-metadata"
-	testTitle    = "test-title"
-	testSummary  = "test-summary"
-)
-
 var (
-	testProposer = constants.Bob_Num0.Owner
-
 	// Inner msgs.
 	MsgSoftwareUpgrade = &upgrade.MsgSoftwareUpgrade{
 		Authority: constants.Bob_Num0.Owner,

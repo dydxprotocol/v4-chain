@@ -8,7 +8,6 @@ linters:
     - govet
     - importas
     - ineffassign
-    - lll
     - misspell
     - revive
     - staticcheck

@@ -32,10 +32,7 @@ import (
 )
 
 var (
-	liqTestMakerOrderQuantums                = satypes.BaseQuantums(100_000_000) // 1 BTC.
-	liqTestInitialSubaccountModuleAccBalance = int64(
-		10_000 * constants.QuoteBalance_OneDollar, // $10,000.
-	)
+	liqTestMakerOrderQuantums   = satypes.BaseQuantums(100_000_000) // 1 BTC.
 	liqTestSubaccountNumberZero = uint32(0)
 	liqTestSubaccountNumberOne  = uint32(1)
 	liqTestUnixSocketAddress    = "/tmp/liquidations_cli_test.sock"
@@ -46,7 +43,6 @@ type LiquidationsIntegrationTestSuite struct {
 
 	validatorAddress sdk.AccAddress
 	cfg              network.Config
-	network          *network.Network
 }
 
 func TestLiquidationOrderIntegrationTestSuite(t *testing.T) {
@@ -114,12 +110,11 @@ func (s *LiquidationsIntegrationTestSuite) SetupSuite() {
 // QuoteBalance and PerpetualPositions, along with the balances of the Subaccounts module,
 // Distribution module, and insurance fund.
 func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
-
 	goodTilBlock := uint32(0)
 	subticks := types.Subticks(50_000_000_000)
 
 	blockHeightQuery := "docker exec interchain-security-instance interchain-security-cd query block --type=height 0"
-	data, _, err := network.QueryCustomNetwork(blockHeightQuery)
+	data, _, _ := network.QueryCustomNetwork(blockHeightQuery)
 	var resp blocktypes.Block
 	require.NoError(s.T(), s.cfg.Codec.UnmarshalJSON(data, &resp))
 	blockHeight := resp.LastCommit.Height
@@ -127,21 +122,31 @@ func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
 	goodTilBlock = uint32(blockHeight) + types.ShortBlockWindow
 	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
 
-	buyTx := "docker exec interchain-security-instance interchain-security-cd tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 1 100000000 50000000000 " + goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
-	_, _, err = network.QueryCustomNetwork(buyTx)
+	buyTx := "docker exec interchain-security-instance interchain-security-cd" +
+		" tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
+		" 0 1 0 1 100000000 50000000000 " + goodTilBlockStr +
+		" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
+		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
+	_, _, err := network.QueryCustomNetwork(buyTx)
 	s.Require().NoError(err)
 
 	time.Sleep(5 * time.Second)
 
 	// Query both subaccounts.
-	accResp, accErr := sa_testutil.MsgQuerySubaccountExec("dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6", liqTestSubaccountNumberZero)
+	accResp, accErr := sa_testutil.MsgQuerySubaccountExec(
+		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
+		liqTestSubaccountNumberZero,
+	)
 	s.Require().NoError(accErr)
 
 	var subaccountResp satypes.QuerySubaccountResponse
 	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(accResp.Bytes(), &subaccountResp))
 	subaccountZero := subaccountResp.Subaccount
 
-	accResp, err = sa_testutil.MsgQuerySubaccountExec("dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6", liqTestSubaccountNumberOne)
+	accResp, _ = sa_testutil.MsgQuerySubaccountExec(
+		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
+		liqTestSubaccountNumberOne,
+	)
 	s.Require().NoError(accErr)
 
 	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(accResp.Bytes(), &subaccountResp))

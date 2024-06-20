@@ -26,7 +26,7 @@ import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import { candlesToSparklineResponseObject } from '../../../request-helpers/request-transformer';
 import { SparklineResponseObject, SparklinesRequest, SparklineTimePeriod } from '../../../types';
 
-const router = express.Router();
+const router: express.Router = express.Router();
 const controllerName: string = 'sparklines-controller';
 
 @Route('sparklines')

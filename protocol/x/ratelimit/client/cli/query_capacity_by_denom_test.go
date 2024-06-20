@@ -19,10 +19,10 @@ import (
 var _ = strconv.IntSize
 
 func TestQueryCapacityByDenom(t *testing.T) {
-
 	cfg := network.DefaultConfig(nil)
 
-	rateQuery := "docker exec interchain-security-instance-setup interchain-security-cd query ratelimit capacity-by-denom " + assettypes.AssetUsdc.Denom
+	rateQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
+		" query ratelimit capacity-by-denom " + assettypes.AssetUsdc.Denom
 	data, _, err := network.QueryCustomNetwork(rateQuery)
 
 	require.NoError(t, err)

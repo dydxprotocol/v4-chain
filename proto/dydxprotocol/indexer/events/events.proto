@@ -23,8 +23,8 @@ message FundingUpdateV1 {
   // funding index is required if and only if parent `FundingEvent` type is
   // `TYPE_FUNDING_RATE_AND_INDEX`.
   bytes funding_index = 3 [
-    (gogoproto.customtype) =
-        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.customtype) = "github.com/StreamFinance-Protocol/stream-chain/"
+                             "protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 }

@@ -268,7 +268,6 @@ func isAnvilRunning() bool {
 		}
 	}
 	return false
-
 }
 
 func cleanUpAnvil() {

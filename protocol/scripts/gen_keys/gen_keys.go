@@ -28,7 +28,8 @@ func main() {
 	}
 
 	// The mnemonic
-	mnemonic := "merge panther lobster crazy road hollow amused security before critic about cliff exhibit cause coyote talent happy where lion river tobacco option coconut small"
+	mnemonic := "merge panther lobster crazy road hollow amused security before critic" +
+		" about cliff exhibit cause coyote talent happy where lion river tobacco option coconut small"
 
 	// HD path for the first account under BIP44: m/44'/118'/0'/0/0
 	hdPath := hd.NewFundraiserParams(0, 118, 0).String()

@@ -1,7 +1,0 @@
-syntax = "proto3";
-package dydxprotocol.govplus;
-
-option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/types";
-
-// Query defines the gRPC querier service.
-service Query {}

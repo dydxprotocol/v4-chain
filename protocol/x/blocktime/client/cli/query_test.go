@@ -16,10 +16,10 @@ import (
 var _ = strconv.IntSize
 
 func TestQueryParams(t *testing.T) {
-
 	cfg := network.DefaultConfig(nil)
 
-	blockQuery := "docker exec interchain-security-instance-setup interchain-security-cd query blocktime get-downtime-params"
+	blockQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
+		" query blocktime get-downtime-params"
 	data, _, err := network.QueryCustomNetwork(blockQuery)
 
 	require.NoError(t, err)
@@ -31,7 +31,8 @@ func TestQueryParams(t *testing.T) {
 func TestQueryAllDowntimeInfo(t *testing.T) {
 	cfg := network.DefaultConfig(nil)
 
-	blockQuery := "docker exec interchain-security-instance-setup interchain-security-cd query blocktime get-all-downtime-info"
+	blockQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
+		" query blocktime get-all-downtime-info"
 	data, _, err := network.QueryCustomNetwork(blockQuery)
 
 	require.NoError(t, err)
@@ -42,7 +43,8 @@ func TestQueryAllDowntimeInfo(t *testing.T) {
 func TestQueryPreviousBlockInfo(t *testing.T) {
 	cfg := network.DefaultConfig(nil)
 
-	blockQuery := "docker exec interchain-security-instance-setup interchain-security-cd query blocktime get-previous-block-info"
+	blockQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
+		" query blocktime get-previous-block-info"
 	data, _, err := network.QueryCustomNetwork(blockQuery)
 	require.NoError(t, err)
 	var resp types.QueryPreviousBlockInfoResponse

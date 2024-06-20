@@ -24,7 +24,8 @@ func TestCmdGetBlockRateLimitConfiguration(t *testing.T) {
 	networkWithClobPairObjects(t, 2)
 
 	cfg := network.DefaultConfig(nil)
-	query := "docker exec interchain-security-instance interchain-security-cd query clob get-block-rate-limit-config"
+	query := "docker exec interchain-security-instance interchain-security-cd" +
+		" query clob get-block-rate-limit-config"
 	data, _, err := network.QueryCustomNetwork(query)
 
 	require.NoError(t, err)

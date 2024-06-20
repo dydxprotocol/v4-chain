@@ -87,7 +87,6 @@ func validateInnerMsg(msg sdk.Msg) error {
 // getInnerMsgs returns the inner msgs of the given msg.
 func getInnerMsgs(msg sdk.Msg) ([]sdk.Msg, error) {
 	switch msg := msg.(type) {
-
 	case *authz.MsgExec:
 		return msg.GetMessages()
 	default:
