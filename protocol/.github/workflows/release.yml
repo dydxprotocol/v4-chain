@@ -7,7 +7,6 @@ on:  # yamllint disable-line rule:truthy
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"  # e.g.: v1.0.1
       - "v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+"  # e.g.: v1.0.1-rc1
-      - "chenyao/test-vault-order-replace"
 
 jobs:
   build:
