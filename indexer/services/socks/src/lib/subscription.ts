@@ -26,7 +26,7 @@ import {
   SubscriptionInfo,
 } from '../types';
 import { axiosRequest } from './axios';
-import { V4_BLOCK_HEIGHT, V4_MARKETS_ID, WS_CLOSE_CODE_POLICY_VIOLATION } from './constants';
+import { V4_BLOCK_HEIGHT_ID, V4_MARKETS_ID, WS_CLOSE_CODE_POLICY_VIOLATION } from './constants';
 import { BlockedError, InvalidChannelError } from './errors';
 import { RateLimiter } from './rate-limit';
 
@@ -447,7 +447,7 @@ export class Subscriptions {
    */
   private normalizeSubscriptionId(channel: Channel, id?: string): string {
     if (channel === Channel.V4_BLOCK_HEIGHT) {
-      return id ?? V4_BLOCK_HEIGHT;
+      return id ?? V4_BLOCK_HEIGHT_ID;
     }
     return id ?? V4_MARKETS_ID;
   }
