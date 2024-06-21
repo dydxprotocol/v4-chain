@@ -74,9 +74,7 @@ func CmdPlaceOrder() *cobra.Command {
 					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: argGoodTilBlock},
 				},
 			)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
