@@ -48,7 +48,6 @@ func (k Keeper) SetMarketMapperRevShareDetails(
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.MarketMapperRevSharePrefix))
 	b := k.cdc.MustMarshal(&params)
 	store.Set(lib.Uint32ToKey(marketId), b)
-	return
 }
 
 // Function to retrieve marketmapper revshare details for a market from module store
