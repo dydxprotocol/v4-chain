@@ -73,7 +73,7 @@ export async function updatePriceLevel({
     );
     logger.crit({
       at: 'orderbookLevelsCache#updatePriceLevel',
-      message: 'Price level updated to negative quantums',
+      message: 'Price level updated to negative quantums, set to zero',
       ticker,
       side,
       humanPrice,
