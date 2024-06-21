@@ -488,6 +488,17 @@ func TestGetPerpetuals_Success(t *testing.T) {
 	)
 }
 
+func BenchmarkGetAllPerpetuals(b *testing.B) {
+	pc := keepertest.PerpetualsKeepers(b)
+	// Create liquidity tiers and perpetuals,
+	keepertest.CreateLiquidityTiersAndNPerpetuals(b, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 100)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = pc.PerpetualsKeeper.GetAllPerpetuals(pc.Ctx)
+	}
+}
+
 func TestGetAllPerpetuals_Sorted(t *testing.T) {
 	// Setup context and keepers
 	pc := keepertest.PerpetualsKeepers(t)
