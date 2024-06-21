@@ -22,7 +22,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MarketMapperRevShareParam specifies any params associated with the market
+// MarketMapperRevShareDetails specifies any details associated with the market
 // mapper revenue share
 type MarketMapperRevShareDetails struct {
 	// Unix timestamp recorded when the market revenue share expires

@@ -3,7 +3,7 @@ package dydxprotocol.revshare;
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types";
 
-// MarketMapperRevShareParam specifies any params associated with the market
+// MarketMapperRevShareDetails specifies any details associated with the market
 // mapper revenue share
 message MarketMapperRevShareDetails {
   // Unix timestamp recorded when the market revenue share expires

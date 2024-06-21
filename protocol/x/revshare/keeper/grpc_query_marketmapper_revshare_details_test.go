@@ -18,8 +18,7 @@ func TestQueryMarketMapperRevShareDetails(t *testing.T) {
 		ExpirationTs: 1735707600,
 	}
 	marketId := uint32(42)
-	err := k.SetMarketMapperRevShareDetails(ctx, marketId, setDetails)
-	require.NoError(t, err)
+	k.SetMarketMapperRevShareDetails(ctx, marketId, setDetails)
 
 	resp, err := k.MarketMapperRevShareDetails(
 		ctx, &types.QueryMarketMapperRevShareDetails{
@@ -28,4 +27,18 @@ func TestQueryMarketMapperRevShareDetails(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Equal(t, resp.Details.ExpirationTs, setDetails.ExpirationTs)
+}
+
+func TestQueryMarketMapperRevShareDetailsFailure(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RevShareKeeper
+
+	// Query for revshare details of non-existent market
+	_, err := k.MarketMapperRevShareDetails(
+		ctx, &types.QueryMarketMapperRevShareDetails{
+			MarketId: 42,
+		},
+	)
+	require.ErrorContains(t, err, "MarketMapperRevShareDetails not found for marketId: 42")
 }

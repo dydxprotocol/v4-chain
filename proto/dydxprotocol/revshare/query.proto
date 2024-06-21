@@ -1,6 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.revshare;
 
+import "google/api/annotations.proto";
 import "dydxprotocol/revshare/revshare.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types";
@@ -9,7 +10,10 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 service Query {
   // Queries market mapper revenue share details for a specific market
   rpc MarketMapperRevShareDetails(QueryMarketMapperRevShareDetails)
-      returns (QueryMarketMapperRevShareDetailsResponse);
+      returns (QueryMarketMapperRevShareDetailsResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/revshare/market_mapper_rev_share_details/{market_id}";
+  }
 }
 
 // Queries market mapper revenue share details for a specific market

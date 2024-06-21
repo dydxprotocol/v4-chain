@@ -1,7 +1,7 @@
 import * as _m0 from "protobufjs/minimal";
 import { Long, DeepPartial } from "../../helpers";
 /**
- * MarketMapperRevShareParam specifies any params associated with the market
+ * MarketMapperRevShareDetails specifies any details associated with the market
  * mapper revenue share
  */
 
@@ -10,7 +10,7 @@ export interface MarketMapperRevShareDetails {
   expirationTs: Long;
 }
 /**
- * MarketMapperRevShareParam specifies any params associated with the market
+ * MarketMapperRevShareDetails specifies any details associated with the market
  * mapper revenue share
  */
 

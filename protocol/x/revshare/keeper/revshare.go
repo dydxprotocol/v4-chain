@@ -37,21 +37,21 @@ func (k Keeper) GetMarketMapperRevenueShareParams(
 	return params
 }
 
-// Function to serialize market mapper rev share params and store in the
-// module store
+// Function to serialize market mapper rev share details for a market
+// and store in the module store
 func (k Keeper) SetMarketMapperRevShareDetails(
 	ctx sdk.Context,
 	marketId uint32,
 	params types.MarketMapperRevShareDetails,
-) (err error) {
+) {
 	// Store the rev share details for provided market in module store
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.MarketMapperRevSharePrefix))
 	b := k.cdc.MustMarshal(&params)
 	store.Set(lib.Uint32ToKey(marketId), b)
-	return nil
+	return
 }
 
-// Function to retrieve marketmapper revshare params from module store
+// Function to retrieve marketmapper revshare details for a market from module store
 func (k Keeper) GetMarketMapperRevShareDetails(
 	ctx sdk.Context,
 	marketId uint32,
@@ -66,7 +66,7 @@ func (k Keeper) GetMarketMapperRevShareDetails(
 }
 
 // Function to perform all market creation actions for the revshare module
-func (k Keeper) CreateNewMarketRevShare(ctx sdk.Context, marketId uint32) (err error) {
+func (k Keeper) CreateNewMarketRevShare(ctx sdk.Context, marketId uint32) {
 	revShareParams := k.GetMarketMapperRevenueShareParams(ctx)
 
 	validDurationSeconds := int64(revShareParams.ValidDays * 24 * 60 * 60)
@@ -75,10 +75,5 @@ func (k Keeper) CreateNewMarketRevShare(ctx sdk.Context, marketId uint32) (err e
 	details := types.MarketMapperRevShareDetails{
 		ExpirationTs: uint64(ctx.BlockTime().Unix() + validDurationSeconds),
 	}
-	err = k.SetMarketMapperRevShareDetails(ctx, marketId, details)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	k.SetMarketMapperRevShareDetails(ctx, marketId, details)
 }
