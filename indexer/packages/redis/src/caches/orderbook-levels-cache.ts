@@ -4,7 +4,7 @@ import Big from 'big.js';
 import _ from 'lodash';
 import { Callback, RedisClient } from 'redis';
 
-import { InvalidOptionsError, InvalidPriceLevelUpdateError } from '../errors';
+import { InvalidOptionsError } from '../errors';
 import { hGetAsync } from '../helpers/redis';
 import { OrderbookLevels, PriceLevel } from '../types';
 import {
@@ -58,32 +58,29 @@ export async function updatePriceLevel({
   // NOTE: If this happens from a single price level update, it's possible for multiple subsequent
   // price level updates to fail with the same error due to interleaved price level updates.
   if (updatedQuantums < 0) {
-    // Undo the update. This can't be done in a Lua script as Redis runs Lua 5.1, which only
-    // uses doubles which support up to 53-bit integers. Race-condition where it's possible for a
-    // price-level to have negative quantums handled in `getOrderbookLevels` where price-levels with
-    // negative quantums are filtered out. Note: even though we are reverting this information, each
-    // call to incrementOrderbookLevel updates the lastUpdated key in the cache.
+    // Set the price level to 0.
+    // Race-condition where it's possible for a price-level to have negative quantums handled in
+    // `getOrderbookLevels` where price-levels with negative quantums are filtered out. Note: even
+    // though we are reverting this information, each call to incrementOrderbookLevel updates the
+    // lastUpdated key in the cache.
     await incrementOrderbookLevel(
       ticker,
       side,
       humanPrice,
       // Needs to be an integer
-      Big(sizeDeltaInQuantums).mul(-1).toFixed(0),
+      Big(updatedQuantums).mul(-1).toFixed(0),
       client,
     );
     logger.crit({
       at: 'orderbookLevelsCache#updatePriceLevel',
-      message: 'Price level updated to negative quantums',
+      message: 'Price level updated to negative quantums, set to zero',
       ticker,
       side,
       humanPrice,
       updatedQuantums,
       sizeDeltaInQuantums,
     });
-    throw new InvalidPriceLevelUpdateError(
-      '#updatePriceLevel: Resulting price level has negative quantums, quantums = ' +
-      `${updatedQuantums}`,
-    );
+    return 0;
   }
 
   return updatedQuantums;
