@@ -16,6 +16,6 @@ func (k Keeper) MarketMapperRevShareDetails(
 		return nil, err
 	}
 	return &types.QueryMarketMapperRevShareDetailsResponse{
-		Details: &revShareDetails,
+		Details: revShareDetails,
 	}, nil
 }
