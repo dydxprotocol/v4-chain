@@ -7,6 +7,11 @@ import (
 
 // ContainsDuplicates returns true if the slice contains duplicates, false if not.
 func ContainsDuplicates[V comparable](values []V) bool {
+	// Optimize edge case. If values is nil, len(values) returns 0.
+	if len(values) <= 1 {
+		return false
+	}
+
 	// Store each value as a key in the mapping.
 	seenValues := make(map[V]struct{}, len(values))
 	for i, val := range values {
