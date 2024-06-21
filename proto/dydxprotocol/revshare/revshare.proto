@@ -1,0 +1,11 @@
+syntax = "proto3";
+package dydxprotocol.revshare;
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types";
+
+// MarketMapperRevShareDetails specifies any details associated with the market
+// mapper revenue share
+message MarketMapperRevShareDetails {
+  // Unix timestamp recorded when the market revenue share expires
+  uint64 expiration_ts = 1;
+}
