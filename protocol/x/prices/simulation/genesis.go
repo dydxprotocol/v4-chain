@@ -40,8 +40,12 @@ func genMarketExponent(r *rand.Rand, isReasonableGenesis bool) int {
 }
 
 // genMarketName return randomized market name.
-func genMarketName(r *rand.Rand) string {
-	return simtypes.RandStringOfLength(r, simtypes.RandIntBetween(r, 3, 6)) + "-USD"
+func genMarketName(r *rand.Rand, existingMarketNames map[string]bool) string {
+	marketName := simtypes.RandStringOfLength(r, simtypes.RandIntBetween(r, 3, 6)) + "-USD"
+	for existingMarketNames[marketName] {
+		marketName = simtypes.RandStringOfLength(r, simtypes.RandIntBetween(r, 3, 6)) + "-USD"
+	}
+	return marketName
 }
 
 // genMarketPrice returns randomized market price.
@@ -63,7 +67,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 	marketParams := make([]types.MarketParam, numMarkets)
 	marketPrices := make([]types.MarketPrice, numMarkets)
 
+	marketNames := make(map[string]bool)
+
 	for i := 0; i < numMarkets; i++ {
+		marketName := genMarketName(r, marketNames)
+		marketNames[marketName] = true
+
 		var minExchanges = genMinExchanges(r, isReasonableGenesis)
 		if minExchanges < minExchangesPerMarket {
 			minExchanges = minExchangesPerMarket
@@ -73,7 +82,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 		marketParams[i] = types.MarketParam{
 			Id:                uint32(i),
-			Pair:              genMarketName(r),
+			Pair:              marketName,
 			Exponent:          int32(marketExponent),
 			MinExchanges:      uint32(minExchanges),
 			MinPriceChangePpm: uint32(simtypes.RandIntBetween(r, 1, int(lib.MaxPriceChangePpm))),
