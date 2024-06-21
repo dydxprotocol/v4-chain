@@ -189,8 +189,6 @@ describe('orderbookLevelsCache', () => {
         client,
       });
 
-      // Test that an error is thrown if the update results in a negative quantums for the price
-      // level
       await updatePriceLevel({
         ticker,
         side: OrderSide.BUY,
@@ -200,7 +198,7 @@ describe('orderbookLevelsCache', () => {
       });
       expect(logger.crit).toHaveBeenCalledTimes(1);
 
-      // Expect that the value in the orderbook is unchanged
+      // Expect that the value in the orderbook is set to 0
       const orderbookLevels: OrderbookLevels = await getOrderBookLevels(
         ticker,
         client,
