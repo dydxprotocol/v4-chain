@@ -118,6 +118,59 @@ func TestContainsDuplicates(t *testing.T) {
 	}
 }
 
+func BenchmarkMapToSortedSlice(b *testing.B) {
+	input := map[string]string{
+		"d": "4",
+		"b": "2",
+		"a": "1",
+		"c": "3",
+		"e": "5",
+		"f": "6",
+		"g": "7",
+		"h": "8",
+		"i": "9",
+		"j": "10",
+	}
+	for i := 0; i < b.N; i++ {
+		_ = lib.MapToSortedSlice[sort.StringSlice, string, string](input)
+	}
+}
+
+func TestMapToSortedSlice(t *testing.T) {
+	tests := map[string]struct {
+		inputMap       map[string]string
+		expectedResult []string
+	}{
+		"Nil input": {
+			inputMap:       nil,
+			expectedResult: []string{},
+		},
+		"Empty map": {
+			inputMap:       map[string]string{},
+			expectedResult: []string{},
+		},
+		"Single item": {
+			inputMap:       map[string]string{"a": "1"},
+			expectedResult: []string{"1"},
+		},
+		"Multiple items": {
+			inputMap: map[string]string{
+				"d": "4",
+				"b": "2",
+				"a": "1",
+				"c": "3",
+			},
+			expectedResult: []string{"1", "2", "3", "4"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualResult := lib.MapToSortedSlice[sort.StringSlice](tc.inputMap)
+			require.Equal(t, tc.expectedResult, actualResult)
+		})
+	}
+}
+
 func TestGetSortedKeys(t *testing.T) {
 	tests := map[string]struct {
 		inputMap       map[string]string
