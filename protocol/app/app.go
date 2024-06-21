@@ -891,18 +891,18 @@ func New(
 	}
 
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
-		appCodec,
-		keys[pricesmoduletypes.StoreKey],
-		indexPriceCache,
-		timeProvider,
-		app.IndexerEventManager,
-		// set the governance and delaymsg module accounts as the authority for conducting upgrades
-		[]string{
+		appCodec, keys[pricesmoduletypes.StoreKey], indexPriceCache, timeProvider, app.IndexerEventManager, []string{
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
-		},
+		}, nil,
 	)
-	pricesModule := pricesmodule.NewAppModule(appCodec, app.PricesKeeper, app.AccountKeeper, app.BankKeeper)
+	pricesModule := pricesmodule.NewAppModule(
+		appCodec,
+		app.PricesKeeper,
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.RevShareKeeper,
+	)
 
 	app.AssetsKeeper = *assetsmodulekeeper.NewKeeper(
 		appCodec,

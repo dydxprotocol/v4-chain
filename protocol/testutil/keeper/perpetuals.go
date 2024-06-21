@@ -69,6 +69,7 @@ func PerpetualsKeepersWithClobHelpers(
 				db,
 				cdc,
 				transientStoreKey,
+				nil,
 			)
 			pc.EpochsKeeper, _ = createEpochsKeeper(stateStore, db, cdc)
 			pc.PerpetualsKeeper, pc.StoreKey = createPerpetualsKeeperWithClobHelpers(

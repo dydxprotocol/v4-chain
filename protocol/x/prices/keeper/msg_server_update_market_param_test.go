@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -143,7 +144,7 @@ func TestUpdateMarketParam(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, pricesKeeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			msgServer := keeper.NewMsgServerImpl(pricesKeeper)
 			initialMarketParam, err := pricesKeeper.CreateMarket(ctx, testMarketParam, testMarketPrice)
