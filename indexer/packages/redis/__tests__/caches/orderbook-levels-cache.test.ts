@@ -208,7 +208,10 @@ describe('orderbookLevelsCache', () => {
           removeZeros: false,
         },
       );
-      expect(orderbookLevels.bids).toMatchObject([{}]);
+      expect(orderbookLevels.bids).toMatchObject([{
+        humanPrice,
+        quantums: '0',
+      }]);
     });
   });
 
