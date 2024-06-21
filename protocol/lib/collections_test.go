@@ -98,6 +98,10 @@ func TestContainsDuplicates(t *testing.T) {
 			input:    []uint32{},
 			expected: false,
 		},
+		"One Item": {
+			input:    []uint32{10},
+			expected: false,
+		},
 		"False": {
 			input:    []uint32{1, 2, 3, 4},
 			expected: false,
