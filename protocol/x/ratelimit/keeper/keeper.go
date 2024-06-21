@@ -91,6 +91,14 @@ func (k Keeper) ProcessWithdrawal(
 		CapacityList: newCapacityList,
 	})
 
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.IbcWithdrawalAmount},
+		metrics.GetMetricValueFromBigInt(amount),
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.RateLimitDenom, denom),
+		},
+	)
+
 	return nil
 }
 
@@ -137,6 +145,14 @@ func (k Keeper) IncrementCapacitiesForDenom(
 		Denom:        denom,
 		CapacityList: newCapacityList,
 	})
+
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.IbcDepositAmount},
+		metrics.GetMetricValueFromBigInt(amount),
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.RateLimitDenom, denom),
+		},
+	)
 }
 
 // SetLimitParams sets `LimitParams` for the given denom.
