@@ -19,4 +19,10 @@ const (
 	// Suffix for the store key to the last block a negative TNC subaccount was seen in state for the
 	// cross collateral pool.
 	CrossCollateralSuffix = "cross"
+
+	// Safety Heap
+	SafetyHeapStorePrefix             = "SH"
+	SafetyHeapSubaccountIdsPrefix     = "Heap/"
+	SafetyHeapSubaccountToIndexPrefix = "Idx/"
+	SafetyHeapLengthPrefix            = "Len/"
 )
