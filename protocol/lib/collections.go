@@ -27,6 +27,19 @@ func ContainsDuplicates[V comparable](values []V) bool {
 	return false
 }
 
+// MapToSortedSlice returns a slice of values from a map, sorted by key.
+func MapToSortedSlice[R interface {
+	~[]K
+	sort.Interface
+}, K comparable, V any](m map[K]V) []V {
+	keys := GetSortedKeys[R](m)
+	values := make([]V, 0, len(m))
+	for _, key := range keys {
+		values = append(values, m[key])
+	}
+	return values
+}
+
 // DedupeSlice deduplicates a slice of comparable values.
 func DedupeSlice[V comparable](values []V) []V {
 	seenValues := make(map[V]struct{})
