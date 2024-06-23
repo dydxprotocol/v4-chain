@@ -14,7 +14,7 @@ import (
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	sample_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
 	asstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
-	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -728,7 +728,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			// Set up Subaccounts module account.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
 			// Set up insurance fund module account.
-			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, clobtypes.InsuranceFundName, []string{})
+			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, perptypes.InsuranceFundName, []string{})
 
 			bankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
 				Base:    constants.Usdc.Denom,
@@ -745,7 +745,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			if tc.insuranceFundBalance > 0 {
 				err := bank_testutil.FundModuleAccount(
 					ctx,
-					clobtypes.InsuranceFundName,
+					perptypes.InsuranceFundName,
 					sdk.Coins{
 						sdk.NewInt64Coin(constants.Usdc.Denom, tc.insuranceFundBalance),
 					},
@@ -802,7 +802,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 
 			// Check the fee module account balance has been updated as expected.
 			toModuleBalance := bankKeeper.GetBalance(
-				ctx, authtypes.NewModuleAddress(clobtypes.InsuranceFundName),
+				ctx, authtypes.NewModuleAddress(perptypes.InsuranceFundName),
 				constants.Usdc.Denom,
 			)
 			require.Equal(t,

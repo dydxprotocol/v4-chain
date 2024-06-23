@@ -13,6 +13,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 
@@ -83,7 +84,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 	mockBankKeeper.On(
 		"GetBalance",
 		mock.Anything,
-		clob_types.InsuranceFundModuleAddress,
+		perptypes.InsuranceFundModuleAddress,
 		constants.Usdc.Denom,
 	).Return(
 		sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),

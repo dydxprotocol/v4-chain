@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
-	clobmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	perpetualsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
@@ -19,7 +19,7 @@ func TestModuleAccountsToAddresses(t *testing.T) {
 
 		ibctransfertypes.ModuleName:                "dydx1yl6hdjhmkf37639730gffanpzndzdpmh8xcdh5",
 		satypes.ModuleName:                         "dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6",
-		clobmoduletypes.InsuranceFundName:          "dydx1c7ptc87hkd54e3r7zjy92q29xkq7t79w64slrq",
+		perpetualsmoduletypes.InsuranceFundName:   "dydx1c7ptc87hkd54e3r7zjy92q29xkq7t79w64slrq",
 		icatypes.ModuleName:                        "dydx1vlthgax23ca9syk7xgaz347xmf4nunefw3cnv8",
 		consumertypes.ConsumerRedistributeName:     "dydx1x69dz0c0emw8m2c6kp5v6c08kgjxmu30yn6p5y",
 		consumertypes.ConsumerToSendToProviderName: "dydx1ywtansy6ss0jtq8ckrcv6jzkps8yh8mf37gcch",

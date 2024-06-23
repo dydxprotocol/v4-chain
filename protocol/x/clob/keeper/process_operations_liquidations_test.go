@@ -202,7 +202,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
 					satypes.ModuleName,
-					types.InsuranceFundName,
+					perptypes.InsuranceFundName,
 					// Subaccount pays $250 to insurance fund for liquidating 1 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000_000)),
 				).Return(nil).Once()
@@ -285,7 +285,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				bk.On(
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
-					types.InsuranceFundName,
+					perptypes.InsuranceFundName,
 					satypes.ModuleName,
 					// Insurance fund covers $1 loss for liquidating 1 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(1_000_000)),
@@ -366,7 +366,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
 					satypes.ModuleName,
-					types.InsuranceFundName,
+					perptypes.InsuranceFundName,
 					// Subaccount pays $62.5 to insurance fund for liquidating 0.25 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(62_500_000)),
 				).Return(nil).Twice()
@@ -469,7 +469,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				bk.On(
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
-					types.InsuranceFundName,
+					perptypes.InsuranceFundName,
 					satypes.ModuleName,
 					// Insurance fund covers $0.25 loss for liquidating 0.25 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000)),
@@ -575,14 +575,14 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
 					satypes.ModuleName,
-					types.InsuranceFundName,
+					perptypes.InsuranceFundName,
 					// Pays insurance fund $0.75 for liquidating 0.75 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(750_000)),
 				).Return(nil).Once()
 				bk.On(
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
-					types.InsuranceFundName,
+					perptypes.InsuranceFundName,
 					satypes.ModuleName,
 					// Insurance fund covers $0.25 loss for liquidating 0.25 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000)),
@@ -679,7 +679,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
 					satypes.ModuleName,
-					types.InsuranceFundName,
+					perptypes.InsuranceFundName,
 					// Pays insurance fund $0.378735 (capped by MaxLiquidationFeePpm)
 					// for liquidating 0.75 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(378_735)),
@@ -688,7 +688,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
 					satypes.ModuleName,
-					types.InsuranceFundName,
+					perptypes.InsuranceFundName,
 					// Pays insurance fund $0.121265.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(121_265)),
 				).Return(nil).Once()
@@ -786,7 +786,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
 					satypes.ModuleName,
-					types.InsuranceFundName,
+					perptypes.InsuranceFundName,
 					// Subaccount pays $125 to insurance fund for liquidating 0.5 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(125_000_000)),
 				).Return(nil).Once()
@@ -899,7 +899,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
 					satypes.ModuleName,
-					types.InsuranceFundName,
+					perptypes.InsuranceFundName,
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(25)),
 				).Return(nil)
 			},
@@ -988,7 +988,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 		// 			"SendCoinsFromModuleToModule",
 		// 			mock.Anything,
 		// 			satypes.ModuleName,
-		// 			types.InsuranceFundName,
+		// 			perptypes.InsuranceFundName,
 		// 			// Subaccount pays $125 to insurance fund for liquidating 0.5 BTC.
 		// 			mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(125_000_000)),
 		// 		).Return(nil).Once()
@@ -1272,7 +1272,7 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
 					mock.Anything,
-					types.InsuranceFundName,
+					perptypes.InsuranceFundName,
 					mock.Anything,
 				).Return(nil)
 			},

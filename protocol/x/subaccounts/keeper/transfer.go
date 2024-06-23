@@ -7,7 +7,7 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
-	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -277,7 +277,7 @@ func (k Keeper) TransferInsuranceFundPayments(
 	// Determine the sender and receiver.
 	// Send coins from `subaccounts` to the `insurance_fund` module account by default.
 	fromModule := types.ModuleName
-	toModule := clobtypes.InsuranceFundName
+	toModule := perptypes.InsuranceFundName
 
 	if insuranceFundDelta.Sign() < 0 {
 		// Insurance fund needs to cover losses from liquidations.

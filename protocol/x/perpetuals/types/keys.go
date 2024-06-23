@@ -30,3 +30,9 @@ const (
 	// ParamsKey is the key to retrieve all params for the module.
 	ParamsKey = "Params"
 )
+
+// Module Accounts
+const (
+	// InsuranceFundName defines the root string for the insurance fund account address
+	InsuranceFundName = "insurance_fund"
+)

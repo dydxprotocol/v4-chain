@@ -114,9 +114,3 @@ const (
 	// This is meant to be used for improved conditional order triggering.
 	MaxTradePricePrefix = "MaxTrade:"
 )
-
-// Module Accounts
-const (
-	// InsuranceFundName defines the root string for the insurance fund account address
-	InsuranceFundName = "insurance_fund"
-)
