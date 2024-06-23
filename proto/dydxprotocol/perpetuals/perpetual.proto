@@ -19,6 +19,15 @@ message Perpetual {
   ];
 }
 
+enum PerpetualMarketType {
+  // Unspecified market type.
+  PERPETUAL_MARKET_TYPE_UNSPECIFIED = 0;
+  // Market type for cross margin perpetual markets.
+  PERPETUAL_MARKET_TYPE_CROSS = 1;
+  // Market type for isolated margin perpetual markets.
+  PERPETUAL_MARKET_TYPE_ISOLATED = 2;
+}
+
 // PerpetualParams represents the parameters of a perpetual on the dYdX
 // exchange.
 message PerpetualParams {
@@ -45,6 +54,9 @@ message PerpetualParams {
 
   // The liquidity_tier that this perpetual is associated with.
   uint32 liquidity_tier = 6;
+
+  // The market type specifying if this perpetual is cross or isolated
+  PerpetualMarketType market_type = 7;
 }
 
 // MarketPremiums stores a list of premiums for a single perpetual market.

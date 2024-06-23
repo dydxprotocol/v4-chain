@@ -115,6 +115,7 @@ var (
 			AtomicResolution:  int32(-10),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(0),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -126,6 +127,7 @@ var (
 			AtomicResolution:  int32(0),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(2),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -137,6 +139,7 @@ var (
 			AtomicResolution:  int32(-10),
 			DefaultFundingPpm: int32(-1_000),
 			LiquidityTier:     uint32(1),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -148,6 +151,7 @@ var (
 			AtomicResolution:  int32(-10),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(1),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -159,6 +163,7 @@ var (
 			AtomicResolution:  int32(-10),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(6),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -170,6 +175,7 @@ var (
 			AtomicResolution:  int32(-10),
 			DefaultFundingPpm: int32(1000), // 0.001%
 			LiquidityTier:     uint32(1),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -181,6 +187,7 @@ var (
 			AtomicResolution:  int32(-8),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(8),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -192,6 +199,7 @@ var (
 			AtomicResolution:  int32(-8),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(0),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -203,6 +211,7 @@ var (
 			AtomicResolution:  int32(-8),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(4),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -214,6 +223,7 @@ var (
 			AtomicResolution:  int32(-8),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(3),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -225,6 +235,7 @@ var (
 			AtomicResolution:  int32(-8),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(7),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -236,6 +247,7 @@ var (
 			AtomicResolution:  int32(-9),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(5),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -247,6 +259,7 @@ var (
 			AtomicResolution:  int32(-9),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(7),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -258,6 +271,7 @@ var (
 			AtomicResolution:  int32(-9),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(3),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -269,6 +283,7 @@ var (
 			AtomicResolution:  int32(-9),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(0),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -280,6 +295,7 @@ var (
 			AtomicResolution:  int32(-9),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(3),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
@@ -346,6 +362,7 @@ var (
 					Id:            uint32(0),
 					Ticker:        "genesis_test_ticker_0",
 					LiquidityTier: 0,
+					MarketType:    perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 				},
 				FundingIndex: dtypes.ZeroInt(),
 			},
@@ -354,6 +371,7 @@ var (
 					Id:            uint32(1),
 					Ticker:        "genesis_test_ticker_1",
 					LiquidityTier: 1,
+					MarketType:    perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 				},
 				FundingIndex: dtypes.ZeroInt(),
 			},

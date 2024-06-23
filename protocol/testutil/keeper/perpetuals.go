@@ -221,8 +221,11 @@ func CreateNPerpetuals(
 		CreateNMarkets(t, ctx, pricesKeeper, n)
 
 		var defaultFundingPpm int32
+		marketType := types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
+
 		if i%3 == 0 {
 			defaultFundingPpm = 1
+			marketType = types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
 		} else if i%3 == 1 {
 			defaultFundingPpm = -1
 		} else {
