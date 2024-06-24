@@ -890,11 +890,26 @@ func New(
 		}()
 	}
 
+	app.RevShareKeeper = *revsharemodulekeeper.NewKeeper(
+		appCodec,
+		keys[revsharemoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+	)
+	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
+
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
-		appCodec, keys[pricesmoduletypes.StoreKey], indexPriceCache, timeProvider, app.IndexerEventManager, []string{
+		appCodec,
+		keys[pricesmoduletypes.StoreKey],
+		indexPriceCache,
+		timeProvider,
+		app.IndexerEventManager,
+		[]string{
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
-		}, nil,
+		},
+		app.RevShareKeeper,
 	)
 	pricesModule := pricesmodule.NewAppModule(
 		appCodec,
@@ -1119,15 +1134,6 @@ func New(
 		},
 	)
 	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
-
-	app.RevShareKeeper = *revsharemodulekeeper.NewKeeper(
-		appCodec,
-		keys[revsharemoduletypes.StoreKey],
-		[]string{
-			lib.GovModuleAddress.String(),
-		},
-	)
-	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
 
 	/****  Module Options ****/
 

@@ -57,7 +57,14 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 		// Define necessary keepers here for unit tests
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 		blockTimeKeeper, _ := createBlockTimeKeeper(stateStore, db, cdc)
-		ks.PricesKeeper, _, _, mockTimeProvider = createPricesKeeper(stateStore, db, cdc, transientStoreKey, nil)
+		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
+		ks.PricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
+			stateStore,
+			db,
+			cdc,
+			transientStoreKey,
+			revShareKeeper,
+		)
 		ks.PerpetualsKeeper, _ = createPerpetualsKeeper(
 			stateStore,
 			db,

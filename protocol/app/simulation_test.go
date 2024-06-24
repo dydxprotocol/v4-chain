@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store"
@@ -133,6 +135,7 @@ var genesisModuleOrder = []string{
 	rewardsmodule.ModuleName,
 	epochstypes.ModuleName,
 	blocktimetypes.ModuleName,
+	revsharetypes.ModuleName,
 }
 
 var skippedGenesisModules = map[string]interface{}{

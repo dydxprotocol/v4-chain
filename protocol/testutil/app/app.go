@@ -15,6 +15,8 @@ import (
 	"testing"
 	"time"
 
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
@@ -202,7 +204,8 @@ type GenesisStates interface {
 		govtypesv1.GenesisState |
 		ratelimittypes.GenesisState |
 		govplus.GenesisState |
-		vaulttypes.GenesisState
+		vaulttypes.GenesisState |
+		revsharetypes.GenesisState
 }
 
 // UpdateGenesisDocWithAppStateForModule updates the supplied genesis doc using the provided function. The function
@@ -258,6 +261,8 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = govplus.ModuleName
 	case vaulttypes.GenesisState:
 		moduleName = vaulttypes.ModuleName
+	case revsharetypes.GenesisState:
+		moduleName = revsharetypes.ModuleName
 	default:
 		panic(fmt.Errorf("Unsupported type %T", t))
 	}

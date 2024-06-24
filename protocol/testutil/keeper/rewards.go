@@ -43,7 +43,8 @@ func RewardsKeepers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		pricesKeeper, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey, nil)
+		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
+		pricesKeeper, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper)
 		// Mock time provider response for market creation.
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 		assetsKeeper, _ = createAssetsKeeper(
