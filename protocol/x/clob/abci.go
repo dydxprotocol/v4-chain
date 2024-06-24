@@ -119,7 +119,7 @@ func EndBlocker(
 	// Emit relevant metrics at the end of every block.
 	metrics.SetGauge(
 		metrics.InsuranceFundBalance,
-		metrics.GetMetricValueFromBigInt(keeper.GetInsuranceFundBalance(ctx)),
+		metrics.GetMetricValueFromBigInt(keeper.GetCrossInsuranceFundBalance(ctx)),
 	)
 }
 

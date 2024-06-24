@@ -200,6 +200,7 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 					types.NewMarketPriceUpdate(constants.MarketId0, constants.Price4),
 					types.NewMarketPriceUpdate(constants.MarketId1, constants.Price1+1),
 					types.NewMarketPriceUpdate(constants.MarketId2, constants.Price2),
+					types.NewMarketPriceUpdate(constants.MarketId3, constants.Price3),
 				},
 			},
 		},
@@ -230,6 +231,7 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 					types.NewMarketPriceUpdate(constants.MarketId0, constants.Price4),
 					types.NewMarketPriceUpdate(constants.MarketId1, constants.Price1),
 					types.NewMarketPriceUpdate(constants.MarketId2, constants.Price2),
+					types.NewMarketPriceUpdate(constants.MarketId3, constants.Price3),
 				},
 			},
 		},
@@ -247,6 +249,7 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 				MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{
 					types.NewMarketPriceUpdate(constants.MarketId1, constants.Price1),
 					types.NewMarketPriceUpdate(constants.MarketId2, constants.Price2),
+					types.NewMarketPriceUpdate(constants.MarketId3, constants.Price3),
 				},
 			},
 		},

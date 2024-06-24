@@ -230,8 +230,8 @@ func (_m *ClobKeeper) GetIndexerEventManager() indexer_manager.IndexerEventManag
 }
 
 // GetInsuranceFundBalance provides a mock function with given fields: ctx
-func (_m *ClobKeeper) GetInsuranceFundBalance(ctx types.Context) *big.Int {
-	ret := _m.Called(ctx)
+func (_m *ClobKeeper) GetInsuranceFundBalance(ctx types.Context, perpetualId uint32) *big.Int {
+	ret := _m.Called(ctx, perpetualId)
 
 	var r0 *big.Int
 	if rf, ok := ret.Get(0).(func(types.Context) *big.Int); ok {

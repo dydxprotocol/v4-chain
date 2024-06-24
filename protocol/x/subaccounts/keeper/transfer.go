@@ -7,7 +7,6 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
-	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -259,6 +258,7 @@ func (k Keeper) TransferFeesToFeeCollectorModule(
 func (k Keeper) TransferInsuranceFundPayments(
 	ctx sdk.Context,
 	insuranceFundDelta *big.Int,
+	perpetualId uint32,
 ) error {
 	if insuranceFundDelta.Sign() == 0 {
 		return nil
@@ -277,7 +277,10 @@ func (k Keeper) TransferInsuranceFundPayments(
 	// Determine the sender and receiver.
 	// Send coins from `subaccounts` to the `insurance_fund` module account by default.
 	fromModule := types.ModuleName
-	toModule := perptypes.InsuranceFundName
+	toModule, err := k.perpetualsKeeper.GetInsuranceFundName(ctx, perpetualId)
+	if err != nil {
+		panic(err)
+	}
 
 	if insuranceFundDelta.Sign() < 0 {
 		// Insurance fund needs to cover losses from liquidations.
@@ -285,10 +288,10 @@ func (k Keeper) TransferInsuranceFundPayments(
 		fromModule, toModule = toModule, fromModule
 	}
 
-	return k.bankKeeper.SendCoinsFromModuleToModule(
+	return k.bankKeeper.SendCoins(
 		ctx,
-		fromModule,
-		toModule,
+		authtypes.NewModuleAddress(fromModule),
+		authtypes.NewModuleAddress(toModule),
 		[]sdk.Coin{coinToTransfer},
 	)
 }

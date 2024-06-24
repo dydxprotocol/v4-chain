@@ -53,6 +53,7 @@ type LiquidationsKeeper interface {
 	)
 	GetInsuranceFundBalance(
 		ctx sdk.Context,
+		perpetualId uint32,
 	) (
 		balance *big.Int,
 	)

@@ -2160,6 +2160,13 @@ func setupProcessProposerOperationsTestCase(
 			mock.Anything,
 		).Return(nil)
 		mockBankKeeper.On(
+			"SendCoins",
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+		).Return(nil)
+		mockBankKeeper.On(
 			"GetBalance",
 			mock.Anything,
 			mock.Anything,

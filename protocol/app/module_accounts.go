@@ -29,7 +29,7 @@ var (
 		// -------- dYdX custom module accounts --------
 		// subaccounts module account holds tokens for all subaccounts.
 		satypes.ModuleName: nil,
-		// clob insurance fund account manages insurance fund for liquidations.
+		// insurance fund account manages insurance fund for liquidations.
 		perpetualsmoduletypes.InsuranceFundName: nil,
 	}
 	// Blocked module accounts which cannot receive external funds.
