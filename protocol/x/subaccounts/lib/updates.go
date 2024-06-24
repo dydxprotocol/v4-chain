@@ -128,16 +128,9 @@ func IsValidStateTransitionForUndercollateralizedSubaccount(
 		return underCollateralizationResult
 	}
 
-	// Note that here we are effectively checking that
-	// `newNetCollateral / newMaintenanceMargin >= curNetCollateral / curMaintenanceMargin`.
-	// However, to avoid rounding errors, we factor this as
-	// `newNetCollateral * curMaintenanceMargin >= curNetCollateral * newMaintenanceMargin`.
-	newNcOldMmr := new(big.Int).Mul(riskNew.NC, riskCur.MMR)
-	oldNcNewMmr := new(big.Int).Mul(riskCur.NC, riskNew.MMR)
-
 	// The subaccount is not well-collateralized, and the state transition leaves the subaccount in a
 	// "more-risky" state (collateral relative to margin requirements is decreasing).
-	if oldNcNewMmr.Cmp(newNcOldMmr) > 0 {
+	if riskNew.Cmp(riskCur) > 0 {
 		return underCollateralizationResult
 	}
 

@@ -53,6 +53,19 @@ func (a *Risk) IsLiquidatable() bool {
 	return a.MMR.Sign() > 0 && a.MMR.Cmp(a.NC) > 0
 }
 
+// Cmp compares the risks of two accounts.
+// Returns -1 if a is less risky than b, 0 if they are equally risky, and 1 if a is more risky than b.
+
+// Note that here we are effectively checking that
+// `a.NetCollateral / a.MaintenanceMargin >= b.NetCollateral / b.MaintenanceMargin`.
+// However, to avoid rounding errors, we factor this as
+// `a.NetCollateral * b.MaintenanceMargin >= b.NetCollateral * a.MaintenanceMargin`.
+func (a *Risk) Cmp(b Risk) int {
+	ANcMultBMmr := new(big.Int).Mul(a.NC, b.MMR)
+	BNcMultAMmr := new(big.Int).Mul(b.NC, a.MMR)
+	return BNcMultAMmr.Cmp(ANcMultBMmr)
+}
+
 func mustExist(i *big.Int) *big.Int {
 	if i == nil {
 		return new(big.Int)
