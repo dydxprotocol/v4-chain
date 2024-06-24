@@ -342,7 +342,8 @@ func UpdatePerpetualPositions(
 		}
 
 		// Convert the new PerpetualPostiion values back into a slice.
-		settledUpdates[i].SettledSubaccount.PerpetualPositions = lib.MapToSortedSlice[lib.Sortable[uint32]](perpetualPositionsMap)
+		settledUpdates[i].SettledSubaccount.PerpetualPositions =
+			lib.MapToSortedSlice[lib.Sortable[uint32]](perpetualPositionsMap)
 	}
 }
 
@@ -390,7 +391,8 @@ func UpdateAssetPositions(
 		}
 
 		// Convert the new AssetPostiion values back into a slice.
-		settledUpdates[i].SettledSubaccount.AssetPositions = lib.MapToSortedSlice[lib.Sortable[uint32]](assetPositionsMap)
+		settledUpdates[i].SettledSubaccount.AssetPositions =
+			lib.MapToSortedSlice[lib.Sortable[uint32]](assetPositionsMap)
 	}
 }
 
