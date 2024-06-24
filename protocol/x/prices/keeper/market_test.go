@@ -59,9 +59,12 @@ func TestCreateMarket(t *testing.T) {
 	keepertest.AssertMarketCreateEventInIndexerBlock(t, keeper, ctx, marketParam)
 
 	// Verify market revenue share creation
+	revShareParams := revShareKeeper.GetMarketMapperRevenueShareParams(ctx)
 	revShareDetails, err := revShareKeeper.GetMarketMapperRevShareDetails(ctx, marketParam.Id)
 	require.NoError(t, err)
-	require.True(t, revShareDetails.ExpirationTs > 0)
+
+	expirationTs := uint64(ctx.BlockTime().Unix() + int64(revShareParams.ValidDays*24*3600))
+	require.Equal(t, revShareDetails.ExpirationTs, expirationTs)
 }
 
 func TestMarketIsRecentlyAvailable(t *testing.T) {
