@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
@@ -55,6 +57,9 @@ const (
 	EnvPrefix = "DYDX"
 
 	flagIAVLCacheSize = "iavl-cache-size"
+
+	// TimeoutProposeOverride is the software override for the `timeout_propose` consensus parameter.
+	TimeoutProposeOverride = 1500 * time.Millisecond
 )
 
 // NewRootCmd creates a new root command for `dydxprotocold`. It is called once in the main function.
@@ -63,11 +68,18 @@ func NewRootCmd(
 	option *RootCmdOption,
 	homeDir string,
 ) *cobra.Command {
+	logger := log.NewLogger(os.Stdout)
 	return NewRootCmdWithInterceptors(
 		option,
 		homeDir,
 		func(serverCtxPtr *server.Context) {
-
+			// Provide an override for `timeout_propose`. This value should be consistent across the network
+			// for synchrony, and should never be tweaked by individual validators in practice.
+			logger.Info(fmt.Sprintf(
+				"Overriding [consensus.timeout_propose] from %v to software constant: %v",
+				serverCtxPtr.Config.Consensus.TimeoutPropose,
+				TimeoutProposeOverride))
+			serverCtxPtr.Config.Consensus.TimeoutPropose = TimeoutProposeOverride
 		},
 		func(s string, appConfig *DydxAppConfig) (string, *DydxAppConfig) {
 			return s, appConfig

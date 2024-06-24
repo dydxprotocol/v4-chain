@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/cosmos/gogoproto/proto"
 	"testing"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	storetypes "cosmossdk.io/store/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -20,18 +21,18 @@ import (
 	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	revsharekeeper "github.com/dydxprotocol/v4-chain/protocol/x/revshare/keeper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-func PricesKeepers(
-	t testing.TB,
-) (
+func PricesKeepers(t testing.TB) (
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
 	storeKey storetypes.StoreKey,
 	indexPriceCache *pricefeedserver_types.MarketToExchangePrices,
 	mockTimeProvider *mocks.TimeProvider,
+	revShareKeeper *revsharekeeper.Keeper,
 ) {
 	ctx = initKeepers(t, func(
 		db *dbm.MemDB,
@@ -40,14 +41,17 @@ func PricesKeepers(
 		stateStore storetypes.CommitMultiStore,
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
+		// Necessary keeper for testing
+		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc)
+
 		// Define necessary keepers here for unit tests
 		keeper, storeKey, indexPriceCache, mockTimeProvider =
-			createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+			createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper)
 
 		return []GenesisInitializer{keeper}
 	})
 
-	return ctx, keeper, storeKey, indexPriceCache, mockTimeProvider
+	return ctx, keeper, storeKey, indexPriceCache, mockTimeProvider, revShareKeeper
 }
 
 func createPricesKeeper(
@@ -55,6 +59,7 @@ func createPricesKeeper(
 	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	transientStoreKey storetypes.StoreKey,
+	revShareKeeper *revsharekeeper.Keeper,
 ) (
 	*keeper.Keeper,
 	storetypes.StoreKey,
@@ -86,6 +91,7 @@ func createPricesKeeper(
 			delaymsgmoduletypes.ModuleAddress.String(),
 			lib.GovModuleAddress.String(),
 		},
+		revShareKeeper,
 	)
 
 	return k, storeKey, indexPriceCache, mockTimeProvider
