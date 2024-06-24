@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"fmt"
-	dbm "github.com/cosmos/cosmos-db"
 	"testing"
+
+	dbm "github.com/cosmos/cosmos-db"
 
 	storetypes "cosmossdk.io/store/types"
 	pricefeedserver_types "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
@@ -240,6 +241,7 @@ func CreateNPerpetuals(
 			int32(i),             // AtomicResolution
 			defaultFundingPpm,    // DefaultFundingPpm
 			allLiquidityTiers[i%len(allLiquidityTiers)].Id, // LiquidityTier
+			marketType,
 		)
 		if err != nil {
 			return items, err
@@ -289,6 +291,7 @@ func CreateTestPricesAndPerpetualMarkets(
 			perp.Params.AtomicResolution,
 			perp.Params.DefaultFundingPpm,
 			perp.Params.LiquidityTier,
+			perp.Params.MarketType,
 		)
 		require.NoError(t, err)
 	}

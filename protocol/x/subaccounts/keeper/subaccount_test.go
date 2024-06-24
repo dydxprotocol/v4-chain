@@ -2118,6 +2118,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 
@@ -2971,6 +2972,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 
@@ -3601,6 +3603,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
@@ -4017,6 +4020,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}

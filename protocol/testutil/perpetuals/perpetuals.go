@@ -39,6 +39,12 @@ func WithLiquidityTier(liquidityTier uint32) PerpetualModifierOption {
 	}
 }
 
+func WithMarketType(marketType perptypes.PerpetualMarketType) PerpetualModifierOption {
+	return func(cp *perptypes.Perpetual) {
+		cp.Params.MarketType = marketType
+	}
+}
+
 // GeneratePerpetual returns a `Perpetual` object set to default values.
 // Passing in `PerpetualModifierOption` methods alters the value of the `Perpetual` returned.
 // It will start with the default, valid `Perpetual` value defined within the method
@@ -58,6 +64,7 @@ func GeneratePerpetual(optionalModifications ...PerpetualModifierOption) *perpty
 			AtomicResolution:  -8,
 			DefaultFundingPpm: 0,
 			LiquidityTier:     0,
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}

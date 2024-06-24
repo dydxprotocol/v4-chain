@@ -135,6 +135,7 @@ func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 			p.Params.AtomicResolution,
 			p.Params.DefaultFundingPpm,
 			p.Params.LiquidityTier,
+			p.Params.MarketType,
 		)
 		require.NoError(t, err)
 	}
@@ -261,6 +262,7 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 			p.Params.AtomicResolution,
 			p.Params.DefaultFundingPpm,
 			p.Params.LiquidityTier,
+			p.Params.MarketType,
 		)
 		require.NoError(t, err)
 	}

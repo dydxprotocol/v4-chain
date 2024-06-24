@@ -675,6 +675,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
@@ -902,6 +903,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}

@@ -2,11 +2,12 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"math"
 	"math/big"
 	"sort"
 	"testing"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -143,6 +144,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 		atomicResolution  int32
 		defaultFundingPpm int32
 		liquidityTier     uint32
+		marketType        types.PerpetualMarketType
 		expectedError     error
 	}{
 		"Price doesn't exist": {
@@ -152,6 +154,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
+			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			expectedError:     errorsmod.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(999)),
 		},
 		"Positive default funding magnitude exceeds maximum": {
@@ -161,6 +164,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: int32(lib.OneMillion + 1),
 			liquidityTier:     0,
+			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			expectedError: errorsmod.Wrap(
 				types.ErrDefaultFundingPpmMagnitudeExceedsMax,
 				fmt.Sprint(int32(lib.OneMillion+1)),
@@ -173,6 +177,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: 0 - int32(lib.OneMillion) - 1,
 			liquidityTier:     0,
+			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			expectedError: errorsmod.Wrap(
 				types.ErrDefaultFundingPpmMagnitudeExceedsMax,
 				fmt.Sprint(0-int32(lib.OneMillion)-1),
@@ -185,6 +190,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: math.MinInt32,
 			liquidityTier:     0,
+			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			expectedError:     errorsmod.Wrap(types.ErrDefaultFundingPpmMagnitudeExceedsMax, fmt.Sprint(math.MinInt32)),
 		},
 		"Ticker is an empty string": {
@@ -194,7 +200,33 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
+			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			expectedError:     types.ErrTickerEmptyString,
+		},
+		"Unspecified market type": {
+			id:                0,
+			ticker:            "",
+			marketId:          0,
+			atomicResolution:  -10,
+			defaultFundingPpm: 0,
+			liquidityTier:     0,
+			expectedError: errorsmod.Wrap(
+				types.ErrInvalidMarketType,
+				fmt.Sprintf("market type %v", types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED),
+			),
+		},
+		"Invalid market type": {
+			id:                0,
+			ticker:            "",
+			marketId:          0,
+			atomicResolution:  -10,
+			defaultFundingPpm: 0,
+			liquidityTier:     0,
+			marketType:        3,
+			expectedError: errorsmod.Wrap(
+				types.ErrInvalidMarketType,
+				fmt.Sprintf("market type %v", 3),
+			),
 		},
 	}
 
@@ -214,6 +246,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 				tc.atomicResolution,
 				tc.defaultFundingPpm,
 				tc.liquidityTier,
+				tc.marketType,
 			)
 
 			require.Error(t, err)
@@ -345,6 +378,7 @@ func TestHasPerpetual(t *testing.T) {
 			perps[perp].Params.AtomicResolution,
 			perps[perp].Params.DefaultFundingPpm,
 			perps[perp].Params.LiquidityTier,
+			perps[perp].Params.MarketType,
 		)
 		require.NoError(t, err)
 	}
@@ -422,6 +456,7 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 			perps[perp].Params.AtomicResolution,
 			perps[perp].Params.DefaultFundingPpm,
 			perps[perp].Params.LiquidityTier,
+			perps[perp].Params.MarketType,
 		)
 		require.NoError(t, err)
 	}
@@ -663,6 +698,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
+				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			)
 			require.NoError(t, err)
 
@@ -863,6 +899,7 @@ func TestGetNetNotional_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
+				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			)
 			require.NoError(t, err)
 
@@ -1024,6 +1061,7 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
+				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			)
 			require.NoError(t, err)
 
@@ -1185,7 +1223,8 @@ func TestGetNetCollateral_Success(t *testing.T) {
 				marketId,                        // MarketId
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
-				0,                               // LiquidityTier
+				0,
+				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			)
 			require.NoError(t, err)
 
@@ -1872,6 +1911,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 				oldPerps[i] = perp
