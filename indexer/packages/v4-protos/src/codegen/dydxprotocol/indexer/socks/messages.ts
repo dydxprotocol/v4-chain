@@ -265,6 +265,8 @@ export interface CandleMessageSDKType {
 
   version: string;
 }
+/** Message to be sent through the 'to-websockets-block-height` kafka topic. */
+
 export interface BlockHeightMessage {
   /** Block height where the contents occur. */
   blockHeight: string;
@@ -275,6 +277,8 @@ export interface BlockHeightMessage {
 
   version: string;
 }
+/** Message to be sent through the 'to-websockets-block-height` kafka topic. */
+
 export interface BlockHeightMessageSDKType {
   /** Block height where the contents occur. */
   block_height: string;
