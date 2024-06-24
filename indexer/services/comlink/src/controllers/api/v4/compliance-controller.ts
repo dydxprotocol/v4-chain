@@ -1,8 +1,9 @@
 import { logger, stats, TooManyRequestsError } from '@dydxprotocol-indexer/base';
 import { ComplianceClientResponse, INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
-import { ComplianceDataFromDatabase, ComplianceTable } from '@dydxprotocol-indexer/postgres';
+import { ComplianceDataCreateObject, ComplianceDataFromDatabase, ComplianceTable } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
+import _ from 'lodash';
 import { DateTime } from 'luxon';
 import {
   Controller, Get, Query, Route,
@@ -85,7 +86,7 @@ export class ComplianceControllerHelper extends Controller {
         address,
       );
       complianceData = await ComplianceTable.upsert({
-        ...response,
+        ..._.omitBy(response, _.isUndefined) as ComplianceDataCreateObject,
         provider: complianceProvider.provider,
         updatedAt: DateTime.utc().toISO(),
       });
