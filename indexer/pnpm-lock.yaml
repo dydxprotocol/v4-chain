@@ -726,6 +726,7 @@ importers:
       kafkajs: ^2.2.4
       lodash: ^4.17.21
       nocache: ^3.0.4
+      piscina: ^4.6.0
       response-time: ^2.3.2
       ts-node: ^10.8.2
       tsconfig-paths: ^4.0.0
@@ -748,6 +749,7 @@ importers:
       kafkajs: 2.2.4
       lodash: 4.17.21
       nocache: 3.0.4
+      piscina: 4.6.0
       response-time: 2.3.2
       uuid: 8.3.2
       ws: 8.16.0
@@ -5820,7 +5822,6 @@ packages:
     resolution: {integrity: sha512-ArgCD39YpyyrtFKIqMDvjz79jto5fcI/SVUs2HwB+f0dAzq68yqOdyaSivLiLugSziTpNXLQrVb7RZFmdZzbhA==}
     dependencies:
       undici-types: 5.26.5
-    dev: true
 
   /@types/parse-package-name/0.1.0:
     resolution: {integrity: sha512-+vF4M3Cd3Ec22Uwb+OKhDrSAcXQ5I6evRx+1letx4KzfzycU+AOEDHnCifus8In11i8iYNFXPfzg9HWTcC1h+Q==}
@@ -9999,7 +10000,7 @@ packages:
       pretty-format: 28.1.1
       slash: 3.0.0
       strip-json-comments: 3.1.1
-      ts-node: 10.8.2_2dd5d46eecda2aef953638919121af58
+      ts-node: 10.8.2_4ea55324100c26d4019c6e6bcc89fac6
     transitivePeerDependencies:
       - supports-color
 
@@ -11176,6 +11177,16 @@ packages:
     resolution: {integrity: sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==}
     dev: true
 
+  /nice-napi/1.0.2:
+    resolution: {integrity: sha512-px/KnJAJZf5RuBGcfD+Sp2pAKq0ytz8j+1NehvgIGFkvtvFrDM3T8E4x/JJODXK9WZow8RRGrbA9QQ3hs+pDhA==}
+    os: ['!win32']
+    requiresBuild: true
+    dependencies:
+      node-addon-api: 3.2.1
+      node-gyp-build: 4.6.0
+    dev: false
+    optional: true
+
   /nice-try/1.0.5:
     resolution: {integrity: sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==}
     dev: false
@@ -11826,6 +11837,12 @@ packages:
   /pirates/4.0.5:
     resolution: {integrity: sha512-8V9+HQPupnaXMA23c5hvl69zXvTwTzyAYasnkb0Tts4XvO4CliqONMOnvlq26rkhLC3nWDFBJf73LU1e1VZLaQ==}
     engines: {node: '>= 6'}
+
+  /piscina/4.6.0:
+    resolution: {integrity: sha512-VofazM7TCa/2cYhbtZQFyxJJIKe1JYZ5JBTxGMOo770CYupdVpHNvMrX+fuL+mACQ10ISWbzXFBmYjZvzELG5w==}
+    optionalDependencies:
+      nice-napi: 1.0.2
+    dev: false
 
   /pkg-dir/4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -13173,7 +13190,6 @@ packages:
       typescript: 4.7.4
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
-    dev: true
 
   /tsconfig-paths/3.14.1:
     resolution: {integrity: sha512-fxDhWnFSLt3VuTwtvJt5fpwxBHg5AdKWMsgcPOOIilyjymcYVZoCQF8fvFRezCNfblEXmi+PcM1eYHeOAgXCOQ==}
@@ -13306,7 +13322,6 @@ packages:
 
   /undici-types/5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
-    dev: true
 
   /unicode-canonical-property-names-ecmascript/2.0.0:
     resolution: {integrity: sha512-yY5PpDlfVIU5+y/BSCxAJRBIS1Zc2dDG3Ujq+sR0U+JjUevW2JhocOF+soROYDSaAezOzOKuyyixhD6mBknSmQ==}

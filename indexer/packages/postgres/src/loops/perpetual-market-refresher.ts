@@ -103,6 +103,14 @@ export function getPerpetualMarketTicker(clobPairId: string): string | undefined
   return perpetualMarket?.ticker;
 }
 
+export function getClobPairIdToTickerMap(): Record<string, string> {
+  const clobPairIdToTickerMap: Record<string, string> = {};
+  for (const market of Object.values(idToPerpetualMarket)) {
+    clobPairIdToTickerMap[market.clobPairId] = market.ticker;
+  }
+  return clobPairIdToTickerMap;
+}
+
 /**
  * Gets the perpetual market for a given ticker.
  */
