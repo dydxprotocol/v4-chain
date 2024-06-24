@@ -198,7 +198,7 @@ async function createKafkaTopics(
   _.forEach(KAFKA_TOPICS, (kafkaTopic: KafkaTopics) => {
     if (_.includes(existingKafkaTopics, kafkaTopic)) {
       logger.info({
-        at: 'index#clearKafkaTopics',
+        at: 'index#createKafkaTopics',
         message: `Cannot create kafka topic that does exist: ${kafkaTopic}`,
       });
       return;
