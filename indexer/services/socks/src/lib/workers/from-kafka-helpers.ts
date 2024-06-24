@@ -1,7 +1,6 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import {
   parentSubaccountHelpers,
-  perpetualMarketRefresher,
   PROTO_TO_CANDLE_RESOLUTION,
   SubaccountMessageContents,
 } from '@dydxprotocol-indexer/postgres';
@@ -30,11 +29,11 @@ export function getChannels(topic: string): Channel[] {
   return TOPIC_TO_CHANNEL[topicEnum];
 }
 
-export default async function getMessagesToForward(
+export default function getMessagesToForward(
   { topic, message, clobPairIdToTickerMap }:
   {topic: string, message: KafkaMessage, clobPairIdToTickerMap: Record<string, string>},
-): Promise<MessageToForward[]> {
-  await perpetualMarketRefresher.updatePerpetualMarkets();
+): MessageToForward[] {
+  // await perpetualMarketRefresher.updatePerpetualMarkets();
   if (!message || !message.value) {
     throw new InvalidForwardMessageError('Got empty kafka message');
   }

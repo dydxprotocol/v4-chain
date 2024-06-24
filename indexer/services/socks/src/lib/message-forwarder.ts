@@ -33,6 +33,8 @@ import {
 
 const piscina = new Piscina({
   filename: path.resolve(__dirname, 'workers/from-kafka-helpers.js'),
+  minThreads: 4,
+  maxThreads: 4,
 });
 
 const BATCH_SEND_INTERVAL_MS: number = config.BATCH_SEND_INTERVAL_MS;
