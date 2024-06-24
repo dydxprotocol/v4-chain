@@ -1,5 +1,5 @@
 // import { Worker } from 'worker_threads';
-import path from 'path';
+// import path from 'path';
 
 import {
   stats,
@@ -10,7 +10,7 @@ import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
 import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import _ from 'lodash';
-import Piscina from 'piscina';
+// import Piscina from 'piscina';
 
 import config from '../config';
 import {
@@ -31,11 +31,11 @@ import getMessagesToForward, {
   getChannels,
 } from './workers/from-kafka-helpers';
 
-const piscina = new Piscina({
-  filename: path.resolve(__dirname, 'workers/blank-worker.js'),
-  minThreads: 1,
-  maxThreads: 2,
-});
+// const piscina = new Piscina({
+//   filename: path.resolve(__dirname, 'workers/blank-worker.js'),
+//   minThreads: 1,
+//   maxThreads: 2,
+// });
 
 const BATCH_SEND_INTERVAL_MS: number = config.BATCH_SEND_INTERVAL_MS;
 const BUFFER_KEY_SEPARATOR: string = ':';
@@ -94,7 +94,7 @@ export class MessageForwarder {
     clearInterval(this.batchSending);
   }
 
-  public async onMessage(topic: string, message: KafkaMessage): Promise<void> {
+  public onMessage(topic: string, message: KafkaMessage): void {
     // await perpetualMarketRefresher.updatePerpetualMarkets();
     const start: number = Date.now();
     stats.timing(
@@ -127,7 +127,7 @@ export class MessageForwarder {
     const clobPairIdToTickerMap:
     Record<string, string> = perpetualMarketRefresher.getClobPairIdToTickerMap();
     const messagesToForward = getMessagesToForward({ topic, message, clobPairIdToTickerMap });
-    await piscina.run({});
+    // await piscina.run({});
     for (const messageToForward of messagesToForward) {
       const startForwardMessage: number = Date.now();
       this.forwardMessage(messageToForward);
