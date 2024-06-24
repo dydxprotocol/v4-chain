@@ -31,6 +31,7 @@
     "kafkajs": "^2.2.4",
     "lodash": "^4.17.21",
     "nocache": "^3.0.4",
+    "piscina": "^4.6.0",
     "response-time": "^2.3.2",
     "uuid": "^8.3.2",
     "ws": "^8.16.0"

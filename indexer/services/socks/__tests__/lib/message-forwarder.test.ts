@@ -180,6 +180,7 @@ describe('message-forwarder', () => {
   };
 
   beforeAll(async () => {
+    await dbHelpers.clearData();
     await dbHelpers.migrate();
     await testMocks.seedData();
     await Promise.all([
@@ -472,6 +473,7 @@ describe('message-forwarder', () => {
   });
 
   it('forwards messages', (done: jest.DoneCallback) => {
+    // await perpetualMarketRefresher.updatePerpetualMarkets();
     const channel: Channel = Channel.V4_TRADES;
     const id: string = ethTicker;
 

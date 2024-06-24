@@ -1,17 +1,18 @@
+// import { Worker } from 'worker_threads';
+import path from 'path';
+
 import {
   stats,
   logger,
   InfoObject,
 } from '@dydxprotocol-indexer/base';
 import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
+import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import _ from 'lodash';
+import Piscina from 'piscina';
 
 import config from '../config';
-import {
-  getChannels,
-  getMessagesToForward,
-} from '../helpers/from-kafka-helpers';
 import {
   createChannelDataMessage,
   createChannelBatchDataMessage,
@@ -26,6 +27,13 @@ import {
 import { Index } from '../websocket/index';
 import { MAX_TIMEOUT_INTEGER } from './constants';
 import { Subscriptions } from './subscription';
+import {
+  getChannels,
+} from './workers/from-kafka-helpers';
+
+const piscina = new Piscina({
+  filename: path.resolve(__dirname, 'workers/from-kafka-helpers.js'),
+});
 
 const BATCH_SEND_INTERVAL_MS: number = config.BATCH_SEND_INTERVAL_MS;
 const BUFFER_KEY_SEPARATOR: string = ':';
@@ -84,7 +92,8 @@ export class MessageForwarder {
     clearInterval(this.batchSending);
   }
 
-  public onMessage(topic: string, message: KafkaMessage): void {
+  public async onMessage(topic: string, message: KafkaMessage): Promise<void> {
+    // await perpetualMarketRefresher.updatePerpetualMarkets();
     const start: number = Date.now();
     stats.timing(
       `${config.SERVICE_NAME}.message_time_in_queue`,
@@ -113,7 +122,10 @@ export class MessageForwarder {
     errProps.channels = channels;
 
     // Decode the message based on the topic
-    const messagesToForward = getMessagesToForward(topic, message);
+    // const messagesToForward = getMessagesToForward(topic, message);
+    const clobPairIdToTickerMap:
+    Record<string, string> = perpetualMarketRefresher.getClobPairIdToTickerMap();
+    const messagesToForward = await piscina.run({ topic, message, clobPairIdToTickerMap });
     for (const messageToForward of messagesToForward) {
       const startForwardMessage: number = Date.now();
       this.forwardMessage(messageToForward);
