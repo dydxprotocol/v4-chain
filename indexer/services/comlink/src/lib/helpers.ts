@@ -82,6 +82,7 @@ function handleInternalServerError(
     at,
     message,
     error,
+    stacktrace: error.stack,
     params: JSON.stringify(req.params),
     query: JSON.stringify(req.query),
   });
