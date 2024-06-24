@@ -643,7 +643,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockBankKeeper := &mocks.BankKeeper{}
 			mockBankKeeper.On(
-				"SendCoinsFromModuleToModule",
+				"SendCoins",
 				mock.Anything,
 				mock.Anything,
 				mock.Anything,
@@ -871,7 +871,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockBankKeeper := &mocks.BankKeeper{}
 			mockBankKeeper.On(
-				"SendCoinsFromModuleToModule",
+				"SendCoins",
 				mock.Anything,
 				mock.Anything,
 				mock.Anything,

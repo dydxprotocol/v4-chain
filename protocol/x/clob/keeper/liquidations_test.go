@@ -235,25 +235,25 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockBankKeeper := &mocks.BankKeeper{}
 			mockBankKeeper.On(
-				"SendCoinsFromModuleToModule",
+				"SendCoins",
 				mock.Anything,
-				satypes.ModuleName,
-				authtypes.FeeCollectorName,
+				satypes.ModuleAddress,
+				authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 				mock.Anything,
 			).Return(nil)
 			mockBankKeeper.On(
 				"SendCoins",
 				mock.Anything,
 				authtypes.NewModuleAddress(satypes.ModuleName),
-				authtypes.NewModuleAddress(perptypes.InsuranceFundName),
+				perptypes.InsuranceFundModuleAddress,
 				mock.Anything,
 			).Return(nil)
 			// Fee collector does not have any funds.
 			mockBankKeeper.On(
-				"SendCoinsFromModuleToModule",
+				"SendCoins",
 				mock.Anything,
-				authtypes.FeeCollectorName,
-				satypes.ModuleName,
+				authtypes.NewModuleAddress(authtypes.FeeCollectorName),
+				satypes.ModuleAddress,
 				mock.Anything,
 			).Return(sdkerrors.ErrInsufficientFunds)
 			// Give the insurance fund a 1M USDC balance.
@@ -794,6 +794,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 				).Return(nil)
 				bk.On(
+					"SendCoins",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bk.On(
 					"GetBalance",
 					mock.Anything,
 					mock.Anything,
@@ -828,6 +835,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
 					"SendCoinsFromModuleToModule",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bk.On(
+					"SendCoins",
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,

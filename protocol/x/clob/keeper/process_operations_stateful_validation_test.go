@@ -339,10 +339,10 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
 						testutil_bank.MatchUsdcOfAmount(
 							12_500_000+5_000_000,
@@ -635,10 +635,10 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
 						testutil_bank.MatchUsdcOfAmount(
 							12_500_000+5_000_000,

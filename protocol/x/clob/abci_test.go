@@ -1338,7 +1338,7 @@ func TestPrepareCheckState(t *testing.T) {
 				constants.Usdc.Denom,
 			).Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
 			mockBankKeeper.On(
-				"SendCoinsFromModuleToModule",
+				"SendCoins",
 				mock.Anything,
 				mock.Anything,
 				mock.Anything,
