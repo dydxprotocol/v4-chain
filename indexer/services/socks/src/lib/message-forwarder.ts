@@ -1,4 +1,4 @@
-// import { Worker } from 'worker_threads';
+import { Worker } from 'worker_threads';
 import path from 'path';
 
 import {
@@ -10,7 +10,7 @@ import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
 import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import _ from 'lodash';
-import Piscina from 'piscina';
+// import Piscina from 'piscina';
 
 import config from '../config';
 import {
@@ -31,11 +31,23 @@ import {
   getChannels,
 } from './workers/from-kafka-helpers';
 
-const piscina = new Piscina({
-  filename: path.resolve(__dirname, 'workers/from-kafka-helpers.js'),
-  minThreads: 4,
-  maxThreads: 4,
-});
+// const piscina = new Piscina({
+//   filename: path.resolve(__dirname, 'workers/from-kafka-helpers.js'),
+//   minThreads: 4,
+//   maxThreads: 4,
+// });
+
+const NUM_WORKERS = 4;
+const getMessagesToForwardWorkers: Worker[] = [];
+
+for (let i = 0; i < NUM_WORKERS; i++) {
+  getMessagesToForwardWorkers.push(new Worker('./build/src/lib/workers/getMessagesToForwardWorker.js'));
+}
+
+function getRandomWorker(workers: Worker[]): Worker {
+  const randomIndex = Math.floor(Math.random() * workers.length);
+  return workers[randomIndex];
+}
 
 const BATCH_SEND_INTERVAL_MS: number = config.BATCH_SEND_INTERVAL_MS;
 const BUFFER_KEY_SEPARATOR: string = ':';
@@ -127,7 +139,13 @@ export class MessageForwarder {
     // const messagesToForward = getMessagesToForward(topic, message);
     const clobPairIdToTickerMap:
     Record<string, string> = perpetualMarketRefresher.getClobPairIdToTickerMap();
-    const messagesToForward = await piscina.run({ topic, message, clobPairIdToTickerMap });
+    // const messagesToForward = await piscina.run({ topic, message, clobPairIdToTickerMap });
+    // getRandomWorker
+    const getMessagesToForwardWorker = getRandomWorker(getMessagesToForwardWorkers);
+    const messagesToForward: MessageToForward[] = await new Promise((resolve, __) => {
+      getMessagesToForwardWorker.once('message', resolve);
+      getMessagesToForwardWorker.postMessage({ topic, message, clobPairIdToTickerMap });
+    });
     for (const messageToForward of messagesToForward) {
       const startForwardMessage: number = Date.now();
       this.forwardMessage(messageToForward);
