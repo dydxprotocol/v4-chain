@@ -76,3 +76,31 @@ func (k Keeper) CreateNewMarketRevShare(ctx sdk.Context, marketId uint32) {
 	}
 	k.SetMarketMapperRevShareDetails(ctx, marketId, details)
 }
+
+func (k Keeper) GetRevenueShareForPerpetual(ctx sdk.Context, perpetualId uint32) (
+	address string,
+	revenueSharePpm uint32,
+	err error,
+) {
+	// get the perpetual market id
+	marketId, err := k.perpetualsKeeper.GetPerpetual(ctx, k, perpetualId)
+	if err != nil {
+		return "", 0, err
+	}
+
+	// get the revenue share details for the market
+	revShareDetails, err := k.GetMarketMapperRevShareDetails(ctx, marketId)
+	if err != nil {
+		return "", 0, err
+	}
+
+	// check if the rev share details are expired
+	if revShareDetails.ExpirationTs < uint64(ctx.BlockTime().Unix()) {
+		return "", 0, fmt.Errorf("Revenue share expired for market: %d", marketId)
+	}
+
+	// Get revenue share params
+	revShareParams := k.GetMarketMapperRevenueShareParams(ctx)
+
+	return revShareParams.Address, revShareParams.RevenueSharePpm, nil
+}
