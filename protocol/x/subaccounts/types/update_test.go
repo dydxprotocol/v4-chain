@@ -5,9 +5,60 @@ import (
 	"testing"
 
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	satest "github.com/dydxprotocol/v4-chain/protocol/testutil/subaccounts"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
+
+func TestValidate(t *testing.T) {
+	tests := map[string]struct {
+		update types.Update
+		err    error
+	}{
+		"empty update": {
+			update: types.Update{},
+			err:    nil,
+		},
+		"valid update": {
+			update: types.Update{
+				AssetUpdates:     testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
+				PerpetualUpdates: satest.CreatePerpetualUpdate(1, big.NewInt(1)),
+			},
+			err: nil,
+		},
+		"duplicate asset update": {
+			update: types.Update{
+				AssetUpdates: append(
+					testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
+					testutil.CreateUsdcAssetUpdate(big.NewInt(1))...,
+				),
+				PerpetualUpdates: satest.CreatePerpetualUpdate(1, big.NewInt(1)),
+			},
+			err: types.ErrNonUniqueUpdatesPosition,
+		},
+		"duplicate perpetual update": {
+			update: types.Update{
+				AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
+				PerpetualUpdates: append(
+					satest.CreatePerpetualUpdate(1, big.NewInt(1)),
+					satest.CreatePerpetualUpdate(1, big.NewInt(1))...,
+				),
+			},
+			err: types.ErrNonUniqueUpdatesPosition,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := tc.update.Validate()
+			if err != nil {
+				require.ErrorIs(t, err, tc.err)
+				return
+			} else {
+				require.NoError(t, tc.err)
+			}
+		})
+	}
+}
 
 func TestGetErrorFromUpdateResults(t *testing.T) {
 	tests := map[string]struct {

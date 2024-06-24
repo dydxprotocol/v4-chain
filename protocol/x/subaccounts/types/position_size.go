@@ -119,7 +119,7 @@ func (au AssetUpdate) GetIsLong() bool {
 }
 
 func (au AssetUpdate) GetBigQuantums() *big.Int {
-	return au.BigQuantumsDelta
+	return new(big.Int).Set(au.BigQuantumsDelta)
 }
 
 func (au AssetUpdate) GetId() uint32 {
@@ -131,7 +131,7 @@ func (au AssetUpdate) GetProductType() string {
 }
 
 func (pu PerpetualUpdate) GetBigQuantums() *big.Int {
-	return pu.BigQuantumsDelta
+	return new(big.Int).Set(pu.BigQuantumsDelta)
 }
 
 func (pu PerpetualUpdate) GetId() uint32 {
@@ -159,8 +159,9 @@ func (pu PositionUpdate) SetBigQuantums(bigQuantums *big.Int) {
 }
 
 func (pu PositionUpdate) GetBigQuantums() *big.Int {
-	return pu.BigQuantums
+	return new(big.Int).Set(pu.BigQuantums)
 }
+
 func (pu PositionUpdate) GetProductType() string {
 	// PositionUpdate is generic and doesn't have a product type.
 	return UnknownProductTYpe

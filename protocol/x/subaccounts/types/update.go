@@ -5,6 +5,8 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 type UpdateResult uint
@@ -83,6 +85,19 @@ type Update struct {
 	AssetUpdates []AssetUpdate
 	// A list of changes to make to any `PerpetualPositions` in the `Subaccount`.
 	PerpetualUpdates []PerpetualUpdate
+}
+
+// Validate checks if the `Update` is valid. An `Update` is invalid if:
+// - There are duplicate `AssetUpdates` positions.
+// - There are duplicate `PerpetualUpdates` positions.
+func (u *Update) Validate() error {
+	if lib.ContainsDuplicates(lib.MapSlice(u.AssetUpdates, func(a AssetUpdate) uint32 { return a.AssetId })) {
+		return ErrNonUniqueUpdatesPosition
+	}
+	if lib.ContainsDuplicates(lib.MapSlice(u.PerpetualUpdates, func(p PerpetualUpdate) uint32 { return p.PerpetualId })) {
+		return ErrNonUniqueUpdatesPosition
+	}
+	return nil
 }
 
 type AssetUpdate struct {
