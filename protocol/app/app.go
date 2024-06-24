@@ -905,6 +905,7 @@ func New(
 		indexPriceCache,
 		timeProvider,
 		app.IndexerEventManager,
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
