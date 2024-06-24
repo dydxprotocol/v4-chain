@@ -18,5 +18,5 @@ type BankKeeper interface {
 
 // RevShareKeeper defines the expected revshare keeper used for simulations.
 type RevShareKeeper interface {
-	CreateNewMarketRevShare(ctx sdk.Context, marketId uint32) (err error)
+	CreateNewMarketRevShare(ctx sdk.Context, marketId uint32)
 }
