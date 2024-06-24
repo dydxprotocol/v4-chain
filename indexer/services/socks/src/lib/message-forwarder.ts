@@ -27,14 +27,14 @@ import {
 import { Index } from '../websocket/index';
 import { MAX_TIMEOUT_INTEGER } from './constants';
 import { Subscriptions } from './subscription';
-import {
+import getMessagesToForward, {
   getChannels,
 } from './workers/from-kafka-helpers';
 
 const piscina = new Piscina({
-  filename: path.resolve(__dirname, 'workers/from-kafka-helpers.js'),
-  minThreads: 4,
-  maxThreads: 4,
+  filename: path.resolve(__dirname, 'workers/blank-worker.js'),
+  minThreads: 1,
+  maxThreads: 2,
 });
 
 const BATCH_SEND_INTERVAL_MS: number = config.BATCH_SEND_INTERVAL_MS;
@@ -124,10 +124,10 @@ export class MessageForwarder {
     errProps.channels = channels;
 
     // Decode the message based on the topic
-    // const messagesToForward = getMessagesToForward(topic, message);
     const clobPairIdToTickerMap:
     Record<string, string> = perpetualMarketRefresher.getClobPairIdToTickerMap();
-    const messagesToForward = await piscina.run({ topic, message, clobPairIdToTickerMap });
+    const messagesToForward = getMessagesToForward({ topic, message, clobPairIdToTickerMap });
+    await piscina.run({});
     for (const messageToForward of messagesToForward) {
       const startForwardMessage: number = Date.now();
       this.forwardMessage(messageToForward);
