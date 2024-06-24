@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"github.com/cosmos/gogoproto/proto"
 	"testing"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	storetypes "cosmossdk.io/store/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -42,7 +43,8 @@ func RewardsKeepers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		pricesKeeper, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
+		pricesKeeper, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper)
 		// Mock time provider response for market creation.
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 		assetsKeeper, _ = createAssetsKeeper(

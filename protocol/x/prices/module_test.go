@@ -3,11 +3,12 @@ package prices_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
@@ -49,13 +50,14 @@ func createAppModule(t *testing.T) prices.AppModule {
 func createAppModuleWithKeeper(t *testing.T) (prices.AppModule, *prices_keeper.Keeper, sdk.Context) {
 	appCodec := codec.NewProtoCodec(module.InterfaceRegistry)
 
-	ctx, keeper, _, _, mockTimeProvider := keeper.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _ := keeper.PricesKeepers(t)
 	// Mock the time provider response for market creation.
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	return prices.NewAppModule(
 		appCodec,
 		*keeper,
+		nil,
 		nil,
 		nil,
 	), keeper, ctx
