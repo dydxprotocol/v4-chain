@@ -323,14 +323,19 @@ func (k Keeper) UpdateSubaccounts(
 		}
 	}
 
-	// Apply the updates to perpetual positions.
-	salib.UpdatePerpetualPositions(
-		settledUpdates,
-		perpInfos,
-	)
-
-	// Apply the updates to asset positions.
-	salib.UpdateAssetPositions(settledUpdates)
+	for _, sa := range settledUpdates {
+		// Apply the updates to asset positions.
+		salib.UpdateAssetPositions(
+			&sa.SettledSubaccount,
+			sa.AssetUpdates,
+		)
+		// Apply the updates to perpetual positions.
+		salib.UpdatePerpetualPositions(
+			&sa.SettledSubaccount,
+			sa.PerpetualUpdates,
+			perpInfos,
+		)
+	}
 
 	// Transfer collateral between collateral pools for any isolated perpetual positions that changed
 	// state due to an update.
@@ -349,10 +354,13 @@ func (k Keeper) UpdateSubaccounts(
 	// Apply all updates, including a subaccount update event in the Indexer block message
 	// per update and emit a cometbft event for each settled funding payment.
 	for _, u := range settledUpdates {
+		// Update the subaccount in state.
 		k.SetSubaccount(ctx, u.SettledSubaccount)
+
 		// Below access is safe because for all updated subaccounts' IDs, this map
 		// is populated as GetSettledSubaccountWithPerpetuals() is called in getSettledUpdates().
 		fundingPayments := subaccountIdToFundingPayments[*u.SettledSubaccount.Id]
+		updatedPositions := salib.GetUpdatedPerpetualPositions(u, fundingPayments)
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeSubaccountUpdate,
@@ -360,10 +368,7 @@ func (k Keeper) UpdateSubaccounts(
 			indexer_manager.GetBytes(
 				indexerevents.NewSubaccountUpdateEvent(
 					u.SettledSubaccount.Id,
-					salib.GetUpdatedPerpetualPositions(
-						u,
-						fundingPayments,
-					),
+					updatedPositions,
 					salib.GetUpdatedAssetPositions(u),
 					fundingPayments,
 				),
@@ -602,8 +607,18 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		}
 
 		// Get the new collateralization and margin requirements with the update applied.
+		updatedSubaccount := u.SettledSubaccount.DeepCopy()
+		salib.UpdateAssetPositions(
+			&updatedSubaccount,
+			u.AssetUpdates,
+		)
+		salib.UpdatePerpetualPositions(
+			&updatedSubaccount,
+			u.PerpetualUpdates,
+			perpInfos,
+		)
 		riskNew, err := salib.GetRiskForSubaccount(
-			u,
+			updatedSubaccount,
 			perpInfos,
 		)
 		if err != nil {
@@ -615,11 +630,6 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		// The subaccount is not well-collateralized after the update.
 		// We must now check if the state transition is valid.
 		if !riskNew.IsInitialCollateralized() {
-			// Get the current collateralization and margin requirements without the update applied.
-			emptyUpdate := types.SettledUpdate{
-				SettledSubaccount: u.SettledSubaccount,
-			}
-
 			bytes, err := proto.Marshal(u.SettledSubaccount.Id)
 			if err != nil {
 				return false, nil, err
@@ -629,7 +639,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			// Cache the current collateralization and margin requirements for the subaccount.
 			if _, ok := riskCurMap[saKey]; !ok {
 				riskCurMap[saKey], err = salib.GetRiskForSubaccount(
-					emptyUpdate,
+					u.SettledSubaccount,
 					perpInfos,
 				)
 				if err != nil {
@@ -680,14 +690,19 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 	}
 	settledSubaccount, _ := salib.GetSettledSubaccountWithPerpetuals(subaccount, perpInfos)
 
-	settledUpdate := types.SettledUpdate{
-		SettledSubaccount: settledSubaccount,
-		AssetUpdates:      update.AssetUpdates,
-		PerpetualUpdates:  update.PerpetualUpdates,
-	}
+	updatedSubaccount := settledSubaccount.DeepCopy()
+	salib.UpdateAssetPositions(
+		&updatedSubaccount,
+		update.AssetUpdates,
+	)
+	salib.UpdatePerpetualPositions(
+		&updatedSubaccount,
+		update.PerpetualUpdates,
+		perpInfos,
+	)
 
 	return salib.GetRiskForSubaccount(
-		settledUpdate,
+		updatedSubaccount,
 		perpInfos,
 	)
 }

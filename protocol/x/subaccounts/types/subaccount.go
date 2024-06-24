@@ -51,6 +51,20 @@ func (m *SubaccountId) MustGetAccAddress() sdk.AccAddress {
 	return sdk.MustAccAddressFromBech32(m.Owner)
 }
 
+// DeepCopy returns a deep copy of the Subaccount.
+func (m *Subaccount) DeepCopy() Subaccount {
+	b, err := m.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	result := Subaccount{}
+	err = result.Unmarshal(b)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
 // GetPerpetualPositionForId returns the perpetual position with the given
 // perpetual id. Returns nil if subaccount does not have an open position
 // for the perpetual.

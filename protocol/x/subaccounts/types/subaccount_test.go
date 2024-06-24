@@ -115,6 +115,14 @@ func TestSubaccountIdMustGetAccAccount(t *testing.T) {
 	}
 }
 
+func TestDeepCopy(t *testing.T) {
+	subaccount := constants.Alice_Num1_1BTC_Long_500_000USD
+	deepCopy := subaccount.DeepCopy()
+
+	require.Equal(t, subaccount, deepCopy)
+	require.NotEqual(t, &subaccount, &deepCopy)
+}
+
 func TestSubaccountGetPerpetualPositionForId(t *testing.T) {
 	expectedPerpetualPositions := []*types.PerpetualPosition{
 		{
