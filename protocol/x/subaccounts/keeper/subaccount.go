@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"time"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	storetypes "cosmossdk.io/store/types"
 
 	errorsmod "cosmossdk.io/errors"
@@ -93,6 +95,49 @@ func (k Keeper) GetAllSubaccount(ctx sdk.Context) (list []types.Subaccount) {
 	}
 
 	return
+}
+
+// GetCollateralPoolForSubaccount returns the collateral pool address for a subaccount
+// based on the subaccount's perpetual positions. If the subaccount holds a position in an isolated
+// market, the collateral pool address will be the isolated market's pool address. Otherwise, the
+// collateral pool address will be the module's pool address.
+func (k Keeper) GetCollateralPoolForSubaccount(ctx sdk.Context, subaccountId types.SubaccountId) (
+	sdk.AccAddress,
+	error,
+) {
+	poolName, err := k.GetCollateralPoolNameForSubaccount(ctx, subaccountId)
+	if err != nil {
+		return nil, err
+	}
+	return authtypes.NewModuleAddress(poolName), nil
+}
+
+func (k Keeper) GetCollateralPoolNameForSubaccount(ctx sdk.Context, subaccountId types.SubaccountId) (string, error) {
+	subaccount := k.GetSubaccount(ctx, subaccountId)
+	if len(subaccount.PerpetualPositions) == 0 {
+		return types.ModuleName, nil
+	}
+
+	// Get the first perpetual position and return the collateral pool name.
+	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, subaccount.PerpetualPositions[0].PerpetualId)
+	if err != nil {
+		panic(fmt.Sprintf("GetCollateralPoolNameForSubaccount: %v", err))
+	}
+
+	if perpetual.Params.MarketType == perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
+		return types.ModuleName + ":" + lib.UintToString(perpetual.GetId()), nil
+	}
+
+	return types.ModuleName, nil
+}
+
+// IsIsolatedMarketSubaccount returns whether a subaccount is isolated to a specific market.
+func (k Keeper) IsIsolatedMarketSubaccount(ctx sdk.Context, subaccountId types.SubaccountId) (bool, error) {
+	poolName, err := k.GetCollateralPoolNameForSubaccount(ctx, subaccountId)
+	if err != nil {
+		panic(fmt.Sprintf("IsIsolatedMarketSubaccount: %v", err))
+	}
+	return poolName != types.ModuleName, nil
 }
 
 // ForEachSubaccount performs a callback across all subaccounts.
