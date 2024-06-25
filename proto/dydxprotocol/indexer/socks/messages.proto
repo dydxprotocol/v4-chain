@@ -92,3 +92,15 @@ message CandleMessage {
   // Version of the websocket message.
   string version = 4;
 }
+
+// Message to be sent through the 'to-websockets-block-height` kafka topic.
+message BlockHeightMessage {
+  // Block height where the contents occur.
+  string block_height = 1;
+
+  // ISO formatted time of the block height.
+  string time = 2;
+
+  // Version of the websocket message.
+  string version = 3;
+}

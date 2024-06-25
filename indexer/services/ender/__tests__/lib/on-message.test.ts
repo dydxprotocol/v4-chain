@@ -671,7 +671,7 @@ describe('on-message', () => {
       expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
     ]);
 
-    expect(producerSendMock).toHaveBeenCalledTimes(2);
+    expect(producerSendMock).toHaveBeenCalledTimes(3);
     // First message batch sent should contain the first message
     expect(producerSendMock.mock.calls[0][0].messages).toHaveLength(1);
     // Second message batch should contain the second message
