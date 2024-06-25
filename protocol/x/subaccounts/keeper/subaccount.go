@@ -195,12 +195,12 @@ func (k Keeper) getSettledUpdates(
 	updates []types.Update,
 	requireUniqueSubaccount bool,
 ) (
-	settledUpdates []settledUpdate,
+	settledUpdates []SettledUpdate,
 	subaccountIdToFundingPayments map[types.SubaccountId]map[uint32]dtypes.SerializableInt,
 	err error,
 ) {
 	var idToSettledSubaccount = make(map[types.SubaccountId]types.Subaccount)
-	settledUpdates = make([]settledUpdate, len(updates))
+	settledUpdates = make([]SettledUpdate, len(updates))
 	subaccountIdToFundingPayments = make(map[types.SubaccountId]map[uint32]dtypes.SerializableInt)
 
 	// Iterate over all updates and query the relevant `Subaccounts`.
@@ -225,7 +225,7 @@ func (k Keeper) getSettledUpdates(
 			subaccountIdToFundingPayments[u.SubaccountId] = fundingPayments
 		}
 
-		settledUpdate := settledUpdate{
+		settledUpdate := SettledUpdate{
 			SettledSubaccount: settledSubaccount,
 			AssetUpdates:      u.AssetUpdates,
 			PerpetualUpdates:  u.PerpetualUpdates,
@@ -244,6 +244,9 @@ func (k Keeper) getSettledUpdates(
 // Returns a boolean indicating whether the update was successfully applied or not. If `false`, then no
 // updates to any subaccount were made. A second return value returns an array of `UpdateResult` which map
 // to the `updates` to indicate which of the updates caused a failure, if any.
+// This function also transfers collateral between the cross-perpetual collateral pool and isolated
+// perpetual collateral pools if any of the updates led to an isolated perpetual posititon to be opened
+// or closed. This is done using the `x/bank` keeper and updates `x/bank` state.
 //
 // Each `SubaccountId` in the `updates` must be unique or an error is returned.
 func (k Keeper) UpdateSubaccounts(
@@ -290,6 +293,20 @@ func (k Keeper) UpdateSubaccounts(
 
 	// Apply the updates to asset positions.
 	UpdateAssetPositions(settledUpdates)
+
+	// Transfer collateral between collateral pools for any isolated perpetual positions that changed
+	// state due to an update.
+	for _, settledUpdateWithUpdatedSubaccount := range settledUpdates {
+		if err := k.computeAndExecuteCollateralTransfer(
+			ctx,
+			// The subaccount in `settledUpdateWithUpdatedSubaccount` already has the perpetual updates
+			// and asset updates applied to it.
+			settledUpdateWithUpdatedSubaccount,
+			allPerps,
+		); err != nil {
+			return false, nil, err
+		}
+	}
 
 	// Apply all updates, including a subaccount update event in the Indexer block message
 	// per update and emit a cometbft event for each settled funding payment.
@@ -369,7 +386,8 @@ func (k Keeper) CanUpdateSubaccounts(
 	}
 
 	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
-	return k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType, allPerps)
+	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType, allPerps)
+	return success, successPerUpdate, err
 }
 
 // getSettledSubaccount returns 1. a new settled subaccount given an unsettled subaccount,
@@ -498,7 +516,8 @@ func checkPositionUpdatable(
 	return nil
 }
 
-// internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts.
+// internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts and compute
+// if any of the updates led to an isolated perpetual position being opened or closed.
 // The `updates` do not have to contain `Subaccounts` with unique `SubaccountIds`.
 // Each update is considered in isolation. Thus if two updates are provided
 // with the same `Subaccount`, they are validated without respect to each
@@ -511,7 +530,7 @@ func checkPositionUpdatable(
 // caused a failure, if any.
 func (k Keeper) internalCanUpdateSubaccounts(
 	ctx sdk.Context,
-	settledUpdates []settledUpdate,
+	settledUpdates []SettledUpdate,
 	updateType types.UpdateType,
 	perpetuals []perptypes.Perpetual,
 ) (
@@ -625,7 +644,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		// We must now check if the state transition is valid.
 		if bigNewInitialMargin.Cmp(bigNewNetCollateral) > 0 {
 			// Get the current collateralization and margin requirements without the update applied.
-			emptyUpdate := settledUpdate{
+			emptyUpdate := SettledUpdate{
 				SettledSubaccount: u.SettledSubaccount,
 			}
 
@@ -755,7 +774,7 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 		return nil, nil, nil, err
 	}
 
-	settledUpdate := settledUpdate{
+	settledUpdate := SettledUpdate{
 		SettledSubaccount: settledSubaccount,
 		AssetUpdates:      update.AssetUpdates,
 		PerpetualUpdates:  update.PerpetualUpdates,
@@ -780,7 +799,7 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 // If two position updates reference the same position, an error is returned.
 func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	ctx sdk.Context,
-	settledUpdate settledUpdate,
+	settledUpdate SettledUpdate,
 ) (
 	bigNetCollateral *big.Int,
 	bigInitialMargin *big.Int,

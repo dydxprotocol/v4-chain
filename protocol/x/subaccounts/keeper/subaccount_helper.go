@@ -53,7 +53,7 @@ func getUpdatedAssetPositions(
 // been updated. This will include any perpetual postions that were closed due to an update or that
 // received / paid out funding payments..
 func getUpdatedPerpetualPositions(
-	update settledUpdate,
+	update SettledUpdate,
 	fundingPayments map[uint32]dtypes.SerializableInt,
 ) []*types.PerpetualPosition {
 	perpetualIdToPositionMap := make(map[uint32]*types.PerpetualPosition)
@@ -102,7 +102,7 @@ func getUpdatedPerpetualPositions(
 // to reflect settledUpdate.PerpetualUpdates.
 // For newly created positions, use `perpIdToFundingIndex` map to populate the `FundingIndex` field.
 func UpdatePerpetualPositions(
-	settledUpdates []settledUpdate,
+	settledUpdates []SettledUpdate,
 	perpIdToFundingIndex map[uint32]dtypes.SerializableInt,
 ) {
 	// Apply the updates.
@@ -166,7 +166,7 @@ func UpdatePerpetualPositions(
 // For each settledUpdate in settledUpdates, updates its SettledSubaccount.AssetPositions
 // to reflect settledUpdate.AssetUpdates.
 func UpdateAssetPositions(
-	settledUpdates []settledUpdate,
+	settledUpdates []SettledUpdate,
 ) {
 	// Apply the updates.
 	for i, u := range settledUpdates {
