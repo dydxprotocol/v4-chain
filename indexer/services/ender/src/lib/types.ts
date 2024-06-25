@@ -27,6 +27,7 @@ import {
   FundingUpdateV1,
   AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
+  PerpetualMarketCreateEventV2,
   LiquidityTierUpsertEventV1,
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
@@ -106,6 +107,12 @@ export type EventProtoWithTypeAndVersion = {
 } | {
   type: DydxIndexerSubtypes.PERPETUAL_MARKET,
   eventProto: PerpetualMarketCreateEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+  blockEventIndex: number,
+} | {
+  type: DydxIndexerSubtypes.PERPETUAL_MARKET,
+  eventProto: PerpetualMarketCreateEventV2,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,

@@ -1,5 +1,6 @@
 import {
   PerpetualMarketCreateEventV1,
+  PerpetualMarketCreateEventV2,
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   Timestamp,
@@ -25,12 +26,14 @@ import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
-  expectPerpetualMarket,
+  expectPerpetualMarketV1,
   expectPerpetualMarketKafkaMessage,
+  expectPerpetualMarketV2,
 } from '../helpers/indexer-proto-helpers';
 import { PerpetualMarketCreationHandler } from '../../src/handlers/perpetual-market-handler';
 import {
-  defaultPerpetualMarketCreateEvent,
+  defaultPerpetualMarketCreateEventV1,
+  defaultPerpetualMarketCreateEventV2,
   defaultHeight,
   defaultPreviousHeight,
   defaultTime,
@@ -70,14 +73,35 @@ describe('perpetualMarketHandler', () => {
     jest.resetAllMocks();
   });
 
-  describe('getParallelizationIds', () => {
+  describe.each([
+    [
+      'PerpetualMarketCreateEventV1',
+      1,
+      PerpetualMarketCreateEventV1.encode(defaultPerpetualMarketCreateEventV1).finish(),
+      expectPerpetualMarketV1,
+      defaultPerpetualMarketCreateEventV1,
+    ],
+    [
+      'PerpetualMarketCreateEventV2',
+      2,
+      PerpetualMarketCreateEventV2.encode(defaultPerpetualMarketCreateEventV2).finish(),
+      expectPerpetualMarketV2,
+      defaultPerpetualMarketCreateEventV2,
+    ],
+  ])('%s', (
+    _name: string,
+    version: number,
+    perpetualMarketCreateEventBytes: Uint8Array,
+    expectPerpetualMarket: Function,
+    event: PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2,
+  ) => {
     it('returns the correct parallelization ids', () => {
       const transactionIndex: number = 0;
       const eventIndex: number = 0;
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.PERPETUAL_MARKET,
-        PerpetualMarketCreateEventV1.encode(defaultPerpetualMarketCreateEvent).finish(),
+        perpetualMarketCreateEventBytes,
         transactionIndex,
         eventIndex,
       );
@@ -93,7 +117,7 @@ describe('perpetualMarketHandler', () => {
         0,
         indexerTendermintEvent,
         0,
-        defaultPerpetualMarketCreateEvent,
+        event,
       );
 
       expect(handler.getParallelizationIds()).toEqual([]);
@@ -103,11 +127,12 @@ describe('perpetualMarketHandler', () => {
   it('fails when market doesnt exist for perpetual market', async () => {
     const transactionIndex: number = 0;
     const kafkaMessage: KafkaMessage = createKafkaMessageFromPerpetualMarketEvent({
-      perpetualMarketEvent: defaultPerpetualMarketCreateEvent,
+      perpetualMarketEventBytes: perpetualMarketCreateEventBytes,
       transactionIndex,
       height: defaultHeight,
       time: defaultTime,
       txHash: defaultTxHash,
+      version: 1,
     });
 
     await expect(onMessage(kafkaMessage)).rejects.toThrowError();
@@ -117,17 +142,18 @@ describe('perpetualMarketHandler', () => {
     await MarketTable.create(testConstants.defaultMarket);
     const transactionIndex: number = 0;
     const kafkaMessage: KafkaMessage = createKafkaMessageFromPerpetualMarketEvent({
-      perpetualMarketEvent: defaultPerpetualMarketCreateEvent,
+      perpetualMarketEventBytes: perpetualMarketCreateEventBytes,
       transactionIndex,
       height: defaultHeight,
       time: defaultTime,
       txHash: defaultTxHash,
+      version: 1,
     });
 
     await expect(onMessage(kafkaMessage)).rejects.toThrowError();
   });
 
-  it('creates new perpetual market', async () => {
+  it('creates new perpetual market with the event', async () => {
     await Promise.all([
       MarketTable.create(testConstants.defaultMarket),
       LiquidityTiersTable.create(testConstants.defaultLiquidityTier),
@@ -135,16 +161,16 @@ describe('perpetualMarketHandler', () => {
     await liquidityTierRefresher.updateLiquidityTiers();
 
     const transactionIndex: number = 0;
-
-    const perpetualMarketEvent: PerpetualMarketCreateEventV1 = defaultPerpetualMarketCreateEvent;
     const kafkaMessage: KafkaMessage = createKafkaMessageFromPerpetualMarketEvent({
-      perpetualMarketEvent,
+      perpetualMarketEventBytes: perpetualMarketCreateEventBytes,
       transactionIndex,
       height: defaultHeight,
       time: defaultTime,
       txHash: defaultTxHash,
+      version,
     });
-      // Confirm there is no existing perpetualMarket.
+
+    // Confirm there is no existing perpetualMarket.
     await expectNoExistingPerpetualMarkets();
 
     const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
@@ -155,11 +181,12 @@ describe('perpetualMarketHandler', () => {
       [], {
         orderBy: [[PerpetualMarketColumns.id, Ordering.ASC]],
       });
+
     expect(newPerpetualMarkets.length).toEqual(1);
-    expectPerpetualMarketMatchesEvent(perpetualMarketEvent, newPerpetualMarkets[0]);
+    expectPerpetualMarketMatchesEvent(event, newPerpetualMarkets[0]);
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher.getPerpetualMarketFromId('0');
     expect(perpetualMarket).toBeDefined();
-    expectPerpetualMarket(perpetualMarket!, perpetualMarketEvent);
+    expectPerpetualMarket(perpetualMarket!, event);
     expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
   });
 });
@@ -182,25 +209,28 @@ function expectPerpetualMarketMatchesEvent(
 }
 
 function createKafkaMessageFromPerpetualMarketEvent({
-  perpetualMarketEvent,
+  perpetualMarketEventBytes,
   transactionIndex,
   height,
   time,
   txHash,
+  version,
 }: {
-  perpetualMarketEvent: PerpetualMarketCreateEventV1,
+  perpetualMarketEventBytes: Uint8Array,
   transactionIndex: number,
   height: number,
   time: Timestamp,
   txHash: string,
+  version: number,
 }) {
   const events: IndexerTendermintEvent[] = [];
   events.push(
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.PERPETUAL_MARKET,
-      PerpetualMarketCreateEventV1.encode(perpetualMarketEvent).finish(),
+      perpetualMarketEventBytes,
       transactionIndex,
       0,
+      version,
     ),
   );
 

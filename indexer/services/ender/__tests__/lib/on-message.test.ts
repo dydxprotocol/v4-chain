@@ -22,6 +22,7 @@ import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   MarketEventV1,
+  defaultPerpetualMarketCreateEventV1,
   SubaccountMessage,
   SubaccountUpdateEventV1,
   Timestamp,
@@ -125,6 +126,13 @@ describe('on-message', () => {
   const defaultMarketEventBinary: Uint8Array = Uint8Array.from(MarketEventV1.encode(
     defaultMarketModify,
   ).finish());
+
+  const defaultPerpetualMarketEventBinary: Uint8Array = Uint8Array.from(
+    PerpetualMarketCreateEventV1.encode(
+      defaultPerpetualMarketCreateEventV1,
+    ).finish(),
+  );
+
 
   it('successfully processes block with transaction event', async () => {
     const transactionIndex: number = 0;
