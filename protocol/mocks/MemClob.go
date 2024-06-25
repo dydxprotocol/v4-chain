@@ -279,10 +279,6 @@ func (_m *MemClob) GetOrderRemainingAmount(ctx types.Context, order clobtypes.Or
 func (_m *MemClob) GetOrderbookUpdatesForOrderPlacement(ctx types.Context, order clobtypes.Order) *clobtypes.OffchainUpdates {
 	ret := _m.Called(ctx, order)
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetOrderbookUpdatesForOrderPlacement")
-	}
-
 	var r0 *clobtypes.OffchainUpdates
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) *clobtypes.OffchainUpdates); ok {
 		r0 = rf(ctx, order)
@@ -299,10 +295,6 @@ func (_m *MemClob) GetOrderbookUpdatesForOrderPlacement(ctx types.Context, order
 func (_m *MemClob) GetOrderbookUpdatesForOrderRemoval(ctx types.Context, orderId clobtypes.OrderId) *clobtypes.OffchainUpdates {
 	ret := _m.Called(ctx, orderId)
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetOrderbookUpdatesForOrderRemoval")
-	}
-
 	var r0 *clobtypes.OffchainUpdates
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) *clobtypes.OffchainUpdates); ok {
 		r0 = rf(ctx, orderId)
@@ -318,10 +310,6 @@ func (_m *MemClob) GetOrderbookUpdatesForOrderRemoval(ctx types.Context, orderId
 // GetOrderbookUpdatesForOrderUpdate provides a mock function with given fields: ctx, orderId
 func (_m *MemClob) GetOrderbookUpdatesForOrderUpdate(ctx types.Context, orderId clobtypes.OrderId) *clobtypes.OffchainUpdates {
 	ret := _m.Called(ctx, orderId)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetOrderbookUpdatesForOrderUpdate")
-	}
 
 	var r0 *clobtypes.OffchainUpdates
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) *clobtypes.OffchainUpdates); ok {

@@ -23,6 +23,10 @@ func (u UpdateResult) IsSuccess() bool {
 	return u == Success
 }
 
+func (u UpdateResult) IsIsolatedSubaccountError() bool {
+	return u == ViolatesIsolatedSubaccountConstraints
+}
+
 // GetErrorFromUpdateResults generates a helpful error when UpdateSubaccounts or
 // CanUpdateSubaccounts returns one or more failed updates.
 func GetErrorFromUpdateResults(

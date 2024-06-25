@@ -14,7 +14,7 @@ type ClobKeeper interface {
 	LiquidationsKeeper
 	LiquidationsConfigKeeper
 
-	AddOrderToOrderbookCollatCheck(
+	AddOrderToOrderbookSubaccountUpdatesCheck(
 		ctx sdk.Context,
 		clobPairId ClobPairId,
 		subaccountOpenOrders map[satypes.SubaccountId][]PendingOpenOrder,

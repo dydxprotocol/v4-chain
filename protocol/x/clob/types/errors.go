@@ -348,6 +348,11 @@ var (
 	)
 
 	// Stateful order errors.
+	ErrWouldViolateIsolatedSubaccountConstraints = errorsmod.Register(
+		ModuleName,
+		2005,
+		"Order would violate isolated subaccount constraints.",
+	)
 	ErrInvalidOrderFlag = errorsmod.Register(
 		ModuleName,
 		3000,

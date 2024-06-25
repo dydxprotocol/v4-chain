@@ -60,6 +60,8 @@ func GetOrderRemovalReason(
 		return sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_IMMEDIATE_OR_CANCEL_WOULD_REST_ON_BOOK, nil
 	case clobtypes.ReduceOnlyResized:
 		return sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE, nil
+	case clobtypes.ViolatesIsolatedSubaccountConstraints:
+		return sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS, nil
 	default:
 		return 0, fmt.Errorf("unrecognized order status %d and error \"%w\"", orderStatus, orderError)
 	}

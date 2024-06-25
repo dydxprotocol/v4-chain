@@ -24,8 +24,8 @@ type ClobKeeper struct {
 	mock.Mock
 }
 
-// AddOrderToOrderbookCollatCheck provides a mock function with given fields: ctx, clobPairId, subaccountOpenOrders
-func (_m *ClobKeeper) AddOrderToOrderbookCollatCheck(ctx types.Context, clobPairId clobtypes.ClobPairId, subaccountOpenOrders map[subaccountstypes.SubaccountId][]clobtypes.PendingOpenOrder) (bool, map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult) {
+// AddOrderToOrderbookSubaccountUpdatesCheck provides a mock function with given fields: ctx, clobPairId, subaccountOpenOrders
+func (_m *ClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(ctx types.Context, clobPairId clobtypes.ClobPairId, subaccountOpenOrders map[subaccountstypes.SubaccountId][]clobtypes.PendingOpenOrder) (bool, map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult) {
 	ret := _m.Called(ctx, clobPairId, subaccountOpenOrders)
 
 	var r0 bool
@@ -229,13 +229,13 @@ func (_m *ClobKeeper) GetIndexerEventManager() indexer_manager.IndexerEventManag
 	return r0
 }
 
-// GetInsuranceFundBalance provides a mock function with given fields: ctx
+// GetInsuranceFundBalance provides a mock function with given fields: ctx, perpetualId
 func (_m *ClobKeeper) GetInsuranceFundBalance(ctx types.Context, perpetualId uint32) *big.Int {
 	ret := _m.Called(ctx, perpetualId)
 
 	var r0 *big.Int
-	if rf, ok := ret.Get(0).(func(types.Context) *big.Int); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) *big.Int); ok {
+		r0 = rf(ctx, perpetualId)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*big.Int)

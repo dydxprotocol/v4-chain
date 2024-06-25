@@ -1,3 +1,5 @@
+# needs to be called from the protocol directory using this command make -f mocks/Makefile mock-gen
+
 GOPATH=$(shell go env GOPATH)
 
 COSMOS_VERSION=$(shell go list -m all | grep "github.com/dydxprotocol/cosmos-sdk" | awk '{print $$NF}')
@@ -9,6 +11,11 @@ mock-clean:
 	@rm -f ./mocks/*.go
 
 mock-gen:
+	@echo "COSMOS_VERSION=$(COSMOS_VERSION)"
+	@echo "COSMOS_STORE_VERSION=$(COSMOS_STORE_VERSION)"
+	@echo "COSMOS_LOG_VERSION=$(COSMOS_LOG_VERSION)"
+	@echo "COSMOS_GOGOPROTO_VERSION=$(COSMOS_GOGOPROTO_VERSION)"
+	@echo "GOPATH=$(GOPATH)"
 	@go run github.com/vektra/mockery/v2 --name=Configurator --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=MultiStore --dir=$(GOPATH)/pkg/mod/cosmossdk.io/store@$(COSMOS_STORE_VERSION)/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=CacheMultiStore --dir=$(GOPATH)/pkg/mod/cosmossdk.io/store@$(COSMOS_STORE_VERSION)/types --recursive --output=./mocks

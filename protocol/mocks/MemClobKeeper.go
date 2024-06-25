@@ -24,8 +24,8 @@ type MemClobKeeper struct {
 	mock.Mock
 }
 
-// AddOrderToOrderbookCollatCheck provides a mock function with given fields: ctx, clobPairId, subaccountOpenOrders
-func (_m *MemClobKeeper) AddOrderToOrderbookCollatCheck(ctx types.Context, clobPairId clobtypes.ClobPairId, subaccountOpenOrders map[subaccountstypes.SubaccountId][]clobtypes.PendingOpenOrder) (bool, map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult) {
+// AddOrderToOrderbookSubaccountUpdatesCheck provides a mock function with given fields: ctx, clobPairId, subaccountOpenOrders
+func (_m *MemClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(ctx types.Context, clobPairId clobtypes.ClobPairId, subaccountOpenOrders map[subaccountstypes.SubaccountId][]clobtypes.PendingOpenOrder) (bool, map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult) {
 	ret := _m.Called(ctx, clobPairId, subaccountOpenOrders)
 
 	var r0 bool
