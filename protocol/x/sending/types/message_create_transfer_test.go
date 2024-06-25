@@ -49,7 +49,7 @@ func TestMsgCreateTransfer_ValidateBasic(t *testing.T) {
 				Transfer: &types.Transfer{
 					Sender: satypes.SubaccountId{
 						Owner:  sample.AccAddress(),
-						Number: uint32(9999),
+						Number: uint32(999_999),
 					},
 					Recipient: constants.Carl_Num0,
 				},
@@ -63,7 +63,7 @@ func TestMsgCreateTransfer_ValidateBasic(t *testing.T) {
 					Sender: constants.Carl_Num0,
 					Recipient: satypes.SubaccountId{
 						Owner:  sample.AccAddress(),
-						Number: uint32(9999),
+						Number: uint32(999_999),
 					},
 				},
 			},

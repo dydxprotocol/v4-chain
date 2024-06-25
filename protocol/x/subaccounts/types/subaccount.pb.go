@@ -27,8 +27,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type SubaccountId struct {
 	// The address of the wallet that owns this subaccount.
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	// < 128 Since 128 should be enough to start and it fits within
-	// 1 Byte (1 Bit needed to indicate that the first byte is the last).
+	// The unique number of this subaccount for the owner.
+	// Currently limited to 128*1000 subaccounts per owner.
 	Number uint32 `protobuf:"varint,2,opt,name=number,proto3" json:"number,omitempty"`
 }
 
