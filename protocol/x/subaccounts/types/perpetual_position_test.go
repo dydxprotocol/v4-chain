@@ -1,11 +1,13 @@
 package types_test
 
 import (
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/stretchr/testify/require"
 )
 
-func TestDeepCopy(t *testing.T) {
+func TestPerpetualPosition_DeepCopy(t *testing.T) {
 	p := constants.PerpetualPosition_OneISO2Short
 	deepCopy := p.DeepCopy()
 

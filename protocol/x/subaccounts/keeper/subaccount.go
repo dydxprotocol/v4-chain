@@ -324,7 +324,7 @@ func (k Keeper) UpdateSubaccounts(
 	}
 
 	// Apply the updates to asset positions and perpetual positions.
-	for i, _ := range settledUpdates {
+	for i := range settledUpdates {
 		settledUpdates[i].SettledSubaccount = salib.CalculateUpdatedSubaccount(
 			settledUpdates[i],
 			perpInfos,

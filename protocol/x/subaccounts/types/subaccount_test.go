@@ -13,21 +13,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBaseQuantumsToBigInt(t *testing.T) {
+func TestBaseQuantums_ToBigInt(t *testing.T) {
 	num := uint64(5)
 	bq := types.BaseQuantums(5)
 
 	require.Zero(t, new(big.Int).SetUint64(num).Cmp(bq.ToBigInt()))
 }
 
-func TestBaseQuantumsToUInt64(t *testing.T) {
+func TestBaseQuantums_ToUInt64(t *testing.T) {
 	num := uint64(5)
 	bq := types.BaseQuantums(5)
 
 	require.Equal(t, num, bq.ToUint64())
 }
 
-func TestSubaccountIdValidate(t *testing.T) {
+func TestSubaccountId_Validate(t *testing.T) {
 	tests := map[string]struct {
 		owner         string
 		number        uint32
@@ -77,7 +77,7 @@ func TestSubaccountIdValidate(t *testing.T) {
 	}
 }
 
-func TestSubaccountIdMustGetAccAccount(t *testing.T) {
+func TestSubaccountId_MustGetAccAccount(t *testing.T) {
 	tests := map[string]struct {
 		owner  string
 		number uint32
@@ -115,7 +115,7 @@ func TestSubaccountIdMustGetAccAccount(t *testing.T) {
 	}
 }
 
-func TestDeepCopy(t *testing.T) {
+func TestSubaccount_DeepCopy(t *testing.T) {
 	subaccount := constants.Alice_Num1_1BTC_Long_500_000USD
 	deepCopy := subaccount.DeepCopy()
 
@@ -123,7 +123,7 @@ func TestDeepCopy(t *testing.T) {
 	require.NotSame(t, &subaccount, &deepCopy)
 }
 
-func TestSubaccountGetPerpetualPositionForId(t *testing.T) {
+func TestSubaccount_GetPerpetualPositionForId(t *testing.T) {
 	expectedPerpetualPositions := []*types.PerpetualPosition{
 		{
 			PerpetualId: 0,
@@ -151,7 +151,7 @@ func TestSubaccountGetPerpetualPositionForId(t *testing.T) {
 	require.Nil(t, position)
 }
 
-func TestGetSubaccountQuoteBalance(t *testing.T) {
+func TestSubaccount_GetUsdcPosition(t *testing.T) {
 	tests := map[string]struct {
 		subaccount           *types.Subaccount
 		expectedQuoteBalance *big.Int
@@ -208,7 +208,7 @@ func TestGetSubaccountQuoteBalance(t *testing.T) {
 	}
 }
 
-func TestSetSubaccountQuoteBalance(t *testing.T) {
+func TestSubaccount_SetUsdcAssetPosition(t *testing.T) {
 	tests := map[string]struct {
 		subaccount             *types.Subaccount
 		newQuoteBalance        *big.Int
