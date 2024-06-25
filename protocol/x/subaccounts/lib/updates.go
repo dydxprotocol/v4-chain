@@ -145,81 +145,6 @@ func IsValidStateTransitionForUndercollateralizedSubaccount(
 	return types.Success
 }
 
-func CalculateUpdatedPerpetualPositions(
-	positions []*types.PerpetualPosition,
-	updates []types.PerpetualUpdate,
-	perpInfos perptypes.PerpInfos,
-) []*types.PerpetualPosition {
-	// Create a map of perpetual positions by ID.
-	positionsMap := make(map[uint32]*types.PerpetualPosition)
-	for _, pos := range positions {
-		positionsMap[pos.PerpetualId] = pos
-	}
-
-	// Iterate over each update and apply it to the positions.
-	for _, update := range updates {
-		// Check if the position already exists.
-		pos, exists := positionsMap[update.PerpetualId]
-		if exists {
-			// Update existing position.
-			quantums := pos.GetBigQuantums()
-			quantums.Add(quantums, update.GetBigQuantums())
-			if quantums.BitLen() == 0 {
-				// The position is now closed.
-				delete(positionsMap, update.PerpetualId)
-			} else {
-				pos.Quantums = dtypes.NewIntFromBigInt(quantums)
-			}
-		} else {
-			// Create a new position.
-			perpInfo := perpInfos.MustGet(update.PerpetualId)
-			positionsMap[update.PerpetualId] = &types.PerpetualPosition{
-				PerpetualId:  update.PerpetualId,
-				Quantums:     dtypes.NewIntFromBigInt(update.GetBigQuantums()),
-				FundingIndex: perpInfo.Perpetual.FundingIndex,
-			}
-		}
-	}
-
-	return lib.MapToSortedSlice[lib.Sortable[uint32]](positionsMap)
-}
-
-func CalculateUpdatedAssetPositions(
-	assetPositions []*types.AssetPosition,
-	updates []types.AssetUpdate,
-) []*types.AssetPosition {
-	// Create a map of asset positions by ID.
-	positionsMap := make(map[uint32]*types.AssetPosition)
-	for _, pos := range assetPositions {
-		positionsMap[pos.AssetId] = pos
-	}
-
-	// Iterate over each update and apply it to the positions.
-	for _, update := range updates {
-		// Check if the position already exists.
-		pos, exists := positionsMap[update.AssetId]
-		if exists {
-			// Update the position.
-			quantums := pos.GetBigQuantums()
-			quantums.Add(quantums, update.GetBigQuantums())
-			if quantums.BitLen() == 0 {
-				// The position is now closed.
-				delete(positionsMap, update.AssetId)
-			} else {
-				pos.Quantums = dtypes.NewIntFromBigInt(quantums)
-			}
-		} else {
-			// Create a new position.
-			positionsMap[update.AssetId] = &types.AssetPosition{
-				AssetId:  update.AssetId,
-				Quantums: dtypes.NewIntFromBigInt(update.GetBigQuantums()),
-			}
-		}
-	}
-
-	return lib.MapToSortedSlice[lib.Sortable[uint32]](positionsMap)
-}
-
 // GetUpdatedAssetPositions filters out all the asset positions on a subaccount that have
 // been updated. This will include any asset postions that were closed due to an update.
 // TODO(DEC-1295): look into reducing code duplication here using Generics+Reflect.
@@ -310,23 +235,101 @@ func GetUpdatedPerpetualPositions(
 	return updatedPerpetualPositions
 }
 
-// For each settledUpdate in settledUpdates, updates its AssetPositions and PerpetualPositions
-// based on the AssetUpdates and PerpetualUpdates.
-func UpdatePositions(
-	settledUpdates []types.SettledUpdate,
-	perpInfos perptypes.PerpInfos,
-) {
-	for i, u := range settledUpdates {
-		settledUpdates[i].SettledSubaccount.AssetPositions = CalculateUpdatedAssetPositions(
-			u.SettledSubaccount.AssetPositions,
-			u.AssetUpdates,
-		)
-		settledUpdates[i].SettledSubaccount.PerpetualPositions = CalculateUpdatedPerpetualPositions(
-			u.SettledSubaccount.PerpetualPositions,
-			u.PerpetualUpdates,
-			perpInfos,
-		)
+// CalculateUpdatedAssetPositions returns a deep-copy of the asset positions with the updates applied.
+func CalculateUpdatedAssetPositions(
+	assetPositions []*types.AssetPosition,
+	updates []types.AssetUpdate,
+) []*types.AssetPosition {
+	// Create a map of asset positions by ID.
+	positionsMap := make(map[uint32]*types.AssetPosition)
+	for _, pos := range assetPositions {
+		copy := pos.DeepCopy()
+		positionsMap[pos.AssetId] = &copy
 	}
+
+	// Iterate over each update and apply it to the positions.
+	for _, update := range updates {
+		// Check if the position already exists.
+		pos, exists := positionsMap[update.AssetId]
+		if exists {
+			// Update the position.
+			quantums := pos.GetBigQuantums()
+			quantums.Add(quantums, update.GetBigQuantums())
+			if quantums.BitLen() == 0 {
+				// The position is now closed.
+				delete(positionsMap, update.AssetId)
+			} else {
+				pos.Quantums = dtypes.NewIntFromBigInt(quantums)
+			}
+		} else {
+			// Create a new position.
+			positionsMap[update.AssetId] = &types.AssetPosition{
+				AssetId:  update.AssetId,
+				Quantums: dtypes.NewIntFromBigInt(update.GetBigQuantums()),
+			}
+		}
+	}
+
+	return lib.MapToSortedSlice[lib.Sortable[uint32]](positionsMap)
+}
+
+// CalculateUpdatedPerpetualPositions returns a deep-copy of the perpetual positions with the updates applied.
+func CalculateUpdatedPerpetualPositions(
+	positions []*types.PerpetualPosition,
+	updates []types.PerpetualUpdate,
+	perpInfos perptypes.PerpInfos,
+) []*types.PerpetualPosition {
+	// Create a map of perpetual positions by ID.
+	positionsMap := make(map[uint32]*types.PerpetualPosition)
+	for _, pos := range positions {
+		copy := pos.DeepCopy()
+		positionsMap[pos.PerpetualId] = &copy
+	}
+
+	// Iterate over each update and apply it to the positions.
+	for _, update := range updates {
+		// Check if the position already exists.
+		pos, exists := positionsMap[update.PerpetualId]
+		if exists {
+			// Update existing position.
+			quantums := pos.GetBigQuantums()
+			quantums.Add(quantums, update.GetBigQuantums())
+			if quantums.BitLen() == 0 {
+				// The position is now closed.
+				delete(positionsMap, update.PerpetualId)
+			} else {
+				pos.Quantums = dtypes.NewIntFromBigInt(quantums)
+			}
+		} else {
+			// Create a new position.
+			perpInfo := perpInfos.MustGet(update.PerpetualId)
+			positionsMap[update.PerpetualId] = &types.PerpetualPosition{
+				PerpetualId:  update.PerpetualId,
+				Quantums:     dtypes.NewIntFromBigInt(update.GetBigQuantums()),
+				FundingIndex: perpInfo.Perpetual.FundingIndex,
+			}
+		}
+	}
+
+	return lib.MapToSortedSlice[lib.Sortable[uint32]](positionsMap)
+}
+
+// CalculateUpdatedSubaccount returns a copy of the settled subaccount with the updates applied.
+func CalculateUpdatedSubaccount(
+	settledUpdate types.SettledUpdate,
+	perpInfos perptypes.PerpInfos,
+) types.Subaccount {
+	result := settledUpdate.SettledSubaccount.DeepCopy()
+	result.AssetPositions = CalculateUpdatedAssetPositions(
+		result.AssetPositions,
+		settledUpdate.AssetUpdates,
+	)
+	result.PerpetualPositions = CalculateUpdatedPerpetualPositions(
+		result.PerpetualPositions,
+		settledUpdate.PerpetualUpdates,
+		perpInfos,
+	)
+	return result
 }
 
 // GetRiskForSubaccount returns the risk value of the `Subaccount` after updates are applied.
@@ -338,7 +341,7 @@ func UpdatePositions(
 //
 // If two position updates reference the same position, an error is returned.
 func GetRiskForSubaccount(
-	settledUpdate types.SettledUpdate,
+	subaccount types.Subaccount,
 	perpInfos perptypes.PerpInfos,
 ) (
 	risk margin.Risk,
@@ -347,30 +350,8 @@ func GetRiskForSubaccount(
 	// Initialize return values.
 	risk = margin.ZeroRisk()
 
-	b, err := settledUpdate.SettledSubaccount.Marshal()
-	if err != nil {
-		return risk, err
-	}
-	err = settledUpdate.SettledSubaccount.Unmarshal(b)
-	if err != nil {
-		return risk, err
-	}
-
-	// Merge updates and assets.
-	assetPositions := CalculateUpdatedAssetPositions(
-		settledUpdate.SettledSubaccount.AssetPositions,
-		settledUpdate.AssetUpdates,
-	)
-
-	// Merge updates and perpetuals.
-	perpetualPositions := CalculateUpdatedPerpetualPositions(
-		settledUpdate.SettledSubaccount.PerpetualPositions,
-		settledUpdate.PerpetualUpdates,
-		perpInfos,
-	)
-
 	// Iterate over all assets and updates and calculate change to net collateral and margin requirements.
-	for _, pos := range assetPositions {
+	for _, pos := range subaccount.AssetPositions {
 		r, err := assetslib.GetNetCollateralAndMarginRequirements(
 			pos.AssetId,
 			pos.GetBigQuantums(),
@@ -382,7 +363,7 @@ func GetRiskForSubaccount(
 	}
 
 	// Iterate over all perpetuals and updates and calculate change to net collateral and margin requirements.
-	for _, pos := range perpetualPositions {
+	for _, pos := range subaccount.PerpetualPositions {
 		perpInfo := perpInfos.MustGet(pos.PerpetualId)
 		r := perplib.GetNetCollateralAndMarginRequirements(
 			perpInfo.Perpetual,

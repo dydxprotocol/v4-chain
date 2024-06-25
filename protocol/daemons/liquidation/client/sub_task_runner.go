@@ -307,9 +307,7 @@ func (c *Client) CheckSubaccountCollateralization(
 	)
 
 	risk, err := salib.GetRiskForSubaccount(
-		satypes.SettledUpdate{
-			SettledSubaccount: settledSubaccount,
-		},
+		settledSubaccount,
 		perpInfos,
 	)
 

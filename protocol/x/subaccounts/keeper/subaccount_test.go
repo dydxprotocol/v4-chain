@@ -523,7 +523,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				&constants.PerpetualPosition_OneBTCLong,
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
-				&types.PerpetualPosition{
+				{
 					PerpetualId:  uint32(0),
 					Quantums:     dtypes.NewInt(300_000_000), // 3 BTC
 					FundingIndex: dtypes.NewInt(0),
@@ -5668,8 +5668,8 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 				},
 			},
 			expectedNetCollateral:     big.NewInt(100_002_000_000), // $100,000 + $1 + $1
-			expectedInitialMargin:     big.NewInt(0),  // $0
-			expectedMaintenanceMargin: big.NewInt(0),  // $0
+			expectedInitialMargin:     big.NewInt(0),               // $0
+			expectedMaintenanceMargin: big.NewInt(0),               // $0
 		},
 		"multiple perpetual updates for the same position": {
 			useEmptySubaccount:        true,

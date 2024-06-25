@@ -324,10 +324,12 @@ func (k Keeper) UpdateSubaccounts(
 	}
 
 	// Apply the updates to asset positions and perpetual positions.
-	salib.UpdatePositions(
-		settledUpdates,
-		perpInfos,
-	)
+	for i, _ := range settledUpdates {
+		settledUpdates[i].SettledSubaccount = salib.CalculateUpdatedSubaccount(
+			settledUpdates[i],
+			perpInfos,
+		)
+	}
 
 	// Transfer collateral between collateral pools for any isolated perpetual positions that changed
 	// state due to an update.
@@ -599,8 +601,9 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		}
 
 		// Get the new collateralization and margin requirements with the update applied.
+		updatedSubaccount := salib.CalculateUpdatedSubaccount(u, perpInfos)
 		riskNew, err := salib.GetRiskForSubaccount(
-			u,
+			updatedSubaccount,
 			perpInfos,
 		)
 		if err != nil {
@@ -613,10 +616,6 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		// We must now check if the state transition is valid.
 		if !riskNew.IsInitialCollateralized() {
 			// Get the current collateralization and margin requirements without the update applied.
-			emptyUpdate := types.SettledUpdate{
-				SettledSubaccount: u.SettledSubaccount,
-			}
-
 			bytes, err := proto.Marshal(u.SettledSubaccount.Id)
 			if err != nil {
 				return false, nil, err
@@ -626,7 +625,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			// Cache the current collateralization and margin requirements for the subaccount.
 			if _, ok := riskCurMap[saKey]; !ok {
 				riskCurMap[saKey], err = salib.GetRiskForSubaccount(
-					emptyUpdate,
+					u.SettledSubaccount,
 					perpInfos,
 				)
 				if err != nil {
@@ -682,9 +681,10 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 		AssetUpdates:      update.AssetUpdates,
 		PerpetualUpdates:  update.PerpetualUpdates,
 	}
+	updatedSubaccount := salib.CalculateUpdatedSubaccount(settledUpdate, perpInfos)
 
 	return salib.GetRiskForSubaccount(
-		settledUpdate,
+		updatedSubaccount,
 		perpInfos,
 	)
 }
