@@ -147,8 +147,10 @@ func TestGetAllOwnerShares(t *testing.T) {
 	bob := constants.BobAccAddress.String()
 	bobShares := vaulttypes.BigIntToNumShares(big.NewInt(123))
 
-	k.SetOwnerShares(ctx, constants.Vault_Clob_0, alice, aliceShares)
-	k.SetOwnerShares(ctx, constants.Vault_Clob_0, bob, bobShares)
+	err := k.SetOwnerShares(ctx, constants.Vault_Clob_0, alice, aliceShares)
+	require.NoError(t, err)
+	err = k.SetOwnerShares(ctx, constants.Vault_Clob_0, bob, bobShares)
+	require.NoError(t, err)
 
 	allOwnerShares = k.GetAllOwnerShares(ctx, constants.Vault_Clob_0)
 	require.ElementsMatch(
