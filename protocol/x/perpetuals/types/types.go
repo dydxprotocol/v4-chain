@@ -101,4 +101,12 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 		params Params,
 	) error
+	SetPerpetualMarketType(
+		ctx sdk.Context,
+		id uint32,
+		marketType PerpetualMarketType,
+	) (Perpetual, error)
+	GetAllPerpetuals(
+		ctx sdk.Context,
+	) []Perpetual
 }

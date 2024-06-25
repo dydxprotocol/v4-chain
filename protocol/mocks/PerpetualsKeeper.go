@@ -70,6 +70,22 @@ func (_m *PerpetualsKeeper) GetAddPremiumVotes(ctx types.Context) *perpetualstyp
 	return r0
 }
 
+// GetAllPerpetuals provides a mock function with given fields: ctx
+func (_m *PerpetualsKeeper) GetAllPerpetuals(ctx types.Context) []perpetualstypes.Perpetual {
+	ret := _m.Called(ctx)
+
+	var r0 []perpetualstypes.Perpetual
+	if rf, ok := ret.Get(0).(func(types.Context) []perpetualstypes.Perpetual); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]perpetualstypes.Perpetual)
+		}
+	}
+
+	return r0
+}
+
 // GetMarginRequirements provides a mock function with given fields: ctx, id, bigQuantums
 func (_m *PerpetualsKeeper) GetMarginRequirements(ctx types.Context, id uint32, bigQuantums *big.Int) (*big.Int, *big.Int, error) {
 	ret := _m.Called(ctx, id, bigQuantums)
@@ -281,6 +297,30 @@ func (_m *PerpetualsKeeper) SetParams(ctx types.Context, params perpetualstypes.
 	}
 
 	return r0
+}
+
+// SetPerpetualMarketType provides a mock function with given fields: ctx, id, marketType
+func (_m *PerpetualsKeeper) SetPerpetualMarketType(ctx types.Context, id uint32, marketType perpetualstypes.PerpetualMarketType) (perpetualstypes.Perpetual, error) {
+	ret := _m.Called(ctx, id, marketType)
+
+	var r0 perpetualstypes.Perpetual
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, perpetualstypes.PerpetualMarketType) (perpetualstypes.Perpetual, error)); ok {
+		return rf(ctx, id, marketType)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, perpetualstypes.PerpetualMarketType) perpetualstypes.Perpetual); ok {
+		r0 = rf(ctx, id, marketType)
+	} else {
+		r0 = ret.Get(0).(perpetualstypes.Perpetual)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, perpetualstypes.PerpetualMarketType) error); ok {
+		r1 = rf(ctx, id, marketType)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 type mockConstructorTestingTNewPerpetualsKeeper interface {
