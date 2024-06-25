@@ -1,11 +1,6 @@
 name: Indexer Build and push Lambda
 
 on:
-  push:
-    branches:
-      - adam/ct-861-websocket-topic-for-blockheight
-      - 'release/indexer/v[0-9]+.[0-9]+.x'  # e.g. release/indexer/v0.1.x
-      - 'release/indexer/v[0-9]+.x'  # e.g. release/indexer/v1.x
   workflow_call:
     inputs:
       ENVIRONMENT:
