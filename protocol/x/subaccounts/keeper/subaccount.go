@@ -432,32 +432,6 @@ func (k Keeper) CanUpdateSubaccounts(
 	return success, successPerUpdate, err
 }
 
-func checkPositionUpdatable(
-	ctx sdk.Context,
-	pk types.ProductKeeper,
-	p types.PositionSize,
-) (
-	err error,
-) {
-	updatable, err := pk.IsPositionUpdatable(
-		ctx,
-		p.GetId(),
-	)
-	if err != nil {
-		return err
-	}
-
-	if !updatable {
-		return errorsmod.Wrapf(
-			types.ErrProductPositionNotUpdatable,
-			"type: %v, id: %d",
-			p.GetProductType(),
-			p.GetId(),
-		)
-	}
-	return nil
-}
-
 // internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts and compute
 // if any of the updates led to an isolated perpetual position being opened or closed.
 // The `updates` do not have to contain `Subaccounts` with unique `SubaccountIds`.
@@ -587,17 +561,31 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	for i, u := range settledUpdates {
 		// Check all updated perps are updatable.
 		for _, perpUpdate := range u.PerpetualUpdates {
-			err := checkPositionUpdatable(ctx, k.perpetualsKeeper, perpUpdate)
+			updatable, err := k.perpetualsKeeper.IsPositionUpdatable(ctx, perpUpdate.GetId())
 			if err != nil {
 				return false, nil, err
+			}
+			if !updatable {
+				return false, nil, errorsmod.Wrapf(
+					types.ErrProductPositionNotUpdatable,
+					"type: perpetual, id: %d",
+					perpUpdate.GetId(),
+				)
 			}
 		}
 
 		// Check all updated assets are updatable.
 		for _, assetUpdate := range u.AssetUpdates {
-			err := checkPositionUpdatable(ctx, k.assetsKeeper, assetUpdate)
+			updatable, err := k.assetsKeeper.IsPositionUpdatable(ctx, assetUpdate.GetId())
 			if err != nil {
 				return false, nil, err
+			}
+			if !updatable {
+				return false, nil, errorsmod.Wrapf(
+					types.ErrProductPositionNotUpdatable,
+					"type: asset, id: %d",
+					assetUpdate.GetId(),
+				)
 			}
 		}
 
