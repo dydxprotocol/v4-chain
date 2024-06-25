@@ -323,14 +323,11 @@ func (k Keeper) UpdateSubaccounts(
 		}
 	}
 
-	// Apply the updates to perpetual positions.
-	salib.UpdatePerpetualPositions(
+	// Apply the updates to asset positions and perpetual positions.
+	salib.UpdatePositions(
 		settledUpdates,
 		perpInfos,
 	)
-
-	// Apply the updates to asset positions.
-	salib.UpdateAssetPositions(settledUpdates)
 
 	// Transfer collateral between collateral pools for any isolated perpetual positions that changed
 	// state due to an update.
