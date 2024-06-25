@@ -44,6 +44,14 @@ func BeginBlocker(
 	)
 }
 
+// Precommit executes all ABCI Precommit logic respective to the clob module.
+func Precommit(
+	ctx sdk.Context,
+	keeper keeper.Keeper,
+) {
+	keeper.StreamEventsAfterBlockFinalized(ctx)
+}
+
 // EndBlocker executes all ABCI EndBlock logic respective to the clob module.
 func EndBlocker(
 	ctx sdk.Context,

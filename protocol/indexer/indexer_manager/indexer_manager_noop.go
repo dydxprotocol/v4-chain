@@ -6,6 +6,7 @@ func NewIndexerEventManagerNoop() IndexerEventManager {
 	return NewIndexerEventManager(
 		msgsender.NewIndexerMessageSenderNoop(),
 		nil,
+		nil,
 		false,
 	)
 }
@@ -13,6 +14,7 @@ func NewIndexerEventManagerNoop() IndexerEventManager {
 func NewIndexerEventManagerNoopEnabled() IndexerEventManager {
 	return NewIndexerEventManager(
 		msgsender.NewIndexerMessageSenderNoopEnabled(),
+		nil,
 		nil,
 		false,
 	)

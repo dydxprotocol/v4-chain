@@ -104,7 +104,7 @@ func assertIsEnabled(t *testing.T, isEnabled bool) {
 	storeKey := storetypes.NewTransientStoreKey(indexer_manager.TransientStoreKey)
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(isEnabled)
-	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, isEnabled)
+	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, nil, isEnabled)
 	require.Equal(t, isEnabled, indexerEventManager.Enabled())
 }
 
@@ -118,7 +118,7 @@ func TestSendOffchainData(t *testing.T) {
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(true)
 	mockMsgSender.On("SendOffchainData", mock.Anything).Return(nil)
-	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, true)
+	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, nil, true)
 	var message msgsender.Message
 	indexerEventManager.SendOffchainData(message)
 	mockMsgSender.AssertExpectations(t)
@@ -130,7 +130,7 @@ func TestSendOnchainData(t *testing.T) {
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(true)
 	mockMsgSender.On("SendOnchainData", mock.Anything).Return(nil)
-	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, true)
+	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, nil, true)
 	indexerEventManager.SendOnchainData(indexerTendermintBlock)
 	mockMsgSender.AssertExpectations(t)
 }
@@ -144,7 +144,7 @@ func TestProduceBlockBasicTxnEvent(t *testing.T) {
 	require.NoError(t, stateStore.LoadLatestVersion())
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(true)
-	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, true)
+	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, nil, true)
 	indexerEventManager.AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeOrderFill,
@@ -172,7 +172,7 @@ func TestProduceBlockBasicBlockEvent(t *testing.T) {
 	require.NoError(t, stateStore.LoadLatestVersion())
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(true)
-	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, true)
+	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, nil, true)
 	indexerEventManager.AddBlockEvent(
 		ctx,
 		indexerevents.SubtypeFundingValues,
@@ -201,7 +201,7 @@ func TestProduceBlockMultipleTxnEvents(t *testing.T) {
 	require.NoError(t, stateStore.LoadLatestVersion())
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(true)
-	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, true)
+	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, nil, true)
 	indexerEventManager.AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeOrderFill,
@@ -251,7 +251,7 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 	require.NoError(t, stateStore.LoadLatestVersion())
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(true)
-	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, true)
+	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, nil, true)
 	indexerEventManager.AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeOrderFill,
@@ -341,7 +341,7 @@ func TestClearEvents(t *testing.T) {
 	require.NoError(t, stateStore.LoadLatestVersion())
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(true)
-	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, true)
+	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, nil, true)
 	indexerEventManager.AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeOrderFill,

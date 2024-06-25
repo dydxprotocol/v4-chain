@@ -21,6 +21,11 @@ func (_m *IndexerEventManager) AddBlockEvent(ctx types.Context, subType string, 
 	_m.Called(ctx, subType, blockEvent, version, dataBytes)
 }
 
+// AddOnchainStreamEvent provides a mock function with given fields: ctx, dataBytes
+func (_m *IndexerEventManager) AddOnchainStreamEvent(ctx types.Context, dataBytes []byte) {
+	_m.Called(ctx, dataBytes)
+}
+
 // AddTxnEvent provides a mock function with given fields: ctx, subType, version, dataByes
 func (_m *IndexerEventManager) AddTxnEvent(ctx types.Context, subType string, version uint32, dataByes []byte) {
 	_m.Called(ctx, subType, version, dataByes)
@@ -44,6 +49,26 @@ func (_m *IndexerEventManager) Enabled() bool {
 		r0 = rf()
 	} else {
 		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
+// GetOnchainStreamEvents provides a mock function with given fields: ctx
+func (_m *IndexerEventManager) GetOnchainStreamEvents(ctx types.Context) []*indexer_manager.IndexerTendermintEventWrapper {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetOnchainStreamEvents")
+	}
+
+	var r0 []*indexer_manager.IndexerTendermintEventWrapper
+	if rf, ok := ret.Get(0).(func(types.Context) []*indexer_manager.IndexerTendermintEventWrapper); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*indexer_manager.IndexerTendermintEventWrapper)
+		}
 	}
 
 	return r0

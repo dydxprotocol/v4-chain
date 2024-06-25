@@ -1,9 +1,10 @@
 package indexer_manager
 
 import (
+	"encoding/binary"
+
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	"encoding/binary"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -15,6 +16,9 @@ import (
 const (
 	// TransientStoreKey is the transient store key for indexer events.
 	TransientStoreKey = "transient_indexer_events"
+	// OnchainStreamTransientStoreKey is the transient store key for storing onchain stream events (fills).
+	// TODO(CT-939): Consolidate FNS with indexer events; share storage and event emission logic.
+	OnchainStreamTransientStoreKey = "transient_onchain_stream"
 
 	// IndexerEventsCountKey is the key to retrieve the count of the indexer events
 	// within the last block. Each individual event is stored at a big endian encoded

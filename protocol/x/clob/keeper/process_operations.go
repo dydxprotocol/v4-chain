@@ -57,26 +57,6 @@ func (k Keeper) ProcessProposerOperations(
 		return errorsmod.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
 	}
 
-	// If grpc streams are on, send absolute fill amounts from local + proposed opqueue to the grpc stream.
-	// This must be sent out to account for checkState being discarded and deliverState being used.
-	if streamingManager := k.GetGrpcStreamingManager(); streamingManager.Enabled() {
-		localValidatorOperationsQueue, _ := k.MemClob.GetOperationsToReplay(ctx)
-		orderIdsFromProposed := fetchOrdersInvolvedInOpQueue(
-			operations,
-		)
-		orderIdsFromLocal := fetchOrdersInvolvedInOpQueue(
-			localValidatorOperationsQueue,
-		)
-		orderIdSetToUpdate := lib.MergeMaps(orderIdsFromLocal, orderIdsFromProposed)
-
-		allUpdates := types.NewOffchainUpdates()
-		for orderId := range orderIdSetToUpdate {
-			orderbookUpdate := k.MemClob.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
-			allUpdates.Append(orderbookUpdate)
-		}
-		k.SendOrderbookUpdates(ctx, allUpdates)
-	}
-
 	log.DebugLog(ctx, "Processing operations queue",
 		log.OperationsQueue, types.GetInternalOperationsQueueTextString(operations))
 
@@ -560,11 +540,9 @@ func (k Keeper) PersistMatchOrdersToState(
 			&takerOrder,
 			makerOrders,
 		)
-		k.SendOrderbookFillUpdates(
+		k.GetIndexerEventManager().AddOnchainStreamEvent(
 			ctx,
-			[]types.StreamOrderbookFill{
-				streamOrderbookFill,
-			},
+			indexer_manager.GetBytes(&streamOrderbookFill),
 		)
 	}
 
@@ -669,11 +647,9 @@ func (k Keeper) PersistMatchLiquidationToState(
 			takerOrder,
 			makerOrders,
 		)
-		k.SendOrderbookFillUpdates(
+		k.GetIndexerEventManager().AddOnchainStreamEvent(
 			ctx,
-			[]types.StreamOrderbookFill{
-				streamOrderbookFill,
-			},
+			indexer_manager.GetBytes(&streamOrderbookFill),
 		)
 	}
 	return nil

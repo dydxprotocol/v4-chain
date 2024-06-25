@@ -445,6 +445,7 @@ func New(
 		statsmoduletypes.TransientStoreKey,
 		rewardsmoduletypes.TransientStoreKey,
 		indexer_manager.TransientStoreKey,
+		indexer_manager.OnchainStreamTransientStoreKey,
 		perpetualsmoduletypes.TransientStoreKey,
 	)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, clobmoduletypes.MemStoreKey)
@@ -730,6 +731,7 @@ func New(
 	app.IndexerEventManager = indexer_manager.NewIndexerEventManager(
 		msgSender,
 		tkeys[indexer_manager.TransientStoreKey],
+		tkeys[indexer_manager.OnchainStreamTransientStoreKey],
 		indexerFlags.SendOffchainData,
 	)
 
