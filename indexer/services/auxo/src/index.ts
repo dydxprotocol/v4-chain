@@ -198,7 +198,6 @@ async function runDbAndKafkaMigration(
   createNewKafkaTopics: boolean,
   lambda: ECRClient,
 ): Promise<void> {
-  // TODO (Adam): Add flag to logger to indicate if creating new kafka topics
   logger.info({
     at: 'index#runDbMigration',
     message: 'Running db migration',
