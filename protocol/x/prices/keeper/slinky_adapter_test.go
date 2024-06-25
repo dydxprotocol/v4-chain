@@ -113,3 +113,24 @@ func TestGetPrevBlockCPCounter(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint64(marketNumber), cpCounter)
 }
+
+func TestGetAllCurrencyPairs(t *testing.T) {
+	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
+
+	marketNumber := 10
+	_ = keepertest.CreateNMarkets(t, ctx, keeper, marketNumber)
+	cps := keeper.GetAllCurrencyPairs(ctx)
+	require.Equal(t, uint64(marketNumber), len(cps))
+}
+
+func TestGetNumCurrencyPairs(t *testing.T) {
+	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
+
+	marketNumber := 10
+	_ = keepertest.CreateNMarkets(t, ctx, keeper, marketNumber)
+	cpCounter, err := keeper.GetNumCurrencyPairs(ctx)
+	require.NoError(t, err)
+	require.Equal(t, uint64(marketNumber), cpCounter)
+}

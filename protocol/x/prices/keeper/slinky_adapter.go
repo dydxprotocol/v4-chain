@@ -105,3 +105,45 @@ func (k Keeper) GetPrevBlockCPCounter(ctx sdk.Context) (uint64, error) {
 
 	return numMarketPrices, nil
 }
+
+func (k Keeper) GetNumCurrencyPairs(ctx sdk.Context) (uint64, error) {
+	marketPriceStore := k.getMarketPriceStore(ctx)
+
+	var numMarketPrices uint64
+
+	iterator := marketPriceStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		marketPrice := types.MarketPrice{}
+		k.cdc.MustUnmarshal(iterator.Value(), &marketPrice)
+		numMarketPrices++
+	}
+
+	return numMarketPrices, nil
+}
+
+func (k Keeper) GetNumRemovedCurrencyPairs(_ sdk.Context) (uint64, error) {
+	return 0, nil
+}
+
+func (k Keeper) GetAllCurrencyPairs(ctx sdk.Context) []slinkytypes.CurrencyPair {
+	marketParamStore := k.getMarketParamStore(ctx)
+	var currencyPairs []slinkytypes.CurrencyPair
+
+	iterator := marketParamStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		mp := types.MarketParam{}
+		k.cdc.MustUnmarshal(iterator.Value(), &mp)
+		mpCp, err := slinky.MarketPairToCurrencyPair(mp.Pair)
+		if err != nil {
+			k.Logger(ctx).Error("market param pair invalid format", "pair", mp.Pair)
+			continue
+		}
+		currencyPairs = append(currencyPairs, mpCp)
+	}
+
+	return currencyPairs
+}

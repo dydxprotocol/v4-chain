@@ -2,6 +2,8 @@ package vote_extensions
 
 import (
 	"fmt"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
+	"math/big"
 
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,6 +19,15 @@ type ExtendVoteHandler struct {
 	SlinkyExtendVoteHandler sdk.ExtendVoteHandler
 	PricesTxDecoder         process.UpdateMarketPriceTxDecoder
 	PricesKeeper            PricesKeeper
+}
+
+type NoopPriceApplier struct{}
+
+func (n NoopPriceApplier) ApplyPricesFromVoteExtensions(_ sdk.Context, _ *cometabci.RequestFinalizeBlock) (map[slinkytypes.CurrencyPair]*big.Int, error) {
+	return nil, nil
+}
+func (n NoopPriceApplier) GetPricesForValidator(_ sdk.ConsAddress) map[slinkytypes.CurrencyPair]*big.Int {
+	return nil
 }
 
 // ExtendVoteHandler returns a sdk.ExtendVoteHandler, responsible for the following:
