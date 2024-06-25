@@ -430,6 +430,15 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+// Block for dep upgrades that would have been pulled in via Slinky
+replace (
+	cosmossdk.io/x/upgrade => cosmossdk.io/x/upgrade v0.1.1
+	github.com/cosmos/ibc-go/v8 => github.com/cosmos/ibc-go/v8 v8.0.0
+	github.com/google/pprof => github.com/google/pprof v0.0.0-20230228050547-1710fef4ab10
+	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.18.0
+	github.com/prometheus/common => github.com/prometheus/common v0.47.0
+)
+
 replace (
 	// TODO(DEC-2209): Ideally we rely on a released version (we don't make any changes in our cosmos-sdk fork).
 	// In this case the latest signing mode fixes aren't tagged as a release yet.
@@ -439,17 +448,11 @@ replace (
 	cosmossdk.io/core => cosmossdk.io/core v0.11.0
 	// Use dYdX fork of Cosmos SDK/store
 	cosmossdk.io/store => github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326192503-dd116391188d
-	cosmossdk.io/x/upgrade => cosmossdk.io/x/upgrade v0.1.1
 	// Use dYdX fork of CometBFT
 	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20240426214049-c8beeeada40a
 	// Use dYdX fork of Cosmos SDK
 	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240606183841-18966898625f
 	github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240509161911-1c8b8e787e85
-	github.com/cosmos/ibc-go/v8 => github.com/cosmos/ibc-go/v8 v8.0.0
-	github.com/google/pprof => github.com/google/pprof v0.0.0-20230228050547-1710fef4ab10
-	// Compat w/ dydx fork of cosmos-sdk
-	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.18.0
-	github.com/prometheus/common => github.com/prometheus/common v0.47.0
 )
 
 replace (
