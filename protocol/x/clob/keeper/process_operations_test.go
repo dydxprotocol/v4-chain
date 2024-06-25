@@ -2349,7 +2349,6 @@ func setupProcessProposerOperationsTestCase(
 			tc.rawOperations,
 		)
 	} else {
-		mockIndexerEventManager.On("Enabled").Return(false).Maybe()
 		mockIndexerEventManager.On("AddTxnEvent",
 			mock.Anything,
 			mock.Anything,
@@ -2584,10 +2583,6 @@ func setupNewMockEventManager(
 	matches []*MatchWithOrdersForTesting,
 	rawOperations []types.OperationRaw,
 ) {
-	if len(matches) > 0 {
-		mockIndexerEventManager.On("Enabled").Return(true)
-	}
-
 	// Add an expectation to the mock for each expected message.
 	var matchOrderCallMap = make(map[types.OrderId]*mock.Call)
 	for _, match := range matches {
