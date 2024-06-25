@@ -76,7 +76,8 @@ const (
 	MARKET_TEST_USD types.MarketId = 33
 
 	// Arbitrary isolated market
-	MARKET_ISO_USD types.MarketId = 999_999
+	MARKET_ISO_USD  types.MarketId = 999_999
+	MARKET_ISO2_USD types.MarketId = 999_998
 
 	// Non-trading markets.
 	// MARKET_USDT_USD is the id for the USDT-USD market pair.
