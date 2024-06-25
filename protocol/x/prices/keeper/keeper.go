@@ -27,7 +27,7 @@ type (
 		authorities                    map[string]struct{}
 		currencyPairIDCache            *CurrencyPairIDCache
 		currencyPairIdCacheInitialized *atomic.Bool
-		revShareKeeper                 types.RevShareKeeper
+		RevShareKeeper                 types.RevShareKeeper
 	}
 )
 
@@ -52,7 +52,7 @@ func NewKeeper(
 		authorities:                    lib.UniqueSliceToSet(authorities),
 		currencyPairIDCache:            NewCurrencyPairIDCache(),
 		currencyPairIdCacheInitialized: &atomic.Bool{}, // Initialized to false
-		revShareKeeper:                 revShareKeeper,
+		RevShareKeeper:                 revShareKeeper,
 	}
 }
 

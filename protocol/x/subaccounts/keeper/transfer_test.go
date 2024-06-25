@@ -20,6 +20,7 @@ import (
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	sample_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
 	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
@@ -192,7 +193,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _ :=
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ :=
 				keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
@@ -453,7 +454,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _ :=
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ :=
 				keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
@@ -726,7 +727,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _ :=
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ :=
 				keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
@@ -1052,7 +1053,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _ :=
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ :=
 				keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
@@ -1174,6 +1175,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 		// Module account state.
 		subaccountModuleAccBalance *big.Int
 		feeModuleAccBalance        *big.Int
+		marketMapperAccBalance     *big.Int
 
 		// Transfer details.
 		asset       asstypes.Asset
@@ -1182,19 +1184,30 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 
 		collateralPoolAddr sdk.AccAddress
 
+		// Revenue share details
+		marketMapperAddr   sdk.AccAddress
+		revenueSharePpm    uint32
+		validDays          uint32
+		setRevenueShare    bool
+		revShareExpiration int64
+
 		// Expectations.
 		expectedErr                         error
 		expectedSubaccountsModuleAccBalance *big.Int
 		expectedFeeModuleAccBalance         *big.Int
+		expectedMarketMapperAccBalance      *big.Int
 	}{
 		"success - send to fee-collector module account": {
 			asset:                               *constants.Usdc,
 			feeModuleAccBalance:                 big.NewInt(2500),
 			subaccountModuleAccBalance:          big.NewInt(600),
+			marketMapperAccBalance:              big.NewInt(0),
 			quantums:                            big.NewInt(500),
 			collateralPoolAddr:                  types.ModuleAddress,
+			marketMapperAddr:                    constants.AliceAccAddress,
 			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 500
 			expectedFeeModuleAccBalance:         big.NewInt(3000), // 500 + 2500
+			expectedMarketMapperAccBalance:      big.NewInt(0),
 		},
 		"success - send to fee-collector module account from isolated market account": {
 			asset:                      *constants.Usdc,
@@ -1207,6 +1220,9 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			),
 			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 500
 			expectedFeeModuleAccBalance:         big.NewInt(3000), // 500 + 2500
+			marketMapperAccBalance:              big.NewInt(0),
+			marketMapperAddr:                    constants.AliceAccAddress,
+			expectedMarketMapperAccBalance:      big.NewInt(0),
 		},
 		"success - quantums is zero": {
 			asset:                               *constants.Usdc,
@@ -1216,6 +1232,9 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: big.NewInt(600),  // 600
 			expectedFeeModuleAccBalance:         big.NewInt(2500), // 2500
+			marketMapperAccBalance:              big.NewInt(0),
+			marketMapperAddr:                    constants.AliceAccAddress,
+			expectedMarketMapperAccBalance:      big.NewInt(0),
 		},
 		"failure - subaccounts module does not have sufficient funds": {
 			asset:                               *constants.Usdc,
@@ -1226,6 +1245,9 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			expectedSubaccountsModuleAccBalance: big.NewInt(300),
 			expectedFeeModuleAccBalance:         big.NewInt(2500),
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
+			marketMapperAccBalance:              big.NewInt(0),
+			marketMapperAddr:                    constants.AliceAccAddress,
+			expectedMarketMapperAccBalance:      big.NewInt(0),
 		},
 		"failure - isolated markets subaccounts module does not have sufficient funds": {
 			asset:                      *constants.Usdc,
@@ -1239,6 +1261,9 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			expectedSubaccountsModuleAccBalance: big.NewInt(300),
 			expectedFeeModuleAccBalance:         big.NewInt(2500),
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
+			marketMapperAccBalance:              big.NewInt(0),
+			marketMapperAddr:                    constants.AliceAccAddress,
+			expectedMarketMapperAccBalance:      big.NewInt(0),
 		},
 		"failure - asset ID doesn't exist": {
 			feeModuleAccBalance:                 big.NewInt(1500),
@@ -1250,6 +1275,9 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			expectedErr:                         asstypes.ErrAssetDoesNotExist,
 			expectedSubaccountsModuleAccBalance: big.NewInt(500),
 			expectedFeeModuleAccBalance:         big.NewInt(1500),
+			marketMapperAccBalance:              big.NewInt(0),
+			marketMapperAddr:                    constants.AliceAccAddress,
+			expectedMarketMapperAccBalance:      big.NewInt(0),
 		},
 		"failure - asset other than USDC not supported": {
 			feeModuleAccBalance:                 big.NewInt(1500),
@@ -1260,6 +1288,9 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			expectedErr:                         types.ErrAssetTransferThroughBankNotImplemented,
 			expectedSubaccountsModuleAccBalance: big.NewInt(500),
 			expectedFeeModuleAccBalance:         big.NewInt(1500),
+			marketMapperAccBalance:              big.NewInt(0),
+			marketMapperAddr:                    constants.AliceAccAddress,
+			expectedMarketMapperAccBalance:      big.NewInt(0),
 		},
 		"success - transfer quantums is negative": {
 			feeModuleAccBalance:                 big.NewInt(1500),
@@ -1269,6 +1300,49 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: big.NewInt(1000),
 			expectedFeeModuleAccBalance:         big.NewInt(1000),
+			marketMapperAccBalance:              big.NewInt(0),
+			marketMapperAddr:                    constants.AliceAccAddress,
+			expectedMarketMapperAccBalance:      big.NewInt(0),
+		},
+		"success - distribute fees to market mapper and fee collector": {
+			asset:                               *constants.Usdc,
+			feeModuleAccBalance:                 big.NewInt(2500),
+			subaccountModuleAccBalance:          big.NewInt(600),
+			marketMapperAccBalance:              big.NewInt(0),
+			quantums:                            big.NewInt(500),
+			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 500
+			expectedFeeModuleAccBalance:         big.NewInt(2950), // 500 + 2500 - 50
+			expectedMarketMapperAccBalance:      big.NewInt(50),   // 0 + 50
+			perpetualId:                         4,
+			collateralPoolAddr: authtypes.NewModuleAddress(
+				types.ModuleName + ":" + lib.IntToString(4),
+			),
+
+			marketMapperAddr:   constants.AliceAccAddress,
+			revenueSharePpm:    100_000,
+			validDays:          240,
+			setRevenueShare:    true,
+			revShareExpiration: 100,
+		},
+		"success - market mapper rev share expired": {
+			asset:                               *constants.Usdc,
+			feeModuleAccBalance:                 big.NewInt(2500),
+			subaccountModuleAccBalance:          big.NewInt(600),
+			marketMapperAccBalance:              big.NewInt(0),
+			quantums:                            big.NewInt(500),
+			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 500
+			expectedFeeModuleAccBalance:         big.NewInt(3000), // 500 + 2500
+			expectedMarketMapperAccBalance:      big.NewInt(0),
+			perpetualId:                         4,
+			collateralPoolAddr: authtypes.NewModuleAddress(
+				types.ModuleName + ":" + lib.IntToString(4),
+			),
+
+			marketMapperAddr:   constants.AliceAccAddress,
+			revenueSharePpm:    100_000,
+			validDays:          240,
+			setRevenueShare:    true,
+			revShareExpiration: -10,
 		},
 		// TODO(DEC-715): Add more test for non-USDC assets, after asset update
 		// is implemented.
@@ -1276,7 +1350,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _ :=
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, revShareKeeper, _ :=
 				keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
@@ -1345,7 +1419,28 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			err := keeper.TransferFeesToFeeCollectorModule(ctx, tc.asset.Id, tc.quantums, tc.perpetualId)
+			// Set market mapper revenue share
+			err := revShareKeeper.SetMarketMapperRevenueShareParams(
+				ctx,
+				revsharetypes.MarketMapperRevenueShareParams{
+					Address:         tc.marketMapperAddr.String(),
+					RevenueSharePpm: tc.revenueSharePpm,
+					ValidDays:       tc.validDays,
+				},
+			)
+			require.NoError(t, err)
+
+			if tc.setRevenueShare {
+				revShareKeeper.SetMarketMapperRevShareDetails(
+					ctx,
+					tc.perpetualId,
+					revsharetypes.MarketMapperRevShareDetails{
+						ExpirationTs: uint64(ctx.BlockTime().Unix() + tc.revShareExpiration),
+					},
+				)
+			}
+
+			err = keeper.DistributeFees(ctx, tc.asset.Id, tc.quantums, tc.perpetualId)
 
 			if tc.expectedErr != nil {
 				require.ErrorIs(t,
@@ -1357,7 +1452,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			}
 
 			// Check the subaccount module balance.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, tc.collateralPoolAddr, tc.asset.Denom)
+			subaccountsModuleAccBalance = bankKeeper.GetBalance(ctx, tc.collateralPoolAddr, tc.asset.Denom)
 			require.Equal(t,
 				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
 				subaccountsModuleAccBalance,
@@ -1371,6 +1466,17 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			require.Equal(t,
 				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedFeeModuleAccBalance)),
 				toModuleBalance,
+			)
+
+			// Check the market mapper account balance has been updated as expected.
+			marketMapperBalance := bankKeeper.GetBalance(
+				ctx, tc.marketMapperAddr,
+				tc.asset.Denom,
+			)
+			require.Equal(
+				t,
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedMarketMapperAccBalance)),
+				marketMapperBalance,
 			)
 		})
 	}
@@ -1489,7 +1595,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _ :=
+			ctx, keeper, pricesKeeper, perpsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ :=
 				keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 

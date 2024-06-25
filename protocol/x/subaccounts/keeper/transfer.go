@@ -209,6 +209,113 @@ func (k Keeper) WithdrawFundsFromSubaccountToAccount(
 	)
 }
 
+// DistributeFees calculates the market mapper revenue share and fee collector share
+// based on the quantums and perpetual parameters, and transfers the fees to the
+// market mapper and fee collector.
+func (k Keeper) DistributeFees(
+	ctx sdk.Context,
+	assetId uint32,
+	quantums *big.Int,
+	perpetualId uint32,
+) error {
+	// get perpetual
+	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	collateralPoolAddr, err := k.GetCollateralPoolFromPerpetualId(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	// calculate market mapper rev share
+	marketMapperShare := big.NewInt(0)
+	revShareAddr, revSharePpm, err := k.revShareKeeper.GetMarketMapperRevenueShareForMarket(
+		ctx,
+		perpetual.Params.MarketId,
+	)
+	if err == nil && revShareAddr != nil {
+		// marketMapperShare = quantums * revSharePpm / 1e6
+		marketMapperShare.Div(
+			new(big.Int).Mul(quantums, big.NewInt(int64(revSharePpm))),
+			big.NewInt(1e6),
+		)
+	}
+
+	// Remaining amount goes to the fee collector
+	feeCollectorShare := new(big.Int).Sub(quantums, marketMapperShare)
+
+	// Transfer fees to the market mapper
+	if err := k.TransferFees(
+		ctx,
+		assetId,
+		collateralPoolAddr,
+		revShareAddr,
+		marketMapperShare,
+	); err != nil {
+		return err
+	}
+
+	// Transfer fees to the fee collector
+	if err := k.TransferFees(
+		ctx,
+		assetId,
+		collateralPoolAddr,
+		authtypes.NewModuleAddress(authtypes.FeeCollectorName),
+		feeCollectorShare,
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// TransferFees translates the assetId and quantums into a sdk.Coin, and moves the funds from
+// `fromAddr` to `toAddr` by calling `bankKeeper.SendCoins()`
+func (k Keeper) TransferFees(
+	ctx sdk.Context,
+	assetId uint32,
+	fromAddr sdk.AccAddress,
+	toAddr sdk.AccAddress,
+	quantums *big.Int,
+) error {
+	// TODO(DEC-715): Support non-USDC assets.
+	if assetId != assettypes.AssetUsdc.Id {
+		return types.ErrAssetTransferThroughBankNotImplemented
+	}
+
+	if quantums.Sign() == 0 {
+		return nil
+	}
+
+	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
+		ctx,
+		assetId,
+		new(big.Int).Abs(quantums),
+	)
+	if err != nil {
+		return err
+	}
+
+	if quantums.Sign() < 0 {
+		// In the case of a liquidation, net fees can be negative if the maker gets a rebate.
+		fromAddr, toAddr = toAddr, fromAddr
+	}
+
+	// Send coins from `fromAddr` to `toAddr`
+	if err := k.bankKeeper.SendCoins(
+		ctx,
+		fromAddr,
+		toAddr,
+		[]sdk.Coin{coinToTransfer},
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // TransferFeesToFeeCollectorModule translates the assetId and quantums into a sdk.Coin,
 // and moves the funds from subaccounts module to the `fee_collector` module account by calling
 // bankKeeper.SendCoins(). Does not change any individual subaccount state.

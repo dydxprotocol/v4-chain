@@ -4,6 +4,8 @@ import (
 	"math/big"
 	"testing"
 
+	revsharekeeper "github.com/dydxprotocol/v4-chain/protocol/x/revshare/keeper"
+
 	"github.com/cosmos/gogoproto/proto"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -30,10 +32,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-func SubaccountsKeepers(
-	t testing.TB,
-	msgSenderEnabled bool,
-) (
+func SubaccountsKeepers(t testing.TB, msgSenderEnabled bool) (
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
 	pricesKeeper *priceskeeper.Keeper,
@@ -42,6 +41,7 @@ func SubaccountsKeepers(
 	bankKeeper *bankkeeper.BaseKeeper,
 	assetsKeeper *asskeeper.Keeper,
 	blocktimeKeeper *blocktimekeeper.Keeper,
+	revShareKeeper *revsharekeeper.Keeper,
 	storeKey storetypes.StoreKey,
 ) {
 	var mockTimeProvider *mocks.TimeProvider
@@ -53,7 +53,7 @@ func SubaccountsKeepers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
+		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc)
 		pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
 			db,
@@ -77,17 +77,18 @@ func SubaccountsKeepers(
 			bankKeeper,
 			perpetualsKeeper,
 			blocktimeKeeper,
+			revShareKeeper,
 			transientStoreKey,
 			msgSenderEnabled,
 		)
 
-		return []GenesisInitializer{pricesKeeper, perpetualsKeeper, assetsKeeper, keeper}
+		return []GenesisInitializer{pricesKeeper, perpetualsKeeper, assetsKeeper, revShareKeeper, keeper}
 	})
 
 	// Mock time provider response for market creation.
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
-	return ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, blocktimeKeeper, storeKey
+	return ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, blocktimeKeeper, revShareKeeper, storeKey
 }
 
 func createSubaccountsKeeper(
@@ -98,6 +99,7 @@ func createSubaccountsKeeper(
 	bk types.BankKeeper,
 	pk *perpskeeper.Keeper,
 	btk *blocktimekeeper.Keeper,
+	rsk *revsharekeeper.Keeper,
 	transientStoreKey storetypes.StoreKey,
 	msgSenderEnabled bool,
 ) (*keeper.Keeper, storetypes.StoreKey) {
@@ -116,6 +118,7 @@ func createSubaccountsKeeper(
 		bk,
 		pk,
 		btk,
+		rsk,
 		mockIndexerEventsManager,
 	)
 

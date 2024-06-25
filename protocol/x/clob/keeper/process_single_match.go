@@ -426,13 +426,33 @@ func (k Keeper) persistMatchedOrders(
 		)
 	}
 
+	// TODO: get perpetual from perpetualId once and pass it to the functions that need the full
+	// perpetual object. This will reduce the number of times we need to get the perpetual from the
+	// keeper.
+
 	if err := k.subaccountsKeeper.TransferInsuranceFundPayments(ctx, insuranceFundDelta, perpetualId); err != nil {
 		return takerUpdateResult, makerUpdateResult, err
 	}
 
 	// Transfer the fee amount from subacounts module to fee collector module account.
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)
-	if err := k.subaccountsKeeper.TransferFeesToFeeCollectorModule(
+	//if err := k.subaccountsKeeper.TransferFeesToFeeCollectorModule(
+	//	ctx,
+	//	assettypes.AssetUsdc.Id,
+	//	bigTotalFeeQuoteQuantums,
+	//	perpetualId,
+	//); err != nil {
+	//	return takerUpdateResult, makerUpdateResult, errorsmod.Wrapf(
+	//		types.ErrSubaccountFeeTransferFailed,
+	//		"persistMatchedOrders: subaccounts (%v, %v) updated, but fee transfer (bigFeeQuoteQuantums: %v)"+
+	//			" to fee-collector failed. Err: %v",
+	//		matchWithOrders.MakerOrder.GetSubaccountId(),
+	//		matchWithOrders.TakerOrder.GetSubaccountId(),
+	//		bigTotalFeeQuoteQuantums,
+	//		err,
+	//	)
+	//}
+	if err := k.subaccountsKeeper.DistributeFees(
 		ctx,
 		assettypes.AssetUsdc.Id,
 		bigTotalFeeQuoteQuantums,

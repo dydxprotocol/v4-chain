@@ -73,6 +73,12 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		perpetualId uint32,
 	) (sdk.AccAddress, error)
+	DistributeFees(
+		ctx sdk.Context,
+		assetId uint32,
+		quantums *big.Int,
+		perpetualId uint32,
+	) error
 }
 
 type AssetsKeeper interface {

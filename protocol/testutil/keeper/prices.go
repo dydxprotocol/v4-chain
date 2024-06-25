@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+
 	"github.com/cosmos/gogoproto/proto"
 
 	storetypes "cosmossdk.io/store/types"
@@ -115,6 +117,13 @@ func CreateTestMarkets(t testing.TB, ctx sdk.Context, k *keeper.Keeper) {
 			},
 		})
 		require.NoError(t, err)
+
+		// update all markets to not have revenue share
+		k.RevShareKeeper.SetMarketMapperRevShareDetails(
+			ctx,
+			uint32(i),
+			revsharetypes.MarketMapperRevShareDetails{ExpirationTs: 0},
+		)
 	}
 }
 
