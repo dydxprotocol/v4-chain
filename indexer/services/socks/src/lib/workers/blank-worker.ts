@@ -1,4 +1,4 @@
-import {logger} from '@dydxprotocol-indexer/base';
+import { logger } from '@dydxprotocol-indexer/base';
 
 export default function print(): void {
   logger.info({
