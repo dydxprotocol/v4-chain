@@ -87,25 +87,6 @@ func (k Keeper) GetPriceForCurrencyPair(ctx sdk.Context, cp slinkytypes.Currency
 	}, nil
 }
 
-// GetPrevBlockCPCounter returns the number of currency pairs (markets) in the previous block
-// Currently we use the existing market number as an upper bound size markets cannot be deleted.
-func (k Keeper) GetPrevBlockCPCounter(ctx sdk.Context) (uint64, error) {
-	marketPriceStore := k.getMarketPriceStore(ctx)
-
-	var numMarketPrices uint64
-
-	iterator := marketPriceStore.Iterator(nil, nil)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		marketPrice := types.MarketPrice{}
-		k.cdc.MustUnmarshal(iterator.Value(), &marketPrice)
-		numMarketPrices++
-	}
-
-	return numMarketPrices, nil
-}
-
 func (k Keeper) GetNumCurrencyPairs(ctx sdk.Context) (uint64, error) {
 	marketPriceStore := k.getMarketPriceStore(ctx)
 

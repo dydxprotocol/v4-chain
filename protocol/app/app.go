@@ -1593,12 +1593,6 @@ func (app *App) initOracle(pricesTxDecoder process.UpdateMarketPriceTxDecoder) {
 			compression.NewDefaultVoteExtensionCodec(),
 			compression.NewZLibCompressor(),
 		),
-		// We are not using the slinky PreBlocker/PriceApplier, so there is no need to pass in PreBlocker here for
-		// VE handler to work properly.
-		// Currently the clob PreBlocker assumes that it will only be called during the normal ABCI
-		// PreBlocker step. Passing in the app PreBlocker here will break that assumption by causing
-		// the clob PreBlocker to be called unexpectedly. This to leads improperly initialized clob state
-		// which results in the next block being committed incorrectly.
 		// TODO we can move the UpdateMarketPrices in extend vote to this in the future.
 		vote_extensions.NoopPriceApplier{},
 		app.oracleMetrics,
