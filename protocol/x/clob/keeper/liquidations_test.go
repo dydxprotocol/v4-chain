@@ -1177,6 +1177,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -1206,6 +1207,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.ClobPair_Eth.SubticksPerTick,
 						constants.ClobPair_Eth.StepBaseQuantums,
 						constants.EthUsd_100PercentMarginRequirement.Params.LiquidityTier,
+						constants.EthUsd_100PercentMarginRequirement.Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -2088,6 +2090,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							clobPair.SubticksPerTick,
 							clobPair.StepBaseQuantums,
 							perpetuals[i].Params.LiquidityTier,
+							perpetuals[i].Params.MarketType,
 						),
 					),
 				).Once().Return()
@@ -2205,6 +2208,7 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.StepBaseQuantums,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 			),
 		),
 	).Once().Return()
@@ -3730,6 +3734,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						tc.perpetuals[0].Params.LiquidityTier,
+						tc.perpetuals[0].Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -4469,6 +4474,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 							clobPair.SubticksPerTick,
 							clobPair.StepBaseQuantums,
 							tc.perpetuals[perpetualId].Params.LiquidityTier,
+							tc.perpetuals[perpetualId].Params.MarketType,
 						),
 					),
 				).Once().Return()
@@ -5034,6 +5040,7 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -5188,6 +5195,7 @@ func TestSortLiquidationOrders(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
 					),
 				),
 			).Once().Return()

@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	storetypes "cosmossdk.io/store/types"
 	"fmt"
 	"sort"
+
+	storetypes "cosmossdk.io/store/types"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -104,6 +105,7 @@ func (k Keeper) CreatePerpetualClobPair(
 				subticksPerTick,
 				stepSizeBaseQuantums.ToUint64(),
 				perpetual.Params.LiquidityTier,
+				perpetual.Params.MarketType,
 			),
 		),
 	)

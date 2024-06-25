@@ -3,12 +3,13 @@ package clob_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 
 	sdkmath "cosmossdk.io/math"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
@@ -306,6 +307,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				uint32(100),
 				uint64(5),
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 			),
 		),
 	).Once().Return()

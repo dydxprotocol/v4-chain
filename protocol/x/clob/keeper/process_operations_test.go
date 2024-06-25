@@ -2261,6 +2261,7 @@ func setupProcessProposerOperationsTestCase(
 						clobPair.SubticksPerTick,
 						clobPair.StepBaseQuantums,
 						tc.perpetuals[perpetualId].Params.LiquidityTier,
+						tc.perpetuals[perpetualId].Params.MarketType,
 					),
 				),
 			).Once().Return()

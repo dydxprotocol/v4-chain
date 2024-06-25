@@ -1040,6 +1040,7 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.StepBaseQuantums,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 			),
 		),
 	).Once().Return()
@@ -1094,6 +1095,7 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.StepBaseQuantums,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 			),
 		),
 	).Once().Return()
@@ -1848,6 +1850,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 							cp.SubticksPerTick,
 							cp.StepBaseQuantums,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.LiquidityTier,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.MarketType,
 						),
 					),
 				).Once().Return()
@@ -2061,6 +2064,7 @@ func TestInitStatefulOrders(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -2192,6 +2196,7 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 					),
 				),
 			).Once().Return()

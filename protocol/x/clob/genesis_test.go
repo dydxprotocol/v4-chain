@@ -1,8 +1,9 @@
 package clob_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
 
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
@@ -456,6 +457,7 @@ func TestGenesis(t *testing.T) {
 								clobPair.SubticksPerTick,
 								clobPair.StepBaseQuantums,
 								perpetual.Params.LiquidityTier,
+								perpetual.Params.MarketType,
 							),
 						),
 					).Once().Return()
