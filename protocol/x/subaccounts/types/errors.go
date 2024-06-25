@@ -25,8 +25,6 @@ var (
 	ErrIntegerOverflow = errorsmod.Register(ModuleName, 0, "integer overflow")
 
 	// 100 - 199: update related.
-	ErrNonUniqueUpdatesPosition = errorsmod.Register(
-		ModuleName, 100, "multiple updates were specified for the same position id")
 	ErrNonUniqueUpdatesSubaccount = errorsmod.Register(
 		ModuleName, 101, "multiple updates were specified for the same subaccountId")
 	ErrFailedToUpdateSubaccounts   = errorsmod.Register(ModuleName, 102, "failed to apply subaccount updates")
