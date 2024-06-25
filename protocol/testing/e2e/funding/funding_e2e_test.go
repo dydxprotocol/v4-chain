@@ -483,7 +483,7 @@ func TestFunding(t *testing.T) {
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
 						AccAddressForSigning: transfer.Transfer.Sender.Owner,
-						Gas:                  100_000,
+						Gas:                  110_000,
 						FeeAmt:               constants.TestFeeCoins_5Cents,
 					},
 					&transfer,

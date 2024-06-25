@@ -22,18 +22,14 @@ func (k Keeper) ProcessTransfer(
 ) (err error) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.ProcessTransfer, metrics.Latency)
 
-	updates := []satypes.Update{
-		pendingTransfer.GetSenderSubaccountUpdate(),
-		pendingTransfer.GetRecipientSubaccountUpdate(),
-	}
-
-	success, successPerUpdate, err := k.subaccountsKeeper.UpdateSubaccounts(ctx, updates, satypes.Transfer)
+	err = k.subaccountsKeeper.TransferFundsFromSubaccountToSubaccount(
+		ctx,
+		pendingTransfer.Sender,
+		pendingTransfer.Recipient,
+		pendingTransfer.AssetId,
+		pendingTransfer.GetBigQuantums(),
+	)
 	if err != nil {
-		return err
-	}
-
-	// If not successful, return error indicating why.
-	if err := satypes.GetErrorFromUpdateResults(success, successPerUpdate, updates); err != nil {
 		return err
 	}
 

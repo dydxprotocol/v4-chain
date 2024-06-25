@@ -51,6 +51,13 @@ type SubaccountsKeeper interface {
 		assetId uint32,
 		amount *big.Int,
 	) (err error)
+	TransferFundsFromSubaccountToSubaccount(
+		ctx sdk.Context,
+		senderSubaccountId SubaccountId,
+		recipientSubaccountId SubaccountId,
+		assetId uint32,
+		quantums *big.Int,
+	) (err error)
 	SetSubaccount(ctx sdk.Context, subaccount Subaccount)
 	GetSubaccount(
 		ctx sdk.Context,
