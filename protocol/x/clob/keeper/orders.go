@@ -378,7 +378,7 @@ func (k Keeper) PlaceStatefulOrder(
 				},
 			)
 
-			if updateResult.IsSuccess() {
+			if !updateResult.IsSuccess() {
 				err := types.ErrStatefulOrderCollateralizationCheckFailed
 				if updateResult.IsIsolatedSubaccountError() {
 					err = types.ErrWouldViolateIsolatedSubaccountConstraints
@@ -1022,7 +1022,6 @@ func (k Keeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 	baseDelta := new(big.Int).Neg(order.RemainingQuantums.ToBigInt())
 	if order.IsBuy {
 		quoteDelta.Neg(quoteDelta)
-	} else {
 		baseDelta.Neg(baseDelta)
 	}
 	fee := lib.BigMulPpm(bigFillQuoteQuantums, lib.BigI(makerFeePpm), true)
