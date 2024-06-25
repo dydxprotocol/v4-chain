@@ -30,6 +30,11 @@ import (
 	gometrics "github.com/hashicorp/go-metrics"
 )
 
+func (k Keeper) IsIsolatedPerpetual(ctx sdk.Context, perpetualId uint32) (bool, error) {
+	insuranceFundName, err := k.GetInsuranceFundName(ctx, perpetualId)
+	return insuranceFundName == types.InsuranceFundName, err
+}
+
 // GetInsuranceFundName returns the name of the insurance fund account for a given perpetual.
 // For isolated markets, the name is "insurance-fund:<perpetualId>".
 // For cross markets, the name is "insurance-fund".

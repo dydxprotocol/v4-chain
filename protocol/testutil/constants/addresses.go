@@ -1,7 +1,9 @@
 package constants
 
 import (
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -17,4 +19,8 @@ var (
 	BobConsAddress   = sdk.ConsAddress(BobPrivateKey.PubKey().Address())
 	CarlConsAddress  = sdk.ConsAddress(CarlPrivateKey.PubKey().Address())
 	DaveConsAddress  = sdk.ConsAddress(DavePrivateKey.PubKey().Address())
+
+	// Collateral pool addresses for isolated perpetuals.
+	IsoCollateralPoolAddress  = authtypes.NewModuleAddress(satypes.ModuleName + ":3")
+	Iso2CollateralPoolAddress = authtypes.NewModuleAddress(satypes.ModuleName + ":4")
 )

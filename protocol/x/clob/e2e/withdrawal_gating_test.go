@@ -252,7 +252,11 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 					tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *expectedSubaccount.Id),
 				)
 			}
-			negativeTncSubaccountSeenAtBlock, exists := tApp.App.SubaccountsKeeper.GetNegativeTncSubaccountSeenAtBlock(ctx)
+			negativeTncSubaccountSeenAtBlock, exists, err := tApp.App.SubaccountsKeeper.GetNegativeTncSubaccountSeenAtBlock(
+				ctx,
+				constants.BtcUsd_NoMarginRequirement.Params.Id,
+			)
+			require.NoError(t, err)
 			require.Equal(t, tc.expectedWithdrawalsGated, exists)
 			require.Equal(t, tc.expectedNegativeTncSubaccountSeenAtBlock, negativeTncSubaccountSeenAtBlock)
 

@@ -12,7 +12,7 @@ import (
 // been updated. This will include any asset postions that were closed due to an update.
 // TODO(DEC-1295): look into reducing code duplication here using Generics+Reflect.
 func getUpdatedAssetPositions(
-	update settledUpdate,
+	update SettledUpdate,
 ) []*types.AssetPosition {
 	assetIdToPositionMap := make(map[uint32]*types.AssetPosition)
 	for _, assetPosition := range update.SettledSubaccount.AssetPositions {
