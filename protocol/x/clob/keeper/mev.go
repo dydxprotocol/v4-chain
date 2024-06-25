@@ -123,21 +123,11 @@ func (k Keeper) RecordMevMetrics(
 		)
 		return
 	}
-	if err := k.CalculateSubaccountPnLForMevMatches(
+	k.CalculateSubaccountPnLForMevMatches(
 		ctx,
 		blockProposerPnL,
 		blockProposerMevMatches,
-	); err != nil {
-		log.ErrorLogWithError(ctx, "Failed to calculate match PnL for block proposer", err,
-			log.MevMatches,
-			blockProposerMevMatches,
-		)
-		metrics.IncrCounter(
-			metrics.ClobMevErrorCount,
-			1,
-		)
-		return
-	}
+	)
 
 	// Calculate the validator's PnL from regular and liquidation matches.
 	validatorMevMatches, err := k.GetMEVDataFromOperations(
@@ -155,21 +145,11 @@ func (k Keeper) RecordMevMetrics(
 		)
 		return
 	}
-	if err := k.CalculateSubaccountPnLForMevMatches(
+	k.CalculateSubaccountPnLForMevMatches(
 		ctx,
 		validatorPnL,
 		validatorMevMatches,
-	); err != nil {
-		log.ErrorLogWithError(ctx, "Failed to calculate match PnL for validator", err,
-			log.MevMatches,
-			validatorMevMatches,
-		)
-		metrics.IncrCounter(
-			metrics.ClobMevErrorCount,
-			1,
-		)
-		return
-	}
+	)
 
 	// TODO(CLOB-742): re-enable deleveraging and funding in MEV calculation.
 	// Calculate Trading PnL for block proposer.
@@ -586,8 +566,6 @@ func (k Keeper) CalculateSubaccountPnLForMevMatches(
 	ctx sdk.Context,
 	clobPairToPnLs map[types.ClobPairId]*CumulativePnL,
 	matches *types.ValidatorMevMatches,
-) (
-	err error,
 ) {
 	for _, matchWithOrders := range matches.Matches {
 		clobPairId := matchWithOrders.ClobPairId
@@ -614,15 +592,13 @@ func (k Keeper) CalculateSubaccountPnLForMevMatches(
 				matchWithOrders.MakerFeePpm,
 			},
 		} {
-			if err := cumulativePnL.AddPnLForTradeWithFilledSubticks(
+			cumulativePnL.AddPnLForTradeWithFilledSubticks(
 				p.subaccountId,
 				p.isBuy,
 				types.Subticks(matchWithOrders.MakerOrderSubticks),
 				satypes.BaseQuantums(matchWithOrders.FillAmount),
 				p.feePpm,
-			); err != nil {
-				return err
-			}
+			)
 		}
 
 		cumulativePnL.NumFills += 1
@@ -647,15 +623,13 @@ func (k Keeper) CalculateSubaccountPnLForMevMatches(
 			{mevLiquidation.LiquidatedSubaccountId, liquidationIsBuy, 0},
 			{mevLiquidation.MakerOrderSubaccountId, !liquidationIsBuy, mevLiquidation.MakerFeePpm},
 		} {
-			if err := cumulativePnL.AddPnLForTradeWithFilledSubticks(
+			cumulativePnL.AddPnLForTradeWithFilledSubticks(
 				p.subaccountId,
 				p.isBuy,
 				types.Subticks(mevLiquidation.MakerOrderSubticks),
 				satypes.BaseQuantums(mevLiquidation.FillAmount),
 				p.feePpm,
-			); err != nil {
-				return err
-			}
+			)
 		}
 
 		// Note that negative insurance fund delta (insurance fund covers losses) will
@@ -668,8 +642,6 @@ func (k Keeper) CalculateSubaccountPnLForMevMatches(
 
 		cumulativePnL.NumFills += 1
 	}
-
-	return nil
 }
 
 // CalculateSubaccountPnLForMatches calculates the PnL for each subaccount for the given matches.
@@ -748,15 +720,13 @@ func (k Keeper) CalculateSubaccountPnLForMatches(
 						{matchDeleveraging.Liquidated, isBuy, 0},
 						{fill.OffsettingSubaccountId, !isBuy, 0},
 					} {
-						if err := cumulativePnL.AddPnLForTradeWithFilledQuoteQuantums(
+						cumulativePnL.AddPnLForTradeWithFilledQuoteQuantums(
 							p.subaccountId,
 							p.isBuy,
 							absQuoteQuantums,
 							satypes.BaseQuantums(fill.FillAmount),
 							p.feePpm,
-						); err != nil {
-							return err
-						}
+						)
 					}
 				}
 				cumulativePnL.NumFills += len(matchDeleveraging.Fills)
@@ -817,17 +787,14 @@ func (c *CumulativePnL) AddPnLForTradeWithFilledSubticks(
 	filledSubticks types.Subticks,
 	filledQuantums satypes.BaseQuantums,
 	feePpm int32,
-) (err error) {
+) {
 	// Get the fill quote quantums using the filled subticks and filled quantums.
-	filledQuoteQuantums, err := getFillQuoteQuantums(
-		c.Metadata.ClobPair,
+	filledQuoteQuantums := types.FillAmountToQuoteQuantums(
 		filledSubticks,
 		filledQuantums,
+		c.Metadata.ClobPair.QuantumConversionExponent,
 	)
-	if err != nil {
-		return err
-	}
-	return c.AddPnLForTradeWithFilledQuoteQuantums(
+	c.AddPnLForTradeWithFilledQuoteQuantums(
 		subaccountId,
 		isBuy,
 		filledQuoteQuantums,
@@ -854,16 +821,13 @@ func (c *CumulativePnL) AddPnLForTradeWithFilledQuoteQuantums(
 	filledQuoteQuantums *big.Int,
 	filledQuantums satypes.BaseQuantums,
 	feePpm int32,
-) (err error) {
+) {
 	// Get the fill quote quantums using the mid price subticks and filled quantums.
-	filledQuoteQuantumsUsingMidPrice, err := getFillQuoteQuantums(
-		c.Metadata.ClobPair,
+	filledQuoteQuantumsUsingMidPrice := types.FillAmountToQuoteQuantums(
 		c.Metadata.MidPrice,
 		filledQuantums,
+		c.Metadata.ClobPair.QuantumConversionExponent,
 	)
-	if err != nil {
-		return err
-	}
 
 	// Calculate PnL for the given subaccount.
 	var pnl *big.Int
@@ -894,7 +858,6 @@ func (c *CumulativePnL) AddPnLForTradeWithFilledQuoteQuantums(
 	)
 
 	c.VolumeQuoteQuantums.Add(c.VolumeQuoteQuantums, filledQuoteQuantums)
-	return nil
 }
 
 // AddDeltaToSubaccount adds the given delta to the PnL for the given subaccount.
