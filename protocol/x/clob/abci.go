@@ -90,6 +90,7 @@ func EndBlocker(
 
 	// Prune expired untriggered conditional orders from the in-memory UntriggeredConditionalOrders struct.
 	keeper.PruneUntriggeredConditionalOrders(
+		ctx,
 		expiredStatefulOrderIds,
 		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
 	)

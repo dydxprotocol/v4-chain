@@ -60,6 +60,14 @@ func (k Keeper) AddUntriggeredConditionalOrders(
 	placedStatefulCancellationOrderIds map[types.OrderId]struct{},
 	expiredStatefulOrderIdsSet map[types.OrderId]struct{},
 ) {
+	if len(placedConditionalOrderIds) > 0 {
+		k.Logger(ctx).Warn(fmt.Sprintf(
+			"AddAddUntriggeredConditionalOrders: placedConditionalOrderIds = %+v"+
+				" placedStatefulCancellationOrderIds = %+v, expiredStatefulOrderIdsSet = %+v",
+			placedConditionalOrderIds, placedStatefulCancellationOrderIds, expiredStatefulOrderIdsSet,
+		))
+	}
+
 	for _, orderId := range placedConditionalOrderIds {
 		_, isCancelled := placedStatefulCancellationOrderIds[orderId]
 		_, isExpired := expiredStatefulOrderIdsSet[orderId]
@@ -127,6 +135,7 @@ func (untriggeredOrders *UntriggeredConditionalOrders) AddUntriggeredConditional
 // stores untriggered orders in a map of ClobPairId -> []Order, so we first group orders by ClobPairId and then
 // call `UntriggeredConditionalOrders.RemoveExpiredUntriggeredConditionalOrders` on each ClobPairId.
 func (k Keeper) PruneUntriggeredConditionalOrders(
+	ctx sdk.Context,
 	expiredStatefulOrderIds []types.OrderId,
 	cancelledStatefulOrderIds []types.OrderId,
 ) {
@@ -161,6 +170,11 @@ func (k Keeper) PruneUntriggeredConditionalOrders(
 			)
 		}
 	}
+
+	k.Logger(ctx).Warn(fmt.Sprintf(
+		"PruneUntriggeredConditionalOrders: prunableUntriggeredConditionalOrderIdsByClobPair = %+v",
+		prunableUntriggeredConditionalOrderIdsByClobPair,
+	))
 
 	for clobPairId := range prunableUntriggeredConditionalOrderIdsByClobPair {
 		if untriggeredConditionalOrders, exists := k.UntriggeredConditionalOrders[clobPairId]; exists {
@@ -347,6 +361,10 @@ func (k Keeper) TriggerOrdersWithPrice(
 	priceType string,
 ) (triggeredOrderIds []types.OrderId) {
 	triggeredOrderIds = untriggered.PollTriggeredConditionalOrders(price)
+
+	if len(triggeredOrderIds) > 0 {
+		k.Logger(ctx).Warn(fmt.Sprintf("TriggerOrdersWithPrice: triggeredOrderIds = %+v", triggeredOrderIds))
+	}
 
 	// Emit metrics.
 	priceFloat, _ := price.Float32()
