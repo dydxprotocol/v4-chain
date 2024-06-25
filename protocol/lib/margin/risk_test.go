@@ -231,13 +231,7 @@ func TestRisk_Cmp(t *testing.T) {
 
 		expected int
 	}{
-		"equal": {
-			firstNC:   big.NewInt(100),
-			firstMMR:  big.NewInt(100),
-			secondNC:  big.NewInt(100),
-			secondMMR: big.NewInt(100),
-			expected:  0,
-		},
+		// Normal cases: different ratios.
 		"first is less risky than second": {
 			firstNC:   big.NewInt(100),
 			firstMMR:  big.NewInt(50),
@@ -292,6 +286,63 @@ func TestRisk_Cmp(t *testing.T) {
 			firstMMR:  big.NewInt(50),
 			secondNC:  big.NewInt(-100),
 			secondMMR: big.NewInt(100),
+			expected:  1,
+		},
+		"first is less risky than second - first has zero MMR": {
+			firstNC:   big.NewInt(100),
+			firstMMR:  big.NewInt(0),
+			secondNC:  big.NewInt(100),
+			secondMMR: big.NewInt(100),
+			expected:  -1,
+		},
+		"first is more risky than second - second has zero MMR": {
+			firstNC:   big.NewInt(100),
+			firstMMR:  big.NewInt(100),
+			secondNC:  big.NewInt(100),
+			secondMMR: big.NewInt(0),
+			expected:  1,
+		},
+		// special cases: ratio is the same
+		"special case: equally risky": {
+			firstNC:   big.NewInt(100),
+			firstMMR:  big.NewInt(100),
+			secondNC:  big.NewInt(100),
+			secondMMR: big.NewInt(100),
+			expected:  0,
+		},
+		"special case: same ratio, tie break by MMR": {
+			firstNC:   big.NewInt(100),
+			firstMMR:  big.NewInt(50),
+			secondNC:  big.NewInt(200),
+			secondMMR: big.NewInt(100),
+			expected:  -1,
+		},
+		"special case: first with zero NC and second with zero NC, tie break by MMR": {
+			firstNC:   big.NewInt(0),
+			firstMMR:  big.NewInt(50),
+			secondNC:  big.NewInt(0),
+			secondMMR: big.NewInt(100),
+			expected:  -1,
+		},
+		"special case: first with zero NC and MMR, tie break by MMR": {
+			firstNC:   big.NewInt(0),
+			firstMMR:  big.NewInt(0),
+			secondNC:  big.NewInt(200),
+			secondMMR: big.NewInt(100),
+			expected:  -1,
+		},
+		"special case: second with zero NC and MMR, tie break by MMR": {
+			firstNC:   big.NewInt(100),
+			firstMMR:  big.NewInt(50),
+			secondNC:  big.NewInt(0),
+			secondMMR: big.NewInt(0),
+			expected:  1,
+		},
+		"special case: first with zero MMR and second with zero MMR, tie break by NC": {
+			firstNC:   big.NewInt(100),
+			firstMMR:  big.NewInt(0),
+			secondNC:  big.NewInt(200),
+			secondMMR: big.NewInt(0),
 			expected:  1,
 		},
 	}

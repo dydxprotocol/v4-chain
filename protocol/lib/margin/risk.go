@@ -63,7 +63,22 @@ func (a *Risk) IsLiquidatable() bool {
 func (a *Risk) Cmp(b Risk) int {
 	ANcMultBMmr := new(big.Int).Mul(a.NC, b.MMR)
 	BNcMultAMmr := new(big.Int).Mul(b.NC, a.MMR)
-	return BNcMultAMmr.Cmp(ANcMultBMmr)
+
+	result := BNcMultAMmr.Cmp(ANcMultBMmr)
+
+	// Special case: if the ratios are the same, compare the net collateral and maintenance margin
+	// for strict ordering.
+	if result == 0 {
+		if a.MMR.Sign() == 0 && b.MMR.Sign() == 0 {
+			// If both MMRs are zero, then the account with less net collateral is more
+			// risky.
+			return b.NC.Cmp(a.NC)
+		}
+
+		// otherwise, the account with the higher maintenance margin is more risky.
+		return a.MMR.Cmp(b.MMR)
+	}
+	return result
 }
 
 func mustExist(i *big.Int) *big.Int {
