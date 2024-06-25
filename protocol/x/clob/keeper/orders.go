@@ -18,6 +18,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -366,22 +367,18 @@ func (k Keeper) PlaceStatefulOrder(
 
 		// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
 		if !order.IsConditionalOrder() {
-			_, successPerSubaccountUpdate := k.AddOrderToOrderbookSubaccountUpdatesCheck(
+			updateResult := k.AddOrderToOrderbookSubaccountUpdatesCheck(
 				ctx,
-				order.GetClobPairId(),
-				map[satypes.SubaccountId][]types.PendingOpenOrder{
-					order.OrderId.SubaccountId: {
-						{
-							RemainingQuantums: order.GetBaseQuantums(),
-							IsBuy:             order.IsBuy(),
-							Subticks:          order.GetOrderSubticks(),
-							ClobPairId:        order.GetClobPairId(),
-						},
-					},
+				order.OrderId.SubaccountId,
+				types.PendingOpenOrder{
+					RemainingQuantums: order.GetBaseQuantums(),
+					IsBuy:             order.IsBuy(),
+					Subticks:          order.GetOrderSubticks(),
+					ClobPairId:        order.GetClobPairId(),
 				},
 			)
 
-			if updateResult := successPerSubaccountUpdate[order.OrderId.SubaccountId]; !updateResult.IsSuccess() {
+			if updateResult.IsSuccess() {
 				err := types.ErrStatefulOrderCollateralizationCheckFailed
 				if updateResult.IsIsolatedSubaccountError() {
 					err = types.ErrWouldViolateIsolatedSubaccountConstraints
@@ -390,7 +387,7 @@ func (k Keeper) PlaceStatefulOrder(
 					err,
 					"PlaceStatefulOrder: order (%+v), result (%s)",
 					order,
-					successPerSubaccountUpdate[order.OrderId.SubaccountId].String(),
+					updateResult.String(),
 				)
 			}
 		}
@@ -1005,111 +1002,55 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 // for orders to determine whether or not they may be added to the orderbook.
 func (k Keeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 	ctx sdk.Context,
-	clobPairId types.ClobPairId,
-	// TODO(DEC-1713): Convert this to 2 parameters: SubaccountId and a slice of PendingOpenOrders.
-	subaccountOpenOrders map[satypes.SubaccountId][]types.PendingOpenOrder,
-) (
-	success bool,
-	successPerUpdate map[satypes.SubaccountId]satypes.UpdateResult,
-) {
-	defer telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		time.Now(),
-		metrics.CollateralizationCheck,
-		metrics.Latency,
-	)
-
-	telemetry.SetGauge(
-		float32(len(subaccountOpenOrders)),
-		types.ModuleName,
-		metrics.CollateralizationCheckSubaccounts,
-		metrics.Count,
-	)
-
+	subaccountId satypes.SubaccountId,
+	order types.PendingOpenOrder,
+) satypes.UpdateResult {
+	clobPairId := order.ClobPairId
 	clobPair, found := k.GetClobPair(ctx, clobPairId)
 	if !found {
 		panic(types.ErrInvalidClob)
 	}
-
-	pendingUpdates := types.NewPendingUpdates()
-
-	// Retrieve the associated `PerpetualId` for the `ClobPair`.
 	perpetualId := clobPair.MustGetPerpetualId()
+	makerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(ctx, subaccountId.Owner, false)
+	bigFillQuoteQuantums := types.FillAmountToQuoteQuantums(
+		order.Subticks,
+		order.RemainingQuantums,
+		clobPair.QuantumConversionExponent,
+	)
 
-	iterateOverOpenOrdersStart := time.Now()
-	for subaccountId, openOrders := range subaccountOpenOrders {
-		telemetry.SetGauge(
-			float32(len(openOrders)),
-			types.ModuleName,
-			metrics.SubaccountPendingMatches,
-			metrics.Count,
-		)
-
-		makerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(ctx, subaccountId.Owner, false)
-		// For each subaccount ID, create the update from all of its existing open orders for the clob and side.
-		for _, openOrder := range openOrders {
-			if openOrder.ClobPairId != clobPairId {
-				panic(fmt.Sprintf("Order `ClobPairId` must equal `clobPairId` for order %+v", openOrder))
-			}
-
-			collatCheckPriceSubticks := openOrder.Subticks
-
-			bigFillQuoteQuantums := types.FillAmountToQuoteQuantums(
-				collatCheckPriceSubticks,
-				openOrder.RemainingQuantums,
-				clobPair.QuantumConversionExponent,
-			)
-			bigFillAmount := openOrder.RemainingQuantums.ToBigInt()
-			addPerpetualFillAmountStart := time.Now()
-			pendingUpdates.AddPerpetualFill(
-				subaccountId,
-				perpetualId,
-				openOrder.IsBuy,
-				makerFeePpm,
-				bigFillAmount,
-				bigFillQuoteQuantums,
-			)
-			telemetry.ModuleMeasureSince(
-				types.ModuleName,
-				addPerpetualFillAmountStart,
-				metrics.AddPerpetualFillAmount,
-				metrics.Latency,
-			)
-		}
+	quoteDelta := new(big.Int).Set(bigFillQuoteQuantums)
+	baseDelta := new(big.Int).Neg(order.RemainingQuantums.ToBigInt())
+	if order.IsBuy {
+		quoteDelta.Neg(quoteDelta)
+	} else {
+		baseDelta.Neg(baseDelta)
 	}
-	telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		iterateOverOpenOrdersStart,
-		metrics.IterateOverPendingMatches,
-		metrics.Latency,
-	)
-
-	covertToUpdatesStart := time.Now()
-	updates := pendingUpdates.ConvertToUpdates()
-	telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		covertToUpdatesStart,
-		metrics.ConvertToUpdates,
-		metrics.Latency,
-	)
-
-	success, successPerSubaccountUpdate, err := k.subaccountsKeeper.CanUpdateSubaccounts(
+	fee := lib.BigMulPpm(bigFillQuoteQuantums, lib.BigI(makerFeePpm), true)
+	quoteDelta.Sub(quoteDelta, fee)
+	_, updateResults, err := k.subaccountsKeeper.CanUpdateSubaccounts(
 		ctx,
-		updates,
+		[]satypes.Update{
+			{
+				SubaccountId: subaccountId,
+				AssetUpdates: []satypes.AssetUpdate{{
+					AssetId:          assettypes.AssetUsdc.Id,
+					BigQuantumsDelta: quoteDelta,
+				}},
+				PerpetualUpdates: []satypes.PerpetualUpdate{{
+					PerpetualId:      perpetualId,
+					BigQuantumsDelta: baseDelta,
+				}},
+			},
+		},
 		satypes.CollatCheck,
 	)
-	// TODO(DEC-191): Remove the error case from `CanUpdateSubaccounts`, which can only occur on overflow and specifying
-	// duplicate accounts.
 	if err != nil {
 		panic(err)
 	}
-
-	result := make(map[satypes.SubaccountId]satypes.UpdateResult, len(updates))
-	for i, update := range updates {
-		result[update.SubaccountId] = successPerSubaccountUpdate[i]
+	if len(updateResults) != 1 {
+		panic("Expected exactly one update result")
 	}
-
-	return success, result
+	return updateResults[0]
 }
 
 // GetOraclePriceSubticksRat returns the oracle price in subticks for the given `ClobPair`.
