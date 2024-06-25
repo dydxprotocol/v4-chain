@@ -63,4 +63,13 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		id SubaccountId,
 	) (val Subaccount)
+	GetNegativeTncSubaccountSeenAtBlock(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (uint32, bool, error)
+	SetNegativeTncSubaccountSeenAtBlock(
+		ctx sdk.Context,
+		perpetualId uint32,
+		blockHeight uint32,
+	) error
 }
