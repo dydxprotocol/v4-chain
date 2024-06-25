@@ -89,6 +89,9 @@ func (k Keeper) CreateMarket(
 	k.marketToCreatedAt[marketParam.Id] = k.timeProvider.Now()
 	metrics.SetMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
 
+	// create a new market rev share
+	k.revShareKeeper.CreateNewMarketRevShare(ctx, marketParam.Id)
+
 	return marketParam, nil
 }
 

@@ -7,14 +7,15 @@ services:
     environment:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_ADVERTISED_HOST_NAME: localhost
-      KAFKA_CREATE_TOPICS: 
+      KAFKA_CREATE_TOPICS:
         "to-ender:1:1,\
         to-vulcan:1:1,\
         to-websockets-orderbooks:1:1,\
         to-websockets-subaccounts:1:1,\
         to-websockets-trades:1:1,\
         to-websockets-markets:1:1,\
-        to-websockets-candles:1:1"
+        to-websockets-candles:1:1,\
+        to-websockets-block-height:1:1"
   postgres-test:
     build:
       context: .

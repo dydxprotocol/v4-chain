@@ -20,15 +20,13 @@ import (
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 
 const (
 	NumBlocksAfterTradingEnabled = 50
 	TestMarketId                 = 1001
-	// Expected response log when a order is submitted but oracle price is zero.
-	// https://github.com/dydxprotocol/v4-chain/blob/5ee11ed/protocol/x/perpetuals/keeper/perpetual.go#L1514-L1517
-	ExpectedPlaceOrderCheckTxResponseLog = "recovered: type: perpetual, id: 1001: product position is not updatable"
 )
 
 var (
@@ -392,9 +390,10 @@ func TestAddNewMarketProposal(t *testing.T) {
 				require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
 				require.Contains(t,
 					resp.Log,
-					ExpectedPlaceOrderCheckTxResponseLog,
+					satypes.ErrProductPositionNotUpdatable.Error(),
 					"expected CheckTx response log to contain: %s, got: %s",
-					ExpectedPlaceOrderCheckTxResponseLog, resp.Log,
+					satypes.ErrProductPositionNotUpdatable,
+					resp.Log,
 				)
 
 				// Advance to the next block and check chain is not halted.

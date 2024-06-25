@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
@@ -15,7 +16,7 @@ import (
 )
 
 func TestMarketPriceQuerySingle(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	msgs := keepertest.CreateNMarkets(t, ctx, keeper, 2)
 	for _, tc := range []struct {
@@ -66,7 +67,7 @@ func TestMarketPriceQuerySingle(t *testing.T) {
 }
 
 func TestMarketPriceQueryPaginated(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	msgs := keepertest.CreateNMarkets(t, ctx, keeper, 5)
 	prices := make([]types.MarketPrice, len(msgs))
@@ -126,7 +127,7 @@ func TestMarketPriceQueryPaginated(t *testing.T) {
 }
 
 func TestMarketParamQuerySingle(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	msgs := keepertest.CreateNMarkets(t, ctx, keeper, 2)
 	for _, tc := range []struct {
@@ -177,7 +178,7 @@ func TestMarketParamQuerySingle(t *testing.T) {
 }
 
 func TestMarketParamQueryPaginated(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	msgs := keepertest.CreateNMarkets(t, ctx, keeper, 5)
 	params := make([]types.MarketParam, len(msgs))

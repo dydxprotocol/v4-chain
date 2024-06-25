@@ -128,16 +128,9 @@ func IsValidStateTransitionForUndercollateralizedSubaccount(
 		return underCollateralizationResult
 	}
 
-	// Note that here we are effectively checking that
-	// `newNetCollateral / newMaintenanceMargin >= curNetCollateral / curMaintenanceMargin`.
-	// However, to avoid rounding errors, we factor this as
-	// `newNetCollateral * curMaintenanceMargin >= curNetCollateral * newMaintenanceMargin`.
-	newNcOldMmr := new(big.Int).Mul(riskNew.NC, riskCur.MMR)
-	oldNcNewMmr := new(big.Int).Mul(riskCur.NC, riskNew.MMR)
-
 	// The subaccount is not well-collateralized, and the state transition leaves the subaccount in a
 	// "more-risky" state (collateral relative to margin requirements is decreasing).
-	if oldNcNewMmr.Cmp(newNcOldMmr) > 0 {
+	if riskNew.Cmp(riskCur) > 0 {
 		return underCollateralizationResult
 	}
 
@@ -342,17 +335,8 @@ func UpdatePerpetualPositions(
 		}
 
 		// Convert the new PerpetualPostiion values back into a slice.
-		perpetualPositions := make([]*types.PerpetualPosition, 0, len(perpetualPositionsMap))
-		for _, value := range perpetualPositionsMap {
-			perpetualPositions = append(perpetualPositions, value)
-		}
-
-		// Sort the new PerpetualPositions in ascending order by Id.
-		sort.Slice(perpetualPositions, func(i, j int) bool {
-			return perpetualPositions[i].GetId() < perpetualPositions[j].GetId()
-		})
-
-		settledUpdates[i].SettledSubaccount.PerpetualPositions = perpetualPositions
+		settledUpdates[i].SettledSubaccount.PerpetualPositions =
+			lib.MapToSortedSlice[lib.Sortable[uint32]](perpetualPositionsMap)
 	}
 }
 
@@ -400,17 +384,8 @@ func UpdateAssetPositions(
 		}
 
 		// Convert the new AssetPostiion values back into a slice.
-		assetPositions := make([]*types.AssetPosition, 0, len(assetPositionsMap))
-		for _, value := range assetPositionsMap {
-			assetPositions = append(assetPositions, value)
-		}
-
-		// Sort the new AssetPositions in ascending order by AssetId.
-		sort.Slice(assetPositions, func(i, j int) bool {
-			return assetPositions[i].GetId() < assetPositions[j].GetId()
-		})
-
-		settledUpdates[i].SettledSubaccount.AssetPositions = assetPositions
+		settledUpdates[i].SettledSubaccount.AssetPositions =
+			lib.MapToSortedSlice[lib.Sortable[uint32]](assetPositionsMap)
 	}
 }
 
