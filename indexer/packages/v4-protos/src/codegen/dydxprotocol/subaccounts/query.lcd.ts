@@ -1,6 +1,6 @@
 import { setPaginationParams } from "../../helpers";
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryGetSubaccountRequest, QuerySubaccountResponseSDKType, QueryAllSubaccountRequest, QuerySubaccountAllResponseSDKType, QueryGetWithdrawalAndTransfersBlockedInfoRequest, QueryGetWithdrawalAndTransfersBlockedInfoResponseSDKType } from "./query";
+import { QueryGetSubaccountRequest, QuerySubaccountResponseSDKType, QueryAllSubaccountRequest, QuerySubaccountAllResponseSDKType, QueryGetWithdrawalAndTransfersBlockedInfoRequest, QueryGetWithdrawalAndTransfersBlockedInfoResponseSDKType, QueryCollateralPoolAddressRequest, QueryCollateralPoolAddressResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -13,6 +13,7 @@ export class LCDQueryClient {
     this.subaccount = this.subaccount.bind(this);
     this.subaccountAll = this.subaccountAll.bind(this);
     this.getWithdrawalAndTransfersBlockedInfo = this.getWithdrawalAndTransfersBlockedInfo.bind(this);
+    this.collateralPoolAddress = this.collateralPoolAddress.bind(this);
   }
   /* Queries a Subaccount by id */
 
@@ -43,16 +44,15 @@ export class LCDQueryClient {
 
 
   async getWithdrawalAndTransfersBlockedInfo(params: QueryGetWithdrawalAndTransfersBlockedInfoRequest): Promise<QueryGetWithdrawalAndTransfersBlockedInfoResponseSDKType> {
-    const options: any = {
-      params: {}
-    };
+    const endpoint = `dydxprotocol/subaccounts/withdrawals_and_transfers_blocked_info/${params.perpetualId}`;
+    return await this.req.get<QueryGetWithdrawalAndTransfersBlockedInfoResponseSDKType>(endpoint);
+  }
+  /* Queries the collateral pool account address for a perpetual id. */
 
-    if (typeof params?.perpetualId !== "undefined") {
-      options.params.perpetual_id = params.perpetualId;
-    }
 
-    const endpoint = `dydxprotocol/subaccounts/withdrawals_and_transfers_blocked_info`;
-    return await this.req.get<QueryGetWithdrawalAndTransfersBlockedInfoResponseSDKType>(endpoint, options);
+  async collateralPoolAddress(params: QueryCollateralPoolAddressRequest): Promise<QueryCollateralPoolAddressResponseSDKType> {
+    const endpoint = `dydxprotocol/subaccounts/collateral_pool_address/${params.perpetualId}`;
+    return await this.req.get<QueryCollateralPoolAddressResponseSDKType>(endpoint);
   }
 
 }
