@@ -132,6 +132,41 @@ func TestGetSetOwnerShares(t *testing.T) {
 	require.Equal(t, numShares, got)
 }
 
+func TestGetAllOwnerShares(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.VaultKeeper
+
+	// Get all owner shares of a vault that has no owners.
+	allOwnerShares := k.GetAllOwnerShares(ctx, constants.Vault_Clob_0)
+	require.Equal(t, []*vaulttypes.OwnerShare{}, allOwnerShares)
+
+	// Set alice and bob as owners of a vault and get all owner shares.
+	alice := constants.AliceAccAddress.String()
+	aliceShares := vaulttypes.BigIntToNumShares(big.NewInt(7))
+	bob := constants.BobAccAddress.String()
+	bobShares := vaulttypes.BigIntToNumShares(big.NewInt(123))
+
+	k.SetOwnerShares(ctx, constants.Vault_Clob_0, alice, aliceShares)
+	k.SetOwnerShares(ctx, constants.Vault_Clob_0, bob, bobShares)
+
+	allOwnerShares = k.GetAllOwnerShares(ctx, constants.Vault_Clob_0)
+	require.ElementsMatch(
+		t,
+		[]*vaulttypes.OwnerShare{
+			{
+				Owner:  alice,
+				Shares: &aliceShares,
+			},
+			{
+				Owner:  bob,
+				Shares: &bobShares,
+			},
+		},
+		allOwnerShares,
+	)
+}
+
 func TestMintShares(t *testing.T) {
 	tests := map[string]struct {
 		/* --- Setup --- */

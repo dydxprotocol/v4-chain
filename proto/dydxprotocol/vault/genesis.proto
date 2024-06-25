@@ -3,6 +3,8 @@ package dydxprotocol.vault;
 
 import "gogoproto/gogo.proto";
 import "dydxprotocol/vault/params.proto";
+import "dydxprotocol/vault/query.proto";
+import "dydxprotocol/vault/vault.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
@@ -10,4 +12,16 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 message GenesisState {
   // The parameters of the module.
   Params params = 1 [ (gogoproto.nullable) = false ];
+  // The vaults.
+  repeated Vault vaults = 2;
+}
+
+// Vault defines the total shares and owner shares of a vault.
+message Vault {
+  // The ID of the vault.
+  VaultId vault_id = 1;
+  // The total number of shares in the vault.
+  NumShares total_shares = 2;
+  // The shares of each owner in the vault.
+  repeated OwnerShare owner_shares = 3;
 }
