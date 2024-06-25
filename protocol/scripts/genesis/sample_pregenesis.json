@@ -1842,7 +1842,7 @@
       "sequences": []
     }
   },
-  "app_version": "5.0.0-dev0-167-gc13a8db9",
+  "app_version": "5.0.0-dev0-164-g7e9a3c39",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {
