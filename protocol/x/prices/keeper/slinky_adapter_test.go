@@ -121,7 +121,7 @@ func TestGetAllCurrencyPairs(t *testing.T) {
 	marketNumber := 10
 	_ = keepertest.CreateNMarkets(t, ctx, keeper, marketNumber)
 	cps := keeper.GetAllCurrencyPairs(ctx)
-	require.Equal(t, uint64(marketNumber), len(cps))
+	require.Equal(t, marketNumber, len(cps))
 }
 
 func TestGetNumCurrencyPairs(t *testing.T) {

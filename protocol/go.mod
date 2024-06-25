@@ -445,6 +445,7 @@ replace (
 	// Use dYdX fork of Cosmos SDK
 	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240606183841-18966898625f
 	github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240509161911-1c8b8e787e85
+	github.com/cosmos/ibc-go/v8 => github.com/cosmos/ibc-go/v8 v8.0.0
 	github.com/google/pprof => github.com/google/pprof v0.0.0-20230228050547-1710fef4ab10
 	// Compat w/ dydx fork of cosmos-sdk
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.18.0

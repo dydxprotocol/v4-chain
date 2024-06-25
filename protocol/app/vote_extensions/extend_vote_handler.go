@@ -23,7 +23,8 @@ type ExtendVoteHandler struct {
 
 type NoopPriceApplier struct{}
 
-func (n NoopPriceApplier) ApplyPricesFromVoteExtensions(_ sdk.Context, _ *cometabci.RequestFinalizeBlock) (map[slinkytypes.CurrencyPair]*big.Int, error) {
+func (n NoopPriceApplier) ApplyPricesFromVoteExtensions(
+	_ sdk.Context, _ *cometabci.RequestFinalizeBlock) (map[slinkytypes.CurrencyPair]*big.Int, error) {
 	return nil, nil
 }
 func (n NoopPriceApplier) GetPricesForValidator(_ sdk.ConsAddress) map[slinkytypes.CurrencyPair]*big.Int {
