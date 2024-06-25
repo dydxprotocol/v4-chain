@@ -434,24 +434,8 @@ func (k Keeper) persistMatchedOrders(
 		return takerUpdateResult, makerUpdateResult, err
 	}
 
-	// Transfer the fee amount from subacounts module to fee collector module account.
+	// Distribute the fee amount from subacounts module to fee collector and rev share accounts
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)
-	//if err := k.subaccountsKeeper.TransferFeesToFeeCollectorModule(
-	//	ctx,
-	//	assettypes.AssetUsdc.Id,
-	//	bigTotalFeeQuoteQuantums,
-	//	perpetualId,
-	//); err != nil {
-	//	return takerUpdateResult, makerUpdateResult, errorsmod.Wrapf(
-	//		types.ErrSubaccountFeeTransferFailed,
-	//		"persistMatchedOrders: subaccounts (%v, %v) updated, but fee transfer (bigFeeQuoteQuantums: %v)"+
-	//			" to fee-collector failed. Err: %v",
-	//		matchWithOrders.MakerOrder.GetSubaccountId(),
-	//		matchWithOrders.TakerOrder.GetSubaccountId(),
-	//		bigTotalFeeQuoteQuantums,
-	//		err,
-	//	)
-	//}
 	if err := k.subaccountsKeeper.DistributeFees(
 		ctx,
 		assettypes.AssetUsdc.Id,

@@ -1168,7 +1168,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 	}
 }
 
-func TestTransferFeesToFeeCollectorModule(t *testing.T) {
+func TestDistributeFees(t *testing.T) {
 	tests := map[string]struct {
 		skipSetUpUsdc bool
 
@@ -1452,7 +1452,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			}
 
 			// Check the subaccount module balance.
-			subaccountsModuleAccBalance = bankKeeper.GetBalance(ctx, tc.collateralPoolAddr, tc.asset.Denom)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, tc.collateralPoolAddr, tc.asset.Denom)
 			require.Equal(t,
 				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
 				subaccountsModuleAccBalance,

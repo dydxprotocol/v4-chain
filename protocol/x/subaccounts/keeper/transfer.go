@@ -316,59 +316,6 @@ func (k Keeper) TransferFees(
 	return nil
 }
 
-// TransferFeesToFeeCollectorModule translates the assetId and quantums into a sdk.Coin,
-// and moves the funds from subaccounts module to the `fee_collector` module account by calling
-// bankKeeper.SendCoins(). Does not change any individual subaccount state.
-func (k Keeper) TransferFeesToFeeCollectorModule(
-	ctx sdk.Context,
-	assetId uint32,
-	quantums *big.Int,
-	perpetualId uint32,
-) error {
-	// TODO(DEC-715): Support non-USDC assets.
-	if assetId != assettypes.AssetUsdc.Id {
-		return types.ErrAssetTransferThroughBankNotImplemented
-	}
-
-	if quantums.Sign() == 0 {
-		return nil
-	}
-
-	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
-		ctx,
-		assetId,
-		new(big.Int).Abs(quantums),
-	)
-	if err != nil {
-		return err
-	}
-
-	collateralPoolAddr, err := k.GetCollateralPoolFromPerpetualId(ctx, perpetualId)
-	if err != nil {
-		return err
-	}
-
-	// Send coins from `subaccounts` to the `auth` module fee collector account.
-	fromModuleAddr := collateralPoolAddr
-	toModuleAddr := authtypes.NewModuleAddress(authtypes.FeeCollectorName)
-
-	if quantums.Sign() < 0 {
-		// In the case of a liquidation, net fees can be negative if the maker gets a rebate.
-		fromModuleAddr, toModuleAddr = toModuleAddr, fromModuleAddr
-	}
-
-	if err := k.bankKeeper.SendCoins(
-		ctx,
-		fromModuleAddr,
-		toModuleAddr,
-		[]sdk.Coin{coinToTransfer},
-	); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // TransferInsuranceFundPayments transfers funds in and out of the insurance fund to the subaccounts
 // module by calling `bankKeeper.SendCoins`.
 // This function transfers funds

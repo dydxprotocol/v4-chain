@@ -88,7 +88,16 @@ func SubaccountsKeepers(t testing.TB, msgSenderEnabled bool) (
 	// Mock time provider response for market creation.
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
-	return ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, blocktimeKeeper, revShareKeeper, storeKey
+	return ctx,
+		keeper,
+		pricesKeeper,
+		perpetualsKeeper,
+		accountKeeper,
+		bankKeeper,
+		assetsKeeper,
+		blocktimeKeeper,
+		revShareKeeper,
+		storeKey
 }
 
 func createSubaccountsKeeper(
