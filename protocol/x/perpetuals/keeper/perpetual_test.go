@@ -3282,3 +3282,35 @@ func TestIsPositionUpdatable(t *testing.T) {
 		})
 	}
 }
+
+func TestIsIsolatedPerpetual(t *testing.T) {
+	testCases := map[string]struct {
+		perp     types.Perpetual
+		expected bool
+	}{
+		"Isolated Perpetual": {
+			perp: *perptest.GeneratePerpetual(
+				perptest.WithMarketType(types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED),
+			),
+			expected: true,
+		},
+		"Cross Perpetual": {
+			perp: *perptest.GeneratePerpetual(
+				perptest.WithMarketType(types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS),
+			),
+			expected: false,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(
+			name, func(t *testing.T) {
+				pc := keepertest.PerpetualsKeepers(t)
+				pc.PerpetualsKeeper.SetPerpetual(pc.Ctx, tc.perp)
+				isIsolated, err := pc.PerpetualsKeeper.IsIsolatedPerpetual(pc.Ctx, tc.perp.Params.Id)
+				require.NoError(t, err)
+				require.Equal(t, tc.expected, isIsolated)
+			},
+		)
+	}
+}

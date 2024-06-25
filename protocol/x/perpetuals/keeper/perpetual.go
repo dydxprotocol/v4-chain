@@ -31,8 +31,12 @@ import (
 )
 
 func (k Keeper) IsIsolatedPerpetual(ctx sdk.Context, perpetualId uint32) (bool, error) {
-	insuranceFundName, err := k.GetInsuranceFundName(ctx, perpetualId)
-	return insuranceFundName == types.InsuranceFundName, err
+	perpetual, err := k.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return false, err
+	}
+
+	return perpetual.Params.MarketType == types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED, nil
 }
 
 // GetInsuranceFundName returns the name of the insurance fund account for a given perpetual.
