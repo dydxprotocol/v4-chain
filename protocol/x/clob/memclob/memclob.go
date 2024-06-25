@@ -508,7 +508,8 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				removalReason = types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED
 			} else if errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder) {
 				removalReason = types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER
-			}
+			} else if errors.Is(err, types.ErrWouldViolateIsolatedSubaccountConstraints) {
+				removalReason = types.OrderRemoval_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS
 
 			if !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
 				m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
@@ -833,11 +834,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		// filled or not filled at all.
 		// TODO(CLOB-267): Create more granular error types here that indicate why the order was not
 		// fully filled (i.e. undercollateralized, reduce only resized, etc).
-		if takerOrderStatus.OrderStatus == types.ViolatesIsolatedSubaccountConstraints {
-			matchingErr = types.ErrWouldViolateIsolatedSubaccountConstraints
-		} else {
-			matchingErr = types.ErrFokOrderCouldNotBeFullyFilled
-		}
+		matchingErr = types.ErrFokOrderCouldNotBeFullyFilled
 	}
 
 	// If the order is post only and it's not the rewind step, then it cannot be filled.
@@ -847,6 +844,12 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		!order.IsLiquidation() &&
 		order.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_POST_ONLY {
 		matchingErr = types.ErrPostOnlyWouldCrossMakerOrder
+	}
+
+	// If the order filling leads to the subaccount having an invalid state due to failing checks for
+	// isolated subaccount constraints, return an error so that the order is canceled.
+	if !order.IsLiquidation() && takerOrderStatus.OrderStatus == types.ViolatesIsolatedSubaccountConstraints {
+		matchingErr = types.ErrWouldViolateIsolatedSubaccountConstraints
 	}
 
 	// If the match is valid and placing the taker order generated valid matches, update memclob state.
