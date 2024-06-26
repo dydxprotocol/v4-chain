@@ -24,34 +24,22 @@ type ClobKeeper struct {
 	mock.Mock
 }
 
-// AddOrderToOrderbookSubaccountUpdatesCheck provides a mock function with given fields: ctx, clobPairId, subaccountOpenOrders
-func (_m *ClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(ctx types.Context, clobPairId clobtypes.ClobPairId, subaccountOpenOrders map[subaccountstypes.SubaccountId][]clobtypes.PendingOpenOrder) (bool, map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult) {
-	ret := _m.Called(ctx, clobPairId, subaccountOpenOrders)
+// AddOrderToOrderbookSubaccountUpdatesCheck provides a mock function with given fields: ctx, subaccountId, order
+func (_m *ClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(ctx types.Context, subaccountId subaccountstypes.SubaccountId, order clobtypes.PendingOpenOrder) subaccountstypes.UpdateResult {
+	ret := _m.Called(ctx, subaccountId, order)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddOrderToOrderbookSubaccountUpdatesCheck")
 	}
 
-	var r0 bool
-	var r1 map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId, map[subaccountstypes.SubaccountId][]clobtypes.PendingOpenOrder) (bool, map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult)); ok {
-		return rf(ctx, clobPairId, subaccountOpenOrders)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId, map[subaccountstypes.SubaccountId][]clobtypes.PendingOpenOrder) bool); ok {
-		r0 = rf(ctx, clobPairId, subaccountOpenOrders)
+	var r0 subaccountstypes.UpdateResult
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, clobtypes.PendingOpenOrder) subaccountstypes.UpdateResult); ok {
+		r0 = rf(ctx, subaccountId, order)
 	} else {
-		r0 = ret.Get(0).(bool)
+		r0 = ret.Get(0).(subaccountstypes.UpdateResult)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.ClobPairId, map[subaccountstypes.SubaccountId][]clobtypes.PendingOpenOrder) map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult); ok {
-		r1 = rf(ctx, clobPairId, subaccountOpenOrders)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult)
-		}
-	}
-
-	return r0, r1
+	return r0
 }
 
 // BatchCancelShortTermOrder provides a mock function with given fields: ctx, msg
@@ -645,7 +633,7 @@ func (_m *ClobKeeper) GetSubaccountMaxNotionalLiquidatable(ctx types.Context, su
 	return r0, r1
 }
 
-// HandleMsgCancelOrder provides a mock function with given fields: ctx, msg
+// HandleMsgCancelOrder provides a mock function with given fields: ctx, msg, isInternalOrder
 func (_m *ClobKeeper) HandleMsgCancelOrder(ctx types.Context, msg *clobtypes.MsgCancelOrder, isInternalOrder bool) error {
 	ret := _m.Called(ctx, msg, isInternalOrder)
 
