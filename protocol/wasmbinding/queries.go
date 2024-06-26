@@ -12,7 +12,7 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	subaccountskeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
-	subaccountstypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 type QueryPlugin struct {
@@ -56,7 +56,7 @@ func (qp QueryPlugin) HandleSubaccountsQuery(ctx sdk.Context, queryData json.Raw
 		return nil, errorsmod.Wrap(err, "Error parsing DydxGetClobQuery")
 	}
 
-	parsedSubaccountId := subaccountstypes.SubaccountId{
+	parsedSubaccountId := satypes.SubaccountId{
 		Owner:  parsedQuery.Subaccount.Owner,
 		Number: parsedQuery.Subaccount.Number,
 	}
@@ -76,10 +76,12 @@ func (qp QueryPlugin) HandlePerpetualClobDetailsQuery(ctx sdk.Context, queryData
 		return nil, errorsmod.Wrap(err, "Error parsing DydxGetClobQuery")
 	}
 
-	perpetualClobDetails, err := qp.clobKeeper.GetPerpetualClobDetails(ctx, clobtypes.ClobPairId(parsedQuery.PerpetualClobDetails.Id))
+	perpetualClobDetails, err := qp.clobKeeper.GetPerpetualClobDetails(ctx,
+		clobtypes.ClobPairId(parsedQuery.PerpetualClobDetails.Id))
 
 	if err != nil {
-		return nil, errorsmod.Wrap(err, fmt.Sprintf("Error getting clob details for pair %d", parsedQuery.PerpetualClobDetails.Id))
+		return nil, errorsmod.Wrap(err,
+			fmt.Sprintf("Error getting clob details for pair %d", parsedQuery.PerpetualClobDetails.Id))
 	}
 	bz, err := json.Marshal(perpetualClobDetails)
 	if err != nil {

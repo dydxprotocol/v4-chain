@@ -4,6 +4,7 @@ import (
 	store "cosmossdk.io/store/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -18,6 +19,7 @@ var Upgrade = upgrades.Upgrade{
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
 			vaulttypes.StoreKey,
+			wasmtypes.StoreKey,
 		},
 	},
 }
