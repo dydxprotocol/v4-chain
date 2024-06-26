@@ -23,6 +23,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -618,50 +619,46 @@ func TestPlaceLongTermOrder(t *testing.T) {
 				{
 					Id: &constants.Alice_Num0,
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: Clob_0.MustGetPerpetualId(),
-							Quantums: dtypes.NewInt(int64(
+						testutil.CreateSinglePerpetualPosition(
+							Clob_0.MustGetPerpetualId(),
+							big.NewInt(int64(
 								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
-							FundingIndex: dtypes.NewInt(0),
-						},
+							big.NewInt(0),
+						),
 					},
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId: 0,
-							Quantums: dtypes.NewIntFromBigInt(
-								new(big.Int).Sub(
-									aliceSubaccount.GetUsdcPosition(),
-									new(big.Int).SetInt64(
-										50_000_000_000+25_000_000, // taker fee of .5%
-									),
+						testutil.CreateSingleAssetPosition(
+							0,
+							new(big.Int).Sub(
+								aliceSubaccount.GetUsdcPosition(),
+								new(big.Int).SetInt64(
+									50_000_000_000+25_000_000, // taker fee of .5%
 								),
 							),
-						},
+						),
 					},
 					MarginEnabled: true,
 				},
 				{
 					Id: &constants.Bob_Num0,
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: Clob_0.MustGetPerpetualId(),
-							Quantums: dtypes.NewInt(-int64(
+						testutil.CreateSinglePerpetualPosition(
+							Clob_0.MustGetPerpetualId(),
+							big.NewInt(-int64(
 								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
-							FundingIndex: dtypes.NewInt(0),
-						},
+							big.NewInt(0),
+						),
 					},
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId: 0,
-							Quantums: dtypes.NewIntFromBigInt(
-								new(big.Int).Add(
-									bobSubaccount.GetUsdcPosition(),
-									new(big.Int).SetInt64(
-										50_000_000_000+5_500_000, // maker rebate of .110%
-									),
+						testutil.CreateSingleAssetPosition(
+							0,
+							new(big.Int).Add(
+								bobSubaccount.GetUsdcPosition(),
+								new(big.Int).SetInt64(
+									50_000_000_000+5_500_000, // maker rebate of .110%
 								),
 							),
-						},
+						),
 					},
 					MarginEnabled: true,
 				},
@@ -747,25 +744,23 @@ func TestPlaceLongTermOrder(t *testing.T) {
 										indexerevents.NewSubaccountUpdateEvent(
 											&constants.Alice_Num0,
 											[]*satypes.PerpetualPosition{
-												{
-													PerpetualId: Clob_0.MustGetPerpetualId(),
-													Quantums: dtypes.NewInt(int64(
+												testutil.CreateSinglePerpetualPosition(
+													Clob_0.MustGetPerpetualId(),
+													big.NewInt(int64(
 														LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
-													FundingIndex: dtypes.NewInt(0),
-												},
+													big.NewInt(0),
+												),
 											},
 											[]*satypes.AssetPosition{
-												{
-													AssetId: 0,
-													Quantums: dtypes.NewIntFromBigInt(
-														new(big.Int).Sub(
-															aliceSubaccount.GetUsdcPosition(),
-															new(big.Int).SetInt64(
-																50_000_000_000+25_000_000, // taker fee of .5%
-															),
+												testutil.CreateSingleAssetPosition(
+													0,
+													new(big.Int).Sub(
+														aliceSubaccount.GetUsdcPosition(),
+														new(big.Int).SetInt64(
+															50_000_000_000+25_000_000, // taker fee of .5%
 														),
 													),
-												},
+												),
 											},
 											nil, // no funding payments
 										),
@@ -781,12 +776,12 @@ func TestPlaceLongTermOrder(t *testing.T) {
 										indexerevents.NewSubaccountUpdateEvent(
 											&constants.Bob_Num0,
 											[]*satypes.PerpetualPosition{
-												{
-													PerpetualId: Clob_0.MustGetPerpetualId(),
-													Quantums: dtypes.NewInt(-int64(
+												testutil.CreateSinglePerpetualPosition(
+													Clob_0.MustGetPerpetualId(),
+													big.NewInt(-int64(
 														LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
-													FundingIndex: dtypes.NewInt(0),
-												},
+													big.NewInt(0),
+												),
 											},
 											[]*satypes.AssetPosition{
 												{
@@ -951,54 +946,50 @@ func TestPlaceLongTermOrder(t *testing.T) {
 				{
 					Id: &constants.Alice_Num0,
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: Clob_0.MustGetPerpetualId(),
-							Quantums: dtypes.NewInt(int64(
+						testutil.CreateSinglePerpetualPosition(
+							Clob_0.MustGetPerpetualId(),
+							big.NewInt(int64(
 								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.GetQuantums())),
-							FundingIndex: dtypes.NewInt(0),
-						},
+							big.NewInt(0),
+						),
 					},
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId: 0,
-							Quantums: dtypes.NewIntFromBigInt(
-								new(big.Int).Sub(
-									aliceSubaccount.GetUsdcPosition(),
-									new(big.Int).SetInt64(
-										50_000_000_000+25_000_000+ // taker fee of .5%
-											50_000_000_000-5_500_000, // maker rebate of .110%
-									),
+						testutil.CreateSingleAssetPosition(
+							0,
+							new(big.Int).Sub(
+								aliceSubaccount.GetUsdcPosition(),
+								new(big.Int).SetInt64(
+									50_000_000_000+25_000_000+ // taker fee of .5%
+										50_000_000_000-5_500_000, // maker rebate of .110%
 								),
 							),
-						},
+						),
 					},
 					MarginEnabled: true,
 				},
 				{
 					Id: &constants.Bob_Num0,
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: Clob_0.MustGetPerpetualId(),
-							Quantums: dtypes.NewInt(-int64(
-								PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums() +
+						testutil.CreateSinglePerpetualPosition(
+							Clob_0.MustGetPerpetualId(),
+							big.NewInt(-int64(
+								PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums()+
 									PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums(),
 							)),
-							FundingIndex: dtypes.NewInt(0),
-						},
+							big.NewInt(0),
+						),
 					},
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId: 0,
-							Quantums: dtypes.NewIntFromBigInt(
-								new(big.Int).Add(
-									bobSubaccount.GetUsdcPosition(),
-									new(big.Int).SetInt64(
-										50_000_000_000+5_500_000+ // maker rebate of .110% from first order
-											50_000_000_000-25_000_000, // taker fee of .5% from second order
-									),
+						testutil.CreateSingleAssetPosition(
+							0,
+							new(big.Int).Add(
+								bobSubaccount.GetUsdcPosition(),
+								new(big.Int).SetInt64(
+									50_000_000_000+5_500_000+ // maker rebate of .110% from first order
+										50_000_000_000-25_000_000, // taker fee of .5% from second order
 								),
 							),
-						},
+						),
 					},
 					MarginEnabled: true,
 				},
@@ -1094,25 +1085,23 @@ func TestPlaceLongTermOrder(t *testing.T) {
 										indexerevents.NewSubaccountUpdateEvent(
 											&constants.Alice_Num0,
 											[]*satypes.PerpetualPosition{
-												{
-													PerpetualId: Clob_0.MustGetPerpetualId(),
-													Quantums: dtypes.NewInt(int64(
+												testutil.CreateSinglePerpetualPosition(
+													Clob_0.MustGetPerpetualId(),
+													big.NewInt(int64(
 														PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums())),
-													FundingIndex: dtypes.NewInt(0),
-												},
+													big.NewInt(0),
+												),
 											},
 											[]*satypes.AssetPosition{
-												{
-													AssetId: 0,
-													Quantums: dtypes.NewIntFromBigInt(
-														new(big.Int).Sub(
-															aliceSubaccount.GetUsdcPosition(),
-															new(big.Int).SetInt64(
-																50_000_000_000+25_000_000, // taker fee of .5%
-															),
+												testutil.CreateSingleAssetPosition(
+													0,
+													new(big.Int).Sub(
+														aliceSubaccount.GetUsdcPosition(),
+														new(big.Int).SetInt64(
+															50_000_000_000+25_000_000, // taker fee of .5%
 														),
 													),
-												},
+												),
 											},
 											nil, // no funding payments
 										),
@@ -1128,25 +1117,23 @@ func TestPlaceLongTermOrder(t *testing.T) {
 										indexerevents.NewSubaccountUpdateEvent(
 											&constants.Bob_Num0,
 											[]*satypes.PerpetualPosition{
-												{
-													PerpetualId: Clob_0.MustGetPerpetualId(),
-													Quantums: dtypes.NewInt(-int64(
+												testutil.CreateSinglePerpetualPosition(
+													Clob_0.MustGetPerpetualId(),
+													big.NewInt(-int64(
 														PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums())),
-													FundingIndex: dtypes.NewInt(0),
-												},
+													big.NewInt(0),
+												),
 											},
 											[]*satypes.AssetPosition{
-												{
-													AssetId: 0,
-													Quantums: dtypes.NewIntFromBigInt(
-														new(big.Int).Add(
-															bobSubaccount.GetUsdcPosition(),
-															new(big.Int).SetInt64(
-																50_000_000_000+5_500_000, // maker rebate of .110%
-															),
+												testutil.CreateSingleAssetPosition(
+													0,
+													new(big.Int).Add(
+														bobSubaccount.GetUsdcPosition(),
+														new(big.Int).SetInt64(
+															50_000_000_000+5_500_000, // maker rebate of .110%
 														),
 													),
-												},
+												),
 											},
 											nil, // no funding payments
 										),
@@ -1259,30 +1246,28 @@ func TestPlaceLongTermOrder(t *testing.T) {
 										indexerevents.NewSubaccountUpdateEvent(
 											&constants.Bob_Num0,
 											[]*satypes.PerpetualPosition{
-												{
-													PerpetualId: Clob_0.MustGetPerpetualId(),
+												testutil.CreateSinglePerpetualPosition(
+													Clob_0.MustGetPerpetualId(),
 													// perpetual position size should equal sum of base quantums of Bob's orders
 													// because they are both fully filled
-													Quantums: dtypes.NewInt(-int64(
-														PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums() +
+													big.NewInt(-int64(
+														PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums()+
 															PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums(),
 													)),
-													FundingIndex: dtypes.NewInt(0),
-												},
+													big.NewInt(0),
+												),
 											},
 											[]*satypes.AssetPosition{
-												{
-													AssetId: 0,
-													Quantums: dtypes.NewIntFromBigInt(
-														new(big.Int).Add(
-															bobSubaccount.GetUsdcPosition(),
-															new(big.Int).SetInt64(
-																50_000_000_000+5_500_000+ // maker rebate of .110% from first order
-																	50_000_000_000-25_000_000, // taker fee of .5% from second order
-															),
+												testutil.CreateSingleAssetPosition(
+													0,
+													new(big.Int).Add(
+														bobSubaccount.GetUsdcPosition(),
+														new(big.Int).SetInt64(
+															50_000_000_000+5_500_000+ // maker rebate of .110% from first order
+																50_000_000_000-25_000_000, // taker fee of .5% from second order
 														),
 													),
-												},
+												),
 											},
 											nil, // no funding payments
 										),
@@ -1298,27 +1283,25 @@ func TestPlaceLongTermOrder(t *testing.T) {
 										indexerevents.NewSubaccountUpdateEvent(
 											&constants.Alice_Num0,
 											[]*satypes.PerpetualPosition{
-												{
-													PerpetualId: Clob_0.MustGetPerpetualId(),
+												testutil.CreateSinglePerpetualPosition(
+													Clob_0.MustGetPerpetualId(),
 													// Order was fully filled
-													Quantums: dtypes.NewInt(int64(
+													big.NewInt(int64(
 														LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.GetQuantums())),
-													FundingIndex: dtypes.NewInt(0),
-												},
+													big.NewInt(0),
+												),
 											},
 											[]*satypes.AssetPosition{
-												{
-													AssetId: 0,
-													Quantums: dtypes.NewIntFromBigInt(
-														new(big.Int).Sub(
-															aliceSubaccount.GetUsdcPosition(),
-															new(big.Int).SetInt64(
-																50_000_000_000+25_000_000+ // taker fee of .5% from first match
-																	50_000_000_000-5_500_000, // maker rebate of .110% from second match
-															),
+												testutil.CreateSingleAssetPosition(
+													0,
+													new(big.Int).Sub(
+														aliceSubaccount.GetUsdcPosition(),
+														new(big.Int).SetInt64(
+															50_000_000_000+25_000_000+ // taker fee of .5% from first match
+																50_000_000_000-5_500_000, // maker rebate of .110% from second match
 														),
 													),
-												},
+												),
 											},
 											nil, // no funding payments
 										),
@@ -1556,50 +1539,46 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 				{
 					Id: &constants.Alice_Num0,
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: Clob_0.MustGetPerpetualId(),
-							Quantums: dtypes.NewInt(int64(
+						testutil.CreateSinglePerpetualPosition(
+							Clob_0.MustGetPerpetualId(),
+							big.NewInt(int64(
 								Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
-							FundingIndex: dtypes.NewInt(0),
-						},
+							big.NewInt(0),
+						),
 					},
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId: 0,
-							Quantums: dtypes.NewIntFromBigInt(
-								new(big.Int).Sub(
-									aliceSubaccount.GetUsdcPosition(),
-									new(big.Int).SetInt64(
-										50_000_000_000+25_000_000, // taker fee of .5%
-									),
+						testutil.CreateSingleAssetPosition(
+							0,
+							new(big.Int).Sub(
+								aliceSubaccount.GetUsdcPosition(),
+								new(big.Int).SetInt64(
+									50_000_000_000+25_000_000, // taker fee of .5%
 								),
 							),
-						},
+						),
 					},
 					MarginEnabled: true,
 				},
 				{
 					Id: &constants.Bob_Num0,
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: Clob_0.MustGetPerpetualId(),
-							Quantums: dtypes.NewInt(-int64(
+						testutil.CreateSinglePerpetualPosition(
+							Clob_0.MustGetPerpetualId(),
+							big.NewInt(-int64(
 								Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
-							FundingIndex: dtypes.NewInt(0),
-						},
+							big.NewInt(0),
+						),
 					},
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId: 0,
-							Quantums: dtypes.NewIntFromBigInt(
-								new(big.Int).Add(
-									bobSubaccount.GetUsdcPosition(),
-									new(big.Int).SetInt64(
-										50_000_000_000+5_500_000, // maker rebate of .110%
-									),
+						testutil.CreateSingleAssetPosition(
+							0,
+							new(big.Int).Add(
+								bobSubaccount.GetUsdcPosition(),
+								new(big.Int).SetInt64(
+									50_000_000_000+5_500_000, // maker rebate of .110%
 								),
 							),
-						},
+						),
 					},
 					MarginEnabled: true,
 				},
@@ -1668,25 +1647,23 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 										indexerevents.NewSubaccountUpdateEvent(
 											&constants.Alice_Num0,
 											[]*satypes.PerpetualPosition{
-												{
-													PerpetualId: Clob_0.MustGetPerpetualId(),
-													Quantums: dtypes.NewInt(int64(
+												testutil.CreateSinglePerpetualPosition(
+													Clob_0.MustGetPerpetualId(),
+													big.NewInt(int64(
 														Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
-													FundingIndex: dtypes.NewInt(0),
-												},
+													big.NewInt(0),
+												),
 											},
 											[]*satypes.AssetPosition{
-												{
-													AssetId: 0,
-													Quantums: dtypes.NewIntFromBigInt(
-														new(big.Int).Sub(
-															aliceSubaccount.GetUsdcPosition(),
-															new(big.Int).SetInt64(
-																50_000_000_000+25_000_000, // taker fee of .5%
-															),
+												testutil.CreateSingleAssetPosition(
+													0,
+													new(big.Int).Sub(
+														aliceSubaccount.GetUsdcPosition(),
+														new(big.Int).SetInt64(
+															50_000_000_000+25_000_000, // taker fee of .5%
 														),
 													),
-												},
+												),
 											},
 											nil, // no funding payments
 										),
@@ -1702,25 +1679,23 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 										indexerevents.NewSubaccountUpdateEvent(
 											&constants.Bob_Num0,
 											[]*satypes.PerpetualPosition{
-												{
-													PerpetualId: Clob_0.MustGetPerpetualId(),
-													Quantums: dtypes.NewInt(-int64(
+												testutil.CreateSinglePerpetualPosition(
+													Clob_0.MustGetPerpetualId(),
+													big.NewInt(-int64(
 														Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
-													FundingIndex: dtypes.NewInt(0),
-												},
+													big.NewInt(0),
+												),
 											},
 											[]*satypes.AssetPosition{
-												{
-													AssetId: 0,
-													Quantums: dtypes.NewIntFromBigInt(
-														new(big.Int).Add(
-															bobSubaccount.GetUsdcPosition(),
-															new(big.Int).SetInt64(
-																50_000_000_000+5_500_000, // maker rebate of .110%
-															),
+												testutil.CreateSingleAssetPosition(
+													0,
+													new(big.Int).Add(
+														bobSubaccount.GetUsdcPosition(),
+														new(big.Int).SetInt64(
+															50_000_000_000+5_500_000, // maker rebate of .110%
 														),
 													),
-												},
+												),
 											},
 											nil, // no funding payments
 										),

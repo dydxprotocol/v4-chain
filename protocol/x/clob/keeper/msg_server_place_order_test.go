@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"context"
 	"errors"
+	"math/big"
 	"testing"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
@@ -504,10 +506,10 @@ func TestHandleMsgPlaceOrder(t *testing.T) {
 							{
 								Id: &testOrder.OrderId.SubaccountId,
 								AssetPositions: []*satypes.AssetPosition{
-									{
-										AssetId:  assettypes.AssetUsdc.Id,
-										Quantums: dtypes.NewInt(tc.assetQuantums),
-									},
+									testutil.CreateSingleAssetPosition(
+										assettypes.AssetUsdc.Id,
+										big.NewInt(tc.assetQuantums),
+									),
 								},
 							},
 						}

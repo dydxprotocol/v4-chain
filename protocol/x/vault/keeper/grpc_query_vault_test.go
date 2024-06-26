@@ -8,6 +8,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
@@ -92,16 +93,17 @@ func TestVault(t *testing.T) {
 							{
 								Id: tc.vaultId.ToSubaccountId(),
 								AssetPositions: []*satypes.AssetPosition{
-									{
-										AssetId:  assettypes.AssetUsdc.Id,
-										Quantums: dtypes.NewIntFromBigInt(tc.asset),
-									},
+									testutil.CreateSingleAssetPosition(
+										assettypes.AssetUsdc.Id,
+										tc.asset,
+									),
 								},
 								PerpetualPositions: []*satypes.PerpetualPosition{
-									{
-										PerpetualId: tc.perpId,
-										Quantums:    dtypes.NewIntFromBigInt(tc.inventory),
-									},
+									testutil.CreateSinglePerpetualPosition(
+										tc.perpId,
+										tc.inventory,
+										big.NewInt(0),
+									),
 								},
 							},
 						}
@@ -209,16 +211,17 @@ func TestAllVaults(t *testing.T) {
 							subaccounts = append(subaccounts, satypes.Subaccount{
 								Id: vaultId.ToSubaccountId(),
 								AssetPositions: []*satypes.AssetPosition{
-									{
-										AssetId:  assettypes.AssetUsdc.Id,
-										Quantums: dtypes.NewIntFromBigInt(tc.assets[i]),
-									},
+									testutil.CreateSingleAssetPosition(
+										assettypes.AssetUsdc.Id,
+										tc.assets[i],
+									),
 								},
 								PerpetualPositions: []*satypes.PerpetualPosition{
-									{
-										PerpetualId: tc.perpIds[i],
-										Quantums:    dtypes.NewIntFromBigInt(tc.inventories[i]),
-									},
+									testutil.CreateSinglePerpetualPosition(
+										tc.perpIds[i],
+										tc.inventories[i],
+										big.NewInt(0),
+									),
 								},
 							})
 						}

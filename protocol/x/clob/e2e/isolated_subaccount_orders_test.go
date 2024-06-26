@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 
@@ -17,6 +16,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -70,20 +70,20 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 		Id: &constants.Alice_Num0,
 		AssetPositions: []*satypes.AssetPosition{
 			// USDC asset position.
-			{
-				AssetId: uint32(0),
+			testutil.CreateSingleAssetPosition(
+				uint32(0),
 				// Match = 10e9 * 10e-8 * 10 = 100 quantums. Fees = 0.
 				// Alice is buying, subtract match quantums from asset position.
-				Quantums: dtypes.NewInt(10_000_000_000 - 100),
-			},
+				big.NewInt(10_000_000_000-100),
+			),
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			// Isolated perpetual position.
-			{
-				PerpetualId:  uint32(3),
-				Quantums:     dtypes.NewInt(int64(orderQuantums)),
-				FundingIndex: dtypes.NewInt(0),
-			},
+			testutil.CreateSinglePerpetualPosition(
+				uint32(3),
+				big.NewInt(int64(orderQuantums)),
+				big.NewInt(0),
+			),
 		},
 	}
 
@@ -92,20 +92,20 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 		Id: &constants.Bob_Num0,
 		AssetPositions: []*satypes.AssetPosition{
 			// USDC asset position.
-			{
-				AssetId: uint32(0),
+			testutil.CreateSingleAssetPosition(
+				uint32(0),
 				// Match = 10e9 * 10e-8 * 10 = 100 quantums. Fees = 1 quantum.
 				// Bob is selling, add match quantums from asset position.
-				Quantums: dtypes.NewInt(10_000_000_000 + 99),
-			},
+				big.NewInt(10_000_000_000+99),
+			),
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			// Isolated perpetual position.
-			{
-				PerpetualId:  uint32(3),
-				Quantums:     dtypes.NewInt(-1 * int64(orderQuantums)),
-				FundingIndex: dtypes.NewInt(0),
-			},
+			testutil.CreateSinglePerpetualPosition(
+				uint32(3),
+				big.NewInt(-1*int64(orderQuantums)),
+				big.NewInt(0),
+			),
 		},
 	}
 
@@ -114,21 +114,21 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 		Id: &constants.Alice_Num0,
 		AssetPositions: []*satypes.AssetPosition{
 			// USDC asset position.
-			{
-				AssetId: uint32(0),
+			testutil.CreateSingleAssetPosition(
+				uint32(0),
 				// Match = 10e9 * 10e-8 * 10 = 100 quantums. Fees = 0.
 				// Alice is buying, subtract match quantums from asset position.
-				Quantums: dtypes.NewInt(10_000_000_000 - 100),
-			},
+				big.NewInt(10_000_000_000-100),
+			),
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			// Isolated perpetual position.
-			{
-				PerpetualId: uint32(3),
+			testutil.CreateSinglePerpetualPosition(
+				uint32(3),
 				// Alice buys 1 more ISO,
-				Quantums:     dtypes.NewInt(2 * int64(orderQuantums)),
-				FundingIndex: dtypes.NewInt(0),
-			},
+				big.NewInt(2*int64(orderQuantums)),
+				big.NewInt(0),
+			),
 		},
 	}
 
@@ -137,12 +137,12 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 		Id: &constants.Bob_Num0,
 		AssetPositions: []*satypes.AssetPosition{
 			// USDC asset position.
-			{
-				AssetId: uint32(0),
+			testutil.CreateSingleAssetPosition(
+				uint32(0),
 				// Match = 10e9 * 10e-8 * 10 = 100 quantums. Fees = 1.
 				// Bob is selling, add match quantums from asset position.
-				Quantums: dtypes.NewInt(10_000_000_000 + 99),
-			},
+				big.NewInt(10_000_000_000+99),
+			),
 		},
 	}
 

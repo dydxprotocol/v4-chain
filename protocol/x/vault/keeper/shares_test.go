@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
@@ -321,10 +321,10 @@ func TestMintShares(t *testing.T) {
 							{
 								Id: tc.vaultId.ToSubaccountId(),
 								AssetPositions: []*satypes.AssetPosition{
-									{
-										AssetId:  0,
-										Quantums: dtypes.NewIntFromBigInt(tc.equity),
-									},
+									testutil.CreateSingleAssetPosition(
+										0,
+										tc.equity,
+									),
 								},
 							},
 						}

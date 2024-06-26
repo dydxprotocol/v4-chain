@@ -13,7 +13,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -539,10 +538,11 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 						&constants.Usdc_Asset_50_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(50_000_000), // 0.5 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(50_000_000), // 0.5 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
@@ -551,10 +551,11 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 						&constants.Usdc_Asset_50_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(50_000_000), // 0.5 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(50_000_000), // 0.5 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -718,11 +719,11 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  1,
-							Quantums:     dtypes.NewInt(1_000_000_000), // 1 ETH
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							1,
+							big.NewInt(1_000_000_000), // 1 ETH
+							big.NewInt(0),
+						),
 					},
 					AssetPositions: testutil.CreateUsdcAssetPositions(
 						big.NewInt(-3_000_000_000),
@@ -1115,11 +1116,11 @@ func TestProcessDeleveraging(t *testing.T) {
 					big.NewInt(54_999_000_000 - 5_499_900_000),
 				),
 				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(-90_000_000), // -0.9 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(-90_000_000), // -0.9 BTC
+						big.NewInt(0),
+					),
 				},
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
@@ -1130,11 +1131,11 @@ func TestProcessDeleveraging(t *testing.T) {
 					big.NewInt(50_000_000_000 + 5_499_900_000),
 				),
 				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(90_000_000), // 0.9 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(90_000_000), // 0.9 BTC
+						big.NewInt(0),
+					),
 				},
 			},
 		},
@@ -1158,20 +1159,22 @@ func TestProcessDeleveraging(t *testing.T) {
 			liquidatedSubaccount: satypes.Subaccount{
 				Id: &constants.Carl_Num0,
 				AssetPositions: []*satypes.AssetPosition{
-					{
-						AssetId:  0,
-						Quantums: dtypes.NewInt(80_800_000_000), // $80,800
-					},
+					testutil.CreateSingleAssetPosition(
+						0,
+						big.NewInt(80_800_000_000), // $80,800
+					),
 				},
 				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId: 0,
-						Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
-					},
-					{
-						PerpetualId: 1,
-						Quantums:    dtypes.NewInt(-10_000_000_000), // -10 ETH
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(-100_000_000), // -1 BTC
+						big.NewInt(0),
+					),
+					testutil.CreateSinglePerpetualPosition(
+						1,
+						big.NewInt(-10_000_000_000), // -10 ETH
+						big.NewInt(0),
+					),
 				},
 			},
 			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
@@ -1186,11 +1189,11 @@ func TestProcessDeleveraging(t *testing.T) {
 					big.NewInt(80_800_000_000 - 50_500_000_000),
 				),
 				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId:  1,
-						Quantums:     dtypes.NewInt(-10_000_000_000), // -10 ETH
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						1,
+						big.NewInt(-10_000_000_000), // -10 ETH
+						big.NewInt(0),
+					),
 				},
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
@@ -1574,16 +1577,17 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 			liquidatedSubaccount: satypes.Subaccount{
 				Id: &constants.Carl_Num0,
 				AssetPositions: []*satypes.AssetPosition{
-					{
-						AssetId:  0,
-						Quantums: dtypes.NewInt(45_001_000_000), // $45,001, TNC = -$4,999
-					},
+					testutil.CreateSingleAssetPosition(
+						0,
+						big.NewInt(45_001_000_000), // $45,001, TNC = -$4,999
+					),
 				},
 				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId: 0,
-						Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(-100_000_000), // -1 BTC
+						big.NewInt(0),
+					),
 				},
 			},
 			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
@@ -1593,16 +1597,17 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 			liquidatedSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
 				AssetPositions: []*satypes.AssetPosition{
-					{
-						AssetId:  0,
-						Quantums: dtypes.NewInt(-50_000_000_000 - 4_999_000_000),
-					},
+					testutil.CreateSingleAssetPosition(
+						0,
+						big.NewInt(-50_000_000_000-4_999_000_000),
+					),
 				},
 				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId: 0,
-						Quantums:    dtypes.NewInt(100_000_000),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(100_000_000),
+						big.NewInt(0),
+					),
 				},
 			},
 			offsettingSubaccount: constants.Carl_Num0_1BTC_Short_100000USD,
