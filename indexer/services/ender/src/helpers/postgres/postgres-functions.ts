@@ -84,6 +84,7 @@ const HELPER_SCRIPTS: string[] = [
   'dydx_uuid_from_subaccount_id_parts.sql',
   'dydx_uuid_from_transaction_parts.sql',
   'dydx_uuid_from_transfer_parts.sql',
+  'dydx_protocol_market_type_to_perpetual_market_type.sql',
 ];
 
 const MAIN_SCRIPTS: string[] = [

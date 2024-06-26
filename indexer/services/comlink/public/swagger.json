@@ -753,6 +753,13 @@
         ],
         "type": "string"
       },
+      "PerpetualMarketType": {
+        "enum": [
+          "CROSS",
+          "ISOLATED"
+        ],
+        "type": "string"
+      },
       "PerpetualMarketResponseObject": {
         "properties": {
           "clobPairId": {
@@ -810,6 +817,9 @@
           "subticksPerTick": {
             "type": "number",
             "format": "double"
+          },
+          "marketType": {
+            "$ref": "#/components/schemas/PerpetualMarketType"
           }
         },
         "required": [
@@ -829,7 +839,8 @@
           "tickSize",
           "stepSize",
           "stepBaseQuantums",
-          "subticksPerTick"
+          "subticksPerTick",
+          "marketType"
         ],
         "type": "object",
         "additionalProperties": false

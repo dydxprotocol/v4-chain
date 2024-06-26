@@ -52,6 +52,9 @@ import {
   PerpetualMarketCreateEventV2,
   DeleveragingEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
+import {
+  PerpetualMarketType,
+} from '@dydxprotocol-indexer/v4-protos/build/codegen/dydxprotocol/indexer/protocol/v1/perpetual';
 import { Message, ProducerRecord } from 'kafkajs';
 import _ from 'lodash';
 
@@ -899,5 +902,21 @@ export function expectPerpetualMarketV2(
     subticksPerTick: perpetual.subticksPerTick,
     stepBaseQuantums: Number(perpetual.stepBaseQuantums),
     liquidityTierId: perpetual.liquidityTier,
+    marketType: eventPerpetualMarketTypeToIndexerPerpetualMarketType(
+      perpetual.marketType,
+    ),
   }));
+}
+
+function eventPerpetualMarketTypeToIndexerPerpetualMarketType(
+  perpetualMarketType: PerpetualMarketType,
+): string {
+  switch (perpetualMarketType) {
+    case PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS:
+      return 'CROSS';
+    case PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED:
+      return 'ISOLATED';
+    default:
+      throw new Error(`Unknown perpetual market type: ${perpetualMarketType}`);
+  }
 }

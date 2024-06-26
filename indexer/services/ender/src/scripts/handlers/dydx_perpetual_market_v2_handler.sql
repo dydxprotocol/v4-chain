@@ -26,6 +26,7 @@ BEGIN
     perpetual_market_record."subticksPerTick" = (event_data->'subticksPerTick')::integer;
     perpetual_market_record."stepBaseQuantums" = dydx_from_jsonlib_long(event_data->'stepBaseQuantums');
     perpetual_market_record."liquidityTierId" = (event_data->'liquidityTier')::integer;
+    perpetual_market_record."marketType" = dydx_protocol_market_type_to_perpetual_market_type(event_data->'marketType');
 
     INSERT INTO perpetual_markets VALUES (perpetual_market_record.*) RETURNING * INTO perpetual_market_record;
 
