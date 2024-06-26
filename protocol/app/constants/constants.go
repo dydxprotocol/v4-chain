@@ -13,4 +13,7 @@ const (
 	// the proposal but are not actual transactions. In this case, the oracle
 	// info is injected into the proposal but should be ignored by the application.
 	NumInjectedTxs = 1
+
+	// where in the proposal the injected VE's are located
+	DeamonInfoIndex = 0
 )

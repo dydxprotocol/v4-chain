@@ -137,3 +137,19 @@ func (mte *MarketToExchangePrices) GetEncodedPrice(
 
 	return price.GobEncode()
 }
+
+func (mte *MarketToExchangePrices) GetDecodedPrice(
+	priceBz []byte,
+) (*big.Int, error) {
+	var price big.Int
+	err := price.GobDecode(priceBz)
+	if err != nil {
+		return nil, err
+	}
+
+	if price.Sign() < 0 {
+		return nil, fmt.Errorf("price must be non-negative %v", price.String())
+	}
+
+	return &price, nil
+}
