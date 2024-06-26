@@ -324,6 +324,7 @@ export function getNewPnlTick(
     marketPrices: JSON.stringify(marketPrices),
     lastUpdatedFundingIndexMap: JSON.stringify(lastUpdatedFundingIndexMap),
     currentFundingIndexMap: JSON.stringify(currentFundingIndexMap),
+    subaccountTotalTransfersMap: JSON.stringify(subaccountTotalTransfersMap),
   });
   const currentEquity: Big = calculateEquity(
     usdcPositionSize,
@@ -453,9 +454,12 @@ export function calculateEquity(
 
   const signedPositionNotional: Big = positions.reduce(
     (acc: Big, position: PerpetualPositionFromDatabase) => {
-      const positionNotional: Big = Big(position.size).times(
-        marketPrices[Number(position.perpetualId)],
-      );
+      console.log(`position.size: ${position.size}`);
+      const price: Big = Number(position.perpetualId) in marketPrices
+        ? Big(marketPrices[Number(position.perpetualId)])
+        : Big(0);
+      console.log(`price: ${marketPrices[Number(position.perpetualId)]}`);
+      const positionNotional: Big = Big(position.size).times(price);
       // Add positionNotional to the accumulator
       return acc.plus(positionNotional);
     },
