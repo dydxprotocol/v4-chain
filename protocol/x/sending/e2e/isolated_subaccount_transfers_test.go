@@ -14,10 +14,10 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	feetiertypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
@@ -70,8 +70,8 @@ func TestTransfer_Isolated_Non_Isolated_Subaccounts(t *testing.T) {
 				constants.IsoUsd_IsolatedMarket,
 			},
 			expectedSubaccounts: []satypes.Subaccount{
-				changeUsdcBalance(constants.Alice_Num0_1ISO_LONG_10_000USD, -100_000_000),
-				changeUsdcBalance(constants.Bob_Num0_10_000USD, 100_000_000),
+				testutil.ChangeUsdcBalance(constants.Alice_Num0_1ISO_LONG_10_000USD, -100_000_000),
+				testutil.ChangeUsdcBalance(constants.Bob_Num0_10_000USD, 100_000_000),
 			},
 			expectedCollateralPoolBalances: map[string]int64{
 				satypes.ModuleAddress.String(): 10_100_000_000, // $10,100 USDC
@@ -103,8 +103,8 @@ func TestTransfer_Isolated_Non_Isolated_Subaccounts(t *testing.T) {
 				constants.IsoUsd_IsolatedMarket,
 			},
 			expectedSubaccounts: []satypes.Subaccount{
-				changeUsdcBalance(constants.Alice_Num0_1ISO_LONG_10_000USD, 100_000_000),
-				changeUsdcBalance(constants.Bob_Num0_10_000USD, -100_000_000),
+				testutil.ChangeUsdcBalance(constants.Alice_Num0_1ISO_LONG_10_000USD, 100_000_000),
+				testutil.ChangeUsdcBalance(constants.Bob_Num0_10_000USD, -100_000_000),
 			},
 			expectedCollateralPoolBalances: map[string]int64{
 				satypes.ModuleAddress.String(): 9_900_000_000, // $9,900 USDC
@@ -139,8 +139,8 @@ func TestTransfer_Isolated_Non_Isolated_Subaccounts(t *testing.T) {
 				constants.Iso2Usd_IsolatedMarket,
 			},
 			expectedSubaccounts: []satypes.Subaccount{
-				changeUsdcBalance(constants.Alice_Num0_1ISO_LONG_10_000USD, -100_000_000),
-				changeUsdcBalance(constants.Bob_Num0_1ISO2_LONG_10_000USD, 100_000_000),
+				testutil.ChangeUsdcBalance(constants.Alice_Num0_1ISO_LONG_10_000USD, -100_000_000),
+				testutil.ChangeUsdcBalance(constants.Bob_Num0_1ISO2_LONG_10_000USD, 100_000_000),
 			},
 			expectedCollateralPoolBalances: map[string]int64{
 				authtypes.NewModuleAddress(
@@ -234,8 +234,8 @@ func TestTransfer_Isolated_Non_Isolated_Subaccounts(t *testing.T) {
 				constants.IsoUsd_IsolatedMarket,
 			},
 			expectedSubaccounts: []satypes.Subaccount{
-				changeUsdcBalance(constants.Alice_Num0_1ISO_LONG_10_000USD, -100_000_000),
-				changeUsdcBalance(constants.Bob_Num0_1ISO_LONG_10_000USD, 100_000_000),
+				testutil.ChangeUsdcBalance(constants.Alice_Num0_1ISO_LONG_10_000USD, -100_000_000),
+				testutil.ChangeUsdcBalance(constants.Bob_Num0_1ISO_LONG_10_000USD, 100_000_000),
 			},
 			expectedCollateralPoolBalances: map[string]int64{
 				authtypes.NewModuleAddress(
@@ -379,47 +379,5 @@ func TestTransfer_Isolated_Non_Isolated_Subaccounts(t *testing.T) {
 				)
 			}
 		})
-	}
-}
-
-// Creates a copy of a subaccount and changes the USDC asset position size of the subaccount by the passed in delta.
-func changeUsdcBalance(subaccount satypes.Subaccount, deltaQuantums int64) satypes.Subaccount {
-	subaccountId := satypes.SubaccountId{
-		Owner:  subaccount.Id.Owner,
-		Number: subaccount.Id.Number,
-	}
-	assetPositions := make([]*satypes.AssetPosition, 0)
-	for _, ap := range subaccount.AssetPositions {
-		if ap.AssetId != constants.Usdc.Id {
-			assetPositions = append(assetPositions, &satypes.AssetPosition{
-				AssetId:  ap.AssetId,
-				Quantums: dtypes.NewInt(ap.Quantums.BigInt().Int64()),
-			})
-		} else {
-			assetPositions = append(assetPositions, &satypes.AssetPosition{
-				AssetId:  ap.AssetId,
-				Quantums: dtypes.NewInt(ap.Quantums.BigInt().Int64() + deltaQuantums),
-			})
-		}
-	}
-	if len(assetPositions) == 0 {
-		assetPositions = nil
-	}
-	perpetualPositions := make([]*satypes.PerpetualPosition, 0)
-	for _, pp := range subaccount.PerpetualPositions {
-		perpetualPositions = append(perpetualPositions, &satypes.PerpetualPosition{
-			PerpetualId:  pp.PerpetualId,
-			Quantums:     dtypes.NewInt(pp.Quantums.BigInt().Int64()),
-			FundingIndex: dtypes.NewInt(pp.FundingIndex.BigInt().Int64()),
-		})
-	}
-	if len(perpetualPositions) == 0 {
-		perpetualPositions = nil
-	}
-	return satypes.Subaccount{
-		Id:                 &subaccountId,
-		AssetPositions:     assetPositions,
-		PerpetualPositions: perpetualPositions,
-		MarginEnabled:      subaccount.MarginEnabled,
 	}
 }

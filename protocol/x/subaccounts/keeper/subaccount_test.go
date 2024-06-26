@@ -39,7 +39,7 @@ func createNSubaccount(keeper *keeper.Keeper, ctx sdk.Context, n int, usdcBalanc
 			Owner:  strconv.Itoa(i),
 			Number: uint32(i),
 		}
-		items[i].AssetPositions = testutil.CreateUsdcAssetPosition(usdcBalance)
+		items[i].AssetPositions = testutil.CreateUsdcAssetPositions(usdcBalance)
 
 		keeper.SetSubaccount(ctx, items[i])
 	}
@@ -211,7 +211,7 @@ func TestSubaccountSet_Empty(t *testing.T) {
 
 	keeper.SetSubaccount(ctx, types.Subaccount{
 		Id:             &constants.Alice_Num0,
-		AssetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(1_000)),
+		AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(1_000)),
 	})
 	keeper.SetSubaccount(ctx, types.Subaccount{
 		Id: &constants.Alice_Num0,
@@ -570,7 +570,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"update increases position size": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(25_000_000_000)), // $25,000
 			expectedQuoteBalance:     big.NewInt(0),
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
@@ -611,8 +611,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: false,
 		},
 		"update decreases position size": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
-			expectedQuoteBalance:     big.NewInt(50_000_000_000),                                   // $50,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(25_000_000_000)), // $25,000
+			expectedQuoteBalance:     big.NewInt(50_000_000_000),                                    // $50,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -665,8 +665,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: false,
 		},
 		"update closes long position": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
-			expectedQuoteBalance:     big.NewInt(75_000_000_000),                                   // $75,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(25_000_000_000)), // $25,000
+			expectedQuoteBalance:     big.NewInt(75_000_000_000),                                    // $75,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -714,8 +714,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"update closes short position": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
-			expectedQuoteBalance:     big.NewInt(50_000_000_000),                                    // $50,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
+			expectedQuoteBalance:     big.NewInt(50_000_000_000),                                     // $50,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -767,7 +767,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"update closes 2nd position and updates 1st": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -835,7 +835,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				constants.BtcUsd,
 			},
 			assetPositions: append(
-				testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
+				testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
 				&types.AssetPosition{
 					AssetId:  constants.BtcUsd.Id,
 					Quantums: dtypes.NewInt(50_000),
@@ -880,8 +880,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"update closes first 1 positions and updates 2nd": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
-			expectedQuoteBalance:     big.NewInt(50_000_000_000),                                    // $50,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
+			expectedQuoteBalance:     big.NewInt(50_000_000_000),                                     // $50,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -954,8 +954,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"update opens new long position, uses current perpetual funding index": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
-			expectedQuoteBalance:     big.NewInt(50_000_000_000),                                    // $50,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
+			expectedQuoteBalance:     big.NewInt(50_000_000_000),                                     // $50,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -1007,8 +1007,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: false,
 		},
 		"update opens new short position": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
-			expectedQuoteBalance:     big.NewInt(150_000_000_000),                                   // $50,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
+			expectedQuoteBalance:     big.NewInt(150_000_000_000),                                    // $50,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -1059,8 +1059,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: false,
 		},
 		"update opens new long eth position with existing btc position": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
-			expectedQuoteBalance:     big.NewInt(100_000_000_000),                                   // $100,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
+			expectedQuoteBalance:     big.NewInt(100_000_000_000),                                    // $100,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -1107,8 +1107,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 		},
 		// TODO(DEC-581): add similar test case for multi-collateral asset support.
 		"update eth position from long to short with existing btc position": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
-			expectedQuoteBalance:     big.NewInt(100_000_000_000),                                   // $100,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
+			expectedQuoteBalance:     big.NewInt(100_000_000_000),                                    // $100,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -1159,8 +1159,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"update opens new long eth position with existing btc and sol position": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
-			expectedQuoteBalance:     big.NewInt(100_000_000_000),                                   // $100,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
+			expectedQuoteBalance:     big.NewInt(100_000_000_000),                                    // $100,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -1217,8 +1217,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"update opens new long btc position with existing eth and sol position": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
-			expectedQuoteBalance:     big.NewInt(100_000_000_000),                                   // $100,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
+			expectedQuoteBalance:     big.NewInt(100_000_000_000),                                    // $100,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -1279,8 +1279,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"update opens new long eth position with existing unsettled sol position": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
-			expectedQuoteBalance:     big.NewInt(100_000_000_000),                                   // $100,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
+			expectedQuoteBalance:     big.NewInt(100_000_000_000),                                    // $100,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -1350,8 +1350,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"provides out-of-order updates (not ordered by PerpetualId)": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
-			expectedQuoteBalance:     big.NewInt(100_000_000_000),                                   // $100,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
+			expectedQuoteBalance:     big.NewInt(100_000_000_000),                                    // $100,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -1546,7 +1546,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"updates new USDC asset position which exceeds max uint64": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(new(big.Int).SetUint64(math.MaxUint64)),
+			assetPositions:           testutil.CreateUsdcAssetPositions(new(big.Int).SetUint64(math.MaxUint64)),
 			expectedQuoteBalance:     new(big.Int).SetUint64(math.MaxUint64),
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
@@ -1582,7 +1582,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"new USDC asset position (including unsettled funding) size exceeds max uint64": {
-			assetPositions: testutil.CreateUsdcAssetPosition(new(big.Int).SetUint64(math.MaxUint64 - 5)),
+			assetPositions: testutil.CreateUsdcAssetPositions(new(big.Int).SetUint64(math.MaxUint64 - 5)),
 			expectedQuoteBalance: new(big.Int).Add(
 				new(big.Int).SetUint64(math.MaxUint64),
 				new(big.Int).SetInt64(1),
@@ -1770,7 +1770,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"update ETH position; start with BTC and ETH positions; both BTC and ETH positions have unsettled funding": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -1848,7 +1848,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"update ETH position; start with BTC and ETH positions; only ETH position has unsettled funding": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -1920,7 +1920,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"update closes ETH position; start with BTC and ETH positions; both BTC and ETH positions have unsettled funding": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -1994,7 +1994,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"update closes ETH position; start with ETH position; ETH position has no unsettled funding": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(100_000_000_000)), // $100,000
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
@@ -2040,7 +2040,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"2 updates, 1 update involves not-updatable perp": {
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			expectedErr:    types.ErrProductPositionNotUpdatable,
 			perpetuals: []perptypes.Perpetual{
 				*perptest.GeneratePerpetual(
@@ -2108,7 +2108,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"Isolated subaccounts - has update for both an isolated perpetual and non-isolated perpetual": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			expectedSuccess:          false,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
 			perpetuals: []perptypes.Perpetual{
@@ -2138,7 +2138,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"Isolated subaccounts - has update for both 2 isolated perpetuals": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			expectedSuccess:          false,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
 			perpetuals: []perptypes.Perpetual{
@@ -2168,7 +2168,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"Isolated subaccounts - subaccount with isolated perpetual position has update for non-isolated perpetual": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			expectedSuccess:          false,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
 			perpetuals: []perptypes.Perpetual{
@@ -2208,7 +2208,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"Isolated subaccounts - subaccount with isolated perpetual position has update for another isolated perpetual": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			expectedSuccess:          false,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
 			perpetuals: []perptypes.Perpetual{
@@ -2248,7 +2248,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			msgSenderEnabled: true,
 		},
 		"Isolated subaccounts - subaccount with non-isolated perpetual position has update for isolated perpetual": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			expectedSuccess:          false,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
 			perpetuals: []perptypes.Perpetual{
@@ -2289,7 +2289,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		},
 		`Isolated - subaccounts - empty subaccount has update to open position for isolated perpetual,
 		collateral is moved from cross-perpetual collateral pool to isolated perpetual collateral pool`: {
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			collateralPoolUsdcBalances: map[string]int64{
 				types.ModuleAddress.String(): 1_500_000_000_000, // $1,500,000 USDC
 			},
@@ -2351,7 +2351,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		},
 		`Isolated - subaccounts - subaccount has update to close position for isolated perpetual,
 		collateral is moved from isolated perpetual collateral pool to cross perpetual collateral pool`: {
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(999_900_000_000)), // $999,900 USDC
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(999_900_000_000)), // $999,900 USDC
 			collateralPoolUsdcBalances: map[string]int64{
 				types.ModuleAddress.String(): 2_000_000_000_000, // $500,000 USDC
 				authtypes.NewModuleAddress(
@@ -2416,7 +2416,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		},
 		`Isolated subaccounts - empty subaccount has update to open position for isolated perpetual,
 		errors out when collateral pool for cross perpetuals has no funds`: {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			expectedSuccess:          false,
 			expectedSuccessPerUpdate: []types.UpdateResult{},
 			perpetuals: []perptypes.Perpetual{
@@ -2447,7 +2447,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		},
 		`Isolated subaccounts - isolated subaccount has update to close position for isolated perpetual,
 		errors out when collateral pool for isolated perpetual has no funds`: {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			expectedSuccess:          false,
 			expectedSuccessPerUpdate: []types.UpdateResult{},
 			perpetuals: []perptypes.Perpetual{
@@ -2523,11 +2523,11 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(900_000_000_000)), // 900_000 USDC
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(900_000_000_000)), // 900_000 USDC
 			additionalTestSubaccounts: []types.Subaccount{
 				{
 					Id: &constants.Bob_Num0,
-					AssetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(
+					AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(
 						900_000_000_000,
 					)), // 900_000 USDC
 				},
@@ -2593,7 +2593,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
 				},
 			},
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(-40_000_000_000)), // -40_000 USDC
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(-40_000_000_000)), // -40_000 USDC
 			updates: []types.Update{
 				{
 					PerpetualUpdates: []types.PerpetualUpdate{
@@ -2628,7 +2628,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			additionalTestSubaccounts: []types.Subaccount{
 				{
 					Id: &constants.Bob_Num0,
-					AssetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(
+					AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(
 						120_000_000_000,
 					)), // 120_000 USDC
 					PerpetualPositions: []*types.PerpetualPosition{
@@ -2700,7 +2700,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
 				},
 			},
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(-40_000_000_000)), // -40_000 USDC
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(-40_000_000_000)), // -40_000 USDC
 			updates: []types.Update{
 				{
 					PerpetualUpdates: []types.PerpetualUpdate{
@@ -2735,7 +2735,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			additionalTestSubaccounts: []types.Subaccount{
 				{
 					Id:             &constants.Bob_Num0,
-					AssetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(5_000_000_000)), // 5000 USDC
+					AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(5_000_000_000)), // 5000 USDC
 					PerpetualPositions: []*types.PerpetualPosition{
 						{
 							PerpetualId: uint32(0),
@@ -3536,7 +3536,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 		},
 		"well-collateralized matches are not blocked if negative TNC subaccount was seen at current block": {
 			assetPositions: map[types.SubaccountId][]*types.AssetPosition{
-				firstSubaccountId: testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
+				firstSubaccountId: testutil.CreateUsdcAssetPositions(big.NewInt(25_000_000_000)), // $25,000
 			},
 			expectedQuoteBalance:     big.NewInt(0),
 			expectedSuccess:          true,
@@ -3597,7 +3597,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 		`well-collateralized matches are not blocked if current block is within
 			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
 			assetPositions: map[types.SubaccountId][]*types.AssetPosition{
-				firstSubaccountId: testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
+				firstSubaccountId: testutil.CreateUsdcAssetPositions(big.NewInt(25_000_000_000)), // $25,000
 			},
 			expectedQuoteBalance:     big.NewInt(0),
 			expectedSuccess:          true,
@@ -3658,7 +3658,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 		},
 		"well-collateralized matches are not blocked if negative TNC subaccount was never seen": {
 			assetPositions: map[types.SubaccountId][]*types.AssetPosition{
-				firstSubaccountId: testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
+				firstSubaccountId: testutil.CreateUsdcAssetPositions(big.NewInt(25_000_000_000)), // $25,000
 			},
 			expectedQuoteBalance:     big.NewInt(0),
 			expectedSuccess:          true,
@@ -4760,7 +4760,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"new USDC asset position exceeds max uint64": {
-			assetPositions: testutil.CreateUsdcAssetPosition(new(big.Int).SetUint64(math.MaxUint64)),
+			assetPositions: testutil.CreateUsdcAssetPositions(new(big.Int).SetUint64(math.MaxUint64)),
 			updates: []types.Update{
 				{
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
@@ -4873,7 +4873,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			"Second update results in no change, " +
 			"Third update makes account _more_ collateralized," +
 			"Fourth update makes it collateralized": {
-			assetPositions:  testutil.CreateUsdcAssetPosition(big.NewInt(-496_000_000)), // -$496
+			assetPositions:  testutil.CreateUsdcAssetPositions(big.NewInt(-496_000_000)), // -$496
 			expectedSuccess: false,
 			expectedSuccessPerUpdate: []types.UpdateResult{
 				types.StillUndercollateralized,
@@ -4926,7 +4926,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"USDC asset position is negative but increasing when no positions are open": {
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(-10)),
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(-10)),
 			updates: []types.Update{
 				{
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)), // $.000001
@@ -4938,7 +4938,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"USDC asset position is negative but unchanging when no positions are open": {
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(-10)),
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(-10)),
 			updates: []types.Update{
 				{
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(0)), // $0
@@ -4961,7 +4961,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"USDC asset position decreases further below zero when no positions are open": {
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(-1)),
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(-1)),
 			updates: []types.Update{
 				{
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-1)), // -$0.000001
@@ -4973,7 +4973,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"two updates on different accounts, second account is new account": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(50_000_000_000)), // $50,000
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(50_000_000_000)), // $50,000
 			expectedSuccess:          false,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.NewlyUndercollateralized},
 			perpetuals: []perptypes.Perpetual{
@@ -5008,7 +5008,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"unsettled funding reduces USDC asset position to 1; further decrease USDC asset position, still collateralized": {
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(100)),
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(100)),
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -5030,7 +5030,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"unsettled funding reduces USDC asset position to zero; further decrease USDC asset position, undercollateralized": {
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(100)),
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(100)),
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -5052,7 +5052,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"unsettled funding makes position undercollateralized": {
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(200)),
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(200)),
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -5075,7 +5075,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 		},
 		"position was undercollateralized before update due to funding and still undercollateralized" +
 			"after due to funding": {
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(199)),
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(199)),
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -5097,7 +5097,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"unsettled funding makes position with negative USDC asset position collateralized before update": {
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(-100)),
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(-100)),
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -5117,7 +5117,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"adding unsettled funding to USDC asset position exceeds max uint64": {
-			assetPositions: testutil.CreateUsdcAssetPosition(new(big.Int).SetUint64(math.MaxUint64 - 1)),
+			assetPositions: testutil.CreateUsdcAssetPositions(new(big.Int).SetUint64(math.MaxUint64 - 1)),
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -5136,7 +5136,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 		},
 		"adding unsettled funding to USDC asset position exceeds negative max uint64": {
-			assetPositions: testutil.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				new(big.Int).Neg(new(big.Int).SetUint64(math.MaxUint64 - 1)),
 			),
 			perpetuals: []perptypes.Perpetual{
@@ -5157,7 +5157,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 		},
 		"adding unsettled funding, original USDC asset position and USDC asset position delta exceeds max int64": {
-			assetPositions: testutil.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				new(big.Int).SetUint64(math.MaxUint64 - 5),
 			),
 			perpetuals: []perptypes.Perpetual{
@@ -5180,7 +5180,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 		},
 		"2 updates, 1 update involves not-updatable perp": {
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			expectedErr:    types.ErrProductPositionNotUpdatable,
 			perpetuals: []perptypes.Perpetual{
 				*perptest.GeneratePerpetual(
@@ -5228,7 +5228,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"Isolated subaccounts - has update for both an isolated perpetual and non-isolated perpetual": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			expectedSuccess:          false,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
 			perpetuals: []perptypes.Perpetual{
@@ -5251,7 +5251,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"Isolated subaccounts - has update for both 2 isolated perpetuals": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			expectedSuccess:          false,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
 			perpetuals: []perptypes.Perpetual{
@@ -5274,7 +5274,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"Isolated subaccounts - subaccount with isolated perpetual position has update for non-isolated perpetual": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			expectedSuccess:          false,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
 			perpetuals: []perptypes.Perpetual{
@@ -5300,7 +5300,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"Isolated subaccounts - subaccount with isolated perpetual position has update for another isolated perpetual": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			expectedSuccess:          false,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
 			perpetuals: []perptypes.Perpetual{
@@ -5326,7 +5326,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 		},
 		"Isolated subaccounts - subaccount with non-isolated perpetual position has update for isolated perpetual": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			assetPositions:           testutil.CreateUsdcAssetPositions(big.NewInt(1_000_000_000_000)),
 			expectedSuccess:          false,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
 			perpetuals: []perptypes.Perpetual{
@@ -5478,21 +5478,21 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 	}{
 		"zero balance": {},
 		"non-negative USDC asset position": {
-			assetPositions:        testutil.CreateUsdcAssetPosition(big.NewInt(123_456)),
+			assetPositions:        testutil.CreateUsdcAssetPositions(big.NewInt(123_456)),
 			expectedNetCollateral: big.NewInt(123_456),
 		},
 		"negative USDC asset position": {
-			assetPositions:        testutil.CreateUsdcAssetPosition(big.NewInt(-123_456)),
+			assetPositions:        testutil.CreateUsdcAssetPositions(big.NewInt(-123_456)),
 			expectedNetCollateral: big.NewInt(-123_456),
 		},
 		"USDC asset position with update": {
-			assetPositions:        testutil.CreateUsdcAssetPosition(big.NewInt(-123_456)),
+			assetPositions:        testutil.CreateUsdcAssetPositions(big.NewInt(-123_456)),
 			expectedNetCollateral: big.NewInt(0),
 			assetUpdates:          testutil.CreateUsdcAssetUpdate(big.NewInt(123_456)),
 		},
 		"single perpetual and USDC asset position": {
-			assetPositions:        testutil.CreateUsdcAssetPosition(big.NewInt(10_000_000_001)), // $10,000.000001
-			expectedNetCollateral: big.NewInt(60_000_000_001),                                   // $60,000.000001
+			assetPositions:        testutil.CreateUsdcAssetPositions(big.NewInt(10_000_000_001)), // $10,000.000001
+			expectedNetCollateral: big.NewInt(60_000_000_001),                                    // $60,000.000001
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_NoMarginRequirement,
 			},
@@ -5501,8 +5501,8 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			},
 		},
 		"single perpetual, USDC asset position and unsettled funding (long)": {
-			assetPositions:        testutil.CreateUsdcAssetPosition(big.NewInt(10_000_000_001)), // $10,000.000001
-			expectedNetCollateral: big.NewInt(60_006_250_001),                                   // $60,006.250001
+			assetPositions:        testutil.CreateUsdcAssetPositions(big.NewInt(10_000_000_001)), // $10,000.000001
+			expectedNetCollateral: big.NewInt(60_006_250_001),                                    // $60,006.250001
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_NoMarginRequirement,
 			},
@@ -5515,8 +5515,8 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			},
 		},
 		"single perpetual, USDC asset position and unsettled funding (short)": {
-			assetPositions:        testutil.CreateUsdcAssetPosition(big.NewInt(-10_000_000_001)), // -$10,000.000001
-			expectedNetCollateral: big.NewInt(-60_006_250_001),                                   // -$60,006.250001
+			assetPositions:        testutil.CreateUsdcAssetPositions(big.NewInt(-10_000_000_001)), // -$10,000.000001
+			expectedNetCollateral: big.NewInt(-60_006_250_001),                                    // -$60,006.250001
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_NoMarginRequirement,
 			},
@@ -5529,7 +5529,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			},
 		},
 		"non-existing perpetual heled by subaccount (should never happen)": {
-			assetPositions: testutil.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(-10_000_000_001), // -$10,000.000001
 			),
 			expectedNetCollateral: big.NewInt(-60_006_250_001), // -$60,006.250001
@@ -5546,13 +5546,13 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			expectedErr: perptypes.ErrPerpetualDoesNotExist,
 		},
 		"USDC asset position update underflows uint64": {
-			assetPositions: testutil.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				constants.BigNegMaxUint64(),
 			),
 			assetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-1)),
 		},
 		"USDC asset position update overflows uint64": {
-			assetPositions: testutil.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				new(big.Int).SetUint64(math.MaxUint64),
 			),
 			assetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
@@ -5567,8 +5567,8 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			},
 		},
 		"update with no existing position": {
-			assetPositions:        testutil.CreateUsdcAssetPosition(big.NewInt(10_000_000_001)), // $10,000.000001
-			expectedNetCollateral: big.NewInt(60_000_000_001),                                   // $60,000.000001
+			assetPositions:        testutil.CreateUsdcAssetPositions(big.NewInt(10_000_000_001)), // $10,000.000001
+			expectedNetCollateral: big.NewInt(60_000_000_001),                                    // $60,000.000001
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_NoMarginRequirement,
 			},
@@ -5580,8 +5580,8 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			},
 		},
 		"single perpetual with USDC asset position and positive update to perpetual": {
-			assetPositions:        testutil.CreateUsdcAssetPosition(big.NewInt(10_000_000_001)), // $10,000.000001
-			expectedNetCollateral: big.NewInt(110_000_000_001),                                  // $110,000.000001
+			assetPositions:        testutil.CreateUsdcAssetPositions(big.NewInt(10_000_000_001)), // $10,000.000001
+			expectedNetCollateral: big.NewInt(110_000_000_001),                                   // $110,000.000001
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_NoMarginRequirement,
 			},
@@ -5635,8 +5635,8 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			},
 		},
 		"single perpetual with USDC asset position and negative update to perpetual": {
-			assetPositions:        testutil.CreateUsdcAssetPosition(big.NewInt(10_000_000_001)), // $10,000.000001
-			expectedNetCollateral: big.NewInt(10_000_000_001),                                   // $10,000.000001
+			assetPositions:        testutil.CreateUsdcAssetPositions(big.NewInt(10_000_000_001)), // $10,000.000001
+			expectedNetCollateral: big.NewInt(10_000_000_001),                                    // $10,000.000001
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_NoMarginRequirement,
 			},
@@ -5722,7 +5722,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 		},
 		"multiple perpetuals with margin requirements and updates": {
 			// $1
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(1000000)),
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(1000000)),
 			// $1 + $50,000 (BTC) + $1,500 (ETH) - $100,000 (BTC update) + $750 (ETH update)
 			expectedNetCollateral: big.NewInt(-47_749_000_000),
 			// abs($25,000 (BTC) - $50,000 (BTC update)) + $300 (ETH) + $150 (ETH update)
