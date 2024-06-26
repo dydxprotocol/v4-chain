@@ -1501,7 +1501,8 @@ const GenesisState = `{
         "order_size_pct_ppm": 100000,
         "order_expiration_seconds": 2,
         "activation_threshold_quote_quantums": "1000000000"
-      }
+      },
+      "vaults": []
     },
     "vest": {
       "vest_entries": [

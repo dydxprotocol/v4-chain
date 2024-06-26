@@ -99,3 +99,28 @@ func (k Keeper) DecommissionVault(
 		ownerSharesStore.Delete(ownerSharesIterator.Key())
 	}
 }
+
+// GetAllVaults returns all vaults with their total shares and owner shares.
+func (k Keeper) GetAllVaults(ctx sdk.Context) []*types.Vault {
+	vaults := []*types.Vault{}
+	totalSharesIterator := k.getTotalSharesIterator(ctx)
+	defer totalSharesIterator.Close()
+	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
+		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
+		if err != nil {
+			panic(err)
+		}
+
+		var totalShares types.NumShares
+		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
+
+		allOwnerShares := k.GetAllOwnerShares(ctx, *vaultId)
+
+		vaults = append(vaults, &types.Vault{
+			VaultId:     vaultId,
+			TotalShares: &totalShares,
+			OwnerShares: allOwnerShares,
+		})
+	}
+	return vaults
+}
