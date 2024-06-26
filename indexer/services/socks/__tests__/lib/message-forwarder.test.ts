@@ -194,7 +194,7 @@ describe('message-forwarder', () => {
       producer.connect(),
       admin.connect(),
     ]);
-    await startConsumer();
+    await startConsumer(config.BATCH_PROCESSING_ENABLED);
     await admin.fetchTopicMetadata();
     await admin.deleteTopicRecords({
       topic: WebsocketTopics.TO_WEBSOCKETS_TRADES,

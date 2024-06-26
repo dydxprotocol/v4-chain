@@ -70,7 +70,9 @@ export class MessageForwarder {
         at: 'consumers#connect',
         message: 'Batch processing enabled',
       });
-      updateOnBatchFunction(this.onBatch);
+      updateOnBatchFunction(async (payload: EachBatchPayload): Promise<void> => {
+        return this.onBatch(payload);
+      });
     } else {
       logger.info({
         at: 'consumers#connect',
