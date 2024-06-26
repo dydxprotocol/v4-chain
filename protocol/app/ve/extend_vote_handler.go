@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/log"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	libtime "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/time"
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
@@ -100,7 +101,7 @@ func (h *VoteExtensionHandler) transformDeamonPricesToVE(
 
 		if !converted {
 			// TODO: check if we just ignore price and continue or return error
-			return types.OracleVoteExtension{}, fmt.Errorf("failed to convert price string to big.Int: %s", priceString)
+			return types.DeamonVoteExtension{}, fmt.Errorf("failed to convert price string to big.Int: %s", priceString)
 		}
 
 		encodedPrice, err := h.indexPriceCache.GetEncodedPrice(rawPrice)
