@@ -110,13 +110,15 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
           "symbol": "string",
           "side": "LONG",
           "size": "string",
-          "assetId": "string"
+          "assetId": "string",
+          "subaccountNumber": 0
         },
         "property2": {
           "symbol": "string",
           "side": "LONG",
           "size": "string",
-          "assetId": "string"
+          "assetId": "string",
+          "subaccountNumber": 0
         }
       },
       "marginEnabled": true
@@ -233,13 +235,15 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber
       "symbol": "string",
       "side": "LONG",
       "size": "string",
-      "assetId": "string"
+      "assetId": "string",
+      "subaccountNumber": 0
     },
     "property2": {
       "symbol": "string",
       "side": "LONG",
       "size": "string",
-      "assetId": "string"
+      "assetId": "string",
+      "subaccountNumber": 0
     }
   },
   "marginEnabled": true
@@ -316,7 +320,8 @@ fetch('https://dydx-testnet.imperator.co/v4/assetPositions?address=string&subacc
       "symbol": "string",
       "side": "LONG",
       "size": "string",
-      "assetId": "string"
+      "assetId": "string",
+      "subaccountNumber": 0
     }
   ]
 }
@@ -1976,7 +1981,8 @@ This operation does not require authentication
   "symbol": "string",
   "side": "LONG",
   "size": "string",
-  "assetId": "string"
+  "assetId": "string",
+  "subaccountNumber": 0
 }
 
 ```
@@ -1989,6 +1995,7 @@ This operation does not require authentication
 |side|[PositionSide](#schemapositionside)|true|none|none|
 |size|string|true|none|none|
 |assetId|string|true|none|none|
+|subaccountNumber|number(double)|true|none|none|
 
 ## AssetPositionsMap
 
@@ -2003,13 +2010,15 @@ This operation does not require authentication
     "symbol": "string",
     "side": "LONG",
     "size": "string",
-    "assetId": "string"
+    "assetId": "string",
+    "subaccountNumber": 0
   },
   "property2": {
     "symbol": "string",
     "side": "LONG",
     "size": "string",
-    "assetId": "string"
+    "assetId": "string",
+    "subaccountNumber": 0
   }
 }
 
@@ -2075,13 +2084,15 @@ This operation does not require authentication
       "symbol": "string",
       "side": "LONG",
       "size": "string",
-      "assetId": "string"
+      "assetId": "string",
+      "subaccountNumber": 0
     },
     "property2": {
       "symbol": "string",
       "side": "LONG",
       "size": "string",
-      "assetId": "string"
+      "assetId": "string",
+      "subaccountNumber": 0
     }
   },
   "marginEnabled": true
@@ -2157,13 +2168,15 @@ This operation does not require authentication
           "symbol": "string",
           "side": "LONG",
           "size": "string",
-          "assetId": "string"
+          "assetId": "string",
+          "subaccountNumber": 0
         },
         "property2": {
           "symbol": "string",
           "side": "LONG",
           "size": "string",
-          "assetId": "string"
+          "assetId": "string",
+          "subaccountNumber": 0
         }
       },
       "marginEnabled": true
@@ -2193,7 +2206,8 @@ This operation does not require authentication
       "symbol": "string",
       "side": "LONG",
       "size": "string",
-      "assetId": "string"
+      "assetId": "string",
+      "subaccountNumber": 0
     }
   ]
 }

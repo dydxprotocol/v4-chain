@@ -116,13 +116,18 @@
           },
           "assetId": {
             "type": "string"
+          },
+          "subaccountNumber": {
+            "type": "number",
+            "format": "double"
           }
         },
         "required": [
           "symbol",
           "side",
           "size",
-          "assetId"
+          "assetId",
+          "subaccountNumber"
         ],
         "type": "object",
         "additionalProperties": false

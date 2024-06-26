@@ -53,7 +53,7 @@ const router: express.Router = express.Router();
 const controllerName: string = 'asset-positions-controller';
 
 @Route('assetPositions')
-class AddressesController extends Controller {
+class AssetPositionsController extends Controller {
   @Get('/')
   async getAssetPositions(
     @Query() address: string,
@@ -109,7 +109,9 @@ class AddressesController extends Controller {
 
     let assetPositionsMap: AssetPositionsMap = _.chain(sortedAssetPositions)
       .map(
-        (position: AssetPositionFromDatabase) => assetPositionToResponseObject(position, idToAsset),
+        (position: AssetPositionFromDatabase) => assetPositionToResponseObject(position,
+          idToAsset,
+          subaccountNumber),
       ).keyBy(
         (positionResponse: AssetPositionResponseObject) => positionResponse.symbol,
       ).value();
@@ -161,11 +163,14 @@ router.get(
       subaccountNumber,
     }: AssetPositionRequest = matchedData(req) as AssetPositionRequest;
 
+    // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
+    const subaccountNum : number = +subaccountNumber;
+
     try {
-      const controller: AddressesController = new AddressesController();
+      const controller: AssetPositionsController = new AssetPositionsController();
       const response: AssetPositionResponse = await controller.getAssetPositions(
         address,
-        subaccountNumber,
+        subaccountNum,
       );
 
       return res.send(response);

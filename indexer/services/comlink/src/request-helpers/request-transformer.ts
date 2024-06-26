@@ -111,6 +111,7 @@ export function perpetualPositionToResponseObject(
 export function assetPositionToResponseObject(
   position: AssetPositionFromDatabase,
   assetMap: AssetById,
+  subaccountNumber: number,
 ): AssetPositionResponseObject {
 
   return {
@@ -118,6 +119,7 @@ export function assetPositionToResponseObject(
     side: position.isLong ? PositionSide.LONG : PositionSide.SHORT,
     size: position.size,
     assetId: position.assetId,
+    subaccountNumber,
   };
 }
 

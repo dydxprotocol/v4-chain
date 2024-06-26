@@ -376,6 +376,7 @@ async function getSubaccountResponse(
       return assetPositionToResponseObject(
         assetPosition,
         assetIdToAsset,
+        subaccount.subaccountNumber,
       );
     },
   );
