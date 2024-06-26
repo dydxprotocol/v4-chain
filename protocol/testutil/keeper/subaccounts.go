@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"math/big"
 	"testing"
 
 	revsharekeeper "github.com/dydxprotocol/v4-chain/protocol/x/revshare/keeper"
@@ -22,9 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimekeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	perpskeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
@@ -132,28 +129,6 @@ func createSubaccountsKeeper(
 	)
 
 	return k, storeKey
-}
-
-func CreateUsdcAssetPosition(
-	quoteBalance *big.Int,
-) []*types.AssetPosition {
-	return []*types.AssetPosition{
-		{
-			AssetId:  assettypes.AssetUsdc.Id,
-			Quantums: dtypes.NewIntFromBigInt(quoteBalance),
-		},
-	}
-}
-
-func CreateUsdcAssetUpdate(
-	deltaQuoteBalance *big.Int,
-) []types.AssetUpdate {
-	return []types.AssetUpdate{
-		{
-			AssetId:          assettypes.AssetUsdc.Id,
-			BigQuantumsDelta: deltaQuoteBalance,
-		},
-	}
 }
 
 // GetSubaccountUpdateEventsFromIndexerBlock returns the subaccount update events in the

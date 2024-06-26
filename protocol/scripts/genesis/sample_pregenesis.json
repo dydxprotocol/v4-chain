@@ -1825,7 +1825,8 @@
         "skew_factor_ppm": 2000000,
         "spread_buffer_ppm": 1500,
         "spread_min_ppm": 10000
-      }
+      },
+      "vaults": []
     },
     "vest": {
       "vest_entries": [

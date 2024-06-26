@@ -11,9 +11,7 @@ import (
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
-// ProductKeeper represents a generic interface for a keeper
-// of a product.
-type ProductKeeper interface {
+type AssetsKeeper interface {
 	IsPositionUpdatable(
 		ctx sdk.Context,
 		id uint32,
@@ -21,10 +19,6 @@ type ProductKeeper interface {
 		updatable bool,
 		err error,
 	)
-}
-
-type AssetsKeeper interface {
-	ProductKeeper
 	ConvertAssetToCoin(
 		ctx sdk.Context,
 		assetId uint32,
@@ -37,7 +31,13 @@ type AssetsKeeper interface {
 }
 
 type PerpetualsKeeper interface {
-	ProductKeeper
+	IsPositionUpdatable(
+		ctx sdk.Context,
+		id uint32,
+	) (
+		updatable bool,
+		err error,
+	)
 	GetPerpetual(
 		ctx sdk.Context,
 		perpetualId uint32,

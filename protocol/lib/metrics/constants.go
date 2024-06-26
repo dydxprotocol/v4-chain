@@ -119,7 +119,6 @@ const (
 	CreateClobPair                                          = "create_clob_pair"
 	Expired                                                 = "expired"
 	FullyFilled                                             = "fully_filled"
-	GetFillQuoteQuantums                                    = "get_fill_quote_quantums"
 	Hydrate                                                 = "hydrate"
 	IsLong                                                  = "is_long"
 	IterateOverPendingMatches                               = "iterate_over_pending_matches"

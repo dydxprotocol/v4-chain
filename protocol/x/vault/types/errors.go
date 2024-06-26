@@ -75,4 +75,14 @@ var (
 		14,
 		"OrderSize is invalid",
 	)
+	ErrInvalidOwner = errorsmod.Register(
+		ModuleName,
+		15,
+		"Owner is invalid",
+	)
+	ErrMismatchedTotalAndOwnerShares = errorsmod.Register(
+		ModuleName,
+		16,
+		"TotalShares does not match sum of OwnerShares",
+	)
 )
