@@ -49,7 +49,7 @@ export const configSchema = {
   COMLINK_URL: parseString(),
   AXIOS_TIMEOUT_MS: parseInteger({ default: 5000 }), // 5 seconds
   INITIAL_GET_TIMEOUT_MS: parseInteger({ default: 20_000 }), // 20 seconds
-  BATCH_PROCESSING_ENABLED: parseBoolean({ default: false }),
+  BATCH_PROCESSING_ENABLED: parseBoolean({ default: true }),
   KAFKA_BATCH_PROCESSING_COMMIT_FREQUENCY_MS: parseNumber({
     default: 3_000,
   }),
