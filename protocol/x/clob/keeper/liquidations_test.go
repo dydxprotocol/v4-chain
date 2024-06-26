@@ -2852,7 +2852,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 					[]satypes.Update{
 						{
 							SubaccountId: subaccountId,
-							AssetUpdates: keepertest.CreateUsdcAssetUpdate(bankruptcyPriceInQuoteQuantums),
+							AssetUpdates: keepertest.CreateUsdcAssetUpdates(bankruptcyPriceInQuoteQuantums),
 							PerpetualUpdates: []satypes.PerpetualUpdate{
 								{
 									PerpetualId:      tc.perpetualId,

@@ -30,7 +30,7 @@ func CreateSingleAssetPosition(
 	}
 }
 
-func CreateUsdcAssetUpdate(
+func CreateUsdcAssetUpdates(
 	deltaQuoteBalance *big.Int,
 ) []satypes.AssetUpdate {
 	return []satypes.AssetUpdate{

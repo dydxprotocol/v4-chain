@@ -344,7 +344,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100)),
 				},
 			},
 			expectedAssetPositions: []*types.AssetPosition{
@@ -392,7 +392,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -449,7 +449,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -507,7 +507,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -561,10 +561,10 @@ func TestUpdateSubaccounts(t *testing.T) {
 			expectedSuccessPerUpdate: nil,
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -599,7 +599,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-25_000_000_000)), // -$25,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-25_000_000_000)), // -$25,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -653,7 +653,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(25_000_000_000)), // $25,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(25_000_000_000)), // $25,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -702,7 +702,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(50_000_000_000)), // $50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(50_000_000_000)), // $50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -755,7 +755,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-50_000_000_000)), // -$50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-50_000_000_000)), // -$50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -938,7 +938,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-50_000_000_000)), // -$50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-50_000_000_000)), // -$50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -995,7 +995,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-50_000_000_000)), // -$50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-50_000_000_000)), // -$50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -1047,7 +1047,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(50_000_000_000)), // $50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(50_000_000_000)), // $50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -1499,7 +1499,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 						Owner:  "non-existent account",
 						Number: uint32(12),
 					},
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(500_000_000)), // $500
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(500_000_000)), // $500
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -1508,7 +1508,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100_000_000)), // $100
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100_000_000)), // $100
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(1),
@@ -1534,7 +1534,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-50_000_000_000)), // -$50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-50_000_000_000)), // -$50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -1563,7 +1563,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(1)),
 				},
 			},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
@@ -1602,7 +1602,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(3)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(3)),
 				},
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
@@ -1721,7 +1721,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(1)),
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -2338,7 +2338,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100_000_000)), // -$100
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100_000_000)), // -$100
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(3),
@@ -2403,7 +2403,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100_000_000)), // $100
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100_000_000)), // $100
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(3),
@@ -2433,7 +2433,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100_000_000)), // -$100
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100_000_000)), // -$100
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(3),
@@ -2476,7 +2476,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100_000_000)), // $100
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100_000_000)), // $100
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(3),
@@ -3006,7 +3006,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100)),
 				},
 			},
 			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
@@ -3044,7 +3044,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100)),
 				},
 			},
 			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
@@ -3082,7 +3082,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100)),
 				},
 			},
 			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
@@ -3129,7 +3129,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -3161,7 +3161,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -3206,7 +3206,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -3250,7 +3250,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -3296,7 +3296,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -3331,7 +3331,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -3371,11 +3371,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -3417,11 +3417,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -3466,11 +3466,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -3515,11 +3515,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -3566,7 +3566,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-25_000_000_000)), // -$25,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-25_000_000_000)), // -$25,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -3576,7 +3576,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(25_000_000_000)), // $25,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(25_000_000_000)), // $25,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -3627,7 +3627,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-25_000_000_000)), // -$25,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-25_000_000_000)), // -$25,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -3637,7 +3637,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(25_000_000_000)), // $25,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(25_000_000_000)), // $25,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -3688,7 +3688,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-25_000_000_000)), // -$25,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-25_000_000_000)), // -$25,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -3698,7 +3698,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(25_000_000_000)), // $25,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(25_000_000_000)), // $25,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -3734,7 +3734,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-50_000_000_000)), // -$50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-50_000_000_000)), // -$50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -3744,7 +3744,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(50_000_000_000)), // $50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(50_000_000_000)), // $50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -3780,7 +3780,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-50_000_000_000)), // -$50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-50_000_000_000)), // -$50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -3790,7 +3790,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(50_000_000_000)), // $50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(50_000_000_000)), // $50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -3827,7 +3827,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-50_000_000_000)), // -$50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-50_000_000_000)), // -$50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -3837,7 +3837,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(50_000_000_000)), // $50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(50_000_000_000)), // $50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -3875,11 +3875,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			updates: []types.Update{
 				{
 					SubaccountId: firstSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -3912,11 +3912,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			updates: []types.Update{
 				{
 					SubaccountId: firstSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -3950,11 +3950,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			updates: []types.Update{
 				{
 					SubaccountId: firstSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -3987,11 +3987,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			updates: []types.Update{
 				{
 					SubaccountId: firstSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -4030,11 +4030,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			updates: []types.Update{
 				{
 					SubaccountId: firstSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -4075,11 +4075,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			updates: []types.Update{
 				{
 					SubaccountId: firstSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -4122,11 +4122,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			updates: []types.Update{
 				{
 					SubaccountId: firstSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -4171,11 +4171,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			updates: []types.Update{
 				{
 					SubaccountId: firstSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -4220,11 +4220,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			updates: []types.Update{
 				{
 					SubaccountId: firstSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-100)),
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(100)),
 				},
 			},
 			msgSenderEnabled: true,
@@ -4763,7 +4763,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			assetPositions: testutil.CreateUsdcAssetPositions(new(big.Int).SetUint64(math.MaxUint64)),
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(1)),
 				},
 			},
 			updateType:               types.Deposit,
@@ -4814,7 +4814,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-50_000_000_000)), // -$50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-50_000_000_000)), // -$50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -4841,7 +4841,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-50_000_000_000)), // -$50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-50_000_000_000)), // -$50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -4850,7 +4850,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					},
 				},
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-49_999_000_000)), // -$49,999
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-49_999_000_000)), // -$49,999
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -4889,7 +4889,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-1)), // -$0.000001
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-1)), // -$0.000001
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -4906,7 +4906,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					},
 				},
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(500_000)), // $.50
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(500_000)), // $.50
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -4915,7 +4915,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					},
 				},
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(2_000_000)), // $2
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(2_000_000)), // $2
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -4929,7 +4929,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(-10)),
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)), // $.000001
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(1)), // $.000001
 				},
 			},
 			expectedSuccess: true,
@@ -4941,7 +4941,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(-10)),
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(0)), // $0
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(0)), // $0
 				},
 			},
 			expectedSuccess: false,
@@ -4952,7 +4952,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 		"USDC asset position decreases below zero when no positions are open": {
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-1)), // -$0.000001
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-1)), // -$0.000001
 				},
 			},
 			expectedSuccess: false,
@@ -4964,7 +4964,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(-1)),
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-1)), // -$0.000001
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-1)), // -$0.000001
 				},
 			},
 			expectedSuccess: false,
@@ -4984,7 +4984,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-50_000_000_000)), // -$50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-50_000_000_000)), // -$50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -4997,7 +4997,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 						Owner:  "non-existent-acount",
 						Number: uint32(0),
 					},
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-50_000_000_000)), // -$50,000
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-50_000_000_000)), // -$50,000
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -5021,7 +5021,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-1)), // -$0.000001
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-1)), // -$0.000001
 				},
 			},
 			expectedSuccess: true,
@@ -5043,7 +5043,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-1)), // -$0.000001
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-1)), // -$0.000001
 				},
 			},
 			expectedSuccess: false,
@@ -5065,7 +5065,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-1)), // -$0.000001
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-1)), // -$0.000001
 				},
 			},
 			expectedSuccess: false,
@@ -5088,7 +5088,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-1)), // -$0.000001
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-1)), // -$0.000001
 				},
 			},
 			expectedSuccess: false,
@@ -5172,7 +5172,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(3)), // $3
+					AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(3)), // $3
 				},
 			},
 			updateType:               types.Deposit,
@@ -5488,7 +5488,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 		"USDC asset position with update": {
 			assetPositions:        testutil.CreateUsdcAssetPositions(big.NewInt(-123_456)),
 			expectedNetCollateral: big.NewInt(0),
-			assetUpdates:          testutil.CreateUsdcAssetUpdate(big.NewInt(123_456)),
+			assetUpdates:          testutil.CreateUsdcAssetUpdates(big.NewInt(123_456)),
 		},
 		"single perpetual and USDC asset position": {
 			assetPositions:        testutil.CreateUsdcAssetPositions(big.NewInt(10_000_000_001)), // $10,000.000001
@@ -5549,13 +5549,13 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			assetPositions: testutil.CreateUsdcAssetPositions(
 				constants.BigNegMaxUint64(),
 			),
-			assetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-1)),
+			assetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(-1)),
 		},
 		"USDC asset position update overflows uint64": {
 			assetPositions: testutil.CreateUsdcAssetPositions(
 				new(big.Int).SetUint64(math.MaxUint64),
 			),
-			assetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
+			assetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(1)),
 		},
 		"update for non-existent perpetual": {
 			expectedErr: perptypes.ErrPerpetualDoesNotExist,
@@ -5673,7 +5673,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 		},
 		"multiple perpetual updates for the same position": {
 			useEmptySubaccount:        true,
-			assetUpdates:              testutil.CreateUsdcAssetUpdate(big.NewInt(1_000_000)),
+			assetUpdates:              testutil.CreateUsdcAssetUpdates(big.NewInt(1_000_000)),
 			expectedNetCollateral:     big.NewInt(-99_249_000_000), // $1 - $100,000 (BTC update) + $750 (ETH update)
 			expectedInitialMargin:     big.NewInt(50_150_000_000),  // $50,000 (BTC update) + $150 (ETH update)
 			expectedMaintenanceMargin: big.NewInt(40_075_000_000),  // $40,000 (BTC update) + $75 (ETH update)
@@ -5701,7 +5701,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 		},
 		"speculative update to non-existent subaccount": {
 			useEmptySubaccount:        true,
-			assetUpdates:              testutil.CreateUsdcAssetUpdate(big.NewInt(1_000_000)),
+			assetUpdates:              testutil.CreateUsdcAssetUpdates(big.NewInt(1_000_000)),
 			expectedNetCollateral:     big.NewInt(-99_249_000_000), // $1 - $100,000 (BTC update) + $750 (ETH update)
 			expectedInitialMargin:     big.NewInt(50_150_000_000),  // $50,000 (BTC update) + $150 (ETH update)
 			expectedMaintenanceMargin: big.NewInt(40_075_000_000),  // $40,000 (BTC update) + $75 (ETH update)
