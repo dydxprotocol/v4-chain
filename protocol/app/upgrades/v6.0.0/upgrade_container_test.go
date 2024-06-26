@@ -1,10 +1,10 @@
-//go:build all || container_test
-
 package v_6_0_0_test
 
 import (
 	"testing"
 	"time"
+
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -216,31 +216,31 @@ func postUpgradeMarketMapperRevShareChecks(node *containertest.Node, t *testing.
 	require.Equal(t, params.Params.ValidDays, uint32(0))
 
 	// Get all markets list
-	//marketsList := pricestypes.MarketParamList{}
-	//resp, err := containertest.Query(
-	//	node,
-	//	pricestypes.NewQueryClient,
-	//	pricestypes.QueryClient.GetAllMarketParams,
-	//	&pricestypes.QueryGetAllMarketParamsRequest{},
-	//)
-	//require.NoError(t, err)
-	//err = proto.Unmarshal(resp.Data, &marketsList)
-	//require.NoError(t, err)
-	//
-	//// Check that all rev share details are set to the default value
-	//for _, market := range marketsList.Markets {
-	//	revShareDetails := revsharetypes.MarketMapperRevShareDetails{}
-	//	resp, err := containertest.Query(
-	//		node,
-	//		revsharetypes.NewQueryClient,
-	//		revsharetypes.QueryClient.MarketMapperRevShareDetails,
-	//		&revsharetypes.QueryMarketMapperRevShareDetails{
-	//			MarketId: market.Id,
-	//		},
-	//	)
-	//	require.NoError(t, err)
-	//	err = proto.Unmarshal(resp.Data, &revShareDetails)
-	//	require.NoError(t, err)
-	//	require.Equal(t, revShareDetails.ExpirationTs, uint64(0))
-	//}
+	marketParams := pricestypes.QueryAllMarketParamsResponse{}
+	resp, err = containertest.Query(
+		node,
+		pricestypes.NewQueryClient,
+		pricestypes.QueryClient.AllMarketParams,
+		&pricestypes.QueryAllMarketParamsRequest{},
+	)
+	require.NoError(t, err)
+	err = proto.UnmarshalText(resp.String(), &marketParams)
+	require.NoError(t, err)
+
+	// Check that all rev share details are set to the default value
+	for _, market := range marketParams.MarketParams {
+		revShareDetails := revsharetypes.QueryMarketMapperRevShareDetailsResponse{}
+		resp, err := containertest.Query(
+			node,
+			revsharetypes.NewQueryClient,
+			revsharetypes.QueryClient.MarketMapperRevShareDetails,
+			&revsharetypes.QueryMarketMapperRevShareDetails{
+				MarketId: market.Id,
+			},
+		)
+		require.NoError(t, err)
+		err = proto.UnmarshalText(resp.String(), &revShareDetails)
+		require.NoError(t, err)
+		require.Equal(t, revShareDetails.Details.ExpirationTs, uint64(0))
+	}
 }
