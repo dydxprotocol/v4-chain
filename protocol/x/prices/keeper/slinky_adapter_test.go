@@ -103,13 +103,8 @@ func TestBadMarketData(t *testing.T) {
 	require.Error(t, err)
 }
 
-<<<<<<< HEAD
-func TestGetPrevBlockCPCounter(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
-=======
 func TestGetNumCurrencyPairs(t *testing.T) {
 	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
->>>>>>> 6abbc72e (chore: Update slinky version (#1768))
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	marketNumber := 10
