@@ -104,7 +104,7 @@ func TestBadMarketData(t *testing.T) {
 }
 
 func TestGetNumCurrencyPairs(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	marketNumber := 10
