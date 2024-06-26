@@ -120,6 +120,7 @@ class OrdersController extends Controller {
     let mergedResponses: OrderResponseObject[] = mergePostgresAndRedisOrdersToResponseObjects(
       postgresOrderMap,
       redisOrderMap,
+      subaccountNumber,
     );
 
     if (status !== undefined) {
@@ -153,8 +154,23 @@ class OrdersController extends Controller {
       OrdersCache.getOrder(orderId, redisClient),
     ]);
 
+    // Get subaccount number from either Redis or Postgres
+    let subaccountNumber: number | undefined;
+    if (redisOrder !== null) {
+      subaccountNumber = redisOrder.order!.orderId!.subaccountId!.number;
+    } else if (postgresOrder !== undefined) {
+      const subaccount = await SubaccountTable.findById(postgresOrder.subaccountId);
+      if (subaccount === undefined) {
+        throw new NotFoundError(`Unable to find subaccount id ${postgresOrder.subaccountId}`);
+      }
+      subaccountNumber = subaccount.subaccountNumber;
+    } else {
+      throw new NotFoundError(`Unable to find order id ${orderId}`);
+    }
+
     const order: OrderResponseObject | undefined = postgresAndRedisOrderToResponseObject(
       postgresOrder,
+      subaccountNumber || 0,
       redisOrder,
     );
     if (order === undefined) {
@@ -241,11 +257,14 @@ router.get(
       returnLatestOrders,
     }: ListOrderRequest = matchedData(req) as ListOrderRequest;
 
+    // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
+    const subaccountNum: number = +subaccountNumber;
+
     try {
       const controller: OrdersController = new OrdersController();
       const response: OrderResponseObject[] = await controller.listOrders(
         address,
-        subaccountNumber,
+        subaccountNum,
         limit,
         ticker,
         side,

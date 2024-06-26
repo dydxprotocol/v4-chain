@@ -1102,7 +1102,8 @@ fetch('https://dydx-testnet.imperator.co/v4/orders?address=string&subaccountNumb
     "postOnly": true,
     "ticker": "string",
     "updatedAt": "string",
-    "updatedAtHeight": "string"
+    "updatedAtHeight": "string",
+    "subaccountNumber": 0
   }
 ]
 ```
@@ -1159,6 +1160,7 @@ Status Code **200**
 |» ticker|string|true|none|none|
 |» updatedAt|[IsoString](#schemaisostring)|false|none|none|
 |» updatedAtHeight|string|false|none|none|
+|» subaccountNumber|number(double)|true|none|none|
 
 #### Enumerated Values
 
@@ -1263,7 +1265,8 @@ fetch('https://dydx-testnet.imperator.co/v4/orders/{orderId}',
   "postOnly": true,
   "ticker": "string",
   "updatedAt": "string",
-  "updatedAtHeight": "string"
+  "updatedAtHeight": "string",
+  "subaccountNumber": 0
 }
 ```
 
@@ -2899,7 +2902,8 @@ or
   "postOnly": true,
   "ticker": "string",
   "updatedAt": "string",
-  "updatedAtHeight": "string"
+  "updatedAtHeight": "string",
+  "subaccountNumber": 0
 }
 
 ```
@@ -2930,6 +2934,7 @@ or
 |ticker|string|true|none|none|
 |updatedAt|[IsoString](#schemaisostring)|false|none|none|
 |updatedAtHeight|string|false|none|none|
+|subaccountNumber|number(double)|true|none|none|
 
 ## PerpetualMarketStatus
 

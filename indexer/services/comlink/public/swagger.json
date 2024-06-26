@@ -682,6 +682,10 @@
           },
           "updatedAtHeight": {
             "type": "string"
+          },
+          "subaccountNumber": {
+            "type": "number",
+            "format": "double"
           }
         },
         "required": [
@@ -700,7 +704,8 @@
           "timeInForce",
           "status",
           "postOnly",
-          "ticker"
+          "ticker",
+          "subaccountNumber"
         ],
         "type": "object",
         "additionalProperties": false

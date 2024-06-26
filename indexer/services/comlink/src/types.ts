@@ -257,6 +257,7 @@ export interface OrderResponseObject extends Omit<OrderFromDatabase, 'timeInForc
   ticker: string;
   updatedAt?: IsoString;
   updatedAtHeight?: string
+  subaccountNumber: number;
 }
 
 export type RedisOrderMap = { [orderId: string]: RedisOrder };

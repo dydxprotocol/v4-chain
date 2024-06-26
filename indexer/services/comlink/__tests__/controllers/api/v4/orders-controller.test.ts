@@ -76,6 +76,7 @@ describe('orders-controller#V4', () => {
           ...testConstants.defaultOrder,
           id: testConstants.defaultOrderId,
         },
+        testConstants.defaultSubaccount.subaccountNumber,
       ));
     });
 
@@ -117,6 +118,7 @@ describe('orders-controller#V4', () => {
             ...testConstants.defaultOrder,
             id: testConstants.defaultOrderId,
           },
+          testConstants.defaultSubaccount.subaccountNumber,
           redisTestConstants.defaultRedisOrder,
         ),
       );
@@ -384,19 +386,19 @@ describe('orders-controller#V4', () => {
         postgresOrderToResponseObject({
           ...testConstants.defaultOrderGoodTilBlockTime,
           id: getUuidForTest(testConstants.defaultOrderGoodTilBlockTime),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         postgresOrderToResponseObject({
           ...secondOrderGoodTilBlockTime,
           id: getUuidForTest(secondOrderGoodTilBlockTime),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         postgresOrderToResponseObject({
           ...secondOrder,
           id: getUuidForTest(secondOrder),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         postgresOrderToResponseObject({
           ...testConstants.defaultOrder,
           id: testConstants.defaultOrderId,
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
       ]);
 
       const response2: request.Response = await sendRequest({
@@ -411,19 +413,19 @@ describe('orders-controller#V4', () => {
         postgresOrderToResponseObject({
           ...testConstants.defaultOrder,
           id: testConstants.defaultOrderId,
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         postgresOrderToResponseObject({
           ...secondOrder,
           id: getUuidForTest(secondOrder),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         postgresOrderToResponseObject({
           ...secondOrderGoodTilBlockTime,
           id: getUuidForTest(secondOrderGoodTilBlockTime),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         postgresOrderToResponseObject({
           ...testConstants.defaultOrderGoodTilBlockTime,
           id: getUuidForTest(testConstants.defaultOrderGoodTilBlockTime),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
       ]);
     });
 
@@ -457,6 +459,7 @@ describe('orders-controller#V4', () => {
             ...testConstants.defaultOrder,
             id: testConstants.defaultOrderId,
           },
+          testConstants.defaultSubaccount.subaccountNumber,
           redisTestConstants.defaultRedisOrder,
         ),
       ]);
@@ -479,7 +482,7 @@ describe('orders-controller#V4', () => {
             filledOrder.clobPairId,
             filledOrder.orderFlags,
           ),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
       ]);
 
       response = await sendRequest({
@@ -513,7 +516,7 @@ describe('orders-controller#V4', () => {
             untriggeredOrder.clobPairId,
             untriggeredOrder.orderFlags,
           ),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
       ]);
 
       response = await sendRequest({
@@ -531,6 +534,7 @@ describe('orders-controller#V4', () => {
             ...testConstants.defaultOrder,
             id: testConstants.defaultOrderId,
           },
+          testConstants.defaultSubaccount.subaccountNumber,
           redisTestConstants.defaultRedisOrder,
         ),
         postgresOrderToResponseObject({
@@ -541,7 +545,7 @@ describe('orders-controller#V4', () => {
             untriggeredOrder.clobPairId,
             untriggeredOrder.orderFlags,
           ),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
       ]);
     });
 
@@ -578,25 +582,27 @@ describe('orders-controller#V4', () => {
         postgresOrderToResponseObject({
           ...secondOrderGoodTilBlockTime,
           id: getUuidForTest(secondOrderGoodTilBlockTime),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         redisOrderToResponseObject(newerRedisOrderGoodTilBlockTime),
         postgresAndRedisOrderToResponseObject(
           {
             ...testConstants.defaultOrderGoodTilBlockTime,
             id: getUuidForTest(testConstants.defaultOrderGoodTilBlockTime),
           },
+          testConstants.defaultSubaccount.subaccountNumber,
           redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         ),
         postgresOrderToResponseObject({
           ...secondOrder,
           id: getUuidForTest(secondOrder),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         redisOrderToResponseObject(redisOrderWithDifferentMarket),
         postgresAndRedisOrderToResponseObject(
           {
             ...testConstants.defaultOrder,
             id: testConstants.defaultOrderId,
           },
+          testConstants.defaultSubaccount.subaccountNumber,
           redisTestConstants.defaultRedisOrder,
         ),
       ]);
