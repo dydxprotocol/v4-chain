@@ -153,7 +153,6 @@ export const defaultUpdatePerpetualEvent: UpdatePerpetualEventV1 = {
   marketId: 1,
   atomicResolution: -8,
   liquidityTier: 1,
-  marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED,
 };
 
 export const defaultUpdateClobPairEvent: UpdateClobPairEventV1 = {

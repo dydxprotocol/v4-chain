@@ -1125,6 +1125,88 @@ fetch('https://dydx-testnet.imperator.co/v4/historical-pnl?address=string&subacc
 This operation does not require authentication
 </aside>
 
+## GetHistoricalPnlForParentSubaccount
+
+<a id="opIdGetHistoricalPnlForParentSubaccount"></a>
+
+> Code samples
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://dydx-testnet.imperator.co/v4/historical-pnl/parentSubaccount', params={
+  'address': 'string',  'parentSubaccountNumber': '0'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://dydx-testnet.imperator.co/v4/historical-pnl/parentSubaccount?address=string&parentSubaccountNumber=0',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /historical-pnl/parentSubaccount`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|parentSubaccountNumber|query|number(double)|true|none|
+|limit|query|number(double)|false|none|
+|createdBeforeOrAtHeight|query|number(double)|false|none|
+|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+|createdOnOrAfterHeight|query|number(double)|false|none|
+|createdOnOrAfter|query|[IsoString](#schemaisostring)|false|none|
+
+> Example responses
+> 200 Response
+```json
+{
+  "historicalPnl": [
+    {
+      "id": "string",
+      "subaccountId": "string",
+      "equity": "string",
+      "totalPnl": "string",
+      "netTransfers": "string",
+      "createdAt": "string",
+      "blockHeight": "string",
+      "blockTime": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[HistoricalPnlResponse](#schemahistoricalpnlresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetPerpetualMarket
 
 <a id="opIdGetPerpetualMarket"></a>
