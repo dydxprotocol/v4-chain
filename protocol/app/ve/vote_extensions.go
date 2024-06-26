@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
+	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
@@ -27,9 +28,31 @@ type VoteExtensionHandler struct {
 
 	timeProvider libtime.TimeProvider
 
-	pk *pk.Keeper
+	pk pk.Keeper
 }
 
+func NewVoteExtensionHandler(
+	logger log.Logger,
+	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
+	timeout time.Duration,
+	vecodec codec.VoteExtensionCodec,
+	timeProvider libtime.TimeProvider,
+	pricekeeper pk.Keeper,
+) *VoteExtensionHandler {
+	return &VoteExtensionHandler{
+		logger:          logger,
+		timeout:         timeout,
+		indexPriceCache: indexPriceCache,
+		veCodec:         vecodec,
+		timeProvider:    timeProvider,
+		pk:              pricekeeper,
+	}
+}
+
+// Returns a handler that extends pre-commit votes with the current
+// prices pulled from the perpetually running price deamon
+// In the case of an error, the handler will return an empty vote extension
+// ensuring liveness in the case of a price deamon failure
 func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 	return func(ctx sdk.Context, req *cometabci.RequestExtendVote) (resp *cometabci.ResponseExtendVote, err error) {
 		defer func() {
@@ -79,6 +102,58 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 	}
 }
 
+func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtensionHandler {
+	return func(
+		ctx sdk.Context,
+		req *cometabci.RequestVerifyVoteExtension,
+	) (_ *cometabci.ResponseVerifyVoteExtension, err error) {
+
+		if req == nil {
+			ctx.Logger().Error("extend vote handler received a nil request")
+			// TODO: return dynamic structured error with name of cometBFT request
+			err = fmt.Errorf("nil request for verify vote")
+			return nil, err
+		}
+
+		// accept if vote extension is empty
+		if len(req.VoteExtension) == 0 {
+			h.logger.Info(
+				"empty vote extension",
+				"height", req.Height,
+			)
+
+			return &cometabci.ResponseVerifyVoteExtension{Status: cometabci.ResponseVerifyVoteExtension_ACCEPT}, nil
+		}
+
+		ve, err := h.veCodec.Decode(req.VoteExtension)
+		if err != nil {
+			h.logger.Error(
+				"failed to decode vote extension",
+				"height", req.Height,
+				"err", err,
+			)
+			return &cometabci.ResponseVerifyVoteExtension{Status: cometabci.ResponseVerifyVoteExtension_REJECT}, err
+		}
+
+		if err := h.ValidateDeamonVE(ctx, ve); err != nil {
+			h.logger.Error(
+				"failed to validate vote extension",
+				"height", req.Height,
+				"err", err,
+			)
+			return &cometabci.ResponseVerifyVoteExtension{Status: cometabci.ResponseVerifyVoteExtension_REJECT}, err
+		}
+
+		h.logger.Debug(
+			"validated vote extension",
+			"height", req.Height,
+			"size (bytes)", len(req.VoteExtension),
+		)
+
+		return &cometabci.ResponseVerifyVoteExtension{Status: cometabci.ResponseVerifyVoteExtension_ACCEPT}, nil
+	}
+}
+
 // encode the prices from the deamon into VE data using GobEncode
 func (h *VoteExtensionHandler) transformDeamonPricesToVE(
 	ctx sdk.Context,
@@ -119,4 +194,29 @@ func (h *VoteExtensionHandler) transformDeamonPricesToVE(
 	return types.DeamonVoteExtension{
 		Prices: vePrices,
 	}, nil
+}
+
+func (h *VoteExtensionHandler) ValidateDeamonVE(
+	ctx sdk.Context,
+	ve types.DeamonVoteExtension,
+) error {
+	maxPairs := h.GetMaxPairs(ctx)
+	if uint32(len(ve.Prices)) > maxPairs {
+		return fmt.Errorf("too many prices in deamon vote extension: %d > %d", len(ve.Prices), maxPairs)
+	}
+
+	for _, bz := range ve.Prices {
+		if len(bz) > constants.MaximumPriceSize {
+			return fmt.Errorf("price bytes are too long: %d", len(bz))
+		}
+	}
+
+	return nil
+}
+
+func (h *VoteExtensionHandler) GetMaxPairs(ctx sdk.Context) uint32 {
+	markets := h.pk.GetAllMarketParams(ctx)
+	// TODO: check how to handle this query in prepare / process proposal
+	// given that pairs can be created/removed
+	return uint32(len(markets))
 }
