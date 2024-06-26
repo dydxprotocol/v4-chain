@@ -4,10 +4,11 @@ package cli_test
 
 import (
 	"fmt"
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"math"
 	"math/big"
 	"testing"
+
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,8 +20,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	testutil_bank "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	cli_testutil "github.com/dydxprotocol/v4-chain/protocol/x/clob/client/testutil"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
@@ -130,12 +131,12 @@ func (s *PlaceOrderIntegrationTestSuite) SetupSuite() {
 		sastate.Subaccounts,
 		satypes.Subaccount{
 			Id:                 &satypes.SubaccountId{Owner: s.validatorAddress.String(), Number: subaccountNumberZero},
-			AssetPositions:     testutil.CreateUsdcAssetPosition(big.NewInt(initialQuoteBalance)),
+			AssetPositions:     testutil.CreateUsdcAssetPositions(big.NewInt(initialQuoteBalance)),
 			PerpetualPositions: []*satypes.PerpetualPosition{},
 		},
 		satypes.Subaccount{
 			Id:                 &satypes.SubaccountId{Owner: s.validatorAddress.String(), Number: subaccountNumberOne},
-			AssetPositions:     testutil.CreateUsdcAssetPosition(big.NewInt(initialQuoteBalance)),
+			AssetPositions:     testutil.CreateUsdcAssetPositions(big.NewInt(initialQuoteBalance)),
 			PerpetualPositions: []*satypes.PerpetualPosition{},
 		},
 	)
