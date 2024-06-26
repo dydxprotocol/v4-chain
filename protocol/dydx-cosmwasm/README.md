@@ -58,7 +58,7 @@ To test the contract, complete the following steps:
 ## Getting funds for local testing
 For local testing, use [faucet](https://github.com/dydxprotocol/faucet) to get funds. To run faucet on a local chain, follow instructions below:
 1. Run v4 chain locally by following the [v4 instructions](https://github.com/dydxprotocol/v4/blob/main/README.md#running-the-chain-locally) (i.e. `cd ~/v4 && make localnet-start`).
-2. Make sure that `facuet` can be built by running `npm run build` or `npm run compile:watch`.
+2. Make sure that `faucet` can be built by running `npm run build` or `npm run compile:watch`.
 3. Run `npm run localnet`.
 4. You can try hitting the faucet endpoint using `curl`. For example:
 ```
