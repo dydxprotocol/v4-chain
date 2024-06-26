@@ -5,6 +5,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 	listingtypes "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 )
 
 const (
@@ -17,6 +18,7 @@ var Upgrade = upgrades.Upgrade{
 		Added: []string{
 			listingtypes.StoreKey,
 			revsharetypes.StoreKey,
+			marketmapmoduletypes.StoreKey,
 		},
 	},
 }
