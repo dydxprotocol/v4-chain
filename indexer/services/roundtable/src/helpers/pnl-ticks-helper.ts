@@ -73,15 +73,32 @@ export async function getPnlTicksCreateObjects(
     mostRecentPnlTicks,
     (pnlTick: PnlTicksCreateObject) => pnlTick.blockTime,
   );
+  logger.info({
+    at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+    message: 'Account to last updated block time',
+    accountToLastUpdatedBlockTime,
+  });
   const subaccountIdsWithTranfers: string[] = _.map(subaccountsWithTransfers, 'id');
   const newSubaccountIds: string[] = _.difference(
     subaccountIdsWithTranfers, _.keys(accountToLastUpdatedBlockTime),
   );
+  logger.info({
+    at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+    message: 'New subaccounts with transfers',
+    newSubaccountIds,
+  });
   // get accounts to update based on last updated block height
   const accountsToUpdate: string[] = [
     ...getAccountsToUpdate(accountToLastUpdatedBlockTime, blockTime),
     ...newSubaccountIds,
   ].slice(0, config.PNL_TICK_MAX_ACCOUNTS_PER_RUN);
+  logger.info({
+    at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+    message: 'Accounts to update',
+    accountsToUpdate,
+    blockHeight,
+    blockTime,
+  });
   stats.gauge(
     `${config.SERVICE_NAME}_get_ticks_accounts_to_update`,
     accountsToUpdate.length,
@@ -182,6 +199,11 @@ export async function getPnlTicksCreateObjects(
         blockTime,
       });
     }
+  });
+  logger.info({
+    at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+    message: 'New ticks to create',
+    subaccountIds: _.map(newTicksToCreate, 'subaccountId'),
   });
   stats.timing(
     `${config.SERVICE_NAME}_get_ticks_compute_pnl`,
@@ -290,6 +312,13 @@ export function getNewPnlTick(
   lastUpdatedFundingIndexMap: FundingIndexMap,
   currentFundingIndexMap: FundingIndexMap,
 ): PnlTicksCreateObject {
+  logger.info({
+    at: 'createPnlTicks#getNewPnlTick',
+    message: 'Creating new PNL tick',
+    subaccountId,
+    latestBlockHeight,
+    latestBlockTime,
+  });
   const currentEquity: Big = calculateEquity(
     usdcPositionSize,
     openPerpetualPositionsForSubaccount,
