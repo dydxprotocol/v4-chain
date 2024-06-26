@@ -48,6 +48,10 @@ func TestNewAnteHandler_Error(t *testing.T) {
 			handlerMutation: func(options *app.HandlerOptions) { options.BankKeeper = nil },
 			errorMsg:        "bank keeper is required for ante builder",
 		},
+		"nil PerpetualsKeeper": {
+			handlerMutation: func(options *app.HandlerOptions) { options.PerpetualsKeeper = nil },
+			errorMsg:        "perpetuals keeper is required for ante builder",
+		},
 		"nil handlerOptions.SignModeHandler": {
 			handlerMutation: func(options *app.HandlerOptions) { options.SignModeHandler = nil },
 			errorMsg:        "sign mode handler is required for ante builder",
