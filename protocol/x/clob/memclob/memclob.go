@@ -510,6 +510,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				removalReason = types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER
 			} else if errors.Is(err, types.ErrWouldViolateIsolatedSubaccountConstraints) {
 				removalReason = types.OrderRemoval_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS
+			}
 
 			if !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
 				m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
