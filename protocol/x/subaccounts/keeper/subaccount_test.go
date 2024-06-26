@@ -512,11 +512,10 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 		},
-		"multiple updates for same position not allowed": {
+		"multiple updates for same position handled gracefully": {
 			expectedQuoteBalance:     big.NewInt(0),
-			expectedSuccess:          false,
-			expectedSuccessPerUpdate: nil,
-			expectedErr:              types.ErrNonUniqueUpdatesPosition,
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
@@ -524,18 +523,31 @@ func TestUpdateSubaccounts(t *testing.T) {
 				&constants.PerpetualPosition_OneBTCLong,
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(300_000_000), // 3 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				defaultSubaccountId: {
+					&types.PerpetualPosition{
+						PerpetualId:  uint32(0),
+						Quantums:     dtypes.NewInt(300_000_000), // 3 BTC
+						FundingIndex: dtypes.NewInt(0),
+					},
+				},
 			},
 			updates: []types.Update{
 				{
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
-							BigQuantumsDelta: big.NewInt(9_900_000_000), // 99 BTC
+							BigQuantumsDelta: big.NewInt(100_000_000),
 						},
 						{
 							PerpetualId:      uint32(0),
-							BigQuantumsDelta: big.NewInt(9_900_000_000), // 99 BTC
+							BigQuantumsDelta: big.NewInt(100_000_000),
 						},
 					},
 				},
@@ -4797,7 +4809,6 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 		},
 		"update refers to the same position twice": {
-			expectedErr: types.ErrNonUniqueUpdatesPosition,
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
@@ -4816,6 +4827,8 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 		},
 		"multiple updates are considered independently for same account": {
 			expectedSuccess:          false,
@@ -5638,29 +5651,35 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			},
 		},
 		"multiple asset updates for the same position": {
-			expectedErr: types.ErrNonUniqueUpdatesPosition,
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_NoMarginRequirement,
 			},
 			assetPositions: []*types.AssetPosition{
 				&constants.Usdc_Asset_100_000,
-				&constants.Short_Asset_1BTC,
 			},
 			assetUpdates: []types.AssetUpdate{
 				{
-					AssetId:          constants.BtcUsd.Id,
-					BigQuantumsDelta: big.NewInt(-100_000_000), // -1 BTC
+					AssetId:          constants.Usdc.Id,
+					BigQuantumsDelta: big.NewInt(1_000_000), // +1 USDC
 				},
 				{
-					AssetId:          constants.BtcUsd.Id,
-					BigQuantumsDelta: big.NewInt(-100_000_000), // -1 BTC
+					AssetId:          constants.Usdc.Id,
+					BigQuantumsDelta: big.NewInt(1_000_000), // +1 USDC
 				},
 			},
+			expectedNetCollateral:     big.NewInt(100_002_000_000), // $100,000 + $1 + $1
+			expectedInitialMargin:     big.NewInt(0),               // $0
+			expectedMaintenanceMargin: big.NewInt(0),               // $0
 		},
 		"multiple perpetual updates for the same position": {
-			expectedErr: types.ErrNonUniqueUpdatesPosition,
+			useEmptySubaccount:        true,
+			assetUpdates:              testutil.CreateUsdcAssetUpdate(big.NewInt(1_000_000)),
+			expectedNetCollateral:     big.NewInt(-99_249_000_000), // $1 - $100,000 (BTC update) + $750 (ETH update)
+			expectedInitialMargin:     big.NewInt(50_150_000_000),  // $50,000 (BTC update) + $150 (ETH update)
+			expectedMaintenanceMargin: big.NewInt(40_075_000_000),  // $40,000 (BTC update) + $75 (ETH update)
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_NoMarginRequirement,
+				constants.BtcUsd_50PercentInitial_40PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
 			},
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
@@ -5673,6 +5692,10 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 				{
 					PerpetualId:      uint32(0),
 					BigQuantumsDelta: big.NewInt(-100_000_000), // -1 BTC
+				},
+				{
+					PerpetualId:      uint32(1),
+					BigQuantumsDelta: big.NewInt(250_000_000), // .25 ETH
 				},
 			},
 		},

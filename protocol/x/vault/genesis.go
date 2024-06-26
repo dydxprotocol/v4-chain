@@ -10,15 +10,32 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.InitializeForGenesis(ctx)
 
+	// Set params.
 	if err := k.SetParams(ctx, genState.Params); err != nil {
 		panic(err)
+	}
+	// Set total shares and owner shares of each vault.
+	for _, vault := range genState.Vaults {
+		if err := k.SetTotalShares(ctx, *vault.VaultId, *vault.TotalShares); err != nil {
+			panic(err)
+		}
+		for _, ownerShares := range vault.OwnerShares {
+			if err := k.SetOwnerShares(ctx, *vault.VaultId, ownerShares.Owner, *ownerShares.Shares); err != nil {
+				panic(err)
+			}
+		}
 	}
 }
 
 // ExportGenesis returns the module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
+
+	// Export params.
 	genesis.Params = k.GetParams(ctx)
+
+	// Export vaults.
+	genesis.Vaults = k.GetAllVaults(ctx)
 
 	return genesis
 }

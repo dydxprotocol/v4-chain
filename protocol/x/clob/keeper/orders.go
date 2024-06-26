@@ -1054,17 +1054,11 @@ func (k Keeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 
 			collatCheckPriceSubticks := openOrder.Subticks
 
-			bigFillQuoteQuantums, err := getFillQuoteQuantums(
-				clobPair,
+			bigFillQuoteQuantums := types.FillAmountToQuoteQuantums(
 				collatCheckPriceSubticks,
 				openOrder.RemainingQuantums,
+				clobPair.QuantumConversionExponent,
 			)
-
-			// If an error is returned, this implies stateful order validation was not performed properly, therefore panic.
-			if err != nil {
-				panic(err)
-			}
-
 			bigFillAmount := openOrder.RemainingQuantums.ToBigInt()
 			addPerpetualFillAmountStart := time.Now()
 			pendingUpdates.AddPerpetualFill(
@@ -1314,37 +1308,4 @@ func (k Keeper) SendOffchainMessages(
 		}
 		k.GetIndexerEventManager().SendOffchainData(update)
 	}
-}
-
-// getFillQuoteQuantums returns the total fillAmount price in quote quantums based on the maker subticks.
-// This value is always positive.
-//
-// Returns an error if:
-// - The Order is not for a `PerpetualClob`.
-// - The underlying `Price` does not exist.
-func getFillQuoteQuantums(
-	clobPair types.ClobPair,
-	makerSubticks types.Subticks,
-	fillAmount satypes.BaseQuantums,
-) (*big.Int, error) {
-	defer telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		time.Now(),
-		metrics.GetFillQuoteQuantums,
-		metrics.Latency,
-	)
-
-	if perpetualClobMetadata := clobPair.GetPerpetualClobMetadata(); perpetualClobMetadata == nil {
-		return nil, types.ErrAssetOrdersNotImplemented
-	}
-
-	quantumConversionExponent := clobPair.QuantumConversionExponent
-
-	quoteQuantums := types.FillAmountToQuoteQuantums(
-		makerSubticks,
-		fillAmount,
-		quantumConversionExponent,
-	)
-
-	return quoteQuantums, nil
 }

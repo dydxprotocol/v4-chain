@@ -104,27 +104,13 @@ func (k Keeper) GetNumCurrencyPairs(ctx sdk.Context) (uint64, error) {
 	return numMarketPrices, nil
 }
 
+// GetNumRemovedCurrencyPairs is currently a no-op since we don't support removing Markets right now.
 func (k Keeper) GetNumRemovedCurrencyPairs(_ sdk.Context) (uint64, error) {
 	return 0, nil
 }
 
+// GetAllCurrencyPairs is not used with the DefaultCurrencyPair strategy.
+// See https://github.com/skip-mev/slinky/blob/main/abci/strategies/currencypair/default.go
 func (k Keeper) GetAllCurrencyPairs(ctx sdk.Context) []slinkytypes.CurrencyPair {
-	marketParamStore := k.getMarketParamStore(ctx)
-	var currencyPairs []slinkytypes.CurrencyPair
-
-	iterator := marketParamStore.Iterator(nil, nil)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		mp := types.MarketParam{}
-		k.cdc.MustUnmarshal(iterator.Value(), &mp)
-		mpCp, err := slinky.MarketPairToCurrencyPair(mp.Pair)
-		if err != nil {
-			k.Logger(ctx).Error("market param pair invalid format", "pair", mp.Pair)
-			continue
-		}
-		currencyPairs = append(currencyPairs, mpCp)
-	}
-
-	return currencyPairs
+	return nil
 }

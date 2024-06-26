@@ -1,9 +1,11 @@
 /* eslint-disable max-len */
 import { logger, stats, STATS_NO_SAMPLING } from '@dydxprotocol-indexer/base';
+import { BLOCK_HEIGHT_WEBSOCKET_MESSAGE_VERSION, KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
   storeHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import {
+  BlockHeightMessage,
   IndexerTendermintBlock,
   IndexerTendermintEvent,
 } from '@dydxprotocol-indexer/v4-protos';
@@ -33,6 +35,7 @@ import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTra
 import { KafkaPublisher } from './kafka-publisher';
 import { SyncHandlers, SYNCHRONOUS_SUBTYPES } from './sync-handlers';
 import {
+  ConsolidatedKafkaEvent,
   DydxIndexerSubtypes, EventMessage, EventProtoWithTypeAndVersion, GroupedEvents,
 } from './types';
 
@@ -225,6 +228,18 @@ export class BlockProcessor {
     });
   }
 
+  createBlockHeightMsg(): ConsolidatedKafkaEvent {
+    const message: BlockHeightMessage = {
+      blockHeight: String(this.block.height),
+      version: BLOCK_HEIGHT_WEBSOCKET_MESSAGE_VERSION,
+      time: this.block.time?.toISOString() ?? '',
+    };
+    return {
+      topic: KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
+      message,
+    };
+  }
+
   private async processEvents(): Promise<KafkaPublisher> {
     const kafkaPublisher: KafkaPublisher = new KafkaPublisher();
 
@@ -270,6 +285,9 @@ export class BlockProcessor {
         { success: success.toString() },
       );
     }
+
+    // Create a block message from the current block
+    kafkaPublisher.addEvent(this.createBlockHeightMsg());
 
     // in genesis, handle sync events first, then batched events.
     // in other blocks, handle batched events first, then sync events.

@@ -101,6 +101,27 @@ func (k Keeper) getVaultOwnerSharesStore(
 	return prefix.NewStore(store, vaultId.ToStateKeyPrefix())
 }
 
+// GetAllOwnerShares gets all owner shares of a given vault.
+func (k Keeper) GetAllOwnerShares(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+) []*types.OwnerShare {
+	allOwnerShares := []*types.OwnerShare{}
+	ownerSharesStore := k.getVaultOwnerSharesStore(ctx, vaultId)
+	ownerSharesIterator := storetypes.KVStorePrefixIterator(ownerSharesStore, []byte{})
+	defer ownerSharesIterator.Close()
+	for ; ownerSharesIterator.Valid(); ownerSharesIterator.Next() {
+		owner := string(ownerSharesIterator.Key())
+		var ownerShares types.NumShares
+		k.cdc.MustUnmarshal(ownerSharesIterator.Value(), &ownerShares)
+		allOwnerShares = append(allOwnerShares, &types.OwnerShare{
+			Owner:  owner,
+			Shares: &ownerShares,
+		})
+	}
+	return allOwnerShares
+}
+
 // MintShares mints shares of a vault for `owner` based on `quantumsToDeposit` by:
 // 1. Increasing total shares of the vault.
 // 2. Increasing owner shares of the vault for given `owner`.
