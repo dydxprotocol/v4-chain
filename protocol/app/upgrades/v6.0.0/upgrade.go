@@ -2,8 +2,9 @@ package v_6_0_0
 
 import (
 	"context"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"fmt"
+
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
