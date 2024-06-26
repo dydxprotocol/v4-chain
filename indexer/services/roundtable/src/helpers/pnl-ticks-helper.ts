@@ -454,11 +454,9 @@ export function calculateEquity(
 
   const signedPositionNotional: Big = positions.reduce(
     (acc: Big, position: PerpetualPositionFromDatabase) => {
-      console.log(`position.size: ${position.size}`);
       const price: Big = Number(position.perpetualId) in marketPrices
         ? Big(marketPrices[Number(position.perpetualId)])
         : Big(0);
-      console.log(`price: ${marketPrices[Number(position.perpetualId)]}`);
       const positionNotional: Big = Big(position.size).times(price);
       // Add positionNotional to the accumulator
       return acc.plus(positionNotional);

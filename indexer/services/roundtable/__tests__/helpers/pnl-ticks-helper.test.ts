@@ -348,6 +348,38 @@ describe('pnl-ticks-helper', () => {
     expect(equity).toEqual(new Big('190530'));
   });
 
+  it('calculateEquity with missing price', () => {
+    const positions2: PerpetualPositionFromDatabase[] = [
+      ...positions,
+      {
+        ...testConstants.defaultPerpetualPosition,
+        side: PositionSide.SHORT,
+        perpetualId: testConstants.defaultPerpetualMarket2.id,
+        entryPrice: '20000',
+        sumOpen: '10',
+        size: '-10',
+        sumClose: '0',
+        openEventId: testConstants.defaultTendermintEventId2,
+        id: PerpetualPositionTable.uuid(
+          testConstants.defaultPerpetualPosition.subaccountId,
+          testConstants.defaultTendermintEventId2,
+        ),
+      },
+    ];
+    const marketPricesMissingPrice: PriceMap = {
+      [testConstants.defaultPerpetualMarket.id]: '20000',
+    };
+    const usdcPosition: Big = new Big('10000');
+    const equity: Big = calculateEquity(
+      usdcPosition,
+      positions2,
+      marketPricesMissingPrice,
+      lastUpdatedFundingIndexMap,
+      currentFundingIndexMap,
+    );
+    expect(equity).toEqual(new Big('200530'));
+  });
+
   it('calculateTotalPnl', () => {
     const equity: Big = new Big('200100');
     const transfers: string = '-20.5';
