@@ -95,7 +95,6 @@ export class MessageForwarder {
   public async onBatch(
     payload: EachBatchPayload,
   ): Promise<void> {
-    console.log('onBatch');
     const batch: Batch = payload.batch;
     const topic: string = batch.topic;
     const partition: string = batch.partition.toString();
@@ -330,6 +329,7 @@ export class MessageForwarder {
       stats.increment(
         `${config.SERVICE_NAME}.forward_message_with_subscribers`,
         1,
+        config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       );
     }
   }
