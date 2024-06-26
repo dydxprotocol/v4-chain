@@ -3,7 +3,6 @@ name: Indexer Build & Push Images to AWS ECR for Mainnet
 on: # yamllint disable-line rule:truthy
   push:
     branches:
-      - 'wl/pnldbg2'
       - main
       - 'release/indexer/v[0-9]+.[0-9]+.x'  # e.g. release/indexer/v0.1.x
       - 'release/indexer/v[0-9]+.x'  # e.g. release/indexer/v1.x
