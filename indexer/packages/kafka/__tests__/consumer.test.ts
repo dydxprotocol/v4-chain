@@ -1,5 +1,5 @@
 import {
-  consumer, startConsumer, addOnMessageFunction, stopConsumer,
+  consumer, startConsumer, updateOnMessageFunction, stopConsumer,
 } from '../src/consumer';
 import { producer } from '../src/producer';
 import { createKafkaMessage } from './helpers/kafka';
@@ -26,7 +26,7 @@ describe.skip('consumer', () => {
 
   it('is consuming message', async () => {
     const onMessageFn: (topic: string, message: KafkaMessage) => Promise<void> = jest.fn();
-    addOnMessageFunction(onMessageFn);
+    updateOnMessageFunction(onMessageFn);
     const kafkaMessage: KafkaMessage = createKafkaMessage(null);
 
     await producer.send({

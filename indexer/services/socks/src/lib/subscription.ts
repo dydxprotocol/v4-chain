@@ -4,7 +4,9 @@ import {
   stats,
 } from '@dydxprotocol-indexer/base';
 import { isRestrictedCountry } from '@dydxprotocol-indexer/compliance';
-import { CandleResolution, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+import {
+  CHILD_SUBACCOUNT_MULTIPLIER, CandleResolution, MAX_PARENT_SUBACCOUNTS, perpetualMarketRefresher,
+} from '@dydxprotocol-indexer/postgres';
 import WebSocket from 'ws';
 
 import config from '../config';
@@ -379,17 +381,10 @@ export class Subscriptions {
     }
     switch (channel) {
       case (Channel.V4_ACCOUNTS): {
-        if (id === undefined) {
-          return false;
-        }
-        const parts: string[] = id.split('/');
-
-        // Id for subaccounts channel should be of the format {address}/{subaccountNumber}
-        if (parts.length !== 2) {
-          return false;
-        }
-
-        return true;
+        return this.validateSubaccountChannelId(
+          id,
+          MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER,
+        );
       }
       case (Channel.V4_MARKETS): {
         return true;
@@ -418,10 +413,34 @@ export class Subscriptions {
 
         return resolution !== undefined;
       }
+      case (Channel.V4_PARENT_ACCOUNTS): {
+        return this.validateSubaccountChannelId(id, MAX_PARENT_SUBACCOUNTS);
+      }
       default: {
         throw new InvalidChannelError(channel);
       }
     }
+  }
+
+  private validateSubaccountChannelId(id?: string, maxSubaccountNumber?: number): boolean {
+    if (id === undefined) {
+      return false;
+    }
+    // Id for subaccounts channel should be of the format {address}/{subaccountNumber}
+    const parts: string[] = id.split('/');
+    if (parts.length !== 2) {
+      return false;
+    }
+
+    if (Number.isNaN(Number(parts[1]))) {
+      return false;
+    }
+
+    if (maxSubaccountNumber !== undefined && Number(Number(parts[1]) >= maxSubaccountNumber)) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -549,6 +568,71 @@ export class Subscriptions {
     }
   }
 
+  private async getInitialResponseForParentSubaccountSubscription(
+    id?: string,
+    country?: string,
+  ): Promise<string> {
+    if (id === undefined) {
+      throw new Error('Invalid undefined id');
+    }
+
+    try {
+      const {
+        address,
+        subaccountNumber,
+      } : {
+        address: string,
+        subaccountNumber: string,
+      } = this.parseSubaccountChannelId(id);
+
+      const [
+        subaccountsResponse,
+        ordersResponse,
+      ]: [
+        string,
+        string,
+      ] = await Promise.all([
+        axiosRequest({
+          method: RequestMethod.GET,
+          url: `${COMLINK_URL}/v4/addresses/${address}/parentSubaccountNumber/${subaccountNumber}`,
+          timeout: config.INITIAL_GET_TIMEOUT_MS,
+          headers: {
+            'cf-ipcountry': country,
+          },
+          transformResponse: (res) => res,
+        }),
+        // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
+        axiosRequest({
+          method: RequestMethod.GET,
+          url: `${COMLINK_URL}/v4/orders/parentSubaccountNumber?address=${address}&subaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED,BEST_EFFORT_OPENED`,
+          timeout: config.INITIAL_GET_TIMEOUT_MS,
+          headers: {
+            'cf-ipcountry': country,
+          },
+          transformResponse: (res) => res,
+        }),
+      ]);
+
+      return JSON.stringify({
+        ...JSON.parse(subaccountsResponse),
+        orders: JSON.parse(ordersResponse),
+      });
+    } catch (error) {
+      // The subaccounts API endpoint returns a 404 for subaccounts that are not indexed, however
+      // such subaccounts can be subscribed to and events can be sent when the subaccounts are
+      // indexed to an existing subscription.
+      if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 404) {
+        return EMPTY_INITIAL_RESPONSE;
+      }
+      // 403 indicates a blocked address. Throw a specific error for blocked addresses with a
+      // specific error message detailing why the subscription failed due to a blocked address.
+      if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 403) {
+        throw new BlockedError();
+      }
+      throw error;
+    }
+  }
+
   private parseSubaccountChannelId(id: string): {
     address: string,
     subaccountNumber: string,
@@ -586,6 +670,9 @@ export class Subscriptions {
   ): Promise<string> {
     if (channel === Channel.V4_ACCOUNTS) {
       return this.getInitialResponseForSubaccountSubscription(id, country);
+    }
+    if (channel === Channel.V4_PARENT_ACCOUNTS) {
+      return this.getInitialResponseForParentSubaccountSubscription(id, country);
     }
     const endpoint: string | undefined = this.getInitialEndpointForSubscription(channel, id);
     // If no endpoint exists, return an empty initial response.

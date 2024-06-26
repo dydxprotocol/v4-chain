@@ -40,7 +40,6 @@ import {
   getTotalUnsettledFunding,
   getPerpetualPositionsWithUpdatedFunding,
   getChildSubaccountNums,
-  getParentSubaccountNum,
   initializePerpetualPositionsWithFunding,
 } from '../../src/lib/helpers';
 import _ from 'lodash';
@@ -719,20 +718,6 @@ describe('helpers', () => {
   describe('getChildSubaccountNums', () => {
     it('Throws an error if the parent subaccount number is greater than or equal to the maximum parent subaccount number', () => {
       expect(() => getChildSubaccountNums(128)).toThrowError('Parent subaccount number must be less than 128');
-    });
-  });
-
-  describe('getParentSubaccountNum', () => {
-    it('Gets the parent subaccount number from a child subaccount number', () => {
-      expect(getParentSubaccountNum(0)).toEqual(0);
-      expect(getParentSubaccountNum(128)).toEqual(0);
-      expect(getParentSubaccountNum(128 * 999 - 1)).toEqual(127);
-    });
-  });
-
-  describe('getParentSubaccountNum', () => {
-    it('Throws an error if the child subaccount number is greater than the max child subaccount number', () => {
-      expect(() => getParentSubaccountNum(128001)).toThrowError('Child subaccount number must be less than 128000');
     });
   });
 });

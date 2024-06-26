@@ -37,7 +37,7 @@ async function startService(): Promise<void> {
     connectToRedis(),
   ]);
 
-  await startConsumer();
+  await startConsumer(config.BATCH_PROCESSING_ENABLED);
 
   logger.info({
     at: 'index#start',

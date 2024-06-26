@@ -526,16 +526,3 @@ export function getChildSubaccountIds(address: string, parentSubaccountNum: numb
     (subaccountNumber: number): string => SubaccountTable.uuid(address, subaccountNumber),
   );
 }
-
-/**
- * Gets the parent subaccount number from a child subaccount number
- * Parent subaccount = childSubaccount % 128
- * @param childSubaccountNum
- * @returns
- */
-export function getParentSubaccountNum(childSubaccountNum: number): number {
-  if (childSubaccountNum > MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER) {
-    throw new Error(`Child subaccount number must be less than ${MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER}`);
-  }
-  return childSubaccountNum % MAX_PARENT_SUBACCOUNTS;
-}
