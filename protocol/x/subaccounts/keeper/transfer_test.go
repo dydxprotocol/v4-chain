@@ -1311,7 +1311,7 @@ func TestDistributeFees(t *testing.T) {
 			marketMapperAccBalance:              big.NewInt(0),
 			quantums:                            big.NewInt(500),
 			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 500
-			expectedFeeModuleAccBalance:         big.NewInt(2950), // 500 + 2500 - 50
+			expectedFeeModuleAccBalance:         big.NewInt(2950), // 2500 + 500 - 50
 			expectedMarketMapperAccBalance:      big.NewInt(50),   // 0 + 50
 			perpetualId:                         4,
 			collateralPoolAddr: authtypes.NewModuleAddress(
@@ -1343,6 +1343,26 @@ func TestDistributeFees(t *testing.T) {
 			validDays:          240,
 			setRevenueShare:    true,
 			revShareExpiration: -10,
+		},
+		"success - negative fees to market mapper and fee collector": {
+			asset:                               *constants.Usdc,
+			feeModuleAccBalance:                 big.NewInt(2500),
+			subaccountModuleAccBalance:          big.NewInt(600),
+			marketMapperAccBalance:              big.NewInt(100),
+			quantums:                            big.NewInt(-500),
+			expectedSubaccountsModuleAccBalance: big.NewInt(1100), // 600 + 500
+			expectedFeeModuleAccBalance:         big.NewInt(2050), // 2500 - (500 - 50)
+			expectedMarketMapperAccBalance:      big.NewInt(50),   // 100 - 50
+			perpetualId:                         4,
+			collateralPoolAddr: authtypes.NewModuleAddress(
+				types.ModuleName + ":" + lib.IntToString(4),
+			),
+
+			marketMapperAddr:   constants.AliceAccAddress,
+			revenueSharePpm:    100_000,
+			validDays:          240,
+			setRevenueShare:    true,
+			revShareExpiration: 100,
 		},
 		// TODO(DEC-715): Add more test for non-USDC assets, after asset update
 		// is implemented.
@@ -1393,6 +1413,18 @@ func TestDistributeFees(t *testing.T) {
 					tc.collateralPoolAddr,
 					sdk.Coins{
 						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
+					},
+					*bankKeeper,
+				)
+				require.NoError(t, err)
+			}
+
+			if tc.marketMapperAccBalance.Sign() > 0 {
+				err := bank_testutil.FundAccount(
+					ctx,
+					tc.marketMapperAddr,
+					sdk.Coins{
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.marketMapperAccBalance)),
 					},
 					*bankKeeper,
 				)
