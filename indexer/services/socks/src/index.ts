@@ -61,13 +61,13 @@ async function start(): Promise<void> {
   });
 
   await connectToKafka();
-  await startConsumer(config.BATCH_PROCESSING_ENABLED);
 
   const subscriptions: Subscriptions = new Subscriptions();
   index = new Index(wss, subscriptions);
   messageForwarder = new MessageForwarder(subscriptions, index);
   subscriptions.start(messageForwarder.forwardToClient);
   messageForwarder.start();
+  await startConsumer(config.BATCH_PROCESSING_ENABLED);
 
   logger.info({
     at: 'index#start',

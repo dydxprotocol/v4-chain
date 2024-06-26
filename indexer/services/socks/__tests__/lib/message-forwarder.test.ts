@@ -13,7 +13,7 @@ import {
   startConsumer,
   TRADES_WEBSOCKET_MESSAGE_VERSION,
   SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
-  BLOCK_HEIGHT_WEBSOCKET_MESSAGE_VERSION,
+  BLOCK_HEIGHT_WEBSOCKET_MESSAGE_VERSION, stopConsumer,
 } from '@dydxprotocol-indexer/kafka';
 import { MessageForwarder } from '../../src/lib/message-forwarder';
 import WebSocket from 'ws';
@@ -180,6 +180,7 @@ describe('message-forwarder', () => {
     orders: mockAxiosResponse,
     blockHeight: '2',
   };
+  let messageForwarder: MessageForwarder;
 
   beforeAll(async () => {
     await dbHelpers.clearData();
@@ -195,7 +196,6 @@ describe('message-forwarder', () => {
       producer.connect(),
       admin.connect(),
     ]);
-    await startConsumer(config.BATCH_PROCESSING_ENABLED);
     await admin.fetchTopicMetadata();
     await admin.deleteTopicRecords({
       topic: WebsocketTopics.TO_WEBSOCKETS_TRADES,
@@ -216,7 +216,7 @@ describe('message-forwarder', () => {
     await dbHelpers.teardown();
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
 
     // Increment port with a large number to ensure it's not used for any other service.
@@ -227,20 +227,22 @@ describe('message-forwarder', () => {
     subscriptions = new Subscriptions();
     index = new Index(wss, subscriptions);
     (axiosRequest as jest.Mock).mockImplementation(() => (JSON.stringify(mockAxiosResponse)));
+
+    messageForwarder = new MessageForwarder(subscriptions, index);
+    subscriptions.start(messageForwarder.forwardToClient);
+    messageForwarder.start();
+    await startConsumer(config.BATCH_PROCESSING_ENABLED);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.clearAllMocks();
     jest.resetAllMocks();
+    await stopConsumer();
   });
 
   it('Batch sends messages with different versions', (done: jest.DoneCallback) => {
     const channel: Channel = Channel.V4_TRADES;
     const id: string = btcTicker;
-
-    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
-    subscriptions.start(messageForwarder.forwardToClient);
-    messageForwarder.start();
 
     const ws = new WebSocket(WS_HOST);
     let connectionId: string;
@@ -319,10 +321,6 @@ describe('message-forwarder', () => {
     const channel: Channel = Channel.V4_ACCOUNTS;
     const id: string = `${defaultSubaccountId.owner}/${defaultSubaccountId.number}`;
 
-    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
-    subscriptions.start(messageForwarder.forwardToClient);
-    messageForwarder.start();
-
     const ws = new WebSocket(WS_HOST);
     let connectionId: string;
 
@@ -389,10 +387,6 @@ describe('message-forwarder', () => {
   it('Batch sends subaccount messages to parent subaccount channel', (done: jest.DoneCallback) => {
     const channel: Channel = Channel.V4_PARENT_ACCOUNTS;
     const id: string = `${defaultSubaccountId.owner}/${defaultSubaccountId.number}`;
-
-    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
-    subscriptions.start(messageForwarder.forwardToClient);
-    messageForwarder.start();
 
     const ws = new WebSocket(WS_HOST);
     let connectionId: string;
@@ -478,10 +472,6 @@ describe('message-forwarder', () => {
     const channel: Channel = Channel.V4_TRADES;
     const id: string = ethTicker;
 
-    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
-    subscriptions.start(messageForwarder.forwardToClient);
-    messageForwarder.start();
-
     const ws = new WebSocket(WS_HOST);
     let connectionId: string;
 
@@ -556,10 +546,6 @@ describe('message-forwarder', () => {
       ...defaultBlockHeightMessage,
       blockHeight: '1',
     };
-
-    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
-    subscriptions.start(messageForwarder.forwardToClient);
-    messageForwarder.start();
 
     const ws = new WebSocket(WS_HOST);
     let connectionId: string;
