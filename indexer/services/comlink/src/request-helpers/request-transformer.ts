@@ -132,6 +132,7 @@ export function assetPositionToResponseObject(
 export function fillToResponseObject(
   fill: FillFromDatabase,
   marketsByClobPairId: MarketAndTypeByClobPairId,
+  subaccountNumber: number,
 ): FillResponseObject {
   return {
     id: fill.id,
@@ -147,6 +148,7 @@ export function fillToResponseObject(
     createdAtHeight: fill.createdAtHeight,
     orderId: fill.orderId,
     clientMetadata: fill.clientMetadata,
+    subaccountNumber,
   };
 }
 

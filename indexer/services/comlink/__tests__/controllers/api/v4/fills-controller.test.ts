@@ -62,6 +62,7 @@ describe('fills-controller#V4', () => {
         orderId: testConstants.defaultFill.orderId,
         createdAt: testConstants.defaultFill.createdAt,
         createdAtHeight: testConstants.defaultFill.createdAtHeight,
+        subaccountNumber: defaultSubaccountNumber,
       };
 
       expect(response.body.fills).toHaveLength(1);
@@ -111,6 +112,7 @@ describe('fills-controller#V4', () => {
         orderId: ethOrder.id,
         createdAt: ethFill.createdAt,
         createdAtHeight: ethFill.createdAtHeight,
+        subaccountNumber: defaultSubaccountNumber,
       };
 
       // Only the ETH-USD order should be returned

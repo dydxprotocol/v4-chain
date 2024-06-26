@@ -7,7 +7,7 @@
     "services/*"
   ],
   "scripts": {
-    "build:all": "pnpm recursive run build --workspace-concurrency=Infinity",
+    "build:all": "pnpm recursive run build",
     "build:prod:all": "pnpm recursive run build:prod",
     "build:watch:all": "pnpm run --parallel build:watch",
     "lint:all": "pnpm run --parallel lint",

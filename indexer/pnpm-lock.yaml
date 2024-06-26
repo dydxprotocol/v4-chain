@@ -424,6 +424,9 @@ importers:
       '@protobufs/gogoproto':
         specifier: ^0.0.10
         version: 0.0.10
+      '@types/node':
+        specifier: ^18.19.39
+        version: 18.19.39
       typescript:
         specifier: ^4.7.4
         version: 4.7.4
