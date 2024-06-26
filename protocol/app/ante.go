@@ -18,6 +18,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
 // HandlerOptions are the options required for constructing an SDK AnteHandler.
@@ -25,9 +26,10 @@ import (
 // struct embedding to include the normal cosmos-sdk `HandlerOptions`.
 type HandlerOptions struct {
 	ante.HandlerOptions
-	Codec        codec.Codec
-	AuthStoreKey storetypes.StoreKey
-	ClobKeeper   clobtypes.ClobKeeper
+	Codec            codec.Codec
+	AuthStoreKey     storetypes.StoreKey
+	ClobKeeper       clobtypes.ClobKeeper
+	PerpetualsKeeper perpetualstypes.PerpetualsKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -83,6 +85,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "auth store key is required for ante builder")
 	}
 
+	if options.PerpetualsKeeper == nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "perpetuals keeper is required for ante builder")
+	}
+
 	h := &lockingAnteHandler{
 		authStoreKey:             options.AuthStoreKey,
 		setupContextDecorator:    ante.NewSetUpContextDecorator(),
@@ -106,6 +112,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		sigGasConsume: ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		clobRateLimit: clobante.NewRateLimitDecorator(options.ClobKeeper),
 		clob:          clobante.NewClobDecorator(options.ClobKeeper),
+		marketupdates: customante.NewValidateMarketUpdateDecorator(options.PerpetualsKeeper),
 	}
 	return h.AnteHandle, nil
 }
@@ -135,6 +142,7 @@ type lockingAnteHandler struct {
 	sigGasConsume            ante.SigGasConsumeDecorator
 	clobRateLimit            clobante.ClobRateLimitDecorator
 	clob                     clobante.ClobDecorator
+	marketupdates            customante.ValidateMarketUpdateDecorator
 }
 
 func (h *lockingAnteHandler) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
@@ -178,6 +186,9 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 		return ctx, err
 	}
 	if ctx, err = h.validateMemo.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
+		return ctx, err
+	}
+	if ctx, err = h.marketupdates.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
 	}
 
