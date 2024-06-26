@@ -164,6 +164,7 @@ describe('fills-controller#V4', () => {
           orderId: testConstants.defaultFill.orderId,
           createdAt: testConstants.defaultFill.createdAt,
           createdAtHeight: testConstants.defaultFill.createdAtHeight,
+          subaccountNumber: defaultSubaccountNumber,
         },
         {
           side: ethFill.side,
@@ -177,6 +178,7 @@ describe('fills-controller#V4', () => {
           orderId: ethOrder.id,
           createdAt: ethFill.createdAt,
           createdAtHeight: ethFill.createdAtHeight,
+          subaccountNumber: defaultSubaccountNumber,
         },
       ];
 
