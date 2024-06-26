@@ -6,7 +6,26 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    devDependencies:
+      '@types/big.js':
+        specifier: ^6.1.5
+        version: 6.2.2
+      '@types/kafkajs':
+        specifier: ^1.9.0
+        version: 1.9.0
+      '@types/lodash':
+        specifier: ^4.14.182
+        version: 4.17.5
+      '@types/node':
+        specifier: ^20.14.9
+        version: 20.14.9
+      '@types/redis':
+        specifier: 2.8.27
+        version: 2.8.27
+      typescript:
+        specifier: ^5.5.2
+        version: 5.5.2
 
   packages/base:
     dependencies:
@@ -171,7 +190,7 @@ importers:
         specifier: ^3.2.0
         version: 3.3.0
       kafkajs:
-        specifier: ^2.1.0
+        specifier: ^2.2.4
         version: 2.2.4
       lodash:
         specifier: ^4.17.21
@@ -449,8 +468,8 @@ importers:
         specifier: ^3.2.0
         version: 3.3.0
       kafkajs:
-        specifier: 2.1.0
-        version: 2.1.0
+        specifier: ^2.2.4
+        version: 2.2.4
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -519,8 +538,8 @@ importers:
         specifier: ^3.2.0
         version: 3.3.0
       kafkajs:
-        specifier: 2.1.0
-        version: 2.1.0
+        specifier: ^2.2.4
+        version: 2.2.4
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -746,7 +765,7 @@ importers:
         specifier: ^3.0.5
         version: 3.0.7(jest@28.1.3(@types/node@18.19.39)(ts-node@10.9.2(@types/node@18.19.39)(typescript@4.7.4)))(typescript@4.7.4)
       kafkajs:
-        specifier: ^2.1.0
+        specifier: ^2.2.4
         version: 2.2.4
       lodash:
         specifier: ^4.17.21
@@ -859,7 +878,7 @@ importers:
         specifier: ^3.2.0
         version: 3.3.0
       kafkajs:
-        specifier: ^2.1.0
+        specifier: ^2.2.4
         version: 2.2.4
       lodash:
         specifier: ^4.17.21
@@ -935,7 +954,7 @@ importers:
         specifier: ^3.2.0
         version: 3.3.0
       kafkajs:
-        specifier: ^2.1.0
+        specifier: ^2.2.4
         version: 2.2.4
       lodash:
         specifier: ^4.17.21
@@ -1011,7 +1030,7 @@ importers:
         specifier: ^1.4.0
         version: 1.4.1
       kafkajs:
-        specifier: ^2.1.0
+        specifier: ^2.2.4
         version: 2.2.4
       lodash:
         specifier: ^4.17.21
@@ -1105,7 +1124,7 @@ importers:
         specifier: ^3.2.0
         version: 3.3.0
       kafkajs:
-        specifier: ^2.2.3
+        specifier: ^2.2.4
         version: 2.2.4
       long:
         specifier: ^5.2.1
@@ -2621,6 +2640,10 @@ packages:
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
+  '@types/kafkajs@1.9.0':
+    resolution: {integrity: sha512-R9VDNbiw+vNfxWjjFHUrLMF/Dfc7asGXzKtYUwI4FaT24Chf5ZNkfvce54p4dkLMxPcsrEsVazAK0Jp2ib4Zxw==}
+    deprecated: This is a stub types definition. kafkajs provides its own type definitions, so you do not need this installed.
+
   '@types/lodash@4.17.5':
     resolution: {integrity: sha512-MBIOHVZqVqgfro1euRDWX7OO0fBVUUMrN6Pwm8LQsz8cWhEpihlvR70ENj3f40j58TNxZaWv2ndSkInykNBBJw==}
 
@@ -2644,6 +2667,9 @@ packages:
 
   '@types/node@18.19.39':
     resolution: {integrity: sha512-nPwTRDKUctxw3di5b4TfT3I0sWDiWoPQCZjXhvdkINntwr8lcoVCKsTgnXeRubKIlfnV+eN/HYk6Jb40tbcEAQ==}
+
+  '@types/node@20.14.9':
+    resolution: {integrity: sha512-06OCtnTXtWOZBJlRApleWndH4JsRVs1pDCc8dLSQp+7PpUpX3ePdHyeNSFTeSe7FtKyQkrlPvHwJOW3SLd8Oyg==}
 
   '@types/parse-package-name@0.1.0':
     resolution: {integrity: sha512-+vF4M3Cd3Ec22Uwb+OKhDrSAcXQ5I6evRx+1letx4KzfzycU+AOEDHnCifus8In11i8iYNFXPfzg9HWTcC1h+Q==}
@@ -5031,10 +5057,6 @@ packages:
     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}
     engines: {node: '>=4.0'}
 
-  kafkajs@2.1.0:
-    resolution: {integrity: sha512-6IYiOdGWvFPbSbVB+AV3feT+A7vzw5sXm7Ze4QTfP7FRNdY8pGcpiNPvD2lfgYFD8Dm9KbMgBgTt2mf8KaIkzw==}
-    engines: {node: '>=14.0.0'}
-
   kafkajs@2.2.4:
     resolution: {integrity: sha512-j/YeapB1vfPT2iOIUn/vxdyKEuhuY2PxMBvf5JWux6iSaukAccrMtXEY/Lb7OvavDhOWME589bpLrEdnVHjfjA==}
     engines: {node: '>=14.0.0'}
@@ -6635,6 +6657,11 @@ packages:
   typescript@4.9.5:
     resolution: {integrity: sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==}
     engines: {node: '>=4.2.0'}
+    hasBin: true
+
+  typescript@5.5.2:
+    resolution: {integrity: sha512-NcRtPEOsPFFWjobJEtfihkLCZCXZt/os3zf8nTxjVH3RvTSxjrCamJpbExGvYOF+tFHc3pA65qpdwPbzjohhew==}
+    engines: {node: '>=14.17'}
     hasBin: true
 
   uc.micro@1.0.6:
@@ -10108,6 +10135,10 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
+  '@types/kafkajs@1.9.0':
+    dependencies:
+      kafkajs: 2.2.4
+
   '@types/lodash@4.17.5': {}
 
   '@types/long@4.0.2': {}
@@ -10125,6 +10156,10 @@ snapshots:
       '@types/express': 4.17.21
 
   '@types/node@18.19.39':
+    dependencies:
+      undici-types: 5.26.5
+
+  '@types/node@20.14.9':
     dependencies:
       undici-types: 5.26.5
 
@@ -13107,8 +13142,6 @@ snapshots:
       object.assign: 4.1.5
       object.values: 1.2.0
 
-  kafkajs@2.1.0: {}
-
   kafkajs@2.2.4: {}
 
   keypress@0.1.0: {}
@@ -14802,6 +14835,8 @@ snapshots:
   typescript@4.7.4: {}
 
   typescript@4.9.5: {}
+
+  typescript@5.5.2: {}
 
   uc.micro@1.0.6: {}
 

@@ -18,6 +18,9 @@ import {
   orderbookMessage,
   subaccountMessage,
   tradesMessage,
+  childSubaccountMessage,
+  defaultChildAccNumber,
+  defaultTransferContents,
 } from '../constants';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage } from './kafka';
@@ -26,10 +29,7 @@ import {
   MarketMessage,
   OrderbookMessage,
   SubaccountMessage,
-  childSubaccountMessage,
   TradeMessage,
-  defaultChildAccNumber,
-  defaultTransferContents,
 } from '@dydxprotocol-indexer/v4-protos';
 import { V4_MARKETS_ID } from '../../src/lib/constants';
 import {

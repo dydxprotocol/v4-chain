@@ -22,7 +22,7 @@ import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   MarketEventV1,
-  defaultPerpetualMarketCreateEventV1,
+  PerpetualMarketCreateEventV1,
   SubaccountMessage,
   SubaccountUpdateEventV1,
   Timestamp,
@@ -44,6 +44,7 @@ import {
   defaultMarketModify,
   defaultPreviousHeight,
   defaultSubaccountMessage,
+  defaultPerpetualMarketCreateEventV1,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import Long from 'long';

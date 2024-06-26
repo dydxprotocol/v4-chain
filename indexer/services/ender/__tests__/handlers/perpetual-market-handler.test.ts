@@ -122,7 +122,6 @@ describe('perpetualMarketHandler', () => {
 
       expect(handler.getParallelizationIds()).toEqual([]);
     });
-  });
 
   it('fails when market doesnt exist for perpetual market', async () => {
     const transactionIndex: number = 0;
@@ -189,6 +188,7 @@ describe('perpetualMarketHandler', () => {
     expectPerpetualMarket(perpetualMarket!, event);
     expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
   });
+});
 });
 
 function expectPerpetualMarketMatchesEvent(

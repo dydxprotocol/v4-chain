@@ -16,5 +16,13 @@
     "test:all": "pnpm recursive run --workspace-concurrency=1 test"
   },
   "author": "",
-  "license": "AGPL-3.0"
+  "license": "AGPL-3.0",
+  "devDependencies": {
+    "@types/big.js": "^6.1.5",
+    "@types/kafkajs": "^1.9.0",
+    "@types/lodash": "^4.14.182",
+    "@types/node": "^20.14.9",
+    "@types/redis": "2.8.27",
+    "typescript": "^5.5.2"
+  }
 }

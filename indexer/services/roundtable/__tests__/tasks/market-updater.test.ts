@@ -51,7 +51,6 @@ import {
   defaultTendermintEvent2,
   defaultTendermintEvent3,
   defaultTendermintEvent4,
-  defaultWallet,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import * as MarketTable from '@dydxprotocol-indexer/postgres/build/src/stores/market-table';
 import * as TendermintEventTable from '@dydxprotocol-indexer/postgres/build/src/stores/tendermint-event-table';

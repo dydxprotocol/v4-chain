@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-
+import Long from 'long';
 import {
   createKafkaMessage,
   MARKETS_WEBSOCKET_MESSAGE_VERSION,
