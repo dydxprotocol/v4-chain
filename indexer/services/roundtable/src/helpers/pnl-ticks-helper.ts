@@ -319,6 +319,11 @@ export function getNewPnlTick(
     subaccountId,
     latestBlockHeight,
     latestBlockTime,
+    usdcPositionSize,
+    openPerpetualPositionsForSubaccount: JSON.stringify(openPerpetualPositionsForSubaccount),
+    marketPrices: JSON.stringify(marketPrices),
+    lastUpdatedFundingIndexMap: JSON.stringify(lastUpdatedFundingIndexMap),
+    currentFundingIndexMap: JSON.stringify(currentFundingIndexMap),
   });
   const currentEquity: Big = calculateEquity(
     usdcPositionSize,
@@ -332,12 +337,19 @@ export function getNewPnlTick(
     currentEquity,
     subaccountTotalTransfersMap[subaccountId][USDC_ASSET_ID],
   );
+  logger.info({
+    at: 'createPnlTicks#getNewPnlTick',
+    message: 'Calculated equity and total pnl',
+    subaccountId,
+    currentEquity: currentEquity.toFixed(),
+    totalPnl: totalPnl.toFixed(),
+  });
 
   const mostRecentPnlTick: PnlTicksCreateObject | undefined = mostRecentPnlTicks[subaccountId];
 
   // if there has been a significant chagne in equity or totalPnl, log it for debugging purposes.
   if (
-    mostRecentPnlTick &&
+    mostRecentPnlTick !== undefined &&
     Big(mostRecentPnlTick.equity).gt(0) &&
     currentEquity.div(mostRecentPnlTick.equity).gt(2) &&
     totalPnl.gte(10000) &&
