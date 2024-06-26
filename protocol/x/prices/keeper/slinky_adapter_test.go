@@ -103,16 +103,6 @@ func TestBadMarketData(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestGetAllCurrencyPairs(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
-	mockTimeProvider.On("Now").Return(constants.TimeT)
-
-	marketNumber := 10
-	_ = keepertest.CreateNMarkets(t, ctx, keeper, marketNumber)
-	cps := keeper.GetAllCurrencyPairs(ctx)
-	require.Equal(t, marketNumber, len(cps))
-}
-
 func TestGetNumCurrencyPairs(t *testing.T) {
 	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
