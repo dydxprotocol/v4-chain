@@ -66,7 +66,7 @@ curl -X POST http://localhost:1234/faucet/tokens -H "Content-Type: application/j
 ```
 
 ## Load testing on localnet
-To run load testing on localnet, use[load tester](https://github.com/dydxprotocol/load-tester). Follow instructions [here](https://github.com/dydxprotocol/load-tester?tab=readme-ov-file#running-against-your-local-chain-localnet)
+To run load testing on localnet, use [load tester](https://github.com/dydxprotocol/load-tester). Follow instructions [here](https://github.com/dydxprotocol/load-tester?tab=readme-ov-file#running-against-your-local-chain-localnet)
 
 
 
