@@ -6,6 +6,7 @@ import {
   helpers,
   IsoString,
   OraclePriceTable,
+  perpetualMarketRefresher,
   PerpetualPositionFromDatabase,
   PerpetualPositionTable,
   PnlTicksCreateObject,
@@ -454,10 +455,9 @@ export function calculateEquity(
 
   const signedPositionNotional: Big = positions.reduce(
     (acc: Big, position: PerpetualPositionFromDatabase) => {
-      const price: Big = Number(position.perpetualId) in marketPrices
-        ? Big(marketPrices[Number(position.perpetualId)])
-        : Big(0);
-      const positionNotional: Big = Big(position.size).times(price);
+      const marketId:
+      number = perpetualMarketRefresher.getPerpetualMarketFromId(position.perpetualId)!.marketId;
+      const positionNotional: Big = Big(position.size).times(Big(marketPrices[marketId]));
       // Add positionNotional to the accumulator
       return acc.plus(positionNotional);
     },

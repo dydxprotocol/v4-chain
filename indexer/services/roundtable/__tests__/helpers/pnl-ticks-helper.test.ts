@@ -17,6 +17,11 @@ import {
   Transaction,
   TransferTable,
   PositionSide,
+  PerpetualMarketStatus,
+  PerpetualMarketType,
+  MarketTable,
+  PerpetualMarketTable,
+  perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   calculateEquity,
@@ -52,10 +57,12 @@ describe('pnl-ticks-helper', () => {
   const lastUpdatedFundingIndexMap: FundingIndexMap = {
     [testConstants.defaultPerpetualMarket.id]: Big('10050'),
     [testConstants.defaultPerpetualMarket2.id]: Big('5'),
+    5: Big('5'),
   };
   const currentFundingIndexMap: FundingIndexMap = {
     [testConstants.defaultPerpetualMarket.id]: Big('11000'),
     [testConstants.defaultPerpetualMarket2.id]: Big('8'),
+    5: Big('8'),
   };
   const marketPrices: PriceMap = {
     [testConstants.defaultPerpetualMarket.id]: '20000',
@@ -73,6 +80,7 @@ describe('pnl-ticks-helper', () => {
 
   beforeEach(async () => {
     await testMocks.seedData();
+    await perpetualMarketRefresher.updatePerpetualMarkets();
   });
 
   afterAll(async () => {
@@ -348,13 +356,40 @@ describe('pnl-ticks-helper', () => {
     expect(equity).toEqual(new Big('190530'));
   });
 
-  it('calculateEquity with missing price', () => {
+  it('calculateEquity with perpetualId/marketId mismatch', async () => {
+    await MarketTable.create({
+      id: 1000,
+      pair: 'TEST-USD',
+      exponent: -12,
+      minPriceChangePpm: 50,
+      oraclePrice: '1.00',
+    });
+    await PerpetualMarketTable.create({
+      id: '5',
+      clobPairId: '5',
+      ticker: 'TEST-USD',
+      marketId: 1000,
+      status: PerpetualMarketStatus.ACTIVE,
+      priceChange24H: '0.000000001',
+      volume24H: '10000000',
+      trades24H: 200,
+      nextFundingRate: '1.2',
+      openInterest: '40000',
+      quantumConversionExponent: -16,
+      atomicResolution: -2,
+      subticksPerTick: 10,
+      stepBaseQuantums: 1,
+      liquidityTierId: 0,
+      marketType: PerpetualMarketType.ISOLATED,
+      baseOpenInterest: '100000',
+    });
+    await perpetualMarketRefresher.updatePerpetualMarkets();
     const positions2: PerpetualPositionFromDatabase[] = [
       ...positions,
       {
         ...testConstants.defaultPerpetualPosition,
         side: PositionSide.SHORT,
-        perpetualId: testConstants.defaultPerpetualMarket2.id,
+        perpetualId: '5',
         entryPrice: '20000',
         sumOpen: '10',
         size: '-10',
@@ -368,6 +403,7 @@ describe('pnl-ticks-helper', () => {
     ];
     const marketPricesMissingPrice: PriceMap = {
       [testConstants.defaultPerpetualMarket.id]: '20000',
+      1000: '1000',
     };
     const usdcPosition: Big = new Big('10000');
     const equity: Big = calculateEquity(
@@ -377,7 +413,7 @@ describe('pnl-ticks-helper', () => {
       lastUpdatedFundingIndexMap,
       currentFundingIndexMap,
     );
-    expect(equity).toEqual(new Big('200530'));
+    expect(equity).toEqual(new Big('190530'));
   });
 
   it('calculateTotalPnl', () => {
