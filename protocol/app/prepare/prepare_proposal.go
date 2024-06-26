@@ -5,7 +5,6 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,7 +47,10 @@ func PrepareProposalHandler(
 	pricesKeeper PreparePricesKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
 ) sdk.PrepareProposalHandler {
-	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
+
+		// var extInfoBz []byte
+
 		defer telemetry.ModuleMeasureSince(
 			ModuleName,
 			time.Now(),
@@ -57,6 +59,21 @@ func PrepareProposalHandler(
 			metrics.Latency,
 		)
 
+		if req == nil {
+			ctx.Logger().Error("PrepareProposalHandler received a nil request")
+			return &EmptyResponse, err
+		}
+
+		// voteExtensionsEnabled := ve.AreVoteExtensionsEnabled(ctx)
+		// if voteExtensionsEnabled {
+		// 	ctx.Logger().Info(
+		// 		"Providing oracle data using vote extensions",
+		// 		"height", req.Height,
+		// 	)
+
+		// 	// Get the vote extnesions
+
+		// }
 		txs, err := NewPrepareProposalTxs(req)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("NewPrepareProposalTxs error: %v", err))
