@@ -193,6 +193,7 @@ export async function getPnlTicksCreateObjects(
       logger.error({
         at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
         message: 'Error when getting new pnl tick',
+        error,
         account,
         pnlTicksToBeCreatedAt,
         blockHeight,
@@ -357,7 +358,7 @@ export function getNewPnlTick(
     });
   }
 
-  return {
+  const pnlTick: PnlTicksCreateObject = {
     totalPnl: totalPnl.toFixed(6),
     netTransfers: usdcNetTransfersSinceLastPnlTick.toFixed(6),
     subaccountId,
@@ -366,6 +367,13 @@ export function getNewPnlTick(
     blockHeight: latestBlockHeight,
     blockTime: latestBlockTime,
   };
+  logger.info({
+    at: 'createPnlTicks#getNewPnlTick',
+    message: 'New PNL tick',
+    subaccountId,
+    pnlTick,
+  });
+  return pnlTick;
 }
 
 /**
