@@ -63,6 +63,18 @@ FAUCET_ACCOUNTS=(
 	"dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m" # main faucet
 )
 
+# Addresses of vaults.
+# Can use ../scripts/vault/get_vault.go to generate a vault's address.
+VAULT_ACCOUNTS=(
+	"dydx1c0m5x87llaunl5sgv3q5vd7j5uha26d2q2r2q0" # BTC vault
+	"dydx14rplxdyycc6wxmgl8fggppgq4774l70zt6phkw" # ETH vault
+)
+# Number of each vault, which for CLOB vaults is the ID of the clob pair it quotes on.
+VAULT_NUMBERS=(
+	0 # BTC clob pair ID
+	1 # ETH clob pair ID
+)
+
 # Define dependencies for this script.
 # `jq` and `dasel` are used to manipulate json and yaml files respectively.
 install_prerequisites() {
@@ -100,7 +112,8 @@ create_validators() {
 		# Using "*" as a subscript results in a single arg: "dydx1... dydx1... dydx1..."
 		# Using "@" as a subscript results in separate args: "dydx1..." "dydx1..." "dydx1..."
 		# Note: `edit_genesis` must be called before `add-genesis-account`.
-		edit_genesis "$VAL_CONFIG_DIR" "${TEST_ACCOUNTS[*]}" "${FAUCET_ACCOUNTS[*]}" "" "" "" ""
+		# edit_genesis "$VAL_CONFIG_DIR" "${TEST_ACCOUNTS[*]}" "${FAUCET_ACCOUNTS[*]}" "${VAULT_ACCOUNTS[*]}" "${VAULT_NUMBERS[*]}" "" "" "" ""
+		edit_genesis "$VAL_CONFIG_DIR" "" "${FAUCET_ACCOUNTS[*]}" "${VAULT_ACCOUNTS[*]}" "${VAULT_NUMBERS[*]}" "" "" "" ""
 		update_genesis_use_test_volatile_market "$VAL_CONFIG_DIR"
 		update_genesis_complete_bridge_delay "$VAL_CONFIG_DIR" "30"
 
