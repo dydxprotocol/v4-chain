@@ -1,0 +1,6 @@
+version: v1
+plugins:
+  - name: doc
+    out: v4-proto-docs
+    opt:
+      - html,index.html,source_relative
