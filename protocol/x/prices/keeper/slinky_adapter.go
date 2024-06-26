@@ -87,9 +87,7 @@ func (k Keeper) GetPriceForCurrencyPair(ctx sdk.Context, cp slinkytypes.Currency
 	}, nil
 }
 
-// GetPrevBlockCPCounter returns the number of currency pairs (markets) in the previous block
-// Currently we use the existing market number as an upper bound size markets cannot be deleted.
-func (k Keeper) GetPrevBlockCPCounter(ctx sdk.Context) (uint64, error) {
+func (k Keeper) GetNumCurrencyPairs(ctx sdk.Context) (uint64, error) {
 	marketPriceStore := k.getMarketPriceStore(ctx)
 
 	var numMarketPrices uint64
@@ -104,4 +102,15 @@ func (k Keeper) GetPrevBlockCPCounter(ctx sdk.Context) (uint64, error) {
 	}
 
 	return numMarketPrices, nil
+}
+
+// GetNumRemovedCurrencyPairs is currently a no-op since we don't support removing Markets right now.
+func (k Keeper) GetNumRemovedCurrencyPairs(_ sdk.Context) (uint64, error) {
+	return 0, nil
+}
+
+// GetAllCurrencyPairs is not used with the DefaultCurrencyPair strategy.
+// See https://github.com/skip-mev/slinky/blob/main/abci/strategies/currencypair/default.go
+func (k Keeper) GetAllCurrencyPairs(ctx sdk.Context) []slinkytypes.CurrencyPair {
+	return nil
 }
