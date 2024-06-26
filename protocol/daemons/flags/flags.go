@@ -112,11 +112,10 @@ func GetDefaultDaemonFlags() DaemonFlags {
 			},
 			Slinky: SlinkyFlags{
 				AppConfig: oracleconfig.AppConfig{
-					Enabled:                 true,
-					OracleAddress:           "localhost:8080",
-					ClientTimeout:           time.Second * 2,
-					MetricsEnabled:          true,
-					PrometheusServerAddress: "0.0.0.0:8001",
+					Enabled:        true,
+					OracleAddress:  "localhost:8080",
+					ClientTimeout:  time.Second * 2,
+					MetricsEnabled: true,
 				},
 			},
 		}
@@ -218,11 +217,6 @@ func AddDaemonFlagsToCmd(
 		df.Slinky.AppConfig.MetricsEnabled,
 		"Enable the oracle metrics reporting for Slinky.",
 	)
-	cmd.Flags().String(
-		FlagOraclePrometheusServerAddress,
-		df.Slinky.AppConfig.PrometheusServerAddress,
-		"The address of the exposed prometheus address for Slinky metrics.",
-	)
 }
 
 // GetDaemonFlagValuesFromOptions gets all daemon flag values from the `AppOptions` struct.
@@ -314,11 +308,6 @@ func GetDaemonFlagValuesFromOptions(
 	if option := appOpts.Get(FlagOracleMetricsEnabled); option != nil {
 		if v, err := cast.ToBoolE(option); err == nil {
 			result.Slinky.AppConfig.MetricsEnabled = v
-		}
-	}
-	if option := appOpts.Get(FlagOraclePrometheusServerAddress); option != nil {
-		if v, err := cast.ToStringE(option); err == nil {
-			result.Slinky.AppConfig.PrometheusServerAddress = v
 		}
 	}
 

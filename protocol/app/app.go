@@ -93,7 +93,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
 	// App
@@ -1545,15 +1544,8 @@ func (app *App) initOracle(pricesTxDecoder process.UpdateMarketPriceTxDecoder) {
 			compression.NewDefaultVoteExtensionCodec(),
 			compression.NewZLibCompressor(),
 		),
-		// We are not using the slinky PreBlocker, so there is no need to pass in PreBlocker here for
-		// VE handler to work properly.
-		// Currently the clob PreBlocker assumes that it will only be called during the normal ABCI
-		// PreBlocker step. Passing in the app PreBlocker here will break that assumption by causing
-		// the clob PreBlocker to be called unexpectedly. This to leads improperly initialized clob state
-		// which results in the next block being committed incorrectly.
-		func(_ sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-			return nil, nil
-		},
+		// TODO we can move the UpdateMarketPrices in extend vote to this in the future.
+		vote_extensions.NoopPriceApplier{},
 		app.oracleMetrics,
 	)
 
@@ -1575,19 +1567,6 @@ func (app *App) initOracleMetrics(appOpts servertypes.AppOptions) {
 	oracleMetrics, err := servicemetrics.NewMetricsFromConfig(cfg, app.ChainID())
 	if err != nil {
 		panic(err)
-	}
-	// run prometheus metrics
-	if cfg.MetricsEnabled {
-		promLogger, err := zap.NewProduction()
-		if err != nil {
-			panic(err)
-		}
-		app.oraclePrometheusServer, err = promserver.NewPrometheusServer(cfg.PrometheusServerAddress, promLogger)
-		if err != nil {
-			panic(err)
-		}
-		// start the prometheus server
-		go app.oraclePrometheusServer.Start()
 	}
 	app.oracleMetrics = oracleMetrics
 }

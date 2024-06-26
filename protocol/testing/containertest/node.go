@@ -55,7 +55,7 @@ func (n *Node) createCometClient() (*comethttp.HTTP, error) {
 }
 
 func (n *Node) createGrpcConn() (*grpc.ClientConn, error) {
-	return grpc.Dial(n.grpcPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	return grpc.Dial(n.grpcPort, grpc.WithTransportCredentials(insecure.NewCredentials())) //nolint:staticcheck
 }
 
 // Wait for current block height has advanced by at least `numBlocks`
