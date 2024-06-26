@@ -95,6 +95,7 @@ export class MessageForwarder {
   public async onBatch(
     payload: EachBatchPayload,
   ): Promise<void> {
+    console.log('onBatch');
     const batch: Batch = payload.batch;
     const topic: string = batch.topic;
     const partition: string = batch.partition.toString();

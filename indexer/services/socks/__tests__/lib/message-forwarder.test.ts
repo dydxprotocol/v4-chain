@@ -182,6 +182,7 @@ describe('message-forwarder', () => {
   };
 
   beforeAll(async () => {
+    await dbHelpers.clearData();
     await dbHelpers.migrate();
     await testMocks.seedData();
     await Promise.all([
