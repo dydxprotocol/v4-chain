@@ -8,7 +8,6 @@ import {
   FillFromDatabase,
   QueryableField,
 } from '@dydxprotocol-indexer/postgres';
-import { getChildSubaccountNums } from '@dydxprotocol-indexer/postgres/build/src/lib/api-translations';
 import express from 'express';
 import {
   checkSchema,
@@ -25,7 +24,7 @@ import config from '../../../config';
 import { complianceCheck } from '../../../lib/compliance-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
-  getClobPairId, handleControllerError, isDefined,
+  getChildSubaccountNums, getClobPairId, handleControllerError, isDefined,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { rejectRestrictedCountries } from '../../../lib/restrict-countries';

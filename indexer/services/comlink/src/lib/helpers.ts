@@ -2,6 +2,7 @@ import { logger } from '@dydxprotocol-indexer/base';
 import {
   AssetPositionFromDatabase,
   BlockFromDatabase,
+  CHILD_SUBACCOUNT_MULTIPLIER,
   FundingIndexMap,
   FundingIndexUpdatesTable,
   helpers,
@@ -9,6 +10,7 @@ import {
   LiquidityTiersFromDatabase,
   MarketFromDatabase,
   MarketsMap,
+  MAX_PARENT_SUBACCOUNTS,
   PerpetualMarketFromDatabase,
   PerpetualMarketsMap,
   PerpetualMarketTable,
@@ -16,6 +18,7 @@ import {
   PerpetualPositionStatus,
   PositionSide,
   SubaccountFromDatabase,
+  SubaccountTable,
   TendermintEventFromDatabase,
   TendermintEventTable,
   USDC_SYMBOL,
@@ -434,7 +437,8 @@ export function adjustUSDCAssetPosition(
     _.set(
       adjustedAssetPositionsMap,
       USDC_SYMBOL,
-      getUSDCAssetPosition(adjustedSize),
+      getUSDCAssetPosition(adjustedSize,
+        adjustedAssetPositionsMap[USDC_SYMBOL]?.subaccountNumber ?? 0),
     );
     // Remove the USDC position in the map if the adjusted size is zero
   } else {
@@ -447,12 +451,14 @@ export function adjustUSDCAssetPosition(
   };
 }
 
-function getUSDCAssetPosition(signedSize: Big): AssetPositionResponseObject {
+function getUSDCAssetPosition(signedSize: Big, subaccountNumber: number):
+    AssetPositionResponseObject {
   const side: PositionSide = signedSize.gt(ZERO) ? PositionSide.LONG : PositionSide.SHORT;
   return {
     ...ZERO_USDC_POSITION,
     side,
     size: signedSize.abs().toFixed(),
+    subaccountNumber,
   };
 }
 
@@ -491,4 +497,45 @@ export function initializePerpetualPositionsWithFunding(
       unsettledFunding: '0',
     };
   });
+}
+
+
+/**
+ * Gets a list of all possible child subaccount numbers for a parent subaccount number
+ * Child subaccounts = [128*0+parentSubaccount, 128*1+parentSubaccount ... 128*999+parentSubaccount]
+ * @param parentSubaccount
+ * @returns
+ */
+export function getChildSubaccountNums(parentSubaccountNum: number): number[] {
+  if (parentSubaccountNum >= MAX_PARENT_SUBACCOUNTS) {
+    throw new NotFoundError(`Parent subaccount number must be less than ${MAX_PARENT_SUBACCOUNTS}`);
+  }
+  return Array.from({ length: CHILD_SUBACCOUNT_MULTIPLIER },
+    // eslint-disable-next-line @typescript-eslint/no-shadow
+    (_, i) => MAX_PARENT_SUBACCOUNTS * i + parentSubaccountNum);
+}
+
+/**
+ * Gets the subaccount uuids of all the child subaccounts given a parent subaccount number
+ * @param address
+ * @param parentSubaccountNum
+ * @returns
+ */
+export function getChildSubaccountIds(address: string, parentSubaccountNum: number): string[] {
+  return getChildSubaccountNums(parentSubaccountNum).map(
+    (subaccountNumber: number): string => SubaccountTable.uuid(address, subaccountNumber),
+  );
+}
+
+/**
+ * Gets the parent subaccount number from a child subaccount number
+ * Parent subaccount = childSubaccount % 128
+ * @param childSubaccountNum
+ * @returns
+ */
+export function getParentSubaccountNum(childSubaccountNum: number): number {
+  if (childSubaccountNum > MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER) {
+    throw new Error(`Child subaccount number must be less than ${MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER}`);
+  }
+  return childSubaccountNum % MAX_PARENT_SUBACCOUNTS;
 }

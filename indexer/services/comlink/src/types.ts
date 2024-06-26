@@ -53,6 +53,14 @@ export interface SubaccountResponseObject {
   marginEnabled: boolean,
 }
 
+export interface ParentSubaccountResponse {
+  address: string;
+  parentSubaccountNumber: number;
+  equity: string; // aggregated over all child subaccounts
+  freeCollateral: string; // aggregated over all child subaccounts
+  childSubaccounts: SubaccountResponseObject[];
+}
+
 export type SubaccountById = {[id: string]: SubaccountFromDatabase};
 
 /* ------- TIME TYPES ------- */

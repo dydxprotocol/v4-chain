@@ -116,6 +116,7 @@ export const isolatedSubaccountId2: string = SubaccountTable.uuid(
   isolatedSubaccount2.subaccountNumber,
 );
 
+
 // ============== Assets ==============
 
 export const defaultAsset: AssetCreateObject = {
@@ -159,6 +160,16 @@ export const defaultAssetPosition2: AssetPositionCreateObject = {
 export const defaultAssetPositionId2: string = AssetPositionTable.uuid(
   defaultAssetPosition2.subaccountId,
   defaultAssetPosition2.assetId,
+);
+export const isolatedSubaccountAssetPosition: AssetPositionCreateObject = {
+  subaccountId: isolatedSubaccountId,
+  assetId: '0',
+  size: '5000',
+  isLong: true,
+};
+export const isolatedSubaccountAssetPositionId: string = AssetPositionTable.uuid(
+  isolatedSubaccountAssetPosition.subaccountId,
+  isolatedSubaccountAssetPosition.assetId,
 );
 
 // ============== PerpetualMarkets ==============
