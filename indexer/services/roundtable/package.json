@@ -7,7 +7,6 @@
     "start": "node --heapsnapshot-signal=SIGUSR2 -r dd-trace/init -r dotenv-flow/config build/src/index.js",
     "build": "rm -rf build/ && tsc",
     "build:prod": "pnpm run build",
-    "test-script": "ts-node src/helpers/script.ts",
     "build:watch": "pnpm run build -- --watch",
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
