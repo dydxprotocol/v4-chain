@@ -55,6 +55,20 @@ To test the contract, complete the following steps:
 ./build/dydxprotocold tx wasm execute <contract_address> <execute_msg> --from alice --gas-prices 25000000000adv4tnt --gas auto --gas-adjustment 1.5 --chain-id localdydxprotocol
 ```
 
+## Getting funds for local testing
+For local testing, use [faucet](https://github.com/dydxprotocol/faucet) to get funds. To run faucet on a local chain, follow instructions below:
+1. Run v4 chain locally by following the [v4 instructions](https://github.com/dydxprotocol/v4/blob/main/README.md#running-the-chain-locally) (i.e. `cd ~/v4 && make localnet-start`).
+2. Make sure that `faucet` can be built by running `npm run build` or `npm run compile:watch`.
+3. Run `npm run localnet`.
+4. You can try hitting the faucet endpoint using `curl`. For example:
+```
+curl -X POST http://localhost:1234/faucet/tokens -H "Content-Type: application/json" -d '{"address": "dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m", "amount": 200, "subaccountNumber": 0}
+```
+
+## Load testing on localnet
+To run load testing on localnet, use[load tester](https://github.com/dydxprotocol/load-tester). Follow instructions [here](https://github.com/dydxprotocol/load-tester?tab=readme-ov-file#running-against-your-local-chain-localnet)
+
+
 
 
 
