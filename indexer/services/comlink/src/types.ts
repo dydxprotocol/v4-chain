@@ -393,6 +393,16 @@ export interface HistoricalFundingRequest extends LimitAndEffectiveBeforeRequest
   ticker: string,
 }
 
+export interface ParentSubaccountListOrderRequest
+  extends ParentSubaccountRequest, LimitRequest, TickerRequest {
+  side?: OrderSide,
+  type?: OrderType,
+  status?: OrderStatus[],
+  goodTilBlockBeforeOrAt?: number,
+  goodTilBlockTimeBeforeOrAt?: IsoString,
+  returnLatestOrders?: boolean,
+}
+
 /* ------- COLLATERALIZATION TYPES ------- */
 
 export interface Risk {

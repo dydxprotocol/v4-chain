@@ -118,7 +118,10 @@ describe('request-transformer', () => {
       };
       const responseObject: OrderResponseObject | undefined = postgresAndRedisOrderToResponseObject(
         filledOrder,
-        testConstants.defaultSubaccount.subaccountNumber,
+        {
+          [testConstants.defaultSubaccountId]:
+            testConstants.defaultSubaccount.subaccountNumber,
+        },
         redisTestConstants.defaultRedisOrder,
       );
       const expectedRedisOrderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
@@ -158,7 +161,10 @@ describe('request-transformer', () => {
     it('successfully converts a postgres order to a response object', () => {
       const responseObject: OrderResponseObject | undefined = postgresAndRedisOrderToResponseObject(
         order,
-        testConstants.defaultSubaccount.subaccountNumber,
+        {
+          [testConstants.defaultSubaccountId]:
+            testConstants.defaultSubaccount.subaccountNumber,
+        },
       );
 
       expect(responseObject).not.toBeUndefined();
@@ -173,7 +179,10 @@ describe('request-transformer', () => {
     it('successfully converts a redis order to a response object', () => {
       const responseObject: OrderResponseObject | undefined = postgresAndRedisOrderToResponseObject(
         undefined,
-        testConstants.defaultSubaccount.subaccountNumber,
+        {
+          [testConstants.defaultSubaccountId]:
+            testConstants.defaultSubaccount.subaccountNumber,
+        },
         redisTestConstants.defaultRedisOrder,
       );
 
@@ -189,7 +198,10 @@ describe('request-transformer', () => {
     it('successfully converts undefined postgres order and null redis orderto undefined', () => {
       const responseObject: OrderResponseObject | undefined = postgresAndRedisOrderToResponseObject(
         undefined,
-        testConstants.defaultSubaccount.subaccountNumber,
+        {
+          [testConstants.defaultSubaccountId]:
+            testConstants.defaultSubaccount.subaccountNumber,
+        },
         null,
       );
 
