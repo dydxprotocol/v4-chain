@@ -69,8 +69,6 @@ pull_request_rules:
       backport:
         branches:
           - release/protocol/v4.x
-<<<<<<< HEAD
-=======
   - name: backport to release/indexer/v5.x branch
     conditions:
       - base=main
@@ -96,4 +94,3 @@ pull_request_rules:
         branches:
           - release/protocol/v5.1.x
 
->>>>>>> d1e89a45 (Add mergify workflow for v5.1.x. (#1788))
