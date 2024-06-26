@@ -2118,6 +2118,93 @@ fetch('https://dydx-testnet.imperator.co/v4/transfers?address=string&subaccountN
 This operation does not require authentication
 </aside>
 
+## GetTransfersForParentSubaccount
+
+<a id="opIdGetTransfersForParentSubaccount"></a>
+
+> Code samples
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://dydx-testnet.imperator.co/v4/transfers/parentSubaccountNumber', params={
+  'address': 'string',  'parentSubaccountNumber': '0'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://dydx-testnet.imperator.co/v4/transfers/parentSubaccountNumber?address=string&parentSubaccountNumber=0',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /transfers/parentSubaccountNumber`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|parentSubaccountNumber|query|number(double)|true|none|
+|limit|query|number(double)|false|none|
+|createdBeforeOrAtHeight|query|number(double)|false|none|
+|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+
+> Example responses
+> 200 Response
+```json
+{
+  "transfers": [
+    {
+      "id": "string",
+      "sender": {
+        "subaccountNumber": 0,
+        "address": "string"
+      },
+      "recipient": {
+        "subaccountNumber": 0,
+        "address": "string"
+      },
+      "size": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string",
+      "symbol": "string",
+      "type": "TRANSFER_IN",
+      "transactionHash": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[ParentSubaccountTransferResponse](#schemaparentsubaccounttransferresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 # Schemas
 
 ## PerpetualPositionStatus
@@ -3791,3 +3878,40 @@ or
 |---|---|---|---|---|
 |transfers|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
 
+## ParentSubaccountTransferResponse
+
+<a id="schemaparentsubaccounttransferresponse"></a>
+<a id="schema_ParentSubaccountTransferResponse"></a>
+<a id="tocSparentsubaccounttransferresponse"></a>
+<a id="tocsparentsubaccounttransferresponse"></a>
+
+```json
+{
+  "transfers": [
+    {
+      "id": "string",
+      "sender": {
+        "subaccountNumber": 0,
+        "address": "string"
+      },
+      "recipient": {
+        "subaccountNumber": 0,
+        "address": "string"
+      },
+      "size": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string",
+      "symbol": "string",
+      "type": "TRANSFER_IN",
+      "transactionHash": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|transfers|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|

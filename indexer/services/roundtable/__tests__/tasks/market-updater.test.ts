@@ -56,7 +56,6 @@ import {
 import * as MarketTable from '@dydxprotocol-indexer/postgres/build/src/stores/market-table';
 import * as TendermintEventTable from '@dydxprotocol-indexer/postgres/build/src/stores/tendermint-event-table';
 import * as AssetTable from '@dydxprotocol-indexer/postgres/build/src/stores/asset-table';
-import * as WalletTable from '@dydxprotocol-indexer/postgres/build/src/stores/wallet-table';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
@@ -96,9 +95,6 @@ async function seedData() {
     AssetTable.create(defaultAsset),
     AssetTable.create(defaultAsset2),
     AssetTable.create(defaultAsset3),
-  ]);
-  await Promise.all([
-    WalletTable.create(defaultWallet),
   ]);
 }
 
