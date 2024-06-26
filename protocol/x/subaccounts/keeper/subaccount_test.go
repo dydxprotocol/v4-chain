@@ -17,10 +17,11 @@ import (
 	bank_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -53,7 +54,7 @@ func assertSubaccountUpdateEventsNotInIndexerBlock(
 	k *keeper.Keeper,
 	ctx sdk.Context,
 ) {
-	subaccountUpdates := testutil.GetSubaccountUpdateEventsFromIndexerBlock(ctx, k)
+	subaccountUpdates := keepertest.GetSubaccountUpdateEventsFromIndexerBlock(ctx, k)
 	require.Empty(t, subaccountUpdates)
 }
 
@@ -72,7 +73,7 @@ func assertSubaccountUpdateEventsInIndexerBlock(
 	expectedSubaccoundIdToFundingPayments map[types.SubaccountId]map[uint32]dtypes.SerializableInt,
 	expectedUpdatedAssetPositions map[types.SubaccountId][]*types.AssetPosition,
 ) {
-	subaccountUpdates := testutil.GetSubaccountUpdateEventsFromIndexerBlock(ctx, k)
+	subaccountUpdates := keepertest.GetSubaccountUpdateEventsFromIndexerBlock(ctx, k)
 
 	// No subaccount update events included in the case of an error or failure to update subaccounts.
 	if expectedErr != nil || !expectedSuccess {
@@ -153,15 +154,15 @@ func TestGetCollateralPool(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(
 			name, func(t *testing.T) {
-				ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := testutil.SubaccountsKeepers(
+				ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(
 					t,
 					true,
 				)
 
-				testutil.CreateTestMarkets(t, ctx, pricesKeeper)
-				testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+				keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+				keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
-				require.NoError(t, testutil.CreateUsdcAsset(ctx, assetsKeeper))
+				require.NoError(t, keepertest.CreateUsdcAsset(ctx, assetsKeeper))
 				for _, p := range tc.perpetuals {
 					_, err := perpetualsKeeper.CreatePerpetual(
 						ctx,
@@ -188,7 +189,7 @@ func TestGetCollateralPool(t *testing.T) {
 }
 
 func TestSubaccountGet(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	items := createNSubaccount(keeper, ctx, 10, big.NewInt(1_000))
 	for _, item := range items {
 		rst := keeper.GetSubaccount(ctx,
@@ -202,7 +203,7 @@ func TestSubaccountGet(t *testing.T) {
 }
 
 func TestSubaccountSet_Empty(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	keeper.SetSubaccount(ctx, types.Subaccount{
 		Id: &constants.Alice_Num0,
 	})
@@ -220,7 +221,7 @@ func TestSubaccountSet_Empty(t *testing.T) {
 }
 
 func TestSubaccountGetNonExistent(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	id := types.SubaccountId{
 		Owner:  "non-existent",
 		Number: uint32(123),
@@ -234,7 +235,7 @@ func TestSubaccountGetNonExistent(t *testing.T) {
 }
 
 func TestGetAllSubaccount(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	items := createNSubaccount(keeper, ctx, 10, big.NewInt(1_000))
 	require.Equal(
 		t,
@@ -275,7 +276,7 @@ func TestForEachSubaccount(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
+			ctx, keeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 			items := createNSubaccount(keeper, ctx, tc.numSubaccountsInState, big.NewInt(1_000))
 			collectedSubaccounts := make([]types.Subaccount, 0)
 			i := 0
@@ -2799,13 +2800,13 @@ func TestUpdateSubaccounts(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, bankKeeper, assetsKeeper, _, _ := testutil.SubaccountsKeepers(
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(
 				t,
 				tc.msgSenderEnabled,
 			)
 			ctx = ctx.WithTxBytes(constants.TestTxBytes)
-			testutil.CreateTestMarkets(t, ctx, pricesKeeper)
-			testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 			for _, m := range tc.marketParamPrices {
 				_, err := pricesKeeper.CreateMarket(
@@ -2817,7 +2818,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			}
 
 			// Always creates USDC asset first
-			require.NoError(t, testutil.CreateUsdcAsset(ctx, assetsKeeper))
+			require.NoError(t, keepertest.CreateUsdcAsset(ctx, assetsKeeper))
 			for _, a := range tc.assets {
 				_, err := assetsKeeper.CreateAsset(
 					ctx,
@@ -4243,13 +4244,13 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := testutil.SubaccountsKeepers(
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(
 				t,
 				tc.msgSenderEnabled,
 			)
 			ctx = ctx.WithTxBytes(constants.TestTxBytes)
-			testutil.CreateTestMarkets(t, ctx, pricesKeeper)
-			testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 			for _, m := range tc.marketParamPrices {
 				_, err := pricesKeeper.CreateMarket(
@@ -4261,7 +4262,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			}
 
 			// Always creates USDC asset first
-			require.NoError(t, testutil.CreateUsdcAsset(ctx, assetsKeeper))
+			require.NoError(t, keepertest.CreateUsdcAsset(ctx, assetsKeeper))
 			for _, a := range tc.assets {
 				_, err := assetsKeeper.CreateAsset(
 					ctx,
@@ -5355,11 +5356,11 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := testutil.SubaccountsKeepers(t, true)
-			testutil.CreateTestMarkets(t, ctx, pricesKeeper)
-			testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
-			require.NoError(t, testutil.CreateUsdcAsset(ctx, assetsKeeper))
+			require.NoError(t, keepertest.CreateUsdcAsset(ctx, assetsKeeper))
 			for _, a := range tc.assets {
 				_, err := assetsKeeper.CreateAsset(
 					ctx,
@@ -5801,11 +5802,11 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := testutil.SubaccountsKeepers(t, true)
-			testutil.CreateTestMarkets(t, ctx, pricesKeeper)
-			testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
-			require.NoError(t, testutil.CreateUsdcAsset(ctx, assetsKeeper))
+			require.NoError(t, keepertest.CreateUsdcAsset(ctx, assetsKeeper))
 			for _, a := range tc.assets {
 				_, err := assetsKeeper.CreateAsset(
 					ctx,

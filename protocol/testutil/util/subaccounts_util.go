@@ -1,10 +1,9 @@
-package keeper
+package util
 
 import (
 	"math/big"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -61,7 +60,7 @@ func ChangeUsdcBalance(subaccount satypes.Subaccount, deltaQuantums int64) satyp
 	}
 	assetPositions := make([]*satypes.AssetPosition, 0)
 	for _, ap := range subaccount.AssetPositions {
-		if ap.AssetId != constants.Usdc.Id {
+		if ap.AssetId != assettypes.AssetUsdc.Id {
 			assetPositions = append(
 				assetPositions,
 				CreateSingleAssetPosition(ap.AssetId, ap.Quantums.BigInt()),

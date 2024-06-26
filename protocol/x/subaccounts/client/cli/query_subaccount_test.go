@@ -15,9 +15,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -37,7 +37,7 @@ func networkWithSubaccountObjects(t *testing.T, n int) (*network.Network, []type
 				Owner:  strconv.Itoa(i),
 				Number: uint32(n),
 			},
-			AssetPositions: keepertest.CreateUsdcAssetPositions(big.NewInt(1_000)),
+			AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(1_000)),
 		}
 		nullify.Fill(&subaccount) //nolint:staticcheck
 		state.Subaccounts = append(state.Subaccounts, subaccount)
