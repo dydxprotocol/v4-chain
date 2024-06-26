@@ -81,13 +81,13 @@ describe('PerpetualPosition store', () => {
   it('Successfully finds all PerpetualPositions', async () => {
     await PerpetualMarketTable.create({
       ...defaultPerpetualMarket,
-      id: '3',
+      id: '100',
     });
     await Promise.all([
       PerpetualPositionTable.create(defaultPerpetualPosition),
       PerpetualPositionTable.create({
         ...defaultPerpetualPosition,
-        perpetualId: '3',
+        perpetualId: '100',
         openEventId: defaultTendermintEventId2,
       }),
     ]);
@@ -107,7 +107,7 @@ describe('PerpetualPosition store', () => {
     expect(perpetualPositions[0]).toEqual(expect.objectContaining(defaultPerpetualPosition));
     expect(perpetualPositions[1]).toEqual(expect.objectContaining({
       ...defaultPerpetualPosition,
-      perpetualId: '3',
+      perpetualId: '100',
       openEventId: defaultTendermintEventId2,
     }));
   });
@@ -115,13 +115,13 @@ describe('PerpetualPosition store', () => {
   it('Successfully finds PerpetualPosition with perpetualId', async () => {
     await PerpetualMarketTable.create({
       ...defaultPerpetualMarket,
-      id: '3',
+      id: '100',
     });
     await Promise.all([
       PerpetualPositionTable.create(defaultPerpetualPosition),
       PerpetualPositionTable.create({
         ...defaultPerpetualPosition,
-        perpetualId: '3',
+        perpetualId: '100',
         openEventId: defaultTendermintEventId2,
       }),
     ]);
@@ -307,28 +307,28 @@ describe('PerpetualPosition store', () => {
       await Promise.all([
         PerpetualMarketTable.create({
           ...defaultPerpetualMarket,
-          id: '3',
+          id: '100',
         }),
         PerpetualMarketTable.create({
           ...defaultPerpetualMarket,
-          id: '4',
+          id: '101',
         }),
       ]);
       const perpetualPosition2: PerpetualPositionCreateObject = {
         ...defaultPerpetualPosition,
-        perpetualId: '3',
+        perpetualId: '100',
         openEventId: defaultTendermintEventId2,
       };
       const perpetualPosition3: PerpetualPositionCreateObject = {
         ...defaultPerpetualPosition,
         subaccountId: defaultSubaccountId2,
-        perpetualId: '4',
+        perpetualId: '101',
         openEventId: defaultTendermintEventId2,
       };
       const perpetualPosition4: PerpetualPositionCreateObject = {
         ...defaultPerpetualPosition,
         subaccountId: defaultSubaccountId2,
-        perpetualId: '3',
+        perpetualId: '100',
         openEventId: defaultTendermintEventId,
         status: PerpetualPositionStatus.CLOSED,
       };

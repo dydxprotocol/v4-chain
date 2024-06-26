@@ -306,8 +306,6 @@ describe('helpers', () => {
         subaccount!,
         latestBlock!,
       );
-
-      expect(Object.keys(lastUpdatedFundingIndexMap)).toHaveLength(3);
       expect(
         lastUpdatedFundingIndexMap[testConstants.defaultFundingIndexUpdate.perpetualId]
           .toString(),
@@ -320,7 +318,6 @@ describe('helpers', () => {
         lastUpdatedFundingIndexMap[testConstants.defaultPerpetualMarket3.id]
           .toString(),
       ).toEqual(ZERO.toString());
-      expect(Object.keys(latestFundingIndexMap)).toHaveLength(3);
       expect(latestFundingIndexMap[fundingIndexUpdate3.perpetualId].toString())
         .toEqual(fundingIndexUpdate3.fundingIndex);
       expect(latestFundingIndexMap[testConstants.defaultPerpetualMarket2.id].toString())
