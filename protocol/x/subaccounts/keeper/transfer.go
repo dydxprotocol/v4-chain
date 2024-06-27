@@ -237,6 +237,11 @@ func (k Keeper) DistributeFees(
 		ctx,
 		perpetual.Params.MarketId,
 	)
+	// Note: The likelihood of this error is very low, and not getting the rev share should not
+	// prevent the trade from going through. Therefore, we log the error and continue
+	if err != nil {
+		log.ErrorLog(ctx, "DistributeFees: failed to get market mapper revenue share", "err", err)
+	}
 	if err == nil && revShareAddr != nil {
 		if revSharePpm >= 1e6 {
 			log.ErrorLog(
