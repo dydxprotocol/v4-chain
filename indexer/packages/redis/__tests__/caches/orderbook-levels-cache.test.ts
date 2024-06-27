@@ -12,6 +12,7 @@ import {
   deleteZeroPriceLevel,
   getLastUpdatedKey,
   deleteStalePriceLevel,
+  getOrderBookMidPrice,
 } from '../../src/caches/orderbook-levels-cache';
 import { OrderSide } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, PriceLevel } from '../../src/types';
@@ -684,5 +685,94 @@ describe('orderbookLevelsCache', () => {
       expect(deleted).toEqual(false);
       expect(size).toEqual('10');
     });
+  });
+
+  describe('getMidPrice', () => {
+    beforeEach(() => {
+      jest.restoreAllMocks();
+      jest.restoreAllMocks();
+    });
+    afterEach(() => {
+      jest.restoreAllMocks();
+      jest.restoreAllMocks();
+    });
+
+    it('returns the correct mid price', async () => {
+      await Promise.all([
+        updatePriceLevel({
+          ticker,
+          side: OrderSide.BUY,
+          humanPrice: '45200',
+          sizeDeltaInQuantums: '2000',
+          client,
+        }),
+        updatePriceLevel({
+          ticker,
+          side: OrderSide.BUY,
+          humanPrice: '45100',
+          sizeDeltaInQuantums: '2000',
+          client,
+        }),
+        updatePriceLevel({
+          ticker,
+          side: OrderSide.BUY,
+          humanPrice: '45300',
+          sizeDeltaInQuantums: '2000',
+          client,
+        }),
+        updatePriceLevel({
+          ticker,
+          side: OrderSide.SELL,
+          humanPrice: '45500',
+          sizeDeltaInQuantums: '2000',
+          client,
+        }),
+        updatePriceLevel({
+          ticker,
+          side: OrderSide.SELL,
+          humanPrice: '45400',
+          sizeDeltaInQuantums: '2000',
+          client,
+        }),
+        updatePriceLevel({
+          ticker,
+          side: OrderSide.SELL,
+          humanPrice: '45600',
+          sizeDeltaInQuantums: '2000',
+          client,
+        }),
+      ]);
+
+      const midPrice = await getOrderBookMidPrice(ticker, client);
+      expect(midPrice).toEqual(45350);
+    });
+
+  });
+
+  it('returns undefined if there are no bids or asks', async () => {
+    await Promise.all([updatePriceLevel({
+      ticker,
+      side: OrderSide.SELL,
+      humanPrice: '45400',
+      sizeDeltaInQuantums: '2000',
+      client,
+    })]);
+
+    const midPrice = await getOrderBookMidPrice(ticker, client);
+    expect(midPrice).toBeUndefined();
+  });
+
+  it('returns undefined if humanPrice is NaN', async () => {
+    await Promise.all([updatePriceLevel({
+      ticker,
+      side: OrderSide.SELL,
+      humanPrice: 'nan',
+      sizeDeltaInQuantums: '2000',
+      client,
+    })]);
+
+    const midPrice = await getOrderBookMidPrice(ticker, client);
+
+    expect(midPrice).toBeUndefined();
   });
 });

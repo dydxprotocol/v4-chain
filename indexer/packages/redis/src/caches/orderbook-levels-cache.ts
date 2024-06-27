@@ -529,3 +529,28 @@ function convertToPriceLevels(
     };
   });
 }
+
+export async function getOrderBookMidPrice(
+  ticker: string,
+  client: RedisClient,
+): Promise<number | undefined> {
+  const levels = await getOrderBookLevels(ticker, client, {
+    removeZeros: true,
+    sortSides: true,
+    uncrossBook: true,
+    limitPerSide: 1,
+  });
+
+  if (levels.bids.length === 0 || levels.asks.length === 0) {
+    return undefined;
+  }
+
+  const bestAsk = Number(levels.asks[0].humanPrice);
+  const bestBid = Number(levels.bids[0].humanPrice);
+
+  if (bestAsk === undefined || bestBid === undefined) {
+    return undefined;
+  }
+
+  return bestBid + (bestAsk - bestBid) / 2;
+}
