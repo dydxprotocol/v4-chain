@@ -3,6 +3,8 @@ package types
 import (
 	"context"
 
+	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -19,4 +21,9 @@ type BankKeeper interface {
 // RevShareKeeper defines the expected revshare keeper used for simulations.
 type RevShareKeeper interface {
 	CreateNewMarketRevShare(ctx sdk.Context, marketId uint32)
+	SetMarketMapperRevShareDetails(
+		ctx sdk.Context,
+		marketId uint32,
+		params types.MarketMapperRevShareDetails,
+	)
 }

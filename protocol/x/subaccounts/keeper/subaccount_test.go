@@ -155,7 +155,7 @@ func TestGetCollateralPool(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(
 			name, func(t *testing.T) {
-				ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(
+				ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _, _ := keepertest.SubaccountsKeepers(
 					t,
 					true,
 				)
@@ -190,7 +190,7 @@ func TestGetCollateralPool(t *testing.T) {
 }
 
 func TestSubaccountGet(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	items := createNSubaccount(keeper, ctx, 10, big.NewInt(1_000))
 	for _, item := range items {
 		rst := keeper.GetSubaccount(ctx,
@@ -204,7 +204,7 @@ func TestSubaccountGet(t *testing.T) {
 }
 
 func TestSubaccountSet_Empty(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	keeper.SetSubaccount(ctx, types.Subaccount{
 		Id: &constants.Alice_Num0,
 	})
@@ -222,7 +222,7 @@ func TestSubaccountSet_Empty(t *testing.T) {
 }
 
 func TestSubaccountGetNonExistent(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	id := types.SubaccountId{
 		Owner:  "non-existent",
 		Number: uint32(123),
@@ -236,7 +236,7 @@ func TestSubaccountGetNonExistent(t *testing.T) {
 }
 
 func TestGetAllSubaccount(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	items := createNSubaccount(keeper, ctx, 10, big.NewInt(1_000))
 	require.Equal(
 		t,
@@ -277,7 +277,7 @@ func TestForEachSubaccount(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 			items := createNSubaccount(keeper, ctx, tc.numSubaccountsInState, big.NewInt(1_000))
 			collectedSubaccounts := make([]types.Subaccount, 0)
 			i := 0
@@ -2521,9 +2521,11 @@ func TestUpdateSubaccounts(t *testing.T) {
 			additionalTestSubaccounts: []types.Subaccount{
 				{
 					Id: &constants.Bob_Num0,
-					AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(
-						900_000_000_000,
-					)), // 900_000 USDC
+					AssetPositions: testutil.CreateUsdcAssetPositions(
+						big.NewInt(
+							900_000_000_000,
+						),
+					), // 900_000 USDC
 				},
 			},
 			updateType: types.Match,
@@ -2623,9 +2625,11 @@ func TestUpdateSubaccounts(t *testing.T) {
 			additionalTestSubaccounts: []types.Subaccount{
 				{
 					Id: &constants.Bob_Num0,
-					AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(
-						120_000_000_000,
-					)), // 120_000 USDC
+					AssetPositions: testutil.CreateUsdcAssetPositions(
+						big.NewInt(
+							120_000_000_000,
+						),
+					), // 120_000 USDC
 					PerpetualPositions: []*types.PerpetualPosition{
 						testutil.CreateSinglePerpetualPosition(
 							uint32(0),
@@ -2797,7 +2801,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, bankKeeper, assetsKeeper, _, _, _ := keepertest.SubaccountsKeepers(
 				t,
 				tc.msgSenderEnabled,
 			)
@@ -4241,7 +4245,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _, _ := keepertest.SubaccountsKeepers(
 				t,
 				tc.msgSenderEnabled,
 			)
@@ -5353,7 +5357,10 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _, _ := keepertest.SubaccountsKeepers(
+				t,
+				true,
+			)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
@@ -5799,7 +5806,10 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _, _ := keepertest.SubaccountsKeepers(
+				t,
+				true,
+			)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
