@@ -97,12 +97,11 @@ func GetMarginRequirementsInQuoteQuantums(
 	bigInitialMarginQuoteQuantums *big.Int,
 	bigMaintenanceMarginQuoteQuantums *big.Int,
 ) {
-	// Always consider the magnitude of the position regardless of whether it is long/short.
-	bigAbsQuantums := new(big.Int).Abs(bigQuantums)
-
 	// Calculate the notional value of the position in quote quantums.
-	bigQuoteQuantums := lib.BaseToQuoteQuantums(
-		bigAbsQuantums,
+	// Always consider the magnitude of the position regardless of whether it is long/short.
+	bigQuoteQuantums := new(big.Int).Abs(bigQuantums)
+	bigQuoteQuantums = lib.BaseToQuoteQuantums(
+		bigQuoteQuantums,
 		perpetual.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
@@ -116,10 +115,12 @@ func GetMarginRequirementsInQuoteQuantums(
 	)
 
 	// Initial margin requirement quote quantums = size in quote quantums * initial margin PPM.
-	bigBaseInitialMarginQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(
+	bigBaseInitialMarginQuoteQuantums := lib.BigMulPpm(
 		bigQuoteQuantums,
-		big.NewInt(0), // pass in 0 as open interest to get base IMR.
+		lib.BigU(liquidityTier.InitialMarginPpm),
+		true, // Round up initial margin.
 	)
+
 	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
 	bigMaintenanceMarginQuoteQuantums = lib.BigMulPpm(
 		bigBaseInitialMarginQuoteQuantums,
