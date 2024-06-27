@@ -53,7 +53,6 @@ async function uncrossOrderbook(
   market: PerpetualMarketFromDatabase,
   orderbookLevels: OrderbookLevels,
 ): Promise<void> {
-  console.log(`orderbookLevels: ${JSON.stringify(orderbookLevels)}`);
   const ticker = market.ticker;
 
   // Remove overlapping levels
@@ -92,7 +91,7 @@ async function uncrossOrderbook(
   stats.increment(
     `${config.SERVICE_NAME}.expected_uncross_orderbook_levels`,
     removeBidLevels.length,
-    { side: OrderSide.BUY },
+    { side: OrderSide.BUY, clobPairId: market.clobPairId, ticker },
   );
   for (const bid of removeBidLevels) {
     const deleted: boolean = await OrderbookLevelsCache.deleteStalePriceLevel({
@@ -119,17 +118,23 @@ async function uncrossOrderbook(
         ticker,
       });
     } else {
-      stats.increment(`${config.SERVICE_NAME}.uncross_orderbook`, { side: OrderSide.BUY });
+      stats.increment(
+        `${config.SERVICE_NAME}.uncross_orderbook_succeed`,
+        {
+          side: OrderSide.BUY,
+          clobPairId: market.clobPairId,
+          ticker,
+        },
+      );
     }
   }
 
   stats.increment(
     `${config.SERVICE_NAME}.expected_uncross_orderbook_levels`,
     removeAskLevels.length,
-    { side: OrderSide.SELL },
+    { side: OrderSide.SELL, clobPairId: market.clobPairId, ticker },
   );
   for (const ask of removeAskLevels) {
-    stats.increment(`${config.SERVICE_NAME}.uncross_orderbook`, { side: OrderSide.SELL });
     const deleted: boolean = await OrderbookLevelsCache.deleteStalePriceLevel({
       ticker,
       side: OrderSide.SELL,
@@ -154,7 +159,14 @@ async function uncrossOrderbook(
         ticker,
       });
     } else {
-      stats.increment(`${config.SERVICE_NAME}.uncross_orderbook`, { side: OrderSide.SELL });
+      stats.increment(
+        `${config.SERVICE_NAME}.uncross_orderbook_succeed`,
+        {
+          side: OrderSide.SELL,
+          clobPairId: market.clobPairId,
+          ticker,
+        },
+      );
     }
   }
 }
