@@ -56,6 +56,7 @@ func createVaultKeeper(
 		&mocks.ClobKeeper{},
 		&mocks.PerpetualsKeeper{},
 		&mocks.PricesKeeper{},
+		&mocks.SendingKeeper{},
 		&mocks.SubaccountsKeeper{},
 		&mocks.IndexerEventManager{},
 		[]string{
