@@ -307,15 +307,6 @@ func (k Keeper) UpdateSubaccounts(
 		return success, successPerUpdate, err
 	}
 
-<<<<<<< HEAD
-	// Get a mapping from perpetual Id to current perpetual funding index.
-	perpIdToFundingIndex := make(map[uint32]dtypes.SerializableInt)
-	for _, perp := range allPerps {
-		perpIdToFundingIndex[perp.Params.Id] = perp.FundingIndex
-	}
-
-=======
->>>>>>> cafe79f5 ([Performance] Optimize state-reads of perpetual information when doing collateral checks (#1691))
 	// Get OpenInterestDelta from the updates, and persist the OI change if any.
 	perpOpenInterestDelta := GetDeltaOpenInterestFromUpdates(settledUpdates, updateType)
 	if perpOpenInterestDelta != nil {
@@ -435,37 +426,9 @@ func (k Keeper) CanUpdateSubaccounts(
 		return false, nil, err
 	}
 
-<<<<<<< HEAD
-	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
-	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType, allPerps)
-	return success, successPerUpdate, err
-}
-
-// getSettledSubaccount returns 1. a new settled subaccount given an unsettled subaccount,
-// updating the USDC AssetPosition, FundingIndex, and LastFundingPayment fields accordingly
-// (does not persist any changes) and 2. a map with perpetual ID as key and last funding
-// payment as value (for emitting funding payments to indexer).
-func (k Keeper) getSettledSubaccount(
-	ctx sdk.Context,
-	subaccount types.Subaccount,
-) (
-	settledSubaccount types.Subaccount,
-	fundingPayments map[uint32]dtypes.SerializableInt,
-	err error,
-) {
-	// Fetch all relevant perpetuals.
-	perpetuals := make(map[uint32]perptypes.Perpetual)
-	for _, p := range subaccount.PerpetualPositions {
-		perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, p.PerpetualId)
-		if err != nil {
-			return types.Subaccount{}, nil, err
-		}
-		perpetuals[p.PerpetualId] = perpetual
-=======
 	settledUpdates, _, err := k.getSettledUpdates(ctx, updates, perpInfos, false)
 	if err != nil {
 		return false, nil, err
->>>>>>> cafe79f5 ([Performance] Optimize state-reads of perpetual information when doing collateral checks (#1691))
 	}
 
 	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType, perpInfos)

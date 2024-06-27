@@ -338,18 +338,3 @@ func (k *Keeper) computeAndExecuteCollateralTransfer(
 
 	return nil
 }
-<<<<<<< HEAD
-
-func getPerpIdToMarketTypeMap(
-	perpetuals []perptypes.Perpetual,
-) map[uint32]perptypes.PerpetualMarketType {
-	var perpIdToMarketType = make(map[uint32]perptypes.PerpetualMarketType)
-
-	for _, perpetual := range perpetuals {
-		perpIdToMarketType[perpetual.GetId()] = perpetual.Params.MarketType
-	}
-
-	return perpIdToMarketType
-}
-=======
->>>>>>> cafe79f5 ([Performance] Optimize state-reads of perpetual information when doing collateral checks (#1691))
