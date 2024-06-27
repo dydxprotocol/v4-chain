@@ -21,7 +21,7 @@ message Perpetual {
   // Total size of open long contracts, measured in base_quantums.
   bytes open_interest = 3 [
     (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 }
