@@ -339,6 +339,21 @@
         "type": "object",
         "additionalProperties": false
       },
+      "ComplianceResponse": {
+        "properties": {
+          "restricted": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "restricted"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "ComplianceStatus": {
         "enum": [
           "COMPLIANT",
@@ -354,6 +369,7 @@
           "MANUAL",
           "US_GEO",
           "CA_GEO",
+          "GB_GEO",
           "SANCTIONED_GEO",
           "COMPLIANCE_PROVIDER"
         ],
@@ -792,7 +808,10 @@
           "STOP_MARKET",
           "TRAILING_STOP",
           "TAKE_PROFIT",
-          "TAKE_PROFIT_MARKET"
+          "TAKE_PROFIT_MARKET",
+          "HARD_TRADE",
+          "FAILED_HARD_TRADE",
+          "TRANSFER_PLACEHOLDER"
         ],
         "type": "string"
       },
@@ -1510,6 +1529,34 @@
             "in": "query",
             "name": "toISO",
             "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/screen": {
+      "get": {
+        "operationId": "Screen",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
             "schema": {
               "type": "string"
             }
@@ -2802,7 +2849,7 @@
   },
   "servers": [
     {
-      "url": "",
+      "url": "https://dydx-testnet.imperator.co/v4",
       "description": "Public Testnet"
     }
   ]
