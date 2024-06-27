@@ -16,15 +16,15 @@ type PreparePricesKeeper struct {
 }
 
 // GetValidMarketPriceUpdates provides a mock function with given fields: ctx
-func (_m *PreparePricesKeeper) GetValidMarketPriceUpdates(ctx types.Context) *pricestypes.MsgUpdateMarketPrices {
+func (_m *PreparePricesKeeper) GetValidMarketPriceUpdates(ctx types.Context) *pricestypes.MarketPriceUpdates {
 	ret := _m.Called(ctx)
 
-	var r0 *pricestypes.MsgUpdateMarketPrices
-	if rf, ok := ret.Get(0).(func(types.Context) *pricestypes.MsgUpdateMarketPrices); ok {
+	var r0 *pricestypes.MarketPriceUpdates
+	if rf, ok := ret.Get(0).(func(types.Context) *pricestypes.MarketPriceUpdates); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*pricestypes.MsgUpdateMarketPrices)
+			r0 = ret.Get(0).(*pricestypes.MarketPriceUpdates)
 		}
 	}
 

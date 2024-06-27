@@ -17,13 +17,16 @@ const (
 
 var (
 	// MsgUpdateMarketPrices test constants.
-	emptyResult = &types.MsgUpdateMarketPrices{
-		MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{},
+	emptyResult = &types.MarketPriceUpdates{
+		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{},
 	}
 
-	validMarket0UpdateResult = &types.MsgUpdateMarketPrices{
-		MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{
-			types.NewMarketPriceUpdate(constants.MarketId0, fiveBillionAndFiveMillion),
+	validMarket0UpdateResult = &types.MarketPriceUpdates{
+		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
+			&types.MarketPriceUpdates_MarketPriceUpdate{
+				MarketId: constants.MarketId0,
+				Price:    fiveBillionAndFiveMillion,
+			},
 		},
 	}
 
@@ -121,7 +124,7 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 		skipCreateMarketsAndExchanges bool
 
 		// Expected.
-		expectedMsg *types.MsgUpdateMarketPrices
+		expectedMsg *types.MarketPriceUpdates
 	}{
 		"Empty result: no markets": {
 			skipCreateMarketsAndExchanges: true,
@@ -195,11 +198,20 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 				constants.MarketId1: {constants.Price1 + 1},
 				constants.MarketId2: {constants.Price2},
 			},
-			expectedMsg: &types.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{
-					types.NewMarketPriceUpdate(constants.MarketId0, constants.Price4),
-					types.NewMarketPriceUpdate(constants.MarketId1, constants.Price1+1),
-					types.NewMarketPriceUpdate(constants.MarketId2, constants.Price2),
+			expectedMsg: &types.MarketPriceUpdates{
+				MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
+					{
+						MarketId: constants.MarketId0,
+						Price:    constants.Price4,
+					},
+					{
+						MarketId: constants.MarketId1,
+						Price:    constants.Price1 + 1,
+					},
+					{
+						MarketId: constants.MarketId2,
+						Price:    constants.Price2,
+					},
 				},
 			},
 		},
@@ -225,11 +237,20 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 				constants.MarketId1: {0},                // Invalid price, so index price is used.
 				constants.MarketId9: {constants.Price1}, // Invalid market.
 			},
-			expectedMsg: &types.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{
-					types.NewMarketPriceUpdate(constants.MarketId0, constants.Price4),
-					types.NewMarketPriceUpdate(constants.MarketId1, constants.Price1),
-					types.NewMarketPriceUpdate(constants.MarketId2, constants.Price2),
+			expectedMsg: &types.MarketPriceUpdates{
+				MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
+					{
+						MarketId: constants.MarketId0,
+						Price:    constants.Price4,
+					},
+					{
+						MarketId: constants.MarketId1,
+						Price:    constants.Price1 + 1,
+					},
+					{
+						MarketId: constants.MarketId2,
+						Price:    constants.Price2,
+					},
 				},
 			},
 		},
@@ -243,10 +264,16 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 				constants.MarketId1: {constants.Price1}, // Valid: same as index price.
 				constants.MarketId9: {constants.Price1}, // Invalid market.
 			},
-			expectedMsg: &types.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{
-					types.NewMarketPriceUpdate(constants.MarketId1, constants.Price1),
-					types.NewMarketPriceUpdate(constants.MarketId2, constants.Price2),
+			expectedMsg: &types.MarketPriceUpdates{
+				MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
+					{
+						MarketId: constants.MarketId1,
+						Price:    constants.Price1,
+					},
+					{
+						MarketId: constants.MarketId2,
+						Price:    constants.Price2,
+					},
 				},
 			},
 		},

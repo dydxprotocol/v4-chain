@@ -216,11 +216,11 @@ func (_m *PricesKeeper) ModifyMarketParam(ctx types.Context, param pricestypes.M
 }
 
 // PerformStatefulPriceUpdateValidation provides a mock function with given fields: ctx, marketPriceUpdates, performNonDeterministicValidation
-func (_m *PricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, marketPriceUpdates *pricestypes.MsgUpdateMarketPrices, performNonDeterministicValidation bool) error {
+func (_m *PricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, marketPriceUpdates *pricestypes.MarketPriceUpdates, performNonDeterministicValidation bool) error {
 	ret := _m.Called(ctx, marketPriceUpdates, performNonDeterministicValidation)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MsgUpdateMarketPrices, bool) error); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdates, bool) error); ok {
 		r0 = rf(ctx, marketPriceUpdates, performNonDeterministicValidation)
 	} else {
 		r0 = ret.Error(0)
@@ -229,12 +229,12 @@ func (_m *PricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, 
 	return r0
 }
 
-// UpdateMarketPrices provides a mock function with given fields: ctx, updates
-func (_m *PricesKeeper) UpdateMarketPrices(ctx types.Context, updates []*pricestypes.MsgUpdateMarketPrices_MarketPrice) error {
+// UpdateMarketPrice provides a mock function with given fields: ctx, updates
+func (_m *PricesKeeper) UpdateMarketPrice(ctx types.Context, updates *pricestypes.MarketPriceUpdates_MarketPriceUpdate) error {
 	ret := _m.Called(ctx, updates)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, []*pricestypes.MsgUpdateMarketPrices_MarketPrice) error); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdates_MarketPriceUpdate) error); ok {
 		r0 = rf(ctx, updates)
 	} else {
 		r0 = ret.Error(0)

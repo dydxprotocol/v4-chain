@@ -2,20 +2,18 @@
 syntax = "proto3";
 package dydxprotocol.prices;
 
+import "dydxprotocol/prices/market_param.proto";
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
-import "dydxprotocol/prices/market_param.proto";
+
+
 
 option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types";
 
 // Msg defines the Msg service.
 service Msg {
   option (cosmos.msg.v1.service) = true;
-  // UpdateMarketPrices updates the oracle price of a market relative to
-  // quoteCurrency.
-  rpc UpdateMarketPrices(MsgUpdateMarketPrices)
-      returns (MsgUpdateMarketPricesResponse);
   // CreateOracleMarket creates a new oracle market.
   rpc CreateOracleMarket(MsgCreateOracleMarket)
       returns (MsgCreateOracleMarketResponse);
@@ -39,23 +37,6 @@ message MsgCreateOracleMarket {
 
 // MsgCreateOracleMarketResponse defines the CreateOracleMarket response type.
 message MsgCreateOracleMarketResponse {}
-
-// MsgUpdateMarketPrices is a request type for the UpdateMarketPrices method.
-message MsgUpdateMarketPrices {
-  // MarketPrice represents a price update for a single market
-  message MarketPrice {
-    // The id of market to update
-    uint32 market_id = 1;
-    // The updated price
-    uint64 price = 2;
-  }
-
-  repeated MarketPrice market_price_updates = 1;
-}
-
-// MsgUpdateMarketPricesResponse defines the MsgUpdateMarketPrices response
-// type.
-message MsgUpdateMarketPricesResponse {}
 
 // MsgUpdateMarketParam is a message used by x/gov for updating the parameters
 // of an oracle market.

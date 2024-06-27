@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -13,6 +14,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	price_5_015_000_000 = constants.FiveBillion + (3 * constants.FiveMillion)
+	price_5_010_000_000 = constants.FiveBillion + (2 * constants.FiveMillion)
+	price_5_005_000_000 = constants.FiveBillion + constants.FiveMillion
+	price_5_004_999_999 = price_5_005_000_000 - 1
+	price_5_000_500_000 = constants.FiveBillion + constants.OneMillion/2
+	price_5_000_250_000 = constants.FiveBillion + constants.OneMillion/4
+	price_4_999_750_000 = constants.FiveBillion - constants.OneMillion/4
+	price_4_999_500_000 = constants.FiveBillion - constants.OneMillion/2
+	price_4_995_000_001 = constants.FiveBillion - constants.FiveMillion + 1
+	price_4_995_000_000 = constants.FiveBillion - constants.FiveMillion
+)
+
 func TestCrossingPriceUpdateCutoffPpm(t *testing.T) {
 	require.Equal(t, uint32(500_000), keeper.CrossingPriceUpdateCutoffPpm)
 }
@@ -21,11 +35,11 @@ func TestCrossingPriceUpdateCutoffPpm(t *testing.T) {
 func TestPerformStatefulPriceUpdateValidation_Valid(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
-		msgUpdateMarketPrices []*types.MsgUpdateMarketPrices_MarketPrice
+		msgUpdateMarketPrices []*types.MarketPriceUpdates_MarketPriceUpdate
 		indexPrices           []*api.MarketPriceUpdate
 	}{
 		"Empty updates": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{},
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{},
 			indexPrices:           constants.AtTimeTSingleExchangePriceUpdate,
 		},
 		"Multiple updates": {
@@ -33,8 +47,11 @@ func TestPerformStatefulPriceUpdateValidation_Valid(t *testing.T) {
 			indexPrices:           constants.AtTimeTSingleExchangePriceUpdate,
 		},
 		"Towards index price = true (current < update < index price)": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId0, price_5_005_000_000),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    price_5_005_000_000,
+				},
 			},
 			indexPrices: []*api.MarketPriceUpdate{
 				{
@@ -50,8 +67,11 @@ func TestPerformStatefulPriceUpdateValidation_Valid(t *testing.T) {
 			},
 		},
 		"Index price crossing = true (price increase), old_ticks > 1, new_ticks <= sqrt(old_ticks) = true": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId0, price_5_005_000_000),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    price_5_005_000_000,
+				},
 			},
 			indexPrices: []*api.MarketPriceUpdate{
 				{
@@ -67,8 +87,11 @@ func TestPerformStatefulPriceUpdateValidation_Valid(t *testing.T) {
 			},
 		},
 		"Index price crossing = true (price decrease), old_ticks > 1, new_ticks <= sqrt(old_ticks) = true": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId0, price_4_995_000_000),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    price_4_995_000_000,
+				},
 			},
 			indexPrices: []*api.MarketPriceUpdate{
 				{
@@ -84,8 +107,11 @@ func TestPerformStatefulPriceUpdateValidation_Valid(t *testing.T) {
 			},
 		},
 		"Index price crossing = true (price increase), old_ticks <= 1, new_ticks <= old_ticks = true": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId0, price_5_000_500_000),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    price_5_000_500_000,
+				},
 			},
 			indexPrices: []*api.MarketPriceUpdate{
 				{
@@ -101,8 +127,11 @@ func TestPerformStatefulPriceUpdateValidation_Valid(t *testing.T) {
 			},
 		},
 		"Index price crossing = true (price decrease), old_ticks <= 1, new_ticks <= old_ticks = true": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId0, price_4_999_500_000),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    price_4_999_500_000,
+				},
 			},
 			indexPrices: []*api.MarketPriceUpdate{
 				{
@@ -128,7 +157,7 @@ func TestPerformStatefulPriceUpdateValidation_Valid(t *testing.T) {
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 
 			// Run.
-			msg := &types.MsgUpdateMarketPrices{
+			msg := &types.MarketPriceUpdates{
 				MarketPriceUpdates: tc.msgUpdateMarketPrices,
 			}
 			err := k.PerformStatefulPriceUpdateValidation(ctx, msg, true)
@@ -142,18 +171,24 @@ func TestPerformStatefulPriceUpdateValidation_Valid(t *testing.T) {
 func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
-		msgUpdateMarketPrices []*types.MsgUpdateMarketPrices_MarketPrice
+		msgUpdateMarketPrices []*types.MarketPriceUpdates_MarketPriceUpdate
 		indexPrices           []*api.MarketPriceUpdate
 	}{
 		"Index price does not exist": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId0, 11),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    11,
+				},
 			},
 			// Skipping price cache update, so the index price does not exist.
 		},
 		"Index price crossing = true, old_ticks > 1, new_ticks <= sqrt(old_ticks) = false": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId0, price_5_015_000_000),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    price_5_015_000_000,
+				},
 			},
 			indexPrices: []*api.MarketPriceUpdate{
 				{
@@ -169,8 +204,11 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 			},
 		},
 		"Index price crossing = true, old_ticks <= 1, new_ticks <= old_ticks = false": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId0, price_5_015_000_000),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    price_5_015_000_000,
+				},
 			},
 			indexPrices: []*api.MarketPriceUpdate{
 				{
@@ -186,8 +224,11 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 			},
 		},
 		"Index price trends in the opposite direction of update price from current price": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId0, price_5_005_000_000),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    price_5_005_000_000,
+				},
 			},
 			indexPrices: []*api.MarketPriceUpdate{
 				{
@@ -213,7 +254,7 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 
 			// Run.
-			msg := &types.MsgUpdateMarketPrices{
+			msg := &types.MarketPriceUpdates{
 				MarketPriceUpdates: tc.msgUpdateMarketPrices,
 			}
 			err := k.PerformStatefulPriceUpdateValidation(ctx, msg, false) // skips non-deterministic checks.
@@ -227,15 +268,18 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
-		msgUpdateMarketPrices []*types.MsgUpdateMarketPrices_MarketPrice
+		msgUpdateMarketPrices []*types.MarketPriceUpdates_MarketPriceUpdate
 		indexPrices           []*api.MarketPriceUpdate
 
 		// Expected.
 		expectedErr string
 	}{
 		"Market does not exist": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(99, 11), // Market with id 99 does not exist.
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: 99, // Market with id 99 does not exist.
+					Price:    11,
+				},
 			},
 			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
 			expectedErr: errorsmod.Wrapf(
@@ -244,12 +288,12 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 			).Error(),
 		},
 		"Price does not meet min price change": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(
-					constants.MarketId0,
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    constants.FiveBillion + (constants.FiveBillion * 50 / uint64(lib.OneMillion)) - 1,
 					// The update price (=5,000,249,999) doesn't quite meet the min 50 ppm requirement.
-					constants.FiveBillion+(constants.FiveBillion*50/uint64(lib.OneMillion))-1,
-				),
+				},
 			},
 			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
 			expectedErr: errorsmod.Wrapf(
@@ -259,8 +303,11 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 			).Error(),
 		},
 		"Index price does not exist": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId0, 11),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    11,
+				},
 			},
 			// Skipping price cache update, so the index price does not exist.
 			expectedErr: errorsmod.Wrapf(
@@ -269,8 +316,11 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 			).Error(),
 		},
 		"Index price crossing = true, old_ticks > 1, new_ticks <= sqrt(old_ticks) = false": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId0, price_5_015_000_000),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    price_5_015_000_000,
+				},
 			},
 			indexPrices: []*api.MarketPriceUpdate{
 				{
@@ -292,8 +342,11 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 			).Error(),
 		},
 		"Index price crossing = true, old_ticks <= 1, new_ticks <= old_ticks = false": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId0, price_5_015_000_000),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    price_5_015_000_000,
+				},
 			},
 			indexPrices: []*api.MarketPriceUpdate{
 				{
@@ -314,8 +367,11 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 			).Error(),
 		},
 		"Price trends in the opposite direction as the index price": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId0, price_5_005_000_000),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    price_5_005_000_000,
+				},
 			},
 			indexPrices: []*api.MarketPriceUpdate{
 				{
@@ -346,7 +402,7 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 
 			// Run and Validate.
-			msg := &types.MsgUpdateMarketPrices{
+			msg := &types.MarketPriceUpdates{
 				MarketPriceUpdates: tc.msgUpdateMarketPrices,
 			}
 			err := k.PerformStatefulPriceUpdateValidation(ctx, msg, true)
@@ -358,7 +414,7 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
-		msgUpdateMarketPrices []*types.MsgUpdateMarketPrices_MarketPrice
+		msgUpdateMarketPrices []*types.MarketPriceUpdates_MarketPriceUpdate
 		indexPrices           []*api.MarketPriceUpdate
 		smoothedIndexPrices   map[uint32]uint64
 
@@ -385,17 +441,26 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 			expectedMarketIds:     nil,
 		},
 		"Non-empty proposed updates, Non-empty local updates, single missing market": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId0, constants.Price5),
-				types.NewMarketPriceUpdate(constants.MarketId1, constants.Price6),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId0,
+					Price:    constants.Price5,
+				},
+				{
+					MarketId: constants.MarketId1,
+					Price:    constants.Price6,
+				},
 			},
 			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
 			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,
 			expectedMarketIds:   []uint32{constants.MarketId2},
 		},
 		"Non-empty proposed updates, Non-empty local updates, multiple missing markets, sorted": {
-			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
-				types.NewMarketPriceUpdate(constants.MarketId1, constants.Price6),
+			msgUpdateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
+				{
+					MarketId: constants.MarketId1,
+					Price:    constants.Price6,
+				},
 			},
 			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
 			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,

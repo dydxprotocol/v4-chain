@@ -15,7 +15,7 @@ import (
 type ProcessPricesKeeper interface {
 	PerformStatefulPriceUpdateValidation(
 		ctx sdk.Context,
-		marketPriceUpdates *pricestypes.MsgUpdateMarketPrices,
+		marketPriceUpdates *pricestypes.MarketPriceUpdates,
 		performNonDeterministicValidation bool,
 	) error
 

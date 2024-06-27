@@ -2008,13 +2008,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			)
 
 			for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
-				err := ks.PricesKeeper.UpdateMarketPrices(
+				err := ks.PricesKeeper.UpdateMarketPrice(
 					ctx,
-					[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{
-						{
-							MarketId: marketId,
-							Price:    oraclePrice,
-						},
+					&pricestypes.MarketPriceUpdates_MarketPriceUpdate{
+						MarketId: marketId,
+						Price:    oraclePrice,
 					},
 				)
 				require.NoError(t, err)

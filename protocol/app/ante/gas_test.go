@@ -1,14 +1,15 @@
 package ante_test
 
 import (
+	"reflect"
+	"testing"
+
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	assets "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"reflect"
-	"testing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -18,8 +19,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ante"
 	testante "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -47,7 +47,7 @@ func TestValidateMsgType_FreeInfiniteGasDecorator(t *testing.T) {
 			expectFreeInfiniteGasMeter: true,
 		},
 		"yes freeInfiniteGasMeter: single msg, MsgUpdateMarketPrices": {
-			msgOne: &pricestypes.MsgUpdateMarketPrices{}, // app-injected.
+			msgOne: &perptypes.MsgAddPremiumVotes{}, // app-injected.
 
 			expectFreeInfiniteGasMeter: true,
 		},
@@ -57,7 +57,7 @@ func TestValidateMsgType_FreeInfiniteGasDecorator(t *testing.T) {
 			expectFreeInfiniteGasMeter: false,
 		},
 		"no freeInfiniteGasMeter: multi msg, MsgUpdateMarketPrices": {
-			msgOne: &pricestypes.MsgUpdateMarketPrices{}, // app-injected.
+			msgOne: &perptypes.MsgAddPremiumVotes{}, // app-injected.
 			msgTwo: &testdata.TestMsg{Signers: []string{"meh"}},
 
 			expectFreeInfiniteGasMeter: false,

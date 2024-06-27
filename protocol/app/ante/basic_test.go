@@ -1,19 +1,19 @@
 package ante_test
 
 import (
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"testing"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
+	libante "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
+	testante "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-
-	libante "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
-	testante "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 
 	"github.com/stretchr/testify/require"
 )
@@ -37,7 +37,7 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 			expectedErr: sdkerrors.ErrNoSignatures,
 		},
 		"skip ValidateBasic: single msg, AppInjected msg": {
-			msgOne:         &pricestypes.MsgUpdateMarketPrices{},
+			msgOne:         &perptypes.MsgAddPremiumVotes{},
 			txHasSignature: false, // this should cause ValidateBasic to fail, but this is skipped.
 
 			expectedErr: nil,
@@ -49,7 +49,7 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 			expectedErr: nil,
 		},
 		"fails ValidateBasic: mult msgs, AppInjected msg": {
-			msgOne:         &pricestypes.MsgUpdateMarketPrices{}, // AppInjected.
+			msgOne:         &perptypes.MsgAddPremiumVotes{}, // AppInjected.
 			msgTwo:         &testdata.TestMsg{Signers: []string{constants.AliceAccAddress.String()}},
 			txHasSignature: true,
 
@@ -63,7 +63,7 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 			expectedErr: nil,
 		},
 		"skip ValidateBasic: recheck": {
-			msgOne:         &pricestypes.MsgUpdateMarketPrices{}, // AppInjected.
+			msgOne:         &perptypes.MsgAddPremiumVotes{}, // AppInjected.
 			msgTwo:         &testdata.TestMsg{Signers: []string{constants.AliceAccAddress.String()}},
 			isRecheck:      true,
 			txHasSignature: false, // this should cause ValidateBasic to fail, but this is skipped.

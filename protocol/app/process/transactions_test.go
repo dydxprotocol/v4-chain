@@ -181,7 +181,6 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 
 			require.Equal(t, constants.ValidEmptyMsgProposedOperations, ppt.ProposedOperationsTx.GetMsg())
 			require.Equal(t, constants.ValidMsgAddPremiumVotes, ppt.AddPremiumVotesTx.GetMsg())
-			require.Equal(t, constants.ValidMsgUpdateMarketPrices, ppt.UpdateMarketPricesTx.GetMsg())
 
 			require.Len(t, ppt.OtherTxs, tc.expectedOtherTxsNum)
 

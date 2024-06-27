@@ -44,7 +44,6 @@ type OperationsTxResponse struct {
 func PrepareProposalHandler(
 	txConfig client.TxConfig,
 	clobKeeper PrepareClobKeeper,
-	pricesKeeper PreparePricesKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
 ) sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
@@ -78,20 +77,6 @@ func PrepareProposalHandler(
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("NewPrepareProposalTxs error: %v", err))
 			recordErrorMetricsWithLabel(metrics.PrepareProposalTxs)
-			return &EmptyResponse, nil
-		}
-
-		// Gather "FixedSize" group messages.
-		pricesTxResp, err := GetUpdateMarketPricesTx(ctx, txConfig, pricesKeeper)
-		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("GetUpdateMarketPricesTx error: %v", err))
-			recordErrorMetricsWithLabel(metrics.PricesTx)
-			return &EmptyResponse, nil
-		}
-		err = txs.SetUpdateMarketPricesTx(pricesTxResp.Tx)
-		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("SetUpdateMarketPricesTx error: %v", err))
-			recordErrorMetricsWithLabel(metrics.PricesTx)
 			return &EmptyResponse, nil
 		}
 
@@ -162,7 +147,6 @@ func PrepareProposalHandler(
 		recordSuccessMetrics(
 			successMetricParams{
 				txs:                 txs,
-				pricesTx:            pricesTxResp,
 				fundingTx:           fundingTxResp,
 				operationsTx:        operationsTxResp,
 				numTxsToReturn:      len(txsToReturn),

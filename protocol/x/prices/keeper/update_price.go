@@ -30,7 +30,7 @@ import (
 // proposed prices for any market.
 func (k Keeper) GetValidMarketPriceUpdates(
 	ctx sdk.Context,
-) *types.MsgUpdateMarketPrices {
+) *types.MarketPriceUpdates {
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
 		time.Now(),
@@ -59,7 +59,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 	allIndexPrices := k.indexPriceCache.GetValidMedianPrices(allMarketParams, k.timeProvider.Now())
 
 	// 3. Collect all "valid" price updates.
-	updates := make([]*types.MsgUpdateMarketPrices_MarketPrice, 0, len(allMarketParamPrices))
+	updates := make([]*types.MarketPriceUpdates_MarketPriceUpdate, 0, len(allMarketParamPrices))
 	for _, marketParamPrice := range allMarketParamPrices {
 		marketId := marketParamPrice.Param.Id
 		indexPrice, indexPriceExists := allIndexPrices[marketId]
@@ -143,7 +143,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 			// Add as a "valid" price update.
 			updates = append(
 				updates,
-				&types.MsgUpdateMarketPrices_MarketPrice{
+				&types.MarketPriceUpdates_MarketPriceUpdate{
 					MarketId: marketId,
 					Price:    proposalPrice,
 				},
@@ -154,7 +154,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 	// 4. Sort price updates by market id in ascending order.
 	sort.Slice(updates, func(i, j int) bool { return updates[i].MarketId < updates[j].MarketId })
 
-	return &types.MsgUpdateMarketPrices{
+	return &types.MarketPriceUpdates{
 		MarketPriceUpdates: updates,
 	}
 }

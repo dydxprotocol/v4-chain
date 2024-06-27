@@ -3,8 +3,8 @@
 package mocks
 
 import (
-	types "github.com/cosmos/cosmos-sdk/types"
 	perpetualstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	mock "github.com/stretchr/testify/mock"
 )
 

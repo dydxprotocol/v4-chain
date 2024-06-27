@@ -58,7 +58,6 @@ type ProcessProposalTxs struct {
 	// Single msg txs.
 	ProposedOperationsTx *ProposedOperationsTx
 	AddPremiumVotesTx    *AddPremiumVotesTx
-	UpdateMarketPricesTx *UpdateMarketPricesTx
 
 	// Multi msgs txs.
 	OtherTxs []*OtherMsgsTx
@@ -94,17 +93,6 @@ func DecodeProcessProposalTxs(
 		return nil, err
 	}
 
-	// Price updates.
-	updatePricesTx, err := DecodeUpdateMarketPricesTx(
-		ctx,
-		pricesKeeper,
-		decoder,
-		req.Txs[numTxs+updateMarketPricesTxLenOffset],
-	)
-	if err != nil {
-		return nil, err
-	}
-
 	// Other txs.
 	allOtherTxs := make([]*OtherMsgsTx, numTxs-minTxsCount)
 	for i, txBytes := range req.Txs[firstOtherTxIndex : numTxs+lastOtherTxLenOffset] {
@@ -119,7 +107,6 @@ func DecodeProcessProposalTxs(
 	return &ProcessProposalTxs{
 		ProposedOperationsTx: operationsTx,
 		AddPremiumVotesTx:    addPremiumVotesTx,
-		UpdateMarketPricesTx: updatePricesTx,
 		OtherTxs:             allOtherTxs,
 	}, nil
 }
@@ -134,7 +121,6 @@ func (ppt *ProcessProposalTxs) Validate() error {
 	singleTxs := []SingleMsgTx{
 		ppt.ProposedOperationsTx,
 		ppt.AddPremiumVotesTx,
-		ppt.UpdateMarketPricesTx,
 	}
 	for _, smt := range singleTxs {
 		if err := smt.Validate(); err != nil {

@@ -3,7 +3,6 @@ package ante
 import (
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perpetualstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -24,10 +23,7 @@ func IsAppInjectedMsg(msg sdk.Msg) bool {
 		*clobtypes.MsgProposedOperations,
 
 		// perpetuals
-		*perpetualstypes.MsgAddPremiumVotes,
-
-		// prices
-		*pricestypes.MsgUpdateMarketPrices:
+		*perpetualstypes.MsgAddPremiumVotes:
 
 		return true
 	}

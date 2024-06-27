@@ -2,11 +2,12 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"math"
 	"math/big"
 	"sort"
 	"testing"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -634,12 +635,12 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 
 			// Update `Market.price`. By updating prices this way, we can simulate conditions where the oracle
 			// price may become 0.
-			err = pc.PricesKeeper.UpdateMarketPrices(
+			err = pc.PricesKeeper.UpdateMarketPrice(
 				pc.Ctx,
-				[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{pricestypes.NewMarketPriceUpdate(
-					marketId,
-					tc.price,
-				)},
+				&pricestypes.MarketPriceUpdates_MarketPriceUpdate{
+					MarketId: marketId,
+					Price:    tc.price,
+				},
 			)
 			require.NoError(t, err)
 

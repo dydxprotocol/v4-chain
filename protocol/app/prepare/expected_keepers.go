@@ -19,5 +19,5 @@ type PreparePerpetualsKeeper interface {
 
 // PreparePricesKeeper defines the expected Prices keeper used for `PrepareProposal`.
 type PreparePricesKeeper interface {
-	GetValidMarketPriceUpdates(ctx sdk.Context) *pricestypes.MsgUpdateMarketPrices
+	GetValidMarketPriceUpdates(ctx sdk.Context) *pricestypes.MarketPriceUpdates
 }

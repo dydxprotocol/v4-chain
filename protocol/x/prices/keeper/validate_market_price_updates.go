@@ -26,7 +26,7 @@ const (
 // Depending on the input, this func performs non-deterministic stateful validation.
 func (k Keeper) PerformStatefulPriceUpdateValidation(
 	ctx sdk.Context,
-	marketPriceUpdates *types.MsgUpdateMarketPrices,
+	marketPriceUpdates *types.MarketPriceUpdates,
 	performNonDeterministicValidation bool,
 ) error {
 	var determinismMetricKeyValue string
@@ -94,7 +94,7 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 // Note: this is NOT determistic, because it relies on "index price" that is subject to each validator.
 func (k Keeper) performNonDeterministicStatefulValidation(
 	ctx sdk.Context,
-	marketPriceUpdates *types.MsgUpdateMarketPrices,
+	marketPriceUpdates *types.MarketPriceUpdates,
 	allMarketParamPrices []types.MarketParamPrice,
 ) error {
 	idToMarket := getIdToMarketParamPrice(allMarketParamPrices)
@@ -168,7 +168,7 @@ func (k Keeper) performNonDeterministicStatefulValidation(
 //   - The price update is greater than the min price change.
 func (k Keeper) performDeterministicStatefulValidation(
 	ctx sdk.Context,
-	marketPriceUpdates *types.MsgUpdateMarketPrices,
+	marketPriceUpdates *types.MarketPriceUpdates,
 	allMarketParamPrices []types.MarketParamPrice,
 ) error {
 	idToMarketParamPrice := getIdToMarketParamPrice(allMarketParamPrices)
@@ -212,7 +212,7 @@ func (k Keeper) performDeterministicStatefulValidation(
 //     Note that ticks are defined as the minimum price change of the currency at the current price
 func (k Keeper) validatePriceAccuracy(
 	currMarketParamPrice types.MarketParamPrice,
-	priceUpdate *types.MsgUpdateMarketPrices_MarketPrice,
+	priceUpdate *types.MarketPriceUpdates_MarketPriceUpdate,
 	indexPrice uint64,
 ) error {
 	if isTowardsIndexPrice(PriceTuple{
@@ -287,7 +287,7 @@ func (k Keeper) validatePriceAccuracy(
 // Note: this is NOT determistic, because it relies on "index price" that is subject to each validator.
 func (k Keeper) GetMarketsMissingFromPriceUpdates(
 	ctx sdk.Context,
-	marketPriceUpdates []*types.MsgUpdateMarketPrices_MarketPrice,
+	marketPriceUpdates []*types.MarketPriceUpdates_MarketPriceUpdate,
 ) []uint32 {
 	// Gather all markets that are part of the proposed updates.
 	proposedUpdatesMap := make(map[uint32]struct{}, len(marketPriceUpdates))

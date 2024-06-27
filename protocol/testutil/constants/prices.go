@@ -260,33 +260,54 @@ var TestPricesGenesisState = types.GenesisState{
 }
 
 var (
-	ValidMarketPriceUpdates = []*types.MsgUpdateMarketPrices_MarketPrice{
-		types.NewMarketPriceUpdate(MarketId0, Price5),
-		types.NewMarketPriceUpdate(MarketId1, Price6),
-		types.NewMarketPriceUpdate(MarketId2, Price7),
+	ValidMarketPriceUpdates = []*types.MarketPriceUpdates_MarketPriceUpdate{
+		{
+			MarketId: MarketId0,
+			Price:    Price5,
+		},
+		{
+			MarketId: MarketId1,
+			Price:    Price6,
+		},
+		{
+			MarketId: MarketId2,
+			Price:    Price7,
+		},
 	}
 
 	// `MsgUpdateMarketPrices`.
-	EmptyMsgUpdateMarketPrices        = &types.MsgUpdateMarketPrices{}
+	EmptyMsgUpdateMarketPrices        = &types.MarketPriceUpdates{}
 	EmptyMsgUpdateMarketPricesTxBytes []byte
 
-	ValidMsgUpdateMarketPrices = &types.MsgUpdateMarketPrices{
+	ValidMsgUpdateMarketPrices = &types.MarketPriceUpdates{
 		MarketPriceUpdates: ValidMarketPriceUpdates,
 	}
 	ValidMsgUpdateMarketPricesTxBytes []byte
 
-	InvalidMsgUpdateMarketPricesStateless = &types.MsgUpdateMarketPrices{
-		MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{
-			types.NewMarketPriceUpdate(MarketId0, 0), // 0 price value is invalid.
+	InvalidMsgUpdateMarketPricesStateless = &types.MarketPriceUpdates{
+		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
+			{
+				MarketId: MarketId0,
+				Price:    0, // 0 price value is invalid.
+			},
 		},
 	}
 	InvalidMsgUpdateMarketPricesStatelessTxBytes []byte
 
-	InvalidMsgUpdateMarketPricesStateful = &types.MsgUpdateMarketPrices{
-		MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{
-			types.NewMarketPriceUpdate(MarketId0, Price5),
-			types.NewMarketPriceUpdate(MarketId1, Price6),
-			types.NewMarketPriceUpdate(99, Price3), // Market with id 99 does not exist.
+	InvalidMsgUpdateMarketPricesStateful = &types.MarketPriceUpdates{
+		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
+			{
+				MarketId: MarketId0,
+				Price:    Price5,
+			},
+			{
+				MarketId: MarketId1,
+				Price:    Price6,
+			},
+			{
+				MarketId: 99,
+				Price:    Price3, // Market with id 99 does not exist.
+			},
 		},
 	}
 	InvalidMsgUpdateMarketPricesStatefulTxBytes []byte

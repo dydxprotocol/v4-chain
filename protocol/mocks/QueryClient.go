@@ -3,13 +3,12 @@
 package mocks
 
 import (
+	api "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 
 	context "context"
 
 	grpc "google.golang.org/grpc"
-
-	liquidationapi "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
 
 	mock "github.com/stretchr/testify/mock"
 
@@ -393,7 +392,7 @@ func (_m *QueryClient) GetWithdrawalAndTransfersBlockedInfo(ctx context.Context,
 }
 
 // LiquidateSubaccounts provides a mock function with given fields: ctx, in, opts
-func (_m *QueryClient) LiquidateSubaccounts(ctx context.Context, in *liquidationapi.LiquidateSubaccountsRequest, opts ...grpc.CallOption) (*liquidationapi.LiquidateSubaccountsResponse, error) {
+func (_m *QueryClient) LiquidateSubaccounts(ctx context.Context, in *api.LiquidateSubaccountsRequest, opts ...grpc.CallOption) (*api.LiquidateSubaccountsResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -403,20 +402,20 @@ func (_m *QueryClient) LiquidateSubaccounts(ctx context.Context, in *liquidation
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *liquidationapi.LiquidateSubaccountsResponse
+	var r0 *api.LiquidateSubaccountsResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *liquidationapi.LiquidateSubaccountsRequest, ...grpc.CallOption) (*liquidationapi.LiquidateSubaccountsResponse, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *api.LiquidateSubaccountsRequest, ...grpc.CallOption) (*api.LiquidateSubaccountsResponse, error)); ok {
 		return rf(ctx, in, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *liquidationapi.LiquidateSubaccountsRequest, ...grpc.CallOption) *liquidationapi.LiquidateSubaccountsResponse); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *api.LiquidateSubaccountsRequest, ...grpc.CallOption) *api.LiquidateSubaccountsResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*liquidationapi.LiquidateSubaccountsResponse)
+			r0 = ret.Get(0).(*api.LiquidateSubaccountsResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *liquidationapi.LiquidateSubaccountsRequest, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *api.LiquidateSubaccountsRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

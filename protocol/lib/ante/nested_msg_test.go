@@ -16,8 +16,7 @@ import (
 )
 
 var (
-	invalidInnerMsgErr_AppInjected = fmt.Errorf("Invalid nested msg: app-injected msg type")
-	invalidInnerMsgErr_Dydx        = fmt.Errorf("Invalid nested msg for MsgExec: dydx msg type")
+	invalidInnerMsgErr_Dydx = fmt.Errorf("Invalid nested msg for MsgExec: dydx msg type")
 )
 
 func TestIsNestedMsg_Empty(t *testing.T) {
@@ -104,11 +103,6 @@ func TestValidateNestedMsg(t *testing.T) {
 		"Invalid: not a nested msg": {
 			msg:         &bank.MsgSend{},
 			expectedErr: fmt.Errorf("not a nested msg"),
-		},
-
-		"Invalid MsgExec: app-injected inner msg": {
-			msg:         &testmsgs.MsgExecWithAppInjectedInner,
-			expectedErr: invalidInnerMsgErr_AppInjected,
 		},
 
 		"Invalid MsgExec: dydx custom msg": {

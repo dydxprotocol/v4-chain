@@ -364,32 +364,30 @@ func TestEndBlocker_Success(t *testing.T) {
 			blockTime: unixTimeTen,
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext, m *mocks.MemClob) {
 				// Update perpetual prices
-				err := ks.PricesKeeper.UpdateMarketPrices(ctx, []*prices.MsgUpdateMarketPrices_MarketPrice{
-					{
-						MarketId: constants.ClobPair_Btc.Id,
-						Price: types.SubticksToPrice(
-							types.Subticks(10),
-							constants.BtcUsdExponent,
-							constants.ClobPair_Btc,
-							constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
-							lib.QuoteCurrencyAtomicResolution,
-						),
-					},
+				err := ks.PricesKeeper.UpdateMarketPrice(ctx, &prices.MarketPriceUpdates_MarketPriceUpdate{
+					MarketId: constants.ClobPair_Btc.Id,
+					Price: types.SubticksToPrice(
+						types.Subticks(10),
+						constants.BtcUsdExponent,
+						constants.ClobPair_Btc,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
+						lib.QuoteCurrencyAtomicResolution,
+					),
 				})
+
 				require.NoError(t, err)
 
-				err = ks.PricesKeeper.UpdateMarketPrices(ctx, []*prices.MsgUpdateMarketPrices_MarketPrice{
-					{
-						MarketId: constants.ClobPair_Eth.Id,
-						Price: types.SubticksToPrice(
-							types.Subticks(35),
-							constants.EthUsdExponent,
-							constants.ClobPair_Eth,
-							constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
-							lib.QuoteCurrencyAtomicResolution,
-						),
-					},
+				err = ks.PricesKeeper.UpdateMarketPrice(ctx, &prices.MarketPriceUpdates_MarketPriceUpdate{
+					MarketId: constants.ClobPair_Eth.Id,
+					Price: types.SubticksToPrice(
+						types.Subticks(35),
+						constants.EthUsdExponent,
+						constants.ClobPair_Eth,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
+						lib.QuoteCurrencyAtomicResolution,
+					),
 				})
+
 				require.NoError(t, err)
 
 				ks.ClobKeeper.UntriggeredConditionalOrders = map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{

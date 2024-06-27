@@ -12,7 +12,6 @@ import (
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perpetualtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
@@ -47,9 +46,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 		txs      [][]byte
 		maxBytes int64
 
-		pricesResp    *pricestypes.MsgUpdateMarketPrices
-		pricesEncoder sdktypes.TxEncoder
-
 		fundingResp    *perpetualtypes.MsgAddPremiumVotes
 		fundingEncoder sdktypes.TxEncoder
 
@@ -63,38 +59,9 @@ func TestPrepareProposalHandler(t *testing.T) {
 			expectedTxs: [][]byte{}, // error returns empty result.
 		},
 
-		// Prices related.
-		"Error: GetPricesTx returns err": {
-			maxBytes: 1,
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: failingTxEncoder, // encoder fails and returns err.
-
-			expectedTxs: [][]byte{}, // error returns empty result.
-		},
-		"Error: GetPricesTx returns empty": {
-			maxBytes: 1,
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: emptyTxEncoder, // encoder returns empty.
-
-			expectedTxs: [][]byte{}, // error returns empty result.
-		},
-		"Error: SetPricesTx returns err": {
-			maxBytes: 1,
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderTwo, // encoder returns two bytes, which exceeds max.
-
-			expectedTxs: [][]byte{}, // error returns empty result.
-		},
-
 		// Funding related.
 		"Error: GetFundingTx returns err": {
-			maxBytes: 2,
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderOne,
+			maxBytes: 1,
 
 			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
 			fundingEncoder: failingTxEncoder, // encoder fails and returns err.
@@ -102,10 +69,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			expectedTxs: [][]byte{}, // error returns empty result.
 		},
 		"Error: GetFundingTx returns empty": {
-			maxBytes: 2,
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderOne,
+			maxBytes: 1,
 
 			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
 			fundingEncoder: emptyTxEncoder, // encoder returns empty.
@@ -113,10 +77,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			expectedTxs: [][]byte{}, // error returns empty result.
 		},
 		"Error: SetFundingTx returns err": {
-			maxBytes: 1, // only upto 1 byte, not enough space for funding tx bytes.
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderOne, // takes up 1 byte.
+			maxBytes: 0, // only upto 1 byte, not enough space for funding tx bytes.
 
 			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
 			fundingEncoder: passingTxEncoderOne, // takes up another 1 byte, so exceeds max.
@@ -126,11 +87,8 @@ func TestPrepareProposalHandler(t *testing.T) {
 
 		// "Others" related.
 		"Error: AddOtherTxs return error": {
-			maxBytes: 17,
+			maxBytes: 13,
 			txs:      [][]byte{{}},
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderFour,
 
 			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
 			fundingEncoder: passingTxEncoderFour,
@@ -141,11 +99,8 @@ func TestPrepareProposalHandler(t *testing.T) {
 			expectedTxs: [][]byte{}, // error returns empty result.
 		},
 		"Error: AddOtherTxs (additional) return error": {
-			maxBytes: 19,
+			maxBytes: 15,
 			txs:      [][]byte{{9, 8}, {9}, {}, {}},
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderFour,
 
 			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
 			fundingEncoder: passingTxEncoderFour,
@@ -156,15 +111,12 @@ func TestPrepareProposalHandler(t *testing.T) {
 			expectedTxs: [][]byte{}, // error returns empty result.
 		},
 		"Valid: Not all Others than can fit": {
-			maxBytes: int64(16) + msgSendTxBytesLen + 1,
+			maxBytes: int64(12) + msgSendTxBytesLen + 1,
 			txs: [][]byte{
 				constants.Msg_Send_TxBytes,
 				constants.Msg_Send_TxBytes, // not included due to maxBytes.
 				constants.Msg_Send_TxBytes, // not included due to maxBytes.
 			},
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderFour,
 
 			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
 			fundingEncoder: passingTxEncoderFour,
@@ -180,15 +132,12 @@ func TestPrepareProposalHandler(t *testing.T) {
 			},
 		},
 		"Valid: Additional Others fit": {
-			maxBytes: int64(16) + msgSendTxBytesLen + msgSendAndTransferTxBytesLen,
+			maxBytes: int64(12) + msgSendTxBytesLen + msgSendAndTransferTxBytesLen,
 			txs: [][]byte{
 				constants.Msg_Send_TxBytes,
 				constants.Msg_SendAndTransfer_TxBytes,
 				constants.Msg_Send_TxBytes, // not included due to maxBytes.
 			},
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderFour,
 
 			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
 			fundingEncoder: passingTxEncoderFour,
@@ -211,15 +160,10 @@ func TestPrepareProposalHandler(t *testing.T) {
 			mockTxConfig := createMockTxConfig(
 				nil,
 				[]sdktypes.TxEncoder{
-					tc.pricesEncoder,
 					tc.fundingEncoder,
 					tc.clobEncoder,
 				},
 			)
-
-			mockPricesKeeper := mocks.PreparePricesKeeper{}
-			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
-				Return(tc.pricesResp)
 
 			mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
 			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
@@ -234,7 +178,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 			handler := prepare.PrepareProposalHandler(
 				mockTxConfig,
 				&mockClobKeeper,
-				&mockPricesKeeper,
 				&mockPerpKeeper,
 			)
 
@@ -307,7 +250,6 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 			handler := prepare.PrepareProposalHandler(
 				encodingCfg.TxConfig,
 				&mockClobKeeper,
-				&mockPricesKeeper,
 				&mockPerpKeeper,
 			)
 
@@ -319,68 +261,6 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 			response, err := handler(ctx, &req)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedTxs, response.Txs)
-		})
-	}
-}
-
-func TestGetUpdateMarketPricesTx(t *testing.T) {
-	tests := map[string]struct {
-		keeperResp *pricestypes.MsgUpdateMarketPrices
-		txEncoder  sdktypes.TxEncoder
-
-		expectedTx         []byte
-		expectedNumMarkets int
-		expectedErr        error
-	}{
-		"nil message fails": {
-			keeperResp: nil,
-
-			expectedErr: fmt.Errorf("MsgUpdateMarketPrices cannot be nil"),
-		},
-		"empty message": {
-			keeperResp: &pricestypes.MsgUpdateMarketPrices{}, // empty
-			txEncoder:  passingTxEncoderOne,
-
-			expectedTx:         []byte{1},
-			expectedNumMarkets: 0,
-		},
-		"empty tx": {
-			keeperResp: &pricestypes.MsgUpdateMarketPrices{},
-			txEncoder:  emptyTxEncoder, // returns empty tx.
-
-			expectedErr: fmt.Errorf("Invalid tx: []"),
-		},
-		"valid message, but encoding fails": {
-			keeperResp: &pricestypes.MsgUpdateMarketPrices{}, // empty
-			txEncoder:  failingTxEncoder,
-
-			expectedErr: fmt.Errorf("encoder failed"),
-		},
-		"valid message": {
-			keeperResp: &pricestypes.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{{}, {}, {}},
-			},
-			txEncoder: passingTxEncoderOne,
-
-			expectedTx:         []byte{1},
-			expectedNumMarkets: 3,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			mockTxConfig := createMockTxConfig(nil, []sdktypes.TxEncoder{tc.txEncoder})
-			mockPricesKeeper := mocks.PreparePricesKeeper{}
-			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
-				Return(tc.keeperResp)
-
-			resp, err := prepare.GetUpdateMarketPricesTx(ctx, mockTxConfig, &mockPricesKeeper)
-			if tc.expectedErr != nil {
-				require.Equal(t, err, tc.expectedErr)
-			} else {
-				require.NoError(t, err)
-			}
-			require.Equal(t, tc.expectedTx, resp.Tx)
-			require.Equal(t, tc.expectedNumMarkets, resp.NumMarkets)
 		})
 	}
 }

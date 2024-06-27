@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"testing"
 	"time"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
@@ -2278,13 +2279,12 @@ func setupProcessProposerOperationsTestCase(
 
 	// Update the oracle prices.
 	for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
-		err := ks.PricesKeeper.UpdateMarketPrices(
+		err := ks.PricesKeeper.UpdateMarketPrice(
 			ks.Ctx,
-			[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{
-				{
-					MarketId: marketId,
-					Price:    oraclePrice,
-				},
+			&pricestypes.MarketPriceUpdates_MarketPriceUpdate{
+
+				MarketId: marketId,
+				Price:    oraclePrice,
 			},
 		)
 		require.NoError(t, err)

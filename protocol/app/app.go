@@ -1168,7 +1168,6 @@ func New(
 			prepare.PrepareProposalHandler(
 				txConfig,
 				app.ClobKeeper,
-				app.PricesKeeper,
 				app.PerpetualsKeeper,
 			),
 		)
