@@ -177,3 +177,4 @@ func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantums(
 		return bigQuoteQuantums
 	}
 	return bigIMREffective
+}
