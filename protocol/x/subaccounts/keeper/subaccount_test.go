@@ -2402,7 +2402,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 		},
-		`Isolated subaccounts - empty subaccount has update to open position for isolated perpetual, 
+		`Isolated subaccounts - empty subaccount has update to open position for isolated perpetual,
 		errors out when collateral pool for cross perpetuals has no funds`: {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
 			expectedSuccess:          false,
@@ -2433,7 +2433,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			expectedErr:      sdkerrors.ErrInsufficientFunds,
 			msgSenderEnabled: true,
 		},
-		`Isolated subaccounts - isolated subaccount has update to close position for isolated perpetual, 
+		`Isolated subaccounts - isolated subaccount has update to close position for isolated perpetual,
 		errors out when collateral pool for isolated perpetual has no funds`: {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
 			expectedSuccess:          false,
@@ -3250,7 +3250,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Withdrawal,
 		},
-		`withdrawals are not blocked if negative TNC subaccount was seen within 
+		`withdrawals are not blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for a different
 		collateral pool`: {
 			expectedQuoteBalance:     big.NewInt(-100),
@@ -3297,7 +3297,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Withdrawal,
 		},
-		`withdrawals are blocked if negative TNC subaccount was seen within 
+		`withdrawals are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for an isolated
 		perpetual collateral pool`: {
 			expectedQuoteBalance:     big.NewInt(-100),
@@ -3332,7 +3332,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Withdrawal,
 		},
-		`withdrawals are blocked if negative TNC subaccount was seen within 
+		`withdrawals are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was never seen for the cross-perpetual
 		collateral pool, both of which are associated with subaccounts being updated`: {
@@ -3377,7 +3377,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Withdrawal,
 		},
-		`withdrawals are blocked if negative TNC subaccount was seen within 
+		`withdrawals are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was seen for the cross-perpetual
 		collateral pool after WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
@@ -3424,7 +3424,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Withdrawal,
 		},
-		`withdrawals are blocked if negative TNC subaccount was seen within 
+		`withdrawals are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was never seen for another isolated
 		collateral pool, both of which are associated with subaccounts being updated`: {
@@ -3472,7 +3472,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Withdrawal,
 		},
-		`withdrawals are blocked if negative TNC subaccount was seen within 
+		`withdrawals are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was seen for another isolated perpetual
 		collateral pool after WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
@@ -3991,7 +3991,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Transfer,
 		},
-		`transfers are not blocked if negative TNC subaccount was seen within 
+		`transfers are not blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for a different
 		collateral pool from the ones associated with the subaccounts being updated`: {
 			expectedQuoteBalance: big.NewInt(-100),
@@ -4035,7 +4035,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Transfer,
 		},
-		`transfers are blocked if negative TNC subaccount was seen within 
+		`transfers are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was never seen for the cross-perpetual
 		collateral pool, both of which are associated with subaccounts being updated`: {
@@ -4081,7 +4081,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Transfer,
 		},
-		`transferss are blocked if negative TNC subaccount was seen within 
+		`transferss are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was seen for the cross-perpetual
 		collateral pool after WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
@@ -4129,7 +4129,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Transfer,
 		},
-		`transfers are blocked if negative TNC subaccount was seen within 
+		`transfers are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was never seen for another isolated perpetual
 		collateral pool, both of which are associated with subaccounts being updated`: {
@@ -4177,7 +4177,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Transfer,
 		},
-		`transferss are blocked if negative TNC subaccount was seen within 
+		`transferss are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was seen for another the cross-perpetual
 		collateral pool after WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
@@ -4406,7 +4406,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			assetPositions: []*types.AssetPosition{
 				{
 					AssetId: uint32(0),
-					// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+					// 900_000 USDC (just enough to collateralize 90 BTC at $50_000 and 20% IMF)
 					Quantums: dtypes.NewInt(900_000_000_000),
 				},
 			},
@@ -4416,7 +4416,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					AssetPositions: []*types.AssetPosition{
 						{
 							AssetId: uint32(0),
-							// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+							// 900_000 USDC (just enough to collateralize 90 BTC at $50_000 and 20% IMF)
 							Quantums: dtypes.NewInt(900_000_000_000),
 						},
 					},
@@ -4467,7 +4467,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			assetPositions: []*types.AssetPosition{
 				{
 					AssetId: uint32(0),
-					// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+					// 900_000 USDC (just enough to collateralize 90 BTC at $50_000 and 20% IMF)
 					Quantums: dtypes.NewInt(900_000_000_000),
 				},
 			},
@@ -4477,7 +4477,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					AssetPositions: []*types.AssetPosition{
 						{
 							AssetId: uint32(0),
-							// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+							// 900_000 USDC (just enough to collateralize 90 BTC at $50_000 and 20% IMF)
 							Quantums: dtypes.NewInt(900_000_000_000),
 						},
 					},
@@ -4535,7 +4535,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			assetPositions: []*types.AssetPosition{
 				{
 					AssetId: uint32(0),
-					// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+					// 900_000 USDC (just enough to collateralize 90 BTC at $50_000 and 20% IMF)
 					Quantums: dtypes.NewInt(900_000_000_000),
 				},
 			},
@@ -4545,7 +4545,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					AssetPositions: []*types.AssetPosition{
 						{
 							AssetId: uint32(0),
-							// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+							// 900_000 USDC (just enough to collateralize 90 BTC at $50_000 and 20% IMF)
 							Quantums: dtypes.NewInt(900_000_000_000),
 						},
 					},
@@ -4554,7 +4554,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			openInterests: []perptypes.OpenInterestDelta{
 				{
 					PerpetualId: uint32(0),
-					// (Only difference from prevoius test case)
+					// (Only difference from previous test case)
 					// 410 BTC. At $50,000, this is $20,500,000 of OI.
 					// OI would be $25,000,000 after the Match updates, so OIMF is still at base IMF.
 					BaseQuantums: big.NewInt(41_000_000_000),
@@ -4605,7 +4605,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			assetPositions: []*types.AssetPosition{
 				{
 					AssetId: uint32(0),
-					// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+					// 900_000 USDC (just enough to collateralize 90 BTC at $50_000 and 20% IMF)
 					Quantums: dtypes.NewInt(900_000_000_000),
 				},
 			},
@@ -4615,7 +4615,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					AssetPositions: []*types.AssetPosition{
 						{
 							AssetId: uint32(0),
-							// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+							// 900_000 USDC (just enough to collateralize 90 BTC at $50_000 and 20% IMF)
 							Quantums: dtypes.NewInt(900_000_000_000),
 						},
 					},
@@ -4624,10 +4624,10 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			openInterests: []perptypes.OpenInterestDelta{
 				{
 					PerpetualId: uint32(0),
-					// (Only difference from prevoius test case)
-					// 410 BTC + 1 base quantum. At $50,000, this is > $20,500,000 of OI.
-					// OI would be just past $25,000,000 after the Match updates, so OIMF > IMF = 20%
-					BaseQuantums: big.NewInt(41_000_000_001),
+					// (Only difference from previous test case)
+					// 410.001 BTC. At $50,000, this is $20,500,050 of OI.
+					// OI would be $25,000,050 after the Match updates, so OIMF > (IMF = 20%)
+					BaseQuantums: big.NewInt(41_000_100_000),
 				},
 			},
 			updates: []types.Update{
