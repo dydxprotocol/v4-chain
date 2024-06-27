@@ -167,6 +167,12 @@
           },
           "marginEnabled": {
             "type": "boolean"
+          },
+          "updatedAtHeight": {
+            "type": "string"
+          },
+          "latestProcessedBlockHeight": {
+            "type": "string"
           }
         },
         "required": [
@@ -176,7 +182,9 @@
           "freeCollateral",
           "openPerpetualPositions",
           "assetPositions",
-          "marginEnabled"
+          "marginEnabled",
+          "updatedAtHeight",
+          "latestProcessedBlockHeight"
         ],
         "type": "object",
         "additionalProperties": false
