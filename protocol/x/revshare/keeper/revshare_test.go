@@ -46,7 +46,7 @@ func TestGetMarketMapperRevShareDetailsFailure(t *testing.T) {
 
 	// Get the rev share details for non-existent market
 	_, err := k.GetMarketMapperRevShareDetails(ctx, 42)
-	require.ErrorContains(t, err, "MarketMapperRevShareDetails not found for marketId: 42")
+	require.ErrorIs(t, err, types.ErrMarketMapperRevShareDetailsNotFound)
 }
 
 func TestCreateNewMarketRevShare(t *testing.T) {
@@ -115,7 +115,7 @@ func TestGetMarketMapperRevenueShareForMarket(t *testing.T) {
 
 			expectedErr: types.ErrMarketMapperRevShareDetailsNotFound,
 		},
-		// TODO: investigate why tApp blocktime doesn't translate to ctx.BlockTime()
+		// TODO (TRA-455): investigate why tApp blocktime doesn't translate to ctx.BlockTime()
 		//"expired market rev share": {
 		//	revShareParams: types.MarketMapperRevenueShareParams{
 		//		Address:         constants.AliceAccAddress.String(),

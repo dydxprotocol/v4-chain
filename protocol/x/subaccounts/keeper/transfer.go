@@ -258,7 +258,7 @@ func (k Keeper) DistributeFees(
 	feeCollectorShare := new(big.Int).Sub(quantums, marketMapperShare)
 
 	// Transfer fees to the market mapper
-	// TODO: add monitoring to record the amount of fees transferred to the market mapper
+	// TODO (TRA-444): add monitoring to record the amount of fees transferred to the market mapper
 	if err := k.TransferFees(
 		ctx,
 		assetId,
