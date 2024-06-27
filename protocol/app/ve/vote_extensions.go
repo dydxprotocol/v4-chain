@@ -13,7 +13,7 @@ import (
 	libtime "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/time"
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	pricetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-	cometabci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -54,7 +54,7 @@ func NewVoteExtensionHandler(
 // In the case of an error, the handler will return an empty vote extension
 // ensuring liveness in the case of a price deamon failure
 func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
-	return func(ctx sdk.Context, req *cometabci.RequestExtendVote) (resp *cometabci.ResponseExtendVote, err error) {
+	return func(ctx sdk.Context, req *abci.RequestExtendVote) (resp *abci.ResponseExtendVote, err error) {
 		defer func() {
 			// catch panics if possible
 			if r := recover(); r != nil {
@@ -63,7 +63,7 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 					"err", r,
 				)
 
-				resp, err = &cometabci.ResponseExtendVote{VoteExtension: []byte{}}, ErrPanic{fmt.Errorf("%v", r)}
+				resp, err = &abci.ResponseExtendVote{VoteExtension: []byte{}}, ErrPanic{fmt.Errorf("%v", r)}
 			}
 		}()
 
@@ -80,33 +80,33 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 		currPrices := h.indexPriceCache.GetValidMedianPrices(marketParams, h.timeProvider.Now())
 
 		if len(currPrices) == 0 {
-			return &cometabci.ResponseExtendVote{VoteExtension: []byte{}}, fmt.Errorf("no valid median prices")
+			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, fmt.Errorf("no valid median prices")
 		}
 
 		voteExt, err := h.transformDeamonPricesToVE(ctx, currPrices)
 		if err != nil {
 			h.logger.Error("failed to transform prices to vote extension", "height", req.Height, "err", err)
 			// TODO: structure error
-			return &cometabci.ResponseExtendVote{VoteExtension: []byte{}}, err
+			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
 		}
 
 		bz, err := h.veCodec.Encode(voteExt)
 		if err != nil {
 			h.logger.Error("failed to encode vote extension", "height", req.Height, "err", err)
-			return &cometabci.ResponseExtendVote{VoteExtension: []byte{}}, err
+			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
 		}
 
 		h.logger.Debug("extending vote with deamon prices", "height", req.Height, "prices", len(currPrices))
 
-		return &cometabci.ResponseExtendVote{VoteExtension: bz}, nil
+		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 	}
 }
 
 func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtensionHandler {
 	return func(
 		ctx sdk.Context,
-		req *cometabci.RequestVerifyVoteExtension,
-	) (_ *cometabci.ResponseVerifyVoteExtension, err error) {
+		req *abci.RequestVerifyVoteExtension,
+	) (_ *abci.ResponseVerifyVoteExtension, err error) {
 
 		if req == nil {
 			ctx.Logger().Error("extend vote handler received a nil request")
@@ -122,7 +122,7 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 				"height", req.Height,
 			)
 
-			return &cometabci.ResponseVerifyVoteExtension{Status: cometabci.ResponseVerifyVoteExtension_ACCEPT}, nil
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 		}
 
 		ve, err := h.veCodec.Decode(req.VoteExtension)
@@ -132,7 +132,7 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 				"height", req.Height,
 				"err", err,
 			)
-			return &cometabci.ResponseVerifyVoteExtension{Status: cometabci.ResponseVerifyVoteExtension_REJECT}, err
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, err
 		}
 
 		if err := h.ValidateDeamonVE(ctx, ve); err != nil {
@@ -141,7 +141,7 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 				"height", req.Height,
 				"err", err,
 			)
-			return &cometabci.ResponseVerifyVoteExtension{Status: cometabci.ResponseVerifyVoteExtension_REJECT}, err
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, err
 		}
 
 		h.logger.Debug(
@@ -150,7 +150,7 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 			"size (bytes)", len(req.VoteExtension),
 		)
 
-		return &cometabci.ResponseVerifyVoteExtension{Status: cometabci.ResponseVerifyVoteExtension_ACCEPT}, nil
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 	}
 }
 

@@ -9,7 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
+	ibcconsumerkeeper "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/keeper"
 )
 
 var (
@@ -45,10 +49,14 @@ func PrepareProposalHandler(
 	txConfig client.TxConfig,
 	clobKeeper PrepareClobKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
+	pricesKeeper pk.Keeper,
+	veCodec codec.VoteExtensionCodec,
+	extCommitCodec codec.ExtendedCommitCodec,
+	consumerKeeper ibcconsumerkeeper.Keeper,
 ) sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
 
-		// var extInfoBz []byte
+		var extInfoBz []byte
 
 		defer telemetry.ModuleMeasureSince(
 			ModuleName,
@@ -63,16 +71,61 @@ func PrepareProposalHandler(
 			return &EmptyResponse, err
 		}
 
-		// voteExtensionsEnabled := ve.AreVoteExtensionsEnabled(ctx)
-		// if voteExtensionsEnabled {
-		// 	ctx.Logger().Info(
-		// 		"Providing oracle data using vote extensions",
-		// 		"height", req.Height,
-		// 	)
+		voteExtensionsEnabled := ve.AreVoteExtensionsEnabled(ctx)
+		if voteExtensionsEnabled {
+			ctx.Logger().Info(
+				"Providing oracle data using vote extensions",
+				"height", req.Height,
+			)
 
-		// 	// Get the vote extnesions
+			// Get the vote extnesions
+			veInfo, err := ve.PruneAndValidateExtendedCommitInfo(
+				ctx,
+				req.LocalLastCommit,
+				veCodec,
+				pricesKeeper,
+				ve.NewValidateVoteExtensionsFn(consumerKeeper),
+			)
 
-		// }
+			if err != nil {
+				ctx.Logger().Error(
+					"failed to prune extended commit info",
+					"height", req.Height,
+					"local_last_commit", req.LocalLastCommit,
+					"err", err,
+				)
+
+				return &abci.ResponsePrepareProposal{Txs: make([][]byte, 0)}, fmt.Errorf("failed to prune extended commit info: %w", err)
+			}
+
+			// Create the vote extension injection data which will be injected into the proposal. These contain the
+			// oracle data for the current block which will be committed to state in PreBlock.
+			extInfoBz, err = extCommitCodec.Encode(veInfo)
+			if err != nil {
+				ctx.Logger().Error(
+					"failed to extended commit info",
+					"commit_info", veInfo,
+					"err", err,
+				)
+
+				return &abci.ResponsePrepareProposal{Txs: make([][]byte, 0)}, fmt.Errorf("failed to encode extended commit info: %w", err)
+			}
+
+			extInfoBzSize := int64(len(extInfoBz))
+			if extInfoBzSize <= req.MaxTxBytes {
+				// Reserve bytes for our VE Tx
+				req.MaxTxBytes -= extInfoBzSize
+			} else {
+				ctx.Logger().Error("VE size consumes greater than entire block",
+					"extInfoBzSize", extInfoBzSize,
+					"MaxTxBytes", req.MaxTxBytes)
+				err := fmt.Errorf("VE size consumes greater than entire block: extInfoBzSize = %d: MaxTxBytes = %d", extInfoBzSize, req.MaxTxBytes)
+				return &abci.ResponsePrepareProposal{Txs: make([][]byte, 0)}, err
+			}
+
+			req.Txs = append([][]byte{extInfoBz}, req.Txs...) // prepend the VE Tx
+
+		}
 		txs, err := NewPrepareProposalTxs(req)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("NewPrepareProposalTxs error: %v", err))
@@ -156,32 +209,6 @@ func PrepareProposalHandler(
 
 		return &abci.ResponsePrepareProposal{Txs: txsToReturn}, nil
 	}
-}
-
-// GetUpdateMarketPricesTx returns a tx containing `MsgUpdateMarketPrices`.
-func GetUpdateMarketPricesTx(
-	ctx sdk.Context,
-	txConfig client.TxConfig,
-	pricesKeeper PreparePricesKeeper,
-) (PricesTxResponse, error) {
-	// Get prices to update.
-	msgUpdateMarketPrices := pricesKeeper.GetValidMarketPriceUpdates(ctx)
-	if msgUpdateMarketPrices == nil {
-		return PricesTxResponse{}, fmt.Errorf("MsgUpdateMarketPrices cannot be nil")
-	}
-
-	tx, err := EncodeMsgsIntoTxBytes(txConfig, msgUpdateMarketPrices)
-	if err != nil {
-		return PricesTxResponse{}, err
-	}
-	if len(tx) == 0 {
-		return PricesTxResponse{}, fmt.Errorf("Invalid tx: %v", tx)
-	}
-
-	return PricesTxResponse{
-		Tx:         tx,
-		NumMarkets: len(msgUpdateMarketPrices.MarketPriceUpdates),
-	}, nil
 }
 
 // GetAddPremiumVotesTx returns a tx containing `MsgAddPremiumVotes`.

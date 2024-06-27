@@ -8,7 +8,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	ptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-	cometabci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -33,14 +33,30 @@ type PriceApplier interface {
 	// vote extensions + VoteAggregator. If a price exists for an asset, it is written to state. The
 	// prices aggregated from vote-extensions are returned if no errors are encountered in execution,
 	// otherwise an error is returned + nil prices.
-	ApplyPricesFromVoteExtensions(ctx sdk.Context, req *cometabci.RequestFinalizeBlock) (map[string]*big.Int, error)
+	ApplyPricesFromVoteExtensions(ctx sdk.Context, req *abci.RequestFinalizeBlock) (map[string]*big.Int, error)
 
 	// GetPriceForValidator gets the prices reported by a given validator. This method depends
 	// on the prices from the latest set of aggregated votes.
 	GetPricesForValidator(validator sdk.ConsAddress) map[string]*big.Int
 }
 
-func (pw *PriceWriter) ApplyPricesFromVoteExtensions(ctx sdk.Context, req *cometabci.RequestFinalizeBlock) (map[string]*big.Int, error) {
+func NewPriceWriter(
+	va VoteAggregator,
+	pk pk.Keeper,
+	voteExtensionCodec codec.VoteExtensionCodec,
+	extendedCommitCodec codec.ExtendedCommitCodec,
+	logger log.Logger,
+) PriceApplier {
+	return &PriceWriter{
+		va:                  va,
+		pk:                  pk,
+		logger:              logger,
+		voteExtensionCodec:  voteExtensionCodec,
+		extendedCommitCodec: extendedCommitCodec,
+	}
+}
+
+func (pw *PriceWriter) ApplyPricesFromVoteExtensions(ctx sdk.Context, req *abci.RequestFinalizeBlock) (map[string]*big.Int, error) {
 	votes, err := GetDeamonVotes(req.Txs, pw.voteExtensionCodec, pw.extendedCommitCodec)
 	if err != nil {
 		pw.logger.Error(

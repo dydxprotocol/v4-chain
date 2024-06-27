@@ -183,6 +183,7 @@ import (
 	streamingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/streaming/grpc/types"
 
 	//Ethos
+	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	ibcconsumer "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer"
 	ibcconsumerkeeper "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/keeper"
 	ibcconsumertypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
@@ -1169,6 +1170,10 @@ func New(
 				txConfig,
 				app.ClobKeeper,
 				app.PerpetualsKeeper,
+				app.PricesKeeper,
+				vecodec.NewDefaultVoteExtensionCodec(),
+				vecodec.NewDefaultExtendedCommitCodec(),
+				app.ConsumerKeeper,
 			),
 		)
 	}

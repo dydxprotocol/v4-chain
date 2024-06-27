@@ -2,7 +2,7 @@ package codec
 
 import (
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
-	cometabci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 )
 
 type VoteExtensionCodec interface {
@@ -15,10 +15,10 @@ type VoteExtensionCodec interface {
 
 type ExtendedCommitCodec interface {
 	// Encode encodes the extended commit info into a byte array.
-	Encode(cometabci.ExtendedCommitInfo) ([]byte, error)
+	Encode(abci.ExtendedCommitInfo) ([]byte, error)
 
 	// Decode decodes the extended commit info from a byte array.
-	Decode([]byte) (cometabci.ExtendedCommitInfo, error)
+	Decode([]byte) (abci.ExtendedCommitInfo, error)
 }
 
 func NewDefaultVoteExtensionCodec() *DefaultVoteExtensionCodec {
@@ -47,15 +47,15 @@ func NewDefaultExtendedCommitCodec() *DefaultExtendedCommitCodec {
 	return &DefaultExtendedCommitCodec{}
 }
 
-func (codec *DefaultExtendedCommitCodec) Encode(extendedCommitInfo cometabci.ExtendedCommitInfo) ([]byte, error) {
+func (codec *DefaultExtendedCommitCodec) Encode(extendedCommitInfo abci.ExtendedCommitInfo) ([]byte, error) {
 	return extendedCommitInfo.Marshal()
 }
 
-func (codec *DefaultExtendedCommitCodec) Decode(bz []byte) (cometabci.ExtendedCommitInfo, error) {
+func (codec *DefaultExtendedCommitCodec) Decode(bz []byte) (abci.ExtendedCommitInfo, error) {
 	if len(bz) == 0 {
-		return cometabci.ExtendedCommitInfo{}, nil
+		return abci.ExtendedCommitInfo{}, nil
 	}
 
-	var extendedCommitInfo cometabci.ExtendedCommitInfo
+	var extendedCommitInfo abci.ExtendedCommitInfo
 	return extendedCommitInfo, extendedCommitInfo.Unmarshal(bz)
 }
