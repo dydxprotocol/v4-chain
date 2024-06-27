@@ -1,0 +1,48 @@
+{
+  "name": "pprof-format",
+  "version": "2.1.0",
+  "description": "Pure JavaScript pprof encoder and decoder",
+  "author": "Datadog Inc. <info@datadoghq.com>",
+  "license": "MIT",
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "require": "./dist/index.js",
+    "import": "./dist/index.mjs",
+    "default": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "lint": "eslint src",
+    "prepublishOnly": "yarn build",
+    "pretest": "yarn build",
+    "test": "node dist/index.test.js",
+    "proto": "mkdir -p proto && pbjs -t static-module -w commonjs -o testing/proto/profile.js testing/proto/profile.proto && pbts -o testing/proto/profile.d.ts testing/proto/profile.js"
+  },
+  "homepage": "https://github.com/DataDog/pprof-format#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DataDog/pprof-format.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DataDog/pprof-format/issues"
+  },
+  "keywords": [
+    "pprof",
+    "encode",
+    "decode",
+    "profile"
+  ],
+  "devDependencies": {
+    "@types/tap": "^15.0.7",
+    "@typescript-eslint/eslint-plugin": "^5.40.0",
+    "@typescript-eslint/parser": "^5.40.0",
+    "eslint": "^8.25.0",
+    "protobufjs": "^7.2.2",
+    "protobufjs-cli": "^1.1.1",
+    "tap": "^16.3.0",
+    "typescript": "^4.8.4"
+  }
+}

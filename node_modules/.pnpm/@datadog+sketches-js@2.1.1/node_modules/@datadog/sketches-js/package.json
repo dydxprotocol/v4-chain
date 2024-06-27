@@ -1,0 +1,48 @@
+{
+  "name": "@datadog/sketches-js",
+  "version": "2.1.1",
+  "description": "TypeScript implementation of DDSketch, a distributed quantile sketch algorithm ",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/DataDog/sketches-js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "README",
+    "LICENSE"
+  ],
+  "keywords": [
+    "histogram",
+    "ddsketch",
+    "sketches",
+    "quantiles",
+    "percentiles",
+    "monitoring"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "yarn clean; tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist/*",
+    "test": "jest",
+    "lint": "eslint \"src/**/*.{js,ts}\"",
+    "prepack": "yarn build",
+    "typecheck": "tsc --noEmit",
+    "generate:proto": "pbjs -t static-module -w commonjs -o src/ddsketch/proto/compiled.js src/ddsketch/proto/DDSketch.proto && pbts -o src/ddsketch/proto/compiled.d.ts src/ddsketch/proto/compiled.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/jest": "^26.0.14",
+    "@typescript-eslint/eslint-plugin": "^4.2.0",
+    "@typescript-eslint/parser": "^4.2.0",
+    "eslint": "^7.9.0",
+    "eslint-config-prettier": "^6.12.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "jest": "^26.4.2",
+    "prettier": "^2.1.2",
+    "protobufjs": "^7.2.6",
+    "ts-jest": "^26.4.0",
+    "typescript": "^4.0.3"
+  }
+}

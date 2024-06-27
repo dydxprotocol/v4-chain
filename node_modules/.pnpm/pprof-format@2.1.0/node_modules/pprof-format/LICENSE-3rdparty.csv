@@ -1,0 +1,9 @@
+Component,Origin,License,Copyright
+dev,@types/tap,MIT,Copyright 2022 zkldi
+dev,@typescript-eslint/eslint-plugin,MIT,Copyright 2022 TypeScript ESLint Authors
+dev,@typescript-eslint/parser,MIT,Copyright 2022 TypeScript ESLint Authors
+dev,eslint,MIT,Copyright 2022 Nicholas C. Zakas <nicholas+npm@nczconsulting.com>
+dev,protobufjs,BSD-3-Clause,Copyright 2016 Daniel Wirtz
+dev,tap,ISC,Copyright 2022 Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)
+dev,typescript,Apache-2.0,Copyright 2022 Microsoft Corp.
+file,profile.proto,Apache license 2.0,Copyright 2016 Google Inc.

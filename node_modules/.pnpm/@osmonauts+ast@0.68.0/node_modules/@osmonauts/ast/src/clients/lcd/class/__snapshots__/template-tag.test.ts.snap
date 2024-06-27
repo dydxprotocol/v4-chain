@@ -1,0 +1,103 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`/cosmos/feegrant/v1beta1/allowance/{granter}/{grantee} 1`] = `
+{
+  "atEnd": true,
+  "strs": [
+    "cosmos/feegrant/v1beta1/allowance/",
+    "/",
+  ],
+}
+`;
+
+exports[`/cosmos/gov/v1beta1/proposals/{proposal_id}/tally 1`] = `
+{
+  "atEnd": false,
+  "strs": [
+    "cosmos/gov/v1beta1/proposals/",
+    "/tally",
+  ],
+}
+`;
+
+exports[`/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter} 1`] = `
+{
+  "atEnd": true,
+  "strs": [
+    "cosmos/gov/v1beta1/proposals/",
+    "votes/",
+  ],
+}
+`;
+
+exports[`/cosmos/group/v1/vote_by_proposal_voter/{proposal_id}/{voter} 1`] = `
+{
+  "atEnd": true,
+  "strs": [
+    "cosmos/group/v1/vote_by_proposal_voter/",
+    "/",
+  ],
+}
+`;
+
+exports[`/cosmos/staking/v1beta1/validators/{validator_addr}/delegations 1`] = `
+{
+  "atEnd": false,
+  "strs": [
+    "cosmos/staking/v1beta1/validators/",
+    "/delegations",
+  ],
+}
+`;
+
+exports[`/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr} 1`] = `
+{
+  "atEnd": true,
+  "strs": [
+    "cosmos/staking/v1beta1/validators/",
+    "delegations/",
+  ],
+}
+`;
+
+exports[`/osmosis/{gamm}/{v1beta1}/{estimate}/{swap_exact_amount_in} 1`] = `
+{
+  "atEnd": true,
+  "strs": [
+    "osmosis/",
+    "/",
+    "/",
+    "/",
+  ],
+}
+`;
+
+exports[`/osmosis/{gamm}/v1beta1/{estimate}/swap_exact_amount_in 1`] = `
+{
+  "atEnd": false,
+  "strs": [
+    "osmosis/",
+    "/v1beta1/",
+    "/swap_exact_amount_in",
+  ],
+}
+`;
+
+exports[`/osmosis/{gamm}/v1beta1/estimate/swap_exact_amount_in 1`] = `
+{
+  "atEnd": false,
+  "strs": [
+    "osmosis/",
+    "/v1beta1/estimate/swap_exact_amount_in",
+  ],
+}
+`;
+
+exports[`/osmosis/gamm/v1beta1/estimate/{swap_exact_amount_in} 1`] = `
+{
+  "atEnd": true,
+  "strs": [
+    "osmosis/gamm/v1beta1/estimate/",
+  ],
+}
+`;

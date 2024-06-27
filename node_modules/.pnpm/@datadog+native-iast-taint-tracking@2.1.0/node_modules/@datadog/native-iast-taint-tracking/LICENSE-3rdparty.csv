@@ -1,0 +1,12 @@
+Component,Origin,License,Copyright
+require,node-gyp-build,MIT,Copyright 2017 Mathias Buus
+dev,node-addon-api,MIT,Copyright (c) 2017 Node.js API collaborators
+dev,nan,MIT,Copyright (c) 2018 NAN contributors
+dev,segfault-handler,BSD-3-Clause,Copyright (c) 2015-2019 Dave Dopson. Copyright (c) 2019 Kenneth Geisshirt
+dev,mocha,MIT,Copyright (c) 2011-2021 OpenJS Foundation and contributors
+dev,mocha-junit-reporter,MIT,Copyright (c) 2015 Michael Allen
+dev,cpputest,BSD-3-Clause,"Copyright (c) 2007, Michael Feathers, James Grenning and Bas Vodde"
+dev,proxyquire,MIT,Copyright 2013 Thorsten Lorenz
+dev,eslint,MIT,Copyright JS Foundation and other contributors https://js.foundation
+dev,eslint-config-standard,MIT,Copyright Feross Aboukhadijeh
+dev,semver,ISC,Copyright Isaac Z. Schlueter and Contributors

@@ -1,0 +1,17 @@
+{
+  "name": "crypto-randomuuid",
+  "version": "1.0.0",
+  "description": "Polyfill crypto.randomUUID",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [
+    "crypto",
+    "random",
+    "uuid",
+    "polyfill"
+  ],
+  "author": "Stephen Belanger <admin@stephenbelanger.com>",
+  "license": "MIT"
+}

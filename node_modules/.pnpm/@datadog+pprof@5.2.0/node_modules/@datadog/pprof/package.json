@@ -1,0 +1,87 @@
+{
+  "name": "@datadog/pprof",
+  "version": "5.2.0",
+  "description": "pprof support for Node.js",
+  "repository": "datadog/pprof-nodejs",
+  "main": "out/src/index.js",
+  "types": "out/src/index.d.ts",
+  "scripts": {
+    "build:asan": "node-gyp configure build --jobs=max --address_sanitizer",
+    "build:tsan": "node-gyp configure build --jobs=max --thread_sanitizer",
+    "build": "node-gyp configure build --jobs=max",
+    "codecov": "nyc report --reporter=json && codecov -f coverage/*.json",
+    "compile": "tsc -p .",
+    "fix": "gts fix",
+    "format": "clang-format --style file -i --glob='bindings/**/*.{h,hh,cpp,cc}'",
+    "install": "exit 0",
+    "lint": "jsgl --local . && gts check && clang-format --style file -n -Werror --glob='bindings/**/*.{h,hh,cpp,cc}'",
+    "prepare": "npm run compile && npm run rebuild",
+    "pretest:js-asan": "npm run compile && npm run build:asan",
+    "pretest:js-tsan": "npm run compile && npm run build:tsan",
+    "pretest:js-valgrind": "npm run pretest",
+    "pretest": "npm run compile",
+    "rebuild": "node-gyp rebuild --jobs=max",
+    "test:cpp": "node scripts/cctest.js",
+    "test:js-asan": "LSAN_OPTIONS='suppressions=./suppressions/lsan_suppr.txt' LD_PRELOAD=`gcc -print-file-name=libasan.so` mocha out/test/test-*.js",
+    "test:js-tsan": "LD_PRELOAD=`gcc -print-file-name=libtsan.so` mocha out/test/test-*.js",
+    "test:js-valgrind": "valgrind --leak-check=full mocha out/test/test-*.js",
+    "test:js": "nyc mocha -r source-map-support/register out/test/test-*.js",
+    "test": "npm run test:js && npm run test:cpp"
+  },
+  "author": {
+    "name": "Google Inc."
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "delay": "^5.0.0",
+    "node-gyp-build": "<4.0",
+    "p-limit": "^3.1.0",
+    "pprof-format": "^2.1.0",
+    "source-map": "^0.7.4"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.1",
+    "@types/node": ">=14",
+    "@types/sinon": "^10.0.15",
+    "@types/tmp": "^0.2.3",
+    "@typescript-eslint/eslint-plugin": "^5.60.1",
+    "clang-format": "^1.8.0",
+    "codecov": "^3.8.2",
+    "deep-copy": "^1.4.2",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^16.0.1",
+    "eslint-plugin-promise": "^6.1.1",
+    "gts": "^4.0.1",
+    "js-green-licenses": "^4.0.0",
+    "mocha": "^10.2.0",
+    "nan": "^2.18.0",
+    "nyc": "^15.1.0",
+    "sinon": "^15.2.0",
+    "source-map-support": "^0.5.21",
+    "tmp": "0.2.1",
+    "typescript": "<5.1"
+  },
+  "files": [
+    "out/src",
+    "out/third_party/cloud-debug-nodejs",
+    "proto",
+    "package-lock.json",
+    "package.json",
+    "README.md",
+    "scripts/preinstall.js",
+    "scripts/require-package-json.js",
+    "scripts/should_rebuild.js",
+    "prebuilds"
+  ],
+  "nyc": {
+    "exclude": [
+      "proto",
+      "out/test",
+      "out/system-test"
+    ]
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}

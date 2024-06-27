@@ -1,0 +1,13 @@
+Component,Origin,License,Copyright
+dev,@typescript-eslint/eslint-plugin,MIT,Copyright JS Foundation and other contributors https://js.foundation
+dev,@typescript-eslint/parser,MIT,Copyright JS Foundation and other contributors https://js.foundation
+dev,eslint,MIT,Copyright JS Foundation and other contributors https://js.foundation
+dev,eslint-config-prettier,MIT,Simon Lydell
+dev,eslint-plugin-prettier,MIT,Teddy Katz
+dev,jest,MIT,Facebook
+dev,prettier,MIT,James Long
+dev,ts-jest,MIT,Kulshekhar Kabra
+dev,typescript,Apache-2.0,Copyright Microsoft Corporation
+float64-frexp,https://github.com/math-io/float64-frexp,MIT,The Compute.io Authors
+float64-ldexp,https://github.com/math-io/float64-ldexp,MIT,The Compute.io Authors
+import,protobufjs,BSD-3-Clause,Daniel Wirtz

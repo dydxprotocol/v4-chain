@@ -1,0 +1,337 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`can_execute_relay_response 1`] = `
+"export interface CanExecuteRelayResponse {
+  canExecute: boolean;
+}"
+`;
+
+exports[`cosmos_msg_for__empty 1`] = `"export type CosmosMsg_for_Empty = CosmosMsg_for_Empty;"`;
+
+exports[`execute classes array types 1`] = `
+"export class SG721Client implements SG721Instance {
+  client: SigningCosmWasmClient;
+  sender: string;
+  contractAddress: string;
+
+  constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    this.client = client;
+    this.sender = sender;
+    this.contractAddress = contractAddress;
+    this.execute = this.execute.bind(this);
+    this.revertFreezeStatus = this.revertFreezeStatus.bind(this);
+    this.relay = this.relay.bind(this);
+    this.rotateUserKey = this.rotateUserKey.bind(this);
+    this.addRelayer = this.addRelayer.bind(this);
+    this.removeRelayer = this.removeRelayer.bind(this);
+    this.updateGuardians = this.updateGuardians.bind(this);
+    this.updateLabel = this.updateLabel.bind(this);
+  }
+
+  execute = async ({
+    msgs
+  }: {
+    msgs: CosmosMsg_for_Empty[];
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      execute: {
+        msgs
+      }
+    }, fee, memo, funds);
+  };
+  revertFreezeStatus = async (fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      revert_freeze_status: {}
+    }, fee, memo, funds);
+  };
+  relay = async ({
+    transaction
+  }: {
+    transaction: RelayTransaction;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      relay: {
+        transaction
+      }
+    }, fee, memo, funds);
+  };
+  rotateUserKey = async ({
+    newUserAddress
+  }: {
+    newUserAddress: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      rotate_user_key: {
+        new_user_address: newUserAddress
+      }
+    }, fee, memo, funds);
+  };
+  addRelayer = async ({
+    newRelayerAddress
+  }: {
+    newRelayerAddress: Addr;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      add_relayer: {
+        new_relayer_address: newRelayerAddress
+      }
+    }, fee, memo, funds);
+  };
+  removeRelayer = async ({
+    relayerAddress
+  }: {
+    relayerAddress: Addr;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      remove_relayer: {
+        relayer_address: relayerAddress
+      }
+    }, fee, memo, funds);
+  };
+  updateGuardians = async ({
+    guardians,
+    newMultisigCodeId
+  }: {
+    guardians: Guardians;
+    newMultisigCodeId?: number;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      update_guardians: {
+        guardians,
+        new_multisig_code_id: newMultisigCodeId
+      }
+    }, fee, memo, funds);
+  };
+  updateLabel = async ({
+    newLabel
+  }: {
+    newLabel: string;
+  }, fee: number | StdFee | \\"auto\\" = \\"auto\\", memo?: string, funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      update_label: {
+        new_label: newLabel
+      }
+    }, fee, memo, funds);
+  };
+}"
+`;
+
+exports[`execute interfaces no extends 1`] = `
+"export interface SG721Instance {
+  contractAddress: string;
+  sender: string;
+  execute: ({
+    msgs
+  }: {
+    msgs: CosmosMsg_for_Empty[];
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  revertFreezeStatus: (fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  relay: ({
+    transaction
+  }: {
+    transaction: RelayTransaction;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  rotateUserKey: ({
+    newUserAddress
+  }: {
+    newUserAddress: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  addRelayer: ({
+    newRelayerAddress
+  }: {
+    newRelayerAddress: Addr;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  removeRelayer: ({
+    relayerAddress
+  }: {
+    relayerAddress: Addr;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  updateGuardians: ({
+    guardians,
+    newMultisigCodeId
+  }: {
+    guardians: Guardians;
+    newMultisigCodeId?: number;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+  updateLabel: ({
+    newLabel
+  }: {
+    newLabel: string;
+  }, fee?: number | StdFee | \\"auto\\", memo?: string, funds?: Coin[]) => Promise<ExecuteResult>;
+}"
+`;
+
+exports[`execute_msg_for__empty 1`] = `"export type ExecuteMsg_for_Empty = ExecuteMsg_for_Empty;"`;
+
+exports[`info_response 1`] = `
+"export interface InfoResponse {
+  codeId: number;
+  guardians: Addr[];
+  isFrozen: boolean;
+  label: string;
+  multisigAddress?: Addr;
+  multisigCodeId: number;
+  nonce: number;
+  relayers: Addr[];
+  userAddr: Addr;
+  version: ContractVersion;
+}"
+`;
+
+exports[`query classes 1`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+    this.bank = this.bank.bind(this);
+    this.custom = this.custom.bind(this);
+    this.staking = this.staking.bind(this);
+    this.distribution = this.distribution.bind(this);
+    this.wasm = this.wasm.bind(this);
+  }
+
+  bank = async (): Promise<BankResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      bank: {}
+    });
+  };
+  custom = async (): Promise<CustomResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      custom: {}
+    });
+  };
+  staking = async (): Promise<StakingResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      staking: {}
+    });
+  };
+  distribution = async (): Promise<DistributionResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      distribution: {}
+    });
+  };
+  wasm = async (): Promise<WasmResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      wasm: {}
+    });
+  };
+}"
+`;
+
+exports[`query classes 2`] = `
+"export class SG721QueryClient implements SG721ReadOnlyInstance {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+    this.execute = this.execute.bind(this);
+    this.revertFreezeStatus = this.revertFreezeStatus.bind(this);
+    this.relay = this.relay.bind(this);
+    this.rotateUserKey = this.rotateUserKey.bind(this);
+    this.addRelayer = this.addRelayer.bind(this);
+    this.removeRelayer = this.removeRelayer.bind(this);
+    this.updateGuardians = this.updateGuardians.bind(this);
+    this.updateLabel = this.updateLabel.bind(this);
+  }
+
+  execute = async ({
+    msgs
+  }: {
+    msgs: CosmosMsg_for_Empty[];
+  }): Promise<ExecuteResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      execute: {
+        msgs
+      }
+    });
+  };
+  revertFreezeStatus = async (): Promise<RevertFreezeStatusResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      revert_freeze_status: {}
+    });
+  };
+  relay = async ({
+    transaction
+  }: {
+    transaction: RelayTransaction;
+  }): Promise<RelayResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      relay: {
+        transaction
+      }
+    });
+  };
+  rotateUserKey = async ({
+    newUserAddress
+  }: {
+    newUserAddress: string;
+  }): Promise<RotateUserKeyResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      rotate_user_key: {
+        new_user_address: newUserAddress
+      }
+    });
+  };
+  addRelayer = async ({
+    newRelayerAddress
+  }: {
+    newRelayerAddress: Addr;
+  }): Promise<AddRelayerResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      add_relayer: {
+        new_relayer_address: newRelayerAddress
+      }
+    });
+  };
+  removeRelayer = async ({
+    relayerAddress
+  }: {
+    relayerAddress: Addr;
+  }): Promise<RemoveRelayerResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      remove_relayer: {
+        relayer_address: relayerAddress
+      }
+    });
+  };
+  updateGuardians = async ({
+    guardians,
+    newMultisigCodeId
+  }: {
+    guardians: Guardians;
+    newMultisigCodeId?: number;
+  }): Promise<UpdateGuardiansResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      update_guardians: {
+        guardians,
+        new_multisig_code_id: newMultisigCodeId
+      }
+    });
+  };
+  updateLabel = async ({
+    newLabel
+  }: {
+    newLabel: string;
+  }): Promise<UpdateLabelResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      update_label: {
+        new_label: newLabel
+      }
+    });
+  };
+}"
+`;
+
+exports[`relay_transaction 1`] = `
+"export interface RelayTransaction {
+  message: Binary;
+  nonce: number;
+  signature: Binary;
+  userPubkey: Binary;
+}"
+`;

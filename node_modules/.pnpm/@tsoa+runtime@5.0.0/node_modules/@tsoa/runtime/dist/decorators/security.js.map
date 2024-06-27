@@ -1,0 +1,1 @@
+{"version":3,"file":"security.js","sourceRoot":"","sources":["../../src/decorators/security.ts"],"names":[],"mappings":";;;AAAA;;GAEG;AACH,SAAgB,UAAU;IACxB,OAAO,GAAG,EAAE;QACV,OAAO;IACT,CAAC,CAAC;AACJ,CAAC;AAJD,gCAIC;AAED;;GAEG;AACH,SAAgB,QAAQ,CAAC,IAA2C,EAAE,MAAiB;IACrF,OAAO,GAAG,EAAE;QACV,OAAO;IACT,CAAC,CAAC;AACJ,CAAC;AAJD,4BAIC"}

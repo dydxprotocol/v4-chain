@@ -1,0 +1,33 @@
+{
+    "name": "@types/swagger-ui-express",
+    "version": "4.1.6",
+    "description": "TypeScript definitions for swagger-ui-express",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/swagger-ui-express",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Dmitry Rogozhny",
+            "githubUsername": "dmitryrogozhny",
+            "url": "https://github.com/dmitryrogozhny"
+        },
+        {
+            "name": "Florian Keller",
+            "githubUsername": "ffflorian",
+            "url": "https://github.com/ffflorian"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/swagger-ui-express"
+    },
+    "scripts": {},
+    "dependencies": {
+        "@types/express": "*",
+        "@types/serve-static": "*"
+    },
+    "typesPublisherContentHash": "e21a8edb36a6f5db7f51e8d228d8bbac8d46caef3c279b6b6cd180a747188293",
+    "typeScriptVersion": "4.5"
+}

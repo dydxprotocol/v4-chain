@@ -1,0 +1,56 @@
+Component,Origin,License,Copyright
+require,anyhow,MIT OR Apache-2.0,Copyright (c) 2018 David Tolnay
+require,base64,MIT and Apache-2.0,Copyright (c) 2015 Alice Maz
+require,console_error_panic_hook,MIT OR Apache-2.0,Copyright (c) 2018 Nick Fitzgerald
+require,fastrand,Apache-2.0 OR MIT, Copyright 2020 Stjepan Glavina
+require,instant,BSD-3-Clause,Copyright (c) 2019 Sébastien Crozet
+require,js-sys,MIT OR Apache-2.0,Copyright (c) 2014 Alex Crichton
+require,log,Apache-2.0 OR MIT,Copyright (c) 2014 The Rust Project Developers
+require,lru-cache,ISC,Copyright (c) 2010-2022 Isaac Z. Schlueter and Contributors
+require,napi,MIT,Copyright (c) 2020-present LongYinan
+require,napi-derive,MIT,Copyright (c) 2020-present LongYinan
+require,node-gyp-build,MIT,Copyright 2017 Mathias Buus
+require,serde,MIT OR Apache-2.0,Copyright (c) Erick Tryzelaar and David Tolnay
+require,serde-wasm-bindgen,MIT,Copyright (c) 2019 Cloudflare Inc.
+require,swc,Apache-2.0,Copyright 강동윤
+require,swc_ecma_parser,Apache-2.0,Copyright 강동윤
+require,swc_ecma_visit,Apache-2.0,Copyright 강동윤
+require,swc_visit_macros,Apache-2.0,Copyright 강동윤
+require,wasm-bindgen,Apache-2.0 OR MIT,Copyright (c) 2014 Alex Crichton
+dev,@babel/core,MIT,Copyright (c) 2014-present Sebastian McKenzie and other contributors
+dev,@babel/parser,MIT,Copyright (c) Copyright (C) 2012-2014 by various contributors
+dev,@babel/types,MIT,Copyright (c) 2014-present Sebastian McKenzie and other contributors
+dev,@napi-rs/cli,MIT,Copyright (c) 2020 LongYinan
+dev,@swc-node/register,MIT,Copyright (c) 2020-present LongYinan
+dev,ast-types,MIT,Copyright (c) 2013 Ben Newman <bn@cs.stanford.edu>
+dev,chai,MIT,Copyright (c) 2017 Chai.js Assertion Library
+dev,cross-env,MIT,Copyright (c) 2017 Kent C. Dodds
+dev,ctor,Apache-2.0 OR MIT,Copyright (c) 2018 Matt Mastracci
+dev,dotenv-cli,MIT,Copyright Jens Claes
+dev,eslint-config-standard,MIT,Copyright (c) Feross Aboukhadijeh
+dev,eslint-plugin-import,MIT,Copyright (c) 2015 Ben Mosher
+dev,eslint-plugin-node,MIT,Copyright (c) 2015 Toru Nagashima
+dev,eslint-plugin-promise,ISC,Copyright (c) 2020
+dev,eslint-plugin-standard,MIT,Copyright (c) 2015 Jamund Ferguson
+dev,eslint,MIT,Copyright JS Foundation and other contributors
+dev,husky,MIT,Copyright (c) 2021 typicode
+dev,lint-staged,MIT,Copyright (c) 2016 Andrey Okonetchnikov
+dev,mocha,MIT,Copyright (c) 2011-2021 OpenJS Foundation and contributors
+dev,mocha-it-each,MIT,Copyright (c) 2013 Mikejsdev
+dev,mocha-junit-reporter,MIT,Copyright (c) 2015 Michael Allen
+dev,napi-build,MIT,Copyright (c) 2020-present LongYinan
+dev,npm-run-all,MIT,Copyright (c) 2015 Toru Nagashima
+dev,recast,MIT,Copyright (c) 2012 Ben Newman <bn@cs.stanford.edu
+dev,prettier,MIT,Copyright © James Long and contributors
+dev,sorcery,MIT,Copyright 2014 Rich-Harris
+dev,source-map,BSD-3-Clause,Copyright (c) 2009-2011 Mozilla Foundation and contributors
+dev,speculoos,Apache-2.0,Copyright (c) cfrancia and oknozor
+dev,tap-junit,MIT,Copyright (c) 2018 Dustin Hershman
+dev,tempfile,MIT OR Apache-2.0,Copyright (c) 2015 Steven Allen
+dev,tmp,MIT,Copyright (c) 2014 KARASZI István
+dev,typescript,Apache License 2.0,Copyright (c) Microsoft Corporation
+dev,sinon,BSD-3-Clause,Copyright 2010-2017 Christian Johansen
+dev,sinon-chai,WTFPL and BSD-2-Clause,Copyright 2004 Sam Hocevar 2012–2017 Domenic Denicola
+dev,proxyquire,MIT,Copyright 2013 Thorsten Lorenz
+dev,@typescript-eslint/parser,BSD-2-Clause,Copyright JS Foundation and other contributors
+dev,@typescript-eslint/eslint-plugin,BSD-2-Clause,Copyright JS Foundation and other contributors

@@ -1,0 +1,13 @@
+extends: seegno
+
+env:
+  jasmine: true
+  jest: true
+
+plugins:
+  - jest
+
+rules:
+  jest/no-disabled-tests: 2
+  jest/no-focused-tests: 2
+  jest/no-identical-title: 2

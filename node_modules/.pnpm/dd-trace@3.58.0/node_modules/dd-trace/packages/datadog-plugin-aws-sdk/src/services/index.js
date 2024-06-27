@@ -1,0 +1,15 @@
+'use strict'
+
+exports.cloudwatchlogs = require('./cloudwatchlogs')
+exports.dynamodb = require('./dynamodb')
+exports.eventbridge = require('./eventbridge')
+exports.kinesis = require('./kinesis')
+exports.lambda = require('./lambda')
+exports.redshift = require('./redshift')
+exports.s3 = require('./s3')
+exports.sfn = require('./sfn')
+exports.sns = require('./sns')
+exports.sqs = require('./sqs')
+exports.states = require('./states')
+exports.stepfunctions = require('./stepfunctions')
+exports.default = require('./default')

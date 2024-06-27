@@ -1,0 +1,63 @@
+{
+  "name": "koalas",
+  "description": "Coalesce for JavaScript. Returns the first value that is not undefined or null.",
+  "version": "1.0.2",
+  "homepage": "https://github.com/doowb/koalas",
+  "author": "Brian Woodward (https://github.com/doowb)",
+  "contributors": [
+    "Brian Woodward <brian.woodward@gmail.com> (https://twitter.com/doowb)",
+    "Jon Schlinkert <jon.schlinkert@sellside.com> (http://twitter.com/jonschlinkert)"
+  ],
+  "repository": "doowb/koalas",
+  "bugs": {
+    "url": "https://github.com/doowb/koalas/issues"
+  },
+  "license": "MIT",
+  "files": [
+    "index.js"
+  ],
+  "main": "index.js",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "devDependencies": {
+    "gulp": "github:gulpjs/gulp#4.0",
+    "gulp-eslint": "^3.0.1",
+    "gulp-format-md": "^0.1.11",
+    "gulp-istanbul": "^1.1.1",
+    "gulp-mocha": "^3.0.1",
+    "mocha": "^3.2.0"
+  },
+  "keywords": [
+    "check",
+    "isnull",
+    "kind",
+    "koala",
+    "koalas",
+    "null",
+    "type",
+    "type-of",
+    "typeof",
+    "undefined",
+    "util",
+    "utility",
+    "utils",
+    "value"
+  ],
+  "verb": {
+    "toc": false,
+    "layout": "default",
+    "tasks": [
+      "readme"
+    ],
+    "plugins": [
+      "gulp-format-md"
+    ],
+    "lint": {
+      "reflinks": true
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "@datadog/native-metrics",
+  "version": "2.0.0",
+  "description": "Native metrics collector for libuv and v8",
+  "main": "index.js",
+  "repository": "git@github.com:DataDog/dd-native-metrics-js.git",
+  "author": "Datadog Inc. <info@datadoghq.com>",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/DataDog/dd-native-metrics-js#readme",
+  "scripts": {
+    "install": "exit 0",
+    "compile_commands": "node-gyp configure --release -- -f gyp.generator.compile_commands_json.py && mv Release/compile_commands.json ./",
+    "rebuild": "node-gyp rebuild -j max",
+    "lint": "node scripts/check_licenses.js && eslint .",
+    "test": "mocha 'test/**/*.spec.js'"
+  },
+  "keywords": [
+    "datadog",
+    "metrics",
+    "apm"
+  ],
+  "engines": {
+    "node": ">=12"
+  },
+  "dependencies": {
+    "node-addon-api": "^6.1.0",
+    "node-gyp-build": "^3.9.0"
+  },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "eslint": "^7.31.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "eslint-plugin-standard": "^5.0.0",
+    "mocha": "^9.0.3",
+    "nan": "^2.17.0"
+  }
+}

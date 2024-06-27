@@ -1,0 +1,57 @@
+{
+  "name": "@datadog/native-iast-taint-tracking",
+  "home": "https://github.com/DataDog/dd-native-iast-taint-tracking-js/blob/main/README.md",
+  "repository": "git@github.com:DataDog/dd-native-iast-taint-tracking-js.git",
+  "version": "2.1.0",
+  "description": "Datadog IAST tant tracking support for NodeJS",
+  "main": "index.js",
+  "scripts": {
+    "build": "node-gyp configure && node-gyp build",
+    "build:arm": "node-gyp configure -arch=arm64 && node-gyp build -arch=arm64",
+    "build:asan": "node-gyp configure && CXXFLAGS=\"-g -O0 -fsanitize=address\" LDFLAGS=\"-fsanitize=address\" node-gyp build",
+    "build:valgrind": "node-gyp configure && CXXFLAGS=\"-g -O0\" node-gyp build",
+    "install": "exit 0",
+    "lint": "eslint . -c ./.eslintrc.json",
+    "test:native": "./scripts/cpputest.sh",
+    "test:junit": "./scripts/cpputest.sh --ci",
+    "pretest:asan": "npm run build:asan",
+    "pretest:js-junit": "npm run build",
+    "pretest:js-valgrind": "npm run build",
+    "pretest:js-asan": "npm run build:asan",
+    "test:asan": "./scripts/cpputest.sh --asan",
+    "test:js-asan": "LD_PRELOAD=`gcc -print-file-name=libasan.so` mocha --recursive",
+    "test:js-valgrind": "valgrind mocha --recursive",
+    "test": "mocha --recursive",
+    "test:js-junit": "mocha --recursive --reporter mocha-junit-reporter --reporter-options mochaFile=./build/junit.xml",
+    "test:docker": "./scripts/test_docker.sh"
+  },
+  "author": "Datadog Inc. <info@datadoghq.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/DataDog/dd-iast-native-taint-tracking-js/issues"
+  },
+  "devDependencies": {
+    "eslint": "^8.26.0",
+    "eslint-config-standard": "^17.0.0",
+    "mocha": "^10.0.0",
+    "mocha-junit-reporter": "^2.0.2",
+    "nan": "2.14.0",
+    "node-addon-api": "^4.3.0",
+    "proxyquire": "^2.1.3",
+    "segfault-handler": "^1.3.0",
+    "semver": "^7.3.8"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "prebuilds/**/*",
+    "replace.js",
+    "scripts/libc.js",
+    "LICENSE",
+    "LICENSE-3rdparty.csv",
+    "README.md"
+  ],
+  "dependencies": {
+    "node-gyp-build": "^3.9.0"
+  }
+}

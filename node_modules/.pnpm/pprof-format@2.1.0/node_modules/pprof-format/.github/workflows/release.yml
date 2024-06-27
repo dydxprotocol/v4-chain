@@ -1,0 +1,28 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - v[0-9]+.x
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v3
+      - uses: actions/setup-node@v3
+        with:
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install
+      - run: npm publish
+      - id: pkg
+        run: |
+          content=`cat ./package.json | tr '\n' ' '`
+          echo "::set-output name=json::$content"
+      - run: |
+          git tag v${{ fromJson(steps.pkg.outputs.json).version }}
+          git push origin v${{ fromJson(steps.pkg.outputs.json).version }}

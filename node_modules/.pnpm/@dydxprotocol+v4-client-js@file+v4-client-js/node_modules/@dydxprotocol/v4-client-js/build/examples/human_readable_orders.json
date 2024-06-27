@@ -1,0 +1,86 @@
+[
+    {
+        "type": "LIMIT",
+        "timeInForce": "GTT",
+        "postOnly": true,
+        "side": "BUY",
+        "price": 40000
+    },
+    {
+        "type": "LIMIT",
+        "timeInForce": "GTT",
+        "postOnly": true,
+        "side": "SELL",
+        "price": 1000
+    },
+    {
+        "type": "LIMIT",
+        "timeInForce": "GTT",
+        "postOnly": false,
+        "side": "BUY",
+        "price": 40000
+    },
+    {
+        "type": "LIMIT",
+        "timeInForce": "GTT",
+        "postOnly": false,
+        "side": "SELL",
+        "price": 1000
+    },
+    {
+        "type": "LIMIT",
+        "timeInForce": "IOC",
+        "postOnly": true,
+        "side": "BUY",
+        "price": 40000
+    },
+    {
+        "type": "LIMIT",
+        "timeInForce": "IOC",
+        "postOnly": true,
+        "side": "SELL",
+        "price": 1000
+    },
+    {
+        "type": "LIMIT",
+        "timeInForce": "IOC",
+        "postOnly": false,
+        "side": "BUY",
+        "price": 40000
+    },
+    {
+        "type": "LIMIT",
+        "timeInForce": "IOC",
+        "postOnly": false,
+        "side": "SELL",
+        "price": 1000
+    },
+    {
+        "type": "LIMIT",
+        "timeInForce": "FOK",
+        "postOnly": true,
+        "side": "BUY",
+        "price": 40000
+    },
+    {
+        "type": "LIMIT",
+        "timeInForce": "FOK",
+        "postOnly": true,
+        "side": "SELL",
+        "price": 1000
+    },
+    {
+        "type": "LIMIT",
+        "timeInForce": "FOK",
+        "postOnly": false,
+        "side": "BUY",
+        "price": 40000
+    },
+    {
+        "type": "LIMIT",
+        "timeInForce": "FOK",
+        "postOnly": false,
+        "side": "SELL",
+        "price": 1000
+    }
+]
