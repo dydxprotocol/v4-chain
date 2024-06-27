@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	salib "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -199,10 +199,11 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					SettledSubaccount: types.Subaccount{
 						Id: bobSubaccountId,
 						PerpetualPositions: []*types.PerpetualPosition{
-							{
-								PerpetualId: 1000,
-								Quantums:    dtypes.NewInt(500),
-							},
+							testutil.CreateSinglePerpetualPosition(
+								1000,
+								big.NewInt(500),
+								big.NewInt(0),
+							),
 						},
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
@@ -240,10 +241,11 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					SettledSubaccount: types.Subaccount{
 						Id: aliceSubaccountId,
 						PerpetualPositions: []*types.PerpetualPosition{
-							{
-								PerpetualId: 1000,
-								Quantums:    dtypes.NewInt(500),
-							},
+							testutil.CreateSinglePerpetualPosition(
+								1000,
+								big.NewInt(500),
+								big.NewInt(0),
+							),
 						},
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
@@ -275,10 +277,11 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					SettledSubaccount: types.Subaccount{
 						Id: aliceSubaccountId,
 						PerpetualPositions: []*types.PerpetualPosition{
-							{
-								PerpetualId: 1000,
-								Quantums:    dtypes.NewInt(-100),
-							},
+							testutil.CreateSinglePerpetualPosition(
+								1000,
+								big.NewInt(-100),
+								big.NewInt(0),
+							),
 						},
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
@@ -292,10 +295,11 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					SettledSubaccount: types.Subaccount{
 						Id: bobSubaccountId,
 						PerpetualPositions: []*types.PerpetualPosition{
-							{
-								PerpetualId: 1000,
-								Quantums:    dtypes.NewInt(250),
-							},
+							testutil.CreateSinglePerpetualPosition(
+								1000,
+								big.NewInt(250),
+								big.NewInt(0),
+							),
 						},
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
@@ -318,10 +322,11 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					SettledSubaccount: types.Subaccount{
 						Id: aliceSubaccountId,
 						PerpetualPositions: []*types.PerpetualPosition{
-							{
-								PerpetualId: 1000,
-								Quantums:    dtypes.NewInt(-3100),
-							},
+							testutil.CreateSinglePerpetualPosition(
+								1000,
+								big.NewInt(-3100),
+								big.NewInt(0),
+							),
 						},
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
@@ -335,10 +340,11 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					SettledSubaccount: types.Subaccount{
 						Id: bobSubaccountId,
 						PerpetualPositions: []*types.PerpetualPosition{
-							{
-								PerpetualId: 1000,
-								Quantums:    dtypes.NewInt(1000),
-							},
+							testutil.CreateSinglePerpetualPosition(
+								1000,
+								big.NewInt(1000),
+								big.NewInt(0),
+							),
 						},
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
