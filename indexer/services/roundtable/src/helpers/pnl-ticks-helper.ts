@@ -320,12 +320,12 @@ export function getNewPnlTick(
     subaccountId,
     latestBlockHeight,
     latestBlockTime,
-    usdcPositionSize,
-    openPerpetualPositionsForSubaccount: JSON.stringify(openPerpetualPositionsForSubaccount),
-    marketPrices: JSON.stringify(marketPrices),
-    lastUpdatedFundingIndexMap: JSON.stringify(lastUpdatedFundingIndexMap),
-    currentFundingIndexMap: JSON.stringify(currentFundingIndexMap),
-    subaccountTotalTransfersMap: JSON.stringify(subaccountTotalTransfersMap),
+    // usdcPositionSize,
+    // openPerpetualPositionsForSubaccount: JSON.stringify(openPerpetualPositionsForSubaccount),
+    // marketPrices: JSON.stringify(marketPrices),
+    // lastUpdatedFundingIndexMap: JSON.stringify(lastUpdatedFundingIndexMap),
+    // currentFundingIndexMap: JSON.stringify(currentFundingIndexMap),
+    // subaccountTotalTransfersMap: JSON.stringify(subaccountTotalTransfersMap),
   });
   const currentEquity: Big = calculateEquity(
     usdcPositionSize,
@@ -334,6 +334,12 @@ export function getNewPnlTick(
     lastUpdatedFundingIndexMap,
     currentFundingIndexMap,
   );
+  logger.info({
+    at: 'createPnlTicks#getNewPnlTick',
+    message: 'Calculated equity and total pnl',
+    subaccountId,
+    currentEquity: currentEquity.toFixed(),
+  });
 
   const totalPnl: Big = calculateTotalPnl(
     currentEquity,
@@ -343,7 +349,6 @@ export function getNewPnlTick(
     at: 'createPnlTicks#getNewPnlTick',
     message: 'Calculated equity and total pnl',
     subaccountId,
-    currentEquity: currentEquity.toFixed(),
     totalPnl: totalPnl.toFixed(),
   });
 
