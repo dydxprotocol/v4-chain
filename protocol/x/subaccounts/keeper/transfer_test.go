@@ -1186,9 +1186,7 @@ func TestDistributeFees(t *testing.T) {
 		collateralPoolAddr sdk.AccAddress
 
 		// Revenue share details
-		marketMapperAddr   sdk.AccAddress
-		revenueSharePpm    uint32
-		validDays          uint32
+		revshareParams     revsharetypes.MarketMapperRevenueShareParams
 		setRevenueShare    bool
 		revShareExpiration int64
 
@@ -1205,10 +1203,12 @@ func TestDistributeFees(t *testing.T) {
 			marketMapperAccBalance:              big.NewInt(0),
 			quantums:                            big.NewInt(500),
 			collateralPoolAddr:                  types.ModuleAddress,
-			marketMapperAddr:                    constants.AliceAccAddress,
 			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 500
 			expectedFeeModuleAccBalance:         big.NewInt(3000), // 500 + 2500
-			expectedMarketMapperAccBalance:      big.NewInt(0),
+			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
+				Address: constants.AliceAccAddress.String(),
+			},
+			expectedMarketMapperAccBalance: big.NewInt(0),
 		},
 		"success - send to fee-collector module account from isolated market account": {
 			asset:                      *constants.Usdc,
@@ -1222,8 +1222,10 @@ func TestDistributeFees(t *testing.T) {
 			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 500
 			expectedFeeModuleAccBalance:         big.NewInt(3000), // 500 + 2500
 			marketMapperAccBalance:              big.NewInt(0),
-			marketMapperAddr:                    constants.AliceAccAddress,
-			expectedMarketMapperAccBalance:      big.NewInt(0),
+			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
+				Address: constants.AliceAccAddress.String(),
+			},
+			expectedMarketMapperAccBalance: big.NewInt(0),
 		},
 		"success - quantums is zero": {
 			asset:                               *constants.Usdc,
@@ -1234,8 +1236,10 @@ func TestDistributeFees(t *testing.T) {
 			expectedSubaccountsModuleAccBalance: big.NewInt(600),  // 600
 			expectedFeeModuleAccBalance:         big.NewInt(2500), // 2500
 			marketMapperAccBalance:              big.NewInt(0),
-			marketMapperAddr:                    constants.AliceAccAddress,
-			expectedMarketMapperAccBalance:      big.NewInt(0),
+			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
+				Address: constants.AliceAccAddress.String(),
+			},
+			expectedMarketMapperAccBalance: big.NewInt(0),
 		},
 		"failure - subaccounts module does not have sufficient funds": {
 			asset:                               *constants.Usdc,
@@ -1247,8 +1251,10 @@ func TestDistributeFees(t *testing.T) {
 			expectedFeeModuleAccBalance:         big.NewInt(2500),
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
 			marketMapperAccBalance:              big.NewInt(0),
-			marketMapperAddr:                    constants.AliceAccAddress,
-			expectedMarketMapperAccBalance:      big.NewInt(0),
+			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
+				Address: constants.AliceAccAddress.String(),
+			},
+			expectedMarketMapperAccBalance: big.NewInt(0),
 		},
 		"failure - isolated markets subaccounts module does not have sufficient funds": {
 			asset:                      *constants.Usdc,
@@ -1263,8 +1269,10 @@ func TestDistributeFees(t *testing.T) {
 			expectedFeeModuleAccBalance:         big.NewInt(2500),
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
 			marketMapperAccBalance:              big.NewInt(0),
-			marketMapperAddr:                    constants.AliceAccAddress,
-			expectedMarketMapperAccBalance:      big.NewInt(0),
+			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
+				Address: constants.AliceAccAddress.String(),
+			},
+			expectedMarketMapperAccBalance: big.NewInt(0),
 		},
 		"failure - asset ID doesn't exist": {
 			feeModuleAccBalance:                 big.NewInt(1500),
@@ -1277,8 +1285,10 @@ func TestDistributeFees(t *testing.T) {
 			expectedSubaccountsModuleAccBalance: big.NewInt(500),
 			expectedFeeModuleAccBalance:         big.NewInt(1500),
 			marketMapperAccBalance:              big.NewInt(0),
-			marketMapperAddr:                    constants.AliceAccAddress,
-			expectedMarketMapperAccBalance:      big.NewInt(0),
+			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
+				Address: constants.AliceAccAddress.String(),
+			},
+			expectedMarketMapperAccBalance: big.NewInt(0),
 		},
 		"failure - asset other than USDC not supported": {
 			feeModuleAccBalance:                 big.NewInt(1500),
@@ -1290,8 +1300,10 @@ func TestDistributeFees(t *testing.T) {
 			expectedSubaccountsModuleAccBalance: big.NewInt(500),
 			expectedFeeModuleAccBalance:         big.NewInt(1500),
 			marketMapperAccBalance:              big.NewInt(0),
-			marketMapperAddr:                    constants.AliceAccAddress,
-			expectedMarketMapperAccBalance:      big.NewInt(0),
+			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
+				Address: constants.AliceAccAddress.String(),
+			},
+			expectedMarketMapperAccBalance: big.NewInt(0),
 		},
 		"success - transfer quantums is negative": {
 			feeModuleAccBalance:                 big.NewInt(1500),
@@ -1302,8 +1314,10 @@ func TestDistributeFees(t *testing.T) {
 			expectedSubaccountsModuleAccBalance: big.NewInt(1000),
 			expectedFeeModuleAccBalance:         big.NewInt(1000),
 			marketMapperAccBalance:              big.NewInt(0),
-			marketMapperAddr:                    constants.AliceAccAddress,
-			expectedMarketMapperAccBalance:      big.NewInt(0),
+			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
+				Address: constants.AliceAccAddress.String(),
+			},
+			expectedMarketMapperAccBalance: big.NewInt(0),
 		},
 		"success - distribute fees to market mapper and fee collector": {
 			asset:                               *constants.Usdc,
@@ -1319,9 +1333,11 @@ func TestDistributeFees(t *testing.T) {
 				types.ModuleName + ":" + lib.IntToString(4),
 			),
 
-			marketMapperAddr:   constants.AliceAccAddress,
-			revenueSharePpm:    100_000,
-			validDays:          240,
+			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
+				Address:         constants.AliceAccAddress.String(),
+				RevenueSharePpm: 100_000, // 10%
+				ValidDays:       240,
+			},
 			setRevenueShare:    true,
 			revShareExpiration: 100,
 		},
@@ -1339,9 +1355,11 @@ func TestDistributeFees(t *testing.T) {
 				types.ModuleName + ":" + lib.IntToString(4),
 			),
 
-			marketMapperAddr:   constants.AliceAccAddress,
-			revenueSharePpm:    100_000,
-			validDays:          240,
+			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
+				Address:         constants.AliceAccAddress.String(),
+				RevenueSharePpm: 100_000, // 10%
+				ValidDays:       240,
+			},
 			setRevenueShare:    true,
 			revShareExpiration: -10,
 		},
@@ -1359,9 +1377,32 @@ func TestDistributeFees(t *testing.T) {
 				types.ModuleName + ":" + lib.IntToString(4),
 			),
 
-			marketMapperAddr:   constants.AliceAccAddress,
-			revenueSharePpm:    100_000,
-			validDays:          240,
+			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
+				Address:         constants.AliceAccAddress.String(),
+				RevenueSharePpm: 100_000, // 10%
+				ValidDays:       240,
+			},
+			setRevenueShare:    true,
+			revShareExpiration: 100,
+		},
+		"success - market mapper rev share rounded down to 0": {
+			asset:                               *constants.Usdc,
+			feeModuleAccBalance:                 big.NewInt(100),
+			subaccountModuleAccBalance:          big.NewInt(200),
+			marketMapperAccBalance:              big.NewInt(0),
+			quantums:                            big.NewInt(9),
+			expectedSubaccountsModuleAccBalance: big.NewInt(191), // 200 - 9
+			expectedFeeModuleAccBalance:         big.NewInt(109), // 100 + 9
+			expectedMarketMapperAccBalance:      big.NewInt(0),
+			perpetualId:                         4,
+			collateralPoolAddr: authtypes.NewModuleAddress(
+				types.ModuleName + ":" + lib.IntToString(4),
+			),
+			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
+				Address:         constants.AliceAccAddress.String(),
+				RevenueSharePpm: 100_000, // 10%
+				ValidDays:       240,
+			},
 			setRevenueShare:    true,
 			revShareExpiration: 100,
 		},
@@ -1420,10 +1461,13 @@ func TestDistributeFees(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			marketMapperAddr, err := sdk.AccAddressFromBech32(constants.AliceAccAddress.String())
+			require.NoError(t, err)
+
 			if tc.marketMapperAccBalance.Sign() > 0 {
 				err := bank_testutil.FundAccount(
 					ctx,
-					tc.marketMapperAddr,
+					marketMapperAddr,
 					sdk.Coins{
 						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.marketMapperAccBalance)),
 					},
@@ -1453,13 +1497,9 @@ func TestDistributeFees(t *testing.T) {
 			}
 
 			// Set market mapper revenue share
-			err := revShareKeeper.SetMarketMapperRevenueShareParams(
+			err = revShareKeeper.SetMarketMapperRevenueShareParams(
 				ctx,
-				revsharetypes.MarketMapperRevenueShareParams{
-					Address:         tc.marketMapperAddr.String(),
-					RevenueSharePpm: tc.revenueSharePpm,
-					ValidDays:       tc.validDays,
-				},
+				tc.revshareParams,
 			)
 			require.NoError(t, err)
 
@@ -1503,7 +1543,7 @@ func TestDistributeFees(t *testing.T) {
 
 			// Check the market mapper account balance has been updated as expected.
 			marketMapperBalance := bankKeeper.GetBalance(
-				ctx, tc.marketMapperAddr,
+				ctx, marketMapperAddr,
 				tc.asset.Denom,
 			)
 			require.Equal(

@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -58,7 +56,7 @@ func (k Keeper) GetMarketMapperRevShareDetails(
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.MarketMapperRevSharePrefix))
 	b := store.Get(lib.Uint32ToKey(marketId))
 	if b == nil {
-		return params, fmt.Errorf("MarketMapperRevShareDetails not found for marketId: %d", marketId)
+		return params, types.ErrMarketMapperRevShareDetailsNotFound
 	}
 	k.cdc.MustUnmarshal(b, &params)
 	return params, nil

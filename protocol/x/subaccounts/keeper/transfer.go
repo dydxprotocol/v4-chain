@@ -3,6 +3,8 @@ package keeper
 import (
 	"math/big"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -236,11 +238,20 @@ func (k Keeper) DistributeFees(
 		perpetual.Params.MarketId,
 	)
 	if err == nil && revShareAddr != nil {
-		// marketMapperShare = quantums * revSharePpm / 1e6
-		marketMapperShare.Div(
-			new(big.Int).Mul(quantums, big.NewInt(int64(revSharePpm))),
-			big.NewInt(1e6),
-		)
+		if revSharePpm >= 1e6 {
+			log.ErrorLog(
+				ctx,
+				"DistributeFees: revSharePpm is greater than or equal to 100%",
+				"revSharePpm",
+				revSharePpm,
+			)
+		} else {
+			// marketMapperShare = quantums * revSharePpm / 1e6
+			marketMapperShare.Div(
+				new(big.Int).Mul(quantums, big.NewInt(int64(revSharePpm))),
+				big.NewInt(1e6),
+			)
+		}
 	}
 
 	// Remaining amount goes to the fee collector
