@@ -5,10 +5,7 @@
 
 Base URLs:
 
-* For **the deployment by DYDX token holders**, use <a href="https://indexer.dydx.trade/v4">https://indexer.dydx.trade/v4</a>
-* For **Testnet**, use <a href="https://dydx-testnet.imperator.co/v4">https://dydx-testnet.imperator.co/v4</a>
-
-Note: Messages on Indexer WebSocket feeds are typically more recent than data fetched via Indexer's REST API, because the latter is backed by read replicas of the databases that feed the former. Ordinarily this difference is minimal (less than a second), but it might become prolonged under load. Please see [Indexer Architecture](https://dydx.exchange/blog/v4-deep-dive-indexer) for more information.
+* <a href="https://dydx-testnet.imperator.co/v4">https://dydx-testnet.imperator.co/v4</a>
 
 # Authentication
 
@@ -26,11 +23,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/addresses/{address}', headers = headers)
+r = requests.get('https://dydx-testnet.imperator.co/v4/addresses/{address}', headers = headers)
 
 print(r.json())
 
@@ -42,11 +35,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/addresses/{address}`,
+fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
 {
   method: 'GET',
 
@@ -77,7 +66,7 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/addresses/{address}`,
   "subaccounts": [
     {
       "address": "string",
-      "subaccountNumber": 0.1,
+      "subaccountNumber": 0,
       "equity": "string",
       "freeCollateral": "string",
       "openPerpetualPositions": {
@@ -122,14 +111,14 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/addresses/{address}`,
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0.1
+          "subaccountNumber": 0
         },
         "property2": {
           "symbol": "string",
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0.1
+          "subaccountNumber": 0
         }
       },
       "marginEnabled": true
@@ -160,11 +149,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber/{subaccountNumber}', headers = headers)
+r = requests.get('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber/{subaccountNumber}', headers = headers)
 
 print(r.json())
 
@@ -176,11 +161,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber/{subaccountNumber}`,
+fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber/{subaccountNumber}',
 {
   method: 'GET',
 
@@ -210,7 +191,7 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/addresses/{address}/subacc
 ```json
 {
   "address": "string",
-  "subaccountNumber": 0.1,
+  "subaccountNumber": 0,
   "equity": "string",
   "freeCollateral": "string",
   "openPerpetualPositions": {
@@ -255,14 +236,14 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/addresses/{address}/subacc
       "side": "LONG",
       "size": "string",
       "assetId": "string",
-      "subaccountNumber": 0.1
+      "subaccountNumber": 0
     },
     "property2": {
       "symbol": "string",
       "side": "LONG",
       "size": "string",
       "assetId": "string",
-      "subaccountNumber": 0.1
+      "subaccountNumber": 0
     }
   },
   "marginEnabled": true
@@ -291,11 +272,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}', headers = headers)
+r = requests.get('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}', headers = headers)
 
 print(r.json())
 
@@ -307,11 +284,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}`,
+fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}',
 {
   method: 'GET',
 
@@ -341,13 +314,13 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/addresses/{address}/parent
 ```json
 {
   "address": "string",
-  "parentSubaccountNumber": 0.1,
+  "parentSubaccountNumber": 0,
   "equity": "string",
   "freeCollateral": "string",
   "childSubaccounts": [
     {
       "address": "string",
-      "subaccountNumber": 0.1,
+      "subaccountNumber": 0,
       "equity": "string",
       "freeCollateral": "string",
       "openPerpetualPositions": {
@@ -392,14 +365,14 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/addresses/{address}/parent
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0.1
+          "subaccountNumber": 0
         },
         "property2": {
           "symbol": "string",
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0.1
+          "subaccountNumber": 0
         }
       },
       "marginEnabled": true
@@ -430,12 +403,8 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/assetPositions', params={
-  'address': 'string',  'subaccountNumber': '0.1'
+r = requests.get('https://dydx-testnet.imperator.co/v4/assetPositions', params={
+  'address': 'string',  'subaccountNumber': '0'
 }, headers = headers)
 
 print(r.json())
@@ -448,11 +417,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/assetPositions?address=string&subaccountNumber=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/assetPositions?address=string&subaccountNumber=0',
 {
   method: 'GET',
 
@@ -487,7 +452,7 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/assetPositions?address=str
       "side": "LONG",
       "size": "string",
       "assetId": "string",
-      "subaccountNumber": 0.1
+      "subaccountNumber": 0
     }
   ]
 }
@@ -515,12 +480,8 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber', params={
-  'address': 'string',  'parentSubaccountNumber': '0.1'
+r = requests.get('https://dydx-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber', params={
+  'address': 'string',  'parentSubaccountNumber': '0'
 }, headers = headers)
 
 print(r.json())
@@ -533,11 +494,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber?address=string&parentSubaccountNumber=0',
 {
   method: 'GET',
 
@@ -572,7 +529,7 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/assetPositions/parentSubac
       "side": "LONG",
       "size": "string",
       "assetId": "string",
-      "subaccountNumber": 0.1
+      "subaccountNumber": 0
     }
   ]
 }
@@ -600,12 +557,8 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/candles/perpetualMarkets/{ticker}', params={
-  'resolution': '1MIN',  'limit': '0.1'
+r = requests.get('https://dydx-testnet.imperator.co/v4/candles/perpetualMarkets/{ticker}', params={
+  'resolution': '1MIN',  'limit': '0'
 }, headers = headers)
 
 print(r.json())
@@ -618,11 +571,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/candles/perpetualMarkets/{ticker}?resolution=1MIN&limit=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/candles/perpetualMarkets/{ticker}?resolution=1MIN&limit=0',
 {
   method: 'GET',
 
@@ -677,7 +626,7 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/candles/perpetualMarkets/{
       "close": "string",
       "baseTokenVolume": "string",
       "usdVolume": "string",
-      "trades": 0.1,
+      "trades": 0,
       "startingOpenInterest": "string",
       "id": "string"
     }
@@ -707,11 +656,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/screen', params={
+r = requests.get('https://dydx-testnet.imperator.co/v4/screen', params={
   'address': 'string'
 }, headers = headers)
 
@@ -725,11 +670,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/screen?address=string`,
+fetch('https://dydx-testnet.imperator.co/v4/screen?address=string',
 {
   method: 'GET',
 
@@ -784,12 +725,8 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/fills', params={
-  'address': 'string',  'subaccountNumber': '0.1',  'market': 'string',  'marketType': 'PERPETUAL',  'limit': '0.1'
+r = requests.get('https://dydx-testnet.imperator.co/v4/fills', params={
+  'address': 'string',  'subaccountNumber': '0',  'market': 'string',  'marketType': 'PERPETUAL',  'limit': '0'
 }, headers = headers)
 
 print(r.json())
@@ -802,11 +739,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/fills?address=string&subaccountNumber=0.1&market=string&marketType=PERPETUAL&limit=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/fills?address=string&subaccountNumber=0&market=string&marketType=PERPETUAL&limit=0',
 {
   method: 'GET',
 
@@ -862,7 +795,7 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/fills?address=string&subac
       "createdAtHeight": "string",
       "orderId": "string",
       "clientMetadata": "string",
-      "subaccountNumber": 0.1
+      "subaccountNumber": 0
     }
   ]
 }
@@ -890,12 +823,8 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/fills/parentSubaccount', params={
-  'address': 'string',  'parentSubaccountNumber': '0.1'
+r = requests.get('https://dydx-testnet.imperator.co/v4/fills/parentSubaccount', params={
+  'address': 'string',  'parentSubaccountNumber': '0'
 }, headers = headers)
 
 print(r.json())
@@ -908,11 +837,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/fills/parentSubaccount?address=string&parentSubaccountNumber=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/fills/parentSubaccount?address=string&parentSubaccountNumber=0',
 {
   method: 'GET',
 
@@ -968,7 +893,7 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/fills/parentSubaccount?add
       "createdAtHeight": "string",
       "orderId": "string",
       "clientMetadata": "string",
-      "subaccountNumber": 0.1
+      "subaccountNumber": 0
     }
   ]
 }
@@ -996,11 +921,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/height', headers = headers)
+r = requests.get('https://dydx-testnet.imperator.co/v4/height', headers = headers)
 
 print(r.json())
 
@@ -1012,11 +933,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/height`,
+fetch('https://dydx-testnet.imperator.co/v4/height',
 {
   method: 'GET',
 
@@ -1065,12 +982,8 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/historicalFunding/{ticker}', params={
-  'limit': '0.1'
+r = requests.get('https://dydx-testnet.imperator.co/v4/historicalFunding/{ticker}', params={
+  'limit': '0'
 }, headers = headers)
 
 print(r.json())
@@ -1083,11 +996,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/historicalFunding/{ticker}?limit=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/historicalFunding/{ticker}?limit=0',
 {
   method: 'GET',
 
@@ -1152,12 +1061,8 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/historical-pnl', params={
-  'address': 'string',  'subaccountNumber': '0.1',  'limit': '0.1'
+r = requests.get('https://dydx-testnet.imperator.co/v4/historical-pnl', params={
+  'address': 'string',  'subaccountNumber': '0',  'limit': '0'
 }, headers = headers)
 
 print(r.json())
@@ -1170,11 +1075,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/historical-pnl?address=string&subaccountNumber=0.1&limit=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/historical-pnl?address=string&subaccountNumber=0&limit=0',
 {
   method: 'GET',
 
@@ -1245,12 +1146,8 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/historical-pnl/parentSubaccount', params={
-  'address': 'string',  'parentSubaccountNumber': '0.1'
+r = requests.get('https://dydx-testnet.imperator.co/v4/historical-pnl/parentSubaccount', params={
+  'address': 'string',  'parentSubaccountNumber': '0'
 }, headers = headers)
 
 print(r.json())
@@ -1263,11 +1160,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/historical-pnl/parentSubaccount?address=string&parentSubaccountNumber=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/historical-pnl/parentSubaccount?address=string&parentSubaccountNumber=0',
 {
   method: 'GET',
 
@@ -1338,11 +1231,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/orderbooks/perpetualMarket/{ticker}', headers = headers)
+r = requests.get('https://dydx-testnet.imperator.co/v4/orderbooks/perpetualMarket/{ticker}', headers = headers)
 
 print(r.json())
 
@@ -1354,11 +1243,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/orderbooks/perpetualMarket/{ticker}`,
+fetch('https://dydx-testnet.imperator.co/v4/orderbooks/perpetualMarket/{ticker}',
 {
   method: 'GET',
 
@@ -1423,12 +1308,8 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/orders', params={
-  'address': 'string',  'subaccountNumber': '0.1',  'limit': '0.1'
+r = requests.get('https://dydx-testnet.imperator.co/v4/orders', params={
+  'address': 'string',  'subaccountNumber': '0',  'limit': '0'
 }, headers = headers)
 
 print(r.json())
@@ -1441,11 +1322,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/orders?address=string&subaccountNumber=0.1&limit=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/orders?address=string&subaccountNumber=0&limit=0',
 {
   method: 'GET',
 
@@ -1522,7 +1399,7 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/orders?address=string&suba
     "ticker": "string",
     "updatedAt": "string",
     "updatedAtHeight": "string",
-    "subaccountNumber": 0.1
+    "subaccountNumber": 0
   }
 ]
 ```
@@ -1623,12 +1500,8 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/orders/parentSubaccountNumber', params={
-  'address': 'string',  'parentSubaccountNumber': '0.1'
+r = requests.get('https://dydx-testnet.imperator.co/v4/orders/parentSubaccountNumber', params={
+  'address': 'string',  'parentSubaccountNumber': '0'
 }, headers = headers)
 
 print(r.json())
@@ -1641,11 +1514,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/orders/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/orders/parentSubaccountNumber?address=string&parentSubaccountNumber=0',
 {
   method: 'GET',
 
@@ -1722,7 +1591,7 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/orders/parentSubaccountNum
     "ticker": "string",
     "updatedAt": "string",
     "updatedAtHeight": "string",
-    "subaccountNumber": 0.1
+    "subaccountNumber": 0
   }
 ]
 ```
@@ -1823,11 +1692,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/orders/{orderId}', headers = headers)
+r = requests.get('https://dydx-testnet.imperator.co/v4/orders/{orderId}', headers = headers)
 
 print(r.json())
 
@@ -1839,11 +1704,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/orders/{orderId}`,
+fetch('https://dydx-testnet.imperator.co/v4/orders/{orderId}',
 {
   method: 'GET',
 
@@ -1893,7 +1754,7 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/orders/{orderId}`,
   "ticker": "string",
   "updatedAt": "string",
   "updatedAtHeight": "string",
-  "subaccountNumber": 0.1
+  "subaccountNumber": 0
 }
 ```
 
@@ -1919,12 +1780,8 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/perpetualMarkets', params={
-  'limit': '0.1'
+r = requests.get('https://dydx-testnet.imperator.co/v4/perpetualMarkets', params={
+  'limit': '0'
 }, headers = headers)
 
 print(r.json())
@@ -1937,11 +1794,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/perpetualMarkets?limit=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets?limit=0',
 {
   method: 'GET',
 
@@ -1978,17 +1831,17 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/perpetualMarkets?limit=0.1
       "oraclePrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
-      "trades24H": 0.1,
+      "trades24H": 0,
       "nextFundingRate": "string",
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "openInterest": "string",
-      "atomicResolution": 0.1,
-      "quantumConversionExponent": 0.1,
+      "atomicResolution": 0,
+      "quantumConversionExponent": 0,
       "tickSize": "string",
       "stepSize": "string",
-      "stepBaseQuantums": 0.1,
-      "subticksPerTick": 0.1,
+      "stepBaseQuantums": 0,
+      "subticksPerTick": 0,
       "marketType": "CROSS"
     },
     "property2": {
@@ -1998,17 +1851,17 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/perpetualMarkets?limit=0.1
       "oraclePrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
-      "trades24H": 0.1,
+      "trades24H": 0,
       "nextFundingRate": "string",
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "openInterest": "string",
-      "atomicResolution": 0.1,
-      "quantumConversionExponent": 0.1,
+      "atomicResolution": 0,
+      "quantumConversionExponent": 0,
       "tickSize": "string",
       "stepSize": "string",
-      "stepBaseQuantums": 0.1,
-      "subticksPerTick": 0.1,
+      "stepBaseQuantums": 0,
+      "subticksPerTick": 0,
       "marketType": "CROSS"
     }
   }
@@ -2037,14 +1890,10 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/perpetualPositions', params={
-  'address': 'string',  'subaccountNumber': '0.1',  'status': [
+r = requests.get('https://dydx-testnet.imperator.co/v4/perpetualPositions', params={
+  'address': 'string',  'subaccountNumber': '0',  'status': [
   "OPEN"
-],  'limit': '0.1'
+],  'limit': '0'
 }, headers = headers)
 
 print(r.json())
@@ -2057,11 +1906,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/perpetualPositions?address=string&subaccountNumber=0.1&status=OPEN&limit=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/perpetualPositions?address=string&subaccountNumber=0&status=OPEN&limit=0',
 {
   method: 'GET',
 
@@ -2146,11 +1991,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/sparklines', params={
+r = requests.get('https://dydx-testnet.imperator.co/v4/sparklines', params={
   'timePeriod': 'ONE_DAY'
 }, headers = headers)
 
@@ -2164,11 +2005,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/sparklines?timePeriod=ONE_DAY`,
+fetch('https://dydx-testnet.imperator.co/v4/sparklines?timePeriod=ONE_DAY',
 {
   method: 'GET',
 
@@ -2234,11 +2071,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/time', headers = headers)
+r = requests.get('https://dydx-testnet.imperator.co/v4/time', headers = headers)
 
 print(r.json())
 
@@ -2250,11 +2083,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/time`,
+fetch('https://dydx-testnet.imperator.co/v4/time',
 {
   method: 'GET',
 
@@ -2277,7 +2106,7 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/time`,
 ```json
 {
   "iso": "string",
-  "epoch": 0.1
+  "epoch": 0
 }
 ```
 
@@ -2303,12 +2132,8 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/trades/perpetualMarket/{ticker}', params={
-  'limit': '0.1'
+r = requests.get('https://dydx-testnet.imperator.co/v4/trades/perpetualMarket/{ticker}', params={
+  'limit': '0'
 }, headers = headers)
 
 print(r.json())
@@ -2321,11 +2146,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/trades/perpetualMarket/{ticker}?limit=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/trades/perpetualMarket/{ticker}?limit=0',
 {
   method: 'GET',
 
@@ -2392,12 +2213,8 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/transfers', params={
-  'address': 'string',  'subaccountNumber': '0.1',  'limit': '0.1'
+r = requests.get('https://dydx-testnet.imperator.co/v4/transfers', params={
+  'address': 'string',  'subaccountNumber': '0',  'limit': '0'
 }, headers = headers)
 
 print(r.json())
@@ -2410,11 +2227,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/transfers?address=string&subaccountNumber=0.1&limit=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/transfers?address=string&subaccountNumber=0&limit=0',
 {
   method: 'GET',
 
@@ -2450,11 +2263,11 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/transfers?address=string&s
     {
       "id": "string",
       "sender": {
-        "subaccountNumber": 0.1,
+        "subaccountNumber": 0,
         "address": "string"
       },
       "recipient": {
-        "subaccountNumber": 0.1,
+        "subaccountNumber": 0,
         "address": "string"
       },
       "size": "string",
@@ -2490,12 +2303,8 @@ headers = {
   'Accept': 'application/json'
 }
 
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.get(f'{baseURL}https://dydx-testnet.imperator.co/v4/transfers/parentSubaccountNumber', params={
-  'address': 'string',  'parentSubaccountNumber': '0.1'
+r = requests.get('https://dydx-testnet.imperator.co/v4/transfers/parentSubaccountNumber', params={
+  'address': 'string',  'parentSubaccountNumber': '0'
 }, headers = headers)
 
 print(r.json())
@@ -2508,11 +2317,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/transfers/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1`,
+fetch('https://dydx-testnet.imperator.co/v4/transfers/parentSubaccountNumber?address=string&parentSubaccountNumber=0',
 {
   method: 'GET',
 
@@ -2548,11 +2353,11 @@ fetch(`${baseURL}https://dydx-testnet.imperator.co/v4/transfers/parentSubaccount
     {
       "id": "string",
       "sender": {
-        "subaccountNumber": 0.1,
+        "subaccountNumber": 0,
         "address": "string"
       },
       "recipient": {
-        "subaccountNumber": 0.1,
+        "subaccountNumber": 0,
         "address": "string"
       },
       "size": "string",
@@ -2761,7 +2566,7 @@ This operation does not require authentication
   "side": "LONG",
   "size": "string",
   "assetId": "string",
-  "subaccountNumber": 0.1
+  "subaccountNumber": 0
 }
 
 ```
@@ -2790,14 +2595,14 @@ This operation does not require authentication
     "side": "LONG",
     "size": "string",
     "assetId": "string",
-    "subaccountNumber": 0.1
+    "subaccountNumber": 0
   },
   "property2": {
     "symbol": "string",
     "side": "LONG",
     "size": "string",
     "assetId": "string",
-    "subaccountNumber": 0.1
+    "subaccountNumber": 0
   }
 }
 
@@ -2819,7 +2624,7 @@ This operation does not require authentication
 ```json
 {
   "address": "string",
-  "subaccountNumber": 0.1,
+  "subaccountNumber": 0,
   "equity": "string",
   "freeCollateral": "string",
   "openPerpetualPositions": {
@@ -2864,14 +2669,14 @@ This operation does not require authentication
       "side": "LONG",
       "size": "string",
       "assetId": "string",
-      "subaccountNumber": 0.1
+      "subaccountNumber": 0
     },
     "property2": {
       "symbol": "string",
       "side": "LONG",
       "size": "string",
       "assetId": "string",
-      "subaccountNumber": 0.1
+      "subaccountNumber": 0
     }
   },
   "marginEnabled": true
@@ -2903,7 +2708,7 @@ This operation does not require authentication
   "subaccounts": [
     {
       "address": "string",
-      "subaccountNumber": 0.1,
+      "subaccountNumber": 0,
       "equity": "string",
       "freeCollateral": "string",
       "openPerpetualPositions": {
@@ -2948,14 +2753,14 @@ This operation does not require authentication
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0.1
+          "subaccountNumber": 0
         },
         "property2": {
           "symbol": "string",
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0.1
+          "subaccountNumber": 0
         }
       },
       "marginEnabled": true
@@ -2981,13 +2786,13 @@ This operation does not require authentication
 ```json
 {
   "address": "string",
-  "parentSubaccountNumber": 0.1,
+  "parentSubaccountNumber": 0,
   "equity": "string",
   "freeCollateral": "string",
   "childSubaccounts": [
     {
       "address": "string",
-      "subaccountNumber": 0.1,
+      "subaccountNumber": 0,
       "equity": "string",
       "freeCollateral": "string",
       "openPerpetualPositions": {
@@ -3032,14 +2837,14 @@ This operation does not require authentication
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0.1
+          "subaccountNumber": 0
         },
         "property2": {
           "symbol": "string",
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0.1
+          "subaccountNumber": 0
         }
       },
       "marginEnabled": true
@@ -3074,7 +2879,7 @@ This operation does not require authentication
       "side": "LONG",
       "size": "string",
       "assetId": "string",
-      "subaccountNumber": 0.1
+      "subaccountNumber": 0
     }
   ]
 }
@@ -3135,7 +2940,7 @@ This operation does not require authentication
   "close": "string",
   "baseTokenVolume": "string",
   "usdVolume": "string",
-  "trades": 0.1,
+  "trades": 0,
   "startingOpenInterest": "string",
   "id": "string"
 }
@@ -3179,7 +2984,7 @@ This operation does not require authentication
       "close": "string",
       "baseTokenVolume": "string",
       "usdVolume": "string",
-      "trades": 0.1,
+      "trades": 0,
       "startingOpenInterest": "string",
       "id": "string"
     }
@@ -3341,7 +3146,7 @@ This operation does not require authentication
   "createdAtHeight": "string",
   "orderId": "string",
   "clientMetadata": "string",
-  "subaccountNumber": 0.1
+  "subaccountNumber": 0
 }
 
 ```
@@ -3389,7 +3194,7 @@ This operation does not require authentication
       "createdAtHeight": "string",
       "orderId": "string",
       "clientMetadata": "string",
-      "subaccountNumber": 0.1
+      "subaccountNumber": 0
     }
   ]
 }
@@ -3767,7 +3572,7 @@ or
   "ticker": "string",
   "updatedAt": "string",
   "updatedAtHeight": "string",
-  "subaccountNumber": 0.1
+  "subaccountNumber": 0
 }
 
 ```
@@ -3869,17 +3674,17 @@ or
   "oraclePrice": "string",
   "priceChange24H": "string",
   "volume24H": "string",
-  "trades24H": 0.1,
+  "trades24H": 0,
   "nextFundingRate": "string",
   "initialMarginFraction": "string",
   "maintenanceMarginFraction": "string",
   "openInterest": "string",
-  "atomicResolution": 0.1,
-  "quantumConversionExponent": 0.1,
+  "atomicResolution": 0,
+  "quantumConversionExponent": 0,
   "tickSize": "string",
   "stepSize": "string",
-  "stepBaseQuantums": 0.1,
-  "subticksPerTick": 0.1,
+  "stepBaseQuantums": 0,
+  "subticksPerTick": 0,
   "marketType": "CROSS"
 }
 
@@ -3925,17 +3730,17 @@ or
       "oraclePrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
-      "trades24H": 0.1,
+      "trades24H": 0,
       "nextFundingRate": "string",
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "openInterest": "string",
-      "atomicResolution": 0.1,
-      "quantumConversionExponent": 0.1,
+      "atomicResolution": 0,
+      "quantumConversionExponent": 0,
       "tickSize": "string",
       "stepSize": "string",
-      "stepBaseQuantums": 0.1,
-      "subticksPerTick": 0.1,
+      "stepBaseQuantums": 0,
+      "subticksPerTick": 0,
       "marketType": "CROSS"
     },
     "property2": {
@@ -3945,17 +3750,17 @@ or
       "oraclePrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
-      "trades24H": 0.1,
+      "trades24H": 0,
       "nextFundingRate": "string",
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "openInterest": "string",
-      "atomicResolution": 0.1,
-      "quantumConversionExponent": 0.1,
+      "atomicResolution": 0,
+      "quantumConversionExponent": 0,
       "tickSize": "string",
       "stepSize": "string",
-      "stepBaseQuantums": 0.1,
-      "subticksPerTick": 0.1,
+      "stepBaseQuantums": 0,
+      "subticksPerTick": 0,
       "marketType": "CROSS"
     }
   }
@@ -4068,7 +3873,7 @@ or
 ```json
 {
   "iso": "string",
-  "epoch": 0.1
+  "epoch": 0
 }
 
 ```
@@ -4206,11 +4011,11 @@ or
 {
   "id": "string",
   "sender": {
-    "subaccountNumber": 0.1,
+    "subaccountNumber": 0,
     "address": "string"
   },
   "recipient": {
-    "subaccountNumber": 0.1,
+    "subaccountNumber": 0,
     "address": "string"
   },
   "size": "string",
@@ -4254,11 +4059,11 @@ or
     {
       "id": "string",
       "sender": {
-        "subaccountNumber": 0.1,
+        "subaccountNumber": 0,
         "address": "string"
       },
       "recipient": {
-        "subaccountNumber": 0.1,
+        "subaccountNumber": 0,
         "address": "string"
       },
       "size": "string",
@@ -4292,11 +4097,11 @@ or
     {
       "id": "string",
       "sender": {
-        "subaccountNumber": 0.1,
+        "subaccountNumber": 0,
         "address": "string"
       },
       "recipient": {
-        "subaccountNumber": 0.1,
+        "subaccountNumber": 0,
         "address": "string"
       },
       "size": "string",
