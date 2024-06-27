@@ -247,6 +247,7 @@ message StatefulOrderEventV1 {
     ConditionalOrderPlacementV1 conditional_order_placement = 5;
     ConditionalOrderTriggeredV1 conditional_order_triggered = 6;
     LongTermOrderPlacementV1 long_term_order_placement = 7;
+    LongTermOrderReplacementV1 order_replacement = 8;
   }
 
   // A stateful order placement contains an order.
@@ -276,6 +277,13 @@ message StatefulOrderEventV1 {
   // A long term order placement contains an order.
   message LongTermOrderPlacementV1 {
     dydxprotocol.indexer.protocol.v1.IndexerOrder order = 1;
+  }
+
+  // A long term order replacement contains an old order ID and the new order.
+  message LongTermOrderReplacementV1 {
+    dydxprotocol.indexer.protocol.v1.IndexerOrderId old_order_id =
+        1; // vault replaces orders with a different order ID
+    dydxprotocol.indexer.protocol.v1.IndexerOrder order = 2;
   }
 }
 
