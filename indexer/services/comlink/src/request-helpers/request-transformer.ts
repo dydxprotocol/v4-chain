@@ -97,8 +97,7 @@ export function perpetualPositionToResponseObject(
     exitPrice: position.exitPrice && Big(position.exitPrice).toFixed(),
     realizedPnl,
     unrealizedPnl: helpers.getUnrealizedPnl(
-      position, perpetualMarketsMap[position.perpetualId],
-      marketsMap[perpetualMarketsMap[position.perpetualId].marketId],
+      position, perpetualMarketsMap[position.perpetualId], marketsMap,
     ),
     createdAt: position.createdAt,
     createdAtHeight: position.createdAtHeight,
@@ -331,11 +330,8 @@ export function subaccountToResponseObject({
     assetPositions,
     // TODO(DEC-687): Track `marginEnabled` for subaccounts.
     marginEnabled: true,
-<<<<<<< HEAD
-=======
     updatedAtHeight: subaccount.updatedAtHeight,
     latestProcessedBlockHeight: latestBlockHeight,
->>>>>>> 03577759 (Add latest block height to /addresses API endpoint (#1701))
   };
 }
 
