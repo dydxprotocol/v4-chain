@@ -22,7 +22,7 @@ type Vote struct {
 	DeamonVoteExtension vetypes.DeamonVoteExtension
 }
 
-func GetOracleVotes(
+func GetDeamonVotes(
 	proposal [][]byte,
 	veCodec codec.VoteExtensionCodec,
 	extCommitCodec codec.ExtendedCommitCodec,
@@ -74,7 +74,7 @@ type VoteAggregator interface {
 	// price aggregator but can be replaced by the application.
 	//
 	// Notice: This method overwrites the VoteAggregator's local view of prices.
-	AggregateDeamonVotes(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error)
+	AggregateDeamonVE(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error)
 
 	// GetPriceForValidator gets the prices reported by a given validator. This method depends
 	// on the prices from the latest set of aggregated votes.
@@ -93,21 +93,21 @@ type MedianAggregator struct {
 	// prices is a map of validator address to a map of currency pair to price
 	prices map[string]map[string]*big.Int
 
-	aggreagateFn func(ctx sdk.Context) (map[string]*big.Int, error)
+	aggregateFn func(ctx sdk.Context) (map[string]*big.Int, error)
 }
 
-// func NewMedianAggregator(
-//
-//	logger log.Logger,
-//	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
-//
-//	) VoteAggregator {
-//		return &MedianAggregator{
-//			logger:          logger,
-//			indexPriceCache: indexPriceCache,
-//			priceAggregator: make(map[string]map[string]*big.Int),
-//		}
-//	}
+func NewMedianAggregator(
+	logger log.Logger,
+	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
+	aggregateFn func(ctx sdk.Context) (map[string]*big.Int, error),
+) VoteAggregator {
+	return &MedianAggregator{
+		logger:          logger,
+		indexPriceCache: indexPriceCache,
+		prices:          make(map[string]map[string]*big.Int),
+		aggregateFn:     aggregateFn,
+	}
+}
 func (ma *MedianAggregator) AggregateDeamonVE(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error) {
 
 	for _, vote := range votes {
@@ -122,7 +122,7 @@ func (ma *MedianAggregator) AggregateDeamonVE(ctx sdk.Context, votes []Vote) (ma
 		}
 	}
 
-	prices, err := ma.aggreagateFn(ctx)
+	prices, err := ma.aggregateFn(ctx)
 	if err != nil {
 		ma.logger.Error(
 			"failed to aggregate prices",
