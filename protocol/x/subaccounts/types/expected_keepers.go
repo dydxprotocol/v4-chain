@@ -8,11 +8,23 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 // ProductKeeper represents a generic interface for a keeper
 // of a product.
 type ProductKeeper interface {
+	IsPositionUpdatable(
+		ctx sdk.Context,
+		id uint32,
+	) (
+		updatable bool,
+		err error,
+	)
+}
+
+type AssetsKeeper interface {
+	ProductKeeper
 	GetNetCollateral(
 		ctx sdk.Context,
 		id uint32,
@@ -30,17 +42,6 @@ type ProductKeeper interface {
 		bigMaintenanceMarginQuoteQuantums *big.Int,
 		err error,
 	)
-	IsPositionUpdatable(
-		ctx sdk.Context,
-		id uint32,
-	) (
-		updatable bool,
-		err error,
-	)
-}
-
-type AssetsKeeper interface {
-	ProductKeeper
 	ConvertAssetToCoin(
 		ctx sdk.Context,
 		assetId uint32,
@@ -70,6 +71,15 @@ type PerpetualsKeeper interface {
 	) (
 		perpetual perptypes.Perpetual,
 		err error,
+	)
+	GetPerpetualAndMarketPriceAndLiquidityTier(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (
+		perptypes.Perpetual,
+		pricestypes.MarketPrice,
+		perptypes.LiquidityTier,
+		error,
 	)
 	GetAllPerpetuals(ctx sdk.Context) []perptypes.Perpetual
 	GetInsuranceFundName(ctx sdk.Context, perpetualId uint32) (string, error)
