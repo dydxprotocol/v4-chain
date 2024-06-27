@@ -206,6 +206,16 @@ var (
 		44,
 		"invalid time in force",
 	)
+	ErrInvalidBatchCancel = errorsmod.Register(
+		ModuleName,
+		45,
+		"Invalid batch cancel message",
+	)
+	ErrBatchCancelFailed = errorsmod.Register(
+		ModuleName,
+		46,
+		"Batch cancel has failed",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(

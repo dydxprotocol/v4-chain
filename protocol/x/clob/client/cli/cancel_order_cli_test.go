@@ -111,7 +111,7 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 	s.Require().NoError(err)
 
 	cancelTx := "docker exec interchain-security-instance interchain-security-cd" +
-		" tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 " +
+		" tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 1 0 " +
 		goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
 		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
 	_, _, err = network.QueryCustomNetwork(cancelTx)
@@ -126,7 +126,7 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 	s.Require().NoError(err)
 
 	cancelUknownTx := "docker exec interchain-security-instance interchain-security-cd" +
-		" tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 10 " +
+		" tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 0 10 0" +
 		goodTilBlockStr + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
 		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
 	_, _, err = network.QueryCustomNetwork(cancelUknownTx)
@@ -222,7 +222,7 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
 
 	cancelBuyTx := "docker exec interchain-security-instance interchain-security-cd" +
 		" tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
-		" 0 2 " + goodTilBlockStr +
+		" 0 2 0" + goodTilBlockStr +
 		" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
 		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
 	_, _, cancelerr := network.QueryCustomNetwork(cancelBuyTx)

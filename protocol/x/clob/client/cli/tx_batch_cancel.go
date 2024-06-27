@@ -1,6 +1,9 @@
 package cli
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -10,30 +13,37 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func CmdCancelOrder() *cobra.Command {
+func CmdBatchCancel() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cancel-order owner subaccount_number clientId clobPairId goodTilBlock",
-		Short: "Broadcasts message cancel_order. Assumes short term order cancellation.",
-		Args:  cobra.ExactArgs(5),
+		Use:   "batch-cancel owner subaccount_number clobPairId goodTilBlock --clientIds=\"<list of ids>\"",
+		Short: "Broadcast message batch cancel for a specific clobPairId",
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argOwner := args[0]
+			clientIds, err := cmd.Flags().GetString("clientIds")
+			if err != nil {
+				return err
+			}
+			argClientIds := []uint32{}
+			for _, idString := range strings.Fields(clientIds) {
+				idUint64, err := strconv.ParseUint(idString, 10, 32)
+				if err != nil {
+					return err
+				}
+				argClientIds = append(argClientIds, uint32(idUint64))
+			}
 
-			argSubaccountNumber, err := cast.ToUint32E(args[1])
+			argNumber, err := cast.ToUint32E(args[1])
 			if err != nil {
 				return err
 			}
 
-			argClientId, err := cast.ToUint32E(args[2])
+			argClobPairId, err := cast.ToUint32E(args[2])
 			if err != nil {
 				return err
 			}
 
-			argClobPairId, err := cast.ToUint32E(args[3])
-			if err != nil {
-				return err
-			}
-
-			argGoodTilBlock, err := cast.ToUint32E(args[4])
+			argGoodTilBlock, err := cast.ToUint32E(args[3])
 			if err != nil {
 				return err
 			}
@@ -43,13 +53,15 @@ func CmdCancelOrder() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgCancelOrderShortTerm(
-				types.OrderId{
-					ClobPairId: argClobPairId,
-					ClientId:   argClientId,
-					SubaccountId: satypes.SubaccountId{
-						Owner:  argOwner,
-						Number: argSubaccountNumber,
+			msg := types.NewMsgBatchCancel(
+				satypes.SubaccountId{
+					Owner:  argOwner,
+					Number: argNumber,
+				},
+				[]types.OrderBatch{
+					{
+						ClobPairId: argClobPairId,
+						ClientIds:  argClientIds,
 					},
 				},
 				argGoodTilBlock,

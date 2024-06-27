@@ -1,9 +1,10 @@
 package rate_limit
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"sort"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
@@ -47,6 +48,7 @@ type multiBlockRateLimiter[K comparable] struct {
 // If invoked during `EndBlocker` then you can pass in the `ctx` as is but if invoked during `PrepareCheckState`
 // one must supply a `ctx` with the previous block height via `ctx.WithBlockHeight(ctx.BlockHeight()-1)`.
 func NewMultiBlockRateLimiter[K comparable](context string, config []types.MaxPerNBlocksRateLimit) RateLimiter[K] {
+
 	// Ensure that we sort the number of blocks so that we are checking the lowest block number rate limits first.
 	sort.Slice(config, func(i, j int) bool {
 		return config[i].NumBlocks < config[j].NumBlocks
@@ -66,6 +68,10 @@ func NewMultiBlockRateLimiter[K comparable](context string, config []types.MaxPe
 }
 
 func (r *multiBlockRateLimiter[K]) RateLimit(ctx sdk.Context, key K) error {
+	return r.RateLimitIncrBy(ctx, key, 1)
+}
+
+func (r *multiBlockRateLimiter[K]) RateLimitIncrBy(ctx sdk.Context, key K, incrBy uint32) error {
 	blockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight())
 	offset := blockHeight % r.maxNumBlocks
 
@@ -83,7 +89,7 @@ func (r *multiBlockRateLimiter[K]) RateLimit(ctx sdk.Context, key K) error {
 		perBlockCounts = make(map[uint32]uint32)
 		r.perKeyBlockCounts[key] = perBlockCounts
 	}
-	count := perBlockCounts[blockHeight] + 1
+	count := perBlockCounts[blockHeight] + incrBy
 	perBlockCounts[blockHeight] = count
 
 	// Update the per rate limit count.
@@ -93,7 +99,7 @@ func (r *multiBlockRateLimiter[K]) RateLimit(ctx sdk.Context, key K) error {
 		r.perKeyRateLimitCounts[key] = perRateLimitCounts
 	}
 	for i := range perRateLimitCounts {
-		perRateLimitCounts[i] += 1
+		perRateLimitCounts[i] += incrBy
 	}
 
 	// Check the accumulated rate limit count to see if any rate limit has been exceeded.

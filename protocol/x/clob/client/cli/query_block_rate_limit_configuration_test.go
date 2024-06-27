@@ -16,6 +16,7 @@ var (
 		MaxShortTermOrdersPerNBlocks:             []types.MaxPerNBlocksRateLimit{},
 		MaxStatefulOrdersPerNBlocks:              []types.MaxPerNBlocksRateLimit{},
 		MaxShortTermOrderCancellationsPerNBlocks: []types.MaxPerNBlocksRateLimit{},
+		MaxShortTermOrdersAndCancelsPerNBlocks:   []types.MaxPerNBlocksRateLimit{},
 	}
 )
 

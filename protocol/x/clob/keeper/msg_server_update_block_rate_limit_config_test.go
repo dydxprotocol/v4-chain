@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"testing"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -8,7 +10,6 @@ import (
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestUpdateBlockRateLimitConfig(t *testing.T) {
@@ -22,7 +23,7 @@ func TestUpdateBlockRateLimitConfig(t *testing.T) {
 		})
 		testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *clobtypes.GenesisState) {
 			state.BlockRateLimitConfig = clobtypes.BlockRateLimitConfiguration{
-				MaxShortTermOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 1,
 						Limit:     2,
@@ -34,19 +35,13 @@ func TestUpdateBlockRateLimitConfig(t *testing.T) {
 						Limit:     4,
 					},
 				},
-				MaxShortTermOrderCancellationsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
-					{
-						NumBlocks: 5,
-						Limit:     6,
-					},
-				},
 			}
 		})
 		return genesis
 	}).Build()
 
 	expectedConfig := clobtypes.BlockRateLimitConfiguration{
-		MaxShortTermOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+		MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 			{
 				NumBlocks: 7,
 				Limit:     8,
@@ -56,12 +51,6 @@ func TestUpdateBlockRateLimitConfig(t *testing.T) {
 			{
 				NumBlocks: 9,
 				Limit:     10,
-			},
-		},
-		MaxShortTermOrderCancellationsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
-			{
-				NumBlocks: 11,
-				Limit:     12,
 			},
 		},
 	}

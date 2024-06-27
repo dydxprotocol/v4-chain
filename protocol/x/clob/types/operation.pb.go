@@ -147,7 +147,6 @@ type InternalOperation struct {
 	// order.
 	//
 	// Types that are valid to be assigned to Operation:
-	//
 	//	*InternalOperation_Match
 	//	*InternalOperation_ShortTermOrderPlacement
 	//	*InternalOperation_PreexistingStatefulOrder

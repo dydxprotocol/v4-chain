@@ -45,9 +45,10 @@ const (
 	// Module tag values are prefixed with `x/`
 	Clob = "x/clob"
 
-	CheckTx   = "check_tx"
-	RecheckTx = "recheck_tx"
-	DeliverTx = "deliver_tx"
+	CheckTx        = "check_tx"
+	RecheckTx      = "recheck_tx"
+	DeliverTx      = "deliver_tx"
+	MsgBatchCancel = "msg_batch_cancel"
 )
 
 // Special tag values that should be PascalCased (i.e function names)

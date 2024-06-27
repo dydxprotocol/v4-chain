@@ -1269,7 +1269,7 @@ func launchValidatorInDir(
 
 // MustMakeCheckTxsWithClobMsg creates one signed RequestCheckTx for each msg passed in.
 // The messsage must use one of the hard-coded well known subaccount owners otherwise this will panic.
-func MustMakeCheckTxsWithClobMsg[T clobtypes.MsgPlaceOrder | clobtypes.MsgCancelOrder](
+func MustMakeCheckTxsWithClobMsg[T clobtypes.MsgPlaceOrder | clobtypes.MsgCancelOrder | clobtypes.MsgBatchCancel](
 	ctx sdk.Context,
 	app *app.App,
 	messages ...T,
@@ -1284,6 +1284,9 @@ func MustMakeCheckTxsWithClobMsg[T clobtypes.MsgPlaceOrder | clobtypes.MsgCancel
 			m = &v
 		case clobtypes.MsgCancelOrder:
 			signerAddress = v.OrderId.SubaccountId.Owner
+			m = &v
+		case clobtypes.MsgBatchCancel:
+			signerAddress = v.SubaccountId.Owner
 			m = &v
 		default:
 			panic(fmt.Errorf("MustMakeCheckTxsWithClobMsg: Unknown message type %T", msg))

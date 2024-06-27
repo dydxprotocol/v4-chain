@@ -22,6 +22,10 @@ type ClobKeeper interface {
 		success bool,
 		successPerUpdate map[satypes.SubaccountId]satypes.UpdateResult,
 	)
+	BatchCancelShortTermOrder(
+		ctx sdk.Context,
+		msg *MsgBatchCancel,
+	) (success []uint32, failure []uint32, err error)
 	CancelShortTermOrder(ctx sdk.Context, msg *MsgCancelOrder) error
 	CancelStatefulOrder(ctx sdk.Context, msg *MsgCancelOrder) error
 	CreatePerpetualClobPair(
@@ -119,7 +123,11 @@ type ClobKeeper interface {
 	GetIndexerEventManager() indexer_manager.IndexerEventManager
 	RateLimitCancelOrder(ctx sdk.Context, order *MsgCancelOrder) error
 	RateLimitPlaceOrder(ctx sdk.Context, order *MsgPlaceOrder) error
+	RateLimitBatchCancel(ctx sdk.Context, order *MsgBatchCancel) error
 	InitializeBlockRateLimit(ctx sdk.Context, config BlockRateLimitConfiguration) error
+	GetBlockRateLimitConfiguration(
+		ctx sdk.Context,
+	) (config BlockRateLimitConfiguration)
 	InitializeEquityTierLimit(ctx sdk.Context, config EquityTierLimitConfiguration) error
 	Logger(ctx sdk.Context) log.Logger
 	UpdateClobPair(

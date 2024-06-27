@@ -47,9 +47,8 @@ func getValidGenesisStr() string {
 	gs += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`
 	gs += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
 	gs += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
-	gs += `{"max_short_term_orders_per_n_blocks":[{"limit": 200,"num_blocks":1}],`
-	gs += `"max_stateful_orders_per_n_blocks":[{"limit": 2,"num_blocks":1},{"limit": 20,"num_blocks":100}],`
-	gs += `"max_short_term_order_cancellations_per_n_blocks":[{"limit": 200,"num_blocks":1}]},`
+	gs += `{"max_short_term_orders_and_cancels_per_n_blocks":[{"limit": 400,"num_blocks":1}],`
+	gs += `"max_stateful_orders_per_n_blocks":[{"limit": 2,"num_blocks":1},{"limit": 20,"num_blocks":100}]},`
 	gs += `"equity_tier_limit_config":{"short_term_order_equity_tiers":[{"limit":0,"usd_tnc_required":"0"},`
 	gs += `{"limit":1,"usd_tnc_required":"20"},{"limit":5,"usd_tnc_required":"100"},`
 	gs += `{"limit":10,"usd_tnc_required":"1000"},{"limit":100,"usd_tnc_required":"10000"},`
@@ -150,7 +149,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	// due to it using an unexported method on the interface thus we use reflection to access the field
 	// directly that contains the registrations.
 	fv := reflect.ValueOf(registry).Elem().FieldByName("implInterfaces")
-	require.Len(t, fv.MapKeys(), 16)
+	require.Len(t, fv.MapKeys(), 18)
 }
 
 func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
@@ -168,8 +167,8 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	expected += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`
 	expected += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
 	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
-	expected += `{"max_short_term_orders_per_n_blocks":[],"max_stateful_orders_per_n_blocks":[],`
-	expected += `"max_short_term_order_cancellations_per_n_blocks":[]},`
+	expected += `{"max_short_term_orders_and_cancels_per_n_blocks":[],"max_stateful_orders_per_n_blocks":[],`
+	expected += `"max_short_term_order_cancellations_per_n_blocks":[],"max_short_term_orders_per_n_blocks":[]},`
 	expected += `"equity_tier_limit_config":{"short_term_order_equity_tiers":[], "stateful_order_equity_tiers":[]}}`
 
 	require.JSONEq(t, expected, string(json))
@@ -242,9 +241,10 @@ func TestAppModuleBasic_GetTxCmd(t *testing.T) {
 
 	cmd := am.GetTxCmd()
 	require.Equal(t, "clob", cmd.Use)
-	require.Equal(t, 2, len(cmd.Commands()))
-	require.Equal(t, "cancel-order", cmd.Commands()[0].Name())
-	require.Equal(t, "place-order", cmd.Commands()[1].Name())
+	require.Equal(t, 3, len(cmd.Commands()))
+	require.Equal(t, "batch-cancel", cmd.Commands()[0].Name())
+	require.Equal(t, "cancel-order", cmd.Commands()[1].Name())
+	require.Equal(t, "place-order", cmd.Commands()[2].Name())
 }
 
 func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
@@ -339,9 +339,9 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	require.Equal(
 		t,
 		clob_types.BlockRateLimitConfiguration{
-			MaxShortTermOrdersPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
+			MaxShortTermOrdersAndCancelsPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
 				{
-					Limit:     200,
+					Limit:     400,
 					NumBlocks: 1,
 				},
 			},
@@ -353,12 +353,6 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				{
 					Limit:     20,
 					NumBlocks: 100,
-				},
-			},
-			MaxShortTermOrderCancellationsPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
-				{
-					Limit:     200,
-					NumBlocks: 1,
 				},
 			},
 		},
@@ -435,10 +429,10 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	expected += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`
 	expected += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
 	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
-	expected += `{"max_short_term_orders_per_n_blocks":[{"limit": 200,"num_blocks":1}],`
+	expected += `{"max_short_term_orders_and_cancels_per_n_blocks":[{"limit": 400,"num_blocks":1}],`
 	expected += `"max_stateful_orders_per_n_blocks":[{"limit": 2,"num_blocks":1},`
-	expected += `{"limit": 20,"num_blocks":100}],"max_short_term_order_cancellations_per_n_blocks":`
-	expected += `[{"limit": 200,"num_blocks":1}]},`
+	expected += `{"limit": 20,"num_blocks":100}],"max_short_term_order_cancellations_per_n_blocks":[],`
+	expected += `"max_short_term_orders_per_n_blocks":[]},`
 	expected += `"equity_tier_limit_config":{"short_term_order_equity_tiers":[{"limit":0,"usd_tnc_required":"0"},`
 	expected += `{"limit":1,"usd_tnc_required":"20"},{"limit":5,"usd_tnc_required":"100"},`
 	expected += `{"limit":10,"usd_tnc_required":"1000"},{"limit":100,"usd_tnc_required":"10000"},`

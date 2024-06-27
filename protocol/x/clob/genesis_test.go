@@ -35,13 +35,7 @@ func TestGenesis(t *testing.T) {
 		"Genesis state is valid": {
 			genesis: types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
-						{
-							Limit:     200,
-							NumBlocks: 1,
-						},
-					},
-					MaxShortTermOrderCancellationsPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrdersAndCancelsPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							Limit:     200,
 							NumBlocks: 1,
@@ -378,7 +372,7 @@ func TestGenesis(t *testing.T) {
 		"Genesis state is invalid when BlockRateLimitConfiguration is invalid": {
 			genesis: types.GenesisState{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrdersAndCancelsPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							Limit:     1,
 							NumBlocks: 0,
@@ -395,7 +389,7 @@ func TestGenesis(t *testing.T) {
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
 				},
 			},
-			expectedErr: "0 is not a valid NumBlocks for MaxShortTermOrdersPerNBlocks rate limit " +
+			expectedErr: "0 is not a valid NumBlocks for MaxShortTermOrdersAndCancelsPerNBlocks rate limit " +
 				"{NumBlocks:0 Limit:1}",
 			expectedErrType: types.ErrInvalidBlockRateLimitConfig,
 		},
