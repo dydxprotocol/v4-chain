@@ -59,6 +59,7 @@ require (
 	github.com/cosmos/ibc-go/v8 v8.3.1
 	github.com/cosmos/rosetta v0.50.3
 	github.com/deckarep/golang-set/v2 v2.3.0
+	github.com/dydxprotocol/v4-chain/protocol v1.0.1
 	github.com/ethos-works/ethos/ethos-chain v0.0.0-00010101000000-000000000000
 	github.com/go-kit/log v0.2.1
 	github.com/hashicorp/go-metrics v0.5.3

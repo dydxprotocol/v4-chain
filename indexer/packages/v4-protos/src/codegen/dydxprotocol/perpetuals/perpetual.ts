@@ -69,6 +69,9 @@ export interface Perpetual {
    */
 
   fundingIndex: Uint8Array;
+  /** Total size of open long contracts, measured in base_quantums. */
+
+  openInterest: Uint8Array;
 }
 /** Perpetual represents a perpetual on the dYdX exchange. */
 
@@ -81,6 +84,9 @@ export interface PerpetualSDKType {
    */
 
   funding_index: Uint8Array;
+  /** Total size of open long contracts, measured in base_quantums. */
+
+  open_interest: Uint8Array;
 }
 /**
  * PerpetualParams represents the parameters of a perpetual on the dYdX
@@ -280,6 +286,19 @@ export interface LiquidityTier {
    */
 
   impactNotional: Long;
+  /**
+   * Lower cap for Open Interest Margin Fracton (OIMF), in quote quantums.
+   * IMF is not affected when OI <= open_interest_lower_cap.
+   */
+
+  openInterestLowerCap: Long;
+  /**
+   * Upper cap for Open Interest Margin Fracton (OIMF), in quote quantums.
+   * IMF scales linearly to 100% as OI approaches open_interest_upper_cap.
+   * If zero, then the IMF does not scale with OI.
+   */
+
+  openInterestUpperCap: Long;
 }
 /** LiquidityTier stores margin information. */
 
@@ -323,12 +342,26 @@ export interface LiquidityTierSDKType {
    */
 
   impact_notional: Long;
+  /**
+   * Lower cap for Open Interest Margin Fracton (OIMF), in quote quantums.
+   * IMF is not affected when OI <= open_interest_lower_cap.
+   */
+
+  open_interest_lower_cap: Long;
+  /**
+   * Upper cap for Open Interest Margin Fracton (OIMF), in quote quantums.
+   * IMF scales linearly to 100% as OI approaches open_interest_upper_cap.
+   * If zero, then the IMF does not scale with OI.
+   */
+
+  open_interest_upper_cap: Long;
 }
 
 function createBasePerpetual(): Perpetual {
   return {
     params: undefined,
-    fundingIndex: new Uint8Array()
+    fundingIndex: new Uint8Array(),
+    openInterest: new Uint8Array()
   };
 }
 
@@ -340,6 +373,10 @@ export const Perpetual = {
 
     if (message.fundingIndex.length !== 0) {
       writer.uint32(18).bytes(message.fundingIndex);
+    }
+
+    if (message.openInterest.length !== 0) {
+      writer.uint32(26).bytes(message.openInterest);
     }
 
     return writer;
@@ -362,6 +399,10 @@ export const Perpetual = {
           message.fundingIndex = reader.bytes();
           break;
 
+        case 3:
+          message.openInterest = reader.bytes();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -375,6 +416,7 @@ export const Perpetual = {
     const message = createBasePerpetual();
     message.params = object.params !== undefined && object.params !== null ? PerpetualParams.fromPartial(object.params) : undefined;
     message.fundingIndex = object.fundingIndex ?? new Uint8Array();
+    message.openInterest = object.openInterest ?? new Uint8Array();
     return message;
   }
 
@@ -614,7 +656,9 @@ function createBaseLiquidityTier(): LiquidityTier {
     initialMarginPpm: 0,
     maintenanceFractionPpm: 0,
     basePositionNotional: Long.UZERO,
-    impactNotional: Long.UZERO
+    impactNotional: Long.UZERO,
+    openInterestLowerCap: Long.UZERO,
+    openInterestUpperCap: Long.UZERO
   };
 }
 
@@ -642,6 +686,14 @@ export const LiquidityTier = {
 
     if (!message.impactNotional.isZero()) {
       writer.uint32(48).uint64(message.impactNotional);
+    }
+
+    if (!message.openInterestLowerCap.isZero()) {
+      writer.uint32(56).uint64(message.openInterestLowerCap);
+    }
+
+    if (!message.openInterestUpperCap.isZero()) {
+      writer.uint32(64).uint64(message.openInterestUpperCap);
     }
 
     return writer;
@@ -680,6 +732,14 @@ export const LiquidityTier = {
           message.impactNotional = (reader.uint64() as Long);
           break;
 
+        case 7:
+          message.openInterestLowerCap = (reader.uint64() as Long);
+          break;
+
+        case 8:
+          message.openInterestUpperCap = (reader.uint64() as Long);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -697,6 +757,8 @@ export const LiquidityTier = {
     message.maintenanceFractionPpm = object.maintenanceFractionPpm ?? 0;
     message.basePositionNotional = object.basePositionNotional !== undefined && object.basePositionNotional !== null ? Long.fromValue(object.basePositionNotional) : Long.UZERO;
     message.impactNotional = object.impactNotional !== undefined && object.impactNotional !== null ? Long.fromValue(object.impactNotional) : Long.UZERO;
+    message.openInterestLowerCap = object.openInterestLowerCap !== undefined && object.openInterestLowerCap !== null ? Long.fromValue(object.openInterestLowerCap) : Long.UZERO;
+    message.openInterestUpperCap = object.openInterestUpperCap !== undefined && object.openInterestUpperCap !== null ? Long.fromValue(object.openInterestUpperCap) : Long.UZERO;
     return message;
   }
 

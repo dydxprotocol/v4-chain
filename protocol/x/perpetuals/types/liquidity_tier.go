@@ -24,6 +24,15 @@ func (liquidityTier LiquidityTier) Validate() error {
 		return ErrImpactNotionalIsZero
 	}
 
+	if liquidityTier.OpenInterestLowerCap > liquidityTier.OpenInterestUpperCap {
+		return errorsmod.Wrapf(
+			ErrOpenInterestLowerCapLargerThanUpperCap,
+			"open_interest_lower_cap: %d, open_interest_upper_cap: %d",
+			liquidityTier.OpenInterestLowerCap,
+			liquidityTier.OpenInterestUpperCap,
+		)
+	}
+
 	return nil
 }
 

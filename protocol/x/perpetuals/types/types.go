@@ -93,6 +93,8 @@ type PerpetualsKeeper interface {
 		initialMarginPpm uint32,
 		maintenanceFractionPpm uint32,
 		impactNotional uint64,
+		openInterestLowerCap uint64,
+		openInterestUpperCap uint64,
 	) (
 		liquidityTier LiquidityTier,
 		err error,

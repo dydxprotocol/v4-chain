@@ -67,6 +67,7 @@ func GeneratePerpetual(optionalModifications ...PerpetualModifierOption) *perpty
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 
 	for _, opt := range optionalModifications {
