@@ -19,9 +19,9 @@ func RegisterCustomPlugins(
 	queryPluginOpt := wasmkeeper.WithQueryPlugins(&wasmkeeper.QueryPlugins{
 		Custom: CustomQuerier(wasmQueryPlugin),
 	})
-	messengerDecoratorOpt := wasmkeeper.WithMessageHandlerDecorator(
-		CustomMessageDecorator(sendingKeeper, clobKeeper),
-	)
+	messengerDecoratorOpt := wasmkeeper.WithMessageEncoders(&wasmkeeper.MessageEncoders{
+		Custom: CustomEncoder,
+	})
 
 	return []wasmkeeper.Option{
 		queryPluginOpt,
