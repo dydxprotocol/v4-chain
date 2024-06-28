@@ -45,7 +45,7 @@ func getDeltaLongFromSettledUpdate(
 }
 
 // For `Match` updates:
-//   - returns a struct `OpenInterestDelta` if input updates results in OI delta.
+//   - returns a struct `OpenInterest` if input updates results in OI delta.
 //   - returns nil if OI delta is zero.
 //   - panics if update format is invalid.
 //
@@ -113,7 +113,7 @@ func GetDeltaOpenInterestFromUpdates(
 	}
 
 	return &perptypes.OpenInterestDelta{
-		PerpetualId:       updatedPerpId,
-		BaseQuantumsDelta: baseQuantumsDelta,
+		PerpetualId:  updatedPerpId,
+		BaseQuantums: baseQuantumsDelta,
 	}
 }

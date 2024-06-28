@@ -292,6 +292,25 @@ func (k Keeper) UpdateSubaccounts(
 		perpIdToFundingIndex[perp.Params.Id] = perp.FundingIndex
 	}
 
+	// Get OpenInterestDelta from the updates, and persist the OI change if any.
+	perpOpenInterestDelta := GetDeltaOpenInterestFromUpdates(settledUpdates, updateType)
+	if perpOpenInterestDelta != nil {
+		if err := k.perpetualsKeeper.ModifyOpenInterest(
+			ctx,
+			perpOpenInterestDelta.PerpetualId,
+			perpOpenInterestDelta.BaseQuantums,
+		); err != nil {
+			return false, nil, errorsmod.Wrapf(
+				types.ErrCannotModifyPerpOpenInterestForOIMF,
+				"perpId = %v, delta = %v, settledUpdates = %+v, err = %v",
+				perpOpenInterestDelta.PerpetualId,
+				perpOpenInterestDelta.BaseQuantums,
+				settledUpdates,
+				err,
+			)
+		}
+	}
+
 	// Apply the updates to perpetual positions.
 	UpdatePerpetualPositions(
 		settledUpdates,
@@ -657,13 +676,13 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			if err := k.perpetualsKeeper.ModifyOpenInterest(
 				branchedContext,
 				perpOpenInterestDelta.PerpetualId,
-				perpOpenInterestDelta.BaseQuantumsDelta,
+				perpOpenInterestDelta.BaseQuantums,
 			); err != nil {
 				return false, nil, errorsmod.Wrapf(
 					types.ErrCannotModifyPerpOpenInterestForOIMF,
 					"perpId = %v, delta = %v, settledUpdates = %+v, err = %v",
 					perpOpenInterestDelta.PerpetualId,
-					perpOpenInterestDelta.BaseQuantumsDelta,
+					perpOpenInterestDelta.BaseQuantums,
 					settledUpdates,
 					err,
 				)

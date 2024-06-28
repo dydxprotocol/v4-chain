@@ -58,7 +58,7 @@ var (
 	ErrCannotModifyPerpOpenInterestForOIMF = errorsmod.Register(
 		ModuleName,
 		402,
-		"cannot temporarily modify perpetual open interest for OIMF calculation",
+		"cannot modify perpetual open interest for OIMF calculation",
 	)
 	ErrCannotRevertPerpOpenInterestForOIMF = errorsmod.Register(
 		ModuleName,

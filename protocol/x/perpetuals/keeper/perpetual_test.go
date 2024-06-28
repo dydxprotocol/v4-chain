@@ -569,7 +569,7 @@ func TestModifyOpenInterest_Failure(t *testing.T) {
 		"Non-existent perp Id": {
 			id:                1111,
 			initOpenInterest:  big.NewInt(1_000),
-			openInterestDelta: big.NewInt(0),
+			openInterestDelta: big.NewInt(100),
 			err:               types.ErrPerpetualDoesNotExist,
 		},
 	}

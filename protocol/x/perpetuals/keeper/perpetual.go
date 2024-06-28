@@ -1253,6 +1253,12 @@ func (k Keeper) ModifyOpenInterest(
 ) (
 	err error,
 ) {
+
+	// No-op if delta is zero.
+	if openInterestDeltaBaseQuantums.Sign() == 0 {
+		return nil
+	}
+
 	// Get perpetual.
 	perpetual, err := k.GetPerpetual(ctx, perpetualId)
 	if err != nil {
@@ -1277,6 +1283,7 @@ func (k Keeper) ModifyOpenInterest(
 
 	perpetual.OpenInterest = dtypes.NewIntFromBigInt(bigOpenInterest)
 	k.SetPerpetual(ctx, perpetual)
+	// TODO(OTE-247): add indexer update logic for open interest change.
 	return nil
 }
 
