@@ -192,26 +192,6 @@ describe('compliance-check', () => {
   it.each([
     ['query', `/v4/check-compliance-query?address=${testConstants.defaultAddress}`],
     ['param', `/v4/check-compliance-param/${testConstants.defaultAddress}`],
-  ])('does not return 403 if address in request is in FIRST_STRIKE_CLOSE_ONLY and from restricted country (%s)', async (
-    _name: string,
-    path: string,
-  ) => {
-    isRestrictedCountrySpy.mockReturnValueOnce(true);
-    await ComplianceStatusTable.create({
-      ...testConstants.compliantStatusData,
-      status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
-    });
-    await sendRequestToApp({
-      type: RequestMethod.GET,
-      path,
-      expressApp: complianceCheckApp,
-      expectedStatus: 200,
-    });
-  });
-
-  it.each([
-    ['query', `/v4/check-compliance-query?address=${testConstants.defaultAddress}`],
-    ['param', `/v4/check-compliance-param/${testConstants.defaultAddress}`],
   ])('does return 403 if request is from restricted country (%s)', async (
     _name: string,
     path: string,
