@@ -26,9 +26,7 @@ func (k msgServer) SetMarketMapperRevShareDetailsForMarket(
 	}
 
 	// Set market mapper revenue share details
-	if err := k.SetMarketMapperRevShareDetails(ctx, msg.Params.MarketId, *msg.Params.MarketMapperRevShareDetails); err != nil {
-		return nil, err
-	}
+	k.SetMarketMapperRevShareDetails(ctx, msg.Params.MarketId, *msg.Params.MarketMapperRevShareDetails)
 
 	return &types.MsgSetMarketMapperRevShareDetailsForMarketResponse{}, nil
 }

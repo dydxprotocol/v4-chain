@@ -46,8 +46,8 @@ func TestSetMarketMapperRevenueShareDetailsForMarket(t *testing.T) {
 					require.Contains(t, err.Error(), tc.expectedErr)
 				} else {
 					require.NoError(t, err)
-					params, _ := k.GetMarketMapperRevShareDetails(ctx, tc.msg.Params.MarketId)
-					require.Equal(t, tc.msg.Params, params)
+					revShareDetails, _ := k.GetMarketMapperRevShareDetails(ctx, tc.msg.Params.MarketId)
+					require.Equal(t, *tc.msg.Params.MarketMapperRevShareDetails, revShareDetails)
 				}
 			},
 		)
