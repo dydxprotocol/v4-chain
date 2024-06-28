@@ -267,6 +267,7 @@ export interface PerpetualMarketResponseObject {
   marketType: PerpetualMarketType;
   openInterestLowerCap?: string;
   openInterestUpperCap?: string;
+  baseOpenInterest: string;
 }
 
 /* ------- ORDERBOOK TYPES ------- */

@@ -33,6 +33,7 @@ import {
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
   DeleveragingEventV1,
+  OpenInterestUpdateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 
@@ -51,6 +52,7 @@ export enum DydxIndexerSubtypes {
   UPDATE_PERPETUAL = 'update_perpetual',
   UPDATE_CLOB_PAIR = 'update_clob_pair',
   DELEVERAGING = 'deleveraging',
+  OPEN_INTEREST_UPDATE = 'open_interest_update',
 }
 
 // Generic interface used for creating the Handler objects
@@ -144,6 +146,12 @@ export type EventProtoWithTypeAndVersion = {
 } | {
   type: DydxIndexerSubtypes.DELEVERAGING,
   eventProto: DeleveragingEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+  blockEventIndex: number,
+} | {
+  type: DydxIndexerSubtypes.OPEN_INTEREST_UPDATE,
+  eventProto: OpenInterestUpdateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,

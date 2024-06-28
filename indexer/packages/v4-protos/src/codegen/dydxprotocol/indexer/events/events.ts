@@ -1137,6 +1137,36 @@ export interface LiquidityTierUpsertEventV1SDKType {
 
   base_position_notional: Long;
 }
+/** OpenInterestUpdateEventV1 is used for open interest update events */
+
+export interface OpenInterestUpdateEventV1 {
+  /** The list of all open interest updates in the block. */
+  openInterestUpdates: OpenInterestUpdate[];
+}
+/** OpenInterestUpdateEventV1 is used for open interest update events */
+
+export interface OpenInterestUpdateEventV1SDKType {
+  /** The list of all open interest updates in the block. */
+  open_interest_updates: OpenInterestUpdateSDKType[];
+}
+/** OpenInterestUpdate contains a single open interest update for a perpetual */
+
+export interface OpenInterestUpdate {
+  /** The ID of the perpetual market. */
+  perpetualId: number;
+  /** The new open interest value for the perpetual market. */
+
+  openInterest: Uint8Array;
+}
+/** OpenInterestUpdate contains a single open interest update for a perpetual */
+
+export interface OpenInterestUpdateSDKType {
+  /** The ID of the perpetual market. */
+  perpetual_id: number;
+  /** The new open interest value for the perpetual market. */
+
+  open_interest: Uint8Array;
+}
 /**
  * LiquidationEventV2 message contains all the information needed to update
  * the liquidity tiers. It contains all the fields from V1 along with the
@@ -3064,6 +3094,106 @@ export const LiquidityTierUpsertEventV1 = {
     message.initialMarginPpm = object.initialMarginPpm ?? 0;
     message.maintenanceFractionPpm = object.maintenanceFractionPpm ?? 0;
     message.basePositionNotional = object.basePositionNotional !== undefined && object.basePositionNotional !== null ? Long.fromValue(object.basePositionNotional) : Long.UZERO;
+    return message;
+  }
+
+};
+
+function createBaseOpenInterestUpdateEventV1(): OpenInterestUpdateEventV1 {
+  return {
+    openInterestUpdates: []
+  };
+}
+
+export const OpenInterestUpdateEventV1 = {
+  encode(message: OpenInterestUpdateEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.openInterestUpdates) {
+      OpenInterestUpdate.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): OpenInterestUpdateEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseOpenInterestUpdateEventV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.openInterestUpdates.push(OpenInterestUpdate.decode(reader, reader.uint32()));
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<OpenInterestUpdateEventV1>): OpenInterestUpdateEventV1 {
+    const message = createBaseOpenInterestUpdateEventV1();
+    message.openInterestUpdates = object.openInterestUpdates?.map(e => OpenInterestUpdate.fromPartial(e)) || [];
+    return message;
+  }
+
+};
+
+function createBaseOpenInterestUpdate(): OpenInterestUpdate {
+  return {
+    perpetualId: 0,
+    openInterest: new Uint8Array()
+  };
+}
+
+export const OpenInterestUpdate = {
+  encode(message: OpenInterestUpdate, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.perpetualId !== 0) {
+      writer.uint32(8).uint32(message.perpetualId);
+    }
+
+    if (message.openInterest.length !== 0) {
+      writer.uint32(18).bytes(message.openInterest);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): OpenInterestUpdate {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseOpenInterestUpdate();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.perpetualId = reader.uint32();
+          break;
+
+        case 2:
+          message.openInterest = reader.bytes();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<OpenInterestUpdate>): OpenInterestUpdate {
+    const message = createBaseOpenInterestUpdate();
+    message.perpetualId = object.perpetualId ?? 0;
+    message.openInterest = object.openInterest ?? new Uint8Array();
     return message;
   }
 

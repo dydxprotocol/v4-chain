@@ -5,18 +5,19 @@ const (
 	// Keep these constants in sync with:
 	// https://github.com/dydxprotocol/indexer/blob/master/services/ender/src/lib/types.ts.
 	// Ender uses these to maintain a mapping between event type and event proto.
-	SubtypeOrderFill        = "order_fill"
-	SubtypeSubaccountUpdate = "subaccount_update"
-	SubtypeTransfer         = "transfer"
-	SubtypeMarket           = "market"
-	SubtypeFundingValues    = "funding_values"
-	SubtypeStatefulOrder    = "stateful_order"
-	SubtypeAsset            = "asset"
-	SubtypePerpetualMarket  = "perpetual_market"
-	SubtypeLiquidityTier    = "liquidity_tier"
-	SubtypeUpdatePerpetual  = "update_perpetual"
-	SubtypeUpdateClobPair   = "update_clob_pair"
-	SubtypeDeleveraging     = "deleveraging"
+	SubtypeOrderFill          = "order_fill"
+	SubtypeSubaccountUpdate   = "subaccount_update"
+	SubtypeTransfer           = "transfer"
+	SubtypeMarket             = "market"
+	SubtypeFundingValues      = "funding_values"
+	SubtypeStatefulOrder      = "stateful_order"
+	SubtypeAsset              = "asset"
+	SubtypePerpetualMarket    = "perpetual_market"
+	SubtypeLiquidityTier      = "liquidity_tier"
+	SubtypeUpdatePerpetual    = "update_perpetual"
+	SubtypeUpdateClobPair     = "update_clob_pair"
+	SubtypeDeleveraging       = "deleveraging"
+	SubtypeOpenInterestUpdate = "open_interest_update"
 )
 
 const (
@@ -33,6 +34,7 @@ const (
 	UpdatePerpetualEventVersion  uint32 = 1
 	UpdateClobPairEventVersion   uint32 = 1
 	DeleveragingEventVersion     uint32 = 1
+	OpenInterestUpdateVersion    uint32 = 1
 )
 
 var OnChainEventSubtypes = []string{

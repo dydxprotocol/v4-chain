@@ -20,6 +20,8 @@ import {
   LiquidationOrderV1,
   LiquidityTierUpsertEventV1,
   LiquidityTierUpsertEventV2,
+  OpenInterestUpdateEventV1,
+  OpenInterestUpdate,
   MarketBaseEventV1,
   MarketEventV1,
   OrderFillEventV1,
@@ -156,6 +158,20 @@ export const defaultLiquidityTierUpsertEventV1: LiquidityTierUpsertEventV1 = {
   initialMarginPpm: 50000,  // 5%
   maintenanceFractionPpm: 600000,  // 60% of IM = 3%
   basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 USDC
+};
+
+const defaultOpenInterestUpdate1: OpenInterestUpdate = {
+  perpetualId: 0,
+  openInterest: bigIntToBytes(BigInt(1000)),
+};
+
+const defaultOpenInterestUpdate2: OpenInterestUpdate = {
+  perpetualId: 1,
+  openInterest: bigIntToBytes(BigInt(2000)),
+};
+
+export const defaultOpenInterestUpdateEvent: OpenInterestUpdateEventV1 = {
+  openInterestUpdates: [defaultOpenInterestUpdate1, defaultOpenInterestUpdate2],
 };
 
 export const defaultUpdatePerpetualEvent: UpdatePerpetualEventV1 = {

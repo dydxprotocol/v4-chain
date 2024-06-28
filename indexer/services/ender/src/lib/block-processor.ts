@@ -18,6 +18,7 @@ import { DeleveragingValidator } from '../validators/deleveraging-validator';
 import { FundingValidator } from '../validators/funding-validator';
 import { LiquidityTierValidatorV2, LiquidityTierValidator } from '../validators/liquidity-tier-validator';
 import { MarketValidator } from '../validators/market-validator';
+import { OpenInterestUpdateValidator } from '../validators/open-interest-update-validator';
 import { OrderFillValidator } from '../validators/order-fill-validator';
 import { PerpetualMarketValidator } from '../validators/perpetual-market-validator';
 import { StatefulOrderValidator } from '../validators/stateful-order-validator';
@@ -52,6 +53,7 @@ const TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorIn
 
 const BLOCK_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.FUNDING.toString(), 1)]: FundingValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.OPEN_INTEREST_UPDATE.toString(), 1)]: OpenInterestUpdateValidator,
 };
 
 function serializeSubtypeAndVersion(

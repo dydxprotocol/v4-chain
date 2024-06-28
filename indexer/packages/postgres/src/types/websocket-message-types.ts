@@ -208,6 +208,7 @@ export interface TradingPerpetualMarketMessage {
   marketType?: PerpetualMarketType;
   openInterestLowerCap?: string;
   openInterestUpperCap?: string;
+  baseOpenInterest?: string;
 
   // Fields that are likely to change
   priceChange24H?: string;

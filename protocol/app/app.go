@@ -377,6 +377,7 @@ func New(
 		clobmoduletypes.TransientStoreKey,
 		statsmoduletypes.TransientStoreKey,
 		indexer_manager.TransientStoreKey,
+		perpetualsmoduletypes.TransientStoreKey,
 	)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, clobmoduletypes.MemStoreKey)
 
@@ -823,6 +824,7 @@ func New(
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
 		},
+		tkeys[perpetualsmoduletypes.TransientStoreKey],
 	)
 	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper)
 
