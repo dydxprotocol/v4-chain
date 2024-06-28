@@ -71,6 +71,15 @@ export async function handler(
     // boolean flag used to determine if new kafka topics should be created
     await runDbAndKafkaMigration(event.addNewKafkaTopics, lambda);
 
+    if (event.onlyRunDbMigrationAndCreateKafkaTopics) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          message: 'success',
+        }),
+      };
+    }
+
     // 3. Create new ECS Task Definition for ECS Services with new image
     const taskDefinitionArnMap: TaskDefinitionArnMap = await createNewEcsTaskDefinitions(
       ecs,
