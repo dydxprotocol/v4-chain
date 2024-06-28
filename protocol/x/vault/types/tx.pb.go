@@ -126,7 +126,7 @@ func (m *MsgDepositToVaultResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDepositToVaultResponse proto.InternalMessageInfo
 
-// MsgWithdrawFromVault withdraws the specified amount of from the vault to the subaccount.
+// MsgWithdrawFromVault withdraws the specified amount of shares from the vault to the subaccount.
 type MsgWithdrawFromVault struct {
 	// The vault to withdraw from.
 	VaultId *VaultId `protobuf:"bytes,1,opt,name=vault_id,json=vaultId,proto3" json:"vault_id,omitempty"`

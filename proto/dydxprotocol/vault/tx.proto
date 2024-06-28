@@ -39,7 +39,7 @@ message MsgDepositToVault {
 // MsgDepositToVaultResponse is the Msg/DepositToVault response type.
 message MsgDepositToVaultResponse {}
 
-// MsgWithdrawFromVault withdraws the specified amount of from the vault to the subaccount.
+// MsgWithdrawFromVault withdraws the specified amount of shares from the vault to the subaccount.
 message MsgWithdrawFromVault  {
   option (cosmos.msg.v1.signer) = "subaccount_id";
   
