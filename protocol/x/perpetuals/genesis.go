@@ -37,10 +37,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// Create all the perpetuals.
 	for _, elem := range genState.Perpetuals {
-		k.SetPerpetual(
+		if err := k.ValidateAndSetPerpetual(
 			ctx,
 			elem,
-		)
+		); err != nil {
+			panic(err)
+		}
 	}
 }
 

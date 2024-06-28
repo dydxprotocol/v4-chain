@@ -3,9 +3,9 @@ package cli
 import (
 	"context"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/spf13/cobra"
 )
 

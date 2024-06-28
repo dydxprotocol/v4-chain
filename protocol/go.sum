@@ -952,8 +952,6 @@ github.com/dydxprotocol/cometbft v0.38.6-0.20240409171441-6d0767b72c06 h1:Dh5Ewe
 github.com/dydxprotocol/cometbft v0.38.6-0.20240409171441-6d0767b72c06/go.mod h1:REQN+ObgfYxi39TcYR/Hv95C9bPxY3sYJCvghryj7vY=
 github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c h1:vTcPGxL/uU0MF/Wfzi3G0uzLweEj/417qs1enjf0q60=
 github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c/go.mod h1:AgkOyykpqwdRuf8cLqoA6PxNZC6ODwNmPrEGYuRzBFY=
-github.com/dydxprotocol/v4-chain/protocol v1.0.1 h1:4MzKryrIINIPBwwulOvb5zwaw5yrjSoVdh3aJSq/hCM=
-github.com/dydxprotocol/v4-chain/protocol v1.0.1/go.mod h1:VsfoG1wTkvCFyU9B2G/k62idcQ7b/RF5svEbiQhUcos=
 github.com/eapache/go-resiliency v1.3.0 h1:RRL0nge+cWGlxXbUzJ7yMcq6w2XBEr19dCN6HECGaT0=
 github.com/eapache/go-resiliency v1.3.0/go.mod h1:5yPzW0MIvSe0JDsv0v+DvcjEv2FyD6iZYSs1ZI+iQho=
 github.com/eapache/go-xerial-snappy v0.0.0-20230111030713-bf00bc1b83b6 h1:8yY/I9ndfrgrXUbOGObLHKBR4Fl3nZXwM2c7OYTT8hM=
