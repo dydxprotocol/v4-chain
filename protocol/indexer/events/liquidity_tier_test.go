@@ -15,7 +15,7 @@ func TestNewLiquidityTierUpsertEvent_Success(t *testing.T) {
 		0,
 		1000000,
 	)
-	expectedLiquidityTierUpsertEventProto := &LiquidityTierUpsertEventV1{
+	expectedLiquidityTierUpsertEventProto := &LiquidityTierUpsertEventV2{
 		Id:                     0,
 		Name:                   "Large-Cap",
 		InitialMarginPpm:       50000,

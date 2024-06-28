@@ -78,6 +78,8 @@ describe('request-transformer', () => {
           stepBaseQuantums: perpetualMarket.stepBaseQuantums,
           subticksPerTick: perpetualMarket.subticksPerTick,
           marketType: perpetualMarket.marketType,
+          openInterestLowerCap: liquidityTier.openInterestLowerCap,
+          openInterestUpperCap: liquidityTier.openInterestUpperCap,
         },
       );
     });

@@ -5,7 +5,7 @@ import {
   liquidityTierRefresher,
   perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
-import { LiquidityTierUpsertEventV1 } from '@dydxprotocol-indexer/v4-protos';
+import { LiquidityTierUpsertEventV1, LiquidityTierUpsertEventV2 } from '@dydxprotocol-indexer/v4-protos';
 import _ from 'lodash';
 import * as pg from 'pg';
 
@@ -13,7 +13,7 @@ import { generatePerpetualMarketMessage } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
 
-export class LiquidityTierHandler extends Handler<LiquidityTierUpsertEventV1> {
+export class LiquidityTierHandlerBase<T> extends Handler<T> {
   eventType: string = 'LiquidityTierUpsertEvent';
 
   public getParallelizationIds(): string[] {
@@ -23,7 +23,8 @@ export class LiquidityTierHandler extends Handler<LiquidityTierUpsertEventV1> {
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const liquidityTier: LiquidityTiersFromDatabase = LiquidityTiersModel.fromJson(
-      resultRow.liquidity_tier) as LiquidityTiersFromDatabase;
+      resultRow.liquidity_tier,
+    ) as LiquidityTiersFromDatabase;
     liquidityTierRefresher.upsertLiquidityTier(liquidityTier);
     return this.generateWebsocketEventsForLiquidityTier(liquidityTier);
   }
@@ -47,4 +48,11 @@ export class LiquidityTierHandler extends Handler<LiquidityTierUpsertEventV1> {
       ),
     ];
   }
+}
+
+
+export class LiquidityTierHandler extends LiquidityTierHandlerBase<LiquidityTierUpsertEventV1> {
+}
+
+export class LiquidityTierHandlerV2 extends LiquidityTierHandlerBase<LiquidityTierUpsertEventV2> {
 }
