@@ -69,6 +69,15 @@ export async function handler(
     // 2. Run db migration in Bazooka
     await runDbMigration(lambda);
 
+    if (event.onlyRunDbMigrationAndCreateKafkaTopics) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          message: 'success',
+        }),
+      };
+    }
+
     // 3. Create new ECS Task Definition for ECS Services with new image
     const taskDefinitionArnMap: TaskDefinitionArnMap = await createNewEcsTaskDefinitions(
       ecs,
