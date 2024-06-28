@@ -1,6 +1,7 @@
 package prepare
 
 import (
+	"bytes"
 	"fmt"
 	"time"
 
@@ -189,12 +190,14 @@ func PrepareProposalHandler(
 			}
 		}
 
-		txsToReturn, err := txs.GetTxsInOrder()
+		finalTxs, err := txs.GetTxsInOrder()
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetTxsInOrder error: %v", err))
 			recordErrorMetricsWithLabel(metrics.GetTxsInOrder)
 			return &EmptyResponse, nil
 		}
+
+		txsToReturn := injectAndResize(finalTxs, extInfoBz, req.MaxTxBytes+int64(len(extInfoBz)))
 
 		// Record a success metric.
 		recordSuccessMetrics(
@@ -277,4 +280,32 @@ func EncodeMsgsIntoTxBytes(txConfig client.TxConfig, msgs ...sdk.Msg) ([]byte, e
 	}
 
 	return txBytes, nil
+}
+
+func injectAndResize(appTxs [][]byte, injectTx []byte, maxSizeBytes int64) [][]byte {
+	var (
+		returnedTxs   [][]byte
+		consumedBytes int64
+	)
+
+	// If VEs are enabled and our VE Tx isn't already in the appTxs, inject it here
+	if len(injectTx) != 0 && (len(appTxs) < 1 || !bytes.Equal(appTxs[0], injectTx)) {
+		injectBytes := int64(len(injectTx))
+		// Ensure the VE Tx is in the response if we have room.
+		// We may want to be more aggressive in the future about dedicating block space for application-specific Txs.
+		// However, the VE Tx size should be relatively stable so MaxTxBytes should be set w/ plenty of headroom.
+		if injectBytes <= maxSizeBytes {
+			consumedBytes += injectBytes
+			returnedTxs = append(returnedTxs, injectTx)
+		}
+	}
+	// Add as many appTxs to the returned proposal as possible given our maxSizeBytes constraint
+	for _, tx := range appTxs {
+		consumedBytes += int64(len(tx))
+		if consumedBytes > maxSizeBytes {
+			return returnedTxs
+		}
+		returnedTxs = append(returnedTxs, tx)
+	}
+	return returnedTxs
 }
