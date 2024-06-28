@@ -3,6 +3,8 @@ package keeper
 import (
 	"math/big"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 
 	errorsmod "cosmossdk.io/errors"
@@ -262,8 +264,17 @@ func (k Keeper) DistributeFees(
 	// Remaining amount goes to the fee collector
 	feeCollectorShare := new(big.Int).Sub(quantums, marketMapperShare)
 
+	// Emit a metric for the amount of fees transferred to the market mapper
+	labels := []metrics.Label{
+		metrics.GetLabelForIntValue(metrics.MarketId, int(perpetual.Params.MarketId)),
+	}
+	metrics.AddSampleWithLabels(
+		metrics.MarketMapperRevenue,
+		metrics.GetMetricValueFromBigInt(marketMapperShare),
+		labels...,
+	)
+
 	// Transfer fees to the market mapper
-	// TODO (TRA-444): add monitoring to record the amount of fees transferred to the market mapper
 	if err := k.TransferFees(
 		ctx,
 		assetId,

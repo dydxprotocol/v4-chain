@@ -302,6 +302,7 @@ const (
 	GetSubaccount                         = "get_subaccount"
 	UpdateSubaccounts                     = "update_subaccounts"
 	SubaccountOwner                       = "subaccount_owner"
+	MarketMapperRevenue                   = "market_mapper_revenue"
 
 	// Liquidation Daemon.
 	CheckCollateralizationForSubaccounts     = "check_collateralization_for_subaccounts"
