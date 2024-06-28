@@ -1,4 +1,5 @@
-import { MarketMapperRevenueShareParams, MarketMapperRevenueShareParamsSDKType, MarketRevShareDetailsParams, MarketRevShareDetailsParamsSDKType } from "./params";
+import { MarketMapperRevenueShareParams, MarketMapperRevenueShareParamsSDKType } from "./params";
+import { MarketMapperRevShareDetails, MarketMapperRevShareDetailsSDKType } from "./revshare";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** Message to set the market mapper revenue share */
@@ -24,28 +25,34 @@ export interface MsgSetMarketMapperRevenueShareResponse {}
 
 export interface MsgSetMarketMapperRevenueShareResponseSDKType {}
 /**
- * Msg to set market mapper revenue share details (e.g. expiration timestamp) for a
- * specific market. To be used as an override for existing revenue share
+ * Msg to set market mapper revenue share details (e.g. expiration timestamp)
+ * for a specific market. To be used as an override for existing revenue share
  * settings set by the MsgSetMarketMapperRevenueShare msg
  */
 
 export interface MsgSetMarketMapperRevShareDetailsForMarket {
   authority: string;
+  /** The market ID for which to set the revenue share details */
+
+  marketId: number;
   /** Parameters for the revenue share details */
 
-  params?: MarketRevShareDetailsParams;
+  params?: MarketMapperRevShareDetails;
 }
 /**
- * Msg to set market mapper revenue share details (e.g. expiration timestamp) for a
- * specific market. To be used as an override for existing revenue share
+ * Msg to set market mapper revenue share details (e.g. expiration timestamp)
+ * for a specific market. To be used as an override for existing revenue share
  * settings set by the MsgSetMarketMapperRevenueShare msg
  */
 
 export interface MsgSetMarketMapperRevShareDetailsForMarketSDKType {
   authority: string;
+  /** The market ID for which to set the revenue share details */
+
+  market_id: number;
   /** Parameters for the revenue share details */
 
-  params?: MarketRevShareDetailsParamsSDKType;
+  params?: MarketMapperRevShareDetailsSDKType;
 }
 /** Response to a MsgSetMarketMapperRevShareDetailsForMarket */
 
@@ -146,6 +153,7 @@ export const MsgSetMarketMapperRevenueShareResponse = {
 function createBaseMsgSetMarketMapperRevShareDetailsForMarket(): MsgSetMarketMapperRevShareDetailsForMarket {
   return {
     authority: "",
+    marketId: 0,
     params: undefined
   };
 }
@@ -156,8 +164,12 @@ export const MsgSetMarketMapperRevShareDetailsForMarket = {
       writer.uint32(10).string(message.authority);
     }
 
+    if (message.marketId !== 0) {
+      writer.uint32(16).uint32(message.marketId);
+    }
+
     if (message.params !== undefined) {
-      MarketRevShareDetailsParams.encode(message.params, writer.uint32(18).fork()).ldelim();
+      MarketMapperRevShareDetails.encode(message.params, writer.uint32(26).fork()).ldelim();
     }
 
     return writer;
@@ -177,7 +189,11 @@ export const MsgSetMarketMapperRevShareDetailsForMarket = {
           break;
 
         case 2:
-          message.params = MarketRevShareDetailsParams.decode(reader, reader.uint32());
+          message.marketId = reader.uint32();
+          break;
+
+        case 3:
+          message.params = MarketMapperRevShareDetails.decode(reader, reader.uint32());
           break;
 
         default:
@@ -192,7 +208,8 @@ export const MsgSetMarketMapperRevShareDetailsForMarket = {
   fromPartial(object: DeepPartial<MsgSetMarketMapperRevShareDetailsForMarket>): MsgSetMarketMapperRevShareDetailsForMarket {
     const message = createBaseMsgSetMarketMapperRevShareDetailsForMarket();
     message.authority = object.authority ?? "";
-    message.params = object.params !== undefined && object.params !== null ? MarketRevShareDetailsParams.fromPartial(object.params) : undefined;
+    message.marketId = object.marketId ?? 0;
+    message.params = object.params !== undefined && object.params !== null ? MarketMapperRevShareDetails.fromPartial(object.params) : undefined;
     return message;
   }
 

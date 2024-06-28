@@ -10,8 +10,8 @@ export interface Msg {
    */
   setMarketMapperRevenueShare(request: MsgSetMarketMapperRevenueShare): Promise<MsgSetMarketMapperRevenueShareResponse>;
   /**
-   * SetMarketMapperRevenueShareDetails sets the revenue share details for a market
-   * mapper.
+   * SetMarketMapperRevenueShareDetails sets the revenue share details for a
+   * market mapper.
    */
 
   setMarketMapperRevShareDetailsForMarket(request: MsgSetMarketMapperRevShareDetailsForMarket): Promise<MsgSetMarketMapperRevShareDetailsForMarketResponse>;

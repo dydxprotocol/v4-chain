@@ -25,6 +25,10 @@ func (k msgServer) SetMarketMapperRevShareDetailsForMarket(
 		)
 	}
 
+	// We do not validate if the market exists in x/prices here because that
+	// creates a circular dependency between x/prices and x/revshare. We can
+	// assume that governance provides a strong safety check for this
+
 	// Set market mapper revenue share details
 	k.SetMarketMapperRevShareDetails(ctx, msg.MarketId, msg.Params)
 

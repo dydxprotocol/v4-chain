@@ -128,7 +128,8 @@ var xxx_messageInfo_MsgSetMarketMapperRevenueShareResponse proto.InternalMessage
 // settings set by the MsgSetMarketMapperRevenueShare msg
 type MsgSetMarketMapperRevShareDetailsForMarket struct {
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	MarketId  uint32 `protobuf:"varint,2,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// The market ID for which to set the revenue share details
+	MarketId uint32 `protobuf:"varint,2,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
 	// Parameters for the revenue share details
 	Params MarketMapperRevShareDetails `protobuf:"bytes,3,opt,name=params,proto3" json:"params"`
 }
