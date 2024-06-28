@@ -35,6 +35,7 @@ import {
   DeleveragingEventV1,
   OpenInterestUpdateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
+import { IHeaders } from 'kafkajs';
 import Long from 'long';
 
 // Type sourced from protocol:
@@ -231,6 +232,7 @@ export interface AnnotatedSubaccountMessage extends SubaccountMessage {
 export interface VulcanMessage {
   key: Buffer,
   value: OffChainUpdateV1,
+  headers?: IHeaders,
 }
 
 export type ConsolidatedKafkaEvent = {

@@ -312,6 +312,7 @@ function createKafkaMessageFromLiquidityTiersEvent({
   height,
   time,
   txHash,
+  version
 }: {
   liquidityTierEvent: Uint8Array,
   transactionIndex: number,
