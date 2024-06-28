@@ -2133,6 +2133,20 @@
             ],
             "id": {
               "number": 0,
+              "owner": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs"
+            },
+            "margin_enabled": true
+          },
+          {
+            "asset_positions": [
+              {
+                "asset_id": 0,
+                "index": 0,
+                "quantums": "100000000000000000"
+              }
+            ],
+            "id": {
+              "number": 0,
               "owner": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70"
             },
             "margin_enabled": true
