@@ -1268,8 +1268,9 @@ func (k Keeper) ModifyOpenInterest(
 	if bigOpenInterest.Sign() < 0 {
 		return errorsmod.Wrapf(
 			types.ErrOpenInterestWouldBecomeNegative,
-			"perpetualId = %d, openInterest = %s",
+			"perpetualId = %d, openInterest before = %s, after = %s",
 			perpetualId,
+			perpetual.OpenInterest.String(),
 			bigOpenInterest.String(),
 		)
 	}

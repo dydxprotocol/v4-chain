@@ -103,17 +103,21 @@ type PerpetualUpdate struct {
 type UpdateType uint
 
 const (
-	Withdrawal UpdateType = iota
+	UpdateTypeUnspecified UpdateType = iota
+	Withdrawal
 	Transfer
 	Deposit
 	Match
+	CollatCheck
 )
 
 var updateTypeStringMap = map[UpdateType]string{
-	Withdrawal: "Withdrawal",
-	Transfer:   "Transfer",
-	Deposit:    "Deposit",
-	Match:      "Match",
+	UpdateTypeUnspecified: "UpdateTypeUnspecified",
+	Withdrawal:            "Withdrawal",
+	Transfer:              "Transfer",
+	Deposit:               "Deposit",
+	Match:                 "Match",
+	CollatCheck:           "CollatCheck",
 }
 
 func (u UpdateType) String() string {

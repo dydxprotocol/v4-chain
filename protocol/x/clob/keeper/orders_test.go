@@ -20,6 +20,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	memclobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/memclob"
+	perptest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/perpetuals"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/tracer"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/keeper"
@@ -680,6 +681,13 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
+
 			// Create all subaccounts.
 			for _, subaccount := range tc.subaccounts {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
@@ -907,6 +915,13 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
 
 			// Create all subaccounts.
 			for _, subaccount := range tc.subaccounts {

@@ -1,6 +1,8 @@
 package constants
 
 import (
+	"math/big"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 )
@@ -82,6 +84,15 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		ImpactNotional:         50_454_000_000,
 	},
 	{
+		Id:                     9,
+		Name:                   "9",
+		InitialMarginPpm:       200_000, // 20%
+		MaintenanceFractionPpm: 500_000, // 20% * 0.5 = 10%
+		ImpactNotional:         2_500_000_000,
+		OpenInterestUpperCap:   50_000_000_000_000, // 50mm USDC
+		OpenInterestLowerCap:   25_000_000_000_000, // 25mm USDC
+	},
+	{
 		Id:                     101,
 		Name:                   "101",
 		InitialMarginPpm:       200_000,
@@ -89,6 +100,22 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		ImpactNotional:         2_500_000_000,
 	},
 }
+
+// Perpetual OI setup in tests
+var (
+	BtcUsd_OpenInterest1_AtomicRes8 = perptypes.OpenInterestDelta{
+		PerpetualId:       0,
+		BaseQuantumsDelta: big.NewInt(100_000_000),
+	}
+	EthUsd_OpenInterest1_AtomicRes9 = perptypes.OpenInterestDelta{
+		PerpetualId:       1,
+		BaseQuantumsDelta: big.NewInt(1_000_000_000),
+	}
+	DefaultTestPerpOIs = []perptypes.OpenInterestDelta{
+		BtcUsd_OpenInterest1_AtomicRes8,
+		EthUsd_OpenInterest1_AtomicRes9,
+	}
+)
 
 // Perpetual genesis parameters.
 const TestFundingRateClampFactorPpm = 6_000_000
@@ -233,6 +260,32 @@ var (
 			AtomicResolution:  int32(-8),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(3),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		},
+		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
+	}
+	BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1 = perptypes.Perpetual{
+		Params: perptypes.PerpetualParams{
+			Id:                0,
+			Ticker:            "BTC-USD 20/10 margin requirements",
+			MarketId:          uint32(0),
+			AtomicResolution:  int32(-8),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(3),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		},
+		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.NewInt(100_000_000),
+	}
+	BtcUsd_20PercentInitial_10PercentMaintenance_25mmLowerCap_50mmUpperCap = perptypes.Perpetual{
+		Params: perptypes.PerpetualParams{
+			Id:                0,
+			Ticker:            "BTC-USD 20/10 margin requirements",
+			MarketId:          uint32(0),
+			AtomicResolution:  int32(-8),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(9),
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
