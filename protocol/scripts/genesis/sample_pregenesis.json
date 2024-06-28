@@ -785,7 +785,7 @@
           "initial_margin_ppm": 100000,
           "maintenance_fraction_ppm": 500000,
           "name": "Mid-Cap",
-          "open_interest_lower_cap": 25000000000000,
+          "open_interest_lower_cap": 20000000000000,
           "open_interest_upper_cap": 50000000000000
         },
         {
@@ -795,8 +795,8 @@
           "initial_margin_ppm": 200000,
           "maintenance_fraction_ppm": 500000,
           "name": "Long-Tail",
-          "open_interest_lower_cap": 10000000000000,
-          "open_interest_upper_cap": 20000000000000
+          "open_interest_lower_cap": 5000000000000,
+          "open_interest_upper_cap": 10000000000000
         },
         {
           "base_position_notional": 1000000000,
@@ -805,8 +805,8 @@
           "initial_margin_ppm": 1000000,
           "maintenance_fraction_ppm": 200000,
           "name": "Safety",
-          "open_interest_lower_cap": 500000000000,
-          "open_interest_upper_cap": 1000000000000
+          "open_interest_lower_cap": 2000000000000,
+          "open_interest_upper_cap": 5000000000000
         }
       ],
       "params": {
