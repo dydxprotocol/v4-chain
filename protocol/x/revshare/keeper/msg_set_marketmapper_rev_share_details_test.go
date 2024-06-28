@@ -22,14 +22,31 @@ func TestSetMarketMapperRevenueShareDetailsForMarket(t *testing.T) {
 		"Success - Set revenue share details for market": {
 			msg: &types.MsgSetMarketMapperRevShareDetailsForMarket{
 				Authority: lib.GovModuleAddress.String(),
-				Params: types.MarketRevShareDetailsParams{
-					MarketId: constants.MarketId0,
-					MarketMapperRevShareDetails: &types.MarketMapperRevShareDetails{
-						ExpirationTs: 100,
-					},
+				MarketId:  constants.MarketId0,
+				Params: types.MarketMapperRevShareDetails{
+					ExpirationTs: 100,
 				},
 			},
 			expectedErr: "",
+		},
+		"Failure - Invalid Authority": {
+			msg: &types.MsgSetMarketMapperRevShareDetailsForMarket{
+				Authority: constants.AliceAccAddress.String(),
+				MarketId:  constants.MarketId0,
+				Params: types.MarketMapperRevShareDetails{
+					ExpirationTs: 100,
+				},
+			},
+			expectedErr: "invalid authority",
+		},
+		"Failure - Empty Authority": {
+			msg: &types.MsgSetMarketMapperRevShareDetailsForMarket{
+				MarketId: constants.MarketId0,
+				Params: types.MarketMapperRevShareDetails{
+					ExpirationTs: 100,
+				},
+			},
+			expectedErr: "invalid authority",
 		},
 	}
 
@@ -46,8 +63,8 @@ func TestSetMarketMapperRevenueShareDetailsForMarket(t *testing.T) {
 					require.Contains(t, err.Error(), tc.expectedErr)
 				} else {
 					require.NoError(t, err)
-					revShareDetails, _ := k.GetMarketMapperRevShareDetails(ctx, tc.msg.Params.MarketId)
-					require.Equal(t, *tc.msg.Params.MarketMapperRevShareDetails, revShareDetails)
+					revShareDetails, _ := k.GetMarketMapperRevShareDetails(ctx, tc.msg.MarketId)
+					require.Equal(t, tc.msg.Params, revShareDetails)
 				}
 			},
 		)
