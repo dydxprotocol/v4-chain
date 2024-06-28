@@ -51,7 +51,12 @@ func TestSafetyHeapInsertRemoval(t *testing.T) {
 		store := subaccountsKeeper.GetSafetyHeapStore(ctx, 0, satypes.Long)
 		for _, subaccount := range allSubaccounts {
 			subaccountsKeeper.SetSubaccount(ctx, subaccount)
-			subaccountsKeeper.Insert(ctx, store, *subaccount.Id)
+			subaccountsKeeper.AddSubaccountToSafetyHeap(
+				ctx,
+				*subaccount.Id,
+				0,
+				satypes.Long,
+			)
 		}
 
 		// Make sure subaccounts are sorted correctly.
@@ -62,7 +67,12 @@ func TestSafetyHeapInsertRemoval(t *testing.T) {
 			require.Equal(t, uint32(i), subaccountId.Number)
 
 			// Remove the subaccount from the heap.
-			subaccountsKeeper.MustRemoveElementAtIndex(ctx, store, 0)
+			subaccountsKeeper.RemoveSubaccountFromSafetyHeap(
+				ctx,
+				subaccountId,
+				0,
+				satypes.Long,
+			)
 		}
 	}
 }
