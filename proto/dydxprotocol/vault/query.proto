@@ -19,11 +19,11 @@ service Query {
   }
   // Queries a Vault by type and number.
   rpc Vault(QueryVaultRequest) returns (QueryVaultResponse) {
-    option (google.api.http).get = "/dydxprotocol/vault/vault/{type}/{number}";
+    option (google.api.http).get = "/dydxprotocol/vault/{type}/{number}";
   }
   // Queries all vaults.
   rpc AllVaults(QueryAllVaultsRequest) returns (QueryAllVaultsResponse) {
-    option (google.api.http).get = "/dydxprotocol/vault/vault";
+    option (google.api.http).get = "/dydxprotocol/vault";
   }
   // Queries owner shares of a vault.
   rpc OwnerShares(QueryOwnerSharesRequest) returns (QueryOwnerSharesResponse) {
