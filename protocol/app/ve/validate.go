@@ -67,3 +67,36 @@ func validateVoteExtension(
 
 	return nil
 }
+
+func ValidateExtendedCommitInfo(
+	ctx sdk.Context,
+	height int64,
+	extCommitInfo cometabci.ExtendedCommitInfo,
+	veCodec codec.VoteExtensionCodec,
+	pk pk.Keeper,
+	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo cometabci.ExtendedCommitInfo) error,
+) error {
+	if err := validateVoteExtensionFn(ctx, extCommitInfo); err != nil {
+		ctx.Logger().Error(
+			"failed to validate vote extension",
+			"height", height,
+			"err", err,
+		)
+		return err
+	}
+
+	for _, vote := range extCommitInfo.Votes {
+		addr := sdk.ConsAddress(vote.Validator.Address)
+
+		if err := validateVoteExtension(ctx, vote, veCodec, pk); err != nil {
+			ctx.Logger().Error(
+				"failed to validate vote extension",
+				"height", height,
+				"validator", addr,
+				"err", err,
+			)
+			return err
+		}
+	}
+	return nil
+}

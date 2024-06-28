@@ -1,13 +1,17 @@
 package process
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	error_lib "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/error"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
-
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -35,6 +39,9 @@ func ProcessProposalHandler(
 	clobKeeper ProcessClobKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
 	pricesKeeper ProcessPricesKeeper,
+	extCodec codec.ExtendedCommitCodec,
+	veCodec codec.VoteExtensionCodec,
+	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
 ) sdk.ProcessProposalHandler {
 	// Keep track of the current block height and consensus round.
 	currentBlockHeight := int64(0)
@@ -49,6 +56,37 @@ func ProcessProposalHandler(
 			metrics.Latency,
 		)
 
+		veEnabled := ve.AreVoteExtensionsEnabled(ctx)
+
+		if veEnabled {
+			if len(req.Txs) < constants.NumInjectedTxs {
+				ctx.Logger().Error("failed to process proposal: missing commit info", "num_txs", len(req.Txs))
+
+				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT},
+					fmt.Errorf("failed to process proposal: missing commit info")
+			}
+
+			extCommitBz := req.Txs[constants.DeamonInfoIndex]
+
+			var extInfo abci.ExtendedCommitInfo
+			extInfo, err := extCodec.Decode(extCommitBz)
+			if err != nil {
+				ctx.Logger().Error("failed to decode extended commit info", "err", err)
+
+				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT},
+					fmt.Errorf("failed to decode extended commit info: %w", err)
+			}
+
+			if err := ve.ValidateExtendedCommitInfo(ctx, req.Height, extInfo, veCodec, pricesKeeper.(pk.Keeper), validateVoteExtensionFn); err != nil {
+				ctx.Logger().Error(
+					"failed to validate extended commit info",
+					"height", req.Height,
+					"commit_info", extInfo,
+					"err", err,
+				)
+				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, fmt.Errorf("failed to validate extended commit info: %w", err)
+			}
+		}
 		// Update the current block height and consensus round.
 		if ctx.BlockHeight() != currentBlockHeight {
 			currentBlockHeight = ctx.BlockHeight()
