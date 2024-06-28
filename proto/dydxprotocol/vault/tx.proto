@@ -41,6 +41,8 @@ message MsgDepositToVaultResponse {}
 
 // MsgWithdrawFromVault withdraws the specified amount of from the vault to the subaccount.
 message MsgWithdrawFromVault  {
+  option (cosmos.msg.v1.signer) = "subaccount_id";
+
 	// The vault to withdraw from.
 	VaultId vault_id = 1;
 
