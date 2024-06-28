@@ -277,6 +277,8 @@ type MsgClient interface {
 	// SetMarketMapperRevenueShare sets the revenue share for a market
 	// mapper.
 	SetMarketMapperRevenueShare(ctx context.Context, in *MsgSetMarketMapperRevenueShare, opts ...grpc.CallOption) (*MsgSetMarketMapperRevenueShareResponse, error)
+	// SetMarketMapperRevenueShareDetails sets the revenue share details for a market
+	// mapper.
 	SetMarketMapperRevShareDetailsForMarket(ctx context.Context, in *MsgSetMarketMapperRevShareDetailsForMarket, opts ...grpc.CallOption) (*MsgSetMarketMapperRevShareDetailsForMarketResponse, error)
 }
 
@@ -311,6 +313,8 @@ type MsgServer interface {
 	// SetMarketMapperRevenueShare sets the revenue share for a market
 	// mapper.
 	SetMarketMapperRevenueShare(context.Context, *MsgSetMarketMapperRevenueShare) (*MsgSetMarketMapperRevenueShareResponse, error)
+	// SetMarketMapperRevenueShareDetails sets the revenue share details for a market
+	// mapper.
 	SetMarketMapperRevShareDetailsForMarket(context.Context, *MsgSetMarketMapperRevShareDetailsForMarket) (*MsgSetMarketMapperRevShareDetailsForMarketResponse, error)
 }
 

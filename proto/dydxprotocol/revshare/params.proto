@@ -21,12 +21,12 @@ message MarketMapperRevenueShareParams {
   uint32 valid_days = 3;
 }
 
-// MarketRevShareDetailsParams represents params for the 
+// MarketRevShareDetailsParams represents params for the
 // MsgSetMarketMapperRevShareDetailsForMarket message
 message MarketRevShareDetailsParams {
-	// Market Id
-	uint32 market_id = 1;
-	
-	// Market mapper rev share details for the market, e.g. expiration timestamp
-	MarketMapperRevShareDetails market_mapper_rev_share_details = 2;
+  // Market Id
+  uint32 market_id = 1;
+
+  // Market mapper rev share details for the market, e.g. expiration timestamp
+  MarketMapperRevShareDetails market_mapper_rev_share_details = 2;
 }
