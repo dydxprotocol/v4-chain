@@ -947,8 +947,8 @@ github.com/dvsekhvalnov/jose2go v1.6.0 h1:Y9gnSnP4qEI0+/uQkHvFXeD2PLPJeXEL+ySMEA
 github.com/dvsekhvalnov/jose2go v1.6.0/go.mod h1:QsHjhyTlD/lAVqn/NSbVZmSCGeDehTB/mPZadG+mhXU=
 github.com/dydxprotocol/cometbft v0.38.6-0.20240426214049-c8beeeada40a h1:KeQZZsYJQ/AKQ6lbP5lL3N/6aOclxxYG8pIm8zerwZw=
 github.com/dydxprotocol/cometbft v0.38.6-0.20240426214049-c8beeeada40a/go.mod h1:EBEod7kZfNr4W0VooOrTEMSiXNrSyiQ/M2FL/rOcPCs=
-github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240606183841-18966898625f h1:OLmCAiUdKbz9KNYzNtrvl+Y8l5sNWeWqjN5U5h78ckw=
-github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240606183841-18966898625f/go.mod h1:NruCXox2SOkVq2ZC5Bs8s2sT+jjVqBEU59wXyZOkCkM=
+github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240628214139-5a26984f1995 h1:lMNLlN2P8zdQvBRyHy3Lecu4i19iXaBPUri6Ghqcnz8=
+github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240628214139-5a26984f1995/go.mod h1:JduXhhVmN5MoPxyXbDa/ogScRjENRBJGRDE1HgoVSKs=
 github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326192503-dd116391188d h1:HgLu1FD2oDFzlKW6/+SFXlH5Os8cwNTbplQIrQOWx8w=
 github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326192503-dd116391188d/go.mod h1:zMcD3hfNwd0WMTpdRUhS3QxoCoEtBXWeoKsu3iaLBbQ=
 github.com/dydxprotocol/iavl v1.1.1-0.20240509161911-1c8b8e787e85 h1:5B/yGZyTBX/OZASQQMnk6Ms/TZja56MYd8OBaVc0Mho=
