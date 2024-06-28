@@ -251,8 +251,10 @@ var (
 		"/dydxprotocol.vest.MsgDeleteVestEntryResponse": {},
 
 		// revshare
-		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShare":         {},
-		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse": {},
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShare":                     {},
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse":             {},
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarket":         {},
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarketResponse": {},
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         {},

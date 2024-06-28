@@ -168,8 +168,10 @@ var (
 		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse": nil,
 
 		// revshare
-		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShare":         &revshare.MsgSetMarketMapperRevenueShare{},
-		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse": nil,
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShare":                     &revshare.MsgSetMarketMapperRevenueShare{},
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse":             nil,
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarket":         &revshare.MsgSetMarketMapperRevShareDetailsForMarket{},
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarketResponse": nil,
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         &rewards.MsgUpdateParams{},

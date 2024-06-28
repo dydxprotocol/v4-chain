@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgSetMarketMapperRevenueShare, MsgSetMarketMapperRevenueShareResponse } from "./tx";
+import { MsgSetMarketMapperRevenueShare, MsgSetMarketMapperRevenueShareResponse, MsgSetMarketMapperRevShareDetailsForMarket, MsgSetMarketMapperRevShareDetailsForMarketResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -9,6 +9,7 @@ export interface Msg {
    * mapper.
    */
   setMarketMapperRevenueShare(request: MsgSetMarketMapperRevenueShare): Promise<MsgSetMarketMapperRevenueShareResponse>;
+  setMarketMapperRevShareDetailsForMarket(request: MsgSetMarketMapperRevShareDetailsForMarket): Promise<MsgSetMarketMapperRevShareDetailsForMarketResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -16,12 +17,19 @@ export class MsgClientImpl implements Msg {
   constructor(rpc: Rpc) {
     this.rpc = rpc;
     this.setMarketMapperRevenueShare = this.setMarketMapperRevenueShare.bind(this);
+    this.setMarketMapperRevShareDetailsForMarket = this.setMarketMapperRevShareDetailsForMarket.bind(this);
   }
 
   setMarketMapperRevenueShare(request: MsgSetMarketMapperRevenueShare): Promise<MsgSetMarketMapperRevenueShareResponse> {
     const data = MsgSetMarketMapperRevenueShare.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.revshare.Msg", "SetMarketMapperRevenueShare", data);
     return promise.then(data => MsgSetMarketMapperRevenueShareResponse.decode(new _m0.Reader(data)));
+  }
+
+  setMarketMapperRevShareDetailsForMarket(request: MsgSetMarketMapperRevShareDetailsForMarket): Promise<MsgSetMarketMapperRevShareDetailsForMarketResponse> {
+    const data = MsgSetMarketMapperRevShareDetailsForMarket.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.revshare.Msg", "SetMarketMapperRevShareDetailsForMarket", data);
+    return promise.then(data => MsgSetMarketMapperRevShareDetailsForMarketResponse.decode(new _m0.Reader(data)));
   }
 
 }

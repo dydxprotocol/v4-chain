@@ -2,6 +2,7 @@ syntax = "proto3";
 package dydxprotocol.revshare;
 
 import "cosmos_proto/cosmos.proto";
+import "dydxprotocol/revshare/revshare.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types";
 
@@ -18,4 +19,14 @@ message MarketMapperRevenueShareParams {
   // revenue share be applied for. After valid_days from market initiation
   // the revenue share goes down to 0
   uint32 valid_days = 3;
+}
+
+// MarketRevShareDetailsParams represents params for the 
+// MsgSetMarketMapperRevShareDetailsForMarket message
+message MarketRevShareDetailsParams {
+	// Market Id
+	uint32 market_id = 1;
+	
+	// Market mapper rev share details for the market, e.g. expiration timestamp
+	MarketMapperRevShareDetails market_mapper_rev_share_details = 2;
 }
