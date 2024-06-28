@@ -31,16 +31,16 @@ type PreBlockHandler struct { //golint:ignore
 
 // NewOraclePreBlockHandler returns a new PreBlockHandler. The handler
 // is responsible for writing oracle data included in vote extensions to state.
-func NewOraclePreBlockHandler(
+func NewDeamonPreBlockHandler(
 	logger log.Logger,
-	aggregateFn func(ctx sdk.Context) (map[string]*big.Int, error),
+	aggregateFn func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error),
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
 	pk pk.Keeper,
 	veCodec codec.VoteExtensionCodec,
 	ecCodec codec.ExtendedCommitCodec,
 ) *PreBlockHandler {
 
-	aggregator := veaggregator.NewMedianAggregator(
+	aggregator := veaggregator.NewVeAggregator(
 		logger,
 		indexPriceCache,
 		aggregateFn,
@@ -65,49 +65,39 @@ func NewOraclePreBlockHandler(
 // is responsible for aggregating price deamon data from each validator
 // and writing to the prices module store.
 
-func (pbh *PreBlockHandler) PreBlocker() sdk.PreBlocker {
-	return func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (_ *sdk.ResponsePreBlock, err error) {
-		if req == nil {
-			ctx.Logger().Error(
-				"received nil RequestFinalizeBlock in prices PreBlocker",
-				"height", ctx.BlockHeight(),
-			)
+func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (resp *sdk.ResponsePreBlock, err error) {
 
-			return &sdk.ResponsePreBlock{}, fmt.Errorf("received nil RequestFinalizeBlock in prices preblocker: height %d", ctx.BlockHeight())
-		}
-		defer func() {
-			// only measure latency in Finalize
-			if ctx.ExecMode() == sdk.ExecModeFinalize {
-				pbh.logger.Debug(
-					"finished executing the pre-block hook",
-					"height", ctx.BlockHeight(),
-				)
-			}
-		}()
-
-		if !ve.AreVoteExtensionsEnabled(ctx) {
-			pbh.logger.Info(
-				"vote extensions are not enabled, skipping prices pre-blocker",
-				"height", ctx.BlockHeight(),
-			)
-			return &sdk.ResponsePreBlock{}, nil
-		}
-		pbh.logger.Debug(
-			"executing the prices pre-block hook",
-			"height", req.Height,
+	if req == nil {
+		ctx.Logger().Error(
+			"received nil RequestFinalizeBlock in prices PreBlocker",
+			"height", ctx.BlockHeight(),
 		)
 
-		_, err = pbh.pa.ApplyPricesFromVoteExtensions(ctx, req)
-		if err != nil {
-			pbh.logger.Error(
-				"failed to apply prices from vote extensions",
-				"height", req.Height,
-				"err", err,
-			)
+		return &sdk.ResponsePreBlock{}, fmt.Errorf("received nil RequestFinalizeBlock in prices preblocker: height %d", ctx.BlockHeight())
+	}
 
-			return &sdk.ResponsePreBlock{}, err
-		}
-
+	if !ve.AreVoteExtensionsEnabled(ctx) {
+		pbh.logger.Info(
+			"vote extensions are not enabled, skipping prices pre-blocker",
+			"height", ctx.BlockHeight(),
+		)
 		return &sdk.ResponsePreBlock{}, nil
 	}
+	pbh.logger.Debug(
+		"executing the prices pre-block hook",
+		"height", req.Height,
+	)
+
+	_, err = pbh.pa.ApplyPricesFromVoteExtensions(ctx, req)
+	if err != nil {
+		pbh.logger.Error(
+			"failed to apply prices from vote extensions",
+			"height", req.Height,
+			"err", err,
+		)
+
+		return &sdk.ResponsePreBlock{}, err
+	}
+
+	return &sdk.ResponsePreBlock{}, nil
 }

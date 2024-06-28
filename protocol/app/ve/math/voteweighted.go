@@ -39,9 +39,8 @@ func Median(
 	logger log.Logger,
 	vStore CCValidatorStore,
 	threshold math.LegacyDec,
-	vePrices map[string]map[string]*big.Int,
-) func(ctx sdk.Context) (map[string]*big.Int, error) {
-	return func(ctx sdk.Context) (map[string]*big.Int, error) {
+) func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error) {
+	return func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error) {
 		priceInfo := make(map[string]PriceInfo)
 
 		for valAddr, valPrices := range vePrices {

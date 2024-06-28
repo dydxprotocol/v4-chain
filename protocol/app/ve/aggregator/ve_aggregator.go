@@ -93,13 +93,13 @@ type MedianAggregator struct {
 	// prices is a map of validator address to a map of currency pair to price
 	prices map[string]map[string]*big.Int
 
-	aggregateFn func(ctx sdk.Context) (map[string]*big.Int, error)
+	aggregateFn func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error)
 }
 
-func NewMedianAggregator(
+func NewVeAggregator(
 	logger log.Logger,
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
-	aggregateFn func(ctx sdk.Context) (map[string]*big.Int, error),
+	aggregateFn func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error),
 ) VoteAggregator {
 	return &MedianAggregator{
 		logger:          logger,
@@ -122,7 +122,7 @@ func (ma *MedianAggregator) AggregateDeamonVE(ctx sdk.Context, votes []Vote) (ma
 		}
 	}
 
-	prices, err := ma.aggregateFn(ctx)
+	prices, err := ma.aggregateFn(ctx, ma.prices)
 	if err != nil {
 		ma.logger.Error(
 			"failed to aggregate prices",

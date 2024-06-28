@@ -13,6 +13,7 @@ import (
 	"time"
 
 	custommodule "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -30,6 +31,7 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	deamonpreblocker "github.com/StreamFinance-Protocol/stream-chain/protocol/app/preblocker"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/configs"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -184,6 +186,7 @@ import (
 
 	//Ethos
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	ibcconsumer "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer"
 	ibcconsumerkeeper "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/keeper"
 	ibcconsumertypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
@@ -298,6 +301,8 @@ type App struct {
 	LiquidationsClient *liquidationclient.Client
 
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
+
+	pricePreBlocker deamonpreblocker.PreBlockHandler
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -929,6 +934,24 @@ func New(
 		app.SubaccountsKeeper,
 	)
 
+	/****  ve deamon initializer ****/
+	voteCodec := vecodec.NewDefaultVoteExtensionCodec()
+	extInfoCodec := vecodec.NewDefaultExtendedCommitCodec()
+
+	aggregatorFn := voteweighted.Median(
+		logger,
+		app.ConsumerKeeper,
+		voteweighted.DefaultPowerThreshold,
+	)
+	app.pricePreBlocker = *deamonpreblocker.NewDeamonPreBlockHandler(
+		logger,
+		aggregatorFn,
+		indexPriceCache,
+		app.PricesKeeper,
+		voteCodec,
+		extInfoCodec,
+	)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -1171,8 +1194,8 @@ func New(
 				app.ClobKeeper,
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
-				vecodec.NewDefaultVoteExtensionCodec(),
-				vecodec.NewDefaultExtendedCommitCodec(),
+				voteCodec,
+				extInfoCodec,
 				app.ConsumerKeeper,
 			),
 		)
@@ -1198,6 +1221,9 @@ func New(
 				app.ClobKeeper,
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
+				extInfoCodec,
+				voteCodec,
+				ve.NewValidateVoteExtensionsFn(app.ConsumerKeeper),
 			),
 		)
 	}
@@ -1332,7 +1358,11 @@ func (app *App) hydrateKeeperInMemoryDataStructures() {
 func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
 
 // PreBlocker application updates before each begin block.
-func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+func (app *App) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	resp, err := app.pricePreBlocker.PreBlocker(ctx, req)
+	if err != nil {
+		return resp, err
+	}
 	return app.ModuleManager.PreBlock(ctx)
 }
 
