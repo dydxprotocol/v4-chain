@@ -1,15 +1,19 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   BlockTable,
-  PnlTicksTable,
   SubaccountTable,
   TransferTable,
   testMocks,
   dbHelpers,
+  testConstants,
 } from '@dydxprotocol-indexer/postgres';
 import runTask from '../../src/tasks/pnl-instrumentation';
+import { getMostRecentPnlTicksForEachAccount } from '../../src/helpers/pnl-ticks-helper';
 import { DateTime } from 'luxon';
 import config from '../../src/config';
+import { asMock } from '@dydxprotocol-indexer/dev';
+
+jest.mock('../../src/helpers/pnl-ticks-helper');
 
 describe('pnl-instrumentation', () => {
   beforeAll(async () => {
@@ -43,10 +47,18 @@ describe('pnl-instrumentation', () => {
       { id: 'subaccount2' },
     ] as any);
 
-    jest.spyOn(PnlTicksTable, 'findMostRecentPnlTickTimeForEachAccount').mockResolvedValue({
-      subaccount1: DateTime.utc().minus({ hours: 1 }).toISO(),
-      subaccount2: DateTime.utc().minus({ hours: 1 }).toISO(),
-    });
+    asMock(getMostRecentPnlTicksForEachAccount).mockImplementation(
+      async () => Promise.resolve({
+        subaccount1: {
+          ...testConstants.defaultPnlTick,
+          blockTime: DateTime.utc().minus({ hours: 1 }).toISO(),
+        },
+        subaccount2: {
+          ...testConstants.defaultPnlTick,
+          blockTime: DateTime.utc().minus({ hours: 1 }).toISO(),
+        },
+      }),
+    );
 
     await runTask();
 
@@ -66,10 +78,18 @@ describe('pnl-instrumentation', () => {
       { id: 'subaccount2' },
     ] as any);
 
-    jest.spyOn(PnlTicksTable, 'findMostRecentPnlTickTimeForEachAccount').mockResolvedValue({
-      subaccount1: DateTime.utc().minus({ hours: 3 }).toISO(),
-      subaccount2: DateTime.utc().minus({ hours: 3 }).toISO(),
-    });
+    asMock(getMostRecentPnlTicksForEachAccount).mockImplementation(
+      async () => Promise.resolve({
+        subaccount1: {
+          ...testConstants.defaultPnlTick,
+          blockTime: DateTime.utc().minus({ hours: 3 }).toISO(),
+        },
+        subaccount2: {
+          ...testConstants.defaultPnlTick,
+          blockTime: DateTime.utc().minus({ hours: 3 }).toISO(),
+        },
+      }),
+    );
 
     await runTask();
 
@@ -94,9 +114,14 @@ describe('pnl-instrumentation', () => {
       { id: 'subaccount2' },
     ] as any);
 
-    jest.spyOn(PnlTicksTable, 'findMostRecentPnlTickTimeForEachAccount').mockResolvedValue({
-      subaccount1: DateTime.utc().minus({ hours: 1 }).toISO(),
-    });
+    asMock(getMostRecentPnlTicksForEachAccount).mockImplementation(
+      async () => Promise.resolve({
+        subaccount1: {
+          ...testConstants.defaultPnlTick,
+          blockTime: DateTime.utc().minus({ hours: 1 }).toISO(),
+        },
+      }),
+    );
 
     jest.spyOn(TransferTable, 'getLastTransferTimeForSubaccounts').mockResolvedValue({
       subaccount2: DateTime.utc().minus({ hours: 3 }).toISO(),

@@ -192,7 +192,7 @@ describe('PnlTicks store', () => {
     } = await PnlTicksTable.findLatestProcessedBlocktimeAndCount();
 
     expect(maxBlockTime).toEqual(blockTime);
-    expect(count).toEqual(2);
+    expect(count).toEqual(1);
   });
 
   it('Successfully finds latest block time without any pnl ticks', async () => {

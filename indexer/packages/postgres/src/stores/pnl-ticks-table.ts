@@ -220,15 +220,28 @@ export async function findLatestProcessedBlocktimeAndCount(): Promise<{
     rows: [{ max: string, count: number }]
   } = await knexReadReplica.getConnection().raw(
     `
-    SELECT MAX("blockTime") as max, COUNT(*) as count
-    FROM "pnl_ticks"
-    `
-    ,
+    WITH maxBlockTime AS (
+      SELECT MAX("blockTime") as "maxBlockTime"
+      FROM "pnl_ticks"
+    )
+    SELECT
+      maxBlockTime."maxBlockTime" as max,
+      COUNT(*) as count
+    FROM
+      "pnl_ticks",
+      maxBlockTime
+    WHERE
+      "pnl_ticks"."blockTime" = maxBlockTime."maxBlockTime"
+    GROUP BY 1
+    `,
   ) as unknown as { rows: [{ max: string, count: number }] };
 
+  const maxBlockTime = result.rows[0]?.max || ZERO_TIME_ISO_8601;
+  const count = Number(result.rows[0]?.count) || 0;
+
   return {
-    maxBlockTime: result.rows[0].max || ZERO_TIME_ISO_8601,
-    count: Number(result.rows[0].count) || 0,
+    maxBlockTime,
+    count,
   };
 }
 
