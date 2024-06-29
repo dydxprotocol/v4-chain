@@ -269,7 +269,7 @@ func (k Keeper) DistributeFees(
 		metrics.GetLabelForIntValue(metrics.MarketId, int(perpetual.Params.MarketId)),
 	}
 	metrics.AddSampleWithLabels(
-		metrics.MarketMapperRevenue,
+		metrics.MarketMapperRevenueDistribution,
 		metrics.GetMetricValueFromBigInt(marketMapperShare),
 		labels...,
 	)
