@@ -62,7 +62,7 @@ func TestMsgDepositToVault(t *testing.T) {
 		vaultEquityHistory []*big.Int
 	}{
 		"Two successful deposits, Same depositor": {
-			vaultId: constants.Vault_Clob_0,
+			vaultId: constants.Vault_Clob0,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
@@ -93,7 +93,7 @@ func TestMsgDepositToVault(t *testing.T) {
 			},
 		},
 		"Two successful deposits, Different depositors": {
-			vaultId: constants.Vault_Clob_0,
+			vaultId: constants.Vault_Clob0,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
@@ -128,7 +128,7 @@ func TestMsgDepositToVault(t *testing.T) {
 			},
 		},
 		"One successful deposit, One failed deposit due to insufficient balance": {
-			vaultId: constants.Vault_Clob_1,
+			vaultId: constants.Vault_Clob1,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
@@ -164,7 +164,7 @@ func TestMsgDepositToVault(t *testing.T) {
 			},
 		},
 		"One failed deposit due to incorrect signer, One successful deposit": {
-			vaultId: constants.Vault_Clob_1,
+			vaultId: constants.Vault_Clob1,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
@@ -201,7 +201,7 @@ func TestMsgDepositToVault(t *testing.T) {
 			},
 		},
 		"Three failed deposits due to invalid deposit amount": {
-			vaultId: constants.Vault_Clob_1,
+			vaultId: constants.Vault_Clob1,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
