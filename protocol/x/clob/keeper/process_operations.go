@@ -116,9 +116,12 @@ func (k Keeper) ProcessProposerOperations(
 					),
 				)
 
-				processProposerMatchesEvents.RemovedStatefulOrderIds = append(
-					processProposerMatchesEvents.RemovedStatefulOrderIds,
-					orderId,
+				processProposerMatchesEvents.RemovedStatefulOrders = append(
+					processProposerMatchesEvents.RemovedStatefulOrders,
+					types.OrderRemoval{
+						OrderId:       orderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
 				)
 			}
 		}
@@ -851,7 +854,7 @@ func (k Keeper) GenerateProcessProposerMatchesEvents(
 ) types.ProcessProposerMatchesEvents {
 	// Seen set for filled order ids
 	seenOrderIdsFilledInLastBlock := make(map[types.OrderId]struct{}, 0)
-	seenOrderIdsRemovedInLastBlock := make(map[types.OrderId]struct{}, 0)
+	seenOrderIdsRemovedInLastBlock := make(map[types.OrderId]types.OrderRemoval, 0)
 
 	// Collect all filled order ids in this block.
 	for _, operation := range operations {
@@ -876,13 +879,17 @@ func (k Keeper) GenerateProcessProposerMatchesEvents(
 		} else if operationRemoval := operation.GetOrderRemoval(); operationRemoval != nil {
 			// For order removal, add order id to `seenOrderIdsRemovedInLastBlock`
 			orderId := operationRemoval.GetOrderId()
-			seenOrderIdsRemovedInLastBlock[orderId] = struct{}{}
+			seenOrderIdsRemovedInLastBlock[orderId] = *operationRemoval
 		}
 	}
 
 	// Sort for deterministic ordering when writing to memstore.
 	filledOrderIds := lib.GetSortedKeys[types.SortedOrders](seenOrderIdsFilledInLastBlock)
 	removedOrderIds := lib.GetSortedKeys[types.SortedOrders](seenOrderIdsRemovedInLastBlock)
+	removedOrders := make([]types.OrderRemoval, len(removedOrderIds))
+	for i, orderId := range removedOrderIds {
+		removedOrders[i] = seenOrderIdsRemovedInLastBlock[orderId]
+	}
 
 	// PlacedLongTermOrderIds to be populated in MsgHandler for MsgPlaceOrder.
 	// PlacedConditionalOrderIds to be populated in MsgHandler for MsgPlaceOrder.
@@ -894,7 +901,7 @@ func (k Keeper) GenerateProcessProposerMatchesEvents(
 		ExpiredStatefulOrderIds:                 []types.OrderId{},
 		OrderIdsFilledInLastBlock:               filledOrderIds,
 		PlacedStatefulCancellationOrderIds:      []types.OrderId{},
-		RemovedStatefulOrderIds:                 removedOrderIds,
+		RemovedStatefulOrders:                   removedOrders,
 		PlacedConditionalOrderIds:               []types.OrderId{},
 		ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
 		BlockHeight:                             lib.MustConvertIntegerToUint32(ctx.BlockHeight()),

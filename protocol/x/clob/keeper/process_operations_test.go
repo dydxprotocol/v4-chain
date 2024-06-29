@@ -446,8 +446,11 @@ func TestProcessProposerOperations(t *testing.T) {
 					{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
 				},
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
 				},
 				BlockHeight: blockHeight,
 			},
@@ -540,8 +543,11 @@ func TestProcessProposerOperations(t *testing.T) {
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15.GetOrderId(),
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
 				},
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
 				},
 				BlockHeight: blockHeight,
 			},
@@ -1296,9 +1302,15 @@ func TestProcessProposerOperations(t *testing.T) {
 
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
 				BlockHeight: blockHeight,
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO.OrderId,
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
+					},
+					{
+						OrderId:       constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE,
+					},
 				},
 			},
 		},
@@ -1526,8 +1538,11 @@ func TestProcessProposerOperations(t *testing.T) {
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15.GetOrderId(),
 					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetOrderId(),
 				},
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetOrderId(),
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetOrderId(),
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
 				},
 				BlockHeight: blockHeight,
 			},
@@ -2155,7 +2170,7 @@ func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
 				ExpiredStatefulOrderIds:                 []types.OrderId{},
 				OrderIdsFilledInLastBlock:               []types.OrderId{},
 				PlacedStatefulCancellationOrderIds:      []types.OrderId{},
-				RemovedStatefulOrderIds:                 []types.OrderId{},
+				RemovedStatefulOrders:                   []types.OrderRemoval{},
 				PlacedConditionalOrderIds:               []types.OrderId{},
 				ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
 				BlockHeight:                             blockHeight,
@@ -2187,7 +2202,7 @@ func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
 					constants.Order_Alice_Num0_Id9_Clob1_Buy15_Price45_GTB19.OrderId,
 				},
 				PlacedStatefulCancellationOrderIds:      []types.OrderId{},
-				RemovedStatefulOrderIds:                 []types.OrderId{},
+				RemovedStatefulOrders:                   []types.OrderRemoval{},
 				PlacedConditionalOrderIds:               []types.OrderId{},
 				ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
 				BlockHeight:                             blockHeight,
@@ -2215,7 +2230,7 @@ func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
 					constants.Order_Alice_Num1_Id13_Clob0_Buy50_Price50_GTB30.OrderId,
 				},
 				PlacedStatefulCancellationOrderIds:      []types.OrderId{},
-				RemovedStatefulOrderIds:                 []types.OrderId{},
+				RemovedStatefulOrders:                   []types.OrderRemoval{},
 				PlacedConditionalOrderIds:               []types.OrderId{},
 				ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
 				BlockHeight:                             blockHeight,
@@ -2247,7 +2262,7 @@ func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
 					constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId,
 				},
 				PlacedStatefulCancellationOrderIds:      []types.OrderId{},
-				RemovedStatefulOrderIds:                 []types.OrderId{},
+				RemovedStatefulOrders:                   []types.OrderRemoval{},
 				PlacedConditionalOrderIds:               []types.OrderId{},
 				ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
 				BlockHeight:                             blockHeight,
@@ -2264,7 +2279,7 @@ func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
 				ExpiredStatefulOrderIds:                 []types.OrderId{},
 				OrderIdsFilledInLastBlock:               []types.OrderId{},
 				PlacedStatefulCancellationOrderIds:      []types.OrderId{},
-				RemovedStatefulOrderIds:                 []types.OrderId{},
+				RemovedStatefulOrders:                   []types.OrderRemoval{},
 				PlacedConditionalOrderIds:               []types.OrderId{},
 				ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
 				BlockHeight:                             blockHeight,
@@ -2286,9 +2301,15 @@ func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
 				ExpiredStatefulOrderIds:            []types.OrderId{},
 				OrderIdsFilledInLastBlock:          []types.OrderId{},
 				PlacedStatefulCancellationOrderIds: []types.OrderId{},
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
+					},
+					{
+						OrderId:       constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE,
+					},
 				},
 				PlacedConditionalOrderIds:               []types.OrderId{},
 				ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
@@ -2555,9 +2576,9 @@ func runProcessProposerOperationsTestCase(
 	}
 
 	// Verify that removed stateful orders were in fact removed from state.
-	for _, removedStatefulOrderId := range processProposerMatchesEvents.RemovedStatefulOrderIds {
-		_, exists := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, removedStatefulOrderId)
-		require.Falsef(t, exists, "order (%+v) was not removed from state.", removedStatefulOrderId)
+	for _, removedStatefulOrders := range processProposerMatchesEvents.RemovedStatefulOrders {
+		_, exists := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, removedStatefulOrders.OrderId)
+		require.Falsef(t, exists, "order (%+v) was not removed from state.", removedStatefulOrders.OrderId)
 	}
 
 	// Verify subaccount liquidation info.

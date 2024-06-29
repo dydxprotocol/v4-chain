@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -30,6 +31,7 @@ type FakeMemClobKeeper struct {
 	statePositionFn                      types.GetStatePositionFn
 	useCollatCheckFnForSingleMatch       bool
 	indexerEventManager                  indexer_manager.IndexerEventManager
+	offchainUpdates                      *types.OffchainUpdates
 }
 
 func NewFakeMemClobKeeper() *FakeMemClobKeeper {
@@ -47,6 +49,7 @@ func NewFakeMemClobKeeper() *FakeMemClobKeeper {
 		dirtyTimeToStatefulOrdersExpiring:    make(map[time.Time][]types.OrderId),
 		nextTransactionIndex:                 0,
 		subaccountsToDeleverage:              make(map[satypes.SubaccountId]bool),
+		offchainUpdates:                      &types.OffchainUpdates{},
 	}
 }
 
@@ -81,7 +84,6 @@ func (f *FakeMemClobKeeper) ReplayPlaceOrder(
 ) (
 	orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 	orderStatus types.OrderStatus,
-	offchainUpdates *types.OffchainUpdates,
 	err error,
 ) {
 	panic("PlaceShortTermOrder not currently implemented on FakeMemClobKeeper")
@@ -468,7 +470,6 @@ func (f *FakeMemClobKeeper) AddPreexistingStatefulOrder(
 ) (
 	orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 	orderStatus types.OrderStatus,
-	offchainUpdates *types.OffchainUpdates,
 	err error,
 ) {
 	panic("This function should not be implemented as FakeMemClobKeeper is getting deprecated (CLOB-175)")
@@ -510,4 +511,26 @@ func (f *FakeMemClobKeeper) SendOrderbookFillUpdates(
 	ctx sdk.Context,
 	orderbookFills []types.StreamOrderbookFill,
 ) {
+}
+
+func (f *FakeMemClobKeeper) SendOffchainMessages(
+	ctx sdk.Context,
+	additionalHeaders []msgsender.MessageHeader,
+	offchainUpdates *types.OffchainUpdates,
+) {
+	f.offchainUpdates.Messages = append(f.offchainUpdates.Messages, offchainUpdates.Messages...)
+}
+
+func (f *FakeMemClobKeeper) GetOffchainMessages() *types.OffchainUpdates {
+	return f.offchainUpdates
+}
+
+func (f *FakeMemClobKeeper) GetAndResetOffchainMessages() *types.OffchainUpdates {
+	ret := f.GetOffchainMessages()
+	f.ResetOffchainMessages()
+	return ret
+}
+
+func (f *FakeMemClobKeeper) ResetOffchainMessages() {
+	f.offchainUpdates = &types.OffchainUpdates{}
 }

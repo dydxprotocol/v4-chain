@@ -47,10 +47,12 @@ func (ppme *ProcessProposerMatchesEvents) ValidateProcessProposerMatchesEvents(
 			ppme.PlacedStatefulCancellationOrderIds,
 		)
 	}
-	if lib.ContainsDuplicates(ppme.RemovedStatefulOrderIds) {
+	if lib.ContainsDuplicates(lib.MapSlice(ppme.RemovedStatefulOrders, func(removal OrderRemoval) OrderId {
+		return removal.OrderId
+	})) {
 		return fmt.Errorf(
-			"ProcessProposerMatchesEvents contains duplicate RemovedStatefulOrderIds: %+v",
-			ppme.RemovedStatefulOrderIds,
+			"ProcessProposerMatchesEvents contains duplicate OrderIds in RemovedStatefulOrders: %+v",
+			ppme.RemovedStatefulOrders,
 		)
 	}
 	if lib.ContainsDuplicates(ppme.ConditionalOrderIdsTriggeredInLastBlock) {

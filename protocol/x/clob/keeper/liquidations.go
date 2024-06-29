@@ -265,8 +265,7 @@ func (k Keeper) PlacePerpetualLiquidation(
 
 	orderSizeOptimisticallyFilledFromMatchingQuantums,
 		orderStatus,
-		offchainUpdates,
-		err :=
+		err =
 		k.MemClob.PlacePerpetualLiquidation(
 			ctx,
 			liquidationOrder,
@@ -338,7 +337,6 @@ func (k Keeper) PlacePerpetualLiquidation(
 		)
 	}
 
-	k.SendOffchainMessages(offchainUpdates, nil, metrics.SendPlacePerpetualLiquidationOffchainUpdates)
 	return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, err
 }
 

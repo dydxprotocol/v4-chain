@@ -87,8 +87,11 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
 				},
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
 				},
 				BlockHeight: blockHeight,
 			},
@@ -160,8 +163,11 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
 				},
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
 				},
 				BlockHeight: blockHeight,
 			},
@@ -233,8 +239,11 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
 				},
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
 				},
 				BlockHeight: blockHeight,
 			},
@@ -306,8 +315,11 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
 				},
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
 				},
 				BlockHeight: blockHeight,
 			},
@@ -378,9 +390,15 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
 				},
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
-					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
+					{
+						OrderId:       constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
 				},
 				BlockHeight: blockHeight,
 			},
@@ -545,8 +563,11 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					constants.Order_Carl_Num0_Id2_Clob0_Buy05BTC_Price50000.OrderId,
 					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
 				},
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
 				},
 				BlockHeight: blockHeight,
 			},
@@ -629,8 +650,11 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				OrderIdsFilledInLastBlock: []types.OrderId{
 					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
 				},
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
 				},
 				BlockHeight: blockHeight,
 			},
@@ -717,8 +741,11 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 				OrderIdsFilledInLastBlock: []types.OrderId{
 					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
 				},
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
 				},
 				BlockHeight: blockHeight,
 			},
@@ -800,8 +827,11 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
 				},
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
 				},
 				BlockHeight: blockHeight,
 			},
@@ -892,8 +922,11 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
 				},
-				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+				RemovedStatefulOrders: []types.OrderRemoval{
+					{
+						OrderId:       constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					},
 				},
 				BlockHeight: blockHeight,
 			},

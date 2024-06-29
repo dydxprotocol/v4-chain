@@ -1,4 +1,5 @@
 import { OrderId, OrderIdSDKType } from "./order";
+import { OrderRemoval, OrderRemovalSDKType } from "./order_removals";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
@@ -9,7 +10,7 @@ import { DeepPartial } from "../../helpers";
  * - Stateful order IDs that were expired in the last block.
  * - Order IDs that were filled in the last block.
  * - Stateful cancellations order IDs that were placed in the last block.
- * - Stateful order IDs forcefully removed in the last block.
+ * - Stateful orders forcefully removed in the last block.
  * - Conditional order IDs triggered in the last block.
  * - Conditional order IDs placed, but not triggered in the last block.
  * - The height of the block in which the events occurred.
@@ -20,7 +21,7 @@ export interface ProcessProposerMatchesEvents {
   expiredStatefulOrderIds: OrderId[];
   orderIdsFilledInLastBlock: OrderId[];
   placedStatefulCancellationOrderIds: OrderId[];
-  removedStatefulOrderIds: OrderId[];
+  removedStatefulOrders: OrderRemoval[];
   conditionalOrderIdsTriggeredInLastBlock: OrderId[];
   placedConditionalOrderIds: OrderId[];
   blockHeight: number;
@@ -33,7 +34,7 @@ export interface ProcessProposerMatchesEvents {
  * - Stateful order IDs that were expired in the last block.
  * - Order IDs that were filled in the last block.
  * - Stateful cancellations order IDs that were placed in the last block.
- * - Stateful order IDs forcefully removed in the last block.
+ * - Stateful orders forcefully removed in the last block.
  * - Conditional order IDs triggered in the last block.
  * - Conditional order IDs placed, but not triggered in the last block.
  * - The height of the block in which the events occurred.
@@ -44,7 +45,7 @@ export interface ProcessProposerMatchesEventsSDKType {
   expired_stateful_order_ids: OrderIdSDKType[];
   order_ids_filled_in_last_block: OrderIdSDKType[];
   placed_stateful_cancellation_order_ids: OrderIdSDKType[];
-  removed_stateful_order_ids: OrderIdSDKType[];
+  removed_stateful_orders: OrderRemovalSDKType[];
   conditional_order_ids_triggered_in_last_block: OrderIdSDKType[];
   placed_conditional_order_ids: OrderIdSDKType[];
   block_height: number;
@@ -56,7 +57,7 @@ function createBaseProcessProposerMatchesEvents(): ProcessProposerMatchesEvents 
     expiredStatefulOrderIds: [],
     orderIdsFilledInLastBlock: [],
     placedStatefulCancellationOrderIds: [],
-    removedStatefulOrderIds: [],
+    removedStatefulOrders: [],
     conditionalOrderIdsTriggeredInLastBlock: [],
     placedConditionalOrderIds: [],
     blockHeight: 0
@@ -81,8 +82,8 @@ export const ProcessProposerMatchesEvents = {
       OrderId.encode(v!, writer.uint32(34).fork()).ldelim();
     }
 
-    for (const v of message.removedStatefulOrderIds) {
-      OrderId.encode(v!, writer.uint32(42).fork()).ldelim();
+    for (const v of message.removedStatefulOrders) {
+      OrderRemoval.encode(v!, writer.uint32(42).fork()).ldelim();
     }
 
     for (const v of message.conditionalOrderIdsTriggeredInLastBlock) {
@@ -126,7 +127,7 @@ export const ProcessProposerMatchesEvents = {
           break;
 
         case 5:
-          message.removedStatefulOrderIds.push(OrderId.decode(reader, reader.uint32()));
+          message.removedStatefulOrders.push(OrderRemoval.decode(reader, reader.uint32()));
           break;
 
         case 6:
@@ -156,7 +157,7 @@ export const ProcessProposerMatchesEvents = {
     message.expiredStatefulOrderIds = object.expiredStatefulOrderIds?.map(e => OrderId.fromPartial(e)) || [];
     message.orderIdsFilledInLastBlock = object.orderIdsFilledInLastBlock?.map(e => OrderId.fromPartial(e)) || [];
     message.placedStatefulCancellationOrderIds = object.placedStatefulCancellationOrderIds?.map(e => OrderId.fromPartial(e)) || [];
-    message.removedStatefulOrderIds = object.removedStatefulOrderIds?.map(e => OrderId.fromPartial(e)) || [];
+    message.removedStatefulOrders = object.removedStatefulOrders?.map(e => OrderRemoval.fromPartial(e)) || [];
     message.conditionalOrderIdsTriggeredInLastBlock = object.conditionalOrderIdsTriggeredInLastBlock?.map(e => OrderId.fromPartial(e)) || [];
     message.placedConditionalOrderIds = object.placedConditionalOrderIds?.map(e => OrderId.fromPartial(e)) || [];
     message.blockHeight = object.blockHeight ?? 0;

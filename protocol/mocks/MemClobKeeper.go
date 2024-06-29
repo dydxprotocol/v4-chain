@@ -12,6 +12,8 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
+	msgsender "github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+
 	subaccountstypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	time "time"
@@ -25,7 +27,7 @@ type MemClobKeeper struct {
 }
 
 // AddPreexistingStatefulOrder provides a mock function with given fields: ctx, order, memclob
-func (_m *MemClobKeeper) AddPreexistingStatefulOrder(ctx types.Context, order *clobtypes.Order, memclob clobtypes.MemClob) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error) {
+func (_m *MemClobKeeper) AddPreexistingStatefulOrder(ctx types.Context, order *clobtypes.Order, memclob clobtypes.MemClob) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, error) {
 	ret := _m.Called(ctx, order, memclob)
 
 	if len(ret) == 0 {
@@ -34,9 +36,8 @@ func (_m *MemClobKeeper) AddPreexistingStatefulOrder(ctx types.Context, order *c
 
 	var r0 subaccountstypes.BaseQuantums
 	var r1 clobtypes.OrderStatus
-	var r2 *clobtypes.OffchainUpdates
-	var r3 error
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.Order, clobtypes.MemClob) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error)); ok {
+	var r2 error
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.Order, clobtypes.MemClob) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, error)); ok {
 		return rf(ctx, order, memclob)
 	}
 	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.Order, clobtypes.MemClob) subaccountstypes.BaseQuantums); ok {
@@ -51,21 +52,13 @@ func (_m *MemClobKeeper) AddPreexistingStatefulOrder(ctx types.Context, order *c
 		r1 = ret.Get(1).(clobtypes.OrderStatus)
 	}
 
-	if rf, ok := ret.Get(2).(func(types.Context, *clobtypes.Order, clobtypes.MemClob) *clobtypes.OffchainUpdates); ok {
+	if rf, ok := ret.Get(2).(func(types.Context, *clobtypes.Order, clobtypes.MemClob) error); ok {
 		r2 = rf(ctx, order, memclob)
 	} else {
-		if ret.Get(2) != nil {
-			r2 = ret.Get(2).(*clobtypes.OffchainUpdates)
-		}
+		r2 = ret.Error(2)
 	}
 
-	if rf, ok := ret.Get(3).(func(types.Context, *clobtypes.Order, clobtypes.MemClob) error); ok {
-		r3 = rf(ctx, order, memclob)
-	} else {
-		r3 = ret.Error(3)
-	}
-
-	return r0, r1, r2, r3
+	return r0, r1, r2
 }
 
 // CanDeleverageSubaccount provides a mock function with given fields: ctx, subaccountId, perpetualId
@@ -352,7 +345,7 @@ func (_m *MemClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *
 }
 
 // ReplayPlaceOrder provides a mock function with given fields: ctx, msg
-func (_m *MemClobKeeper) ReplayPlaceOrder(ctx types.Context, msg *clobtypes.MsgPlaceOrder) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error) {
+func (_m *MemClobKeeper) ReplayPlaceOrder(ctx types.Context, msg *clobtypes.MsgPlaceOrder) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, error) {
 	ret := _m.Called(ctx, msg)
 
 	if len(ret) == 0 {
@@ -361,9 +354,8 @@ func (_m *MemClobKeeper) ReplayPlaceOrder(ctx types.Context, msg *clobtypes.MsgP
 
 	var r0 subaccountstypes.BaseQuantums
 	var r1 clobtypes.OrderStatus
-	var r2 *clobtypes.OffchainUpdates
-	var r3 error
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgPlaceOrder) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error)); ok {
+	var r2 error
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgPlaceOrder) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, error)); ok {
 		return rf(ctx, msg)
 	}
 	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgPlaceOrder) subaccountstypes.BaseQuantums); ok {
@@ -378,21 +370,18 @@ func (_m *MemClobKeeper) ReplayPlaceOrder(ctx types.Context, msg *clobtypes.MsgP
 		r1 = ret.Get(1).(clobtypes.OrderStatus)
 	}
 
-	if rf, ok := ret.Get(2).(func(types.Context, *clobtypes.MsgPlaceOrder) *clobtypes.OffchainUpdates); ok {
+	if rf, ok := ret.Get(2).(func(types.Context, *clobtypes.MsgPlaceOrder) error); ok {
 		r2 = rf(ctx, msg)
 	} else {
-		if ret.Get(2) != nil {
-			r2 = ret.Get(2).(*clobtypes.OffchainUpdates)
-		}
+		r2 = ret.Error(2)
 	}
 
-	if rf, ok := ret.Get(3).(func(types.Context, *clobtypes.MsgPlaceOrder) error); ok {
-		r3 = rf(ctx, msg)
-	} else {
-		r3 = ret.Error(3)
-	}
+	return r0, r1, r2
+}
 
-	return r0, r1, r2, r3
+// SendOffchainMessages provides a mock function with given fields: ctx, additionalHeaders, offchainUpdates
+func (_m *MemClobKeeper) SendOffchainMessages(ctx types.Context, additionalHeaders []msgsender.MessageHeader, offchainUpdates *clobtypes.OffchainUpdates) {
+	_m.Called(ctx, additionalHeaders, offchainUpdates)
 }
 
 // SendOrderbookFillUpdates provides a mock function with given fields: ctx, orderbookFills

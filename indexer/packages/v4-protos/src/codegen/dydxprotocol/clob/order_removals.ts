@@ -65,6 +65,12 @@ export enum OrderRemoval_RemovalReason {
    *  would lead to the subaccount violating isolated subaccount constraints.
    */
   REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS = 8,
+
+  /**
+   * REMOVAL_REASON_FINAL_SETTLEMENT - REMOVAL_REASON_FINAL_SETTLEMENT represents a removal of an order that
+   * was removed due to final settlement of a market.
+   */
+  REMOVAL_REASON_FINAL_SETTLEMENT = 9,
   UNRECOGNIZED = -1,
 }
 export enum OrderRemoval_RemovalReasonSDKType {
@@ -131,6 +137,12 @@ export enum OrderRemoval_RemovalReasonSDKType {
    *  would lead to the subaccount violating isolated subaccount constraints.
    */
   REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS = 8,
+
+  /**
+   * REMOVAL_REASON_FINAL_SETTLEMENT - REMOVAL_REASON_FINAL_SETTLEMENT represents a removal of an order that
+   * was removed due to final settlement of a market.
+   */
+  REMOVAL_REASON_FINAL_SETTLEMENT = 9,
   UNRECOGNIZED = -1,
 }
 export function orderRemoval_RemovalReasonFromJSON(object: any): OrderRemoval_RemovalReason {
@@ -171,6 +183,10 @@ export function orderRemoval_RemovalReasonFromJSON(object: any): OrderRemoval_Re
     case "REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS":
       return OrderRemoval_RemovalReason.REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS;
 
+    case 9:
+    case "REMOVAL_REASON_FINAL_SETTLEMENT":
+      return OrderRemoval_RemovalReason.REMOVAL_REASON_FINAL_SETTLEMENT;
+
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -205,6 +221,9 @@ export function orderRemoval_RemovalReasonToJSON(object: OrderRemoval_RemovalRea
 
     case OrderRemoval_RemovalReason.REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS:
       return "REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS";
+
+    case OrderRemoval_RemovalReason.REMOVAL_REASON_FINAL_SETTLEMENT:
+      return "REMOVAL_REASON_FINAL_SETTLEMENT";
 
     case OrderRemoval_RemovalReason.UNRECOGNIZED:
     default:

@@ -391,7 +391,7 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup memclob state and test expectations.
 			memclob,
-				_,
+				fakeMemClobKeeper,
 				expectedNumCollateralizationChecks,
 				numCollateralChecks := placeOrderTestSetup(
 				t,
@@ -418,6 +418,7 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 				tc.expectedRemainingAsks,
 				tc.expectedOperations,
 				tc.expectedInternalOperations,
+				fakeMemClobKeeper,
 			)
 
 			// Verify the correct offchain update messages were returned.
@@ -522,7 +523,7 @@ func TestPlacePerpetualLiquidation_CollatCheckFailure(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup memclob state and test expectations.
 			memclob,
-				_,
+				fakeMemClobKeeper,
 				expectedNumCollateralizationChecks,
 				numCollateralChecks := placeOrderTestSetup(
 				t,
@@ -548,6 +549,7 @@ func TestPlacePerpetualLiquidation_CollatCheckFailure(t *testing.T) {
 				tc.expectedRemainingBids,
 				tc.expectedRemainingAsks,
 				tc.expectedMatches,
+				fakeMemClobKeeper,
 			)
 
 			// Verify the correct offchain update messages were returned.

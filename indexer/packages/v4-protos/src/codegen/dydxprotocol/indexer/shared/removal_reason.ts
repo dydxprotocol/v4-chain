@@ -84,6 +84,9 @@ export enum OrderRemovalReason {
    * violating isolated subaccount constraints.
    */
   ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS = 15,
+
+  /** ORDER_REMOVAL_REASON_REPLAY_OPERATIONS - The order has been removed during the replay operations step of commiting a block. */
+  ORDER_REMOVAL_REASON_REPLAY_OPERATIONS = 16,
   UNRECOGNIZED = -1,
 }
 /** OrderRemovalReason is an enum of all the reasons an order was removed. */
@@ -173,6 +176,9 @@ export enum OrderRemovalReasonSDKType {
    * violating isolated subaccount constraints.
    */
   ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS = 15,
+
+  /** ORDER_REMOVAL_REASON_REPLAY_OPERATIONS - The order has been removed during the replay operations step of commiting a block. */
+  ORDER_REMOVAL_REASON_REPLAY_OPERATIONS = 16,
   UNRECOGNIZED = -1,
 }
 export function orderRemovalReasonFromJSON(object: any): OrderRemovalReason {
@@ -241,6 +247,10 @@ export function orderRemovalReasonFromJSON(object: any): OrderRemovalReason {
     case "ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS":
       return OrderRemovalReason.ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS;
 
+    case 16:
+    case "ORDER_REMOVAL_REASON_REPLAY_OPERATIONS":
+      return OrderRemovalReason.ORDER_REMOVAL_REASON_REPLAY_OPERATIONS;
+
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -296,6 +306,9 @@ export function orderRemovalReasonToJSON(object: OrderRemovalReason): string {
 
     case OrderRemovalReason.ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS:
       return "ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS";
+
+    case OrderRemovalReason.ORDER_REMOVAL_REASON_REPLAY_OPERATIONS:
+      return "ORDER_REMOVAL_REASON_REPLAY_OPERATIONS";
 
     case OrderRemovalReason.UNRECOGNIZED:
     default:

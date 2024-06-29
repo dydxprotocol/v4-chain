@@ -8,7 +8,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	memclobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/memclob"
 	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -27,13 +26,13 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 		fullyFilledOrderIds      []types.OrderId
 		expiredStatefulOrderIds  []types.OrderId
 		canceledStatefulOrderIds []types.OrderId
-		removedStatefulOrderIds  []types.OrderId
+		removedStatefulOrders    []types.OrderRemoval
 
 		// Expectations.
-		expectedRemainingBids          []OrderWithRemainingSize
-		expectedRemovedExpiredOrderIds []types.OrderId
-		expectedRemainingAsks          []OrderWithRemainingSize
-		expectedCancels                []*types.MsgCancelOrder
+		expectedRemainingBids   []OrderWithRemainingSize
+		expectedRemovedOrderIds []types.OrderId
+		expectedRemainingAsks   []OrderWithRemainingSize
+		expectedCancels         []*types.MsgCancelOrder
 	}{
 		`Empty memclob and no fully-filled or expired order IDs`: {
 			placedOperations:    []types.Operation{},
@@ -66,7 +65,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				&constants.CancelOrder_Alice_Num1_Id11_Clob1_GTB20,
 				&constants.CancelOrder_Alice_Num1_Id13_Clob0_GTB30,
 			},
-			expectedRemovedExpiredOrderIds: []types.OrderId{
+			expectedRemovedOrderIds: []types.OrderId{
 				constants.Order_Bob_Num0_Id2_Clob0_Sell25_Price95_GTB10.OrderId,
 				constants.Order_Bob_Num1_Id1_Clob1_Sell25_Price85_GTB10.OrderId,
 			},
@@ -93,7 +92,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				constants.Order_Alice_Num0_Id1_Clob0_Buy15_Price10_GTB18_PO.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId,
 			},
-			expectedRemovedExpiredOrderIds: []types.OrderId{},
+			expectedRemovedOrderIds: []types.OrderId{},
 			expiredStatefulOrderIds: []types.OrderId{
 				constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId,
@@ -116,7 +115,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				constants.Order_Alice_Num0_Id1_Clob0_Buy15_Price10_GTB18_PO.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId,
 			},
-			expectedRemovedExpiredOrderIds: []types.OrderId{},
+			expectedRemovedOrderIds: []types.OrderId{},
 			expiredStatefulOrderIds: []types.OrderId{
 				constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25.OrderId,
@@ -157,8 +156,10 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				constants.Order_Alice_Num0_Id1_Clob0_Buy15_Price10_GTB18_PO.OrderId,
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId, // This order is on the memclob.
 			},
-			expectedRemovedExpiredOrderIds: []types.OrderId{
+			expectedRemovedOrderIds: []types.OrderId{
 				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId, // This order is on the memclob.
+				constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32.OrderId,
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 			},
 			expiredStatefulOrderIds: []types.OrderId{
 				constants.LongTermOrder_Alice_Num1_Id1_Clob0_Sell25_Price30_GTBT10.OrderId,
@@ -186,8 +187,8 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 				constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32.OrderId, // This order is on the memclob.
 			},
 
-			expectedRemovedExpiredOrderIds: []types.OrderId{},
-			expiredStatefulOrderIds:        []types.OrderId{},
+			expectedRemovedOrderIds: []types.OrderId{},
+			expiredStatefulOrderIds: []types.OrderId{},
 			expectedRemainingBids: []OrderWithRemainingSize{
 				{
 					Order:         constants.Order_Bob_Num0_Id1_Clob0_Buy35_Price55_GTB32,
@@ -207,10 +208,12 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 
 			fullyFilledOrderIds: []types.OrderId{},
 
-			expectedRemovedExpiredOrderIds: []types.OrderId{},
-			expiredStatefulOrderIds:        []types.OrderId{},
-			expectedRemainingBids:          []OrderWithRemainingSize{},
-			expectedRemainingAsks:          []OrderWithRemainingSize{},
+			expectedRemovedOrderIds: []types.OrderId{
+				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
+			},
+			expiredStatefulOrderIds: []types.OrderId{},
+			expectedRemainingBids:   []OrderWithRemainingSize{},
+			expectedRemainingAsks:   []OrderWithRemainingSize{},
 		},
 		`An order is canceled, but it is not present on the memclob so it is a no-op`: {
 			placedOperations:    []types.Operation{},
@@ -221,26 +224,30 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 
 			fullyFilledOrderIds: []types.OrderId{},
 
-			expectedRemovedExpiredOrderIds: []types.OrderId{},
-			expiredStatefulOrderIds:        []types.OrderId{},
-			expectedRemainingBids:          []OrderWithRemainingSize{},
-			expectedRemainingAsks:          []OrderWithRemainingSize{},
+			expectedRemovedOrderIds: []types.OrderId{},
+			expiredStatefulOrderIds: []types.OrderId{},
+			expectedRemainingBids:   []OrderWithRemainingSize{},
+			expectedRemainingAsks:   []OrderWithRemainingSize{},
 		},
 		"An order in RemovedStatefulOrderIds is removed from the memclob": {
 			placedOperations: []types.Operation{
 				clobtest.NewOrderPlacementOperation(constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10),
 			},
 			newOrderFillAmounts: map[types.OrderId]satypes.BaseQuantums{},
-			removedStatefulOrderIds: []types.OrderId{
-				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
+			removedStatefulOrders: []types.OrderRemoval{
+				{
+					OrderId:       constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
+					RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+				},
 			},
-
 			fullyFilledOrderIds: []types.OrderId{},
 
-			expectedRemovedExpiredOrderIds: []types.OrderId{},
-			expiredStatefulOrderIds:        []types.OrderId{},
-			expectedRemainingBids:          []OrderWithRemainingSize{},
-			expectedRemainingAsks:          []OrderWithRemainingSize{},
+			expectedRemovedOrderIds: []types.OrderId{
+				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
+			},
+			expiredStatefulOrderIds: []types.OrderId{},
+			expectedRemainingBids:   []OrderWithRemainingSize{},
+			expectedRemainingAsks:   []OrderWithRemainingSize{},
 		},
 	}
 
@@ -254,6 +261,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 			memclob.SetClobKeeper(mockMemClobKeeper)
 			mockMemClobKeeper.On("Logger", mock.Anything).Return(log.NewNopLogger()).Maybe()
 			mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
+			mockMemClobKeeper.On("SendOffchainMessages", mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
 
 			for _, operation := range tc.placedOperations {
 				switch operation.Operation.(type) {
@@ -301,27 +309,19 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 
 			// Run the test.
 			ctx = ctx.WithBlockHeight(10)
-			offchainUpdates := types.NewOffchainUpdates()
 			memclob.PurgeInvalidMemclobState(
 				ctx,
 				tc.fullyFilledOrderIds,
 				tc.expiredStatefulOrderIds,
 				tc.canceledStatefulOrderIds,
-				tc.removedStatefulOrderIds,
-				offchainUpdates,
+				tc.removedStatefulOrders,
 			)
 
-			// Verify that all removed orders have an associated off-chain removal.
-			require.Equal(
-				t,
-				memclobtest.MessageCountOfType(offchainUpdates, types.RemoveMessageType),
-				len(tc.expectedRemovedExpiredOrderIds),
-			)
-
-			for _, orderId := range tc.expectedRemovedExpiredOrderIds {
-				require.True(
+			for _, orderId := range tc.expectedRemovedOrderIds {
+				orderbook := memclob.mustGetOrderbook(types.ClobPairId(orderId.ClobPairId))
+				require.False(
 					t,
-					memclobtest.HasMessage(offchainUpdates, orderId, types.RemoveMessageType),
+					orderbook.hasOrder(orderId),
 				)
 			}
 
@@ -350,6 +350,7 @@ func TestPurgeInvalidMemclobState_DoesNotPanicWhenCalledWithDuplicateCanceledSta
 	memclob.SetClobKeeper(mockMemClobKeeper)
 	memclob.CreateOrderbook(constants.ClobPair_Btc)
 	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return().Maybe()
+	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
 
 	canceledStatefulOrderIds := []types.OrderId{
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
@@ -364,8 +365,7 @@ func TestPurgeInvalidMemclobState_DoesNotPanicWhenCalledWithDuplicateCanceledSta
 				[]types.OrderId{},
 				[]types.OrderId{},
 				canceledStatefulOrderIds,
-				[]types.OrderId{},
-				types.NewOffchainUpdates(),
+				[]types.OrderRemoval{},
 			)
 		},
 	)
@@ -380,6 +380,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenNonStatefulOrderIsCanceled(t *testin
 	memclob.SetClobKeeper(mockMemClobKeeper)
 	memclob.CreateOrderbook(constants.ClobPair_Btc)
 	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return().Maybe()
+	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
 
 	shortTermOrderId := constants.Order_Alice_Num0_Id0_Clob2_Buy5_Price10_GTB15.OrderId
 
@@ -395,8 +396,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenNonStatefulOrderIsCanceled(t *testin
 				[]types.OrderId{},
 				[]types.OrderId{},
 				[]types.OrderId{shortTermOrderId},
-				[]types.OrderId{},
-				types.NewOffchainUpdates(),
+				[]types.OrderRemoval{},
 			)
 		},
 	)
@@ -412,6 +412,7 @@ func TestPurgeInvalidMemclobState_DoesNotPanicWhenCalledWithDuplicateExpiredStat
 	memclob.SetClobKeeper(mockMemClobKeeper)
 	memclob.CreateOrderbook(constants.ClobPair_Btc)
 	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return().Maybe()
+	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
 
 	expiredStatefulOrderIds := []types.OrderId{
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
@@ -426,8 +427,7 @@ func TestPurgeInvalidMemclobState_DoesNotPanicWhenCalledWithDuplicateExpiredStat
 				[]types.OrderId{},
 				expiredStatefulOrderIds,
 				[]types.OrderId{},
-				[]types.OrderId{},
-				types.NewOffchainUpdates(),
+				[]types.OrderRemoval{},
 			)
 		},
 	)
@@ -442,6 +442,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenCalledWithShortTermExpiredStatefulOr
 	mockMemClobKeeper := &mocks.MemClobKeeper{}
 	memclob.SetClobKeeper(mockMemClobKeeper)
 	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return().Maybe()
+	mockMemClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
 
 	shortTermOrderId := constants.Order_Alice_Num0_Id0_Clob2_Buy5_Price10_GTB15.OrderId
 
@@ -457,8 +458,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenCalledWithShortTermExpiredStatefulOr
 				[]types.OrderId{},
 				[]types.OrderId{shortTermOrderId},
 				[]types.OrderId{},
-				[]types.OrderId{},
-				types.NewOffchainUpdates(),
+				[]types.OrderRemoval{},
 			)
 		},
 	)
