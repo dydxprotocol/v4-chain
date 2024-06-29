@@ -47,19 +47,25 @@ export interface MsgDepositToVaultResponseSDKType {}
 export interface MsgWithdrawFromVault {
   /** The vault to withdraw from. */
   vaultId?: VaultId;
-  /** The subaccount to withdraw to. */
+  /**
+   * The subaccount to withdraw to.
+   * The subaccount must own shares in the vault.
+   */
 
   subaccountId?: SubaccountId;
   /**
-   * The target amount of quote quantums to withdraw.
-   * The target amount should account for slippage. For example:
+   * The amount of quote quantums to withdraw.
+   * The amount should account for slippage, so that the final amount withdrawn
+   * to the user matches the amount specified.
+   * If the amount specified exceeds the max amount that can be withdrawn (=
+   * user equity - slippage), only the max amount is withdrawn. For example:
    *    * user equity = $1020
    *    * target amount = $1000
    *    * slippage = $50
    * then, the amount withdrawn is $970 (= 1020 - (1000 + 50 - 1020))
    */
 
-  targetQuoteQuantums: Uint8Array;
+  quoteQuantums: Uint8Array;
 }
 /**
  * MsgWithdrawFromVault attempts to withdraw the specified target amount of
@@ -69,19 +75,25 @@ export interface MsgWithdrawFromVault {
 export interface MsgWithdrawFromVaultSDKType {
   /** The vault to withdraw from. */
   vault_id?: VaultIdSDKType;
-  /** The subaccount to withdraw to. */
+  /**
+   * The subaccount to withdraw to.
+   * The subaccount must own shares in the vault.
+   */
 
   subaccount_id?: SubaccountIdSDKType;
   /**
-   * The target amount of quote quantums to withdraw.
-   * The target amount should account for slippage. For example:
+   * The amount of quote quantums to withdraw.
+   * The amount should account for slippage, so that the final amount withdrawn
+   * to the user matches the amount specified.
+   * If the amount specified exceeds the max amount that can be withdrawn (=
+   * user equity - slippage), only the max amount is withdrawn. For example:
    *    * user equity = $1020
    *    * target amount = $1000
    *    * slippage = $50
    * then, the amount withdrawn is $970 (= 1020 - (1000 + 50 - 1020))
    */
 
-  target_quote_quantums: Uint8Array;
+  quote_quantums: Uint8Array;
 }
 /** MsgWithdrawFromVaultResponse is the Msg/WithdrawFromVault response type. */
 
@@ -233,7 +245,7 @@ function createBaseMsgWithdrawFromVault(): MsgWithdrawFromVault {
   return {
     vaultId: undefined,
     subaccountId: undefined,
-    targetQuoteQuantums: new Uint8Array()
+    quoteQuantums: new Uint8Array()
   };
 }
 
@@ -247,8 +259,8 @@ export const MsgWithdrawFromVault = {
       SubaccountId.encode(message.subaccountId, writer.uint32(18).fork()).ldelim();
     }
 
-    if (message.targetQuoteQuantums.length !== 0) {
-      writer.uint32(26).bytes(message.targetQuoteQuantums);
+    if (message.quoteQuantums.length !== 0) {
+      writer.uint32(26).bytes(message.quoteQuantums);
     }
 
     return writer;
@@ -272,7 +284,7 @@ export const MsgWithdrawFromVault = {
           break;
 
         case 3:
-          message.targetQuoteQuantums = reader.bytes();
+          message.quoteQuantums = reader.bytes();
           break;
 
         default:
@@ -288,7 +300,7 @@ export const MsgWithdrawFromVault = {
     const message = createBaseMsgWithdrawFromVault();
     message.vaultId = object.vaultId !== undefined && object.vaultId !== null ? VaultId.fromPartial(object.vaultId) : undefined;
     message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? SubaccountId.fromPartial(object.subaccountId) : undefined;
-    message.targetQuoteQuantums = object.targetQuoteQuantums ?? new Uint8Array();
+    message.quoteQuantums = object.quoteQuantums ?? new Uint8Array();
     return message;
   }
 

@@ -21,6 +21,9 @@ service Msg {
 // MsgDepositToVault deposits the specified asset from the subaccount to the
 // vault.
 message MsgDepositToVault {
+  // This annotation enforces that the tx signer is the owner specified in
+  // subaccount_id. Therefore, this enforces that only the owner of the
+  // subaccount can deposit into the vault using that subaccount.
   option (cosmos.msg.v1.signer) = "subaccount_id";
 
   // The vault to deposit into.
@@ -43,21 +46,28 @@ message MsgDepositToVaultResponse {}
 // MsgWithdrawFromVault attempts to withdraw the specified target amount of
 // asset from the vault to the subaccount.
 message MsgWithdrawFromVault {
+  // This annotation enforces that the tx signer is the owner specified in
+  // subaccount_id. Therefore, this enforces that only the owner of the
+  // subaccount can withdraw from the vault equity allocated to the subaccount.
   option (cosmos.msg.v1.signer) = "subaccount_id";
 
   // The vault to withdraw from.
   VaultId vault_id = 1;
 
   // The subaccount to withdraw to.
+  // The subaccount must own shares in the vault.
   dydxprotocol.subaccounts.SubaccountId subaccount_id = 2;
 
-  // The target amount of quote quantums to withdraw.
-  // The target amount should account for slippage. For example:
+  // The amount of quote quantums to withdraw.
+  // The amount should account for slippage, so that the final amount withdrawn
+  // to the user matches the amount specified.
+  // If the amount specified exceeds the max amount that can be withdrawn (=
+  // user equity - slippage), only the max amount is withdrawn. For example:
   //    * user equity = $1020
   //    * target amount = $1000
   //    * slippage = $50
   // then, the amount withdrawn is $970 (= 1020 - (1000 + 50 - 1020))
-  bytes target_quote_quantums = 3 [
+  bytes quote_quantums = 3 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
