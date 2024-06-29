@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
 
 	storetypes "cosmossdk.io/store/types"
 	pricefeedserver_types "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -216,9 +216,8 @@ func GetLiquidityTierUpsertEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeLiquidityTier {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var liquidityTierEvent indexerevents.LiquidityTierUpsertEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &liquidityTierEvent)
+		err := proto.Unmarshal(event.DataBytes, &liquidityTierEvent)
 		if err != nil {
 			panic(err)
 		}
