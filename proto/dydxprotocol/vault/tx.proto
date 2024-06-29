@@ -14,6 +14,11 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 service Msg {
   // DepositToVault deposits funds into a vault.
   rpc DepositToVault(MsgDepositToVault) returns (MsgDepositToVaultResponse);
+
+  // WithdrawFromVault attempts to withdraw funds from a vault.
+  rpc WithdrawFromVault(MsgWithdrawFromVault)
+      returns (MsgWithdrawFromVaultResponse);
+
   // UpdateParams updates the Params in state.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
