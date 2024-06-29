@@ -6,7 +6,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
-// DepositToVault deposits from a subaccount to a vault.
+// TODO: implement
 func (k msgServer) WithdrawFromVault(
 	goCtx context.Context,
 	msg *types.MsgWithdrawFromVault,
