@@ -30,8 +30,8 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 	}{
 		"Decommission no vault": {
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: []*big.Int{
 				big.NewInt(7),
@@ -48,8 +48,8 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 		},
 		"Decommission one vault": {
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: []*big.Int{
 				big.NewInt(7),
@@ -66,8 +66,8 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 		},
 		"Decommission two vaults": {
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: []*big.Int{
 				big.NewInt(7),
@@ -160,19 +160,19 @@ func TestDecommissionVault(t *testing.T) {
 		owners []string
 	}{
 		"Total shares doesn't exist, no owners": {
-			vaultId: constants.Vault_Clob_0,
+			vaultId: constants.Vault_Clob0,
 		},
 		"Total shares exists, no owners": {
-			vaultId:           constants.Vault_Clob_0,
+			vaultId:           constants.Vault_Clob0,
 			totalSharesExists: true,
 		},
 		"Total shares exists, one owner": {
-			vaultId:           constants.Vault_Clob_1,
+			vaultId:           constants.Vault_Clob1,
 			totalSharesExists: true,
 			owners:            []string{constants.Alice_Num0.Owner},
 		},
 		"Total shares exists, two owners": {
-			vaultId:           constants.Vault_Clob_1,
+			vaultId:           constants.Vault_Clob1,
 			totalSharesExists: true,
 			owners: []string{
 				constants.Alice_Num0.Owner,
