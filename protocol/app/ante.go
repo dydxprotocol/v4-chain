@@ -2,7 +2,9 @@ package app
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -20,6 +22,8 @@ import (
 // struct embedding to include the normal cosmos-sdk `HandlerOptions`.
 type HandlerOptions struct {
 	ante.HandlerOptions
+	Codec          codec.Codec
+	AuthStoreKey   storetypes.StoreKey
 	ClobKeeper     clobtypes.ClobKeeper
 	IBCKeeper      ibckeeper.Keeper
 	ConsumerKeeper consumerkeeper.Keeper
@@ -28,6 +32,28 @@ type HandlerOptions struct {
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, deducts fees from the first
 // signer, and handles in-memory clob messages.
+//
+// Note that the contract for the forked version of Cosmos SDK is that during `checkTx` the ante handler
+// is responsible for branching and writing the state store. During this time the forked Cosmos SDK has
+// a read lock allowing for parallel state reads but no writes. The `AnteHandler` is responsible for ensuring
+// the linearization of reads and writes by having locks cover each other. This requires any ante decorators
+// that read state that can be mutated during `checkTx` to acquire an appropriate lock. Today that is:
+//   - account keeper params / consensus params (and all other state) are only read during `checkTx` and only
+//     mutated during `deliverTx` thus no additional locking is needed to linearize reads and writes.
+//   - accounts require the per account lock to be acquired since accounts have have pub keys set or the
+//     sequence number incremented to linearize reads and writes.
+//   - banks / fee state (and all other state) that can be mutated during `checkTx` requires the global
+//     lock to be acquired before it is read or written to linearize reads and writes.
+//
+// During `deliverTx` and simulation the Cosmos SDK is responsible for branching and writing the state store
+// so no additional locking is necessary to linearize state reads and writes. Note that simulation only ever occurs
+// on a past block and not the current `checkState` so there is no opportunity for it to collide with concurrent
+// `checkTx` invocations.
+//
+// Also note that all the ante decorators that are used return immediately the results of invoking `next` allowing
+// us to significantly reduce the stack by saving and passing forward the context to the next ante decorator.
+// This allows us to have a method that contains the order in which all the ante decorators are invoked including
+// a single place to reason about the locking semantics without needing to look at several ante decorators.
 //
 // Link to default `AnteHandler` used by cosmos sdk:
 // https://github.com/cosmos/cosmos-sdk/blob/3bb27795742dab2451b232bab02b82566d1a0192/x/auth/ante/ante.go#L25
