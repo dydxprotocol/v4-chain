@@ -950,8 +950,8 @@ github.com/dvsekhvalnov/jose2go v1.6.0 h1:Y9gnSnP4qEI0+/uQkHvFXeD2PLPJeXEL+ySMEA
 github.com/dvsekhvalnov/jose2go v1.6.0/go.mod h1:QsHjhyTlD/lAVqn/NSbVZmSCGeDehTB/mPZadG+mhXU=
 github.com/dydxprotocol/cometbft v0.38.6-0.20240426214049-c8beeeada40a h1:KeQZZsYJQ/AKQ6lbP5lL3N/6aOclxxYG8pIm8zerwZw=
 github.com/dydxprotocol/cometbft v0.38.6-0.20240426214049-c8beeeada40a/go.mod h1:EBEod7kZfNr4W0VooOrTEMSiXNrSyiQ/M2FL/rOcPCs=
-github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c h1:vTcPGxL/uU0MF/Wfzi3G0uzLweEj/417qs1enjf0q60=
-github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c/go.mod h1:AgkOyykpqwdRuf8cLqoA6PxNZC6ODwNmPrEGYuRzBFY=
+github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240606183841-18966898625f h1:OLmCAiUdKbz9KNYzNtrvl+Y8l5sNWeWqjN5U5h78ckw=
+github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240606183841-18966898625f/go.mod h1:NruCXox2SOkVq2ZC5Bs8s2sT+jjVqBEU59wXyZOkCkM=
 github.com/eapache/go-resiliency v1.3.0 h1:RRL0nge+cWGlxXbUzJ7yMcq6w2XBEr19dCN6HECGaT0=
 github.com/eapache/go-resiliency v1.3.0/go.mod h1:5yPzW0MIvSe0JDsv0v+DvcjEv2FyD6iZYSs1ZI+iQho=
 github.com/eapache/go-xerial-snappy v0.0.0-20230111030713-bf00bc1b83b6 h1:8yY/I9ndfrgrXUbOGObLHKBR4Fl3nZXwM2c7OYTT8hM=

@@ -77,6 +77,7 @@ func TestAnteHandlerChainOrder_Valid(t *testing.T) {
 	decoratorTypes := humanReadableDecoratorTypes(decoratorChain)
 
 	expectedDecoratorTypes := []string{
+		"baseapp.lockAndCacheContextDecorator",
 		"ante.AppInjectedMsgAnteWrapper(ante.SingleMsgClobTxAnteWrapper(ante.SetUpContextDecorator))",
 		"ante.FreeInfiniteGasDecorator",
 		"ante.RejectExtensionOptionsDecorator",
