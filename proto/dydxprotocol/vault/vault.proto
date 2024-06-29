@@ -2,6 +2,7 @@ syntax = "proto3";
 package dydxprotocol.vault;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
