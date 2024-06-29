@@ -196,7 +196,7 @@ func PrepareProposalHandler(
 			recordErrorMetricsWithLabel(metrics.GetTxsInOrder)
 			return &EmptyResponse, nil
 		}
-
+		// TODO: ensure important transactions get priority
 		txsToReturn := injectAndResize(finalTxs, extInfoBz, req.MaxTxBytes+int64(len(extInfoBz)))
 
 		// Record a success metric.
