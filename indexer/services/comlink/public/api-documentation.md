@@ -1842,7 +1842,10 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets?limit=0',
       "stepSize": "string",
       "stepBaseQuantums": 0,
       "subticksPerTick": 0,
-      "marketType": "CROSS"
+      "marketType": "CROSS",
+      "openInterestLowerCap": "string",
+      "openInterestUpperCap": "string",
+      "baseOpenInterest": "string"
     },
     "property2": {
       "clobPairId": "string",
@@ -1862,7 +1865,10 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets?limit=0',
       "stepSize": "string",
       "stepBaseQuantums": 0,
       "subticksPerTick": 0,
-      "marketType": "CROSS"
+      "marketType": "CROSS",
+      "openInterestLowerCap": "string",
+      "openInterestUpperCap": "string",
+      "baseOpenInterest": "string"
     }
   }
 }
@@ -3685,7 +3691,10 @@ or
   "stepSize": "string",
   "stepBaseQuantums": 0,
   "subticksPerTick": 0,
-  "marketType": "CROSS"
+  "marketType": "CROSS",
+  "openInterestLowerCap": "string",
+  "openInterestUpperCap": "string",
+  "baseOpenInterest": "string"
 }
 
 ```
@@ -3712,6 +3721,9 @@ or
 |stepBaseQuantums|number(double)|true|none|none|
 |subticksPerTick|number(double)|true|none|none|
 |marketType|[PerpetualMarketType](#schemaperpetualmarkettype)|true|none|none|
+|openInterestLowerCap|string|false|none|none|
+|openInterestUpperCap|string|false|none|none|
+|baseOpenInterest|string|true|none|none|
 
 ## PerpetualMarketResponse
 
@@ -3741,7 +3753,10 @@ or
       "stepSize": "string",
       "stepBaseQuantums": 0,
       "subticksPerTick": 0,
-      "marketType": "CROSS"
+      "marketType": "CROSS",
+      "openInterestLowerCap": "string",
+      "openInterestUpperCap": "string",
+      "baseOpenInterest": "string"
     },
     "property2": {
       "clobPairId": "string",
@@ -3761,7 +3776,10 @@ or
       "stepSize": "string",
       "stepBaseQuantums": 0,
       "subticksPerTick": 0,
-      "marketType": "CROSS"
+      "marketType": "CROSS",
+      "openInterestLowerCap": "string",
+      "openInterestUpperCap": "string",
+      "baseOpenInterest": "string"
     }
   }
 }

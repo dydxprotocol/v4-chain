@@ -60,6 +60,8 @@ BEGIN
                 rval[i] = dydx_update_perpetual_handler(event_data);
             WHEN '"update_clob_pair"'::jsonb THEN
                 rval[i] = dydx_update_clob_pair_handler(event_data);
+            WHEN '"open_interest_update"'::jsonb THEN
+                rval[i] = dydx_open_interest_update_handler(event_data);
             ELSE
                 NULL;
             END CASE;

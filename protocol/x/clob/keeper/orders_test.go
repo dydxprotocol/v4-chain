@@ -20,6 +20,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	memclobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/memclob"
+	perptest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/perpetuals"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/tracer"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/keeper"
@@ -55,7 +56,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 		expectedMultiStoreWrites []string
 		expectedOrderStatus      types.OrderStatus
 		expectedFilledSize       satypes.BaseQuantums
-		expectedErr              error
+		// Expected remaining OI after test.
+		// The test initializes each perp with default open interest of 1 full coin.
+		expectedOpenInterests map[uint32]*big.Int
+		expectedErr           error
 	}{
 		"Can place an order on the orderbook closing a position": {
 			perpetuals: []perptypes.Perpetual{
@@ -71,6 +75,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 
 			expectedOrderStatus: types.Success,
 			expectedFilledSize:  0,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// unchanged, no match happened
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
+			},
 		},
 		"Can place an order on the orderbook in a different market than their current perpetual position": {
 			perpetuals: []perptypes.Perpetual{
@@ -90,6 +98,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 
 			expectedOrderStatus: types.Success,
 			expectedFilledSize:  0,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// unchanged, no match happened
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
+			},
 		},
 		"Can place an order and the order is fully matched": {
 			perpetuals: []perptypes.Perpetual{
@@ -137,6 +149,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				// Update maker order fill amount in memStore
 				types.OrderAmountFilledKeyPrefix,
 			},
+			expectedOpenInterests: map[uint32]*big.Int{
+				// positions fully closed
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(0),
+			},
 		},
 		"Cannot place an order on the orderbook if the account would be undercollateralized": {
 			perpetuals: []perptypes.Perpetual{
@@ -156,6 +172,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 
 			expectedOrderStatus: types.Undercollateralized,
 			expectedFilledSize:  0,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// unchanged, no match happened
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
+			},
 		},
 		"Can place an order on the orderbook if the subaccount is right at the initial margin ratio": {
 			perpetuals: []perptypes.Perpetual{
@@ -173,6 +193,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 
 			expectedOrderStatus: types.Success,
 			expectedFilledSize:  0,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// unchanged, no match happened
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
+			},
 		},
 		"Cannot place an order on the orderbook if the account would be undercollateralized due to fees paid": {
 			perpetuals: []perptypes.Perpetual{
@@ -191,6 +215,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 
 			expectedOrderStatus: types.Undercollateralized,
 			expectedFilledSize:  0,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// unchanged, no match happened
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
+			},
 		},
 		"Can place an order on the orderbook if the account would be collateralized due to rebate": {
 			perpetuals: []perptypes.Perpetual{
@@ -210,6 +238,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 
 			expectedOrderStatus: types.Success,
 			expectedFilledSize:  0,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// unchanged, no match happened
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
+			},
 		},
 		"Cannot open an order if it doesn't reference a valid CLOB": {
 			perpetuals: []perptypes.Perpetual{
@@ -227,6 +259,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			order: constants.Order_Carl_Num0_Id3_Clob1_Buy1ETH_Price3000,
 
 			expectedErr: types.ErrInvalidClob,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// unchanged, no match happened
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
+			},
 		},
 		"Cannot open an order if the subticks are invalid": {
 			perpetuals: []perptypes.Perpetual{
@@ -249,6 +285,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 
 			expectedErr: types.ErrInvalidPlaceOrder,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// unchanged, no match happened
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
+			},
 		},
 		"Cannot open an order that is smaller than the minimum base quantums": {
 			perpetuals: []perptypes.Perpetual{
@@ -271,6 +311,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 
 			expectedErr: types.ErrInvalidPlaceOrder,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// unchanged, no match happened
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
+			},
 		},
 		"Cannot open an order that is not divisible by the step size base quantums": {
 			perpetuals: []perptypes.Perpetual{
@@ -291,6 +335,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 
 			expectedErr: types.ErrInvalidPlaceOrder,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// unchanged, no match happened
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
+			},
 		},
 		"Cannot open an order with a GoodTilBlock in the past": {
 			perpetuals: []perptypes.Perpetual{
@@ -312,6 +360,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 
 			expectedErr: types.ErrHeightExceedsGoodTilBlock,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// unchanged, no match happened
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
+			},
 		},
 		"Cannot open an order with a GoodTilBlock greater than ShortBlockWindow blocks in the future": {
 			perpetuals: []perptypes.Perpetual{
@@ -333,6 +385,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 
 			expectedErr: types.ErrGoodTilBlockExceedsShortBlockWindow,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// unchanged, no match happened
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
+			},
 		},
 		// This is a regression test for an issue whereby orders that had been previously matched were being checked for
 		// collateralization as if the subticks of the order were `0`. This resulted in always using `0`
@@ -396,6 +452,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			// and a perpetual of size 0.01 BTC ($500), and the perpetual has a 100% margin requirement.
 			order:               constants.Order_Carl_Num1_Id1_Clob0_Buy1kQtBTC_Price50000,
 			expectedOrderStatus: types.Undercollateralized,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// 1 BTC + 0.01 BTC filled
+				constants.BtcUsd_100PercentMarginRequirement.Params.Id: big.NewInt(101_000_000),
+			},
 		},
 		`New order should be undercollateralized when matching when previous fills make it undercollateralized when using
 				maker orders subticks, but would be collateralized if using taker order subticks`: {
@@ -453,6 +513,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				// Update maker order fill amount in memStore
 				types.OrderAmountFilledKeyPrefix,
 			},
+			expectedOpenInterests: map[uint32]*big.Int{
+				// 1 BTC + 0.01 BTC + 0.01 BTC filled
+				constants.BtcUsd_50PercentInitial_40PercentMaintenance.Params.Id: big.NewInt(102_000_000),
+			},
 		},
 		// This is a regression test for an issue whereby orders that had been previously matched were being checked for
 		// collateralization as if the CLOB pair ID of the order was `0`. This resulted in always using `0`
@@ -503,6 +567,12 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			// quantums required to open the previous buy order and fail.
 			order:               constants.Order_Carl_Num0_Id4_Clob1_Buy01ETH_Price3000,
 			expectedOrderStatus: types.Success,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// Unchanged, no BTC match happened
+				constants.BtcUsd_NoMarginRequirement.Params.Id: big.NewInt(100_000_000),
+				// 1 ETH + 1 ETH filled
+				constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.Id: big.NewInt(2_000_000_000),
+			},
 		},
 		`Subaccount cannot place maker buy order for 1 BTC at 5 subticks with 0 collateral`: {
 			perpetuals: []perptypes.Perpetual{
@@ -680,6 +750,13 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
+
 			// Create all subaccounts.
 			for _, subaccount := range tc.subaccounts {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
@@ -741,6 +818,19 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			}
 
 			traceDecoder.RequireKeyPrefixesWritten(t, tc.expectedMultiStoreWrites)
+
+			for _, perp := range tc.perpetuals {
+				if expectedOI, exists := tc.expectedOpenInterests[perp.Params.Id]; exists {
+					gotPerp, err := ks.PerpetualsKeeper.GetPerpetual(ks.Ctx, perp.Params.Id)
+					require.NoError(t, err)
+					require.Zero(t,
+						expectedOI.Cmp(gotPerp.OpenInterest.BigInt()),
+						"expected open interest %s, got %s",
+						expectedOI.String(),
+						gotPerp.OpenInterest.String(),
+					)
+				}
+			}
 		})
 	}
 }
@@ -907,6 +997,13 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
 
 			// Create all subaccounts.
 			for _, subaccount := range tc.subaccounts {

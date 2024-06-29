@@ -29,16 +29,17 @@ import (
 )
 
 type PerpKeepersTestContext struct {
-	Ctx              sdk.Context
-	PricesKeeper     *priceskeeper.Keeper
-	IndexPriceCache  *pricefeedserver_types.MarketToExchangePrices
-	AssetsKeeper     *assetskeeper.Keeper
-	EpochsKeeper     *epochskeeper.Keeper
-	PerpetualsKeeper *keeper.Keeper
-	StoreKey         storetypes.StoreKey
-	MemKey           storetypes.StoreKey
-	Cdc              *codec.ProtoCodec
-	MockTimeProvider *mocks.TimeProvider
+	Ctx               sdk.Context
+	PricesKeeper      *priceskeeper.Keeper
+	IndexPriceCache   *pricefeedserver_types.MarketToExchangePrices
+	AssetsKeeper      *assetskeeper.Keeper
+	EpochsKeeper      *epochskeeper.Keeper
+	PerpetualsKeeper  *keeper.Keeper
+	StoreKey          storetypes.StoreKey
+	MemKey            storetypes.StoreKey
+	Cdc               *codec.ProtoCodec
+	MockTimeProvider  *mocks.TimeProvider
+	TransientStoreKey storetypes.StoreKey
 }
 
 func PerpetualsKeepers(
@@ -78,7 +79,7 @@ func PerpetualsKeepersWithClobHelpers(
 			clobKeeper,
 			transientStoreKey,
 		)
-
+		pc.TransientStoreKey = transientStoreKey
 		return []GenesisInitializer{pc.PricesKeeper, pc.PerpetualsKeeper}
 	})
 
@@ -118,6 +119,7 @@ func createPerpetualsKeeperWithClobHelpers(
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
 		},
+		transientStoreKey,
 	)
 
 	k.SetClobKeeper(pck)
@@ -190,6 +192,8 @@ func CreateTestLiquidityTiers(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 			l.InitialMarginPpm,
 			l.MaintenanceFractionPpm,
 			l.ImpactNotional,
+			l.OpenInterestLowerCap,
+			l.OpenInterestUpperCap,
 		)
 
 		require.NoError(t, err)

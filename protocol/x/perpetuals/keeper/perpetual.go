@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -87,15 +88,6 @@ func (k Keeper) CreatePerpetual(
 		)
 	}
 
-	// Check if market type is valid
-	if marketType != types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS &&
-		marketType != types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
-		return types.Perpetual{}, errorsmod.Wrap(
-			types.ErrInvalidMarketType,
-			fmt.Sprintf("market type %v", marketType),
-		)
-	}
-
 	// Create the perpetual.
 	perpetual := types.Perpetual{
 		Params: types.PerpetualParams{
@@ -108,17 +100,13 @@ func (k Keeper) CreatePerpetual(
 			MarketType:        marketType,
 		},
 		FundingIndex: dtypes.ZeroInt(),
-	}
-
-	if err := k.validatePerpetual(
-		ctx,
-		&perpetual,
-	); err != nil {
-		return perpetual, err
+		OpenInterest: dtypes.ZeroInt(),
 	}
 
 	// Store the new perpetual.
-	k.SetPerpetual(ctx, perpetual)
+	if err := k.ValidateAndSetPerpetual(ctx, perpetual); err != nil {
+		return types.Perpetual{}, err
+	}
 
 	k.SetEmptyPremiumSamples(ctx)
 	k.SetEmptyPremiumVotes(ctx)
@@ -163,16 +151,10 @@ func (k Keeper) ModifyPerpetual(
 	perpetual.Params.DefaultFundingPpm = defaultFundingPpm
 	perpetual.Params.LiquidityTier = liquidityTier
 
-	// Validate updates to perpetual.
-	if err = k.validatePerpetual(
-		ctx,
-		&perpetual,
-	); err != nil {
-		return perpetual, err
-	}
-
 	// Store the modified perpetual.
-	k.SetPerpetual(ctx, perpetual)
+	if err := k.ValidateAndSetPerpetual(ctx, perpetual); err != nil {
+		return types.Perpetual{}, err
+	}
 
 	// Emit indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(
@@ -222,7 +204,9 @@ func (k Keeper) SetPerpetualMarketType(
 	perpetual.Params.MarketType = marketType
 
 	// Store the modified perpetual.
-	k.SetPerpetual(ctx, perpetual)
+	if err := k.ValidateAndSetPerpetual(ctx, perpetual); err != nil {
+		return types.Perpetual{}, err
+	}
 
 	return perpetual, nil
 }
@@ -1015,6 +999,7 @@ func GetMarginRequirementsInQuoteQuantums(
 	// Always consider the magnitude of the position regardless of whether it is long/short.
 	bigAbsQuantums := new(big.Int).Set(bigQuantums).Abs(bigQuantums)
 
+	// Calculate the notional value of the position in quote quantums.
 	bigQuoteQuantums := lib.BaseToQuoteQuantums(
 		bigAbsQuantums,
 		perpetual.Params.AtomicResolution,
@@ -1022,17 +1007,34 @@ func GetMarginRequirementsInQuoteQuantums(
 		marketPrice.Exponent,
 	)
 
+	// Calculate the perpetual's open interest in quote quantums.
+	openInterestQuoteQuantums := lib.BaseToQuoteQuantums(
+		perpetual.OpenInterest.BigInt(), // OpenInterest is represented as base quantums.
+		perpetual.Params.AtomicResolution,
+		marketPrice.Price,
+		marketPrice.Exponent,
+	)
+
 	// Initial margin requirement quote quantums = size in quote quantums * initial margin PPM.
-	bigInitialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantums(bigQuoteQuantums)
+	bigBaseInitialMarginQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(
+		bigQuoteQuantums,
+		big.NewInt(0), // pass in 0 as open interest to get base IMR.
+	)
 
 	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
 	bigMaintenanceMarginQuoteQuantums = lib.BigRatRound(
 		lib.BigRatMulPpm(
-			new(big.Rat).SetInt(bigInitialMarginQuoteQuantums),
+			new(big.Rat).SetInt(bigBaseInitialMarginQuoteQuantums),
 			liquidityTier.MaintenanceFractionPpm,
 		),
 		true,
 	)
+
+	bigInitialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantums(
+		bigQuoteQuantums,
+		openInterestQuoteQuantums, // pass in current OI to get scaled IMR.
+	)
+
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums
 }
 
@@ -1222,7 +1224,57 @@ func (k Keeper) ModifyFundingIndex(
 	bigFundingIndex.Add(bigFundingIndex, bigFundingIndexDelta)
 
 	perpetual.FundingIndex = dtypes.NewIntFromBigInt(bigFundingIndex)
-	k.SetPerpetual(ctx, perpetual)
+	k.setPerpetual(ctx, perpetual)
+	return nil
+}
+
+// Modify the open interest of a perpetual in state.
+func (k Keeper) ModifyOpenInterest(
+	ctx sdk.Context,
+	perpetualId uint32,
+	openInterestDeltaBaseQuantums *big.Int,
+) (
+	err error,
+) {
+
+	// No-op if delta is zero.
+	if openInterestDeltaBaseQuantums.Sign() == 0 {
+		return nil
+	}
+
+	// Get perpetual.
+	perpetual, err := k.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	bigOpenInterest := perpetual.OpenInterest.BigInt()
+	bigOpenInterest.Add(
+		bigOpenInterest, // reuse pointer for efficiency
+		openInterestDeltaBaseQuantums,
+	)
+
+	if bigOpenInterest.Sign() < 0 {
+		return errorsmod.Wrapf(
+			types.ErrOpenInterestWouldBecomeNegative,
+			"perpetualId = %d, openInterest before = %s, after = %s",
+			perpetualId,
+			perpetual.OpenInterest.String(),
+			bigOpenInterest.String(),
+		)
+	}
+
+	perpetual.OpenInterest = dtypes.NewIntFromBigInt(bigOpenInterest)
+	k.setPerpetual(ctx, perpetual)
+
+	if ctx.ExecMode() == sdk.ExecModeFinalize {
+		updatedOIStore := prefix.NewStore(ctx.TransientStore(k.transientStoreKey), []byte(types.UpdatedOIKeyPrefix))
+		openInterestInBytes, err := perpetual.OpenInterest.Marshal()
+		if err != nil {
+			return err
+		}
+		updatedOIStore.Set(lib.Uint32ToKey(perpetualId), openInterestInBytes)
+	}
 	return nil
 }
 
@@ -1248,13 +1300,36 @@ func (k Keeper) SetEmptyPremiumVotes(
 	)
 }
 
-func (k Keeper) SetPerpetual(
+func (k Keeper) SetPerpetualForTest(
+	ctx sdk.Context,
+	perpetual types.Perpetual,
+) {
+	k.setPerpetual(ctx, perpetual)
+}
+
+func (k Keeper) setPerpetual(
 	ctx sdk.Context,
 	perpetual types.Perpetual,
 ) {
 	b := k.cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
 	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
+}
+
+// SetPerpetual validates the perpetual object and sets it in state.
+func (k Keeper) ValidateAndSetPerpetual(
+	ctx sdk.Context,
+	perpetual types.Perpetual,
+) error {
+	if err := k.validatePerpetual(
+		ctx,
+		&perpetual,
+	); err != nil {
+		return err
+	}
+
+	k.setPerpetual(ctx, perpetual)
+	return nil
 }
 
 // GetPerpetualAndMarketPrice retrieves a Perpetual by its id and its corresponding MarketPrice.
@@ -1448,6 +1523,8 @@ func (k Keeper) SetLiquidityTier(
 	initialMarginPpm uint32,
 	maintenanceFractionPpm uint32,
 	impactNotional uint64,
+	openInterestLowerCap uint64,
+	openInterestUpperCap uint64,
 ) (
 	liquidityTier types.LiquidityTier,
 	err error,
@@ -1459,6 +1536,8 @@ func (k Keeper) SetLiquidityTier(
 		InitialMarginPpm:       initialMarginPpm,
 		MaintenanceFractionPpm: maintenanceFractionPpm,
 		ImpactNotional:         impactNotional,
+		OpenInterestLowerCap:   openInterestLowerCap,
+		OpenInterestUpperCap:   openInterestUpperCap,
 	}
 
 	// Validate liquidity tier's fields.
@@ -1480,6 +1559,8 @@ func (k Keeper) SetLiquidityTier(
 				name,
 				initialMarginPpm,
 				maintenanceFractionPpm,
+				openInterestLowerCap,
+				openInterestUpperCap,
 			),
 		),
 	)
@@ -1598,4 +1679,40 @@ func (k Keeper) IsPositionUpdatable(
 		return false, nil
 	}
 	return true, nil
+}
+
+func (k Keeper) SendOIUpdatesToIndexer(ctx sdk.Context) {
+	updatedOIStore := prefix.NewStore(ctx.TransientStore(k.transientStoreKey), []byte(types.UpdatedOIKeyPrefix))
+	iterator := updatedOIStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	OIMessageArray := make([]*indexerevents.OpenInterestUpdate, 0)
+
+	for ; iterator.Valid(); iterator.Next() {
+		openInterestSerializableInt := dtypes.SerializableInt{}
+		if err := openInterestSerializableInt.Unmarshal(iterator.Value()); err != nil {
+			panic(errorsmod.Wrap(err, "failed to unmarshal open interest"))
+		}
+		OIMessage := indexerevents.OpenInterestUpdate{
+			PerpetualId:  binary.BigEndian.Uint32(iterator.Key()),
+			OpenInterest: openInterestSerializableInt,
+		}
+		OIMessageArray = append(OIMessageArray, &OIMessage)
+	}
+
+	if len(OIMessageArray) == 0 {
+		return
+	}
+
+	k.GetIndexerEventManager().AddBlockEvent(
+		ctx,
+		indexerevents.SubtypeOpenInterestUpdate,
+		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+		indexerevents.OpenInterestUpdateVersion,
+		indexer_manager.GetBytes(
+			&indexerevents.OpenInterestUpdateEventV1{
+				OpenInterestUpdates: OIMessageArray,
+			},
+		),
+	)
 }

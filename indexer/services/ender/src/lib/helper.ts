@@ -20,9 +20,11 @@ import {
   PerpetualMarketCreateEventV1,
   PerpetualMarketCreateEventV2,
   LiquidityTierUpsertEventV1,
+  LiquidityTierUpsertEventV2,
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
   SubaccountMessage,
+  OpenInterestUpdateEventV1,
   DeleveragingEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -190,9 +192,18 @@ export function indexerTendermintEventToEventProtoWithType(
       }
     }
     case (DydxIndexerSubtypes.LIQUIDITY_TIER.toString()): {
+      if (version === 1) {
+        return {
+          type: DydxIndexerSubtypes.LIQUIDITY_TIER,
+          eventProto: LiquidityTierUpsertEventV1.decode(eventDataBinary),
+          indexerTendermintEvent: event,
+          version,
+          blockEventIndex,
+        };
+      }
       return {
         type: DydxIndexerSubtypes.LIQUIDITY_TIER,
-        eventProto: LiquidityTierUpsertEventV1.decode(eventDataBinary),
+        eventProto: LiquidityTierUpsertEventV2.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
@@ -220,6 +231,15 @@ export function indexerTendermintEventToEventProtoWithType(
       return {
         type: DydxIndexerSubtypes.DELEVERAGING,
         eventProto: DeleveragingEventV1.decode(eventDataBinary),
+        indexerTendermintEvent: event,
+        version,
+        blockEventIndex,
+      };
+    }
+    case (DydxIndexerSubtypes.OPEN_INTEREST_UPDATE.toString()): {
+      return {
+        type: DydxIndexerSubtypes.OPEN_INTEREST_UPDATE,
+        eventProto: OpenInterestUpdateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,

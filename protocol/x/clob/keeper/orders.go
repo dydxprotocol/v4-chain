@@ -1105,7 +1105,7 @@ func (k Keeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 	success, successPerSubaccountUpdate, err := k.subaccountsKeeper.CanUpdateSubaccounts(
 		ctx,
 		updates,
-		satypes.Match,
+		satypes.CollatCheck,
 	)
 	// TODO(DEC-191): Remove the error case from `CanUpdateSubaccounts`, which can only occur on overflow and specifying
 	// duplicate accounts.

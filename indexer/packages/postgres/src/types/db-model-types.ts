@@ -85,6 +85,7 @@ export interface PerpetualMarketFromDatabase {
   stepBaseQuantums: number;
   liquidityTierId: number;
   marketType: PerpetualMarketType;
+  baseOpenInterest: string;
 }
 
 export interface FillFromDatabase {
@@ -174,6 +175,8 @@ export interface LiquidityTiersFromDatabase {
   name: string;
   initialMarginPpm: string;
   maintenanceFractionPpm: string;
+  openInterestLowerCap?: string;
+  openInterestUpperCap?: string;
 }
 
 export interface CandleFromDatabase extends IdBasedModelFromDatabase {

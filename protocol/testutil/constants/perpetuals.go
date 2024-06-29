@@ -1,6 +1,8 @@
 package constants
 
 import (
+	"math/big"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 )
@@ -82,6 +84,15 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		ImpactNotional:         50_454_000_000,
 	},
 	{
+		Id:                     9,
+		Name:                   "9",
+		InitialMarginPpm:       200_000, // 20%
+		MaintenanceFractionPpm: 500_000, // 20% * 0.5 = 10%
+		ImpactNotional:         2_500_000_000,
+		OpenInterestUpperCap:   50_000_000_000_000, // 50mm USDC
+		OpenInterestLowerCap:   25_000_000_000_000, // 25mm USDC
+	},
+	{
 		Id:                     101,
 		Name:                   "101",
 		InitialMarginPpm:       200_000,
@@ -89,6 +100,22 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		ImpactNotional:         2_500_000_000,
 	},
 }
+
+// Perpetual OI setup in tests
+var (
+	BtcUsd_OpenInterest1_AtomicRes8 = perptypes.OpenInterestDelta{
+		PerpetualId:  0,
+		BaseQuantums: big.NewInt(100_000_000),
+	}
+	EthUsd_OpenInterest1_AtomicRes9 = perptypes.OpenInterestDelta{
+		PerpetualId:  1,
+		BaseQuantums: big.NewInt(1_000_000_000),
+	}
+	DefaultTestPerpOIs = []perptypes.OpenInterestDelta{
+		BtcUsd_OpenInterest1_AtomicRes8,
+		EthUsd_OpenInterest1_AtomicRes9,
+	}
+)
 
 // Perpetual genesis parameters.
 const TestFundingRateClampFactorPpm = 6_000_000
@@ -118,6 +145,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	BtcUsd_0DefaultFunding_0AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -130,6 +158,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	BtcUsd_NegativeDefaultFunding_10AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -142,6 +171,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	BtcUsd_0DefaultFunding_10AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -154,6 +184,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	BtcUsd_0DefaultFunding_10AtomicResolution_20IM_18MM = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -166,6 +197,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	BtcUsd_0_001Percent_DefaultFunding_10AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -178,7 +210,9 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
+
 	BtcUsd_SmallMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
 			Id:                0,
@@ -190,6 +224,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	BtcUsd_100PercentMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -202,6 +237,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	BtcUsd_50PercentInitial_40PercentMaintenance = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -214,6 +250,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	BtcUsd_20PercentInitial_10PercentMaintenance = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -226,6 +263,46 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
+	}
+	BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1 = perptypes.Perpetual{
+		Params: perptypes.PerpetualParams{
+			Id:                0,
+			Ticker:            "BTC-USD 20/10 margin requirements",
+			MarketId:          uint32(0),
+			AtomicResolution:  int32(-8),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(3),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		},
+		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.NewInt(100_000_000),
+	}
+	BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest2 = perptypes.Perpetual{
+		Params: perptypes.PerpetualParams{
+			Id:                0,
+			Ticker:            "BTC-USD 20/10 margin requirements",
+			MarketId:          uint32(0),
+			AtomicResolution:  int32(-8),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(3),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		},
+		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.NewInt(200_000_000),
+	}
+	BtcUsd_20PercentInitial_10PercentMaintenance_25mmLowerCap_50mmUpperCap = perptypes.Perpetual{
+		Params: perptypes.PerpetualParams{
+			Id:                0,
+			Ticker:            "BTC-USD 20/10 margin requirements",
+			MarketId:          uint32(0),
+			AtomicResolution:  int32(-8),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(9),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		},
+		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	BtcUsd_NoMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -238,6 +315,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	EthUsd_0DefaultFunding_9AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -250,6 +328,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	EthUsd_NoMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -262,6 +341,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	EthUsd_20PercentInitial_10PercentMaintenance = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -274,6 +354,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	EthUsd_100PercentMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -286,6 +367,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	SolUsd_20PercentInitial_10PercentMaintenance = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -298,6 +380,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	IsoUsd_IsolatedMarket = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -310,6 +393,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	Iso2Usd_IsolatedMarket = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -322,6 +406,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 )
 
@@ -404,6 +489,8 @@ var (
 				InitialMarginPpm:       200_000,
 				MaintenanceFractionPpm: 500_000,
 				ImpactNotional:         2_500_000_000,
+				OpenInterestLowerCap:   0,
+				OpenInterestUpperCap:   0,
 			},
 			{
 				Id:                     uint32(1),
@@ -411,6 +498,8 @@ var (
 				InitialMarginPpm:       300_000,
 				MaintenanceFractionPpm: 600_000,
 				ImpactNotional:         1_667_000_000,
+				OpenInterestLowerCap:   25_000_000_000_000,
+				OpenInterestUpperCap:   50_000_000_000_000,
 			},
 			{
 				Id:                     uint32(2),
@@ -418,6 +507,8 @@ var (
 				InitialMarginPpm:       400_000,
 				MaintenanceFractionPpm: 700_000,
 				ImpactNotional:         1_250_000_000,
+				OpenInterestLowerCap:   10_000_000_000_000,
+				OpenInterestUpperCap:   20_000_000_000_000,
 			},
 		},
 		Params: PerpetualsGenesisParams,
@@ -430,6 +521,7 @@ var (
 					MarketType:    perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 				},
 				FundingIndex: dtypes.ZeroInt(),
+				OpenInterest: dtypes.ZeroInt(),
 			},
 			{
 				Params: perptypes.PerpetualParams{
@@ -439,6 +531,7 @@ var (
 					MarketType:    perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 				},
 				FundingIndex: dtypes.ZeroInt(),
+				OpenInterest: dtypes.ZeroInt(),
 			},
 		},
 	}

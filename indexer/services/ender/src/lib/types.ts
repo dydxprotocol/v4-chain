@@ -29,10 +29,13 @@ import {
   PerpetualMarketCreateEventV1,
   PerpetualMarketCreateEventV2,
   LiquidityTierUpsertEventV1,
+  LiquidityTierUpsertEventV2,
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
   DeleveragingEventV1,
+  OpenInterestUpdateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
+import { IHeaders } from 'kafkajs';
 import Long from 'long';
 
 // Type sourced from protocol:
@@ -50,6 +53,7 @@ export enum DydxIndexerSubtypes {
   UPDATE_PERPETUAL = 'update_perpetual',
   UPDATE_CLOB_PAIR = 'update_clob_pair',
   DELEVERAGING = 'deleveraging',
+  OPEN_INTEREST_UPDATE = 'open_interest_update',
 }
 
 // Generic interface used for creating the Handler objects
@@ -123,6 +127,12 @@ export type EventProtoWithTypeAndVersion = {
   version: number,
   blockEventIndex: number,
 } | {
+  type: DydxIndexerSubtypes.LIQUIDITY_TIER,
+  eventProto: LiquidityTierUpsertEventV2,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+  blockEventIndex: number,
+} | {
   type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
   eventProto: UpdatePerpetualEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
@@ -137,6 +147,12 @@ export type EventProtoWithTypeAndVersion = {
 } | {
   type: DydxIndexerSubtypes.DELEVERAGING,
   eventProto: DeleveragingEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+  blockEventIndex: number,
+} | {
+  type: DydxIndexerSubtypes.OPEN_INTEREST_UPDATE,
+  eventProto: OpenInterestUpdateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
@@ -216,6 +232,7 @@ export interface AnnotatedSubaccountMessage extends SubaccountMessage {
 export interface VulcanMessage {
   key: Buffer,
   value: OffChainUpdateV1,
+  headers?: IHeaders,
 }
 
 export type ConsolidatedKafkaEvent = {

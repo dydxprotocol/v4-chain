@@ -206,6 +206,9 @@ export interface TradingPerpetualMarketMessage {
   subticksPerTick?: number;
   stepBaseQuantums?: number;
   marketType?: PerpetualMarketType;
+  openInterestLowerCap?: string;
+  openInterestUpperCap?: string;
+  baseOpenInterest?: string;
 
   // Fields that are likely to change
   priceChange24H?: string;

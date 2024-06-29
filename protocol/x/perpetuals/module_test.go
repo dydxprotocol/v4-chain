@@ -211,12 +211,13 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 
 	cmd := am.GetQueryCmd()
 	require.Equal(t, "perpetuals", cmd.Use)
-	require.Equal(t, 5, len(cmd.Commands()))
-	require.Equal(t, "get-params", cmd.Commands()[0].Name())
-	require.Equal(t, "get-premium-samples", cmd.Commands()[1].Name())
-	require.Equal(t, "get-premium-votes", cmd.Commands()[2].Name())
-	require.Equal(t, "list-perpetual", cmd.Commands()[3].Name())
-	require.Equal(t, "show-perpetual", cmd.Commands()[4].Name())
+	require.Equal(t, 6, len(cmd.Commands()))
+	require.Equal(t, "get-all-liquidity-tiers", cmd.Commands()[0].Name())
+	require.Equal(t, "get-params", cmd.Commands()[1].Name())
+	require.Equal(t, "get-premium-samples", cmd.Commands()[2].Name())
+	require.Equal(t, "get-premium-votes", cmd.Commands()[3].Name())
+	require.Equal(t, "list-perpetual", cmd.Commands()[4].Name())
+	require.Equal(t, "show-perpetual", cmd.Commands()[5].Name())
 }
 
 func TestAppModule_Name(t *testing.T) {
@@ -282,7 +283,9 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 			  "name":"Large-Cap",
 			  "initial_margin_ppm":50000,
 			  "maintenance_fraction_ppm":500000,
-			  "impact_notional":10000000000
+			  "impact_notional":10000000000,
+			  "open_interest_lower_cap":25000000000000,
+			  "open_interest_upper_cap":50000000000000
 		   }
 		],
 		"params":{
@@ -314,7 +317,8 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				 "liquidity_tier":0,
 				 "market_type": "PERPETUAL_MARKET_TYPE_CROSS"
 			  },
-			  "funding_index":"0"
+			  "funding_index":"0",
+			  "open_interest":"0"
 		   }
 		],
 		"liquidity_tiers":[
@@ -324,7 +328,9 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 			  "initial_margin_ppm":50000,
 			  "maintenance_fraction_ppm":500000,
 			  "base_position_notional":"0",
-			  "impact_notional":"10000000000"
+			  "impact_notional":"10000000000",
+			  "open_interest_lower_cap":"25000000000000",
+			  "open_interest_upper_cap":"50000000000000"
 		   }
 		],
 		"params":{

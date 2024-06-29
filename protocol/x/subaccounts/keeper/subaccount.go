@@ -292,6 +292,25 @@ func (k Keeper) UpdateSubaccounts(
 		perpIdToFundingIndex[perp.Params.Id] = perp.FundingIndex
 	}
 
+	// Get OpenInterestDelta from the updates, and persist the OI change if any.
+	perpOpenInterestDelta := GetDeltaOpenInterestFromUpdates(settledUpdates, updateType)
+	if perpOpenInterestDelta != nil {
+		if err := k.perpetualsKeeper.ModifyOpenInterest(
+			ctx,
+			perpOpenInterestDelta.PerpetualId,
+			perpOpenInterestDelta.BaseQuantums,
+		); err != nil {
+			return false, nil, errorsmod.Wrapf(
+				types.ErrCannotModifyPerpOpenInterestForOIMF,
+				"perpId = %v, delta = %v, settledUpdates = %+v, err = %v",
+				perpOpenInterestDelta.PerpetualId,
+				perpOpenInterestDelta.BaseQuantums,
+				settledUpdates,
+				err,
+			)
+		}
+	}
+
 	// Apply the updates to perpetual positions.
 	UpdatePerpetualPositions(
 		settledUpdates,
@@ -624,6 +643,11 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		}
 	}
 
+	// Get delta open interest from the updates.
+	// `perpOpenInterestDelta` is nil if the update type is not `Match` or if the updates
+	// do not result in OI changes.
+	perpOpenInterestDelta := GetDeltaOpenInterestFromUpdates(settledUpdates, updateType)
+
 	// Iterate over all updates.
 	for i, u := range settledUpdates {
 		// Check all updated perps are updatable.
@@ -642,11 +666,34 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			}
 		}
 
+		// Branch the state to calculate the new OIMF after OI increase.
+		// The branched state is only needed for this purpose and is always discarded.
+		branchedContext, _ := ctx.CacheContext()
+
+		// Temporily apply open interest delta to perpetuals, so IMF is calculated based on open interest after the update.
+		// `perpOpenInterestDeltas` is only present for `Match` update type.
+		if perpOpenInterestDelta != nil {
+			if err := k.perpetualsKeeper.ModifyOpenInterest(
+				branchedContext,
+				perpOpenInterestDelta.PerpetualId,
+				perpOpenInterestDelta.BaseQuantums,
+			); err != nil {
+				return false, nil, errorsmod.Wrapf(
+					types.ErrCannotModifyPerpOpenInterestForOIMF,
+					"perpId = %v, delta = %v, settledUpdates = %+v, err = %v",
+					perpOpenInterestDelta.PerpetualId,
+					perpOpenInterestDelta.BaseQuantums,
+					settledUpdates,
+					err,
+				)
+			}
+		}
+
 		// Get the new collateralization and margin requirements with the update applied.
 		bigNewNetCollateral,
 			bigNewInitialMargin,
 			bigNewMaintenanceMargin,
-			err := k.internalGetNetCollateralAndMarginRequirements(ctx, u)
+			err := k.internalGetNetCollateralAndMarginRequirements(branchedContext, u)
 		if err != nil {
 			return false, nil, err
 		}

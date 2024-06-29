@@ -17,6 +17,7 @@ import (
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	perptest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/perpetuals"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/memclob"
@@ -471,6 +472,9 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 		expectedSubaccounts       []satypes.Subaccount
 		expectedFills             []types.MatchPerpetualDeleveraging_Fill
 		expectedQuantumsRemaining *big.Int
+		// Expected remaining OI after test.
+		// The test initializes each perp with default open interest of 1 full coin.
+		expectedOpenInterest *big.Int
 	}{
 		"Can get one offsetting subaccount for deleveraged short": {
 			subaccounts: []satypes.Subaccount{
@@ -500,6 +504,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				},
 			},
 			expectedQuantumsRemaining: new(big.Int),
+			expectedOpenInterest:      new(big.Int), // fully deleveraged
 		},
 		"Can get one offsetting subaccount for deleveraged long": {
 			subaccounts: []satypes.Subaccount{
@@ -527,6 +532,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				},
 			},
 			expectedQuantumsRemaining: new(big.Int),
+			expectedOpenInterest:      new(big.Int), // fully deleveraged
 		},
 		"Can get multiple offsetting subaccounts": {
 			subaccounts: []satypes.Subaccount{
@@ -591,6 +597,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				},
 			},
 			expectedQuantumsRemaining: new(big.Int),
+			expectedOpenInterest:      new(big.Int), // fully deleveraged
 		},
 		"Skips subaccounts with positions on the same side": {
 			subaccounts: []satypes.Subaccount{
@@ -622,6 +629,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				},
 			},
 			expectedQuantumsRemaining: new(big.Int),
+			expectedOpenInterest:      new(big.Int), // fully deleveraged
 		},
 		"Skips subaccounts with no open position for the given perpetual": {
 			subaccounts: []satypes.Subaccount{
@@ -653,6 +661,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				},
 			},
 			expectedQuantumsRemaining: new(big.Int),
+			expectedOpenInterest:      new(big.Int), // fully deleveraged
 		},
 		"Skips subaccounts with non-overlapping bankruptcy prices": {
 			subaccounts: []satypes.Subaccount{
@@ -684,6 +693,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				},
 			},
 			expectedQuantumsRemaining: new(big.Int),
+			expectedOpenInterest:      new(big.Int), // fully deleveraged
 		},
 		"Returns an error if not enough subaccounts to fully deleverage liquidated subaccount's position": {
 			subaccounts: []satypes.Subaccount{
@@ -696,6 +706,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			expectedSubaccounts:       nil,
 			expectedFills:             []types.MatchPerpetualDeleveraging_Fill{},
 			expectedQuantumsRemaining: big.NewInt(100_000_000),
+			expectedOpenInterest:      big.NewInt(100_000_000),
 		},
 		"Can offset subaccount with multiple positions, first position is offset leaving TNC constant": {
 			subaccounts: []satypes.Subaccount{
@@ -735,6 +746,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				},
 			},
 			expectedQuantumsRemaining: big.NewInt(0),
+			expectedOpenInterest:      new(big.Int), // fully deleveraged
 		},
 	}
 
@@ -770,6 +782,13 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				perps,
+			)
 
 			clobPairs := []types.ClobPair{
 				constants.ClobPair_Btc,
@@ -861,6 +880,17 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 
 			for _, subaccount := range tc.expectedSubaccounts {
 				require.Equal(t, subaccount, ks.SubaccountsKeeper.GetSubaccount(ks.Ctx, *subaccount.Id))
+			}
+
+			if tc.expectedOpenInterest != nil {
+				gotPerp, err := ks.PerpetualsKeeper.GetPerpetual(ks.Ctx, tc.perpetualId)
+				require.NoError(t, err)
+				require.Zero(t,
+					tc.expectedOpenInterest.Cmp(gotPerp.OpenInterest.BigInt()),
+					"expected open interest %s, got %s",
+					tc.expectedOpenInterest.String(),
+					gotPerp.OpenInterest.String(),
+				)
 			}
 		})
 	}
@@ -1219,10 +1249,11 @@ func TestProcessDeleveraging(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
-			for _, p := range []perptypes.Perpetual{
+			testPerps := []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
-			} {
+			}
+			for _, p := range testPerps {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
 					p.Params.Id,
@@ -1235,6 +1266,13 @@ func TestProcessDeleveraging(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				testPerps,
+			)
 
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
@@ -1430,10 +1468,11 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
-			for _, p := range []perptypes.Perpetual{
+			testPerps := []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
-			} {
+			}
+			for _, p := range testPerps {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
 					p.Params.Id,
@@ -1446,6 +1485,13 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				testPerps,
+			)
 
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
@@ -1592,10 +1638,11 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
-			for _, p := range []perptypes.Perpetual{
+			testPerps := []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
-			} {
+			}
+			for _, p := range testPerps {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
 					p.Params.Id,
@@ -1608,6 +1655,13 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				testPerps,
+			)
 
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)

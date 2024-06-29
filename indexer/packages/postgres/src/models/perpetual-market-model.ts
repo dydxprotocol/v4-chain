@@ -85,6 +85,7 @@ export default class PerpetualMarketModel extends Model {
         stepBaseQuantums: { type: 'integer' },
         liquidityTierId: { type: 'integer' },
         marketType: { type: 'string' },
+        baseOpenInterest: { type: 'string', pattern: NumericPattern },
       },
     };
   }
@@ -113,6 +114,7 @@ export default class PerpetualMarketModel extends Model {
       stepBaseQuantums: 'integer',
       liquidityTierId: 'integer',
       marketType: 'string',
+      baseOpenInterest: 'string',
     };
   }
 
@@ -147,4 +149,6 @@ export default class PerpetualMarketModel extends Model {
   liquidityTierId!: number;
   
   marketType!: PerpetualMarketType;
+
+  baseOpenInterest!: string;
 }

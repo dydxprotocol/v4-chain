@@ -820,6 +820,15 @@
           },
           "marketType": {
             "$ref": "#/components/schemas/PerpetualMarketType"
+          },
+          "openInterestLowerCap": {
+            "type": "string"
+          },
+          "openInterestUpperCap": {
+            "type": "string"
+          },
+          "baseOpenInterest": {
+            "type": "string"
           }
         },
         "required": [
@@ -840,7 +849,8 @@
           "stepSize",
           "stepBaseQuantums",
           "subticksPerTick",
-          "marketType"
+          "marketType",
+          "baseOpenInterest"
         ],
         "type": "object",
         "additionalProperties": false

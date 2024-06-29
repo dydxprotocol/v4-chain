@@ -55,7 +55,7 @@ import {
 import {
   PerpetualMarketType,
 } from '@dydxprotocol-indexer/v4-protos/build/codegen/dydxprotocol/indexer/protocol/v1/perpetual';
-import { Message, ProducerRecord } from 'kafkajs';
+import { IHeaders, Message, ProducerRecord } from 'kafkajs';
 import _ from 'lodash';
 
 import {
@@ -322,10 +322,12 @@ export function expectVulcanKafkaMessage({
   producerSendMock,
   orderId,
   offchainUpdate,
+  headers,
 }: {
   producerSendMock: jest.SpyInstance,
   orderId: IndexerOrderId,
   offchainUpdate: OffChainUpdateV1,
+  headers?: IHeaders,
 }): void {
   expect(producerSendMock.mock.calls.length).toBeGreaterThanOrEqual(1);
   expect(producerSendMock.mock.calls[0].length).toBeGreaterThanOrEqual(1);
@@ -352,6 +354,7 @@ export function expectVulcanKafkaMessage({
       return {
         key: message.key as Buffer,
         value: OffChainUpdateV1.decode(messageValueBinary),
+        headers: message.headers,
       };
     },
   );
@@ -359,6 +362,7 @@ export function expectVulcanKafkaMessage({
   expect(vulcanMessages).toContainEqual({
     key: getOrderIdHash(orderId),
     value: offchainUpdate,
+    headers,
   });
 }
 

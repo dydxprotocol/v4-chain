@@ -18,6 +18,7 @@ import (
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	perptest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/perpetuals"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/memclob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
@@ -2385,6 +2386,13 @@ func setupProcessProposerOperationsTestCase(
 		)
 		require.NoError(t, err)
 	}
+
+	perptest.SetUpDefaultPerpOIsForTest(
+		t,
+		ks.Ctx,
+		ks.PerpetualsKeeper,
+		tc.perpetuals,
+	)
 
 	// Create all subaccounts.
 	for _, subaccount := range tc.subaccounts {
