@@ -32,7 +32,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgDepositToVault deposits the specified asset from the subaccout to the
+// MsgDepositToVault deposits the specified asset from the subaccount to the
 // vault.
 type MsgDepositToVault struct {
 	// The vault to deposit into.
@@ -127,8 +127,8 @@ func (m *MsgDepositToVaultResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDepositToVaultResponse proto.InternalMessageInfo
 
-// MsgWithdrawFromVault withdraws the specified amount of shares from the vault
-// to the subaccount.
+// MsgWithdrawFromVault attempts to withdraw the specified target amount of
+// asset from the vault to the subaccount.
 type MsgWithdrawFromVault struct {
 	// The vault to withdraw from.
 	VaultId *VaultId `protobuf:"bytes,1,opt,name=vault_id,json=vaultId,proto3" json:"vault_id,omitempty"`

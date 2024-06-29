@@ -18,7 +18,7 @@ service Msg {
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
-// MsgDepositToVault deposits the specified asset from the subaccout to the
+// MsgDepositToVault deposits the specified asset from the subaccount to the
 // vault.
 message MsgDepositToVault {
   option (cosmos.msg.v1.signer) = "subaccount_id";
@@ -40,8 +40,8 @@ message MsgDepositToVault {
 // MsgDepositToVaultResponse is the Msg/DepositToVault response type.
 message MsgDepositToVaultResponse {}
 
-// MsgWithdrawFromVault withdraws the specified amount of shares from the vault
-// to the subaccount.
+// MsgWithdrawFromVault attempts to withdraw the specified target amount of
+// asset from the vault to the subaccount.
 message MsgWithdrawFromVault {
   option (cosmos.msg.v1.signer) = "subaccount_id";
 

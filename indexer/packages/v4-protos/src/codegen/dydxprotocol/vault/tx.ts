@@ -4,7 +4,7 @@ import { Params, ParamsSDKType } from "./params";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
- * MsgDepositToVault deposits the specified asset from the subaccout to the
+ * MsgDepositToVault deposits the specified asset from the subaccount to the
  * vault.
  */
 
@@ -19,7 +19,7 @@ export interface MsgDepositToVault {
   quoteQuantums: Uint8Array;
 }
 /**
- * MsgDepositToVault deposits the specified asset from the subaccout to the
+ * MsgDepositToVault deposits the specified asset from the subaccount to the
  * vault.
  */
 
@@ -40,8 +40,8 @@ export interface MsgDepositToVaultResponse {}
 
 export interface MsgDepositToVaultResponseSDKType {}
 /**
- * MsgWithdrawFromVault withdraws the specified amount of shares from the vault
- * to the subaccount.
+ * MsgWithdrawFromVault attempts to withdraw the specified target amount of
+ * asset from the vault to the subaccount.
  */
 
 export interface MsgWithdrawFromVault {
@@ -62,8 +62,8 @@ export interface MsgWithdrawFromVault {
   targetQuoteQuantums: Uint8Array;
 }
 /**
- * MsgWithdrawFromVault withdraws the specified amount of shares from the vault
- * to the subaccount.
+ * MsgWithdrawFromVault attempts to withdraw the specified target amount of
+ * asset from the vault to the subaccount.
  */
 
 export interface MsgWithdrawFromVaultSDKType {
