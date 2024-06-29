@@ -109,7 +109,7 @@ func (k Keeper) BatchCancelShortTermOrder(
 					log.Error, err,
 				)
 			} else {
-				success = append(failure, clientId)
+				success = append(success, clientId)
 			}
 		}
 	}
