@@ -32,3 +32,9 @@ message NumShares {
     (gogoproto.nullable) = false
   ];
 }
+
+// OwnerShare is a type for owner shares in a vault.
+message OwnerShare {
+  string owner = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  NumShares shares = 2;
+}

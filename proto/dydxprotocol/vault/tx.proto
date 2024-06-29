@@ -18,7 +18,8 @@ service Msg {
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
-// MsgDepositToVault deposits the specified asset from the subaccout to the vault.
+// MsgDepositToVault deposits the specified asset from the subaccout to the
+// vault.
 message MsgDepositToVault {
   option (cosmos.msg.v1.signer) = "subaccount_id";
 
@@ -39,22 +40,41 @@ message MsgDepositToVault {
 // MsgDepositToVaultResponse is the Msg/DepositToVault response type.
 message MsgDepositToVaultResponse {}
 
-// MsgWithdrawFromVault withdraws the specified amount of shares from the vault to the subaccount.
-message MsgWithdrawFromVault  {
+// MsgWithdrawFromVault withdraws the specified amount of shares from the vault
+// to the subaccount.
+message MsgWithdrawFromVault {
   option (cosmos.msg.v1.signer) = "subaccount_id";
-  
+
   // The vault to withdraw from.
   VaultId vault_id = 1;
-  
+
   // The subaccount to withdraw to.
   dydxprotocol.subaccounts.SubaccountId subaccount_id = 2;
-  
-  // Number of shares to withdraw.
-  uint64 shares = 3;
+
+  // The target amount of quote quantums to withdraw.
+  // The target amount should account for slippage. For example:
+  //    * user equity = $1020
+  //    * target amount = $1000
+  //    * slippage = $50
+  // then, the amount withdrawn is $970 (= 1020 - (1000 + 50 - 1020))
+  bytes target_quote_quantums = 3 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // MsgWithdrawFromVaultResponse is the Msg/WithdrawFromVault response type.
-message MsgWithdrawFromVaultResponse {}
+message MsgWithdrawFromVaultResponse {
+  // Number of shares that have been redeemed as part of the withdrawal.
+  NumShares redeemed_shares = 1;
+
+  // Number of shares remaining after the withdrawal.
+  NumShares remaining_shares = 2;
+
+  // Number of shares for the vault after the withdrawal.
+  NumShares total_shares = 3;
+}
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
