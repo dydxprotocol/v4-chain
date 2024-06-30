@@ -12,8 +12,7 @@ import (
 )
 
 func TestParams(t *testing.T) {
-	genesisChanges := GetPerpetualGenesisShort()
-	network.DeployCustomNetwork(genesisChanges)
+
 	cfg := network.DefaultConfig(nil)
 
 	perpQuery := "docker exec interchain-security-instance-setup interchain-security-cd query perpetuals get-params"
@@ -23,5 +22,4 @@ func TestParams(t *testing.T) {
 	var resp types.QueryParamsResponse
 	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
-	network.CleanupCustomNetwork()
 }

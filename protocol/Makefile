@@ -271,12 +271,12 @@ test-cover-slow:
 test-exchange-slow:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock exchange_tests $(build_tags)' -p 1 -count=1 github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/handler -run "TestQueryingActualExchanges"
 
-test-unit-and-integration:
+test-unit-and-integration: e2e-setup delete-anvil
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 80m ./...
 	$(MAKE) remove-container
 
 specific-test: 
-	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 80m -run "TestBatchCancelSingleCancelFunctionality" ./x/clob/e2e/...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 80m -run "TestAllLiquidityTiers" ./x/perpetuals/client/cli/...
 
 test-unit-and-integration-linux: e2e-setup-linux 
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...
