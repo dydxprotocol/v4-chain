@@ -5,6 +5,7 @@ import {
   PnlTicksCreateObject,
   PnlTicksTable,
   Transaction,
+  perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { LatestAccountPnlTicksCache } from '@dydxprotocol-indexer/redis';
 import _ from 'lodash';
@@ -53,6 +54,7 @@ export default async function runTask(): Promise<void> {
   const txId: number = await Transaction.start();
   let newTicksToCreate: PnlTicksCreateObject[] = [];
   try {
+    await perpetualMarketRefresher.updatePerpetualMarkets();
     newTicksToCreate = await getPnlTicksCreateObjects(latestBlockHeight, latestBlockTime, txId);
   } catch (error) {
     logger.error({

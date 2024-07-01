@@ -19,12 +19,9 @@ type ClobKeeper interface {
 
 	AddOrderToOrderbookSubaccountUpdatesCheck(
 		ctx sdk.Context,
-		clobPairId ClobPairId,
-		subaccountOpenOrders map[satypes.SubaccountId][]PendingOpenOrder,
-	) (
-		success bool,
-		successPerUpdate map[satypes.SubaccountId]satypes.UpdateResult,
-	)
+		subaccountId satypes.SubaccountId,
+		order PendingOpenOrder,
+	) satypes.UpdateResult
 	BatchCancelShortTermOrder(
 		ctx sdk.Context,
 		msg *MsgBatchCancel,

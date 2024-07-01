@@ -13,6 +13,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -129,10 +130,10 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 							subaccounts[i] = satypes.Subaccount{
 								Id: vaultId.ToSubaccountId(),
 								AssetPositions: []*satypes.AssetPosition{
-									{
-										AssetId:  assettypes.AssetUsdc.Id,
-										Quantums: dtypes.NewIntFromBigInt(tc.assetQuantums[i]),
-									},
+									testutil.CreateSingleAssetPosition(
+										assettypes.AssetUsdc.Id,
+										tc.assetQuantums[i],
+									),
 								},
 							}
 						}
@@ -275,10 +276,10 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 							{
 								Id: tc.vaultId.ToSubaccountId(),
 								AssetPositions: []*satypes.AssetPosition{
-									{
-										AssetId:  assettypes.AssetUsdc.Id,
-										Quantums: dtypes.NewInt(1_000_000_000), // 1,000 USDC
-									},
+									testutil.CreateSingleAssetPosition(
+										assettypes.AssetUsdc.Id,
+										big.NewInt(1_000_000_000), // 1,000 USDC
+									),
 								},
 							},
 						}
@@ -649,10 +650,11 @@ func TestGetVaultClobOrders(t *testing.T) {
 						if tc.vaultInventoryBaseQuantums != nil && tc.vaultInventoryBaseQuantums.Sign() != 0 {
 							perpPositions = append(
 								perpPositions,
-								&satypes.PerpetualPosition{
-									PerpetualId: tc.perpetual.Params.Id,
-									Quantums:    dtypes.NewIntFromBigInt(tc.vaultInventoryBaseQuantums),
-								},
+								testutil.CreateSinglePerpetualPosition(
+									tc.perpetual.Params.Id,
+									tc.vaultInventoryBaseQuantums,
+									big.NewInt(0),
+								),
 							)
 						}
 						genesisState.Subaccounts = []satypes.Subaccount{

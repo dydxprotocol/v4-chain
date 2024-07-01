@@ -8,6 +8,7 @@ import (
 
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -22,19 +23,19 @@ func TestGenesis(t *testing.T) {
 					Owner:  "foo",
 					Number: uint32(0),
 				},
-				AssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(1_000)),
+				AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(1_000)),
 			},
 			{
 				Id: &types.SubaccountId{
 					Owner:  "bar",
 					Number: uint32(99),
 				},
-				AssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(1_000)),
+				AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(1_000)),
 			},
 		},
 	}
 
-	ctx, k, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	ctx, k, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	subaccounts.InitGenesis(ctx, *k, genesisState)
 	assertSubaccountUpdateEventsInIndexerBlock(t, k, ctx, 2)
 	got := subaccounts.ExportGenesis(ctx, *k)

@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
@@ -99,10 +99,10 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 									satypes.Subaccount{
 										Id: vaultId.ToSubaccountId(),
 										AssetPositions: []*satypes.AssetPosition{
-											{
-												AssetId:  assettypes.AssetUsdc.Id,
-												Quantums: dtypes.NewIntFromBigInt(tc.equities[i]),
-											},
+											testutil.CreateSingleAssetPosition(
+												assettypes.AssetUsdc.Id,
+												tc.equities[i],
+											),
 										},
 									},
 								)

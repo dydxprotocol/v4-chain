@@ -21,6 +21,7 @@ REWARD_TOKEN="adv4tnt"
 NATIVE_TOKEN="adv4tnt" # public testnet token
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
+DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT=1000000000
 NATIVE_TOKEN_WHOLE_COIN="dv4tnt"
 COIN_NAME="dYdX V4 Testnet Token"
 # Each testnet validator has 1 million whole coins of native token.
@@ -48,26 +49,28 @@ function edit_genesis() {
 	# The -r flag tells the command to not treat a Backslash as an escape character.
 	IFS=' ' read -ra INPUT_TEST_ACCOUNTS <<<"${2}"
 	IFS=' ' read -ra INPUT_FAUCET_ACCOUNTS <<<"${3}"
+	IFS=' ' read -ra INPUT_VAULT_ACCOUNTS <<<"${4}"
+	IFS=' ' read -ra INPUT_VAULT_NUMBERS <<<"${5}"
 
-	EXCHANGE_CONFIG_JSON_DIR="$4"
+	EXCHANGE_CONFIG_JSON_DIR="$6"
 	if [ -z "$EXCHANGE_CONFIG_JSON_DIR" ]; then
 		# Default to using exchange_config folder within the current directory.
 		EXCHANGE_CONFIG_JSON_DIR="exchange_config"
 	fi
 
-	DELAY_MSG_JSON_DIR="$5"
+	DELAY_MSG_JSON_DIR="$7"
 	if [ -z "$DELAY_MSG_JSON_DIR" ]; then
 		# Default to using exchange_config folder within the current directory.
 		DELAY_MSG_JSON_DIR="delaymsg_config"
 	fi
 
-	INITIAL_CLOB_PAIR_STATUS="$6"
+	INITIAL_CLOB_PAIR_STATUS="$8"
 		if [ -z "$INITIAL_CLOB_PAIR_STATUS" ]; then
 		# Default to initialie clob pairs as active.
 		INITIAL_CLOB_PAIR_STATUS='STATUS_ACTIVE'
 	fi
 
-	REWARDS_VESTER_ACCOUNT_BALANCE="$7"
+	REWARDS_VESTER_ACCOUNT_BALANCE="$9"
 	if [ -z "$REWARDS_VESTER_ACCOUNT_BALANCE" ]; then
 		# Default to 200 million full coins.
 		REWARDS_VESTER_ACCOUNT_BALANCE="200000000$EIGHTEEN_ZEROS"
@@ -1058,6 +1061,12 @@ function edit_genesis() {
 		bridge_module_account_balance=$(echo "$bridge_module_account_balance - $TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE" | bc)
 		acct_idx=$(($acct_idx + 1))
 	done
+	# Update subaccounts module for vault accounts.
+	for acct in "${INPUT_VAULT_ACCOUNTS[@]}"; do
+		add_subaccount "$GENESIS" "$acct_idx" "$acct" "$DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT"
+		total_accounts_quote_balance=$(($total_accounts_quote_balance + $DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT))
+		acct_idx=$(($acct_idx + 1))
+	done
 
 	next_bank_idx=0
 	if (( total_accounts_quote_balance > 0 )); then
@@ -1485,6 +1494,26 @@ function edit_genesis() {
 	update_ica_host_params
 	# ICA Controller Params
 	update_ica_controller_params
+
+	# Vaults
+	# Set total shares and owner shares of each vault.
+	vault_idx=0
+	if [ -z "${INPUT_TEST_ACCOUNTS[0]}" ]; then
+		vault_owner_address='dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4' # alice as default vault owner
+	else
+		vault_owner_address="${INPUT_TEST_ACCOUNTS[0]}"
+	fi
+	for number in "${INPUT_VAULT_NUMBERS[@]}"; do
+		dasel put -t json -f "$GENESIS" '.app_state.vault.vaults.[]' -v '{}'
+		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_id.type" -v 'VAULT_TYPE_CLOB'
+		dasel put -t int -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_id.number" -v "${number}"
+		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].total_shares.num_shares" -v "${DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT}"
+
+		dasel put -t json -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[]" -v '{}'
+		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[0].owner" -v "${vault_owner_address}"
+		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[0].shares.num_shares" -v "${DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT}"
+		vault_idx=$(($vault_idx + 1))
+	done
 }
 
 function add_subaccount() {

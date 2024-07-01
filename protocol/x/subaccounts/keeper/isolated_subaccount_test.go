@@ -4,8 +4,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
@@ -146,10 +146,10 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 						&constants.PerpetualPosition_OneISOLong,
 					},
 					AssetPositions: []*types.AssetPosition{
-						{
-							AssetId:  assettypes.AssetUsdc.Id,
-							Quantums: dtypes.NewInt(-40_000_000), // -$40
-						},
+						testutil.CreateSingleAssetPosition(
+							assettypes.AssetUsdc.Id,
+							big.NewInt(-40_000_000), // -$40
+						),
 					},
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
@@ -184,10 +184,10 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 						&constants.PerpetualPosition_OneISOLong,
 					},
 					AssetPositions: []*types.AssetPosition{
-						{
-							AssetId:  assettypes.AssetUsdc.Id,
-							Quantums: dtypes.NewInt(-40_000_000), // -$65
-						},
+						testutil.CreateSingleAssetPosition(
+							assettypes.AssetUsdc.Id,
+							big.NewInt(-40_000_000), // -$65
+						),
 					},
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
@@ -216,10 +216,10 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 						&constants.PerpetualPosition_OneISOLong,
 					},
 					AssetPositions: []*types.AssetPosition{
-						{
-							AssetId:  assettypes.AssetUsdc.Id,
-							Quantums: dtypes.NewInt(50_000_000), // $50
-						},
+						testutil.CreateSingleAssetPosition(
+							assettypes.AssetUsdc.Id,
+							big.NewInt(50_000_000), // $50
+						),
 					},
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
@@ -244,14 +244,14 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 						&constants.PerpetualPosition_OneISOLong,
 					},
 					AssetPositions: []*types.AssetPosition{
-						{
-							AssetId:  assettypes.AssetUsdc.Id,
-							Quantums: dtypes.NewInt(-40_000_000), // -$40
-						},
-						{
-							AssetId:  constants.BtcUsd.Id,
-							Quantums: dtypes.NewInt(100_000_000), // 1 BTC
-						},
+						testutil.CreateSingleAssetPosition(
+							assettypes.AssetUsdc.Id,
+							big.NewInt(-40_000_000), // -$40
+						),
+						testutil.CreateSingleAssetPosition(
+							constants.BtcUsd.Id,
+							big.NewInt(100_000_000), // 1 BTC
+						),
 					},
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
@@ -285,14 +285,14 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 						&constants.PerpetualPosition_OneISOLong,
 					},
 					AssetPositions: []*types.AssetPosition{
-						{
-							AssetId:  assettypes.AssetUsdc.Id,
-							Quantums: dtypes.NewInt(50_000_000), // $50
-						},
-						{
-							AssetId:  constants.BtcUsd.Id,
-							Quantums: dtypes.NewInt(100_000_000), // 1 BTC
-						},
+						testutil.CreateSingleAssetPosition(
+							assettypes.AssetUsdc.Id,
+							big.NewInt(50_000_000), // $50
+						),
+						testutil.CreateSingleAssetPosition(
+							constants.BtcUsd.Id,
+							big.NewInt(100_000_000), // 1 BTC
+						),
 					},
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
