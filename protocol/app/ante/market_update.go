@@ -21,7 +21,9 @@ var ErrNoCrossMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUps
 type ValidateMarketUpdateDecorator struct {
 	perpKeeper  perpetualstypes.PerpetualsKeeper
 	priceKeeper prices_types.PricesKeeper
-	cache       map[string]perpetualstypes.PerpetualMarketType
+	// write only cache for mapping slinky ticker strings to market types
+	// only evicted on node restart
+	cache map[string]perpetualstypes.PerpetualMarketType
 }
 
 func NewValidateMarketUpdateDecorator(perpKeeper perpetualstypes.PerpetualsKeeper, priceKeeper prices_types.PricesKeeper) ValidateMarketUpdateDecorator {

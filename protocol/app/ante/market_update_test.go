@@ -319,6 +319,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 					},
 				},
 			},
+			wantErr: false,
 		},
 		{
 			name: "reject a single message with cross markets",
