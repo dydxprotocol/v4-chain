@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math/big"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -28,6 +30,8 @@ import (
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/libs/bytes"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -40,6 +44,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -47,6 +52,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -224,6 +230,10 @@ import (
 	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 )
 
+const (
+	TestnetVoteExtensionsEnableHeightOverride = 19048505
+)
+
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
@@ -352,6 +362,10 @@ func assertAppPreconditions() {
 	if sdk.DefaultPowerReduction.BigInt().Cmp(big.NewInt(1_000_000_000_000_000_000)) != 0 {
 		panic("DefaultPowerReduction is not set correctly")
 	}
+}
+
+func (app *App) GetKey(storeKey string) *storetypes.KVStoreKey {
+	return app.keys[storeKey]
 }
 
 // New returns a reference to an initialized blockchain app
@@ -1941,4 +1955,275 @@ func getGrpcStreamingManagerFromOptions(
 		)
 	}
 	return streaming.NewNoopGrpcStreamingManager()
+}
+
+// Adapted from `InitOsmosisAppForTestnet`.
+// InitDydxAppForTestnet is broken down into two sections:
+// Required Changes: Changes that, if not made, will cause the testnet to halt or panic
+// Optional Changes: Changes to customize the testnet to one's liking (lower vote times, fund accounts, etc)
+func InitDydxAppForTestnet(app *App, newValAddr bytes.HexBytes, newValPubKey crypto.PubKey, newOperatorAddress, upgradeToTrigger string) *App {
+	//
+	// Required Changes:
+	//
+
+	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
+	pubkey := &ed25519.PubKey{Key: newValPubKey.Bytes()}
+	pubkeyAny, err := types.NewAnyWithValue(pubkey)
+	if err != nil {
+		panic(err)
+	}
+
+	// STAKING
+	//
+
+	// Create Validator struct for our new validator.
+	_, bz, err := bech32.DecodeAndConvert(newOperatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	bech32Addr, err := bech32.ConvertAndEncode("dydxvaloper", bz)
+	if err != nil {
+		panic(err)
+	}
+
+	oneNativeToken, ok := sdkmath.NewIntFromString("1000000000000000000")
+	if !ok {
+		panic("failed to parse token amount")
+	}
+	newVal := stakingtypes.Validator{
+		OperatorAddress: bech32Addr,
+		ConsensusPubkey: pubkeyAny,
+		Jailed:          false,
+		Status:          stakingtypes.Bonded,
+		Tokens:          oneNativeToken,
+		DelegatorShares: sdkmath.LegacyMustNewDecFromStr("10000000"),
+		Description: stakingtypes.Description{
+			Moniker: "Testnet Validator",
+		},
+		Commission: stakingtypes.Commission{
+			CommissionRates: stakingtypes.CommissionRates{
+				Rate:          sdkmath.LegacyMustNewDecFromStr("0.05"),
+				MaxRate:       sdkmath.LegacyMustNewDecFromStr("0.1"),
+				MaxChangeRate: sdkmath.LegacyMustNewDecFromStr("0.05"),
+			},
+		},
+		MinSelfDelegation: sdkmath.OneInt(),
+	}
+	if _, err := newVal.GetConsAddr(); err != nil {
+		panic(err)
+	}
+
+	// Remove all validators from power store
+	stakingKey := app.GetKey(stakingtypes.StoreKey)
+	stakingStore := ctx.KVStore(stakingKey)
+
+	iterator, err := app.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
+	if err != nil {
+		panic(err)
+	}
+	for ; iterator.Valid(); iterator.Next() {
+		stakingStore.Delete(iterator.Key())
+	}
+	iterator.Close()
+
+	// Remove all valdiators from last validators store
+	iterator, err = app.StakingKeeper.LastValidatorsIterator(ctx)
+	if err != nil {
+		panic(err)
+	}
+	for ; iterator.Valid(); iterator.Next() {
+		stakingStore.Delete(iterator.Key())
+	}
+	iterator.Close()
+
+	// Remove all validators from validators store
+	iterator = storetypes.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorsKey)
+	for ; iterator.Valid(); iterator.Next() {
+		stakingStore.Delete(iterator.Key())
+	}
+	iterator.Close()
+
+	// Remove all validators from unbonding queue
+	iterator = storetypes.KVStorePrefixIterator(stakingStore, stakingtypes.ValidatorQueueKey)
+	for ; iterator.Valid(); iterator.Next() {
+		stakingStore.Delete(iterator.Key())
+	}
+	iterator.Close()
+
+	// Add our validator to power and last validators store
+	err = app.StakingKeeper.SetValidator(ctx, newVal)
+	if err != nil {
+		panic(err)
+	}
+	err = app.StakingKeeper.SetValidatorByConsAddr(ctx, newVal)
+	if err != nil {
+		panic(err)
+	}
+	err = app.StakingKeeper.SetValidatorByPowerIndex(ctx, newVal)
+	if err != nil {
+		panic(err)
+	}
+	valAddr, err := sdk.ValAddressFromBech32(newVal.GetOperator())
+	if err != nil {
+		panic(err)
+	}
+	err = app.StakingKeeper.SetLastValidatorPower(ctx, valAddr, 0)
+	if err != nil {
+		panic(err)
+	}
+	if err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, valAddr); err != nil {
+		panic(err)
+	}
+
+	stakingParams, err := app.StakingKeeper.GetParams(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	// DISTRIBUTION
+	//
+
+	// Initialize records for this validator across all distribution stores
+	valAddr, err = sdk.ValAddressFromBech32(newVal.GetOperator())
+	if err != nil {
+		panic(err)
+	}
+	err = app.DistrKeeper.SetValidatorHistoricalRewards(ctx, valAddr, 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
+	if err != nil {
+		panic(err)
+	}
+	err = app.DistrKeeper.SetValidatorCurrentRewards(ctx, valAddr, distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
+	if err != nil {
+		panic(err)
+	}
+	err = app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valAddr, distrtypes.InitialValidatorAccumulatedCommission())
+	if err != nil {
+		panic(err)
+	}
+	err = app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valAddr, distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
+	if err != nil {
+		panic(err)
+	}
+
+	// CONSENSUS
+	//
+
+	// Skip VE verifications at the initial height of in-place-testnet.
+	consensusParams, err := app.ConsensusParamsKeeper.ParamsStore.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
+	// Change to a few blocks after in-place-testnet height.
+	// Should be same as CometBFT override height.
+	consensusParams.Abci.VoteExtensionsEnableHeight = TestnetVoteExtensionsEnableHeightOverride
+	if err := app.ConsensusParamsKeeper.ParamsStore.Set(ctx, consensusParams); err != nil {
+		panic(err)
+	}
+
+	// SLASHING
+	//
+
+	// Set validator signing info for our new validator.
+	newConsAddr := sdk.ConsAddress(newValAddr.Bytes())
+	newValidatorSigningInfo := slashingtypes.ValidatorSigningInfo{
+		Address:     newConsAddr.String(),
+		StartHeight: app.LastBlockHeight() - 1,
+		Tombstoned:  false,
+	}
+	err = app.SlashingKeeper.SetValidatorSigningInfo(ctx, newConsAddr, newValidatorSigningInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	//
+	// Optional Changes:
+	//
+
+	// GOV
+	//
+
+	newExpeditedVotingPeriod := time.Minute
+	newVotingPeriod := time.Minute * 2
+
+	govParams, err := app.GovKeeper.Params.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
+	govParams.ExpeditedVotingPeriod = &newExpeditedVotingPeriod
+	govParams.VotingPeriod = &newVotingPeriod
+	govParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(stakingParams.BondDenom, 1_000_000))
+	govParams.ExpeditedMinDeposit = sdk.NewCoins(sdk.NewInt64Coin(stakingParams.BondDenom, 1_000_000))
+
+	err = app.GovKeeper.Params.Set(ctx, govParams)
+	if err != nil {
+		panic(err)
+	}
+
+	// EPOCHS
+	//
+
+	allEpochs := app.EpochsKeeper.GetAllEpochInfo(ctx)
+	for _, epoch := range allEpochs {
+		// Set the epoch to be be not initialized so that it can be re-initialized
+		// and fast-forwarded to the current block time.
+		epoch.IsInitialized = false
+		app.EpochsKeeper.UnsafeSetEpochInfo(
+			ctx,
+			epoch,
+		)
+	}
+
+	// BANK
+	//
+
+	nativeCoinAmount, ok := sdkmath.NewIntFromString("1000000000000000000000") // 1e21
+	if !ok {
+		tmos.Exit("failed to parse coin amount")
+	}
+	defaultCoins := sdk.NewCoins(
+		sdk.NewCoin(stakingParams.BondDenom, nativeCoinAmount),
+		sdk.NewCoin(assetsmoduletypes.AssetUsdc.Denom, sdkmath.NewInt(999_999_000_000)),
+	)
+
+	localdYdXAccounts := []sdk.AccAddress{
+		sdk.MustAccAddressFromBech32("dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4"), // alice
+		sdk.MustAccAddressFromBech32("dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs"), // bob
+		sdk.MustAccAddressFromBech32("dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70"), // carl
+		sdk.MustAccAddressFromBech32("dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn"), // dave
+
+		sdk.MustAccAddressFromBech32("dydx168pjt8rkru35239fsqvz7rzgeclakp49zx3aum"), // jeff
+	}
+
+	// Fund localdydx accounts
+	for _, account := range localdYdXAccounts {
+		// Bridge module has mint permissions
+		err := app.BankKeeper.MintCoins(ctx, bridgemoduletypes.ModuleName, defaultCoins)
+		if err != nil {
+			panic(err)
+		}
+		err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, bridgemoduletypes.ModuleName, account, defaultCoins)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	// TODO: Fund faucet
+
+	// UPGRADE
+	//
+
+	if upgradeToTrigger != "" {
+		upgradePlan := upgradetypes.Plan{
+			Name:   upgradeToTrigger,
+			Height: app.LastBlockHeight() + 10,
+		}
+		err = app.UpgradeKeeper.ScheduleUpgrade(ctx, upgradePlan)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	fmt.Println("**** Finished initializing in-place-testnet ****")
+
+	return app
 }
