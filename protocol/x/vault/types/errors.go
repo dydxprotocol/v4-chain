@@ -100,4 +100,9 @@ var (
 		19,
 		"Owner share not found",
 	)
+	ErrInsufficientEquity = errorsmod.Register(
+		ModuleName,
+		20,
+		"Insufficient equity",
+	)
 )
