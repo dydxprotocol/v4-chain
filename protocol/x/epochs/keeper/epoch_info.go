@@ -23,6 +23,13 @@ func (k Keeper) getEpochInfoStore(
 	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochInfoKeyPrefix))
 }
 
+func (k Keeper) UnsafeSetEpochInfo(
+	ctx sdk.Context,
+	epochInfo types.EpochInfo,
+) {
+	k.setEpochInfo(ctx, epochInfo)
+}
+
 func (k Keeper) setEpochInfo(ctx sdk.Context, epochInfo types.EpochInfo) {
 	store := k.getEpochInfoStore(ctx)
 	b := k.cdc.MustMarshal(&epochInfo)
