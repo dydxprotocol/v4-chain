@@ -88,36 +88,36 @@ export interface MsgWithdrawFromVaultSDKType {
 /** MsgWithdrawFromVaultResponse is the Msg/WithdrawFromVault response type. */
 
 export interface MsgWithdrawFromVaultResponse {
-  /** Number of shares that have been redeemed as part of the withdrawal. */
+  /** Number of owner shares that have been redeemed as part of the withdrawal. */
   redeemedShares?: NumShares;
-  /** Amount of quote quantums that have been withdrawn. */
+  /** Amount of equity (in quote quantums) that has been withdrawn. */
 
   withdrawnQuoteQuantums: Uint8Array;
-  /** Number of shares remaining after the withdrawal. */
+  /** Number of owner shares remaining after the withdrawal. */
 
   remainingShares?: NumShares;
-  /** Total number of shares vault after the withdrawal. */
+  /** Number of total vault shares after the withdrawal. */
 
   totalVaultShares?: NumShares;
-  /** Total amount of quote quatums for the vault after the withdrawal. */
+  /** Vault equity (in quote quantums) after the withdrawal. */
 
   totalVaultEquity: Uint8Array;
 }
 /** MsgWithdrawFromVaultResponse is the Msg/WithdrawFromVault response type. */
 
 export interface MsgWithdrawFromVaultResponseSDKType {
-  /** Number of shares that have been redeemed as part of the withdrawal. */
+  /** Number of owner shares that have been redeemed as part of the withdrawal. */
   redeemed_shares?: NumSharesSDKType;
-  /** Amount of quote quantums that have been withdrawn. */
+  /** Amount of equity (in quote quantums) that has been withdrawn. */
 
   withdrawn_quote_quantums: Uint8Array;
-  /** Number of shares remaining after the withdrawal. */
+  /** Number of owner shares remaining after the withdrawal. */
 
   remaining_shares?: NumSharesSDKType;
-  /** Total number of shares vault after the withdrawal. */
+  /** Number of total vault shares after the withdrawal. */
 
   total_vault_shares?: NumSharesSDKType;
-  /** Total amount of quote quatums for the vault after the withdrawal. */
+  /** Vault equity (in quote quantums) after the withdrawal. */
 
   total_vault_equity: Uint8Array;
 }

@@ -198,15 +198,15 @@ func (m *MsgWithdrawFromVault) GetShares() *NumShares {
 
 // MsgWithdrawFromVaultResponse is the Msg/WithdrawFromVault response type.
 type MsgWithdrawFromVaultResponse struct {
-	// Number of shares that have been redeemed as part of the withdrawal.
+	// Number of owner shares that have been redeemed as part of the withdrawal.
 	RedeemedShares *NumShares `protobuf:"bytes,1,opt,name=redeemed_shares,json=redeemedShares,proto3" json:"redeemed_shares,omitempty"`
-	// Amount of quote quantums that have been withdrawn.
+	// Amount of equity (in quote quantums) that has been withdrawn.
 	WithdrawnQuoteQuantums github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=withdrawn_quote_quantums,json=withdrawnQuoteQuantums,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"withdrawn_quote_quantums"`
-	// Number of shares remaining after the withdrawal.
+	// Number of owner shares remaining after the withdrawal.
 	RemainingShares *NumShares `protobuf:"bytes,3,opt,name=remaining_shares,json=remainingShares,proto3" json:"remaining_shares,omitempty"`
-	// Total number of shares vault after the withdrawal.
+	// Number of total vault shares after the withdrawal.
 	TotalVaultShares *NumShares `protobuf:"bytes,4,opt,name=total_vault_shares,json=totalVaultShares,proto3" json:"total_vault_shares,omitempty"`
-	// Total amount of quote quatums for the vault after the withdrawal.
+	// Vault equity (in quote quantums) after the withdrawal.
 	TotalVaultEquity github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,5,opt,name=total_vault_equity,json=totalVaultEquity,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"total_vault_equity"`
 }
 

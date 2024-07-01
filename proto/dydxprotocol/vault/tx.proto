@@ -72,23 +72,23 @@ message MsgWithdrawFromVault {
 
 // MsgWithdrawFromVaultResponse is the Msg/WithdrawFromVault response type.
 message MsgWithdrawFromVaultResponse {
-  // Number of shares that have been redeemed as part of the withdrawal.
+  // Number of owner shares that have been redeemed as part of the withdrawal.
   NumShares redeemed_shares = 1;
 
-  // Amount of quote quantums that have been withdrawn.
+  // Amount of equity (in quote quantums) that has been withdrawn.
   bytes withdrawn_quote_quantums = 2 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 
-  // Number of shares remaining after the withdrawal.
+  // Number of owner shares remaining after the withdrawal.
   NumShares remaining_shares = 3;
 
-  // Total number of shares vault after the withdrawal.
+  // Number of total vault shares after the withdrawal.
   NumShares total_vault_shares = 4;
 
-  // Total amount of quote quatums for the vault after the withdrawal.
+  // Vault equity (in quote quantums) after the withdrawal.
   bytes total_vault_equity = 5 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
