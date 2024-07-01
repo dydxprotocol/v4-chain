@@ -81,12 +81,12 @@ class ComplianceV2Controller extends Controller {
         };
       }
     } else {
+      const complianceStatus: ComplianceStatusFromDatabase[] = await
+      ComplianceStatusTable.findAll(
+        { address: [address] },
+        [],
+      );
       if (restricted) {
-        const complianceStatus: ComplianceStatusFromDatabase[] = await
-        ComplianceStatusTable.findAll(
-          { address: [address] },
-          [],
-        );
         let complianceStatusFromDatabase: ComplianceStatusFromDatabase | undefined;
         const updatedAt: string = DateTime.utc().toISO();
         if (complianceStatus.length === 0) {
@@ -96,23 +96,35 @@ class ComplianceV2Controller extends Controller {
             reason: ComplianceReason.COMPLIANCE_PROVIDER,
             updatedAt,
           });
-        } else {
+        } else if (
+          complianceStatus[0].status !== ComplianceStatus.CLOSE_ONLY &&
+          complianceStatus[0].status !== ComplianceStatus.BLOCKED
+        ) {
           complianceStatusFromDatabase = await ComplianceStatusTable.update({
             address,
             status: ComplianceStatus.CLOSE_ONLY,
             reason: ComplianceReason.COMPLIANCE_PROVIDER,
             updatedAt,
           });
+        } else {
+          complianceStatusFromDatabase = complianceStatus[0];
         }
         return {
           status: complianceStatusFromDatabase!.status,
           reason: complianceStatusFromDatabase!.reason,
-          updatedAt,
+          updatedAt: complianceStatusFromDatabase!.updatedAt,
         };
       } else {
-        return {
-          status: ComplianceStatus.COMPLIANT,
-        };
+        if (complianceStatus.length === 0) {
+          return {
+            status: ComplianceStatus.COMPLIANT,
+          };
+        } else {
+          return {
+            status: complianceStatus[0].status,
+            reason: complianceStatus[0].reason,
+          };
+        }
       }
     }
   }
