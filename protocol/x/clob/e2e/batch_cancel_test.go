@@ -60,7 +60,7 @@ func TestBatchCancelSingleCancelFunctionality(t *testing.T) {
 		"Batch cancel partially filled short term order in same block": {
 			firstBlockOrders: []clobtypes.MsgPlaceOrder{
 				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5,
-				*clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+				*clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 					clobtypes.Order{
 						OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
 						Side:         clobtypes.Order_SIDE_SELL,
@@ -97,7 +97,7 @@ func TestBatchCancelSingleCancelFunctionality(t *testing.T) {
 		"Cancel partially filled short term order in next block": {
 			firstBlockOrders: []clobtypes.MsgPlaceOrder{
 				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5,
-				*clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+				*clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 					clobtypes.Order{
 						OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
 						Side:         clobtypes.Order_SIDE_SELL,
@@ -293,49 +293,49 @@ func TestBatchCancelSingleCancelFunctionality(t *testing.T) {
 
 var (
 	PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(
-		MustScaleOrder(
+		testapp.MustScaleOrder(
 			constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20,
 			testapp.DefaultGenesis(),
 		),
 	)
 	PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB30 = *clobtypes.NewMsgPlaceOrder(
-		MustScaleOrder(
+		testapp.MustScaleOrder(
 			constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB30,
 			testapp.DefaultGenesis(),
 		),
 	)
 	PlaceOrder_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20 = *clobtypes.NewMsgPlaceOrder(
-		MustScaleOrder(
+		testapp.MustScaleOrder(
 			constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
 			testapp.DefaultGenesis(),
 		),
 	)
 	PlaceOrder_Alice_Num1_Id2_Clob1_Buy10_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(
-		MustScaleOrder(
+		testapp.MustScaleOrder(
 			constants.Order_Alice_Num1_Id2_Clob1_Buy10_Price10_GTB20,
 			testapp.DefaultGenesis(),
 		),
 	)
 	PlaceOrder_Alice_Num1_Id2_Clob1_Buy10_Price10_GTB26 = *clobtypes.NewMsgPlaceOrder(
-		MustScaleOrder(
+		testapp.MustScaleOrder(
 			constants.Order_Alice_Num1_Id2_Clob1_Buy10_Price10_GTB26,
 			testapp.DefaultGenesis(),
 		),
 	)
 	PlaceOrder_Alice_Num1_Id3_Clob0_Sell100_Price100000_GTB20 = *clobtypes.NewMsgPlaceOrder(
-		MustScaleOrder(
+		testapp.MustScaleOrder(
 			constants.Order_Alice_Num1_Id3_Clob0_Sell100_Price100000_GTB20,
 			testapp.DefaultGenesis(),
 		),
 	)
 	PlaceOrder_Alice_Num1_Id4_Clob1_Sell10_Price15_GTB20_PO = *clobtypes.NewMsgPlaceOrder(
-		MustScaleOrder(
+		testapp.MustScaleOrder(
 			constants.Order_Alice_Num1_Id4_Clob1_Sell10_Price15_GTB20_PO,
 			testapp.DefaultGenesis(),
 		),
 	)
 	PlaceOrder_Alice_Num1_Id5_Clob1_Buy10_Price15_GTB23 = *clobtypes.NewMsgPlaceOrder(
-		MustScaleOrder(
+		testapp.MustScaleOrder(
 			constants.Order_Alice_Num1_Id5_Clob1_Buy10_Price15_GTB23,
 			testapp.DefaultGenesis(),
 		),
@@ -888,4 +888,3 @@ func TestBatchCancelOffchainUpdates(t *testing.T) {
 		})
 	}
 }
-

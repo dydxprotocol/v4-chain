@@ -372,6 +372,7 @@ func New(
 		delaymsgmoduletypes.StoreKey,
 		epochsmoduletypes.StoreKey,
 	)
+	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
 	tkeys := storetypes.NewTransientStoreKeys(
 		paramstypes.TStoreKey,
 		clobmoduletypes.TransientStoreKey,
@@ -1509,6 +1510,8 @@ func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
 			ClobKeeper:     app.ClobKeeper,
+			Codec:          app.appCodec,
+			AuthStoreKey:   app.keys[authtypes.StoreKey],
 			IBCKeeper:      *app.IBCKeeper,
 			ConsumerKeeper: app.ConsumerKeeper,
 		},
