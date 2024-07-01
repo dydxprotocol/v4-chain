@@ -63,20 +63,11 @@ message MsgWithdrawFromVault {
   // The subaccount must own shares in the vault.
   dydxprotocol.subaccounts.SubaccountId subaccount_id = 2;
 
-  // The amount of quote quantums to withdraw.
-  // The amount should account for slippage, so that the final amount withdrawn
-  // to the user matches the amount specified.
-  // If the amount specified exceeds the max amount that can be withdrawn (=
-  // user equity - slippage), only the max amount is withdrawn. For example:
-  //    * user equity = $1020
-  //    * target amount = $1000
-  //    * slippage = $50
-  // then, the amount withdrawn is $970 (= 1020 - (1000 + 50 - 1020))
-  bytes quote_quantums = 3 [
-    (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
-    (gogoproto.nullable) = false
-  ];
+  // The number of shares to redeem as quote quantums and withdraw.
+  // If the specified number exceeds the number of shares owned by the
+  // subaccount, then all the shares owned by the subaccount is redeemed and
+  // withdrawn.
+  NumShares shares = 3;
 }
 
 // MsgWithdrawFromVaultResponse is the Msg/WithdrawFromVault response type.
@@ -84,11 +75,25 @@ message MsgWithdrawFromVaultResponse {
   // Number of shares that have been redeemed as part of the withdrawal.
   NumShares redeemed_shares = 1;
 
+  // Amount of quote quantums that have been withdrawn.
+  bytes withdrawn_quote_quantums = 2 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+
   // Number of shares remaining after the withdrawal.
-  NumShares remaining_shares = 2;
+  NumShares remaining_shares = 3;
 
   // Number of shares for the vault after the withdrawal.
-  NumShares total_shares = 3;
+  NumShares total_vault_shares = 4;
+
+  // Amount of quote quatums for the vault after the withdrawal.
+  bytes total_vault_equity = 5 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
