@@ -22,9 +22,10 @@ func newHandlerOptions() app.HandlerOptions {
 			FeegrantKeeper:  dydxApp.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
-		ClobKeeper:   dydxApp.ClobKeeper,
-		Codec:        encodingConfig.Codec,
-		AuthStoreKey: dydxApp.CommitMultiStore().(*rootmulti.Store).StoreKeysByName()[authtypes.StoreKey],
+		ClobKeeper:       dydxApp.ClobKeeper,
+		Codec:            encodingConfig.Codec,
+		AuthStoreKey:     dydxApp.CommitMultiStore().(*rootmulti.Store).StoreKeysByName()[authtypes.StoreKey],
+		PerpetualsKeeper: dydxApp.PerpetualsKeeper,
 	}
 }
 
