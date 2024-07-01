@@ -12,7 +12,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var ErrnoCrossMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUpsertMarkets on a market listed as cross margin")
+var ErrnoCrossMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUpsertMarkets " +
+	"on a market listed as cross margin")
 
 type ValidateMarketUpdateDecorator struct {
 	pk    perpetualstypes.PerpetualsKeeper
@@ -26,13 +27,12 @@ func NewValidateMarketUpdateDecorator(pk perpetualstypes.PerpetualsKeeper) Valid
 	}
 }
 
-func (d *ValidateMarketUpdateDecorator) AnteHandle(
+func (d ValidateMarketUpdateDecorator) AnteHandle(
 	ctx sdk.Context,
 	tx sdk.Tx,
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
-
 	// Ensure that if this is a market update message then that there is only one.
 	// If it isn't a market update message then pass to the next AnteHandler.
 	isSingleMarketUpdate, err := IsMarketUpdateTx(tx)
@@ -63,17 +63,14 @@ func (d *ValidateMarketUpdateDecorator) AnteHandle(
 	return next(ctx, tx, simulate)
 }
 
-func (d *ValidateMarketUpdateDecorator) doMarketsContainCrossMarket(ctx sdk.Context, markets []mmtypes.Market) bool {
+func (d ValidateMarketUpdateDecorator) doMarketsContainCrossMarket(ctx sdk.Context, markets []mmtypes.Market) bool {
 	perps := d.pk.GetAllPerpetuals(ctx)
 
 	for _, market := range markets {
-		var (
-			ticker     = market.Ticker.CurrencyPair.String()
-			marketType perpetualstypes.PerpetualMarketType
-			found      bool
-		)
+		ticker := market.Ticker.CurrencyPair.String()
 
-		if marketType, found = d.cache[ticker]; !found {
+		marketType, found := d.cache[ticker]
+		if !found {
 			// search for market if we cannot find
 			for _, perp := range perps {
 				if perp.Params.Ticker == ticker {
