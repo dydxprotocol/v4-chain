@@ -6,7 +6,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/cachemulti"
 	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -20,6 +19,7 @@ import (
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 // HandlerOptions are the options required for constructing an SDK AnteHandler.
@@ -31,6 +31,7 @@ type HandlerOptions struct {
 	AuthStoreKey     storetypes.StoreKey
 	ClobKeeper       clobtypes.ClobKeeper
 	PerpetualsKeeper perpetualstypes.PerpetualsKeeper
+	PricesKeeper     pricestypes.PricesKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -90,6 +91,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "perpetuals keeper is required for ante builder")
 	}
 
+	if options.PricesKeeper == nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "prices keeper is required for ante builder")
+	}
+
 	h := &lockingAnteHandler{
 		authStoreKey:             options.AuthStoreKey,
 		setupContextDecorator:    ante.NewSetUpContextDecorator(),
@@ -113,7 +118,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		sigGasConsume: ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		clobRateLimit: clobante.NewRateLimitDecorator(options.ClobKeeper),
 		clob:          clobante.NewClobDecorator(options.ClobKeeper),
-		marketupdates: customante.NewValidateMarketUpdateDecorator(options.PerpetualsKeeper),
+		marketUpdates: customante.NewValidateMarketUpdateDecorator(options.PerpetualsKeeper, options.PricesKeeper),
 	}
 	return h.AnteHandle, nil
 }
@@ -143,7 +148,7 @@ type lockingAnteHandler struct {
 	sigGasConsume            ante.SigGasConsumeDecorator
 	clobRateLimit            clobante.ClobRateLimitDecorator
 	clob                     clobante.ClobDecorator
-	marketupdates            customante.ValidateMarketUpdateDecorator
+	marketUpdates            customante.ValidateMarketUpdateDecorator
 }
 
 func (h *lockingAnteHandler) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
@@ -187,9 +192,6 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 		return ctx, err
 	}
 	if ctx, err = h.validateMemo.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
-		return ctx, err
-	}
-	if ctx, err = h.marketupdates.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
 	}
 
@@ -340,6 +342,9 @@ func (h *lockingAnteHandler) otherMsgAnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		return ctx, err
 	}
 	if ctx, err = h.validateMemo.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
+		return ctx, err
+	}
+	if ctx, err = h.marketUpdates.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
 	}
 
