@@ -123,6 +123,7 @@ class ComplianceV2Controller extends Controller {
           return {
             status: complianceStatus[0].status,
             reason: complianceStatus[0].reason,
+            updatedAt: complianceStatus[0].updatedAt,
           };
         }
       }
