@@ -56,7 +56,7 @@ export interface MsgWithdrawFromVault {
   /**
    * The number of shares to redeem as quote quantums and withdraw.
    * If the specified number exceeds the number of shares owned by the
-   * subaccount, then all the shares owned by the subaccount is redeemed and
+   * subaccount, then all the shares owned by the subaccount are redeemed and
    * withdrawn.
    */
 
@@ -79,7 +79,7 @@ export interface MsgWithdrawFromVaultSDKType {
   /**
    * The number of shares to redeem as quote quantums and withdraw.
    * If the specified number exceeds the number of shares owned by the
-   * subaccount, then all the shares owned by the subaccount is redeemed and
+   * subaccount, then all the shares owned by the subaccount are redeemed and
    * withdrawn.
    */
 
@@ -96,10 +96,10 @@ export interface MsgWithdrawFromVaultResponse {
   /** Number of shares remaining after the withdrawal. */
 
   remainingShares?: NumShares;
-  /** Number of shares for the vault after the withdrawal. */
+  /** Total number of shares vault after the withdrawal. */
 
   totalVaultShares?: NumShares;
-  /** Amount of quote quatums for the vault after the withdrawal. */
+  /** Total amount of quote quatums for the vault after the withdrawal. */
 
   totalVaultEquity: Uint8Array;
 }
@@ -114,10 +114,10 @@ export interface MsgWithdrawFromVaultResponseSDKType {
   /** Number of shares remaining after the withdrawal. */
 
   remaining_shares?: NumSharesSDKType;
-  /** Number of shares for the vault after the withdrawal. */
+  /** Total number of shares vault after the withdrawal. */
 
   total_vault_shares?: NumSharesSDKType;
-  /** Amount of quote quatums for the vault after the withdrawal. */
+  /** Total amount of quote quatums for the vault after the withdrawal. */
 
   total_vault_equity: Uint8Array;
 }

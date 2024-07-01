@@ -137,7 +137,7 @@ type MsgWithdrawFromVault struct {
 	SubaccountId *types.SubaccountId `protobuf:"bytes,2,opt,name=subaccount_id,json=subaccountId,proto3" json:"subaccount_id,omitempty"`
 	// The number of shares to redeem as quote quantums and withdraw.
 	// If the specified number exceeds the number of shares owned by the
-	// subaccount, then all the shares owned by the subaccount is redeemed and
+	// subaccount, then all the shares owned by the subaccount are redeemed and
 	// withdrawn.
 	Shares *NumShares `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
 }
@@ -204,9 +204,9 @@ type MsgWithdrawFromVaultResponse struct {
 	WithdrawnQuoteQuantums github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=withdrawn_quote_quantums,json=withdrawnQuoteQuantums,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"withdrawn_quote_quantums"`
 	// Number of shares remaining after the withdrawal.
 	RemainingShares *NumShares `protobuf:"bytes,3,opt,name=remaining_shares,json=remainingShares,proto3" json:"remaining_shares,omitempty"`
-	// Number of shares for the vault after the withdrawal.
+	// Total number of shares vault after the withdrawal.
 	TotalVaultShares *NumShares `protobuf:"bytes,4,opt,name=total_vault_shares,json=totalVaultShares,proto3" json:"total_vault_shares,omitempty"`
-	// Amount of quote quatums for the vault after the withdrawal.
+	// Total amount of quote quatums for the vault after the withdrawal.
 	TotalVaultEquity github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,5,opt,name=total_vault_equity,json=totalVaultEquity,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"total_vault_equity"`
 }
 

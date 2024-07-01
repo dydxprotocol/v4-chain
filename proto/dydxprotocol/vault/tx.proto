@@ -65,7 +65,7 @@ message MsgWithdrawFromVault {
 
   // The number of shares to redeem as quote quantums and withdraw.
   // If the specified number exceeds the number of shares owned by the
-  // subaccount, then all the shares owned by the subaccount is redeemed and
+  // subaccount, then all the shares owned by the subaccount are redeemed and
   // withdrawn.
   NumShares shares = 3;
 }
@@ -85,10 +85,10 @@ message MsgWithdrawFromVaultResponse {
   // Number of shares remaining after the withdrawal.
   NumShares remaining_shares = 3;
 
-  // Number of shares for the vault after the withdrawal.
+  // Total number of shares vault after the withdrawal.
   NumShares total_vault_shares = 4;
 
-  // Amount of quote quatums for the vault after the withdrawal.
+  // Total amount of quote quatums for the vault after the withdrawal.
   bytes total_vault_equity = 5 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
