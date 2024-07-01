@@ -4,7 +4,6 @@ package dydxprotocol.vault;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "cosmos_proto/cosmos.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 import "dydxprotocol/vault/params.proto";
 import "dydxprotocol/vault/vault.proto";
@@ -80,12 +79,6 @@ message QueryOwnerSharesRequest {
   VaultType type = 1;
   uint32 number = 2;
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
-}
-
-// OwnerShare is a type for owner shares in a vault.
-message OwnerShare {
-  string owner = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  NumShares shares = 2;
 }
 
 // QueryOwnerSharesResponse is a response type for the OwnerShares RPC method.
