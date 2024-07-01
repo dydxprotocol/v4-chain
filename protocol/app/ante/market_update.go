@@ -15,7 +15,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var ErrnoCrossMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUpsertMarkets " +
+var ErrNoCrossMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUpsertMarkets " +
 	"on a market listed as cross margin")
 
 type ValidateMarketUpdateDecorator struct {
@@ -54,12 +54,12 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 	switch msg := msg.(type) {
 	case *mmtypes.MsgUpdateMarkets:
 		if contains := d.doMarketsContainCrossMarket(ctx, msg.UpdateMarkets); contains {
-			return ctx, ErrnoCrossMarketUpdates
+			return ctx, ErrNoCrossMarketUpdates
 		}
 
 	case *mmtypes.MsgUpsertMarkets:
 		if contains := d.doMarketsContainCrossMarket(ctx, msg.Markets); contains {
-			return ctx, ErrnoCrossMarketUpdates
+			return ctx, ErrNoCrossMarketUpdates
 		}
 	default:
 		return ctx, fmt.Errorf("unrecognized message type: %T", msg)
@@ -85,16 +85,15 @@ func (d ValidateMarketUpdateDecorator) doMarketsContainCrossMarket(ctx sdk.Conte
 
 				if MatchPairToSlinkyTicker(params.Pair, market.Ticker.CurrencyPair) {
 					// populate cache
-					marketType := perp.Params.MarketType
+					marketType = perp.Params.MarketType
 					d.cache[ticker] = marketType
-					break
 				}
 			}
 		}
-
 		if marketType == perpetualstypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS {
 			return true
 		}
+
 	}
 
 	return false
