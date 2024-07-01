@@ -96,7 +96,6 @@ func migratePricesToMarketMap(ctx sdk.Context, pk pricestypes.PricesKeeper, mmk 
 		if err != nil {
 			panic(fmt.Sprintf("Failed to create market %s", market.Ticker.String()))
 		}
-
 	}
 }
 

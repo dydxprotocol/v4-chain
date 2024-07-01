@@ -6,20 +6,20 @@ import (
 	"testing"
 	"time"
 
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/gogoproto/proto"
-	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	v_6_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v6.0.0"
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -51,10 +51,12 @@ func preUpgradeSetups(node *containertest.Node, t *testing.T) {
 func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 	// Add test for your upgrade handler logic below
 	preUpgradeStatefulOrderCheck(node, t)
+	preUpgradeMarketMapState(node, t)
 }
 
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	// Add test for your upgrade handler logic below
+	postUpgradeMarketMapState(node, t)
 	postUpgradeStatefulOrderCheck(node, t)
 	postUpgradeMarketMapperRevShareChecks(node, t)
 }
@@ -161,6 +163,18 @@ func preUpgradeStatefulOrderCheck(node *containertest.Node, t *testing.T) {
 	require.NoError(t, err)
 }
 
+func preUpgradeMarketMapState(node *containertest.Node, t *testing.T) {
+	// check that the market map state does not exist
+	_, err := containertest.Query(
+		node,
+		marketmapmoduletypes.NewQueryClient,
+		marketmapmoduletypes.QueryClient.MarketMap,
+		&marketmapmoduletypes.MarketMapRequest{},
+	)
+	require.Error(t, err)
+
+}
+
 func postUpgradeStatefulOrderCheck(node *containertest.Node, t *testing.T) {
 	// Check that all stateful orders are removed.
 	_, err := containertest.Query(
@@ -245,4 +259,21 @@ func postUpgradeMarketMapperRevShareChecks(node *containertest.Node, t *testing.
 		require.NoError(t, err)
 		require.Equal(t, revShareDetails.Details.ExpirationTs, uint64(0))
 	}
+}
+
+func postUpgradeMarketMapState(node *containertest.Node, t *testing.T) {
+	// check that the market map state has been initialized
+	marketMap, err := containertest.Query(
+		node,
+		marketmapmoduletypes.NewQueryClient,
+		marketmapmoduletypes.QueryClient.MarketMap,
+		&marketmapmoduletypes.MarketMapRequest{},
+	)
+	require.NoError(t, err)
+
+	expectedMarkets := marketmapmoduletypes.MarketMap{
+		Markets: make(map[string]marketmapmoduletypes.Market, 0),
+	}
+
+	require.Equal(t, expectedMarkets, marketMap)
 }
