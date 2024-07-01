@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"math/big"
-	"math/rand"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +11,7 @@ import (
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/typ.v4/slices"
 )
 
 func TestSafetyHeapInsertRemoval(t *testing.T) {
@@ -45,9 +45,7 @@ func TestSafetyHeapInsertRemoval(t *testing.T) {
 		// Setup keeper state and test parameters.
 		ctx, subaccountsKeeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, false)
 
-		rand.Shuffle(len(allSubaccounts), func(i, j int) {
-			allSubaccounts[i], allSubaccounts[j] = allSubaccounts[j], allSubaccounts[i]
-		})
+		slices.Shuffle(allSubaccounts)
 
 		store := subaccountsKeeper.GetSafetyHeapStore(ctx, 0, satypes.Long)
 		for i, subaccount := range allSubaccounts {
