@@ -26,6 +26,7 @@ func newHandlerOptions() app.HandlerOptions {
 		Codec:            encodingConfig.Codec,
 		AuthStoreKey:     dydxApp.CommitMultiStore().(*rootmulti.Store).StoreKeysByName()[authtypes.StoreKey],
 		PerpetualsKeeper: dydxApp.PerpetualsKeeper,
+		PricesKeeper:     dydxApp.PricesKeeper,
 	}
 }
 

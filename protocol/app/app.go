@@ -1856,6 +1856,7 @@ func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 			Codec:            app.appCodec,
 			AuthStoreKey:     app.keys[authtypes.StoreKey],
 			PerpetualsKeeper: app.PerpetualsKeeper,
+			PricesKeeper:     app.PricesKeeper,
 		},
 	)
 	if err != nil {

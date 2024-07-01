@@ -10,6 +10,7 @@ import (
 	prices_types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/skip-mev/slinky/pkg/types"
 	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
+	"math/rand"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -278,7 +279,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 							{
 								Ticker: mmtypes.Ticker{
 									CurrencyPair: types.CurrencyPair{
-										Base:  "BTC",
+										Base:  "TEST",
 										Quote: "USD",
 									},
 									Decimals:         1,
@@ -294,6 +295,14 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 				simulate: false,
 				marketPerps: []marketPerpPair{
 					{
+						market: prices_types.MarketParam{
+							Id:                 0,
+							Pair:               "TEST-USD",
+							Exponent:           -8,
+							MinExchanges:       1,
+							MinPriceChangePpm:  10,
+							ExchangeConfigJson: `{"test_config_placeholder":{}}`,
+						},
 						perp: perpetualtypes.Perpetual{
 							Params: perpetualtypes.PerpetualParams{
 								Id:                0,
@@ -301,7 +310,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 								MarketId:          uint32(0),
 								AtomicResolution:  int32(-8),
 								DefaultFundingPpm: int32(0),
-								LiquidityTier:     uint32(8),
+								LiquidityTier:     uint32(0),
 								MarketType:        perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
 							},
 							FundingIndex: dtypes.ZeroInt(),
@@ -310,7 +319,58 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 					},
 				},
 			},
-			wantErr: false,
+		},
+		{
+			name: "reject a single message with cross markets",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpsertMarkets{
+						Authority: constants.BobAccAddress.String(),
+						Markets: []mmtypes.Market{
+							{
+								Ticker: mmtypes.Ticker{
+									CurrencyPair: types.CurrencyPair{
+										Base:  "TEST",
+										Quote: "USD",
+									},
+									Decimals:         1,
+									MinProviderCount: 1,
+									Enabled:          true,
+									Metadata_JSON:    "",
+								},
+								ProviderConfigs: nil,
+							},
+						},
+					},
+				},
+				simulate: false,
+				marketPerps: []marketPerpPair{
+					{
+						market: prices_types.MarketParam{
+							Id:                 0,
+							Pair:               "TEST-USD",
+							Exponent:           -8,
+							MinExchanges:       1,
+							MinPriceChangePpm:  10,
+							ExchangeConfigJson: `{"test_config_placeholder":{}}`,
+						},
+						perp: perpetualtypes.Perpetual{
+							Params: perpetualtypes.PerpetualParams{
+								Id:                0,
+								Ticker:            "TEST-USD small margin requirement",
+								MarketId:          uint32(0),
+								AtomicResolution:  int32(-8),
+								DefaultFundingPpm: int32(0),
+								LiquidityTier:     uint32(0),
+								MarketType:        perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+							},
+							FundingIndex: dtypes.ZeroInt(),
+							OpenInterest: dtypes.ZeroInt(),
+						},
+					},
+				},
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -319,14 +379,15 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			// setup initial perps based on test
-			for i, pair := range tt.args.marketPerps {
-				pair.market.Id = uint32(i)
+			for _, pair := range tt.args.marketPerps {
+				marketID := rand.Uint32()
+				pair.market.Id = marketID
 
 				_, err := tApp.App.PricesKeeper.CreateMarket(
 					ctx,
 					pair.market,
 					prices_types.MarketPrice{
-						Id:       uint32(i),
+						Id:       marketID,
 						Exponent: -8,
 						Price:    10,
 					},
@@ -335,9 +396,9 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 
 				_, err = tApp.App.PerpetualsKeeper.CreatePerpetual(
 					ctx,
-					uint32(i),
+					marketID,
 					pair.perp.Params.Ticker,
-					pair.perp.Params.MarketId,
+					marketID,
 					pair.perp.Params.AtomicResolution,
 					pair.perp.Params.DefaultFundingPpm,
 					pair.perp.Params.LiquidityTier,
