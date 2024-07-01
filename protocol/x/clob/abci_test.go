@@ -22,8 +22,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 
-	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
@@ -51,9 +49,7 @@ func assertFillAmountAndPruneState(
 	t *testing.T,
 	k *keeper.Keeper,
 	ctx sdk.Context,
-	storeKey storetypes.StoreKey,
 	expectedFillAmounts map[types.OrderId]satypes.BaseQuantums,
-	expectedPruneableBlockHeights map[uint32][]types.OrderId,
 	expectedPrunedOrders map[types.OrderId]bool,
 ) {
 	for orderId, expectedFillAmount := range expectedFillAmounts {
@@ -65,28 +61,6 @@ func assertFillAmountAndPruneState(
 	for orderId := range expectedPrunedOrders {
 		exists, _, _ := k.GetOrderFillAmount(ctx, orderId)
 		require.False(t, exists)
-	}
-
-	for blockHeight, orderIds := range expectedPruneableBlockHeights {
-		// Verify that expected `blockHeightToPotentiallyPrunableOrders` were deleted.
-		blockHeightToPotentiallyPrunableOrdersStore := prefix.NewStore(
-			ctx.KVStore(storeKey),
-			[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
-		)
-
-		potentiallyPrunableOrdersBytes := blockHeightToPotentiallyPrunableOrdersStore.Get(
-			lib.Uint32ToKey(blockHeight),
-		)
-
-		var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}
-		err := potentiallyPrunableOrders.Unmarshal(potentiallyPrunableOrdersBytes)
-		require.NoError(t, err)
-
-		require.ElementsMatch(
-			t,
-			potentiallyPrunableOrders.OrderIds,
-			orderIds,
-		)
 	}
 }
 
@@ -184,7 +158,6 @@ func TestEndBlocker_Success(t *testing.T) {
 
 		// Expectations.
 		expectedFillAmounts                  map[types.OrderId]satypes.BaseQuantums
-		expectedPruneableBlockHeights        map[uint32][]types.OrderId
 		expectedPrunedOrders                 map[types.OrderId]bool
 		expectedStatefulPlacementInState     map[types.OrderId]bool
 		expectedStatefulOrderTimeSlice       map[time.Time][]types.OrderId
@@ -802,9 +775,7 @@ func TestEndBlocker_Success(t *testing.T) {
 				t,
 				ks.ClobKeeper,
 				ctx,
-				ks.StoreKey,
 				tc.expectedFillAmounts,
-				tc.expectedPruneableBlockHeights,
 				tc.expectedPrunedOrders,
 			)
 

@@ -792,6 +792,11 @@ func (_m *ClobKeeper) MaybeGetLiquidationOrder(ctx types.Context, subaccountId s
 	return r0, r1
 }
 
+// MigratePruneableOrders provides a mock function with given fields: ctx
+func (_m *ClobKeeper) MigratePruneableOrders(ctx types.Context) {
+	_m.Called(ctx)
+}
+
 // MustAddOrderToStatefulOrdersTimeSlice provides a mock function with given fields: ctx, goodTilBlockTime, orderId
 func (_m *ClobKeeper) MustAddOrderToStatefulOrdersTimeSlice(ctx types.Context, goodTilBlockTime time.Time, orderId clobtypes.OrderId) {
 	_m.Called(ctx, goodTilBlockTime, orderId)

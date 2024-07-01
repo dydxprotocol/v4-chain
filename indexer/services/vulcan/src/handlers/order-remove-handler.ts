@@ -38,7 +38,7 @@ import {
   SubaccountMessage,
 } from '@dydxprotocol-indexer/v4-protos';
 import { Big } from 'big.js';
-import { Message } from 'kafkajs';
+import { IHeaders, Message } from 'kafkajs';
 
 import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
@@ -68,7 +68,7 @@ import { getStateRemainingQuantums, getTriggerPrice } from './helpers';
  */
 export class OrderRemoveHandler extends Handler {
   // eslint-disable-next-line @typescript-eslint/require-await
-  protected async handle(update: OffChainUpdateV1): Promise<void> {
+  protected async handle(update: OffChainUpdateV1, headers: IHeaders): Promise<void> {
     logger.info({
       at: 'OrderRemoveHandler#handle',
       message: 'Received OffChainUpdate with OrderRemove.',
@@ -131,11 +131,11 @@ export class OrderRemoveHandler extends Handler {
     }
 
     if (this.isStatefulOrderCancelation(orderRemove)) {
-      await this.handleStatefulOrderCancelation(orderRemove, removeOrderResult);
+      await this.handleStatefulOrderCancelation(orderRemove, removeOrderResult, headers);
       return;
     }
 
-    await this.handleOrderRemoval(orderRemove, removeOrderResult);
+    await this.handleOrderRemoval(orderRemove, removeOrderResult, headers);
   }
 
   protected validateOrderRemove(orderRemove: OrderRemoveV1): void {
@@ -193,6 +193,7 @@ export class OrderRemoveHandler extends Handler {
   protected async handleStatefulOrderCancelation(
     orderRemove: OrderRemoveV1,
     removeOrderResult: RemoveOrderResult,
+    headers: IHeaders,
   ): Promise<void> {
     const order: OrderFromDatabase | undefined = await runFuncWithTimingStat(
       OrderTable.findById(
@@ -230,6 +231,9 @@ export class OrderRemoveHandler extends Handler {
         orderRemove,
         perpetualMarket.ticker,
       ),
+      headers: {
+        message_received_timestamp: headers.message_received_timestamp,
+      },
     };
     sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
 
@@ -241,7 +245,7 @@ export class OrderRemoveHandler extends Handler {
       removeOrderResult.removed &&
       removeOrderResult.restingOnBook === true &&
       !requiresImmediateExecution(removeOrderResult.removedOrder!.order!.timeInForce)) {
-      await this.updateOrderbook(removeOrderResult, perpetualMarket);
+      await this.updateOrderbook(removeOrderResult, perpetualMarket, headers);
     }
 
   }
@@ -259,6 +263,7 @@ export class OrderRemoveHandler extends Handler {
   protected async handleOrderRemoval(
     orderRemove: OrderRemoveV1,
     removeOrderResult: RemoveOrderResult,
+    headers: IHeaders,
   ): Promise<void> {
     if (!removeOrderResult.removed) {
       logger.info({
@@ -306,6 +311,9 @@ export class OrderRemoveHandler extends Handler {
         orderRemove,
         perpetualMarket,
       ),
+      headers: {
+        message_received_timestamp: headers.message_received_timestamp,
+      },
     };
 
     if (this.shouldSendSubaccountMessage(orderRemove, removeOrderResult, stateRemainingQuantums)) {
@@ -322,7 +330,7 @@ export class OrderRemoveHandler extends Handler {
       !remainingQuantums.eq('0') &&
       removeOrderResult.restingOnBook !== false &&
       !requiresImmediateExecution(removeOrderResult.removedOrder!.order!.timeInForce)) {
-      await this.updateOrderbook(removeOrderResult, perpetualMarket);
+      await this.updateOrderbook(removeOrderResult, perpetualMarket, headers);
     }
     // TODO: consolidate remove handler logic into a single lua script.
     await this.addOrderToCanceledOrdersCache(
@@ -339,6 +347,7 @@ export class OrderRemoveHandler extends Handler {
   protected async updateOrderbook(
     removeOrderResult: RemoveOrderResult,
     perpetualMarket: PerpetualMarketFromDatabase,
+    headers: IHeaders,
   ): Promise<void> {
     const updatedQuantums: number = await runFuncWithTimingStat(
       this.updatePriceLevelsCache(
@@ -352,6 +361,9 @@ export class OrderRemoveHandler extends Handler {
         perpetualMarket,
         updatedQuantums,
       ),
+      headers: {
+        message_received_timestamp: headers.message_received_timestamp,
+      },
     };
     sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
   }
