@@ -45,6 +45,7 @@ func TestSafetyHeapInsertRemoval(t *testing.T) {
 		// Setup keeper state and test parameters.
 		ctx, subaccountsKeeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, false)
 
+		// Shuffle the subaccounts so that insertion order is random.
 		slices.Shuffle(allSubaccounts)
 
 		store := subaccountsKeeper.GetSafetyHeapStore(ctx, 0, satypes.Long)
