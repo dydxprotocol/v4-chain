@@ -3,6 +3,9 @@ package ante
 import (
 	"errors"
 	"fmt"
+	prices_types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
+	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -16,14 +19,16 @@ var ErrnoCrossMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUps
 	"on a market listed as cross margin")
 
 type ValidateMarketUpdateDecorator struct {
-	pk    perpetualstypes.PerpetualsKeeper
-	cache map[string]perpetualstypes.PerpetualMarketType
+	perpKeeper  perpetualstypes.PerpetualsKeeper
+	priceKeeper prices_types.PricesKeeper
+	cache       map[string]perpetualstypes.PerpetualMarketType
 }
 
-func NewValidateMarketUpdateDecorator(pk perpetualstypes.PerpetualsKeeper) ValidateMarketUpdateDecorator {
+func NewValidateMarketUpdateDecorator(perpKeeper perpetualstypes.PerpetualsKeeper, priceKeeper prices_types.PricesKeeper) ValidateMarketUpdateDecorator {
 	return ValidateMarketUpdateDecorator{
-		pk:    pk,
-		cache: make(map[string]perpetualstypes.PerpetualMarketType),
+		perpKeeper:  perpKeeper,
+		priceKeeper: priceKeeper,
+		cache:       make(map[string]perpetualstypes.PerpetualMarketType),
 	}
 }
 
@@ -64,7 +69,7 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 }
 
 func (d ValidateMarketUpdateDecorator) doMarketsContainCrossMarket(ctx sdk.Context, markets []mmtypes.Market) bool {
-	perps := d.pk.GetAllPerpetuals(ctx)
+	perps := d.perpKeeper.GetAllPerpetuals(ctx)
 
 	for _, market := range markets {
 		ticker := market.Ticker.CurrencyPair.String()
@@ -73,7 +78,12 @@ func (d ValidateMarketUpdateDecorator) doMarketsContainCrossMarket(ctx sdk.Conte
 		if !found {
 			// search for market if we cannot find
 			for _, perp := range perps {
-				if perp.Params.Ticker == ticker {
+				params, exists := d.priceKeeper.GetMarketParam(ctx, perp.Params.MarketId)
+				if !exists {
+					return false
+				}
+
+				if MatchPairToSlinkyTicker(params.Pair, market.Ticker.CurrencyPair) {
 					// populate cache
 					marketType := perp.Params.MarketType
 					d.cache[ticker] = marketType
@@ -120,4 +130,19 @@ func IsMarketUpdateTx(tx sdk.Tx) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// MatchPairToSlinkyTicker matches a market params string of form "BTC-USD"
+// toa slinky currency pair struct consisting of a BASE and QUOTE.
+func MatchPairToSlinkyTicker(pair string, ticker slinkytypes.CurrencyPair) bool {
+	pairSplit := strings.Split(pair, "-")
+	if len(pairSplit) != 2 {
+		return false
+	}
+
+	if pairSplit[0] == ticker.Base && pairSplit[1] == ticker.Quote {
+		return true
+	}
+
+	return false
 }

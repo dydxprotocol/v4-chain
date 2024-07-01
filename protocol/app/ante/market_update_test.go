@@ -3,9 +3,12 @@ package ante_test
 import (
 	sdkmath "cosmossdk.io/math"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	prices_types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/skip-mev/slinky/pkg/types"
 	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"testing"
 
@@ -157,10 +160,15 @@ func TestIsMarketUpdateTx(t *testing.T) {
 }
 
 func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
+	type marketPerpPair struct {
+		market prices_types.MarketParam
+		perp   perpetualtypes.Perpetual
+	}
+
 	type args struct {
-		msgs       []sdk.Msg
-		simulate   bool
-		perpetuals []perpetualtypes.Perpetual
+		msgs        []sdk.Msg
+		simulate    bool
+		marketPerps []marketPerpPair
 	}
 	tests := []struct {
 		name    string
@@ -260,6 +268,50 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "accept a single message with no cross markets",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpsertMarkets{
+						Authority: constants.BobAccAddress.String(),
+						Markets: []mmtypes.Market{
+							{
+								Ticker: mmtypes.Ticker{
+									CurrencyPair: types.CurrencyPair{
+										Base:  "BTC",
+										Quote: "USD",
+									},
+									Decimals:         1,
+									MinProviderCount: 1,
+									Enabled:          true,
+									Metadata_JSON:    "",
+								},
+								ProviderConfigs: nil,
+							},
+						},
+					},
+				},
+				simulate: false,
+				marketPerps: []marketPerpPair{
+					{
+						perp: perpetualtypes.Perpetual{
+							Params: perpetualtypes.PerpetualParams{
+								Id:                0,
+								Ticker:            "BTC-USD small margin requirement",
+								MarketId:          uint32(0),
+								AtomicResolution:  int32(-8),
+								DefaultFundingPpm: int32(0),
+								LiquidityTier:     uint32(8),
+								MarketType:        perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
+							},
+							FundingIndex: dtypes.ZeroInt(),
+							OpenInterest: dtypes.ZeroInt(),
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -267,21 +319,34 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			// setup initial perps based on test
-			for i, perp := range tt.args.perpetuals {
-				_, err := tApp.App.PerpetualsKeeper.CreatePerpetual(
+			for i, pair := range tt.args.marketPerps {
+				pair.market.Id = uint32(i)
+
+				_, err := tApp.App.PricesKeeper.CreateMarket(
+					ctx,
+					pair.market,
+					prices_types.MarketPrice{
+						Id:       uint32(i),
+						Exponent: -8,
+						Price:    10,
+					},
+				)
+				require.NoError(t, err)
+
+				_, err = tApp.App.PerpetualsKeeper.CreatePerpetual(
 					ctx,
 					uint32(i),
-					perp.Params.Ticker,
-					perp.Params.MarketId,
-					perp.Params.AtomicResolution,
-					perp.Params.DefaultFundingPpm,
-					perp.Params.LiquidityTier,
-					perp.Params.MarketType,
+					pair.perp.Params.Ticker,
+					pair.perp.Params.MarketId,
+					pair.perp.Params.AtomicResolution,
+					pair.perp.Params.DefaultFundingPpm,
+					pair.perp.Params.LiquidityTier,
+					pair.perp.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
 
-			wrappedHandler := ante.NewValidateMarketUpdateDecorator(tApp.App.PerpetualsKeeper)
+			wrappedHandler := ante.NewValidateMarketUpdateDecorator(tApp.App.PerpetualsKeeper, tApp.App.PricesKeeper)
 			anteHandler := sdk.ChainAnteDecorators(wrappedHandler)
 
 			// Empty private key, so tx's signature should be empty.
