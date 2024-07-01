@@ -100,9 +100,4 @@ var (
 		19,
 		"Owner share not found",
 	)
-	ErrNotEnoughOwnerShare = errorsmod.Register(
-		ModuleName,
-		20,
-		"Owner share is less than or equal to zero",
-	)
 )
