@@ -6,6 +6,12 @@ import (
 	"testing"
 	"time"
 
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/gogoproto/proto"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+
 	v_6_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v6.0.0"
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -50,6 +56,7 @@ func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	// Add test for your upgrade handler logic below
 	postUpgradeStatefulOrderCheck(node, t)
+	postUpgradeMarketMapperRevShareChecks(node, t)
 }
 
 func placeOrders(node *containertest.Node, t *testing.T) {
@@ -191,4 +198,51 @@ func postUpgradeStatefulOrderCheck(node *containertest.Node, t *testing.T) {
 		},
 	)
 	require.ErrorIs(t, err, status.Error(codes.NotFound, "not found"))
+}
+
+func postUpgradeMarketMapperRevShareChecks(node *containertest.Node, t *testing.T) {
+	// Check that all rev share params are set to the default value
+	resp, err := containertest.Query(
+		node,
+		revsharetypes.NewQueryClient,
+		revsharetypes.QueryClient.MarketMapperRevenueShareParams,
+		&revsharetypes.QueryMarketMapperRevenueShareParams{},
+	)
+	require.NoError(t, err)
+
+	params := revsharetypes.QueryMarketMapperRevenueShareParamsResponse{}
+	err = proto.UnmarshalText(resp.String(), &params)
+	require.NoError(t, err)
+	require.Equal(t, params.Params.Address, authtypes.NewModuleAddress(authtypes.FeeCollectorName).String())
+	require.Equal(t, params.Params.RevenueSharePpm, uint32(0))
+	require.Equal(t, params.Params.ValidDays, uint32(0))
+
+	// Get all markets list
+	marketParams := pricestypes.QueryAllMarketParamsResponse{}
+	resp, err = containertest.Query(
+		node,
+		pricestypes.NewQueryClient,
+		pricestypes.QueryClient.AllMarketParams,
+		&pricestypes.QueryAllMarketParamsRequest{},
+	)
+	require.NoError(t, err)
+	err = proto.UnmarshalText(resp.String(), &marketParams)
+	require.NoError(t, err)
+
+	// Check that all rev share details are set to the default value
+	for _, market := range marketParams.MarketParams {
+		revShareDetails := revsharetypes.QueryMarketMapperRevShareDetailsResponse{}
+		resp, err := containertest.Query(
+			node,
+			revsharetypes.NewQueryClient,
+			revsharetypes.QueryClient.MarketMapperRevShareDetails,
+			&revsharetypes.QueryMarketMapperRevShareDetails{
+				MarketId: market.Id,
+			},
+		)
+		require.NoError(t, err)
+		err = proto.UnmarshalText(resp.String(), &revShareDetails)
+		require.NoError(t, err)
+		require.Equal(t, revShareDetails.Details.ExpirationTs, uint64(0))
+	}
 }

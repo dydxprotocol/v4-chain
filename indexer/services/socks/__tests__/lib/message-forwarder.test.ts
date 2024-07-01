@@ -182,6 +182,8 @@ describe('message-forwarder', () => {
   };
 
   beforeAll(async () => {
+    config.BATCH_PROCESSING_ENABLED = false;
+    await dbHelpers.clearData();
     await dbHelpers.migrate();
     await testMocks.seedData();
     await Promise.all([

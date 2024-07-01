@@ -1,15 +1,17 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   BlockFromDatabase,
-  BlockTable,
-  PnlTicksTable,
+  BlockTable, PnlTicksCreateObject,
   SubaccountFromDatabase,
   SubaccountTable,
   TransferTable,
 } from '@dydxprotocol-indexer/postgres';
+import { PnlTickForSubaccounts } from '@dydxprotocol-indexer/redis';
+import _ from 'lodash';
 import { DateTime } from 'luxon';
 
 import config from '../config';
+import { getMostRecentPnlTicksForEachAccount } from '../helpers/pnl-ticks-helper';
 
 /**
  * Instrument data on PNL to be used for analytics.
@@ -34,20 +36,23 @@ export default async function runTask(): Promise<void> {
     (subaccount: SubaccountFromDatabase) => subaccount.id,
   );
 
-  // Get the most recent PNL ticks for each subaccount in DB
-  const mostRecentPnlTicks: {
+  // Get the most recent PNL ticks for each subaccount from Redis
+  const mostRecentPnlTicks: PnlTickForSubaccounts = await getMostRecentPnlTicksForEachAccount();
+  const mostRecentPnlTickTimes:
+  {
     [subaccountId: string]: string
-  } = await PnlTicksTable.findMostRecentPnlTickTimeForEachAccount(
-    '1',
+  } = _.mapValues(
+    mostRecentPnlTicks,
+    (pnlTick: PnlTicksCreateObject) => pnlTick.blockTime,
   );
 
   // Check last PNL computation for each subaccount
   const stalePnlSubaccounts: string[] = [];
-  const subaccountsWithPnl: string[] = Object.keys(mostRecentPnlTicks);
+  const subaccountsWithPnl: string[] = Object.keys(mostRecentPnlTickTimes);
   subaccountIds.forEach((id: string) => {
-    const lastPnlTick: string = mostRecentPnlTicks[id];
-    if (lastPnlTick) {
-      const lastPnlTime: DateTime = DateTime.fromISO(lastPnlTick);
+    const lastPnlTickTime: string = mostRecentPnlTickTimes[id];
+    if (lastPnlTickTime) {
+      const lastPnlTime: DateTime = DateTime.fromISO(lastPnlTickTime);
       const hoursSinceLastPnl = startTaskTime.diff(lastPnlTime, 'hours').hours;
 
       if (hoursSinceLastPnl >= 2) {

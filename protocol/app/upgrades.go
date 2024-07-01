@@ -33,6 +33,7 @@ func (app *App) setupUpgradeHandlers() {
 			app.ClobKeeper,
 			app.PricesKeeper,
 			app.MarketMapKeeper,
+			app.RevShareKeeper,
 		),
 	)
 }

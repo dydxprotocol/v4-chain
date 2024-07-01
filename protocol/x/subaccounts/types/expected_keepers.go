@@ -96,3 +96,14 @@ type BankKeeper interface {
 type BlocktimeKeeper interface {
 	GetDowntimeInfoFor(ctx sdk.Context, duration time.Duration) blocktimetypes.AllDowntimeInfo_DowntimeInfo
 }
+
+type RevShareKeeper interface {
+	GetMarketMapperRevenueShareForMarket(
+		ctx sdk.Context,
+		marketId uint32,
+	) (
+		address sdk.AccAddress,
+		revenueSharePpm uint32,
+		err error,
+	)
+}

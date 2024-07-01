@@ -2,17 +2,18 @@ package keeper_test
 
 import (
 	"math"
+	"math/big"
 	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	testutil_bank "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -452,18 +453,18 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(-50_000_000), // .5 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(-50_000_000), // .5 BTC
+						big.NewInt(0),
+					),
 				},
 				constants.Dave_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(50_000_000), // .5 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(50_000_000), // .5 BTC
+						big.NewInt(0),
+					),
 				},
 			},
 		},
@@ -806,18 +807,18 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(-50_000_000), // .5 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(-50_000_000), // .5 BTC
+						big.NewInt(0),
+					),
 				},
 				constants.Dave_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(50_000_000), // .5 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(50_000_000), // .5 BTC
+						big.NewInt(0),
+					),
 				},
 			},
 		},
@@ -898,18 +899,18 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(-50_000_000), // .5 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(-50_000_000), // .5 BTC
+						big.NewInt(0),
+					),
 				},
 				constants.Dave_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(50_000_000), // .5 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(50_000_000), // .5 BTC
+						big.NewInt(0),
+					),
 				},
 			},
 		},

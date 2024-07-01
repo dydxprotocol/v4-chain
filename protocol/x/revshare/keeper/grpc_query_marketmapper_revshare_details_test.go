@@ -40,5 +40,5 @@ func TestQueryMarketMapperRevShareDetailsFailure(t *testing.T) {
 			MarketId: 42,
 		},
 	)
-	require.ErrorContains(t, err, "MarketMapperRevShareDetails not found for marketId: 42")
+	require.ErrorIs(t, err, types.ErrMarketMapperRevShareDetailsNotFound)
 }
