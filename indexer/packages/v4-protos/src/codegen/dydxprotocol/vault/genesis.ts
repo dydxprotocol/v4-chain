@@ -1,6 +1,5 @@
 import { Params, ParamsSDKType } from "./params";
-import { VaultId, VaultIdSDKType, NumShares, NumSharesSDKType } from "./vault";
-import { OwnerShare, OwnerShareSDKType } from "./query";
+import { VaultId, VaultIdSDKType, NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType } from "./vault";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** GenesisState defines `x/vault`'s genesis state. */
