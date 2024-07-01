@@ -142,8 +142,8 @@ export async function create(
   return PnlTicksModel.query(
     Transaction.get(options.txId),
   ).insert({
-    id: uuid(pnlTicksToCreate.subaccountId, pnlTicksToCreate.createdAt),
     ...pnlTicksToCreate,
+    id: uuid(pnlTicksToCreate.subaccountId, pnlTicksToCreate.createdAt),
   }).returning('*');
 }
 

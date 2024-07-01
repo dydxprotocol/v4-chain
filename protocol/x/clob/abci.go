@@ -61,9 +61,10 @@ func EndBlocker(
 		keeper.DeleteLongTermOrderPlacement(ctx, orderId)
 
 		// Emit an on-chain indexer event for Stateful Order Expiration.
-		keeper.GetIndexerEventManager().AddTxnEvent(
+		keeper.GetIndexerEventManager().AddBlockEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
+			indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 			indexerevents.StatefulOrderEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewStatefulOrderRemovalEvent(

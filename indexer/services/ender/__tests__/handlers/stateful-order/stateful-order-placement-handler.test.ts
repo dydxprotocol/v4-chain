@@ -36,6 +36,7 @@ import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
+  expectOrderSubaccountKafkaMessage,
   expectVulcanKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
 import { StatefulOrderPlacementHandler } from '../../../src/handlers/stateful-order/stateful-order-placement-handler';
@@ -44,6 +45,7 @@ import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
+import config from '../../../src/config';
 
 describe('statefulOrderPlacementHandler', () => {
   beforeAll(async () => {
@@ -61,6 +63,7 @@ describe('statefulOrderPlacementHandler', () => {
   afterEach(async () => {
     await dbHelpers.clearData();
     jest.clearAllMocks();
+    config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = false;
   });
 
   afterAll(async () => {
@@ -135,14 +138,24 @@ describe('statefulOrderPlacementHandler', () => {
 
   it.each([
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
-    ['stateful order placement', defaultStatefulOrderEvent],
-    ['stateful long term order placement', defaultStatefulOrderLongTermEvent],
-  ])('successfully places order with %s', async (
+    ['stateful order placement as txn event', defaultStatefulOrderEvent, false, 0],
+    ['stateful long term order placement as txn event', defaultStatefulOrderLongTermEvent, false, 0],
+    ['stateful order placement as txn event', defaultStatefulOrderEvent, true, 0],
+    ['stateful long term order placement as txn event', defaultStatefulOrderLongTermEvent, true, 0],
+    ['stateful order placement as block event', defaultStatefulOrderEvent, false, -1],
+    ['stateful long term order placement as block event', defaultStatefulOrderLongTermEvent, false, -1],
+    ['stateful order placement as block event', defaultStatefulOrderEvent, true, -1],
+    ['stateful long term order placement as block event', defaultStatefulOrderLongTermEvent, true, -1],
+  ])('successfully places order with %s (emit subaccount websocket msg: %s)', async (
     _name: string,
     statefulOrderEvent: StatefulOrderEventV1,
+    emitSubaccountMessage: boolean,
+    transactionIndex: number,
   ) => {
+    config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = emitSubaccountMessage;
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       statefulOrderEvent,
+      transactionIndex,
     );
 
     await onMessage(kafkaMessage);
@@ -182,6 +195,15 @@ describe('statefulOrderPlacementHandler', () => {
       offchainUpdate: expectedOffchainUpdate,
       headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderPlacement' },
     });
+    if (emitSubaccountMessage) {
+      expectOrderSubaccountKafkaMessage(
+        producerSendMock,
+        defaultOrder.orderId!.subaccountId!,
+        order!,
+        defaultHeight.toString(),
+        transactionIndex,
+      );
+    }
   });
 
   it.each([

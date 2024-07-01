@@ -41,6 +41,7 @@ import {
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
+import { expectPerpetualMarketMatchesEvent } from '../helpers/postgres-helpers';
 
 describe('perpetualMarketHandler', () => {
   beforeAll(async () => {
@@ -190,23 +191,6 @@ describe('perpetualMarketHandler', () => {
   });
 });
 });
-
-function expectPerpetualMarketMatchesEvent(
-  perpetual: PerpetualMarketCreateEventV1,
-  perpetualMarket: PerpetualMarketFromDatabase,
-) {
-  expect(perpetualMarket).toEqual(expect.objectContaining({
-    id: perpetual.id.toString(),
-    clobPairId: perpetual.clobPairId.toString(),
-    ticker: perpetual.ticker,
-    marketId: perpetual.marketId,
-    quantumConversionExponent: perpetual.quantumConversionExponent,
-    atomicResolution: perpetual.atomicResolution,
-    subticksPerTick: perpetual.subticksPerTick,
-    stepBaseQuantums: Number(perpetual.stepBaseQuantums),
-    liquidityTierId: perpetual.liquidityTier,
-  }));
-}
 
 function createKafkaMessageFromPerpetualMarketEvent({
   perpetualMarketEventBytes,

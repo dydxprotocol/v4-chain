@@ -116,9 +116,10 @@ func TestEndBlocker_Failure(t *testing.T) {
 			ctx := ks.Ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(tc.blockTime)
 
 			for _, orderId := range tc.expiredStatefulOrderIds {
-				mockIndexerEventManager.On("AddTxnEvent",
+				mockIndexerEventManager.On("AddBlockEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
+					indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewStatefulOrderRemovalEvent(
@@ -739,9 +740,10 @@ func TestEndBlocker_Success(t *testing.T) {
 
 			// Assert that the indexer events for Expired Stateful Orders were emitted.
 			for _, orderId := range tc.expectedProcessProposerMatchesEvents.ExpiredStatefulOrderIds {
-				mockIndexerEventManager.On("AddTxnEvent",
+				mockIndexerEventManager.On("AddBlockEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
+					indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewStatefulOrderRemovalEvent(
