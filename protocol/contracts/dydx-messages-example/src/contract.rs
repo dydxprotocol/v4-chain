@@ -37,40 +37,7 @@ pub fn execute(
 ) -> Result<Response<DydxMsg>, ContractError> {
     match msg {
         ExecuteMsg::DydxMsg(dydx_msg) => {
-            match dydx_msg{
-                DydxMsg::DepositToSubaccount { sender, recipient, asset_id, quantums } => {
-                    let deposit = DydxMsg::DepositToSubaccount {
-                        sender: sender,
-                        recipient: recipient,
-                        asset_id: asset_id,
-                        quantums: quantums,
-                    };
-                    Ok(Response::new().add_message(deposit))
-                }
-                DydxMsg::WithdrawFromSubaccount { sender, recipient, asset_id, quantums } => {
-                    let withdraw = DydxMsg::WithdrawFromSubaccount {
-                        sender: sender,
-                        recipient: recipient,
-                        asset_id: asset_id,
-                        quantums: quantums,
-                    };
-                    Ok(Response::new().add_message(withdraw))
-                }
-                DydxMsg::PlaceOrder { order } => {
-                    let place_order = DydxMsg::PlaceOrder {
-                        order: order,
-                    };
-                    Ok(Response::new().add_message(place_order))
-                }
-                DydxMsg::CancelOrder { order_id, good_til_oneof } => {
-                    let cancel_order = DydxMsg::CancelOrder {
-                        order_id: order_id,
-                        good_til_oneof: good_til_oneof,
-                    };
-                    Ok(Response::new().add_message(cancel_order))
-                }
-                _ => Err(ContractError::InvalidDydxMsg{}),
-            }
+            Ok(Response::new().add_message(dydx_msg))
         }
     }
 }
