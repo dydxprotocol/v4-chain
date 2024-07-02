@@ -15,8 +15,8 @@ func (k Keeper) mustTransitionToFinalSettlement(ctx sdk.Context, clobPairId type
 	// Forcefully cancel all stateful orders from state for this clob pair.
 	k.mustCancelStatefulOrdersForFinalSettlement(ctx, clobPairId)
 
-	// Delete untriggered conditional orders for this clob pair from memory.
-	delete(k.UntriggeredConditionalOrders, clobPairId)
+	// // Delete untriggered conditional orders for this clob pair from memory.
+	// delete(k.UntriggeredConditionalOrders, clobPairId)
 }
 
 // mustCancelStatefulOrdersForFinalSettlement forcefully cancels all stateful orders

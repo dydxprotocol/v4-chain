@@ -1394,6 +1394,28 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].subticks_per_tick' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].quantum_conversion_exponent' -v '-9'
 
+
+	# Set up more test markets
+	for id in {33..100}
+	do
+		dasel put -t json -f "$GENESIS" ".app_state.perpetuals.perpetuals.[]" -v "{}"
+		dasel put -t string -f "$GENESIS" ".app_state.perpetuals.perpetuals.[$id].params.ticker" -v "TICKER-$id"
+		dasel put -t int -f "$GENESIS" ".app_state.perpetuals.perpetuals.[$id].params.id" -v "$id"
+		dasel put -t int -f "$GENESIS" ".app_state.perpetuals.perpetuals.[$id].params.market_id" -v '32' # use existing oracle price.
+		dasel put -t int -f "$GENESIS" ".app_state.perpetuals.perpetuals.[$id].params.atomic_resolution" -v '-5'
+		dasel put -t int -f "$GENESIS" ".app_state.perpetuals.perpetuals.[$id].params.default_funding_ppm" -v '0'
+		dasel put -t int -f "$GENESIS" ".app_state.perpetuals.perpetuals.[$id].params.liquidity_tier" -v '1'
+		dasel put -t int -f "$GENESIS" ".app_state.perpetuals.perpetuals.[$id].params.market_type" -v '1'
+		
+		dasel put -t json -f "$GENESIS" ".app_state.clob.clob_pairs.[]" -v "{}"
+		dasel put -t int -f "$GENESIS" ".app_state.clob.clob_pairs.[$id].id" -v "$id"
+		dasel put -t string -f "$GENESIS" ".app_state.clob.clob_pairs.[$id].status" -v "$INITIAL_CLOB_PAIR_STATUS"
+		dasel put -t int -f "$GENESIS" ".app_state.clob.clob_pairs.[$id].perpetual_clob_metadata.perpetual_id" -v "$id"
+		dasel put -t int -f "$GENESIS" ".app_state.clob.clob_pairs.[$id].step_base_quantums" -v '1000000'
+		dasel put -t int -f "$GENESIS" ".app_state.clob.clob_pairs.[$id].subticks_per_tick" -v '1000000'
+		dasel put -t int -f "$GENESIS" ".app_state.clob.clob_pairs.[$id].quantum_conversion_exponent" -v '-9'
+	done
+
 	# Liquidations
 	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.max_liquidation_fee_ppm' -v '15000'  # 1.5%
 	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.position_block_limits.min_position_notional_liquidated' -v '1000000000' # 1_000 USDC
@@ -1565,7 +1587,7 @@ function update_genesis_use_test_exchange() {
 # Modify the genesis file to add test volatile market. Market TEST-USD will be added as market 33.
 function update_genesis_use_test_volatile_market() {
 	GENESIS=$1/genesis.json
-	TEST_USD_MARKET_ID=33
+	TEST_USD_MARKET_ID=999
 
 	# Market: TEST-USD
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
