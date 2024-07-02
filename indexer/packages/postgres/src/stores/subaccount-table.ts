@@ -21,6 +21,7 @@ import {
   QueryableField,
   SubaccountUpdateObject,
 } from '../types';
+import config from '../config';
 
 export function uuid(address: string, subaccountNumber: number): string {
   // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
@@ -187,4 +188,17 @@ export async function update(
   const updatedSubaccount = await subaccount.$query().patch(fields as PartialModelObject<SubaccountModel>).returning('*');
   // The objection types mistakenly think the query returns an array of Subaccounts.
   return updatedSubaccount as unknown as (SubaccountFromDatabase | undefined);
+}
+
+export async function deleteById(
+  id: string,
+  options: Options = { txId: undefined },
+): Promise<void> {
+  if (config.NODE_ENV !== 'test') {
+    throw new Error('Subaccount deletion is not allowed in non-test environments');
+  }
+
+  await SubaccountModel.query(
+    Transaction.get(options.txId),
+  ).deleteById(id);
 }
