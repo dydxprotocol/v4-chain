@@ -100,7 +100,8 @@ func (k Keeper) DecommissionVault(
 	}
 }
 
-// GetAllVaults returns all vaults with their total shares and owner shares.
+// GetAllVaults returns all vaults with their total shares, owner shares, and individual params.
+// Note: This function is only used for exporting module state.
 func (k Keeper) GetAllVaults(ctx sdk.Context) []*types.Vault {
 	vaults := []*types.Vault{}
 	totalSharesIterator := k.getTotalSharesIterator(ctx)
@@ -116,10 +117,13 @@ func (k Keeper) GetAllVaults(ctx sdk.Context) []*types.Vault {
 
 		allOwnerShares := k.GetAllOwnerShares(ctx, *vaultId)
 
+		vaultParams, _ := k.GetVaultParams(ctx, *vaultId)
+
 		vaults = append(vaults, &types.Vault{
 			VaultId:     vaultId,
 			TotalShares: &totalShares,
 			OwnerShares: allOwnerShares,
+			VaultParams: &vaultParams,
 		})
 	}
 	return vaults

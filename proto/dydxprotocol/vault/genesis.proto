@@ -23,4 +23,6 @@ message Vault {
   NumShares total_shares = 2;
   // The shares of each owner in the vault.
   repeated OwnerShare owner_shares = 3;
+  // The individual parameters of the vault.
+  VaultParams vault_params = 4;
 }
