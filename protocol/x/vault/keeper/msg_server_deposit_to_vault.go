@@ -19,7 +19,7 @@ func (k msgServer) DepositToVault(
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 	quoteQuantums := msg.QuoteQuantums.BigInt()
 
-	// Mint shares for the vault.
+	// Mint vault shares for the depositor.
 	err := k.MintShares(
 		ctx,
 		*msg.VaultId,
@@ -30,9 +30,12 @@ func (k msgServer) DepositToVault(
 		return nil, err
 	}
 
-	// Transfer from sender subaccount to vault.
-	// Note: Transfer should take place after minting shares for
-	// shares calculation to be correct.
+	// Transfer from depositor's subaccount to vault.
+	// IMPORTANT: Transfer should take place after minting shares for
+	// shares calculation to be correct. This is because minting shares
+	// depends on the vault's current equity. Therefore, if you transfer
+	// before minting shares, then minting shares will be based on the
+	// vault's equity after the deposit.
 	err = k.sendingKeeper.ProcessTransfer(
 		ctx,
 		&sendingtypes.Transfer{

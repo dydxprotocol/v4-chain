@@ -25,6 +25,7 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 	numActiveVaults := 0
 	totalSharesIterator := k.getTotalSharesIterator(ctx)
 	defer totalSharesIterator.Close()
+	// Note: the total shares for a given vault can be zero.
 	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
 		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
 

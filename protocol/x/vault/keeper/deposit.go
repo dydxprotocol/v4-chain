@@ -3,6 +3,7 @@ package keeper
 import (
 	"math/big"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
@@ -37,8 +38,9 @@ func (k Keeper) MintShares(
 			return err
 		}
 		// Don't mint shares if equity is non-positive.
+		// This shouldn't happen, but check as a defense in depth.
 		if equity.Sign() <= 0 {
-			return types.ErrNonPositiveEquity
+			return errors.Wrapf(types.ErrNonPositiveEquity, "VaultId: %v, Equity: %v", vaultId, equity)
 		}
 		// Mint `deposit (in quote quantums) * existing shares / vault equity (in quote quantums)`
 		// number of shares.
@@ -52,7 +54,15 @@ func (k Keeper) MintShares(
 
 		// Return error if `sharesToMint` is rounded down to 0.
 		if sharesToMint.Sign() == 0 {
-			return types.ErrZeroSharesToMint
+			return errors.Wrapf(
+				types.ErrZeroSharesToMint,
+				"VaultId: %v, Equity: %v, Deposit: %v, TotalShares: %v, SharesToMint: %v",
+				vaultId,
+				equity,
+				quantumsToDeposit,
+				existingTotalShares,
+				sharesToMint,
+			)
 		}
 	}
 
