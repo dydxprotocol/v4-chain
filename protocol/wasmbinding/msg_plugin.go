@@ -13,32 +13,34 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-func EncodeDydxCustomWasmMessage(sender sdk.AccAddress, msg json.RawMessage) ([]sdk.Msg, error) {
+// This function is called from https://github.com/CosmWasm/wasmd/blob/main/x/wasm/keeper/handler_plugin_encoders.go#L96
+// which enforces the function to be called with contract address
+func EncodeDydxCustomWasmMessage(contractAddr sdk.AccAddress, msg json.RawMessage) ([]sdk.Msg, error) {
 	var customMessage bindings.DydxCustomWasmMessage
 	if err := json.Unmarshal(msg, &customMessage); err != nil {
 		return []sdk.Msg{}, wasmvmtypes.InvalidRequest{Err: "Error parsing DydxCustomWasmMessage"}
 	}
 	switch {
 	case customMessage.DepositToSubaccountV1 != nil:
-		return EncodeDepositToSubaccountV1(sender, customMessage.DepositToSubaccountV1)
+		return EncodeDepositToSubaccountV1(contractAddr, customMessage.DepositToSubaccountV1)
 	case customMessage.WithdrawFromSubaccountV1 != nil:
-		return EncodeWithdrawFromSubaccountV1(sender, customMessage.WithdrawFromSubaccountV1)
+		return EncodeWithdrawFromSubaccountV1(contractAddr, customMessage.WithdrawFromSubaccountV1)
 	case customMessage.PlaceOrderV1 != nil:
-		return EncodePlaceOrderV1(sender, customMessage.PlaceOrderV1)
+		return EncodePlaceOrderV1(contractAddr, customMessage.PlaceOrderV1)
 	case customMessage.CancelOrderV1 != nil:
-		return EncodeCancelOrderV1(sender, customMessage.CancelOrderV1)
+		return EncodeCancelOrderV1(contractAddr, customMessage.CancelOrderV1)
 	default:
 		return nil, wasmvmtypes.InvalidRequest{Err: "Unknown Dydx Wasm Message"}
 	}
 }
 
-func EncodeDepositToSubaccountV1(sender sdk.AccAddress, depositToSubaccount *bindings.DepositToSubaccountV1) ([]sdk.Msg, error) {
+func EncodeDepositToSubaccountV1(contractAddr sdk.AccAddress, depositToSubaccount *bindings.DepositToSubaccountV1) ([]sdk.Msg, error) {
 	if depositToSubaccount == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid deposit to subaccount request: No deposit data provided"}
 	}
 
 	depositToSubaccountMsg := &sendingtypes.MsgDepositToSubaccount{
-		Sender:    sender.String(),
+		Sender:    contractAddr.String(),
 		Recipient: depositToSubaccount.Recipient,
 		AssetId:   depositToSubaccount.AssetId,
 		Quantums:  depositToSubaccount.Quantums,
@@ -46,16 +48,14 @@ func EncodeDepositToSubaccountV1(sender sdk.AccAddress, depositToSubaccount *bin
 	return []sdk.Msg{depositToSubaccountMsg}, nil
 }
 
-// This function is called from https://github.com/CosmWasm/wasmd/blob/main/x/wasm/keeper/handler_plugin_encoders.go#L96
-// which enforces sender to be the contract address
-func EncodeWithdrawFromSubaccountV1(sender sdk.AccAddress, withdrawFromSubaccount *bindings.WithdrawFromSubaccountV1) ([]sdk.Msg, error) {
+func EncodeWithdrawFromSubaccountV1(contractAddr sdk.AccAddress, withdrawFromSubaccount *bindings.WithdrawFromSubaccountV1) ([]sdk.Msg, error) {
 	if withdrawFromSubaccount == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid withdraw from subaccount request: No withdraw data provided"}
 	}
 
 	withdrawFromSubaccountMsg := &sendingtypes.MsgWithdrawFromSubaccount{
 		Sender: types.SubaccountId{
-			Owner:  sender.String(),
+			Owner:  contractAddr.String(),
 			Number: withdrawFromSubaccount.SubaccountNumber,
 		},
 		Recipient: withdrawFromSubaccount.Recipient,
@@ -65,7 +65,7 @@ func EncodeWithdrawFromSubaccountV1(sender sdk.AccAddress, withdrawFromSubaccoun
 	return []sdk.Msg{withdrawFromSubaccountMsg}, nil
 }
 
-func EncodePlaceOrderV1(sender sdk.AccAddress, placeOrder *bindings.PlaceOrderV1) ([]sdk.Msg, error) {
+func EncodePlaceOrderV1(contractAddr sdk.AccAddress, placeOrder *bindings.PlaceOrderV1) ([]sdk.Msg, error) {
 	if placeOrder == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid place order request: No order data provided"}
 	}
@@ -74,7 +74,7 @@ func EncodePlaceOrderV1(sender sdk.AccAddress, placeOrder *bindings.PlaceOrderV1
 		Order: clobtypes.Order{
 			OrderId: clobtypes.OrderId{
 				SubaccountId: types.SubaccountId{
-					Owner:  sender.String(),
+					Owner:  contractAddr.String(),
 					Number: placeOrder.SubaccountNumber,
 				},
 				ClientId:   placeOrder.ClientId,
@@ -94,7 +94,7 @@ func EncodePlaceOrderV1(sender sdk.AccAddress, placeOrder *bindings.PlaceOrderV1
 	return []sdk.Msg{placeOrderMsg}, nil
 }
 
-func EncodeCancelOrderV1(sender sdk.AccAddress, cancelOrder *bindings.CancelOrderV1) ([]sdk.Msg, error) {
+func EncodeCancelOrderV1(contractAddr sdk.AccAddress, cancelOrder *bindings.CancelOrderV1) ([]sdk.Msg, error) {
 	if cancelOrder == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid cancel order request: No order data provided"}
 	}
@@ -102,7 +102,7 @@ func EncodeCancelOrderV1(sender sdk.AccAddress, cancelOrder *bindings.CancelOrde
 	cancelOrderMsg := &clobtypes.MsgCancelOrder{
 		OrderId: clobtypes.OrderId{
 			SubaccountId: types.SubaccountId{
-				Owner:  sender.String(),
+				Owner:  contractAddr.String(),
 				Number: cancelOrder.SubaccountNumber,
 			},
 			ClientId:   cancelOrder.ClientId,
