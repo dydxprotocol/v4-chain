@@ -51,6 +51,8 @@ now_date() {
     echo -n $(TZ="UTC" date '+%Y-%m-%d_%H:%M:%S')
 }
 
+PREUPGRADE_BINARY_PATH="/bin/dydxprotocold_preupgrade"
+
 install_prerequisites() {
     apk add dasel jq curl
     apk add --no-cache \
@@ -62,12 +64,23 @@ install_prerequisites() {
     && rm -rf /var/cache/apk/*
 }
 
+setup_preupgrade_binary() {
+	tar_url='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv5.0.5/dydxprotocold-v5.0.5-linux-amd64.tar.gz'
+	tar_path='/tmp/dydxprotocold/dydxprotocold.tar.gz'
+	mkdir -p /tmp/dydxprotocold
+	curl -vL $tar_url -o $tar_path
+	dydxprotocold_path=$(tar -xvf $tar_path --directory /tmp/dydxprotocold)
+	mv /tmp/dydxprotocold/$dydxprotocold_path $PREUPGRADE_BINARY_PATH
+}
+
 setup_cosmovisor() {
     VAL_HOME_DIR="$HOME/chain/local_node"
     export DAEMON_NAME=dydxprotocold
     export DAEMON_HOME="$HOME/chain/local_node"
 
-    cosmovisor init /bin/dydxprotocold
+    cosmovisor init $PREUPGRADE_BINARY_PATH
+    mkdir -p "$VAL_HOME_DIR/cosmovisor/upgrades/v5.1.0/bin/"
+    ln -s /bin/dydxprotocold "$VAL_HOME_DIR/cosmovisor/upgrades/v5.1.0/bin/dydxprotocold"
 }
 
 install_prerequisites
@@ -96,6 +109,7 @@ sed -i 's/min-retain-blocks = 0/min-retain-blocks = 2/' /dydxprotocol/chain/loca
 # Do not index tx_index.db
 sed -i 's/indexer = "kv"/indexer = "null"/' /dydxprotocol/chain/local_node/config/config.toml
 
+setup_preupgrade_binary
 setup_cosmovisor
 
 # TODO: add metrics around snapshot upload latency/frequency/success rate
