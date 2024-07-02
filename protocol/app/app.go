@@ -189,6 +189,9 @@ import (
 	vestmodule "github.com/dydxprotocol/v4-chain/protocol/x/vest"
 	vestmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/vest/keeper"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
+	marketmapmodule "github.com/skip-mev/slinky/x/marketmap"
+	marketmapmodulekeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 
 	// IBC
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
@@ -291,6 +294,8 @@ type App struct {
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	GovPlusKeeper         govplusmodulekeeper.Keeper
+
+	MarketMapKeeper marketmapmodulekeeper.Keeper
 
 	PricesKeeper pricesmodulekeeper.Keeper
 
@@ -436,6 +441,7 @@ func New(
 		govplusmoduletypes.StoreKey,
 		vaultmoduletypes.StoreKey,
 		revsharemoduletypes.StoreKey,
+		marketmapmoduletypes.StoreKey,
 	)
 	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
 	tkeys := storetypes.NewTransientStoreKeys(
@@ -898,6 +904,14 @@ func New(
 	)
 	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
 
+	app.MarketMapKeeper = *marketmapmodulekeeper.NewKeeper(
+		runtime.NewKVStoreService(storetypes.NewKVStoreKey(marketmapmoduletypes.StoreKey)),
+		appCodec,
+		authtypes.NewModuleAddress(govtypes.ModuleName),
+	)
+
+	marketmapModule := marketmapmodule.NewAppModule(appCodec, &app.MarketMapKeeper)
+
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
 		appCodec,
 		keys[pricesmoduletypes.StoreKey],
@@ -1206,6 +1220,7 @@ func New(
 		vaultModule,
 		listingModule,
 		revShareModule,
+		marketmapModule,
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
@@ -1255,6 +1270,7 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		marketmapmoduletypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
@@ -1299,6 +1315,7 @@ func New(
 		delaymsgmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
@@ -1345,6 +1362,7 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
 
@@ -1387,6 +1405,7 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,
 
 		// Auth must be migrated after staking.
