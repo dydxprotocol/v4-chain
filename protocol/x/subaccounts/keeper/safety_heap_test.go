@@ -15,8 +15,12 @@ import (
 )
 
 func TestSafetyHeapInsertRemoval(t *testing.T) {
+	perpetualId := uint32(0)
+	side := satypes.Long
 	totalSubaccounts := 1000
 
+	// Create 1000 subaccounts with balances ranging from -500 to 500.
+	// The subaccounts should be sorted by balance.
 	allSubaccounts := make([]satypes.Subaccount, 0)
 	for i := 0; i < totalSubaccounts; i++ {
 		subaccount := satypes.Subaccount{
@@ -48,14 +52,14 @@ func TestSafetyHeapInsertRemoval(t *testing.T) {
 		// Shuffle the subaccounts so that insertion order is random.
 		slices.Shuffle(allSubaccounts)
 
-		store := subaccountsKeeper.GetSafetyHeapStore(ctx, 0, satypes.Long)
+		store := subaccountsKeeper.GetSafetyHeapStore(ctx, perpetualId, side)
 		for i, subaccount := range allSubaccounts {
 			subaccountsKeeper.SetSubaccount(ctx, subaccount)
 			subaccountsKeeper.AddSubaccountToSafetyHeap(
 				ctx,
 				*subaccount.Id,
-				0,
-				satypes.Long,
+				perpetualId,
+				side,
 			)
 
 			require.Equal(
@@ -67,17 +71,25 @@ func TestSafetyHeapInsertRemoval(t *testing.T) {
 
 		// Make sure subaccounts are sorted correctly.
 		for i := 0; i < totalSubaccounts; i++ {
+			// Get the subaccount with the lowest safety score.
+			// In this case, the subaccount with the lowest USDC balance.
 			subaccountId := subaccountsKeeper.MustGetSubaccountAtIndex(store, uint32(0))
+			subaccount := subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 
 			// Subaccounts should be sorted by asset position balance.
 			require.Equal(t, uint32(i), subaccountId.Number)
+			require.Equal(
+				t,
+				big.NewInt(int64(i-totalSubaccounts/2)),
+				subaccount.GetUsdcPosition(),
+			)
 
 			// Remove the subaccount from the heap.
 			subaccountsKeeper.RemoveSubaccountFromSafetyHeap(
 				ctx,
 				subaccountId,
-				0,
-				satypes.Long,
+				perpetualId,
+				side,
 			)
 			require.Equal(
 				t,
