@@ -1,5 +1,5 @@
 import { Params, ParamsSDKType } from "./params";
-import { VaultId, VaultIdSDKType, NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType } from "./vault";
+import { VaultId, VaultIdSDKType, NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType, VaultParams, VaultParamsSDKType } from "./vault";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** GenesisState defines `x/vault`'s genesis state. */
@@ -31,6 +31,9 @@ export interface Vault {
   /** The shares of each owner in the vault. */
 
   ownerShares: OwnerShare[];
+  /** The individual parameters of the vault. */
+
+  vaultParams?: VaultParams;
 }
 /** Vault defines the total shares and owner shares of a vault. */
 
@@ -43,6 +46,9 @@ export interface VaultSDKType {
   /** The shares of each owner in the vault. */
 
   owner_shares: OwnerShareSDKType[];
+  /** The individual parameters of the vault. */
+
+  vault_params?: VaultParamsSDKType;
 }
 
 function createBaseGenesisState(): GenesisState {
@@ -104,7 +110,8 @@ function createBaseVault(): Vault {
   return {
     vaultId: undefined,
     totalShares: undefined,
-    ownerShares: []
+    ownerShares: [],
+    vaultParams: undefined
   };
 }
 
@@ -120,6 +127,10 @@ export const Vault = {
 
     for (const v of message.ownerShares) {
       OwnerShare.encode(v!, writer.uint32(26).fork()).ldelim();
+    }
+
+    if (message.vaultParams !== undefined) {
+      VaultParams.encode(message.vaultParams, writer.uint32(34).fork()).ldelim();
     }
 
     return writer;
@@ -146,6 +157,10 @@ export const Vault = {
           message.ownerShares.push(OwnerShare.decode(reader, reader.uint32()));
           break;
 
+        case 4:
+          message.vaultParams = VaultParams.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -160,6 +175,7 @@ export const Vault = {
     message.vaultId = object.vaultId !== undefined && object.vaultId !== null ? VaultId.fromPartial(object.vaultId) : undefined;
     message.totalShares = object.totalShares !== undefined && object.totalShares !== null ? NumShares.fromPartial(object.totalShares) : undefined;
     message.ownerShares = object.ownerShares?.map(e => OwnerShare.fromPartial(e)) || [];
+    message.vaultParams = object.vaultParams !== undefined && object.vaultParams !== null ? VaultParams.fromPartial(object.vaultParams) : undefined;
     return message;
   }
 
