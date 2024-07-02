@@ -344,6 +344,22 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "accept a single message with no perps that match the market (disabled market)",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpsertMarkets{
+						Authority: constants.BobAccAddress.String(),
+						Markets: []mmtypes.Market{
+							testMarket,
+						},
+					},
+				},
+				simulate:    false,
+				marketPerps: []marketPerpPair{},
+			},
+			wantErr: false,
+		},
+		{
 			name: "accept a single message with no cross markets (only isolated)",
 			args: args{
 				msgs: []sdk.Msg{
