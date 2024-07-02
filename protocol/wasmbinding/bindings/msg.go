@@ -1,7 +1,7 @@
 package bindings
 
 import (
-	subaccounttypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 type DydxCustomWasmMessage struct {
@@ -12,9 +12,9 @@ type DydxCustomWasmMessage struct {
 }
 
 type DepositToSubaccountV1 struct {
-	Recipient subaccounttypes.SubaccountId `json:"recipient"`
-	AssetId   uint32                       `json:"asset_id"`
-	Quantums  uint64                       `json:"quantums"`
+	Recipient satypes.SubaccountId `json:"recipient"`
+	AssetId   uint32               `json:"asset_id"`
+	Quantums  uint64               `json:"quantums"`
 }
 
 type WithdrawFromSubaccountV1 struct {
