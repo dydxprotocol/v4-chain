@@ -1,15 +1,12 @@
 package constants
 
 import (
-	"math/big"
-
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
 type VaultState struct {
 	VaultId     types.VaultId
-	Equity      *big.Int
 	OwnerShares []*types.OwnerShare
 }
 
@@ -25,7 +22,6 @@ var (
 
 	Vault_Clob0_SingleOwner_Alice0_1000 = VaultState{
 		VaultId: Vault_Clob0,
-		Equity:  big.NewInt(1000),
 		OwnerShares: []*types.OwnerShare{
 			{
 				Owner:  Alice_Num0.Owner,
@@ -35,7 +31,6 @@ var (
 	}
 	Vault_Clob0_MultiOwner_Alice0_1000_Bob0_2500 = VaultState{
 		VaultId: Vault_Clob0,
-		Equity:  big.NewInt(3500),
 		OwnerShares: []*types.OwnerShare{
 			{
 				Owner:  Alice_Num0.Owner,

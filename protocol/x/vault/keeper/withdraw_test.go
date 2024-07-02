@@ -50,47 +50,83 @@ func TestValidateWithdrawFromVault(t *testing.T) {
 		"Success: single owner": {
 			vaultState: constants.Vault_Clob0_SingleOwner_Alice0_1000,
 			msg: vaulttypes.MsgWithdrawFromVault{
-				VaultId:       &constants.Vault_Clob0,
-				SubaccountId:  &constants.Alice_Num0,
-				QuoteQuantums: dtypes.NewInt(100),
+				VaultId:      &constants.Vault_Clob0,
+				SubaccountId: &constants.Alice_Num0,
+				Shares:       &vaulttypes.NumShares{NumShares: dtypes.NewInt(1)},
 			},
 			expectedErr: nil,
 		},
 		"Success: multiple owners": {
 			vaultState: constants.Vault_Clob0_MultiOwner_Alice0_1000_Bob0_2500,
 			msg: vaulttypes.MsgWithdrawFromVault{
-				VaultId:       &constants.Vault_Clob0,
-				SubaccountId:  &constants.Bob_Num0,
-				QuoteQuantums: dtypes.NewInt(100),
+				VaultId:      &constants.Vault_Clob0,
+				SubaccountId: &constants.Bob_Num0,
+				Shares:       &vaulttypes.NumShares{NumShares: dtypes.NewInt(1)},
+			},
+			expectedErr: nil,
+		},
+		"Success: single owner, max shares": {
+			vaultState: constants.Vault_Clob0_SingleOwner_Alice0_1000,
+			msg: vaulttypes.MsgWithdrawFromVault{
+				VaultId:      &constants.Vault_Clob0,
+				SubaccountId: &constants.Alice_Num0,
+				Shares:       &vaulttypes.NumShares{NumShares: dtypes.NewInt(1000)},
+			},
+			expectedErr: nil,
+		},
+		"Success: multiple owners, max shares": {
+			vaultState: constants.Vault_Clob0_MultiOwner_Alice0_1000_Bob0_2500,
+			msg: vaulttypes.MsgWithdrawFromVault{
+				VaultId:      &constants.Vault_Clob0,
+				SubaccountId: &constants.Bob_Num0,
+				Shares:       &vaulttypes.NumShares{NumShares: dtypes.NewInt(2500)},
 			},
 			expectedErr: nil,
 		},
 		"Failure: no vault": {
 			vaultState: constants.VaultState{}, // nil vault state.
 			msg: vaulttypes.MsgWithdrawFromVault{
-				VaultId:       &constants.Vault_Clob0, // vault 0 doesn't exist.
-				SubaccountId:  &constants.Alice_Num0,
-				QuoteQuantums: dtypes.NewInt(100),
+				VaultId:      &constants.Vault_Clob0, // vault 0 doesn't exist.
+				SubaccountId: &constants.Alice_Num0,
+				Shares:       &vaulttypes.NumShares{NumShares: dtypes.NewInt(1)},
 			},
 			expectedErr: vaulttypes.ErrVaultNotFound,
 		},
 		"Failure: no matching vault": {
 			vaultState: constants.Vault_Clob0_SingleOwner_Alice0_1000,
 			msg: vaulttypes.MsgWithdrawFromVault{
-				VaultId:       &constants.Vault_Clob1, // vault 1 doesn't exist.
-				SubaccountId:  &constants.Alice_Num0,
-				QuoteQuantums: dtypes.NewInt(100),
+				VaultId:      &constants.Vault_Clob1, // vault 1 doesn't exist.
+				SubaccountId: &constants.Alice_Num0,
+				Shares:       &vaulttypes.NumShares{NumShares: dtypes.NewInt(1)},
 			},
 			expectedErr: vaulttypes.ErrVaultNotFound,
 		},
 		"Failure: no matching shares": {
 			vaultState: constants.Vault_Clob0_MultiOwner_Alice0_1000_Bob0_2500,
 			msg: vaulttypes.MsgWithdrawFromVault{
-				VaultId:       &constants.Vault_Clob0,
-				SubaccountId:  &constants.Carl_Num0, // Carl doesn't have any shares.
-				QuoteQuantums: dtypes.NewInt(100),
+				VaultId:      &constants.Vault_Clob0,
+				SubaccountId: &constants.Carl_Num0, // Carl doesn't have any shares.
+				Shares:       &vaulttypes.NumShares{NumShares: dtypes.NewInt(1)},
 			},
 			expectedErr: vaulttypes.ErrOwnerShareNotFound,
+		},
+		"Failure: single owner, shares greater than owner shares": {
+			vaultState: constants.Vault_Clob0_SingleOwner_Alice0_1000,
+			msg: vaulttypes.MsgWithdrawFromVault{
+				VaultId:      &constants.Vault_Clob0,
+				SubaccountId: &constants.Alice_Num0,
+				Shares:       &vaulttypes.NumShares{NumShares: dtypes.NewInt(1001)},
+			},
+			expectedErr: vaulttypes.ErrInvalidWithdrawalAmount,
+		},
+		"Failure: multiple owners, shares greater than owner shares": {
+			vaultState: constants.Vault_Clob0_MultiOwner_Alice0_1000_Bob0_2500,
+			msg: vaulttypes.MsgWithdrawFromVault{
+				VaultId:      &constants.Vault_Clob0,
+				SubaccountId: &constants.Bob_Num0,
+				Shares:       &vaulttypes.NumShares{NumShares: dtypes.NewInt(2501)},
+			},
+			expectedErr: vaulttypes.ErrInvalidWithdrawalAmount,
 		},
 	}
 

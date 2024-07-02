@@ -16,8 +16,9 @@ func (k Keeper) ValidateWithdrawFromVault(
 		return errors.Wrapf(types.ErrVaultNotFound, "VaultId: %v", *msgWithdraw.GetVaultId())
 	}
 
+	ownerShares, sharesExists := k.GetOwnerShares(ctx, *msgWithdraw.GetVaultId(), msgWithdraw.SubaccountId.GetOwner())
+
 	// 2. Subaccount has shares in the vault.
-	_, sharesExists := k.GetOwnerShares(ctx, *msgWithdraw.GetVaultId(), msgWithdraw.SubaccountId.GetOwner())
 	if !sharesExists {
 		return errors.Wrapf(
 			types.ErrOwnerShareNotFound,
@@ -26,5 +27,18 @@ func (k Keeper) ValidateWithdrawFromVault(
 			msgWithdraw.SubaccountId.GetOwner(),
 		)
 	}
+
+	// 3. Shares to withdraw cannot be greater than the owner shares.
+	if ownerShares.NumShares.BigInt().Cmp(msgWithdraw.Shares.NumShares.BigInt()) < 0 {
+		return errors.Wrapf(
+			types.ErrInvalidWithdrawalAmount,
+			"VaultId: %v, Owner: %v, OwnerShares: %v, WithdrawalShares: %v",
+			*msgWithdraw.GetVaultId(),
+			msgWithdraw.SubaccountId.GetOwner(),
+			ownerShares.NumShares.BigInt(),
+			msgWithdraw.Shares.NumShares.BigInt(),
+		)
+	}
+
 	return nil
 }
