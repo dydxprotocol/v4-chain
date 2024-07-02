@@ -127,7 +127,7 @@ func TestVault(t *testing.T) {
 					SubaccountId: *tc.vaultId.ToSubaccountId(),
 					Equity:       dtypes.NewIntFromBigInt(tc.expectedEquity),
 					Inventory:    dtypes.NewIntFromBigInt(tc.inventory),
-					TotalShares:  tc.totalShares.Uint64(),
+					TotalShares:  vaulttypes.BigIntToNumShares(tc.totalShares),
 				}
 				require.Equal(t, expectedResponse, *response)
 			}
