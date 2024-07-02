@@ -50,9 +50,9 @@ class FillsController extends Controller {
   async getFills(
     @Query() address: string,
       @Query() subaccountNumber: number,
-      @Query() market: string,
-      @Query() marketType: MarketType,
-      @Query() limit: number,
+      @Query() market?: string,
+      @Query() marketType?: MarketType,
+      @Query() limit?: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
   ): Promise<FillResponse> {
@@ -60,7 +60,7 @@ class FillsController extends Controller {
     // querying the DB.
     let clobPairId: string | undefined;
     if (isDefined(market) && isDefined(marketType)) {
-      clobPairId = await getClobPairId(market, marketType);
+      clobPairId = await getClobPairId(market!, marketType!);
 
       if (clobPairId === undefined) {
         throw new NotFoundError(`${market} not found in markets of type ${marketType}`);

@@ -200,7 +200,7 @@ class OrdersController extends Controller {
   async listOrders(
     @Query() address: string,
       @Query() subaccountNumber: number,
-      @Query() limit: number,
+      @Query() limit?: number,
       @Query() ticker?: string,
       @Query() side?: OrderSide,
       @Query() type?: OrderType,
