@@ -120,6 +120,21 @@ func TestIsMarketUpdateTx(t *testing.T) {
 			want:    false,
 			wantErr: true,
 		},
+		{
+			name: "return error for multiple mixed market map messages",
+			msgs: []sdk.Msg{
+				&mmtypes.MsgUpsertMarkets{
+					Authority: constants.BobAccAddress.String(),
+					Markets:   nil,
+				},
+				&mmtypes.MsgUpdateMarkets{
+					Authority:     constants.BobAccAddress.String(),
+					UpdateMarkets: nil,
+				},
+			},
+			want:    false,
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -250,6 +265,40 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 					&mmtypes.MsgUpsertMarkets{
 						Authority: constants.BobAccAddress.String(),
 						Markets:   nil,
+					},
+				},
+				simulate: false,
+			},
+			wantErr: true,
+		},
+		{
+			name: "reject for multiple mixed market messages - simulate",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpsertMarkets{
+						Authority: constants.BobAccAddress.String(),
+						Markets:   nil,
+					},
+					&mmtypes.MsgUpdateMarkets{
+						Authority:     constants.BobAccAddress.String(),
+						UpdateMarkets: nil,
+					},
+				},
+				simulate: true,
+			},
+			wantErr: true,
+		},
+		{
+			name: "reject for multiple mixed market messages",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpsertMarkets{
+						Authority: constants.BobAccAddress.String(),
+						Markets:   nil,
+					},
+					&mmtypes.MsgUpdateMarkets{
+						Authority:     constants.BobAccAddress.String(),
+						UpdateMarkets: nil,
 					},
 				},
 				simulate: false,
