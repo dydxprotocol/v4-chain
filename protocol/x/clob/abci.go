@@ -112,6 +112,10 @@ func EndBlocker(
 
 	// Poll out all triggered conditional orders from `UntriggeredConditionalOrders` and update state.
 	triggeredConditionalOrderIds := keeper.MaybeTriggerConditionalOrders(ctx)
+	if len(triggeredConditionalOrderIds) > 0 {
+		fmt.Printf("!!!!!!! triggeredConditionalOrderIds = %+v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", triggeredConditionalOrderIds)
+	}
+
 	// Update the memstore with conditional order ids triggered in the last block.
 	// These triggered conditional orders will be placed in the `PrepareCheckState``.
 	processProposerMatchesEvents.ConditionalOrderIdsTriggeredInLastBlock = triggeredConditionalOrderIds
