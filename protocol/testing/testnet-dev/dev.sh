@@ -212,8 +212,8 @@ setup_cosmovisor() {
 		export DAEMON_HOME="$HOME/chain/.${MONIKERS[$i]}"
 
 		cosmovisor init $PREUPGRADE_BINARY_PATH
-		mkdir -p "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v5.1.0/bin/"
-		ln -s /bin/dydxprotocold "$FULL_NODE_HOME_DIR/cosmovisor/upgrades/v5.1.0/bin/dydxprotocold"
+		mkdir -p "$VAL_NODE_HOME_DIR/cosmovisor/upgrades/v5.1.0/bin/"
+		ln -s /bin/dydxprotocold "$VAL_NODE_HOME_DIR/cosmovisor/upgrades/v5.1.0/bin/dydxprotocold"
 	done
 }
 
