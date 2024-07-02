@@ -10,10 +10,12 @@ import {
   getOrderBookLevels,
   getKey,
   deleteZeroPriceLevel,
+  getLastUpdatedKey,
+  deleteStalePriceLevel,
 } from '../../src/caches/orderbook-levels-cache';
 import { OrderSide } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, PriceLevel } from '../../src/types';
-import { InvalidOptionsError, InvalidPriceLevelUpdateError } from '../../src/errors';
+import { InvalidOptionsError } from '../../src/errors';
 import { logger } from '@dydxprotocol-indexer/base';
 
 describe('orderbookLevelsCache', () => {
@@ -174,11 +176,10 @@ describe('orderbookLevelsCache', () => {
       expect(orderbookLevels.bids).toEqual([]);
     });
 
-    it('throws error if update will cause quantums to be negative', async () => {
+    it('sets price level to 0 if update will cause quantums to be negative', async () => {
       const humanPrice: string = '50000';
       const quantums: string = '1000';
       const invalidDelta: string = '-2000';
-      const resultingQuantums: string = '-1000';
       // Set existing quantums for the level
       await updatePriceLevel({
         ticker,
@@ -188,31 +189,26 @@ describe('orderbookLevelsCache', () => {
         client,
       });
 
-      // Test that an error is thrown if the update results in a negative quantums for the price
-      // level
-      await expect(updatePriceLevel({
+      await updatePriceLevel({
         ticker,
         side: OrderSide.BUY,
         humanPrice,
         sizeDeltaInQuantums: invalidDelta,
         client,
-      })).rejects.toBeInstanceOf(InvalidPriceLevelUpdateError);
+      });
       expect(logger.crit).toHaveBeenCalledTimes(1);
-      await expect(updatePriceLevel({
-        ticker,
-        side: OrderSide.BUY,
-        humanPrice,
-        sizeDeltaInQuantums: invalidDelta,
-        client,
-      })).rejects.toEqual(expect.objectContaining({
-        message: expect.stringContaining(resultingQuantums),
-      }));
 
-      // Expect that the value in the orderbook is unchanged
-      const orderbookLevels: OrderbookLevels = await getOrderBookLevels(ticker, client);
+      // Expect that the value in the orderbook is set to 0
+      const orderbookLevels: OrderbookLevels = await getOrderBookLevels(
+        ticker,
+        client,
+        {
+          removeZeros: false,
+        },
+      );
       expect(orderbookLevels.bids).toMatchObject([{
         humanPrice,
-        quantums,
+        quantums: '0',
       }]);
     });
   });
@@ -604,6 +600,80 @@ describe('orderbookLevelsCache', () => {
       });
 
       size = await hGetAsync(
+        {
+          hash: getKey(ticker, OrderSide.BUY),
+          key: humanPrice,
+        },
+        client,
+      );
+
+      expect(deleted).toEqual(false);
+      expect(size).toEqual('10');
+    });
+  });
+
+  describe('deleteStalePriceLevel', () => {
+    const humanPrice: string = '45100';
+
+    it('deletes stale price level', async () => {
+      await updatePriceLevel({
+        ticker,
+        side: OrderSide.BUY,
+        humanPrice,
+        sizeDeltaInQuantums: '100',
+        client,
+      });
+
+      client.hset(getLastUpdatedKey(ticker, OrderSide.BUY), humanPrice, (Date.now() / 1000) - 20);
+
+      let size: string | null = await hGetAsync(
+        {
+          hash: getKey(ticker, OrderSide.BUY),
+          key: humanPrice,
+        },
+        client,
+      );
+
+      expect(size).toEqual('100');
+
+      const deleted: boolean = await deleteStalePriceLevel({
+        ticker,
+        side: OrderSide.BUY,
+        humanPrice,
+        timeThreshold: 10,
+        client,
+      });
+
+      size = await hGetAsync(
+        {
+          hash: getKey(ticker, OrderSide.BUY),
+          key: humanPrice,
+        },
+        client,
+      );
+
+      expect(deleted).toEqual(true);
+      expect(size).toBeNull();
+    });
+
+    it('does not delete recent price level', async () => {
+      await updatePriceLevel({
+        ticker,
+        side: OrderSide.BUY,
+        humanPrice,
+        sizeDeltaInQuantums: '10',
+        client,
+      });
+
+      const deleted: boolean = await deleteStalePriceLevel({
+        ticker,
+        side: OrderSide.BUY,
+        humanPrice,
+        timeThreshold: 10,
+        client,
+      });
+
+      const size: string | null = await hGetAsync(
         {
           hash: getKey(ticker, OrderSide.BUY),
           key: humanPrice,

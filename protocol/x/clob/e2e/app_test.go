@@ -2,6 +2,7 @@ package clob_test
 
 import (
 	"fmt"
+	"math/big"
 	"sync"
 	"testing"
 	"time"
@@ -15,7 +16,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/rand"
 	"gopkg.in/typ.v4/slices"
 
@@ -25,6 +25,7 @@ import (
 	clobtestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	epochtypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	feetierstypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
@@ -382,7 +383,6 @@ func TestHydrationInPreBlocker(t *testing.T) {
 
 	// Order should be on the orderbook
 	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(
-		ctx,
 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 	)
 	require.True(t, found)
@@ -492,13 +492,11 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 
 	// Make sure orders are not on the orderbook.
 	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(
-		ctx,
 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 	)
 	require.False(t, found)
 
 	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(
-		ctx,
 		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
 	)
 	require.False(t, found)
@@ -528,17 +526,17 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 	require.Equal(t, satypes.Subaccount{
 		Id: &constants.Carl_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			{
-				AssetId:  0,
-				Quantums: dtypes.NewInt(100_000_000_000 - 50_000_000_000),
-			},
+			testutil.CreateSingleAssetPosition(
+				0,
+				big.NewInt(100_000_000_000-50_000_000_000),
+			),
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
-			{
-				PerpetualId:  0,
-				Quantums:     dtypes.NewInt(100_000_000),
-				FundingIndex: dtypes.NewInt(0),
-			},
+			testutil.CreateSinglePerpetualPosition(
+				0,
+				big.NewInt(100_000_000),
+				big.NewInt(0),
+			),
 		},
 	}, carl)
 
@@ -546,17 +544,17 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 	require.Equal(t, satypes.Subaccount{
 		Id: &constants.Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			{
-				AssetId:  0,
-				Quantums: dtypes.NewInt(500_000_000_000 + 50_000_000_000),
-			},
+			testutil.CreateSingleAssetPosition(
+				0,
+				big.NewInt(500_000_000_000+50_000_000_000),
+			),
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
-			{
-				PerpetualId:  0,
-				Quantums:     dtypes.NewInt(-100_000_000),
-				FundingIndex: dtypes.NewInt(0),
-			},
+			testutil.CreateSinglePerpetualPosition(
+				0,
+				big.NewInt(-100_000_000),
+				big.NewInt(0),
+			),
 		},
 	}, dave)
 

@@ -16,7 +16,7 @@ func (k Keeper) GetVaultEquity(
 	ctx sdk.Context,
 	vaultId types.VaultId,
 ) (*big.Int, error) {
-	netCollateral, _, _, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+	risk, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{
 			SubaccountId: *vaultId.ToSubaccountId(),
@@ -25,7 +25,7 @@ func (k Keeper) GetVaultEquity(
 	if err != nil {
 		return nil, err
 	}
-	return netCollateral, nil
+	return risk.NC, nil
 }
 
 // GetVaultInventory returns the inventory of a vault in a given perpeutal (in base quantums).
@@ -59,7 +59,7 @@ func (k Keeper) DecommissionNonPositiveEquityVaults(
 		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
 
 		// Skip if TotalShares is non-positive.
-		if totalShares.NumShares.BigInt().Sign() <= 0 {
+		if totalShares.NumShares.Sign() <= 0 {
 			continue
 		}
 
@@ -98,4 +98,33 @@ func (k Keeper) DecommissionVault(
 	for ; ownerSharesIterator.Valid(); ownerSharesIterator.Next() {
 		ownerSharesStore.Delete(ownerSharesIterator.Key())
 	}
+}
+
+// GetAllVaults returns all vaults with their total shares, owner shares, and individual params.
+// Note: This function is only used for exporting module state.
+func (k Keeper) GetAllVaults(ctx sdk.Context) []*types.Vault {
+	vaults := []*types.Vault{}
+	totalSharesIterator := k.getTotalSharesIterator(ctx)
+	defer totalSharesIterator.Close()
+	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
+		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
+		if err != nil {
+			panic(err)
+		}
+
+		var totalShares types.NumShares
+		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
+
+		allOwnerShares := k.GetAllOwnerShares(ctx, *vaultId)
+
+		vaultParams, _ := k.GetVaultParams(ctx, *vaultId)
+
+		vaults = append(vaults, &types.Vault{
+			VaultId:     vaultId,
+			TotalShares: &totalShares,
+			OwnerShares: allOwnerShares,
+			VaultParams: &vaultParams,
+		})
+	}
+	return vaults
 }

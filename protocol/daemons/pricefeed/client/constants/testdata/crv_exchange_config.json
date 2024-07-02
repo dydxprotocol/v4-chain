@@ -24,11 +24,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Mexc",
-      "ticker": "CRV_USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Okx",
       "ticker": "CRV-USDT",
       "adjustByMarket": "USDT-USD"

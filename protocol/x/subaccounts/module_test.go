@@ -39,7 +39,7 @@ func createAppModule(t *testing.T) subaccounts.AppModule {
 func createAppModuleWithKeeper(t *testing.T) (subaccounts.AppModule, *sa_keeper.Keeper, sdk.Context) {
 	appCodec := codec.NewProtoCodec(module.InterfaceRegistry)
 
-	ctx, keeper, _, _, _, _, _, _, _ := keeper.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, _, _, _ := keeper.SubaccountsKeepers(t, true)
 
 	return subaccounts.NewAppModule(
 		appCodec,

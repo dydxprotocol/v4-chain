@@ -31,27 +31,16 @@ func (k Keeper) MevNodeToNodeCalculation(
 
 	blockProposerPnL, validatorPnL := k.InitializeCumulativePnLsFromRequest(ctx, req)
 
-	if err := k.CalculateSubaccountPnLForMevMatches(
+	k.CalculateSubaccountPnLForMevMatches(
 		ctx,
 		blockProposerPnL,
 		req.BlockProposerMatches,
-	); err != nil {
-		log.ErrorLogWithError(ctx, "Failed to calculate match PnL for block proposer", err,
-			"mev_matches", req.BlockProposerMatches,
-		)
-		return nil, err
-	}
-
-	if err := k.CalculateSubaccountPnLForMevMatches(
+	)
+	k.CalculateSubaccountPnLForMevMatches(
 		ctx,
 		validatorPnL,
 		req.ValidatorMevMetrics.ValidatorMevMatches,
-	); err != nil {
-		log.ErrorLogWithError(ctx, "Failed to calculate match PnL for validator", err,
-			"mev_matches", req.ValidatorMevMetrics.ValidatorMevMatches,
-		)
-		return nil, err
-	}
+	)
 
 	mevAndVolumePerClob := make(
 		[]types.MevNodeToNodeCalculationResponse_MevAndVolumePerClob,

@@ -274,11 +274,11 @@ func TestBatchCancelSingleCancelFunctionality(t *testing.T) {
 
 			// Verify expectations
 			for orderId, shouldHaveOrder := range tc.expectedOrderIdsInMemclob {
-				_, exists := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, orderId)
+				_, exists := tApp.App.ClobKeeper.MemClob.GetOrder(orderId)
 				require.Equal(t, shouldHaveOrder, exists)
 			}
 			for orderId, expectedCancelExpirationBlock := range tc.expectedCancelExpirationsInMemclob {
-				cancelExpirationBlock, exists := tApp.App.ClobKeeper.MemClob.GetCancelOrder(ctx, orderId)
+				cancelExpirationBlock, exists := tApp.App.ClobKeeper.MemClob.GetCancelOrder(orderId)
 				require.True(t, exists)
 				require.Equal(t, expectedCancelExpirationBlock, cancelExpirationBlock)
 			}
@@ -650,11 +650,11 @@ func TestBatchCancelBatchFunctionality(t *testing.T) {
 
 			// Verify expectations
 			for orderId, shouldHaveOrder := range tc.expectedOrderIdsInMemclob {
-				_, exists := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, orderId)
+				_, exists := tApp.App.ClobKeeper.MemClob.GetOrder(orderId)
 				require.Equal(t, shouldHaveOrder, exists)
 			}
 			for orderId, expectedCancelExpirationBlock := range tc.expectedCancelExpirationsInMemclob {
-				cancelExpirationBlock, exists := tApp.App.ClobKeeper.MemClob.GetCancelOrder(ctx, orderId)
+				cancelExpirationBlock, exists := tApp.App.ClobKeeper.MemClob.GetCancelOrder(orderId)
 				if expectedCancelExpirationBlock > 0 {
 					require.True(t, exists)
 					require.Equal(t, expectedCancelExpirationBlock, cancelExpirationBlock)

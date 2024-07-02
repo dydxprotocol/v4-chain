@@ -17,10 +17,12 @@ import deleteZeroPriceLevelsTask from './tasks/delete-zero-price-levels';
 import marketUpdaterTask from './tasks/market-updater';
 import orderbookInstrumentationTask from './tasks/orderbook-instrumentation';
 import performComplianceStatusTransitionsTask from './tasks/perform-compliance-status-transitions';
+import pnlInstrumentationTask from './tasks/pnl-instrumentation';
 import removeExpiredOrdersTask from './tasks/remove-expired-orders';
 import removeOldOrderUpdatesTask from './tasks/remove-old-order-updates';
 import takeFastSyncSnapshotTask from './tasks/take-fast-sync-snapshot';
 import trackLag from './tasks/track-lag';
+import uncrossOrderbookTask from './tasks/uncross-orderbook';
 import updateComplianceDataTask from './tasks/update-compliance-data';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
 
@@ -64,6 +66,15 @@ async function start(): Promise<void> {
     );
   }
 
+  if (config.LOOPS_ENABLED_UNCROSS_ORDERBOOK) {
+    startLoop(
+      uncrossOrderbookTask,
+      'uncross_orderbook',
+      config.LOOPS_INTERVAL_MS_UNCROSS_ORDERBOOK,
+      config.UNCROSS_ORDERBOOK_LOCK_MULTIPLIER,
+    );
+  }
+
   if (config.LOOPS_ENABLED_PNL_TICKS) {
     startLoop(
       createPnlTicksTask,
@@ -86,6 +97,14 @@ async function start(): Promise<void> {
       orderbookInstrumentationTask,
       'orderbook_instrumentation',
       config.LOOPS_INTERVAL_MS_ORDERBOOK_INSTRUMENTATION,
+    );
+  }
+
+  if (config.LOOPS_PNL_INSTRUMENTATION) {
+    startLoop(
+      pnlInstrumentationTask,
+      'pnl_instrumentation',
+      config.LOOPS_INTERVAL_MS_PNL_INSTRUMENTATION,
     );
   }
 

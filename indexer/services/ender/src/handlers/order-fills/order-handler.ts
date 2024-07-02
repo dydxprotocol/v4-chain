@@ -2,26 +2,28 @@ import {
   FillFromDatabase,
   FillModel,
   Liquidity,
+  MarketFromDatabase,
+  MarketModel,
   OrderFromDatabase,
   OrderModel,
+  OrderStatus,
   OrderTable,
   PerpetualMarketFromDatabase,
   PerpetualMarketModel,
+  perpetualMarketRefresher,
   PerpetualPositionFromDatabase,
   PerpetualPositionModel,
   SubaccountTable,
-  OrderStatus,
+  UpdatedPerpetualPositionSubaccountKafkaObject,
 } from '@dydxprotocol-indexer/postgres';
 import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
-import {
-  IndexerOrderId, IndexerSubaccountId, IndexerOrder,
-} from '@dydxprotocol-indexer/v4-protos';
+import { IndexerOrder, IndexerOrderId, IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import * as pg from 'pg';
 
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
-import { convertPerpetualPosition } from '../../helpers/kafka-helper';
+import { annotateWithPnl, convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { redisClient } from '../../helpers/redis/redis-controller';
 import { orderFillWithLiquidityToOrderFillEventWithOrder } from '../../helpers/translation-helper';
 import { OrderFillWithLiquidity } from '../../lib/translated-types';
@@ -70,6 +72,8 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       resultRow[field].fill) as FillFromDatabase;
     const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
       resultRow[field].perpetual_market) as PerpetualMarketFromDatabase;
+    const market: MarketFromDatabase = MarketModel.fromJson(
+      resultRow[field].market) as MarketFromDatabase;
     const position: PerpetualPositionFromDatabase = PerpetualPositionModel.fromJson(
       resultRow[field].perpetual_position) as PerpetualPositionFromDatabase;
 
@@ -79,11 +83,16 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
     } else {
       subaccountId = castedOrderFillEventMessage.order.orderId!.subaccountId!;
     }
+    const positionUpdate: UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
+      convertPerpetualPosition(position),
+      perpetualMarketRefresher.getPerpetualMarketsMap(),
+      market,
+    );
     kafkaEvents.push(
       this.generateConsolidatedKafkaEvent(
         subaccountId,
         order,
-        convertPerpetualPosition(position),
+        positionUpdate,
         fill,
         perpetualMarket,
       ),

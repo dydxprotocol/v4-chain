@@ -147,7 +147,6 @@ func findOpenShortTermOrderToCancel(
 	for _, clobPair := range clobPairs {
 		for _, orderSide := range orderSides {
 			openOrders, err := memClob.GetSubaccountOrders(
-				ctx,
 				clobPair.GetClobPairId(),
 				subaccountId,
 				orderSide,

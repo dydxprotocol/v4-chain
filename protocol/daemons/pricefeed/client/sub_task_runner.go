@@ -356,6 +356,9 @@ func RunMarketParamUpdaterTaskLoop(
 	marketParamErrors, err := configs.UpdateMarkets(marketParams)
 
 	for _, marketParam := range marketParams {
+		// Update the market id -> pair for telemetry.
+		pricefeedmetrics.SetMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
+
 		outcome := metrics.Success
 
 		// Mark this update as an error either if this market failed to update, or if all markets failed.

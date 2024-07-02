@@ -37,9 +37,11 @@ export const configSchema = {
   // Loop Enablement
   LOOPS_ENABLED_MARKET_UPDATER: parseBoolean({ default: true }),
   LOOPS_ENABLED_DELETE_ZERO_PRICE_LEVELS: parseBoolean({ default: true }),
+  LOOPS_ENABLED_UNCROSS_ORDERBOOK: parseBoolean({ default: true }),
   LOOPS_ENABLED_PNL_TICKS: parseBoolean({ default: true }),
   LOOPS_ENABLED_REMOVE_EXPIRED_ORDERS: parseBoolean({ default: true }),
   LOOPS_ORDERBOOK_INSTRUMENTATION: parseBoolean({ default: true }),
+  LOOPS_PNL_INSTRUMENTATION: parseBoolean({ default: true }),
   LOOPS_CANCEL_STALE_ORDERS: parseBoolean({ default: true }),
   LOOPS_ENABLED_UPDATE_RESEARCH_ENVIRONMENT: parseBoolean({ default: false }),
   LOOPS_ENABLED_TAKE_FAST_SYNC_SNAPSHOTS: parseBoolean({ default: true }),
@@ -57,6 +59,9 @@ export const configSchema = {
   LOOPS_INTERVAL_MS_DELETE_ZERO_PRICE_LEVELS: parseInteger({
     default: 2 * ONE_MINUTE_IN_MILLISECONDS,
   }),
+  LOOPS_INTERVAL_MS_UNCROSS_ORDERBOOK: parseInteger({
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
+  }),
   LOOPS_INTERVAL_MS_PNL_TICKS: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
@@ -65,6 +70,9 @@ export const configSchema = {
   }),
   LOOPS_INTERVAL_MS_ORDERBOOK_INSTRUMENTATION: parseInteger({
     default: 5 * ONE_SECOND_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_PNL_INSTRUMENTATION: parseInteger({
+    default: ONE_HOUR_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_CANCEL_STALE_ORDERS: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,
@@ -103,6 +111,7 @@ export const configSchema = {
   // Lock multipliers
   MARKET_UPDATER_LOCK_MULTIPLIER: parseInteger({ default: 10 }),
   DELETE_ZERO_PRICE_LEVELS_LOCK_MULTIPLIER: parseInteger({ default: 1 }),
+  UNCROSS_ORDERBOOK_LOCK_MULTIPLIER: parseInteger({ default: 1 }),
   PNL_TICK_UPDATE_LOCK_MULTIPLIER: parseInteger({ default: 20 }),
 
   // Maximum number of running tasks - set this equal to PG_POOL_MIN in .env, default is 2
@@ -112,6 +121,7 @@ export const configSchema = {
   // PNL ticks
   PNL_TICK_UPDATE_INTERVAL_MS: parseInteger({ default: ONE_HOUR_IN_MILLISECONDS }),
   PNL_TICK_MAX_ROWS_PER_UPSERT: parseInteger({ default: 1000 }),
+  PNL_TICK_MAX_ACCOUNTS_PER_RUN: parseInteger({ default: 65000 }),
 
   // Remove expired orders
   BLOCKS_TO_DELAY_EXPIRY_BEFORE_SENDING_REMOVES: parseInteger({ default: 20 }),
@@ -154,6 +164,9 @@ export const configSchema = {
     default: ONE_HOUR_IN_MILLISECONDS,
   }),
   AGGREGATE_TRADING_REWARDS_CHUNK_SIZE: parseInteger({ default: 50 }),
+
+  // Uncross orderbook
+  STALE_ORDERBOOK_LEVEL_THRESHOLD_SECONDS: parseInteger({ default: 10 }),
 };
 
 export default parseSchema(configSchema);

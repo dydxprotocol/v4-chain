@@ -23,8 +23,5 @@ func Int64MulPow10(
 ) (
 	result *big.Int,
 ) {
-	return new(big.Int).Mul(
-		big.NewInt(val),
-		lib.BigPow10(exponent),
-	)
+	return lib.BigIntMulPow10(big.NewInt(val), exponent, false)
 }

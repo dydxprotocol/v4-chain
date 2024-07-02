@@ -28,7 +28,6 @@ describe('Index', () => {
   let mockConnect: (ws: WebSocket, req: IncomingMessage) => void;
   let wsOnSpy: jest.SpyInstance;
   let wsPingSpy: jest.SpyInstance;
-  let wsPongSpy: jest.SpyInstance;
   let invalidMsgHandlerSpy: jest.SpyInstance;
 
   const connectionId: string = 'conId';
@@ -49,10 +48,9 @@ describe('Index', () => {
     (Subscriptions as unknown as jest.Mock).mockClear();
     (sendMessage as unknown as jest.Mock).mockClear();
     mockWss = new Wss();
-    websocket = new WebSocket(null);
+    websocket = new WebSocket(null as any as string, [], { autoPong: true } as any);
     wsOnSpy = jest.spyOn(websocket, 'on');
     wsPingSpy = jest.spyOn(websocket, 'ping').mockImplementation(jest.fn());
-    wsPongSpy = jest.spyOn(websocket, 'pong').mockImplementation(jest.fn());
     mockWss.onConnection = jest.fn().mockImplementation(
       (cb: (ws: WebSocket, req: IncomingMessage) => void) => {
         mockConnect = cb;
@@ -74,12 +72,11 @@ describe('Index', () => {
       expect(index.connections[connectionId].messageId).toEqual(0);
 
       // Test that handlers are attached.
-      expect(wsOnSpy).toHaveBeenCalledTimes(5);
+      expect(wsOnSpy).toHaveBeenCalledTimes(4);
       expect(wsOnSpy).toHaveBeenCalledWith(WebsocketEvents.MESSAGE, expect.anything());
       expect(wsOnSpy).toHaveBeenCalledWith(WebsocketEvents.CLOSE, expect.anything());
       expect(wsOnSpy).toHaveBeenCalledWith(WebsocketEvents.ERROR, expect.anything());
       expect(wsOnSpy).toHaveBeenCalledWith(WebsocketEvents.PONG, expect.anything());
-      expect(wsOnSpy).toHaveBeenCalledWith(WebsocketEvents.PING, expect.anything());
 
       // Test that a connection messages is sent.
       expect(sendMessage).toHaveBeenCalledTimes(1);
@@ -177,7 +174,9 @@ describe('Index', () => {
         ALL_CHANNELS.map((channel: Channel) => { return [channel]; }),
       )('handles valid subscription message for channel: %s', (channel: Channel) => {
         // Test that markets work with a missing id.
-        const id: string | undefined = channel === Channel.V4_MARKETS ? undefined : subId;
+        const id: string | undefined = (
+          channel === Channel.V4_MARKETS || channel === Channel.V4_BLOCK_HEIGHT
+        ) ? undefined : subId;
         const isBatched: boolean = false;
         const subMessage: IncomingMessage = createIncomingMessage({
           type: IncomingMessageType.SUBSCRIBE,
@@ -203,7 +202,9 @@ describe('Index', () => {
         ALL_CHANNELS.map((channel: Channel) => { return [channel]; }),
       )('handles valid unsubscribe message for channel: %s', (channel: Channel) => {
         // Test that markets work with a missing id.
-        const id: string | undefined = channel === Channel.V4_MARKETS ? undefined : subId;
+        const id: string | undefined = (
+          channel === Channel.V4_MARKETS || channel === Channel.V4_BLOCK_HEIGHT
+        ) ? undefined : subId;
         const unSubMessage: IncomingMessage = createIncomingMessage({
           type: IncomingMessageType.UNSUBSCRIBE,
           channel,
@@ -256,15 +257,6 @@ describe('Index', () => {
         expect(websocket.terminate).toHaveBeenCalledTimes(1);
         expect(mockSub.remove).toHaveBeenCalledWith(connectionId);
         expect(index.connections[connectionId]).toBeUndefined();
-      });
-    });
-
-    describe('ping', () => {
-      it('sends pong on receiving ping', () => {
-        (v4 as unknown as jest.Mock).mockReturnValueOnce(connectionId);
-        mockConnect(websocket, new IncomingMessage(new Socket()));
-        websocket.emit(WebsocketEvents.PING);
-        expect(wsPongSpy).toHaveBeenCalledTimes(2);
       });
     });
 

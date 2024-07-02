@@ -25,6 +25,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	sample_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -139,13 +140,12 @@ func TestMsgCreateTransfer(t *testing.T) {
 							{
 								Id: &(tc.senderSubaccountId),
 								AssetPositions: []*satypes.AssetPosition{
-									{
-										AssetId: constants.Usdc.Id,
-										Index:   0,
-										Quantums: dtypes.NewIntFromUint64(
+									testutil.CreateSingleAssetPosition(
+										constants.Usdc.Id,
+										big.NewInt(0).SetUint64(
 											tc.senderInitialBalance,
 										),
-									},
+									),
 								},
 							},
 						}
@@ -155,13 +155,12 @@ func TestMsgCreateTransfer(t *testing.T) {
 								satypes.Subaccount{
 									Id: &(tc.recipientSubaccountId),
 									AssetPositions: []*satypes.AssetPosition{
-										{
-											AssetId: constants.Usdc.Id,
-											Index:   0,
-											Quantums: dtypes.NewIntFromUint64(
+										testutil.CreateSingleAssetPosition(
+											constants.Usdc.Id,
+											big.NewInt(0).SetUint64(
 												rand.NewRand().Uint64(),
 											),
-										},
+										),
 									},
 								},
 							)

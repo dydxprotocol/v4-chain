@@ -10,7 +10,7 @@ import {
 import { getIpAddr } from '../../../../src/lib/utils';
 import { sendRequest } from '../../../helpers/helpers';
 import { RequestMethod } from '../../../../src/types';
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { ratelimitRedis } from '../../../../src/caches/rate-limiters';
 import { ComplianceControllerHelper } from '../../../../src/controllers/api/v4/compliance-controller';
@@ -158,6 +158,40 @@ describe('ComplianceV2Controller', () => {
         }));
       });
 
+    it('should return CLOSE_ONLY & not update for a restricted, dydx address with existing CLOSE_ONLY compliance status',
+      async () => {
+        jest.spyOn(ComplianceControllerHelper.prototype, 'screen').mockImplementation(() => {
+          return Promise.resolve({
+            restricted: true,
+          });
+        });
+
+        const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO();
+        await ComplianceStatusTable.create({
+          address: testConstants.defaultAddress,
+          status: ComplianceStatus.CLOSE_ONLY,
+          createdAt,
+          updatedAt: createdAt,
+        });
+        let data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
+        expect(data).toHaveLength(1);
+
+        const response: any = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/compliance/screen/${testConstants.defaultAddress}`,
+        });
+        expect(response.body.status).toEqual(ComplianceStatus.CLOSE_ONLY);
+        expect(response.body.updatedAt).toEqual(createdAt);
+        data = await ComplianceStatusTable.findAll({}, [], {});
+        expect(data).toHaveLength(1);
+        expect(data[0]).toEqual(expect.objectContaining({
+          address: testConstants.defaultAddress,
+          status: ComplianceStatus.CLOSE_ONLY,
+          createdAt,
+          updatedAt: createdAt,
+        }));
+      });
+
     it('should return COMPLIANT for a non-restricted, dydx address', async () => {
       jest.spyOn(ComplianceControllerHelper.prototype, 'screen').mockImplementation(() => {
         return Promise.resolve({
@@ -170,6 +204,24 @@ describe('ComplianceV2Controller', () => {
         path: `/v4/compliance/screen/${testConstants.defaultAddress}`,
       });
       expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
+    });
+
+    it('should return existing compliance data for a non-restricted, dydx address', async () => {
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.FIRST_STRIKE,
+      });
+      jest.spyOn(ComplianceControllerHelper.prototype, 'screen').mockImplementation(() => {
+        return Promise.resolve({
+          restricted: false,
+        });
+      });
+
+      const response: any = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/compliance/screen/${testConstants.defaultAddress}`,
+      });
+      expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE);
     });
   });
 
@@ -250,7 +302,7 @@ describe('ComplianceV2Controller', () => {
     const body: any = {
       address: testConstants.defaultAddress,
       message: 'Test message',
-      action: ComplianceAction.ONBOARD,
+      action: ComplianceAction.CONNECT,
       signedMessage: 'signedmessage123',
       pubkey: 'asdfasdf',
       timestamp: 1620000000,
@@ -340,10 +392,11 @@ describe('ComplianceV2Controller', () => {
       expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
     });
 
-    it('should set status to BLOCKED for ONBOARD action from a restricted country with no existing compliance status', async () => {
+    it('should set status to BLOCKED for CONNECT action from a restricted country with no existing compliance status and no wallet', async () => {
       (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
       getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
       isRestrictedCountryHeadersSpy.mockReturnValue(true);
+      await dbHelpers.clearData();
 
       const response: any = await sendRequest({
         type: RequestMethod.POST,
@@ -365,7 +418,7 @@ describe('ComplianceV2Controller', () => {
       expect(response.body.updatedAt).toBeDefined();
     });
 
-    it('should set status to FIRST_STRIKE_CLOSE_ONLY for CONNECT action from a restricted country with no existing compliance status', async () => {
+    it('should set status to FIRST_STRIKE_CLOSE_ONLY for CONNECT action from a restricted country with no existing compliance status and a wallet', async () => {
       (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
       getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
       isRestrictedCountryHeadersSpy.mockReturnValue(true);
@@ -441,70 +494,6 @@ describe('ComplianceV2Controller', () => {
         reason: ComplianceReason.US_GEO,
       }));
 
-      expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY);
-      expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
-      expect(response.body.updatedAt).toBeDefined();
-    });
-
-    it('should be a no-op for ONBOARD action with existing COMPLIANT status', async () => {
-      const loggerError = jest.spyOn(logger, 'error');
-      await ComplianceStatusTable.create({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.COMPLIANT,
-      });
-      (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
-      isRestrictedCountryHeadersSpy.mockReturnValue(true);
-
-      const response: any = await sendRequest({
-        type: RequestMethod.POST,
-        path: '/v4/compliance/geoblock',
-        body,
-        expectedStatus: 200,
-      });
-
-      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
-      expect(data).toHaveLength(1);
-      expect(data[0]).toEqual(expect.objectContaining({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.COMPLIANT,
-      }));
-
-      expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'ComplianceV2Controller POST /geoblock',
-        message: 'Invalid action for current compliance status',
-      }));
-      expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
-    });
-
-    it('should be a no-op for ONBOARD action with existing FIRST_STRIKE_CLOSE_ONLY status', async () => {
-      const loggerError = jest.spyOn(logger, 'error');
-      await ComplianceStatusTable.create({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
-        reason: ComplianceReason.US_GEO,
-      });
-      (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
-      isRestrictedCountryHeadersSpy.mockReturnValue(true);
-
-      const response: any = await sendRequest({
-        type: RequestMethod.POST,
-        path: '/v4/compliance/geoblock',
-        body,
-        expectedStatus: 200,
-      });
-
-      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
-      expect(data).toHaveLength(1);
-      expect(data[0]).toEqual(expect.objectContaining({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
-        reason: ComplianceReason.US_GEO,
-      }));
-
-      expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'ComplianceV2Controller POST /geoblock',
-        message: 'Invalid action for current compliance status',
-      }));
       expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
       expect(response.body.updatedAt).toBeDefined();

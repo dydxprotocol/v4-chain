@@ -6,6 +6,7 @@ import {
   helpers,
   IsoString,
   OraclePriceTable,
+  perpetualMarketRefresher,
   PerpetualPositionFromDatabase,
   PerpetualPositionTable,
   PnlTicksCreateObject,
@@ -73,6 +74,11 @@ export async function getPnlTicksCreateObjects(
     mostRecentPnlTicks,
     (pnlTick: PnlTicksCreateObject) => pnlTick.blockTime,
   );
+  logger.info({
+    at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+    message: 'Account to last updated block time',
+    accountToLastUpdatedBlockTime,
+  });
   const subaccountIdsWithTranfers: string[] = _.map(subaccountsWithTransfers, 'id');
   const newSubaccountIds: string[] = _.difference(
     subaccountIdsWithTranfers, _.keys(accountToLastUpdatedBlockTime),
@@ -81,7 +87,14 @@ export async function getPnlTicksCreateObjects(
   const accountsToUpdate: string[] = [
     ...getAccountsToUpdate(accountToLastUpdatedBlockTime, blockTime),
     ...newSubaccountIds,
-  ];
+  ].slice(0, config.PNL_TICK_MAX_ACCOUNTS_PER_RUN);
+  logger.info({
+    at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+    message: 'Accounts to update',
+    accountsToUpdate,
+    blockHeight,
+    blockTime,
+  });
   stats.gauge(
     `${config.SERVICE_NAME}_get_ticks_accounts_to_update`,
     accountsToUpdate.length,
@@ -176,12 +189,18 @@ export async function getPnlTicksCreateObjects(
       logger.error({
         at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
         message: 'Error when getting new pnl tick',
+        error,
         account,
         pnlTicksToBeCreatedAt,
         blockHeight,
         blockTime,
       });
     }
+  });
+  logger.info({
+    at: 'pnl-ticks-helper#getPnlTicksCreateObjects',
+    message: 'New ticks to create',
+    subaccountIds: _.map(newTicksToCreate, 'subaccountId'),
   });
   stats.timing(
     `${config.SERVICE_NAME}_get_ticks_compute_pnl`,
@@ -290,6 +309,13 @@ export function getNewPnlTick(
   lastUpdatedFundingIndexMap: FundingIndexMap,
   currentFundingIndexMap: FundingIndexMap,
 ): PnlTicksCreateObject {
+  logger.info({
+    at: 'createPnlTicks#getNewPnlTick',
+    message: 'Creating new PNL tick',
+    subaccountId,
+    latestBlockHeight,
+    latestBlockTime,
+  });
   const currentEquity: Big = calculateEquity(
     usdcPositionSize,
     openPerpetualPositionsForSubaccount,
@@ -302,12 +328,19 @@ export function getNewPnlTick(
     currentEquity,
     subaccountTotalTransfersMap[subaccountId][USDC_ASSET_ID],
   );
+  logger.info({
+    at: 'createPnlTicks#getNewPnlTick',
+    message: 'Calculated equity and total pnl',
+    subaccountId,
+    currentEquity: currentEquity.toFixed(),
+    totalPnl: totalPnl.toFixed(),
+  });
 
   const mostRecentPnlTick: PnlTicksCreateObject | undefined = mostRecentPnlTicks[subaccountId];
 
   // if there has been a significant chagne in equity or totalPnl, log it for debugging purposes.
   if (
-    mostRecentPnlTick &&
+    mostRecentPnlTick !== undefined &&
     Big(mostRecentPnlTick.equity).gt(0) &&
     currentEquity.div(mostRecentPnlTick.equity).gt(2) &&
     totalPnl.gte(10000) &&
@@ -328,7 +361,7 @@ export function getNewPnlTick(
     });
   }
 
-  return {
+  const pnlTick: PnlTicksCreateObject = {
     totalPnl: totalPnl.toFixed(6),
     netTransfers: usdcNetTransfersSinceLastPnlTick.toFixed(6),
     subaccountId,
@@ -337,6 +370,13 @@ export function getNewPnlTick(
     blockHeight: latestBlockHeight,
     blockTime: latestBlockTime,
   };
+  logger.info({
+    at: 'createPnlTicks#getNewPnlTick',
+    message: 'New PNL tick',
+    subaccountId,
+    pnlTick,
+  });
+  return pnlTick;
 }
 
 /**
@@ -404,9 +444,9 @@ export function calculateEquity(
 
   const signedPositionNotional: Big = positions.reduce(
     (acc: Big, position: PerpetualPositionFromDatabase) => {
-      const positionNotional: Big = Big(position.size).times(
-        marketPrices[Number(position.perpetualId)],
-      );
+      const marketId:
+      number = perpetualMarketRefresher.getPerpetualMarketFromId(position.perpetualId)!.marketId;
+      const positionNotional: Big = Big(position.size).times(Big(marketPrices[marketId]));
       // Add positionNotional to the accumulator
       return acc.plus(positionNotional);
     },

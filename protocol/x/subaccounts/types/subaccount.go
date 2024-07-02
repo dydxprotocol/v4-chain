@@ -17,6 +17,13 @@ const (
 // BaseQuantums is used to represent an amount in base quantums.
 type BaseQuantums uint64
 
+type SafetyHeapPositionSide uint
+
+const (
+	Long SafetyHeapPositionSide = iota
+	Short
+)
+
 // Get the BaseQuantum value in *big.Int.
 func (bq BaseQuantums) ToBigInt() *big.Int {
 	return new(big.Int).SetUint64(bq.ToUint64())
@@ -42,6 +49,18 @@ func (m *SubaccountId) Validate() error {
 
 func (m *SubaccountId) MustGetAccAddress() sdk.AccAddress {
 	return sdk.MustAccAddressFromBech32(m.Owner)
+}
+
+func (m *Subaccount) DeepCopy() Subaccount {
+	b, err := m.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	newSubaccount := Subaccount{}
+	if err := newSubaccount.Unmarshal(b); err != nil {
+		panic(err)
+	}
+	return newSubaccount
 }
 
 // GetPerpetualPositionForId returns the perpetual position with the given

@@ -144,41 +144,14 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				types.PrunableOrdersKeyPrefix,
 				// Update taker order fill amount
 				types.OrderAmountFilledKeyPrefix,
-				// Update taker order fill amount in memStore
-				types.OrderAmountFilledKeyPrefix,
 				// Update prunable block height for maker fill amount
 				types.PrunableOrdersKeyPrefix,
 				// Update maker order fill amount
-				types.OrderAmountFilledKeyPrefix,
-				// Update maker order fill amount in memStore
 				types.OrderAmountFilledKeyPrefix,
 			},
 			expectedOpenInterests: map[uint32]*big.Int{
 				// positions fully closed
 				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(0),
-			},
-		},
-		"Cannot place an order on the orderbook if the account would be undercollateralized": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_SmallMarginRequirement,
-				constants.EthUsd_20PercentInitial_10PercentMaintenance,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_599USD,
-			},
-			clobs: []types.ClobPair{
-				constants.ClobPair_Btc,
-				constants.ClobPair_Eth,
-			},
-			feeParams: constants.PerpetualFeeParams,
-
-			order: constants.Order_Carl_Num0_Id3_Clob1_Buy1ETH_Price3000,
-
-			expectedOrderStatus: types.Undercollateralized,
-			expectedFilledSize:  0,
-			expectedOpenInterests: map[uint32]*big.Int{
-				// unchanged, no match happened
-				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
 			},
 		},
 		"Can place an order on the orderbook if the subaccount is right at the initial margin ratio": {
@@ -196,28 +169,6 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			order: constants.Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price100000QuoteQt,
 
 			expectedOrderStatus: types.Success,
-			expectedFilledSize:  0,
-			expectedOpenInterests: map[uint32]*big.Int{
-				// unchanged, no match happened
-				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
-			},
-		},
-		"Cannot place an order on the orderbook if the account would be undercollateralized due to fees paid": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-			},
-			clobs: []types.ClobPair{
-				// Exact same set-up as the previous test, except the clob pair has fees.
-				constants.ClobPair_Btc,
-			},
-			feeParams: constants.PerpetualFeeParams,
-
-			order: constants.Order_Carl_Num0_Id0_Clob0_Buy10QtBTC_Price100000QuoteQt,
-
-			expectedOrderStatus: types.Undercollateralized,
 			expectedFilledSize:  0,
 			expectedOpenInterests: map[uint32]*big.Int{
 				// unchanged, no match happened
@@ -394,73 +345,6 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
 			},
 		},
-		// This is a regression test for an issue whereby orders that had been previously matched were being checked for
-		// collateralization as if the subticks of the order were `0`. This resulted in always using `0`
-		// `bigFillQuoteQuantums` for the order when performing collateralization checks during `PlaceOrder`.
-		// This meant that previous buy orders in the match queue could only ever increase collateralization
-		// of the subaccount.
-		// Context: https://dydx-team.slack.com/archives/C03SLFHC3L7/p1668105457456389
-		`Regression: New order should be undercollateralized when adding to the orderbook when previous fills make it
-			undercollateralized`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num1_500USD,
-				constants.Carl_Num0_10000USD,
-			},
-			clobs: []types.ClobPair{
-				constants.ClobPair_Btc,
-			},
-			existingOrders: []types.Order{
-				// The maker subaccount places an order which is a maker order to buy $500 worth of BTC.
-				// The subaccount has a balance of $500 worth of USDC, and the perpetual has a 100% margin requirement.
-				// This order does not match, and is placed on the book as a maker order.
-				constants.Order_Carl_Num1_Id0_Clob0_Buy1kQtBTC_Price50000,
-				// The taker subaccount places an order which fully fills the previous order.
-				constants.Order_Carl_Num0_Id0_Clob0_Sell1kQtBTC_Price50000,
-			},
-			feeParams: constants.PerpetualFeeParamsNoFee,
-			// The maker subaccount places a second order identical to the first.
-			// This should fail, because the maker subaccount currently has a balance of $0 USDC, and a perpetual of size
-			// 0.01 BTC ($500), and the perpetual has a 100% margin requirement.
-			order:               constants.Order_Carl_Num1_Id1_Clob0_Buy1kQtBTC_Price50000,
-			expectedOrderStatus: types.Undercollateralized,
-		},
-		`Regression: New order should be undercollateralized when matching when previous fills make it
-				undercollateralized`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num1_500USD,
-				constants.Carl_Num0_10000USD,
-			},
-			clobs: []types.ClobPair{
-				constants.ClobPair_Btc,
-			},
-			existingOrders: []types.Order{
-				// The maker subaccount places an order which is a maker order to buy $500 worth of BTC.
-				// The subaccount has a balance of $500 worth of USDC, and the perpetual has a 100% margin requirement.
-				// This order does not match, and is placed on the book as a maker order.
-				constants.Order_Carl_Num1_Id0_Clob0_Buy1kQtBTC_Price50000,
-				// The taker subaccount places an order which fully fills the previous order.
-				constants.Order_Carl_Num0_Id0_Clob0_Sell1kQtBTC_Price50000,
-				// Match queue is now empty.
-				// The subaccount from the above order now places an order which is added to the book.
-				constants.Order_Carl_Num0_Id1_Clob0_Sell1kQtBTC_Price50000,
-			},
-			feeParams: constants.PerpetualFeeParamsNoFee,
-			// The maker subaccount places a second order identical to the first.
-			// This should fail, because the maker during matching, because subaccount currently has a balance of $0 USDC,
-			// and a perpetual of size 0.01 BTC ($500), and the perpetual has a 100% margin requirement.
-			order:               constants.Order_Carl_Num1_Id1_Clob0_Buy1kQtBTC_Price50000,
-			expectedOrderStatus: types.Undercollateralized,
-			expectedOpenInterests: map[uint32]*big.Int{
-				// 1 BTC + 0.01 BTC filled
-				constants.BtcUsd_100PercentMarginRequirement.Params.Id: big.NewInt(101_000_000),
-			},
-		},
 		`New order should be undercollateralized when matching when previous fills make it undercollateralized when using
 				maker orders subticks, but would be collateralized if using taker order subticks`: {
 			perpetuals: []perptypes.Perpetual{
@@ -508,13 +392,9 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				types.PrunableOrdersKeyPrefix,
 				// Update taker order fill amount
 				types.OrderAmountFilledKeyPrefix,
-				// Update taker order fill amount in memStore
-				types.OrderAmountFilledKeyPrefix,
 				// Update prunable block height for maker fill amount
 				types.PrunableOrdersKeyPrefix,
 				// Update maker order fill amount
-				types.OrderAmountFilledKeyPrefix,
-				// Update maker order fill amount in memStore
 				types.OrderAmountFilledKeyPrefix,
 			},
 			expectedOpenInterests: map[uint32]*big.Int{
@@ -599,22 +479,6 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			expectedFilledSize:       0,
 			expectedMultiStoreWrites: []string{},
 		},
-		`Subaccount cannot place buy order due to a failed collateralization check with its maker price but would
-				pass if using the oracle price`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_50PercentInitial_40PercentMaintenance,
-			},
-			subaccounts: []satypes.Subaccount{constants.Carl_Num0_100000USD},
-			clobs: []types.ClobPair{
-				constants.ClobPair_Btc,
-			},
-			existingOrders:           []types.Order{},
-			feeParams:                constants.PerpetualFeeParamsNoFee,
-			order:                    constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price500000_GTB10,
-			expectedOrderStatus:      types.Undercollateralized,
-			expectedFilledSize:       0,
-			expectedMultiStoreWrites: []string{},
-		},
 		`Subaccount placed buy order passes collateralization check when using the maker price`: {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_50PercentInitial_40PercentMaintenance,
@@ -649,22 +513,6 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			feeParams:                constants.PerpetualFeeParamsNoFee,
 			order:                    constants.Order_Carl_Num0_Id0_Clob0_Sell1BTC_Price500000_GTB10,
 			expectedOrderStatus:      types.Success,
-			expectedFilledSize:       0,
-			expectedMultiStoreWrites: []string{},
-		},
-		`Subaccount cannot place sell order due to a failed collateralization check with its maker price but would
-				pass if using the oracle price`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_50PercentInitial_40PercentMaintenance,
-			},
-			subaccounts: []satypes.Subaccount{constants.Carl_Num0_50000USD},
-			clobs: []types.ClobPair{
-				constants.ClobPair_Btc,
-			},
-			existingOrders:           []types.Order{},
-			feeParams:                constants.PerpetualFeeParamsNoFee,
-			order:                    constants.Order_Carl_Num0_Id0_Clob0_Sell1BTC_Price5000_GTB10,
-			expectedOrderStatus:      types.Undercollateralized,
 			expectedFilledSize:       0,
 			expectedMultiStoreWrites: []string{},
 		},
@@ -898,14 +746,10 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 				indexer_manager.IndexerEventsCountKey,
 				// Update block stats
 				statstypes.BlockStatsKey,
-				// Update taker order fill amount to state and memStore.
+				// Update taker order fill amount to state.
 				types.OrderAmountFilledKeyPrefix +
 					string(constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId.ToStateKey()),
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId.ToStateKey()),
-				// Update maker order fill amount to state and memStore.
-				types.OrderAmountFilledKeyPrefix +
-					string(constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId.ToStateKey()),
+				// Update maker order fill amount to state.
 				types.OrderAmountFilledKeyPrefix +
 					string(constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId.ToStateKey()),
 			},
@@ -1096,7 +940,7 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 	ctx := ks.Ctx.WithTxBytes(constants.TestTxBytes)
 	ctx = ctx.WithIsCheckTx(true)
 
-	memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
+	memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 	// the indexer event manager to expect these events.
 	indexerEventManager.On("AddTxnEvent",
@@ -1151,7 +995,7 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
-	memClob.On("CreateOrderbook", ks.Ctx, constants.ClobPair_Btc).Return()
+	memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 	// the indexer event manager to expect these events.
 	indexerEventManager.On("AddTxnEvent",
@@ -2122,7 +1966,7 @@ func TestInitStatefulOrders(t *testing.T) {
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 			// Create CLOB pair.
-			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
+			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 			indexerEventManager.On("AddTxnEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
@@ -2254,7 +2098,7 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 			// Create CLOB pair.
-			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
+			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 			indexerEventManager.On("AddTxnEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
@@ -2429,7 +2273,7 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 			})
 
 			// Create CLOB pair.
-			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
+			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				constants.ClobPair_Btc.Id,
@@ -2558,7 +2402,7 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 			})
 
 			// Create CLOB pair.
-			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
+			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				constants.ClobPair_Btc.Id,
@@ -2578,11 +2422,9 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 				longTermOrderPlacementBytes := ks.Cdc.MustMarshal(&longTermOrderPlacement)
 
 				store := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementStore(ctx)
-				memstore := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementMemStore(ctx)
 
 				orderKey := order.OrderId.ToStateKey()
 				store.Set(orderKey, longTermOrderPlacementBytes)
-				memstore.Set(orderKey, longTermOrderPlacementBytes)
 			}
 
 			// Write to untriggered orders state
@@ -2593,11 +2435,9 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 				longTermOrderPlacementBytes := ks.Cdc.MustMarshal(&longTermOrderPlacement)
 
 				store := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementStore(ctx)
-				memstore := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
 
 				orderKey := order.OrderId.ToStateKey()
 				store.Set(orderKey, longTermOrderPlacementBytes)
-				memstore.Set(orderKey, longTermOrderPlacementBytes)
 			}
 
 			// Assert expected order placement memclob calls.

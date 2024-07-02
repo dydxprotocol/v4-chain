@@ -4,8 +4,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
@@ -16,7 +16,7 @@ import (
 func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 	tests := map[string]struct {
 		// parameters
-		settledUpdateWithUpdatedSubaccount keeper.SettledUpdate
+		settledUpdateWithUpdatedSubaccount types.SettledUpdate
 		perpetuals                         []perptypes.Perpetual
 
 		// expectation
@@ -24,7 +24,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 		expectedErr             error
 	}{
 		`If no perpetual updates, nil state transition is returned`: {
-			settledUpdateWithUpdatedSubaccount: keeper.SettledUpdate{
+			settledUpdateWithUpdatedSubaccount: types.SettledUpdate{
 				SettledSubaccount: types.Subaccount{
 					Id:                 &constants.Alice_Num0,
 					PerpetualPositions: nil,
@@ -37,7 +37,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 			expectedStateTransition: nil,
 		},
 		`If single non-isolated perpetual updates, nil state transition is returned`: {
-			settledUpdateWithUpdatedSubaccount: keeper.SettledUpdate{
+			settledUpdateWithUpdatedSubaccount: types.SettledUpdate{
 				SettledSubaccount: types.Subaccount{
 					Id:                 &constants.Alice_Num0,
 					PerpetualPositions: nil,
@@ -57,7 +57,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 			expectedStateTransition: nil,
 		},
 		`If multiple non-isolated perpetual updates, nil state transition is returned`: {
-			settledUpdateWithUpdatedSubaccount: keeper.SettledUpdate{
+			settledUpdateWithUpdatedSubaccount: types.SettledUpdate{
 				SettledSubaccount: types.Subaccount{
 					Id:                 &constants.Alice_Num0,
 					PerpetualPositions: nil,
@@ -82,7 +82,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 			expectedStateTransition: nil,
 		},
 		`If multiple non-isolated perpetual positions, nil state transition is returned`: {
-			settledUpdateWithUpdatedSubaccount: keeper.SettledUpdate{
+			settledUpdateWithUpdatedSubaccount: types.SettledUpdate{
 				SettledSubaccount: types.Subaccount{
 					Id: &constants.Alice_Num0,
 					PerpetualPositions: []*types.PerpetualPosition{
@@ -106,7 +106,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 			expectedStateTransition: nil,
 		},
 		`If single isolated perpetual update, no perpetual position, state transition is returned for closed position`: {
-			settledUpdateWithUpdatedSubaccount: keeper.SettledUpdate{
+			settledUpdateWithUpdatedSubaccount: types.SettledUpdate{
 				SettledSubaccount: types.Subaccount{
 					Id:                 &constants.Alice_Num0,
 					PerpetualPositions: nil,
@@ -139,17 +139,17 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 		},
 		`If single isolated perpetual update, existing perpetual position with same size, state transition is returned for
 		opened position`: {
-			settledUpdateWithUpdatedSubaccount: keeper.SettledUpdate{
+			settledUpdateWithUpdatedSubaccount: types.SettledUpdate{
 				SettledSubaccount: types.Subaccount{
 					Id: &constants.Alice_Num0,
 					PerpetualPositions: []*types.PerpetualPosition{
 						&constants.PerpetualPosition_OneISOLong,
 					},
 					AssetPositions: []*types.AssetPosition{
-						{
-							AssetId:  assettypes.AssetUsdc.Id,
-							Quantums: dtypes.NewInt(-40_000_000), // -$40
-						},
+						testutil.CreateSingleAssetPosition(
+							assettypes.AssetUsdc.Id,
+							big.NewInt(-40_000_000), // -$40
+						),
 					},
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
@@ -177,17 +177,17 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 		},
 		`If single isolated perpetual update, existing perpetual position with different size, nil state transition
 		returned`: {
-			settledUpdateWithUpdatedSubaccount: keeper.SettledUpdate{
+			settledUpdateWithUpdatedSubaccount: types.SettledUpdate{
 				SettledSubaccount: types.Subaccount{
 					Id: &constants.Alice_Num0,
 					PerpetualPositions: []*types.PerpetualPosition{
 						&constants.PerpetualPosition_OneISOLong,
 					},
 					AssetPositions: []*types.AssetPosition{
-						{
-							AssetId:  assettypes.AssetUsdc.Id,
-							Quantums: dtypes.NewInt(-40_000_000), // -$65
-						},
+						testutil.CreateSingleAssetPosition(
+							assettypes.AssetUsdc.Id,
+							big.NewInt(-40_000_000), // -$65
+						),
 					},
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
@@ -209,17 +209,17 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 			expectedStateTransition: nil,
 		},
 		`Returns error if perpetual position was opened with no asset updates`: {
-			settledUpdateWithUpdatedSubaccount: keeper.SettledUpdate{
+			settledUpdateWithUpdatedSubaccount: types.SettledUpdate{
 				SettledSubaccount: types.Subaccount{
 					Id: &constants.Alice_Num0,
 					PerpetualPositions: []*types.PerpetualPosition{
 						&constants.PerpetualPosition_OneISOLong,
 					},
 					AssetPositions: []*types.AssetPosition{
-						{
-							AssetId:  assettypes.AssetUsdc.Id,
-							Quantums: dtypes.NewInt(50_000_000), // $50
-						},
+						testutil.CreateSingleAssetPosition(
+							assettypes.AssetUsdc.Id,
+							big.NewInt(50_000_000), // $50
+						),
 					},
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
@@ -237,21 +237,21 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 			expectedErr:             types.ErrFailedToUpdateSubaccounts,
 		},
 		`Returns error if perpetual position was opened with multiple asset updates`: {
-			settledUpdateWithUpdatedSubaccount: keeper.SettledUpdate{
+			settledUpdateWithUpdatedSubaccount: types.SettledUpdate{
 				SettledSubaccount: types.Subaccount{
 					Id: &constants.Alice_Num0,
 					PerpetualPositions: []*types.PerpetualPosition{
 						&constants.PerpetualPosition_OneISOLong,
 					},
 					AssetPositions: []*types.AssetPosition{
-						{
-							AssetId:  assettypes.AssetUsdc.Id,
-							Quantums: dtypes.NewInt(-40_000_000), // -$40
-						},
-						{
-							AssetId:  constants.BtcUsd.Id,
-							Quantums: dtypes.NewInt(100_000_000), // 1 BTC
-						},
+						testutil.CreateSingleAssetPosition(
+							assettypes.AssetUsdc.Id,
+							big.NewInt(-40_000_000), // -$40
+						),
+						testutil.CreateSingleAssetPosition(
+							constants.BtcUsd.Id,
+							big.NewInt(100_000_000), // 1 BTC
+						),
 					},
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
@@ -278,21 +278,21 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 			expectedErr:             types.ErrFailedToUpdateSubaccounts,
 		},
 		`Returns error if perpetual position was opened with non-usdc asset update`: {
-			settledUpdateWithUpdatedSubaccount: keeper.SettledUpdate{
+			settledUpdateWithUpdatedSubaccount: types.SettledUpdate{
 				SettledSubaccount: types.Subaccount{
 					Id: &constants.Alice_Num0,
 					PerpetualPositions: []*types.PerpetualPosition{
 						&constants.PerpetualPosition_OneISOLong,
 					},
 					AssetPositions: []*types.AssetPosition{
-						{
-							AssetId:  assettypes.AssetUsdc.Id,
-							Quantums: dtypes.NewInt(50_000_000), // $50
-						},
-						{
-							AssetId:  constants.BtcUsd.Id,
-							Quantums: dtypes.NewInt(100_000_000), // 1 BTC
-						},
+						testutil.CreateSingleAssetPosition(
+							assettypes.AssetUsdc.Id,
+							big.NewInt(50_000_000), // $50
+						),
+						testutil.CreateSingleAssetPosition(
+							constants.BtcUsd.Id,
+							big.NewInt(100_000_000), // 1 BTC
+						),
 					},
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
@@ -319,9 +319,16 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(
 			name, func(t *testing.T) {
+				perpInfos := make(perptypes.PerpInfos, len(tc.perpetuals))
+				for _, perp := range tc.perpetuals {
+					perpInfos[perp.Params.Id] = perptypes.PerpInfo{
+						Perpetual: perp,
+					}
+				}
+
 				stateTransition, err := keeper.GetIsolatedPerpetualStateTransition(
 					tc.settledUpdateWithUpdatedSubaccount,
-					tc.perpetuals,
+					perpInfos,
 				)
 				if tc.expectedErr != nil {
 					require.Error(t, tc.expectedErr, err)

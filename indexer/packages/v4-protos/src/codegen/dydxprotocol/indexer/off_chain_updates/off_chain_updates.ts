@@ -278,6 +278,24 @@ export interface OrderUpdateV1SDKType {
   order_id?: IndexerOrderIdSDKType;
   total_filled_quantums: Long;
 }
+/** OrderReplace messages contain the old order ID and the replacement order. */
+
+export interface OrderReplaceV1 {
+  /** vault replaces orders with a different order ID */
+  oldOrderId?: IndexerOrderId;
+  order?: IndexerOrder;
+  placementStatus: OrderPlaceV1_OrderPlacementStatus;
+  timeStamp?: Date;
+}
+/** OrderReplace messages contain the old order ID and the replacement order. */
+
+export interface OrderReplaceV1SDKType {
+  /** vault replaces orders with a different order ID */
+  old_order_id?: IndexerOrderIdSDKType;
+  order?: IndexerOrderSDKType;
+  placement_status: OrderPlaceV1_OrderPlacementStatusSDKType;
+  time_stamp?: Date;
+}
 /**
  * An OffChainUpdate message is the message type which will be sent on Kafka to
  * the Indexer.
@@ -287,6 +305,7 @@ export interface OffChainUpdateV1 {
   orderPlace?: OrderPlaceV1;
   orderRemove?: OrderRemoveV1;
   orderUpdate?: OrderUpdateV1;
+  orderReplace?: OrderReplaceV1;
 }
 /**
  * An OffChainUpdate message is the message type which will be sent on Kafka to
@@ -297,6 +316,7 @@ export interface OffChainUpdateV1SDKType {
   order_place?: OrderPlaceV1SDKType;
   order_remove?: OrderRemoveV1SDKType;
   order_update?: OrderUpdateV1SDKType;
+  order_replace?: OrderReplaceV1SDKType;
 }
 
 function createBaseOrderPlaceV1(): OrderPlaceV1 {
@@ -494,11 +514,87 @@ export const OrderUpdateV1 = {
 
 };
 
+function createBaseOrderReplaceV1(): OrderReplaceV1 {
+  return {
+    oldOrderId: undefined,
+    order: undefined,
+    placementStatus: 0,
+    timeStamp: undefined
+  };
+}
+
+export const OrderReplaceV1 = {
+  encode(message: OrderReplaceV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.oldOrderId !== undefined) {
+      IndexerOrderId.encode(message.oldOrderId, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.order !== undefined) {
+      IndexerOrder.encode(message.order, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.placementStatus !== 0) {
+      writer.uint32(24).int32(message.placementStatus);
+    }
+
+    if (message.timeStamp !== undefined) {
+      Timestamp.encode(toTimestamp(message.timeStamp), writer.uint32(34).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): OrderReplaceV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseOrderReplaceV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.oldOrderId = IndexerOrderId.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.order = IndexerOrder.decode(reader, reader.uint32());
+          break;
+
+        case 3:
+          message.placementStatus = (reader.int32() as any);
+          break;
+
+        case 4:
+          message.timeStamp = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<OrderReplaceV1>): OrderReplaceV1 {
+    const message = createBaseOrderReplaceV1();
+    message.oldOrderId = object.oldOrderId !== undefined && object.oldOrderId !== null ? IndexerOrderId.fromPartial(object.oldOrderId) : undefined;
+    message.order = object.order !== undefined && object.order !== null ? IndexerOrder.fromPartial(object.order) : undefined;
+    message.placementStatus = object.placementStatus ?? 0;
+    message.timeStamp = object.timeStamp ?? undefined;
+    return message;
+  }
+
+};
+
 function createBaseOffChainUpdateV1(): OffChainUpdateV1 {
   return {
     orderPlace: undefined,
     orderRemove: undefined,
-    orderUpdate: undefined
+    orderUpdate: undefined,
+    orderReplace: undefined
   };
 }
 
@@ -514,6 +610,10 @@ export const OffChainUpdateV1 = {
 
     if (message.orderUpdate !== undefined) {
       OrderUpdateV1.encode(message.orderUpdate, writer.uint32(26).fork()).ldelim();
+    }
+
+    if (message.orderReplace !== undefined) {
+      OrderReplaceV1.encode(message.orderReplace, writer.uint32(34).fork()).ldelim();
     }
 
     return writer;
@@ -540,6 +640,10 @@ export const OffChainUpdateV1 = {
           message.orderUpdate = OrderUpdateV1.decode(reader, reader.uint32());
           break;
 
+        case 4:
+          message.orderReplace = OrderReplaceV1.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -554,6 +658,7 @@ export const OffChainUpdateV1 = {
     message.orderPlace = object.orderPlace !== undefined && object.orderPlace !== null ? OrderPlaceV1.fromPartial(object.orderPlace) : undefined;
     message.orderRemove = object.orderRemove !== undefined && object.orderRemove !== null ? OrderRemoveV1.fromPartial(object.orderRemove) : undefined;
     message.orderUpdate = object.orderUpdate !== undefined && object.orderUpdate !== null ? OrderUpdateV1.fromPartial(object.orderUpdate) : undefined;
+    message.orderReplace = object.orderReplace !== undefined && object.orderReplace !== null ? OrderReplaceV1.fromPartial(object.orderReplace) : undefined;
     return message;
   }
 

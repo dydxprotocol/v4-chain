@@ -462,3 +462,53 @@ export async function findById(
     .findById(id)
     .returning('*');
 }
+
+export async function getLastTransferTimeForSubaccounts(
+  subaccountIds: string[],
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<{ [subaccountId: string]: string }> {
+  if (!subaccountIds.length) {
+    return {};
+  }
+
+  let baseQuery: QueryBuilder<TransferModel> = setupBaseQuery<TransferModel>(
+    TransferModel,
+    options,
+  );
+
+  baseQuery = baseQuery
+    .select('senderSubaccountId', 'recipientSubaccountId', 'createdAt')
+    .where((queryBuilder) => {
+      // eslint-disable-next-line no-void
+      void queryBuilder.whereIn('senderSubaccountId', subaccountIds)
+        .orWhereIn('recipientSubaccountId', subaccountIds);
+    })
+    .orderBy('createdAt', 'desc');
+
+  const result: TransferFromDatabase[] = await baseQuery;
+
+  const mapping: { [subaccountId: string]: string } = {};
+
+  result.forEach((row) => {
+    if (
+      row.senderSubaccountId !== undefined &&
+      subaccountIds.includes(row.senderSubaccountId)
+    ) {
+      if (!mapping[row.senderSubaccountId] || row.createdAt > mapping[row.senderSubaccountId]) {
+        mapping[row.senderSubaccountId] = row.createdAt;
+      }
+    }
+    if (
+      row.recipientSubaccountId !== undefined &&
+      subaccountIds.includes(row.recipientSubaccountId)
+    ) {
+      if (
+        !mapping[row.recipientSubaccountId] ||
+        row.createdAt > mapping[row.recipientSubaccountId]) {
+        mapping[row.recipientSubaccountId] = row.createdAt;
+      }
+    }
+  });
+
+  return mapping;
+}

@@ -1,9 +1,8 @@
 package types
 
 import (
-	"math/big"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -23,6 +22,7 @@ type ClobKeeper interface {
 	HandleMsgCancelOrder(
 		ctx sdk.Context,
 		msg *clobtypes.MsgCancelOrder,
+		isInternalOrder bool,
 	) (err error)
 	HandleMsgPlaceOrder(
 		ctx sdk.Context,
@@ -61,9 +61,7 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		update satypes.Update,
 	) (
-		bigNetCollateral *big.Int,
-		bigInitialMargin *big.Int,
-		bigMaintenanceMargin *big.Int,
+		risk margin.Risk,
 		err error,
 	)
 	GetSubaccount(

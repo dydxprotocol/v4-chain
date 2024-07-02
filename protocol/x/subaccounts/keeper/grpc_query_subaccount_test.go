@@ -19,7 +19,7 @@ import (
 var _ = strconv.IntSize
 
 func TestSubaccountQuerySingle(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	msgs := createNSubaccount(keeper, ctx, 2, big.NewInt(1_000))
 	for _, tc := range []struct {
 		desc     string
@@ -90,7 +90,7 @@ func TestSubaccountQuerySingle(t *testing.T) {
 }
 
 func TestSubaccountQueryPaginated(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	msgs := createNSubaccount(keeper, ctx, 5, big.NewInt(1_000))
 
 	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllSubaccountRequest {

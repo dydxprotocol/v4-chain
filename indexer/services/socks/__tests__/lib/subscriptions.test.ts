@@ -4,7 +4,12 @@ import { Subscriptions } from '../../src/lib/subscription';
 import { sendMessage, sendMessageString } from '../../src/helpers/wss';
 import { RateLimiter } from '../../src/lib/rate-limit';
 import {
-  dbHelpers, testMocks, perpetualMarketRefresher, CandleResolution, MAX_PARENT_SUBACCOUNTS,
+  dbHelpers,
+  testMocks,
+  perpetualMarketRefresher,
+  CandleResolution,
+  MAX_PARENT_SUBACCOUNTS,
+  blockHeightRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { btcTicker, invalidChannel, invalidTicker } from '../constants';
 import { axiosRequest } from '../../src/lib/axios';
@@ -36,8 +41,10 @@ describe('Subscriptions', () => {
     [Channel.V4_ORDERBOOK]: btcTicker,
     [Channel.V4_TRADES]: btcTicker,
     [Channel.V4_PARENT_ACCOUNTS]: mockSubaccountId,
+    [Channel.V4_BLOCK_HEIGHT]: defaultId,
   };
-  const invalidIdsMap: Record<Exclude<Channel, Channel.V4_MARKETS>, string[]> = {
+  const invalidIdsMap:
+  Record<Exclude<Channel, Channel.V4_MARKETS | Channel.V4_BLOCK_HEIGHT>, string[]> = {
     [Channel.V4_ACCOUNTS]: [invalidTicker],
     [Channel.V4_CANDLES]: [
       `${invalidTicker}/${CandleResolution.ONE_DAY}`,
@@ -51,7 +58,7 @@ describe('Subscriptions', () => {
   const initialResponseUrlPatterns: Record<Channel, string[] | undefined> = {
     [Channel.V4_ACCOUNTS]: [
       '/v4/addresses/.+/subaccountNumber/.+',
-      '/v4/orders?.+subaccountNumber.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED',
+      '/v4/orders?.+subaccountNumber.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED,BEST_EFFORT_CANCELED',
     ],
     [Channel.V4_CANDLES]: ['/v4/candles/perpetualMarkets/.+?resolution=.+'],
     [Channel.V4_MARKETS]: ['/v4/perpetualMarkets'],
@@ -59,8 +66,9 @@ describe('Subscriptions', () => {
     [Channel.V4_TRADES]: ['/v4/trades/perpetualMarket/.+'],
     [Channel.V4_PARENT_ACCOUNTS]: [
       '/v4/addresses/.+/parentSubaccountNumber/.+',
-      '/v4/orders/parentSubaccountNumber?.+parentSubaccountNumber.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED',
+      '/v4/orders/parentSubaccountNumber?.+parentSubaccountNumber.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED,BEST_EFFORT_CANCELED',
     ],
+    [Channel.V4_BLOCK_HEIGHT]: ['v4/height'],
   };
   const initialMessage: Object = { a: 'b' };
   const country: string = 'AR';
@@ -68,7 +76,10 @@ describe('Subscriptions', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await testMocks.seedData();
-    await perpetualMarketRefresher.updatePerpetualMarkets();
+    await Promise.all([
+      perpetualMarketRefresher.updatePerpetualMarkets(),
+      blockHeightRefresher.updateBlockHeight(),
+    ]);
   });
 
   afterAll(async () => {
@@ -97,6 +108,7 @@ describe('Subscriptions', () => {
       [Channel.V4_ORDERBOOK, validIds[Channel.V4_ORDERBOOK]],
       [Channel.V4_TRADES, validIds[Channel.V4_TRADES]],
       [Channel.V4_PARENT_ACCOUNTS, validIds[Channel.V4_PARENT_ACCOUNTS]],
+      [Channel.V4_BLOCK_HEIGHT, validIds[Channel.V4_BLOCK_HEIGHT]],
     ])('handles valid subscription request to channel %s', async (
       channel: Channel,
       id: string,
@@ -308,6 +320,7 @@ describe('Subscriptions', () => {
       [Channel.V4_MARKETS, validIds[Channel.V4_MARKETS]],
       [Channel.V4_ORDERBOOK, validIds[Channel.V4_ORDERBOOK]],
       [Channel.V4_TRADES, validIds[Channel.V4_TRADES]],
+      [Channel.V4_BLOCK_HEIGHT, validIds[Channel.V4_BLOCK_HEIGHT]],
     ])('handles valid unsubscription request to channel %s', async (
       channel: Channel,
       id: string,

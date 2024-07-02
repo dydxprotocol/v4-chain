@@ -19,6 +19,7 @@ type (
 		bankKeeper          types.BankKeeper
 		perpetualsKeeper    types.PerpetualsKeeper
 		blocktimeKeeper     types.BlocktimeKeeper
+		revShareKeeper      types.RevShareKeeper
 		indexerEventManager indexer_manager.IndexerEventManager
 	}
 )
@@ -30,6 +31,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	perpetualsKeeper types.PerpetualsKeeper,
 	blocktimeKeeper types.BlocktimeKeeper,
+	revShareKeeper types.RevShareKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 ) *Keeper {
 	return &Keeper{
@@ -39,6 +41,7 @@ func NewKeeper(
 		bankKeeper:          bankKeeper,
 		perpetualsKeeper:    perpetualsKeeper,
 		blocktimeKeeper:     blocktimeKeeper,
+		revShareKeeper:      revShareKeeper,
 		indexerEventManager: indexerEventManager,
 	}
 }

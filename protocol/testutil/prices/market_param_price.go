@@ -1,8 +1,10 @@
 package prices
 
 import (
+	"fmt"
 	"math/big"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -86,32 +88,21 @@ func GenerateMarketParamPrice(optionalModifications ...MarketParamPriceModifierO
 	return marketParamPrice
 }
 
+// MustHumanPriceToMarketPrice converts a human-readable price to a market price.
+// It uses the inverse of the exponent to convert the human price to a market price,
+// since the exponent applies to the market price to derive the human price.
 func MustHumanPriceToMarketPrice(
 	humanPrice string,
 	exponent int32,
 ) (marketPrice uint64) {
-	// Ensure the exponent is negative
-	if exponent >= 0 {
-		panic("Only negative exponents are supported")
-	}
-
-	// Parse the humanPrice string to a big rational
-	ratValue, ok := new(big.Rat).SetString(humanPrice)
+	ratio, ok := new(big.Rat).SetString(humanPrice)
 	if !ok {
-		panic("Failed to parse humanPrice to big.Rat")
+		panic(fmt.Sprintf("MustHumanPriceToMarketPrice: Failed to parse humanPrice: %s", humanPrice))
 	}
-
-	// Convert exponent to its absolute value for calculations
-	absResolution := int64(-exponent)
-
-	// Create a multiplier which is 10 raised to the power of the absolute exponent
-	multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(absResolution), nil)
-
-	// Multiply the parsed humanPrice with the multiplier
-	ratValue.Mul(ratValue, new(big.Rat).SetInt(multiplier))
-
-	// Convert the result to an unsigned 64-bit integer
-	resultInt := ratValue.Num() // Get the numerator which now represents the whole value
-
-	return resultInt.Uint64()
+	result := lib.BigIntMulPow10(ratio.Num(), -exponent, false)
+	result.Quo(result, ratio.Denom())
+	if !result.IsUint64() {
+		panic("MustHumanPriceToMarketPrice: result is not a uint64")
+	}
+	return result.Uint64()
 }

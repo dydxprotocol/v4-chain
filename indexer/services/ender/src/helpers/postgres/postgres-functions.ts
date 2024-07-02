@@ -65,6 +65,7 @@ const HELPER_SCRIPTS: string[] = [
   'dydx_get_fee_from_liquidity.sql',
   'dydx_get_order_status.sql',
   'dydx_get_perpetual_market_for_clob_pair.sql',
+  'dydx_get_market_for_id.sql',
   'dydx_get_total_filled_from_liquidity.sql',
   'dydx_get_weighted_average.sql',
   'dydx_liquidation_fill_handler_per_order.sql',

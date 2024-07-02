@@ -2,17 +2,21 @@ import { logger } from '@dydxprotocol-indexer/base';
 import {
   FillFromDatabase,
   FillModel,
+  MarketFromDatabase,
+  MarketModel,
   PerpetualMarketFromDatabase,
   PerpetualMarketModel,
   perpetualMarketRefresher,
   PerpetualPositionFromDatabase,
   PerpetualPositionModel,
   SubaccountTable,
+  UpdatedPerpetualPositionSubaccountKafkaObject,
 } from '@dydxprotocol-indexer/postgres';
 import { DeleveragingEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
 import { SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
+import { annotateWithPnl, convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
 
@@ -53,24 +57,37 @@ export class DeleveragingHandler extends AbstractOrderFillHandler<DeleveragingEv
       resultRow.offsetting_fill) as FillFromDatabase;
     const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
       resultRow.perpetual_market) as PerpetualMarketFromDatabase;
+    const market: MarketFromDatabase = MarketModel.fromJson(
+      resultRow.market) as MarketFromDatabase;
     const liquidatedPerpetualPosition:
     PerpetualPositionFromDatabase = PerpetualPositionModel.fromJson(
       resultRow.liquidated_perpetual_position) as PerpetualPositionFromDatabase;
     const offsettingPerpetualPosition:
     PerpetualPositionFromDatabase = PerpetualPositionModel.fromJson(
       resultRow.offsetting_perpetual_position) as PerpetualPositionFromDatabase;
+
+    const liquidatedPositionUpdate: UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
+      convertPerpetualPosition(liquidatedPerpetualPosition),
+      perpetualMarketRefresher.getPerpetualMarketsMap(),
+      market,
+    );
+    const offsettingPositionUpdate: UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
+      convertPerpetualPosition(offsettingPerpetualPosition),
+      perpetualMarketRefresher.getPerpetualMarketsMap(),
+      market,
+    );
     const kafkaEvents: ConsolidatedKafkaEvent[] = [
       this.generateConsolidatedKafkaEvent(
         this.event.liquidated!,
         undefined,
-        liquidatedPerpetualPosition,
+        liquidatedPositionUpdate,
         liquidatedFill,
         perpetualMarket,
       ),
       this.generateConsolidatedKafkaEvent(
         this.event.offsetting!,
         undefined,
-        offsettingPerpetualPosition,
+        offsettingPositionUpdate,
         offsettingFill,
         perpetualMarket,
       ),

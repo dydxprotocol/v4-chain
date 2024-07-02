@@ -37,6 +37,7 @@ export interface SubaccountMessageContents {
   fills?: FillSubaccountMessageContents[],
   transfers?: TransferSubaccountMessageContents,
   tradingReward?: TradingRewardSubaccountMessageContents,
+  blockHeight?: string,
 }
 
 export interface PerpetualPositionSubaccountMessageContents {
@@ -101,15 +102,15 @@ export interface OrderSubaccountMessageContents {
   id: string;
   subaccountId: string;
   clientId: string;
-  clobPairId: string;
-  side: OrderSide;
-  size: string;
-  ticker: string,
-  price: string;
-  type: OrderType;
-  timeInForce: APITimeInForce;
-  postOnly: boolean;
-  reduceOnly: boolean;
+  clobPairId?: string;
+  side?: OrderSide;
+  size?: string;
+  ticker?: string,
+  price?: string;
+  type?: OrderType;
+  timeInForce?: APITimeInForce;
+  postOnly?: boolean;
+  reduceOnly?: boolean;
   status: APIOrderStatus;
   orderFlags: string;
 
@@ -125,7 +126,7 @@ export interface OrderSubaccountMessageContents {
   removalReason?: string;
   // This will only be set for stateful orders
   createdAtHeight?: string;
-  clientMetadata: string;
+  clientMetadata?: string;
 }
 
 export interface FillSubaccountMessageContents {

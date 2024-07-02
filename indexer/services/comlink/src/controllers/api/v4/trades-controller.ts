@@ -6,6 +6,8 @@ import {
   Liquidity,
   QueryableField,
   perpetualMarketRefresher,
+  FillColumns,
+  Ordering,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import {
@@ -23,7 +25,7 @@ import {
   handleControllerError,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { CheckLimitAndCreatedBeforeOrAtSchema } from '../../../lib/validation/schemas';
+import { CheckLimitAndCreatedBeforeOrAtSchema, CheckPaginationSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { fillToTradeResponseObject } from '../../../request-helpers/request-transformer';
@@ -45,6 +47,7 @@ class TradesController extends Controller {
       @Query() limit?: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
+      @Query() page?: number,
   ): Promise<TradeResponse> {
     const clobPairId: string | undefined = perpetualMarketRefresher
       .getClobPairIdFromTicker(ticker);
@@ -53,7 +56,12 @@ class TradesController extends Controller {
       throw new NotFoundError(`${ticker} not found in tickers of type ${MarketType.PERPETUAL}`);
     }
 
-    const { results: fills } = await FillTable.findAll(
+    const {
+      results: fills,
+      limit: pageSize,
+      offset,
+      total,
+    } = await FillTable.findAll(
       {
         clobPairId,
         liquidity: Liquidity.TAKER,
@@ -62,14 +70,19 @@ class TradesController extends Controller {
           ? createdBeforeOrAtHeight.toString()
           : undefined,
         createdBeforeOrAt,
+        page,
       },
       [QueryableField.LIQUIDITY, QueryableField.CLOB_PAIR_ID, QueryableField.LIMIT],
+      page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
     );
 
     return {
       trades: fills.map((fill: FillFromDatabase): TradeResponseObject => {
         return fillToTradeResponseObject(fill);
       }),
+      pageSize,
+      totalResults: total,
+      offset,
     };
   }
 }
@@ -78,6 +91,7 @@ router.get(
   '/perpetualMarket/:ticker',
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckLimitAndCreatedBeforeOrAtSchema,
+  ...CheckPaginationSchema,
   ...checkSchema({
     ticker: {
       in: ['params'],
@@ -97,6 +111,7 @@ router.get(
       limit,
       createdBeforeOrAtHeight,
       createdBeforeOrAt,
+      page,
     }: TradeRequest = matchedData(req) as TradeRequest;
 
     try {
@@ -106,6 +121,7 @@ router.get(
         limit,
         createdBeforeOrAtHeight,
         createdBeforeOrAt,
+        page,
       );
 
       return res.send(response);

@@ -144,24 +144,19 @@ func reverseShiftBigFloatSlice(
 	values []*big.Float,
 	exponent int32,
 ) []*big.Float {
-	unsignedExponent := lib.AbsInt32(exponent)
-
-	pow10 := new(big.Float).SetInt(lib.BigPow10(uint64(unsignedExponent)))
+	p10, inverse := lib.BigPow10(exponent)
+	p10Float := new(big.Float).SetInt(p10)
 	updatedValues := make([]*big.Float, 0, len(values))
 	for _, value := range values {
-		updatedValues = append(updatedValues, reverseShiftFloatWithPow10(value, pow10, exponent))
+		newValue := new(big.Float).Set(value)
+		if inverse {
+			newValue.Mul(newValue, p10Float)
+		} else {
+			newValue.Quo(newValue, p10Float)
+		}
+		updatedValues = append(updatedValues, newValue)
 	}
 	return updatedValues
-}
-
-func reverseShiftFloatWithPow10(value *big.Float, pow10 *big.Float, exponent int32) *big.Float {
-	if exponent == 0 {
-		return value
-	} else if exponent > 0 {
-		return new(big.Float).Quo(value, pow10)
-	} else { // exponent < 0
-		return new(big.Float).Mul(value, pow10)
-	}
 }
 
 // Ticker encodes a ticker response returned by an exchange API. It contains accessors for the ticker's

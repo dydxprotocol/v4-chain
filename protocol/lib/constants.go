@@ -28,11 +28,6 @@ var PowerReduction = sdkmath.NewIntFromBigInt(
 	new(big.Int).SetUint64(1_000_000_000_000_000_000),
 )
 
-// BigInt0 returns a `big.Int` that is set to 0.
-func BigInt0() *big.Int {
-	return big.NewInt(0)
-}
-
 // BigNegMaxUint64 returns a `big.Int` that is set to -math.MaxUint64.
 func BigNegMaxUint64() *big.Int {
 	return new(big.Int).Neg(
@@ -43,11 +38,6 @@ func BigNegMaxUint64() *big.Int {
 // BigMaxInt32 returns a `big.Int` that represents `MaxInt32`.
 func BigMaxInt32() *big.Int {
 	return big.NewInt(math.MaxInt32)
-}
-
-// BigFloat0 returns a `big.Float` that is set to 0.
-func BigFloat0() *big.Float {
-	return big.NewFloat(0)
 }
 
 // BigFloatMaxUint64 returns a `big.Float` that is set to MaxUint64.

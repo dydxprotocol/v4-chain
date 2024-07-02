@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -21,6 +20,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -485,20 +485,22 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(54_999_000_000), // $54,999
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(54_999_000_000), // $54,999
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
-						},
-						{
-							PerpetualId: 1,
-							Quantums:    dtypes.NewInt(-1_000_000_000), // -1 ETH
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(-100_000_000), // -1 BTC
+							big.NewInt(0),
+						),
+						testutil.CreateSinglePerpetualPosition(
+							1,
+							big.NewInt(-1_000_000_000), // -1 ETH
+							big.NewInt(0),
+						),
 					},
 				},
 				constants.Dave_Num0_1BTC_Long_50000USD,
@@ -568,20 +570,22 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(54_999_000_000), // $54,999
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(54_999_000_000), // $54,999
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
-						},
-						{
-							PerpetualId: 1,
-							Quantums:    dtypes.NewInt(-1_000_000_000), // -1 ETH
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(-100_000_000), // -1 BTC
+							big.NewInt(0),
+						),
+						testutil.CreateSinglePerpetualPosition(
+							1,
+							big.NewInt(-1_000_000_000), // -1 ETH
+							big.NewInt(0),
+						),
 					},
 				},
 				constants.Dave_Num0_1BTC_Long_50000USD,
@@ -696,20 +700,22 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(53_000_000_000), // $53,000
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(53_000_000_000), // $53,000
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
-						},
-						{
-							PerpetualId: 1,
-							Quantums:    dtypes.NewInt(-1_000_000_000), // -1 ETH
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(-100_000_000), // -1 BTC
+							big.NewInt(0),
+						),
+						testutil.CreateSinglePerpetualPosition(
+							1,
+							big.NewInt(-1_000_000_000), // -1 ETH
+							big.NewInt(0),
+						),
 					},
 				},
 				constants.Dave_Num0_1BTC_Long_50000USD,
@@ -1094,20 +1100,22 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(54_999_000_000), // $54,999
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(54_999_000_000), // $54,999
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
-						},
-						{
-							PerpetualId: 1,
-							Quantums:    dtypes.NewInt(-2_000_000_000), // -2 ETH
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(-100_000_000), // -1 BTC
+							big.NewInt(0),
+						),
+						testutil.CreateSinglePerpetualPosition(
+							1,
+							big.NewInt(-2_000_000_000), // -2 ETH
+							big.NewInt(0),
+						),
 					},
 				},
 				constants.Dave_Num0_1BTC_Long_50000USD,
@@ -1373,19 +1381,19 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(50_499_000_000 - 50_000_000_000 - 250_000_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(50_499_000_000-50_000_000_000-250_000_000),
+						),
 					},
 				},
 				{
 					Id: &constants.Dave_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(100_000_000_000), // $100,000
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(100_000_000_000), // $100,000
+						),
 					},
 				},
 			},
@@ -1431,33 +1439,33 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(50_499_000_000 - 12_500_000_000 - 62_500_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(50_499_000_000-12_500_000_000-62_500_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(-75_000_000), // -0.75 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(-75_000_000), // -0.75 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
 					Id: &constants.Dave_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(50_000_000_000 + 12_500_000_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(50_000_000_000+12_500_000_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(75_000_000), // 0.75 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(75_000_000), // 0.75 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -1511,10 +1519,10 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				{
 					Id: &constants.Dave_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(50_000_000_000 + 50_499_000_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(50_000_000_000+50_499_000_000),
+						),
 					},
 				},
 			},
@@ -1567,33 +1575,33 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(50_499_000_000 - (50_498_000_000 / 4) - 250_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(50_499_000_000-(50_498_000_000/4)-250_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(-75_000_000), // -0.75 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(-75_000_000), // -0.75 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
 					Id: &constants.Dave_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(50_000_000_000 + (50_498_000_000 / 4)),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(50_000_000_000+(50_498_000_000/4)),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(75_000_000), // 0.75 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(75_000_000), // 0.75 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -1680,17 +1688,17 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(49_999_000_000 - 12_499_750_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(49_999_000_000-12_499_750_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(-75_000_000), // -0.75 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(-75_000_000), // -0.75 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				// Dave's bankruptcy price to close 1 BTC long is $50,000, and deleveraging can not be
@@ -1700,10 +1708,10 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				{
 					Id: &constants.Dave_Num1,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(50_000_000_000 + 12_499_750_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(50_000_000_000+12_499_750_000),
+						),
 					},
 				},
 			},
@@ -1753,18 +1761,18 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(49_999_000_000 - 24_999_500_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(49_999_000_000-24_999_500_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
+						testutil.CreateSinglePerpetualPosition(
+							0,
 							// Deleveraging fails for remaining amount.
-							Quantums:     dtypes.NewInt(-50_000_000), // -0.5 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
+							big.NewInt(-50_000_000), // -0.5 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				// Dave_Num0 does not change since deleveraging against this subaccount failed.
@@ -1772,10 +1780,10 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				{
 					Id: &constants.Dave_Num1,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(50_000_000_000 + 24_999_500_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(50_000_000_000+24_999_500_000),
+						),
 					},
 				},
 			},
@@ -1829,33 +1837,33 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(50_499_000_000 - (50_498_000_000 / 4) - 250_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(50_499_000_000-(50_498_000_000/4)-250_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(-75_000_000), // -0.75 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(-75_000_000), // -0.75 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
 					Id: &constants.Dave_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(50_000_000_000 + (50_498_000_000 / 4)),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(50_000_000_000+(50_498_000_000/4)),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(75_000_000), // 0.75 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(75_000_000), // 0.75 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -1911,10 +1919,10 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				{
 					Id: &constants.Dave_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(50_000_000_000 + 50_499_500_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(50_000_000_000+50_499_500_000),
+						),
 					},
 				},
 			},
@@ -1979,39 +1987,39 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId: 0,
-							Quantums: dtypes.NewInt(
-								54_999_000_000 - 50_000_000_000/4 -
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(
+								54_999_000_000-50_000_000_000/4-
 									lib.BigIntMulPpm(
 										big.NewInt(50_000_000_000/4),
 										constants.LiquidationsConfig_No_Limit.MaxLiquidationFeePpm,
 									).Int64(),
 							),
-						},
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(-75_000_000), // -0.75 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(-75_000_000), // -0.75 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
 					Id: &constants.Dave_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(50_000_000_000 + 50_000_000_000/4),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(50_000_000_000+50_000_000_000/4),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(75_000_000), // 0.75 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(75_000_000), // 0.75 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -2243,7 +2251,7 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 	prices.InitGenesis(ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
-	memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
+	memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
 	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 	// the indexer event manager to expect these events.
 	indexerEventManager.On("AddTxnEvent",
@@ -2307,13 +2315,13 @@ func TestIsLiquidatable(t *testing.T) {
 	}{
 		"Subaccount with no open positions but positive net collateral is not liquidatable": {
 			expectedIsLiquidatable: false,
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 1),
 			),
 		},
 		"Subaccount with no open positions but negative net collateral is not liquidatable": {
 			expectedIsLiquidatable: false,
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -1),
 			),
 		},
@@ -2323,12 +2331,13 @@ func TestIsLiquidatable(t *testing.T) {
 			},
 
 			perpetualPositions: []*satypes.PerpetualPosition{
-				{
-					PerpetualId: uint32(0),
-					Quantums:    dtypes.NewInt(10_000_000), // 0.1 BTC, $5,000 notional.
-				},
+				testutil.CreateSinglePerpetualPosition(
+					uint32(0),
+					big.NewInt(10_000_000), // 0.1 BTC, $5,000 notional.
+					big.NewInt(0),
+				),
 			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_000),
 			),
 			expectedIsLiquidatable: false,
@@ -2339,12 +2348,13 @@ func TestIsLiquidatable(t *testing.T) {
 			},
 
 			perpetualPositions: []*satypes.PerpetualPosition{
-				{
-					PerpetualId: uint32(0),
-					Quantums:    dtypes.NewInt(10_000_000), // 0.1 BTC, $5,000 notional.
-				},
+				testutil.CreateSinglePerpetualPosition(
+					uint32(0),
+					big.NewInt(10_000_000), // 0.1 BTC, $5,000 notional.
+					big.NewInt(0),
+				),
 			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_500),
 			),
 			expectedIsLiquidatable: false,
@@ -2355,12 +2365,13 @@ func TestIsLiquidatable(t *testing.T) {
 			},
 
 			perpetualPositions: []*satypes.PerpetualPosition{
-				{
-					PerpetualId: uint32(0),
-					Quantums:    dtypes.NewInt(10_000_000), // 0.1 BTC, $5,000 notional.
-				},
+				testutil.CreateSinglePerpetualPosition(
+					uint32(0),
+					big.NewInt(10_000_000), // 0.1 BTC, $5,000 notional.
+					big.NewInt(0),
+				),
 			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			expectedIsLiquidatable: true,
@@ -2439,7 +2450,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2459,7 +2470,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 5_499),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2479,7 +2490,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -5_000),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2499,7 +2510,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -5_000),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2519,7 +2530,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 5_000),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2539,7 +2550,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 5_000),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2559,7 +2570,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -5_100),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2579,7 +2590,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 4_900),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2600,7 +2611,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -490),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2622,7 +2633,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 510),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2644,7 +2655,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 110),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2665,7 +2676,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -13),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2686,7 +2697,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 13),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2709,7 +2720,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 
 			// Note that if quote balance is positive for longs, this indicates that the subaccount's
 			// quote balance exceeds the notional value of their long position.
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2728,7 +2739,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2744,7 +2755,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{},
@@ -2758,7 +2769,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2774,7 +2785,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2852,7 +2863,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 					[]satypes.Update{
 						{
 							SubaccountId: subaccountId,
-							AssetUpdates: keepertest.CreateUsdcAssetUpdate(bankruptcyPriceInQuoteQuantums),
+							AssetUpdates: testutil.CreateUsdcAssetUpdates(bankruptcyPriceInQuoteQuantums),
 							PerpetualUpdates: []satypes.PerpetualUpdate{
 								{
 									PerpetualId:      tc.perpetualId,
@@ -2900,7 +2911,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2919,7 +2930,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2948,7 +2959,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2977,7 +2988,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 5_499),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -2996,7 +3007,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 5_499),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3026,7 +3037,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 5_499),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3055,7 +3066,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -5_000),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3075,7 +3086,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -5_000),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3096,7 +3107,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 5_000),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3115,7 +3126,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -5_500),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3134,7 +3145,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 4_500),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3154,7 +3165,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -490),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3174,7 +3185,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3203,7 +3214,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3230,7 +3241,7 @@ func TestGetFillablePrice(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3258,7 +3269,7 @@ func TestGetFillablePrice(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3274,7 +3285,7 @@ func TestGetFillablePrice(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{},
@@ -3288,7 +3299,7 @@ func TestGetFillablePrice(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3304,7 +3315,7 @@ func TestGetFillablePrice(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3412,7 +3423,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -5_100),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3436,7 +3447,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -5_100),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3466,7 +3477,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -5_100),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3495,7 +3506,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 4_900),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3519,7 +3530,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 4_900),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3549,7 +3560,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 4_900),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3579,7 +3590,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -5_100),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3603,7 +3614,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 4_900),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3626,7 +3637,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -5_100),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3649,7 +3660,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 4_900),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3673,7 +3684,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * -5_100),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3696,7 +3707,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 4_900),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3718,7 +3729,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 4_900),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -3736,7 +3747,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 
-			assetPositions: keepertest.CreateUsdcAssetPosition(
+			assetPositions: testutil.CreateUsdcAssetPositions(
 				big.NewInt(constants.QuoteBalance_OneDollar * 4_900),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{
@@ -4078,10 +4089,11 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 		},
 		`full position is returned when position size is smaller than StepBaseQuantums`: {
 			perpetualPositions: []*satypes.PerpetualPosition{
-				{
-					PerpetualId: 0,
-					Quantums:    dtypes.NewInt(5),
-				},
+				testutil.CreateSinglePerpetualPosition(
+					0,
+					big.NewInt(5),
+					big.NewInt(0),
+				),
 			},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -4106,10 +4118,11 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 		},
 		`returned position size is rounded down to the nearest clob.stepBaseQuantums`: {
 			perpetualPositions: []*satypes.PerpetualPosition{
-				{
-					PerpetualId: 0,
-					Quantums:    dtypes.NewInt(140),
-				},
+				testutil.CreateSinglePerpetualPosition(
+					0,
+					big.NewInt(140),
+					big.NewInt(0),
+				),
 			},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -4135,10 +4148,11 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 		},
 		`returned position size is at least clob.stepBaseQuantums`: {
 			perpetualPositions: []*satypes.PerpetualPosition{
-				{
-					PerpetualId: 0,
-					Quantums:    dtypes.NewInt(20),
-				},
+				testutil.CreateSinglePerpetualPosition(
+					0,
+					big.NewInt(20),
+					big.NewInt(0),
+				),
 			},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -4269,10 +4283,11 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 		},
 		`Result is rounded to nearest step size`: {
 			perpetualPositions: []*satypes.PerpetualPosition{
-				{
-					PerpetualId: 0,
-					Quantums:    dtypes.NewInt(21),
-				},
+				testutil.CreateSinglePerpetualPosition(
+					0,
+					big.NewInt(21),
+					big.NewInt(0),
+				),
 			},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -5014,10 +5029,11 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 				},
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
-			positionToLiquidate: &satypes.PerpetualPosition{
-				PerpetualId: uint32(0),
-				Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
-			},
+			positionToLiquidate: testutil.CreateSinglePerpetualPosition(
+				uint32(0),
+				big.NewInt(100_000_000), // 1 BTC
+				big.NewInt(0),
+			),
 			expectedMinPosNotionalLiquidatable: big.NewInt(100),
 			expectedMaxPosNotionalLiquidatable: big.NewInt(50_000_000_000), // $50,000
 		},
@@ -5031,10 +5047,11 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 				},
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
-			positionToLiquidate: &satypes.PerpetualPosition{
-				PerpetualId: uint32(0),
-				Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
-			},
+			positionToLiquidate: testutil.CreateSinglePerpetualPosition(
+				uint32(0),
+				big.NewInt(100_000_000), // 1 BTC
+				big.NewInt(0),
+			),
 			expectedMinPosNotionalLiquidatable: big.NewInt(100),
 			expectedMaxPosNotionalLiquidatable: big.NewInt(25_000_000_000), // $25,000
 		},
@@ -5048,19 +5065,21 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 				},
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
-			positionToLiquidate: &satypes.PerpetualPosition{
-				PerpetualId: uint32(0),
-				Quantums:    dtypes.NewInt(10_000), // $5 notional
-			},
+			positionToLiquidate: testutil.CreateSinglePerpetualPosition(
+				uint32(0),
+				big.NewInt(10_000), // $5 notional
+				big.NewInt(0),
+			),
 			expectedMinPosNotionalLiquidatable: big.NewInt(5_000_000), // $5
 			expectedMaxPosNotionalLiquidatable: big.NewInt(5_000_000), // $5
 		},
 		"errors are propagated": {
 			liquidationConfig: constants.LiquidationsConfig_No_Limit,
-			positionToLiquidate: &satypes.PerpetualPosition{
-				PerpetualId: uint32(999), // non-existent
-				Quantums:    dtypes.NewInt(1),
-			},
+			positionToLiquidate: testutil.CreateSinglePerpetualPosition(
+				uint32(999), // non-existent
+				big.NewInt(1),
+				big.NewInt(0),
+			),
 			expectedErr: perptypes.ErrPerpetualDoesNotExist,
 		},
 	}

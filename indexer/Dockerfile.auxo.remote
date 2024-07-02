@@ -6,6 +6,9 @@ WORKDIR /usr/app
 # Copy pnpm lock and workspace and package.json from base directory
 COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
 
+# Copy patches
+COPY ./patches ./patches
+
 # Copy auxo and imported packages
 COPY ./packages/base/ ./packages/base/
 COPY ./packages/v4-protos/ ./packages/v4-protos/
@@ -19,7 +22,7 @@ COPY tsconfig.json ./
 RUN npm install -g pnpm@6
 
 # Install npm modules using pnpm
-RUN pnpm install --loglevel warn --frozen-lockfile
+RUN pnpm install --loglevel warn --frozen-lockfile --unsafe-perm
 RUN pnpm run build:prod:all
 
 FROM public.ecr.aws/lambda/nodejs:16

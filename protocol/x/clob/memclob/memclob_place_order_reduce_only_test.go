@@ -1355,7 +1355,7 @@ func TestPlaceOrder_ReduceOnly(t *testing.T) {
 
 			// Verify that the expected reduce-only orders remain on each orderbook.
 			for clobPairId, expectedOpenReduceOnlyOrders := range tc.expectedSubaccountOpenReduceOnlyOrders {
-				orderbook, exists := memclob.openOrders.orderbooksMap[clobPairId]
+				orderbook, exists := memclob.orderbooks[clobPairId]
 				require.True(
 					t,
 					exists,
@@ -1384,6 +1384,7 @@ func TestPlaceOrder_ReduceOnly(t *testing.T) {
 				tc.expectedNewMatches,
 				tc.expectedCancelledReduceOnlyOrders,
 				// TODO(IND-261): Add tests for replaced reduce-only orders.
+				false,
 				false,
 			)
 		})
@@ -1639,7 +1640,7 @@ func TestPlaceOrder_LongTermReduceOnlyRemovals(t *testing.T) {
 
 			// Verify that the expected reduce-only orders remain on each orderbook.
 			for clobPairId, expectedOpenReduceOnlyOrders := range tc.expectedSubaccountOpenReduceOnlyOrders {
-				orderbook, exists := memclob.openOrders.orderbooksMap[clobPairId]
+				orderbook, exists := memclob.orderbooks[clobPairId]
 				require.True(
 					t,
 					exists,
@@ -1667,6 +1668,7 @@ func TestPlaceOrder_LongTermReduceOnlyRemovals(t *testing.T) {
 				tc.expectedExistingMatches,
 				tc.expectedNewMatches,
 				tc.expectedCancelledReduceOnlyOrders,
+				false,
 				false,
 			)
 		})

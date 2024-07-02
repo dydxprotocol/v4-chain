@@ -871,6 +871,9 @@ const GenesisState = `{
         }
       }
     },
+    "listing": {
+      "hard_cap_for_markets": 0
+	},
     "perpetuals": {
       "liquidity_tiers": [
         {
@@ -1347,6 +1350,13 @@ const GenesisState = `{
         }
       ]
     },
+    "revshare": {
+      "params": {
+        "address": "dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt2",
+        "revenue_share_ppm": 0,
+        "valid_days": 0
+      }
+  	},
     "rewards": {
       "params": {
         "treasury_account":"rewards_treasury",
@@ -1501,7 +1511,8 @@ const GenesisState = `{
         "order_size_pct_ppm": 100000,
         "order_expiration_seconds": 2,
         "activation_threshold_quote_quantums": "1000000000"
-      }
+      },
+      "vaults": []
     },
     "vest": {
       "vest_entries": [

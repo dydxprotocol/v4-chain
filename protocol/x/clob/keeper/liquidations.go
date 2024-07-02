@@ -16,6 +16,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -353,10 +354,7 @@ func (k Keeper) IsLiquidatable(
 	bool,
 	error,
 ) {
-	bigNetCollateral,
-		_,
-		bigMaintenanceMargin,
-		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+	risk, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
 	)
@@ -364,22 +362,7 @@ func (k Keeper) IsLiquidatable(
 		return false, err
 	}
 
-	return CanLiquidateSubaccount(bigNetCollateral, bigMaintenanceMargin), nil
-}
-
-// CanLiquidateSubaccount returns true if a subaccount is liquidatable given its total net collateral and
-// maintenance margin requirement.
-//
-// The subaccount is liquidatable if both of the following are true:
-// - The maintenance margin requirements are greater than zero (note that they can never be negative).
-// - The maintenance margin requirements are greater than the subaccount's net collateral.
-//
-// Note that this is a stateless function.
-func CanLiquidateSubaccount(
-	bigNetCollateral *big.Int,
-	bigMaintenanceMargin *big.Int,
-) bool {
-	return bigMaintenanceMargin.Sign() > 0 && bigMaintenanceMargin.Cmp(bigNetCollateral) == 1
+	return risk.IsLiquidatable(), nil
 }
 
 // EnsureIsLiquidatable returns an error if the subaccount is not liquidatable.
@@ -429,7 +412,7 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// - DMMR (delta maintenance margin requirement).
 	// - TMMR (total maintenance margin requirement).
 
-	tncBig, _, tmmrBig, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+	riskTotal, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
 	)
@@ -455,70 +438,55 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 		)
 	}
 
+	perpetual,
+		marketPrice,
+		liquidityTier,
+		err := k.perpetualsKeeper.
+		GetPerpetualAndMarketPriceAndLiquidityTier(ctx, perpetualId)
+	if err != nil {
+		return nil, err
+	}
+
 	// `DNNV = PNNVAD - PNNV`, where `PNNVAD` is the perpetual's net notional
 	// with a position size of `PS + deltaQuantums`.
 	// Note that we are intentionally not calculating `DNNV` from `deltaQuantums`
 	// directly to avoid rounding errors.
-	pnnvBig, err := k.perpetualsKeeper.GetNetNotional(
-		ctx,
-		perpetualId,
+	riskPosOld := perplib.GetNetCollateralAndMarginRequirements(
+		perpetual,
+		marketPrice,
+		liquidityTier,
 		psBig,
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	pnnvadBig, err := k.perpetualsKeeper.GetNetNotional(
-		ctx,
-		perpetualId,
+	riskPosNew := perplib.GetNetCollateralAndMarginRequirements(
+		perpetual,
+		marketPrice,
+		liquidityTier,
 		new(big.Int).Add(psBig, deltaQuantums),
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	dnnvBig := new(big.Int).Sub(pnnvadBig, pnnvBig)
-
 	// `DMMR = PMMRAD - PMMR`, where `PMMRAD` is the perpetual's maintenance margin requirement
 	// with a position size of `PS + deltaQuantums`.
 	// Note that we cannot directly calculate `DMMR` from `deltaQuantums` because the maintenance
 	// margin requirement function could be non-linear.
-	_, pmmrBig, err := k.perpetualsKeeper.GetMarginRequirements(ctx, perpetualId, psBig)
-	if err != nil {
-		return nil, err
-	}
-
-	_, pmmradBig, err := k.perpetualsKeeper.GetMarginRequirements(
-		ctx,
-		perpetualId,
-		new(big.Int).Add(
-			psBig,
-			deltaQuantums,
-		),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	dmmrBig := new(big.Int).Sub(pmmradBig, pmmrBig)
-	// `dmmrBig` should never be positive if `| PS | >= | PS + deltaQuantums |`. If it is, panic.
-	if dmmrBig.Sign() == 1 {
+	deltaNC := new(big.Int).Sub(riskPosNew.NC, riskPosOld.NC)
+	deltaMMR := new(big.Int).Sub(riskPosNew.MMR, riskPosOld.MMR)
+	// `deltaMMR` should never be positive if `| PS | >= | PS + deltaQuantums |`. If it is, panic.
+	if deltaMMR.Sign() == 1 {
 		panic("GetBankruptcyPriceInQuoteQuantums: DMMR is positive")
 	}
 
 	// Calculate `TNC * abs(DMMR) / TMMR`.
-	tncMulDmmrBig := new(big.Int).Mul(tncBig, new(big.Int).Abs(dmmrBig))
+	tncMulDmmrBig := new(big.Int).Mul(riskTotal.NC, new(big.Int).Abs(deltaMMR))
 	// This calculation is intentionally rounded down to negative infinity to ensure the
 	// final result is rounded towards positive-infinity. This works because of the following:
 	// - This is the only division in the equation.
 	// - This calculation is subtracted from `-DNNV` to get the final result.
 	// - The dividend `TNC * abs(DMMR)` is the only number that can be negative, and `Div` uses
 	//   Euclidean division so even if `TNC < 0` this will still round towards negative infinity.
-	quoteQuantumsBeforeBankruptcyBig := new(big.Int).Div(tncMulDmmrBig, tmmrBig)
+	quoteQuantumsBeforeBankruptcyBig := new(big.Int).Div(tncMulDmmrBig, riskTotal.MMR)
 
 	// Calculate `-DNNV - TNC * abs(DMMR) / TMMR`.
 	bankruptcyPriceQuoteQuantumsBig := new(big.Int).Sub(
-		new(big.Int).Neg(dnnvBig),
+		new(big.Int).Neg(deltaNC),
 		quoteQuantumsBeforeBankruptcyBig,
 	)
 
@@ -565,20 +533,22 @@ func (k Keeper) GetFillablePrice(
 		)
 	}
 
-	pnnvBig, err := k.perpetualsKeeper.GetNetCollateral(ctx, perpetualId, psBig)
+	perpetual,
+		marketPrice,
+		liquidityTier,
+		err := k.perpetualsKeeper.GetPerpetualAndMarketPriceAndLiquidityTier(ctx, perpetualId)
 	if err != nil {
 		return nil, err
 	}
 
-	_, pmmrBig, err := k.perpetualsKeeper.GetMarginRequirements(ctx, perpetualId, psBig)
-	if err != nil {
-		return nil, err
-	}
+	riskPos := perplib.GetNetCollateralAndMarginRequirements(
+		perpetual,
+		marketPrice,
+		liquidityTier,
+		psBig,
+	)
 
-	tncBig,
-		_,
-		tmmrBig,
-		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+	riskTotal, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
 	)
@@ -588,7 +558,7 @@ func (k Keeper) GetFillablePrice(
 
 	// stat liquidation order for negative TNC
 	// TODO(CLOB-906) Prevent duplicated stat emissions for liquidation orders in PrepareCheckState.
-	if tncBig.Sign() < 0 {
+	if riskTotal.NC.Sign() < 0 {
 		callback := metrics.PrepareCheckState
 		if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
 			callback = metrics.DeliverTx
@@ -610,7 +580,7 @@ func (k Keeper) GetFillablePrice(
 		ctx.Logger().Info(
 			"GetFillablePrice: Subaccount has negative TNC. SubaccountId: %+v, TNC: %+v",
 			subaccountId,
-			tncBig,
+			riskTotal.NC,
 		)
 	}
 
@@ -619,7 +589,7 @@ func (k Keeper) GetFillablePrice(
 	smmr := liquidationsConfig.FillablePriceConfig.SpreadToMaintenanceMarginRatioPpm
 
 	// Calculate the ABR (adjusted bankruptcy rating).
-	tncDivTmmrRat := new(big.Rat).SetFrac(tncBig, tmmrBig)
+	tncDivTmmrRat := new(big.Rat).SetFrac(riskTotal.NC, riskTotal.MMR)
 	unboundedAbrRat := lib.BigRatMulPpm(
 		new(big.Rat).Sub(
 			lib.BigRat1(),
@@ -633,7 +603,7 @@ func (k Keeper) GetFillablePrice(
 
 	// Calculate `SMMR * PMMR` (the maximum liquidation spread in quote quantums).
 	maxLiquidationSpreadQuoteQuantumsRat := lib.BigRatMulPpm(
-		new(big.Rat).SetInt(pmmrBig),
+		new(big.Rat).SetInt(riskPos.MMR),
 		smmr,
 	)
 
@@ -645,7 +615,7 @@ func (k Keeper) GetFillablePrice(
 	// For shorts, `pnnvRat < 0` meaning the fillable price in quote quantums will be higher than
 	// the oracle price (in this case the result will be negative, but dividing by `positionSize` below
 	// will make it positive since `positionSize < 0` for shorts).
-	pnnvRat := new(big.Rat).SetInt(pnnvBig)
+	pnnvRat := new(big.Rat).SetInt(riskPos.NC)
 	fillablePriceQuoteQuantumsRat := new(big.Rat).Sub(pnnvRat, fillablePriceOracleDeltaQuoteQuantumsRat)
 
 	// Calculate the fillable price by dividing by `PS`.
@@ -689,14 +659,11 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 	// Get the delta quantums and delta quote quantums.
 	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
 	deltaQuantums := new(big.Int).SetUint64(fillAmount)
-	deltaQuoteQuantums, err := getFillQuoteQuantums(
-		clobPair,
+	deltaQuoteQuantums := types.FillAmountToQuoteQuantums(
 		subticks,
 		satypes.BaseQuantums(fillAmount),
+		clobPair.QuantumConversionExponent,
 	)
-	if err != nil {
-		return nil, err
-	}
 	if isBuy {
 		deltaQuoteQuantums.Neg(deltaQuoteQuantums)
 	} else {
@@ -1052,20 +1019,22 @@ func (k Keeper) ConvertFillablePriceToSubticks(
 		panic("ConvertFillablePriceToSubticks: FillablePrice should not be negative")
 	}
 
-	exponent := clobPair.QuantumConversionExponent
-	absExponentiatedValueBig := lib.BigPow10(uint64(lib.AbsInt32(exponent)))
-	quoteQuantumsPerBaseQuantumAndSubtickRat := new(big.Rat).SetInt(absExponentiatedValueBig)
-	// If `exponent` is negative, invert the fraction to set the result to `1 / 10^exponent`.
-	if exponent < 0 {
-		quoteQuantumsPerBaseQuantumAndSubtickRat.Inv(quoteQuantumsPerBaseQuantumAndSubtickRat)
-	}
-
 	// Assuming `fillablePrice` is in units of `quote quantums / base quantum`,  then dividing by
 	// `quote quantums / (base quantum * subtick)` will give the resulting units of subticks.
-	subticksRat := new(big.Rat).Quo(
-		fillablePrice,
-		quoteQuantumsPerBaseQuantumAndSubtickRat,
-	)
+	exponent := clobPair.QuantumConversionExponent
+	p10, inverse := lib.BigPow10(exponent)
+	subticksRat := new(big.Rat)
+	if inverse {
+		subticksRat.SetFrac(
+			new(big.Int).Mul(p10, fillablePrice.Num()),
+			fillablePrice.Denom(),
+		)
+	} else {
+		subticksRat.SetFrac(
+			fillablePrice.Num(),
+			new(big.Int).Mul(p10, fillablePrice.Denom()),
+		)
+	}
 
 	// If we are liquidating a long position with a sell order, then we round up to the nearest
 	// subtick (and vice versa for liquidating shorts).

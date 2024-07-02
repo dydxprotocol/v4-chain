@@ -101,7 +101,9 @@ describe('helpers', () => {
       );
 
       const unrealizedPnl: string = getUnrealizedPnl(
-        perpetualPosition, defaultPerpetualMarket, marketIdToMarket,
+        perpetualPosition,
+        defaultPerpetualMarket,
+        marketIdToMarket[defaultPerpetualMarket.marketId],
       );
 
       expect(unrealizedPnl).toEqual(Big(-50000).toFixed());
@@ -125,7 +127,9 @@ describe('helpers', () => {
       );
 
       const unrealizedPnl: string = getUnrealizedPnl(
-        perpetualPosition, defaultPerpetualMarket, marketIdToMarket,
+        perpetualPosition,
+        defaultPerpetualMarket,
+        marketIdToMarket[defaultPerpetualMarket.marketId],
       );
 
       expect(unrealizedPnl).toEqual(Big(50000).toFixed());

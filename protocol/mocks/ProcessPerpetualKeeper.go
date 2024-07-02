@@ -3,8 +3,6 @@
 package mocks
 
 import (
-	big "math/big"
-
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	mock "github.com/stretchr/testify/mock"
 
@@ -42,45 +40,6 @@ func (_m *ProcessPerpetualKeeper) GetPerpetual(ctx types.Context, id uint32) (pe
 	}
 
 	return r0, r1
-}
-
-// GetSettlementPpm provides a mock function with given fields: ctx, perpetualId, quantums, index
-func (_m *ProcessPerpetualKeeper) GetSettlementPpm(ctx types.Context, perpetualId uint32, quantums *big.Int, index *big.Int) (*big.Int, *big.Int, error) {
-	ret := _m.Called(ctx, perpetualId, quantums, index)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetSettlementPpm")
-	}
-
-	var r0 *big.Int
-	var r1 *big.Int
-	var r2 error
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, *big.Int, *big.Int) (*big.Int, *big.Int, error)); ok {
-		return rf(ctx, perpetualId, quantums, index)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, *big.Int, *big.Int) *big.Int); ok {
-		r0 = rf(ctx, perpetualId, quantums, index)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, *big.Int, *big.Int) *big.Int); ok {
-		r1 = rf(ctx, perpetualId, quantums, index)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*big.Int)
-		}
-	}
-
-	if rf, ok := ret.Get(2).(func(types.Context, uint32, *big.Int, *big.Int) error); ok {
-		r2 = rf(ctx, perpetualId, quantums, index)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
 }
 
 // MaybeProcessNewFundingTickEpoch provides a mock function with given fields: ctx

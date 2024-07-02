@@ -29,12 +29,24 @@ func BaseToQuoteQuantums(
 	priceValue uint64,
 	priceExponent int32,
 ) (bigNotional *big.Int) {
-	return multiplyByPrice(
-		new(big.Rat).SetInt(bigBaseQuantums),
-		baseCurrencyAtomicResolution,
-		priceValue,
-		priceExponent,
-	)
+	// Multiply all numerators.
+	numResult := new(big.Int).SetUint64(priceValue)
+	numResult.Mul(numResult, bigBaseQuantums)
+	exponent := priceExponent + baseCurrencyAtomicResolution - QuoteCurrencyAtomicResolution
+
+	// Special case: if the exponent is zero, we can return early.
+	if exponent == 0 {
+		return numResult
+	}
+
+	// Otherwise multiply or divide by the 1e^exponent.
+	pow10, inverse := BigPow10(exponent)
+	if inverse {
+		// Trucated division (towards zero) instead of Euclidean division.
+		return numResult.Quo(numResult, pow10)
+	} else {
+		return numResult.Mul(numResult, pow10)
+	}
 }
 
 // QuoteToBaseQuantums converts an amount denoted in quote quantums, to an equivalent amount denoted in base
@@ -51,107 +63,28 @@ func BaseToQuoteQuantums(
 //	  quoteQuantums / priceValue /
 //	  10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution)
 //
-// The result is rounded down.
+// The result is rounded towards zero.
 func QuoteToBaseQuantums(
 	bigQuoteQuantums *big.Int,
 	baseCurrencyAtomicResolution int32,
 	priceValue uint64,
 	priceExponent int32,
 ) (bigNotional *big.Int) {
-	// Determine the non-exponent part of the equation.
-	// We perform all calculations using positive rationals for consistent rounding.
-	isLong := bigQuoteQuantums.Sign() >= 0
-	ratAbsQuoteQuantums := new(big.Rat).Abs(
-		new(big.Rat).SetInt(bigQuoteQuantums),
-	)
-	ratPrice := new(big.Rat).SetUint64(priceValue)
-	ratQuoteQuantumsDivPrice := new(big.Rat).Quo(ratAbsQuoteQuantums, ratPrice)
+	// Initialize result to quoteQuantums.
+	result := new(big.Int).Set(bigQuoteQuantums)
 
-	// Determine the absolute value of the return value.
+	// Divide result (towards zero) by 10^(exponent).
 	exponent := priceExponent + baseCurrencyAtomicResolution - QuoteCurrencyAtomicResolution
-	ratBaseQuantums := new(big.Rat).Quo(
-		ratQuoteQuantumsDivPrice,
-		RatPow10(exponent),
-	)
-
-	// Round down.
-	bigBaseQuantums := BigRatRound(ratBaseQuantums, false)
-
-	// Flip the sign of the return value if necessary.
-	if !isLong {
-		bigBaseQuantums.Neg(bigBaseQuantums)
+	p10, inverse := BigPow10(exponent)
+	if inverse {
+		result.Mul(result, p10)
+	} else {
+		result.Quo(result, p10)
 	}
-	return bigBaseQuantums
-}
 
-// multiplyByPrice multiples a value by price, factoring in exponents of base
-// and quote currencies.
-// Given `value`, returns result of the following:
-//
-// `value * priceValue * 10^(priceExponent + baseAtomicResolution - quoteAtomicResolution)` [expression 2]
-//
-// Note that both `BaseToQuoteQuantums` and `FundingRateToIndex` directly wrap around this function.
-// - For `BaseToQuoteQuantums`, substituing `value` with `baseQuantums` in expression 2 yields expression 1.
-// - For `FundingRateToIndex`, substituing `value` with `fundingRatePpm * time` in expression 2 yields expression 3.
-func multiplyByPrice(
-	value *big.Rat,
-	baseCurrencyAtomicResolution int32,
-	priceValue uint64,
-	priceExponent int32,
-) (result *big.Int) {
-	ratResult := new(big.Rat).SetUint64(priceValue)
+	// Divide result (towards zero) by priceValue.
+	// If there are two divisions, it is okay to do them separately as the result is the same.
+	result.Quo(result, new(big.Int).SetUint64(priceValue))
 
-	ratResult.Mul(
-		ratResult,
-		value,
-	)
-
-	ratResult.Mul(
-		ratResult,
-		RatPow10(priceExponent+baseCurrencyAtomicResolution-QuoteCurrencyAtomicResolution),
-	)
-
-	return new(big.Int).Quo(
-		ratResult.Num(),
-		ratResult.Denom(),
-	)
-}
-
-// FundingRateToIndex converts funding rate (in ppm) to FundingIndex given the oracle price.
-//
-// To get funding index from funding rate, we know that:
-//
-//   - `fundingPaymentQuoteQuantum = fundingRatePpm / 1_000_000 * time * quoteQuantums`
-//   - Divide both sides by `baseQuantums`:
-//   - Left side: `fundingPaymentQuoteQuantums / baseQuantums = fundingIndexDelta / 1_000_000`
-//   - right side:
-//     ```
-//     fundingRate * time * quoteQuantums / baseQuantums = fundingRatePpm / 1_000_000 *
-//     priceValue * 10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution) [expression 3]
-//     ```
-//
-// Hence, further multiplying both sides by 1_000_000, we have:
-//
-//	fundingIndexDelta =
-//	  (fundingRatePpm * time) * priceValue *
-//	  10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution)
-//
-// Arguments:
-//
-//	proratedFundingRate: prorated funding rate adjusted by time delta, in parts-per-million
-//	baseCurrencyAtomicResolution: atomic resolution of the base currency
-//	priceValue: index price of the perpetual market according to the pricesKeeper
-//	priceExponent: priceExponent of the market according to the pricesKeeper
-func FundingRateToIndex(
-	proratedFundingRate *big.Rat,
-	baseCurrencyAtomicResolution int32,
-	priceValue uint64,
-	priceExponent int32,
-) (fundingIndex *big.Int) {
-	return multiplyByPrice(
-		proratedFundingRate,
-		baseCurrencyAtomicResolution,
-		priceValue,
-		priceExponent,
-	)
+	return result
 }

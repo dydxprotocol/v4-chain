@@ -6,7 +6,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -24,22 +23,17 @@ import (
 // caused a failure, if any.
 func (k Keeper) checkIsolatedSubaccountConstraints(
 	ctx sdk.Context,
-	settledUpdates []SettledUpdate,
-	perpetuals []perptypes.Perpetual,
+	settledUpdates []types.SettledUpdate,
+	perpInfos perptypes.PerpInfos,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
-	err error,
 ) {
 	success = true
 	successPerUpdate = make([]types.UpdateResult, len(settledUpdates))
-	perpIdToMarketType := getPerpIdToMarketTypeMap(perpetuals)
 
 	for i, u := range settledUpdates {
-		result, err := isValidIsolatedPerpetualUpdates(u, perpIdToMarketType)
-		if err != nil {
-			return false, nil, err
-		}
+		result := isValidIsolatedPerpetualUpdates(u, perpInfos)
 		if result != types.Success {
 			success = false
 		}
@@ -47,7 +41,7 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 		successPerUpdate[i] = result
 	}
 
-	return success, successPerUpdate, nil
+	return success, successPerUpdate
 }
 
 // Checks whether the perpetual updates to a settled subaccount violates constraints for isolated
@@ -61,27 +55,22 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 //   - a subaccount with no positions cannot be updated to have positions in multiple isolated
 //     perpetuals or a combination of isolated and non-isolated perpetuals
 func isValidIsolatedPerpetualUpdates(
-	settledUpdate SettledUpdate,
-	perpIdToMarketType map[uint32]perptypes.PerpetualMarketType,
-) (types.UpdateResult, error) {
+	settledUpdate types.SettledUpdate,
+	perpInfos perptypes.PerpInfos,
+) types.UpdateResult {
 	// If there are no perpetual updates, then this update does not violate constraints for isolated
 	// markets.
 	if len(settledUpdate.PerpetualUpdates) == 0 {
-		return types.Success, nil
+		return types.Success
 	}
 
 	// Check if the updates contain an update to an isolated perpetual.
 	hasIsolatedUpdate := false
 	isolatedUpdatePerpetualId := uint32(math.MaxUint32)
 	for _, perpetualUpdate := range settledUpdate.PerpetualUpdates {
-		marketType, exists := perpIdToMarketType[perpetualUpdate.PerpetualId]
-		if !exists {
-			return types.UpdateCausedError, errorsmod.Wrap(
-				perptypes.ErrPerpetualDoesNotExist, lib.UintToString(perpetualUpdate.PerpetualId),
-			)
-		}
+		perpInfo := perpInfos.MustGet(perpetualUpdate.PerpetualId)
 
-		if marketType == perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
+		if perpInfo.Perpetual.Params.MarketType == perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
 			hasIsolatedUpdate = true
 			isolatedUpdatePerpetualId = perpetualUpdate.PerpetualId
 			break
@@ -94,14 +83,9 @@ func isValidIsolatedPerpetualUpdates(
 	isolatedPositionPerpetualId := uint32(math.MaxUint32)
 	hasPerpetualPositions := len(settledUpdate.SettledSubaccount.PerpetualPositions) > 0
 	for _, perpetualPosition := range settledUpdate.SettledSubaccount.PerpetualPositions {
-		marketType, exists := perpIdToMarketType[perpetualPosition.PerpetualId]
-		if !exists {
-			return types.UpdateCausedError, errorsmod.Wrap(
-				perptypes.ErrPerpetualDoesNotExist, lib.UintToString(perpetualPosition.PerpetualId),
-			)
-		}
+		perpInfo := perpInfos.MustGet(perpetualPosition.PerpetualId)
 
-		if marketType == perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
+		if perpInfo.Perpetual.Params.MarketType == perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
 			isIsolatedSubaccount = true
 			isolatedPositionPerpetualId = perpetualPosition.PerpetualId
 			break
@@ -111,19 +95,19 @@ func isValidIsolatedPerpetualUpdates(
 	// A subaccount with a perpetual position in an isolated perpetual cannot have updates to other
 	// non-isolated perpetuals.
 	if isIsolatedSubaccount && !hasIsolatedUpdate {
-		return types.ViolatesIsolatedSubaccountConstraints, nil
+		return types.ViolatesIsolatedSubaccountConstraints
 	}
 
 	// A subaccount with perpetual positions in non-isolated perpetuals cannot have an update
 	// to an isolated perpetual.
 	if !isIsolatedSubaccount && hasPerpetualPositions && hasIsolatedUpdate {
-		return types.ViolatesIsolatedSubaccountConstraints, nil
+		return types.ViolatesIsolatedSubaccountConstraints
 	}
 
 	// There cannot be more than a single perpetual update if an update to an isolated perpetual
 	// exists in the slice of perpetual updates.
 	if hasIsolatedUpdate && len(settledUpdate.PerpetualUpdates) > 1 {
-		return types.ViolatesIsolatedSubaccountConstraints, nil
+		return types.ViolatesIsolatedSubaccountConstraints
 	}
 
 	// Note we can assume that if `hasIsolatedUpdate` is true, there is only a single perpetual
@@ -133,10 +117,10 @@ func isValidIsolatedPerpetualUpdates(
 	if isIsolatedSubaccount &&
 		hasIsolatedUpdate &&
 		isolatedPositionPerpetualId != isolatedUpdatePerpetualId {
-		return types.ViolatesIsolatedSubaccountConstraints, nil
+		return types.ViolatesIsolatedSubaccountConstraints
 	}
 
-	return types.Success, nil
+	return types.Success
 }
 
 // GetIsolatedPerpetualStateTransition computes whether an isolated perpetual position will be
@@ -145,10 +129,9 @@ func isValidIsolatedPerpetualUpdates(
 // The input `settledUpdate` must have an updated subaccount (`settledUpdate.SettledSubaccount`),
 // so all the updates must have been applied already to the subaccount.
 func GetIsolatedPerpetualStateTransition(
-	settledUpdateWithUpdatedSubaccount SettledUpdate,
-	perpetuals []perptypes.Perpetual,
+	settledUpdateWithUpdatedSubaccount types.SettledUpdate,
+	perpInfos perptypes.PerpInfos,
 ) (*types.IsolatedPerpetualPositionStateTransition, error) {
-	perpIdToMarketType := getPerpIdToMarketTypeMap(perpetuals)
 	// This subaccount needs to have had the updates in the `settledUpdate` already applied to it.
 	updatedSubaccount := settledUpdateWithUpdatedSubaccount.SettledSubaccount
 	// If there are no perpetual updates, then no perpetual position could have been opened or closed
@@ -168,15 +151,10 @@ func GetIsolatedPerpetualStateTransition(
 	// Now, from the above checks, we know there is only a single perpetual update and 0 or 1 perpetual
 	// positions.
 	perpetualUpdate := settledUpdateWithUpdatedSubaccount.PerpetualUpdates[0]
-	marketType, exists := perpIdToMarketType[perpetualUpdate.PerpetualId]
-	if !exists {
-		return nil, errorsmod.Wrap(
-			perptypes.ErrPerpetualDoesNotExist, lib.UintToString(perpetualUpdate.PerpetualId),
-		)
-	}
+	perpInfo := perpInfos.MustGet(perpetualUpdate.PerpetualId)
 	// If the perpetual update is not for an isolated perpetual, no isolated perpetual position is
 	// being opened or closed.
-	if marketType != perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
+	if perpInfo.Perpetual.Params.MarketType != perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
 		return nil, nil
 	}
 
@@ -324,14 +302,14 @@ func (k *Keeper) transferCollateralForIsolatedPerpetual(
 // Note: This uses the `x/bank` keeper and modifies `x/bank` state.
 func (k *Keeper) computeAndExecuteCollateralTransfer(
 	ctx sdk.Context,
-	settledUpdateWithUpdatedSubaccount SettledUpdate,
-	perpetuals []perptypes.Perpetual,
+	settledUpdateWithUpdatedSubaccount types.SettledUpdate,
+	perpInfos perptypes.PerpInfos,
 ) error {
 	// The subaccount in `settledUpdateWithUpdatedSubaccount` already has the perpetual updates
 	// and asset updates applied to it.
 	stateTransition, err := GetIsolatedPerpetualStateTransition(
 		settledUpdateWithUpdatedSubaccount,
-		perpetuals,
+		perpInfos,
 	)
 	if err != nil {
 		return err
@@ -344,16 +322,4 @@ func (k *Keeper) computeAndExecuteCollateralTransfer(
 	}
 
 	return nil
-}
-
-func getPerpIdToMarketTypeMap(
-	perpetuals []perptypes.Perpetual,
-) map[uint32]perptypes.PerpetualMarketType {
-	var perpIdToMarketType = make(map[uint32]perptypes.PerpetualMarketType)
-
-	for _, perpetual := range perpetuals {
-		perpIdToMarketType[perpetual.GetId()] = perpetual.Params.MarketType
-	}
-
-	return perpIdToMarketType
 }

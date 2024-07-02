@@ -101,6 +101,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.govplus.MsgSlashValidator",
 		"/dydxprotocol.govplus.MsgSlashValidatorResponse",
 
+		// listing
+		"/dydxprotocol.listing.MsgSetMarketsHardCap",
+		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse",
+
 		// perpeutals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual",
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse",
@@ -120,6 +124,12 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// ratelimit
 		"/dydxprotocol.ratelimit.MsgSetLimitParams",
 		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse",
+
+		// revshare
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarket",
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarketResponse",
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShare",
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse",
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams",

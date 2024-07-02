@@ -88,8 +88,7 @@ var (
 	ErrInvalidReplacement = errorsmod.Register(
 		ModuleName,
 		20,
-		"An order with the same `OrderId` already exists for this CLOB with a greater-than-or-equal `GoodTilBlock` "+
-			"or Order Hash",
+		"Replacing an existing order failed",
 	)
 	ErrClobPairAndPerpetualDoNotMatch = errorsmod.Register(
 		ModuleName,
@@ -220,6 +219,11 @@ var (
 		ModuleName,
 		47,
 		"CLOB has not been initialized",
+	)
+	ErrDeprecatedField = errorsmod.Register(
+		ModuleName,
+		48,
+		"This field has been deprecated",
 	)
 
 	// Liquidations errors.
@@ -359,7 +363,7 @@ var (
 	ErrImmediateExecutionOrderAlreadyFilled = errorsmod.Register(
 		ModuleName,
 		2004,
-		"IOC/FOK order is already filled, remaining size is cancelled.",
+		"IOC order is already filled, remaining size is cancelled.",
 	)
 	ErrWouldViolateIsolatedSubaccountConstraints = errorsmod.Register(
 		ModuleName,
@@ -519,7 +523,7 @@ var (
 	ErrReduceOnlyDisabled = errorsmod.Register(
 		ModuleName,
 		9003,
-		"Reduce-only is currently disabled for non-FOK/IOC orders",
+		"Reduce-only is currently disabled for non-IOC orders",
 	)
 
 	// Equity tier limit errors.

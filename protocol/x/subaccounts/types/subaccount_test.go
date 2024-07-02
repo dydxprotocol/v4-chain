@@ -5,29 +5,29 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 
-func TestBaseQuantumsToBigInt(t *testing.T) {
+func TestBaseQuantums_ToBigInt(t *testing.T) {
 	num := uint64(5)
 	bq := types.BaseQuantums(5)
 
 	require.Zero(t, new(big.Int).SetUint64(num).Cmp(bq.ToBigInt()))
 }
 
-func TestBaseQuantumsToUInt64(t *testing.T) {
+func TestBaseQuantums_ToUInt64(t *testing.T) {
 	num := uint64(5)
 	bq := types.BaseQuantums(5)
 
 	require.Equal(t, num, bq.ToUint64())
 }
 
-func TestSubaccountIdValidate(t *testing.T) {
+func TestSubaccountId_Validate(t *testing.T) {
 	tests := map[string]struct {
 		owner         string
 		number        uint32
@@ -77,7 +77,7 @@ func TestSubaccountIdValidate(t *testing.T) {
 	}
 }
 
-func TestSubaccountIdMustGetAccAccount(t *testing.T) {
+func TestSubaccountId_MustGetAccAccount(t *testing.T) {
 	tests := map[string]struct {
 		owner  string
 		number uint32
@@ -115,16 +115,26 @@ func TestSubaccountIdMustGetAccAccount(t *testing.T) {
 	}
 }
 
-func TestSubaccountGetPerpetualPositionForId(t *testing.T) {
+func TestSubaccount_DeepCopy(t *testing.T) {
+	subaccount := constants.Alice_Num1_1BTC_Long_500_000USD
+	deepCopy := subaccount.DeepCopy()
+
+	require.Equal(t, subaccount, deepCopy)
+	require.NotSame(t, &subaccount, &deepCopy)
+}
+
+func TestSubaccount_GetPerpetualPositionForId(t *testing.T) {
 	expectedPerpetualPositions := []*types.PerpetualPosition{
-		{
-			PerpetualId: 0,
-			Quantums:    dtypes.NewInt(100),
-		},
-		{
-			PerpetualId: 1,
-			Quantums:    dtypes.NewInt(100),
-		},
+		testutil.CreateSinglePerpetualPosition(
+			0,
+			big.NewInt(100),
+			big.NewInt(0),
+		),
+		testutil.CreateSinglePerpetualPosition(
+			1,
+			big.NewInt(100),
+			big.NewInt(0),
+		),
 	}
 	subaccount := types.Subaccount{
 		PerpetualPositions: expectedPerpetualPositions,
@@ -143,7 +153,7 @@ func TestSubaccountGetPerpetualPositionForId(t *testing.T) {
 	require.Nil(t, position)
 }
 
-func TestGetSubaccountQuoteBalance(t *testing.T) {
+func TestSubaccount_GetUsdcPosition(t *testing.T) {
 	tests := map[string]struct {
 		subaccount           *types.Subaccount
 		expectedQuoteBalance *big.Int
@@ -157,10 +167,10 @@ func TestGetSubaccountQuoteBalance(t *testing.T) {
 			subaccount: &types.Subaccount{
 				Id: &constants.Carl_Num0,
 				AssetPositions: []*types.AssetPosition{
-					{
-						AssetId:  assettypes.AssetUsdc.Id,
-						Quantums: dtypes.NewInt(-599_000_000), // $599
-					},
+					testutil.CreateSingleAssetPosition(
+						assettypes.AssetUsdc.Id,
+						big.NewInt(-599_000_000), // $599
+					),
 				},
 			},
 			expectedQuoteBalance: big.NewInt(-599_000_000),
@@ -200,7 +210,7 @@ func TestGetSubaccountQuoteBalance(t *testing.T) {
 	}
 }
 
-func TestSetSubaccountQuoteBalance(t *testing.T) {
+func TestSubaccount_SetUsdcAssetPosition(t *testing.T) {
 	tests := map[string]struct {
 		subaccount             *types.Subaccount
 		newQuoteBalance        *big.Int
@@ -221,30 +231,30 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 			subaccount:      &constants.Carl_Num0_599USD,
 			newQuoteBalance: big.NewInt(-10_000_000_000),
 			expectedAssetPositions: []*types.AssetPosition{
-				{
-					AssetId:  assettypes.AssetUsdc.Id,
-					Quantums: dtypes.NewInt(-10_000_000_000), // $10,000
-				},
+				testutil.CreateSingleAssetPosition(
+					assettypes.AssetUsdc.Id,
+					big.NewInt(-10_000_000_000), // $10,000
+				),
 			},
 		},
 		"can set max quote balance": {
 			subaccount:      &constants.Carl_Num0_599USD,
 			newQuoteBalance: new(big.Int).SetUint64(math.MaxUint64),
 			expectedAssetPositions: []*types.AssetPosition{
-				{
-					AssetId:  assettypes.AssetUsdc.Id,
-					Quantums: dtypes.NewIntFromUint64(math.MaxUint64),
-				},
+				testutil.CreateSingleAssetPosition(
+					assettypes.AssetUsdc.Id,
+					big.NewInt(0).SetUint64(math.MaxUint64),
+				),
 			},
 		},
 		"can set min quote balance": {
 			subaccount:      &constants.Carl_Num0_599USD,
 			newQuoteBalance: constants.BigNegMaxUint64(),
 			expectedAssetPositions: []*types.AssetPosition{
-				{
-					AssetId:  assettypes.AssetUsdc.Id,
-					Quantums: dtypes.NewIntFromBigInt(constants.BigNegMaxUint64()),
-				},
+				testutil.CreateSingleAssetPosition(
+					assettypes.AssetUsdc.Id,
+					constants.BigNegMaxUint64(),
+				),
 			},
 		},
 		"can set zero quote balance and removes existing position from slice": {
@@ -275,14 +285,13 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 				big.NewInt(1),
 			),
 			expectedAssetPositions: []*types.AssetPosition{
-				{
-					Quantums: dtypes.NewIntFromBigInt(
-						new(big.Int).Add(
-							new(big.Int).SetUint64(math.MaxUint64),
-							big.NewInt(1),
-						),
+				testutil.CreateSingleAssetPosition(
+					0,
+					new(big.Int).Add(
+						new(big.Int).SetUint64(math.MaxUint64),
+						big.NewInt(1),
 					),
-				},
+				),
 			},
 		},
 		"returns error if abs new quote balance overflows uint64": {
@@ -295,14 +304,13 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 				big.NewInt(-1),
 			),
 			expectedAssetPositions: []*types.AssetPosition{
-				{
-					Quantums: dtypes.NewIntFromBigInt(
-						new(big.Int).Add(
-							constants.BigNegMaxUint64(),
-							big.NewInt(-1),
-						),
+				testutil.CreateSingleAssetPosition(
+					0,
+					new(big.Int).Add(
+						constants.BigNegMaxUint64(),
+						big.NewInt(-1),
 					),
-				},
+				),
 			},
 		},
 	}

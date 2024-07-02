@@ -20,7 +20,9 @@ const RAW_TABLE_COLUMNS: string = `
   \`atomicResolution\` int,
   \`subticksPerTick\` int,
   \`stepBaseQuantums\` int,
-  \`liquidityTierId\` int
+  \`liquidityTierId\` int,
+  \`marketType\` string,
+  \`baseOpenInterest\` string
 `;
 const TABLE_COLUMNS: string = `
   "id",
@@ -37,7 +39,9 @@ const TABLE_COLUMNS: string = `
   "atomicResolution",
   "subticksPerTick",
   "stepBaseQuantums",
-  "liquidityTierId"
+  "liquidityTierId",
+  "marketType",
+  ${castToDouble('baseOpenInterest')}
 `;
 
 export function generateRawTable(tablePrefix: string, rdsExportIdentifier: string): string {

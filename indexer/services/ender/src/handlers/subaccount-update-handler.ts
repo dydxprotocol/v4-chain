@@ -3,10 +3,9 @@ import {
   AssetPositionModel,
   assetRefresher,
   AssetsMap,
-  MarketColumns,
   MarketFromDatabase,
+  MarketModel,
   MarketsMap,
-  MarketTable,
   perpetualMarketRefresher,
   PerpetualMarketsMap,
   PerpetualPositionModel,
@@ -36,6 +35,7 @@ export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
     ];
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const updateObjects: UpdatedPerpetualPositionSubaccountKafkaObject[] = _.map(
       resultRow.perpetual_positions,
@@ -46,20 +46,19 @@ export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
       resultRow.asset_positions,
       (value) => AssetPositionModel.fromJson(value) as AssetPositionFromDatabase,
     );
-    const markets: MarketFromDatabase[] = await MarketTable.findAll(
-      {},
-      [],
-      { txId: this.txId },
+    const marketIdToMarket: MarketsMap = _.mapValues(
+      resultRow.markets,
+      (value) => MarketModel.fromJson(value) as MarketFromDatabase,
     );
-    const marketIdToMarket: MarketsMap = _.keyBy(
-      markets,
-      MarketColumns.id,
-    );
+
     for (let i = 0; i < updateObjects.length; i++) {
+      const marketId: number = perpetualMarketRefresher.getPerpetualMarketsMap()[
+        updateObjects[i].perpetualId
+      ].marketId;
       updateObjects[i] = annotateWithPnl(
         updateObjects[i],
         perpetualMarketRefresher.getPerpetualMarketsMap(),
-        marketIdToMarket,
+        marketIdToMarket[marketId],
       );
     }
 
@@ -91,6 +90,7 @@ export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
       perpetualMarketsMapping,
       updatedAssetPositions,
       assetsMap,
+      this.block.height.toString(),
     );
 
     return this.generateConsolidatedSubaccountKafkaEvent(

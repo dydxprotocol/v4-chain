@@ -55,6 +55,10 @@ service Query {
     option (google.api.http).get = "/dydxprotocol/clob/liquidations_config";
   }
 
+  // Queries the stateful order for a given order id.
+  rpc StatefulOrder(QueryStatefulOrderRequest)
+      returns (QueryStatefulOrderResponse) {}
+
   // GRPC Streams
 
   // Streams orderbook updates. Updates contain orderbook data
@@ -128,6 +132,25 @@ message QueryBlockRateLimitConfigurationResponse {
       [ (gogoproto.nullable) = false ];
 }
 
+// QueryStatefulOrderRequest is a request message for StatefulOrder.
+message QueryStatefulOrderRequest {
+  // Order id to query.
+  OrderId order_id = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryStatefulOrderResponse is a response message that contains the stateful
+// order.
+message QueryStatefulOrderResponse {
+  // Stateful order placement.
+  LongTermOrderPlacement order_placement = 1 [ (gogoproto.nullable) = false ];
+
+  // Fill amounts.
+  uint64 fill_amount = 2;
+
+  // Triggered status.
+  bool triggered = 3;
+}
+
 // QueryLiquidationsConfigurationRequest is a request message for
 // LiquidationsConfiguration.
 message QueryLiquidationsConfigurationRequest {}
@@ -148,15 +171,8 @@ message StreamOrderbookUpdatesRequest {
 // StreamOrderbookUpdatesResponse is a response message for the
 // StreamOrderbookUpdates method.
 message StreamOrderbookUpdatesResponse {
-  // Orderbook updates for the clob pair.
+  // Batch of updates for the clob pair.
   repeated StreamUpdate updates = 1 [ (gogoproto.nullable) = false ];
-
-  // ---Additional fields used to debug issues---
-  // Block height of the updates.
-  uint32 block_height = 2;
-
-  // Exec mode of the updates.
-  uint32 exec_mode = 3;
 }
 
 // StreamUpdate is an update that will be pushed through the
@@ -168,6 +184,12 @@ message StreamUpdate {
     StreamOrderbookUpdate orderbook_update = 1;
     StreamOrderbookFill order_fill = 2;
   }
+
+  // Block height of the update.
+  uint32 block_height = 3;
+
+  // Exec mode of the update.
+  uint32 exec_mode = 4;
 }
 
 // StreamOrderbookUpdate provides information on an orderbook update. Used in
@@ -179,8 +201,8 @@ message StreamOrderbookUpdate {
       [ (gogoproto.nullable) = false ];
 
   // Snapshot indicates if the response is from a snapshot of the orderbook.
-  // This is true for the initial response and false for all subsequent updates.
-  // Note that if the snapshot is true, then all previous entries should be
+  // All updates should be ignored until snapshot is recieved.
+  // If the snapshot is true, then all previous entries should be
   // discarded and the orderbook should be resynced.
   bool snapshot = 2;
 }
@@ -189,7 +211,7 @@ message StreamOrderbookUpdate {
 // the full node GRPC stream.
 message StreamOrderbookFill {
   // Clob match. Provides information on which orders were matched
-  // and the type of order. Fill amounts here are relative.
+  // and the type of order.
   ClobMatch clob_match = 1;
 
   // All orders involved in the specified clob match. Used to look up
@@ -197,7 +219,7 @@ message StreamOrderbookFill {
   repeated Order orders = 2 [ (gogoproto.nullable) = false ];
 
   // Resulting fill amounts for each order in the orders array.
-  repeated uint64 fill_amounts = 3 [ (gogoproto.nullable) = false ];
+  repeated uint64 fill_amounts = 3;
 }
 
 // QueryPerpetualClobDetails is a response message that contains the perpetual clob details.

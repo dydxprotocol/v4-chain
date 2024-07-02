@@ -1,4 +1,4 @@
-package off_chain_updates
+package off_chain_updates_test
 
 import (
 	"testing"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+	ocu "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	sharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
@@ -30,6 +31,14 @@ var (
 	offchainUpdateOrderPlace       = ocutypes.OffChainUpdateV1{
 		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderPlace{
 			OrderPlace: &ocutypes.OrderPlaceV1{
+				Order:           &indexerOrder,
+				PlacementStatus: ocutypes.OrderPlaceV1_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+			},
+		},
+	}
+	offchainUpdateOrderReplace = ocutypes.OffChainUpdateV1{
+		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderReplace{
+			OrderReplace: &ocutypes.OrderReplaceV1{
 				Order:           &indexerOrder,
 				PlacementStatus: ocutypes.OrderPlaceV1_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
 			},
@@ -65,7 +74,7 @@ var (
 
 func TestCreateOrderPlaceMessage(t *testing.T) {
 	ctx, _, _ := sdk.NewSdkContextWithMultistore()
-	actualMessage, success := CreateOrderPlaceMessage(
+	actualMessage, success := ocu.CreateOrderPlaceMessage(
 		ctx,
 		order,
 	)
@@ -80,10 +89,27 @@ func TestCreateOrderPlaceMessage(t *testing.T) {
 	require.Equal(t, expectedMessage, actualMessage)
 }
 
+func TestCreateOrderReplaceMessage(t *testing.T) {
+	ctx, _, _ := sdk.NewSdkContextWithMultistore()
+	actualMessage, success := ocu.CreateOrderReplaceMessage(
+		ctx,
+		order,
+	)
+	require.True(t, success)
+
+	updateBytes, err := proto.Marshal(&offchainUpdateOrderReplace)
+	require.NoError(t, err)
+	expectedMessage := msgsender.Message{
+		Key:   orderIdHash,
+		Value: updateBytes,
+	}
+	require.Equal(t, expectedMessage, actualMessage)
+}
+
 func TestCreateOrderUpdateMessage(t *testing.T) {
 	ctx, _, _ := sdk.NewSdkContextWithMultistore()
 
-	actualMessage, success := CreateOrderUpdateMessage(ctx, order.OrderId, totalFilledAmount)
+	actualMessage, success := ocu.CreateOrderUpdateMessage(ctx, order.OrderId, totalFilledAmount)
 	require.True(t, success)
 
 	updateBytes, err := proto.Marshal(&offchainUpdateOrderUpdate)
@@ -98,7 +124,7 @@ func TestCreateOrderUpdateMessage(t *testing.T) {
 func TestCreateOrderRemoveWithReason(t *testing.T) {
 	ctx, _, _ := sdk.NewSdkContextWithMultistore()
 
-	actualMessage, success := CreateOrderRemoveMessage(
+	actualMessage, success := ocu.CreateOrderRemoveMessage(
 		ctx,
 		order.OrderId,
 		orderStatus,
@@ -125,7 +151,7 @@ func TestCreateOrderRemoveMessageWithDefaultReason_HappyPath(t *testing.T) {
 		defaultRemovalReason,
 		"defaultRemovalReason must be different than expectedMessage's removal reason for test to "+
 			"be valid & useful.")
-	actualMessage, success := CreateOrderRemoveMessageWithDefaultReason(
+	actualMessage, success := ocu.CreateOrderRemoveMessageWithDefaultReason(
 		ctx,
 		order.OrderId,
 		orderStatus,
@@ -146,7 +172,7 @@ func TestCreateOrderRemoveMessageWithDefaultReason_HappyPath(t *testing.T) {
 
 func TestCreateOrderRemoveMessageWithDefaultReason_DefaultReasonReturned(t *testing.T) {
 	ctx, _, _ := sdk.NewSdkContextWithMultistore()
-	actualMessage, success := CreateOrderRemoveMessageWithDefaultReason(
+	actualMessage, success := ocu.CreateOrderRemoveMessageWithDefaultReason(
 		ctx,
 		order.OrderId,
 		clobtypes.Success,
@@ -172,7 +198,7 @@ func TestCreateOrderRemoveMessageWithDefaultReason_InvalidDefault(t *testing.T) 
 		t,
 		"Invalid parameter: defaultRemovalReason cannot be OrderRemove_ORDER_REMOVAL_REASON_UNSPECIFIED",
 		func() {
-			CreateOrderRemoveMessageWithDefaultReason(
+			ocu.CreateOrderRemoveMessageWithDefaultReason(
 				ctx,
 				order.OrderId,
 				clobtypes.Success,
@@ -187,7 +213,7 @@ func TestCreateOrderRemoveMessageWithDefaultReason_InvalidDefault(t *testing.T) 
 func TestCreateOrderRemoveWithReasonMessage(t *testing.T) {
 	ctx, _, _ := sdk.NewSdkContextWithMultistore()
 
-	actualMessage, success := CreateOrderRemoveMessageWithReason(
+	actualMessage, success := ocu.CreateOrderRemoveMessageWithReason(
 		ctx,
 		order.OrderId,
 		reason,
@@ -205,7 +231,7 @@ func TestCreateOrderRemoveWithReasonMessage(t *testing.T) {
 }
 
 func TestNewOrderPlaceMessage(t *testing.T) {
-	actualUpdateBytes, err := newOrderPlaceMessage(
+	actualUpdateBytes, err := ocu.NewOrderPlaceMessage(
 		order,
 	)
 	require.NoError(
@@ -229,7 +255,7 @@ func TestNewOrderPlaceMessage(t *testing.T) {
 }
 
 func TestNewOrderUpdateMessage(t *testing.T) {
-	actualUpdateBytes, err := newOrderUpdateMessage(order.OrderId, totalFilledAmount)
+	actualUpdateBytes, err := ocu.NewOrderUpdateMessage(order.OrderId, totalFilledAmount)
 	require.NoError(
 		t,
 		err,
@@ -251,7 +277,7 @@ func TestNewOrderUpdateMessage(t *testing.T) {
 }
 
 func TestNewOrderRemoveMessage(t *testing.T) {
-	actualUpdateBytes, err := newOrderRemoveMessage(order.OrderId, reason, status)
+	actualUpdateBytes, err := ocu.NewOrderRemoveMessage(order.OrderId, reason, status)
 	require.NoError(
 		t,
 		err,
@@ -288,7 +314,7 @@ func TestGetOrderIdHash(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			hash, err := GetOrderIdHash(tc.orderId)
+			hash, err := ocu.GetOrderIdHash(tc.orderId)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedHash, hash)
 		})
@@ -370,7 +396,7 @@ func TestShouldSendOrderRemovalOnReplay(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			shouldSend := ShouldSendOrderRemovalOnReplay(tc.orderError)
+			shouldSend := ocu.ShouldSendOrderRemovalOnReplay(tc.orderError)
 			require.Equal(t, tc.expected, shouldSend)
 		})
 	}
