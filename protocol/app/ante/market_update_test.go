@@ -175,6 +175,31 @@ func TestIsMarketUpdateTx(t *testing.T) {
 	}
 }
 
+var (
+	testMarket = mmtypes.Market{
+		Ticker: mmtypes.Ticker{
+			CurrencyPair: types.CurrencyPair{
+				Base:  "TEST",
+				Quote: "USD",
+			},
+			Decimals:         1,
+			MinProviderCount: 1,
+			Enabled:          true,
+			Metadata_JSON:    "",
+		},
+		ProviderConfigs: nil,
+	}
+
+	testMarketParams = prices_types.MarketParam{
+		Id:                 0,
+		Pair:               "TEST-USD",
+		Exponent:           -8,
+		MinExchanges:       1,
+		MinPriceChangePpm:  10,
+		ExchangeConfigJson: `{"test_config_placeholder":{}}`,
+	}
+)
+
 func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 	type marketPerpPair struct {
 		market prices_types.MarketParam
@@ -319,39 +344,20 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "accept a single message with no cross markets",
+			name: "accept a single message with no cross markets (only isolated)",
 			args: args{
 				msgs: []sdk.Msg{
 					&mmtypes.MsgUpsertMarkets{
 						Authority: constants.BobAccAddress.String(),
 						Markets: []mmtypes.Market{
-							{
-								Ticker: mmtypes.Ticker{
-									CurrencyPair: types.CurrencyPair{
-										Base:  "TEST",
-										Quote: "USD",
-									},
-									Decimals:         1,
-									MinProviderCount: 1,
-									Enabled:          true,
-									Metadata_JSON:    "",
-								},
-								ProviderConfigs: nil,
-							},
+							testMarket,
 						},
 					},
 				},
 				simulate: false,
 				marketPerps: []marketPerpPair{
 					{
-						market: prices_types.MarketParam{
-							Id:                 0,
-							Pair:               "TEST-USD",
-							Exponent:           -8,
-							MinExchanges:       1,
-							MinPriceChangePpm:  10,
-							ExchangeConfigJson: `{"test_config_placeholder":{}}`,
-						},
+						market: testMarketParams,
 						perp: perpetualtypes.Perpetual{
 							Params: perpetualtypes.PerpetualParams{
 								Id:                0,
@@ -377,33 +383,14 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 					&mmtypes.MsgUpsertMarkets{
 						Authority: constants.BobAccAddress.String(),
 						Markets: []mmtypes.Market{
-							{
-								Ticker: mmtypes.Ticker{
-									CurrencyPair: types.CurrencyPair{
-										Base:  "TEST",
-										Quote: "USD",
-									},
-									Decimals:         1,
-									MinProviderCount: 1,
-									Enabled:          true,
-									Metadata_JSON:    "",
-								},
-								ProviderConfigs: nil,
-							},
+							testMarket,
 						},
 					},
 				},
 				simulate: false,
 				marketPerps: []marketPerpPair{
 					{
-						market: prices_types.MarketParam{
-							Id:                 0,
-							Pair:               "TEST-USD",
-							Exponent:           -8,
-							MinExchanges:       1,
-							MinPriceChangePpm:  10,
-							ExchangeConfigJson: `{"test_config_placeholder":{}}`,
-						},
+						market: testMarketParams,
 						perp: perpetualtypes.Perpetual{
 							Params: perpetualtypes.PerpetualParams{
 								Id:                0,
