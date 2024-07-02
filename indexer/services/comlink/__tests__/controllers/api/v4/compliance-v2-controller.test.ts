@@ -158,6 +158,40 @@ describe('ComplianceV2Controller', () => {
         }));
       });
 
+    it('should return CLOSE_ONLY & not update for a restricted, dydx address with existing CLOSE_ONLY compliance status',
+      async () => {
+        jest.spyOn(ComplianceControllerHelper.prototype, 'screen').mockImplementation(() => {
+          return Promise.resolve({
+            restricted: true,
+          });
+        });
+
+        const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO();
+        await ComplianceStatusTable.create({
+          address: testConstants.defaultAddress,
+          status: ComplianceStatus.CLOSE_ONLY,
+          createdAt,
+          updatedAt: createdAt,
+        });
+        let data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
+        expect(data).toHaveLength(1);
+
+        const response: any = await sendRequest({
+          type: RequestMethod.GET,
+          path: `/v4/compliance/screen/${testConstants.defaultAddress}`,
+        });
+        expect(response.body.status).toEqual(ComplianceStatus.CLOSE_ONLY);
+        expect(response.body.updatedAt).toEqual(createdAt);
+        data = await ComplianceStatusTable.findAll({}, [], {});
+        expect(data).toHaveLength(1);
+        expect(data[0]).toEqual(expect.objectContaining({
+          address: testConstants.defaultAddress,
+          status: ComplianceStatus.CLOSE_ONLY,
+          createdAt,
+          updatedAt: createdAt,
+        }));
+      });
+
     it('should return COMPLIANT for a non-restricted, dydx address', async () => {
       jest.spyOn(ComplianceControllerHelper.prototype, 'screen').mockImplementation(() => {
         return Promise.resolve({
@@ -170,6 +204,24 @@ describe('ComplianceV2Controller', () => {
         path: `/v4/compliance/screen/${testConstants.defaultAddress}`,
       });
       expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
+    });
+
+    it('should return existing compliance data for a non-restricted, dydx address', async () => {
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.FIRST_STRIKE,
+      });
+      jest.spyOn(ComplianceControllerHelper.prototype, 'screen').mockImplementation(() => {
+        return Promise.resolve({
+          restricted: false,
+        });
+      });
+
+      const response: any = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/compliance/screen/${testConstants.defaultAddress}`,
+      });
+      expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE);
     });
   });
 
