@@ -89,30 +89,33 @@ func EndBlocker(
 	}
 
 	// Prune expired untriggered conditional orders from the in-memory UntriggeredConditionalOrders struct.
-	keeper.PruneUntriggeredConditionalOrders(
-		ctx,
-		expiredStatefulOrderIds,
-		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
-	)
+	// keeper.PruneUntriggeredConditionalOrders(
+	// 	expiredStatefulOrderIds,
+	// 	processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
+	// )
 
 	// Update the memstore with expired order ids.
 	// These expired stateful order ids will be purged from the memclob in `Commit`.
 	processProposerMatchesEvents.ExpiredStatefulOrderIds = expiredStatefulOrderIds
 
-	// Before triggering conditional orders, add newly-placed conditional orders to the clob keeper's
-	// in-memory UntriggeredConditionalOrders data structure to allow conditional orders to
-	// trigger in the same block they are placed. Skip triggering orders which have been cancelled
-	// or expired.
-	// TODO(CLOB-773) Support conditional order replacements. Ensure replacements are de-duplicated.
-	keeper.AddUntriggeredConditionalOrders(
-		ctx,
-		processProposerMatchesEvents.PlacedConditionalOrderIds,
-		lib.UniqueSliceToSet(processProposerMatchesEvents.GetPlacedStatefulCancellationOrderIds()),
-		lib.UniqueSliceToSet(expiredStatefulOrderIds),
-	)
+	// // Before triggering conditional orders, add newly-placed conditional orders to the clob keeper's
+	// // in-memory UntriggeredConditionalOrders data structure to allow conditional orders to
+	// // trigger in the same block they are placed. Skip triggering orders which have been cancelled
+	// // or expired.
+	// // TODO(CLOB-773) Support conditional order replacements. Ensure replacements are de-duplicated.
+	// keeper.AddUntriggeredConditionalOrders(
+	// 	ctx,
+	// 	processProposerMatchesEvents.PlacedConditionalOrderIds,
+	// 	lib.UniqueSliceToSet(processProposerMatchesEvents.GetPlacedStatefulCancellationOrderIds()),
+	// 	lib.UniqueSliceToSet(expiredStatefulOrderIds),
+	// )
 
 	// Poll out all triggered conditional orders from `UntriggeredConditionalOrders` and update state.
 	triggeredConditionalOrderIds := keeper.MaybeTriggerConditionalOrders(ctx)
+	if len(triggeredConditionalOrderIds) > 0 {
+		fmt.Printf("!!!!!!! triggeredConditionalOrderIds = %+v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", triggeredConditionalOrderIds)
+	}
+
 	// Update the memstore with conditional order ids triggered in the last block.
 	// These triggered conditional orders will be placed in the `PrepareCheckState``.
 	processProposerMatchesEvents.ConditionalOrderIdsTriggeredInLastBlock = triggeredConditionalOrderIds
