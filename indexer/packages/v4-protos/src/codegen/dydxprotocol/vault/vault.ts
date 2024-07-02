@@ -1,3 +1,4 @@
+import { MarketPrice, MarketPriceSDKType } from "../prices/market_price";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** VaultType represents different types of vaults. */
@@ -90,6 +91,18 @@ export interface OwnerShare {
 export interface OwnerShareSDKType {
   owner: string;
   shares?: NumSharesSDKType;
+}
+/** VaultParams is the individual parameters of a vault. */
+
+export interface VaultParams {
+  /** Lagged price that the vault quotes at. */
+  laggedPrice?: MarketPrice;
+}
+/** VaultParams is the individual parameters of a vault. */
+
+export interface VaultParamsSDKType {
+  /** Lagged price that the vault quotes at. */
+  lagged_price?: MarketPriceSDKType;
 }
 
 function createBaseVaultId(): VaultId {
@@ -242,6 +255,51 @@ export const OwnerShare = {
     const message = createBaseOwnerShare();
     message.owner = object.owner ?? "";
     message.shares = object.shares !== undefined && object.shares !== null ? NumShares.fromPartial(object.shares) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseVaultParams(): VaultParams {
+  return {
+    laggedPrice: undefined
+  };
+}
+
+export const VaultParams = {
+  encode(message: VaultParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.laggedPrice !== undefined) {
+      MarketPrice.encode(message.laggedPrice, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): VaultParams {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseVaultParams();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.laggedPrice = MarketPrice.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<VaultParams>): VaultParams {
+    const message = createBaseVaultParams();
+    message.laggedPrice = object.laggedPrice !== undefined && object.laggedPrice !== null ? MarketPrice.fromPartial(object.laggedPrice) : undefined;
     return message;
   }
 
