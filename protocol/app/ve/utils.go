@@ -61,11 +61,7 @@ func AreVoteExtensionsEnabled(ctx sdk.Context) bool {
 // NewDefaultValidateVoteExtensionsFn returns a new DefaultValidateVoteExtensionsFn.
 func NewValidateVoteExtensionsFn(validatorStore ValidatorStore) ValidateVoteExtensionsFn {
 	return func(ctx sdk.Context, info cometabci.ExtendedCommitInfo) error {
-		if AreVoteExtensionsEnabled(ctx) {
-			return ValidateVoteExtensions(ctx, validatorStore, info)
-		}
-
-		return nil
+		return ValidateVoteExtensions(ctx, validatorStore, info)
 	}
 }
 

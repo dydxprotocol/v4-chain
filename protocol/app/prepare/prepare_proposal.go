@@ -45,6 +45,8 @@ type OperationsTxResponse struct {
 //   - "Others" Group: Bytes=25% of max bytes minus "Fixed" Group size. Includes txs in the request.
 //   - "Order" Group: Bytes=75% of max bytes minus "Fixed" Group size. Includes order matches.
 //   - If there are extra available bytes and there are more txs in "Other" group, add more txs from this group.
+//
+// TODO: if there are no vote extensions in the block (because first block) ensure you set it empty and it doesn't cuase further errors
 func PrepareProposalHandler(
 	txConfig client.TxConfig,
 	clobKeeper PrepareClobKeeper,
@@ -54,7 +56,6 @@ func PrepareProposalHandler(
 	extCommitCodec codec.ExtendedCommitCodec,
 	consumerKeeper ibcconsumerkeeper.Keeper,
 	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
-
 ) sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
 
@@ -86,13 +87,13 @@ func PrepareProposalHandler(
 			)
 
 			// Get the vote extnesions
-			// TODO: Create this in app.go and pass as param so it can be resused
+
 			veInfo, err := ve.PruneAndValidateExtendedCommitInfo(
 				ctx,
 				req.LocalLastCommit,
 				veCodec,
 				pricesKeeper,
-				ve.NewValidateVoteExtensionsFn(consumerKeeper),
+				validateVoteExtensionFn,
 			)
 
 			if err != nil {
