@@ -41,7 +41,7 @@ func NewValidateMarketUpdateDecorator(perpKeeper perpetualstypes.PerpetualsKeepe
 
 // AnteHandle performs the following checks:
 // - check if tx contains x/marketmap/MsgUpdateMarkets or x/marketmap/MsgUpsertMarkets
-// - check if the given Tx has more than one message is it has x/marketmap updates, reject if so
+// - check if the given Tx has more than one message if it has x/marketmap updates, reject if so
 // - check if the x/marketmap update affects markets that are registered as cross margin
 // in x/perpetuals, reject if so.
 func (d ValidateMarketUpdateDecorator) AnteHandle(
