@@ -26,12 +26,14 @@ const (
 	ClobRateLimitPlaceOrderCount                       = "clob_rate_limit_place_order_count"
 	ClobRateLimitCancelOrderCount                      = "clob_rate_limit_cancel_order_count"
 	ClobRateLimitBatchCancelCount                      = "clob_rate_limit_batch_cancel_count"
+	SubaccountCreatedCount                             = "subaccount_created_count"
 
 	// Gauges
-	InsuranceFundBalance             = "insurance_fund_balance"
-	ClobMev                          = "clob_mev"
-	ClobConditionalOrderTriggerPrice = "clob_conditional_order_trigger_price"
-	ClobConditionalOrderTriggered    = "clob_conditional_order_triggered"
+	InsuranceFundBalance                      = "insurance_fund_balance"
+	ClobMev                                   = "clob_mev"
+	ClobConditionalOrderTriggerPrice          = "clob_conditional_order_trigger_price"
+	ClobConditionalOrderTriggered             = "clob_conditional_order_triggered"
+	ClobSubaccountsRequiringDeleveragingCount = "clob_subaccounts_requiring_deleveraging_count"
 
 	// Samples
 	ClobDeleverageSubaccountTotalQuoteQuantumsDistribution         = "clob_deleverage_subaccount_total_quote_quantums_distribution"
