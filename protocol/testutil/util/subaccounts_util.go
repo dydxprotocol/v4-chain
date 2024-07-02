@@ -49,6 +49,7 @@ func CreateSinglePerpetualPosition(
 		PerpetualId:  perpetualId,
 		Quantums:     dtypes.NewIntFromBigInt(quantums),
 		FundingIndex: dtypes.NewIntFromBigInt(fundingIndex),
+		QuoteBalance: dtypes.NewInt(0),
 	}
 }
 
