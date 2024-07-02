@@ -362,7 +362,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 							Params: perpetualtypes.PerpetualParams{
 								Id:                0,
 								Ticker:            "BTC-USD small margin requirement",
-								MarketId:          uint32(0),
+								MarketId:          testMarketParams.Id,
 								AtomicResolution:  int32(-8),
 								DefaultFundingPpm: int32(0),
 								LiquidityTier:     uint32(0),
@@ -395,7 +395,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 							Params: perpetualtypes.PerpetualParams{
 								Id:                0,
 								Ticker:            "TEST-USD small margin requirement",
-								MarketId:          uint32(0),
+								MarketId:          testMarketParams.Id,
 								AtomicResolution:  int32(-8),
 								DefaultFundingPpm: int32(0),
 								LiquidityTier:     uint32(0),
