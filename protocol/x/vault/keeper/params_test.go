@@ -55,7 +55,7 @@ func TestGetSetVaultParams(t *testing.T) {
 	k := tApp.App.VaultKeeper
 
 	// Get non-existent vault params.
-	_, exists := k.GetVaultParams(ctx, constants.Vault_Clob_0)
+	_, exists := k.GetVaultParams(ctx, constants.Vault_Clob0)
 	require.False(t, exists)
 
 	// Set vault params of vault clob 0.
@@ -66,15 +66,15 @@ func TestGetSetVaultParams(t *testing.T) {
 			Price:    123_456_789,
 		},
 	}
-	err := k.SetVaultParams(ctx, constants.Vault_Clob_0, vaultClob0Params)
+	err := k.SetVaultParams(ctx, constants.Vault_Clob0, vaultClob0Params)
 	require.NoError(t, err)
 
 	// Get vault params of vault clob 0.
-	params, exists := k.GetVaultParams(ctx, constants.Vault_Clob_0)
+	params, exists := k.GetVaultParams(ctx, constants.Vault_Clob0)
 	require.True(t, exists)
 	require.Equal(t, vaultClob0Params, params)
 
 	// Get vault params of vault clob 1.
-	_, exists = k.GetVaultParams(ctx, constants.Vault_Clob_1)
+	_, exists = k.GetVaultParams(ctx, constants.Vault_Clob1)
 	require.False(t, exists)
 }
