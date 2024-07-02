@@ -88,7 +88,7 @@ func (d ValidateMarketUpdateDecorator) doMarketsContainCrossMarket(ctx sdk.Conte
 
 		marketType, found := d.cache[ticker]
 		if !found {
-			// search for market if we cannot find
+			// search for market if we cannot find in cache
 			for _, perp := range perps {
 				params, exists := d.priceKeeper.GetMarketParam(ctx, perp.Params.MarketId)
 				if !exists {
