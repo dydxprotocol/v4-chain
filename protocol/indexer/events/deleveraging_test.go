@@ -36,7 +36,7 @@ func TestNewDeleveragingEvent_Success(t *testing.T) {
 		Offsetting:         indexerOffsettingSubaccountId,
 		PerpetualId:        perpetualId,
 		FillAmount:         fillAmount.ToUint64(),
-		totalQuoteQuantums: totalQuoteQuantums.ToUint64(),
+		TotalQuoteQuantums: totalQuoteQuantums.ToUint64(),
 		IsBuy:              isBuy,
 	}
 	require.Equal(t, expectedDeleveragingEventProto, deleveragingEvent)
