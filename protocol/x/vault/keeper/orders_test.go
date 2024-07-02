@@ -36,8 +36,8 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 	}{
 		"Two Vaults, Both Positive Shares, Both above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: []*big.Int{
 				big.NewInt(1_000),
@@ -51,8 +51,8 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 		},
 		"Two Vaults, One Positive Shares, One Zero Shares, Both above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: []*big.Int{
 				big.NewInt(1_000),
@@ -66,8 +66,8 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 		},
 		"Two Vaults, Both Zero Shares, Both above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: []*big.Int{
 				big.NewInt(0),
@@ -81,8 +81,8 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 		},
 		"Two Vaults, Both Positive Shares, Only One above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: []*big.Int{
 				big.NewInt(1_000),
@@ -96,8 +96,8 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 		},
 		"Two Vaults, Both Positive Shares, Both below Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: []*big.Int{
 				big.NewInt(1_000),
@@ -252,7 +252,7 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 		expectedErr error
 	}{
 		"Success - Refresh Orders from Vault for Clob Pair 0": {
-			vaultId: constants.Vault_Clob_0,
+			vaultId: constants.Vault_Clob0,
 		},
 		"Error - Refresh Orders from Vault for Clob Pair 4321 (non-existent clob pair)": {
 			vaultId: vaulttypes.VaultId{
@@ -354,7 +354,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 				OrderExpirationSeconds:           2,       // 2 seconds
 				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 			},
-			vaultId:                    constants.Vault_Clob_0,
+			vaultId:                    constants.Vault_Clob0,
 			vaultAssetQuoteQuantums:    big.NewInt(1_000_000_000), // 1,000 USDC
 			vaultInventoryBaseQuantums: big.NewInt(0),
 			clobPair:                   constants.ClobPair_Btc,
@@ -414,7 +414,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 				OrderExpirationSeconds:           4,       // 4 seconds
 				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 			},
-			vaultId:                    constants.Vault_Clob_1,
+			vaultId:                    constants.Vault_Clob1,
 			vaultAssetQuoteQuantums:    big.NewInt(2_000_000_000), // 2,000 USDC
 			vaultInventoryBaseQuantums: big.NewInt(-500_000_000),  // -0.5 ETH
 			clobPair:                   constants.ClobPair_Eth,
@@ -488,7 +488,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 				OrderExpirationSeconds:           4,         // 4 seconds
 				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 			},
-			vaultId:                    constants.Vault_Clob_1,
+			vaultId:                    constants.Vault_Clob1,
 			vaultAssetQuoteQuantums:    big.NewInt(-2_000_000_000), // -2,000 USDC
 			vaultInventoryBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
 			clobPair:                   constants.ClobPair_Eth,
@@ -550,7 +550,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 				OrderExpirationSeconds:           2,       // 2 seconds
 				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 			},
-			vaultId:                    constants.Vault_Clob_1,
+			vaultId:                    constants.Vault_Clob1,
 			vaultAssetQuoteQuantums:    big.NewInt(1_000_000), // 1 USDC
 			vaultInventoryBaseQuantums: big.NewInt(0),
 			clobPair:                   constants.ClobPair_Eth,
@@ -566,7 +566,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 		},
 		"Error - Clob Pair doesn't exist": {
 			vaultParams: vaulttypes.DefaultParams(),
-			vaultId:     constants.Vault_Clob_0,
+			vaultId:     constants.Vault_Clob0,
 			clobPair:    constants.ClobPair_Eth,
 			marketParam: constants.TestMarketParams[1],
 			marketPrice: constants.TestMarketPrices[1],
@@ -575,7 +575,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 		},
 		"Error - Vault equity is zero": {
 			vaultParams:                vaulttypes.DefaultParams(),
-			vaultId:                    constants.Vault_Clob_0,
+			vaultId:                    constants.Vault_Clob0,
 			vaultAssetQuoteQuantums:    big.NewInt(0),
 			vaultInventoryBaseQuantums: big.NewInt(0),
 			clobPair:                   constants.ClobPair_Btc,
@@ -586,7 +586,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 		},
 		"Error - Vault equity is negative": {
 			vaultParams:                vaulttypes.DefaultParams(),
-			vaultId:                    constants.Vault_Clob_0,
+			vaultId:                    constants.Vault_Clob0,
 			vaultAssetQuoteQuantums:    big.NewInt(5_000_000), // 5 USDC
 			vaultInventoryBaseQuantums: big.NewInt(-10_000_000),
 			clobPair:                   constants.ClobPair_Btc,
