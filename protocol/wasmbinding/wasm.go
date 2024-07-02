@@ -20,7 +20,7 @@ func RegisterCustomPlugins(
 		Custom: CustomQuerier(wasmQueryPlugin),
 	})
 	messengerDecoratorOpt := wasmkeeper.WithMessageEncoders(&wasmkeeper.MessageEncoders{
-		Custom: CustomEncoder,
+		Custom: EncodeDydxCustomWasmMessage,
 	})
 
 	return []wasmkeeper.Option{

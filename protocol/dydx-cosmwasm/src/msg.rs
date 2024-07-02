@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_repr::*;
 use cosmwasm_std::{
-  to_json_binary,
+  to_json_string,
   CosmosMsg,
   CustomMsg,
 };
@@ -39,18 +39,21 @@ pub enum OrderConditionType {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum DydxMsg {
-  DepositToSubaccount {
+  // Maps to https://github.com/dydxprotocol/v4-chain/blob/main/proto/dydxprotocol/sending/transfer.proto#L31 message on protocol
+  DepositToSubaccountV1 {
     recipient: SubaccountId,
     asset_id: u32,
     quantums: u64,
   },
-    WithdrawFromSubaccount {
+  // Maps to https://github.com/dydxprotocol/v4-chain/blob/main/proto/dydxprotocol/sending/transfer.proto#L50 message on protocol
+    WithdrawFromSubaccountV1 {
         subaccount_number: u32,
         recipient: String,
         asset_id: u32,
         quantums: u64,
     },
-  PlaceOrder{
+  // Maps to https://github.com/dydxprotocol/v4-chain/blob/main/proto/dydxprotocol/clob/tx.proto#L78 message on protocol
+  PlaceOrderV1{
     subaccount_number: u32,
     client_id: u32,
     order_flags: u32,
@@ -65,7 +68,8 @@ pub enum DydxMsg {
     condition_type: OrderConditionType,
     conditional_order_trigger_subticks: u64,
   },
-  CancelOrder {
+  // Maps to https://github.com/dydxprotocol/v4-chain/blob/main/proto/dydxprotocol/clob/tx.proto#L84 on protocol
+  CancelOrderV1 {
     subaccount_number: u32,
     client_id: u32,
     order_flags: u32,
@@ -88,7 +92,7 @@ mod tests {
   
   #[test]
   fn deposit_to_subaccount_msg_json_validation() {
-    let msg: DydxMsg = DydxMsg::DepositToSubaccount {
+    let msg: DydxMsg = DydxMsg::DepositToSubaccountV1 {
       recipient: SubaccountId {
         owner: "b".to_string(),
         number: 0,
@@ -96,31 +100,31 @@ mod tests {
       asset_id: 0,
       quantums: 10000000000,
     };
-    let json = to_json_binary(&msg).unwrap();
+    let json = to_json_string(&msg).unwrap();
     assert_eq!(
       String::from_utf8_lossy(&json),
-      r#"{"deposit_to_subaccount":{"recipient":{"owner":"b","number":0},"asset_id":0,"quantums":10000000000}}"#
+      r#"{"deposit_to_subaccount_v1":{"recipient":{"owner":"b","number":0},"asset_id":0,"quantums":10000000000}}"#
     );
   }
 
   #[test]
   fn withdraw_from_subaccount_msg_json_validation() {
-    let msg: DydxMsg = DydxMsg::WithdrawFromSubaccount {
+    let msg: DydxMsg = DydxMsg::WithdrawFromSubaccountV1 {
       subaccount_number: 0,
       recipient: "b".to_string(),
       asset_id: 0,
       quantums: 10000000000,
     };
-    let json = to_json_binary(&msg).unwrap();
+    let json = to_json_string(&msg).unwrap();
     assert_eq!(
       String::from_utf8_lossy(&json),
-      r#"{"withdraw_from_subaccount":{"subaccount_number":0,"recipient":"b","asset_id":0,"quantums":10000000000}}"#
+      r#"{"withdraw_from_subaccount_v1":{"subaccount_number":0,"recipient":"b","asset_id":0,"quantums":10000000000}}"#
     );
   }
 
   #[test]
   fn place_order_msg_json_validation() {
-    let msg: DydxMsg = DydxMsg::PlaceOrder {
+    let msg: DydxMsg = DydxMsg::PlaceOrderV1 {
       subaccount_number: 0,
       client_id: 0,
       order_flags: 0,
@@ -135,26 +139,26 @@ mod tests {
       condition_type: OrderConditionType::StopLoss,
       conditional_order_trigger_subticks: 10000000000,
     };
-    let json = to_json_binary(&msg).unwrap();
+    let json = to_json_string(&msg).unwrap();
     assert_eq!(
       String::from_utf8_lossy(&json),
-      r#"{"place_order":{"subaccount_number":0,"client_id":0,"order_flags":0,"clob_pair_id":0,"side":1,"quantums":10000000000,"subticks":10000000000,"good_til_block_time":0,"time_in_force":1,"reduce_only":false,"client_metadata":0,"condition_type":1,"conditional_order_trigger_subticks":10000000000}}"#
+      r#"{"place_order_v1":{"subaccount_number":0,"client_id":0,"order_flags":0,"clob_pair_id":0,"side":1,"quantums":10000000000,"subticks":10000000000,"good_til_block_time":0,"time_in_force":1,"reduce_only":false,"client_metadata":0,"condition_type":1,"conditional_order_trigger_subticks":10000000000}}"#
     );
   }
   
   #[test]
   fn cancel_order_msg_json_validation() {
-    let msg: DydxMsg = DydxMsg::CancelOrder {
+    let msg: DydxMsg = DydxMsg::CancelOrderV1 {
       subaccount_number: 0,
       client_id: 0,
       order_flags: 0,
       clob_pair_id: 0,
       good_til_block_time: 0,
     };
-    let json = to_json_binary(&msg).unwrap();
+    let json = to_json_string(&msg).unwrap();
     assert_eq!(
       String::from_utf8_lossy(&json),
-      r#"{"cancel_order":{"subaccount_number":0,"client_id":0,"order_flags":0,"clob_pair_id":0,"good_til_block_time":0}}"#
+      r#"{"cancel_order_v1":{"subaccount_number":0,"client_id":0,"order_flags":0,"clob_pair_id":0,"good_til_block_time":0}}"#
     );
   }
 }

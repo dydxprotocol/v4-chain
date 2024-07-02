@@ -5,26 +5,26 @@ import (
 )
 
 type DydxCustomWasmMessage struct {
-	DepositToSubaccount    *DepositToSubaccount    `json:"deposit_to_subaccount,omitempty"`
-	WithdrawFromSubaccount *WithdrawFromSubaccount `json:"withdraw_from_subaccount,omitempty"`
-	PlaceOrder             *PlaceOrder             `json:"place_order,omitempty"`
-	CancelOrder            *CancelOrder            `json:"cancel_order,omitempty"`
+	DepositToSubaccountV1    *DepositToSubaccountV1    `json:"deposit_to_subaccount_v1,omitempty"`
+	WithdrawFromSubaccountV1 *WithdrawFromSubaccountV1 `json:"withdraw_from_subaccount_v1,omitempty"`
+	PlaceOrderV1             *PlaceOrderV1             `json:"place_order_v1,omitempty"`
+	CancelOrderV1            *CancelOrderV1            `json:"cancel_order_v1,omitempty"`
 }
 
-type DepositToSubaccount struct {
+type DepositToSubaccountV1 struct {
 	Recipient subaccounttypes.SubaccountId `json:"recipient"`
 	AssetId   uint32                       `json:"asset_id"`
 	Quantums  uint64                       `json:"quantums"`
 }
 
-type WithdrawFromSubaccount struct {
+type WithdrawFromSubaccountV1 struct {
 	SubaccountNumber uint32 `json:"subaccount_number"`
 	Recipient        string `json:"recipient"`
 	AssetId          uint32 `json:"asset_id"`
 	Quantums         uint64 `json:"quantums"`
 }
 
-type PlaceOrder struct {
+type PlaceOrderV1 struct {
 	SubaccountNumber                uint32 `json:"subaccount_number"`
 	ClientId                        uint32 `json:"client_id"`
 	OrderFLags                      uint32 `json:"order_flags"`
@@ -39,7 +39,7 @@ type PlaceOrder struct {
 	ConditionalOrderTriggerSubticks uint64 `json:"conditional_order_trigger_subticks"`
 }
 
-type CancelOrder struct {
+type CancelOrderV1 struct {
 	SubaccountNumber uint32 `json:"subaccount_number"`
 	ClientId         uint32 `json:"client_id"`
 	OrderFLags       uint32 `json:"order_flags"`

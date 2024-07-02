@@ -13,27 +13,26 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-// DispatchMsg executes on the contractMsg.
-func CustomEncoder(sender sdk.AccAddress, msg json.RawMessage) ([]sdk.Msg, error) {
+func EncodeDydxCustomWasmMessage(sender sdk.AccAddress, msg json.RawMessage) ([]sdk.Msg, error) {
 	var customMessage bindings.DydxCustomWasmMessage
 	if err := json.Unmarshal(msg, &customMessage); err != nil {
 		return []sdk.Msg{}, wasmvmtypes.InvalidRequest{Err: "Error parsing DydxCustomWasmMessage"}
 	}
 	switch {
-	case customMessage.DepositToSubaccount != nil:
-		return EncodeDepositToSubaccount(sender, customMessage.DepositToSubaccount)
-	case customMessage.WithdrawFromSubaccount != nil:
-		return EncodeWithdrawFromSubaccount(sender, customMessage.WithdrawFromSubaccount)
-	case customMessage.PlaceOrder != nil:
-		return EncodePlaceOrder(sender, customMessage.PlaceOrder)
-	case customMessage.CancelOrder != nil:
-		return EncodeCancelOrder(sender, customMessage.CancelOrder)
+	case customMessage.DepositToSubaccountV1 != nil:
+		return EncodeDepositToSubaccountV1(sender, customMessage.DepositToSubaccountV1)
+	case customMessage.WithdrawFromSubaccountV1 != nil:
+		return EncodeWithdrawFromSubaccountV1(sender, customMessage.WithdrawFromSubaccountV1)
+	case customMessage.PlaceOrderV1 != nil:
+		return EncodePlaceOrderV1(sender, customMessage.PlaceOrderV1)
+	case customMessage.CancelOrderV1 != nil:
+		return EncodeCancelOrderV1(sender, customMessage.CancelOrderV1)
 	default:
 		return nil, wasmvmtypes.InvalidRequest{Err: "Unknown Dydx Wasm Message"}
 	}
 }
 
-func EncodeDepositToSubaccount(sender sdk.AccAddress, depositToSubaccount *bindings.DepositToSubaccount) ([]sdk.Msg, error) {
+func EncodeDepositToSubaccountV1(sender sdk.AccAddress, depositToSubaccount *bindings.DepositToSubaccountV1) ([]sdk.Msg, error) {
 	if depositToSubaccount == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid deposit to subaccount request: No deposit data provided"}
 	}
@@ -47,7 +46,9 @@ func EncodeDepositToSubaccount(sender sdk.AccAddress, depositToSubaccount *bindi
 	return []sdk.Msg{depositToSubaccountMsg}, nil
 }
 
-func EncodeWithdrawFromSubaccount(sender sdk.AccAddress, withdrawFromSubaccount *bindings.WithdrawFromSubaccount) ([]sdk.Msg, error) {
+// This function is called from https://github.com/CosmWasm/wasmd/blob/main/x/wasm/keeper/handler_plugin_encoders.go#L96
+// which enforces sender to be the contract address
+func EncodeWithdrawFromSubaccountV1(sender sdk.AccAddress, withdrawFromSubaccount *bindings.WithdrawFromSubaccountV1) ([]sdk.Msg, error) {
 	if withdrawFromSubaccount == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid withdraw from subaccount request: No withdraw data provided"}
 	}
@@ -64,7 +65,7 @@ func EncodeWithdrawFromSubaccount(sender sdk.AccAddress, withdrawFromSubaccount 
 	return []sdk.Msg{withdrawFromSubaccountMsg}, nil
 }
 
-func EncodePlaceOrder(sender sdk.AccAddress, placeOrder *bindings.PlaceOrder) ([]sdk.Msg, error) {
+func EncodePlaceOrderV1(sender sdk.AccAddress, placeOrder *bindings.PlaceOrderV1) ([]sdk.Msg, error) {
 	if placeOrder == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid place order request: No order data provided"}
 	}
@@ -93,7 +94,7 @@ func EncodePlaceOrder(sender sdk.AccAddress, placeOrder *bindings.PlaceOrder) ([
 	return []sdk.Msg{placeOrderMsg}, nil
 }
 
-func EncodeCancelOrder(sender sdk.AccAddress, cancelOrder *bindings.CancelOrder) ([]sdk.Msg, error) {
+func EncodeCancelOrderV1(sender sdk.AccAddress, cancelOrder *bindings.CancelOrderV1) ([]sdk.Msg, error) {
 	if cancelOrder == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid cancel order request: No order data provided"}
 	}
