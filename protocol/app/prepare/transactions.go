@@ -11,11 +11,11 @@ import (
 // a proposal for `PrepareProposal`.
 type PrepareProposalTxs struct {
 	// Transactions.
-	UpdateMarketPricesTx []byte
+
 	AddPremiumVotesTx    []byte
 	ProposedOperationsTx []byte
 	OtherTxs             [][]byte
-
+	extInfoBz            []byte
 	// Bytes.
 	// In general, there's no need to check for int64 overflow given that it would require
 	// exabytes of memory to hit the max int64 value in bytes.
@@ -37,14 +37,13 @@ func NewPrepareProposalTxs(
 	}, nil
 }
 
-// SetUpdateMarketPricesTx sets the tx used for updating market prices.
-func (t *PrepareProposalTxs) SetUpdateMarketPricesTx(tx []byte) error {
-	oldBytes := uint64(len(t.UpdateMarketPricesTx))
-	newBytes := uint64(len(tx))
+func (t *PrepareProposalTxs) SetExtInfoBz(extInfoBz []byte) error {
+	oldBytes := uint64(len(t.extInfoBz))
+	newBytes := uint64(len(extInfoBz))
 	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
 		return err
 	}
-	t.UpdateMarketPricesTx = tx
+	t.extInfoBz = extInfoBz
 	return nil
 }
 
@@ -118,9 +117,12 @@ func (t *PrepareProposalTxs) GetAvailableBytes() uint64 {
 }
 
 // GetTxsInOrder returns a list of txs in an order that the `ProcessProposal` expects.
-func (t *PrepareProposalTxs) GetTxsInOrder() ([][]byte, error) {
-	if len(t.UpdateMarketPricesTx) == 0 {
-		return nil, errors.New("UpdateMarketPricesTx must be set")
+func (t *PrepareProposalTxs) GetTxsInOrder(veEnabled bool) ([][]byte, error) {
+
+	if veEnabled && len(t.extInfoBz) == 0 {
+		return nil, errors.New("extInfoBz must be set; VE is enabled")
+	} else if !veEnabled && len(t.extInfoBz) > 0 {
+		return nil, errors.New("extInfoBz must not be set; VE is disabled")
 	}
 
 	if len(t.AddPremiumVotesTx) == 0 {
@@ -129,23 +131,24 @@ func (t *PrepareProposalTxs) GetTxsInOrder() ([][]byte, error) {
 
 	var txsToReturn [][]byte
 
-	// 1. Proposed operations.
+	// 1. ve info.
+	if veEnabled {
+		txsToReturn = append(txsToReturn, t.extInfoBz)
+	}
+
+	// 2. Proposed operations.
 	if len(t.ProposedOperationsTx) > 0 {
 		txsToReturn = append(txsToReturn, t.ProposedOperationsTx)
 	}
 
-	// 2. "Other" txs.
+	// 3. "Other" txs.
 	if len(t.OtherTxs) > 0 {
 		txsToReturn = append(txsToReturn, t.OtherTxs...)
 	}
 
-	// 3. Funding samples.
+	// 4. Funding samples.
 	// The validation for `AddPremiumVotesTx` is done at the beginning.
 	txsToReturn = append(txsToReturn, t.AddPremiumVotesTx)
-
-	// 4. Price updates.
-	// The validation for `UpdateMarketPricesTx` is done at the beginning.
-	txsToReturn = append(txsToReturn, t.UpdateMarketPricesTx)
 
 	return txsToReturn, nil
 }

@@ -1,7 +1,6 @@
 package prepare
 
 import (
-	"bytes"
 	"fmt"
 	"time"
 
@@ -54,10 +53,15 @@ func PrepareProposalHandler(
 	veCodec codec.VoteExtensionCodec,
 	extCommitCodec codec.ExtendedCommitCodec,
 	consumerKeeper ibcconsumerkeeper.Keeper,
+	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
+
 ) sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
 
-		var extInfoBz []byte
+		var (
+			extInfoBz []byte
+			finalTxs  [][]byte
+		)
 
 		defer telemetry.ModuleMeasureSince(
 			ModuleName,
@@ -72,6 +76,8 @@ func PrepareProposalHandler(
 			return &EmptyResponse, err
 		}
 
+		txs, err := NewPrepareProposalTxs(req)
+
 		voteExtensionsEnabled := ve.AreVoteExtensionsEnabled(ctx)
 		if voteExtensionsEnabled {
 			ctx.Logger().Info(
@@ -80,6 +86,7 @@ func PrepareProposalHandler(
 			)
 
 			// Get the vote extnesions
+			// TODO: Create this in app.go and pass as param so it can be resused
 			veInfo, err := ve.PruneAndValidateExtendedCommitInfo(
 				ctx,
 				req.LocalLastCommit,
@@ -112,22 +119,14 @@ func PrepareProposalHandler(
 				return &abci.ResponsePrepareProposal{Txs: make([][]byte, 0)}, fmt.Errorf("failed to encode extended commit info: %w", err)
 			}
 
-			extInfoBzSize := int64(len(extInfoBz))
-			if extInfoBzSize <= req.MaxTxBytes {
-				// Reserve bytes for our VE Tx
-				req.MaxTxBytes -= extInfoBzSize
-			} else {
-				ctx.Logger().Error("VE size consumes greater than entire block",
-					"extInfoBzSize", extInfoBzSize,
-					"MaxTxBytes", req.MaxTxBytes)
-				err := fmt.Errorf("VE size consumes greater than entire block: extInfoBzSize = %d: MaxTxBytes = %d", extInfoBzSize, req.MaxTxBytes)
-				return &abci.ResponsePrepareProposal{Txs: make([][]byte, 0)}, err
+			err = txs.SetExtInfoBz(extInfoBz)
+			if err != nil {
+				ctx.Logger().Error(fmt.Sprintf("SetExtInfoBz error: %v", err))
+				recordErrorMetricsWithLabel(metrics.FundingTx)
+				return &EmptyResponse, nil
 			}
-
-			req.Txs = append([][]byte{extInfoBz}, req.Txs...) // prepend the VE Tx
-
 		}
-		txs, err := NewPrepareProposalTxs(req)
+
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("NewPrepareProposalTxs error: %v", err))
 			recordErrorMetricsWithLabel(metrics.PrepareProposalTxs)
@@ -190,14 +189,17 @@ func PrepareProposalHandler(
 			}
 		}
 
-		finalTxs, err := txs.GetTxsInOrder()
+		if voteExtensionsEnabled {
+			finalTxs, err = txs.GetTxsInOrder(true)
+		} else {
+			finalTxs, err = txs.GetTxsInOrder(false)
+		}
+
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetTxsInOrder error: %v", err))
 			recordErrorMetricsWithLabel(metrics.GetTxsInOrder)
 			return &EmptyResponse, nil
 		}
-		// TODO: ensure important transactions get priority
-		txsToReturn := injectAndResize(finalTxs, extInfoBz, req.MaxTxBytes+int64(len(extInfoBz)))
 
 		// Record a success metric.
 		recordSuccessMetrics(
@@ -205,12 +207,12 @@ func PrepareProposalHandler(
 				txs:                 txs,
 				fundingTx:           fundingTxResp,
 				operationsTx:        operationsTxResp,
-				numTxsToReturn:      len(txsToReturn),
+				numTxsToReturn:      len(finalTxs),
 				numTxsInOriginalReq: len(req.Txs),
 			},
 		)
 
-		return &abci.ResponsePrepareProposal{Txs: txsToReturn}, nil
+		return &abci.ResponsePrepareProposal{Txs: finalTxs}, nil
 	}
 }
 
@@ -280,32 +282,4 @@ func EncodeMsgsIntoTxBytes(txConfig client.TxConfig, msgs ...sdk.Msg) ([]byte, e
 	}
 
 	return txBytes, nil
-}
-
-func injectAndResize(appTxs [][]byte, injectTx []byte, maxSizeBytes int64) [][]byte {
-	var (
-		returnedTxs   [][]byte
-		consumedBytes int64
-	)
-
-	// If VEs are enabled and our VE Tx isn't already in the appTxs, inject it here
-	if len(injectTx) != 0 && (len(appTxs) < 1 || !bytes.Equal(appTxs[0], injectTx)) {
-		injectBytes := int64(len(injectTx))
-		// Ensure the VE Tx is in the response if we have room.
-		// We may want to be more aggressive in the future about dedicating block space for application-specific Txs.
-		// However, the VE Tx size should be relatively stable so MaxTxBytes should be set w/ plenty of headroom.
-		if injectBytes <= maxSizeBytes {
-			consumedBytes += injectBytes
-			returnedTxs = append(returnedTxs, injectTx)
-		}
-	}
-	// Add as many appTxs to the returned proposal as possible given our maxSizeBytes constraint
-	for _, tx := range appTxs {
-		consumedBytes += int64(len(tx))
-		if consumedBytes > maxSizeBytes {
-			return returnedTxs
-		}
-		returnedTxs = append(returnedTxs, tx)
-	}
-	return returnedTxs
 }

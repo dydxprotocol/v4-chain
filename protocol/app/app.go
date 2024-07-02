@@ -1184,6 +1184,8 @@ func New(
 	app.SetPrecommiter(app.Precommitter)
 	app.SetPrepareCheckStater(app.PrepareCheckStater)
 
+	veValidationFn := ve.NewValidateVoteExtensionsFn(app.ConsumerKeeper)
+
 	// PrepareProposal setup.
 	if appFlags.NonValidatingFullNode {
 		app.SetPrepareProposal(prepare.FullNodePrepareProposalHandler())
@@ -1197,6 +1199,7 @@ func New(
 				voteCodec,
 				extInfoCodec,
 				app.ConsumerKeeper,
+				veValidationFn,
 			),
 		)
 	}
@@ -1223,7 +1226,7 @@ func New(
 				app.PricesKeeper,
 				extInfoCodec,
 				voteCodec,
-				ve.NewValidateVoteExtensionsFn(app.ConsumerKeeper),
+				veValidationFn,
 			),
 		)
 	}

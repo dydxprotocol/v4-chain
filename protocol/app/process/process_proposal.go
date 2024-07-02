@@ -59,7 +59,7 @@ func ProcessProposalHandler(
 		veEnabled := ve.AreVoteExtensionsEnabled(ctx)
 
 		if veEnabled {
-			if len(req.Txs) < constants.NumInjectedTxs {
+			if len(req.Txs) < constants.MinTxsCount {
 				ctx.Logger().Error("failed to process proposal: missing commit info", "num_txs", len(req.Txs))
 
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT},
@@ -103,6 +103,7 @@ func ProcessProposalHandler(
 		// Perform the update of smoothed prices here to ensure that smoothed prices are updated even if a block is later
 		// rejected by consensus. We want smoothed prices to be updated on fixed cadence, and we are piggybacking on
 		// consensus round to do so.
+		//TODO: Do we need smoothed prices still?
 		if err := pricesKeeper.UpdateSmoothedPrices(ctx, lib.Uint64LinearInterpolate); err != nil {
 			recordErrorMetricsWithLabel(metrics.UpdateSmoothedPrices)
 			error_lib.LogErrorWithOptionalContext(ctx, "UpdateSmoothedPrices failed", err)

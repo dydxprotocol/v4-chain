@@ -27,8 +27,8 @@ func GetDeamonVotes(
 	veCodec codec.VoteExtensionCodec,
 	extCommitCodec codec.ExtendedCommitCodec,
 ) ([]Vote, error) {
-	if len(proposal) < constants.NumInjectedTxs {
-		return nil, fmt.Errorf("proposal does not contain enough VEs: %d", len(proposal))
+	if len(proposal) < constants.MinTxsCount {
+		return nil, fmt.Errorf("proposal does not contain enough set messages (VE's, proposed operations, or premium votes): %d", len(proposal))
 	}
 
 	extendedCommitInfo, err := extCommitCodec.Decode(proposal[constants.DeamonInfoIndex])

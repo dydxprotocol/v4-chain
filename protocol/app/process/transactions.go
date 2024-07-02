@@ -4,54 +4,47 @@ import (
 	"slices"
 
 	errorsmod "cosmossdk.io/errors"
+	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
-	minTxsCount                   = 3
-	proposedOperationsTxIndex     = 0
-	updateMarketPricesTxLenOffset = -1
-	addPremiumVotesTxLenOffset    = -2
-	lastOtherTxLenOffset          = addPremiumVotesTxLenOffset
-	firstOtherTxIndex             = proposedOperationsTxIndex + 1
-)
-
 func init() {
 	txIndicesAndOffsets := []int{
-		proposedOperationsTxIndex,
-		addPremiumVotesTxLenOffset,
-		updateMarketPricesTxLenOffset,
+		constants.ProposedOperationsTxIndex,
+		constants.AddPremiumVotesTxLenOffset,
+		constants.ExtInfoBzIndex,
 	}
-	if minTxsCount != len(txIndicesAndOffsets) {
+	if constants.MinTxsCount != len(txIndicesAndOffsets) {
 		panic("minTxsCount does not match expected count of Txs.")
 	}
 	if lib.ContainsDuplicates(txIndicesAndOffsets) {
 		panic("Duplicate indices/offsets defined for Txs.")
 	}
-	if slices.Min[[]int](txIndicesAndOffsets) != lastOtherTxLenOffset {
+	if slices.Min[[]int](txIndicesAndOffsets) != constants.LastOtherTxLenOffset {
 		panic("lastTxLenOffset is not the lowest offset")
 	}
-	if slices.Max[[]int](txIndicesAndOffsets)+1 != firstOtherTxIndex {
+	if slices.Max[[]int](txIndicesAndOffsets)+1 != constants.FirstOtherTxIndex {
 		panic("firstOtherTxIndex is <= the maximum offset")
 	}
 	txIndicesForMinTxsCount := []int{
-		proposedOperationsTxIndex,
-		addPremiumVotesTxLenOffset + minTxsCount,
-		updateMarketPricesTxLenOffset + minTxsCount,
+		constants.ExtInfoBzIndex,
+		constants.ProposedOperationsTxIndex,
+		constants.AddPremiumVotesTxLenOffset + constants.MinTxsCount,
 	}
-	if minTxsCount != len(txIndicesForMinTxsCount) {
+	if constants.MinTxsCount != len(txIndicesForMinTxsCount) {
 		panic("minTxsCount does not match expected count of Txs.")
 	}
 	if lib.ContainsDuplicates(txIndicesForMinTxsCount) {
 		panic("Overlapping indices and offsets defined for Txs.")
 	}
-	if minTxsCount != firstOtherTxIndex-lastOtherTxLenOffset {
+	if constants.MinTxsCount != constants.FirstOtherTxIndex-constants.LastOtherTxLenOffset {
 		panic("Unexpected gap between firstOtherTxIndex and lastOtherTxLenOffset which is greater than minTxsCount")
 	}
 }
 
+// TODO: add extInfo into this and use to decode (cleanup)
 // ProcessProposalTxs is used as an intermediary struct to validate a proposed list of txs
 // for `ProcessProposal`.
 type ProcessProposalTxs struct {
@@ -72,30 +65,30 @@ func DecodeProcessProposalTxs(
 ) (*ProcessProposalTxs, error) {
 	// Check len.
 	numTxs := len(req.Txs)
-	if numTxs < minTxsCount {
+	if numTxs < constants.MinTxsCount {
 		return nil, errorsmod.Wrapf(
 			ErrUnexpectedNumMsgs,
 			"Expected the proposal to contain at least %d txs, but got %d",
-			minTxsCount,
+			constants.MinTxsCount,
 			numTxs,
 		)
 	}
 
 	// Operations.
-	operationsTx, err := DecodeProposedOperationsTx(decoder, req.Txs[proposedOperationsTxIndex])
+	operationsTx, err := DecodeProposedOperationsTx(decoder, req.Txs[constants.ProposedOperationsTxIndex])
 	if err != nil {
 		return nil, err
 	}
 
 	// Funding samples.
-	addPremiumVotesTx, err := DecodeAddPremiumVotesTx(decoder, req.Txs[numTxs+addPremiumVotesTxLenOffset])
+	addPremiumVotesTx, err := DecodeAddPremiumVotesTx(decoder, req.Txs[numTxs+constants.AddPremiumVotesTxLenOffset])
 	if err != nil {
 		return nil, err
 	}
 
 	// Other txs.
-	allOtherTxs := make([]*OtherMsgsTx, numTxs-minTxsCount)
-	for i, txBytes := range req.Txs[firstOtherTxIndex : numTxs+lastOtherTxLenOffset] {
+	allOtherTxs := make([]*OtherMsgsTx, numTxs-constants.MinTxsCount)
+	for i, txBytes := range req.Txs[constants.FirstOtherTxIndex : numTxs+constants.LastOtherTxLenOffset] {
 		otherTx, err := DecodeOtherMsgsTx(decoder, txBytes)
 		if err != nil {
 			return nil, err
