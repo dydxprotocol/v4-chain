@@ -2,9 +2,10 @@ package keeper_test
 
 import (
 	"fmt"
-	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"math/big"
 	"testing"
+
+	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
@@ -91,7 +92,7 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 			tApp := testApp.NewTestAppBuilder(t).Build()
 			tApp.InitChain()
 			untriggeredConditionalOrders := tApp.App.ClobKeeper.NewUntriggeredConditionalOrders()
-			tApp.App.ClobKeeper.UntriggeredConditionalOrders[0] = untriggeredConditionalOrders
+			// tApp.App.ClobKeeper.UntriggeredConditionalOrders[0] = untriggeredConditionalOrders
 
 			for _, order := range tc.conditionalOrdersToAdd {
 				untriggeredConditionalOrders.AddUntriggeredConditionalOrder(order)
@@ -197,7 +198,7 @@ func TestRemoveUntriggeredConditionalOrders(t *testing.T) {
 			tApp := testApp.NewTestAppBuilder(t).Build()
 			tApp.InitChain()
 			untriggeredConditionalOrders := tApp.App.ClobKeeper.NewUntriggeredConditionalOrders()
-			tApp.App.ClobKeeper.UntriggeredConditionalOrders[0] = untriggeredConditionalOrders
+			// tApp.App.ClobKeeper.UntriggeredConditionalOrders[0] = untriggeredConditionalOrders
 
 			for _, order := range tc.conditionalOrdersToAdd {
 				untriggeredConditionalOrders.AddUntriggeredConditionalOrder(order)

@@ -54,38 +54,23 @@ func (untriggeredOrders *UntriggeredConditionalOrders) IsEmpty() bool {
 // AddUntriggeredConditionalOrders takes in a list of newly-placed conditional order ids and adds them
 // to the in-memory UntriggeredConditionalOrders struct, filtering out orders that have been cancelled
 // or expired in the last block. This function is used in EndBlocker and on application startup.
-func (k Keeper) AddUntriggeredConditionalOrders(
+func GetInMemUntriggeredConditionalOrders(
 	ctx sdk.Context,
-	placedConditionalOrderIds []types.OrderId,
-	placedStatefulCancellationOrderIds map[types.OrderId]struct{},
-	expiredStatefulOrderIdsSet map[types.OrderId]struct{},
-) {
-	for _, orderId := range placedConditionalOrderIds {
-		_, isCancelled := placedStatefulCancellationOrderIds[orderId]
-		_, isExpired := expiredStatefulOrderIdsSet[orderId]
-		if isCancelled || isExpired {
-			continue
-		}
+	conditonalOrdersFromState []types.Order,
+) map[types.ClobPairId]*UntriggeredConditionalOrders {
+	ret := make(map[types.ClobPairId]*UntriggeredConditionalOrders)
 
-		orderPlacement, exists := k.GetUntriggeredConditionalOrderPlacement(ctx, orderId)
+	for _, order := range conditonalOrdersFromState {
+		clobPairId := types.ClobPairId(order.GetClobPairId())
+		untriggeredConditionalOrders, exists := ret[clobPairId]
 		if !exists {
-			panic(
-				fmt.Sprintf(
-					"AddUntriggeredConditionalOrders: order placement does not exist in state for untriggered "+
-						"conditional order id, OrderId %+v.",
-					orderId,
-				),
-			)
+			untriggeredConditionalOrders = NewUntriggeredConditionalOrders()
+			ret[clobPairId] = untriggeredConditionalOrders
 		}
-
-		clobPairId := types.ClobPairId(orderId.GetClobPairId())
-		untriggeredConditionalOrders, exists := k.UntriggeredConditionalOrders[clobPairId]
-		if !exists {
-			untriggeredConditionalOrders = k.NewUntriggeredConditionalOrders()
-			k.UntriggeredConditionalOrders[clobPairId] = untriggeredConditionalOrders
-		}
-		untriggeredConditionalOrders.AddUntriggeredConditionalOrder(orderPlacement.GetOrder())
+		untriggeredConditionalOrders.AddUntriggeredConditionalOrder(order)
 	}
+
+	return ret
 }
 
 // AddUntriggeredConditionalOrder adds an untriggered conditional order to the UntriggeredConditionalOrders
@@ -126,53 +111,53 @@ func (untriggeredOrders *UntriggeredConditionalOrders) AddUntriggeredConditional
 // all respective orders from the in-memory `UntriggeredConditionalOrders` data structure. This data structure
 // stores untriggered orders in a map of ClobPairId -> []Order, so we first group orders by ClobPairId and then
 // call `UntriggeredConditionalOrders.RemoveExpiredUntriggeredConditionalOrders` on each ClobPairId.
-func (k Keeper) PruneUntriggeredConditionalOrders(
-	expiredStatefulOrderIds []types.OrderId,
-	cancelledStatefulOrderIds []types.OrderId,
-) {
-	// Merge lists of order ids.
-	orderIdsToPrune := lib.UniqueSliceToSet(expiredStatefulOrderIds)
-	for _, orderId := range cancelledStatefulOrderIds {
-		if _, exists := orderIdsToPrune[orderId]; exists {
-			panic(
-				fmt.Sprintf(
-					"PruneUntriggeredConditionalOrders: duplicate order id %+v in expired and "+
-						"cancelled order lists", orderId,
-				),
-			)
-		}
-		orderIdsToPrune[orderId] = struct{}{}
-	}
+// func (k Keeper) PruneUntriggeredConditionalOrders(
+// 	expiredStatefulOrderIds []types.OrderId,
+// 	cancelledStatefulOrderIds []types.OrderId,
+// ) {
+// 	// Merge lists of order ids.
+// 	orderIdsToPrune := lib.UniqueSliceToSet(expiredStatefulOrderIds)
+// 	for _, orderId := range cancelledStatefulOrderIds {
+// 		if _, exists := orderIdsToPrune[orderId]; exists {
+// 			panic(
+// 				fmt.Sprintf(
+// 					"PruneUntriggeredConditionalOrders: duplicate order id %+v in expired and "+
+// 						"cancelled order lists", orderId,
+// 				),
+// 			)
+// 		}
+// 		orderIdsToPrune[orderId] = struct{}{}
+// 	}
 
-	prunableUntriggeredConditionalOrderIdsByClobPair := make(map[types.ClobPairId][]types.OrderId)
-	for orderId := range orderIdsToPrune {
-		// If the order id is conditional, add to prunable list of untriggered order ids.
-		// Triggered conditional orders will be effectively ignored during removal as they are not part of
-		// UntriggeredConditionalOrders anymore. No need to filter out here, we can avoid memstore reads.
-		if orderId.IsConditionalOrder() {
-			clobPairId := types.ClobPairId(orderId.GetClobPairId())
-			if _, exists := prunableUntriggeredConditionalOrderIdsByClobPair[clobPairId]; !exists {
-				prunableUntriggeredConditionalOrderIdsByClobPair[clobPairId] = []types.OrderId{}
-			}
+// 	prunableUntriggeredConditionalOrderIdsByClobPair := make(map[types.ClobPairId][]types.OrderId)
+// 	for orderId := range orderIdsToPrune {
+// 		// If the order id is conditional, add to prunable list of untriggered order ids.
+// 		// Triggered conditional orders will be effectively ignored during removal as they are not part of
+// 		// UntriggeredConditionalOrders anymore. No need to filter out here, we can avoid memstore reads.
+// 		if orderId.IsConditionalOrder() {
+// 			clobPairId := types.ClobPairId(orderId.GetClobPairId())
+// 			if _, exists := prunableUntriggeredConditionalOrderIdsByClobPair[clobPairId]; !exists {
+// 				prunableUntriggeredConditionalOrderIdsByClobPair[clobPairId] = []types.OrderId{}
+// 			}
 
-			prunableUntriggeredConditionalOrderIdsByClobPair[clobPairId] = append(
-				prunableUntriggeredConditionalOrderIdsByClobPair[clobPairId],
-				orderId,
-			)
-		}
-	}
+// 			prunableUntriggeredConditionalOrderIdsByClobPair[clobPairId] = append(
+// 				prunableUntriggeredConditionalOrderIdsByClobPair[clobPairId],
+// 				orderId,
+// 			)
+// 		}
+// 	}
 
-	for clobPairId := range prunableUntriggeredConditionalOrderIdsByClobPair {
-		if untriggeredConditionalOrders, exists := k.UntriggeredConditionalOrders[clobPairId]; exists {
-			untriggeredConditionalOrders.RemoveUntriggeredConditionalOrders(
-				prunableUntriggeredConditionalOrderIdsByClobPair[clobPairId],
-			)
-			if untriggeredConditionalOrders.IsEmpty() {
-				delete(k.UntriggeredConditionalOrders, clobPairId)
-			}
-		}
-	}
-}
+// 	for clobPairId := range prunableUntriggeredConditionalOrderIdsByClobPair {
+// 		if untriggeredConditionalOrders, exists := k.UntriggeredConditionalOrders[clobPairId]; exists {
+// 			untriggeredConditionalOrders.RemoveUntriggeredConditionalOrders(
+// 				prunableUntriggeredConditionalOrderIdsByClobPair[clobPairId],
+// 			)
+// 			if untriggeredConditionalOrders.IsEmpty() {
+// 				delete(k.UntriggeredConditionalOrders, clobPairId)
+// 			}
+// 		}
+// 	}
+// }
 
 // RemoveUntriggeredConditionalOrders removes a list of order ids from the `UntriggeredConditionalOrders`
 // data structure. This function will panic if the order ids contained involve more than one ClobPairId.
@@ -277,15 +262,21 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (allTriggeredOrde
 		time.Now(),
 	)
 
+	allUntriggerred := k.GetAllUntriggeredConditionalOrders(ctx)
+	untriggeredConditonals := GetInMemUntriggeredConditionalOrders(
+		ctx,
+		allUntriggerred,
+	)
+
 	// Sort the keys for the untriggered conditional orders struct. We need to trigger
 	// the conditional orders in an ordered way to have deterministic state writes.
-	sortedKeys := lib.GetSortedKeys[types.SortedClobPairId](k.UntriggeredConditionalOrders)
+	sortedKeys := lib.GetSortedKeys[types.SortedClobPairId](untriggeredConditonals)
 
 	allTriggeredOrderIds = make([]types.OrderId, 0)
 	// For all clob pair ids in UntriggeredConditionalOrders, fetch the updated
 	// oracle price and poll out triggered conditional orders.
 	for _, clobPairId := range sortedKeys {
-		untriggered := k.UntriggeredConditionalOrders[clobPairId]
+		untriggered := untriggeredConditonals[clobPairId]
 		clobPair, found := k.GetClobPair(ctx, clobPairId)
 		if !found {
 			panic(
@@ -319,8 +310,8 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (allTriggeredOrde
 			allTriggeredOrderIds = append(allTriggeredOrderIds, triggered...)
 		}
 
-		// Set the modified untriggeredConditionalOrders back on the keeper field.
-		k.UntriggeredConditionalOrders[clobPairId] = untriggered
+		// // Set the modified untriggeredConditionalOrders back on the keeper field.
+		// untriggeredConditonals[clobPairId] = untriggered
 
 		// Gauge the number of untriggered orders.
 		metrics.SetGaugeWithLabels(
