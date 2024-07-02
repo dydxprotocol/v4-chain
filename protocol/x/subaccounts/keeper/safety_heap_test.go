@@ -29,7 +29,7 @@ func TestSafetyHeapInsertRemoveMin(t *testing.T) {
 	for i := 0; i < totalSubaccounts; i++ {
 		subaccount := satypes.Subaccount{
 			Id: &satypes.SubaccountId{
-				Owner: types.MustBech32ifyAddressBytes(
+				Owner: sdk.MustBech32ifyAddressBytes(
 					config.Bech32PrefixAccAddr,
 					constants.AliceAccAddress,
 				),
