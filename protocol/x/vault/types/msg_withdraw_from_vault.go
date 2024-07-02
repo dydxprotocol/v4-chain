@@ -18,10 +18,9 @@ func (msg *MsgWithdrawFromVault) ValidateBasic() error {
 		return err
 	}
 
-	// Validate that quote quantums is positive and an uint64.
-	quoteQuantums := msg.QuoteQuantums.BigInt()
-	if quoteQuantums.Sign() <= 0 || !quoteQuantums.IsUint64() {
-		return errors.Wrap(ErrInvalidWithdrawalAmount, "quote quantums must be strictly positive and less than 2^64")
+	// Validate that `shares` is positive.
+	if msg.Shares.NumShares.Sign() <= 0 {
+		return errors.Wrap(ErrInvalidWithdrawalAmount, "shares must be strictly positive")
 	}
 
 	return nil

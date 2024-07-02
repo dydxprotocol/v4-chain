@@ -19,46 +19,38 @@ func TestMsgWithdrawFromVault_ValidateBasic(t *testing.T) {
 	}{
 		"Success": {
 			msg: types.MsgWithdrawFromVault{
-				VaultId:       &constants.Vault_Clob0,
-				SubaccountId:  &constants.Alice_Num0,
-				QuoteQuantums: dtypes.NewInt(1),
+				VaultId:      &constants.Vault_Clob0,
+				SubaccountId: &constants.Alice_Num0,
+				Shares:       &types.NumShares{dtypes.NewInt(1)},
 			},
 		},
-		"Success: max uint64 quote quantums": {
-			msg: types.MsgWithdrawFromVault{
-				VaultId:       &constants.Vault_Clob0,
-				SubaccountId:  &constants.Alice_Num0,
-				QuoteQuantums: dtypes.NewIntFromUint64(math.MaxUint64),
-			},
-		},
-		"Failure: quote quantums greater than max uint64": {
+		"Success: shares greater than max uint64": {
 			msg: types.MsgWithdrawFromVault{
 				VaultId:      &constants.Vault_Clob0,
 				SubaccountId: &constants.Alice_Num0,
-				QuoteQuantums: dtypes.NewIntFromBigInt(
+				Shares: &types.NumShares{dtypes.NewIntFromBigInt(
 					new(big.Int).Add(
 						new(big.Int).SetUint64(math.MaxUint64),
 						new(big.Int).SetUint64(1),
 					),
-				),
+				)},
 			},
-			expectedErr: "Withdrawal amount is invalid",
 		},
-		"Failure: zero quote quantums": {
+		"Failure: zero shares": {
 			msg: types.MsgWithdrawFromVault{
-				VaultId:       &constants.Vault_Clob0,
-				SubaccountId:  &constants.Alice_Num0,
-				QuoteQuantums: dtypes.NewInt(0),
+				VaultId:      &constants.Vault_Clob0,
+				SubaccountId: &constants.Alice_Num0,
+				Shares:       &types.NumShares{dtypes.NewInt(0)},
 			},
-			expectedErr: "Withdrawal amount is invalid",
+			expectedErr: "shares must be strictly positive: Withdrawal amount is invalid",
 		},
-		"Failure: negative quote quantums": {
+		"Failure: negative shares": {
 			msg: types.MsgWithdrawFromVault{
-				VaultId:       &constants.Vault_Clob0,
-				SubaccountId:  &constants.Alice_Num0,
-				QuoteQuantums: dtypes.NewInt(-1),
+				VaultId:      &constants.Vault_Clob0,
+				SubaccountId: &constants.Alice_Num0,
+				Shares:       &types.NumShares{dtypes.NewInt(-1)},
 			},
-			expectedErr: "Withdrawal amount is invalid",
+			expectedErr: "shares must be strictly positive: Withdrawal amount is invalid",
 		},
 		"Failure: invalid subaccount owner": {
 			msg: types.MsgWithdrawFromVault{
@@ -67,7 +59,7 @@ func TestMsgWithdrawFromVault_ValidateBasic(t *testing.T) {
 					Owner:  "invalid-owner",
 					Number: 0,
 				},
-				QuoteQuantums: dtypes.NewInt(1),
+				Shares: &types.NumShares{dtypes.NewInt(1)},
 			},
 			expectedErr: "subaccount id owner is an invalid address",
 		},
