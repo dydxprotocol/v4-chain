@@ -69,7 +69,6 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 
 		if req == nil {
 			ctx.Logger().Error("extend vote handler received a nil request")
-			// TODO: return dynamic structured error with name of cometBFT request
 			err = fmt.Errorf("nil request for extend vote")
 			return nil, err
 		}
@@ -77,6 +76,7 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 		// TODO: call the method used to write prices to state, in the same way preBlocker does
 
 		marketParams := h.pk.GetAllMarketParams(ctx)
+		// TODO: does the deamon needs some time to warm up or can we include this in the first block
 		currPrices := h.indexPriceCache.GetValidMedianPrices(marketParams, h.timeProvider.Now())
 
 		if len(currPrices) == 0 {
@@ -86,7 +86,6 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 		voteExt, err := h.transformDeamonPricesToVE(ctx, currPrices)
 		if err != nil {
 			h.logger.Error("failed to transform prices to vote extension", "height", req.Height, "err", err)
-			// TODO: structure error
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
 		}
 
@@ -110,7 +109,6 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 
 		if req == nil {
 			ctx.Logger().Error("extend vote handler received a nil request")
-			// TODO: return dynamic structured error with name of cometBFT request
 			err = fmt.Errorf("nil request for verify vote")
 			return nil, err
 		}
@@ -171,13 +169,8 @@ func (h *VoteExtensionHandler) transformDeamonPricesToVE(
 			h.logger.Debug("market id not found", "marketId", marketId)
 			continue
 		}
-		priceString := fmt.Sprintf("%d", price)
-		rawPrice, converted := new(big.Int).SetString(priceString, 10)
 
-		if !converted {
-			// TODO: check if we just ignore price and continue or return error
-			return types.DeamonVoteExtension{}, fmt.Errorf("failed to convert price string to big.Int: %s", priceString)
-		}
+		rawPrice := new(big.Int).SetUint64(price)
 
 		encodedPrice, err := h.indexPriceCache.GetEncodedPrice(rawPrice)
 
