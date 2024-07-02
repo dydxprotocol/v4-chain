@@ -70,9 +70,12 @@ func (k Keeper) MustRemoveElementAtIndex(
 	k.DeleteSubaccountAtIndex(store, length-1)
 	k.SetSafetyHeapLength(store, length-1)
 
-	// Heapify down the element at the given index
+	// Heapify down and up the element at the given index
 	// to restore the heap property.
-	k.HeapifyDown(ctx, store, index)
+	if index < length-1 {
+		k.HeapifyDown(ctx, store, index)
+		k.HeapifyUp(ctx, store, index)
+	}
 }
 
 // HeapifyUp moves the element at the given index up the heap
