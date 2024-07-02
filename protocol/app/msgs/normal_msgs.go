@@ -251,5 +251,7 @@ var (
 		"/slinky.marketmap.v1.MsgRemoveMarketAuthoritiesResponse": nil,
 		"/slinky.marketmap.v1.MsgUpdateMarkets":                   &marketmapmoduletypes.MsgUpdateMarkets{},
 		"/slinky.marketmap.v1.MsgUpdateMarketsResponse":           nil,
+		"/slinky.marketmap.v1.MsgUpsertMarkets":                   &marketmapmoduletypes.MsgUpsertMarkets{},
+		"/slinky.marketmap.v1.MsgUpsertMarketsResponse":           nil,
 	}
 )

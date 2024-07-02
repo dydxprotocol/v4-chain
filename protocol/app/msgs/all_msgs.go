@@ -360,6 +360,8 @@ var (
 		"/slinky.marketmap.v1.MsgRemoveMarketAuthoritiesResponse": {},
 		"/slinky.marketmap.v1.MsgUpdateMarkets":                   {},
 		"/slinky.marketmap.v1.MsgUpdateMarketsResponse":           {},
+		"/slinky.marketmap.v1.MsgUpsertMarkets":                   {},
+		"/slinky.marketmap.v1.MsgUpsertMarketsResponse":           {},
 	}
 
 	// DisallowMsgs are messages that cannot be externally submitted.
