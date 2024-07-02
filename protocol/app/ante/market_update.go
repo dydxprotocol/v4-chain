@@ -134,7 +134,7 @@ func IsMarketUpdateTx(tx sdk.Tx) (bool, error) {
 }
 
 // MatchPairToSlinkyTicker matches a market params string of form "BTC-USD"
-// toa slinky currency pair struct consisting of a BASE and QUOTE.
+// to a slinky currency pair struct consisting of a BASE and QUOTE.
 func MatchPairToSlinkyTicker(pair string, ticker slinkytypes.CurrencyPair) bool {
 	pairSplit := strings.Split(pair, "-")
 	if len(pairSplit) != 2 {
