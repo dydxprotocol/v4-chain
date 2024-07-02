@@ -3,136 +3,113 @@ package wasmbinding
 import (
 	"encoding/json"
 
-	errorsmod "cosmossdk.io/errors"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	bindings "github.com/dydxprotocol/v4-chain/protocol/wasmbinding/bindings"
 
-	sendingkeeper "github.com/dydxprotocol/v4-chain/protocol/x/sending/keeper"
-	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
-
-	clobkeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-// TODO(OTE-409): add checks for contract addresses
-
-// CustomMessageDecorator returns decorator for custom CosmWasm bindings messages
-func CustomMessageDecorator(sending *sendingkeeper.Keeper, clob *clobkeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
-	return func(old wasmkeeper.Messenger) wasmkeeper.Messenger {
-		return &CustomMessenger{
-			wrapped: old,
-			sending: sending,
-			clob:    clob,
-		}
+// This function is called from https://github.com/CosmWasm/wasmd/blob/main/x/wasm/keeper/handler_plugin_encoders.go#L96
+// which enforces the function to be called with contract address
+func EncodeDydxCustomWasmMessage(contractAddr sdk.AccAddress, msg json.RawMessage) ([]sdk.Msg, error) {
+	var customMessage bindings.DydxCustomWasmMessage
+	if err := json.Unmarshal(msg, &customMessage); err != nil {
+		return []sdk.Msg{}, wasmvmtypes.InvalidRequest{Err: "Error parsing DydxCustomWasmMessage"}
+	}
+	switch {
+	case customMessage.DepositToSubaccountV1 != nil:
+		return EncodeDepositToSubaccountV1(contractAddr, customMessage.DepositToSubaccountV1)
+	case customMessage.WithdrawFromSubaccountV1 != nil:
+		return EncodeWithdrawFromSubaccountV1(contractAddr, customMessage.WithdrawFromSubaccountV1)
+	case customMessage.PlaceOrderV1 != nil:
+		return EncodePlaceOrderV1(contractAddr, customMessage.PlaceOrderV1)
+	case customMessage.CancelOrderV1 != nil:
+		return EncodeCancelOrderV1(contractAddr, customMessage.CancelOrderV1)
+	default:
+		return nil, wasmvmtypes.InvalidRequest{Err: "Unknown Dydx Wasm Message"}
 	}
 }
 
-type CustomMessenger struct {
-	wrapped wasmkeeper.Messenger
-	sending *sendingkeeper.Keeper
-	clob    *clobkeeper.Keeper
-}
-
-var _ wasmkeeper.Messenger = (*CustomMessenger)(nil)
-
-// DispatchMsg executes on the contractMsg.
-func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmvmtypes.CosmosMsg) ([]sdk.Event, [][]byte, error) {
-	if msg.Custom != nil {
-		// only handle the happy path where this is really creating / minting / swapping ...
-		// leave everything else for the wrapped version
-		var contractMsg bindings.SendingMsg
-		// print the custom message in string format
-		if err := json.Unmarshal(msg.Custom, &contractMsg); err != nil {
-			return nil, nil, errorsmod.Wrap(err, "Error Unmarshalling Custom Message")
-		}
-		if contractMsg.CreateTransfer != nil {
-			return m.createTransfer(ctx, contractAddr, contractMsg.CreateTransfer)
-		}
-		if contractMsg.DepositToSubaccount != nil {
-			return m.depositToSubaccount(ctx, contractAddr, contractMsg.DepositToSubaccount)
-		}
-		if contractMsg.WithdrawFromSubaccount != nil {
-			return m.withdrawFromSubaccount(ctx, contractAddr, contractMsg.WithdrawFromSubaccount)
-		}
-		if contractMsg.PlaceOrder != nil {
-			return m.placeOrder(ctx, contractAddr, contractMsg.PlaceOrder)
-		}
-		if contractMsg.CancelOrder != nil {
-			return m.cancelOrder(ctx, contractAddr, contractMsg.CancelOrder)
-		}
-		return nil, nil, wasmvmtypes.InvalidRequest{Err: "Unknown custom message"}
-	}
-	return m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
-}
-
-func (m *CustomMessenger) createTransfer(ctx sdk.Context, contractAddr sdk.AccAddress, createTransfer *sendingtypes.MsgCreateTransfer) ([]sdk.Event, [][]byte, error) {
-	if createTransfer == nil {
-		return nil, nil, wasmvmtypes.InvalidRequest{Err: "Invalid create transfer request: No transfer data provided"}
-	}
-	err := m.sending.ProcessTransfer(ctx, createTransfer.Transfer)
-	return nil, nil, err
-}
-
-func (m *CustomMessenger) depositToSubaccount(ctx sdk.Context, contractAddr sdk.AccAddress, depositToSubaccount *sendingtypes.MsgDepositToSubaccount) ([]sdk.Event, [][]byte, error) {
+func EncodeDepositToSubaccountV1(contractAddr sdk.AccAddress, depositToSubaccount *bindings.DepositToSubaccountV1) ([]sdk.Msg, error) {
 	if depositToSubaccount == nil {
-		return nil, nil, wasmvmtypes.InvalidRequest{Err: "Invalid deposit to subaccount request: No deposit data provided"}
+		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid deposit to subaccount request: No deposit data provided"}
 	}
 
-	err := m.sending.ProcessDepositToSubaccount(ctx, depositToSubaccount)
-	return nil, nil, err
+	depositToSubaccountMsg := &sendingtypes.MsgDepositToSubaccount{
+		Sender:    contractAddr.String(),
+		Recipient: depositToSubaccount.Recipient,
+		AssetId:   depositToSubaccount.AssetId,
+		Quantums:  depositToSubaccount.Quantums,
+	}
+	return []sdk.Msg{depositToSubaccountMsg}, nil
 }
 
-func (m *CustomMessenger) withdrawFromSubaccount(ctx sdk.Context, contractAddr sdk.AccAddress, withdrawFromSubaccount *sendingtypes.MsgWithdrawFromSubaccount) ([]sdk.Event, [][]byte, error) {
+func EncodeWithdrawFromSubaccountV1(contractAddr sdk.AccAddress, withdrawFromSubaccount *bindings.WithdrawFromSubaccountV1) ([]sdk.Msg, error) {
 	if withdrawFromSubaccount == nil {
-		return nil, nil, wasmvmtypes.InvalidRequest{Err: "Invalid withdraw from subaccount request: No withdraw data provided"}
+		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid withdraw from subaccount request: No withdraw data provided"}
 	}
 
-	err := m.sending.ProcessWithdrawFromSubaccount(ctx, withdrawFromSubaccount)
-	return nil, nil, err
-
+	withdrawFromSubaccountMsg := &sendingtypes.MsgWithdrawFromSubaccount{
+		Sender: types.SubaccountId{
+			Owner:  contractAddr.String(),
+			Number: withdrawFromSubaccount.SubaccountNumber,
+		},
+		Recipient: withdrawFromSubaccount.Recipient,
+		AssetId:   withdrawFromSubaccount.AssetId,
+		Quantums:  withdrawFromSubaccount.Quantums,
+	}
+	return []sdk.Msg{withdrawFromSubaccountMsg}, nil
 }
 
-func parseAddress(addr string) (sdk.AccAddress, error) {
-	parsed, err := sdk.AccAddressFromBech32(addr)
-	if err != nil {
-		return nil, err
-	}
-	err = sdk.VerifyAddressFormat(parsed)
-	if err != nil {
-		return nil, err
-	}
-	return parsed, nil
-}
-
-func (m *CustomMessenger) placeOrder(
-	ctx sdk.Context,
-	contractAddr sdk.AccAddress,
-	placeOrder *clobtypes.MsgPlaceOrder,
-) ([]sdk.Event, [][]byte, error) {
+func EncodePlaceOrderV1(contractAddr sdk.AccAddress, placeOrder *bindings.PlaceOrderV1) ([]sdk.Msg, error) {
 	if placeOrder == nil {
-		return nil, nil, wasmvmtypes.InvalidRequest{Err: "Invalid place order request: No order data provided"}
+		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid place order request: No order data provided"}
 	}
-	if ctx.IsCheckTx() || ctx.IsReCheckTx() {
-		return nil, nil, nil
+
+	placeOrderMsg := &clobtypes.MsgPlaceOrder{
+		Order: clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: types.SubaccountId{
+					Owner:  contractAddr.String(),
+					Number: placeOrder.SubaccountNumber,
+				},
+				ClientId:   placeOrder.ClientId,
+				OrderFlags: placeOrder.OrderFLags,
+				ClobPairId: placeOrder.ClobPairId,
+			},
+			Side:                            clobtypes.Order_Side(placeOrder.Side),
+			Quantums:                        placeOrder.Quantums,
+			Subticks:                        placeOrder.Subticks,
+			GoodTilOneof:                    &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: placeOrder.GoodTilBlockTime},
+			ReduceOnly:                      placeOrder.ReduceOnly,
+			ClientMetadata:                  placeOrder.ClientMetadata,
+			ConditionType:                   clobtypes.Order_ConditionType(placeOrder.ConditionType),
+			ConditionalOrderTriggerSubticks: placeOrder.ConditionalOrderTriggerSubticks,
+		},
 	}
-	err := m.clob.HandleMsgPlaceOrder(ctx, placeOrder, false)
-	return nil, nil, err
+	return []sdk.Msg{placeOrderMsg}, nil
 }
 
-func (m *CustomMessenger) cancelOrder(
-	ctx sdk.Context,
-	contractAddr sdk.AccAddress,
-	cancelOrder *clobtypes.MsgCancelOrder,
-) ([]sdk.Event, [][]byte, error) {
+func EncodeCancelOrderV1(contractAddr sdk.AccAddress, cancelOrder *bindings.CancelOrderV1) ([]sdk.Msg, error) {
 	if cancelOrder == nil {
-		return nil, nil, wasmvmtypes.InvalidRequest{Err: "Invalid cancel order request: No order data provided"}
+		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid cancel order request: No order data provided"}
 	}
-	if ctx.IsCheckTx() || ctx.IsReCheckTx() {
-		return nil, nil, nil
+
+	cancelOrderMsg := &clobtypes.MsgCancelOrder{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: types.SubaccountId{
+				Owner:  contractAddr.String(),
+				Number: cancelOrder.SubaccountNumber,
+			},
+			ClientId:   cancelOrder.ClientId,
+			OrderFlags: cancelOrder.OrderFLags,
+			ClobPairId: cancelOrder.ClobPairId,
+		},
+		GoodTilOneof: &clobtypes.MsgCancelOrder_GoodTilBlockTime{GoodTilBlockTime: cancelOrder.GoodTilBlockTime},
 	}
-	err := m.clob.HandleMsgCancelOrder(ctx, cancelOrder)
-	return nil, nil, err
+	return []sdk.Msg{cancelOrderMsg}, nil
 }

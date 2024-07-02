@@ -6,7 +6,7 @@ mod dydx_types;
 mod proto_structs;
 mod serializable_int;
 
-pub use msg::{DydxMsg, Transfer, Order, OrderSide, OrderTimeInForce, OrderConditionType, OrderId};
+pub use msg::{DydxMsg, OrderSide, OrderTimeInForce, OrderConditionType};
 pub use querier::DydxQuerier;
 pub use query::{
     MarketPriceResponse, PerpetualClobDetailsResponse, SubaccountResponse, DydxQuery, DydxQueryWrapper};
