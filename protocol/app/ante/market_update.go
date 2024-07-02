@@ -3,16 +3,16 @@ package ante
 import (
 	"errors"
 	"fmt"
-	prices_types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
-	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
+	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
+
+	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 var ErrNoCrossMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUpsertMarkets " +
@@ -20,13 +20,18 @@ var ErrNoCrossMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUps
 
 type ValidateMarketUpdateDecorator struct {
 	perpKeeper  perpetualstypes.PerpetualsKeeper
-	priceKeeper prices_types.PricesKeeper
+	priceKeeper pricestypes.PricesKeeper
 	// write only cache for mapping slinky ticker strings to market types
 	// only evicted on node restart
 	cache map[string]perpetualstypes.PerpetualMarketType
 }
 
-func NewValidateMarketUpdateDecorator(perpKeeper perpetualstypes.PerpetualsKeeper, priceKeeper prices_types.PricesKeeper) ValidateMarketUpdateDecorator {
+// NewValidateMarketUpdateDecorator returns an AnteDecorator that is able to check for x/marketmap update messages
+// and reject them if they are updating cross margin markets.
+//
+// NOTE: this is a stop-gap solution before more general functionality is added to x/marketmap to delay and gate
+// certain update operations.
+func NewValidateMarketUpdateDecorator(perpKeeper perpetualstypes.PerpetualsKeeper, priceKeeper pricestypes.PricesKeeper) ValidateMarketUpdateDecorator {
 	return ValidateMarketUpdateDecorator{
 		perpKeeper:  perpKeeper,
 		priceKeeper: priceKeeper,
@@ -34,6 +39,11 @@ func NewValidateMarketUpdateDecorator(perpKeeper perpetualstypes.PerpetualsKeepe
 	}
 }
 
+// AnteHandle performs the following checks:
+// - check if tx contains x/marketmap/MsgUpdateMarkets or x/marketmap/MsgUpsertMarkets
+// - check if the given Tx has more than one message is it has x/marketmap updates, reject if so
+// - check if the x/marketmap update affects markets that are registered as cross margin
+// in x/perpetuals, reject if so.
 func (d ValidateMarketUpdateDecorator) AnteHandle(
 	ctx sdk.Context,
 	tx sdk.Tx,
