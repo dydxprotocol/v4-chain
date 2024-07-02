@@ -16,6 +16,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// PreBlocker executes all ABCI PreBlock logic respective to the clob module.
+func PreBlocker(
+	ctx sdk.Context,
+	keeper types.ClobKeeper,
+) {
+	keeper.Initialize(ctx)
+}
+
 // BeginBlocker executes all ABCI BeginBlock logic respective to the clob module.
 func BeginBlocker(
 	ctx sdk.Context,

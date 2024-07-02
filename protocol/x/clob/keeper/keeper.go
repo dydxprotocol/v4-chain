@@ -44,6 +44,7 @@ type (
 		indexerEventManager indexer_manager.IndexerEventManager
 		streamingManager    streamingtypes.GrpcStreamingManager
 
+		initialized         *atomic.Bool
 		memStoreInitialized *atomic.Bool
 
 		Flags flags.ClobFlags
@@ -107,7 +108,8 @@ func NewKeeper(
 		statsKeeper:                  statsKeeper,
 		indexerEventManager:          indexerEventManager,
 		streamingManager:             grpcStreamingManager,
-		memStoreInitialized:          &atomic.Bool{},
+		memStoreInitialized:          &atomic.Bool{}, // False by default.
+		initialized:                  &atomic.Bool{}, // False by default.
 		txDecoder:                    txDecoder,
 		mevTelemetryConfig: MevTelemetryConfig{
 			Enabled:    clobFlags.MevTelemetryEnabled,
@@ -149,6 +151,43 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
+}
+
+// IsInitialized returns whether the clob keeper has been hydrated.
+func (k Keeper) IsInitialized() bool {
+	return k.initialized.Load()
+}
+
+// Initialize hydrates the clob keeper with the necessary in memory data structures.
+func (k Keeper) Initialize(ctx sdk.Context) {
+	alreadyInitialized := k.initialized.Swap(true)
+	if alreadyInitialized {
+		return
+	}
+
+	// Initialize memstore in clobKeeper with order fill amounts and stateful orders.
+	k.InitMemStore(ctx)
+
+	// Branch the context for hydration.
+	// This means that new order matches from hydration will get added to the operations
+	// queue but the corresponding state changes will be discarded.
+	// This is needed because we are hydrating in memory structures in PreBlock
+	// which operates on deliver state. Writing optimistic matches breaks consensus.
+	checkCtx, _ := ctx.CacheContext()
+	checkCtx = checkCtx.WithIsCheckTx(true)
+
+	// Initialize memclob in clobKeeper with orderbooks using `ClobPairs` in state.
+	k.InitMemClobOrderbooks(checkCtx)
+	// Initialize memclob with all existing stateful orders.
+	// TODO(DEC-1348): Emit indexer messages to indicate that application restarted.
+	k.InitStatefulOrders(checkCtx)
+
+	// Initialize the untriggered conditional orders data structure with untriggered
+	// conditional orders in state.
+	k.HydrateClobPairAndPerpetualMapping(checkCtx)
+	// Initialize the untriggered conditional orders data structure with untriggered
+	// conditional orders in state.
+	k.HydrateUntriggeredConditionalOrders(checkCtx)
 }
 
 // InitMemStore initializes the memstore of the `clob` keeper.

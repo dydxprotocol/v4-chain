@@ -217,6 +217,12 @@ var (
 		"Batch cancel has failed",
 	)
 
+	ErrClobNotInitialized = errorsmod.Register(
+		ModuleName,
+		47,
+		"CLOB has not been initialized",
+	)
+
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(
 		ModuleName,
