@@ -10,6 +10,13 @@ export const BAZOOKA_DB_MIGRATION_PAYLOAD: Uint8Array = new TextEncoder().encode
   }),
 );
 
+export const BAZOOKA_DB_MIGRATION_AND_CREATE_KAFKA_PAYLOAD: Uint8Array = new TextEncoder().encode(
+  JSON.stringify({
+    migrate: true,
+    create_kafka_topics: true,
+  }),
+);
+
 export const ECS_SERVICE_NAMES: EcsServiceNames[] = [
   EcsServiceNames.COMLINK,
   EcsServiceNames.ENDER,

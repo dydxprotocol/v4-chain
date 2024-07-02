@@ -57,6 +57,7 @@ export class TransferHandler extends Handler<TransferEventV1> {
         this.event.sender!.subaccountId!,
         this.event.sender!.subaccountId,
         this.event.recipient!.subaccountId,
+        this.block.height.toString(),
       );
 
       kafkaEvents.push(
@@ -74,6 +75,7 @@ export class TransferHandler extends Handler<TransferEventV1> {
         this.event.recipient!.subaccountId!,
         this.event.sender!.subaccountId,
         this.event.recipient!.subaccountId,
+        this.block.height.toString(),
       );
 
       kafkaEvents.push(

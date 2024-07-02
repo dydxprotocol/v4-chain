@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
@@ -30,8 +30,8 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 	}{
 		"Decommission no vault": {
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: []*big.Int{
 				big.NewInt(7),
@@ -48,8 +48,8 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 		},
 		"Decommission one vault": {
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: []*big.Int{
 				big.NewInt(7),
@@ -66,8 +66,8 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 		},
 		"Decommission two vaults": {
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: []*big.Int{
 				big.NewInt(7),
@@ -99,10 +99,10 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 									satypes.Subaccount{
 										Id: vaultId.ToSubaccountId(),
 										AssetPositions: []*satypes.AssetPosition{
-											{
-												AssetId:  assettypes.AssetUsdc.Id,
-												Quantums: dtypes.NewIntFromBigInt(tc.equities[i]),
-											},
+											testutil.CreateSingleAssetPosition(
+												assettypes.AssetUsdc.Id,
+												tc.equities[i],
+											),
 										},
 									},
 								)
@@ -160,19 +160,19 @@ func TestDecommissionVault(t *testing.T) {
 		owners []string
 	}{
 		"Total shares doesn't exist, no owners": {
-			vaultId: constants.Vault_Clob_0,
+			vaultId: constants.Vault_Clob0,
 		},
 		"Total shares exists, no owners": {
-			vaultId:           constants.Vault_Clob_0,
+			vaultId:           constants.Vault_Clob0,
 			totalSharesExists: true,
 		},
 		"Total shares exists, one owner": {
-			vaultId:           constants.Vault_Clob_1,
+			vaultId:           constants.Vault_Clob1,
 			totalSharesExists: true,
 			owners:            []string{constants.Alice_Num0.Owner},
 		},
 		"Total shares exists, two owners": {
-			vaultId:           constants.Vault_Clob_1,
+			vaultId:           constants.Vault_Clob1,
 			totalSharesExists: true,
 			owners: []string{
 				constants.Alice_Num0.Owner,

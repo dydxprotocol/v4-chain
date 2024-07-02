@@ -1,9 +1,11 @@
 package keeper
 
 import (
-	"github.com/cosmos/gogoproto/proto"
-	"math/big"
 	"testing"
+
+	revsharekeeper "github.com/dydxprotocol/v4-chain/protocol/x/revshare/keeper"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -19,9 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimekeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	perpskeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
@@ -29,10 +29,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-func SubaccountsKeepers(
-	t testing.TB,
-	msgSenderEnabled bool,
-) (
+func SubaccountsKeepers(t testing.TB, msgSenderEnabled bool) (
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
 	pricesKeeper *priceskeeper.Keeper,
@@ -41,6 +38,7 @@ func SubaccountsKeepers(
 	bankKeeper *bankkeeper.BaseKeeper,
 	assetsKeeper *asskeeper.Keeper,
 	blocktimeKeeper *blocktimekeeper.Keeper,
+	revShareKeeper *revsharekeeper.Keeper,
 	storeKey storetypes.StoreKey,
 ) {
 	var mockTimeProvider *mocks.TimeProvider
@@ -52,7 +50,14 @@ func SubaccountsKeepers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc)
+		pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
+			stateStore,
+			db,
+			cdc,
+			transientStoreKey,
+			revShareKeeper,
+		)
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 		perpetualsKeeper, _ = createPerpetualsKeeper(stateStore, db, cdc, pricesKeeper, epochsKeeper, transientStoreKey)
 		assetsKeeper, _ = createAssetsKeeper(stateStore, db, cdc, pricesKeeper, transientStoreKey, msgSenderEnabled)
@@ -69,17 +74,27 @@ func SubaccountsKeepers(
 			bankKeeper,
 			perpetualsKeeper,
 			blocktimeKeeper,
+			revShareKeeper,
 			transientStoreKey,
 			msgSenderEnabled,
 		)
 
-		return []GenesisInitializer{pricesKeeper, perpetualsKeeper, assetsKeeper, keeper}
+		return []GenesisInitializer{pricesKeeper, perpetualsKeeper, assetsKeeper, revShareKeeper, keeper}
 	})
 
 	// Mock time provider response for market creation.
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
-	return ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, blocktimeKeeper, storeKey
+	return ctx,
+		keeper,
+		pricesKeeper,
+		perpetualsKeeper,
+		accountKeeper,
+		bankKeeper,
+		assetsKeeper,
+		blocktimeKeeper,
+		revShareKeeper,
+		storeKey
 }
 
 func createSubaccountsKeeper(
@@ -90,6 +105,7 @@ func createSubaccountsKeeper(
 	bk types.BankKeeper,
 	pk *perpskeeper.Keeper,
 	btk *blocktimekeeper.Keeper,
+	rsk *revsharekeeper.Keeper,
 	transientStoreKey storetypes.StoreKey,
 	msgSenderEnabled bool,
 ) (*keeper.Keeper, storetypes.StoreKey) {
@@ -108,32 +124,11 @@ func createSubaccountsKeeper(
 		bk,
 		pk,
 		btk,
+		rsk,
 		mockIndexerEventsManager,
 	)
 
 	return k, storeKey
-}
-
-func CreateUsdcAssetPosition(
-	quoteBalance *big.Int,
-) []*types.AssetPosition {
-	return []*types.AssetPosition{
-		{
-			AssetId:  assettypes.AssetUsdc.Id,
-			Quantums: dtypes.NewIntFromBigInt(quoteBalance),
-		},
-	}
-}
-
-func CreateUsdcAssetUpdate(
-	deltaQuoteBalance *big.Int,
-) []types.AssetUpdate {
-	return []types.AssetUpdate{
-		{
-			AssetId:          assettypes.AssetUsdc.Id,
-			BigQuantumsDelta: deltaQuoteBalance,
-		},
-	}
 }
 
 // GetSubaccountUpdateEventsFromIndexerBlock returns the subaccount update events in the

@@ -215,7 +215,6 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 
 	// Initialize all the necessary memory stores.
 	for _, keyPrefix := range []string{
-		types.OrderAmountFilledKeyPrefix,
 		types.StatefulOrderKeyPrefix,
 	} {
 		// Retrieve an instance of the memstore.
@@ -260,26 +259,23 @@ func (k *Keeper) SetAnteHandler(anteHandler sdk.AnteHandler) {
 // by sending the corresponding orderbook snapshots.
 func (k Keeper) InitializeNewGrpcStreams(ctx sdk.Context) {
 	streamingManager := k.GetGrpcStreamingManager()
-	allUpdates := types.NewOffchainUpdates()
 
-	uninitializedClobPairIds := streamingManager.GetUninitializedClobPairIds()
-	for _, clobPairId := range uninitializedClobPairIds {
-		update := k.MemClob.GetOffchainUpdatesForOrderbookSnapshot(
-			ctx,
-			types.ClobPairId(clobPairId),
-		)
-
-		allUpdates.Append(update)
-	}
-
-	k.SendOrderbookUpdates(ctx, allUpdates, true)
+	streamingManager.InitializeNewGrpcStreams(
+		func(clobPairId types.ClobPairId) *types.OffchainUpdates {
+			return k.MemClob.GetOffchainUpdatesForOrderbookSnapshot(
+				ctx,
+				clobPairId,
+			)
+		},
+		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
+	)
 }
 
 // SendOrderbookUpdates sends the offchain updates to the gRPC streaming manager.
 func (k Keeper) SendOrderbookUpdates(
 	ctx sdk.Context,
 	offchainUpdates *types.OffchainUpdates,
-	snapshot bool,
 ) {
 	if len(offchainUpdates.Messages) == 0 {
 		return
@@ -287,7 +283,6 @@ func (k Keeper) SendOrderbookUpdates(
 
 	k.GetGrpcStreamingManager().SendOrderbookUpdates(
 		offchainUpdates,
-		snapshot,
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
 	)

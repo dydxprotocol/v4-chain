@@ -8,28 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
-// ProductKeeper represents a generic interface for a keeper
-// of a product.
-type ProductKeeper interface {
-	GetNetCollateral(
-		ctx sdk.Context,
-		id uint32,
-		bigQuantums *big.Int,
-	) (
-		bigNetCollateralQuoteQuantums *big.Int,
-		err error,
-	)
-	GetMarginRequirements(
-		ctx sdk.Context,
-		id uint32,
-		bigQuantums *big.Int,
-	) (
-		bigInitialMarginQuoteQuantums *big.Int,
-		bigMaintenanceMarginQuoteQuantums *big.Int,
-		err error,
-	)
+type AssetsKeeper interface {
 	IsPositionUpdatable(
 		ctx sdk.Context,
 		id uint32,
@@ -37,10 +19,6 @@ type ProductKeeper interface {
 		updatable bool,
 		err error,
 	)
-}
-
-type AssetsKeeper interface {
-	ProductKeeper
 	ConvertAssetToCoin(
 		ctx sdk.Context,
 		assetId uint32,
@@ -53,15 +31,11 @@ type AssetsKeeper interface {
 }
 
 type PerpetualsKeeper interface {
-	ProductKeeper
-	GetSettlementPpm(
+	IsPositionUpdatable(
 		ctx sdk.Context,
-		perpetualId uint32,
-		quantums *big.Int,
-		index *big.Int,
+		id uint32,
 	) (
-		bigNetSettlement *big.Int,
-		newFundingIndex *big.Int,
+		updatable bool,
 		err error,
 	)
 	GetPerpetual(
@@ -70,6 +44,30 @@ type PerpetualsKeeper interface {
 	) (
 		perpetual perptypes.Perpetual,
 		err error,
+	)
+	GetPerpetualAndMarketPrice(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (
+		perptypes.Perpetual,
+		pricestypes.MarketPrice,
+		error,
+	)
+	GetPerpetualAndMarketPriceAndLiquidityTier(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (
+		perptypes.Perpetual,
+		pricestypes.MarketPrice,
+		perptypes.LiquidityTier,
+		error,
+	)
+	GetLiquidityTier(
+		ctx sdk.Context,
+		id uint32,
+	) (
+		perptypes.LiquidityTier,
+		error,
 	)
 	GetAllPerpetuals(ctx sdk.Context) []perptypes.Perpetual
 	GetInsuranceFundName(ctx sdk.Context, perpetualId uint32) (string, error)
@@ -97,4 +95,15 @@ type BankKeeper interface {
 
 type BlocktimeKeeper interface {
 	GetDowntimeInfoFor(ctx sdk.Context, duration time.Duration) blocktimetypes.AllDowntimeInfo_DowntimeInfo
+}
+
+type RevShareKeeper interface {
+	GetMarketMapperRevenueShareForMarket(
+		ctx sdk.Context,
+		marketId uint32,
+	) (
+		address sdk.AccAddress,
+		revenueSharePpm uint32,
+		err error,
+	)
 }

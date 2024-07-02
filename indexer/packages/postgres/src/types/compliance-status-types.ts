@@ -6,6 +6,7 @@ export enum ComplianceReason {
   MANUAL = 'MANUAL',
   US_GEO = 'US_GEO',
   CA_GEO = 'CA_GEO',
+  GB_GEO = 'GB_GEO',
   SANCTIONED_GEO = 'SANCTIONED_GEO',
   COMPLIANCE_PROVIDER = 'COMPLIANCE_PROVIDER',
 }

@@ -13,7 +13,6 @@ import {
   assetRefresher,
   AssetTable,
   dbHelpers,
-  MarketsMap,
   PerpetualMarketColumns,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
@@ -101,10 +100,6 @@ describe('subaccountUpdateHandler', () => {
     assetId: '0',
     size: '10000',
     isLong: true,
-  };
-
-  const defaultMarketMap: MarketsMap = {
-    [testConstants.defaultMarket.id]: testConstants.defaultMarket,
   };
 
   describe('getParallelizationIds', () => {
@@ -248,7 +243,7 @@ describe('subaccountUpdateHandler', () => {
     UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
       convertPerpetualPosition(perpetualPosition!),
       perpetualMarketRefresher.getPerpetualMarketsMap(),
-      defaultMarketMap,
+      testConstants.defaultMarket,
     );
     await expectUpdatedPositionsSubaccountKafkaMessage(
       producerSendMock,
@@ -311,7 +306,7 @@ describe('subaccountUpdateHandler', () => {
     UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
       convertPerpetualPosition(perpetualPosition!),
       perpetualMarketRefresher.getPerpetualMarketsMap(),
-      defaultMarketMap,
+      testConstants.defaultMarket,
     );
     await expectUpdatedPositionsSubaccountKafkaMessage(
       producerSendMock,
@@ -386,13 +381,13 @@ describe('subaccountUpdateHandler', () => {
     UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
       convertPerpetualPosition(closedPosition!),
       perpetualMarketRefresher.getPerpetualMarketsMap(),
-      defaultMarketMap,
+      testConstants.defaultMarket,
     );
     const newPositionSubaccountKafkaObject:
     UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
       convertPerpetualPosition(newPosition!),
       perpetualMarketRefresher.getPerpetualMarketsMap(),
-      defaultMarketMap,
+      testConstants.defaultMarket,
     );
 
     await expectUpdatedPositionsSubaccountKafkaMessage(
@@ -567,7 +562,7 @@ describe('subaccountUpdateHandler', () => {
     UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
       convertPerpetualPosition(closedPosition!),
       perpetualMarketRefresher.getPerpetualMarketsMap(),
-      defaultMarketMap,
+      testConstants.defaultMarket,
     );
     await expectUpdatedPositionsSubaccountKafkaMessage(
       producerSendMock,
@@ -652,7 +647,7 @@ describe('subaccountUpdateHandler', () => {
     UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
       convertPerpetualPosition(perpetualPosition!),
       perpetualMarketRefresher.getPerpetualMarketsMap(),
-      defaultMarketMap,
+      testConstants.defaultMarket,
     );
 
     const assetPosition: AssetPositionFromDatabase | undefined = await
@@ -740,6 +735,7 @@ async function expectUpdatedPositionsSubaccountKafkaMessage(
     _.keyBy(perpMarkets, PerpetualMarketColumns.id),
     assetPositions,
     _.keyBy(assets, AssetColumns.id),
+    blockHeight,
   );
 
   expectSubaccountKafkaMessage({

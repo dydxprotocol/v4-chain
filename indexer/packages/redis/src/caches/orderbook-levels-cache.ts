@@ -4,10 +4,15 @@ import Big from 'big.js';
 import _ from 'lodash';
 import { Callback, RedisClient } from 'redis';
 
-import { InvalidOptionsError, InvalidPriceLevelUpdateError } from '../errors';
+import { InvalidOptionsError } from '../errors';
 import { hGetAsync } from '../helpers/redis';
 import { OrderbookLevels, PriceLevel } from '../types';
-import { deleteZeroPriceLevelScript, getOrderbookSideScript, incrementOrderbookLevelScript } from './scripts';
+import {
+  deleteZeroPriceLevelScript,
+  deleteStalePriceLevelScript,
+  getOrderbookSideScript,
+  incrementOrderbookLevelScript,
+} from './scripts';
 
 // Cache of orderbook levels for each clob pair
 // Each side of each exchange pair is an HSET with the hash = price, and value = total size of
@@ -53,32 +58,29 @@ export async function updatePriceLevel({
   // NOTE: If this happens from a single price level update, it's possible for multiple subsequent
   // price level updates to fail with the same error due to interleaved price level updates.
   if (updatedQuantums < 0) {
-    // Undo the update. This can't be done in a Lua script as Redis runs Lua 5.1, which only
-    // uses doubles which support up to 53-bit integers. Race-condition where it's possible for a
-    // price-level to have negative quantums handled in `getOrderbookLevels` where price-levels with
-    // negative quantums are filtered out. Note: even though we are reverting this information, each
-    // call to incrementOrderbookLevel updates the lastUpdated key in the cache.
+    // Set the price level to 0.
+    // Race-condition where it's possible for a price-level to have negative quantums handled in
+    // `getOrderbookLevels` where price-levels with negative quantums are filtered out. Note: even
+    // though we are reverting this information, each call to incrementOrderbookLevel updates the
+    // lastUpdated key in the cache.
     await incrementOrderbookLevel(
       ticker,
       side,
       humanPrice,
       // Needs to be an integer
-      Big(sizeDeltaInQuantums).mul(-1).toFixed(0),
+      Big(updatedQuantums).mul(-1).toFixed(0),
       client,
     );
     logger.crit({
       at: 'orderbookLevelsCache#updatePriceLevel',
-      message: 'Price level updated to negative quantums',
+      message: 'Price level updated to negative quantums, set to zero',
       ticker,
       side,
       humanPrice,
       updatedQuantums,
       sizeDeltaInQuantums,
     });
-    throw new InvalidPriceLevelUpdateError(
-      '#updatePriceLevel: Resulting price level has negative quantums, quantums = ' +
-      `${updatedQuantums}`,
-    );
+    return 0;
   }
 
   return updatedQuantums;
@@ -334,6 +336,71 @@ export async function deleteZeroPriceLevel({
 }
 
 /**
+ * Deletes a stale price level from the orderbook levels cache idempotently using a Lua script.
+ * @param param0 Ticker of the exchange pair, side, human readable price level,
+ * time threshold to delete.
+ * @returns `boolean`, true/false for whether the level was deleted.
+ */
+export async function deleteStalePriceLevel({
+  ticker,
+  side,
+  humanPrice,
+  timeThreshold,
+  client,
+}: {
+  ticker: string,
+  side: OrderSide,
+  humanPrice: string,
+  timeThreshold: number,
+  client: RedisClient,
+}): Promise<boolean> {
+  // Number of keys for the lua script.
+  const numKeys: number = 2;
+
+  let evalAsync: (
+    orderbookKey: string,
+    lastUpdatedKey: string,
+    priceLevel: string,
+    timeInterval: number,
+  ) => Promise<boolean> = (
+    orderbookKey,
+    lastUpdatedKey,
+    priceLevel,
+    timeInterval,
+  ) => {
+    return new Promise((resolve, reject) => {
+      const callback: Callback<number> = (
+        err: Error | null,
+        results: number,
+      ) => {
+        if (err) {
+          return reject(err);
+        }
+        const deleted: number = results;
+        return resolve(deleted === 1);
+      };
+      client.evalsha(
+        deleteStalePriceLevelScript.hash,
+        numKeys,
+        orderbookKey,
+        lastUpdatedKey,
+        priceLevel,
+        timeInterval,
+        callback,
+      );
+    });
+  };
+  evalAsync = evalAsync.bind(client);
+
+  return evalAsync(
+    getKey(ticker, side),
+    getLastUpdatedKey(ticker, side),
+    humanPrice,
+    timeThreshold,
+  );
+}
+
+/**
  * Gets the quantums and lastUpdated data from the cache for the given orderbook side.
  * @param param0 Ticker of the exchange pair, side, Redis client.
  * @returns An mapping from human-readable price to objects containing data for the price point.
@@ -396,8 +463,10 @@ export async function getOrderbookSideData({
   // The 1st list is a flat array of alternating key-value pairs representing prices and quantums.
   // The 2nd is a flat array of alternating key-value pairs representing prices and lastUpdated
   // values.
-  const quantumsMapping: {[field: string]: string} = _.fromPairs(_.chunk(rawRedisResults[0], 2));
-  const lastUpdatedMapping: {[field: string]: string} = _.fromPairs(_.chunk(rawRedisResults[1], 2));
+  const quantumsMapping: { [field: string]: string } = _.fromPairs(_.chunk(rawRedisResults[0], 2));
+  const lastUpdatedMapping: { [field: string]: string } = _.fromPairs(
+    _.chunk(rawRedisResults[1], 2),
+  );
 
   return convertToPriceLevels(ticker, side, quantumsMapping, lastUpdatedMapping);
 
@@ -432,8 +501,8 @@ async function getOrderbookSide(
 function convertToPriceLevels(
   ticker: string,
   side: OrderSide,
-  price2QuantumsMapping: {[field: string]: string},
-  price2LastUpdatedMapping: {[field: string]: string},
+  price2QuantumsMapping: { [field: string]: string },
+  price2LastUpdatedMapping: { [field: string]: string },
 ): PriceLevel[] {
   const quantumsKeys: string[] = _.keys(price2QuantumsMapping);
   const lastUpdatedKeys: string[] = _.keys(price2LastUpdatedMapping);

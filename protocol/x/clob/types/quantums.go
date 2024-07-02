@@ -5,7 +5,6 @@ import (
 	"math/big"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -34,26 +33,8 @@ func FillAmountToQuoteQuantums(
 	bigSubticks := subticks.ToBigInt()
 	bigBaseQuantums := baseQuantums.ToBigInt()
 
-	bigSubticksMulBaseQuantums := new(big.Int).Mul(bigSubticks, bigBaseQuantums)
-
-	exponent := int64(quantumConversionExponent)
-
-	// To ensure we are always doing math with integers, we take the absolute
-	// value of the exponent. If `exponent` is non-negative, then `10^exponent` is an
-	// integer and we can multiply by it. Else, `10^exponent` is less than 1 and we should
-	// multiply by `1 / 10^exponent` (which must be an integer if `exponent < 0`).
-	bigExponentValue := lib.BigPow10(lib.AbsInt64(exponent))
-
-	bigQuoteQuantums := new(big.Int)
-	if exponent < 0 {
-		// `1 / 10^exponent` is an integer.
-		bigQuoteQuantums.Div(bigSubticksMulBaseQuantums, bigExponentValue)
-	} else {
-		// `10^exponent` is an integer.
-		bigQuoteQuantums.Mul(bigSubticksMulBaseQuantums, bigExponentValue)
-	}
-
-	return bigQuoteQuantums
+	result := new(big.Int).Mul(bigSubticks, bigBaseQuantums)
+	return lib.BigIntMulPow10(result, quantumConversionExponent, false)
 }
 
 // GetAveragePriceSubticks computes the average price (in subticks) of filled
@@ -74,42 +55,13 @@ func GetAveragePriceSubticks(
 	if bigBaseQuantums.Sign() == 0 {
 		panic(errors.New("GetAveragePriceSubticks: bigBaseQuantums = 0"))
 	}
-
-	result := lib.BigMulPow10(bigQuoteQuantums, -quantumConversionExponent)
-	return result.Quo(
-		result,
-		new(big.Rat).SetInt(bigBaseQuantums),
-	)
-}
-
-// NotionalToCoinAmount returns the coin amount (e.g. `uatom`) that has equal worth to the notional (in quote quantums).
-// For example, given price of 9.5 USDC/ATOM, notional of 9_500_000 quote quantums, return 1_000_000 `uatom` (since
-// `tokenDenomExp“=-6).
-// Note the return value is in coin amount, which is different from base quantums.
-//
-// Given the below by definitions:
-//
-//	quote_quantums * 10^quote_atomic_resolution = full_quote_coin_amount (e.g. 2_000_000 quote quantums * 10^-6 = 2 USDC)
-//	coin_amount * 10^denom_exponent = full_coin_amount (e.g. 1_000_000 uatom * 10^-6 = 1 ATOM)
-//	full_coin_amount * coin_price = full_quote_coin_amount (e.g. 1 ATOM * 9.5 USDC/ATOM = 9.5 USDC)
-//
-// Therefore:
-//
-//	coin_amount * 10^denom_exponent * coin_price = quote_quantums * 10^quote_atomic_resolution
-//	coin_amount = quote_quantums * 10^(quote_atomic_resolution - denom_exponent) / coin_price
-func NotionalToCoinAmount(
-	notionalQuoteQuantums *big.Int,
-	quoteAtomicResolution int32,
-	denomExp int32,
-	marketPrice pricestypes.MarketPrice,
-) *big.Rat {
-	fullCoinPrice := lib.BigMulPow10(
-		new(big.Int).SetUint64(marketPrice.Price),
-		marketPrice.Exponent,
-	)
-	ret := lib.BigMulPow10(notionalQuoteQuantums, quoteAtomicResolution-denomExp)
-	return ret.Quo(
-		ret,
-		fullCoinPrice,
-	)
+	numerator := new(big.Int).Set(bigQuoteQuantums)
+	denominator := new(big.Int).Set(bigBaseQuantums)
+	p10, inverse := lib.BigPow10(-quantumConversionExponent)
+	if inverse {
+		denominator.Mul(denominator, p10)
+	} else {
+		numerator.Mul(numerator, p10)
+	}
+	return new(big.Rat).SetFrac(numerator, denominator)
 }

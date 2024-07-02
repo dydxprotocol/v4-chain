@@ -13,6 +13,7 @@ const (
 	PlaceMessageType OffchainUpdateMessageType = iota
 	RemoveMessageType
 	UpdateMessageType
+	ReplaceMessageType
 )
 
 // Represents a single message added to the OffchainUpdates.
@@ -49,6 +50,11 @@ func (om *OffchainUpdates) AddUpdateMessage(orderId OrderId, message msgsender.M
 // AddRemoveMessage adds an off-chain message for the removal of an order to the OffchainUpdates.
 func (om *OffchainUpdates) AddRemoveMessage(orderId OrderId, message msgsender.Message) {
 	om.Messages = append(om.Messages, OffchainUpdateMessage{RemoveMessageType, orderId, message})
+}
+
+// AddReplaceMessage adds an off-chain message for the replacement of an order to the OffchainUpdates.
+func (om *OffchainUpdates) AddReplaceMessage(orderId OrderId, message msgsender.Message) {
+	om.Messages = append(om.Messages, OffchainUpdateMessage{ReplaceMessageType, orderId, message})
 }
 
 // CondenseMessageForReplay removes all but the last off-chain message for each OrderId from the

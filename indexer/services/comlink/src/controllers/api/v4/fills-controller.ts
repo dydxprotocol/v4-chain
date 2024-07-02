@@ -7,6 +7,8 @@ import {
   FillTable,
   FillFromDatabase,
   QueryableField,
+  FillColumns,
+  Ordering,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import {
@@ -28,7 +30,12 @@ import {
   getClobPairId, handleControllerError, isDefined,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { CheckLimitAndCreatedBeforeOrAtSchema, CheckSubaccountSchema, CheckParentSubaccountSchema } from '../../../lib/validation/schemas';
+import {
+  CheckLimitAndCreatedBeforeOrAtSchema,
+  CheckSubaccountSchema,
+  CheckParentSubaccountSchema,
+  CheckPaginationSchema,
+} from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { fillToResponseObject } from '../../../request-helpers/request-transformer';
@@ -55,6 +62,7 @@ class FillsController extends Controller {
       @Query() limit?: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
+      @Query() page?: number,
   ): Promise<FillResponse> {
     // TODO(DEC-656): Change to using a cache of markets in Redis similar to Librarian instead of
     // querying the DB.
@@ -68,7 +76,12 @@ class FillsController extends Controller {
     }
 
     const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
-    const { results: fills } = await FillTable.findAll(
+    const {
+      results: fills,
+      limit: pageSize,
+      offset,
+      total,
+    } = await FillTable.findAll(
       {
         subaccountId: [subaccountId],
         clobPairId,
@@ -77,8 +90,10 @@ class FillsController extends Controller {
           ? createdBeforeOrAtHeight.toString()
           : undefined,
         createdBeforeOrAt,
+        page,
       },
       [QueryableField.LIMIT],
+      page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
     );
 
     const clobPairIdToPerpetualMarket: Record<
@@ -98,6 +113,9 @@ class FillsController extends Controller {
       fills: fills.map((fill: FillFromDatabase): FillResponseObject => {
         return fillToResponseObject(fill, clobPairIdToMarket, subaccountNumber);
       }),
+      pageSize,
+      totalResults: total,
+      offset,
     };
   }
 
@@ -110,6 +128,7 @@ class FillsController extends Controller {
       @Query() limit?: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
+      @Query() page?: number,
   ): Promise<FillResponse> {
     // TODO(DEC-656): Change to using a cache of markets in Redis similar to Librarian instead of
     // querying the DB.
@@ -132,7 +151,12 @@ class FillsController extends Controller {
     );
     const subaccountIds: string[] = Object.keys(childIdtoSubaccountNumber);
 
-    const { results: fills } = await FillTable.findAll(
+    const {
+      results: fills,
+      limit: pageSize,
+      offset,
+      total,
+    } = await FillTable.findAll(
       {
         subaccountId: subaccountIds,
         clobPairId,
@@ -141,8 +165,10 @@ class FillsController extends Controller {
           ? createdBeforeOrAtHeight.toString()
           : undefined,
         createdBeforeOrAt,
+        page,
       },
       [QueryableField.LIMIT],
+      page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
     );
 
     const clobPairIdToPerpetualMarket: Record<
@@ -163,6 +189,9 @@ class FillsController extends Controller {
         return fillToResponseObject(fill, clobPairIdToMarket,
           childIdtoSubaccountNumber[fill.subaccountId]);
       }),
+      pageSize,
+      totalResults: total,
+      offset,
     };
   }
 }
@@ -172,6 +201,7 @@ router.get(
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
+  ...CheckPaginationSchema,
   // Use conditional validations such that market is required if marketType is in the query
   // parameters and vice-versa.
   // Reference https://express-validator.github.io/docs/validation-chain-api.html#ifcondition
@@ -208,6 +238,7 @@ router.get(
       limit,
       createdBeforeOrAtHeight,
       createdBeforeOrAt,
+      page,
     }: FillRequest = matchedData(req) as FillRequest;
 
     // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
@@ -225,6 +256,7 @@ router.get(
         limit,
         createdBeforeOrAtHeight,
         createdBeforeOrAt,
+        page,
       );
 
       return res.send(response);
@@ -250,6 +282,7 @@ router.get(
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckParentSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtSchema,
+  ...CheckPaginationSchema,
   // Use conditional validations such that market is required if marketType is in the query
   // parameters and vice-versa.
   // Reference https://express-validator.github.io/docs/validation-chain-api.html#ifcondition
@@ -286,6 +319,7 @@ router.get(
       limit,
       createdBeforeOrAtHeight,
       createdBeforeOrAt,
+      page,
     }: ParentSubaccountFillRequest = matchedData(req) as ParentSubaccountFillRequest;
 
     // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
@@ -303,6 +337,7 @@ router.get(
         limit,
         createdBeforeOrAtHeight,
         createdBeforeOrAt,
+        page,
       );
 
       return res.send(response);

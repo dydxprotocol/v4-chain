@@ -3,14 +3,14 @@ import {
   Ordering,
   PnlTicksColumns,
   PnlTicksCreateObject,
-  PnlTicksFromDatabase,
 } from '../../src/types';
 import * as PnlTicksTable from '../../src/stores/pnl-ticks-table';
 import * as BlockTable from '../../src/stores/block-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { seedData } from '../helpers/mock-generators';
 import {
-  defaultBlock, defaultBlock2,
+  defaultBlock,
+  defaultBlock2,
   defaultPnlTick,
   defaultSubaccountId,
   defaultSubaccountId2,
@@ -58,7 +58,7 @@ describe('PnlTicks store', () => {
       PnlTicksTable.create(pnlTick2),
     ]);
 
-    const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.findAll({}, [], {
+    const { results: pnlTicks } = await PnlTicksTable.findAll({}, [], {
       orderBy: [[PnlTicksColumns.blockHeight, Ordering.ASC]],
     });
 
@@ -78,7 +78,7 @@ describe('PnlTicks store', () => {
       blockTime: defaultBlock.time,
     };
     await PnlTicksTable.createMany([defaultPnlTick, pnlTick2]);
-    const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.findAll({}, [], {
+    const { results: pnlTicks } = await PnlTicksTable.findAll({}, [], {
       orderBy: [[PnlTicksColumns.blockHeight, Ordering.ASC]],
     });
 
@@ -101,7 +101,7 @@ describe('PnlTicks store', () => {
       }),
     ]);
 
-    const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.findAll(
+    const { results: pnlTicks } = await PnlTicksTable.findAll(
       {
         subaccountId: [defaultSubaccountId],
       },
@@ -110,6 +110,66 @@ describe('PnlTicks store', () => {
     );
 
     expect(pnlTicks.length).toEqual(2);
+  });
+
+  it('Successfully finds PnlTicks using pagination', async () => {
+    const blockTime: IsoString = '2023-01-01T00:00:00.000Z';
+    await Promise.all([
+      PnlTicksTable.create(defaultPnlTick),
+      PnlTicksTable.create({
+        ...defaultPnlTick,
+        createdAt: '2020-01-01T00:00:00.000Z',
+        blockHeight: '1000',
+        blockTime,
+      }),
+    ]);
+
+    const responsePageOne = await PnlTicksTable.findAll({
+      page: 1,
+      limit: 1,
+    }, [], {
+      orderBy: [[PnlTicksColumns.blockHeight, Ordering.DESC]],
+    });
+
+    expect(responsePageOne.results.length).toEqual(1);
+    expect(responsePageOne.results[0]).toEqual(expect.objectContaining({
+      ...defaultPnlTick,
+      createdAt: '2020-01-01T00:00:00.000Z',
+      blockHeight: '1000',
+      blockTime,
+    }));
+    expect(responsePageOne.offset).toEqual(0);
+    expect(responsePageOne.total).toEqual(2);
+
+    const responsePageTwo = await PnlTicksTable.findAll({
+      page: 2,
+      limit: 1,
+    }, [], {
+      orderBy: [[PnlTicksColumns.blockHeight, Ordering.DESC]],
+    });
+
+    expect(responsePageTwo.results.length).toEqual(1);
+    expect(responsePageTwo.results[0]).toEqual(expect.objectContaining(defaultPnlTick));
+    expect(responsePageTwo.offset).toEqual(1);
+    expect(responsePageTwo.total).toEqual(2);
+
+    const responsePageAllPages = await PnlTicksTable.findAll({
+      page: 1,
+      limit: 2,
+    }, [], {
+      orderBy: [[PnlTicksColumns.blockHeight, Ordering.DESC]],
+    });
+
+    expect(responsePageAllPages.results.length).toEqual(2);
+    expect(responsePageAllPages.results[0]).toEqual(expect.objectContaining({
+      ...defaultPnlTick,
+      createdAt: '2020-01-01T00:00:00.000Z',
+      blockHeight: '1000',
+      blockTime,
+    }));
+    expect(responsePageAllPages.results[1]).toEqual(expect.objectContaining(defaultPnlTick));
+    expect(responsePageAllPages.offset).toEqual(0);
+    expect(responsePageAllPages.total).toEqual(2);
   });
 
   it('Successfully finds latest block time', async () => {
@@ -124,14 +184,27 @@ describe('PnlTicks store', () => {
       }),
     ]);
 
-    const latestBlocktime: string = await PnlTicksTable.findLatestProcessedBlocktime();
+    const {
+      maxBlockTime, count,
+    }: {
+      maxBlockTime: string,
+      count: number
+    } = await PnlTicksTable.findLatestProcessedBlocktimeAndCount();
 
-    expect(latestBlocktime).toEqual(blockTime);
+    expect(maxBlockTime).toEqual(blockTime);
+    expect(count).toEqual(1);
   });
 
   it('Successfully finds latest block time without any pnl ticks', async () => {
-    const latestBlocktime: string = await PnlTicksTable.findLatestProcessedBlocktime();
-    expect(latestBlocktime).toEqual(ZERO_TIME_ISO_8601);
+    const {
+      maxBlockTime, count,
+    }: {
+      maxBlockTime: string,
+      count: number
+    } = await PnlTicksTable.findLatestProcessedBlocktimeAndCount();
+
+    expect(maxBlockTime).toEqual(ZERO_TIME_ISO_8601);
+    expect(count).toEqual(0);
   });
 
   it('createMany PnlTicks, find most recent pnl ticks for each account', async () => {

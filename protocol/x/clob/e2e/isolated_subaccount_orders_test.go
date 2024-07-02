@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 
@@ -17,6 +16,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -35,14 +35,14 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 			Subticks:     10,
 			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 5},
 		})
-	PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price10_GTB5_FOK := *clobtypes.NewMsgPlaceOrder(
+	PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price10_GTB5_IOC := *clobtypes.NewMsgPlaceOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 3},
 			Side:         clobtypes.Order_SIDE_BUY,
 			Quantums:     uint64(orderQuantums),
 			Subticks:     10,
 			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 5},
-			TimeInForce:  clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL,
+			TimeInForce:  clobtypes.Order_TIME_IN_FORCE_IOC,
 		})
 	PlaceOrder_Bob_Num0_Id0_Clob3_Sell_1ISO_Price10_GTB5 := *clobtypes.NewMsgPlaceOrder(
 		clobtypes.Order{
@@ -70,20 +70,20 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 		Id: &constants.Alice_Num0,
 		AssetPositions: []*satypes.AssetPosition{
 			// USDC asset position.
-			{
-				AssetId: uint32(0),
+			testutil.CreateSingleAssetPosition(
+				uint32(0),
 				// Match = 10e9 * 10e-8 * 10 = 100 quantums. Fees = 0.
 				// Alice is buying, subtract match quantums from asset position.
-				Quantums: dtypes.NewInt(10_000_000_000 - 100),
-			},
+				big.NewInt(10_000_000_000-100),
+			),
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			// Isolated perpetual position.
-			{
-				PerpetualId:  uint32(3),
-				Quantums:     dtypes.NewInt(int64(orderQuantums)),
-				FundingIndex: dtypes.NewInt(0),
-			},
+			testutil.CreateSinglePerpetualPosition(
+				uint32(3),
+				big.NewInt(int64(orderQuantums)),
+				big.NewInt(0),
+			),
 		},
 	}
 
@@ -92,20 +92,20 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 		Id: &constants.Bob_Num0,
 		AssetPositions: []*satypes.AssetPosition{
 			// USDC asset position.
-			{
-				AssetId: uint32(0),
+			testutil.CreateSingleAssetPosition(
+				uint32(0),
 				// Match = 10e9 * 10e-8 * 10 = 100 quantums. Fees = 1 quantum.
 				// Bob is selling, add match quantums from asset position.
-				Quantums: dtypes.NewInt(10_000_000_000 + 99),
-			},
+				big.NewInt(10_000_000_000+99),
+			),
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			// Isolated perpetual position.
-			{
-				PerpetualId:  uint32(3),
-				Quantums:     dtypes.NewInt(-1 * int64(orderQuantums)),
-				FundingIndex: dtypes.NewInt(0),
-			},
+			testutil.CreateSinglePerpetualPosition(
+				uint32(3),
+				big.NewInt(-1*int64(orderQuantums)),
+				big.NewInt(0),
+			),
 		},
 	}
 
@@ -114,21 +114,21 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 		Id: &constants.Alice_Num0,
 		AssetPositions: []*satypes.AssetPosition{
 			// USDC asset position.
-			{
-				AssetId: uint32(0),
+			testutil.CreateSingleAssetPosition(
+				uint32(0),
 				// Match = 10e9 * 10e-8 * 10 = 100 quantums. Fees = 0.
 				// Alice is buying, subtract match quantums from asset position.
-				Quantums: dtypes.NewInt(10_000_000_000 - 100),
-			},
+				big.NewInt(10_000_000_000-100),
+			),
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			// Isolated perpetual position.
-			{
-				PerpetualId: uint32(3),
+			testutil.CreateSinglePerpetualPosition(
+				uint32(3),
 				// Alice buys 1 more ISO,
-				Quantums:     dtypes.NewInt(2 * int64(orderQuantums)),
-				FundingIndex: dtypes.NewInt(0),
-			},
+				big.NewInt(2*int64(orderQuantums)),
+				big.NewInt(0),
+			),
 		},
 	}
 
@@ -137,12 +137,12 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 		Id: &constants.Bob_Num0,
 		AssetPositions: []*satypes.AssetPosition{
 			// USDC asset position.
-			{
-				AssetId: uint32(0),
+			testutil.CreateSingleAssetPosition(
+				uint32(0),
 				// Match = 10e9 * 10e-8 * 10 = 100 quantums. Fees = 1.
 				// Bob is selling, add match quantums from asset position.
-				Quantums: dtypes.NewInt(10_000_000_000 + 99),
-			},
+				big.NewInt(10_000_000_000+99),
+			),
 		},
 	}
 
@@ -481,7 +481,7 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountConstraints.ABCICode(),
 			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
 		},
-		`Subaccount with isolated perpetual position fails to place FOK order for cross perpetual`: {
+		`Subaccount with isolated perpetual position fails to place IOC order for cross perpetual`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_1ISO_LONG_10_000USD,
 				constants.Bob_Num0_10_000USD,
@@ -497,9 +497,9 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 				constants.ClobPair_3_Iso,
 			},
 			orders: []clobtypes.MsgPlaceOrder{
-				// Liquidity to match the FOK order
+				// Liquidity to match the IOC order
 				*clobtypes.NewMsgPlaceOrder(constants.Order_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10),
-				*clobtypes.NewMsgPlaceOrder(constants.Order_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10_FOK),
+				*clobtypes.NewMsgPlaceOrder(constants.Order_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10_IOC),
 			},
 			collateralPoolBalances: map[string]int64{
 				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
@@ -522,7 +522,7 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountConstraints.ABCICode(),
 			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
 		},
-		`Subaccount with cross perpetual position fails to place FOK order for isolated perpetual`: {
+		`Subaccount with cross perpetual position fails to place IOC order for isolated perpetual`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_1BTC_LONG_10_000USD,
 				constants.Bob_Num0_10_000USD,
@@ -538,9 +538,9 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 				constants.ClobPair_3_Iso,
 			},
 			orders: []clobtypes.MsgPlaceOrder{
-				// Liquidity to match the FOK order
+				// Liquidity to match the IOC order
 				PlaceOrder_Bob_Num0_Id0_Clob3_Sell_1ISO_Price10_GTB5,
-				PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price10_GTB5_FOK,
+				PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price10_GTB5_IOC,
 			},
 			collateralPoolBalances: map[string]int64{
 				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC

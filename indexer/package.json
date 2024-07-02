@@ -13,8 +13,15 @@
     "lint:all": "pnpm run --parallel lint",
     "lint:fix:all": "pnpm run --parallel lint:fix",
     "coverage:all": "pnpm recursive run --workspace-concurrency=1 coverage",
-    "test:all": "pnpm recursive run --workspace-concurrency=1 test"
+    "test:all": "pnpm recursive run --workspace-concurrency=1 test",
+    "postinstall": "patch-package"
   },
   "author": "",
-  "license": "AGPL-3.0"
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "@milahu/patch-package": "6.4.14"
+  },
+  "devDependencies": {
+    "@types/ws": "8.5.10"
+  }
 }

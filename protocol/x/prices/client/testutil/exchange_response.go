@@ -29,7 +29,7 @@ type ExchangeIdAndName struct {
 
 // SetupExchangeResponses validates and sets up responses returned by exchange APIs using `gock`.
 func SetupExchangeResponses(
-	t *testing.T,
+	t testing.TB,
 	responses map[ExchangeIdAndName]Response,
 ) {
 	// Setup `gock` responses.
@@ -40,7 +40,7 @@ func SetupExchangeResponses(
 
 // setupGockResponse sets up the mock API responses returned by exchanges using `gock`.
 func setupGockResponse(
-	t *testing.T,
+	t testing.TB,
 	exchange ExchangeIdAndName,
 	response Response,
 ) {

@@ -4,22 +4,21 @@ import {
   dbHelpers,
   MarketFromDatabase,
   MarketMessageContents,
-  MarketsMap,
   OraclePriceFromDatabase,
   OraclePriceTable,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
   PerpetualPositionFromDatabase,
   PerpetualPositionStatus,
+  PerpetualPositionTable,
   PositionSide,
   SubaccountMessageContents,
+  SubaccountTable,
   testConstants,
   testMocks,
   TransferFromDatabase,
-  PerpetualPositionTable,
-  UpdatedPerpetualPositionSubaccountKafkaObject,
   TransferType,
-  SubaccountTable,
+  UpdatedPerpetualPositionSubaccountKafkaObject,
 } from '@dydxprotocol-indexer/postgres';
 import { IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import { DateTime } from 'luxon';
@@ -36,6 +35,8 @@ import { updateBlockCache } from '../../src/caches/block-cache';
 import { defaultPreviousHeight, defaultWalletAddress } from './constants';
 
 describe('kafka-helper', () => {
+  const blockHeight: string = '5';
+
   describe('addPositionsToContents', () => {
     const defaultPerpetualPosition: PerpetualPositionFromDatabase = {
       id: '',
@@ -81,10 +82,12 @@ describe('kafka-helper', () => {
         {},
         [],
         {},
+        blockHeight,
       );
 
       expect(contents.perpetualPositions).toEqual(undefined);
       expect(contents.assetPositions).toEqual(undefined);
+      expect(contents.blockHeight).toEqual(blockHeight);
     });
 
     it('successfully adds one asset position and one perp position', () => {
@@ -100,6 +103,7 @@ describe('kafka-helper', () => {
         { [defaultPerpetualMarket.id]: defaultPerpetualMarket },
         [defaultAssetPosition],
         { [defaultAsset.id]: defaultAsset },
+        blockHeight,
       );
 
       expect(contents.perpetualPositions!.length).toEqual(1);
@@ -129,6 +133,7 @@ describe('kafka-helper', () => {
         side: 'LONG',
         size: defaultAssetPosition.size,
       });
+      expect(contents.blockHeight).toEqual(blockHeight);
     });
 
     it('successfully adds one asset position', () => {
@@ -144,6 +149,7 @@ describe('kafka-helper', () => {
         {},
         [defaultAssetPosition],
         { [defaultAsset.id]: defaultAsset },
+        blockHeight,
       );
 
       expect(contents.perpetualPositions).toBeUndefined();
@@ -158,6 +164,7 @@ describe('kafka-helper', () => {
         side: 'LONG',
         size: defaultAssetPosition.size,
       });
+      expect(contents.blockHeight).toEqual(blockHeight);
     });
 
     it('successfully adds one perp position', () => {
@@ -173,6 +180,7 @@ describe('kafka-helper', () => {
         { [defaultPerpetualMarket.id]: defaultPerpetualMarket },
         [],
         {},
+        blockHeight,
       );
 
       expect(contents.perpetualPositions!.length).toEqual(1);
@@ -193,6 +201,7 @@ describe('kafka-helper', () => {
       });
 
       expect(contents.assetPositions).toBeUndefined();
+      expect(contents.blockHeight).toEqual(blockHeight);
     });
 
     it('successfully adds multiple positions', () => {
@@ -222,6 +231,7 @@ describe('kafka-helper', () => {
           },
         ],
         { [defaultAsset.id]: defaultAsset },
+        blockHeight,
       );
 
       // check perpetual positions
@@ -277,6 +287,7 @@ describe('kafka-helper', () => {
         side: 'LONG',
         size: assetSize,
       });
+      expect(contents.blockHeight).toEqual(blockHeight);
     });
   });
 
@@ -343,6 +354,7 @@ describe('kafka-helper', () => {
         senderSubaccountId,
         senderSubaccountId,
         recipientSubaccountId,
+        transfer.createdAtHeight,
       );
 
       expect(contents.transfers).toEqual({
@@ -361,6 +373,7 @@ describe('kafka-helper', () => {
         createdAtHeight: transfer.createdAtHeight,
         transactionHash: transfer.transactionHash,
       });
+      expect(contents.blockHeight).toEqual(transfer.createdAtHeight);
     });
 
     it('successfully adds a transfer_in', () => {
@@ -478,9 +491,6 @@ describe('kafka-helper', () => {
   });
 
   describe('pnl', () => {
-    const defaultMarketMap: MarketsMap = {
-      [testConstants.defaultMarket.id]: testConstants.defaultMarket,
-    };
     const updatedObject: UpdatedPerpetualPositionSubaccountKafkaObject = {
       perpetualId: '0',
       maxSize: '25',
@@ -531,7 +541,7 @@ describe('kafka-helper', () => {
       } = getPnl(
         updatedObject,
         perpetualMarketRefresher.getPerpetualMarketsMap()[updatedObject.perpetualId],
-        defaultMarketMap,
+        testConstants.defaultMarket,
       );
       expect(realizedPnl).toEqual('-199998');  // 0*0-199998
       expect(unrealizedPnl).toEqual('1.5');  // 0.0001*(15000-0)
@@ -552,7 +562,7 @@ describe('kafka-helper', () => {
       } = getPnl(
         updatedObject2,
         perpetualMarketRefresher.getPerpetualMarketsMap()[updatedObject2.perpetualId],
-        defaultMarketMap,
+        testConstants.defaultMarket,
       );
       expect(realizedPnl).toEqual('-199993');  // 1*5-199998
       expect(unrealizedPnl).toEqual('1.5');  // 0.0001*(15000-0)
@@ -594,7 +604,7 @@ describe('kafka-helper', () => {
       const updatedObjectWithPnl: UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
         updatedObject2,
         perpetualMarketRefresher.getPerpetualMarketsMap(),
-        defaultMarketMap,
+        testConstants.defaultMarket,
       );
       expect(
         updatedObjectWithPnl,

@@ -2,7 +2,7 @@ import { stats } from '@dydxprotocol-indexer/base';
 import {
   DEFAULT_POSTGRES_OPTIONS,
   IsoString,
-  Ordering,
+  Ordering, PaginationFromDatabase,
   PnlTicksFromDatabase,
   PnlTicksTable,
   QueryableField,
@@ -22,7 +22,9 @@ import { NotFoundError } from '../../../lib/errors';
 import { getChildSubaccountIds, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
-  CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema, CheckParentSubaccountSchema,
+  CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
+  CheckPaginationSchema,
+  CheckParentSubaccountSchema,
   CheckSubaccountSchema,
 } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
@@ -44,12 +46,20 @@ class HistoricalPnlController extends Controller {
       @Query() createdBeforeOrAt?: IsoString,
       @Query() createdOnOrAfterHeight?: number,
       @Query() createdOnOrAfter?: IsoString,
+      @Query() page?: number,
   ): Promise<HistoricalPnlResponse> {
     const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
 
-    const [subaccount, pnlTicks]: [
+    const [subaccount,
+      {
+        results: pnlTicks,
+        limit: pageSize,
+        offset,
+        total,
+      },
+    ]: [
       SubaccountFromDatabase | undefined,
-      PnlTicksFromDatabase[],
+      PaginationFromDatabase<PnlTicksFromDatabase>,
     ] = await Promise.all([
       SubaccountTable.findById(
         subaccountId,
@@ -66,6 +76,7 @@ class HistoricalPnlController extends Controller {
             ? createdOnOrAfterHeight.toString()
             : undefined,
           createdOnOrAfter,
+          page,
         },
         [QueryableField.LIMIT],
         {
@@ -84,6 +95,9 @@ class HistoricalPnlController extends Controller {
       historicalPnl: pnlTicks.map((pnlTick: PnlTicksFromDatabase) => {
         return pnlTicksToResponseObject(pnlTick);
       }),
+      pageSize,
+      totalResults: total,
+      offset,
     };
   }
 
@@ -96,13 +110,21 @@ class HistoricalPnlController extends Controller {
       @Query() createdBeforeOrAt?: IsoString,
       @Query() createdOnOrAfterHeight?: number,
       @Query() createdOnOrAfter?: IsoString,
+      @Query() page?: number,
   ): Promise<HistoricalPnlResponse> {
 
     const childSubaccountIds: string[] = getChildSubaccountIds(address, parentSubaccountNumber);
 
-    const [subaccounts, pnlTicks]: [
+    const [subaccounts,
+      {
+        results: pnlTicks,
+        limit: pageSize,
+        offset,
+        total,
+      },
+    ]: [
       SubaccountFromDatabase[],
-      PnlTicksFromDatabase[],
+      PaginationFromDatabase<PnlTicksFromDatabase>,
     ] = await Promise.all([
       SubaccountTable.findAll(
         {
@@ -122,6 +144,7 @@ class HistoricalPnlController extends Controller {
             ? createdOnOrAfterHeight.toString()
             : undefined,
           createdOnOrAfter,
+          page,
         },
         [QueryableField.LIMIT],
         {
@@ -162,6 +185,9 @@ class HistoricalPnlController extends Controller {
         (pnlTick: PnlTicksFromDatabase) => {
           return pnlTicksToResponseObject(pnlTick);
         }),
+      pageSize,
+      totalResults: total,
+      offset,
     };
   }
 }
@@ -171,6 +197,7 @@ router.get(
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
+  ...CheckPaginationSchema,
   handleValidationErrors,
   complianceAndGeoCheck,
   ExportResponseCodeStats({ controllerName }),
@@ -184,6 +211,7 @@ router.get(
       createdBeforeOrAt,
       createdOnOrAfterHeight,
       createdOnOrAfter,
+      page,
     }: PnlTicksRequest = matchedData(req) as PnlTicksRequest;
 
     try {
@@ -196,6 +224,7 @@ router.get(
         createdBeforeOrAt,
         createdOnOrAfterHeight,
         createdOnOrAfter,
+        page,
       );
 
       return res.send(response);
@@ -221,6 +250,7 @@ router.get(
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckParentSubaccountSchema,
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
+  ...CheckPaginationSchema,
   handleValidationErrors,
   complianceAndGeoCheck,
   ExportResponseCodeStats({ controllerName }),

@@ -65,13 +65,17 @@ func (k Keeper) UpdateMarketPrices(
 		updatedMarketPrices = append(updatedMarketPrices, marketPrice)
 
 		// Report the oracle price.
-		updatedPrice, _ := lib.BigMulPow10(
-			new(big.Int).SetUint64(update.Price),
-			marketPrice.Exponent,
-		).Float32()
+		p10, inverse := lib.BigPow10(marketPrice.Exponent)
+		updatePrice := new(big.Int).SetUint64(update.Price)
+		var result float32
+		if inverse {
+			result, _ = new(big.Rat).SetFrac(updatePrice, p10).Float32()
+		} else {
+			result, _ = new(big.Rat).SetInt(updatePrice.Mul(updatePrice, p10)).Float32()
+		}
 		telemetry.SetGaugeWithLabels(
 			[]string{types.ModuleName, metrics.CurrentMarketPrices},
-			updatedPrice,
+			result,
 			[]gometrics.Label{ // To track per market, include the id as a label.
 				pricefeedmetrics.GetLabelForMarketId(marketPrice.Id),
 			},

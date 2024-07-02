@@ -29,12 +29,12 @@ func (g *GrpcClientImpl) NewGrpcConnection(
 	ctx context.Context,
 	socketAddress string,
 ) (*grpc.ClientConn, error) {
-	return grpc.DialContext(
+	return grpc.DialContext( //nolint:staticcheck
 		ctx,
 		socketAddress,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		// https://github.com/grpc/grpc-go/blob/master/dialoptions.go#L264
-		grpc.WithBlock(),
+		grpc.WithBlock(), //nolint:staticcheck
 		grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
 			// Create a custom `net.Dialer` in order to specify `unix` as the desired network.
 			var dialer net.Dialer
@@ -48,11 +48,11 @@ func (g *GrpcClientImpl) NewTcpConnection(
 	ctx context.Context,
 	endpoint string,
 ) (*grpc.ClientConn, error) {
-	return grpc.DialContext(
+	return grpc.DialContext( //nolint:staticcheck
 		ctx,
 		endpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
+		grpc.WithBlock(), //nolint:staticcheck
 	)
 }
 

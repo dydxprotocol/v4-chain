@@ -70,7 +70,9 @@ import {
   AssetPositionResponseObject,
   AssetPositionsMap,
   PerpetualPositionWithFunding,
-  AddressResponse, ParentSubaccountResponse, ParentSubaccountRequest,
+  AddressResponse,
+  ParentSubaccountResponse,
+  ParentSubaccountRequest,
 } from '../../../types';
 
 const router: express.Router = express.Router();
@@ -154,6 +156,7 @@ class AddressesController extends Controller {
           assets,
           markets,
           unsettledFunding,
+          latestBlock.blockHeight,
         );
       },
     ));
@@ -239,6 +242,7 @@ class AddressesController extends Controller {
       assets,
       markets,
       unsettledFunding,
+      latestBlock.blockHeight,
     );
     return subaccountResponse;
   }
@@ -322,6 +326,7 @@ class AddressesController extends Controller {
           assets,
           markets,
           unsettledFunding,
+          latestBlock.blockHeight,
         );
       },
     ));
@@ -491,6 +496,7 @@ async function getSubaccountResponse(
   assets: AssetFromDatabase[],
   markets: MarketFromDatabase[],
   unsettledFunding: Big,
+  latestBlockHeight: string,
 ): Promise<SubaccountResponseObject> {
   const perpetualMarketsMap: PerpetualMarketsMap = perpetualMarketRefresher
     .getPerpetualMarketsMap();
@@ -567,6 +573,7 @@ async function getSubaccountResponse(
     subaccount,
     equity,
     freeCollateral,
+    latestBlockHeight,
     openPerpetualPositions: perpetualPositionsMap,
     assetPositions: adjustedAssetPositionsMap,
   });

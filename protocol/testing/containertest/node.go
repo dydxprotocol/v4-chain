@@ -55,7 +55,7 @@ func (n *Node) createCometClient() (*comethttp.HTTP, error) {
 }
 
 func (n *Node) createGrpcConn() (*grpc.ClientConn, error) {
-	return grpc.Dial(n.grpcPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	return grpc.Dial(n.grpcPort, grpc.WithTransportCredentials(insecure.NewCredentials())) //nolint:staticcheck
 }
 
 // Wait for current block height has advanced by at least `numBlocks`
@@ -161,6 +161,27 @@ func BroadcastTx[M cosmos.Msg](n *Node, message M, signer string) (err error) {
 	txFactory = txFactory.WithGas(constants.TestGasLimit).WithFees(constants.TestFee)
 
 	if err = tx.GenerateOrBroadcastTxWithFactory(*clientContext, txFactory, message); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Broadcast a tx to the node given the message and a signer address.
+func BroadcastTxWithoutValidateBasic[M cosmos.Msg](n *Node, message M, signer string) (err error) {
+	clientContext, flags, err := n.getContextForBroadcastTx(signer)
+	if err != nil {
+		return err
+	}
+
+	txFactory, err := tx.NewFactoryCLI(*clientContext, flags)
+	if err != nil {
+		return err
+	}
+
+	// Use default gas limit and gas fee.
+	txFactory = txFactory.WithGas(constants.TestGasLimit).WithFees(constants.TestFee)
+
+	if err = tx.BroadcastTx(*clientContext, txFactory, message); err != nil {
 		return err
 	}
 	return nil

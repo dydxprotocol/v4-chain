@@ -107,20 +107,7 @@ func TestPerformStatelessMatchOrdersValidation(t *testing.T) {
 			},
 			takerOrder:    &constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
 			fillAmount:    100_000_000, // 1 BTC.
-			expectedError: errors.New("IOC / FOK order cannot be matched as a maker order"),
-		},
-		"Stateless match validation: maker order is a FOK order": {
-			makerOrder: &types.Order{
-				OrderId:      types.OrderId{SubaccountId: constants.Dave_Num0, ClientId: 0, ClobPairId: 0},
-				Side:         types.Order_SIDE_SELL,
-				Quantums:     100_000_000,
-				Subticks:     50_000_000_000,
-				GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 10},
-				TimeInForce:  types.Order_TIME_IN_FORCE_FILL_OR_KILL,
-			},
-			takerOrder:    &constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
-			fillAmount:    100_000_000, // 1 BTC.
-			expectedError: errors.New("IOC / FOK order cannot be matched as a maker order"),
+			expectedError: errors.New("IOC order cannot be matched as a maker order"),
 		},
 		"Stateless match validation: taker order is an IOC order": {
 			makerOrder: &constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,

@@ -9,6 +9,7 @@ const (
 	ErrorLogKey      = "error"
 	ExchangeIdLogKey = "exchangeId"
 	MarketIdLogKey   = "marketId"
+	MarketIdsLogKey  = "marketIds"
 	PriceLogKey      = "Price"
 	ReasonLogKey     = "reason"
 

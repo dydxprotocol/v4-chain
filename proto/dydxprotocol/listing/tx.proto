@@ -1,0 +1,29 @@
+syntax = "proto3";
+package dydxprotocol.listing;
+
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/listing/types";
+
+// Msg defines the Msg service.
+service Msg {
+  // SetMarketsHardCap sets a hard cap on the number of markets listed
+  rpc SetMarketsHardCap(MsgSetMarketsHardCap)
+      returns (MsgSetMarketsHardCapResponse);
+}
+
+// MsgSetMarketsHardCap is used to set a hard cap on the number of markets
+// listed
+message MsgSetMarketsHardCap {
+  // The address that controls the module (the gov module account).
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // Hard cap for the total number of markets listed
+  uint32 hard_cap_for_markets = 2;
+}
+
+// MsgSetMarketsHardCapResponse defines the MsgSetMarketsHardCap response
+message MsgSetMarketsHardCapResponse {}

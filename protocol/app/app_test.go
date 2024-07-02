@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	listingmodule "github.com/dydxprotocol/v4-chain/protocol/x/listing"
+
 	evidencemodule "cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
@@ -42,6 +44,7 @@ import (
 	perpetualsmodule "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	pricesmodule "github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	ratelimitmodule "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit"
+	revsharemodule "github.com/dydxprotocol/v4-chain/protocol/x/revshare"
 	rewardsmodule "github.com/dydxprotocol/v4-chain/protocol/x/rewards"
 	sendingmodule "github.com/dydxprotocol/v4-chain/protocol/x/sending"
 	statsmodule "github.com/dydxprotocol/v4-chain/protocol/x/stats"
@@ -214,6 +217,8 @@ func TestModuleBasics(t *testing.T) {
 		epochsmodule.AppModuleBasic{},
 		ratelimitmodule.AppModuleBasic{},
 		vaultmodule.AppModuleBasic{},
+		listingmodule.AppModuleBasic{},
+		revsharemodule.AppModuleBasic{},
 	)
 
 	app := testapp.DefaultTestApp(nil)

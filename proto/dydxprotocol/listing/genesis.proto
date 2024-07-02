@@ -1,0 +1,11 @@
+syntax = "proto3";
+package dydxprotocol.listing;
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/listing/types";
+
+// GenesisState defines `x/listing`'s genesis state.
+message GenesisState {
+  // hard_cap_for_markets is the hard cap for the number of markets that can be
+  // listed
+  uint32 hard_cap_for_markets = 1;
+}

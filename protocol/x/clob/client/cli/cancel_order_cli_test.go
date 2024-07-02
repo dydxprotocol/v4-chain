@@ -19,8 +19,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	testutil_bank "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	cli_testutil "github.com/dydxprotocol/v4-chain/protocol/x/clob/client/testutil"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
@@ -125,7 +125,7 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 				Owner:  s.validatorAddress.String(),
 				Number: cancelsSubaccountNumberZero,
 			},
-			AssetPositions:     testutil.CreateUsdcAssetPosition(big.NewInt(cancelsInitialQuoteBalance)),
+			AssetPositions:     testutil.CreateUsdcAssetPositions(big.NewInt(cancelsInitialQuoteBalance)),
 			PerpetualPositions: []*satypes.PerpetualPosition{},
 		},
 		satypes.Subaccount{
@@ -133,7 +133,7 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 				Owner:  s.validatorAddress.String(),
 				Number: cancelsSubaccountNumberOne,
 			},
-			AssetPositions:     testutil.CreateUsdcAssetPosition(big.NewInt(cancelsInitialQuoteBalance)),
+			AssetPositions:     testutil.CreateUsdcAssetPositions(big.NewInt(cancelsInitialQuoteBalance)),
 			PerpetualPositions: []*satypes.PerpetualPosition{},
 		},
 	)

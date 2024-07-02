@@ -182,75 +182,6 @@ func (k Keeper) GetAllAssets(
 	return list
 }
 
-// GetNetCollateral returns the net collateral that a given position (quantums)
-// for a given assetId contributes to an account.
-func (k Keeper) GetNetCollateral(
-	ctx sdk.Context,
-	id uint32,
-	bigQuantums *big.Int,
-) (
-	bigNetCollateralQuoteQuantums *big.Int,
-	err error,
-) {
-	if id == types.AssetUsdc.Id {
-		return new(big.Int).Set(bigQuantums), nil
-	}
-
-	// Get asset
-	_, exists := k.GetAsset(ctx, id)
-	if !exists {
-		return big.NewInt(0), errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.UintToString(id))
-	}
-
-	// Balance is zero.
-	if bigQuantums.BitLen() == 0 {
-		return big.NewInt(0), nil
-	}
-
-	// Balance is positive.
-	// TODO(DEC-581): add multi-collateral support.
-	if bigQuantums.Sign() == 1 {
-		return big.NewInt(0), types.ErrNotImplementedMulticollateral
-	}
-
-	// Balance is negative.
-	// TODO(DEC-582): add margin-trading support.
-	return big.NewInt(0), types.ErrNotImplementedMargin
-}
-
-// GetMarginRequirements returns the initial and maintenance margin-
-// requirements for a given position size for a given assetId.
-func (k Keeper) GetMarginRequirements(
-	ctx sdk.Context,
-	id uint32,
-	bigQuantums *big.Int,
-) (
-	bigInitialMarginQuoteQuantums *big.Int,
-	bigMaintenanceMarginQuoteQuantums *big.Int,
-	err error,
-) {
-	// QuoteBalance does not contribute to any margin requirements.
-	if id == types.AssetUsdc.Id {
-		return big.NewInt(0), big.NewInt(0), nil
-	}
-
-	// Get asset
-	_, exists := k.GetAsset(ctx, id)
-	if !exists {
-		return big.NewInt(0), big.NewInt(0), errorsmod.Wrap(
-			types.ErrAssetDoesNotExist, lib.UintToString(id))
-	}
-
-	// Balance is zero or positive.
-	if bigQuantums.Sign() >= 0 {
-		return big.NewInt(0), big.NewInt(0), nil
-	}
-
-	// Balance is negative.
-	// TODO(DEC-582): margin-trading
-	return big.NewInt(0), big.NewInt(0), types.ErrNotImplementedMargin
-}
-
 // ConvertAssetToCoin converts the given `assetId` and `quantums` used in `x/asset`,
 // to an `sdk.Coin` in correspoding `denom` and `amount` used in `x/bank`.
 // Also outputs `convertedQuantums` which has the equal value as converted `sdk.Coin`.
@@ -299,22 +230,19 @@ func (k Keeper) ConvertAssetToCoin(
 		)
 	}
 
-	bigRatDenomAmount := lib.BigMulPow10(
-		quantums,
-		asset.AtomicResolution-asset.DenomExponent,
-	)
+	exponent := asset.AtomicResolution - asset.DenomExponent
+	p10, inverse := lib.BigPow10(exponent)
+	var resultDenom *big.Int
+	var resultQuantums *big.Int
+	if inverse {
+		resultDenom = new(big.Int).Div(quantums, p10)
+		resultQuantums = new(big.Int).Mul(resultDenom, p10)
+	} else {
+		resultDenom = new(big.Int).Mul(quantums, p10)
+		resultQuantums = new(big.Int).Div(resultDenom, p10)
+	}
 
-	// round down to get denom amount that was converted.
-	bigConvertedDenomAmount := lib.BigRatRound(bigRatDenomAmount, false)
-
-	bigRatConvertedQuantums := lib.BigMulPow10(
-		bigConvertedDenomAmount,
-		asset.DenomExponent-asset.AtomicResolution,
-	)
-
-	bigConvertedQuantums := bigRatConvertedQuantums.Num()
-
-	return bigConvertedQuantums, sdk.NewCoin(asset.Denom, sdkmath.NewIntFromBigInt(bigConvertedDenomAmount)), nil
+	return resultQuantums, sdk.NewCoin(asset.Denom, sdkmath.NewIntFromBigInt(resultDenom)), nil
 }
 
 // IsPositionUpdatable returns whether position of an asset is updatable.

@@ -6,8 +6,6 @@ import (
 	"math/big"
 	"time"
 
-	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 
@@ -19,6 +17,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -178,10 +178,7 @@ func (k Keeper) CanDeleverageSubaccount(
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
 ) (shouldDeleverageAtBankruptcyPrice bool, shouldDeleverageAtOraclePrice bool, err error) {
-	bigNetCollateral,
-		_,
-		_,
-		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+	risk, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
 	)
@@ -190,7 +187,7 @@ func (k Keeper) CanDeleverageSubaccount(
 	}
 
 	// Negative TNC, deleverage at bankruptcy price.
-	if bigNetCollateral.Sign() == -1 {
+	if risk.NC.Sign() == -1 {
 		return true, false, nil
 	}
 
@@ -226,10 +223,7 @@ func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 	foundNegativeTncSubaccount := false
 	var negativeTncSubaccountId satypes.SubaccountId
 	for _, subaccountId := range negativeTncSubaccountIds {
-		bigNetCollateral,
-			_,
-			_,
-			err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+		risk, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 			ctx,
 			satypes.Update{SubaccountId: subaccountId},
 		)
@@ -238,7 +232,7 @@ func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 		}
 
 		// If the subaccount has negative TNC, mark that a negative TNC subaccount was found.
-		if bigNetCollateral.Sign() == -1 {
+		if risk.NC.Sign() == -1 {
 			foundNegativeTncSubaccount = true
 			negativeTncSubaccountId = subaccountId
 			break
@@ -261,7 +255,7 @@ func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 		)
 	}
 	perpetualId := subaccount.PerpetualPositions[0].PerpetualId
-	k.MemClob.InsertZeroFillDeleveragingIntoOperationsQueue(ctx, negativeTncSubaccountId, perpetualId)
+	k.MemClob.InsertZeroFillDeleveragingIntoOperationsQueue(negativeTncSubaccountId, perpetualId)
 	metrics.IncrCountMetricWithLabels(
 		types.ModuleName,
 		metrics.SubaccountsNegativeTncSubaccountSeen,
@@ -592,11 +586,12 @@ func (k Keeper) ProcessDeleveraging(
 	}
 
 	// Stat quantums deleveraged in quote quantums.
-	if deleveragedQuoteQuantums, err := k.perpetualsKeeper.GetNetCollateral(
-		ctx,
-		perpetualId,
-		new(big.Int).Abs(deltaBaseQuantums),
-	); err == nil {
+	if perpetual, marketPrice, err := k.perpetualsKeeper.GetPerpetualAndMarketPrice(ctx, perpetualId); err == nil {
+		deleveragedQuoteQuantums := perplib.GetNetNotionalInQuoteQuantums(
+			perpetual,
+			marketPrice,
+			new(big.Int).Abs(deltaBaseQuantums),
+		)
 		labels := []metrics.Label{
 			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
 			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),

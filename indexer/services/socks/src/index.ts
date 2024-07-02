@@ -1,6 +1,6 @@
 import { logger, startBugsnag, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
 import { startConsumer } from '@dydxprotocol-indexer/kafka';
-import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+import { blockHeightRefresher, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 
 import config from './config';
 import {
@@ -39,8 +39,12 @@ async function start(): Promise<void> {
 
   startBugsnag();
 
-  // Initialize PerpetualMarkets cache
-  await perpetualMarketRefresher.updatePerpetualMarkets();
+  // Initialize PerpetualMarkets and BlockHeight cache
+  await Promise.all([
+    blockHeightRefresher.updateBlockHeight(),
+    perpetualMarketRefresher.updatePerpetualMarkets(),
+  ]);
+  wrapBackgroundTask(blockHeightRefresher.start(), true, 'startUpdateBlockHeight');
   wrapBackgroundTask(perpetualMarketRefresher.start(), true, 'startUpdatePerpetualMarkets');
 
   logger.info({
@@ -57,13 +61,13 @@ async function start(): Promise<void> {
   });
 
   await connectToKafka();
-  await startConsumer();
 
   const subscriptions: Subscriptions = new Subscriptions();
   index = new Index(wss, subscriptions);
   messageForwarder = new MessageForwarder(subscriptions, index);
   subscriptions.start(messageForwarder.forwardToClient);
   messageForwarder.start();
+  await startConsumer(config.BATCH_PROCESSING_ENABLED);
 
   logger.info({
     at: 'index#start',

@@ -30,8 +30,8 @@ export const configSchema = {
     default: 250,
   }),
 
-  WS_HEARTBEAT_INTERVAL_MS: parseInteger(),
-  WS_HEARTBEAT_TIMEOUT_MS: parseInteger(),
+  WS_HEARTBEAT_INTERVAL_MS: parseInteger({ default: 30_000 }),
+  WS_HEARTBEAT_TIMEOUT_MS: parseInteger({ default: 10_000 }),
 
   RATE_LIMIT_ENABLED: parseBoolean({ default: true }),
   RATE_LIMIT_SUBSCRIBE_POINTS: parseNumber({ default: 2 }),
@@ -49,6 +49,10 @@ export const configSchema = {
   COMLINK_URL: parseString(),
   AXIOS_TIMEOUT_MS: parseInteger({ default: 5000 }), // 5 seconds
   INITIAL_GET_TIMEOUT_MS: parseInteger({ default: 20_000 }), // 20 seconds
+  BATCH_PROCESSING_ENABLED: parseBoolean({ default: true }),
+  KAFKA_BATCH_PROCESSING_COMMIT_FREQUENCY_MS: parseNumber({
+    default: 3_000,
+  }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////

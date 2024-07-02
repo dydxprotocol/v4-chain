@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -27,9 +28,7 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		update satypes.Update,
 	) (
-		bigNetCollateral *big.Int,
-		bigInitialMargin *big.Int,
-		bigMaintenanceMargin *big.Int,
+		risk margin.Risk,
 		err error,
 	)
 	GetSubaccount(
@@ -64,7 +63,6 @@ type SubaccountsKeeper interface {
 		perpetualId uint32,
 		blockHeight uint32,
 	) error
-	TransferFeesToFeeCollectorModule(ctx sdk.Context, assetId uint32, amount *big.Int, perpetualId uint32) error
 	TransferInsuranceFundPayments(
 		ctx sdk.Context,
 		amount *big.Int,
@@ -74,6 +72,12 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		perpetualId uint32,
 	) (sdk.AccAddress, error)
+	DistributeFees(
+		ctx sdk.Context,
+		assetId uint32,
+		quantums *big.Int,
+		perpetualId uint32,
+	) error
 }
 
 type AssetsKeeper interface {
@@ -105,21 +109,13 @@ type PerpetualsKeeper interface {
 		bigBaseQuantums *big.Int,
 		err error,
 	)
-	GetNetCollateral(
+	GetPerpetualAndMarketPriceAndLiquidityTier(
 		ctx sdk.Context,
-		id uint32,
-		bigQuantums *big.Int,
+		perpetualId uint32,
 	) (
-		bigNetCollateralQuoteQuantums *big.Int,
-		err error,
-	)
-	GetMarginRequirements(
-		ctx sdk.Context,
-		id uint32,
-		bigQuantums *big.Int,
-	) (
-		bigInitialMarginQuoteQuantums *big.Int,
-		bigMaintenanceMarginQuoteQuantums *big.Int,
+		perpetual perpetualsmoduletypes.Perpetual,
+		price pricestypes.MarketPrice,
+		liquidityTier perpetualsmoduletypes.LiquidityTier,
 		err error,
 	)
 	GetPerpetual(
@@ -130,16 +126,6 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 		perpetualId uint32,
 	) (perpetualsmoduletypes.Perpetual, pricestypes.MarketPrice, error)
-	GetSettlementPpm(
-		ctx sdk.Context,
-		perpetualId uint32,
-		quantums *big.Int,
-		index *big.Int,
-	) (
-		bigNetSettlement *big.Int,
-		newFundingIndex *big.Int,
-		err error,
-	)
 	MaybeProcessNewFundingTickEpoch(ctx sdk.Context)
 	GetInsuranceFundModuleAddress(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error)
 }

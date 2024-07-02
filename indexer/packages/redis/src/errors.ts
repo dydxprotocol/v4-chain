@@ -21,11 +21,3 @@ export class InvalidOptionsError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 }
-
-export class InvalidPriceLevelUpdateError extends Error {
-  constructor(message: string) {
-    super(`Invalid price level update: ${message}`);
-    this.name = this.constructor.name;
-    Error.captureStackTrace(this, this.constructor);
-  }
-}

@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/ibc-go/modules/capability"
 	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
+	listingmodule "github.com/dydxprotocol/v4-chain/protocol/x/listing"
 
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
@@ -33,6 +34,7 @@ import (
 	perpetualsmodule "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	pricesmodule "github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	ratelimitmodule "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit"
+	revsharemodule "github.com/dydxprotocol/v4-chain/protocol/x/revshare"
 	rewardsmodule "github.com/dydxprotocol/v4-chain/protocol/x/rewards"
 	sendingmodule "github.com/dydxprotocol/v4-chain/protocol/x/sending"
 	statsmodule "github.com/dydxprotocol/v4-chain/protocol/x/stats"
@@ -95,5 +97,7 @@ var (
 		govplusmodule.AppModuleBasic{},
 		vaultmodule.AppModuleBasic{},
 		wasm.AppModuleBasic{},
+		revsharemodule.AppModuleBasic{},
+		listingmodule.AppModuleBasic{},
 	)
 )

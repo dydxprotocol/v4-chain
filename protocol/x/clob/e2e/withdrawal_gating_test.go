@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	"math/big"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -17,6 +18,7 @@ import (
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	feetiertypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
@@ -31,10 +33,10 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 	Alice_Num0_AfterWithdrawal := satypes.Subaccount{
 		Id: &constants.Alice_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			{
-				AssetId:  uint32(0),
-				Quantums: dtypes.NewInt(9_999_999_999),
-			},
+			testutil.CreateSingleAssetPosition(
+				uint32(0),
+				big.NewInt(9_999_999_999),
+			),
 		},
 		PerpetualPositions: nil,
 	}
@@ -259,17 +261,17 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(49_999_000_000 - 12_499_750_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(49_999_000_000-12_499_750_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(-75_000_000), // -0.75 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(-75_000_000), // -0.75 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				// Dave's bankruptcy price to close 1 BTC long is $50,000, and deleveraging can not be

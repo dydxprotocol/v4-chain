@@ -1,9 +1,12 @@
-import { VaultId, VaultIdSDKType } from "./vault";
+import { VaultId, VaultIdSDKType, NumShares, NumSharesSDKType } from "./vault";
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
 import { Params, ParamsSDKType } from "./params";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
-/** MsgDepositToVault is the Msg/DepositToVault request type. */
+/**
+ * MsgDepositToVault deposits the specified asset from the subaccount to the
+ * vault.
+ */
 
 export interface MsgDepositToVault {
   /** The vault to deposit into. */
@@ -15,7 +18,10 @@ export interface MsgDepositToVault {
 
   quoteQuantums: Uint8Array;
 }
-/** MsgDepositToVault is the Msg/DepositToVault request type. */
+/**
+ * MsgDepositToVault deposits the specified asset from the subaccount to the
+ * vault.
+ */
 
 export interface MsgDepositToVaultSDKType {
   /** The vault to deposit into. */
@@ -33,6 +39,88 @@ export interface MsgDepositToVaultResponse {}
 /** MsgDepositToVaultResponse is the Msg/DepositToVault response type. */
 
 export interface MsgDepositToVaultResponseSDKType {}
+/**
+ * MsgWithdrawFromVault attempts to withdraw the specified target amount of
+ * asset from the vault to the subaccount.
+ */
+
+export interface MsgWithdrawFromVault {
+  /** The vault to withdraw from. */
+  vaultId?: VaultId;
+  /**
+   * The subaccount to withdraw to.
+   * The subaccount must own shares in the vault.
+   */
+
+  subaccountId?: SubaccountId;
+  /**
+   * The number of shares to redeem as quote quantums and withdraw.
+   * If the specified number exceeds the number of shares owned by the
+   * subaccount, then all the shares owned by the subaccount are redeemed and
+   * withdrawn.
+   */
+
+  shares?: NumShares;
+}
+/**
+ * MsgWithdrawFromVault attempts to withdraw the specified target amount of
+ * asset from the vault to the subaccount.
+ */
+
+export interface MsgWithdrawFromVaultSDKType {
+  /** The vault to withdraw from. */
+  vault_id?: VaultIdSDKType;
+  /**
+   * The subaccount to withdraw to.
+   * The subaccount must own shares in the vault.
+   */
+
+  subaccount_id?: SubaccountIdSDKType;
+  /**
+   * The number of shares to redeem as quote quantums and withdraw.
+   * If the specified number exceeds the number of shares owned by the
+   * subaccount, then all the shares owned by the subaccount are redeemed and
+   * withdrawn.
+   */
+
+  shares?: NumSharesSDKType;
+}
+/** MsgWithdrawFromVaultResponse is the Msg/WithdrawFromVault response type. */
+
+export interface MsgWithdrawFromVaultResponse {
+  /** Number of owner shares that have been redeemed as part of the withdrawal. */
+  redeemedShares?: NumShares;
+  /** Amount of equity (in quote quantums) that has been withdrawn. */
+
+  withdrawnQuoteQuantums: Uint8Array;
+  /** Number of owner shares remaining after the withdrawal. */
+
+  remainingShares?: NumShares;
+  /** Number of total vault shares after the withdrawal. */
+
+  totalVaultShares?: NumShares;
+  /** Vault equity (in quote quantums) after the withdrawal. */
+
+  totalVaultEquity: Uint8Array;
+}
+/** MsgWithdrawFromVaultResponse is the Msg/WithdrawFromVault response type. */
+
+export interface MsgWithdrawFromVaultResponseSDKType {
+  /** Number of owner shares that have been redeemed as part of the withdrawal. */
+  redeemed_shares?: NumSharesSDKType;
+  /** Amount of equity (in quote quantums) that has been withdrawn. */
+
+  withdrawn_quote_quantums: Uint8Array;
+  /** Number of owner shares remaining after the withdrawal. */
+
+  remaining_shares?: NumSharesSDKType;
+  /** Number of total vault shares after the withdrawal. */
+
+  total_vault_shares?: NumSharesSDKType;
+  /** Vault equity (in quote quantums) after the withdrawal. */
+
+  total_vault_equity: Uint8Array;
+}
 /** MsgUpdateParams is the Msg/UpdateParams request type. */
 
 export interface MsgUpdateParams {
@@ -150,6 +238,156 @@ export const MsgDepositToVaultResponse = {
 
   fromPartial(_: DeepPartial<MsgDepositToVaultResponse>): MsgDepositToVaultResponse {
     const message = createBaseMsgDepositToVaultResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgWithdrawFromVault(): MsgWithdrawFromVault {
+  return {
+    vaultId: undefined,
+    subaccountId: undefined,
+    shares: undefined
+  };
+}
+
+export const MsgWithdrawFromVault = {
+  encode(message: MsgWithdrawFromVault, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.vaultId !== undefined) {
+      VaultId.encode(message.vaultId, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.subaccountId !== undefined) {
+      SubaccountId.encode(message.subaccountId, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.shares !== undefined) {
+      NumShares.encode(message.shares, writer.uint32(26).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgWithdrawFromVault {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgWithdrawFromVault();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.vaultId = VaultId.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.subaccountId = SubaccountId.decode(reader, reader.uint32());
+          break;
+
+        case 3:
+          message.shares = NumShares.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgWithdrawFromVault>): MsgWithdrawFromVault {
+    const message = createBaseMsgWithdrawFromVault();
+    message.vaultId = object.vaultId !== undefined && object.vaultId !== null ? VaultId.fromPartial(object.vaultId) : undefined;
+    message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? SubaccountId.fromPartial(object.subaccountId) : undefined;
+    message.shares = object.shares !== undefined && object.shares !== null ? NumShares.fromPartial(object.shares) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgWithdrawFromVaultResponse(): MsgWithdrawFromVaultResponse {
+  return {
+    redeemedShares: undefined,
+    withdrawnQuoteQuantums: new Uint8Array(),
+    remainingShares: undefined,
+    totalVaultShares: undefined,
+    totalVaultEquity: new Uint8Array()
+  };
+}
+
+export const MsgWithdrawFromVaultResponse = {
+  encode(message: MsgWithdrawFromVaultResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.redeemedShares !== undefined) {
+      NumShares.encode(message.redeemedShares, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.withdrawnQuoteQuantums.length !== 0) {
+      writer.uint32(18).bytes(message.withdrawnQuoteQuantums);
+    }
+
+    if (message.remainingShares !== undefined) {
+      NumShares.encode(message.remainingShares, writer.uint32(26).fork()).ldelim();
+    }
+
+    if (message.totalVaultShares !== undefined) {
+      NumShares.encode(message.totalVaultShares, writer.uint32(34).fork()).ldelim();
+    }
+
+    if (message.totalVaultEquity.length !== 0) {
+      writer.uint32(42).bytes(message.totalVaultEquity);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgWithdrawFromVaultResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgWithdrawFromVaultResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.redeemedShares = NumShares.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.withdrawnQuoteQuantums = reader.bytes();
+          break;
+
+        case 3:
+          message.remainingShares = NumShares.decode(reader, reader.uint32());
+          break;
+
+        case 4:
+          message.totalVaultShares = NumShares.decode(reader, reader.uint32());
+          break;
+
+        case 5:
+          message.totalVaultEquity = reader.bytes();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgWithdrawFromVaultResponse>): MsgWithdrawFromVaultResponse {
+    const message = createBaseMsgWithdrawFromVaultResponse();
+    message.redeemedShares = object.redeemedShares !== undefined && object.redeemedShares !== null ? NumShares.fromPartial(object.redeemedShares) : undefined;
+    message.withdrawnQuoteQuantums = object.withdrawnQuoteQuantums ?? new Uint8Array();
+    message.remainingShares = object.remainingShares !== undefined && object.remainingShares !== null ? NumShares.fromPartial(object.remainingShares) : undefined;
+    message.totalVaultShares = object.totalVaultShares !== undefined && object.totalVaultShares !== null ? NumShares.fromPartial(object.totalVaultShares) : undefined;
+    message.totalVaultEquity = object.totalVaultEquity ?? new Uint8Array();
     return message;
   }
 

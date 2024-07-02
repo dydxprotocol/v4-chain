@@ -15,7 +15,7 @@ import (
 // It will set the balance of the subaccount module in the genesis.
 // If the provided subaccount module balance is negative, this function will panic.
 func CreateBankGenesisState(
-	t *testing.T,
+	t testing.TB,
 	cfg network.Config,
 	initialSubaccountModuleBalance int64,
 ) []byte {

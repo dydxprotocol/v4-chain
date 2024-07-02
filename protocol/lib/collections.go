@@ -7,16 +7,37 @@ import (
 
 // ContainsDuplicates returns true if the slice contains duplicates, false if not.
 func ContainsDuplicates[V comparable](values []V) bool {
-	seenValues := make(map[V]bool)
-	for _, val := range values {
-		if _, exists := seenValues[val]; exists {
+	// Optimize edge case. If values is nil, len(values) returns 0.
+	if len(values) <= 1 {
+		return false
+	}
+
+	// Store each value as a key in the mapping.
+	seenValues := make(map[V]struct{}, len(values))
+	for i, val := range values {
+		// Add the value to the mapping.
+		seenValues[val] = struct{}{}
+
+		// Return early if the size of the mapping did not grow.
+		if len(seenValues) <= i {
 			return true
 		}
-
-		seenValues[val] = true
 	}
 
 	return false
+}
+
+// MapToSortedSlice returns a slice of values from a map, sorted by key.
+func MapToSortedSlice[R interface {
+	~[]K
+	sort.Interface
+}, K comparable, V any](m map[K]V) []V {
+	keys := GetSortedKeys[R](m)
+	values := make([]V, 0, len(m))
+	for _, key := range keys {
+		values = append(values, m[key])
+	}
+	return values
 }
 
 // DedupeSlice deduplicates a slice of comparable values.

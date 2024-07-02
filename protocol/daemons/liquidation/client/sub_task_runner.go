@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"math/big"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -10,13 +9,10 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	clobkeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	sakeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
+	salib "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/lib"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -56,9 +52,7 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 
 	// 1. Fetch all information needed to calculate total net collateral and margin requirements.
 	subaccounts,
-		marketPrices,
-		perpetuals,
-		liquidityTiers,
+		perpInfos,
 		err := daemonClient.FetchApplicationStateAtBlockHeight(
 		ctx,
 		lastCommittedBlockHeight,
@@ -73,9 +67,7 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 		negativeTncSubaccountIds,
 		err := daemonClient.GetLiquidatableSubaccountIds(
 		subaccounts,
-		marketPrices,
-		perpetuals,
-		liquidityTiers,
+		perpInfos,
 	)
 	if err != nil {
 		return err
@@ -111,9 +103,7 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 	liqFlags flags.LiquidationFlags,
 ) (
 	subaccounts []satypes.Subaccount,
-	marketPricesMap map[uint32]pricestypes.MarketPrice,
-	perpetualsMap map[uint32]perptypes.Perpetual,
-	liquidityTiersMap map[uint32]perptypes.LiquidityTier,
+	perpInfos perptypes.PerpInfos,
 	err error,
 ) {
 	defer telemetry.ModuleMeasureSince(
@@ -129,46 +119,66 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 	// Subaccounts
 	subaccounts, err = c.GetAllSubaccounts(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	// Market prices
 	marketPrices, err := c.GetAllMarketPrices(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
-	marketPricesMap = lib.UniqueSliceToMap(marketPrices, func(m pricestypes.MarketPrice) uint32 {
+	marketPricesMap := lib.UniqueSliceToMap(marketPrices, func(m pricestypes.MarketPrice) uint32 {
 		return m.Id
 	})
 
 	// Perpetuals
 	perpetuals, err := c.GetAllPerpetuals(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
-	perpetualsMap = lib.UniqueSliceToMap(perpetuals, func(p perptypes.Perpetual) uint32 {
-		return p.Params.Id
-	})
 
 	// Liquidity tiers
 	liquidityTiers, err := c.GetAllLiquidityTiers(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
-	liquidityTiersMap = lib.UniqueSliceToMap(liquidityTiers, func(l perptypes.LiquidityTier) uint32 {
+	liquidityTiersMap := lib.UniqueSliceToMap(liquidityTiers, func(l perptypes.LiquidityTier) uint32 {
 		return l.Id
 	})
 
-	return subaccounts, marketPricesMap, perpetualsMap, liquidityTiersMap, nil
+	perpInfos = make(perptypes.PerpInfos, len(perpetuals))
+	for _, perp := range perpetuals {
+		price, ok := marketPricesMap[perp.Params.MarketId]
+		if !ok {
+			return nil, nil, errorsmod.Wrapf(
+				pricestypes.ErrMarketPriceDoesNotExist,
+				"%d",
+				perp.Params.MarketId,
+			)
+		}
+		liquidityTier, ok := liquidityTiersMap[perp.Params.LiquidityTier]
+		if !ok {
+			return nil, nil, errorsmod.Wrapf(
+				perptypes.ErrLiquidityTierDoesNotExist,
+				"%d",
+				perp.Params.LiquidityTier,
+			)
+		}
+		perpInfos[perp.Params.Id] = perptypes.PerpInfo{
+			Perpetual:     perp,
+			Price:         price,
+			LiquidityTier: liquidityTier,
+		}
+	}
+
+	return subaccounts, perpInfos, nil
 }
 
 // GetLiquidatableSubaccountIds verifies collateralization statuses of subaccounts with
 // at least one open position and returns a list of unique and potentially liquidatable subaccount ids.
 func (c *Client) GetLiquidatableSubaccountIds(
 	subaccounts []satypes.Subaccount,
-	marketPrices map[uint32]pricestypes.MarketPrice,
-	perpetuals map[uint32]perptypes.Perpetual,
-	liquidityTiers map[uint32]perptypes.LiquidityTier,
+	perpInfos perptypes.PerpInfos,
 ) (
 	liquidatableSubaccountIds []satypes.SubaccountId,
 	negativeTncSubaccountIds []satypes.SubaccountId,
@@ -192,9 +202,7 @@ func (c *Client) GetLiquidatableSubaccountIds(
 		// Check if the subaccount is liquidatable.
 		isLiquidatable, hasNegativeTnc, err := c.CheckSubaccountCollateralization(
 			subaccount,
-			marketPrices,
-			perpetuals,
-			liquidityTiers,
+			perpInfos,
 		)
 		if err != nil {
 			c.logger.Error("Error checking collateralization status", "error", err)
@@ -278,9 +286,7 @@ func (c *Client) GetSubaccountOpenPositionInfo(
 // is not yet implemented.
 func (c *Client) CheckSubaccountCollateralization(
 	unsettledSubaccount satypes.Subaccount,
-	marketPrices map[uint32]pricestypes.MarketPrice,
-	perpetuals map[uint32]perptypes.Perpetual,
-	liquidityTiers map[uint32]perptypes.LiquidityTier,
+	perpInfos perptypes.PerpInfos,
 ) (
 	isLiquidatable bool,
 	hasNegativeTnc bool,
@@ -295,78 +301,15 @@ func (c *Client) CheckSubaccountCollateralization(
 
 	// Funding payments are lazily settled, so get the settled subaccount
 	// to ensure that the funding payments are included in the net collateral calculation.
-	settledSubaccount, _, err := sakeeper.GetSettledSubaccountWithPerpetuals(
+	settledSubaccount, _ := salib.GetSettledSubaccountWithPerpetuals(
 		unsettledSubaccount,
-		perpetuals,
+		perpInfos,
 	)
-	if err != nil {
-		return false, false, err
-	}
 
-	bigTotalNetCollateral := big.NewInt(0)
-	bigTotalMaintenanceMargin := big.NewInt(0)
+	risk, err := salib.GetRiskForSubaccount(
+		settledSubaccount,
+		perpInfos,
+	)
 
-	// Calculate the net collateral and maintenance margin for each of the asset positions.
-	// Note that we only expect USDC before multi-collateral support is added.
-	for _, assetPosition := range settledSubaccount.AssetPositions {
-		if assetPosition.AssetId != assetstypes.AssetUsdc.Id {
-			return false, false, errorsmod.Wrapf(
-				assetstypes.ErrNotImplementedMulticollateral,
-				"Asset %d is not supported",
-				assetPosition.AssetId,
-			)
-		}
-		// Net collateral for USDC is the quantums of the position.
-		// Margin requirements for USDC are zero.
-		bigTotalNetCollateral.Add(bigTotalNetCollateral, assetPosition.GetBigQuantums())
-	}
-
-	// Calculate the net collateral and maintenance margin for each of the perpetual positions.
-	for _, perpetualPosition := range settledSubaccount.PerpetualPositions {
-		perpetual, ok := perpetuals[perpetualPosition.PerpetualId]
-		if !ok {
-			return false, false, errorsmod.Wrapf(
-				perptypes.ErrPerpetualDoesNotExist,
-				"Perpetual not found for perpetual id %d",
-				perpetualPosition.PerpetualId,
-			)
-		}
-
-		marketPrice, ok := marketPrices[perpetual.Params.MarketId]
-		if !ok {
-			return false, false, errorsmod.Wrapf(
-				pricestypes.ErrMarketPriceDoesNotExist,
-				"MarketPrice not found for perpetual %+v",
-				perpetual,
-			)
-		}
-
-		bigQuantums := perpetualPosition.GetBigQuantums()
-
-		// Get the net collateral for the position.
-		bigNetCollateralQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums)
-		bigTotalNetCollateral.Add(bigTotalNetCollateral, bigNetCollateralQuoteQuantums)
-
-		liquidityTier, ok := liquidityTiers[perpetual.Params.LiquidityTier]
-		if !ok {
-			return false, false, errorsmod.Wrapf(
-				perptypes.ErrLiquidityTierDoesNotExist,
-				"LiquidityTier not found for perpetual %+v",
-				perpetual,
-			)
-		}
-
-		// Get the maintenance margin requirement for the position.
-		_, bigMaintenanceMarginQuoteQuantums := perpkeeper.GetMarginRequirementsInQuoteQuantums(
-			perpetual,
-			marketPrice,
-			liquidityTier,
-			bigQuantums,
-		)
-		bigTotalMaintenanceMargin.Add(bigTotalMaintenanceMargin, bigMaintenanceMarginQuoteQuantums)
-	}
-
-	return clobkeeper.CanLiquidateSubaccount(bigTotalNetCollateral, bigTotalMaintenanceMargin),
-		bigTotalNetCollateral.Sign() == -1,
-		nil
+	return risk.IsLiquidatable(), risk.NC.Sign() < 0, nil
 }

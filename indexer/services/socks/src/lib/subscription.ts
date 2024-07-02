@@ -4,7 +4,14 @@ import {
   stats,
 } from '@dydxprotocol-indexer/base';
 import {
-  CHILD_SUBACCOUNT_MULTIPLIER, CandleResolution, MAX_PARENT_SUBACCOUNTS, perpetualMarketRefresher,
+  APIOrderStatus,
+  BestEffortOpenedStatus,
+  blockHeightRefresher,
+  CHILD_SUBACCOUNT_MULTIPLIER,
+  CandleResolution,
+  MAX_PARENT_SUBACCOUNTS,
+  OrderStatus,
+  perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import WebSocket from 'ws';
 
@@ -19,12 +26,19 @@ import {
   SubscriptionInfo,
 } from '../types';
 import { axiosRequest } from './axios';
-import { V4_MARKETS_ID, WS_CLOSE_CODE_POLICY_VIOLATION } from './constants';
+import { V4_BLOCK_HEIGHT_ID, V4_MARKETS_ID, WS_CLOSE_CODE_POLICY_VIOLATION } from './constants';
 import { BlockedError, InvalidChannelError } from './errors';
 import { RateLimiter } from './rate-limit';
 
 const COMLINK_URL: string = `http://${config.COMLINK_URL}`;
 const EMPTY_INITIAL_RESPONSE: string = '{}';
+const VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE: APIOrderStatus[] = [
+  OrderStatus.OPEN,
+  OrderStatus.UNTRIGGERED,
+  BestEffortOpenedStatus.BEST_EFFORT_OPENED,
+  OrderStatus.BEST_EFFORT_CANCELED,
+];
+const VALID_ORDER_STATUS: string = VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE.join(',');
 
 export class Subscriptions {
   // Maps channels and ids to a list of websocket connections subscribed to them
@@ -98,7 +112,7 @@ export class Subscriptions {
       return;
     }
 
-    const subscriptionId: string = this.normalizeSubscriptionId(id);
+    const subscriptionId: string = this.normalizeSubscriptionId(channel, id);
     const duration: number = this.subscribeRateLimiter.rateLimit({
       connectionId,
       key: channel + subscriptionId,
@@ -289,7 +303,7 @@ export class Subscriptions {
     channel: Channel,
     id?: string,
   ): void {
-    const subscriptionId: string = this.normalizeSubscriptionId(id);
+    const subscriptionId: string = this.normalizeSubscriptionId(channel, id);
     if (this.subscriptionLists[connectionId]) {
       this.subscriptionLists[connectionId] = this.subscriptionLists[connectionId].filter(
         (e: Subscription) => (e.channel !== channel || e.id !== subscriptionId),
@@ -374,8 +388,9 @@ export class Subscriptions {
    * @returns
    */
   private validateSubscription(channel: Channel, id?: string): boolean {
-    // Only markets channel does not require an id to subscribe to.
-    if (channel !== Channel.V4_MARKETS && id === undefined) {
+    // Only markets & block height channels do not require an id to subscribe to.
+    if ((channel !== Channel.V4_MARKETS && channel !== Channel.V4_BLOCK_HEIGHT) &&
+      id === undefined) {
       return false;
     }
     switch (channel) {
@@ -385,6 +400,7 @@ export class Subscriptions {
           MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER,
         );
       }
+      case (Channel.V4_BLOCK_HEIGHT):
       case (Channel.V4_MARKETS): {
         return true;
       }
@@ -423,12 +439,16 @@ export class Subscriptions {
 
   /**
    * Normalizes subscription ids. If the id is undefined, returns the default id for the markets
-   * channel, which is the only channel that does not have specific ids to subscribe to.
+   * channel or block height channel which are the only channels that don't
+   * have specific ids to subscribe to.
    * NOTE: Validation of the id and channel will happen in other functions.
    * @param id Subscription id to normalize.
    * @returns Normalized subscription id.
    */
-  private normalizeSubscriptionId(id?: string): string {
+  private normalizeSubscriptionId(channel: Channel, id?: string): string {
+    if (channel === Channel.V4_BLOCK_HEIGHT) {
+      return id ?? V4_BLOCK_HEIGHT_ID;
+    }
     return id ?? V4_MARKETS_ID;
   }
 
@@ -471,6 +491,9 @@ export class Subscriptions {
       }
       case (Channel.V4_MARKETS): {
         return `${COMLINK_URL}/v4/perpetualMarkets`;
+      }
+      case (Channel.V4_BLOCK_HEIGHT): {
+        return `${COMLINK_URL}/v4/height`;
       }
       case (Channel.V4_ORDERBOOK): {
         if (id === undefined) {
@@ -521,7 +544,9 @@ export class Subscriptions {
       const [
         subaccountsResponse,
         ordersResponse,
+        blockHeight,
       ]: [
+        string,
         string,
         string,
       ] = await Promise.all([
@@ -537,18 +562,20 @@ export class Subscriptions {
         // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
         axiosRequest({
           method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED,BEST_EFFORT_OPENED`,
+          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=${VALID_ORDER_STATUS}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
           headers: {
             'cf-ipcountry': country,
           },
           transformResponse: (res) => res,
         }),
+        blockHeightRefresher.getLatestBlockHeight(),
       ]);
 
       return JSON.stringify({
         ...JSON.parse(subaccountsResponse),
         orders: JSON.parse(ordersResponse),
+        blockHeight,
       });
     } catch (error) {
       // The subaccounts API endpoint returns a 404 for subaccounts that are not indexed, however
@@ -586,7 +613,9 @@ export class Subscriptions {
       const [
         subaccountsResponse,
         ordersResponse,
+        blockHeight,
       ]: [
+        string,
         string,
         string,
       ] = await Promise.all([
@@ -602,18 +631,20 @@ export class Subscriptions {
         // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
         axiosRequest({
           method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/orders/parentSubaccountNumber?address=${address}&parentSubaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED,BEST_EFFORT_OPENED`,
+          url: `${COMLINK_URL}/v4/orders/parentSubaccountNumber?address=${address}&parentSubaccountNumber=${subaccountNumber}&status=${VALID_ORDER_STATUS}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
           headers: {
             'cf-ipcountry': country,
           },
           transformResponse: (res) => res,
         }),
+        blockHeightRefresher.getLatestBlockHeight(),
       ]);
 
       return JSON.stringify({
         ...JSON.parse(subaccountsResponse),
         orders: JSON.parse(ordersResponse),
+        blockHeight,
       });
     } catch (error) {
       // The subaccounts API endpoint returns a 404 for subaccounts that are not indexed, however

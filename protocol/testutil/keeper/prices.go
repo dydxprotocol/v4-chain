@@ -2,8 +2,11 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/cosmos/gogoproto/proto"
 	"testing"
+
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	storetypes "cosmossdk.io/store/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -20,18 +23,18 @@ import (
 	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	revsharekeeper "github.com/dydxprotocol/v4-chain/protocol/x/revshare/keeper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-func PricesKeepers(
-	t testing.TB,
-) (
+func PricesKeepers(t testing.TB) (
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
 	storeKey storetypes.StoreKey,
 	indexPriceCache *pricefeedserver_types.MarketToExchangePrices,
 	mockTimeProvider *mocks.TimeProvider,
+	revShareKeeper *revsharekeeper.Keeper,
 ) {
 	ctx = initKeepers(t, func(
 		db *dbm.MemDB,
@@ -40,14 +43,17 @@ func PricesKeepers(
 		stateStore storetypes.CommitMultiStore,
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
+		// Necessary keeper for testing
+		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc)
+
 		// Define necessary keepers here for unit tests
 		keeper, storeKey, indexPriceCache, mockTimeProvider =
-			createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+			createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper)
 
 		return []GenesisInitializer{keeper}
 	})
 
-	return ctx, keeper, storeKey, indexPriceCache, mockTimeProvider
+	return ctx, keeper, storeKey, indexPriceCache, mockTimeProvider, revShareKeeper
 }
 
 func createPricesKeeper(
@@ -55,6 +61,7 @@ func createPricesKeeper(
 	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	transientStoreKey storetypes.StoreKey,
+	revShareKeeper *revsharekeeper.Keeper,
 ) (
 	*keeper.Keeper,
 	storetypes.StoreKey,
@@ -86,6 +93,7 @@ func createPricesKeeper(
 			delaymsgmoduletypes.ModuleAddress.String(),
 			lib.GovModuleAddress.String(),
 		},
+		revShareKeeper,
 	)
 
 	return k, storeKey, indexPriceCache, mockTimeProvider
@@ -94,7 +102,7 @@ func createPricesKeeper(
 // CreateTestMarkets creates a standard set of test markets for testing.
 // This function assumes no markets exist and will create markets as id `0`, `1`, and `2`, ... using markets
 // defined in constants.TestMarkets.
-func CreateTestMarkets(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
+func CreateTestMarkets(t testing.TB, ctx sdk.Context, k *keeper.Keeper) {
 	for i, marketParam := range constants.TestMarketParams {
 		_, err := k.CreateMarket(
 			ctx,
@@ -109,11 +117,18 @@ func CreateTestMarkets(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 			},
 		})
 		require.NoError(t, err)
+
+		// update all markets to not have revenue share
+		k.RevShareKeeper.SetMarketMapperRevShareDetails(
+			ctx,
+			uint32(i),
+			revsharetypes.MarketMapperRevShareDetails{ExpirationTs: 0},
+		)
 	}
 }
 
 // CreateNMarkets creates N MarketParam, MarketPrice pairs for testing.
-func CreateNMarkets(t *testing.T, ctx sdk.Context, keeper *keeper.Keeper, n int) []types.MarketParamPrice {
+func CreateNMarkets(t testing.TB, ctx sdk.Context, keeper *keeper.Keeper, n int) []types.MarketParamPrice {
 	items := make([]types.MarketParamPrice, n)
 	numExistingMarkets := GetNumMarkets(t, ctx, keeper)
 	for i := range items {
@@ -144,7 +159,7 @@ func CreateNMarkets(t *testing.T, ctx sdk.Context, keeper *keeper.Keeper, n int)
 // AssertPriceUpdateEventsInIndexerBlock verifies that the market update has a corresponding price update
 // event included in the Indexer block message.
 func AssertPriceUpdateEventsInIndexerBlock(
-	t *testing.T,
+	t testing.TB,
 	k *keeper.Keeper,
 	ctx sdk.Context,
 	updatedMarketPrices []types.MarketPrice,
@@ -158,7 +173,7 @@ func AssertPriceUpdateEventsInIndexerBlock(
 
 // AssertMarketEventsNotInIndexerBlock verifies that no market events were included in the Indexer block message.
 func AssertMarketEventsNotInIndexerBlock(
-	t *testing.T,
+	t testing.TB,
 	k *keeper.Keeper,
 	ctx sdk.Context,
 ) {
@@ -168,7 +183,7 @@ func AssertMarketEventsNotInIndexerBlock(
 
 // AssertNMarketEventsNotInIndexerBlock verifies that N market events were included in the Indexer block message.
 func AssertNMarketEventsNotInIndexerBlock(
-	t *testing.T,
+	t testing.TB,
 	k *keeper.Keeper,
 	ctx sdk.Context,
 	n int,
@@ -201,7 +216,7 @@ func getMarketEventsFromIndexerBlock(
 // AssertMarketModifyEventInIndexerBlock verifies that the market update has a corresponding market modify
 // event included in the Indexer block message.
 func AssertMarketModifyEventInIndexerBlock(
-	t *testing.T,
+	t testing.TB,
 	k *keeper.Keeper,
 	ctx sdk.Context,
 	updatedMarketParam types.MarketParam,
@@ -218,7 +233,7 @@ func AssertMarketModifyEventInIndexerBlock(
 // AssertMarketCreateEventInIndexerBlock verifies that the market create has a corresponding market create
 // event included in the Indexer block message.
 func AssertMarketCreateEventInIndexerBlock(
-	t *testing.T,
+	t testing.TB,
 	k *keeper.Keeper,
 	ctx sdk.Context,
 	createdMarketParam types.MarketParam,
@@ -234,7 +249,7 @@ func AssertMarketCreateEventInIndexerBlock(
 }
 
 func AssertMarketPriceUpdateEventInIndexerBlock(
-	t *testing.T,
+	t testing.TB,
 	k *keeper.Keeper,
 	ctx sdk.Context,
 	updatedMarketPrice types.MarketPrice,
@@ -250,7 +265,7 @@ func AssertMarketPriceUpdateEventInIndexerBlock(
 // CreateTestPriceMarkets is a test utility function that creates list of given
 // price markets in state.
 func CreateTestPriceMarkets(
-	t *testing.T,
+	t testing.TB,
 	ctx sdk.Context,
 	pricesKeeper *keeper.Keeper,
 	markets []types.MarketParamPrice,
@@ -268,7 +283,7 @@ func CreateTestPriceMarkets(
 	}
 }
 
-func GetNumMarkets(t *testing.T, ctx sdk.Context, keeper *keeper.Keeper) uint32 {
+func GetNumMarkets(t testing.TB, ctx sdk.Context, keeper *keeper.Keeper) uint32 {
 	allMarkets, err := keeper.GetAllMarketParamPrices(ctx)
 	require.NoError(t, err)
 	return lib.MustConvertIntegerToUint32(len(allMarkets))

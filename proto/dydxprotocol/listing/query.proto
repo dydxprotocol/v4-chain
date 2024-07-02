@@ -1,0 +1,16 @@
+syntax = "proto3";
+package dydxprotocol.listing;
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/listing/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Queries for the hard cap number of listed markets
+  rpc MarketsHardCap(QueryMarketsHardCap) returns (QueryMarketsHardCapResponse);
+}
+
+// Queries for the hard cap on listed markets
+message QueryMarketsHardCap {}
+
+// Response type indicating the hard cap on listed markets
+message QueryMarketsHardCapResponse { uint32 hard_cap = 1; }

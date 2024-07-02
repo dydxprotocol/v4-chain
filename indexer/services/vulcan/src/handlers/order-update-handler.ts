@@ -14,7 +14,6 @@ import {
   updateOrder,
   UpdateOrderResult,
   OrderbookLevelsCache,
-  OpenOrdersCache,
   StatefulOrderUpdatesCache,
 } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder, requiresImmediateExecution } from '@dydxprotocol-indexer/v4-proto-parser';
@@ -106,37 +105,6 @@ export class OrderUpdateHandler extends Handler {
         },
       );
       return;
-    }
-
-    if (updateResult.updated !== true) {
-      logger.info({
-        at: 'OrderUpdateHandler#handle',
-        message: 'Received order update for order that does not exist, order id ' +
-                 `${JSON.stringify(orderUpdate.orderId!)}`,
-        update,
-        updateResult,
-      });
-      stats.increment(`${config.SERVICE_NAME}.order_update_order_does_not_exist`, 1);
-      return;
-    }
-
-    const clobPairId: string = orderUpdate.orderId!.clobPairId.toString();
-    if (orderUpdate.totalFilledQuantums.gte(updateResult.order!.order!.quantums)) {
-      // TODO(IND-147): Remove once fully-filled orders are removed.
-      // If total filled >= quantums of the order, the order is fully-filled and no longer
-      // considered an open order
-      await OpenOrdersCache.removeOpenOrder(
-        updateResult.order!.id,
-        clobPairId,
-        redisClient,
-      );
-    } else {
-      // If the order is not fully filled, consider it an open order.
-      await OpenOrdersCache.addOpenOrder(
-        updateResult.order!.id,
-        clobPairId,
-        redisClient,
-      );
     }
 
     const sizeDeltaInQuantums: Big = this.getSizeDeltaInQuantums(updateResult, orderUpdate);

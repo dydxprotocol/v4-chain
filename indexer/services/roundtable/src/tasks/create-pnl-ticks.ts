@@ -5,6 +5,7 @@ import {
   PnlTicksCreateObject,
   PnlTicksTable,
   Transaction,
+  perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { LatestAccountPnlTicksCache } from '@dydxprotocol-indexer/redis';
 import _ from 'lodash';
@@ -17,26 +18,32 @@ export default async function runTask(): Promise<void> {
   const startGetNewTicks: number = Date.now();
   const [
     block,
-    pnlTickLatestBlocktime,
+    {
+      maxBlockTime,
+      count,
+    },
   ]: [
     BlockFromDatabase,
-    string,
+    {
+      maxBlockTime: string,
+      count: number,
+    },
   ] = await Promise.all([
     BlockTable.getLatest({ readReplica: true }),
-    PnlTicksTable.findLatestProcessedBlocktime(),
+    PnlTicksTable.findLatestProcessedBlocktimeAndCount(),
   ]);
   const latestBlockTime: string = block.time;
   const latestBlockHeight: string = block.blockHeight;
   // Check that the latest block time is within PNL_TICK_UPDATE_INTERVAL_MS of the last computed
   // PNL tick block time.
   if (
-    Date.parse(latestBlockTime) - normalizeStartTime(new Date(pnlTickLatestBlocktime)).getTime() <
-    config.PNL_TICK_UPDATE_INTERVAL_MS
+    Date.parse(latestBlockTime) - normalizeStartTime(new Date(maxBlockTime)).getTime() <
+    config.PNL_TICK_UPDATE_INTERVAL_MS && count < config.PNL_TICK_MAX_ACCOUNTS_PER_RUN
   ) {
     logger.info({
       at: 'create-pnl-ticks#runTask',
-      message: 'Skipping run because update interval has not been reached',
-      pnlTickLatestBlocktime,
+      message: 'Skipping run because update interval has not been reached and all subaccounts have been processed',
+      pnlTickLatestBlocktime: maxBlockTime,
       latestBlockTime,
       threshold: config.PNL_TICK_UPDATE_INTERVAL_MS,
     });
@@ -47,12 +54,16 @@ export default async function runTask(): Promise<void> {
   const txId: number = await Transaction.start();
   let newTicksToCreate: PnlTicksCreateObject[] = [];
   try {
+    await perpetualMarketRefresher.updatePerpetualMarkets();
     newTicksToCreate = await getPnlTicksCreateObjects(latestBlockHeight, latestBlockTime, txId);
   } catch (error) {
     logger.error({
       at: 'create-pnl-ticks#runTask',
       message: 'Error when getting pnl ticks',
       error,
+      latestBlockHeight,
+      latestBlockTime,
+      txId,
     });
     return;
   } finally {

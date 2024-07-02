@@ -7,7 +7,7 @@ import (
 
 type GrpcStreamingManager interface {
 	Enabled() bool
-
+	Stop()
 	// L3+ Orderbook updates.
 	Subscribe(
 		req clobtypes.StreamOrderbookUpdatesRequest,
@@ -15,10 +15,19 @@ type GrpcStreamingManager interface {
 	) (
 		err error,
 	)
-	GetUninitializedClobPairIds() []uint32
+	InitializeNewGrpcStreams(
+		getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
+		blockHeight uint32,
+		execMode sdk.ExecMode,
+	)
+	SendSnapshot(
+		offchainUpdates *clobtypes.OffchainUpdates,
+		subscriptionId uint32,
+		blockHeight uint32,
+		execMode sdk.ExecMode,
+	)
 	SendOrderbookUpdates(
 		offchainUpdates *clobtypes.OffchainUpdates,
-		snapshot bool,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)

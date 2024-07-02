@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/big"
 	"testing"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
@@ -21,6 +21,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -121,10 +122,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
@@ -133,10 +135,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -215,18 +218,18 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 - 100_000_000),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000-100_000_000),
+						big.NewInt(0),
+					),
 				},
 				constants.Alice_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 + 100_000_000),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000+100_000_000),
+						big.NewInt(0),
+					),
 				},
 			},
 		},
@@ -245,10 +248,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
@@ -257,10 +261,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -339,18 +344,18 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 - 100_000_000),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000-100_000_000),
+						big.NewInt(0),
+					),
 				},
 				constants.Alice_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 + 100_000_000),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000+100_000_000),
+						big.NewInt(0),
+					),
 				},
 			},
 		},
@@ -369,10 +374,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
@@ -381,10 +387,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -450,18 +457,18 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 - 5),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000-5),
+						big.NewInt(0),
+					),
 				},
 				constants.Alice_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 + 5),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000+5),
+						big.NewInt(0),
+					),
 				},
 			},
 		},
@@ -480,10 +487,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
@@ -492,10 +500,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -542,18 +551,18 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 - 5),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000-5),
+						big.NewInt(0),
+					),
 				},
 				constants.Alice_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 + 5),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000+5),
+						big.NewInt(0),
+					),
 				},
 			},
 		},
@@ -572,10 +581,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
@@ -584,10 +594,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
@@ -596,10 +607,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -705,25 +717,25 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 - 10),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000-10),
+						big.NewInt(0),
+					),
 				},
 				constants.Alice_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 + 10 + 15),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000+10+15),
+						big.NewInt(0),
+					),
 				},
 				constants.Carl_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 - 15),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000-15),
+						big.NewInt(0),
+					),
 				},
 			},
 		},
@@ -1095,18 +1107,18 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(-100_000_000 + 50_000_000),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(-100_000_000+50_000_000),
+						big.NewInt(0),
+					),
 				},
 				constants.Dave_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(100_000_000 - 50_000_000),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(100_000_000-50_000_000),
+						big.NewInt(0),
+					),
 				},
 			},
 			expectedNegativeTncSubaccountSeen: map[uint32]bool{
@@ -1305,10 +1317,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
@@ -1317,10 +1330,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -1457,10 +1471,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
@@ -1469,10 +1484,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -1521,18 +1537,18 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 - 5),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000-5),
+						big.NewInt(0),
+					),
 				},
 				constants.Alice_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(1_000_000_000 + 5),
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000+5),
+						big.NewInt(0),
+					),
 				},
 			},
 		},
@@ -1551,10 +1567,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
@@ -1563,10 +1580,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -1605,10 +1623,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 				{
@@ -1617,10 +1636,11 @@ func TestProcessProposerOperations(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(1_000_000_000), // 10 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -2349,7 +2369,6 @@ func setupProcessProposerOperationsTestCase(
 			tc.rawOperations,
 		)
 	} else {
-		mockIndexerEventManager.On("Enabled").Return(false).Maybe()
 		mockIndexerEventManager.On("AddTxnEvent",
 			mock.Anything,
 			mock.Anything,
@@ -2584,10 +2603,6 @@ func setupNewMockEventManager(
 	matches []*MatchWithOrdersForTesting,
 	rawOperations []types.OperationRaw,
 ) {
-	if len(matches) > 0 {
-		mockIndexerEventManager.On("Enabled").Return(true)
-	}
-
 	// Add an expectation to the mock for each expected message.
 	var matchOrderCallMap = make(map[types.OrderId]*mock.Call)
 	for _, match := range matches {

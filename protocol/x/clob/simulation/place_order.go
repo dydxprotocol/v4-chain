@@ -31,10 +31,9 @@ var (
 	orderLevels                = big.NewInt(4)
 
 	weightedSupportedTimeInForces = map[types.Order_TimeInForce]int{
-		types.Order_TIME_IN_FORCE_UNSPECIFIED:  3,
-		types.Order_TIME_IN_FORCE_IOC:          1,
-		types.Order_TIME_IN_FORCE_POST_ONLY:    1,
-		types.Order_TIME_IN_FORCE_FILL_OR_KILL: 1,
+		types.Order_TIME_IN_FORCE_UNSPECIFIED: 3,
+		types.Order_TIME_IN_FORCE_IOC:         1,
+		types.Order_TIME_IN_FORCE_POST_ONLY:   1,
 	}
 
 	weightedReduceOnly = map[bool]int{
@@ -123,7 +122,7 @@ func SimulateMsgPlaceOrder(
 				"Subaccount does not have enough free collateral to place minimum order",
 			), nil, nil
 		}
-		if bigMinOrderQuoteQuantums.Cmp(lib.BigInt0()) == 0 {
+		if bigMinOrderQuoteQuantums.BitLen() == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
 				typeMsgPlaceOrder,
@@ -173,7 +172,6 @@ func SimulateMsgPlaceOrder(
 		if err != nil {
 			switch {
 			case errors.Is(err, satypes.ErrIntegerOverflow),
-				errors.Is(err, types.ErrFokOrderCouldNotBeFullyFilled),
 				errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder),
 				errors.Is(err, types.ErrWouldViolateIsolatedSubaccountConstraints):
 				// These errors are expected, and can occur during normal operation. We shouldn't panic on them.
@@ -265,7 +263,7 @@ func generateValidPlaceOrder(
 	// Handle special order conditions.
 	if reduceOnly {
 		// Reduce only must be opposite of current positions in clob pair.
-		curPositionSign := currentPositionSizeQuantums.Cmp(lib.BigInt0())
+		curPositionSign := currentPositionSizeQuantums.Sign()
 		if curPositionSign < 0 {
 			// currently short, order should go long
 			orderSide = types.Order_SIDE_BUY
@@ -304,7 +302,7 @@ func getMaxSubaccountOrderQuoteQuantums(
 	sk types.SubaccountsKeeper,
 	subaccountId satypes.SubaccountId,
 ) *big.Int {
-	bigNetCollateral, bigInitialMargin, _, err := sk.GetNetCollateralAndMarginRequirements(
+	risk, err := sk.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{
 			SubaccountId: subaccountId,
@@ -314,6 +312,6 @@ func getMaxSubaccountOrderQuoteQuantums(
 		panic(err)
 	}
 
-	maxQuoteQuantums := new(big.Int).Sub(bigNetCollateral, bigInitialMargin)
+	maxQuoteQuantums := new(big.Int).Sub(risk.NC, risk.IMR)
 	return lib.BigMin(maxQuoteQuantums, maxNonOverflowOrderQuoteQuantums)
 }

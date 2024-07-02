@@ -27,6 +27,7 @@ type (
 		authorities                    map[string]struct{}
 		currencyPairIDCache            *CurrencyPairIDCache
 		currencyPairIdCacheInitialized *atomic.Bool
+		RevShareKeeper                 types.RevShareKeeper
 	}
 )
 
@@ -39,6 +40,7 @@ func NewKeeper(
 	timeProvider libtime.TimeProvider,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	authorities []string,
+	revShareKeeper types.RevShareKeeper,
 ) *Keeper {
 	return &Keeper{
 		cdc:                            cdc,
@@ -50,6 +52,7 @@ func NewKeeper(
 		authorities:                    lib.UniqueSliceToSet(authorities),
 		currencyPairIDCache:            NewCurrencyPairIDCache(),
 		currencyPairIdCacheInitialized: &atomic.Bool{}, // Initialized to false
+		RevShareKeeper:                 revShareKeeper,
 	}
 }
 

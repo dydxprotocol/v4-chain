@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func NetworkWithMarketObjects(t *testing.T, n int) (*network.Network, []types.MarketParam, []types.MarketPrice) {
+func NetworkWithMarketObjects(t testing.TB, n int) (*network.Network, []types.MarketParam, []types.MarketPrice) {
 	t.Helper()
 	cfg := network.DefaultConfig(nil)
 	state := types.GenesisState{}

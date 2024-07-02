@@ -2,17 +2,19 @@ import {
   stats,
   logger,
   InfoObject,
-  safeJsonStringify,
-  STATS_NO_SAMPLING,
 } from '@dydxprotocol-indexer/base';
-import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
-import { KafkaMessage } from 'kafkajs';
+import { updateOnBatchFunction, updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
+import {
+  Batch,
+  EachBatchPayload,
+  KafkaMessage,
+} from 'kafkajs';
 import _ from 'lodash';
 
 import config from '../config';
 import {
   getChannels,
-  getMessageToForward,
+  getMessagesToForward,
 } from '../helpers/from-kafka-helpers';
 import {
   createChannelDataMessage,
@@ -63,16 +65,113 @@ export class MessageForwarder {
       throw new Error('MessageForwarder already started');
     }
 
-    // Kafkajs requires the function passed into `eachMessage` be an async function.
-    // eslint-disable-next-line @typescript-eslint/require-await
-    updateOnMessageFunction(async (topic, message): Promise<void> => {
-      return this.onMessage(topic, message);
-    });
+    if (config.BATCH_PROCESSING_ENABLED) {
+      logger.info({
+        at: 'consumers#connect',
+        message: 'Batch processing enabled',
+      });
+      updateOnBatchFunction(async (payload: EachBatchPayload): Promise<void> => {
+        return this.onBatch(payload);
+      });
+    } else {
+      logger.info({
+        at: 'consumers#connect',
+        message: 'Batch processing disabled. Processing each message individually',
+      });
+      // Kafkajs requires the function passed into `eachMessage` be an async function.
+      // eslint-disable-next-line @typescript-eslint/require-await
+      updateOnMessageFunction(async (topic, message): Promise<void> => {
+        return this.onMessage(topic, message);
+      });
+    }
 
     this.started = true;
     this.batchSending = setInterval(
       () => { this.forwardBatchedMessages(); },
       BATCH_SEND_INTERVAL_MS,
+    );
+  }
+
+  public async onBatch(
+    payload: EachBatchPayload,
+  ): Promise<void> {
+    const batch: Batch = payload.batch;
+    const topic: string = batch.topic;
+    const partition: string = batch.partition.toString();
+    const metricTags: Record<string, string> = { topic, partition };
+    if (batch.isEmpty()) {
+      logger.error({
+        at: 'on-batch#onBatch',
+        message: 'Empty batch',
+        ...metricTags,
+      });
+      return;
+    }
+
+    const startTime: number = Date.now();
+    const firstMessageTimestamp: number = Number(batch.messages[0].timestamp);
+    const batchTimeInQueue: number = startTime - firstMessageTimestamp;
+    const batchInfo = {
+      firstMessageTimestamp: new Date(firstMessageTimestamp).toISOString(),
+      batchTimeInQueue,
+      messagesInBatch: batch.messages.length,
+      firstOffset: batch.firstOffset(),
+      lastOffset: batch.lastOffset(),
+      ...metricTags,
+    };
+
+    logger.info({
+      at: 'on-batch#onBatch',
+      message: 'Received batch',
+      ...batchInfo,
+    });
+    stats.timing(
+      'socks.batch_time_in_queue',
+      batchTimeInQueue,
+      metricTags,
+    );
+
+    let lastCommitTime: number = startTime;
+    for (let i = 0; i < batch.messages.length; i++) {
+      const message: KafkaMessage = batch.messages[i];
+      await this.onMessage(batch.topic, message);
+
+      // Commit every KAFKA_BATCH_PROCESSING_COMMIT_FREQUENCY_MS to reduce number of roundtrips, and
+      // also prevent disconnecting from the broker due to inactivity.
+      const now: number = Date.now();
+      if (now - lastCommitTime > config.KAFKA_BATCH_PROCESSING_COMMIT_FREQUENCY_MS) {
+        logger.info({
+          at: 'on-batch#onBatch',
+          message: 'Committing offsets and sending heart beat',
+          ...batchInfo,
+        });
+        payload.resolveOffset(message.offset);
+        await Promise.all([
+          payload.heartbeat(),
+          // commitOffsetsIfNecessary will respect autoCommitThreshold and will not commit if
+          // fewer messages than the threshold have been processed since the last commit.
+          payload.commitOffsetsIfNecessary(),
+        ]);
+        lastCommitTime = now;
+      }
+    }
+
+    const batchProcessingTime: number = Date.now() - startTime;
+    logger.info({
+      at: 'on-batch#onBatch',
+      message: 'Finished Processing Batch',
+      batchProcessingTime,
+      ...batchInfo,
+    });
+    stats.timing(
+      'socks.batch_processing_time',
+      batchProcessingTime,
+      metricTags,
+    );
+    stats.timing(
+      'socks.batch_size',
+      batch.messages.length,
+      metricTags,
     );
   }
 
@@ -114,21 +213,9 @@ export class MessageForwarder {
     }
     errProps.channels = channels;
 
-    for (const channel of channels) {
-      let messageToForward: MessageToForward;
-      try {
-        messageToForward = getMessageToForward(channel, message);
-      } catch (error) {
-        logger.error({
-          ...errProps,
-          at: loggerAt,
-          message: 'Failed to get message to forward from kafka message',
-          kafkaMessage: safeJsonStringify(message),
-          error,
-        });
-        return;
-      }
-
+    // Decode the message based on the topic
+    const messagesToForward = getMessagesToForward(topic, message);
+    for (const messageToForward of messagesToForward) {
       const startForwardMessage: number = Date.now();
       this.forwardMessage(messageToForward);
       const end: number = Date.now();
@@ -138,7 +225,7 @@ export class MessageForwarder {
         config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
         {
           topic,
-          channel: String(channel),
+          channel: String(messageToForward.channel),
         },
       );
 
@@ -147,7 +234,7 @@ export class MessageForwarder {
         stats.timing(
           `${config.SERVICE_NAME}.message_time_since_received`,
           startForwardMessage - Number(originalMessageTimestamp),
-          STATS_NO_SAMPLING,
+          config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
           {
             topic,
             event_type: String(message.headers?.event_type),
@@ -166,13 +253,13 @@ export class MessageForwarder {
 
     if (!this.subscriptions.subscriptions[message.channel] &&
       !this.subscriptions.batchedSubscriptions[message.channel]) {
-      logger.debug({
-        at: 'message-forwarder#forwardMessage',
-        message: 'No clients to forward to',
-        messageId: message.id,
-        messageChannel: message.channel,
-        contents: message.contents,
-      });
+      // logger.debug({
+      //   at: 'message-forwarder#forwardMessage',
+      //   message: 'No clients to forward to',
+      //   messageId: message.id,
+      //   messageChannel: message.channel,
+      //   contents: message.contents,
+      // });
       return;
     }
 
@@ -183,21 +270,21 @@ export class MessageForwarder {
     }
     let forwardedToSubscribers: boolean = false;
 
-    if (subscriptions.length > 0) {
-      if (message.channel !== Channel.V4_ORDERBOOK ||
-          (
-            // Don't log orderbook messages unless enabled
-            message.channel === Channel.V4_ORDERBOOK && config.ENABLE_ORDERBOOK_LOGS
-          )
-      ) {
-        logger.debug({
-          at: 'message-forwarder#forwardMessage',
-          message: 'Forwarding message to clients..',
-          messageContents: message,
-          connectionIds: subscriptions.map((s: SubscriptionInfo) => s.connectionId),
-        });
-      }
-    }
+    // if (subscriptions.length > 0) {
+    //   if (message.channel !== Channel.V4_ORDERBOOK ||
+    //       (
+    //         // Don't log orderbook messages unless enabled
+    //         message.channel === Channel.V4_ORDERBOOK && config.ENABLE_ORDERBOOK_LOGS
+    //       )
+    //   ) {
+    //     logger.debug({
+    //       at: 'message-forwarder#forwardMessage',
+    //       message: 'Forwarding message to clients..',
+    //       messageContents: message,
+    //       connectionIds: subscriptions.map((s: SubscriptionInfo) => s.connectionId),
+    //     });
+    //   }
+    // }
 
     // Buffer messages if the subscription is for batched messages
     if (this.subscriptions.batchedSubscriptions[message.channel] &&
@@ -242,6 +329,7 @@ export class MessageForwarder {
       stats.increment(
         `${config.SERVICE_NAME}.forward_message_with_subscribers`,
         1,
+        config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       );
     }
   }

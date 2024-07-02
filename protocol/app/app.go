@@ -94,7 +94,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
 	// App
@@ -165,6 +164,9 @@ import (
 	govplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/govplus"
 	govplusmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/govplus/keeper"
 	govplusmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/govplus/types"
+	listingmodule "github.com/dydxprotocol/v4-chain/protocol/x/listing"
+	listingmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
+	listingmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	perpetualsmodule "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	perpetualsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -174,6 +176,9 @@ import (
 	ratelimitmodule "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit"
 	ratelimitmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/keeper"
 	ratelimitmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
+	revsharemodule "github.com/dydxprotocol/v4-chain/protocol/x/revshare"
+	revsharemodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/revshare/keeper"
+	revsharemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	rewardsmodule "github.com/dydxprotocol/v4-chain/protocol/x/rewards"
 	rewardsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
@@ -307,11 +312,15 @@ type App struct {
 
 	FeeTiersKeeper feetiersmodulekeeper.Keeper
 
+	ListingKeeper listingmodulekeeper.Keeper
+
 	PerpetualsKeeper *perpetualsmodulekeeper.Keeper
 
 	VestKeeper vestmodulekeeper.Keeper
 
 	RewardsKeeper rewardsmodulekeeper.Keeper
+
+	RevShareKeeper revsharemodulekeeper.Keeper
 
 	StatsKeeper statsmodulekeeper.Keeper
 
@@ -433,6 +442,7 @@ func New(
 		blocktimemoduletypes.StoreKey,
 		bridgemoduletypes.StoreKey,
 		feetiersmoduletypes.StoreKey,
+		listingmoduletypes.StoreKey,
 		perpetualsmoduletypes.StoreKey,
 		satypes.StoreKey,
 		statsmoduletypes.StoreKey,
@@ -445,6 +455,7 @@ func New(
 		govplusmoduletypes.StoreKey,
 		vaultmoduletypes.StoreKey,
 		wasmtypes.StoreKey,
+		revsharemoduletypes.StoreKey,
 	)
 	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
 	tkeys := storetypes.NewTransientStoreKeys(
@@ -477,6 +488,9 @@ func New(
 			}
 			if app.SlinkyClient != nil {
 				app.SlinkyClient.Stop()
+			}
+			if app.GrpcStreamingManager != nil {
+				app.GrpcStreamingManager.Stop()
 			}
 			return nil
 		},
@@ -847,7 +861,8 @@ func New(
 					appFlags,
 					logger,
 				)
-				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient, maxDaemonUnhealthyDuration)
+				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient.GetMarketPairHC(), maxDaemonUnhealthyDuration)
+				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient.GetPriceHC(), maxDaemonUnhealthyDuration)
 			}
 		}
 
@@ -897,6 +912,15 @@ func New(
 		}()
 	}
 
+	app.RevShareKeeper = *revsharemodulekeeper.NewKeeper(
+		appCodec,
+		keys[revsharemoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+	)
+	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
+
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
 		appCodec,
 		keys[pricesmoduletypes.StoreKey],
@@ -908,8 +932,15 @@ func New(
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
 		},
+		app.RevShareKeeper,
 	)
-	pricesModule := pricesmodule.NewAppModule(appCodec, app.PricesKeeper, app.AccountKeeper, app.BankKeeper)
+	pricesModule := pricesmodule.NewAppModule(
+		appCodec,
+		app.PricesKeeper,
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.RevShareKeeper,
+	)
 
 	app.AssetsKeeper = *assetsmodulekeeper.NewKeeper(
 		appCodec,
@@ -1021,6 +1052,7 @@ func New(
 		app.BankKeeper,
 		app.PerpetualsKeeper,
 		app.BlockTimeKeeper,
+		app.RevShareKeeper,
 		app.IndexerEventManager,
 	)
 	subaccountsModule := subaccountsmodule.NewAppModule(
@@ -1110,6 +1142,7 @@ func New(
 		app.PricesKeeper,
 		app.SendingKeeper,
 		app.SubaccountsKeeper,
+		app.IndexerEventManager,
 		[]string{
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
@@ -1155,6 +1188,15 @@ func New(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		wasmOpts...,
 	)
+
+	app.ListingKeeper = *listingmodulekeeper.NewKeeper(
+		appCodec,
+		keys[listingmoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+	)
+	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
 
 	/****  Module Options ****/
 
@@ -1233,6 +1275,8 @@ func New(
 			app.MsgServiceRouter(),
 			app.getSubspace(wasmtypes.ModuleName),
 		),
+		listingModule,
+		revShareModule,
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
@@ -1281,6 +1325,8 @@ func New(
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
 		wasmtypes.ModuleName,
+		listingmoduletypes.ModuleName,
+		revsharemoduletypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
@@ -1313,6 +1359,9 @@ func New(
 		perpetualsmoduletypes.ModuleName,
 		statsmoduletypes.ModuleName,
 		satypes.ModuleName,
+		// should be before clob EndBlocker so that vault order cancels are
+		// processed before any vault order expirations (handled by clob)
+		vaultmoduletypes.ModuleName,
 		clobmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 		vestmoduletypes.ModuleName,
@@ -1321,8 +1370,10 @@ func New(
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
-		authz.ModuleName, // No-op.
 		wasmtypes.ModuleName,
+		listingmoduletypes.ModuleName,
+		revsharemoduletypes.ModuleName,
+		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
 
@@ -1366,6 +1417,8 @@ func New(
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
+		listingmoduletypes.ModuleName,
+		revsharemoduletypes.ModuleName,
 		authz.ModuleName,
 		// NOTE: wasm module should be at the end as it can call other module functionality direct
 		// or via message dispatching during genesis phase.
@@ -1411,6 +1464,8 @@ func New(
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		vaultmoduletypes.ModuleName,
+		listingmoduletypes.ModuleName,
+		revsharemoduletypes.ModuleName,
 		authz.ModuleName,
 
 		// Auth must be migrated after staking.
@@ -1632,15 +1687,8 @@ func (app *App) initOracle(pricesTxDecoder process.UpdateMarketPriceTxDecoder) {
 			compression.NewDefaultVoteExtensionCodec(),
 			compression.NewZLibCompressor(),
 		),
-		// We are not using the slinky PreBlocker, so there is no need to pass in PreBlocker here for
-		// VE handler to work properly.
-		// Currently the clob PreBlocker assumes that it will only be called during the normal ABCI
-		// PreBlocker step. Passing in the app PreBlocker here will break that assumption by causing
-		// the clob PreBlocker to be called unexpectedly. This to leads improperly initialized clob state
-		// which results in the next block being committed incorrectly.
-		func(_ sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-			return nil, nil
-		},
+		// TODO we can move the UpdateMarketPrices in extend vote to this in the future.
+		vote_extensions.NoopPriceApplier{},
 		app.oracleMetrics,
 	)
 
@@ -1662,19 +1710,6 @@ func (app *App) initOracleMetrics(appOpts servertypes.AppOptions) {
 	oracleMetrics, err := servicemetrics.NewMetricsFromConfig(cfg, app.ChainID())
 	if err != nil {
 		panic(err)
-	}
-	// run prometheus metrics
-	if cfg.MetricsEnabled {
-		promLogger, err := zap.NewProduction()
-		if err != nil {
-			panic(err)
-		}
-		app.oraclePrometheusServer, err = promserver.NewPrometheusServer(cfg.PrometheusServerAddress, promLogger)
-		if err != nil {
-			panic(err)
-		}
-		// start the prometheus server
-		go app.oraclePrometheusServer.Start()
 	}
 	app.oracleMetrics = oracleMetrics
 }
@@ -1718,6 +1753,8 @@ func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
 
 // PreBlocker application updates before each begin block.
 func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	app.scheduleForkUpgrade(ctx)
+
 	// Set gas meter to the free gas meter.
 	// This is because there is currently non-deterministic gas usage in the
 	// pre-blocker, e.g. due to hydration of in-memory data structures.
@@ -1736,7 +1773,6 @@ func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	proposerAddr := sdk.ConsAddress(ctx.BlockHeader().ProposerAddress)
 	middleware.Logger = ctx.Logger().With("proposer_cons_addr", proposerAddr.String())
 
-	app.scheduleForkUpgrade(ctx)
 	return app.ModuleManager.BeginBlock(ctx)
 }
 
@@ -1757,8 +1793,6 @@ func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 	if err != nil {
 		return response, err
 	}
-	block := app.IndexerEventManager.ProduceBlock(ctx)
-	app.IndexerEventManager.SendOnchainData(block)
 	return response, err
 }
 
@@ -1767,6 +1801,8 @@ func (app *App) Precommitter(ctx sdk.Context) {
 	if err := app.ModuleManager.Precommit(ctx); err != nil {
 		panic(err)
 	}
+	block := app.IndexerEventManager.ProduceBlock(ctx)
+	app.IndexerEventManager.SendOnchainData(block)
 }
 
 // PrepareCheckStater application updates after commit and before any check state is invoked.
@@ -2022,7 +2058,12 @@ func getGrpcStreamingManagerFromOptions(
 ) (manager streamingtypes.GrpcStreamingManager) {
 	if appFlags.GrpcStreamingEnabled {
 		logger.Info("GRPC streaming is enabled")
-		return streaming.NewGrpcStreamingManager()
+		return streaming.NewGrpcStreamingManager(
+			logger,
+			appFlags.GrpcStreamingFlushIntervalMs,
+			appFlags.GrpcStreamingMaxBatchSize,
+			appFlags.GrpcStreamingMaxChannelBufferSize,
+		)
 	}
 	return streaming.NewNoopGrpcStreamingManager()
 }

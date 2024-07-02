@@ -7,13 +7,13 @@ import {
   StatefulOrderUpdatesCache,
 } from '@dydxprotocol-indexer/redis';
 import {
-  expectOpenOrderIds,
   expectOrderbookLevelCache,
   handleInitialOrderPlace,
   handleOrderUpdate,
 } from '../helpers/helpers';
 import { redisClient as client } from '../../src/helpers/redis/redis-controller';
 import {
+  blockHeightRefresher,
   dbHelpers,
   OrderbookMessageContents,
   perpetualMarketRefresher,
@@ -60,7 +60,10 @@ describe('OrderUpdateHandler', () => {
 
     beforeEach(async () => {
       await testMocks.seedData();
-      await perpetualMarketRefresher.updatePerpetualMarkets();
+      await Promise.all([
+        perpetualMarketRefresher.updatePerpetualMarkets(),
+        blockHeightRefresher.updateBlockHeight(),
+      ]);
       jest.spyOn(stats, 'timing');
       jest.spyOn(stats, 'increment');
       jest.spyOn(OrderbookLevelsCache, 'updatePriceLevel');
@@ -177,12 +180,6 @@ describe('OrderUpdateHandler', () => {
           ]),
         );
 
-        // Check order is added to open orders cache
-        await expectOpenOrderIds(
-          testConstants.defaultPerpetualMarket.clobPairId,
-          [redisTestConstants.defaultRedisOrder.id],
-        );
-
         jest.clearAllMocks();
         const secondTotalFilledQuantums: Long = Long.fromValue(500_350, true);
         const secondUpdate: redisTestConstants.OffChainUpdateOrderUpdateUpdateMessage = {
@@ -225,9 +222,6 @@ describe('OrderUpdateHandler', () => {
           },
         };
         await handleOrderUpdate(thirdUpdate);
-
-        // Order total filled == size, order should be removed from open orders cache
-        await expectOpenOrderIds(testConstants.defaultPerpetualMarket.clobPairId, []);
       },
     );
 

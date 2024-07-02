@@ -12,3 +12,6 @@ This directory defines all protos for `v4-chain`. We follow the Cosmos-SDK conve
 [buf](https://github.com/bufbuild/buf) to manage proto dependencies. You can think of `buf` as being like `npm` for
 protocol buffers. See the `buf` [documentation](https://docs.buf.build/how-to/iterate-on-modules#update-dependencies)
 for further details.
+
+## Building protos
+After making changes to any .proto file(s), you will also need to build the protos. To do this, run `make proto-gen` under the root `/v4-chain` directory. If the changes to the protos is also used by Indexer, you will also need to run `pnpm build:proto` after `cd`-ing into `/v4-chain/indexer/packages/v4-protos`

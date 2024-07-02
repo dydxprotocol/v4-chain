@@ -1,7 +1,9 @@
 syntax = "proto3";
 package dydxprotocol.vault;
 
+import "dydxprotocol/prices/market_price.proto";
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
@@ -31,4 +33,16 @@ message NumShares {
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
+}
+
+// OwnerShare is a type for owner shares in a vault.
+message OwnerShare {
+  string owner = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  NumShares shares = 2;
+}
+
+// VaultParams is the individual parameters of a vault.
+message VaultParams {
+  // Lagged price that the vault quotes at.
+  dydxprotocol.prices.MarketPrice lagged_price = 1;
 }

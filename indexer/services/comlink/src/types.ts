@@ -41,6 +41,13 @@ export enum RequestMethod {
   PUT = 'PUT',
 }
 
+/* ------- Pagination ------- */
+export interface PaginationResponse {
+  pageSize?: number,
+  totalResults?: number,
+  offset?: number,
+}
+
 /* ------- SUBACCOUNT TYPES ------- */
 
 export interface AddressResponse {
@@ -56,6 +63,8 @@ export interface SubaccountResponseObject {
   openPerpetualPositions: PerpetualPositionsMap,
   assetPositions: AssetPositionsMap,
   marginEnabled: boolean,
+  updatedAtHeight: string,
+  latestProcessedBlockHeight: string,
 }
 
 export interface ParentSubaccountResponse {
@@ -122,7 +131,7 @@ export type AssetPositionsMap = { [symbol: string]: AssetPositionResponseObject 
 
 /* ------- FILL TYPES ------- */
 
-export interface FillResponse {
+export interface FillResponse extends PaginationResponse {
   fills: FillResponseObject[],
 }
 
@@ -145,7 +154,7 @@ export interface FillResponseObject {
 
 /* ------- TRANSFER TYPES ------- */
 
-export interface TransferResponse {
+export interface TransferResponse extends PaginationResponse {
   transfers: TransferResponseObject[],
 }
 
@@ -167,7 +176,7 @@ export interface TransferResponseObject {
   transactionHash: string,
 }
 
-export interface ParentSubaccountTransferResponse {
+export interface ParentSubaccountTransferResponse extends PaginationResponse {
   transfers: TransferResponseObject[],
 }
 
@@ -191,7 +200,7 @@ export interface ParentSubaccountTransferResponseObject {
 
 /* ------- PNL TICKS TYPES ------- */
 
-export interface HistoricalPnlResponse {
+export interface HistoricalPnlResponse extends PaginationResponse {
   historicalPnl: PnlTicksResponseObject[],
 }
 
@@ -208,7 +217,7 @@ export interface PnlTicksResponseObject {
 
 /* ------- TRADE TYPES ------- */
 
-export interface TradeResponse {
+export interface TradeResponse extends PaginationResponse {
   trades: TradeResponseObject[],
 }
 
@@ -351,6 +360,10 @@ export interface ParentSubaccountRequest extends AddressRequest {
   parentSubaccountNumber: number,
 }
 
+export interface PaginationRequest {
+  page?: number;
+}
+
 export interface LimitRequest {
   limit: number,
 }
@@ -388,30 +401,33 @@ export interface AssetPositionRequest extends SubaccountRequest {}
 export interface ParentSubaccountAssetPositionRequest extends ParentSubaccountRequest {
 }
 
-export interface TransferRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {}
+export interface TransferRequest
+  extends SubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest {}
 
 export interface ParentSubaccountTransferRequest
-  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest {
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest {
 }
 
-export interface FillRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {
+export interface FillRequest
+  extends SubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest {
   market: string,
   marketType: MarketType,
 }
 
 export interface ParentSubaccountFillRequest
-  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest {
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest, PaginationRequest {
   market: string,
   marketType: MarketType,
 }
 
-export interface TradeRequest extends LimitAndCreatedBeforeRequest {
+export interface TradeRequest extends LimitAndCreatedBeforeRequest, PaginationRequest {
   ticker: string,
 }
 
 export interface PerpetualMarketRequest extends LimitRequest, TickerRequest {}
 
-export interface PnlTicksRequest extends SubaccountRequest, LimitAndCreatedBeforeAndAfterRequest {}
+export interface PnlTicksRequest
+  extends SubaccountRequest, LimitAndCreatedBeforeAndAfterRequest, PaginationRequest {}
 
 export interface ParentSubaccountPnlTicksRequest
   extends ParentSubaccountRequest, LimitAndCreatedBeforeAndAfterRequest {

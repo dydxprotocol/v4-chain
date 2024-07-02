@@ -22,9 +22,11 @@ import (
 	delaymsg "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetiers "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	govplus "github.com/dydxprotocol/v4-chain/protocol/x/govplus/types"
+	listing "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	ratelimit "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
+	revshare "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -141,6 +143,10 @@ var (
 		"/dydxprotocol.govplus.MsgSlashValidator":         &govplus.MsgSlashValidator{},
 		"/dydxprotocol.govplus.MsgSlashValidatorResponse": nil,
 
+		// listing
+		"/dydxprotocol.listing.MsgSetMarketsHardCap":         &listing.MsgSetMarketsHardCap{},
+		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse": nil,
+
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual":               &perpetuals.MsgCreatePerpetual{},
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":       nil,
@@ -160,6 +166,12 @@ var (
 		// ratelimit
 		"/dydxprotocol.ratelimit.MsgSetLimitParams":         &ratelimit.MsgSetLimitParams{},
 		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse": nil,
+
+		// revshare
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarket":         &revshare.MsgSetMarketMapperRevShareDetailsForMarket{}, //nolint:lll
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarketResponse": nil,
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShare":                     &revshare.MsgSetMarketMapperRevenueShare{}, //nolint:lll
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse":             nil,
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         &rewards.MsgUpdateParams{},

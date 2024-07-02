@@ -167,6 +167,12 @@
           },
           "marginEnabled": {
             "type": "boolean"
+          },
+          "updatedAtHeight": {
+            "type": "string"
+          },
+          "latestProcessedBlockHeight": {
+            "type": "string"
           }
         },
         "required": [
@@ -176,7 +182,9 @@
           "freeCollateral",
           "openPerpetualPositions",
           "assetPositions",
-          "marginEnabled"
+          "marginEnabled",
+          "updatedAtHeight",
+          "latestProcessedBlockHeight"
         ],
         "type": "object",
         "additionalProperties": false
@@ -361,6 +369,7 @@
           "MANUAL",
           "US_GEO",
           "CA_GEO",
+          "GB_GEO",
           "SANCTIONED_GEO",
           "COMPLIANCE_PROVIDER"
         ],
@@ -480,6 +489,18 @@
       },
       "FillResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "fills": {
             "items": {
               "$ref": "#/components/schemas/FillResponseObject"
@@ -629,6 +650,18 @@
       },
       "HistoricalPnlResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "historicalPnl": {
             "items": {
               "$ref": "#/components/schemas/PnlTicksResponseObject"
@@ -775,10 +808,7 @@
           "STOP_MARKET",
           "TRAILING_STOP",
           "TAKE_PROFIT",
-          "TAKE_PROFIT_MARKET",
-          "HARD_TRADE",
-          "FAILED_HARD_TRADE",
-          "TRANSFER_PLACEHOLDER"
+          "TAKE_PROFIT_MARKET"
         ],
         "type": "string"
       },
@@ -1101,6 +1131,18 @@
       },
       "TradeResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "trades": {
             "items": {
               "$ref": "#/components/schemas/TradeResponseObject"
@@ -1193,6 +1235,18 @@
       },
       "TransferResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "transfers": {
             "items": {
               "$ref": "#/components/schemas/TransferResponseObject"
@@ -1208,6 +1262,18 @@
       },
       "ParentSubaccountTransferResponse": {
         "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
           "transfers": {
             "items": {
               "$ref": "#/components/schemas/TransferResponseObject"
@@ -1598,6 +1664,15 @@
             "schema": {
               "$ref": "#/components/schemas/IsoString"
             }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
           }
         ]
       }
@@ -1676,6 +1751,15 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
             }
           }
         ]
@@ -1883,6 +1967,15 @@
             "schema": {
               "$ref": "#/components/schemas/IsoString"
             }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
           }
         ]
       }
@@ -1962,6 +2055,15 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
             }
           }
         ]
@@ -2584,6 +2686,15 @@
             "schema": {
               "$ref": "#/components/schemas/IsoString"
             }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
           }
         ]
       }
@@ -2646,6 +2757,15 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
             }
           }
         ]
@@ -2710,6 +2830,15 @@
             "schema": {
               "$ref": "#/components/schemas/IsoString"
             }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
           }
         ]
       }
@@ -2717,7 +2846,7 @@
   },
   "servers": [
     {
-      "url": "https://dydx-testnet.imperator.co/v4",
+      "url": "",
       "description": "Public Testnet"
     }
   ]

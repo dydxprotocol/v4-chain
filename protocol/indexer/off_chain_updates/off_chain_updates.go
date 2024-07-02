@@ -48,7 +48,51 @@ func CreateOrderPlaceMessage(
 		return msgsender.Message{}, false
 	}
 
-	update, err := newOrderPlaceMessage(order)
+	update, err := NewOrderPlaceMessage(order)
+	if err != nil {
+		log.ErrorLogWithError(
+			ctx,
+			errMessage,
+			err,
+			log.Order, order,
+		)
+		return msgsender.Message{}, false
+	}
+
+	return msgsender.Message{Key: orderIdHash, Value: update}, true
+}
+
+// MustCreateOrderReplaceMessage invokes CreateOrderReplaceMessage and panics if creation was unsuccessful.
+func MustCreateOrderReplaceMessage(
+	ctx sdk.Context,
+	order clobtypes.Order,
+) msgsender.Message {
+	msg, ok := CreateOrderReplaceMessage(ctx, order)
+	if !ok {
+		panic(fmt.Errorf("Unable to create place order message for order %+v", order))
+	}
+	return msg
+}
+
+// CreateOrderReplaceMessage creates an off-chain update message for an order.
+func CreateOrderReplaceMessage(
+	ctx sdk.Context,
+	order clobtypes.Order,
+) (message msgsender.Message, success bool) {
+	errMessage := "Error creating off-chain update message for replacing order."
+
+	orderIdHash, err := GetOrderIdHash(order.OrderId)
+	if err != nil {
+		log.ErrorLogWithError(
+			ctx,
+			errMessage,
+			err,
+			log.Order, order,
+		)
+		return msgsender.Message{}, false
+	}
+
+	update, err := NewOrderReplaceMessage(order)
 	if err != nil {
 		log.ErrorLogWithError(
 			ctx,
@@ -95,7 +139,7 @@ func CreateOrderUpdateMessage(
 		return msgsender.Message{}, false
 	}
 
-	update, err := newOrderUpdateMessage(orderId, totalFilled)
+	update, err := NewOrderUpdateMessage(orderId, totalFilled)
 	if err != nil {
 		log.ErrorLogWithError(
 			ctx,
@@ -148,7 +192,7 @@ func CreateOrderRemoveMessageWithReason(
 		return msgsender.Message{}, false
 	}
 
-	update, err := newOrderRemoveMessage(orderId, reason, removalStatus)
+	update, err := NewOrderRemoveMessage(orderId, reason, removalStatus)
 	if err != nil {
 		log.ErrorLogWithError(
 			ctx,
@@ -240,9 +284,9 @@ func CreateOrderRemoveMessageWithDefaultReason(
 	return CreateOrderRemoveMessageWithReason(ctx, orderId, reason, removalStatus)
 }
 
-// newOrderPlaceMessage returns an `OffChainUpdate` struct populated with an `OrderPlace` struct
+// NewOrderPlaceMessage returns an `OffChainUpdate` struct populated with an `OrderPlace` struct
 // as the `UpdateMessage` parameter, encoded as a byte slice.
-func newOrderPlaceMessage(
+func NewOrderPlaceMessage(
 	order clobtypes.Order,
 ) ([]byte, error) {
 	indexerOrder := v1.OrderToIndexerOrder(order)
@@ -258,10 +302,10 @@ func newOrderPlaceMessage(
 	return proto.Marshal(&update)
 }
 
-// newOrderPlaceMessage returns an `OffChainUpdate` struct populated with an `OrderRemove`
+// NewOrderRemoveMessage returns an `OffChainUpdate` struct populated with an `OrderRemove`
 // struct as the `UpdateMessage` parameter, encoded as a byte slice.
 // The `OrderRemove` struct is instantiated with the given orderId, reason and status parameters.
-func newOrderRemoveMessage(
+func NewOrderRemoveMessage(
 	orderId clobtypes.OrderId,
 	reason sharedtypes.OrderRemovalReason,
 	status ocutypes.OrderRemoveV1_OrderRemovalStatus,
@@ -282,7 +326,7 @@ func newOrderRemoveMessage(
 // NewOrderUpdateMessage returns an `OffChainUpdate` struct populated with an `OrderUpdate`
 // struct as the `UpdateMessage` parameter, encoded as a byte slice.
 // The `OrderUpdate` struct is instantiated with the given orderId and totalFilled parameters.
-func newOrderUpdateMessage(
+func NewOrderUpdateMessage(
 	orderId clobtypes.OrderId,
 	totalFilled satypes.BaseQuantums,
 ) ([]byte, error) {
@@ -292,6 +336,24 @@ func newOrderUpdateMessage(
 			OrderUpdate: &ocutypes.OrderUpdateV1{
 				OrderId:             &indexerOrderId,
 				TotalFilledQuantums: totalFilled.ToUint64(),
+			},
+		},
+	}
+	return proto.Marshal(&update)
+}
+
+// NewOrderReplaceMessage returns an `OffChainUpdate` struct populated with an `OrderReplace` struct
+// as the `UpdateMessage` parameter, encoded as a byte slice.
+func NewOrderReplaceMessage(
+	order clobtypes.Order,
+) ([]byte, error) {
+	indexerOrder := v1.OrderToIndexerOrder(order)
+	update := ocutypes.OffChainUpdateV1{
+		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderReplace{
+			OrderReplace: &ocutypes.OrderReplaceV1{
+				Order: &indexerOrder,
+				// Protocol will always send best effort opened messages to indexer.
+				PlacementStatus: ocutypes.OrderPlaceV1_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
 			},
 		},
 	}

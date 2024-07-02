@@ -93,6 +93,7 @@ func GetTestEncodingCfg() testutil.TestEncodingConfig {
 
 		// Vault.
 		&vaulttypes.MsgDepositToVault{},
+		&vaulttypes.MsgWithdrawFromVault{},
 	}
 
 	for _, msg := range msgInterfacesToRegister {
@@ -107,7 +108,7 @@ func GetTestEncodingCfg() testutil.TestEncodingConfig {
 }
 
 // EncodeMessageToAny converts a message to an Any object for protobuf encoding.
-func EncodeMessageToAny(t *testing.T, msg sdk.Msg) *codectypes.Any {
+func EncodeMessageToAny(t testing.TB, msg sdk.Msg) *codectypes.Any {
 	any, err := codectypes.NewAnyWithValue(msg)
 	require.NoError(t, err)
 	return any

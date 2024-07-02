@@ -164,9 +164,7 @@ export class Index {
       }
     });
 
-    this.connections[connectionId].ws.on(WebsocketEvents.PING, (data: Buffer) => {
-      ws.pong(data);
-    });
+    // Do not attach handler for pings. The ws library automatically responds to pings with pongs.
 
     // Attach handler for close events from the connection.
     this.connections[connectionId].ws.on(WebsocketEvents.CLOSE, (code: number, reason: Buffer) => {
@@ -309,7 +307,7 @@ export class Index {
         );
         break;
       }
-      // TODO: Consider custom ping messages as invalid after publishing updated documentation.
+      // Handle pings by doing nothing. The ws library automatically responds to pings with pongs.
       case IncomingMessageType.PING: {
         break;
       }
@@ -463,7 +461,7 @@ export class Index {
   private validateSubscriptionForChannel(
     message: SubscribeMessage | UnsubscribeMessage,
   ): boolean {
-    if (message.channel === Channel.V4_MARKETS) {
+    if (message.channel === Channel.V4_MARKETS || message.channel === Channel.V4_BLOCK_HEIGHT) {
       return true;
     }
     return message.id !== undefined && typeof message.id === 'string';
