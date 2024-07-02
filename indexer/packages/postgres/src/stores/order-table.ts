@@ -199,13 +199,13 @@ export async function create(
   return OrderModel.query(
     Transaction.get(options.txId),
   ).insert({
+    ...orderToCreate,
     id: uuid(
       orderToCreate.subaccountId,
       orderToCreate.clientId,
       orderToCreate.clobPairId,
       orderToCreate.orderFlags,
     ),
-    ...orderToCreate,
   }).returning('*');
 }
 

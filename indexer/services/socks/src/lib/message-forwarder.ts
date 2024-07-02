@@ -86,9 +86,10 @@ export class MessageForwarder {
   }
 
   public onMessage(topic: string, message: KafkaMessage): void {
+    const start: number = Date.now();
     stats.timing(
       `${config.SERVICE_NAME}.message_time_in_queue`,
-      Date.now() - Number(message.timestamp),
+      start - Number(message.timestamp),
       config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       {
         topic,

@@ -55,6 +55,7 @@ const (
 	OriginalNumTxs     = "original_num_txs"
 	OtherTxs           = "other_txs"
 	RemoveDisallowMsgs = "remove_disallow_msgs"
+	PreBlocker         = "pre_blocker"
 	PrepareProposalTxs = "prepare_proposal_txs"
 	PrepareCheckState  = "prepare_check_state"
 	PricesTx           = "prices_tx"

@@ -128,22 +128,22 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				satypes.SubaccountKeyPrefix +
 					string(constants.Carl_Num0.ToStateKey()),
 				// Indexer event
-				indexer_manager.IndexerEventsKey,
+				indexer_manager.IndexerEventsCountKey,
 				// Update maker subaccount
 				satypes.SubaccountKeyPrefix +
 					string(constants.Dave_Num0.ToStateKey()),
 				// Indexer event
-				indexer_manager.IndexerEventsKey,
+				indexer_manager.IndexerEventsCountKey,
 				// Update block stats
 				statstypes.BlockStatsKey,
 				// Update prunable block height for taker fill amount
-				types.BlockHeightToPotentiallyPrunableOrdersPrefix,
+				types.PrunableOrdersKeyPrefix,
 				// Update taker order fill amount
 				types.OrderAmountFilledKeyPrefix,
 				// Update taker order fill amount in memStore
 				types.OrderAmountFilledKeyPrefix,
 				// Update prunable block height for maker fill amount
-				types.BlockHeightToPotentiallyPrunableOrdersPrefix,
+				types.PrunableOrdersKeyPrefix,
 				// Update maker order fill amount
 				types.OrderAmountFilledKeyPrefix,
 				// Update maker order fill amount in memStore
@@ -493,21 +493,21 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				// Update taker subaccount
 				satypes.SubaccountKeyPrefix +
 					string(constants.Carl_Num1.ToStateKey()),
-				indexer_manager.IndexerEventsKey,
+				indexer_manager.IndexerEventsCountKey,
 				// Update maker subaccount
 				satypes.SubaccountKeyPrefix +
 					string(constants.Carl_Num0.ToStateKey()),
-				indexer_manager.IndexerEventsKey,
+				indexer_manager.IndexerEventsCountKey,
 				// Update block stats
 				statstypes.BlockStatsKey,
 				// Update prunable block height for taker fill amount
-				types.BlockHeightToPotentiallyPrunableOrdersPrefix,
+				types.PrunableOrdersKeyPrefix,
 				// Update taker order fill amount
 				types.OrderAmountFilledKeyPrefix,
 				// Update taker order fill amount in memStore
 				types.OrderAmountFilledKeyPrefix,
 				// Update prunable block height for maker fill amount
-				types.BlockHeightToPotentiallyPrunableOrdersPrefix,
+				types.PrunableOrdersKeyPrefix,
 				// Update maker order fill amount
 				types.OrderAmountFilledKeyPrefix,
 				// Update maker order fill amount in memStore
@@ -913,11 +913,11 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 				// Update taker subaccount.
 				satypes.SubaccountKeyPrefix +
 					string(constants.Carl_Num0.ToStateKey()),
-				indexer_manager.IndexerEventsKey,
+				indexer_manager.IndexerEventsCountKey,
 				// Update maker subaccount.
 				satypes.SubaccountKeyPrefix +
 					string(constants.Dave_Num0.ToStateKey()),
-				indexer_manager.IndexerEventsKey,
+				indexer_manager.IndexerEventsCountKey,
 				// Update block stats
 				statstypes.BlockStatsKey,
 				// Update taker order fill amount to state and memStore.

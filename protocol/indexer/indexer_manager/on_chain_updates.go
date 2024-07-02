@@ -2,22 +2,15 @@ package indexer_manager
 
 import (
 	"fmt"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/msgsender"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 const (
 	createErrMsg          = "Cannot create message."
 	onChainEventsKafkaKey = "on_chain_events"
 )
-
-func marshalIndexerTendermintBlock(
-	indexerTendermintBlock *IndexerTendermintBlock,
-	marshaler common.Marshaler,
-) ([]byte, error) {
-	bytes, err := marshaler.Marshal(indexerTendermintBlock)
-	return bytes, err
-}
 
 // CreateIndexerBlockEventMessage creates an on-chain update message for all the Indexer events in a block.
 func CreateIndexerBlockEventMessage(
@@ -26,7 +19,7 @@ func CreateIndexerBlockEventMessage(
 	errMessage := "Error creating on-chain Indexer block event message."
 	errDetails := fmt.Sprintf("Block: %+v", *block)
 
-	update, err := marshalIndexerTendermintBlock(block, &common.MarshalerImpl{})
+	update, err := proto.Marshal(block)
 	if err != nil {
 		panic(fmt.Sprintf("%s %s Err: %+v %s\n", errMessage, createErrMsg, err, errDetails))
 	}

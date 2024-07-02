@@ -58,7 +58,7 @@ class TransfersController extends Controller {
   async getTransfers(
     @Query() address: string,
       @Query() subaccountNumber: number,
-      @Query() limit: number,
+      @Query() limit?: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
   ): Promise<TransferResponse> {

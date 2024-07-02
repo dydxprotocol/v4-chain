@@ -5,7 +5,13 @@ import {
 } from '@dydxprotocol-indexer/base';
 import { isRestrictedCountry } from '@dydxprotocol-indexer/compliance';
 import {
-  CHILD_SUBACCOUNT_MULTIPLIER, CandleResolution, MAX_PARENT_SUBACCOUNTS, perpetualMarketRefresher,
+  APIOrderStatus,
+  BestEffortOpenedStatus,
+  CHILD_SUBACCOUNT_MULTIPLIER,
+  CandleResolution,
+  MAX_PARENT_SUBACCOUNTS,
+  OrderStatus,
+  perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import WebSocket from 'ws';
 
@@ -26,6 +32,13 @@ import { RateLimiter } from './rate-limit';
 
 const COMLINK_URL: string = `http://${config.COMLINK_URL}`;
 const EMPTY_INITIAL_RESPONSE: string = '{}';
+const VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE: APIOrderStatus[] = [
+  OrderStatus.OPEN,
+  OrderStatus.UNTRIGGERED,
+  BestEffortOpenedStatus.BEST_EFFORT_OPENED,
+  OrderStatus.BEST_EFFORT_CANCELED,
+];
+const VALID_ORDER_STATUS: string = VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE.join(',');
 
 export class Subscriptions {
   // Maps channels and ids to a list of websocket connections subscribed to them
@@ -542,7 +555,7 @@ export class Subscriptions {
         // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
         axiosRequest({
           method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED,BEST_EFFORT_OPENED`,
+          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=${VALID_ORDER_STATUS}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
           transformResponse: (res) => res,
         }),
@@ -604,7 +617,7 @@ export class Subscriptions {
         // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
         axiosRequest({
           method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/orders/parentSubaccountNumber?address=${address}&subaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED,BEST_EFFORT_OPENED`,
+          url: `${COMLINK_URL}/v4/orders/parentSubaccountNumber?address=${address}&parentSubaccountNumber=${subaccountNumber}&status=${VALID_ORDER_STATUS}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
           headers: {
             'cf-ipcountry': country,

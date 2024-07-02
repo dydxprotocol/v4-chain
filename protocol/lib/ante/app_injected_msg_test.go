@@ -3,6 +3,7 @@ package ante_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -11,6 +12,10 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
 	testmsgs "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/msgs"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+)
+
+var (
+	testMsg = &testdata.TestMsg{Signers: []string{"meh"}}
 )
 
 func TestIsSingleAppInjectedMsg(t *testing.T) {

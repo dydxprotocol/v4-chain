@@ -14,6 +14,9 @@ type ClobKeeper interface {
 	LiquidationsKeeper
 	LiquidationsConfigKeeper
 
+	IsInitialized() bool
+	Initialize(ctx sdk.Context)
+
 	AddOrderToOrderbookSubaccountUpdatesCheck(
 		ctx sdk.Context,
 		clobPairId ClobPairId,
@@ -142,4 +145,5 @@ type ClobKeeper interface {
 		offchainUpdates *OffchainUpdates,
 		snapshot bool,
 	)
+	MigratePruneableOrders(ctx sdk.Context)
 }

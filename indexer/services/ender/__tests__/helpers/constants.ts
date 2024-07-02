@@ -76,6 +76,22 @@ export const defaultFundingUpdateSampleEvent: FundingEventMessage = {
   ],
 };
 
+export const defaultFundingUpdateSampleEventWithAdditionalMarket: FundingEventMessage = {
+  type: FundingEventV1_Type.TYPE_PREMIUM_SAMPLE,
+  updates: [
+    {
+      perpetualId: 0,
+      fundingValuePpm: 10,
+      fundingIndex: bigIntToBytes(BigInt(0)),
+    },
+    {
+      perpetualId: 99999,
+      fundingValuePpm: 10,
+      fundingIndex: bigIntToBytes(BigInt(0)),
+    },
+  ],
+};
+
 export const defaultFundingRateEvent: FundingEventMessage = {
   type: FundingEventV1_Type.TYPE_FUNDING_RATE_AND_INDEX,
   updates: [
@@ -329,7 +345,7 @@ export const defaultDeleveragingEvent: DeleveragingEventV1 = {
   offsetting: defaultRecipientSubaccountId,
   perpetualId: 1,
   fillAmount: Long.fromValue(10_000, true),
-  price: Long.fromValue(1_000_000_000, true),
+  totalQuoteQuantums: Long.fromValue(1_000_000_000, true),
   isBuy: true,
   isFinalSettlement: false,
 };

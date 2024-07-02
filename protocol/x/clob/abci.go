@@ -16,6 +16,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// PreBlocker executes all ABCI PreBlock logic respective to the clob module.
+func PreBlocker(
+	ctx sdk.Context,
+	keeper types.ClobKeeper,
+) {
+	keeper.Initialize(ctx)
+}
+
 // BeginBlocker executes all ABCI BeginBlock logic respective to the clob module.
 func BeginBlocker(
 	ctx sdk.Context,
@@ -61,9 +69,10 @@ func EndBlocker(
 		keeper.DeleteLongTermOrderPlacement(ctx, orderId)
 
 		// Emit an on-chain indexer event for Stateful Order Expiration.
-		keeper.GetIndexerEventManager().AddTxnEvent(
+		keeper.GetIndexerEventManager().AddBlockEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
+			indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 			indexerevents.StatefulOrderEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewStatefulOrderRemovalEvent(

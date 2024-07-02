@@ -30,8 +30,9 @@ import {
   PerpetualMarketTable,
   IsoString,
   fillTypeToTradeType,
+  OrderSubaccountMessageContents,
 } from '@dydxprotocol-indexer/postgres';
-import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
+import { getOrderIdHash, ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   LiquidationOrderV1,
   MarketMessage,
@@ -51,6 +52,7 @@ import {
   PerpetualMarketCreateEventV1,
   PerpetualMarketCreateEventV2,
   DeleveragingEventV1,
+  protoTimestampToDate,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   PerpetualMarketType,
@@ -64,7 +66,6 @@ import {
   generatePerpetualMarketMessage,
   generatePerpetualPositionsContents,
 } from '../../src/helpers/kafka-helper';
-import { protoTimestampToDate } from '../../src/lib/helper';
 import { DydxIndexerSubtypes, VulcanMessage } from '../../src/lib/types';
 
 // TX Hash is SHA256, so is of length 64 hexadecimal without the '0x'.
@@ -698,6 +699,10 @@ export async function expectFillSubaccountKafkaMessageFromLiquidationEvent(
   });
 }
 
+function isConditionalOrder(order: OrderFromDatabase): boolean {
+  return Number(order.orderFlags) === ORDER_FLAG_CONDITIONAL;
+}
+
 export function expectOrderSubaccountKafkaMessage(
   producerSendMock: jest.SpyInstance,
   subaccountIdProto: IndexerSubaccountId,
@@ -707,16 +712,33 @@ export function expectOrderSubaccountKafkaMessage(
   eventIndex: number = 0,
   ticker: string = defaultPerpetualMarketTicker,
 ): void {
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    triggerPrice, totalFilled, goodTilBlock, ...orderWithoutUnwantedFields
+  } = order!;
+  let orderObject: OrderSubaccountMessageContents;
+
+  if (isConditionalOrder(order)) {
+    orderObject = {
+      ...order!,
+      timeInForce: apiTranslations.orderTIFToAPITIF(order!.timeInForce),
+      postOnly: apiTranslations.isOrderTIFPostOnly(order!.timeInForce),
+      goodTilBlock: order!.goodTilBlock,
+      goodTilBlockTime: order!.goodTilBlockTime,
+      ticker,
+    };
+  } else {
+    orderObject = {
+      ...orderWithoutUnwantedFields!,
+      timeInForce: apiTranslations.orderTIFToAPITIF(order!.timeInForce),
+      postOnly: apiTranslations.isOrderTIFPostOnly(order!.timeInForce),
+      goodTilBlockTime: order!.goodTilBlockTime,
+      ticker,
+    };
+  }
   const contents: SubaccountMessageContents = {
     orders: [
-      {
-        ...order!,
-        timeInForce: apiTranslations.orderTIFToAPITIF(order!.timeInForce),
-        postOnly: apiTranslations.isOrderTIFPostOnly(order!.timeInForce),
-        goodTilBlock: order!.goodTilBlock,
-        goodTilBlockTime: order!.goodTilBlockTime,
-        ticker,
-      },
+      orderObject,
     ],
   };
 

@@ -98,8 +98,8 @@ export async function create(
   return TransactionModel.query(
     Transaction.get(options.txId),
   ).insert({
-    id: uuid(transactionToCreate.blockHeight, transactionToCreate.transactionIndex),
     ...transactionToCreate,
+    id: uuid(transactionToCreate.blockHeight, transactionToCreate.transactionIndex),
   }).returning('*');
 }
 
