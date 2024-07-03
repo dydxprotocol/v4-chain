@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
@@ -17,6 +18,14 @@ type BankKeeper interface {
 
 type BlockTimeKeeper interface {
 	GetTimeSinceLastBlock(ctx sdk.Context) time.Duration
+}
+
+type PricesKeeper interface {
+	GetMarketPrice(
+		ctx sdk.Context,
+		id uint32,
+	) (market prices.MarketPrice, err error)
+	// Methods imported from prices should be defined here
 }
 
 // ICS4Wrapper defines the expected ICS4Wrapper for middleware

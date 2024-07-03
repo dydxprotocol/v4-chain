@@ -23,6 +23,16 @@ const (
 
 	// PendingSendPacketPrefix is the prefix for the key-value store for PendingSendPacket.
 	PendingSendPacketPrefix = "PendingSendPacket:"
+
+	// For the sDAI middleware
+	// This is the name of the sDAI pool which is where sDAI and pending trading DAI yields are stored
+	sDaiPool = "sDAIPool"
+
+	// This is the name of the sDAI token
+	sDaiToken = "sDAI" // change
+
+	// This is the name of the trading DAI token
+	tradingDaiToken = "tradingDAI"
 )
 
 // State
