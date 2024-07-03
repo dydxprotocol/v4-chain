@@ -144,7 +144,7 @@ func TestIsMarketUpdateTx(t *testing.T) {
 
 			require.NoError(t, suite.TxBuilder.SetMsgs(tt.msgs...))
 
-			// Empty private key, so tx's signature should be  .
+			// Empty private key, so tx's signature should be empty.
 			var (
 				privs   []cryptotypes.PrivKey
 				accSeqs []uint64
