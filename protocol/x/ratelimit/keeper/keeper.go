@@ -28,7 +28,6 @@ type (
 		bankKeeper      types.BankKeeper
 		blockTimeKeeper types.BlockTimeKeeper
 		ics4Wrapper     types.ICS4Wrapper
-		pricesKeeper    types.PricesKeeper
 
 		// the addresses capable of executing MsgSetLimitParams message.
 		authorities map[string]struct{}
@@ -40,7 +39,6 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
-	pricesKeeper types.PricesKeeper,
 	ics4Wrapper types.ICS4Wrapper,
 	authorities []string,
 ) *Keeper {
@@ -49,7 +47,6 @@ func NewKeeper(
 		storeKey:        storeKey,
 		bankKeeper:      bankKeeper,
 		blockTimeKeeper: blockTimeKeeper,
-		pricesKeeper:    pricesKeeper,
 		ics4Wrapper:     ics4Wrapper,
 		authorities:     lib.UniqueSliceToSet(authorities),
 	}
@@ -383,3 +380,22 @@ func (k Keeper) Logger(ctx sdk.Context) cosmoslog.Logger {
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {}
+
+// Functions related to the sDAI conversion
+// SetSDAIPrice sets the price of sDAI in the store as a big.Int
+func (k Keeper) SetSDAIPrice(ctx sdk.Context, price *big.Int) {
+	store := ctx.KVStore(k.storeKey)
+	bz := price.Bytes()
+	store.Set([]byte(types.sDAIKeyPrefix), bz)
+}
+
+// GetSDAIPrice gets the price of sDAI from the store as a big.Int
+func (k Keeper) GetSDAIPrice(ctx sdk.Context) (price *big.Int, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(types.sDAIKeyPrefix))
+	if bz == nil {
+		return nil, false
+	}
+	price = new(big.Int).SetBytes(bz)
+	return price, true
+}

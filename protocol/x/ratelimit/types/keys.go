@@ -33,6 +33,9 @@ const (
 
 	// This is the name of the trading DAI token
 	tradingDaiToken = "tradingDAI"
+
+	// sDAIKeyPrefix is the prefix for the key-value store forthe sDAI price
+	sDAIKeyPrefix = "sDAIPrice:"
 )
 
 // State
