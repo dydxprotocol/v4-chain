@@ -9,9 +9,12 @@ import {
   ComplianceStatus,
   ComplianceStatusFromDatabase,
   ComplianceStatusTable,
+  WalletFromDatabase,
+  WalletTable,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
+import _ from 'lodash';
 import { DateTime } from 'luxon';
 import {
   Controller, Get, Path, Route,
@@ -28,14 +31,15 @@ import { getIpAddr } from '../../../lib/utils';
 import { CheckAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
-import { ComplianceRequest, ComplianceV2Response, SetComplianceStatusRequest } from '../../../types';
+import {
+  ComplianceRequest, ComplianceV2Response, SetComplianceStatusRequest,
+} from '../../../types';
 import { ComplianceControllerHelper } from './compliance-controller';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'compliance-v2-controller';
 
 export enum ComplianceAction {
-  ONBOARD = 'ONBOARD',
   CONNECT = 'CONNECT',
   VALID_SURVEY = 'VALID_SURVEY',
   INVALID_SURVEY = 'INVALID_SURVEY',
@@ -235,98 +239,31 @@ router.post(
         );
       }
 
-      /**
-       * If the address doesn't exist in the compliance table:
-       * - if the request is from a restricted country:
-       *  - if the action is ONBOARD, set the status to BLOCKED
-       *  - if the action is CONNECT, set the status to FIRST_STRIKE_CLOSE_ONLY
-       * - else if the request is from a non-restricted country:
-       *  - set the status to COMPLIANT
-       *
-       * if the address is COMPLIANT:
-       * - the ONLY action should be CONNECT. ONBOARD/VALID_SURVEY/INVALID_SURVEY are no-ops.
-       * - if the request is from a restricted country:
-       *  - set the status to FIRST_STRIKE_CLOSE_ONLY
-       *
-       * if the address is FIRST_STRIKE_CLOSE_ONLY:
-       * - the ONLY actions should be VALID_SURVEY/INVALID_SURVEY/CONNECT. ONBOARD/CONNECT
-       * are no-ops.
-       * - if the action is VALID_SURVEY:
-       *   - set the status to FIRST_STRIKE
-       * - if the action is INVALID_SURVEY:
-       *   - set the status to CLOSE_ONLY
-       *
-       * if the address is FIRST_STRIKE:
-       * - the ONLY action should be CONNECT. ONBOARD/VALID_SURVEY/INVALID_SURVEY are no-ops.
-       * - if the request is from a restricted country:
-       *  - set the status to CLOSE_ONLY
-       */
-      const complianceStatus: ComplianceStatusFromDatabase[] = await
-      ComplianceStatusTable.findAll(
-        { address: [address] },
-        [],
-      );
-      let complianceStatusFromDatabase: ComplianceStatusFromDatabase | undefined;
+      const [
+        complianceStatus,
+        wallet,
+      ]: [
+        ComplianceStatusFromDatabase[],
+        WalletFromDatabase | undefined,
+      ] = await Promise.all([
+        ComplianceStatusTable.findAll(
+          { address: [address] },
+          [],
+        ),
+        WalletTable.findById(address),
+      ]);
+
       const updatedAt: string = DateTime.utc().toISO();
-      if (complianceStatus.length === 0) {
-        if (isRestrictedCountryHeaders(req.headers as CountryHeaders)) {
-          if (action === ComplianceAction.ONBOARD) {
-            complianceStatusFromDatabase = await ComplianceStatusTable.upsert({
-              address,
-              status: ComplianceStatus.BLOCKED,
-              reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
-              updatedAt,
-            });
-          } else if (action === ComplianceAction.CONNECT) {
-            complianceStatusFromDatabase = await ComplianceStatusTable.upsert({
-              address,
-              status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
-              reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
-              updatedAt,
-            });
-          }
-        } else {
-          complianceStatusFromDatabase = await ComplianceStatusTable.upsert({
-            address,
-            status: ComplianceStatus.COMPLIANT,
-            updatedAt,
-          });
-        }
-      } else {
-        complianceStatusFromDatabase = complianceStatus[0];
-        if (
-          complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE ||
-          complianceStatus[0].status === ComplianceStatus.COMPLIANT
-        ) {
-          if (
-            isRestrictedCountryHeaders(req.headers as CountryHeaders) &&
-            action === ComplianceAction.CONNECT
-          ) {
-            complianceStatusFromDatabase = await ComplianceStatusTable.update({
-              address,
-              status: COMPLIANCE_PROGRESSION[complianceStatus[0].status],
-              reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
-              updatedAt,
-            });
-          }
-        } else if (
-          complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY
-        ) {
-          if (action === ComplianceAction.VALID_SURVEY) {
-            complianceStatusFromDatabase = await ComplianceStatusTable.update({
-              address,
-              status: ComplianceStatus.FIRST_STRIKE,
-              updatedAt,
-            });
-          } else if (action === ComplianceAction.INVALID_SURVEY) {
-            complianceStatusFromDatabase = await ComplianceStatusTable.update({
-              address,
-              status: ComplianceStatus.CLOSE_ONLY,
-              updatedAt,
-            });
-          }
-        }
-      }
+      const complianceStatusFromDatabase:
+      ComplianceStatusFromDatabase | undefined = await upsertComplianceStatus(
+        req,
+        action,
+        address,
+        wallet,
+        complianceStatus,
+        updatedAt,
+      );
+
       const response = {
         status: complianceStatusFromDatabase!.status,
         reason: complianceStatusFromDatabase!.reason,
@@ -358,6 +295,102 @@ router.post(
 
 function generateAddress(pubkeyArray: Uint8Array): string {
   return toBech32('dydx', ripemd160(sha256(pubkeyArray)));
+}
+
+/**
+ * If the address doesn't exist in the compliance table:
+ * - if the request is from a restricted country:
+ *  - if the action is CONNECT and no wallet, set the status to BLOCKED
+ *  - if the action is CONNECT and wallet exists, set the status to FIRST_STRIKE_CLOSE_ONLY
+ * - else if the request is from a non-restricted country:
+ *  - set the status to COMPLIANT
+ *
+ * if the address is COMPLIANT:
+ * - the ONLY action should be CONNECT. VALID_SURVEY/INVALID_SURVEY are no-ops.
+ * - if the request is from a restricted country:
+ *  - set the status to FIRST_STRIKE_CLOSE_ONLY
+ *
+ * if the address is FIRST_STRIKE_CLOSE_ONLY:
+ * - the ONLY actions should be VALID_SURVEY/INVALID_SURVEY/CONNECT. CONNECT
+ * are no-ops.
+ * - if the action is VALID_SURVEY:
+ *   - set the status to FIRST_STRIKE
+ * - if the action is INVALID_SURVEY:
+ *   - set the status to CLOSE_ONLY
+ *
+ * if the address is FIRST_STRIKE:
+ * - the ONLY action should be CONNECT. VALID_SURVEY/INVALID_SURVEY are no-ops.
+ * - if the request is from a restricted country:
+ *  - set the status to CLOSE_ONLY
+ */
+// eslint-disable-next-line @typescript-eslint/require-await
+async function upsertComplianceStatus(
+  req: express.Request,
+  action: ComplianceAction,
+  address: string,
+  wallet: WalletFromDatabase | undefined,
+  complianceStatus: ComplianceStatusFromDatabase[],
+  updatedAt: string,
+): Promise<ComplianceStatusFromDatabase | undefined> {
+  if (complianceStatus.length === 0) {
+    if (!isRestrictedCountryHeaders(req.headers as CountryHeaders)) {
+      return ComplianceStatusTable.upsert({
+        address,
+        status: ComplianceStatus.COMPLIANT,
+        updatedAt,
+      });
+    }
+
+    // If address is restricted and is not onboarded then block
+    if (_.isUndefined(wallet)) {
+      return ComplianceStatusTable.upsert({
+        address,
+        status: ComplianceStatus.BLOCKED,
+        reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
+        updatedAt,
+      });
+    }
+
+    return ComplianceStatusTable.upsert({
+      address,
+      status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
+      reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
+      updatedAt,
+    });
+  }
+
+  if (
+    complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE ||
+    complianceStatus[0].status === ComplianceStatus.COMPLIANT
+  ) {
+    if (
+      isRestrictedCountryHeaders(req.headers as CountryHeaders) &&
+      action === ComplianceAction.CONNECT
+    ) {
+      return ComplianceStatusTable.update({
+        address,
+        status: COMPLIANCE_PROGRESSION[complianceStatus[0].status],
+        reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
+        updatedAt,
+      });
+    }
+  } else if (complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY) {
+    if (action === ComplianceAction.VALID_SURVEY) {
+      return ComplianceStatusTable.update({
+        address,
+        status: ComplianceStatus.FIRST_STRIKE,
+        updatedAt,
+      });
+    } else if (action === ComplianceAction.INVALID_SURVEY) {
+      return ComplianceStatusTable.update({
+        address,
+        status: ComplianceStatus.CLOSE_ONLY,
+        updatedAt,
+      });
+    }
+  }
+
+  return complianceStatus[0];
 }
 
 if (config.EXPOSE_SET_COMPLIANCE_ENDPOINT) {
