@@ -35,11 +35,21 @@ const (
 	tradingDaiToken = "tradingDAI"
 
 	// sDAIKeyPrefix is the prefix for the key-value store forthe sDAI price
-	sDAIKeyPrefix = "sDAIPrice:"
+	SDAIKeyPrefix = "SDAIPrice:"
+
+	// storedDripRate is the prefix for the key-value store for historical drip rate
+	StoredDripRatePrefix = "StoredDripRatePrefix:"
 )
 
 // State
-const ()
+const (
+
+	// The number of ethereum blocks we store the sDAI rate for
+	ETH_BLOCKS_TO_STORE = 5
+
+	// base 10
+	BASE_10 = 10
+)
 
 func GetPendingSendPacketKey(channelId string, sequenceNumber uint64) []byte {
 	return []byte(fmt.Sprintf("%s_%d", channelId, sequenceNumber))

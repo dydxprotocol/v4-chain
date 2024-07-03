@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"math/big"
+	"strconv"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -386,16 +387,53 @@ func (k Keeper) InitializeForGenesis(ctx sdk.Context) {}
 func (k Keeper) SetSDAIPrice(ctx sdk.Context, price *big.Int) {
 	store := ctx.KVStore(k.storeKey)
 	bz := price.Bytes()
-	store.Set([]byte(types.sDAIKeyPrefix), bz)
+	store.Set([]byte(types.SDAIKeyPrefix), bz)
 }
 
 // GetSDAIPrice gets the price of sDAI from the store as a big.Int
 func (k Keeper) GetSDAIPrice(ctx sdk.Context) (price *big.Int, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get([]byte(types.sDAIKeyPrefix))
+	bz := store.Get([]byte(types.SDAIKeyPrefix))
 	if bz == nil {
 		return nil, false
 	}
 	price = new(big.Int).SetBytes(bz)
 	return price, true
+}
+
+// SetEthBlockToChiRate stores the sDAI rate for a given Ethereum block number and deletes the entry for blockNumber - 5 if it exists.
+func (k Keeper) SetEthBlockTosDAIRate(ctx sdk.Context, blockNumber uint64, rate *big.Int) {
+	store := ctx.KVStore(k.storeKey)
+	key := []byte(types.StoredDripRatePrefix + strconv.FormatUint(blockNumber, 10))
+	bz := rate.Bytes()
+	store.Set(key, bz)
+
+	// Delete the entry for blockNumber - 5 if it exists
+	if blockNumber >= types.ETH_BLOCKS_TO_STORE {
+		oldKey := []byte(types.StoredDripRatePrefix + strconv.FormatUint(blockNumber-types.ETH_BLOCKS_TO_STORE, types.BASE_10))
+		if store.Has(oldKey) {
+			store.Delete(oldKey)
+		}
+	}
+}
+
+// GetEthBlockTosDAIRate retrieves the sDAI rate for a given Ethereum block number.
+func (k Keeper) GetEthBlockTosDAIRate(ctx sdk.Context, blockNumber uint64) (*big.Int, bool) {
+	store := ctx.KVStore(k.storeKey)
+	key := []byte(types.StoredDripRatePrefix + strconv.FormatUint(blockNumber, types.BASE_10))
+	bz := store.Get(key)
+	if bz == nil {
+		return nil, false
+	}
+	rate := new(big.Int).SetBytes(bz)
+	return rate, true
+}
+
+// CheckEthBlockToDripRate checks if the given Ethereum block number exists in the store and if the stored rate matches the provided rate.
+func (k Keeper) CheckEthBlockToDripRate(ctx sdk.Context, blockNumber uint64, rate *big.Int) bool {
+	storedRate, found := k.GetEthBlockTosDAIRate(ctx, blockNumber)
+	if !found {
+		return false
+	}
+	return storedRate.Cmp(rate) == 0
 }
