@@ -49,6 +49,9 @@ const (
 
 	// base 10
 	BASE_10 = 10
+
+	// Maker RAY value which stores decimal points
+	SDAI_DECIMALS = 27
 )
 
 func GetPendingSendPacketKey(channelId string, sequenceNumber uint64) []byte {
