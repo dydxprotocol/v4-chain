@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"testing"
-	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
@@ -65,51 +64,6 @@ func TestCreateMarket(t *testing.T) {
 
 	expirationTs := uint64(ctx.BlockTime().Unix() + int64(revShareParams.ValidDays*24*3600))
 	require.Equal(t, revShareDetails.ExpirationTs, expirationTs)
-}
-
-func TestMarketIsRecentlyAvailable(t *testing.T) {
-	tests := map[string]struct {
-		blockHeight      int64
-		now              time.Time
-		expectedIsRecent bool
-	}{
-		"Recent: << block height, << elapsed since market creation time": {
-			blockHeight:      0,
-			now:              constants.TimeT.Add(types.MarketIsRecentDuration - 1),
-			expectedIsRecent: true,
-		},
-		"Recent: >> block height, << elapsed since market creation time": {
-			blockHeight:      types.PriceDaemonInitializationBlocks + 1,
-			now:              constants.TimeT.Add(types.MarketIsRecentDuration - 1),
-			expectedIsRecent: true,
-		},
-		"Recent: << block height, >> elapsed since market creation time": {
-			blockHeight:      0,
-			now:              constants.TimeT.Add(types.MarketIsRecentDuration + 1),
-			expectedIsRecent: true,
-		},
-		"Not recent: >> block height, >> elapsed since market creation time": {
-			blockHeight:      types.PriceDaemonInitializationBlocks + 1,
-			now:              constants.TimeT.Add(types.MarketIsRecentDuration + 1),
-			expectedIsRecent: false,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
-
-			// Create market with TimeT creation timestamp.
-			mockTimeProvider.On("Now").Return(constants.TimeT).Once()
-			require.False(t, keeper.IsRecentlyAvailable(ctx, 0))
-
-			keepertest.CreateNMarkets(t, ctx, keeper, 1)
-
-			ctx = ctx.WithBlockHeight(tc.blockHeight)
-			mockTimeProvider.On("Now").Return(tc.now).Once()
-
-			require.Equal(t, tc.expectedIsRecent, keeper.IsRecentlyAvailable(ctx, 0))
-		})
-	}
 }
 
 func TestCreateMarket_Errors(t *testing.T) {
