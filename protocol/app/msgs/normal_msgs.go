@@ -237,8 +237,10 @@ var (
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
 
 		// vault
-		"/dydxprotocol.vault.MsgDepositToVault":         &vault.MsgDepositToVault{},
-		"/dydxprotocol.vault.MsgDepositToVaultResponse": nil,
+		"/dydxprotocol.vault.MsgDepositToVault":            &vault.MsgDepositToVault{},
+		"/dydxprotocol.vault.MsgDepositToVaultResponse":    nil,
+		"/dydxprotocol.vault.MsgWithdrawFromVault":         &vault.MsgWithdrawFromVault{},
+		"/dydxprotocol.vault.MsgWithdrawFromVaultResponse": nil,
 	}
 
 	NormalMsgsSlinky = map[string]sdk.Msg{

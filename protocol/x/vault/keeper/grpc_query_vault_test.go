@@ -40,7 +40,7 @@ func TestVault(t *testing.T) {
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
 				Number: 0,
 			},
-			vaultId:        constants.Vault_Clob_0,
+			vaultId:        constants.Vault_Clob0,
 			asset:          big.NewInt(100),
 			perpId:         0,
 			inventory:      big.NewInt(200),
@@ -52,7 +52,7 @@ func TestVault(t *testing.T) {
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
 				Number: 0,
 			},
-			vaultId:        constants.Vault_Clob_0,
+			vaultId:        constants.Vault_Clob0,
 			asset:          big.NewInt(100),
 			perpId:         0,
 			inventory:      big.NewInt(-200),
@@ -64,7 +64,7 @@ func TestVault(t *testing.T) {
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
 				Number: 1, // Non-existent vault.
 			},
-			vaultId:     constants.Vault_Clob_0,
+			vaultId:     constants.Vault_Clob0,
 			asset:       big.NewInt(100),
 			perpId:      0,
 			inventory:   big.NewInt(200),
@@ -73,7 +73,7 @@ func TestVault(t *testing.T) {
 		},
 		"Error: nil request": {
 			req:         nil,
-			vaultId:     constants.Vault_Clob_0,
+			vaultId:     constants.Vault_Clob0,
 			asset:       big.NewInt(100),
 			perpId:      0,
 			inventory:   big.NewInt(200),
@@ -129,7 +129,7 @@ func TestVault(t *testing.T) {
 					SubaccountId: *tc.vaultId.ToSubaccountId(),
 					Equity:       dtypes.NewIntFromBigInt(tc.expectedEquity),
 					Inventory:    dtypes.NewIntFromBigInt(tc.inventory),
-					TotalShares:  tc.totalShares.Uint64(),
+					TotalShares:  vaulttypes.BigIntToNumShares(tc.totalShares),
 				}
 				require.Equal(t, expectedResponse, *response)
 			}
@@ -159,12 +159,12 @@ func TestAllVaults(t *testing.T) {
 		"Success": {
 			req: &vaulttypes.QueryAllVaultsRequest{},
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: map[vaulttypes.VaultId]*big.Int{
-				constants.Vault_Clob_0: big.NewInt(100),
-				constants.Vault_Clob_1: big.NewInt(200),
+				constants.Vault_Clob0: big.NewInt(100),
+				constants.Vault_Clob1: big.NewInt(200),
 			},
 			assets: []*big.Int{
 				big.NewInt(1_000),
@@ -179,12 +179,12 @@ func TestAllVaults(t *testing.T) {
 		"Error: nil request": {
 			req: nil,
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: map[vaulttypes.VaultId]*big.Int{
-				constants.Vault_Clob_0: big.NewInt(100),
-				constants.Vault_Clob_1: big.NewInt(200),
+				constants.Vault_Clob0: big.NewInt(100),
+				constants.Vault_Clob1: big.NewInt(200),
 			},
 			assets: []*big.Int{
 				big.NewInt(1_000),
