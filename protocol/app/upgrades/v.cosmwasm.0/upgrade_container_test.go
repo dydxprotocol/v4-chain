@@ -1,3 +1,5 @@
+//go:build all || container_test
+
 package v_cosmwasm_0_test
 
 import (
