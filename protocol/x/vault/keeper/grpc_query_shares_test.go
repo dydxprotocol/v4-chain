@@ -31,7 +31,7 @@ func TestOwnerShares(t *testing.T) {
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
 				Number: 0,
 			},
-			vaultId: constants.Vault_Clob_0,
+			vaultId: constants.Vault_Clob0,
 			ownerShares: map[string]*big.Int{
 				constants.Alice_Num0.Owner: big.NewInt(100),
 				constants.Bob_Num0.Owner:   big.NewInt(200),
@@ -56,7 +56,7 @@ func TestOwnerShares(t *testing.T) {
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
 				Number: 1,
 			},
-			vaultId: constants.Vault_Clob_0,
+			vaultId: constants.Vault_Clob0,
 			ownerShares: map[string]*big.Int{
 				constants.Alice_Num0.Owner: big.NewInt(100),
 				constants.Bob_Num0.Owner:   big.NewInt(200),
@@ -65,7 +65,7 @@ func TestOwnerShares(t *testing.T) {
 		},
 		"Error: nil request": {
 			req:     nil,
-			vaultId: constants.Vault_Clob_0,
+			vaultId: constants.Vault_Clob0,
 			ownerShares: map[string]*big.Int{
 				constants.Alice_Num0.Owner: big.NewInt(100),
 				constants.Bob_Num0.Owner:   big.NewInt(200),

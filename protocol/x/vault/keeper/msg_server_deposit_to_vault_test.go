@@ -12,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
@@ -61,7 +62,7 @@ func TestMsgDepositToVault(t *testing.T) {
 		vaultEquityHistory []*big.Int
 	}{
 		"Two successful deposits, Same depositor": {
-			vaultId: constants.Vault_Clob_0,
+			vaultId: constants.Vault_Clob0,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
@@ -92,7 +93,7 @@ func TestMsgDepositToVault(t *testing.T) {
 			},
 		},
 		"Two successful deposits, Different depositors": {
-			vaultId: constants.Vault_Clob_0,
+			vaultId: constants.Vault_Clob0,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
@@ -127,7 +128,7 @@ func TestMsgDepositToVault(t *testing.T) {
 			},
 		},
 		"One successful deposit, One failed deposit due to insufficient balance": {
-			vaultId: constants.Vault_Clob_1,
+			vaultId: constants.Vault_Clob1,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
@@ -163,7 +164,7 @@ func TestMsgDepositToVault(t *testing.T) {
 			},
 		},
 		"One failed deposit due to incorrect signer, One successful deposit": {
-			vaultId: constants.Vault_Clob_1,
+			vaultId: constants.Vault_Clob1,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
@@ -200,7 +201,7 @@ func TestMsgDepositToVault(t *testing.T) {
 			},
 		},
 		"Three failed deposits due to invalid deposit amount": {
-			vaultId: constants.Vault_Clob_1,
+			vaultId: constants.Vault_Clob1,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
@@ -267,10 +268,10 @@ func TestMsgDepositToVault(t *testing.T) {
 							subaccounts[i] = satypes.Subaccount{
 								Id: &(setup.depositor),
 								AssetPositions: []*satypes.AssetPosition{
-									{
-										AssetId:  0,
-										Quantums: dtypes.NewIntFromBigInt(setup.depositorBalance),
-									},
+									testutil.CreateSingleAssetPosition(
+										0,
+										setup.depositorBalance,
+									),
 								},
 							}
 						}

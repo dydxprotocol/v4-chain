@@ -21,7 +21,8 @@ const RAW_TABLE_COLUMNS: string = `
   \`subticksPerTick\` int,
   \`stepBaseQuantums\` int,
   \`liquidityTierId\` int,
-  \`marketType\` string
+  \`marketType\` string,
+  \`baseOpenInterest\` string
 `;
 const TABLE_COLUMNS: string = `
   "id",
@@ -39,7 +40,8 @@ const TABLE_COLUMNS: string = `
   "subticksPerTick",
   "stepBaseQuantums",
   "liquidityTierId",
-  "marketType"
+  "marketType",
+  ${castToDouble('baseOpenInterest')}
 `;
 
 export function generateRawTable(tablePrefix: string, rdsExportIdentifier: string): string {

@@ -2,16 +2,18 @@ package client_test
 
 import (
 	"context"
-	"cosmossdk.io/log"
+	"math/big"
 	"testing"
+
+	"cosmossdk.io/log"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/client"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -283,17 +285,17 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						{
 							Id: &constants.Carl_Num0,
 							AssetPositions: []*satypes.AssetPosition{
-								{
-									AssetId:  0,
-									Quantums: dtypes.NewInt(55_000_000_000), // $55,000
-								},
+								testutil.CreateSingleAssetPosition(
+									0,
+									big.NewInt(55_000_000_000), // $55,000
+								),
 							},
 							PerpetualPositions: []*satypes.PerpetualPosition{
-								{
-									PerpetualId:  0,
-									Quantums:     dtypes.NewInt(-100_000_000), // -1 BTC
-									FundingIndex: dtypes.NewInt(10_000),
-								},
+								testutil.CreateSinglePerpetualPosition(
+									0,
+									big.NewInt(-100_000_000), // -1 BTC
+									big.NewInt(10_000),
+								),
 							},
 						},
 					},
@@ -363,17 +365,17 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						{
 							Id: &constants.Dave_Num0,
 							AssetPositions: []*satypes.AssetPosition{
-								{
-									AssetId:  0,
-									Quantums: dtypes.NewInt(-45_000_000_000), // -$45,000
-								},
+								testutil.CreateSingleAssetPosition(
+									0,
+									big.NewInt(-45_000_000_000), // -$45,000
+								),
 							},
 							PerpetualPositions: []*satypes.PerpetualPosition{
-								{
-									PerpetualId:  0,
-									Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
-									FundingIndex: dtypes.NewInt(-10_000),
-								},
+								testutil.CreateSinglePerpetualPosition(
+									0,
+									big.NewInt(100_000_000), // 1 BTC
+									big.NewInt(-10_000),
+								),
 							},
 						},
 					},
@@ -443,17 +445,17 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						{
 							Id: &constants.Carl_Num0,
 							AssetPositions: []*satypes.AssetPosition{
-								{
-									AssetId:  0,
-									Quantums: dtypes.NewInt(54_999_000_000), // $54,999
-								},
+								testutil.CreateSingleAssetPosition(
+									0,
+									big.NewInt(54_999_000_000), // $54,999
+								),
 							},
 							PerpetualPositions: []*satypes.PerpetualPosition{
-								{
-									PerpetualId:  0,
-									Quantums:     dtypes.NewInt(-100_000_000), // -1 BTC
-									FundingIndex: dtypes.NewInt(-10_000),
-								},
+								testutil.CreateSinglePerpetualPosition(
+									0,
+									big.NewInt(-100_000_000), // -1 BTC
+									big.NewInt(-10_000),
+								),
 							},
 						},
 					},
@@ -521,17 +523,17 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						{
 							Id: &constants.Dave_Num0,
 							AssetPositions: []*satypes.AssetPosition{
-								{
-									AssetId:  0,
-									Quantums: dtypes.NewInt(-44_999_000_000), // -$44,999
-								},
+								testutil.CreateSingleAssetPosition(
+									0,
+									big.NewInt(-44_999_000_000), // -$44,999
+								),
 							},
 							PerpetualPositions: []*satypes.PerpetualPosition{
-								{
-									PerpetualId:  0,
-									Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
-									FundingIndex: dtypes.NewInt(10_000),
-								},
+								testutil.CreateSinglePerpetualPosition(
+									0,
+									big.NewInt(100_000_000), // 1 BTC
+									big.NewInt(10_000),
+								),
 							},
 						},
 					},

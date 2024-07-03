@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -58,7 +56,7 @@ func (k Keeper) GetMarketMapperRevShareDetails(
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.MarketMapperRevSharePrefix))
 	b := store.Get(lib.Uint32ToKey(marketId))
 	if b == nil {
-		return params, fmt.Errorf("MarketMapperRevShareDetails not found for marketId: %d", marketId)
+		return params, types.ErrMarketMapperRevShareDetailsNotFound
 	}
 	k.cdc.MustUnmarshal(b, &params)
 	return params, nil
@@ -75,4 +73,31 @@ func (k Keeper) CreateNewMarketRevShare(ctx sdk.Context, marketId uint32) {
 		ExpirationTs: uint64(ctx.BlockTime().Unix() + validDurationSeconds),
 	}
 	k.SetMarketMapperRevShareDetails(ctx, marketId, details)
+}
+
+func (k Keeper) GetMarketMapperRevenueShareForMarket(ctx sdk.Context, marketId uint32) (
+	address sdk.AccAddress,
+	revenueSharePpm uint32,
+	err error,
+) {
+	// get the revenue share details for the market
+	revShareDetails, err := k.GetMarketMapperRevShareDetails(ctx, marketId)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// check if the rev share details are expired
+	if revShareDetails.ExpirationTs < uint64(ctx.BlockTime().Unix()) {
+		return nil, 0, nil
+	}
+
+	// Get revenue share params
+	revShareParams := k.GetMarketMapperRevenueShareParams(ctx)
+
+	revShareAddr, err := sdk.AccAddressFromBech32(revShareParams.Address)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return revShareAddr, revShareParams.RevenueSharePpm, nil
 }
