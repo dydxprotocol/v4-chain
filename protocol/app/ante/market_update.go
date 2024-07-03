@@ -31,7 +31,10 @@ type ValidateMarketUpdateDecorator struct {
 //
 // NOTE: this is a stop-gap solution before more general functionality is added to x/marketmap to delay and gate
 // certain update operations.
-func NewValidateMarketUpdateDecorator(perpKeeper perpetualstypes.PerpetualsKeeper, priceKeeper pricestypes.PricesKeeper) ValidateMarketUpdateDecorator {
+func NewValidateMarketUpdateDecorator(
+	perpKeeper perpetualstypes.PerpetualsKeeper,
+	priceKeeper pricestypes.PricesKeeper,
+) ValidateMarketUpdateDecorator {
 	return ValidateMarketUpdateDecorator{
 		perpKeeper:  perpKeeper,
 		priceKeeper: priceKeeper,
