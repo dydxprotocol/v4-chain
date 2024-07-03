@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/prepare"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
@@ -125,10 +127,10 @@ func TestPrepareProposalHandler(t *testing.T) {
 			clobEncoder: passingTxEncoderFour,
 
 			expectedTxs: [][]byte{
+				{},                         // ve.
 				{1, 2, 3, 4},               // order.
 				constants.Msg_Send_TxBytes, // others.
 				{1, 2, 3, 4},               // funding.
-				{1, 2, 3, 4},               // prices.
 			},
 		},
 		"Valid: Additional Others fit": {
@@ -146,11 +148,11 @@ func TestPrepareProposalHandler(t *testing.T) {
 			clobEncoder: passingTxEncoderFour,
 
 			expectedTxs: [][]byte{
+				{},                                    // ve.
 				{1, 2, 3, 4},                          // order.
 				constants.Msg_Send_TxBytes,            // others.
 				constants.Msg_SendAndTransfer_TxBytes, // additional others.
 				{1, 2, 3, 4},                          // funding.
-				{1, 2, 3, 4},                          // prices.
 			},
 		},
 	}
@@ -165,6 +167,10 @@ func TestPrepareProposalHandler(t *testing.T) {
 				},
 			)
 
+			mockPricesKeeper := mocks.PreparePricesKeeper{}
+			mockPricesKeeper.On("GetAllMarketParams", mock.Anything).
+				Return(constants.ValidEmptyMarketParams)
+
 			mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
 			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
 				Return(tc.fundingResp)
@@ -173,12 +179,20 @@ func TestPrepareProposalHandler(t *testing.T) {
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
 				Return(tc.clobResp)
 
+			mockConsumerKeeper := mocks.PrepareConsumerKeeper{}
+			mockConsumerKeeper.On("GetCCValidator", mock.Anything, mock.Anything).
+				Return(constants.ValidEmptyCrossChainValidator, true)
+
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			handler := prepare.PrepareProposalHandler(
 				mockTxConfig,
 				&mockClobKeeper,
 				&mockPerpKeeper,
+				&mockPricesKeeper,
+				vecodec.NewDefaultVoteExtensionCodec(),
+				vecodec.NewDefaultExtendedCommitCodec(),
+				ve.NewValidateVoteExtensionsFn(&mockConsumerKeeper),
 			)
 
 			req := abci.RequestPrepareProposal{
@@ -207,10 +221,11 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				multiMsgsTxHasDisallowMixedTxBytes, // filtered out.
 			},
 			expectedTxs: [][]byte{
+				constants.ValidEmptyExtInfoBytes,                 // ve.
 				constants.ValidEmptyMsgProposedOperationsTxBytes, // order.
 				// no other txs.
-				constants.ValidMsgAddPremiumVotesTxBytes,    // funding.
-				constants.ValidMsgUpdateMarketPricesTxBytes, // prices.
+				constants.ValidMsgAddPremiumVotesTxBytes, // funding.
+
 			},
 		},
 		"Valid: some others txs contain disallow msgs": {
@@ -222,11 +237,12 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				constants.ValidMsgAddPremiumVotesTxBytes, // filtered out.
 			},
 			expectedTxs: [][]byte{
+				constants.ValidEmptyExtInfoBytes,                 // ve.
 				constants.ValidEmptyMsgProposedOperationsTxBytes, // order.
 				constants.Msg_SendAndTransfer_TxBytes,            // others.
 				constants.Msg_Send_TxBytes,                       // others.
 				constants.ValidMsgAddPremiumVotesTxBytes,         // funding.
-				constants.ValidMsgUpdateMarketPricesTxBytes,      // prices.
+
 			},
 		},
 	}
@@ -234,8 +250,8 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			mockPricesKeeper := mocks.PreparePricesKeeper{}
-			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
-				Return(constants.ValidMsgUpdateMarketPrices)
+			mockPricesKeeper.On("GetAllMarketParams", mock.Anything).
+				Return(constants.ValidEmptyMarketParams)
 
 			mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
 			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
@@ -245,12 +261,20 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
 				Return(constants.ValidEmptyMsgProposedOperations)
 
+			mockConsumerKeeper := mocks.PrepareConsumerKeeper{}
+			mockConsumerKeeper.On("GetCCValidator", mock.Anything, mock.Anything).
+				Return(constants.ValidEmptyCrossChainValidator, true)
+
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			handler := prepare.PrepareProposalHandler(
 				encodingCfg.TxConfig,
 				&mockClobKeeper,
 				&mockPerpKeeper,
+				&mockPricesKeeper,
+				vecodec.NewDefaultVoteExtensionCodec(),
+				vecodec.NewDefaultExtendedCommitCodec(),
+				ve.NewValidateVoteExtensionsFn(&mockConsumerKeeper),
 			)
 
 			req := abci.RequestPrepareProposal{

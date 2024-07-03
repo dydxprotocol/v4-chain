@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+
+	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	error_lib "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/error"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
-	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -84,8 +84,8 @@ func ProcessProposalHandler(
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT},
 					fmt.Errorf("failed to decode extended commit info: %w", err)
 			}
-
-			if err := ve.ValidateExtendedCommitInfo(ctx, req.Height, extInfo, veCodec, pricesKeeper.(pk.Keeper), validateVoteExtensionFn); err != nil {
+			// TODO: PreparePricesKeeper and ProcessPricesKeeper are the same (clean up)
+			if err := ve.ValidateExtendedCommitInfo(ctx, req.Height, extInfo, veCodec, pricesKeeper.(ve.PreparePricesKeeper), validateVoteExtensionFn); err != nil {
 				ctx.Logger().Error(
 					"failed to validate extended commit info",
 					"height", req.Height,

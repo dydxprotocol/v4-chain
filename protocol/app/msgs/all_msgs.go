@@ -134,8 +134,6 @@ var (
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket":         {},
 		"/dydxprotocol.prices.MsgCreateOracleMarketResponse": {},
-		"/dydxprotocol.prices.MsgUpdateMarketPrices":         {},
-		"/dydxprotocol.prices.MsgUpdateMarketPricesResponse": {},
 		"/dydxprotocol.prices.MsgUpdateMarketParam":          {},
 		"/dydxprotocol.prices.MsgUpdateMarketParamResponse":  {},
 

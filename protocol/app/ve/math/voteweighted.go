@@ -97,6 +97,8 @@ func Median(
 		totalPower := GetTotalPower(ctx, vStore)
 
 		for pair, info := range priceInfo {
+			// The total voting power % that submitted a price update for the given currency pair must be
+			// greater than the threshold to be included in the final oracle price.
 			if percentSubmitted := math.LegacyNewDecFromInt(info.TotalWeight).Quo(math.LegacyNewDecFromInt(totalPower)); percentSubmitted.GTE(threshold) {
 				prices[pair] = ComputeMedian(info)
 				logger.Info(

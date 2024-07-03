@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/core/comet"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
-	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
@@ -25,7 +24,7 @@ import (
 func ValidateDeamonVoteExtension(
 	ctx sdk.Context,
 	ve vetypes.DeamonVoteExtension,
-	pk pk.Keeper,
+	pk PreparePricesKeeper,
 ) error {
 	// TODO: how do you account for removed prices from the prev and current block
 	params := pk.GetAllMarketParams(ctx)

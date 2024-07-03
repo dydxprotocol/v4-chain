@@ -77,9 +77,9 @@ func TestUpdateMarketPrices_NotFound(t *testing.T) {
 
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	for _, update := range priceUpdates {
-		err = keeper.UpdateMarketPrices(
+		err := keeper.UpdateMarketPrice(
 			ctx,
-			priceUpdates,
+			update,
 		)
 		require.NoError(t, err)
 	}

@@ -15,6 +15,22 @@ type PreparePricesKeeper struct {
 	mock.Mock
 }
 
+// GetAllMarketParams provides a mock function with given fields: ctx
+func (_m *PreparePricesKeeper) GetAllMarketParams(ctx types.Context) []pricestypes.MarketParam {
+	ret := _m.Called(ctx)
+
+	var r0 []pricestypes.MarketParam
+	if rf, ok := ret.Get(0).(func(types.Context) []pricestypes.MarketParam); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]pricestypes.MarketParam)
+		}
+	}
+
+	return r0
+}
+
 // GetValidMarketPriceUpdates provides a mock function with given fields: ctx
 func (_m *PreparePricesKeeper) GetValidMarketPriceUpdates(ctx types.Context) *pricestypes.MarketPriceUpdates {
 	ret := _m.Called(ctx)

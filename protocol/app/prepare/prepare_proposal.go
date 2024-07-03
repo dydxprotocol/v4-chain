@@ -12,8 +12,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
-	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
-	ibcconsumerkeeper "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/keeper"
 )
 
 var (
@@ -49,10 +47,9 @@ func PrepareProposalHandler(
 	txConfig client.TxConfig,
 	clobKeeper PrepareClobKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
-	pricesKeeper pk.Keeper,
+	pricesKeeper PreparePricesKeeper,
 	veCodec codec.VoteExtensionCodec,
 	extCommitCodec codec.ExtendedCommitCodec,
-	consumerKeeper ibcconsumerkeeper.Keeper,
 	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
 ) sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {

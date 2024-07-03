@@ -24,9 +24,12 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=PrepareClobKeeper --dir=./app/prepare --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=PreparePerpetualsKeeper --dir=./app/prepare --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=PreparePricesKeeper --dir=./app/prepare --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=PrepareConsumerKeeper --dir=./app/prepare/ --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ProcessClobKeeper --dir=./app/process --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ProcessStakingKeeper --dir=./app/process --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ProcessPerpetualKeeper --dir=./app/process --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=ProcessConsumerKeeper --dir=./app/process --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=ProcessConsumerKeeper --dir=./app/process --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=MemClob --dir=./x/clob/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=DelayMsgKeeper --dir=./x/delaymsg/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ClobKeeper --dir=./x/clob/types --recursive --output=./mocks

@@ -2,7 +2,6 @@ package ve
 
 import (
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
-	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cometproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +11,7 @@ func PruneAndValidateExtendedCommitInfo(
 	ctx sdk.Context,
 	extCommitInfo cometabci.ExtendedCommitInfo,
 	veCodec codec.VoteExtensionCodec,
-	pk pk.Keeper,
+	pk PreparePricesKeeper,
 	validateVoteExtensionsFn func(ctx sdk.Context, extCommitInfo cometabci.ExtendedCommitInfo) error,
 ) (cometabci.ExtendedCommitInfo, error) {
 	for i, vote := range extCommitInfo.Votes {
@@ -48,7 +47,7 @@ func validateVoteExtension(
 	ctx sdk.Context,
 	vote cometabci.ExtendedVoteInfo,
 	voteExtensionCodec codec.VoteExtensionCodec,
-	pk pk.Keeper,
+	pk PreparePricesKeeper,
 ) error {
 	// vote is not voted for if VE is nil
 	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
@@ -73,7 +72,7 @@ func ValidateExtendedCommitInfo(
 	height int64,
 	extCommitInfo cometabci.ExtendedCommitInfo,
 	veCodec codec.VoteExtensionCodec,
-	pk pk.Keeper,
+	pk PreparePricesKeeper,
 	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo cometabci.ExtendedCommitInfo) error,
 ) error {
 	if err := validateVoteExtensionFn(ctx, extCommitInfo); err != nil {

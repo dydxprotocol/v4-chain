@@ -16,6 +16,7 @@ func init() {
 var (
 	ValidEmptyMsgProposedOperations        = &types.MsgProposedOperations{}
 	ValidEmptyMsgProposedOperationsTxBytes []byte
+
 	// InvalidProposedOperationsUnspecifiedOrderRemovalReason is invalid because the order removal reason is
 	// unspecified.
 	InvalidProposedOperationsUnspecifiedOrderRemovalReason = &types.MsgProposedOperations{

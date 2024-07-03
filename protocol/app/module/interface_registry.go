@@ -93,7 +93,6 @@ func NewInterfaceRegistry(addrPrefix string, valAddrPrefix string) (types.Interf
 				// App injected messages have no signers.
 				"dydxprotocol.clob.MsgProposedOperations":    noSigners,
 				"dydxprotocol.perpetuals.MsgAddPremiumVotes": noSigners,
-				"dydxprotocol.prices.MsgUpdateMarketPrices":  noSigners,
 			},
 		},
 	})

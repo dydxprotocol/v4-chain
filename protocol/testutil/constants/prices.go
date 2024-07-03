@@ -275,6 +275,7 @@ var (
 		},
 	}
 
+	ValidEmptyMarketParams = []types.MarketParam{}
 	// `MsgUpdateMarketPrices`.
 	EmptyMsgUpdateMarketPrices        = &types.MarketPriceUpdates{}
 	EmptyMsgUpdateMarketPricesTxBytes []byte

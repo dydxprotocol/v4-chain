@@ -15,7 +15,7 @@ type PrepareProposalTxs struct {
 	AddPremiumVotesTx    []byte
 	ProposedOperationsTx []byte
 	OtherTxs             [][]byte
-	extInfoBz            []byte
+	ExtInfoBz            []byte
 	// Bytes.
 	// In general, there's no need to check for int64 overflow given that it would require
 	// exabytes of memory to hit the max int64 value in bytes.
@@ -38,12 +38,12 @@ func NewPrepareProposalTxs(
 }
 
 func (t *PrepareProposalTxs) SetExtInfoBz(extInfoBz []byte) error {
-	oldBytes := uint64(len(t.extInfoBz))
+	oldBytes := uint64(len(t.ExtInfoBz))
 	newBytes := uint64(len(extInfoBz))
 	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
 		return err
 	}
-	t.extInfoBz = extInfoBz
+	t.ExtInfoBz = extInfoBz
 	return nil
 }
 
@@ -119,9 +119,9 @@ func (t *PrepareProposalTxs) GetAvailableBytes() uint64 {
 // GetTxsInOrder returns a list of txs in an order that the `ProcessProposal` expects.
 func (t *PrepareProposalTxs) GetTxsInOrder(veEnabled bool) ([][]byte, error) {
 
-	if veEnabled && len(t.extInfoBz) == 0 {
+	if veEnabled && len(t.ExtInfoBz) == 0 {
 		return nil, errors.New("extInfoBz must be set; VE is enabled")
-	} else if !veEnabled && len(t.extInfoBz) > 0 {
+	} else if !veEnabled && len(t.ExtInfoBz) > 0 {
 		return nil, errors.New("extInfoBz must not be set; VE is disabled")
 	}
 
@@ -131,10 +131,8 @@ func (t *PrepareProposalTxs) GetTxsInOrder(veEnabled bool) ([][]byte, error) {
 
 	var txsToReturn [][]byte
 
-	// 1. ve info.
-	if veEnabled {
-		txsToReturn = append(txsToReturn, t.extInfoBz)
-	}
+	// 1. ve info. it gets included even if empty
+	txsToReturn = append(txsToReturn, t.ExtInfoBz)
 
 	// 2. Proposed operations.
 	if len(t.ProposedOperationsTx) > 0 {

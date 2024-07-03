@@ -830,6 +830,10 @@ func (tApp *TestApp) AdvanceToBlock(
 				finalizeBlockErr,
 			)
 			for i, txResult := range finalizeBlockResponse.TxResults {
+				if i == 0 {
+					// The first transaction is the block proposal is a VE
+					continue
+				}
 				require.Conditionf(
 					tApp.builder.t,
 					txResult.IsOK,

@@ -20,4 +20,5 @@ const (
 	AddPremiumVotesTxLenOffset = -1
 	LastOtherTxLenOffset       = AddPremiumVotesTxLenOffset
 	FirstOtherTxIndex          = ProposedOperationsTxIndex + 1
+	NonVeMinTxsCount           = 2
 )

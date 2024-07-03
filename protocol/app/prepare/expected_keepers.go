@@ -5,6 +5,7 @@ import (
 	perpstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 )
 
 // PrepareClobKeeper defines the expected CLOB keeper used for `PrepareProposal`.
@@ -20,4 +21,9 @@ type PreparePerpetualsKeeper interface {
 // PreparePricesKeeper defines the expected Prices keeper used for `PrepareProposal`.
 type PreparePricesKeeper interface {
 	GetValidMarketPriceUpdates(ctx sdk.Context) *pricestypes.MarketPriceUpdates
+	GetAllMarketParams(ctx sdk.Context) []pricestypes.MarketParam
+}
+
+type PrepareConsumerKeeper interface {
+	GetCCValidator(ctx sdk.Context, addr []byte) (ccvtypes.CrossChainValidator, bool)
 }

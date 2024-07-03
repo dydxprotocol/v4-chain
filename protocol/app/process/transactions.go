@@ -65,13 +65,8 @@ func DecodeProcessProposalTxs(
 ) (*ProcessProposalTxs, error) {
 	// Check len.
 	numTxs := len(req.Txs)
-	if numTxs < constants.MinTxsCount {
-		return nil, errorsmod.Wrapf(
-			ErrUnexpectedNumMsgs,
-			"Expected the proposal to contain at least %d txs, but got %d",
-			constants.MinTxsCount,
-			numTxs,
-		)
+	if err := validateNumTxs(numTxs); err != nil {
+		return nil, err
 	}
 
 	// Operations.
@@ -85,7 +80,6 @@ func DecodeProcessProposalTxs(
 	if err != nil {
 		return nil, err
 	}
-
 	// Other txs.
 	allOtherTxs := make([]*OtherMsgsTx, numTxs-constants.MinTxsCount)
 	for i, txBytes := range req.Txs[constants.FirstOtherTxIndex : numTxs+constants.LastOtherTxLenOffset] {
@@ -96,7 +90,6 @@ func DecodeProcessProposalTxs(
 
 		allOtherTxs[i] = otherTx
 	}
-
 	return &ProcessProposalTxs{
 		ProposedOperationsTx: operationsTx,
 		AddPremiumVotesTx:    addPremiumVotesTx,
@@ -126,6 +119,19 @@ func (ppt *ProcessProposalTxs) Validate() error {
 		if err := mmt.Validate(); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func validateNumTxs(numTxs int) error {
+	if numTxs < constants.MinTxsCount {
+		return errorsmod.Wrapf(
+			ErrUnexpectedNumMsgs,
+			"Expected the proposal to contain at least %d txs, but got %d",
+			constants.MinTxsCount,
+			numTxs,
+		)
 	}
 
 	return nil

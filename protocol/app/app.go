@@ -1198,7 +1198,6 @@ func New(
 				app.PricesKeeper,
 				voteCodec,
 				extInfoCodec,
-				app.ConsumerKeeper,
 				veValidationFn,
 			),
 		)
