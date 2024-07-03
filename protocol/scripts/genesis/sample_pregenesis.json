@@ -853,7 +853,6 @@
     "listing": {
       "hard_cap_for_markets": 0
     },
-    "params": null,
     "perpetuals": {
       "liquidity_tiers": [
         {
@@ -1854,7 +1853,7 @@
       "sequences": []
     }
   },
-  "app_version": "5.0.0-dev0-164-g7e9a3c39",
+  "app_version": "5.0.0-dev0-342-g99b658d8",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {
