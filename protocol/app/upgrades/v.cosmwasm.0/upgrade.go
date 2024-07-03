@@ -149,7 +149,7 @@ func CreateUpgradeHandler(
 		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
 		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
 
-		// InitializeModuleAccs(sdkCtx, ak)
+		InitializeModuleAccs(sdkCtx, ak)
 		// Remove all stateful FOK orders from state.
 		removeStatefulFOKOrders(sdkCtx, clobKeeper)
 
