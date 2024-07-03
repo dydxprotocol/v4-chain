@@ -43,6 +43,7 @@ func NewDeamonPreBlockHandler(
 	aggregator := veaggregator.NewVeAggregator(
 		logger,
 		indexPriceCache,
+		pk,
 		aggregateFn,
 	)
 

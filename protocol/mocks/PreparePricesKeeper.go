@@ -31,6 +31,32 @@ func (_m *PreparePricesKeeper) GetAllMarketParams(ctx types.Context) []pricestyp
 	return r0
 }
 
+// GetMarketPriceUpdateFromBytes provides a mock function with given fields: id, bz
+func (_m *PreparePricesKeeper) GetMarketPriceUpdateFromBytes(id uint32, bz []byte) (*pricestypes.MarketPriceUpdates_MarketPriceUpdate, error) {
+	ret := _m.Called(id, bz)
+
+	var r0 *pricestypes.MarketPriceUpdates_MarketPriceUpdate
+	var r1 error
+	if rf, ok := ret.Get(0).(func(uint32, []byte) (*pricestypes.MarketPriceUpdates_MarketPriceUpdate, error)); ok {
+		return rf(id, bz)
+	}
+	if rf, ok := ret.Get(0).(func(uint32, []byte) *pricestypes.MarketPriceUpdates_MarketPriceUpdate); ok {
+		r0 = rf(id, bz)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*pricestypes.MarketPriceUpdates_MarketPriceUpdate)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(uint32, []byte) error); ok {
+		r1 = rf(id, bz)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetValidMarketPriceUpdates provides a mock function with given fields: ctx
 func (_m *PreparePricesKeeper) GetValidMarketPriceUpdates(ctx types.Context) *pricestypes.MarketPriceUpdates {
 	ret := _m.Called(ctx)
@@ -42,6 +68,20 @@ func (_m *PreparePricesKeeper) GetValidMarketPriceUpdates(ctx types.Context) *pr
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*pricestypes.MarketPriceUpdates)
 		}
+	}
+
+	return r0
+}
+
+// PerformStatefulPriceUpdateValidation provides a mock function with given fields: ctx, marketPriceUpdates, performNonDeterministicValidation
+func (_m *PreparePricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, marketPriceUpdates *pricestypes.MarketPriceUpdates, performNonDeterministicValidation bool) error {
+	ret := _m.Called(ctx, marketPriceUpdates, performNonDeterministicValidation)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdates, bool) error); ok {
+		r0 = rf(ctx, marketPriceUpdates, performNonDeterministicValidation)
+	} else {
+		r0 = ret.Error(0)
 	}
 
 	return r0

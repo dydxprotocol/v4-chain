@@ -6,7 +6,6 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pktypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -26,7 +25,7 @@ type ProcessPricesKeeper interface {
 		linearInterpolateFunc func(v0 uint64, v1 uint64, ppm uint32) (uint64, error),
 	) error
 
-	GetAllMarketParams(ctx sdk.Context) []pktypes.MarketParam
+	GetAllMarketParams(ctx sdk.Context) []pricestypes.MarketParam
 }
 
 // ProcessClobKeeper defines the expected clob keeper used for `ProcessProposal`.

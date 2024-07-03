@@ -309,6 +309,19 @@ func (k Keeper) GetMarketsMissingFromPriceUpdates(
 	return missingMarkets
 }
 
+func (k Keeper) GetMarketPriceUpdateFromBytes(id uint32, bz []byte) (*types.MarketPriceUpdates_MarketPriceUpdate, error) {
+	var priceUpdate types.MarketPriceUpdates_MarketPriceUpdate
+	price, err := k.indexPriceCache.GetDecodedPrice(bz)
+	if err != nil {
+		return nil, err
+	}
+	priceUpdate = types.MarketPriceUpdates_MarketPriceUpdate{
+		MarketId: id,
+		Price:    price.Uint64(),
+	}
+	return &priceUpdate, nil
+}
+
 // getIdToMarketParamPrice returns a map of market id to market param price given a slice of market param prices.
 func getIdToMarketParamPrice(marketParamPrices []types.MarketParamPrice) map[uint32]types.MarketParamPrice {
 	idToMarketParamPrice := make(map[uint32]types.MarketParamPrice, len(marketParamPrices))

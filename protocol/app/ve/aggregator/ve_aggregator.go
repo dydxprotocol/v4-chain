@@ -11,6 +11,7 @@ import (
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -99,6 +100,7 @@ type MedianAggregator struct {
 func NewVeAggregator(
 	logger log.Logger,
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
+	pricekeeper pk.Keeper,
 	aggregateFn func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error),
 ) VoteAggregator {
 	return &MedianAggregator{
@@ -106,6 +108,7 @@ func NewVeAggregator(
 		indexPriceCache: indexPriceCache,
 		prices:          make(map[string]map[string]*big.Int),
 		aggregateFn:     aggregateFn,
+		pk:              pricekeeper,
 	}
 }
 func (ma *MedianAggregator) AggregateDeamonVE(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error) {
@@ -143,6 +146,7 @@ func (ma *MedianAggregator) addVoteToAggregator(ctx sdk.Context, address string,
 	if len(ve.Prices) == 0 {
 		return nil
 	}
+	var priceupdates pricestypes.MarketPriceUpdates
 
 	prices := make(map[string]*big.Int, len(ve.Prices))
 	for marketId, priceBz := range ve.Prices {
@@ -155,13 +159,14 @@ func (ma *MedianAggregator) addVoteToAggregator(ctx sdk.Context, address string,
 
 			continue
 		}
+
 		market, exists := ma.pk.GetMarketParam(ctx, marketId)
 		if !exists {
 			ma.logger.Debug("market id not found", "market_id", marketId)
 			continue
 		}
 
-		price, err := ma.indexPriceCache.GetDecodedPrice(priceBz)
+		pu, err := ma.pk.GetMarketPriceUpdateFromBytes(marketId, priceBz)
 		if err != nil {
 			ma.logger.Debug(
 				"failed to decode price",
@@ -170,17 +175,31 @@ func (ma *MedianAggregator) addVoteToAggregator(ctx sdk.Context, address string,
 			)
 			continue
 		}
-		prices[market.Pair] = price
+		priceupdates.MarketPriceUpdates = append(priceupdates.MarketPriceUpdates, pu)
+
+		prices[market.Pair] = new(big.Int).SetUint64(pu.Price)
 	}
 
-	ma.logger.Debug(
-		"adding prices to aggregator",
-		"validator_address", address,
-		"num_prices", len(prices),
-	)
+	if ma.pk.PerformStatefulPriceUpdateValidation(ctx, &priceupdates, false) != nil {
+		ma.logger.Debug(
+			"failed to validate price updates",
+			"num_price_updates", len(priceupdates.MarketPriceUpdates),
+		)
 
-	ma.prices[address] = prices
+		ma.prices[address] = nil
+
+	} else {
+		ma.logger.Debug(
+			"adding prices to aggregator",
+			"validator_address", address,
+			"num_prices", len(prices),
+		)
+
+		ma.prices[address] = prices
+
+	}
 	return nil
+
 }
 
 func (ma *MedianAggregator) GetPriceForValidator(validator sdk.ConsAddress) map[string]*big.Int {
