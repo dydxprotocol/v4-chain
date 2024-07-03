@@ -245,7 +245,7 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 					},
 					{
 						MarketId: constants.MarketId1,
-						Price:    constants.Price1 + 1,
+						Price:    constants.Price1,
 					},
 					{
 						MarketId: constants.MarketId2,

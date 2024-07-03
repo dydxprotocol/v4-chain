@@ -319,8 +319,8 @@ func TestAuthz(t *testing.T) {
 						request abcitypes.RequestFinalizeBlock,
 						response abcitypes.ResponseFinalizeBlock,
 					) (haltchain bool) {
-						// Note the first TX is MsgProposeOperations.
-						txResult := response.TxResults[1]
+						// Note the first TX is ExtInfo and second is proposed operations.
+						txResult := response.TxResults[2]
 						require.Equal(t, tc.expectedMsgExecDeliverTxSuccess, txResult.IsOK())
 						require.Equal(t, tc.expectedMsgExecDeliverTxCode, txResult.Code)
 						return false

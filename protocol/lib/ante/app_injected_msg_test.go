@@ -37,6 +37,7 @@ func TestIsSingleAppInjectedMsg(t *testing.T) {
 		},
 		"mult msg: all app-injected msgs": {
 			msgs: []sdk.Msg{
+				&perptypes.MsgAddPremiumVotes{},
 				&perptypes.MsgAddPremiumVotes{}, // app-injected.
 			},
 			expectedResult: false,

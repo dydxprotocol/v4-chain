@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -20,7 +21,6 @@ func createNMarketPriceUpdates(
 			Price:    uint64(i),
 		}
 	}
-
 	return items
 }
 
@@ -66,12 +66,12 @@ func TestUpdateMarketPrices_NotFound(t *testing.T) {
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	priceUpdates := createNMarketPriceUpdates(10)
-	for _, update := range priceUpdates {
+	for i, update := range priceUpdates {
 		err := keeper.UpdateMarketPrice(
 			ctx,
 			update,
 		)
-		require.EqualError(t, err, "0: Market price does not exist")
+		require.EqualError(t, err, fmt.Sprintf(`%d: Market price does not exist`, i))
 	}
 	keepertest.AssertMarketEventsNotInIndexerBlock(t, keeper, ctx)
 
