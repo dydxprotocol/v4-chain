@@ -17,6 +17,9 @@ export interface PerpetualPosition {
    */
 
   fundingIndex: Uint8Array;
+  /** The quote_balance of the `Perpetual`. */
+
+  quoteBalance: Uint8Array;
 }
 /**
  * PerpetualPositions are an account’s positions of a `Perpetual`.
@@ -35,13 +38,17 @@ export interface PerpetualPositionSDKType {
    */
 
   funding_index: Uint8Array;
+  /** The quote_balance of the `Perpetual`. */
+
+  quote_balance: Uint8Array;
 }
 
 function createBasePerpetualPosition(): PerpetualPosition {
   return {
     perpetualId: 0,
     quantums: new Uint8Array(),
-    fundingIndex: new Uint8Array()
+    fundingIndex: new Uint8Array(),
+    quoteBalance: new Uint8Array()
   };
 }
 
@@ -57,6 +64,10 @@ export const PerpetualPosition = {
 
     if (message.fundingIndex.length !== 0) {
       writer.uint32(26).bytes(message.fundingIndex);
+    }
+
+    if (message.quoteBalance.length !== 0) {
+      writer.uint32(34).bytes(message.quoteBalance);
     }
 
     return writer;
@@ -83,6 +94,10 @@ export const PerpetualPosition = {
           message.fundingIndex = reader.bytes();
           break;
 
+        case 4:
+          message.quoteBalance = reader.bytes();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -97,6 +112,7 @@ export const PerpetualPosition = {
     message.perpetualId = object.perpetualId ?? 0;
     message.quantums = object.quantums ?? new Uint8Array();
     message.fundingIndex = object.fundingIndex ?? new Uint8Array();
+    message.quoteBalance = object.quoteBalance ?? new Uint8Array();
     return message;
   }
 
