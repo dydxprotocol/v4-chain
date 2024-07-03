@@ -26,13 +26,13 @@ const (
 
 	// For the sDAI middleware
 	// This is the name of the sDAI pool which is where sDAI and pending trading DAI yields are stored
-	sDaiPool = "sDAIPool"
+	PoolAccount = "PoolAccount"
 
 	// This is the name of the sDAI token
-	sDaiToken = "sDAI" // change
+	SDaiDenom = "sDAI" // change
 
 	// This is the name of the trading DAI token
-	tradingDaiToken = "tradingDAI"
+	TradingDAIDenom = "tradingDAI"
 
 	// sDAIKeyPrefix is the prefix for the key-value store forthe sDAI price
 	SDAIKeyPrefix = "SDAIPrice:"
