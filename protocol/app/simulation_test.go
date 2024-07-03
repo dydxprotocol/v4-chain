@@ -134,7 +134,6 @@ var genesisModuleOrder = []string{
 	rewardsmodule.ModuleName,
 	epochstypes.ModuleName,
 	blocktimetypes.ModuleName,
-	wasmtypes.ModuleName,
 }
 
 var skippedGenesisModules = map[string]interface{}{
@@ -142,7 +141,8 @@ var skippedGenesisModules = map[string]interface{}{
 	// https://github.com/cosmos/ibc-go/blob/2551dea/modules/apps/27-interchain-accounts/simulation/proposals.go#L23
 	// adds both ICA host and controller messages while the app only supports host messages causing the
 	// simulation to fail due to unroutable controller messages.
-	icatypes.ModuleName: nil,
+	icatypes.ModuleName:  nil,
+	wasmtypes.ModuleName: nil,
 }
 
 // WithRandomlyGeneratedOperationsSimulationManager uses the default weighted operations of each of

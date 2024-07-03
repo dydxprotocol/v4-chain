@@ -24,6 +24,7 @@ var ModuleAccsToInitialize = []string{
 	wasmtypes.ModuleName,
 }
 
+// copied from v3 upgrade handler
 func InitializeModuleAccs(ctx sdk.Context, ak authkeeper.AccountKeeper) {
 	for _, modAccName := range ModuleAccsToInitialize {
 		// Get module account and relevant permissions from the accountKeeper.
