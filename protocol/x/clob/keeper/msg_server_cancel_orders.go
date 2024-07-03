@@ -100,15 +100,8 @@ func (k Keeper) HandleMsgCancelOrder(
 		return err
 	}
 
-	// 3. Update `ProcessProposerMatchesEvents` with the new stateful order cancellation.
-	processProposerMatchesEvents := k.GetProcessProposerMatchesEvents(ctx)
-
-	processProposerMatchesEvents.PlacedStatefulCancellationOrderIds = append(
-		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
-		msg.OrderId,
-	)
-
-	k.MustSetProcessProposerMatchesEvents(ctx, processProposerMatchesEvents)
+	// 3. Update memstore with the new stateful order cancellation.
+	k.AddDeliveredCancelledOrderId(ctx, msg.OrderId)
 
 	// 4. Add the relevant on-chain Indexer event for the cancellation.
 	if !isInternalOrder { // vault order indexer event logic is handled elsewhere
