@@ -74,7 +74,9 @@ func TestMaccPerms(t *testing.T) {
 		"rewards_vester":         nil,
 		"community_treasury":     nil,
 		"community_vester":       nil,
-		"wasm":                   {"burner"},
+		// required for burn msg in wasmvm
+		// https://github.com/CosmWasm/wasmvm/blob/1c3fdc2a4402e527617ec72fe53f114b24899a01/types/msg.go#L116-L121
+		"wasm": {"burner"},
 	}
 	require.Equal(t, expectedMaccPerms, maccPerms, "default macc perms list does not match expected")
 }
