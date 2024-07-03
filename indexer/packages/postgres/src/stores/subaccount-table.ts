@@ -1,6 +1,7 @@
 import { IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
+import config from '../config';
 import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import {
   verifyAllRequiredFields,
@@ -21,7 +22,6 @@ import {
   QueryableField,
   SubaccountUpdateObject,
 } from '../types';
-import config from '../config';
 
 export function uuid(address: string, subaccountNumber: number): string {
   // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
