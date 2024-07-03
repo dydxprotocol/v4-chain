@@ -560,6 +560,7 @@ func New(
 		keys[ratelimitmoduletypes.StoreKey],
 		app.BankKeeper,
 		app.BlockTimeKeeper,
+		&app.PricesKeeper,
 		app.IBCKeeper.ChannelKeeper, // ICS4Wrapper
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
