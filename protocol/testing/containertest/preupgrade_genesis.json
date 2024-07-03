@@ -1,6 +1,10 @@
 {
   "app_name": "dydxprotocold",
+<<<<<<< HEAD
   "app_version": "5.0.1",
+=======
+  "app_version": "5.0.5",
+>>>>>>> 7aa0952a (Add upgrade handler for v5.1.0 (#1836))
   "genesis_time": "2023-01-01T00:00:00Z",
   "chain_id": "localdydxprotocol",
   "initial_height": 1,
