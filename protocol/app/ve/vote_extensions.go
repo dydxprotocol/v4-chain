@@ -75,15 +75,14 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 
 		// TODO: call the method used to write prices to state, in the same way preBlocker does
 
-		marketParams := h.pk.GetAllMarketParams(ctx)
 		// TODO: does the deamon needs some time to warm up or can we include this in the first block
-		currPrices := h.indexPriceCache.GetValidMedianPrices(marketParams, h.timeProvider.Now())
+		pu := h.pk.GetValidMarketPriceUpdates(ctx)
 
-		if len(currPrices) == 0 {
+		if len(pu.MarketPriceUpdates) == 0 {
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, fmt.Errorf("no valid median prices")
 		}
 
-		voteExt, err := h.transformDeamonPricesToVE(ctx, currPrices)
+		voteExt, err := h.transformDeamonPricesToVE(ctx, pu.MarketPriceUpdates)
 		if err != nil {
 			h.logger.Error("failed to transform prices to vote extension", "height", req.Height, "err", err)
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
@@ -95,7 +94,7 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
 		}
 
-		h.logger.Debug("extending vote with deamon prices", "height", req.Height, "prices", len(currPrices))
+		h.logger.Debug("extending vote with deamon prices", "height", req.Height, "prices", len(pu.MarketPriceUpdates))
 
 		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 	}
@@ -155,16 +154,20 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 // encode the prices from the deamon into VE data using GobEncode
 func (h *VoteExtensionHandler) transformDeamonPricesToVE(
 	ctx sdk.Context,
-	prices map[uint32]uint64,
+	priceupdates []*pricetypes.MarketPriceUpdates_MarketPriceUpdate,
 ) (types.DeamonVoteExtension, error) {
 
 	vePrices := make(map[uint32][]byte)
-	for marketId, price := range prices {
+	for _, pu := range priceupdates {
 		// check if the marketId is valid
 		var market pricetypes.MarketParam
 		var ok bool
 
+		marketId := pu.GetMarketId()
+		price := pu.GetPrice()
+
 		// Check if the marketId is valid
+		// TODO: check if this is necessary given that we call GetValidMarketPriceUpdates in the ExtendVoteHandler
 		if market, ok = h.pk.GetMarketParam(ctx, marketId); !ok {
 			h.logger.Debug("market id not found", "marketId", marketId)
 			continue
