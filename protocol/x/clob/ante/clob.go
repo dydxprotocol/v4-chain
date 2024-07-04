@@ -115,7 +115,7 @@ func (cd ClobDecorator) AnteHandle(
 
 			// HOTFIX: Ignore any short-term place orders in a transaction with a timeout height.
 			if timeoutHeight > 0 && ctx.IsCheckTx() {
-				log.WarnLog(
+				log.InfoLog(
 					ctx,
 					"Ignored short-term place order with non-zero timeout height",
 					timeoutHeightLogKey,
