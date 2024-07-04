@@ -174,9 +174,8 @@ func (k Keeper) TrySendRateLimitedPacket(ctx sdk.Context, packet channeltypes.Pa
 		return err
 	}
 
-	sDAIPacket, err := util.TryGetsDAIWithdrawPacket(packet)
-	if err == nil {
-		err = k.WithdrawSDAIFromTradingDAI(ctx, sDAIPacket.Sender, sDAIPacket.Amount)
+	if packetInfo.Denom == types.SDaiDenom {
+		err = k.WithdrawSDAIFromTradingDAI(ctx, packetInfo.Sender, packetInfo.Amount)
 		if err != nil {
 			return err
 		}

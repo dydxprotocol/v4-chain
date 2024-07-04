@@ -19,14 +19,8 @@ type IBCTransferPacketInfo struct {
 	ChannelID string
 	Denom     string
 	Amount    *big.Int
-}
-
-// SDAITransferPacket contains relevant information from
-// an IBC packet for an sDAI withdrawl
-type SDAITransferPacket struct {
-	Sender sdk.AccAddress
-	Denom  string
-	Amount *big.Int
+	Receiver  sdk.AccAddress
+	Sender    sdk.AccAddress
 }
 
 // AckResponseStatus represents the status of an acknowledgement of IBC transfer packet.

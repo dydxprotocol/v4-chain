@@ -140,6 +140,13 @@ func (im IBCMiddleware) OnRecvPacket(
 	// TODO(CORE-855): Add an E2E test for this.
 	im.keeper.IncrementCapacitiesForDenom(ctx, ibcTransferPacketInfo.Denom, ibcTransferPacketInfo.Amount)
 
+	if ibcTransferPacketInfo.Denom == types.SDaiDenom {
+		err := im.keeper.MintTradingDAIToUserAccount(ctx, ibcTransferPacketInfo.Receiver, ibcTransferPacketInfo.Amount)
+		if err != nil {
+			return channeltypes.NewErrorAcknowledgement(err)
+		}
+	}
+
 	return im.app.OnRecvPacket(ctx, packet, relayer)
 }
 
