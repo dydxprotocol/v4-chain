@@ -132,23 +132,24 @@ type lockingAnteHandler struct {
 	globalLock   sync.Mutex
 	authStoreKey storetypes.StoreKey
 
-	setupContextDecorator    ante.SetUpContextDecorator
-	freeInfiniteGasDecorator customante.FreeInfiniteGasDecorator
-	extensionOptionsChecker  sdk.AnteDecorator
-	validateMsgType          customante.ValidateMsgTypeDecorator
-	txTimeoutHeight          ante.TxTimeoutHeightDecorator
-	validateMemo             ante.ValidateMemoDecorator
-	validateBasic            ante.ValidateBasicDecorator
-	validateSigCount         ante.ValidateSigCountDecorator
-	incrementSequence        ante.IncrementSequenceDecorator
-	sigVerification          customante.SigVerificationDecorator
-	consumeTxSizeGas         ante.ConsumeTxSizeGasDecorator
-	deductFee                ante.DeductFeeDecorator
-	setPubKey                ante.SetPubKeyDecorator
-	sigGasConsume            ante.SigGasConsumeDecorator
-	clobRateLimit            clobante.ClobRateLimitDecorator
-	clob                     clobante.ClobDecorator
-	marketUpdates            customante.ValidateMarketUpdateDecorator
+	setupContextDecorator        ante.SetUpContextDecorator
+	freeInfiniteGasDecorator     customante.FreeInfiniteGasDecorator
+	extensionOptionsChecker      sdk.AnteDecorator
+	validateMsgType              customante.ValidateMsgTypeDecorator
+	txTimeoutHeight              ante.TxTimeoutHeightDecorator
+	validateMemo                 ante.ValidateMemoDecorator
+	validateBasic                ante.ValidateBasicDecorator
+	validateSigCount             ante.ValidateSigCountDecorator
+	incrementSequence            ante.IncrementSequenceDecorator
+	sigVerification              customante.SigVerificationDecorator
+	consumeTxSizeGas             ante.ConsumeTxSizeGasDecorator
+	deductFee                    ante.DeductFeeDecorator
+	setPubKey                    ante.SetPubKeyDecorator
+	sigGasConsume                ante.SigGasConsumeDecorator
+	clobRateLimit                clobante.ClobRateLimitDecorator
+	clob                         clobante.ClobDecorator
+	marketUpdates                customante.ValidateMarketUpdateDecorator
+	rejectStOrderTxTimeoutHeight customante.RejectSTOrderTimeoutHeightDecorator
 }
 
 func (h *lockingAnteHandler) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
@@ -186,6 +187,9 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 		return ctx, err
 	}
 	if ctx, err = h.validateBasic.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
+		return ctx, err
+	}
+	if ctx, err = h.rejectStOrderTxTimeoutHeight.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
 	}
 	if ctx, err = h.txTimeoutHeight.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {

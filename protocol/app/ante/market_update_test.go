@@ -1,24 +1,23 @@
 package ante_test
 
 import (
+	"math/rand"
+	"testing"
+
 	sdkmath "cosmossdk.io/math"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	prices_types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/skip-mev/slinky/pkg/types"
 	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
-	"math/rand"
-	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/stretchr/testify/require"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/ante"
@@ -470,7 +469,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 				accNums []uint64
 			)
 
-			tx, err := CreateTestTx(
+			tx, err := tx.CreateTestTx(
 				ctx,
 				tt.args.msgs,
 				privs,
@@ -479,6 +478,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 				tApp.App.ChainID(),
 				signing.SignMode_SIGN_MODE_DIRECT,
 				tApp.App.TxConfig(),
+				0, // timeoutHeight
 			)
 			require.NoError(t, err)
 
@@ -490,65 +490,4 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
-}
-
-// CreateTestTx is a helper function to create a tx given multiple inputs.
-func CreateTestTx(
-	ctx sdk.Context,
-	msgs []sdk.Msg,
-	privs []cryptotypes.PrivKey,
-	accNums, accSeqs []uint64,
-	chainID string, signMode signing.SignMode, txConfig client.TxConfig,
-) (xauthsigning.Tx, error) {
-	txBuilder := txConfig.NewTxBuilder()
-	err := txBuilder.SetMsgs(msgs...)
-	if err != nil {
-		panic(err)
-	}
-
-	// First round: we gather all the signer infos. We use the "set empty
-	// signature" hack to do that.
-	var sigsV2 []signing.SignatureV2
-	for i, priv := range privs {
-		sigV2 := signing.SignatureV2{
-			PubKey: priv.PubKey(),
-			Data: &signing.SingleSignatureData{
-				SignMode:  signMode,
-				Signature: nil,
-			},
-			Sequence: accSeqs[i],
-		}
-
-		sigsV2 = append(sigsV2, sigV2)
-	}
-	err = txBuilder.SetSignatures(sigsV2...)
-	if err != nil {
-		return nil, err
-	}
-
-	// Second round: all signer infos are set, so each signer can sign.
-	sigsV2 = []signing.SignatureV2{}
-	for i, priv := range privs {
-		signerData := xauthsigning.SignerData{
-			Address:       sdk.AccAddress(priv.PubKey().Address()).String(),
-			ChainID:       chainID,
-			AccountNumber: accNums[i],
-			Sequence:      accSeqs[i],
-			PubKey:        priv.PubKey(),
-		}
-		sigV2, err := tx.SignWithPrivKey(
-			ctx, signMode, signerData,
-			txBuilder, priv, txConfig, accSeqs[i])
-		if err != nil {
-			return nil, err
-		}
-
-		sigsV2 = append(sigsV2, sigV2)
-	}
-	err = txBuilder.SetSignatures(sigsV2...)
-	if err != nil {
-		return nil, err
-	}
-
-	return txBuilder.GetTx(), nil
 }
