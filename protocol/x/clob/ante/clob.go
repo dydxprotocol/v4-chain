@@ -12,6 +12,10 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+var (
+	timeoutHeightLogKey = "TimeoutHeight"
+)
+
 // ClobDecorator is an AnteDecorator which is responsible for:
 //   - adding short term order placements and cancelations to the in-memory orderbook (`CheckTx` only).
 //   - adding stateful order placements and cancelations to state (`CheckTx` and `RecheckTx` only).
@@ -104,6 +108,20 @@ func (cd ClobDecorator) AnteHandle(
 			// No need to process short term orders on `ReCheckTx`.
 			if ctx.IsReCheckTx() {
 				return next(ctx, tx, simulate)
+			}
+
+			// HOTFIX: Ignore any short-term place orders in a transaction with a timeout height.
+			if timeoutHeight := GetTimeoutHeight(tx); timeoutHeight > 0 && ctx.IsCheckTx() {
+				log.InfoLog(
+					ctx,
+					"Rejected short-term place order with non-zero timeout height",
+					timeoutHeightLogKey,
+					timeoutHeight,
+				)
+				return ctx, errorsmod.Wrap(
+					sdkerrors.ErrInvalidRequest,
+					"a short term place order message may not have a non-zero timeout height, use goodTilBlock instead",
+				)
 			}
 
 			var orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums
@@ -238,4 +256,16 @@ func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// GetTimeoutHeight returns the timeout height of a transaction. If the transaction does not have
+// a timeout height, return 0.
+func GetTimeoutHeight(tx sdk.Tx) uint64 {
+	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
+	if !ok {
+		return 0
+	}
+
+	timeoutHeight := timeoutTx.GetTimeoutHeight()
+	return timeoutHeight
 }
