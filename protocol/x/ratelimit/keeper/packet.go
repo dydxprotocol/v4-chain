@@ -69,6 +69,9 @@ func (k Keeper) AcknowledgeIBCTransferPacket(
 
 	// If the ack failed, undo the change to the capacity
 	k.UndoSendPacket(ctx, packetInfo.ChannelID, packet.Sequence, packetInfo.Denom, packetInfo.Amount)
+
+	// Redeposit sDAI
+	k.MintTradingDAIToUserAccount(ctx, packetInfo.Sender, packetInfo.Amount)
 	return nil
 }
 
@@ -83,6 +86,9 @@ func (k Keeper) TimeoutIBCTransferPacket(ctx sdk.Context, packet channeltypes.Pa
 	}
 
 	k.UndoSendPacket(ctx, packetInfo.ChannelID, packet.Sequence, packetInfo.Denom, packetInfo.Amount)
+
+	// Redeposit sDAI
+	k.MintTradingDAIToUserAccount(ctx, packetInfo.Sender, packetInfo.Amount)
 	return nil
 }
 
