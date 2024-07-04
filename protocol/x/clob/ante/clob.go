@@ -90,7 +90,7 @@ func (cd ClobDecorator) AnteHandle(
 
 			// HOTFIX: Ignore any short-term clob messages in a transaction with a timeout height.
 			if timeoutHeight > 0 {
-				log.ErrorLog(
+				log.InfoLog(
 					ctx,
 					"Ignored short-term cancel order with non-zero timeout height",
 					timeoutHeightLogKey,
@@ -126,7 +126,7 @@ func (cd ClobDecorator) AnteHandle(
 
 			// HOTFIX: Ignore any short-term clob messages in a transaction with a timeout height.
 			if timeoutHeight > 0 {
-				log.ErrorLog(
+				log.InfoLog(
 					ctx,
 					"Ignored short-term place order with non-zero timeout height",
 					timeoutHeightLogKey,
@@ -161,7 +161,7 @@ func (cd ClobDecorator) AnteHandle(
 
 		// HOTFIX: Ignore any short-term clob messages in a transaction with a timeout height.
 		if timeoutHeight > 0 {
-			log.ErrorLog(
+			log.InfoLog(
 				ctx,
 				"Ignored short-term batch cancel with non-zero timeout height",
 				timeoutHeightLogKey,
