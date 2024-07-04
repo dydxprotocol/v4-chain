@@ -255,6 +255,7 @@ func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 	return true, nil
 }
 
+// HasNonZeroTimeoutHeight checks if a given transaction has a non-zero timeout height set.
 func HasNonZeroTimeoutHeight(tx sdk.Tx) bool {
 	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
 	if !ok {
