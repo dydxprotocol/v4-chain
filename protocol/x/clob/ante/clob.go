@@ -81,6 +81,11 @@ func (cd ClobDecorator) AnteHandle(
 				return next(ctx, tx, simulate)
 			}
 
+			// HOTFIX: Ignore any short-term clob messages in a transaction with a timeout height.
+			if HasNonZeroTimeoutHeight(tx) {
+				return next(ctx, tx, simulate)
+			}
+
 			// Note that `msg.ValidateBasic` is called before the AnteHandlers.
 			// This guarantees that `MsgCancelOrder` has undergone stateless validation.
 			err = cd.clobKeeper.CancelShortTermOrder(ctx, msg)
@@ -106,6 +111,11 @@ func (cd ClobDecorator) AnteHandle(
 				return next(ctx, tx, simulate)
 			}
 
+			// HOTFIX: Ignore any short-term clob messages in a transaction with a timeout height.
+			if HasNonZeroTimeoutHeight(tx) {
+				return next(ctx, tx, simulate)
+			}
+
 			var orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums
 			var status types.OrderStatus
 			// Note that `msg.ValidateBasic` is called before all AnteHandlers.
@@ -127,6 +137,11 @@ func (cd ClobDecorator) AnteHandle(
 		// MsgBatchCancel currently only processes short-term cancels right now.
 		// No need to process short term orders on `ReCheckTx`.
 		if ctx.IsReCheckTx() {
+			return next(ctx, tx, simulate)
+		}
+
+		// HOTFIX: Ignore any short-term clob messages in a transaction with a timeout height.
+		if HasNonZeroTimeoutHeight(tx) {
 			return next(ctx, tx, simulate)
 		}
 
@@ -238,4 +253,18 @@ func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func HasNonZeroTimeoutHeight(tx sdk.Tx) bool {
+	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
+	if !ok {
+		return false
+	}
+
+	timeoutHeight := timeoutTx.GetTimeoutHeight()
+	if timeoutHeight == 0 {
+		return false
+	}
+
+	return true
 }
