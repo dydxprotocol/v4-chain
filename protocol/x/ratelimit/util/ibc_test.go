@@ -58,12 +58,21 @@ func TestParsePacketInfo(t *testing.T) {
 		Data:               packetData,
 	}
 
+	senderAddr, err := sdk.AccAddressFromBech32(sender)
+	require.NoError(t, err)
+
+	receiverAddr, err := sdk.AccAddressFromBech32(receiver)
+	require.NoError(t, err)
+
 	// Send 'denom' from channel-100 -> channel-200
 	expectedSendPacketInfo := types.IBCTransferPacketInfo{
 		ChannelID: sourceChannel,
 		Denom:     denom,
 		Amount:    amountInt,
+		Sender:    senderAddr,
+		Receiver:  receiverAddr,
 	}
+
 	actualSendPacketInfo, err := util.ParsePacketInfo(packet, types.PACKET_SEND)
 	require.NoError(t, err, "no error expected when parsing send packet")
 	require.Equal(t, expectedSendPacketInfo, actualSendPacketInfo, "send packet")
@@ -73,6 +82,8 @@ func TestParsePacketInfo(t *testing.T) {
 		ChannelID: destinationChannel,
 		Denom:     hashDenomTrace(fmt.Sprintf("transfer/%s/%s", destinationChannel, denom)),
 		Amount:    amountInt,
+		Sender:    senderAddr,
+		Receiver:  receiverAddr,
 	}
 	actualRecvPacketInfo, err := util.ParsePacketInfo(packet, types.PACKET_RECV)
 	require.NoError(t, err, "no error expected when parsing recv packet")
