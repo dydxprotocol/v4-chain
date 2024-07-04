@@ -11,11 +11,11 @@ import (
 	// sdkmath "cosmossdk.io/math"
 
 	// "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
-	// testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	// big_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/big"
 	// blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	// "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
-	// cometbfttypes "github.com/cometbft/cometbft/types"
+	cometbfttypes "github.com/cometbft/cometbft/types"
 	// sdk "github.com/cosmos/cosmos-sdk/types"
 	// banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
@@ -158,6 +158,84 @@ func TestDivideAndRoundUp_Failure(t *testing.T) {
 			gotResult, err := keeper.DivideAndRoundUp(tc.x, tc.y)
 			require.Equal(t, tc.expectedResult, gotResult, "Expected nil value on failure, but got non-nil.")
 			require.ErrorContains(t, err, tc.expectedErr.Error())
+		})
+	}
+}
+
+func TestGetTradingDAIFromSDAIAmount(t *testing.T) {
+	tests := map[string]struct {
+		sDAIAmount           *big.Int
+		sDAIPrice			 *big.Int
+		expectedSDAIAmount	 *big.Int
+		expectedErr			 error
+	}{
+		"Example Input.": {
+			sDAIAmount: big.NewInt(0),
+			sDAIPrice: big.NewInt(1),
+			expectedSDAIAmount: nil,
+			expectedErr: nil,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				return genesis
+			}).Build()
+
+			ctx := tApp.InitChain()
+
+			k := tApp.App.RatelimitKeeper
+				
+			k.SetSDAIPrice(ctx, tc.sDAIPrice)
+
+			gotSDAIAmount, err := k.GetTradingDAIFromSDAIAmountAndRoundUp(ctx, tc.sDAIAmount)
+			
+			if tc.expectedErr != nil {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, tc.expectedSDAIAmount, gotSDAIAmount, "SDAI amounts mismatch.")
+		})
+	}
+}
+
+func TestGetTradingDAIFromSDAIAmountAndRoundUp(t *testing.T) {
+	tests := map[string]struct {
+		sDAIAmount           *big.Int
+		sDAIPrice			 *big.Int
+		expectedSDAIAmount	 *big.Int
+		expectedErr			 error
+	}{
+		"Example Input.": {
+			sDAIAmount: big.NewInt(0),
+			sDAIPrice: big.NewInt(1),
+			expectedSDAIAmount: nil,
+			expectedErr: nil,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				return genesis
+			}).Build()
+
+			ctx := tApp.InitChain()
+
+			k := tApp.App.RatelimitKeeper
+				
+			k.SetSDAIPrice(ctx, tc.sDAIPrice)
+
+			gotSDAIAmount, err := k.GetTradingDAIFromSDAIAmountAndRoundUp(ctx, tc.sDAIAmount)
+			
+			if tc.expectedErr != nil {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, tc.expectedSDAIAmount, gotSDAIAmount, "SDAI amounts mismatch.")
 		})
 	}
 }
