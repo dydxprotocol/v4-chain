@@ -3,6 +3,7 @@ package ante_test
 import (
 	"testing"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -28,7 +29,9 @@ type TestCase struct {
 	useWithIsCheckTxContext   bool
 	useWithIsRecheckTxContext bool
 	isSimulate                bool
+	timeoutHeight             uint64
 	expectedErr               error
+	additionalAssertions      func(ctx sdk.Context, mck *mocks.ClobKeeper)
 }
 
 func runTestCase(t *testing.T, tc TestCase) {
@@ -60,7 +63,7 @@ func runTestCase(t *testing.T, tc TestCase) {
 	// Create Test Transaction.
 	priv1, _, _ := testdata.KeyTestPubAddr()
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := txtest.CreateTestTx(privs, accNums, accSeqs, "dydx", tc.msgs)
+	tx, err := txtest.CreateTestTx(privs, accNums, accSeqs, "dydx", tc.msgs, tc.timeoutHeight)
 	require.NoError(t, err)
 
 	// Call Antehandler.
@@ -76,6 +79,10 @@ func runTestCase(t *testing.T, tc TestCase) {
 	// Assert mock expectations.
 	result := mockClobKeeper.AssertExpectations(t)
 	require.True(t, result)
+
+	if tc.additionalAssertions != nil {
+		tc.additionalAssertions(ctx, mockClobKeeper)
+	}
 }
 
 func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
@@ -214,6 +221,26 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder, constants.Msg_Send},
 			useWithIsCheckTxContext: true,
 			expectedErr:             sdkerrors.ErrInvalidRequest,
+		},
+		// Test for hotfix.
+		"PlaceShortTermOrder is not called on keeper CheckTx if transaction timeout height is non-zero": {
+			msgs:                      []sdk.Msg{constants.Msg_PlaceOrder},
+			useWithIsCheckTxContext:   true,
+			useWithIsRecheckTxContext: false,
+			isSimulate:                false,
+			expectedErr: errorsmod.Wrap(
+				sdkerrors.ErrInvalidRequest,
+				"a short term place order message may not have a non-zero timeout height, use goodTilBlock instead",
+			),
+			timeoutHeight: 1,
+			additionalAssertions: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+				mck.AssertNotCalled(
+					t,
+					"PlaceShortTermOrder",
+					ctx,
+					constants.Msg_PlaceOrder,
+				)
+			},
 		},
 	}
 
