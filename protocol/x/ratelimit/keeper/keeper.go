@@ -382,7 +382,8 @@ func (k Keeper) Logger(ctx sdk.Context) cosmoslog.Logger {
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {}
 
-// Functions related to the sDAI conversion
+/* Functions related to the sDAI conversion */
+
 // SetSDAIPrice sets the price of sDAI in the store as a big.Int
 func (k Keeper) SetSDAIPrice(ctx sdk.Context, price *big.Int) {
 	store := ctx.KVStore(k.storeKey)
