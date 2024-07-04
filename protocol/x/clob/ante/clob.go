@@ -72,9 +72,6 @@ func (cd ClobDecorator) AnteHandle(
 		)
 	}
 
-	// HOTFIX: Ignore any short-term clob messages in a transaction with a timeout height.
-	timeoutHeight := GetTimeoutHeight(tx)
-
 	msgs := tx.GetMsgs()
 	var msg = msgs[0]
 
@@ -114,10 +111,10 @@ func (cd ClobDecorator) AnteHandle(
 			}
 
 			// HOTFIX: Ignore any short-term place orders in a transaction with a timeout height.
-			if timeoutHeight > 0 && ctx.IsCheckTx() {
+			if timeoutHeight := GetTimeoutHeight(tx); timeoutHeight > 0 && ctx.IsCheckTx() {
 				log.InfoLog(
 					ctx,
-					"Ignored short-term place order with non-zero timeout height",
+					"Rejected short-term place order with non-zero timeout height",
 					timeoutHeightLogKey,
 					timeoutHeight,
 				)
