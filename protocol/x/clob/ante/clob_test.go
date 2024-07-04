@@ -3,6 +3,7 @@ package ante_test
 import (
 	"testing"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -227,8 +228,11 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 			useWithIsCheckTxContext:   true,
 			useWithIsRecheckTxContext: false,
 			isSimulate:                false,
-			expectedErr:               nil,
-			timeoutHeight:             1,
+			expectedErr: errorsmod.Wrap(
+				sdkerrors.ErrInvalidRequest,
+				"a short term place order message may not have a non-zero timeout height, use goodTilBlock instead",
+			),
+			timeoutHeight: 1,
 			additionalAssertions: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
 				mck.AssertNotCalled(
 					t,
@@ -553,26 +557,6 @@ func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 			msgs:                    []sdk.Msg{constants.Msg_CancelOrder, constants.Msg_Send},
 			useWithIsCheckTxContext: true,
 			expectedErr:             sdkerrors.ErrInvalidRequest,
-		},
-		// Test for hotfix.
-		"CancelShortTermOrder is not called on keeper CheckTx if transaction timeout height is non-zero": {
-			msgs:                      []sdk.Msg{constants.Msg_CancelOrder},
-			useWithIsCheckTxContext:   true,
-			useWithIsRecheckTxContext: false,
-			isSimulate:                false,
-			expectedErr:               nil,
-			timeoutHeight:             1,
-			additionalAssertions: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
-				mck.AssertNotCalled(
-					t,
-					"CancelShortTermOrder",
-					ctx,
-					clobtypes.NewMsgCancelOrderShortTerm(
-						constants.Msg_CancelOrder.OrderId,
-						constants.Msg_CancelOrder.GetGoodTilBlock(),
-					),
-				)
-			},
 		},
 	}
 
