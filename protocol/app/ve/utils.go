@@ -21,9 +21,9 @@ import (
 	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 )
 
-func ValidateDeamonVoteExtension(
+func ValidateDaemonVoteExtension(
 	ctx sdk.Context,
-	ve vetypes.DeamonVoteExtension,
+	ve vetypes.DaemonVoteExtension,
 	pk PreparePricesKeeper,
 ) error {
 	// TODO: how do you account for removed prices from the prev and current block

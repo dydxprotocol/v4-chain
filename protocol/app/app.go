@@ -31,7 +31,7 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	deamonpreblocker "github.com/StreamFinance-Protocol/stream-chain/protocol/app/preblocker"
+	daemonpreblocker "github.com/StreamFinance-Protocol/stream-chain/protocol/app/preblocker"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/configs"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -302,7 +302,7 @@ type App struct {
 
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
 
-	pricePreBlocker deamonpreblocker.PreBlockHandler
+	pricePreBlocker daemonpreblocker.PreBlockHandler
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -737,7 +737,7 @@ func New(
 		}
 
 		// Non-validating full-nodes have no need to run the price daemon.
-		if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
+		if !appFlags.NonValidatingFullNode {
 			exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
@@ -755,6 +755,7 @@ func New(
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
 			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
+
 		}
 
 		// Start the Metrics Daemon.
@@ -934,16 +935,20 @@ func New(
 		app.SubaccountsKeeper,
 	)
 
-	/****  ve deamon initializer ****/
+	/****  ve daemon initializer ****/
 	voteCodec := vecodec.NewDefaultVoteExtensionCodec()
 	extInfoCodec := vecodec.NewDefaultExtendedCommitCodec()
+
+	if !appFlags.NonValidatingFullNode {
+		app.InitVoteExtensions(logger, indexPriceCache, voteCodec, app.PricesKeeper)
+	}
 
 	aggregatorFn := voteweighted.Median(
 		logger,
 		app.ConsumerKeeper,
 		voteweighted.DefaultPowerThreshold,
 	)
-	app.pricePreBlocker = *deamonpreblocker.NewDeamonPreBlockHandler(
+	app.pricePreBlocker = *daemonpreblocker.NewDaemonPreBlockHandler(
 		logger,
 		aggregatorFn,
 		indexPriceCache,
@@ -1366,6 +1371,18 @@ func (app *App) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sd
 		return resp, err
 	}
 	return app.ModuleManager.PreBlock(ctx)
+}
+
+func (app *App) InitVoteExtensions(
+	logger log.Logger,
+	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
+	veCodec vecodec.VoteExtensionCodec,
+	pricesKeeper pricesmodulekeeper.Keeper,
+) {
+	veHandler := ve.NewVoteExtensionHandler(logger, indexPriceCache, veCodec, pricesKeeper)
+	app.SetExtendVoteHandler(veHandler.ExtendVoteHandler())
+	app.SetVerifyVoteExtensionHandler(veHandler.VerifyVoteExtensionHandler())
+
 }
 
 // BeginBlocker application updates every begin block

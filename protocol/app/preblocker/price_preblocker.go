@@ -1,4 +1,4 @@
-package deamon
+package daemon
 
 import (
 	"fmt"
@@ -15,14 +15,14 @@ import (
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 )
 
-// PreBlockHandler is responsible for aggregating deamon data from each
+// PreBlockHandler is responsible for aggregating daemon data from each
 // validator and writing the prices data into the store before any transactions
 // are executed/finalized for a given block.
 type PreBlockHandler struct { //golint:ignore
 	logger log.Logger
 
 	// keeper is the keeper for the prices module. This is utilized to write
-	// deamon price data to state.
+	// daemon price data to state.
 	keeper pk.Keeper
 
 	// price applier writes the aggregated prices to state.
@@ -31,7 +31,7 @@ type PreBlockHandler struct { //golint:ignore
 
 // NewOraclePreBlockHandler returns a new PreBlockHandler. The handler
 // is responsible for writing oracle data included in vote extensions to state.
-func NewDeamonPreBlockHandler(
+func NewDaemonPreBlockHandler(
 	logger log.Logger,
 	aggregateFn func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error),
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
@@ -63,7 +63,7 @@ func NewDeamonPreBlockHandler(
 }
 
 // PreBlocker is called by the base app before the block is finalized. It
-// is responsible for aggregating price deamon data from each validator
+// is responsible for aggregating price daemon data from each validator
 // and writing to the prices module store.
 
 func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (resp *sdk.ResponsePreBlock, err error) {

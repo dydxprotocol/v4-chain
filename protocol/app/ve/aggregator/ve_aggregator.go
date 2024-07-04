@@ -20,10 +20,10 @@ type Vote struct {
 	// ConsAddress is the validator that submitted the vote extension.
 	ConsAddress sdk.ConsAddress
 	// OracleVoteExtension
-	DeamonVoteExtension vetypes.DeamonVoteExtension
+	DaemonVoteExtension vetypes.DaemonVoteExtension
 }
 
-func GetDeamonVotes(
+func GetDaemonVotes(
 	proposal [][]byte,
 	veCodec codec.VoteExtensionCodec,
 	extCommitCodec codec.ExtendedCommitCodec,
@@ -32,7 +32,7 @@ func GetDeamonVotes(
 		return nil, fmt.Errorf("proposal does not contain enough set messages (VE's, proposed operations, or premium votes): %d", len(proposal))
 	}
 
-	extendedCommitInfo, err := extCommitCodec.Decode(proposal[constants.DeamonInfoIndex])
+	extendedCommitInfo, err := extCommitCodec.Decode(proposal[constants.DaemonInfoIndex])
 	if err != nil {
 		return nil, fmt.Errorf("error decoding extended-commit-info: %w", err)
 	}
@@ -46,7 +46,7 @@ func GetDeamonVotes(
 
 		votes[i] = Vote{
 			ConsAddress:         voteInfo.Validator.Address,
-			DeamonVoteExtension: voteExtension,
+			DaemonVoteExtension: voteExtension,
 		}
 	}
 
@@ -59,12 +59,12 @@ func GetDeamonVotes(
 //
 //go:generate mockery --name VoteAggregator --filename mock_vote_aggregator.go
 type VoteAggregator interface {
-	// AggregateDeamonVotes ingresses vote information which contains all
+	// AggregateDaemonVotes ingresses vote information which contains all
 	// vote extensions each validator extended in the previous block. it is important
 	// to note that
 	//  1. The vote extension may be nil, in which case the validator is not providing
-	//     any deamon price data for the current block. This could have occurred because the
-	//     validator was offline, or its local price deamon service was down.
+	//     any daemon price data for the current block. This could have occurred because the
+	//     validator was offline, or its local price daemon service was down.
 	//  2. The vote extension may contain prices updates for only a subset of currency pairs.
 	//     This could have occurred because the price providers for the validator were
 	//     offline, or the price providers did not provide a price update for a given
@@ -75,7 +75,7 @@ type VoteAggregator interface {
 	// price aggregator but can be replaced by the application.
 	//
 	// Notice: This method overwrites the VoteAggregator's local view of prices.
-	AggregateDeamonVE(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error)
+	AggregateDaemonVE(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error)
 
 	// GetPriceForValidator gets the prices reported by a given validator. This method depends
 	// on the prices from the latest set of aggregated votes.
@@ -111,11 +111,11 @@ func NewVeAggregator(
 		pk:              pricekeeper,
 	}
 }
-func (ma *MedianAggregator) AggregateDeamonVE(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error) {
+func (ma *MedianAggregator) AggregateDaemonVE(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error) {
 
 	for _, vote := range votes {
 		consAddr := vote.ConsAddress.String()
-		if err := ma.addVoteToAggregator(ctx, vote.ConsAddress.String(), vote.DeamonVoteExtension); err != nil {
+		if err := ma.addVoteToAggregator(ctx, vote.ConsAddress.String(), vote.DaemonVoteExtension); err != nil {
 			ma.logger.Error(
 				"failed to add vote to aggregator",
 				"validator_address", consAddr,
@@ -135,14 +135,14 @@ func (ma *MedianAggregator) AggregateDeamonVE(ctx sdk.Context, votes []Vote) (ma
 	}
 
 	ma.logger.Debug(
-		"aggregated deamon price data",
+		"aggregated daemon price data",
 		"num_prices", len(prices),
 	)
 
 	return prices, nil
 }
 
-func (ma *MedianAggregator) addVoteToAggregator(ctx sdk.Context, address string, ve vetypes.DeamonVoteExtension) error {
+func (ma *MedianAggregator) addVoteToAggregator(ctx sdk.Context, address string, ve vetypes.DaemonVoteExtension) error {
 	if len(ve.Prices) == 0 {
 		return nil
 	}

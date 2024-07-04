@@ -57,7 +57,7 @@ func NewPriceWriter(
 }
 
 func (pw *PriceWriter) ApplyPricesFromVoteExtensions(ctx sdk.Context, req *abci.RequestFinalizeBlock) (map[string]*big.Int, error) {
-	votes, err := GetDeamonVotes(req.Txs, pw.voteExtensionCodec, pw.extendedCommitCodec)
+	votes, err := GetDaemonVotes(req.Txs, pw.voteExtensionCodec, pw.extendedCommitCodec)
 	if err != nil {
 		pw.logger.Error(
 			"failed to get extended commit info from proposal",
@@ -75,7 +75,7 @@ func (pw *PriceWriter) ApplyPricesFromVoteExtensions(ctx sdk.Context, req *abci.
 		"num_votes", len(votes),
 	)
 
-	prices, err := pw.va.AggregateDeamonVE(ctx, votes)
+	prices, err := pw.va.AggregateDaemonVE(ctx, votes)
 	if err != nil {
 		pw.logger.Error(
 			"failed to aggregate prices",

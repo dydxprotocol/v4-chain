@@ -60,7 +60,7 @@ func validateVoteExtension(
 	}
 
 	// The vote extensions are from the previous block.
-	if err := ValidateDeamonVoteExtension(ctx, voteExt, pk); err != nil {
+	if err := ValidateDaemonVoteExtension(ctx, voteExt, pk); err != nil {
 		return err
 	}
 

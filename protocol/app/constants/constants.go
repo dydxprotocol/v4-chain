@@ -10,7 +10,7 @@ const (
 	MaximumPriceSize = 33
 
 	// where in the proposal the injected VE's are located
-	DeamonInfoIndex = 0
+	DaemonInfoIndex = 0
 
 	// block structure
 	// this is three becuase the first place in the block is for VE's

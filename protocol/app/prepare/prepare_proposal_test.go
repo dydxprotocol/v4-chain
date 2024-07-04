@@ -16,6 +16,8 @@ import (
 	perpetualtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	cometabci "github.com/cometbft/cometbft/abci/types"
+
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -204,6 +206,14 @@ func TestPrepareProposalHandler(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedTxs, response.Txs)
 		})
+	}
+}
+
+func TestPrepareProposalHandler_VE(t *testing.T) {
+	tests := map[string]struct {
+		request: func() *cometabci.Reqa
+	}{
+
 	}
 }
 

@@ -7,10 +7,10 @@ import (
 
 type VoteExtensionCodec interface {
 	// Encode encodes the vote extension into a byte array.
-	Encode(ve vetypes.DeamonVoteExtension) ([]byte, error)
+	Encode(ve vetypes.DaemonVoteExtension) ([]byte, error)
 
 	// Decode decodes the vote extension from a byte array.
-	Decode([]byte) (vetypes.DeamonVoteExtension, error)
+	Decode([]byte) (vetypes.DaemonVoteExtension, error)
 }
 
 type ExtendedCommitCodec interface {
@@ -29,12 +29,12 @@ func NewDefaultVoteExtensionCodec() *DefaultVoteExtensionCodec {
 // vanilla implementations of Unmarshal / Marshal under the hood.
 type DefaultVoteExtensionCodec struct{}
 
-func (codec *DefaultVoteExtensionCodec) Encode(ve vetypes.DeamonVoteExtension) ([]byte, error) {
+func (codec *DefaultVoteExtensionCodec) Encode(ve vetypes.DaemonVoteExtension) ([]byte, error) {
 	return ve.Marshal()
 }
 
-func (codec *DefaultVoteExtensionCodec) Decode(bz []byte) (vetypes.DeamonVoteExtension, error) {
-	var ve vetypes.DeamonVoteExtension
+func (codec *DefaultVoteExtensionCodec) Decode(bz []byte) (vetypes.DaemonVoteExtension, error) {
+	var ve vetypes.DaemonVoteExtension
 	return ve, ve.Unmarshal(bz)
 }
 

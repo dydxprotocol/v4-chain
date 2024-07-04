@@ -3,14 +3,12 @@ package ve
 import (
 	"fmt"
 	"math/big"
-	"time"
 
 	"cosmossdk.io/log"
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
-	libtime "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/time"
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	pricetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -20,13 +18,10 @@ import (
 type VoteExtensionHandler struct {
 	logger log.Logger
 
+	// used to encode prices before they are put into a VE
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices
 
 	veCodec codec.VoteExtensionCodec
-
-	timeout time.Duration
-
-	timeProvider libtime.TimeProvider
 
 	pk pk.Keeper
 }
@@ -34,25 +29,21 @@ type VoteExtensionHandler struct {
 func NewVoteExtensionHandler(
 	logger log.Logger,
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
-	timeout time.Duration,
 	vecodec codec.VoteExtensionCodec,
-	timeProvider libtime.TimeProvider,
 	pricekeeper pk.Keeper,
 ) *VoteExtensionHandler {
 	return &VoteExtensionHandler{
 		logger:          logger,
-		timeout:         timeout,
 		indexPriceCache: indexPriceCache,
 		veCodec:         vecodec,
-		timeProvider:    timeProvider,
 		pk:              pricekeeper,
 	}
 }
 
 // Returns a handler that extends pre-commit votes with the current
-// prices pulled from the perpetually running price deamon
+// prices pulled from the perpetually running price daemon
 // In the case of an error, the handler will return an empty vote extension
-// ensuring liveness in the case of a price deamon failure
+// ensuring liveness in the case of a price daemon failure
 func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 	return func(ctx sdk.Context, req *abci.RequestExtendVote) (resp *abci.ResponseExtendVote, err error) {
 		defer func() {
@@ -75,14 +66,14 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 
 		// TODO: call the method used to write prices to state, in the same way preBlocker does
 
-		// TODO: does the deamon needs some time to warm up or can we include this in the first block
+		// TODO: does the daemon needs some time to warm up or can we include this in the first block
 		pu := h.pk.GetValidMarketPriceUpdates(ctx)
 
 		if len(pu.MarketPriceUpdates) == 0 {
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, fmt.Errorf("no valid median prices")
 		}
 
-		voteExt, err := h.transformDeamonPricesToVE(ctx, pu.MarketPriceUpdates)
+		voteExt, err := h.transformDaemonPricesToVE(ctx, pu.MarketPriceUpdates)
 		if err != nil {
 			h.logger.Error("failed to transform prices to vote extension", "height", req.Height, "err", err)
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
@@ -94,7 +85,7 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
 		}
 
-		h.logger.Debug("extending vote with deamon prices", "height", req.Height, "prices", len(pu.MarketPriceUpdates))
+		h.logger.Debug("extending vote with daemon prices", "height", req.Height, "prices", len(pu.MarketPriceUpdates))
 
 		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 	}
@@ -132,7 +123,7 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, err
 		}
 
-		if err := h.ValidateDeamonVE(ctx, ve); err != nil {
+		if err := h.ValidateDaemonVE(ctx, ve); err != nil {
 			h.logger.Error(
 				"failed to validate vote extension",
 				"height", req.Height,
@@ -151,11 +142,11 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 	}
 }
 
-// encode the prices from the deamon into VE data using GobEncode
-func (h *VoteExtensionHandler) transformDeamonPricesToVE(
+// encode the prices from the daemon into VE data using GobEncode
+func (h *VoteExtensionHandler) transformDaemonPricesToVE(
 	ctx sdk.Context,
 	priceupdates []*pricetypes.MarketPriceUpdates_MarketPriceUpdate,
-) (types.DeamonVoteExtension, error) {
+) (types.DaemonVoteExtension, error) {
 
 	vePrices := make(map[uint32][]byte)
 	for _, pu := range priceupdates {
@@ -182,23 +173,23 @@ func (h *VoteExtensionHandler) transformDeamonPricesToVE(
 			continue
 		}
 
-		h.logger.Info("transformed deamon price", "market", market.Pair, "price", price)
+		h.logger.Info("transformed daemon price", "market", market.Pair, "price", price)
 
 		vePrices[marketId] = encodedPrice
 	}
-	h.logger.Info("transformed deamon prices", "prices", len(vePrices))
-	return types.DeamonVoteExtension{
+	h.logger.Info("transformed daemon prices", "prices", len(vePrices))
+	return types.DaemonVoteExtension{
 		Prices: vePrices,
 	}, nil
 }
 
-func (h *VoteExtensionHandler) ValidateDeamonVE(
+func (h *VoteExtensionHandler) ValidateDaemonVE(
 	ctx sdk.Context,
-	ve types.DeamonVoteExtension,
+	ve types.DaemonVoteExtension,
 ) error {
 	maxPairs := h.GetMaxPairs(ctx)
 	if uint32(len(ve.Prices)) > maxPairs {
-		return fmt.Errorf("too many prices in deamon vote extension: %d > %d", len(ve.Prices), maxPairs)
+		return fmt.Errorf("too many prices in daemon vote extension: %d > %d", len(ve.Prices), maxPairs)
 	}
 
 	for _, bz := range ve.Prices {

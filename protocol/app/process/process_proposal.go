@@ -74,7 +74,7 @@ func ProcessProposalHandler(
 					fmt.Errorf("failed to process proposal: missing commit info")
 			}
 
-			extCommitBz := req.Txs[constants.DeamonInfoIndex]
+			extCommitBz := req.Txs[constants.DaemonInfoIndex]
 
 			var extInfo abci.ExtendedCommitInfo
 			extInfo, err := extCodec.Decode(extCommitBz)
