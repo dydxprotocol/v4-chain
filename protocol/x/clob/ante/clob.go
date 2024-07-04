@@ -12,6 +12,10 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+var (
+	timeoutHeightLogKey = "TimeoutHeight"
+)
+
 // ClobDecorator is an AnteDecorator which is responsible for:
 //   - adding short term order placements and cancelations to the in-memory orderbook (`CheckTx` only).
 //   - adding stateful order placements and cancelations to state (`CheckTx` and `RecheckTx` only).
@@ -68,6 +72,9 @@ func (cd ClobDecorator) AnteHandle(
 		)
 	}
 
+	// HOTFIX: Ignore any short-term clob messages in a transaction with a timeout height.
+	timeoutHeight := GetTimeoutHeight(tx)
+
 	msgs := tx.GetMsgs()
 	var msg = msgs[0]
 
@@ -82,7 +89,13 @@ func (cd ClobDecorator) AnteHandle(
 			}
 
 			// HOTFIX: Ignore any short-term clob messages in a transaction with a timeout height.
-			if HasNonZeroTimeoutHeight(tx) {
+			if timeoutHeight > 0 {
+				log.ErrorLog(
+					ctx,
+					"Ignored short-term cancel order with non-zero timeout height",
+					timeoutHeightLogKey,
+					timeoutHeight,
+				)
 				return next(ctx, tx, simulate)
 			}
 
@@ -112,7 +125,13 @@ func (cd ClobDecorator) AnteHandle(
 			}
 
 			// HOTFIX: Ignore any short-term clob messages in a transaction with a timeout height.
-			if HasNonZeroTimeoutHeight(tx) {
+			if timeoutHeight > 0 {
+				log.ErrorLog(
+					ctx,
+					"Ignored short-term place order with non-zero timeout height",
+					timeoutHeightLogKey,
+					timeoutHeight,
+				)
 				return next(ctx, tx, simulate)
 			}
 
@@ -141,7 +160,13 @@ func (cd ClobDecorator) AnteHandle(
 		}
 
 		// HOTFIX: Ignore any short-term clob messages in a transaction with a timeout height.
-		if HasNonZeroTimeoutHeight(tx) {
+		if timeoutHeight > 0 {
+			log.ErrorLog(
+				ctx,
+				"Ignored short-term batch cancel with non-zero timeout height",
+				timeoutHeightLogKey,
+				timeoutHeight,
+			)
 			return next(ctx, tx, simulate)
 		}
 
@@ -255,17 +280,14 @@ func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 	return true, nil
 }
 
-// HasNonZeroTimeoutHeight checks if a given transaction has a non-zero timeout height set.
-func HasNonZeroTimeoutHeight(tx sdk.Tx) bool {
+// GetTimeoutHeight returns the timeout height of a transaction. If the transaction does not have
+// a timeout height, return 0.
+func GetTimeoutHeight(tx sdk.Tx) uint64 {
 	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
 	if !ok {
-		return false
+		return 0
 	}
 
 	timeoutHeight := timeoutTx.GetTimeoutHeight()
-	if timeoutHeight == 0 {
-		return false
-	}
-
-	return true
+	return timeoutHeight
 }
