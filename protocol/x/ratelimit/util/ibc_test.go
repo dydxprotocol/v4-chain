@@ -39,8 +39,8 @@ func TestParsePacketInfo(t *testing.T) {
 	denom := "denom"
 	amountString := "100"
 	amountInt := big.NewInt(100)
-	sender := "sender"
-	receiver := "receiver"
+	sender := "cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg"
+	receiver := "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5"
 
 	packetData, err := json.Marshal(ibctransfertypes.FungibleTokenPacketData{
 		Denom:    denom,
