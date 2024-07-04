@@ -1,6 +1,10 @@
 package types
 
-import "math/big"
+import (
+	"math/big"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 type PacketDirection int32
 
@@ -15,6 +19,14 @@ type IBCTransferPacketInfo struct {
 	ChannelID string
 	Denom     string
 	Amount    *big.Int
+}
+
+// SDAITransferPacket contains relevant information from
+// an IBC packet for an sDAI withdrawl
+type SDAITransferPacket struct {
+	Sender sdk.AccAddress
+	Denom  string
+	Amount *big.Int
 }
 
 // AckResponseStatus represents the status of an acknowledgement of IBC transfer packet.

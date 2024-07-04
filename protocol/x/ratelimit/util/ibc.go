@@ -66,6 +66,58 @@ func ParsePacketInfo(
 	return packetInfo, nil
 }
 
+func TryGetsDAIWithdrawPacket(
+	packet channeltypes.Packet,
+) (types.SDAITransferPacket, error) {
+	var packetData ibctransfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(packet.GetData(), &packetData); err != nil {
+		return types.SDAITransferPacket{}, err
+	}
+
+	// check the denom
+	denom := ParseDenomFromSendPacket(packetData)
+	if denom != types.SDaiDenom {
+		return types.SDAITransferPacket{}, errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"not a sDAI withdrawl packet, got %s",
+			denom,
+		)
+	}
+
+	// From `SetString` documentation:
+	// For base 0, the number prefix determines the actual base:
+	// A prefix of “0b” or “0B” selects base 2, “0”, “0o” or “0O” selects base 8, and “0x” or “0X” selects base 16.
+	// Otherwise, the selected base is 10 and no prefix is accepted.
+	amount, ok := new(big.Int).SetString(packetData.Amount, 0)
+	if !ok {
+		return types.SDAITransferPacket{},
+			errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"Unable to cast packet amount '%s' to big.Int",
+				packetData.Amount,
+			)
+	}
+
+	sender, err := sdk.AccAddressFromBech32(packetData.Sender)
+	if err != nil {
+		return types.SDAITransferPacket{},
+			errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"Unable to convert sender address",
+			)
+	}
+
+	// get the sender address
+
+	packetInfo := types.SDAITransferPacket{
+		Denom:  denom,
+		Amount: amount,
+		Sender: sender,
+	}
+
+	return packetInfo, nil
+}
+
 // UnpackAcknowledgementResponseForTransfer unmarshals Acknowledgements for IBC transfers, determines the status of the
 // acknowledgement (success or failure).
 func UnpackAcknowledgementResponseForTransfer(

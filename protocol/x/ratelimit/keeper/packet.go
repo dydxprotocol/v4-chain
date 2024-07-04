@@ -174,6 +174,14 @@ func (k Keeper) TrySendRateLimitedPacket(ctx sdk.Context, packet channeltypes.Pa
 		return err
 	}
 
+	sDAIPacket, err := util.TryGetsDAIWithdrawPacket(packet)
+	if err == nil {
+		err = k.WithdrawSDAIFromTradingDAI(ctx, sDAIPacket.Sender, sDAIPacket.Amount)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Store the sequence number of the packet so that if the transfer fails,
 	// we can identify if it was sent during this quota and can revert the outflow
 	k.SetPendingSendPacket(ctx, packetInfo.ChannelID, packet.Sequence)
