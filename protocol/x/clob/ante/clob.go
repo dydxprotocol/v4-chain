@@ -113,7 +113,7 @@ func (cd ClobDecorator) AnteHandle(
 				return next(ctx, tx, simulate)
 			}
 
-			// HOTFIX: Ignore any short-term clob messages in a transaction with a timeout height.
+			// HOTFIX: Ignore any short-term place orders in a transaction with a timeout height.
 			if timeoutHeight > 0 && ctx.IsCheckTx() {
 				log.InfoLog(
 					ctx,
