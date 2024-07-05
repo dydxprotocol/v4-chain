@@ -1,6 +1,8 @@
 package constants
 
 import (
+	"math/big"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants"
 	daemonClientTypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
@@ -163,6 +165,22 @@ var (
 	Price5       uint64 = 500005
 	Price6       uint64 = 60006
 	Price7       uint64 = 7007
+
+	Price1Big = big.NewInt(int64(Price1))
+	Price2Big = big.NewInt(int64(Price2))
+	Price3Big = big.NewInt(int64(Price3))
+	Price4Big = big.NewInt(int64(Price4))
+	Price5Big = big.NewInt(int64(Price5))
+	Price6Big = big.NewInt(int64(Price6))
+	Price7Big = big.NewInt(int64(Price7))
+
+	Price1Bytes = Price1Big.Bytes()
+	Price2Bytes = Price2Big.Bytes()
+	Price3Bytes = Price3Big.Bytes()
+	Price4Bytes = Price4Big.Bytes()
+	Price5Bytes = Price5Big.Bytes()
+	Price6Bytes = Price6Big.Bytes()
+	Price7Bytes = Price7Big.Bytes()
 
 	// Exchange 0 prices
 	Exchange0_Price4_TimeT = &api.ExchangePrice{

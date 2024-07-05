@@ -83,7 +83,7 @@ func PrepareProposalHandler(
 
 			// Get the vote extnesions
 
-			veInfo, err := ve.PruneAndValidateExtendedCommitInfo(
+			extCommitInfo, err := ve.PruneAndValidateExtendedCommitInfo(
 				ctx,
 				req.LocalLastCommit,
 				veCodec,
@@ -104,11 +104,11 @@ func PrepareProposalHandler(
 
 			// Create the vote extension injection data which will be injected into the proposal. These contain the
 			// oracle data for the current block which will be committed to state in PreBlock.
-			extInfoBz, err = extCommitCodec.Encode(veInfo)
+			extInfoBz, err = extCommitCodec.Encode(extCommitInfo)
 			if err != nil {
 				ctx.Logger().Error(
 					"failed to extended commit info",
-					"commit_info", veInfo,
+					"commit_info", extCommitInfo,
 					"err", err,
 				)
 

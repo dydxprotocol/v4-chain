@@ -104,7 +104,11 @@ func ValidateVoteExtensions(
 ) error {
 	currentHeight := ctx.HeaderInfo().Height
 	chainID := ctx.HeaderInfo().ChainID
-	commitInfo := ctx.CometInfo().GetLastCommit()
+	cometInfo := ctx.CometInfo()
+	if cometInfo == nil {
+		return fmt.Errorf("comet info not found")
+	}
+	commitInfo := cometInfo.GetLastCommit()
 
 	// Check that both extCommit + commit are ordered in accordance with vp/address.
 	if err := ValidateExtendedCommitAgainstLastCommit(extCommit, commitInfo); err != nil {

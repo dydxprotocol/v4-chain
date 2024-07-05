@@ -1,12 +1,30 @@
 package ve_testutils
 
 import (
+	"fmt"
+
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cometproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+func GetExtCommitInfoBz(
+	consAddr sdk.ConsAddress,
+	prices map[uint32][]byte,
+) (cometabci.ExtendedCommitInfo, []byte, error) {
+	commitInfo, err := CreateExtendedVoteInfoWithPower(consAddr, 1, prices, vecodec.NewDefaultVoteExtensionCodec())
+	if err != nil {
+		return cometabci.ExtendedCommitInfo{}, nil, err
+	}
+
+	extendedCommitInfo, bz, err := CreateExtendedCommitInfo([]cometabci.ExtendedVoteInfo{commitInfo}, vecodec.NewDefaultExtendedCommitCodec())
+	if err != nil {
+		return cometabci.ExtendedCommitInfo{}, nil, err
+	}
+	return extendedCommitInfo, bz, nil
+}
 
 // CreateExtendedCommitInfo creates an extended commit info with the given commit info.
 func CreateExtendedCommitInfo(commitInfo []cometabci.ExtendedVoteInfo, codec vecodec.ExtendedCommitCodec) (cometabci.ExtendedCommitInfo, []byte, error) {
@@ -15,6 +33,7 @@ func CreateExtendedCommitInfo(commitInfo []cometabci.ExtendedVoteInfo, codec vec
 	}
 
 	bz, err := codec.Encode(extendedCommitInfo)
+	fmt.Println("EXTBZ", bz)
 	if err != nil {
 		return cometabci.ExtendedCommitInfo{}, nil, err
 	}
