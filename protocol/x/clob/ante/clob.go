@@ -110,17 +110,17 @@ func (cd ClobDecorator) AnteHandle(
 				return next(ctx, tx, simulate)
 			}
 
-			// HOTFIX: Ignore any short-term place orders in a transaction with a timeout height.
-			if timeoutHeight := GetTimeoutHeight(tx); timeoutHeight > 0 && ctx.IsCheckTx() {
+			// HOTFIX: Ignore any short-term place orders in a transaction with a timeout height < good til block
+			if timeoutHeight := GetTimeoutHeight(tx); timeoutHeight > 0 && int(timeoutHeight) < int(msg.Order.GetGoodTilBlock()) && ctx.IsCheckTx() {
 				log.InfoLog(
 					ctx,
-					"Rejected short-term place order with non-zero timeout height",
+					"Rejected short-term place order with timeout height < goodTilBlock",
 					timeoutHeightLogKey,
 					timeoutHeight,
 				)
 				return ctx, errorsmod.Wrap(
 					sdkerrors.ErrInvalidRequest,
-					"a short term place order message may not have a non-zero timeout height, use goodTilBlock instead",
+					"a short term place order message may not have a timeout height less than goodTilBlock",
 				)
 			}
 
