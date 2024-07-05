@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 )
 
 // Module name and store keys
@@ -24,12 +25,12 @@ const (
 	// PendingSendPacketPrefix is the prefix for the key-value store for PendingSendPacket.
 	PendingSendPacketPrefix = "PendingSendPacket:"
 
-	// For the sDAI middleware
-	// This is the name of the sDAI pool which is where sDAI and pending trading DAI yields are stored
-	PoolAccount = "PoolAccount"
+	/* For the sDAI middleware */
+
+	PoolAccount = ibctransfertypes.ModuleName
 
 	// This is the name of the sDAI token
-	SDaiDenom = "sDAI" // change
+	SDaiDenom = "sDAI" // TODO: change
 
 	// This is the name of the trading DAI token
 	TradingDAIDenom = "tradingDAI"

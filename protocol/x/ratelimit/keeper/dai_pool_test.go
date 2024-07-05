@@ -305,25 +305,28 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 				sDAICoins := sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewIntFromBigInt(transfer.sDAIAmount)))
 
 				// Simulate user having received sDAI
-				userMintingErr := bankKeeper.MintCoins(ctx, transfer.userAddr.String(), sDAICoins)
-				require.NoError(t, userMintingErr)
+				mintingErr := bankKeeper.MintCoins(ctx, types.PoolAccount, sDAICoins)
+				require.NoError(t, mintingErr)
+				sendingErr := bankKeeper.SendCoinsFromModuleToAccount(ctx, types.PoolAccount, transfer.userAddr, sDAICoins)
+				require.NoError(t, sendingErr)
+
 
 				// Check initial balance
 				initialPoolSDAIBalance := bankKeeper.GetBalance(
 					ctx,
 					accountKeeper.GetModuleAddress(types.PoolAccount),
 					types.SDaiDenom,
-				)
+				).Amount.BigInt()
 				initialUserSDAIBalance := bankKeeper.GetBalance(
 					ctx,
 					transfer.userAddr,
 					types.SDaiDenom,
-				)
+				).Amount.BigInt()
 				initialUserTDAIBalance := bankKeeper.GetBalance(
 					ctx,
 					transfer.userAddr,
 					types.TradingDAIDenom,
-				)
+				).Amount.BigInt()
 
 				// Execute Minting
 				err := k.MintTradingDAIToUserAccount(ctx, transfer.userAddr, transfer.sDAIAmount)
@@ -340,25 +343,25 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 					ctx,
 					accountKeeper.GetModuleAddress(types.PoolAccount),
 					types.SDaiDenom,
-				)
+				).Amount.BigInt()
 				endingUserSDAIBalance := bankKeeper.GetBalance(
 					ctx,
 					transfer.userAddr,
 					types.SDaiDenom,
-				)
+				).Amount.BigInt()
 				endingUserTDAIBalance := bankKeeper.GetBalance(
 					ctx,
 					transfer.userAddr,
 					types.TradingDAIDenom,
-				)
+				).Amount.BigInt()
 
-				deltaPoolSDAI := endingPoolSDAIBalance.Sub(initialPoolSDAIBalance)
+				deltaPoolSDAI := new(big.Int).Sub(endingPoolSDAIBalance, initialPoolSDAIBalance)
 				require.Equal(t, transfer.sDAIAmount, deltaPoolSDAI, "Change in pool SDAI balance incorrect.")
 
-				deltaUserSDAI := initialUserSDAIBalance.Sub(endingUserSDAIBalance)
+				deltaUserSDAI := new(big.Int).Sub(initialUserSDAIBalance, endingUserSDAIBalance)
 				require.Equal(t, transfer.sDAIAmount, deltaUserSDAI, "Change in user SDAI balance incorrect.")
 				
-				deltaUserTDAI := endingUserTDAIBalance.Sub(initialUserTDAIBalance)
+				deltaUserTDAI := new(big.Int).Sub(endingUserTDAIBalance, initialUserTDAIBalance)
 				require.Equal(t, transfer.expectedTDAIAmount, deltaUserTDAI, "Change in user TDAI balance incorrect.")
 			}
 		})
