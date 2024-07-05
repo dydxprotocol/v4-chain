@@ -11,21 +11,26 @@ import (
 func GetExtCommitInfoBz(
 	consAddr sdk.ConsAddress,
 	prices map[uint32][]byte,
-) (cometabci.ExtendedCommitInfo, []byte, error) {
-	commitInfo, err := CreateExtendedVoteInfoWithPower(consAddr, 1, prices, vecodec.NewDefaultVoteExtensionCodec())
+	voteCodec vecodec.VoteExtensionCodec,
+	extCodec vecodec.ExtendedCommitCodec,
+) []byte {
+	commitInfo, err := CreateExtendedVoteInfoWithPower(consAddr, 1, prices, voteCodec)
 	if err != nil {
-		return cometabci.ExtendedCommitInfo{}, nil, err
+		return nil
 	}
 
-	extendedCommitInfo, bz, err := CreateExtendedCommitInfo([]cometabci.ExtendedVoteInfo{commitInfo}, vecodec.NewDefaultExtendedCommitCodec())
+	_, bz, err := CreateExtendedCommitInfo([]cometabci.ExtendedVoteInfo{commitInfo}, extCodec)
 	if err != nil {
-		return cometabci.ExtendedCommitInfo{}, nil, err
+		return nil
 	}
-	return extendedCommitInfo, bz, nil
+	return bz
 }
 
 // CreateExtendedCommitInfo creates an extended commit info with the given commit info.
-func CreateExtendedCommitInfo(commitInfo []cometabci.ExtendedVoteInfo, codec vecodec.ExtendedCommitCodec) (cometabci.ExtendedCommitInfo, []byte, error) {
+func CreateExtendedCommitInfo(
+	commitInfo []cometabci.ExtendedVoteInfo,
+	codec vecodec.ExtendedCommitCodec,
+) (cometabci.ExtendedCommitInfo, []byte, error) {
 	extendedCommitInfo := cometabci.ExtendedCommitInfo{
 		Votes: commitInfo,
 	}
@@ -56,6 +61,7 @@ func CreateExtendedVoteInfoWithPower(
 	codec vecodec.VoteExtensionCodec,
 ) (cometabci.ExtendedVoteInfo, error) {
 	ve, err := CreateVoteExtensionBytes(prices, codec)
+
 	if err != nil {
 		return cometabci.ExtendedVoteInfo{}, err
 	}
@@ -89,6 +95,7 @@ func CreateVoteExtensionBytes(
 func CreateVoteExtension(
 	prices map[uint32][]byte,
 ) vetypes.DaemonVoteExtension {
+
 	return vetypes.DaemonVoteExtension{
 		Prices: prices,
 	}

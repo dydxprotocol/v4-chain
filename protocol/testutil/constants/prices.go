@@ -3,7 +3,6 @@ package constants
 import (
 	pricefeedclient "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
-	vetestutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
 
@@ -282,7 +281,6 @@ var (
 		MarketId1: Price6Bytes,
 		MarketId2: Price7Bytes,
 	}
-	_, ExpectedValidVePriceExtCommitBz, _ = vetestutils.GetExtCommitInfoBz(AliceConsAddress, ValidVEPrice)
 
 	ValidEmptyMarketParams = []types.MarketParam{}
 	// `MsgUpdateMarketPrices`.

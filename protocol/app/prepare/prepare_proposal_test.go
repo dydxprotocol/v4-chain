@@ -17,8 +17,8 @@ import (
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perpetualtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cometproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -59,12 +59,14 @@ type PerpareProposalHandlerTC struct {
 	pricesParamsResp              []pricestypes.MarketParam
 	pricesMarketPriceFromByesResp *pricestypes.MarketPriceUpdates_MarketPriceUpdate
 
-	expectedTxs [][]byte
+	expectedPrices map[uint32][]byte
+	expectedTxs    [][]byte
 }
 
 func TestPrepareProposalHandler(t *testing.T) {
 	msgSendTxBytesLen := int64(len(constants.Msg_Send_TxBytes))
 	msgSendAndTransferTxBytesLen := int64(len(constants.Msg_SendAndTransfer_TxBytes))
+	votecodec, extcodec := vecodec.NewDefaultVoteExtensionCodec(), vecodec.NewDefaultExtendedCommitCodec()
 
 	tests := map[string]PerpareProposalHandlerTC{
 		"Error: Empty proposal request returns error": {
@@ -176,7 +178,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 			clobEncoder: passingTxEncoderFour,
 
 			expectedTxs: [][]byte{
-				{},                         // ve.
 				{1, 2, 3, 4},               // order.
 				constants.Msg_Send_TxBytes, // others.
 				{1, 2, 3, 4},               // funding.
@@ -202,9 +203,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 
 			clobResp:    &clobtypes.MsgProposedOperations{},
 			clobEncoder: passingTxEncoderFour,
-
 			expectedTxs: [][]byte{
-				{},                                    // ve.
 				{1, 2, 3, 4},                          // order.
 				constants.Msg_Send_TxBytes,            // others.
 				constants.Msg_SendAndTransfer_TxBytes, // additional others.
@@ -236,6 +235,8 @@ func TestPrepareProposalHandler(t *testing.T) {
 
 			veEnabled: true,
 
+			expectedPrices: constants.ValidVEPrice,
+
 			request: func() *cometabci.RequestPrepareProposal {
 				proposal := [][]byte{
 					constants.Msg_SendAndTransfer_TxBytes, // others.
@@ -245,13 +246,14 @@ func TestPrepareProposalHandler(t *testing.T) {
 				valVoteInfo, err := vetesting.CreateExtendedVoteInfo(
 					constants.AliceConsAddress,
 					constants.ValidVEPrice,
-					vecodec.NewDefaultVoteExtensionCodec(),
+					votecodec,
 				)
+
 				require.NoError(t, err)
 
 				commitInfo, _, err := vetesting.CreateExtendedCommitInfo(
 					[]cometabci.ExtendedVoteInfo{valVoteInfo},
-					vecodec.NewDefaultExtendedCommitCodec(),
+					extcodec,
 				)
 
 				require.NoError(t, err)
@@ -268,7 +270,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 			},
 
 			expectedTxs: [][]byte{
-				constants.ExpectedValidVePriceExtCommitBz, // ve.
 				{1, 2, 3, 4},                          // order.
 				constants.Msg_SendAndTransfer_TxBytes, // others.
 				constants.Msg_Send_TxBytes,            // others.
@@ -297,8 +298,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 				ctx = getVeEnabledCtx(ctx)
 			}
 
-			votecodec, extcodec := vecodec.NewDefaultVoteExtensionCodec(), vecodec.NewDefaultExtendedCommitCodec()
-
 			handler := prepare.PrepareProposalHandler(
 				mockTxConfig,
 				mClobKeeper,
@@ -312,7 +311,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			req := tc.request()
 			response, err := handler(ctx, req)
 			require.NoError(t, err)
-			require.Equal(t, tc.expectedTxs, response.Txs)
+			require.Equal(t, tc.expectedTxs, getResponseTransactionsWithExtInfo(response.Txs))
 
 			if tc.veEnabled {
 				bz, err := extcodec.Encode(req.LocalLastCommit)
@@ -320,6 +319,9 @@ func TestPrepareProposalHandler(t *testing.T) {
 				if int64(len(bz)) < req.MaxTxBytes {
 					require.Equal(t, bz, response.Txs[0])
 				}
+
+				prices := getPricesFromExtInfoBytes(response.Txs[0], extcodec, votecodec)
+				require.Equal(t, tc.expectedPrices, prices)
 			}
 		})
 	}
@@ -639,4 +641,29 @@ func setMockResponses(
 		Return(tc.fundingResp)
 	mClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
 		Return(tc.clobResp)
+}
+
+func getResponseTransactionsWithExtInfo(txs [][]byte) [][]byte {
+	if len(txs) == 0 {
+		return txs
+	}
+	return txs[1:]
+}
+
+func getPricesFromExtInfoBytes(bz []byte, extcodec vecodec.ExtendedCommitCodec, votecodec vecodec.VoteExtensionCodec) map[uint32][]byte {
+
+	extCommitInfo, err := extcodec.Decode(bz)
+	if err != nil {
+		return nil
+	}
+	for _, vote := range extCommitInfo.Votes {
+		if vote.VoteExtension != nil {
+			voteExt, err := votecodec.Decode(vote.VoteExtension)
+			if err != nil {
+				return nil
+			}
+			return voteExt.Prices
+		}
+	}
+	return nil
 }

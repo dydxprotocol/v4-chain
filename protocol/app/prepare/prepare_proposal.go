@@ -82,7 +82,6 @@ func PrepareProposalHandler(
 			)
 
 			// Get the vote extnesions
-
 			extCommitInfo, err := ve.PruneAndValidateExtendedCommitInfo(
 				ctx,
 				req.LocalLastCommit,
