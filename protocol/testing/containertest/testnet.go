@@ -25,11 +25,7 @@ const persistentPeers = "17e5e45691f0d01449c84fd4ae87279578cdd7ec@testnet-local-
 const resourceLifetimeSecs = 600
 
 // The version of that we're upgrading to (aka the current commit)
-<<<<<<< HEAD
 const UpgradeToVersion = "v6.0.0"
-=======
-const UpgradeToVersion = "v5.1.0"
->>>>>>> 7aa0952a (Add upgrade handler for v5.1.0 (#1836))
 
 func monikers() map[string]string {
 	return map[string]string{
