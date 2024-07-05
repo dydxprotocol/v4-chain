@@ -121,7 +121,7 @@ func (cd ClobDecorator) AnteHandle(
 				)
 				return ctx, errorsmod.Wrap(
 					sdkerrors.ErrInvalidRequest,
-					"a short term place order message may not have a timeout height less than goodTilBlock",
+					"timeout height (if non-zero) may not be less than `goodTilBlock` for a short-term place order",
 				)
 			}
 
