@@ -223,16 +223,16 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 			expectedErr:             sdkerrors.ErrInvalidRequest,
 		},
 		// Test for hotfix.
-		"PlaceShortTermOrder is not called on keeper CheckTx if transaction timeout height is non-zero": {
+		"PlaceShortTermOrder is not called on keeper CheckTx if transaction timeout height < goodTilBlock": {
 			msgs:                      []sdk.Msg{constants.Msg_PlaceOrder},
 			useWithIsCheckTxContext:   true,
 			useWithIsRecheckTxContext: false,
 			isSimulate:                false,
 			expectedErr: errorsmod.Wrap(
 				sdkerrors.ErrInvalidRequest,
-				"a short term place order message may not have a non-zero timeout height, use goodTilBlock instead",
+				"a short term place order message may not have a timeout height less than goodTilBlock",
 			),
-			timeoutHeight: 1,
+			timeoutHeight: uint64(constants.Msg_PlaceOrder.Order.GetGoodTilBlock() - 1),
 			additionalAssertions: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
 				mck.AssertNotCalled(
 					t,
@@ -241,6 +241,22 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 					constants.Msg_PlaceOrder,
 				)
 			},
+		},
+		"Successfully places a short term order using a single message with timeout height >= goodTilBlock": {
+			msgs: []sdk.Msg{constants.Msg_PlaceOrder},
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+				mck.On("PlaceShortTermOrder",
+					ctx,
+					constants.Msg_PlaceOrder,
+				).Return(
+					satypes.BaseQuantums(0),
+					clobtypes.Success,
+					nil,
+				)
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             nil,
+			timeoutHeight:           uint64(constants.Msg_PlaceOrder.Order.GetGoodTilBlock()),
 		},
 	}
 
