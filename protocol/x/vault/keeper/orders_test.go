@@ -730,6 +730,82 @@ func TestGetVaultClobOrders(t *testing.T) {
 	}
 }
 
+func TestGetVaultClobOrderIds(t *testing.T) {
+	tests := map[string]struct {
+		/* --- Setup --- */
+		// Vault ID.
+		vaultId vaulttypes.VaultId
+		// Layers.
+		layers uint32
+
+		/* --- Expectations --- */
+		// Expected error, if any.
+		expectedErr error
+	}{
+		"Vault Clob 0, 2 layers": {
+			vaultId: constants.Vault_Clob_0,
+			layers:  2,
+		},
+		"Vault Clob 1, 7 layers": {
+			vaultId: constants.Vault_Clob_1,
+			layers:  7,
+		},
+		"Vault Clob 0, 0 layers": {
+			vaultId: constants.Vault_Clob_0,
+			layers:  0,
+		},
+		"Vault Clob 797 (non-existent clob pair), 2 layers": {
+			vaultId: vaulttypes.VaultId{
+				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+				Number: 797,
+			},
+			layers:      2,
+			expectedErr: vaulttypes.ErrClobPairNotFound,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			k := tApp.App.VaultKeeper
+			ctx := tApp.InitChain()
+
+			// Set number of layers.
+			params := k.GetParams(ctx)
+			params.Layers = tc.layers
+			err := k.SetParams(ctx, params)
+			require.NoError(t, err)
+
+			// Construct expected order IDs.
+			expectedOrderIds := make([]*clobtypes.OrderId, tc.layers*2)
+			for i := uint32(0); i < tc.layers; i++ {
+				expectedOrderIds[2*i] = &clobtypes.OrderId{
+					SubaccountId: *tc.vaultId.ToSubaccountId(),
+					ClientId:     tApp.App.VaultKeeper.GetVaultClobOrderClientId(ctx, clobtypes.Order_SIDE_SELL, uint8(i)),
+					OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+					ClobPairId:   tc.vaultId.Number,
+				}
+				expectedOrderIds[2*i+1] = &clobtypes.OrderId{
+					SubaccountId: *tc.vaultId.ToSubaccountId(),
+					ClientId:     tApp.App.VaultKeeper.GetVaultClobOrderClientId(ctx, clobtypes.Order_SIDE_BUY, uint8(i)),
+					OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+					ClobPairId:   tc.vaultId.Number,
+				}
+			}
+
+			// Verify order IDs.
+			orderIds, err := k.GetVaultClobOrderIds(ctx, tc.vaultId)
+			if tc.expectedErr != nil {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+				require.Empty(t, orderIds)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, expectedOrderIds, orderIds)
+			}
+		})
+	}
+}
+
 func TestGetVaultClobOrderClientId(t *testing.T) {
 	tests := map[string]struct {
 		/* --- Setup --- */
