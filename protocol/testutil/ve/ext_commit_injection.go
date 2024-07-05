@@ -1,8 +1,6 @@
 package ve_testutils
 
 import (
-	"fmt"
-
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
@@ -33,7 +31,6 @@ func CreateExtendedCommitInfo(commitInfo []cometabci.ExtendedVoteInfo, codec vec
 	}
 
 	bz, err := codec.Encode(extendedCommitInfo)
-	fmt.Println("EXTBZ", bz)
 	if err != nil {
 		return cometabci.ExtendedCommitInfo{}, nil, err
 	}
