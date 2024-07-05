@@ -112,7 +112,7 @@ func (cd ClobDecorator) AnteHandle(
 
 			// HOTFIX: Reject any short-term place orders in a transaction with a non-zero timeout height < good til block
 			if timeoutHeight := GetTimeoutHeight(tx); timeoutHeight > 0 &&
-				int(timeoutHeight) < int(msg.Order.GetGoodTilBlock()) && ctx.IsCheckTx() {
+				timeoutHeight < uint64(msg.Order.GetGoodTilBlock()) && ctx.IsCheckTx() {
 				log.InfoLog(
 					ctx,
 					"Rejected short-term place order with non-zero timeout height < goodTilBlock",
