@@ -8,7 +8,7 @@ import (
 	// "time"
 
 	// errorsmod "cosmossdk.io/errors"
-	// sdkmath "cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	// "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
@@ -20,7 +20,34 @@ import (
 	// banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 )
+
+
+var (
+	accAddrs = []sdk.AccAddress{
+		sdk.AccAddress([]byte("addr1_______________")),
+		sdk.AccAddress([]byte("addr2_______________")),
+		sdk.AccAddress([]byte("addr3_______________")),
+		sdk.AccAddress([]byte("addr4_______________")),
+		sdk.AccAddress([]byte("addr5_______________")),
+	}
+)
+
+type MintTestTransfer struct {
+	// Setup.
+	sDAIAmount           *big.Int
+	sDAIPrice			 *big.Int
+	userAddr			 sdk.AccAddress
+	// Expectations.
+	expectedTDAIAmount	 *big.Int
+	expectedErr			 error
+}
+
+type MintTestCase struct {
+	transfers			 []MintTestTransfer			
+}
 
 func TestDivideAndRoundUp_Success(t *testing.T) {
 	tests := map[string]struct {
@@ -236,6 +263,104 @@ func TestGetTradingDAIFromSDAIAmountAndRoundUp(t *testing.T) {
 				require.NoError(t, err)
 			}
 			require.Equal(t, tc.expectedSDAIAmount, gotSDAIAmount, "SDAI amounts mismatch.")
+		})
+	}
+}
+
+func TestMintTradingDAIToUserAccount(t *testing.T) {
+	// Test Case Definition
+	tests := map[string]MintTestCase{
+		"Example Input.": {
+			transfers: []MintTestTransfer{
+				{
+					sDAIAmount: big.NewInt(0),
+					sDAIPrice: big.NewInt(1),
+					userAddr: accAddrs[0],
+					expectedTDAIAmount: big.NewInt(0),
+					expectedErr: nil,
+				},
+			},
+		},
+	}
+
+	// Test Case Execution
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				return genesis
+			}).Build()
+
+			ctx := tApp.InitChain()
+			k := tApp.App.RatelimitKeeper
+			bankKeeper := tApp.App.BankKeeper
+			accountKeeper := tApp.App.AccountKeeper
+
+
+			// Process each minting transfer
+			for _, transfer := range tc.transfers {
+
+				/* Setup state */
+				k.SetSDAIPrice(ctx, transfer.sDAIPrice)
+				sDAICoins := sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewIntFromBigInt(transfer.sDAIAmount)))
+
+				// Simulate user having received sDAI
+				userMintingErr := bankKeeper.MintCoins(ctx, transfer.userAddr.String(), sDAICoins)
+				require.NoError(t, userMintingErr)
+
+				// Check initial balance
+				initialPoolSDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					accountKeeper.GetModuleAddress(types.PoolAccount),
+					types.SDaiDenom,
+				)
+				initialUserSDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					transfer.userAddr,
+					types.SDaiDenom,
+				)
+				initialUserTDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					transfer.userAddr,
+					types.TradingDAIDenom,
+				)
+
+				// Execute Minting
+				err := k.MintTradingDAIToUserAccount(ctx, transfer.userAddr, transfer.sDAIAmount)
+				
+				// Verify success
+				if transfer.expectedErr != nil {
+					require.ErrorContains(t, err, transfer.expectedErr.Error())
+				} else {
+					require.NoError(t, err)
+				}
+				
+				// Verify state change
+				endingPoolSDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					accountKeeper.GetModuleAddress(types.PoolAccount),
+					types.SDaiDenom,
+				)
+				endingUserSDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					transfer.userAddr,
+					types.SDaiDenom,
+				)
+				endingUserTDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					transfer.userAddr,
+					types.TradingDAIDenom,
+				)
+
+				deltaPoolSDAI := endingPoolSDAIBalance.Sub(initialPoolSDAIBalance)
+				require.Equal(t, transfer.sDAIAmount, deltaPoolSDAI, "Change in pool SDAI balance incorrect.")
+
+				deltaUserSDAI := initialUserSDAIBalance.Sub(endingUserSDAIBalance)
+				require.Equal(t, transfer.sDAIAmount, deltaUserSDAI, "Change in user SDAI balance incorrect.")
+				
+				deltaUserTDAI := endingUserTDAIBalance.Sub(initialUserTDAIBalance)
+				require.Equal(t, transfer.expectedTDAIAmount, deltaUserTDAI, "Change in user TDAI balance incorrect.")
+			}
 		})
 	}
 }
