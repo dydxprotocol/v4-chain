@@ -74,23 +74,23 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 // RefreshVaultClobOrders refreshes orders of a CLOB vault.
 func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (err error) {
 	// Cancel CLOB orders from last block.
-	ordersToCancel, err := k.GetVaultClobOrders(
+	orderIdsToCancel, err := k.GetVaultClobOrderIds(
 		ctx.WithBlockHeight(ctx.BlockHeight()-1),
 		vaultId,
 	)
 	if err != nil {
-		log.ErrorLogWithError(ctx, "Failed to get vault clob orders to cancel", err, "vaultId", vaultId)
+		log.ErrorLogWithError(ctx, "Failed to get vault clob order IDs to cancel", err, "vaultId", vaultId)
 		return err
 	}
 	orderExpirationSeconds := k.GetParams(ctx).OrderExpirationSeconds
-	for _, order := range ordersToCancel {
-		if _, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId); exists {
+	for _, orderId := range orderIdsToCancel {
+		if _, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, *orderId); exists {
 			err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
-				order.OrderId,
+				*orderId,
 				uint32(ctx.BlockTime().Unix())+orderExpirationSeconds,
 			), true)
 			if err != nil {
-				log.ErrorLogWithError(ctx, "Failed to cancel order", err, "order", order, "vaultId", vaultId)
+				log.ErrorLogWithError(ctx, "Failed to cancel order", err, "orderId", orderId, "vaultId", vaultId)
 			}
 			vaultId.IncrCounterWithLabels(
 				metrics.VaultCancelOrder,
@@ -116,10 +116,10 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 			metrics.GetLabelForBoolValue(metrics.Success, err == nil),
 		)
 
-		// Send indexer messages. We expect ordersToCancel and ordersToPlace to have the same length
+		// Send indexer messages. We expect orderIdsToCancel and ordersToPlace to have the same length
 		// and the order to place at each index to be a replacement of the order to cancel at the same index.
-		replacedOrder := ordersToCancel[i]
-		if replacedOrder == nil {
+		replacedOrderId := orderIdsToCancel[i]
+		if replacedOrderId == nil {
 			k.GetIndexerEventManager().AddTxnEvent(
 				ctx,
 				indexerevents.SubtypeStatefulOrder,
@@ -137,7 +137,7 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 				indexerevents.StatefulOrderEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewLongTermOrderReplacementEvent(
-						replacedOrder.OrderId,
+						*replacedOrderId,
 						*order,
 					),
 				),
@@ -192,8 +192,6 @@ func (k Keeper) GetVaultClobOrders(
 		)
 	}
 
-	// Get vault (subaccount 0 of corresponding module account).
-	vault := vaultId.ToSubaccountId()
 	// Calculate leverage = open notional / equity.
 	equity, err := k.GetVaultEquity(ctx, vaultId)
 	if err != nil {
@@ -267,6 +265,7 @@ func (k Keeper) GetVaultClobOrders(
 	constructOrder := func(
 		side clobtypes.Order_Side,
 		layer uint32,
+		orderId *clobtypes.OrderId,
 	) *clobtypes.Order {
 		// Ask: leverage_i = leverage - i * order_size_pct
 		// Bid: leverage_i = leverage + i * order_size_pct
@@ -332,12 +331,7 @@ func (k Keeper) GetVaultClobOrders(
 		)
 
 		return &clobtypes.Order{
-			OrderId: clobtypes.OrderId{
-				SubaccountId: *vault,
-				ClientId:     k.GetVaultClobOrderClientId(ctx, side, uint8(layer)),
-				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
-				ClobPairId:   clobPair.Id,
-			},
+			OrderId:      *orderId,
 			Side:         side,
 			Quantums:     orderSize.Uint64(), // Validated to be a uint64 above.
 			Subticks:     subticksRounded,
@@ -345,16 +339,61 @@ func (k Keeper) GetVaultClobOrders(
 		}
 	}
 
+	orderIds, err := k.GetVaultClobOrderIds(ctx, vaultId)
+	if err != nil {
+		return orders, err
+	}
 	orders = make([]*clobtypes.Order, 2*params.Layers)
 	for i := uint32(0); i < params.Layers; i++ {
 		// Construct ask at this layer.
-		orders[2*i] = constructOrder(clobtypes.Order_SIDE_SELL, i)
+		orders[2*i] = constructOrder(clobtypes.Order_SIDE_SELL, i, orderIds[2*i])
 
 		// Construct bid at this layer.
-		orders[2*i+1] = constructOrder(clobtypes.Order_SIDE_BUY, i)
+		orders[2*i+1] = constructOrder(clobtypes.Order_SIDE_BUY, i, orderIds[2*i+1])
 	}
 
 	return orders, nil
+}
+
+// GetVaultClobOrderIds returns a list of order IDs for a given CLOB vault.
+// Let n be number of layers, then the function returns order IDs
+// [a_0, b_0, a_1, b_1, ..., a_{n-1}, b_{n-1}] where a_i and b_i are respectively
+// ask and bid order IDs at the i-th layer.
+func (k Keeper) GetVaultClobOrderIds(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+) (orderIds []*clobtypes.OrderId, err error) {
+	clobPair, exists := k.clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(vaultId.Number))
+	if !exists {
+		return orderIds, errorsmod.Wrap(
+			types.ErrClobPairNotFound,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
+	}
+	vault := vaultId.ToSubaccountId()
+	constructOrderId := func(
+		side clobtypes.Order_Side,
+		layer uint32,
+	) *clobtypes.OrderId {
+		return &clobtypes.OrderId{
+			SubaccountId: *vault,
+			ClientId:     k.GetVaultClobOrderClientId(ctx, side, uint8(layer)),
+			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+			ClobPairId:   clobPair.Id,
+		}
+	}
+
+	layers := k.GetParams(ctx).Layers
+	orderIds = make([]*clobtypes.OrderId, 2*layers)
+	for i := uint32(0); i < layers; i++ {
+		// Construct ask order ID at this layer.
+		orderIds[2*i] = constructOrderId(clobtypes.Order_SIDE_SELL, i)
+
+		// Construct bid order ID at this layer.
+		orderIds[2*i+1] = constructOrderId(clobtypes.Order_SIDE_BUY, i)
+	}
+
+	return orderIds, nil
 }
 
 // GetVaultClobOrderClientId returns the client ID for a CLOB order where
