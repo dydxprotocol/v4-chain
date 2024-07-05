@@ -3,7 +3,6 @@ package keeper
 import (
 	"fmt"
 	"sync/atomic"
-	"time"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -23,7 +22,6 @@ type (
 		indexPriceCache                *pricefeedtypes.MarketToExchangePrices
 		timeProvider                   libtime.TimeProvider
 		indexerEventManager            indexer_manager.IndexerEventManager
-		marketToCreatedAt              map[uint32]time.Time
 		authorities                    map[string]struct{}
 		currencyPairIDCache            *CurrencyPairIDCache
 		currencyPairIdCacheInitialized *atomic.Bool
@@ -48,7 +46,6 @@ func NewKeeper(
 		indexPriceCache:                indexPriceCache,
 		timeProvider:                   timeProvider,
 		indexerEventManager:            indexerEventManager,
-		marketToCreatedAt:              map[uint32]time.Time{},
 		authorities:                    lib.UniqueSliceToSet(authorities),
 		currencyPairIDCache:            NewCurrencyPairIDCache(),
 		currencyPairIdCacheInitialized: &atomic.Bool{}, // Initialized to false
