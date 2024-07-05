@@ -115,7 +115,7 @@ func (cd ClobDecorator) AnteHandle(
 				int(timeoutHeight) < int(msg.Order.GetGoodTilBlock()) && ctx.IsCheckTx() {
 				log.InfoLog(
 					ctx,
-					"Rejected short-term place order with timeout height < goodTilBlock",
+					"Rejected short-term place order with non-zero timeout height < goodTilBlock",
 					timeoutHeightLogKey,
 					timeoutHeight,
 				)
