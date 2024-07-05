@@ -14,6 +14,8 @@ import (
 
 var (
 	timeoutHeightLogKey = "TimeoutHeight"
+	orderIdLogKey       = "OrderId"
+	goodTilBlockLogKey  = "GoodTilBlock"
 )
 
 // ClobDecorator is an AnteDecorator which is responsible for:
@@ -118,6 +120,10 @@ func (cd ClobDecorator) AnteHandle(
 					"Rejected short-term place order with non-zero timeout height < goodTilBlock",
 					timeoutHeightLogKey,
 					timeoutHeight,
+					orderIdLogKey,
+					msg.Order.OrderId,
+					goodTilBlockLogKey,
+					msg.Order.GetGoodTilBlock(),
 				)
 				return ctx, errorsmod.Wrap(
 					sdkerrors.ErrInvalidRequest,
