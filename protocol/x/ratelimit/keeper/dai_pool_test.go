@@ -35,7 +35,7 @@ var (
 	}
 )
 
-type MintTestTransfer struct {
+type PoolTestTransfer struct {
 	// Setup.
 	sDAIAmount           *big.Int
 	sDAIPrice			 *big.Int
@@ -45,8 +45,8 @@ type MintTestTransfer struct {
 	expectedErr			 error
 }
 
-type MintTestCase struct {
-	transfers			 []MintTestTransfer			
+type PoolTestCase struct {
+	transfers			 []PoolTestTransfer			
 }
 
 func TestDivideAndRoundUp_Success(t *testing.T) {
@@ -269,9 +269,9 @@ func TestGetTradingDAIFromSDAIAmountAndRoundUp(t *testing.T) {
 
 func TestMintTradingDAIToUserAccount(t *testing.T) {
 	// Test Case Definition
-	tests := map[string]MintTestCase{
+	tests := map[string]PoolTestCase{
 		"Example Input.": {
-			transfers: []MintTestTransfer{
+			transfers: []PoolTestTransfer{
 				{
 					sDAIAmount: big.NewInt(0),
 					sDAIPrice: big.NewInt(1),
@@ -310,12 +310,16 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 				sendingErr := bankKeeper.SendCoinsFromModuleToAccount(ctx, types.PoolAccount, transfer.userAddr, sDAICoins)
 				require.NoError(t, sendingErr)
 
-
 				// Check initial balance
 				initialPoolSDAIBalance := bankKeeper.GetBalance(
 					ctx,
 					accountKeeper.GetModuleAddress(types.PoolAccount),
 					types.SDaiDenom,
+				).Amount.BigInt()
+				initialPoolTDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					accountKeeper.GetModuleAddress(types.PoolAccount),
+					types.TradingDAIDenom,
 				).Amount.BigInt()
 				initialUserSDAIBalance := bankKeeper.GetBalance(
 					ctx,
@@ -344,6 +348,11 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 					accountKeeper.GetModuleAddress(types.PoolAccount),
 					types.SDaiDenom,
 				).Amount.BigInt()
+				endingPoolTDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					accountKeeper.GetModuleAddress(types.PoolAccount),
+					types.TradingDAIDenom,
+				).Amount.BigInt()
 				endingUserSDAIBalance := bankKeeper.GetBalance(
 					ctx,
 					transfer.userAddr,
@@ -358,6 +367,9 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 				deltaPoolSDAI := new(big.Int).Sub(endingPoolSDAIBalance, initialPoolSDAIBalance)
 				require.Equal(t, transfer.sDAIAmount, deltaPoolSDAI, "Change in pool SDAI balance incorrect.")
 
+				deltaPoolTDAI := new(big.Int).Sub(endingPoolTDAIBalance, initialPoolTDAIBalance)
+				require.Equal(t, big.NewInt(0), deltaPoolTDAI, "Change in pool TDAI balance incorrect. Should always be 0 when minting.")
+
 				deltaUserSDAI := new(big.Int).Sub(initialUserSDAIBalance, endingUserSDAIBalance)
 				require.Equal(t, transfer.sDAIAmount, deltaUserSDAI, "Change in user SDAI balance incorrect.")
 				
@@ -367,3 +379,121 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 		})
 	}
 }
+
+
+func TestWithdrawSDAIFromTradingDAI(t *testing.T) {
+	// Test Case Definition
+	tests := map[string]PoolTestCase{
+		"Example Input.": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount: big.NewInt(0),
+					sDAIPrice: big.NewInt(1),
+					userAddr: accAddrs[0],
+					expectedTDAIAmount: big.NewInt(0),
+					expectedErr: nil,
+				},
+			},
+		},
+	}
+
+	// Test Case Execution
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				return genesis
+			}).Build()
+
+			ctx := tApp.InitChain()
+			k := tApp.App.RatelimitKeeper
+			bankKeeper := tApp.App.BankKeeper
+			accountKeeper := tApp.App.AccountKeeper
+
+
+			// Process each minting transfer
+			for _, transfer := range tc.transfers {
+
+				/* Setup state */
+				k.SetSDAIPrice(ctx, transfer.sDAIPrice)
+				tradingDAIAmount, conversionErr := k.GetTradingDAIFromSDAIAmountAndRoundUp(ctx, transfer.sDAIAmount)
+				require.NoError(t, conversionErr)
+				tDAICoins := sdk.NewCoins(sdk.NewCoin(types.TradingDAIDenom, sdkmath.NewIntFromBigInt(tradingDAIAmount)))
+
+				// Simulate user having appropriate amount of tDAI in their account
+				// TODO: Make sure that we also test cases, where the user does not have enought tDAI to mint the given amount of sDAI
+				mintingErr := bankKeeper.MintCoins(ctx, types.PoolAccount, tDAICoins)
+				require.NoError(t, mintingErr)
+				sendingErr := bankKeeper.SendCoinsFromModuleToAccount(ctx, types.PoolAccount, transfer.userAddr, tDAICoins)
+				require.NoError(t, sendingErr)
+
+				// Check initial balance
+				initialPoolSDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					accountKeeper.GetModuleAddress(types.PoolAccount),
+					types.SDaiDenom,
+				).Amount.BigInt()
+				initialPoolTDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					accountKeeper.GetModuleAddress(types.PoolAccount),
+					types.TradingDAIDenom,
+				).Amount.BigInt()
+				initialUserSDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					transfer.userAddr,
+					types.SDaiDenom,
+				).Amount.BigInt()
+				initialUserTDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					transfer.userAddr,
+					types.TradingDAIDenom,
+				).Amount.BigInt()
+
+				// Execute Minting
+				err := k.WithdrawSDAIFromTradingDAI(ctx, transfer.userAddr, transfer.sDAIAmount)
+				
+				// Verify success
+				if transfer.expectedErr != nil {
+					require.ErrorContains(t, err, transfer.expectedErr.Error())
+				} else {
+					require.NoError(t, err)
+				}
+				
+				// Verify state change
+				endingPoolSDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					accountKeeper.GetModuleAddress(types.PoolAccount),
+					types.SDaiDenom,
+				).Amount.BigInt()
+				endingPoolTDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					accountKeeper.GetModuleAddress(types.PoolAccount),
+					types.TradingDAIDenom,
+				).Amount.BigInt()
+				endingUserSDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					transfer.userAddr,
+					types.SDaiDenom,
+				).Amount.BigInt()
+				endingUserTDAIBalance := bankKeeper.GetBalance(
+					ctx,
+					transfer.userAddr,
+					types.TradingDAIDenom,
+				).Amount.BigInt()
+
+				deltaPoolSDAI := new(big.Int).Sub(initialPoolSDAIBalance, endingPoolSDAIBalance)
+				require.Equal(t, transfer.sDAIAmount, deltaPoolSDAI, "Change in pool SDAI balance incorrect.")
+
+				deltaPoolTDAI := new(big.Int).Sub(endingPoolTDAIBalance, initialPoolTDAIBalance)
+				require.Equal(t, big.NewInt(0), deltaPoolTDAI, "Change in pool TDAI balance incorrect. Should always be 0 when minting.")
+
+				deltaUserSDAI := new(big.Int).Sub(endingUserSDAIBalance, initialUserSDAIBalance)
+				require.Equal(t, transfer.sDAIAmount, deltaUserSDAI, "Change in user SDAI balance incorrect.")
+				
+				deltaUserTDAI := new(big.Int).Sub(initialUserTDAIBalance, endingUserTDAIBalance)
+				require.Equal(t, transfer.expectedTDAIAmount, deltaUserTDAI, "Change in user TDAI balance incorrect.")
+			}
+		})
+	}
+}
+
