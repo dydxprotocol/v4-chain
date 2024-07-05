@@ -110,7 +110,7 @@ func (cd ClobDecorator) AnteHandle(
 				return next(ctx, tx, simulate)
 			}
 
-			// HOTFIX: Ignore any short-term place orders in a transaction with a timeout height < good til block
+			// HOTFIX: Reject any short-term place orders in a transaction with a non-zero timeout height < good til block
 			if timeoutHeight := GetTimeoutHeight(tx); timeoutHeight > 0 &&
 				int(timeoutHeight) < int(msg.Order.GetGoodTilBlock()) && ctx.IsCheckTx() {
 				log.InfoLog(
