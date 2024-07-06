@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
@@ -114,4 +116,36 @@ func (k Keeper) GetAllMarketParamPrices(ctx sdk.Context) ([]types.MarketParamPri
 		marketParamPrices[i].Price = price
 	}
 	return marketParamPrices, nil
+}
+
+// GetNextMarketID returns the next market id to be used from the module store
+func (k Keeper) GetNextMarketID(ctx sdk.Context) uint32 {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get([]byte(types.NextMarketIDKey))
+	var result gogotypes.UInt32Value
+	k.cdc.MustUnmarshal(b, &result)
+	return result.Value
+}
+
+// SetNextMarketID sets the next market id to be used
+func (k Keeper) SetNextMarketID(ctx sdk.Context, nextID uint32) {
+	store := ctx.KVStore(k.storeKey)
+	value := gogotypes.UInt32Value{Value: nextID}
+	store.Set([]byte(types.NextMarketIDKey), k.cdc.MustMarshal(&value))
+}
+
+// AcquireNextMarketID returns the next market id to be used and increments the next market id
+func (k Keeper) AcquireNextMarketID(ctx sdk.Context) uint32 {
+	nextID := k.GetNextMarketID(ctx)
+	// if market id already exists, increment until we find one that doesn't
+	for {
+		_, exists := k.GetMarketParam(ctx, nextID)
+		if !exists {
+			break
+		}
+		nextID++
+	}
+
+	k.SetNextMarketID(ctx, nextID+1)
+	return nextID
 }
