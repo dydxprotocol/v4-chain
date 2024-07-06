@@ -3,7 +3,6 @@ package clob_test
 import (
 	"testing"
 
-	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
@@ -671,46 +670,6 @@ func TestBatchCancelOffchainUpdates(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 
-	batchCancel := clobtypes.MsgBatchCancel{
-		SubaccountId: PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20.Order.OrderId.SubaccountId,
-		ShortTermCancels: []clobtypes.OrderBatch{
-			{
-				ClobPairId: 0,
-				ClientIds:  []uint32{0, 3},
-			},
-			{
-				ClobPairId: 1,
-				ClientIds:  []uint32{1, 2},
-			},
-		},
-		GoodTilBlock: 25,
-	}
-
-	CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20 := testapp.MustMakeCheckTx(
-		ctx,
-		tApp.App,
-		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: constants.Alice_Num1.Owner,
-		},
-		&PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20,
-	)
-	CheckTx_PlaceOrder_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20 := testapp.MustMakeCheckTx(
-		ctx,
-		tApp.App,
-		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: constants.Alice_Num1.Owner,
-		},
-		&PlaceOrder_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
-	)
-	CheckTx_BatchCancel := testapp.MustMakeCheckTx(
-		ctx,
-		tApp.App,
-		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: constants.Alice_Num1.Owner,
-		},
-		&batchCancel,
-	)
-
 	tests := map[string]struct {
 		firstBlockOrders      []clobtypes.MsgPlaceOrder
 		firstBlockBatchCancel []clobtypes.MsgBatchCancel
@@ -742,33 +701,21 @@ func TestBatchCancelOffchainUpdates(t *testing.T) {
 				off_chain_updates.MustCreateOrderPlaceMessage(
 					ctx,
 					PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20.Order,
-				).AddHeader(msgsender.MessageHeader{
-					Key:   msgsender.TransactionHashHeaderKey,
-					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20.Tx),
-				}),
+				),
 				off_chain_updates.MustCreateOrderUpdateMessage(
 					ctx,
 					PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20.Order.OrderId,
 					0,
-				).AddHeader(msgsender.MessageHeader{
-					Key:   msgsender.TransactionHashHeaderKey,
-					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20.Tx),
-				}),
+				),
 				off_chain_updates.MustCreateOrderPlaceMessage(
 					ctx,
 					PlaceOrder_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20.Order,
-				).AddHeader(msgsender.MessageHeader{
-					Key:   msgsender.TransactionHashHeaderKey,
-					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20.Tx),
-				}),
+				),
 				off_chain_updates.MustCreateOrderUpdateMessage(
 					ctx,
 					PlaceOrder_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20.Order.OrderId,
 					0,
-				).AddHeader(msgsender.MessageHeader{
-					Key:   msgsender.TransactionHashHeaderKey,
-					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20.Tx),
-				}),
+				),
 				// 4 removals from the batch remove operation
 				off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 					ctx,
@@ -781,10 +728,7 @@ func TestBatchCancelOffchainUpdates(t *testing.T) {
 					},
 					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-				).AddHeader(msgsender.MessageHeader{
-					Key:   msgsender.TransactionHashHeaderKey,
-					Value: tmhash.Sum(CheckTx_BatchCancel.Tx),
-				}),
+				),
 				off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 					ctx,
 					// Order id for the second cancel in the batch.
@@ -796,10 +740,7 @@ func TestBatchCancelOffchainUpdates(t *testing.T) {
 					},
 					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-				).AddHeader(msgsender.MessageHeader{
-					Key:   msgsender.TransactionHashHeaderKey,
-					Value: tmhash.Sum(CheckTx_BatchCancel.Tx),
-				}),
+				),
 				off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 					ctx,
 					// Order id for the third cancel in the batch.
@@ -811,10 +752,7 @@ func TestBatchCancelOffchainUpdates(t *testing.T) {
 					},
 					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-				).AddHeader(msgsender.MessageHeader{
-					Key:   msgsender.TransactionHashHeaderKey,
-					Value: tmhash.Sum(CheckTx_BatchCancel.Tx),
-				}),
+				),
 				off_chain_updates.MustCreateOrderRemoveMessageWithReason(
 					ctx,
 					// Order id for the fourth cancel in the batch.
@@ -826,10 +764,7 @@ func TestBatchCancelOffchainUpdates(t *testing.T) {
 					},
 					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-				).AddHeader(msgsender.MessageHeader{
-					Key:   msgsender.TransactionHashHeaderKey,
-					Value: tmhash.Sum(CheckTx_BatchCancel.Tx),
-				}),
+				),
 			},
 		},
 	}

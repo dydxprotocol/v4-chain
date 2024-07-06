@@ -25,9 +25,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	feetypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
@@ -2233,72 +2231,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			)
 		})
 	}
-}
-
-func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
-	indexerEventManager := &mocks.IndexerEventManager{}
-	for _, message := range constants.TestOffchainMessages {
-		indexerEventManager.On("SendOffchainData", message).Once().Return()
-	}
-
-	memClob := &mocks.MemClob{}
-	memClob.On("SetClobKeeper", mock.Anything).Return()
-
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
-	ctx := ks.Ctx.WithTxBytes(constants.TestTxBytes)
-	// CheckTx mode set correctly
-	ctx = ctx.WithIsCheckTx(true)
-	prices.InitGenesis(ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
-	perpetuals.InitGenesis(ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
-
-	memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
-	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
-	// the indexer event manager to expect these events.
-	indexerEventManager.On("AddTxnEvent",
-		ctx,
-		indexerevents.SubtypePerpetualMarket,
-		indexerevents.PerpetualMarketEventVersion,
-		indexer_manager.GetBytes(
-			indexerevents.NewPerpetualMarketCreateEvent(
-				0,
-				0,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-				constants.ClobPair_Btc.Status,
-				constants.ClobPair_Btc.QuantumConversionExponent,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-				constants.ClobPair_Btc.SubticksPerTick,
-				constants.ClobPair_Btc.StepBaseQuantums,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
-			),
-		),
-	).Once().Return()
-	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
-		ctx,
-		constants.ClobPair_Btc.Id,
-		clobtest.MustPerpetualId(constants.ClobPair_Btc),
-		satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-		constants.ClobPair_Btc.QuantumConversionExponent,
-		constants.ClobPair_Btc.SubticksPerTick,
-		constants.ClobPair_Btc.Status,
-	)
-	require.NoError(t, err)
-
-	order := constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000
-	memClob.On("PlacePerpetualLiquidation", ctx, order).Return(
-		satypes.BaseQuantums(100_000_000),
-		types.Success,
-		constants.TestOffchainUpdates,
-		nil,
-	)
-
-	_, _, err = ks.ClobKeeper.PlacePerpetualLiquidation(ctx, order)
-	require.NoError(t, err)
-
-	indexerEventManager.AssertNumberOfCalls(t, "SendOffchainData", len(constants.TestOffchainMessages))
-	indexerEventManager.AssertExpectations(t)
-	memClob.AssertExpectations(t)
 }
 
 func TestIsLiquidatable(t *testing.T) {

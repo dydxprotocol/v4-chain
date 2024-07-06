@@ -705,11 +705,17 @@ func TestUpdateClobPair_FinalSettlement(t *testing.T) {
 	ppme := ks.ClobKeeper.GetProcessProposerMatchesEvents(ks.Ctx)
 	require.Equal(
 		t,
-		[]types.OrderId{
-			constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
-			constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+		[]types.OrderRemoval{
+			{
+				OrderId:       constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
+				RemovalReason: types.OrderRemoval_REMOVAL_REASON_FINAL_SETTLEMENT,
+			},
+			{
+				OrderId:       constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+				RemovalReason: types.OrderRemoval_REMOVAL_REASON_FINAL_SETTLEMENT,
+			},
 		},
-		ppme.RemovedStatefulOrderIds,
+		ppme.RemovedStatefulOrders,
 	)
 
 	// Verify UntriggeredConditionalOrders is cleared.

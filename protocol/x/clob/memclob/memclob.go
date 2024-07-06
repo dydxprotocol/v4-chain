@@ -103,7 +103,7 @@ func (m *MemClobPriceTimePriority) SetGenerateOrderbookUpdates(generateOrderbook
 func (m *MemClobPriceTimePriority) CancelOrder(
 	ctx sdk.Context,
 	msgCancelOrder *types.MsgCancelOrder,
-) (offchainUpdates *types.OffchainUpdates, err error) {
+) error {
 	lib.AssertCheckTxMode(ctx)
 
 	orderbook := m.mustGetOrderbook(types.ClobPairId(msgCancelOrder.OrderId.GetClobPairId()))
@@ -119,7 +119,7 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 	// If the existing short-term cancel has the same or greater `goodTilBlock`, then there is
 	// nothing for us to do. Return an error.
 	if cancelAlreadyExists && oldCancellationGoodTilBlock >= goodTilBlock {
-		return nil, types.ErrMemClobCancelAlreadyExists
+		return types.ErrMemClobCancelAlreadyExists
 	}
 
 	// If there exists a resting order on the book with a `GoodTilBlock` not-greater-than that of
@@ -127,7 +127,13 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 	// TODO(DEC-824): Perform correct cancellation validation of stateful orders.
 	if levelOrder, orderExists := orderbook.orderIdToLevelOrder[orderIdToCancel]; orderExists &&
 		goodTilBlock >= levelOrder.Value.Order.GetGoodTilBlock() {
-		m.mustRemoveOrder(ctx, orderIdToCancel)
+
+		m.mustRemoveOrder(
+			ctx,
+			orderIdToCancel,
+			indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
+			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+		)
 
 		telemetry.IncrCounter(1, types.ModuleName, metrics.CancelShortTermOrder, metrics.RemovedFromOrderBook)
 	}
@@ -140,19 +146,7 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 	// Add the new order cancelation.
 	orderbook.addShortTermCancel(orderIdToCancel, goodTilBlock)
 
-	offchainUpdates = types.NewOffchainUpdates()
-	if m.generateOffchainUpdates {
-		if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-			ctx,
-			orderIdToCancel,
-			indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
-			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-		); success {
-			offchainUpdates.AddRemoveMessage(orderIdToCancel, message)
-		}
-	}
-
-	return offchainUpdates, nil
+	return nil
 }
 
 // MaybeCreateOrderbook is used for updating memclob internal data structures to mark an orderbook as created.
@@ -268,9 +262,7 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 	newMakerFills []types.MakerFill,
 	matchedOrderHashToOrder map[types.OrderHash]types.MatchableOrder,
 	matchedMakerOrderIdToOrder map[types.OrderId]types.Order,
-) (offchainUpdates *types.OffchainUpdates) {
-	offchainUpdates = types.NewOffchainUpdates()
-
+) {
 	// For each order, update `orderHashToMatchableOrder` and `orderIdToOrder`.
 	for _, matchedOrder := range matchedOrderHashToOrder {
 		// If this is not a liquidation, update `orderIdToOrder`.
@@ -341,13 +333,6 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 			))
 		}
 
-		// Update the orderbook state to reflect the maker order was matched.
-		matchOffchainUpdates := m.mustUpdateOrderbookStateWithMatchedMakerOrder(
-			ctx,
-			matchedMakerOrder,
-		)
-		offchainUpdates.Append(matchOffchainUpdates)
-
 		// Update the total matched quantums for this matching loop stored in `subaccountTotalMatchedQuantums`.
 		for _, order := range []types.MatchableOrder{
 			&matchedMakerOrder,
@@ -391,19 +376,12 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 
 	// Add the new matches to the operations queue.
 	internalOperation := m.operationsToPropose.MustAddMatchToOperationsQueue(takerOrder, makerFillWithOrders)
-	// If orderbook updates are on, send an orderbook update with the fill to grpc streams.
-	if m.generateOrderbookUpdates {
-		// Collect all maker orders.
-		makerOrders := lib.MapSlice(
-			makerFillWithOrders,
-			func(mfwo types.MakerFillWithOrder) types.Order {
-				return mfwo.Order
-			},
-		)
-		clobMatch := internalOperation.GetMatch()
-		orderbookMatchFill := m.GenerateStreamOrderbookFill(ctx, *clobMatch, takerOrder, makerOrders)
-		m.clobKeeper.SendOrderbookFillUpdates(ctx, []types.StreamOrderbookFill{orderbookMatchFill})
-	}
+	m.mustUpdateOrderbookStateWithMatches(
+		ctx,
+		internalOperation.GetMatch(),
+		takerOrder,
+		makerFillWithOrders,
+	)
 
 	// Build a slice of all subaccounts which had matches this matching loop, and sort them for determinism.
 	allSubaccounts := lib.GetSortedKeys[satypes.SortedSubaccountIds](subaccountTotalMatchedQuantums)
@@ -412,17 +390,13 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 	// open reduce-only orders for the subaccount. This occurs when the sign of the position size before matching
 	// differs from the sign of the position size after matching.
 	for _, subaccountId := range allSubaccounts {
-		cancelledOffchainUpdates := m.maybeCancelReduceOnlyOrders(
+		m.maybeCancelReduceOnlyOrders(
 			ctx,
 			subaccountId,
 			takerOrder.GetClobPairId(),
 			subaccountTotalMatchedQuantums[subaccountId],
 		)
-
-		offchainUpdates.Append(cancelledOffchainUpdates)
 	}
-
-	return offchainUpdates
 }
 
 // GetOperationsRaw fetches the operations to propose in the next block in raw format
@@ -459,7 +433,6 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 ) (
 	orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 	orderStatus types.OrderStatus,
-	offchainUpdates *types.OffchainUpdates,
 	err error,
 ) {
 	lib.AssertCheckTxMode(ctx)
@@ -487,42 +460,24 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		}
 	}()
 
-	offchainUpdates = types.NewOffchainUpdates()
-
 	// Validate the order and return an error if any validation fails.
 	if err := m.validateNewOrder(ctx, order); err != nil {
-		return 0, 0, offchainUpdates, err
+		return 0, 0, err
 	}
 
-	if m.generateOffchainUpdates {
-		// Send an order place message.
-		// For replacement orders, if the price of the existing order is different from the new order,
-		// create an order removal message first so we can remove the original price level from the orderbook.
-		// TODO (CT-884): send OrderReplaceV1 message for replacement orders and add order-replace-handler to Vulcan
-		orderId := order.OrderId
-		if existingOrder, found := orderbook.getOrder(orderId); found {
-			if order.Subticks != existingOrder.Subticks {
-				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-					ctx,
-					orderId,
-					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
-					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-				); success {
-					offchainUpdates.AddRemoveMessage(orderId, message)
-				}
-			}
-		}
-		if message, success := off_chain_updates.CreateOrderPlaceMessage(
-			ctx,
-			order,
-		); success {
-			offchainUpdates.AddPlaceMessage(order.OrderId, message)
-		}
-	}
+	m.removeOrderIfExists(
+		ctx,
+		order.OrderId,
+		indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
+		ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+	)
+	m.emitOrderPlacementEvent(
+		ctx,
+		order,
+	)
 
 	// Attempt to match the order against the orderbook.
-	takerOrderStatus, takerOffchainUpdates, _, err := m.matchOrder(ctx, &order)
-	offchainUpdates.Append(takerOffchainUpdates)
+	takerOrderStatus, _, err := m.matchOrder(ctx, &order)
 
 	if err != nil {
 		if order.IsStatefulOrder() {
@@ -542,21 +497,14 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			}
 		}
 
-		if m.generateOffchainUpdates {
-			// Send an off-chain update message indicating the order should be removed from the orderbook
-			// on the Indexer.
-			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				ctx,
-				order.OrderId,
-				takerOrderStatus.OrderStatus,
-				err,
-				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-			); success {
-				offchainUpdates.AddRemoveMessage(order.OrderId, message)
-			}
-		}
-
-		return 0, 0, offchainUpdates, err
+		m.emitOrderRemovalEventWithOrderStatus(
+			ctx,
+			order.OrderId,
+			orderStatus,
+			err,
+			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+		)
+		return 0, 0, err
 	}
 
 	remainingSize := takerOrderStatus.RemainingQuantums
@@ -565,17 +513,13 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	// If the status of the taker order is not successful, do not attempt to add the order to the orderbook.
 	if !takerOrderStatus.OrderStatus.IsSuccess() {
 		if m.generateOffchainUpdates {
-			// Send an off-chain update message indicating the order should be removed from the orderbook
-			// on the Indexer.
-			if message, success := off_chain_updates.CreateOrderRemoveMessage(
+			m.emitOrderRemovalEventWithOrderStatus(
 				ctx,
 				order.OrderId,
 				takerOrderStatus.OrderStatus,
 				nil,
 				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-			); success {
-				offchainUpdates.AddRemoveMessage(order.OrderId, message)
-			}
+			)
 		}
 		// If stateful taker order fails collateralization checks while matching, add Order Removal
 		// to operations queue to forcefully remove the order from state.
@@ -587,7 +531,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				)
 			}
 		}
-		return orderSizeOptimisticallyFilledFromMatchingQuantums, takerOrderStatus.OrderStatus, offchainUpdates, nil
+		return orderSizeOptimisticallyFilledFromMatchingQuantums, takerOrderStatus.OrderStatus, nil
 	}
 
 	// If the order has no remaining size, we do not have to add the order to the orderbook and we can return early.
@@ -596,34 +540,30 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		// off-chain message with the total filled size of the order equal to the size of the order.
 		// This is needed to account for the case where an order was partially matched, rewound, then was fully matched
 		// during uncrossing.
-		if m.generateOffchainUpdates {
-			if message, success := off_chain_updates.CreateOrderUpdateMessage(
-				ctx,
-				order.OrderId,
-				order.GetBaseQuantums(),
-			); success {
-				offchainUpdates.AddUpdateMessage(order.OrderId, message)
-			}
-		}
-		return orderSizeOptimisticallyFilledFromMatchingQuantums, takerOrderStatus.OrderStatus, offchainUpdates, nil
+		m.emitOrderUpdateEvent(
+			ctx,
+			order.OrderId,
+			order.GetBaseQuantums(),
+		)
+		m.emitOrderRemovalEvent(
+			ctx,
+			order.OrderId,
+			indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+		)
+		return orderSizeOptimisticallyFilledFromMatchingQuantums, takerOrderStatus.OrderStatus, nil
 	}
 
 	// If this is an IOC order, cancel the remaining size since IOC orders cannot be maker orders.
 	if order.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
 		orderStatus := types.ImmediateOrCancelWouldRestOnBook
-		if m.generateOffchainUpdates {
-			// Send an off-chain update message indicating the order should be removed from the orderbook
-			// on the Indexer.
-			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				ctx,
-				order.OrderId,
-				orderStatus,
-				nil,
-				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-			); success {
-				offchainUpdates.AddRemoveMessage(order.OrderId, message)
-			}
-		}
+		m.emitOrderRemovalEventWithOrderStatus(
+			ctx,
+			order.OrderId,
+			orderStatus,
+			nil,
+			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+		)
 
 		// long-term orders cannot use IOC, so we know this stateful order
 		// is conditional. Remove the conditional order.
@@ -633,7 +573,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK,
 			)
 		}
-		return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, nil
+		return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, nil
 	}
 
 	// If this is a Short-Term order and it's not in the operations queue, add the TX bytes to the
@@ -651,16 +591,11 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 
 	// If the taker order is added to the orderbook successfully, send an off-chain message with
 	// the total filled size of the order (size of order - remaining size).
-	if m.generateOffchainUpdates {
-		if message, success := off_chain_updates.CreateOrderUpdateMessage(
-			ctx,
-			order.OrderId,
-			order.GetBaseQuantums()-remainingSize,
-		); success {
-			offchainUpdates.AddUpdateMessage(order.OrderId, message)
-		}
-	}
-
+	m.emitOrderUpdateEvent(
+		ctx,
+		order.OrderId,
+		order.GetBaseQuantums()-remainingSize,
+	)
 	// TODO(DEC-1347): Ensure emitted stats have tags for which ABCI callback was the caller.
 	telemetry.IncrCounterWithLabels(
 		[]string{types.ModuleName, metrics.PlaceOrder, metrics.AddedToOrderBook},
@@ -668,7 +603,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		order.GetOrderLabels(),
 	)
 
-	return orderSizeOptimisticallyFilledFromMatchingQuantums, types.Success, offchainUpdates, nil
+	return orderSizeOptimisticallyFilledFromMatchingQuantums, types.Success, nil
 }
 
 // PlacePerpetualLiquidation matches an IOC liquidation order against the orderbook. Specifically,
@@ -685,21 +620,19 @@ func (m *MemClobPriceTimePriority) PlacePerpetualLiquidation(
 ) (
 	orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 	orderStatus types.OrderStatus,
-	offchainUpdates *types.OffchainUpdates,
 	err error,
 ) {
 	lib.AssertCheckTxMode(ctx)
 
 	// Attempt to match the liquidation order against the orderbook.
 	// TODO(DEC-1157): Update liquidations flow to send off-chain indexer messages.
-	liquidationOrderStatus, offchainUpdates, _, err := m.matchOrder(ctx, &liquidationOrder)
+	liquidationOrderStatus, _, err := m.matchOrder(ctx, &liquidationOrder)
 	if err != nil {
-		return 0, 0, nil, err
+		return 0, 0, err
 	}
 
 	return liquidationOrderStatus.OrderOptimisticallyFilledQuantums,
 		liquidationOrderStatus.OrderStatus,
-		offchainUpdates,
 		err
 }
 
@@ -747,12 +680,10 @@ func (m *MemClobPriceTimePriority) matchOrder(
 	order types.MatchableOrder,
 ) (
 	orderStatus types.TakerOrderStatus,
-	offchainUpdates *types.OffchainUpdates,
 	makerOrdersToRemove []OrderWithRemovalReason,
 	err error,
 ) {
 	orderbook := m.mustGetOrderbook(order.GetClobPairId())
-	offchainUpdates = types.NewOffchainUpdates()
 
 	// Branch the state. State will be wrote to only if matching does not return an error.
 	branchedContext, writeCache := ctx.CacheContext()
@@ -780,26 +711,17 @@ func (m *MemClobPriceTimePriority) matchOrder(
 	for _, makerOrderWithRemovalReason := range makerOrdersToRemove {
 		// TODO(DEC-847): Update logic to properly remove long-term orders.
 		makerOrderId := makerOrderWithRemovalReason.Order.OrderId
-		// TODO(CLOB-669): Move logic outside of `memclob.go` by returning a slice of removed orders.
-		// If the order is a replacement order, a message was already added above the place message.
-		if m.generateOffchainUpdates && (order.IsLiquidation() || makerOrderId != order.MustGetOrder().OrderId) {
-			// If the taker order and the removed maker order are from the same subaccount, set
-			// the reason to SELF_TRADE error, otherwise set the reason to be UNDERCOLLATERALIZED.
-			// TODO(DEC-1409): Update this to support order replacements on indexer.
-			reason := indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
-				makerOrderWithRemovalReason.RemovalReason,
-			)
-			if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-				branchedContext,
-				makerOrderId,
-				reason,
-				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-			); success {
-				offchainUpdates.AddRemoveMessage(makerOrderId, message)
-			}
-		}
-
-		m.mustRemoveOrder(branchedContext, makerOrderId)
+		// If the taker order and the removed maker order are from the same subaccount, set
+		// the reason to SELF_TRADE error, otherwise set the reason to be UNDERCOLLATERALIZED.
+		reason := indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
+			makerOrderWithRemovalReason.RemovalReason,
+		)
+		m.mustRemoveOrder(
+			branchedContext,
+			makerOrderId,
+			reason,
+			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+		)
 		if makerOrderId.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(makerOrderId) {
 			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
 				makerOrderId,
@@ -828,14 +750,13 @@ func (m *MemClobPriceTimePriority) matchOrder(
 	// If the match is valid and placing the taker order generated valid matches, update memclob state.
 	takerGeneratedValidMatches := len(newMakerFills) > 0 && matchingErr == nil
 	if takerGeneratedValidMatches {
-		matchOffchainUpdates := m.mustUpdateMemclobStateWithMatches(
+		m.mustUpdateMemclobStateWithMatches(
 			branchedContext,
 			order,
 			newMakerFills,
 			matchedOrderHashToOrder,
 			matchedMakerOrderIdToOrder,
 		)
-		offchainUpdates.Append(matchOffchainUpdates)
 		writeCache()
 	} else {
 		// If state was not written to, re-send grpc stream updates for all orders
@@ -853,7 +774,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		m.clobKeeper.SendOrderbookUpdates(ctx, allUpdates)
 	}
 
-	return takerOrderStatus, offchainUpdates, makerOrdersToRemove, matchingErr
+	return takerOrderStatus, makerOrdersToRemove, matchingErr
 }
 
 // ReplayOperations will replay the provided operations onto the memclob.
@@ -868,8 +789,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 	ctx sdk.Context,
 	localOperations []types.InternalOperation,
 	shortTermOrderTxBytes map[types.OrderHash][]byte,
-	existingOffchainUpdates *types.OffchainUpdates,
-) *types.OffchainUpdates {
+) {
 	lib.AssertCheckTxMode(ctx)
 
 	defer telemetry.MeasureSince(
@@ -933,7 +853,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 			// TODO(DEC-998): Research whether it's fine for two post-only orders to be matched. Currently they are dropped.
 			msg := types.NewMsgPlaceOrder(order)
 			orderSizeOptimisticallyFilledFromMatchingQuantums,
-				orderStatus, placeOrderOffchainUpdates, err := m.clobKeeper.ReplayPlaceOrder(
+				orderStatus, err := m.clobKeeper.ReplayPlaceOrder(
 				ctx,
 				msg,
 			)
@@ -955,14 +875,11 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx.BlockHeight(),
 			)
 
-			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
+			m.processReplayPlaceOrderError(
 				ctx,
 				err,
 				operation,
 				order,
-				orderStatus,
-				placeOrderOffchainUpdates,
-				existingOffchainUpdates,
 			)
 
 		// Replay all pre-existing stateful order placements.
@@ -1004,20 +921,17 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 			}
 
 			// TODO(DEC-998): Research whether it's fine for two post-only orders to be matched. Currently they are dropped.
-			_, orderStatus, placeOrderOffchainUpdates, err := m.clobKeeper.AddPreexistingStatefulOrder(
+			_, _, err := m.clobKeeper.AddPreexistingStatefulOrder(
 				ctx,
 				&statefulOrderPlacement.Order,
 				m,
 			)
 			placedPreexistingStatefulOrderIds[*orderId] = struct{}{}
-			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
+			m.processReplayPlaceOrderError(
 				ctx,
 				err,
 				operation,
 				statefulOrderPlacement.Order,
-				orderStatus,
-				placeOrderOffchainUpdates,
-				existingOffchainUpdates,
 			)
 		// Matches are a no-op.
 		case *types.InternalOperation_Match:
@@ -1056,44 +970,29 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				continue
 			}
 
-			_, orderStatus, placeOrderOffchainUpdates, err := m.PlaceOrder(
+			_, _, err := m.PlaceOrder(
 				ctx,
 				statefulOrderPlacement.Order,
 			)
 			placedOrderRemovalOrderIds[orderId] = struct{}{}
-			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
+			m.processReplayPlaceOrderError(
 				ctx,
 				err,
 				operation,
 				statefulOrderPlacement.Order,
-				orderStatus,
-				placeOrderOffchainUpdates,
-				existingOffchainUpdates,
 			)
 		default:
 			panic(fmt.Sprintf("unknown operation type: %T", operation.Operation))
 		}
 	}
-
-	existingOffchainUpdates.CondenseMessagesForReplay()
-	return existingOffchainUpdates
 }
 
-// GenerateOffchainUpdatesForReplayPlaceOrder is a helper function intended to be used in ReplayOperations.
-// It takes the results of a PlaceOrder function call, emits the according logs, and appends offchain updates for
-// the replay operation to the existingOffchainUpdates object.
-func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
+func (m *MemClobPriceTimePriority) processReplayPlaceOrderError(
 	ctx sdk.Context,
 	err error,
 	operation types.InternalOperation,
 	order types.Order,
-	orderStatus types.OrderStatus,
-	placeOrderOffchainUpdates *types.OffchainUpdates,
-	existingOffchainUpdates *types.OffchainUpdates,
-) *types.OffchainUpdates {
-	lib.AssertCheckTxMode(ctx)
-
-	orderId := order.OrderId
+) {
 	if err != nil {
 		var loggerString string
 		switch operation.Operation.(type) {
@@ -1112,25 +1011,7 @@ func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 			log.Operation, operation,
 			log.Order, order,
 		)
-
-		// If the order is dropped while adding it to the book, return an off-chain order remove
-		// message for the order.
-		if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
-			if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-				ctx,
-				orderId,
-				orderStatus,
-				err,
-				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
-			); success {
-				existingOffchainUpdates.AddRemoveMessage(orderId, message)
-			}
-		}
-	} else if m.generateOffchainUpdates {
-		existingOffchainUpdates.Append(placeOrderOffchainUpdates)
 	}
-	return existingOffchainUpdates
 }
 
 // RemoveAndClearOperationsQueue is called during `Commit`/`PrepareCheckState`
@@ -1169,7 +1050,12 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 			orderbook := m.mustGetOrderbook(types.ClobPairId(otpOrderId.GetClobPairId()))
 			existingOrder, found := orderbook.getOrder(otpOrderId)
 			if found && existingOrder.GetOrderHash() == otpOrderHash {
-				m.mustRemoveOrder(ctx, otpOrderId)
+				m.mustRemoveOrder(
+					ctx,
+					otpOrderId,
+					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLAY_OPERATIONS,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				)
 			} else {
 				order := operation.GetShortTermOrderPlacement().Order
 				m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
@@ -1185,7 +1071,12 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 			// OTP, and therefore be removed in this loop as well.
 			orderbook := m.mustGetOrderbook(types.ClobPairId(otpOrderId.GetClobPairId()))
 			if orderbook.hasOrder(*otpOrderId) {
-				m.mustRemoveOrder(ctx, *otpOrderId)
+				m.mustRemoveOrder(
+					ctx,
+					*otpOrderId,
+					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLAY_OPERATIONS,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				)
 			}
 		}
 	}
@@ -1202,9 +1093,8 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	filledOrderIds []types.OrderId,
 	expiredStatefulOrderIds []types.OrderId,
 	canceledStatefulOrderIds []types.OrderId,
-	removedStatefulOrderIds []types.OrderId,
-	existingOffchainUpdates *types.OffchainUpdates,
-) *types.OffchainUpdates {
+	removedStatefulOrders []types.OrderRemoval,
+) {
 	lib.AssertCheckTxMode(ctx)
 
 	defer telemetry.MeasureSince(
@@ -1231,7 +1121,12 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 		// check failures, self-trade errors, etc and will not be removed from state. Therefore it
 		// is possible that when they are canceled they will not exist on the orderbook.
 		if orderbook.hasOrder(statefulOrderId) {
-			m.mustRemoveOrder(ctx, statefulOrderId)
+			m.mustRemoveOrder(
+				ctx,
+				statefulOrderId,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
+			)
 		}
 	}
 
@@ -1246,21 +1141,12 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 		// check failures, self-trade errors, etc and will not be removed from state. Therefore it
 		// is possible that when they expire they will not exist on the orderbook.
 		if orderbook.hasOrder(statefulOrderId) {
-			m.mustRemoveOrder(ctx, statefulOrderId)
-
-			if m.generateOffchainUpdates {
-				// Send an off-chain update message indicating the stateful order should be removed from the
-				// orderbook on the Indexer. As the order is expired, the status of the order is canceled
-				// and not best-effort-canceled.
-				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-					ctx,
-					statefulOrderId,
-					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
-					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
-				); success {
-					existingOffchainUpdates.AddRemoveMessage(statefulOrderId, message)
-				}
-			}
+			m.mustRemoveOrder(
+				ctx,
+				statefulOrderId,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
+			)
 		}
 	}
 
@@ -1268,33 +1154,27 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 		// Remove all expired Short-Term order IDs from the memclob.
 		if blockExpirations, beExists := orderbook.blockExpirationsForOrders[blockHeight]; beExists {
 			for shortTermOrderId := range blockExpirations {
-				if m.generateOffchainUpdates {
-					// Send an off-chain update message indicating the order should be removed from the
-					// orderbook on the Indexer. As the order is expired, the status of the order is canceled
-					// and not best-effort-canceled.
-					if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-						ctx,
-						shortTermOrderId,
-						indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
-						ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
-					); success {
-						existingOffchainUpdates.AddRemoveMessage(shortTermOrderId, message)
-					}
-				}
-
-				m.mustRemoveOrder(ctx, shortTermOrderId)
+				m.mustRemoveOrder(
+					ctx,
+					shortTermOrderId,
+					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
+				)
 			}
 		}
 	}
 
 	// Remove all forcefully removed stateful order IDs from the memclob if they exist.
-	// Indexer events are sent during DeliverTx and therefore do not need to be sent here.
-	for _, statefulOrderId := range removedStatefulOrderIds {
-		statefulOrderId.MustBeStatefulOrder()
-		orderbook := m.mustGetOrderbook(types.ClobPairId(statefulOrderId.GetClobPairId()))
+	for _, statefulOrderRemoval := range removedStatefulOrders {
+		statefulOrderRemoval.OrderId.MustBeStatefulOrder()
+		orderbook := m.mustGetOrderbook(types.ClobPairId(statefulOrderRemoval.OrderId.GetClobPairId()))
 
-		if orderbook.hasOrder(statefulOrderId) {
-			m.mustRemoveOrder(ctx, statefulOrderId)
+		if orderbook.hasOrder(statefulOrderRemoval.OrderId) {
+			m.mustRemoveOrder(ctx,
+				statefulOrderRemoval.OrderId,
+				indexersharedtypes.OrderRemovalReason(statefulOrderRemoval.RemovalReason),
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
+			)
 		}
 	}
 
@@ -1303,8 +1183,6 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	for _, orderbook := range m.orderbooks {
 		orderbook.removeAllCancelsAtBlock(blockHeight)
 	}
-
-	return existingOffchainUpdates
 }
 
 // validateReplacement validates that an order can replace another.
@@ -1894,6 +1772,8 @@ func (m *MemClobPriceTimePriority) SetMemclobGauges(
 func (m *MemClobPriceTimePriority) mustRemoveOrder(
 	ctx sdk.Context,
 	orderId types.OrderId,
+	reason indexersharedtypes.OrderRemovalReason,
+	removalStatus ocutypes.OrderRemoveV1_OrderRemovalStatus,
 ) {
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
@@ -1920,49 +1800,168 @@ func (m *MemClobPriceTimePriority) mustRemoveOrder(
 		m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
 	}
 
-	if m.generateOrderbookUpdates {
-		// Send an orderbook update to grpc streams.
-		orderbookUpdate := m.GetOrderbookUpdatesForOrderRemoval(ctx, order.OrderId)
-		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate)
+	m.emitOrderRemovalEvent(ctx, orderId, reason, removalStatus)
+}
+
+func (m *MemClobPriceTimePriority) emitOrderRemovalEvent(
+	ctx sdk.Context,
+	orderId types.OrderId,
+	reason indexersharedtypes.OrderRemovalReason,
+	removalStatus ocutypes.OrderRemoveV1_OrderRemovalStatus,
+) {
+	if m.generateOrderbookUpdates || m.generateOffchainUpdates {
+		offchainUpdates := types.NewOffchainUpdates()
+		if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+			ctx,
+			orderId,
+			reason,
+			removalStatus,
+		); success {
+			offchainUpdates.AddRemoveMessage(orderId, message)
+			if m.generateOrderbookUpdates {
+				m.clobKeeper.SendOrderbookUpdates(ctx, offchainUpdates)
+			}
+			if m.generateOffchainUpdates {
+				m.clobKeeper.SendOffchainMessages(ctx, nil, offchainUpdates)
+			}
+		}
 	}
 }
 
-// mustUpdateOrderbookStateWithMatchedMakerOrder updates the orderbook with a matched maker order.
-// If the maker order is fully filled, it removes it from the orderbook.
-func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder(
+func (m *MemClobPriceTimePriority) emitOrderRemovalEventWithOrderStatus(
 	ctx sdk.Context,
-	makerOrder types.Order,
-) *types.OffchainUpdates {
-	offchainUpdates := types.NewOffchainUpdates()
-	makerOrderBaseQuantums := makerOrder.GetBaseQuantums()
-	newTotalFilledAmount := m.GetOrderFilledAmount(ctx, makerOrder.OrderId)
+	orderId types.OrderId,
+	orderStatus types.OrderStatus,
+	orderError error,
+	removalStatus ocutypes.OrderRemoveV1_OrderRemovalStatus,
+) {
+	if m.generateOrderbookUpdates || m.generateOffchainUpdates {
+		reason, err := indexershared.GetOrderRemovalReason(orderStatus, orderError)
+		if err != nil {
+			log.ErrorLogWithError(
+				ctx,
+				"Error creating off-chain update message for removing order. Invalid order removal reason.",
+				err,
+				log.OrderId, orderId,
+				log.RemovalStatus, removalStatus,
+			)
+		}
 
-	// If the filled amount of the maker order is greater than the order size, panic to avoid silent failure.
-	if newTotalFilledAmount > makerOrderBaseQuantums {
-		panic("Total filled size of maker order greater than the order size")
-	}
-
-	// If the order is fully filled, remove it from the orderbook.
-	// Note we shouldn't remove Short-Term order hashes from `ShortTermOrderTxBytes` here since
-	// the order was matched.
-	if newTotalFilledAmount == makerOrderBaseQuantums {
-		makerOrderId := makerOrder.OrderId
-		m.mustRemoveOrder(ctx, makerOrderId)
-	}
-
-	if m.generateOffchainUpdates {
-		// Send an off-chain update message to the indexer to update the total filled size of the maker
-		// order.
-		if message, success := off_chain_updates.CreateOrderUpdateMessage(
+		offchainUpdates := types.NewOffchainUpdates()
+		if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 			ctx,
-			makerOrder.OrderId,
-			newTotalFilledAmount,
+			orderId,
+			reason,
+			removalStatus,
 		); success {
-			offchainUpdates.AddUpdateMessage(makerOrder.OrderId, message)
+			offchainUpdates.AddRemoveMessage(orderId, message)
+			if m.generateOrderbookUpdates {
+				m.clobKeeper.SendOrderbookUpdates(ctx, offchainUpdates)
+			}
+			if m.generateOffchainUpdates {
+				m.clobKeeper.SendOffchainMessages(ctx, nil, offchainUpdates)
+			}
 		}
 	}
+}
 
-	return offchainUpdates
+func (m *MemClobPriceTimePriority) emitOrderPlacementEvent(
+	ctx sdk.Context,
+	order types.Order,
+) {
+	if m.generateOrderbookUpdates || m.generateOffchainUpdates {
+		offchainUpdates := types.NewOffchainUpdates()
+		if message, success := off_chain_updates.CreateOrderPlaceMessage(
+			ctx,
+			order,
+		); success {
+			offchainUpdates.AddPlaceMessage(order.OrderId, message)
+			if m.generateOrderbookUpdates {
+				m.clobKeeper.SendOrderbookUpdates(ctx, offchainUpdates)
+			}
+			if m.generateOffchainUpdates {
+				m.clobKeeper.SendOffchainMessages(ctx, nil, offchainUpdates)
+			}
+		}
+	}
+}
+
+func (m *MemClobPriceTimePriority) emitOrderUpdateEvent(
+	ctx sdk.Context,
+	orderId types.OrderId,
+	filledQuantums satypes.BaseQuantums,
+) {
+	if m.generateOrderbookUpdates || m.generateOffchainUpdates {
+		offchainUpdates := types.NewOffchainUpdates()
+		if message, success := off_chain_updates.CreateOrderUpdateMessage(
+			ctx,
+			orderId,
+			filledQuantums,
+		); success {
+			offchainUpdates.AddUpdateMessage(orderId, message)
+			if m.generateOrderbookUpdates {
+				m.clobKeeper.SendOrderbookUpdates(ctx, offchainUpdates)
+			}
+			if m.generateOffchainUpdates {
+				m.clobKeeper.SendOffchainMessages(ctx, nil, offchainUpdates)
+			}
+		}
+	}
+}
+
+// mustUpdateOrderbookStateWithMatches updates the orderbook with matches.
+// If a maker order is fully filled, it removes it from the orderbook.
+func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatches(
+	ctx sdk.Context,
+	match *types.ClobMatch,
+	takerOrder types.MatchableOrder,
+	makerFills []types.MakerFillWithOrder,
+) {
+	if m.generateOrderbookUpdates {
+		makerOrders := lib.MapSlice(
+			makerFills,
+			func(mfwo types.MakerFillWithOrder) types.Order {
+				return mfwo.Order
+			},
+		)
+		orderbookMatchFill := m.GenerateStreamOrderbookFill(ctx, *match, takerOrder, makerOrders)
+		m.clobKeeper.SendOrderbookFillUpdates(ctx, []types.StreamOrderbookFill{orderbookMatchFill})
+	}
+
+	for _, makerFill := range makerFills {
+		makerOrderBaseQuantums := makerFill.Order.GetBaseQuantums()
+		newTotalFilledAmount := m.GetOrderFilledAmount(ctx, makerFill.Order.OrderId)
+
+		// If the filled amount of the maker order is greater than the order size, panic to avoid silent failure.
+		if newTotalFilledAmount > makerOrderBaseQuantums {
+			panic("Total filled size of maker order greater than the order size")
+		}
+
+		offchainUpdates := types.NewOffchainUpdates()
+		if m.generateOffchainUpdates {
+			if message, success := off_chain_updates.CreateOrderUpdateMessage(
+				ctx,
+				makerFill.Order.OrderId,
+				newTotalFilledAmount,
+			); success {
+				offchainUpdates.AddUpdateMessage(makerFill.Order.OrderId, message)
+			}
+			m.clobKeeper.SendOffchainMessages(ctx, nil, offchainUpdates)
+		}
+
+		// If the order is fully filled, remove it from the orderbook.
+		// Note we shouldn't remove Short-Term order hashes from `ShortTermOrderTxBytes` here since
+		// the order was matched.
+		if newTotalFilledAmount == makerOrderBaseQuantums {
+			makerOrderId := makerFill.Order.OrderId
+			m.mustRemoveOrder(
+				ctx,
+				makerOrderId,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			)
+		}
+	}
 }
 
 // updateResultToOrderStatus translates the result of a collateralization check into a resulting order status.
@@ -2036,8 +2035,37 @@ func (m *MemClobPriceTimePriority) RemoveOrderIfFilled(
 	// Case: order is now completely filled and can be removed.
 	order := levelOrder.Value.Order
 	if orderStateFillAmount >= order.GetBaseQuantums() {
-		m.mustRemoveOrder(ctx, order.OrderId)
+		m.mustRemoveOrder(
+			ctx,
+			order.OrderId,
+			indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_FILLED,
+		)
 	}
+	return
+}
+
+// RemoveOrderIfFilled removes an order from the orderbook if it exists
+func (m *MemClobPriceTimePriority) removeOrderIfExists(
+	ctx sdk.Context,
+	orderId types.OrderId,
+	reason indexersharedtypes.OrderRemovalReason,
+	removalStatus ocutypes.OrderRemoveV1_OrderRemovalStatus,
+) {
+	orderbook := m.mustGetOrderbook(types.ClobPairId(orderId.GetClobPairId()))
+
+	levelOrder, levelExists := orderbook.orderIdToLevelOrder[orderId]
+	if !levelExists {
+		return
+	}
+
+	order := levelOrder.Value.Order
+	m.mustRemoveOrder(
+		ctx,
+		order.OrderId,
+		reason,
+		removalStatus,
+	)
 }
 
 // maybeCancelReduceOnlyOrders cancels all open reduce-only orders on the CLOB pair if the new fill would change the
@@ -2047,8 +2075,7 @@ func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrders(
 	subaccountId satypes.SubaccountId,
 	clobPairId types.ClobPairId,
 	totalBigMatchedQuantums *big.Int,
-) (offchainUpdates *types.OffchainUpdates) {
-	offchainUpdates = types.NewOffchainUpdates()
+) {
 	// Get the new position size after matching.
 	newPositionSize := m.clobKeeper.GetStatePosition(ctx, subaccountId, clobPairId)
 
@@ -2076,28 +2103,21 @@ func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrders(
 			// Remove each open reduce-only order from the memclob.
 			for _, orderId := range openReduceOnlyOrdersCopy {
 				// TODO(DEC-847): Update logic to properly remove stateful orders.
-				m.mustRemoveOrder(ctx, orderId)
+				m.mustRemoveOrder(
+					ctx,
+					orderId,
+					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				)
 				if orderId.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(orderId) {
 					m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
 						orderId,
 						types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY,
 					)
 				}
-				if m.generateOffchainUpdates {
-					if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-						ctx,
-						orderId,
-						indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
-						ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-					); success {
-						offchainUpdates.AddRemoveMessage(orderId, message)
-					}
-				}
 			}
 		}
 	}
-
-	return offchainUpdates
 }
 
 // GetMidPrice returns the mid price of the orderbook for the given clob pair

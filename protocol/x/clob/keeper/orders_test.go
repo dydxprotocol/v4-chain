@@ -21,7 +21,6 @@ import (
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	memclobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/tracer"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
@@ -867,7 +866,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 					)
 				}
 
-				_, orderStatus, _, err := ks.ClobKeeper.AddPreexistingStatefulOrder(
+				_, orderStatus, err := ks.ClobKeeper.AddPreexistingStatefulOrder(
 					ctx.WithIsCheckTx(true),
 					&order,
 					memClob,
@@ -897,7 +896,6 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 
 			orderSizeOptimisticallyFilledFromMatching,
 				orderStatus,
-				_,
 				err := ks.ClobKeeper.AddPreexistingStatefulOrder(ctx.WithIsCheckTx(true), &tc.order, memClob)
 
 			// Verify test expectations.
@@ -920,70 +918,6 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			traceDecoder.RequireKeyPrefixesWritten(t, tc.expectedMultiStoreWrites)
 		})
 	}
-}
-
-func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
-	indexerEventManager := &mocks.IndexerEventManager{}
-	for _, message := range constants.TestOffchainMessages {
-		indexerEventManager.On(
-			"SendOffchainData",
-			message.AddHeader(constants.TestTxHashHeader),
-		).Return().Once()
-	}
-
-	memClob := &mocks.MemClob{}
-	memClob.On("SetClobKeeper", mock.Anything).Return()
-
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
-	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
-	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
-	ctx := ks.Ctx.WithTxBytes(constants.TestTxBytes)
-	ctx = ctx.WithIsCheckTx(true)
-
-	memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
-	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
-	// the indexer event manager to expect these events.
-	indexerEventManager.On("AddTxnEvent",
-		ctx,
-		indexerevents.SubtypePerpetualMarket,
-		indexerevents.PerpetualMarketEventVersion,
-		indexer_manager.GetBytes(
-			indexerevents.NewPerpetualMarketCreateEvent(
-				0,
-				0,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-				constants.ClobPair_Btc.Status,
-				constants.ClobPair_Btc.QuantumConversionExponent,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-				constants.ClobPair_Btc.SubticksPerTick,
-				constants.ClobPair_Btc.StepBaseQuantums,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
-			),
-		),
-	).Once().Return()
-	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
-		ctx,
-		constants.ClobPair_Btc.Id,
-		clobtest.MustPerpetualId(constants.ClobPair_Btc),
-		satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-		constants.ClobPair_Btc.QuantumConversionExponent,
-		constants.ClobPair_Btc.SubticksPerTick,
-		constants.ClobPair_Btc.Status,
-	)
-	require.NoError(t, err)
-
-	order := constants.Order_Carl_Num0_Id5_Clob0_Buy2BTC_Price50000
-	msgPlaceOrder := &types.MsgPlaceOrder{Order: order}
-	memClob.On("PlaceOrder", ctx, order).
-		Return(order.GetBaseQuantums(), types.OrderStatus(0), constants.TestOffchainUpdates, nil)
-
-	_, _, err = ks.ClobKeeper.PlaceShortTermOrder(ctx, msgPlaceOrder)
-	require.NoError(t, err)
-	indexerEventManager.AssertNumberOfCalls(t, "SendOffchainData", len(constants.TestOffchainMessages))
-	indexerEventManager.AssertExpectations(t)
-	memClob.AssertExpectations(t)
 }
 
 func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
@@ -1999,7 +1933,6 @@ func TestInitStatefulOrders(t *testing.T) {
 			require.NoError(t, err)
 
 			// Create each stateful order placement in state and properly mock the MemClob call.
-			expectedPlacedOrders := make([]types.Order, 0)
 			for i, order := range tc.statefulOrdersInState {
 				require.True(t, order.IsStatefulOrder())
 
@@ -2024,25 +1957,13 @@ func TestInitStatefulOrders(t *testing.T) {
 				memClob.On("PlaceOrder", mock.Anything, order).Return(
 					satypes.BaseQuantums(0),
 					types.Success,
-					constants.TestOffchainUpdates,
 					orderPlacementErr,
 				).Once()
-
-				for _, message := range constants.TestOffchainMessages {
-					indexerEventManager.On("SendOffchainData", message).Return().Once()
-				}
-
-				expectedPlacedOrders = append(expectedPlacedOrders, order)
 			}
 
 			// Run the test and verify expectations.
 			ks.ClobKeeper.InitStatefulOrders(ks.Ctx)
 			indexerEventManager.AssertExpectations(t)
-			indexerEventManager.AssertNumberOfCalls(
-				t,
-				"SendOffchainData",
-				len(constants.TestOffchainMessages)*len(expectedPlacedOrders),
-			)
 			memClob.AssertExpectations(t)
 		})
 	}
@@ -2297,39 +2218,21 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 				memClob.On("PlaceOrder", mock.Anything, order).Return(
 					satypes.BaseQuantums(0),
 					types.Success,
-					constants.TestOffchainUpdates,
 					nil,
 				).Once()
 			}
 
 			// Run the test and verify expectations.
-			offchainUpdates := types.NewOffchainUpdates()
 			orderIds := make([]types.OrderId, 0)
 			for _, order := range tc.orders {
 				orderIds = append(orderIds, order.OrderId)
 			}
-			ks.ClobKeeper.PlaceStatefulOrdersFromLastBlock(ctx, orderIds, offchainUpdates)
-
-			// PlaceStatefulOrdersFromLastBlock utilizes the memclob's PlaceOrder flow, but we
-			// do not want to emit PlaceMessages in offchain events for stateful orders. This assertion
-			// verifies that we call `ClearPlaceMessages()` on the offchain updates before returning.
-			require.Equal(t, 0, memclobtest.MessageCountOfType(offchainUpdates, types.PlaceMessageType))
+			ks.ClobKeeper.PlaceStatefulOrdersFromLastBlock(ctx, orderIds)
 
 			// Verify that all removed orders have an associated off-chain update.
 			orderMap := make(map[types.OrderId]bool)
 			for _, order := range tc.orders {
 				orderMap[order.OrderId] = true
-			}
-
-			removedOrders := lib.FilterSlice(tc.expectedOrderPlacementCalls, func(order types.Order) bool {
-				return !orderMap[order.OrderId]
-			})
-
-			for _, order := range removedOrders {
-				require.True(
-					t,
-					memclobtest.HasMessage(offchainUpdates, order.OrderId, types.RemoveMessageType),
-				)
 			}
 
 			memClob.AssertExpectations(t)
@@ -2445,13 +2348,11 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 				memClob.On("PlaceOrder", mock.Anything, order).Return(
 					satypes.BaseQuantums(0),
 					types.Success,
-					constants.TestOffchainUpdates,
 					nil,
 				).Once()
 			}
 
 			// Run the test and verify expectations.
-			offchainUpdates := types.NewOffchainUpdates()
 			orderIds := make([]types.OrderId, 0)
 			for _, order := range tc.triggeredOrders {
 				orderIds = append(orderIds, order.OrderId)
@@ -2465,18 +2366,13 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 					t,
 					tc.expectedPanic,
 					func() {
-						ks.ClobKeeper.PlaceConditionalOrdersTriggeredInLastBlock(ctx, orderIds, offchainUpdates)
+						ks.ClobKeeper.PlaceConditionalOrdersTriggeredInLastBlock(ctx, orderIds)
 					},
 				)
 				return
 			}
 
-			ks.ClobKeeper.PlaceConditionalOrdersTriggeredInLastBlock(ctx, orderIds, offchainUpdates)
-
-			// PlaceStatefulOrdersFromLastBlock utilizes the memclob's PlaceOrder flow, but we
-			// do not want to emit PlaceMessages in offchain events for stateful orders. This assertion
-			// verifies that we call `ClearPlaceMessages()` on the offchain updates before returning.
-			require.Equal(t, 0, memclobtest.MessageCountOfType(offchainUpdates, types.PlaceMessageType))
+			ks.ClobKeeper.PlaceConditionalOrdersTriggeredInLastBlock(ctx, orderIds)
 
 			// Verify that all removed orders have an associated off-chain update.
 			orderMap := make(map[types.OrderId]bool)
@@ -2485,17 +2381,6 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 			}
 			for _, order := range tc.untriggeredOrders {
 				orderMap[order.OrderId] = true
-			}
-
-			removedOrders := lib.FilterSlice(tc.expectedOrderPlacementCalls, func(order types.Order) bool {
-				return !orderMap[order.OrderId]
-			})
-
-			for _, order := range removedOrders {
-				require.True(
-					t,
-					memclobtest.HasMessage(offchainUpdates, order.OrderId, types.RemoveMessageType),
-				)
 			}
 
 			memClob.AssertExpectations(t)

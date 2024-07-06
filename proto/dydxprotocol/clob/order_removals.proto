@@ -48,6 +48,9 @@ message OrderRemoval {
     // REMOVAL_REASON_FULLY_FILLED represents a removal of an order that
     //  would lead to the subaccount violating isolated subaccount constraints.
     REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS = 8;
+    // REMOVAL_REASON_FINAL_SETTLEMENT represents a removal of an order that
+    // was removed due to final settlement of a market.
+    REMOVAL_REASON_FINAL_SETTLEMENT = 9;
   }
 
   RemovalReason removal_reason = 2;

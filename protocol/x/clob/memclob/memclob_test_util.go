@@ -12,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
+	indexersharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testutil_memclob "github.com/dydxprotocol/v4-chain/protocol/testutil/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -619,11 +620,11 @@ func applyOperationsToMemclob(
 		switch op.Operation.(type) {
 		case *types.Operation_ShortTermOrderPlacement:
 			orderPlacement := op.GetShortTermOrderPlacement()
-			_, _, _, err := memclob.PlaceOrder(ctx, orderPlacement.Order)
+			_, _, err := memclob.PlaceOrder(ctx, orderPlacement.Order)
 			require.NoError(t, err)
 		case *types.Operation_ShortTermOrderCancellation:
 			orderCancellation := op.GetShortTermOrderCancellation()
-			_, err := memclob.CancelOrder(ctx, orderCancellation)
+			err := memclob.CancelOrder(ctx, orderCancellation)
 			require.NoError(t, err)
 		case *types.Operation_PreexistingStatefulOrder:
 			preexistingStatefulOrderId := op.GetPreexistingStatefulOrder()
@@ -632,7 +633,7 @@ func applyOperationsToMemclob(
 				*preexistingStatefulOrderId,
 			)
 			require.True(t, found)
-			_, _, _, err := memclob.PlaceOrder(ctx, orderPlacement.Order)
+			_, _, err := memclob.PlaceOrder(ctx, orderPlacement.Order)
 			require.NoError(t, err)
 		default:
 			panic(
@@ -675,7 +676,7 @@ func createAllMatchableOrders(
 				matchableOrder.GetOrderSubticks(),
 			)
 
-			_, _, _, err := memclob.PlacePerpetualLiquidation(
+			_, _, err := memclob.PlacePerpetualLiquidation(
 				ctx,
 				*liquidationOrder,
 			)
@@ -684,7 +685,7 @@ func createAllMatchableOrders(
 			fakeMemClobKeeper.CommitState()
 		} else {
 			order := matchableOrder.MustGetOrder()
-			_, _, _, err := memclob.PlaceOrder(
+			_, _, err := memclob.PlaceOrder(
 				ctx,
 				order,
 			)
@@ -705,7 +706,7 @@ func createAllOrders(
 ) {
 	// Place all existing orders on the orderbook.
 	for _, order := range orders {
-		_, _, _, err := memclob.PlaceOrder(
+		_, _, err := memclob.PlaceOrder(
 			ctx,
 			order,
 		)
@@ -1089,9 +1090,9 @@ func placeOrderAndVerifyExpectations(
 	expectedMatches []expectedMatch,
 	fakeMemClobKeeper *testutil_memclob.FakeMemClobKeeper,
 ) *types.OffchainUpdates {
+	fakeMemClobKeeper.ResetOffchainMessages()
 	filledSize,
 		orderStatus,
-		offchainUpdates,
 		err := memclob.PlaceOrder(ctx, order)
 
 	if fakeMemClobKeeper != nil {
@@ -1158,7 +1159,7 @@ func placeOrderAndVerifyExpectations(
 		expectedMatches,
 	)
 
-	return offchainUpdates
+	return fakeMemClobKeeper.GetAndResetOffchainMessages()
 }
 
 // placeOrderAndVerifyExpectationsOperations is a testing helper used for calling `PlaceOrder` and
@@ -1186,9 +1187,9 @@ func placeOrderAndVerifyExpectationsOperations(
 	expectedInternalOperations []types.InternalOperation,
 	fakeMemClobKeeper *testutil_memclob.FakeMemClobKeeper,
 ) *types.OffchainUpdates {
+	fakeMemClobKeeper.ResetOffchainMessages()
 	filledSize,
 		orderStatus,
-		offchainUpdates,
 		err := memclob.PlaceOrder(ctx, order)
 
 	if fakeMemClobKeeper != nil {
@@ -1265,7 +1266,7 @@ func placeOrderAndVerifyExpectationsOperations(
 		expectedRemainingAsks,
 	)
 
-	return offchainUpdates
+	return fakeMemClobKeeper.GetAndResetOffchainMessages()
 }
 
 // assertPlaceOrderOffchainMessages checks that the expected offchain update messages are returned
@@ -1292,7 +1293,6 @@ func assertPlaceOrderOffchainMessages(
 	expectedNewMatches []expectedMatch,
 	expectedCancelledReduceOnlyOrders []types.OrderId,
 	expectedToReplaceOrder bool,
-	expectedReplacementOrderPriceChanged bool,
 ) {
 	actualOffchainMessages := offchainUpdates.GetMessages()
 	expectedOffchainMessages := []msgsender.Message{}
@@ -1301,18 +1301,16 @@ func assertPlaceOrderOffchainMessages(
 	// If there are no errors expected, an order place message should be sent.
 	if expectedErr == nil || doesErrorProduceOffchainMessages(expectedErr) {
 		if expectedToReplaceOrder {
-			if expectedReplacementOrderPriceChanged {
-				removeMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
-					ctx,
-					order.OrderId,
-					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
-					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-				)
-				expectedOffchainMessages = append(
-					expectedOffchainMessages,
-					removeMessage,
-				)
-			}
+			removeMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+				ctx,
+				order.OrderId,
+				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			)
+			expectedOffchainMessages = append(
+				expectedOffchainMessages,
+				removeMessage,
+			)
 		}
 		placeMessage := off_chain_updates.MustCreateOrderPlaceMessage(
 			ctx,
@@ -1405,6 +1403,20 @@ func assertPlaceOrderOffchainMessages(
 			expectedOffchainMessages,
 			updateMessage,
 		)
+
+		if totalFilled == makerOrder.GetBaseQuantums() {
+			removeMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+				ctx,
+				makerOrderId,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			)
+			expectedOffchainMessages = append(
+				expectedOffchainMessages,
+				removeMessage,
+			)
+		}
+
 		require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
 	}
 
@@ -1443,6 +1455,21 @@ func assertPlaceOrderOffchainMessages(
 			updateMessage,
 		)
 		require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
+
+		// Fully filled orders are removed
+		if expectedTotalFilledSize == order.GetBaseQuantums() {
+			removalMessage := off_chain_updates.MustCreateOrderRemoveMessageWithReason(
+				ctx,
+				order.OrderId,
+				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_FULLY_FILLED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			)
+			expectedOffchainMessages = append(
+				expectedOffchainMessages,
+				removalMessage,
+			)
+			require.Equal(t, expectedOffchainMessages, actualOffchainMessages[:len(expectedOffchainMessages)])
+		}
 	}
 
 	// If the order status after placing is not a success/resize but no error was returned, or an error
@@ -1612,9 +1639,11 @@ func placePerpetualLiquidationAndVerifyExpectations(
 	expectedRemainingBids []OrderWithRemainingSize,
 	expectedRemainingAsks []OrderWithRemainingSize,
 	expectedMatches []expectedMatch,
+	fakeMemClobKeeper *testutil_memclob.FakeMemClobKeeper,
 ) *types.OffchainUpdates {
 	// Run the test case.
-	_, _, offchainUpdates, err := memclob.PlacePerpetualLiquidation(
+	fakeMemClobKeeper.ResetOffchainMessages()
+	_, _, err := memclob.PlacePerpetualLiquidation(
 		ctx,
 		order,
 	)
@@ -1638,7 +1667,7 @@ func placePerpetualLiquidationAndVerifyExpectations(
 		expectedMatches,
 	)
 
-	return offchainUpdates
+	return fakeMemClobKeeper.GetAndResetOffchainMessages()
 }
 
 // placePerpetualLiquidationAndVerifyExpectationsOperations is a testing helper used for calling
@@ -1659,9 +1688,11 @@ func placePerpetualLiquidationAndVerifyExpectationsOperations(
 	expectedRemainingAsks []OrderWithRemainingSize,
 	expectedOperations []types.Operation,
 	expectedInternalOperations []types.InternalOperation,
+	fakeMemClobKeeper *testutil_memclob.FakeMemClobKeeper,
 ) *types.OffchainUpdates {
 	// Run the test case.
-	_, _, offchainUpdates, err := memclob.PlacePerpetualLiquidation(
+	fakeMemClobKeeper.ResetOffchainMessages()
+	_, _, err := memclob.PlacePerpetualLiquidation(
 		ctx,
 		order,
 	)
@@ -1695,5 +1726,5 @@ func placePerpetualLiquidationAndVerifyExpectationsOperations(
 		expectedRemainingAsks,
 	)
 
-	return offchainUpdates
+	return fakeMemClobKeeper.GetAndResetOffchainMessages()
 }

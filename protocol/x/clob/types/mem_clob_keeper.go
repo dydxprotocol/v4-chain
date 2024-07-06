@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -46,7 +47,6 @@ type MemClobKeeper interface {
 	) (
 		orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 		orderStatus OrderStatus,
-		offchainUpdates *OffchainUpdates,
 		err error,
 	)
 	AddPreexistingStatefulOrder(
@@ -56,7 +56,6 @@ type MemClobKeeper interface {
 	) (
 		orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 		orderStatus OrderStatus,
-		offchainUpdates *OffchainUpdates,
 		err error,
 	)
 	CancelShortTermOrder(
@@ -109,5 +108,10 @@ type MemClobKeeper interface {
 	SendOrderbookFillUpdates(
 		ctx sdk.Context,
 		orderbookFills []StreamOrderbookFill,
+	)
+	SendOffchainMessages(
+		ctx sdk.Context,
+		additionalHeaders []msgsender.MessageHeader,
+		offchainUpdates *OffchainUpdates,
 	)
 }

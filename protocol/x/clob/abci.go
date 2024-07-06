@@ -165,24 +165,21 @@ func PrepareCheckState(
 	keeper.MemClob.RemoveAndClearOperationsQueue(ctx, localValidatorOperationsQueue)
 
 	// 2. Purge invalid state from the memclob.
-	offchainUpdates := types.NewOffchainUpdates()
-	offchainUpdates = keeper.MemClob.PurgeInvalidMemclobState(
+	keeper.MemClob.PurgeInvalidMemclobState(
 		ctx,
 		processProposerMatchesEvents.OrderIdsFilledInLastBlock,
 		processProposerMatchesEvents.ExpiredStatefulOrderIds,
 		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
-		processProposerMatchesEvents.RemovedStatefulOrderIds,
-		offchainUpdates,
+		processProposerMatchesEvents.RemovedStatefulOrders,
 	)
 
 	// 3. Place all stateful order placements included in the last block on the memclob.
 	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`
 	// is called within `PlaceConditionalOrdersTriggeredInLastBlock`.
 	startPlaceLongTermOrders := time.Now()
-	offchainUpdates = keeper.PlaceStatefulOrdersFromLastBlock(
+	keeper.PlaceStatefulOrdersFromLastBlock(
 		ctx,
 		processProposerMatchesEvents.PlacedLongTermOrderIds,
-		offchainUpdates,
 	)
 	telemetry.MeasureSince(
 		startPlaceLongTermOrders,
@@ -198,24 +195,17 @@ func PrepareCheckState(
 	)
 
 	// 4. Place all conditional orders triggered in EndBlocker of last block on the memclob.
-	offchainUpdates = keeper.PlaceConditionalOrdersTriggeredInLastBlock(
+	keeper.PlaceConditionalOrdersTriggeredInLastBlock(
 		ctx,
 		processProposerMatchesEvents.ConditionalOrderIdsTriggeredInLastBlock,
-		offchainUpdates,
 	)
 
 	// 5. Replay the local validator’s operations onto the book.
-	replayUpdates := keeper.MemClob.ReplayOperations(
+	keeper.MemClob.ReplayOperations(
 		ctx,
 		localValidatorOperationsQueue,
 		shortTermOrderTxBytes,
-		offchainUpdates,
 	)
-
-	// TODO(CLOB-275): Do not gracefully handle panics in `PrepareCheckState`.
-	if replayUpdates != nil {
-		offchainUpdates = replayUpdates
-	}
 
 	// 6. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
 	liquidatableSubaccountIds := keeper.DaemonLiquidationInfo.GetLiquidatableSubaccountIds()
@@ -243,9 +233,6 @@ func PrepareCheckState(
 	if err := keeper.GateWithdrawalsIfNegativeTncSubaccountSeen(ctx, negativeTncSubaccountIds); err != nil {
 		panic(err)
 	}
-
-	// Send all off-chain Indexer events
-	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
 
 	newLocalValidatorOperationsQueue, _ := keeper.MemClob.GetOperationsToReplay(ctx)
 

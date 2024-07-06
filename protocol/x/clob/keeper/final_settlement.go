@@ -55,9 +55,12 @@ func (k Keeper) mustCancelStatefulOrdersForFinalSettlement(ctx sdk.Context, clob
 
 		// Append to RemovedStatefulOrderIds so this order gets removed
 		// from the memclob in PrepareCheckState during the PurgeInvalidMemclobState step
-		processProposerMatchesEvents.RemovedStatefulOrderIds = append(
-			processProposerMatchesEvents.RemovedStatefulOrderIds,
-			order.OrderId,
+		processProposerMatchesEvents.RemovedStatefulOrders = append(
+			processProposerMatchesEvents.RemovedStatefulOrders,
+			types.OrderRemoval{
+				OrderId:       order.OrderId,
+				RemovalReason: types.OrderRemoval_REMOVAL_REASON_FINAL_SETTLEMENT,
+			},
 		)
 
 		k.GetIndexerEventManager().AddTxnEvent(

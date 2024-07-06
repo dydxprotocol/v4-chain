@@ -56,4 +56,6 @@ enum OrderRemovalReason {
   // The order has been removed since filling it would lead to the subaccount
   // violating isolated subaccount constraints.
   ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS = 15;
+  // The order has been removed during the replay operations step of commiting a block.
+  ORDER_REMOVAL_REASON_REPLAY_OPERATIONS = 16;
 }

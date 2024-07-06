@@ -88,7 +88,15 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 	// an info message instead.
 	ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
 		ctx,
-		types.ProcessProposerMatchesEvents{BlockHeight: 2, RemovedStatefulOrderIds: []types.OrderId{orderToCancel.OrderId}},
+		types.ProcessProposerMatchesEvents{
+			BlockHeight: 2,
+			RemovedStatefulOrders: []types.OrderRemoval{
+				{
+					OrderId:       orderToCancel.OrderId,
+					RemovalReason: types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+				},
+			},
+		},
 	)
 
 	_, err := msgServer.CancelOrder(ctx, &orderToCancel)
