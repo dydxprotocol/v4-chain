@@ -98,6 +98,28 @@ func (k Keeper) DecommissionVault(
 	for ; ownerSharesIterator.Valid(); ownerSharesIterator.Next() {
 		ownerSharesStore.Delete(ownerSharesIterator.Key())
 	}
+
+	// Delete from vault address store.
+	vaultAddressStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultAddressKeyPrefix))
+	vaultAddressStore.Delete([]byte(vaultId.ToModuleAccountAddress()))
+}
+
+// AddVaultToAddressStore adds a vault's address to the vault address store.
+func (k Keeper) AddVaultToAddressStore(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+) {
+	vaultAddressStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultAddressKeyPrefix))
+	vaultAddressStore.Set([]byte(vaultId.ToModuleAccountAddress()), []byte{})
+}
+
+// IsVault checks if a given address is a vault.
+func (k Keeper) IsVault(
+	ctx sdk.Context,
+	address string,
+) bool {
+	vaultAddressStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultAddressKeyPrefix))
+	return vaultAddressStore.Has([]byte(address))
 }
 
 // GetAllVaults returns all vaults with their total shares, owner shares, and individual params.
