@@ -130,7 +130,11 @@ func (t *PrepareProposalTxs) GetTxsInOrder(veEnabled bool) ([][]byte, error) {
 	var txsToReturn [][]byte
 
 	// 1. ve info. it gets included even if empty
-	txsToReturn = append(txsToReturn, t.ExtInfoBz)
+	if t.ExtInfoBz != nil {
+		txsToReturn = append(txsToReturn, t.ExtInfoBz)
+	} else {
+		return nil, errors.New("ExtInfoBz must be set")
+	}
 
 	// 2. Proposed operations.
 	if len(t.ProposedOperationsTx) > 0 {

@@ -360,63 +360,99 @@ func Test_GetTxsInOrder(t *testing.T) {
 		otherTxs           [][]byte
 		otherAdditionalTxs [][]byte
 		fundingTx          []byte
+		extInfoBz          []byte
 
 		expectedTxs [][]byte
 		expectedErr error
+		veEnabled   bool
 	}{
 		"add funding samples is not set": {
 			operationsTx:       []byte{},
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{},
 			fundingTx:          []byte{},
+			extInfoBz:          []byte{},
 
 			expectedTxs: nil,
 			expectedErr: errors.New("AddPremiumVotesTx must be set"),
+			veEnabled:   true,
 		},
-		"funding only": {
+		"extInfo is not set": {
 			operationsTx:       []byte{},
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{},
 			fundingTx:          []byte{2, 3},
+			extInfoBz:          nil,
 
-			expectedTxs: [][]byte{{}, {2, 3}},
-			expectedErr: nil,
+			expectedTxs: nil,
+			expectedErr: errors.New("ExtInfoBz must be set"),
+			veEnabled:   true,
 		},
-		"funding + matched orders": {
+		"funding and extInfo only": {
+			operationsTx:       []byte{},
+			otherTxs:           [][]byte{},
+			otherAdditionalTxs: [][]byte{},
+			fundingTx:          []byte{2, 3},
+			extInfoBz:          []byte{4, 5},
+
+			expectedTxs: [][]byte{{4, 5}, {2, 3}},
+			expectedErr: nil,
+			veEnabled:   true,
+		},
+		"funding + matched orders + extInfo": {
 			operationsTx:       []byte{4, 5, 6},
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{},
 			fundingTx:          []byte{2},
+			extInfoBz:          []byte{1},
 
-			expectedTxs: [][]byte{{}, {4, 5, 6}, {2}},
+			expectedTxs: [][]byte{{1}, {4, 5, 6}, {2}},
 			expectedErr: nil,
+			veEnabled:   true,
 		},
 		"funding + others": {
 			operationsTx:       []byte{},
 			otherTxs:           [][]byte{{4}, {5, 6}},
 			otherAdditionalTxs: [][]byte{},
 			fundingTx:          []byte{2},
+			extInfoBz:          []byte{1},
 
-			expectedTxs: [][]byte{{}, {4}, {5, 6}, {2}},
+			expectedTxs: [][]byte{{1}, {4}, {5, 6}, {2}},
 			expectedErr: nil,
+			veEnabled:   true,
 		},
 		"partially set": {
 			operationsTx:       []byte{4, 5, 6},
 			otherTxs:           [][]byte{{7, 8}, {9, 10}},
 			otherAdditionalTxs: [][]byte{},
 			fundingTx:          []byte{2, 3},
+			extInfoBz:          []byte{11, 12},
 
-			expectedTxs: [][]byte{{}, {4, 5, 6}, {7, 8}, {9, 10}, {2, 3}},
+			expectedTxs: [][]byte{{11, 12}, {4, 5, 6}, {7, 8}, {9, 10}, {2, 3}},
 			expectedErr: nil,
+			veEnabled:   true,
 		},
 		"all set": {
 			operationsTx:       []byte{4, 5},
 			otherTxs:           [][]byte{{6}, {7, 8}},
 			otherAdditionalTxs: [][]byte{{9}, {10}},
 			fundingTx:          []byte{2, 3},
+			extInfoBz:          []byte{11, 12},
 
-			expectedTxs: [][]byte{{}, {4, 5}, {6}, {7, 8}, {9}, {10}, {2, 3}},
+			expectedTxs: [][]byte{{11, 12}, {4, 5}, {6}, {7, 8}, {9}, {10}, {2, 3}},
 			expectedErr: nil,
+			veEnabled:   true,
+		},
+		"ve not enabled with extInfo": {
+			operationsTx:       []byte{4, 5},
+			otherTxs:           [][]byte{{6}, {7, 8}},
+			otherAdditionalTxs: [][]byte{{9}, {10}},
+			fundingTx:          []byte{2, 3},
+			extInfoBz:          []byte{11, 12},
+
+			expectedTxs: nil,
+			expectedErr: errors.New("extInfoBz must not be set; VE is disabled"),
+			veEnabled:   false,
 		},
 	}
 
@@ -431,8 +467,10 @@ func Test_GetTxsInOrder(t *testing.T) {
 			require.Equal(t, uint64(11), ppt.MaxBytes)
 			require.Equal(t, uint64(0), ppt.UsedBytes)
 
-			err = ppt.SetExtInfoBz([]byte{})
-			require.NoError(t, err)
+			if tc.extInfoBz != nil {
+				err = ppt.SetExtInfoBz(tc.extInfoBz)
+				require.NoError(t, err)
+			}
 
 			err = ppt.SetAddPremiumVotesTx(tc.fundingTx)
 			require.NoError(t, err)
@@ -456,7 +494,7 @@ func Test_GetTxsInOrder(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			txs, err := ppt.GetTxsInOrder(false)
+			txs, err := ppt.GetTxsInOrder(tc.veEnabled)
 			if tc.expectedErr != nil {
 				require.ErrorContains(t, err, tc.expectedErr.Error())
 			} else {

@@ -560,7 +560,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			if tc.veEnabled {
-				ctx = getVeEnabledCtx(ctx, tc.height)
+				ctx = GetVeEnabledCtx(ctx, tc.height)
 			}
 
 			handler := prepare.PrepareProposalHandler(
@@ -879,7 +879,7 @@ func buildMockKeepers() (*mocks.PreparePricesKeeper, *mocks.PrepareClobKeeper, *
 	return mPricesk, mClobk, mPerpk2
 }
 
-func getVeEnabledCtx(ctx sdktypes.Context, blockHeight int64) sdktypes.Context {
+func GetVeEnabledCtx(ctx sdktypes.Context, blockHeight int64) sdktypes.Context {
 	ctx = ctx.WithConsensusParams(
 		cometproto.ConsensusParams{
 			Abci: &cometproto.ABCIParams{
