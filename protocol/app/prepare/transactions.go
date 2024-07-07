@@ -119,9 +119,7 @@ func (t *PrepareProposalTxs) GetAvailableBytes() uint64 {
 // GetTxsInOrder returns a list of txs in an order that the `ProcessProposal` expects.
 func (t *PrepareProposalTxs) GetTxsInOrder(veEnabled bool) ([][]byte, error) {
 
-	if veEnabled && len(t.ExtInfoBz) == 0 {
-		return nil, errors.New("extInfoBz must be set; VE is enabled")
-	} else if !veEnabled && len(t.ExtInfoBz) > 0 {
+	if !veEnabled && len(t.ExtInfoBz) > 0 {
 		return nil, errors.New("extInfoBz must not be set; VE is disabled")
 	}
 
