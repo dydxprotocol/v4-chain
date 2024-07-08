@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/require"
@@ -19,12 +20,14 @@ func TestLogger(t *testing.T) {
 
 func TestGetPerpetualFeePpm(t *testing.T) {
 	tests := map[string]struct {
+		user                string
 		UserStats           *stattypes.UserStats
 		GlobalStats         *stattypes.GlobalStats
 		expectedTakerFeePpm int32
 		expectedMakerFeePpm int32
 	}{
-		"first tier": {
+		"regular user, first tier": {
+			"alice",
 			&stattypes.UserStats{
 				TakerNotional: 10,
 				MakerNotional: 10,
@@ -35,7 +38,8 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			10,
 			1,
 		},
-		"increased tier": {
+		"regular user, increased tier": {
+			"alice",
 			&stattypes.UserStats{
 				TakerNotional: 1_000,
 				MakerNotional: 150,
@@ -46,7 +50,8 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			20,
 			2,
 		},
-		"partial requirements doesn't increase tier": {
+		"regular user, partial requirements doesn't increase tier": {
+			"alice",
 			&stattypes.UserStats{
 				TakerNotional: 1_000,
 				MakerNotional: 1_000_000_000,
@@ -57,7 +62,8 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			20,
 			2,
 		},
-		"top tier": {
+		"regular user, top tier": {
+			"alice",
 			&stattypes.UserStats{
 				TakerNotional: 1_000,
 				MakerNotional: 1_000_000_000,
@@ -68,13 +74,25 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			30,
 			3,
 		},
+		"vault is top tier regardless of stats": {
+			constants.Vault_Clob_0.ToModuleAccountAddress(),
+			&stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			},
+			&stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			},
+			30,
+			3,
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
-			user := "alice"
+			tApp.App.VaultKeeper.AddVaultToAddressStore(ctx, constants.Vault_Clob_0)
 			k := tApp.App.FeeTiersKeeper
 			err := k.SetPerpetualFeeParams(
 				ctx,
@@ -104,11 +122,11 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			require.NoError(t, err)
 
 			statsKeeper := tApp.App.StatsKeeper
-			statsKeeper.SetUserStats(ctx, user, tc.UserStats)
+			statsKeeper.SetUserStats(ctx, tc.user, tc.UserStats)
 			statsKeeper.SetGlobalStats(ctx, tc.GlobalStats)
 
-			require.Equal(t, tc.expectedTakerFeePpm, k.GetPerpetualFeePpm(ctx, user, true))
-			require.Equal(t, tc.expectedMakerFeePpm, k.GetPerpetualFeePpm(ctx, user, false))
+			require.Equal(t, tc.expectedTakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, true))
+			require.Equal(t, tc.expectedMakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, false))
 		})
 	}
 }

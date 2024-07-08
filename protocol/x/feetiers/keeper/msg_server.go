@@ -11,12 +11,12 @@ import (
 )
 
 type msgServer struct {
-	Keeper
+	Keeper types.FeeTiersKeeper
 }
 
 // NewMsgServerImpl returns an implementation of the MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(keeper Keeper) types.MsgServer {
+func NewMsgServerImpl(keeper types.FeeTiersKeeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
@@ -26,7 +26,7 @@ func (k msgServer) UpdatePerpetualFeeParams(
 	goCtx context.Context,
 	msg *types.MsgUpdatePerpetualFeeParams,
 ) (*types.MsgUpdatePerpetualFeeParamsResponse, error) {
-	if !k.HasAuthority(msg.Authority) {
+	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, errorsmod.Wrapf(
 			govtypes.ErrInvalidSigner,
 			"invalid authority %s",
@@ -35,7 +35,7 @@ func (k msgServer) UpdatePerpetualFeeParams(
 	}
 
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
-	if err := k.SetPerpetualFeeParams(ctx, msg.Params); err != nil {
+	if err := k.Keeper.SetPerpetualFeeParams(ctx, msg.Params); err != nil {
 		return nil, err
 	}
 
