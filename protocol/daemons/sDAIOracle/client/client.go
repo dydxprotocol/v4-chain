@@ -9,6 +9,7 @@ import (
 	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
 	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/api"
+	ethqueryclienttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/eth_query_client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/types"
 	daemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/types"
 	libtime "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/time"
@@ -79,6 +80,8 @@ func (c *Client) Start(
 
 	ticker := time.NewTicker(time.Duration(flags.SDAI.LoopDelayMs) * time.Millisecond)
 	stop := make(chan bool, 1)
+
+	queryClient := &ethqueryclienttypes.EthQueryClientImpl{}
 	// Run the main task loop at an interval.
 	StartsDAIDaemonTaskLoop(
 		ctx,
@@ -87,6 +90,7 @@ func (c *Client) Start(
 		stop,
 		&SubTaskRunnerImpl{},
 		ethClient,
+		queryClient,
 		serviceClient,
 	)
 
@@ -102,6 +106,7 @@ func StartsDAIDaemonTaskLoop(
 	stop <-chan bool,
 	s SubTaskRunner,
 	ethClient *ethclient.Client,
+	queryClient ethqueryclienttypes.EthQueryClient,
 	serviceClient api.SDAIServiceClient,
 ) {
 	// Run the main task loop at an interval.
@@ -112,6 +117,7 @@ func StartsDAIDaemonTaskLoop(
 				ctx,
 				c.logger,
 				ethClient,
+				queryClient,
 				serviceClient,
 			); err == nil {
 				c.ReportSuccess()

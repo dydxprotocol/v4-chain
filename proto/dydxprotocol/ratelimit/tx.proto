@@ -4,6 +4,7 @@ package dydxprotocol.ratelimit;
 
 option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types";
 
+import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "dydxprotocol/ratelimit/limit_params.proto";
 import "gogoproto/gogo.proto";

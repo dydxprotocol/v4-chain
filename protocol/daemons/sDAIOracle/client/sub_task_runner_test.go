@@ -10,6 +10,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/grpc"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -65,19 +66,20 @@ func TestRunsDAIDaemonTaskLoop(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := grpc.Ctx
 			mockLogger := mocks.Logger{}
-			mockEthClient := mocks.EthClient{}
+			mockEthClient := &ethclient.Client{}
+			mockQueryClient := mocks.EthQueryClient{}
 			mockServiceClient := mocks.SDAIServiceClient{}
-			mockStoreClient := mocks.StoreMock{}
 
-			mockEthClient.On("ChainID", ctx).Return(big.NewInt(int64(tc.chainId)), tc.chainIdError)
-			mockStoreClient.On("QueryDaiConversionRate", ctx, mock.Anything).Return(tc.daiRate, tc.ethereumBlockHeight, tc.queryDaiErr)
+			mockQueryClient.On("ChainID", ctx, mock.Anything).Return(big.NewInt(int64(tc.chainId)), tc.chainIdError)
+			mockQueryClient.On("QueryDaiConversionRate", mock.Anything).Return(tc.daiRate, tc.ethereumBlockHeight, tc.queryDaiErr)
 			mockServiceClient.On("AddsDAIEvents", ctx, mock.Anything).Return(nil, tc.addsDAIEventsErr)
 
 			subTaskRunner := &client.SubTaskRunnerImpl{}
 			err := subTaskRunner.RunsDAIDaemonTaskLoop(
 				grpc.Ctx,
 				&mockLogger,
-				&mockEthClient,
+				mockEthClient,
+				&mockQueryClient,
 				&mockServiceClient,
 			)
 			if tc.expectedErrorString != "" {

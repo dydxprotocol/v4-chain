@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/api"
-	store "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/contract"
+	ethqueryclienttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/eth_query_client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -19,6 +19,7 @@ type SubTaskRunner interface {
 		ctx context.Context,
 		logger log.Logger,
 		ethClient *ethclient.Client,
+		queryClient ethqueryclienttypes.EthQueryClient,
 		serviceClient api.SDAIServiceClient,
 	) error
 }
@@ -34,6 +35,7 @@ func (s *SubTaskRunnerImpl) RunsDAIDaemonTaskLoop(
 	ctx context.Context,
 	logger log.Logger,
 	ethClient *ethclient.Client,
+	queryClient ethqueryclienttypes.EthQueryClient,
 	serviceClient api.SDAIServiceClient,
 ) error {
 	defer telemetry.ModuleMeasureSince(
@@ -44,7 +46,7 @@ func (s *SubTaskRunnerImpl) RunsDAIDaemonTaskLoop(
 	)
 
 	// Verify Chain ID.
-	chainId, err := ethClient.ChainID(ctx)
+	chainId, err := queryClient.ChainID(ctx, ethClient)
 	if err != nil {
 		return fmt.Errorf("failed to fetch chain ID: %w", err)
 	}
@@ -57,7 +59,7 @@ func (s *SubTaskRunnerImpl) RunsDAIDaemonTaskLoop(
 	}
 
 	// Call the QueryDaiConversionRate function
-	sDAIConversionRate, blockNumber, err := store.QueryDaiConversionRate(ethClient)
+	sDAIConversionRate, blockNumber, err := queryClient.QueryDaiConversionRate(ethClient)
 	if err != nil {
 		return fmt.Errorf("failed to query DAI conversion rate: %w", err)
 	}

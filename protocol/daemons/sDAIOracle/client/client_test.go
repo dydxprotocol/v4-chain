@@ -12,6 +12,7 @@ import (
 	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client"
+	ethqueryclienttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/eth_query_client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons"
@@ -115,6 +116,7 @@ func (f *FakeSubTaskRunner) RunsDAIDaemonTaskLoop(
 	_ context.Context,
 	_ log.Logger,
 	_ *ethclient.Client,
+	_ ethqueryclienttypes.EthQueryClient,
 	_ api.SDAIServiceClient,
 ) error {
 	f.callIndex += 1
@@ -166,6 +168,7 @@ func TestHealthCheck_Mixed(t *testing.T) {
 					ticker,
 					stop,
 					fakeSubTaskRunner,
+					nil,
 					nil,
 					nil,
 				)

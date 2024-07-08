@@ -16,7 +16,7 @@ func QueryDaiConversionRate(client *ethclient.Client) (string, string, error) {
 	}
 
 	// Query the chi variable
-	chi, err := instance.Chi(nil)
+	sDAIExchangeRate, err := instance.Chi(nil)
 	if err != nil {
 		return "", "", err
 	}
@@ -26,5 +26,5 @@ func QueryDaiConversionRate(client *ethclient.Client) (string, string, error) {
 		return "", "", err
 	}
 
-	return chi.String(), header.Number.String(), nil
+	return sDAIExchangeRate.String(), header.Number.String(), nil
 }
