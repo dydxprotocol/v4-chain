@@ -10,15 +10,32 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// divideAndRoundUp performs division with rounding up: calculates x / y and rounds up to the nearest whole number
-func divideAndRoundUp(x, y *big.Int) *big.Int {
-	if x.Cmp(big.NewInt(0)) == 0 {
-		return big.NewInt(0)
+// DivideAndRoundUp performs division with rounding up: calculates x / y and rounds up to the nearest whole number
+func DivideAndRoundUp(x, y *big.Int) (*big.Int, error) {
+	// Handle nil inputs
+	if x == nil || y == nil {
+		return nil, errors.New("input values cannot be nil")
 	}
+
+	// Handle negative inputs
+	if x.Cmp(big.NewInt(0)) < 0 || y.Cmp(big.NewInt(0)) < 0 {
+		return nil, errors.New("input values cannot be negative")
+	}
+
+	// Handle division by zero
+	if y.Cmp(big.NewInt(0)) == 0 {
+		return nil, errors.New("division by zero")
+	}
+
+	// Handle x being zero
+	if x.Cmp(big.NewInt(0)) == 0 {
+		return big.NewInt(0), nil
+	}
+
 	result := new(big.Int).Sub(x, big.NewInt(1))
 	result = result.Div(result, y)
 	result = result.Add(result, big.NewInt(1))
-	return result
+	return result, nil
 }
 
 // Converts sDAI to corresponding amount of tDAI, implementing the following maker code
@@ -61,7 +78,11 @@ func (k Keeper) GetTradingDAIFromSDAIAmountAndRoundUp(ctx sdk.Context, sDAI *big
 
 	// Calculate shares = _divup(assets * RAY / chi)
 	tDAIAmount := new(big.Int).Mul(sDAI, new(big.Int).Exp(big.NewInt(types.BASE_10), big.NewInt(types.SDAI_DECIMALS), nil))
-	tDAIAmount = divideAndRoundUp(tDAIAmount, sDAIPrice)
+	tDAIAmount, err := DivideAndRoundUp(tDAIAmount, sDAIPrice)
+	if err != nil {
+		return nil, err
+	}
+	
 	return tDAIAmount, nil
 }
 
