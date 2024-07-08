@@ -299,6 +299,7 @@ func CalculateUpdatedPerpetualPositions(
 			positionsMap[update.PerpetualId] = &types.PerpetualPosition{
 				PerpetualId:  update.PerpetualId,
 				Quantums:     dtypes.NewIntFromBigInt(update.GetBigQuantums()),
+				QuoteBalance: dtypes.ZeroInt(),
 				FundingIndex: perpInfo.Perpetual.FundingIndex,
 			}
 		}
