@@ -10,6 +10,19 @@ import (
 
 var _ sdk.Msg = &MsgUpdateSDAIConversionRate{}
 
+// NewMsgUpdateSDAIConversionRate constructs a `MsgUpdateSDAIConversionRate` from a sender, conversion rate, and ethereum block number.
+func NewMsgUpdateSDAIConversionRate(
+	sender sdk.AccAddress,
+	conversionRate string,
+	ethereumBlockNumber string,
+) *MsgUpdateSDAIConversionRate {
+	return &MsgUpdateSDAIConversionRate{
+		Sender:              sender.String(),
+		ConversionRate:      conversionRate,
+		EthereumBlockNumber: ethereumBlockNumber,
+	}
+}
+
 // ValidateBasic runs validation on the fields of a MsgUpdateSDAIConversionRate.
 func (msg *MsgUpdateSDAIConversionRate) ValidateBasic() error {
 

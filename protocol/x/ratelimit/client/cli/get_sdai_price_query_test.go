@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
@@ -36,7 +37,16 @@ func TestGetSDAIPriceQuery(t *testing.T) {
 	chi, blockNumber, err := store.QueryDaiConversionRate(client)
 	assert.Nil(t, err, "Expected no error with real client")
 
-	// todo solal set the sDAI price to chi for block number
+	time.Sleep(15 * time.Second) // to ensure other validators have queried the sdai rate at this block
+
+	setTx := "docker exec interchain-security-instance-setup interchain-security-cd" +
+		" tx ratelimit update-market-prices dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 " +
+		chi + " " + blockNumber +
+		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
+	_, _, err = network.QueryCustomNetwork(setTx)
+	require.NoError(t, err)
+
+	time.Sleep(10 * time.Second)
 
 	param := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
 
