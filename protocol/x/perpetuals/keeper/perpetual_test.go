@@ -3120,3 +3120,35 @@ func TestIsIsolatedPerpetual(t *testing.T) {
 		)
 	}
 }
+
+func TestAcquireNextPerpetualID(t *testing.T) {
+	pc := keepertest.PerpetualsKeepers(t)
+	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 10)
+
+	// Get the highest perpetual id from the existing markets
+	highestPerpetualId := uint32(0)
+	for _, perp := range perps {
+		if perp.Params.Id > highestPerpetualId {
+			highestPerpetualId = perp.Params.Id
+		}
+	}
+
+	// Acquire the next perpetual id
+	nextPerpetualId := pc.PerpetualsKeeper.AcquireNextPerpetualID(pc.Ctx)
+	require.Equal(t, highestPerpetualId+1, nextPerpetualId)
+
+	// Verify the next perpetual id is stored in the store
+	nextPerpetualIdFromStore := pc.PerpetualsKeeper.GetNextPerpetualID(pc.Ctx)
+	require.Equal(t, nextPerpetualId+1, nextPerpetualIdFromStore)
+
+	// Create a perpetual with the next perpetual ID outside of acquire flow
+	perp := perptest.GeneratePerpetual(
+		perptest.WithId(nextPerpetualIdFromStore),
+		perptest.WithMarketId(nextPerpetualIdFromStore),
+	)
+	pc.PerpetualsKeeper.SetPerpetualForTest(pc.Ctx, *perp)
+
+	// Verify the next perpetual id is incremented
+	nextPerpetualId = pc.PerpetualsKeeper.AcquireNextPerpetualID(pc.Ctx)
+	require.Equal(t, nextPerpetualIdFromStore+1, nextPerpetualId)
+}

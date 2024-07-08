@@ -8,6 +8,8 @@ import (
 	"sort"
 	"time"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	storetypes "cosmossdk.io/store/types"
@@ -1513,4 +1515,36 @@ func (k Keeper) SendOIUpdatesToIndexer(ctx sdk.Context) {
 			},
 		),
 	)
+}
+
+// GetNextPerpetualID returns the next perpetual id to be used from the module store
+func (k Keeper) GetNextPerpetualID(ctx sdk.Context) uint32 {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get([]byte(types.NextPerpetualIDKey))
+	var result gogotypes.UInt32Value
+	k.cdc.MustUnmarshal(b, &result)
+	return result.Value
+}
+
+// SetNextPerpetualID sets the next perpetual id to be used
+func (k Keeper) SetNextPerpetualID(ctx sdk.Context, nextID uint32) {
+	store := ctx.KVStore(k.storeKey)
+	value := gogotypes.UInt32Value{Value: nextID}
+	store.Set([]byte(types.NextPerpetualIDKey), k.cdc.MustMarshal(&value))
+}
+
+// AcquireNextPerpetualID returns the next perpetual id to be used and increments the next perpetual id
+func (k Keeper) AcquireNextPerpetualID(ctx sdk.Context) uint32 {
+	nextID := k.GetNextPerpetualID(ctx)
+	// if perpetual id already exists, increment until we find one that doesn't
+	for {
+		_, err := k.GetPerpetual(ctx, nextID)
+		if err != nil && errorsmod.IsOf(err, types.ErrPerpetualDoesNotExist) {
+			break
+		}
+		nextID++
+	}
+
+	k.SetNextPerpetualID(ctx, nextID+1)
+	return nextID
 }
