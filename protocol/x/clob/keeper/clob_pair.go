@@ -717,12 +717,19 @@ func (k Keeper) SetNextClobPairID(ctx sdk.Context, nextID uint32) {
 func (k Keeper) AcquireNextClobPairID(ctx sdk.Context) uint32 {
 	nextID := k.GetNextClobPairID(ctx)
 	// if clob pair id already exists, increment until we find one that doesn't
+	maxAttempts, attempts := 1000, 0
 	for {
 		_, found := k.GetClobPair(ctx, types.ClobPairId(nextID))
 		if !found {
 			break
 		}
 		nextID++
+
+		// panic if we've tried too many times and are stuck in a loop
+		attempts++
+		if attempts >= maxAttempts {
+			panic("Exceeded maximum attempts to find a unique clob pair id")
+		}
 	}
 
 	k.SetNextClobPairID(ctx, nextID+1)
