@@ -210,3 +210,51 @@ func TestGetAllMarketParamPrices(t *testing.T) {
 		allParamPrices,
 	)
 }
+
+func TestAcquireNextMarketID(t *testing.T) {
+	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
+	ctx = ctx.WithTxBytes(constants.TestTxBytes)
+
+	keepertest.CreateNMarkets(t, ctx, keeper, 10)
+
+	// Get the highest market ID from the existing markets.
+	allParams := keeper.GetAllMarketParams(ctx)
+	highestMarketID := uint32(0)
+	for _, param := range allParams {
+		if param.Id > highestMarketID {
+			highestMarketID = param.Id
+		}
+	}
+
+	// Acquire the next market ID.
+	nextMarketID := keeper.AcquireNextMarketID(ctx)
+	require.Equal(t, highestMarketID+1, nextMarketID)
+
+	// Verify the next market ID is stored in the module store.
+	nextMarketIDFromStore := keeper.GetNextMarketID(ctx)
+	require.Equal(t, nextMarketID+1, nextMarketIDFromStore)
+
+	// Create a market with the next market ID outside of acquire flow
+	_, err := keeper.CreateMarket(
+		ctx,
+		types.MarketParam{
+			Id:                 nextMarketIDFromStore,
+			Pair:               "TEST-USD",
+			Exponent:           int32(-6),
+			ExchangeConfigJson: `{"test_config_placeholder":{}}`,
+			MinExchanges:       2,
+			MinPriceChangePpm:  uint32(9_999),
+		},
+		types.MarketPrice{
+			Id:       nextMarketIDFromStore,
+			Exponent: int32(-6),
+			Price:    constants.FiveBillion,
+		},
+	)
+	require.NoError(t, err)
+
+	// Verify the next market ID is incremented.
+	nextMarketID = keeper.AcquireNextMarketID(ctx)
+	require.Equal(t, nextMarketIDFromStore+1, nextMarketID)
+}
