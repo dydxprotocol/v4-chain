@@ -115,6 +115,7 @@ import (
 	daemonservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types"
 	liquidationtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/liquidations"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
+	sdaidaemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
 	daemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/types"
 
 	// Modules
@@ -557,9 +558,15 @@ func New(
 	)
 	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
 
+	// Setup server for sDAI oracle prices.
+	// The in-memory data structure is shared by the x/ratelimit module and sDAIOracle daemon.
+	sDAIEventManager := sdaidaemontypes.NewsDAIEventManager()
+	app.Server.WithsDAIEventManager(sDAIEventManager)
+
 	app.RatelimitKeeper = *ratelimitmodulekeeper.NewKeeper(
 		appCodec,
 		keys[ratelimitmoduletypes.StoreKey],
+		sDAIEventManager,
 		app.BankKeeper,
 		app.BlockTimeKeeper,
 		app.IBCKeeper.ChannelKeeper, // ICS4Wrapper

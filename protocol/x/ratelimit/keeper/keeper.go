@@ -3,7 +3,6 @@ package keeper
 import (
 	"fmt"
 	"math/big"
-	"strconv"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -20,15 +19,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gometrics "github.com/hashicorp/go-metrics"
+
+	sdaiserver "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
 )
 
 type (
 	Keeper struct {
-		cdc             codec.BinaryCodec
-		storeKey        storetypes.StoreKey
-		bankKeeper      types.BankKeeper
-		blockTimeKeeper types.BlockTimeKeeper
-		ics4Wrapper     types.ICS4Wrapper
+		cdc              codec.BinaryCodec
+		storeKey         storetypes.StoreKey
+		sDAIEventManager *sdaiserver.SDAIEventManager
+		bankKeeper       types.BankKeeper
+		blockTimeKeeper  types.BlockTimeKeeper
+		ics4Wrapper      types.ICS4Wrapper
 
 		// the addresses capable of executing MsgSetLimitParams message.
 		authorities map[string]struct{}
@@ -38,18 +40,20 @@ type (
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
+	sDAIEventManager *sdaiserver.SDAIEventManager,
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
 	ics4Wrapper types.ICS4Wrapper,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:             cdc,
-		storeKey:        storeKey,
-		bankKeeper:      bankKeeper,
-		blockTimeKeeper: blockTimeKeeper,
-		ics4Wrapper:     ics4Wrapper,
-		authorities:     lib.UniqueSliceToSet(authorities),
+		cdc:              cdc,
+		storeKey:         storeKey,
+		sDAIEventManager: sDAIEventManager,
+		bankKeeper:       bankKeeper,
+		blockTimeKeeper:  blockTimeKeeper,
+		ics4Wrapper:      ics4Wrapper,
+		authorities:      lib.UniqueSliceToSet(authorities),
 	}
 }
 
@@ -400,41 +404,4 @@ func (k Keeper) GetSDAIPrice(ctx sdk.Context) (price *big.Int, found bool) {
 	}
 	price = new(big.Int).SetBytes(bz)
 	return price, true
-}
-
-// SetEthBlockToChiRate stores the sDAI rate for a given Ethereum block number and deletes the entry for blockNumber - 5 if it exists.
-func (k Keeper) SetEthBlockTosDAIRate(ctx sdk.Context, blockNumber uint64, rate *big.Int) {
-	store := ctx.KVStore(k.storeKey)
-	key := []byte(types.StoredDripRatePrefix + strconv.FormatUint(blockNumber, 10))
-	bz := rate.Bytes()
-	store.Set(key, bz)
-
-	// Delete the entry for blockNumber - 5 if it exists
-	if blockNumber >= types.ETH_BLOCKS_TO_STORE {
-		oldKey := []byte(types.StoredDripRatePrefix + strconv.FormatUint(blockNumber-types.ETH_BLOCKS_TO_STORE, types.BASE_10))
-		if store.Has(oldKey) {
-			store.Delete(oldKey)
-		}
-	}
-}
-
-// GetEthBlockTosDAIRate retrieves the sDAI rate for a given Ethereum block number.
-func (k Keeper) GetEthBlockTosDAIRate(ctx sdk.Context, blockNumber uint64) (*big.Int, bool) {
-	store := ctx.KVStore(k.storeKey)
-	key := []byte(types.StoredDripRatePrefix + strconv.FormatUint(blockNumber, types.BASE_10))
-	bz := store.Get(key)
-	if bz == nil {
-		return nil, false
-	}
-	rate := new(big.Int).SetBytes(bz)
-	return rate, true
-}
-
-// CheckEthBlockToDripRate checks if the given Ethereum block number exists in the store and if the stored rate matches the provided rate.
-func (k Keeper) CheckEthBlockToDripRate(ctx sdk.Context, blockNumber uint64, rate *big.Int) bool {
-	storedRate, found := k.GetEthBlockTosDAIRate(ctx, blockNumber)
-	if !found {
-		return false
-	}
-	return storedRate.Cmp(rate) == 0
 }

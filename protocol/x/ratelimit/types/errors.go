@@ -41,4 +41,29 @@ var (
 		1007,
 		"Invalid input",
 	)
+	ErrInvalidSender = errorsmod.Register(
+		ModuleName,
+		1008,
+		"Sender address is invalid",
+	)
+	ErrUnableToDecodeBigInt = errorsmod.Register(
+		ModuleName,
+		1009,
+		"Unable to decode bigint",
+	)
+	ErrValueIsNegative = errorsmod.Register(
+		ModuleName,
+		1010,
+		"Value is negative",
+	)
+	ErrInvalidSDAIConversionRate = errorsmod.Register(
+		ModuleName,
+		1011,
+		"Proposed SDAI conversion rate is invalid",
+	)
+	ErrSDAIConversionRateNotInitisialised = errorsmod.Register(
+		ModuleName,
+		1012,
+		"The SDAI rate has not been initialised",
+	)
 )

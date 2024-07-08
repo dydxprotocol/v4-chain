@@ -13,6 +13,8 @@ service Msg {
   option (cosmos.msg.v1.service) = true;
   // SetLimitParams sets a `LimitParams` object in state.
   rpc SetLimitParams(MsgSetLimitParams) returns (MsgSetLimitParamsResponse);
+  // UpdateSDAIConversionRate updates the sDAI conversion rate with a asociated block height
+  rpc UpdateSDAIConversionRate(MsgUpdateSDAIConversionRate) returns (MsgUpdateSDAIConversionRateResponse);
 }
 
 // MsgSetLimitParams is the Msg/SetLimitParams request type.
@@ -27,3 +29,20 @@ message MsgSetLimitParams {
 
 // MsgSetLimitParamsResponse is the Msg/SetLimitParams response type.
 message MsgSetLimitParamsResponse {}
+
+// MsgUpdateSDAIConversionRate is the Msg/UpdateSDAIConversionRate request type.
+message MsgUpdateSDAIConversionRate {
+  option (cosmos.msg.v1.signer) = "sender";
+  
+  // The sender wallet address.
+  string sender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The sDAI conversion rate
+  string conversion_rate = 2;
+
+  // The ethereum block number for that rate
+  string ethereum_block_number = 3;
+}
+
+// MsgUpdateSDAIConversionRateResponse is the Msg/UpdateSDAIConversionRate response type.
+message MsgUpdateSDAIConversionRateResponse {}

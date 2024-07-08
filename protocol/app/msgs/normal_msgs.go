@@ -5,6 +5,7 @@ import (
 	feegrant "cosmossdk.io/x/feegrant"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	clob "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	ratelimit "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sending "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -196,6 +197,10 @@ var (
 		// perpetuals
 
 		// prices
+
+		// ratelimit
+		"/dydxprotocol.ratelimit.MsgUpdateSDAIConversionRate":         &ratelimit.MsgUpdateSDAIConversionRate{},
+		"/dydxprotocol.ratelimit.MsgUpdateSDAIConversionRateResponse": nil,
 
 		// sending
 		"/dydxprotocol.sending.MsgCreateTransfer":                 &sending.MsgCreateTransfer{},

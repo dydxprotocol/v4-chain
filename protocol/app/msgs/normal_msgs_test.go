@@ -87,6 +87,10 @@ func TestNormalMsgs_Key(t *testing.T) {
 
 		// prices
 
+		// ratelimit
+		"/dydxprotocol.ratelimit.MsgUpdateSDAIConversionRate",
+		"/dydxprotocol.ratelimit.MsgUpdateSDAIConversionRateResponse",
+
 		// sending
 		"/dydxprotocol.sending.MsgCreateTransfer",
 		"/dydxprotocol.sending.MsgCreateTransferResponse",
