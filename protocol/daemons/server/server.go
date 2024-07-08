@@ -24,6 +24,7 @@ type Server struct {
 	fileHandler   daemontypes.FileHandler
 	socketAddress string
 
+	SDAIServer
 	PriceFeedServer
 	LiquidationServer
 }

@@ -110,6 +110,7 @@ import (
 	pricefeedclient "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants"
 	pricefeed_types "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/types"
+	sdaiclient "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client"
 	daemonserver "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server"
 	daemonservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types"
 	liquidationtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/liquidations"
@@ -296,6 +297,7 @@ type App struct {
 
 	PriceFeedClient    *pricefeedclient.Client
 	LiquidationsClient *liquidationclient.Client
+	SDAIClient         *sdaiclient.Client
 
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
 }
@@ -752,6 +754,25 @@ func New(
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
 			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
+		}
+
+		// Start SDAI Daemon.
+		// Non-validating full-nodes have no need to run the sDAI daemon.
+		if !appFlags.NonValidatingFullNode && daemonFlags.SDAI.Enabled {
+			app.SDAIClient = sdaiclient.NewClient(logger)
+			go func() {
+				app.RegisterDaemonWithHealthMonitor(app.SDAIClient, maxDaemonUnhealthyDuration)
+				if err := app.SDAIClient.Start(
+					// The client will use `context.Background` so that it can have a different context from
+					// the main application.
+					context.Background(),
+					daemonFlags,
+					appFlags,
+					&daemontypes.GrpcClientImpl{},
+				); err != nil {
+					panic(err)
+				}
+			}()
 		}
 
 		// Start the Metrics Daemon.

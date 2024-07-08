@@ -13,6 +13,10 @@ const (
 	FlagPanicOnDaemonFailureEnabled = "panic-on-daemon-failure-enabled"
 	FlagMaxDaemonUnhealthySeconds   = "max-daemon-unhealthy-seconds"
 
+	FlagSDAIDaemonEnabled        = "sDai-daemon-enabled"
+	FlagSDAIDaemonLoopDelayMs    = "sDAI-daemon-loop-delay-ms"
+	FlagSDAIDaemonEthRpcEndpoint = "sDAI-daemon-eth-rpc-endpoint"
+
 	FlagPriceDaemonEnabled     = "price-daemon-enabled"
 	FlagPriceDaemonLoopDelayMs = "price-daemon-loop-delay-ms"
 
@@ -29,6 +33,16 @@ type SharedFlags struct {
 	PanicOnDaemonFailureEnabled bool
 	// MaxDaemonUnhealthySeconds is the maximum allowable duration for which a daemon can be unhealthy.
 	MaxDaemonUnhealthySeconds uint32
+}
+
+// sDAIFlags contains configuration flags for the DAI Daemon.
+type SDAIFlags struct {
+	// Enabled toggles the DAI daemon on or off.
+	Enabled bool
+	// LoopDelayMs configures the update frequency of the DAI daemon.
+	LoopDelayMs uint32
+	// EthRpcEndpoint is the endpoint for the Ethereum node where DAI data is queried.
+	EthRpcEndpoint string
 }
 
 // LiquidationFlags contains configuration flags for the Liquidation Daemon.
@@ -52,6 +66,7 @@ type PriceFlags struct {
 // DaemonFlags contains the collected configuration flags for all daemons.
 type DaemonFlags struct {
 	Shared      SharedFlags
+	SDAI        SDAIFlags
 	Liquidation LiquidationFlags
 	Price       PriceFlags
 }
@@ -66,6 +81,11 @@ func GetDefaultDaemonFlags() DaemonFlags {
 				SocketAddress:               "/tmp/daemons.sock",
 				PanicOnDaemonFailureEnabled: true,
 				MaxDaemonUnhealthySeconds:   5 * 60, // 5 minutes.
+			},
+			SDAI: SDAIFlags{
+				Enabled:        true,
+				LoopDelayMs:    30_000,
+				EthRpcEndpoint: "",
 			},
 			Liquidation: LiquidationFlags{
 				Enabled:        true,
@@ -106,6 +126,23 @@ func AddDaemonFlagsToCmd(
 		FlagMaxDaemonUnhealthySeconds,
 		df.Shared.MaxDaemonUnhealthySeconds,
 		"Maximum allowable duration for which a daemon can be unhealthy.",
+	)
+
+	// Bridge Daemon.
+	cmd.Flags().Bool(
+		FlagSDAIDaemonEnabled,
+		df.SDAI.Enabled,
+		"Enable SDAI Daemon. Set to false for non-validator nodes.",
+	)
+	cmd.Flags().Uint32(
+		FlagSDAIDaemonLoopDelayMs,
+		df.SDAI.LoopDelayMs,
+		"Delay in milliseconds between running the sDAI Daemon task loop.",
+	)
+	cmd.Flags().String(
+		FlagSDAIDaemonEthRpcEndpoint,
+		df.SDAI.EthRpcEndpoint,
+		"Ethereum Node Rpc Endpoint",
 	)
 
 	// Liquidation Daemon.
@@ -159,6 +196,23 @@ func GetDaemonFlagValuesFromOptions(
 	if option := appOpts.Get(FlagMaxDaemonUnhealthySeconds); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
 			result.Shared.MaxDaemonUnhealthySeconds = v
+		}
+	}
+
+	// Bridge Daemon.
+	if option := appOpts.Get(FlagSDAIDaemonEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.SDAI.Enabled = v
+		}
+	}
+	if option := appOpts.Get(FlagSDAIDaemonLoopDelayMs); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.SDAI.LoopDelayMs = v
+		}
+	}
+	if option := appOpts.Get(FlagSDAIDaemonEthRpcEndpoint); option != nil {
+		if v, err := cast.ToStringE(option); err == nil && len(v) > 0 {
+			result.SDAI.EthRpcEndpoint = v
 		}
 	}
 
