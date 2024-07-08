@@ -32,7 +32,9 @@ func (k msgServer) UpdateSDAIConversionRate(
 
 	for _, event := range lastTenEvents {
 
-		// todo what if not all the array is full
+		if event.EthereumBlockNumber == "" || event.ConversionRate == "" {
+			continue
+		}
 
 		blockNumber, err := ConvertStringToBigInt(event.EthereumBlockNumber)
 		if err != nil {
