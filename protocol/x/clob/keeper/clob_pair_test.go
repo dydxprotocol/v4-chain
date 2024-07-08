@@ -1142,7 +1142,7 @@ func TestClobPairValidate(t *testing.T) {
 
 func TestAcquireNextClobPairID(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	mockIndexerEventManager := &mocks.IndexerEventManager{}
+	mockIndexerEventManager := indexer_manager.NewIndexerEventManagerNoop()
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 	existingClobPairs := 10
 	keepertest.CreateNClobPair(
@@ -1152,7 +1152,7 @@ func TestAcquireNextClobPairID(t *testing.T) {
 		ks.PricesKeeper,
 		ks.Ctx,
 		existingClobPairs,
-		mockIndexerEventManager,
+		&mocks.IndexerEventManager{},
 	)
 
 	// Acquire next clob pair ID.
@@ -1181,28 +1181,6 @@ func TestAcquireNextClobPairID(t *testing.T) {
 		clobtest.WithId(nextClobPairIDFromStore),
 		clobtest.WithPerpetualId(perp.Params.Id),
 	)
-
-	mockIndexerEventManager.On(
-		"AddTxnEvent",
-		ks.Ctx,
-		indexerevents.SubtypePerpetualMarket,
-		indexerevents.PerpetualMarketEventVersion,
-		indexer_manager.GetBytes(
-			indexerevents.NewPerpetualMarketCreateEvent(
-				clobtest.MustPerpetualId(*clobPair),
-				clobPair.Id,
-				perp.Params.Ticker,
-				perp.Params.MarketId,
-				clobPair.Status,
-				clobPair.QuantumConversionExponent,
-				perp.Params.AtomicResolution,
-				clobPair.SubticksPerTick,
-				clobPair.StepBaseQuantums,
-				perp.Params.LiquidityTier,
-				perp.Params.MarketType,
-			),
-		),
-	).Return()
 
 	_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 		ks.Ctx,
