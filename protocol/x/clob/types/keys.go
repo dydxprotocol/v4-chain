@@ -68,6 +68,9 @@ const (
 	// UntriggeredConditionalOrderKeyPrefix is the key to retrieve an untriggered conditional order and
 	// information about when it was placed.
 	UntriggeredConditionalOrderKeyPrefix = StatefulOrderKeyPrefix + "U:"
+
+	// NextClobPairIDKey is the key to retrieve the next ClobPair ID to be used.
+	NextClobPairIDKey = "NextClobPairID"
 )
 
 // Memstore
