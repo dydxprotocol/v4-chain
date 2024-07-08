@@ -18,9 +18,8 @@ import (
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
-	abci "github.com/cometbft/cometbft/abci/types"
+
 	cometabci "github.com/cometbft/cometbft/abci/types"
-	cometproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -560,7 +559,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			if tc.veEnabled {
-				ctx = GetVeEnabledCtx(ctx, tc.height)
+				ctx = vetesting.GetVeEnabledCtx(ctx, tc.height)
 			}
 
 			handler := prepare.PrepareProposalHandler(
@@ -663,7 +662,7 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				ve.NewValidateVoteExtensionsFn(&mockConsumerKeeper),
 			)
 
-			req := abci.RequestPrepareProposal{
+			req := cometabci.RequestPrepareProposal{
 				Txs:        tc.txs,
 				MaxTxBytes: 100_000, // something large.
 			}
@@ -877,17 +876,6 @@ func buildMockKeepers() (*mocks.PreparePricesKeeper, *mocks.PrepareClobKeeper, *
 	mPerpk2 := &mocks.PreparePerpetualsKeeper{}
 
 	return mPricesk, mClobk, mPerpk2
-}
-
-func GetVeEnabledCtx(ctx sdktypes.Context, blockHeight int64) sdktypes.Context {
-	ctx = ctx.WithConsensusParams(
-		cometproto.ConsensusParams{
-			Abci: &cometproto.ABCIParams{
-				VoteExtensionsEnableHeight: 2,
-			},
-		},
-	).WithBlockHeight(blockHeight)
-	return ctx
 }
 
 func setMockResponses(

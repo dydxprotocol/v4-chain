@@ -75,7 +75,6 @@ func PrepareProposalHandler(
 		txs, err := NewPrepareProposalTxs(req)
 
 		if err != nil {
-			fmt.Println("NewPrepareProposalTxs error: ", err)
 			ctx.Logger().Error(fmt.Sprintf("NewPrepareProposalTxs error: %v", err))
 			recordErrorMetricsWithLabel(metrics.PrepareProposalTxs)
 			return &EmptyPrepareProposalResponse, nil
@@ -112,7 +111,6 @@ func PrepareProposalHandler(
 			// oracle data for the current block which will be committed to state in PreBlock.
 			extInfoBz, err = extCommitCodec.Encode(extCommitInfo)
 			if err != nil {
-				fmt.Println("failed to encode extended commit info", err)
 				ctx.Logger().Error(
 					"failed to extended commit info",
 					"commit_info", extCommitInfo,
@@ -124,7 +122,6 @@ func PrepareProposalHandler(
 
 			err = txs.SetExtInfoBz(extInfoBz)
 			if err != nil {
-				fmt.Println("failed to set ext info", err)
 				ctx.Logger().Error(fmt.Sprintf("SetExtInfoBz error: %v", err))
 				recordErrorMetricsWithLabel(metrics.FundingTx)
 				return &EmptyPrepareProposalResponse, nil
@@ -141,14 +138,14 @@ func PrepareProposalHandler(
 
 		fundingTxResp, err := GetAddPremiumVotesTx(ctx, txConfig, perpetualKeeper)
 		if err != nil {
-			fmt.Println("GetAddPremiumVotesTx error: ", err)
+
 			ctx.Logger().Error(fmt.Sprintf("GetAddPremiumVotesTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.FundingTx)
 			return &EmptyPrepareProposalResponse, nil
 		}
 		err = txs.SetAddPremiumVotesTx(fundingTxResp.Tx)
 		if err != nil {
-			fmt.Println("SetAddPremiumVotesTx error: ", err)
+
 			ctx.Logger().Error(fmt.Sprintf("SetAddPremiumVotesTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.FundingTx)
 			return &EmptyPrepareProposalResponse, nil
@@ -162,7 +159,6 @@ func PrepareProposalHandler(
 		if len(otherTxsToInclude) > 0 {
 			err := txs.AddOtherTxs(otherTxsToInclude)
 			if err != nil {
-				fmt.Println("AddOtherTxs error: ", err)
 				ctx.Logger().Error(fmt.Sprintf("AddOtherTxs error: %v", err))
 				recordErrorMetricsWithLabel(metrics.OtherTxs)
 				return &EmptyPrepareProposalResponse, nil
@@ -173,14 +169,12 @@ func PrepareProposalHandler(
 		// TODO(DEC-1237): ensure ProposedOperations is within a certain size.
 		operationsTxResp, err := GetProposedOperationsTx(ctx, txConfig, clobKeeper)
 		if err != nil {
-			fmt.Println("GetProposedOperationsTx error: ", err)
 			ctx.Logger().Error(fmt.Sprintf("GetProposedOperationsTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.OperationsTx)
 			return &EmptyPrepareProposalResponse, nil
 		}
 		err = txs.SetProposedOperationsTx(operationsTxResp.Tx)
 		if err != nil {
-			fmt.Println("SetProposedOperationsTx error: ", err)
 			ctx.Logger().Error(fmt.Sprintf("SetProposedOperationsTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.OperationsTx)
 			return &EmptyPrepareProposalResponse, nil
@@ -193,7 +187,7 @@ func PrepareProposalHandler(
 			if len(moreOtherTxsToInclude) > 0 {
 				err = txs.AddOtherTxs(moreOtherTxsToInclude)
 				if err != nil {
-					fmt.Println("AddOtherTxs (additional) error: ", err)
+
 					ctx.Logger().Error(fmt.Sprintf("AddOtherTxs (additional) error: %v", err))
 					recordErrorMetricsWithLabel(metrics.OtherTxs)
 					return &EmptyPrepareProposalResponse, nil
@@ -208,7 +202,7 @@ func PrepareProposalHandler(
 		}
 
 		if err != nil {
-			fmt.Println("GetTxsInOrder error: ", err)
+
 			ctx.Logger().Error(fmt.Sprintf("GetTxsInOrder error: %v", err))
 			recordErrorMetricsWithLabel(metrics.GetTxsInOrder)
 			return &EmptyPrepareProposalResponse, nil

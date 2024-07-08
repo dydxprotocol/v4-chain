@@ -1,8 +1,6 @@
 package ve
 
 import (
-	"fmt"
-
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cometproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -24,7 +22,6 @@ func PruneAndValidateExtendedCommitInfo(
 				"err", err,
 				"validator", vote.Validator.Address,
 			)
-			fmt.Println("failed to validate vote extension - pruning vote", err, vote)
 
 			// failed to validate this vote-extension, mark it as absent in the original commit
 			vote.BlockIdFlag = cometproto.BlockIDFlagAbsent

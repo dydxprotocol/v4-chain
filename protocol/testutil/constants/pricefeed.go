@@ -1,14 +1,53 @@
 package constants
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants"
 	daemonClientTypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
+
+func GetVEEncodedPrice(
+	price *big.Int,
+) ([]byte, error) {
+	if price.Sign() < 0 {
+		return nil, fmt.Errorf("price must be non-negative %v", price.String())
+	}
+	pricebz, err := price.GobEncode()
+	fmt.Println("price in constants", price)
+	fmt.Println("pricebz in constants", pricebz)
+	return pricebz, err
+}
+
+func GetVEDecodedPrice(
+	priceBz []byte,
+) (*big.Int, error) {
+	var price big.Int
+	// fmt.Println("priceBz", priceBz)
+	// var uint64Price uint64
+	// uint64Price = 1001
+	// testInt := big.NewInt(int64(uint64Price))
+	// encodedInt, _ := testInt.GobEncode()
+	// fmt.Println("encodedInt", encodedInt)
+	// err := price.GobDecode(encodedInt)
+
+	// fmt.Println("testDecode", price.String())
+	err := price.GobDecode(priceBz)
+	if err != nil {
+		return nil, err
+	}
+
+	if price.Sign() < 0 {
+		return nil, fmt.Errorf("price must be non-negative %v", price.String())
+	}
+
+	return &price, nil
+}
 
 var (
 	// Markets
@@ -174,13 +213,13 @@ var (
 	Price6Big = big.NewInt(int64(Price6))
 	Price7Big = big.NewInt(int64(Price7))
 
-	Price1Bytes = Price1Big.Bytes()
-	Price2Bytes = Price2Big.Bytes()
-	Price3Bytes = Price3Big.Bytes()
-	Price4Bytes = Price4Big.Bytes()
-	Price5Bytes = Price5Big.Bytes()
-	Price6Bytes = Price6Big.Bytes()
-	Price7Bytes = Price7Big.Bytes()
+	Price1Bytes, _ = GetVEEncodedPrice(Price1Big)
+	Price2Bytes, _ = GetVEEncodedPrice(Price2Big)
+	Price3Bytes, _ = GetVEEncodedPrice(Price3Big)
+	Price4Bytes, _ = GetVEEncodedPrice(Price4Big)
+	Price5Bytes, _ = GetVEEncodedPrice(Price5Big)
+	Price6Bytes, _ = GetVEEncodedPrice(Price6Big)
+	Price7Bytes, _ = GetVEEncodedPrice(Price7Big)
 
 	// Exchange 0 prices
 	Exchange0_Price4_TimeT = &api.ExchangePrice{

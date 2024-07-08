@@ -28,7 +28,6 @@ func ValidateDaemonVoteExtension(
 ) error {
 	// TODO: how do you account for removed prices from the prev and current block
 	params := pk.GetAllMarketParams(ctx)
-
 	if uint64(len(ve.Prices)) > uint64(len(params)) {
 		return fmt.Errorf("number of oracle vote extension pairs of %d greater than maximum expected pairs of %d", uint64(len(ve.Prices)), uint64(len(params)))
 	}

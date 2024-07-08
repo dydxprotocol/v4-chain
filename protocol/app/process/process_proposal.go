@@ -1,7 +1,6 @@
 package process
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
@@ -70,8 +69,7 @@ func ProcessProposalHandler(
 			if len(req.Txs) < constants.MinTxsCount {
 				ctx.Logger().Error("failed to process proposal: missing commit info", "num_txs", len(req.Txs))
 
-				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT},
-					fmt.Errorf("failed to process proposal: missing commit info")
+				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
 
 			extCommitBz := req.Txs[constants.DaemonInfoIndex]
@@ -81,18 +79,18 @@ func ProcessProposalHandler(
 			if err != nil {
 				ctx.Logger().Error("failed to decode extended commit info", "err", err)
 
-				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT},
-					fmt.Errorf("failed to decode extended commit info: %w", err)
+				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
 			// TODO: PreparePricesKeeper and ProcessPricesKeeper are the same (clean up)
 			if err := ve.ValidateExtendedCommitInfo(ctx, req.Height, extInfo, veCodec, pricesKeeper.(ve.PreparePricesKeeper), validateVoteExtensionFn); err != nil {
+
 				ctx.Logger().Error(
 					"failed to validate extended commit info",
 					"height", req.Height,
 					"commit_info", extInfo,
 					"err", err,
 				)
-				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, fmt.Errorf("failed to validate extended commit info: %w", err)
+				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
 		}
 		// Update the current block height and consensus round.

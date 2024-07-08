@@ -1,6 +1,9 @@
 package ve_testutils
 
 import (
+	"fmt"
+	"math/big"
+
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
@@ -99,4 +102,37 @@ func CreateVoteExtension(
 	return vetypes.DaemonVoteExtension{
 		Prices: prices,
 	}
+}
+
+func GetVeEnabledCtx(ctx sdk.Context, blockHeight int64) sdk.Context {
+	ctx = ctx.WithConsensusParams(
+		cometproto.ConsensusParams{
+			Abci: &cometproto.ABCIParams{
+				VoteExtensionsEnableHeight: 2,
+			},
+		},
+	).WithBlockHeight(blockHeight)
+	return ctx
+}
+
+func GetIndexPriceCacheEncodedPrice(price *big.Int) ([]byte, error) {
+	if price.Sign() < 0 {
+		return nil, fmt.Errorf("price must be non-negative %v", price.String())
+	}
+
+	return price.GobEncode()
+}
+
+func GetIndexPriceCacheDecodedPrice(priceBz []byte) (*big.Int, error) {
+	var price big.Int
+	err := price.GobDecode(priceBz)
+	if err != nil {
+		return nil, err
+	}
+
+	if price.Sign() < 0 {
+		return nil, fmt.Errorf("price must be non-negative %v", price.String())
+	}
+
+	return &price, nil
 }

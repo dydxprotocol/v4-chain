@@ -128,7 +128,7 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 	return marketIdToMedianPrice
 }
 
-func (mte *MarketToExchangePrices) GetEncodedPrice(
+func (mte *MarketToExchangePrices) GetVEEncodedPrice(
 	price *big.Int,
 ) ([]byte, error) {
 	if price.Sign() < 0 {
@@ -138,7 +138,7 @@ func (mte *MarketToExchangePrices) GetEncodedPrice(
 	return price.GobEncode()
 }
 
-func (mte *MarketToExchangePrices) GetDecodedPrice(
+func (mte *MarketToExchangePrices) GetVEDecodedPrice(
 	priceBz []byte,
 ) (*big.Int, error) {
 	var price big.Int

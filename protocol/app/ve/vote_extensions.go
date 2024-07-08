@@ -166,7 +166,7 @@ func (h *VoteExtensionHandler) transformDaemonPricesToVE(
 
 		rawPrice := new(big.Int).SetUint64(price)
 
-		encodedPrice, err := h.indexPriceCache.GetEncodedPrice(rawPrice)
+		encodedPrice, err := h.indexPriceCache.GetVEEncodedPrice(rawPrice)
 
 		if err != nil {
 			h.logger.Debug("failed to encode price", "price", price, "market", market.Pair, "err", err)
