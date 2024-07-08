@@ -76,6 +76,23 @@ const (
 	// memclob state based on the latest block.
 	ProcessProposerMatchesEventsKey = "ProposerEvents"
 
+	// The following Delivered keys used to be a part of ProcessProposerMatchesEvents but were taken out to unnecessary
+	// serde of a big monolithic value.
+
+	// OrderedDeliveredLongTermOrderIndexKey stores the next index to be used for OrderedDeliveredLongTermOrderKeyPrefix
+	OrderedDeliveredLongTermOrderIndexKey = "DLTOIdx"
+	// OrderedDeliveredLongTermOrderKeyPrefix is used to store placed orders for memclob placement in PrepareCheckState.
+	OrderedDeliveredLongTermOrderKeyPrefix = "DLTO:"
+
+	// OrderedDeliveredConditionalOrdexIndexKey stores the next index to be used for
+	// OrderedDeliveredConditionalOrderKeyPrefix
+	OrderedDeliveredConditionalOrderIndexKey = "DCOIdx"
+	// OrderedDeliveredConditionalOrderKeyPrefix is used to store placed orders for memclob placement in PrepareCheckState.
+	OrderedDeliveredConditionalOrderKeyPrefix = "DCIdx:"
+
+	// DeliveredCancelKeyPrefix is used to store placed orders for memclob placement in PrepareCheckState.
+	DeliveredCancelKeyPrefix = "DCancel:"
+
 	// StatefulOrderCountPrefix is the key to retrieve the stateful order count. The stateful order count
 	// represents the number of stateful orders stored in state.
 	StatefulOrderCountPrefix = "NumSO:"
