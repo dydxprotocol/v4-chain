@@ -93,7 +93,7 @@ func NewInterfaceRegistry(addrPrefix string, valAddrPrefix string) (types.Interf
 					[]string{"sender", "owner"},
 				),
 				"dydxprotocol.ratelimit.MsgUpdateSDAIConversionRate": getLegacyMsgSignerFn(
-					[]string{"sender", "owner"},
+					[]string{"sender"},
 				),
 
 				// App injected messages have no signers.

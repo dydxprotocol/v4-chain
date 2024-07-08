@@ -110,7 +110,6 @@ func StartsDAIDaemonTaskLoop(
 		case <-ticker.C:
 			if err := s.RunsDAIDaemonTaskLoop(
 				ctx,
-				c,
 				c.logger,
 				ethClient,
 				serviceClient,

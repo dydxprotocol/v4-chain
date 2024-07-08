@@ -17,7 +17,6 @@ import (
 type SubTaskRunner interface {
 	RunsDAIDaemonTaskLoop(
 		ctx context.Context,
-		c *Client,
 		logger log.Logger,
 		ethClient *ethclient.Client,
 		serviceClient api.SDAIServiceClient,
@@ -33,7 +32,6 @@ var _ SubTaskRunner = (*SubTaskRunnerImpl)(nil)
 // 2) Sends sDAI conversion rate to the gRPC server.
 func (s *SubTaskRunnerImpl) RunsDAIDaemonTaskLoop(
 	ctx context.Context,
-	c *Client,
 	logger log.Logger,
 	ethClient *ethclient.Client,
 	serviceClient api.SDAIServiceClient,
@@ -59,7 +57,7 @@ func (s *SubTaskRunnerImpl) RunsDAIDaemonTaskLoop(
 	}
 
 	// Call the QueryDaiConversionRate function
-	sDAIConversionRate, blockNumber, err := c.QueryDaiRate(ethClient)
+	sDAIConversionRate, blockNumber, err := store.QueryDaiConversionRate(ethClient)
 	if err != nil {
 		return fmt.Errorf("failed to query DAI conversion rate: %w", err)
 	}
@@ -80,10 +78,4 @@ func (s *SubTaskRunnerImpl) RunsDAIDaemonTaskLoop(
 
 	// Success.
 	return nil
-}
-
-func (c *Client) QueryDaiRate(ethClient *ethclient.Client) (string, string, error) {
-
-	// Call the QueryDaiConversionRate function
-	return store.QueryDaiConversionRate(ethClient)
 }

@@ -10,44 +10,30 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/grpc"
-	ethcoretypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRunsDAIDaemonTaskLoop(t *testing.T) {
-	errParams := errors.New("error getting event params")
-	errPropose := errors.New("error getting propose params")
-	errRecognizedEventInfo := errors.New("error getting recognized event info")
 	errChainId := errors.New("error getting chain id")
-	errEthereumLogs := errors.New("error getting Ethereum logs")
-	errAddBridgeEvents := errors.New("error adding bridge events")
+	errQuerysDAIRate := errors.New("failed to fetch chain ID")
+	errAddSDAIEvents := errors.New("failed to add sDAI events")
 
 	tests := map[string]struct {
-		chainId            int
-		chainIdError       error
-		filterLogs         []ethcoretypes.Log
-		filterLogsErr      error
-		addBridgeEventsErr error
+		chainId             int
+		chainIdError        error
+		daiRate             string
+		ethereumBlockHeight string
+		queryDaiErr         error
+		addsDAIEventsErr    error
 
 		expectedErrorString string
 		expectedError       error
 	}{
 		"Success": {
-			chainId: constants.EthChainId,
-			filterLogs: []ethcoretypes.Log{
-				constants.EthLog_Event0,
-				constants.EthLog_Event1,
-			},
-		},
-		"Error getting event params": {
-			expectedError: errParams,
-		},
-		"Error getting propose params": {
-			expectedError: errPropose,
-		},
-		"Error getting recognized event info": {
-			expectedError: errRecognizedEventInfo,
+			chainId:             constants.EthChainId,
+			daiRate:             constants.SDAIRate,
+			ethereumBlockHeight: constants.EthereumBlockNumber,
 		},
 		"Error getting chain id": {
 			chainIdError:  errChainId,
@@ -61,18 +47,17 @@ func TestRunsDAIDaemonTaskLoop(t *testing.T) {
 				constants.EthChainId+1,
 			),
 		},
-		"Error getting Ethereum logs": {
+		"Error getting dai conversion rare": {
 			chainId:       constants.EthChainId,
-			filterLogsErr: errEthereumLogs,
-			expectedError: errEthereumLogs,
+			queryDaiErr:   errQuerysDAIRate,
+			expectedError: errQuerysDAIRate,
 		},
-		"Error adding bridge events": {
-			chainId: constants.EthChainId,
-			filterLogs: []ethcoretypes.Log{
-				constants.EthLog_Event0,
-			},
-			addBridgeEventsErr: errAddBridgeEvents,
-			expectedError:      errAddBridgeEvents,
+		"Error adding sDAI events": {
+			chainId:             constants.EthChainId,
+			daiRate:             constants.SDAIRate,
+			ethereumBlockHeight: constants.EthereumBlockNumber,
+			addsDAIEventsErr:    errAddSDAIEvents,
+			expectedError:       errAddSDAIEvents,
 		},
 	}
 
@@ -81,19 +66,18 @@ func TestRunsDAIDaemonTaskLoop(t *testing.T) {
 			ctx := grpc.Ctx
 			mockLogger := mocks.Logger{}
 			mockEthClient := mocks.EthClient{}
-			mockQueryClient := mocks.BridgeQueryClient{}
-			mockServiceClient := mocks.BridgeServiceClient{}
+			mockServiceClient := mocks.SDAIServiceClient{}
+			mockStoreClient := mocks.StoreMock{}
 
 			mockEthClient.On("ChainID", ctx).Return(big.NewInt(int64(tc.chainId)), tc.chainIdError)
-			mockEthClient.On("FilterLogs", ctx, mock.Anything).Return(tc.filterLogs, tc.filterLogsErr)
-			mockServiceClient.On("AddBridgeEvents", ctx, mock.Anything).Return(nil, tc.addBridgeEventsErr)
+			mockStoreClient.On("QueryDaiConversionRate", ctx, mock.Anything).Return(tc.daiRate, tc.ethereumBlockHeight, tc.queryDaiErr)
+			mockServiceClient.On("AddsDAIEvents", ctx, mock.Anything).Return(nil, tc.addsDAIEventsErr)
 
 			subTaskRunner := &client.SubTaskRunnerImpl{}
-			err := subTaskRunner.RunBridgeDaemonTaskLoop(
+			err := subTaskRunner.RunsDAIDaemonTaskLoop(
 				grpc.Ctx,
 				&mockLogger,
 				&mockEthClient,
-				&mockQueryClient,
 				&mockServiceClient,
 			)
 			if tc.expectedErrorString != "" {

@@ -113,7 +113,6 @@ func NewFakeSubTaskRunnerWithResults(results []error) *FakeSubTaskRunner {
 
 func (f *FakeSubTaskRunner) RunsDAIDaemonTaskLoop(
 	_ context.Context,
-	_ *client.Client,
 	_ log.Logger,
 	_ *ethclient.Client,
 	_ api.SDAIServiceClient,
