@@ -31,6 +31,7 @@ import (
 	statskeeper "github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	subkeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 	"github.com/stretchr/testify/require"
 )
 
@@ -45,6 +46,7 @@ type ClobKeepersTestContext struct {
 	StatsKeeper       *statskeeper.Keeper
 	RewardsKeeper     *rewardskeeper.Keeper
 	SubaccountsKeeper *subkeeper.Keeper
+	VaultKeeper       *vaultkeeper.Keeper
 	StoreKey          storetypes.StoreKey
 	MemKey            storetypes.StoreKey
 	Cdc               *codec.ProtoCodec
@@ -114,9 +116,16 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			db,
 			cdc,
 		)
+		ks.VaultKeeper, _ = createVaultKeeper(
+			stateStore,
+			db,
+			cdc,
+			indexerEventsTransientStoreKey,
+		)
 		ks.FeeTiersKeeper, _ = createFeeTiersKeeper(
 			stateStore,
 			ks.StatsKeeper,
+			ks.VaultKeeper,
 			db,
 			cdc,
 		)

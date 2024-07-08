@@ -302,7 +302,7 @@ type App struct {
 
 	DelayMsgKeeper delaymsgmodulekeeper.Keeper
 
-	FeeTiersKeeper feetiersmodulekeeper.Keeper
+	FeeTiersKeeper *feetiersmodulekeeper.Keeper
 
 	ListingKeeper listingmodulekeeper.Keeper
 
@@ -980,7 +980,7 @@ func New(
 	)
 	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
 
-	app.FeeTiersKeeper = *feetiersmodulekeeper.NewKeeper(
+	app.FeeTiersKeeper = feetiersmodulekeeper.NewKeeper(
 		appCodec,
 		app.StatsKeeper,
 		keys[feetiersmoduletypes.StoreKey],
@@ -1126,6 +1126,7 @@ func New(
 		},
 	)
 	vaultModule := vaultmodule.NewAppModule(appCodec, app.VaultKeeper)
+	app.FeeTiersKeeper.SetVaultKeeper(app.VaultKeeper)
 
 	app.ListingKeeper = *listingmodulekeeper.NewKeeper(
 		appCodec,
