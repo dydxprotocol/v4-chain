@@ -25,17 +25,11 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 	// Valid add funding tx.
 	validAddFundingTx := constants.ValidMsgAddPremiumVotesTxBytes
 
-	// Valid update price tx.
-	validUpdatePriceTx := constants.ValidMsgUpdateMarketPricesTxBytes
-
 	// Valid "other" single msg tx.
 	validSingleMsgOtherTx := constants.Msg_Send_TxBytes
 
 	// Valid "other" multi msgs tx.
 	validMultiMsgOtherTx := constants.Msg_SendAndTransfer_TxBytes
-
-	// Invalid update price tx.
-	invalidUpdatePriceTx := constants.InvalidMsgUpdateMarketPricesStatelessTxBytes
 
 	tests := map[string]struct {
 		txsBytes [][]byte
@@ -49,7 +43,6 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 			txsBytes: [][]byte{
 				validOperationsTx,
 				validAddFundingTx,
-				invalidUpdatePriceTx, // invalid.
 			},
 		},
 		"Valid txs": {
@@ -58,7 +51,6 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 				validMultiMsgOtherTx,  // other txs.
 				validSingleMsgOtherTx, // other txs.
 				validAddFundingTx,
-				validUpdatePriceTx,
 			},
 		},
 	}

@@ -6,21 +6,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
 
-func init() {
-	_ = TestTxBuilder.SetMsgs(EmptyMsgUpdateMarketPrices)
-	EmptyMsgUpdateMarketPricesTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
-
-	_ = TestTxBuilder.SetMsgs(ValidMsgUpdateMarketPrices)
-	ValidMsgUpdateMarketPricesTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
-
-	_ = TestTxBuilder.SetMsgs(InvalidMsgUpdateMarketPricesStateless)
-	InvalidMsgUpdateMarketPricesStatelessTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
-
-	_ = TestTxBuilder.SetMsgs(InvalidMsgUpdateMarketPricesStateful)
-	InvalidMsgUpdateMarketPricesStatefulTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
-
-}
-
 const (
 	BtcUsdPair   = "BTC-USD"
 	EthUsdPair   = "ETH-USD"
@@ -284,15 +269,15 @@ var (
 
 	ValidEmptyMarketParams = []types.MarketParam{}
 	// `MsgUpdateMarketPrices`.
-	EmptyMsgUpdateMarketPrices        = &types.MarketPriceUpdates{}
-	EmptyMsgUpdateMarketPricesTxBytes []byte
+	EmptyUpdateMarketPrices        = &types.MarketPriceUpdates{}
+	EmptyUpdateMarketPricesTxBytes []byte
 
-	ValidMsgUpdateMarketPrices = &types.MarketPriceUpdates{
+	ValidUpdateMarketPrices = &types.MarketPriceUpdates{
 		MarketPriceUpdates: ValidMarketPriceUpdates,
 	}
-	ValidMsgUpdateMarketPricesTxBytes []byte
+	ValidUpdateMarketPricesTxBytes []byte
 
-	InvalidMsgUpdateMarketPricesStateless = &types.MarketPriceUpdates{
+	InvalidUpdateMarketPricesStateless = &types.MarketPriceUpdates{
 		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
 			{
 				MarketId: MarketId0,
@@ -300,9 +285,9 @@ var (
 			},
 		},
 	}
-	InvalidMsgUpdateMarketPricesStatelessTxBytes []byte
+	InvalidUpdateMarketPricesStatelessTxBytes []byte
 
-	InvalidMsgUpdateMarketPricesStateful = &types.MarketPriceUpdates{
+	InvalidUpdateMarketPricesStateful = &types.MarketPriceUpdates{
 		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
 			{
 				MarketId: MarketId0,
@@ -318,7 +303,7 @@ var (
 			},
 		},
 	}
-	InvalidMsgUpdateMarketPricesStatefulTxBytes []byte
+	InvalidUpdateMarketPricesStatefulTxBytes []byte
 
 	Prices_DefaultGenesisState = types.GenesisState{
 		MarketParams: []types.MarketParam{
