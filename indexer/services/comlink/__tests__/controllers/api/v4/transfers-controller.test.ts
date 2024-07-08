@@ -1086,7 +1086,7 @@ describe('transfers-controller#V4', () => {
       await dbHelpers.clearData();
 
       const transferBetweenResponse: TransferBetweenResponse = await getTransferBetweenResponse();
-      expect(transferBetweenResponse.transfers).toHaveLength(0);
+      expect(transferBetweenResponse.transfersSubset).toHaveLength(0);
       expect(transferBetweenResponse.totalNetTransfers).toEqual('0');
     });
 
@@ -1094,7 +1094,7 @@ describe('transfers-controller#V4', () => {
       await SubaccountTable.deleteById(testConstants.defaultSubaccountId);
 
       const transferBetweenResponse: TransferBetweenResponse = await getTransferBetweenResponse();
-      expect(transferBetweenResponse.transfers).toHaveLength(0);
+      expect(transferBetweenResponse.transfersSubset).toHaveLength(0);
       expect(transferBetweenResponse.totalNetTransfers).toEqual('0');
     });
 
@@ -1102,20 +1102,20 @@ describe('transfers-controller#V4', () => {
       await SubaccountTable.deleteById(testConstants.defaultSubaccountId2);
 
       const transferBetweenResponse: TransferBetweenResponse = await getTransferBetweenResponse();
-      expect(transferBetweenResponse.transfers).toHaveLength(0);
+      expect(transferBetweenResponse.transfersSubset).toHaveLength(0);
       expect(transferBetweenResponse.totalNetTransfers).toEqual('0');
 
     });
 
-    it('Returns successfully with transfers with net transfers', async () => {
+    it('Returns successfully with transfers and net transfers', async () => {
       await Promise.all([
         TransferTable.create(firstTransfer),
         TransferTable.create(secondTransfer),
       ]);
 
       const transferBetweenResponse: TransferBetweenResponse = await getTransferBetweenResponse();
-      expect(transferBetweenResponse.transfers).toHaveLength(2);
-      expect(transferBetweenResponse.transfers).toEqual([
+      expect(transferBetweenResponse.transfersSubset).toHaveLength(2);
+      expect(transferBetweenResponse.transfersSubset).toEqual([
         secondTransferResponse,
         firstTransferResponse,
       ]);
@@ -1133,8 +1133,8 @@ describe('transfers-controller#V4', () => {
       const transferBetweenResponse: TransferBetweenResponse = await getTransferBetweenResponse(
         +firstTransfer.createdAtHeight,
       );
-      expect(transferBetweenResponse.transfers).toHaveLength(1);
-      expect(transferBetweenResponse.transfers).toEqual([
+      expect(transferBetweenResponse.transfersSubset).toHaveLength(1);
+      expect(transferBetweenResponse.transfersSubset).toEqual([
         firstTransferResponse,
       ]);
       expect(transferBetweenResponse.totalNetTransfers).toEqual(
@@ -1152,8 +1152,8 @@ describe('transfers-controller#V4', () => {
         undefined,
         firstTransfer.createdAt,
       );
-      expect(transferBetweenResponse.transfers).toHaveLength(1);
-      expect(transferBetweenResponse.transfers).toEqual([
+      expect(transferBetweenResponse.transfersSubset).toHaveLength(1);
+      expect(transferBetweenResponse.transfersSubset).toEqual([
         firstTransferResponse,
       ]);
       expect(transferBetweenResponse.totalNetTransfers).toEqual(

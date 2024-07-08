@@ -1301,7 +1301,7 @@
             "type": "number",
             "format": "double"
           },
-          "transfers": {
+          "transfersSubset": {
             "items": {
               "$ref": "#/components/schemas/TransferResponseObject"
             },
@@ -1312,7 +1312,7 @@
           }
         },
         "required": [
-          "transfers",
+          "transfersSubset",
           "totalNetTransfers"
         ],
         "type": "object",
@@ -2874,7 +2874,7 @@
         ]
       }
     },
-    "/transfers/compare": {
+    "/transfers/between": {
       "get": {
         "operationId": "GetTransferBetween",
         "responses": {

@@ -439,7 +439,7 @@ export async function getNetTransfersBetweenSubaccountIds(
 ): Promise<string> {
   const queryString: string = `
   SELECT 
-    SUM(sub."size") AS "totalSize"
+    COALESCE(SUM(sub."size"), '0') AS "totalSize"
   FROM (
     SELECT DISTINCT 
       "size" AS "size",
@@ -466,11 +466,6 @@ export async function getNetTransfersBetweenSubaccountIds(
   } = await rawQuery(queryString, options);
 
   // Should only ever return a single row
-  if (result.rows[0].totalSize === null) {
-    // If not transfers between the two subaccounts exist, then psql returns null
-    return '0';
-  }
-
   return result.rows[0].totalSize;
 }
 

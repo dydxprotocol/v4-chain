@@ -2907,7 +2907,7 @@ headers = {
 # baseURL = 'https://indexer.dydx.trade/v4'
 baseURL = 'https://dydx-testnet.imperator.co/v4'
 
-r = requests.get(f'{baseURL}/transfers/compare', params={
+r = requests.get(f'{baseURL}/transfers/between', params={
   'sourceAddress': 'string',  'sourceSubaccountNumber': '0.1',  'recipientAddress': 'string',  'recipientSubaccountNumber': '0.1'
 }, headers = headers)
 
@@ -2925,7 +2925,7 @@ const headers = {
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://dydx-testnet.imperator.co/v4';
 
-fetch(`${baseURL}/transfers/compare?sourceAddress=string&sourceSubaccountNumber=0.1&recipientAddress=string&recipientSubaccountNumber=0.1`,
+fetch(`${baseURL}/transfers/between?sourceAddress=string&sourceSubaccountNumber=0.1&recipientAddress=string&recipientSubaccountNumber=0.1`,
 {
   method: 'GET',
 
@@ -2939,7 +2939,7 @@ fetch(`${baseURL}/transfers/compare?sourceAddress=string&sourceSubaccountNumber=
 
 ```
 
-`GET /transfers/compare`
+`GET /transfers/between`
 
 ### Parameters
 
@@ -2961,7 +2961,7 @@ fetch(`${baseURL}/transfers/compare?sourceAddress=string&sourceSubaccountNumber=
   "pageSize": 0.1,
   "totalResults": 0.1,
   "offset": 0.1,
-  "transfers": [
+  "transfersSubset": [
     {
       "id": "string",
       "sender": {
@@ -5023,7 +5023,7 @@ or
   "pageSize": 0.1,
   "totalResults": 0.1,
   "offset": 0.1,
-  "transfers": [
+  "transfersSubset": [
     {
       "id": "string",
       "sender": {
@@ -5054,6 +5054,6 @@ or
 |pageSize|number(double)|false|none|none|
 |totalResults|number(double)|false|none|none|
 |offset|number(double)|false|none|none|
-|transfers|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
+|transfersSubset|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
 |totalNetTransfers|string|true|none|none|
 

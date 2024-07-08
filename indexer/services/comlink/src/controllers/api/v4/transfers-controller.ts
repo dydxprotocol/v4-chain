@@ -236,7 +236,7 @@ class TransfersController extends Controller {
     };
   }
 
-  @Get('/compare')
+  @Get('/between')
   async getTransferBetween(
     @Query() sourceAddress: string,
       @Query() sourceSubaccountNumber: number,
@@ -282,7 +282,7 @@ class TransfersController extends Controller {
     ]);
 
     return {
-      transfers: transfers.map((transfer: TransferFromDatabase) => {
+      transfersSubset: transfers.map((transfer: TransferFromDatabase) => {
         return transferToResponseObject(transfer, idToAsset, idToSubaccount, sourceSubaccountId);
       }),
       totalNetTransfers,
@@ -411,7 +411,7 @@ router.get(
 
     try {
       const controllers: TransfersController = new TransfersController();
-      const response: TransferResponse = await controllers.getTransferBetween(
+      const response: TransferBetweenResponse = await controllers.getTransferBetween(
         sourceAddress,
         sourceSubaccountNumber,
         recipientAddress,
@@ -423,7 +423,7 @@ router.get(
       return res.send(response);
     } catch (error) {
       return handleControllerError(
-        'TransfersController GET /compare',
+        'TransfersController GET /between',
         'Transfers error',
         error,
         req,
@@ -431,7 +431,7 @@ router.get(
       );
     } finally {
       stats.timing(
-        `${config.SERVICE_NAME}.${controllerName}.get_transfers_compare.timing`,
+        `${config.SERVICE_NAME}.${controllerName}.get_transfers_between.timing`,
         Date.now() - start,
       );
     }

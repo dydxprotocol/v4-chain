@@ -202,7 +202,7 @@ export interface TransferBetweenResponse extends PaginationResponse {
   // Indexer will return data in descending order with the first transfer
   // being the most recent transfer. Will always return up to 100 transfers.
   // Transfers are categorized from the perspective of the source subaccount
-  transfers: TransferResponseObject[],
+  transfersSubset: TransferResponseObject[],
 
   // Given that source subaccount is the trader and the recipient subaccount
   // is the vault, total net transfer should always be positive
