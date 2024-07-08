@@ -59,9 +59,16 @@ func RewardsKeepers(
 			db,
 			cdc,
 		)
+		vaultKeeper, _ := createVaultKeeper(
+			stateStore,
+			db,
+			cdc,
+			transientStoreKey,
+		)
 		feetiersKeeper, _ = createFeeTiersKeeper(
 			stateStore,
 			statsKeeper,
+			vaultKeeper,
 			db,
 			cdc,
 		)
