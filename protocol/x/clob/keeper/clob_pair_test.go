@@ -1139,3 +1139,83 @@ func TestClobPairValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestAcquireNextClobPairID(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	mockIndexerEventManager := &mocks.IndexerEventManager{}
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+	existingClobPairs := 10
+	keepertest.CreateNClobPair(
+		t,
+		ks.ClobKeeper,
+		ks.PerpetualsKeeper,
+		ks.PricesKeeper,
+		ks.Ctx,
+		existingClobPairs,
+		mockIndexerEventManager,
+	)
+
+	// Acquire next clob pair ID.
+	nextClobPairID := ks.ClobKeeper.AcquireNextClobPairID(ks.Ctx)
+	require.Equal(t, uint32(existingClobPairs), nextClobPairID)
+
+	// Verify the next clob pair ID is stored in the keeper.
+	nextClobPairIDFromStore := ks.ClobKeeper.GetNextClobPairID(ks.Ctx)
+	require.Equal(t, nextClobPairID+1, nextClobPairIDFromStore)
+
+	// Create a clob pair outside of the acquire flow
+	perp := perptest.GeneratePerpetual(perptest.WithId(nextClobPairIDFromStore))
+	_, err := ks.PerpetualsKeeper.CreatePerpetual(
+		ks.Ctx,
+		perp.Params.Id,
+		perp.Params.Ticker,
+		perp.Params.MarketId,
+		perp.Params.AtomicResolution,
+		perp.Params.DefaultFundingPpm,
+		perp.Params.LiquidityTier,
+		perp.Params.MarketType,
+	)
+	require.NoError(t, err)
+
+	clobPair := clobtest.GenerateClobPair(
+		clobtest.WithId(nextClobPairIDFromStore),
+		clobtest.WithPerpetualId(perp.Params.Id),
+	)
+
+	mockIndexerEventManager.On(
+		"AddTxnEvent",
+		ks.Ctx,
+		indexerevents.SubtypePerpetualMarket,
+		indexerevents.PerpetualMarketEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				clobtest.MustPerpetualId(*clobPair),
+				clobPair.Id,
+				perp.Params.Ticker,
+				perp.Params.MarketId,
+				clobPair.Status,
+				clobPair.QuantumConversionExponent,
+				perp.Params.AtomicResolution,
+				clobPair.SubticksPerTick,
+				clobPair.StepBaseQuantums,
+				perp.Params.LiquidityTier,
+				perp.Params.MarketType,
+			),
+		),
+	).Return()
+
+	_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+		ks.Ctx,
+		clobPair.Id,
+		perp.GetId(),
+		satypes.BaseQuantums(clobPair.StepBaseQuantums),
+		clobPair.QuantumConversionExponent,
+		clobPair.SubticksPerTick,
+		clobPair.Status,
+	)
+	require.NoError(t, err)
+
+	// Verify the next clob pair ID is incremented.
+	nextClobPairID = ks.ClobKeeper.AcquireNextClobPairID(ks.Ctx)
+	require.Equal(t, nextClobPairIDFromStore+1, nextClobPairID)
+}
