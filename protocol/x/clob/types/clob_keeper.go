@@ -157,4 +157,5 @@ type ClobKeeper interface {
 	)
 	MigratePruneableOrders(ctx sdk.Context)
 	GetAllStatefulOrders(ctx sdk.Context) []Order
+	ResetAllDeliveredOrderIds(ctx sdk.Context)
 }
