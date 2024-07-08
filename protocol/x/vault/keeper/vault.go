@@ -113,7 +113,7 @@ func (k Keeper) AddVaultToAddressStore(
 	vaultAddressStore.Set([]byte(vaultId.ToModuleAccountAddress()), []byte{})
 }
 
-// IsVault checks if a given address is a vault.
+// IsVault checks if a given address is the address of an existing vault.
 func (k Keeper) IsVault(
 	ctx sdk.Context,
 	address string,
