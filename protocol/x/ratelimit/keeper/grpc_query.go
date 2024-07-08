@@ -78,3 +78,22 @@ func (k Keeper) AllPendingSendPackets(
 		PendingSendPackets: pendingPackets,
 	}, nil
 }
+
+func (k Keeper) GetSDAIPriceQuery(
+	ctx context.Context,
+	req *types.GetSDAIPriceQueryRequest,
+) (*types.GetSDAIPriceQueryResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	price, found := k.GetSDAIPrice(sdkCtx)
+	if !found {
+		return nil, status.Error(codes.NotFound, "sDAI price not found")
+	}
+
+	return &types.GetSDAIPriceQueryResponse{
+		Price: price.String(),
+	}, nil
+}

@@ -136,4 +136,5 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 	require.Equal(t, "capacity-by-denom", cmd.Commands()[0].Name())
 	require.Equal(t, "list-limit-params", cmd.Commands()[1].Name())
 	require.Equal(t, "pending-send-packets", cmd.Commands()[2].Name())
+	require.Equal(t, "get-sdai-price", cmd.Commands()[3].Name())
 }

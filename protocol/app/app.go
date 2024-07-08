@@ -561,7 +561,6 @@ func New(
 	// Setup server for sDAI oracle prices.
 	// The in-memory data structure is shared by the x/ratelimit module and sDAIOracle daemon.
 	sDAIEventManager := sdaidaemontypes.NewsDAIEventManager()
-	app.Server.WithsDAIEventManager(sDAIEventManager)
 
 	app.RatelimitKeeper = *ratelimitmodulekeeper.NewKeeper(
 		appCodec,
@@ -695,6 +694,10 @@ func New(
 		&daemontypes.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
 	)
+
+	// Setup the server for the sDAI events
+	app.Server.WithsDAIEventManager(sDAIEventManager)
+
 	// Setup server for pricefeed messages. The server will wait for gRPC messages containing price
 	// updates and then encode them into an in-memory cache shared by the prices module.
 	// The in-memory data structure is shared by the x/prices module and PriceFeed daemon.

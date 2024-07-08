@@ -51,16 +51,9 @@ func (k msgServer) UpdateSDAIConversionRate(
 			if bigConversionRate == conversionRate {
 
 				currentRate, ok := k.GetSDAIPrice(ctx)
-				if !ok {
-					return nil, errorsmod.Wrap(
-						types.ErrSDAIConversionRateNotInitisialised,
-						fmt.Sprintf(
-							"The suggested sDAI conversion rate is not valid",
-						),
-					)
-				}
 
-				if conversionRate.Cmp(currentRate) <= 0 {
+				// if !ok it means the sDAI price is not initialised
+				if ok && conversionRate.Cmp(currentRate) <= 0 {
 					return nil, errorsmod.Wrap(
 						types.ErrInvalidSDAIConversionRate,
 						fmt.Sprintf(

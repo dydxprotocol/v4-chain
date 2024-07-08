@@ -168,3 +168,39 @@ func TestGetAllPendingSendPacket(t *testing.T) {
 		},
 	}, res)
 }
+
+func TestGetSDAIPriceQuery(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	for name, tc := range map[string]struct {
+		req *types.GetSDAIPriceQueryRequest
+		res *types.GetSDAIPriceQueryResponse
+		err error
+	}{
+		"Success": {
+			req: &types.GetSDAIPriceQueryRequest{},
+			res: &types.GetSDAIPriceQueryResponse{
+				Price: "1",
+			},
+			err: nil,
+		},
+		"Nil": {
+			req: nil,
+			res: nil,
+			err: status.Error(codes.InvalidArgument, "invalid request"),
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			k.SetSDAIPrice(ctx, big.NewInt(1))
+			res, err := k.GetSDAIPriceQuery(ctx, tc.req)
+			if tc.err != nil {
+				require.ErrorIs(t, err, tc.err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.res, res)
+			}
+		})
+	}
+}

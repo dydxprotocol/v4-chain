@@ -30,6 +30,13 @@ service Query {
     option (google.api.http).get =
         "/dydxprotocol/v4/ratelimit/get_all_pending_send_packet";
   }
+
+  // Get the price of sDAI.
+  rpc GetSDAIPriceQuery(GetSDAIPriceQueryRequest)
+    returns (GetSDAIPriceQueryResponse) {
+  option (google.api.http).get =
+      "/dydxprotocol/v4/ratelimit/get_sdai_price";
+}
 }
 
 // ListLimitParamsRequest is a request type of the ListLimitParams RPC method.
@@ -60,4 +67,12 @@ message QueryAllPendingSendPacketsRequest {}
 message QueryAllPendingSendPacketsResponse {
   repeated PendingSendPacket pending_send_packets = 1
       [ (gogoproto.nullable) = false ];
+}
+
+// GetSDAIPriceRequest is a request type for the GetSDAIPrice RPC method.
+message GetSDAIPriceQueryRequest {}
+
+// GetSDAIPriceResponse is a response type for the GetSDAIPrice RPC method.
+message GetSDAIPriceQueryResponse {
+  string price = 1; // Assuming price is returned as a string
 }
