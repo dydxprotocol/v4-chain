@@ -1,8 +1,12 @@
 package events
 
 import (
+	"math/big"
+
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	salib "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/lib"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -21,6 +25,32 @@ func NewSubaccountUpdateEvent(
 			updatedPerpetualPositions,
 			fundingPayments,
 		),
-		UpdatedAssetPositions: v1.AssetPositionsToIndexerAssetPositions(updatedAssetPositions),
+		UpdatedAssetPositions: v1.AssetPositionsToIndexerAssetPositions(
+			AddQuoteBalanceFromPerpetualPositions(
+				updatedPerpetualPositions,
+				updatedAssetPositions,
+			),
+		),
 	}
+}
+
+func AddQuoteBalanceFromPerpetualPositions(
+	perpetualPositions []*satypes.PerpetualPosition,
+	assetPositions []*satypes.AssetPosition,
+) []*satypes.AssetPosition {
+	quoteBalance := new(big.Int)
+	for _, position := range perpetualPositions {
+		quoteBalance.Add(quoteBalance, position.GetQuoteBalance())
+	}
+
+	// Add the quote balance to asset positions.
+	return salib.CalculateUpdatedAssetPositions(
+		assetPositions,
+		[]satypes.AssetUpdate{
+			{
+				AssetId:          assettypes.AssetUsdc.Id,
+				BigQuantumsDelta: quoteBalance,
+			},
+		},
+	)
 }
