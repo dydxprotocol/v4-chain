@@ -159,24 +159,42 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 		marketPrice   pricestypes.MarketPrice
 		liquidityTier types.LiquidityTier
 		quantums      *big.Int
+		quoteBalance  *big.Int
 	}{
 		"zero quantums": {
 			perpetual:     testPerpetual,
 			marketPrice:   testMarketPrice,
 			liquidityTier: testLiquidityTier,
 			quantums:      big.NewInt(0),
+			quoteBalance:  big.NewInt(0),
 		},
 		"positive quantums": {
 			perpetual:     testPerpetual,
 			marketPrice:   testMarketPrice,
 			liquidityTier: testLiquidityTier,
 			quantums:      big.NewInt(1_000_000_000_000),
+			quoteBalance:  big.NewInt(0),
 		},
 		"negative quantums": {
 			perpetual:     testPerpetual,
 			marketPrice:   testMarketPrice,
 			liquidityTier: testLiquidityTier,
 			quantums:      big.NewInt(-1_000_000_000_000),
+			quoteBalance:  big.NewInt(0),
+		},
+		"positive quote balance": {
+			perpetual:     testPerpetual,
+			marketPrice:   testMarketPrice,
+			liquidityTier: testLiquidityTier,
+			quantums:      big.NewInt(-1_000_000_000_000),
+			quoteBalance:  big.NewInt(1_000_000_000_000),
+		},
+		"negative quote balance": {
+			perpetual:     testPerpetual,
+			marketPrice:   testMarketPrice,
+			liquidityTier: testLiquidityTier,
+			quantums:      big.NewInt(1_000_000_000_000),
+			quoteBalance:  big.NewInt(-1_000_000_000_000),
 		},
 	}
 	for name, test := range tests {
@@ -197,8 +215,9 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 				test.marketPrice,
 				test.liquidityTier,
 				test.quantums,
+				test.quoteBalance,
 			)
-			require.Equal(t, enc, risk.NC)
+			require.Equal(t, 0, new(big.Int).Add(enc, test.quoteBalance).Cmp(risk.NC))
 			require.Equal(t, eimr, risk.IMR)
 			require.Equal(t, emmr, risk.MMR)
 		})

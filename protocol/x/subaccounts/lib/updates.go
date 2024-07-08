@@ -363,6 +363,7 @@ func GetRiskForSubaccount(
 			perpInfo.Price,
 			perpInfo.LiquidityTier,
 			pos.GetBigQuantums(),
+			pos.GetQuoteBalance(),
 		)
 		risk.AddInPlace(r)
 	}
