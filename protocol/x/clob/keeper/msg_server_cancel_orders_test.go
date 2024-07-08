@@ -249,8 +249,7 @@ func TestCancelOrder_Success(t *testing.T) {
 			require.False(t, found)
 
 			// Ensure cancellation exists in `ProcessProposerMatchesEvents`.
-			events := ks.ClobKeeper.GetProcessProposerMatchesEvents(ctx)
-			cancellations := events.GetPlacedStatefulCancellationOrderIds()
+			cancellations := ks.ClobKeeper.GetDeliveredCancelledOrderIds(ctx)
 			require.Len(t, cancellations, 1)
 			require.Equal(t, cancellations[0], tc.StatefulOrderCancellation.OrderId)
 

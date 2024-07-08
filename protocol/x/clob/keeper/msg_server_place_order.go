@@ -87,7 +87,7 @@ func (k Keeper) HandleMsgPlaceOrder(
 
 	// 2. Return an error if an associated cancellation or removal already exists in the current block.
 	processProposerMatchesEvents := k.GetProcessProposerMatchesEvents(ctx)
-	cancelledOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
+	cancelledOrderIds := lib.UniqueSliceToSet(k.GetDeliveredCancelledOrderIds(ctx))
 	if _, found := cancelledOrderIds[order.GetOrderId()]; found {
 		return errorsmod.Wrapf(
 			types.ErrStatefulOrderPreviouslyCancelled,
@@ -126,8 +126,8 @@ func (k Keeper) HandleMsgPlaceOrder(
 				),
 			)
 		}
-		processProposerMatchesEvents.PlacedConditionalOrderIds = append(
-			processProposerMatchesEvents.PlacedConditionalOrderIds,
+		k.AddDeliveredConditionalOrderId(
+			ctx,
 			order.OrderId,
 		)
 	} else {
@@ -143,16 +143,11 @@ func (k Keeper) HandleMsgPlaceOrder(
 				),
 			)
 		}
-		processProposerMatchesEvents.PlacedLongTermOrderIds = append(
-			processProposerMatchesEvents.PlacedLongTermOrderIds,
+		k.AddDeliveredLongTermOrderId(
+			ctx,
 			order.OrderId,
 		)
 	}
-	// 5. Add the newly-placed stateful order to `ProcessProposerMatchesEvents` for use in `PrepareCheckState`.
-	k.MustSetProcessProposerMatchesEvents(
-		ctx,
-		processProposerMatchesEvents,
-	)
 
 	return nil
 }

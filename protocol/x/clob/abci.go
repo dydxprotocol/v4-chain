@@ -42,6 +42,7 @@ func BeginBlocker(
 			BlockHeight: lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		},
 	)
+	keeper.ResetAllDeliveredOrderIds(ctx)
 }
 
 // EndBlocker executes all ABCI EndBlock logic respective to the clob module.
@@ -88,10 +89,11 @@ func EndBlocker(
 		)
 	}
 
+	deliveredCancels := keeper.GetDeliveredCancelledOrderIds(ctx)
 	// Prune expired untriggered conditional orders from the in-memory UntriggeredConditionalOrders struct.
 	keeper.PruneUntriggeredConditionalOrders(
 		expiredStatefulOrderIds,
-		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
+		deliveredCancels,
 	)
 
 	// Update the memstore with expired order ids.
@@ -103,10 +105,11 @@ func EndBlocker(
 	// trigger in the same block they are placed. Skip triggering orders which have been cancelled
 	// or expired.
 	// TODO(CLOB-773) Support conditional order replacements. Ensure replacements are de-duplicated.
+	conditionalOrdersIds := keeper.GetDeliveredConditionalOrderIds(ctx)
 	keeper.AddUntriggeredConditionalOrders(
 		ctx,
-		processProposerMatchesEvents.PlacedConditionalOrderIds,
-		lib.UniqueSliceToSet(processProposerMatchesEvents.GetPlacedStatefulCancellationOrderIds()),
+		conditionalOrdersIds,
+		lib.UniqueSliceToSet(deliveredCancels),
 		lib.UniqueSliceToSet(expiredStatefulOrderIds),
 	)
 
@@ -170,7 +173,7 @@ func PrepareCheckState(
 		ctx,
 		processProposerMatchesEvents.OrderIdsFilledInLastBlock,
 		processProposerMatchesEvents.ExpiredStatefulOrderIds,
-		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
+		keeper.GetDeliveredCancelledOrderIds(ctx),
 		processProposerMatchesEvents.RemovedStatefulOrderIds,
 		offchainUpdates,
 	)
@@ -179,9 +182,10 @@ func PrepareCheckState(
 	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`
 	// is called within `PlaceConditionalOrdersTriggeredInLastBlock`.
 	startPlaceLongTermOrders := time.Now()
+	longTermOrderIds := keeper.GetDeliveredLongTermOrderIds(ctx)
 	offchainUpdates = keeper.PlaceStatefulOrdersFromLastBlock(
 		ctx,
-		processProposerMatchesEvents.PlacedLongTermOrderIds,
+		longTermOrderIds,
 		offchainUpdates,
 	)
 	telemetry.MeasureSince(
@@ -191,7 +195,7 @@ func PrepareCheckState(
 		metrics.Latency,
 	)
 	telemetry.SetGauge(
-		float32(len(processProposerMatchesEvents.PlacedLongTermOrderIds)),
+		float32(len(longTermOrderIds)),
 		types.ModuleName,
 		metrics.PlaceLongTermOrdersFromLastBlock,
 		metrics.Count,
