@@ -235,12 +235,10 @@ var (
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": {},
 
 		// vault
-		"/dydxprotocol.vault.MsgDepositToVault":            {},
-		"/dydxprotocol.vault.MsgDepositToVaultResponse":    {},
-		"/dydxprotocol.vault.MsgWithdrawFromVault":         {},
-		"/dydxprotocol.vault.MsgWithdrawFromVaultResponse": {},
-		"/dydxprotocol.vault.MsgUpdateParams":              {},
-		"/dydxprotocol.vault.MsgUpdateParamsResponse":      {},
+		"/dydxprotocol.vault.MsgDepositToVault":         {},
+		"/dydxprotocol.vault.MsgDepositToVaultResponse": {},
+		"/dydxprotocol.vault.MsgUpdateParams":           {},
+		"/dydxprotocol.vault.MsgUpdateParamsResponse":   {},
 
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            {},
