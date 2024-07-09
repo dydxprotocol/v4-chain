@@ -1537,12 +1537,19 @@ func (k Keeper) SetNextPerpetualID(ctx sdk.Context, nextID uint32) {
 func (k Keeper) AcquireNextPerpetualID(ctx sdk.Context) uint32 {
 	nextID := k.GetNextPerpetualID(ctx)
 	// if perpetual id already exists, increment until we find one that doesn't
+	maxAttempts, attempts := 1000, 0
 	for {
 		_, err := k.GetPerpetual(ctx, nextID)
 		if err != nil && errorsmod.IsOf(err, types.ErrPerpetualDoesNotExist) {
 			break
 		}
 		nextID++
+
+		// panic if we've tried too many times and are stuck in a loop
+		attempts++
+		if attempts >= maxAttempts {
+			panic("Exceeded maximum attempts to find a unique perpetual id")
+		}
 	}
 
 	k.SetNextPerpetualID(ctx, nextID+1)
