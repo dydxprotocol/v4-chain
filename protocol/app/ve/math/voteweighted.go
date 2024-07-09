@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 )
 

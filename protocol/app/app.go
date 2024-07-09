@@ -103,6 +103,8 @@ import (
 
 	// VE
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
+	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 
 	// Mempool
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mempool"
@@ -188,8 +190,6 @@ import (
 	streamingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/streaming/grpc/types"
 
 	//Ethos
-	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
-	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	ibcconsumer "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer"
 	ibcconsumerkeeper "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/keeper"
 	ibcconsumertypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
