@@ -130,7 +130,7 @@ func (k Keeper) CreateAndStoreNewDaiYieldEpochParams(ctx sdk.Context) error {
 
 	yieldParams := k.CreateNewDaiYieldEpochParams(ctx, tDAISupply, tradingDaiMinted)
 
-	k.SetDaiYieldEpochParams(ctx, newEpoch%uint64(types.DAI_YIELD_ARRAY_SIZE), yieldParams)
+	k.SetDaiYieldEpochParams(ctx, newEpoch%types.DAI_YIELD_ARRAY_SIZE, yieldParams)
 
 	k.SetCurrentDaiYieldEpochNumber(ctx, big.NewInt(int64(newEpoch)))
 
