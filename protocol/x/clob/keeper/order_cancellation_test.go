@@ -146,7 +146,7 @@ func TestCancelOrder_KeeperForwardsErrorsFromMemclob(t *testing.T) {
 
 	longTermOrder := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15
 	ks.ClobKeeper.SetLongTermOrderPlacement(ctx.WithIsCheckTx(false), longTermOrder, 15)
-	ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+	ks.ClobKeeper.AddStatefulOrderIdExpiration(
 		ctx,
 		longTermOrder.MustGetUnixGoodTilBlockTime(),
 		longTermOrder.GetOrderId(),
@@ -257,7 +257,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					5,
 				)
-				k.MustAddOrderToStatefulOrdersTimeSlice(
+				k.AddStatefulOrderIdExpiration(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
@@ -286,7 +286,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					5,
 				)
-				k.MustAddOrderToStatefulOrdersTimeSlice(
+				k.AddStatefulOrderIdExpiration(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
@@ -307,7 +307,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					5,
 				)
-				k.MustAddOrderToStatefulOrdersTimeSlice(
+				k.AddStatefulOrderIdExpiration(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
@@ -327,7 +327,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					5,
 				)
-				k.MustAddOrderToStatefulOrdersTimeSlice(
+				k.AddStatefulOrderIdExpiration(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
@@ -348,7 +348,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					5,
 				)
-				k.MustAddOrderToStatefulOrdersTimeSlice(
+				k.AddStatefulOrderIdExpiration(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
@@ -368,7 +368,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					5,
 				)
-				k.MustAddOrderToStatefulOrdersTimeSlice(
+				k.AddStatefulOrderIdExpiration(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),
@@ -388,7 +388,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					5,
 				)
-				k.MustAddOrderToStatefulOrdersTimeSlice(
+				k.AddStatefulOrderIdExpiration(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.GetOrderId(),

@@ -204,7 +204,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 
 			for _, order := range tc.StatefulOrders {
 				ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, 5)
-				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+				ks.ClobKeeper.AddStatefulOrderIdExpiration(
 					ctx,
 					order.MustGetUnixGoodTilBlockTime(),
 					order.GetOrderId(),

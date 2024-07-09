@@ -61,7 +61,7 @@ func EndBlocker(
 	keeper.PruneStateFillAmountsForShortTermOrders(ctx)
 
 	// Prune expired stateful orders completely from state.
-	expiredStatefulOrderIds := keeper.RemoveExpiredStatefulOrdersTimeSlices(ctx, ctx.BlockTime())
+	expiredStatefulOrderIds := keeper.RemoveExpiredStatefulOrders(ctx, ctx.BlockTime())
 	for _, orderId := range expiredStatefulOrderIds {
 		// Remove the order fill amount from state.
 		keeper.RemoveOrderFillAmount(ctx, orderId)

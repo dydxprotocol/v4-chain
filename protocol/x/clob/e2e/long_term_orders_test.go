@@ -1785,7 +1785,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 				LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
 				1,
 			)
-			tApp.App.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+			tApp.App.ClobKeeper.AddStatefulOrderIdExpiration(
 				tApp.App.NewUncachedContext(true, tmproto.Header{}),
 				time.Unix(5, 0),
 				LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
