@@ -1,6 +1,7 @@
 package bindings
 
 import (
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	subaccounttypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -9,6 +10,7 @@ type DydxCustomWasmMessage struct {
 	WithdrawFromSubaccountV1 *WithdrawFromSubaccountV1 `json:"withdraw_from_subaccount_v1,omitempty"`
 	PlaceOrderV1             *PlaceOrderV1             `json:"place_order_v1,omitempty"`
 	CancelOrderV1            *CancelOrderV1            `json:"cancel_order_v1,omitempty"`
+	BatchCancelV1            *BatchCancelV1            `json:"batch_cancel_v1,omitempty"`
 }
 
 type DepositToSubaccountV1 struct {
@@ -45,4 +47,10 @@ type CancelOrderV1 struct {
 	OrderFLags       uint32 `json:"order_flags"`
 	ClobPairId       uint32 `json:"clob_pair_id"`
 	GoodTilBlockTime uint32 `json:"good_til_block_time"`
+}
+
+type BatchCancelV1 struct {
+	SubaccountNumber uint32                 `json:"subaccount_number"`
+	ShortTermCancels []clobtypes.OrderBatch `json:"short_term_cancels"`
+	GoodTilBlock     uint32                 `json:"good_til_block"`
 }

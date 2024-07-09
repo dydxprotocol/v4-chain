@@ -123,3 +123,13 @@ pub struct PerpetualClobDetails {
     pub perpetual: Perpetual,
     pub clob_pair: ClobPair,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct OrderBatch {
+    /// The Clob Pair ID all orders in this order batch belong to.
+    pub clob_pair_id: u32,
+    /// List of client ids in this order batch.
+    /// Note that this is serialized as a uint32 instead of a fixed32 to
+    /// avoid issues when decoding repeated packed fixed32.
+    pub client_ids: Vec<u32>,
+}

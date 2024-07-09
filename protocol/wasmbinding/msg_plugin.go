@@ -29,6 +29,8 @@ func EncodeDydxCustomWasmMessage(contractAddr sdk.AccAddress, msg json.RawMessag
 		return EncodePlaceOrderV1(contractAddr, customMessage.PlaceOrderV1)
 	case customMessage.CancelOrderV1 != nil:
 		return EncodeCancelOrderV1(contractAddr, customMessage.CancelOrderV1)
+	case customMessage.BatchCancelV1 != nil:
+		return EncodeBatchCancelV1(contractAddr, customMessage.BatchCancelV1)
 	default:
 		return nil, wasmvmtypes.InvalidRequest{Err: "Unknown Dydx Wasm Message"}
 	}
@@ -112,4 +114,20 @@ func EncodeCancelOrderV1(contractAddr sdk.AccAddress, cancelOrder *bindings.Canc
 		GoodTilOneof: &clobtypes.MsgCancelOrder_GoodTilBlockTime{GoodTilBlockTime: cancelOrder.GoodTilBlockTime},
 	}
 	return []sdk.Msg{cancelOrderMsg}, nil
+}
+
+func EncodeBatchCancelV1(contractAddr sdk.AccAddress, batchCancel *bindings.BatchCancelV1) ([]sdk.Msg, error) {
+	if batchCancel == nil {
+		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid batch cancel: No order data provided"}
+	}
+
+	batchCancelMsg := &clobtypes.MsgBatchCancel{
+		SubaccountId: types.SubaccountId{
+			Owner:  contractAddr.String(),
+			Number: batchCancel.SubaccountNumber,
+		},
+		ShortTermCancels: batchCancel.ShortTermCancels,
+		GoodTilBlock:     batchCancel.GoodTilBlock,
+	}
+	return []sdk.Msg{batchCancelMsg}, nil
 }

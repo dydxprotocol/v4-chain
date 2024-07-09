@@ -8,6 +8,7 @@ use cosmwasm_std::{
 };
 
 use crate::SubaccountId;
+use crate::proto_structs::OrderBatch;
 
 
 #[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -75,7 +76,13 @@ pub enum DydxMsg {
     order_flags: u32,
     clob_pair_id: u32,
     good_til_block_time: u32,
-  }
+  },
+// Maps to https://github.com/dydxprotocol/v4-chain/blob/main/proto/dydxprotocol/clob/tx.proto#L107 on protocol
+  BatchCancelV1 {
+    subaccount_number: u32,
+    short_term_cancels: Vec<OrderBatch>,
+    good_til_block: u32,
+},
 }
 
 impl From<DydxMsg> for CosmosMsg<DydxMsg> {
@@ -102,7 +109,7 @@ mod tests {
     };
     let json = to_json_string(&msg).unwrap();
     assert_eq!(
-      String::from_utf8_lossy(&json),
+      json,
       r#"{"deposit_to_subaccount_v1":{"recipient":{"owner":"b","number":0},"asset_id":0,"quantums":10000000000}}"#
     );
   }
@@ -117,7 +124,7 @@ mod tests {
     };
     let json = to_json_string(&msg).unwrap();
     assert_eq!(
-      String::from_utf8_lossy(&json),
+      json,
       r#"{"withdraw_from_subaccount_v1":{"subaccount_number":0,"recipient":"b","asset_id":0,"quantums":10000000000}}"#
     );
   }
@@ -141,7 +148,7 @@ mod tests {
     };
     let json = to_json_string(&msg).unwrap();
     assert_eq!(
-      String::from_utf8_lossy(&json),
+      json,
       r#"{"place_order_v1":{"subaccount_number":0,"client_id":0,"order_flags":0,"clob_pair_id":0,"side":1,"quantums":10000000000,"subticks":10000000000,"good_til_block_time":0,"time_in_force":1,"reduce_only":false,"client_metadata":0,"condition_type":1,"conditional_order_trigger_subticks":10000000000}}"#
     );
   }
@@ -157,8 +164,22 @@ mod tests {
     };
     let json = to_json_string(&msg).unwrap();
     assert_eq!(
-      String::from_utf8_lossy(&json),
+      json,
       r#"{"cancel_order_v1":{"subaccount_number":0,"client_id":0,"order_flags":0,"clob_pair_id":0,"good_til_block_time":0}}"#
+    );
+  }
+
+  #[test]
+  fn batch_cancel_msg_json_validation() {
+    let msg: DydxMsg = DydxMsg::BatchCancelV1 {
+      subaccount_number: 0,
+      short_term_cancels: vec![OrderBatch { clob_pair_id: 0, client_ids: vec![101,102] }],
+      good_til_block: 0,
+    };
+    let json = to_json_string(&msg).unwrap();
+    assert_eq!(
+      json,
+      r#"{"batch_cancel_v1":{"subaccount_number":0,"short_term_cancels":[{"clob_pair_id":0,"client_ids":[101,102]}],"good_til_block":0}}"#
     );
   }
 }
