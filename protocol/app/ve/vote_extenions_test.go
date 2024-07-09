@@ -11,6 +11,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	vetestutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/mock"
@@ -119,7 +120,7 @@ func TestExtendVoteHandler(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, _, _, indexPriceCache, _, _ := keepertest.PricesKeepers(t)
-
+			ctx = vetestutils.GetVeEnabledCtx(ctx, 3)
 			votecodec := vecodec.NewDefaultVoteExtensionCodec()
 
 			mPriceApplier := &mocks.PriceApplier{}
@@ -168,6 +169,7 @@ type TestVerifyExtendedVoteTC struct {
 }
 
 func TestVerifyVoteHandler(t *testing.T) {
+	votecodec := vecodec.NewDefaultVoteExtensionCodec()
 	tests := map[string]TestVerifyExtendedVoteTC{
 		"nil request returns error": {
 			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
@@ -180,20 +182,177 @@ func TestVerifyVoteHandler(t *testing.T) {
 			expectedResponse: nil,
 			expectedError:    true,
 		},
+		"empty vote extension": {
+			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
+				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+				return mPricesKeeper
+			},
+			getReq: func() *cometabci.RequestVerifyVoteExtension {
+				return &cometabci.RequestVerifyVoteExtension{}
+			},
+			expectedResponse: &cometabci.ResponseVerifyVoteExtension{
+				Status: cometabci.ResponseVerifyVoteExtension_ACCEPT,
+			},
+			expectedError: false,
+		},
+		"empty vote extension - 1 valid price": {
+			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
+				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+				mPricesKeeper.On("GetMaxPairs", mock.Anything).Return(1)
+				return mPricesKeeper
+			},
+			getReq: func() *cometabci.RequestVerifyVoteExtension {
+				return &cometabci.RequestVerifyVoteExtension{}
+			},
+			expectedResponse: &cometabci.ResponseVerifyVoteExtension{
+				Status: cometabci.ResponseVerifyVoteExtension_ACCEPT,
+			},
+			expectedError: false,
+		},
+		"malformed bytes returns error": {
+			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
+				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+				return mPricesKeeper
+			},
+			getReq: func() *cometabci.RequestVerifyVoteExtension {
+				return &cometabci.RequestVerifyVoteExtension{
+					VoteExtension: []byte("malformed"),
+				}
+			},
+			expectedResponse: &cometabci.ResponseVerifyVoteExtension{
+				Status: cometabci.ResponseVerifyVoteExtension_REJECT,
+			},
+			expectedError: true,
+		},
+		"valid vote extension - multple valid prices": {
+			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
+				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+				mPricesKeeper.On("GetAllMarketParams", mock.Anything).Return(
+					constants.TestMarketParams,
+				)
+				return mPricesKeeper
+
+			},
+			getReq: func() *cometabci.RequestVerifyVoteExtension {
+				ext, err := vetestutils.CreateVoteExtensionBytes(
+					constants.ValidVEPrice,
+					votecodec,
+				)
+				require.NoError(t, err)
+				return &cometabci.RequestVerifyVoteExtension{
+					VoteExtension: ext,
+					Height:        3,
+				}
+			},
+			expectedResponse: &cometabci.ResponseVerifyVoteExtension{
+				Status: cometabci.ResponseVerifyVoteExtension_ACCEPT,
+			},
+			expectedError: false,
+		},
+		"invalid vote extension - multple valid prices - should fail": {
+			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
+				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+				mPricesKeeper.On("GetAllMarketParams", mock.Anything).Return(
+					constants.TestMarketParams[1:], // two prices
+				)
+				return mPricesKeeper
+			},
+			getReq: func() *cometabci.RequestVerifyVoteExtension {
+				ext, err := vetestutils.CreateVoteExtensionBytes(
+					constants.ValidVEPrice,
+					votecodec,
+				)
+				require.NoError(t, err)
+				return &cometabci.RequestVerifyVoteExtension{
+					VoteExtension: ext,
+					Height:        3,
+				}
+			},
+			expectedResponse: &cometabci.ResponseVerifyVoteExtension{
+				Status: cometabci.ResponseVerifyVoteExtension_REJECT,
+			},
+			expectedError: true,
+		},
+		"vote extension with no prices": {
+			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
+				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+				mPricesKeeper.On("GetAllMarketParams", mock.Anything).Return(
+					[]pricestypes.MarketParam{}, // two prices
+				)
+				return mPricesKeeper
+			},
+			getReq: func() *cometabci.RequestVerifyVoteExtension {
+				prices := map[uint32][]byte{}
+
+				ext, err := vetestutils.CreateVoteExtensionBytes(
+					prices,
+					votecodec,
+				)
+				require.NoError(t, err)
+
+				return &cometabci.RequestVerifyVoteExtension{
+					VoteExtension: ext,
+					Height:        3,
+				}
+			},
+
+			expectedResponse: &cometabci.ResponseVerifyVoteExtension{
+				Status: cometabci.ResponseVerifyVoteExtension_ACCEPT,
+			},
+			expectedError: false,
+		},
+		"vote extension with malformed prices": {
+			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
+				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+				mPricesKeeper.On("GetAllMarketParams", mock.Anything).Return(
+					[]pricestypes.MarketParam{constants.TestMarketParams[0]},
+				)
+				return mPricesKeeper
+			},
+			getReq: func() *cometabci.RequestVerifyVoteExtension {
+				prices := map[uint32][]byte{
+					constants.MarketId0: make([]byte, 34),
+				}
+
+				ext, err := vetestutils.CreateVoteExtensionBytes(
+					prices,
+					votecodec,
+				)
+				require.NoError(t, err)
+
+				return &cometabci.RequestVerifyVoteExtension{
+					VoteExtension: ext,
+					Height:        3,
+				}
+			},
+			expectedResponse: &cometabci.ResponseVerifyVoteExtension{
+				Status: cometabci.ResponseVerifyVoteExtension_REJECT,
+			},
+			expectedError: true,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, _, _, indexPriceCache, _, _ := keepertest.PricesKeepers(t)
-
+			ctx = vetestutils.GetVeEnabledCtx(ctx, 3)
 			mPriceApplier := &mocks.PriceApplier{}
+			mPricesKeeper := tc.pricesKeeper()
+			// if tc.needsMockDecoder {
 
-			votecodec := vecodec.NewDefaultVoteExtensionCodec()
+			// 	mPricesKeeper.On("GetMarketPriceUpdateFromBytes", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+			// 		marketId := args.Get(0).(uint32)
+			// 		priceBz := args.Get(1).([]byte)
+			// 		update, err := pk.GetMarketPriceUpdateFromBytes(marketId, priceBz)
+			// 		args[0] = update
+			// 		args[1] = err
+			// 	}).Return(nil, nil) // Initial return values, will be overridden by Run
+			// }
 
 			handler := ve.NewVoteExtensionHandler(
 				log.NewTestLogger(t),
 				indexPriceCache,
 				votecodec,
-				tc.pricesKeeper(),
+				mPricesKeeper,
 				mPriceApplier,
 			).VerifyVoteExtensionHandler()
 

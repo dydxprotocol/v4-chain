@@ -140,7 +140,7 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, err
 		}
 
-		if err := h.ValidateDaemonVE(ctx, ve); err != nil {
+		if err := h.ValidateDaemonVE(ctx, h.pricesKeeper, ve); err != nil {
 			h.logger.Error(
 				"failed to validate vote extension",
 				"height", req.Height,
@@ -202,9 +202,12 @@ func (h *VoteExtensionHandler) transformDaemonPricesToVE(
 
 func (h *VoteExtensionHandler) ValidateDaemonVE(
 	ctx sdk.Context,
+	pricesKeeper ExtendVotePricesKeeper,
 	ve types.DaemonVoteExtension,
 ) error {
 	maxPairs := h.GetMaxPairs(ctx)
+	fmt.Println("maxPairs", maxPairs)
+	fmt.Println("len(ve.Prices)", len(ve.Prices))
 	if uint32(len(ve.Prices)) > maxPairs {
 		return fmt.Errorf("too many prices in daemon vote extension: %d > %d", len(ve.Prices), maxPairs)
 	}
@@ -213,6 +216,10 @@ func (h *VoteExtensionHandler) ValidateDaemonVE(
 		if len(bz) > constants.MaximumPriceSize {
 			return fmt.Errorf("price bytes are too long: %d", len(bz))
 		}
+		// TODO: Should we check we can decode here
+		// if _, err := pricesKeeper.GetMarketPriceUpdateFromBytes(id, bz); err != nil {
+		// 	return fmt.Errorf("failed to decode price: %v", err)
+		// }
 	}
 
 	return nil

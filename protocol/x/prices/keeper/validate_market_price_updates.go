@@ -312,10 +312,10 @@ func (k Keeper) GetMarketsMissingFromPriceUpdates(
 func (k Keeper) GetMarketPriceUpdateFromBytes(id uint32, bz []byte) (*types.MarketPriceUpdates_MarketPriceUpdate, error) {
 	var priceUpdate types.MarketPriceUpdates_MarketPriceUpdate
 	price, err := k.indexPriceCache.GetVEDecodedPrice(bz)
+
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("id:", id, "price:", price)
 	priceUpdate = types.MarketPriceUpdates_MarketPriceUpdate{
 		MarketId: id,
 		Price:    price.Uint64(),

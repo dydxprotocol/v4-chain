@@ -283,6 +283,18 @@ var (
 		MarketId2: Price7Bytes,
 	}
 
+	InvalidVEPriceBytes = map[uint32][]byte{
+		MarketId0: Price5NegativeBytes,
+		MarketId1: Price6NegativeBytes,
+		MarketId2: Price7NegativeBytes,
+	}
+
+	InvalidVePricesMarketIds = map[uint32][]byte{
+		99:  Price5Bytes,
+		101: Price6Bytes,
+		102: Price7Bytes,
+	}
+
 	ValidEmptyMarketParams = []types.MarketParam{}
 	// `MsgUpdateMarketPrices`.
 	EmptyUpdateMarketPrices        = &types.MarketPriceUpdates{}
