@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
@@ -24,12 +25,17 @@ type BankKeeper interface {
 		recipientAddr sdk.AccAddress,
 		amt sdk.Coins,
 	) error
+	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 }
 
 type BlockTimeKeeper interface {
 	GetTimeSinceLastBlock(ctx sdk.Context) time.Duration
+}
+
+type PricesKeeper interface {
+	GetAllMarketPrices(ctx sdk.Context) []prices.MarketPrice
 }
 
 // ICS4Wrapper defines the expected ICS4Wrapper for middleware

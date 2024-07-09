@@ -40,11 +40,11 @@ func DivideAndRoundUp(x, y *big.Int) (*big.Int, error) {
 
 // Converts sDAI to corresponding amount of tDAI, implementing the following maker code
 /* 	https://etherscan.deth.net/address/0x83f20f44975d03b1b09e64809b757c47f942beea
-	function deposit(uint256 assets, address receiver) external returns (uint256 shares) {
-		uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
-		shares = assets * RAY / chi;
-		_mint(assets, shares, receiver);
-	}
+function deposit(uint256 assets, address receiver) external returns (uint256 shares) {
+	uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
+	shares = assets * RAY / chi;
+	_mint(assets, shares, receiver);
+}
 */
 func (k Keeper) GetTradingDAIFromSDAIAmount(ctx sdk.Context, sDAI *big.Int) (*big.Int, error) {
 	// Get the current sDAI price
@@ -82,12 +82,12 @@ func (k Keeper) GetTradingDAIFromSDAIAmountAndRoundUp(ctx sdk.Context, sDAI *big
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return tDAIAmount, nil
 }
 
 // MintTradingDAIToUserAccount transfers the input sDAI amount from the user's
-// account to the pool account and mints the corresponding amount of trading 
+// account to the pool account and mints the corresponding amount of trading
 // DAI into the user's account.
 func (k Keeper) MintTradingDAIToUserAccount(
 	ctx sdk.Context,

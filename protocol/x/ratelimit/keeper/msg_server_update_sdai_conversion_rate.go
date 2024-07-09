@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -17,6 +16,17 @@ func (k msgServer) UpdateSDAIConversionRate(
 	msg *types.MsgUpdateSDAIConversionRate,
 ) (*types.MsgUpdateSDAIConversionRateResponse, error) {
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
+
+	elapsed, err := k.CheckCurrentDAIYieldEpochElapsed(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if !elapsed {
+		return nil, errorsmod.Wrap(
+			types.ErrInvalidSDAIConversionRate,
+			"The current DAI yield epoch has not yet elapsed",
+		)
+	}
 
 	bigConversionRate, err := ConvertStringToBigInt(msg.ConversionRate)
 	if err != nil {
@@ -56,13 +66,14 @@ func (k msgServer) UpdateSDAIConversionRate(
 				if ok && conversionRate.Cmp(currentRate) <= 0 {
 					return nil, errorsmod.Wrap(
 						types.ErrInvalidSDAIConversionRate,
-						fmt.Sprintf(
-							"The suggested sDAI conversion rate must be greater than the curret one",
-						),
+						"The suggested sDAI conversion rate must be greater than the curret one",
 					)
 				}
 
 				k.SetSDAIPrice(ctx, conversionRate)
+
+				k.CreateAndStoreNewDaiYieldEpochParams(ctx)
+
 				return &types.MsgUpdateSDAIConversionRateResponse{}, nil
 			}
 		}
@@ -70,9 +81,7 @@ func (k msgServer) UpdateSDAIConversionRate(
 
 	return nil, errorsmod.Wrap(
 		types.ErrInvalidSDAIConversionRate,
-		fmt.Sprintf(
-			"The suggested sDAI conversion rate is not valid",
-		),
+		"The suggested sDAI conversion rate is not valid",
 	)
 }
 
@@ -82,9 +91,7 @@ func ConvertStringToBigInt(str string) (*big.Int, error) {
 	if !ok {
 		return nil, errorsmod.Wrap(
 			types.ErrUnableToDecodeBigInt,
-			fmt.Sprintf(
-				"Unable to convert the sDAI conversion rate to a big int",
-			),
+			"Unable to convert the sDAI conversion rate to a big int",
 		)
 	}
 

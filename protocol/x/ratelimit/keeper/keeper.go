@@ -30,6 +30,7 @@ type (
 		sDAIEventManager *sdaiserver.SDAIEventManager
 		bankKeeper       types.BankKeeper
 		blockTimeKeeper  types.BlockTimeKeeper
+		pricesKeeper     types.PricesKeeper
 		ics4Wrapper      types.ICS4Wrapper
 
 		// the addresses capable of executing MsgSetLimitParams message.
@@ -43,6 +44,7 @@ func NewKeeper(
 	sDAIEventManager *sdaiserver.SDAIEventManager,
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
+	pricesKeeper types.PricesKeeper,
 	ics4Wrapper types.ICS4Wrapper,
 	authorities []string,
 ) *Keeper {
@@ -52,6 +54,7 @@ func NewKeeper(
 		sDAIEventManager: sDAIEventManager,
 		bankKeeper:       bankKeeper,
 		blockTimeKeeper:  blockTimeKeeper,
+		pricesKeeper:     pricesKeeper,
 		ics4Wrapper:      ics4Wrapper,
 		authorities:      lib.UniqueSliceToSet(authorities),
 	}
