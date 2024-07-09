@@ -6,6 +6,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { getParentSubaccountNum } from '@dydxprotocol-indexer/postgres/build/src/lib/parent-subaccount-helpers';
 import {
+  BlockHeightMessage,
   CandleMessage,
   CandleMessage_Resolution,
   MarketMessage,
@@ -16,7 +17,7 @@ import {
 import { KafkaMessage } from 'kafkajs';
 
 import { Channel, MessageToForward, WebsocketTopics } from '../../types';
-import { TOPIC_TO_CHANNEL, V4_MARKETS_ID } from '../constants';
+import {TOPIC_TO_CHANNEL, V4_BLOCK_HEIGHT_ID, V4_MARKETS_ID} from '../constants';
 import { InvalidForwardMessageError, InvalidTopicError } from '../errors';
 
 export function getChannels(topic: string): Channel[] {
@@ -90,6 +91,18 @@ export default function getMessagesToForward(
         subaccountNumber: subaccountMessage.subaccountId!.number,
         contents: getParentSubaccountContents(subaccountMessage),
         version: subaccountMessage.version,
+      }];
+    }
+    case WebsocketTopics.TO_WEBSOCKETS_BLOCK_HEIGHT: {
+      const blockHeightMessage: BlockHeightMessage = BlockHeightMessage.decode(messageBinary);
+      return [{
+        channel: Channel.V4_BLOCK_HEIGHT,
+        id: V4_BLOCK_HEIGHT_ID,
+        version: blockHeightMessage.version,
+        contents: {
+          blockHeight: blockHeightMessage.blockHeight,
+          time: blockHeightMessage.time,
+        },
       }];
     }
     default:

@@ -250,14 +250,14 @@ export class MessageForwarder {
         );
       }
     }
-    stats.timing(
-      `${config.SERVICE_NAME}.on_message_latency`,
-      Date.now() - start,
-      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
-      {
-        topic,
-      },
-    );
+    // stats.timing(
+    //   `${config.SERVICE_NAME}.on_message_latency`,
+    //   Date.now() - start,
+    //   config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+    //   {
+    //     topic,
+    //   },
+    // );
   }
 
   public forwardMessage(message: MessageToForward): void {
@@ -345,6 +345,7 @@ export class MessageForwarder {
       stats.increment(
         `${config.SERVICE_NAME}.forward_message_with_subscribers`,
         1,
+        config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       );
     }
   }
