@@ -92,6 +92,15 @@ func (m *PerpetualPosition) GetBigQuantums() *big.Int {
 	return m.Quantums.BigInt()
 }
 
+// Get the perpetual position quote balance in big.Int.
+func (m *PerpetualPosition) GetQuoteBalance() *big.Int {
+	if m == nil || m.QuoteBalance.IsNil() {
+		return new(big.Int)
+	}
+
+	return m.QuoteBalance.BigInt()
+}
+
 func (m *PerpetualPosition) GetIsLong() bool {
 	if m == nil {
 		return false
