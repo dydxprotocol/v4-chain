@@ -14,4 +14,10 @@ var (
 		2,
 		"invalid revenue share ppm",
 	)
+
+	ErrMarketMapperRevShareDetailsNotFound = errorsmod.Register(
+		ModuleName,
+		3,
+		"MarketMapperRevShareDetails not found for marketId",
+	)
 )

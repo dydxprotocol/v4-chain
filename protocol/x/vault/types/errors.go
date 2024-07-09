@@ -75,4 +75,29 @@ var (
 		14,
 		"OrderSize is invalid",
 	)
+	ErrInvalidOwner = errorsmod.Register(
+		ModuleName,
+		15,
+		"Owner is invalid",
+	)
+	ErrMismatchedTotalAndOwnerShares = errorsmod.Register(
+		ModuleName,
+		16,
+		"TotalShares does not match sum of OwnerShares",
+	)
+	ErrInvalidWithdrawalAmount = errorsmod.Register(
+		ModuleName,
+		17,
+		"Withdrawal amount is invalid",
+	)
+	ErrVaultNotFound = errorsmod.Register(
+		ModuleName,
+		18,
+		"Vault not found",
+	)
+	ErrOwnerShareNotFound = errorsmod.Register(
+		ModuleName,
+		19,
+		"Owner share not found",
+	)
 )

@@ -93,7 +93,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
 	// App
@@ -303,7 +302,7 @@ type App struct {
 
 	DelayMsgKeeper delaymsgmodulekeeper.Keeper
 
-	FeeTiersKeeper feetiersmodulekeeper.Keeper
+	FeeTiersKeeper *feetiersmodulekeeper.Keeper
 
 	ListingKeeper listingmodulekeeper.Keeper
 
@@ -981,7 +980,7 @@ func New(
 	)
 	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
 
-	app.FeeTiersKeeper = *feetiersmodulekeeper.NewKeeper(
+	app.FeeTiersKeeper = feetiersmodulekeeper.NewKeeper(
 		appCodec,
 		app.StatsKeeper,
 		keys[feetiersmoduletypes.StoreKey],
@@ -1030,6 +1029,7 @@ func New(
 		app.BankKeeper,
 		app.PerpetualsKeeper,
 		app.BlockTimeKeeper,
+		app.RevShareKeeper,
 		app.IndexerEventManager,
 	)
 	subaccountsModule := subaccountsmodule.NewAppModule(
@@ -1126,6 +1126,7 @@ func New(
 		},
 	)
 	vaultModule := vaultmodule.NewAppModule(appCodec, app.VaultKeeper)
+	app.FeeTiersKeeper.SetVaultKeeper(app.VaultKeeper)
 
 	app.ListingKeeper = *listingmodulekeeper.NewKeeper(
 		appCodec,
@@ -1287,6 +1288,9 @@ func New(
 		perpetualsmoduletypes.ModuleName,
 		statsmoduletypes.ModuleName,
 		satypes.ModuleName,
+		// should be before clob EndBlocker so that vault order cancels are
+		// processed before any vault order expirations (handled by clob)
+		vaultmoduletypes.ModuleName,
 		clobmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 		vestmoduletypes.ModuleName,
@@ -1294,7 +1298,6 @@ func New(
 		epochsmoduletypes.ModuleName,
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
-		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
@@ -1594,15 +1597,8 @@ func (app *App) initOracle(pricesTxDecoder process.UpdateMarketPriceTxDecoder) {
 			compression.NewDefaultVoteExtensionCodec(),
 			compression.NewZLibCompressor(),
 		),
-		// We are not using the slinky PreBlocker, so there is no need to pass in PreBlocker here for
-		// VE handler to work properly.
-		// Currently the clob PreBlocker assumes that it will only be called during the normal ABCI
-		// PreBlocker step. Passing in the app PreBlocker here will break that assumption by causing
-		// the clob PreBlocker to be called unexpectedly. This to leads improperly initialized clob state
-		// which results in the next block being committed incorrectly.
-		func(_ sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-			return nil, nil
-		},
+		// TODO we can move the UpdateMarketPrices in extend vote to this in the future.
+		vote_extensions.NoopPriceApplier{},
 		app.oracleMetrics,
 	)
 
@@ -1624,19 +1620,6 @@ func (app *App) initOracleMetrics(appOpts servertypes.AppOptions) {
 	oracleMetrics, err := servicemetrics.NewMetricsFromConfig(cfg, app.ChainID())
 	if err != nil {
 		panic(err)
-	}
-	// run prometheus metrics
-	if cfg.MetricsEnabled {
-		promLogger, err := zap.NewProduction()
-		if err != nil {
-			panic(err)
-		}
-		app.oraclePrometheusServer, err = promserver.NewPrometheusServer(cfg.PrometheusServerAddress, promLogger)
-		if err != nil {
-			panic(err)
-		}
-		// start the prometheus server
-		go app.oraclePrometheusServer.Start()
 	}
 	app.oracleMetrics = oracleMetrics
 }
@@ -1870,9 +1853,11 @@ func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 				FeegrantKeeper:  app.FeeGrantKeeper,
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
-			ClobKeeper:   app.ClobKeeper,
-			Codec:        app.appCodec,
-			AuthStoreKey: app.keys[authtypes.StoreKey],
+			ClobKeeper:       app.ClobKeeper,
+			Codec:            app.appCodec,
+			AuthStoreKey:     app.keys[authtypes.StoreKey],
+			PerpetualsKeeper: app.PerpetualsKeeper,
+			PricesKeeper:     app.PricesKeeper,
 		},
 	)
 	if err != nil {

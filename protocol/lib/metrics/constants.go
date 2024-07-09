@@ -119,7 +119,6 @@ const (
 	CreateClobPair                                          = "create_clob_pair"
 	Expired                                                 = "expired"
 	FullyFilled                                             = "fully_filled"
-	GetFillQuoteQuantums                                    = "get_fill_quote_quantums"
 	Hydrate                                                 = "hydrate"
 	IsLong                                                  = "is_long"
 	IterateOverPendingMatches                               = "iterate_over_pending_matches"
@@ -303,6 +302,7 @@ const (
 	GetSubaccount                         = "get_subaccount"
 	UpdateSubaccounts                     = "update_subaccounts"
 	SubaccountOwner                       = "subaccount_owner"
+	MarketMapperRevenueDistribution       = "market_mapper_revenue_distribution"
 
 	// Liquidation Daemon.
 	CheckCollateralizationForSubaccounts     = "check_collateralization_for_subaccounts"

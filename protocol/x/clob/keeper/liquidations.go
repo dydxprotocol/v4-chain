@@ -659,14 +659,11 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 	// Get the delta quantums and delta quote quantums.
 	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
 	deltaQuantums := new(big.Int).SetUint64(fillAmount)
-	deltaQuoteQuantums, err := getFillQuoteQuantums(
-		clobPair,
+	deltaQuoteQuantums := types.FillAmountToQuoteQuantums(
 		subticks,
 		satypes.BaseQuantums(fillAmount),
+		clobPair.QuantumConversionExponent,
 	)
-	if err != nil {
-		return nil, err
-	}
 	if isBuy {
 		deltaQuoteQuantums.Neg(deltaQuoteQuantums)
 	} else {

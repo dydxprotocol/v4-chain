@@ -18,11 +18,11 @@ func TestToString(t *testing.T) {
 		expectedStr string
 	}{
 		"Vault for Clob Pair 0": {
-			vaultId:     constants.Vault_Clob_0,
+			vaultId:     constants.Vault_Clob0,
 			expectedStr: "VAULT_TYPE_CLOB-0",
 		},
 		"Vault for Clob Pair 1": {
-			vaultId:     constants.Vault_Clob_1,
+			vaultId:     constants.Vault_Clob1,
 			expectedStr: "VAULT_TYPE_CLOB-1",
 		},
 		"Vault, missing type and number": {
@@ -58,13 +58,13 @@ func TestToStateKey(t *testing.T) {
 	require.Equal(
 		t,
 		[]byte("VAULT_TYPE_CLOB-0"),
-		constants.Vault_Clob_0.ToStateKey(),
+		constants.Vault_Clob0.ToStateKey(),
 	)
 
 	require.Equal(
 		t,
 		[]byte("VAULT_TYPE_CLOB-1"),
-		constants.Vault_Clob_1.ToStateKey(),
+		constants.Vault_Clob1.ToStateKey(),
 	)
 }
 
@@ -79,11 +79,11 @@ func TestGetVaultIdFromStateKey(t *testing.T) {
 	}{
 		"Vault for Clob Pair 0": {
 			stateKey:        []byte("VAULT_TYPE_CLOB-0"),
-			expectedVaultId: constants.Vault_Clob_0,
+			expectedVaultId: constants.Vault_Clob0,
 		},
 		"Vault for Clob Pair 1": {
 			stateKey:        []byte("VAULT_TYPE_CLOB-1"),
-			expectedVaultId: constants.Vault_Clob_1,
+			expectedVaultId: constants.Vault_Clob1,
 		},
 		"Empty bytes": {
 			stateKey:    []byte{},
@@ -120,12 +120,12 @@ func TestToModuleAccountAddress(t *testing.T) {
 	require.Equal(
 		t,
 		authtypes.NewModuleAddress("vault-VAULT_TYPE_CLOB-0").String(),
-		constants.Vault_Clob_0.ToModuleAccountAddress(),
+		constants.Vault_Clob0.ToModuleAccountAddress(),
 	)
 	require.Equal(
 		t,
 		authtypes.NewModuleAddress("vault-VAULT_TYPE_CLOB-1").String(),
-		constants.Vault_Clob_1.ToModuleAccountAddress(),
+		constants.Vault_Clob1.ToModuleAccountAddress(),
 	)
 }
 
@@ -133,17 +133,17 @@ func TestToSubaccountId(t *testing.T) {
 	require.Equal(
 		t,
 		satypes.SubaccountId{
-			Owner:  constants.Vault_Clob_0.ToModuleAccountAddress(),
+			Owner:  constants.Vault_Clob0.ToModuleAccountAddress(),
 			Number: 0,
 		},
-		*constants.Vault_Clob_0.ToSubaccountId(),
+		*constants.Vault_Clob0.ToSubaccountId(),
 	)
 	require.Equal(
 		t,
 		satypes.SubaccountId{
-			Owner:  constants.Vault_Clob_1.ToModuleAccountAddress(),
+			Owner:  constants.Vault_Clob1.ToModuleAccountAddress(),
 			Number: 0,
 		},
-		*constants.Vault_Clob_1.ToSubaccountId(),
+		*constants.Vault_Clob1.ToSubaccountId(),
 	)
 }

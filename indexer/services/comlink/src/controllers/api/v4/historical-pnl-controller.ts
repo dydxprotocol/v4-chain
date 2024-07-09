@@ -101,7 +101,7 @@ class HistoricalPnlController extends Controller {
     };
   }
 
-  @Get('/parentSubaccount')
+  @Get('/parentSubaccountNumber')
   async getHistoricalPnlForParentSubaccount(
     @Query() address: string,
       @Query() parentSubaccountNumber: number,

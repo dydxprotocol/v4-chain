@@ -1354,7 +1354,7 @@ headers = {
 # baseURL = 'https://indexer.dydx.trade/v4'
 baseURL = 'https://dydx-testnet.imperator.co/v4'
 
-r = requests.get(f'{baseURL}/historical-pnl/parentSubaccount', params={
+r = requests.get(f'{baseURL}/historical-pnl/parentSubaccountNumber', params={
   'address': 'string',  'parentSubaccountNumber': '0.1'
 }, headers = headers)
 
@@ -1372,7 +1372,7 @@ const headers = {
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://dydx-testnet.imperator.co/v4';
 
-fetch(`${baseURL}/historical-pnl/parentSubaccount?address=string&parentSubaccountNumber=0.1`,
+fetch(`${baseURL}/historical-pnl/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1`,
 {
   method: 'GET',
 
@@ -1386,7 +1386,7 @@ fetch(`${baseURL}/historical-pnl/parentSubaccount?address=string&parentSubaccoun
 
 ```
 
-`GET /historical-pnl/parentSubaccount`
+`GET /historical-pnl/parentSubaccountNumber`
 
 ### Parameters
 

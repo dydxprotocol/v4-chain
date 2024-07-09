@@ -13,6 +13,7 @@ import (
 	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
+	perpetualskeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -44,15 +45,16 @@ type TestAccount struct {
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
 type AnteTestSuite struct {
-	AnteHandler    sdk.AnteHandler
-	Ctx            sdk.Context
-	ClientCtx      client.Context
-	TxBuilder      client.TxBuilder
-	AccountKeeper  keeper.AccountKeeper
-	BankKeeper     *authtestutil.MockBankKeeper
-	TxBankKeeper   *txtestutil.MockBankKeeper
-	FeeGrantKeeper *antetestutil.MockFeegrantKeeper
-	EncCfg         moduletestutil.TestEncodingConfig
+	AnteHandler      sdk.AnteHandler
+	Ctx              sdk.Context
+	ClientCtx        client.Context
+	TxBuilder        client.TxBuilder
+	AccountKeeper    keeper.AccountKeeper
+	BankKeeper       *authtestutil.MockBankKeeper
+	TxBankKeeper     *txtestutil.MockBankKeeper
+	FeeGrantKeeper   *antetestutil.MockFeegrantKeeper
+	PerpetualsKeeper perpetualskeeper.Keeper
+	EncCfg           moduletestutil.TestEncodingConfig
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
