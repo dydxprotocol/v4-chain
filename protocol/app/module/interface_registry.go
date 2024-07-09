@@ -95,9 +95,6 @@ func NewInterfaceRegistry(addrPrefix string, valAddrPrefix string) (types.Interf
 				"dydxprotocol.vault.MsgDepositToVault": getLegacyMsgSignerFn(
 					[]string{"subaccount_id", "owner"},
 				),
-				"dydxprotocol.vault.MsgWithdrawFromVault": getLegacyMsgSignerFn(
-					[]string{"subaccount_id", "owner"},
-				),
 
 				// App injected messages have no signers.
 				"dydxprotocol.bridge.MsgAcknowledgeBridges":  noSigners,
