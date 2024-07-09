@@ -104,4 +104,9 @@ type MemClobKeeper interface {
 		ctx sdk.Context,
 		orderbookFills []StreamOrderbookFill,
 	)
+	AddOrderToOrderbookSubaccountUpdatesCheck(
+		ctx sdk.Context,
+		subaccountId satypes.SubaccountId,
+		order PendingOpenOrder,
+	) satypes.UpdateResult
 }
