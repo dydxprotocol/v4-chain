@@ -216,6 +216,15 @@ var TestMarketParams = []types.MarketParam{
 	},
 }
 
+var TestSingleMarketParam = types.MarketParam{
+	Id:                 0,
+	Pair:               BtcUsdPair,
+	Exponent:           BtcUsdExponent,
+	MinExchanges:       1,
+	MinPriceChangePpm:  50,
+	ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
+}
+
 var TestMarketPrices = []types.MarketPrice{
 	{
 		Id:       0,
@@ -258,6 +267,13 @@ var (
 		{
 			MarketId: MarketId2,
 			Price:    Price7,
+		},
+	}
+
+	ValidSingleMarketPriceUpdate = []*types.MarketPriceUpdates_MarketPriceUpdate{
+		{
+			MarketId: MarketId0,
+			Price:    Price5,
 		},
 	}
 

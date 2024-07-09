@@ -5,14 +5,16 @@ import (
 
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 type TestExtendedVoteTC struct {
@@ -33,6 +35,85 @@ func TestExtendVoteHandler(t *testing.T) {
 			extendVoteRequest: func() *cometabci.RequestExtendVote {
 				return nil
 			},
+		},
+		"price daemon returns no prices": {
+			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
+				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+				mPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).Return(
+					&pricestypes.MarketPriceUpdates{
+						MarketPriceUpdates: []*pricestypes.MarketPriceUpdates_MarketPriceUpdate{},
+					},
+				)
+
+				mPricesKeeper.On("GetMarketParam", mock.Anything, mock.Anything).Return(
+					&pricestypes.MarketParam{},
+					false,
+				)
+
+				return mPricesKeeper
+
+			},
+			expectedResponse: &vetypes.DaemonVoteExtension{
+				Prices: nil,
+			},
+		},
+		"oracle service returns single price": {
+			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
+				mpricesKeeper := &mocks.ExtendVotePricesKeeper{}
+				mpricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).Return(
+					constants.ValidSingleMarketPriceUpdate,
+				)
+				mpricesKeeper.On("GetMarketParam", mock.Anything, mock.Anything).Return(
+					constants.TestSingleMarketParam,
+					true,
+				)
+
+				return mpricesKeeper
+			},
+			expectedResponse: &vetypes.DaemonVoteExtension{
+				Prices: map[uint32][]byte{
+					constants.MarketId0: constants.Price5Bytes,
+				},
+			},
+		},
+		"oracle service returns multiple prices": {
+			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
+				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+				mPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).Return(
+					constants.ValidMarketPriceUpdates,
+				)
+				mPricesKeeper.On("GetMarketParam", mock.Anything, constants.MarketId0).Return(
+					constants.TestMarketParams[0],
+					true,
+				)
+				mPricesKeeper.On("GetMarketParam", mock.Anything, constants.MarketId1).Return(
+					constants.TestMarketParams[1],
+					true,
+				)
+				mPricesKeeper.On("GetMarketParam", mock.Anything, constants.MarketId2).Return(
+					constants.TestMarketParams[2],
+					true,
+				)
+				return mPricesKeeper
+			},
+			expectedResponse: &vetypes.DaemonVoteExtension{
+				Prices: map[uint32][]byte{
+					constants.MarketId0: constants.Price5Bytes,
+					constants.MarketId1: constants.Price6Bytes,
+					constants.MarketId2: constants.Price7Bytes,
+				},
+			},
+		},
+		"getting prices panics": {
+			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
+				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+				mPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).Panic("panic")
+				return mPricesKeeper
+			},
+			expectedResponse: &vetypes.DaemonVoteExtension{
+				Prices: nil,
+			},
+			expectedError: true,
 		},
 	}
 	for name, tc := range tests {
