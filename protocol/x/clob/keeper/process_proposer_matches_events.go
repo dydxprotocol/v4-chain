@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -71,14 +72,17 @@ func (k Keeper) InitializeProcessProposerMatchesEvents(
 
 // ResetAllDeliveredOrderIds resets the lists of delivered order ids. This should be reset every block.
 func (k Keeper) ResetAllDeliveredOrderIds(ctx sdk.Context) {
-	k.ResetUnorderedOrderIds(ctx, types.DeliveredCancelKeyPrefix)
+	memStore := ctx.KVStore(k.memKey)
+	k.ResetUnorderedOrderIds(ctx, memStore, types.DeliveredCancelKeyPrefix)
 	k.ResetOrderedOrderIds(
 		ctx,
+		memStore,
 		types.OrderedDeliveredLongTermOrderKeyPrefix,
 		types.OrderedDeliveredLongTermOrderIndexKey,
 	)
 	k.ResetOrderedOrderIds(
 		ctx,
+		memStore,
 		types.OrderedDeliveredConditionalOrderKeyPrefix,
 		types.OrderedDeliveredConditionalOrderIndexKey,
 	)
@@ -89,6 +93,7 @@ func (k Keeper) ResetAllDeliveredOrderIds(ctx sdk.Context) {
 func (k Keeper) AddDeliveredLongTermOrderId(ctx sdk.Context, orderId types.OrderId) {
 	k.AppendOrderedOrderId(
 		ctx,
+		ctx.KVStore(k.memKey),
 		types.OrderedDeliveredLongTermOrderKeyPrefix,
 		types.OrderedDeliveredLongTermOrderIndexKey,
 		orderId,
@@ -100,6 +105,7 @@ func (k Keeper) AddDeliveredLongTermOrderId(ctx sdk.Context, orderId types.Order
 func (k Keeper) AddDeliveredConditionalOrderId(ctx sdk.Context, orderId types.OrderId) {
 	k.AppendOrderedOrderId(
 		ctx,
+		ctx.KVStore(k.memKey),
 		types.OrderedDeliveredConditionalOrderKeyPrefix,
 		types.OrderedDeliveredConditionalOrderIndexKey,
 		orderId,
@@ -109,77 +115,77 @@ func (k Keeper) AddDeliveredConditionalOrderId(ctx sdk.Context, orderId types.Or
 // AddDeliveredCancelledOrderId saves a cancelled order id to the memstore for processing
 // in the next PrepareCheckState. The order of additions is not maintained.
 func (k Keeper) AddDeliveredCancelledOrderId(ctx sdk.Context, orderId types.OrderId) {
-	k.SetUnorderedOrderId(ctx, types.DeliveredCancelKeyPrefix, orderId)
+	k.SetUnorderedOrderId(ctx, ctx.KVStore(k.memKey), types.DeliveredCancelKeyPrefix, orderId)
 }
 
 // GetDeliveredLongTermOrderIds gets the ordered list of delivered long term order ids from the memstore.
 func (k Keeper) GetDeliveredLongTermOrderIds(ctx sdk.Context) []types.OrderId {
-	return k.GetOrderIds(ctx, types.OrderedDeliveredLongTermOrderKeyPrefix)
+	return k.GetOrderIds(ctx, ctx.KVStore(k.memKey), types.OrderedDeliveredLongTermOrderKeyPrefix)
 }
 
 // GetDeliveredConditionalOrderIds gets the ordered list of delivered conditional order ids from the memstore.
 func (k Keeper) GetDeliveredConditionalOrderIds(ctx sdk.Context) []types.OrderId {
-	return k.GetOrderIds(ctx, types.OrderedDeliveredConditionalOrderKeyPrefix)
+	return k.GetOrderIds(ctx, ctx.KVStore(k.memKey), types.OrderedDeliveredConditionalOrderKeyPrefix)
 }
 
 // GetDeliveredCancelledOrderIds gets the unordered list of delivered cancelled order ids from the memstore.
 func (k Keeper) GetDeliveredCancelledOrderIds(ctx sdk.Context) []types.OrderId {
-	return k.GetOrderIds(ctx, types.DeliveredCancelKeyPrefix)
+	return k.GetOrderIds(ctx, ctx.KVStore(k.memKey), types.DeliveredCancelKeyPrefix)
 }
 
 // HasDeliveredCancelledOrderId returns the existence of an order id in the memstore's list of delivered
 // cancelled order ids.
 func (k Keeper) HasDeliveredCancelledOrderId(ctx sdk.Context, orderId types.OrderId) bool {
-	return k.HasUnorderedOrderId(ctx, types.DeliveredCancelKeyPrefix, orderId)
+	return k.HasUnorderedOrderId(ctx, ctx.KVStore(k.memKey), types.DeliveredCancelKeyPrefix, orderId)
 }
 
-func (k Keeper) ResetOrderedOrderIds(ctx sdk.Context, keyPrefix string, indexKey string) {
-	memStore := ctx.KVStore(k.memKey)
-	store := prefix.NewStore(memStore, []byte(keyPrefix))
-	it := store.Iterator(nil, nil)
+func (k Keeper) ResetOrderedOrderIds(
+	ctx sdk.Context, store storetypes.KVStore, keyPrefix string, indexKey string,
+) {
+	prefixStore := prefix.NewStore(store, []byte(keyPrefix))
+	it := prefixStore.Iterator(nil, nil)
 	for ; it.Valid(); it.Next() {
-		store.Delete(it.Key())
+		prefixStore.Delete(it.Key())
 	}
-	memStore.Delete([]byte(indexKey))
+	store.Delete([]byte(indexKey))
 }
 
-func (k Keeper) ResetUnorderedOrderIds(ctx sdk.Context, keyPrefix string) {
-	memStore := ctx.KVStore(k.memKey)
-	store := prefix.NewStore(memStore, []byte(keyPrefix))
-	it := store.Iterator(nil, nil)
+func (k Keeper) ResetUnorderedOrderIds(ctx sdk.Context, store storetypes.KVStore, keyPrefix string) {
+	prefixStore := prefix.NewStore(store, []byte(keyPrefix))
+	it := prefixStore.Iterator(nil, nil)
 	for ; it.Valid(); it.Next() {
-		store.Delete(it.Key())
+		prefixStore.Delete(it.Key())
 	}
 }
 
 func (k Keeper) AppendOrderedOrderId(
 	ctx sdk.Context,
+	store storetypes.KVStore,
 	keyPrefix string,
 	indexKey string,
 	orderId types.OrderId,
 ) {
-	memStore := ctx.KVStore(k.memKey)
 	index := uint32(0)
-	if bytes := memStore.Get([]byte(indexKey)); bytes != nil {
+	if bytes := store.Get([]byte(indexKey)); bytes != nil {
 		index = binary.BigEndian.Uint32(bytes)
 	}
-	store := prefix.NewStore(memStore, []byte(keyPrefix))
-	store.Set(lib.Uint32ToKey(index), k.cdc.MustMarshal(&orderId))
+	prefixStore := prefix.NewStore(store, []byte(keyPrefix))
+	prefixStore.Set(lib.Uint32ToKey(index), k.cdc.MustMarshal(&orderId))
 
 	if index == math.MaxUint32 {
 		panic("store key index overflow")
 	}
-	memStore.Set([]byte(indexKey), lib.Uint32ToKey(index+1))
+	store.Set([]byte(indexKey), lib.Uint32ToKey(index+1))
 }
 
 func (k Keeper) GetOrderIds(
 	ctx sdk.Context,
+	store storetypes.KVStore,
 	keyPrefix string,
 ) []types.OrderId {
 	ret := []types.OrderId{}
-	memStore := ctx.KVStore(k.memKey)
-	store := prefix.NewStore(memStore, []byte(keyPrefix))
-	it := store.Iterator(nil, nil)
+	prefixStore := prefix.NewStore(store, []byte(keyPrefix))
+	it := prefixStore.Iterator(nil, nil)
 	for ; it.Valid(); it.Next() {
 		var orderId types.OrderId
 		k.cdc.MustUnmarshal(it.Value(), &orderId)
@@ -190,20 +196,30 @@ func (k Keeper) GetOrderIds(
 
 func (k Keeper) HasUnorderedOrderId(
 	ctx sdk.Context,
+	store storetypes.KVStore,
 	keyPrefix string,
 	orderId types.OrderId,
 ) bool {
-	memStore := ctx.KVStore(k.memKey)
-	store := prefix.NewStore(memStore, []byte(keyPrefix))
-	return store.Has(orderId.ToStateKey())
+	prefixStore := prefix.NewStore(store, []byte(keyPrefix))
+	return prefixStore.Has(orderId.ToStateKey())
 }
 
 func (k Keeper) SetUnorderedOrderId(
 	ctx sdk.Context,
+	store storetypes.KVStore,
 	keyPrefix string,
 	orderId types.OrderId,
 ) {
-	memStore := ctx.KVStore(k.memKey)
-	store := prefix.NewStore(memStore, []byte(keyPrefix))
-	store.Set(orderId.ToStateKey(), k.cdc.MustMarshal(&orderId))
+	prefixStore := prefix.NewStore(store, []byte(keyPrefix))
+	prefixStore.Set(orderId.ToStateKey(), k.cdc.MustMarshal(&orderId))
+}
+
+func (k Keeper) RemoveUnorderedOrderId(
+	ctx sdk.Context,
+	store storetypes.KVStore,
+	keyPrefix string,
+	orderId types.OrderId,
+) {
+	prefixStore := prefix.NewStore(store, []byte(keyPrefix))
+	prefixStore.Delete(orderId.ToStateKey())
 }

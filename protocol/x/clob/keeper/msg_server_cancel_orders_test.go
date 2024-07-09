@@ -226,7 +226,7 @@ func TestCancelOrder_Success(t *testing.T) {
 
 			// Add stateful order placement to state
 			ks.ClobKeeper.SetLongTermOrderPlacement(ctx, tc.StatefulOrderPlacement, 1)
-			ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+			ks.ClobKeeper.AddStatefulOrderIdExpiration(
 				ctx,
 				tc.StatefulOrderPlacement.MustGetUnixGoodTilBlockTime(),
 				tc.StatefulOrderPlacement.GetOrderId(),

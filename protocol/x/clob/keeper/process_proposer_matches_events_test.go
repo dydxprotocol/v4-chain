@@ -197,16 +197,18 @@ func TestOrderedOrderIdList(t *testing.T) {
 		},
 	}
 
-	for _, orderId := range orderIds {
-		ks.ClobKeeper.AppendOrderedOrderId(ks.Ctx, prefixKey, indexKey, orderId)
-	}
-	require.Equal(t, orderIds, ks.ClobKeeper.GetOrderIds(ks.Ctx, prefixKey))
+	memStore := ks.Ctx.KVStore(ks.MemKey)
 
-	ks.ClobKeeper.ResetOrderedOrderIds(ks.Ctx, prefixKey, indexKey)
 	for _, orderId := range orderIds {
-		ks.ClobKeeper.AppendOrderedOrderId(ks.Ctx, prefixKey, indexKey, orderId)
+		ks.ClobKeeper.AppendOrderedOrderId(ks.Ctx, memStore, prefixKey, indexKey, orderId)
 	}
-	require.Equal(t, orderIds, ks.ClobKeeper.GetOrderIds(ks.Ctx, prefixKey))
+	require.Equal(t, orderIds, ks.ClobKeeper.GetOrderIds(ks.Ctx, memStore, prefixKey))
+
+	ks.ClobKeeper.ResetOrderedOrderIds(ks.Ctx, memStore, prefixKey, indexKey)
+	for _, orderId := range orderIds {
+		ks.ClobKeeper.AppendOrderedOrderId(ks.Ctx, memStore, prefixKey, indexKey, orderId)
+	}
+	require.Equal(t, orderIds, ks.ClobKeeper.GetOrderIds(ks.Ctx, memStore, prefixKey))
 }
 
 func TestUnorderedOrderIdList(t *testing.T) {
@@ -236,14 +238,16 @@ func TestUnorderedOrderIdList(t *testing.T) {
 		},
 	}
 
-	for _, orderId := range orderIds {
-		ks.ClobKeeper.SetUnorderedOrderId(ks.Ctx, prefixKey, orderId)
-	}
-	require.Equal(t, orderIds, ks.ClobKeeper.GetOrderIds(ks.Ctx, prefixKey))
+	memStore := ks.Ctx.KVStore(ks.MemKey)
 
-	ks.ClobKeeper.ResetOrderedOrderIds(ks.Ctx, prefixKey, indexKey)
 	for _, orderId := range orderIds {
-		ks.ClobKeeper.SetUnorderedOrderId(ks.Ctx, prefixKey, orderId)
+		ks.ClobKeeper.SetUnorderedOrderId(ks.Ctx, memStore, prefixKey, orderId)
 	}
-	require.Equal(t, orderIds, ks.ClobKeeper.GetOrderIds(ks.Ctx, prefixKey))
+	require.Equal(t, orderIds, ks.ClobKeeper.GetOrderIds(ks.Ctx, memStore, prefixKey))
+
+	ks.ClobKeeper.ResetOrderedOrderIds(ks.Ctx, memStore, prefixKey, indexKey)
+	for _, orderId := range orderIds {
+		ks.ClobKeeper.SetUnorderedOrderId(ks.Ctx, memStore, prefixKey, orderId)
+	}
+	require.Equal(t, orderIds, ks.ClobKeeper.GetOrderIds(ks.Ctx, memStore, prefixKey))
 }
