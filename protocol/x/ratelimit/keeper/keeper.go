@@ -406,6 +406,49 @@ func (k Keeper) GetSDAIPrice(ctx sdk.Context) (price *big.Int, found bool) {
 	return price, true
 }
 
+// SetDaiYieldEpochParams sets the DaiYieldEpochParams in the store
+func (k Keeper) SetDaiYieldEpochParams(ctx sdk.Context, index uint64, params types.DaiYieldEpochParams) {
+	store := ctx.KVStore(k.storeKey)
+	// Create a key for the specific epoch number
+	key := append([]byte(types.DaiYieldEpochPrefix), sdk.Uint64ToBigEndian(index)...)
+
+	// Marshal the params and store them
+	bz := k.cdc.MustMarshal(&params)
+	store.Set(key, bz)
+}
+
+// GetDaiYieldEpochParams retrieves the DaiYieldEpochParams from the store based on the index
+func (k Keeper) GetDaiYieldEpochParams(ctx sdk.Context, index uint64) (types.DaiYieldEpochParams, bool) {
+	store := ctx.KVStore(k.storeKey)
+	key := append([]byte(types.DaiYieldEpochPrefix), sdk.Uint64ToBigEndian(index)...)
+	bz := store.Get(key)
+	if bz == nil {
+		return types.DaiYieldEpochParams{}, false
+	}
+
+	var params types.DaiYieldEpochParams
+	k.cdc.MustUnmarshal(bz, &params)
+	return params, true
+}
+
+// SetCurrentDaiYieldEpochNumber sets the current epoch number
+func (k Keeper) SetCurrentDaiYieldEpochNumber(ctx sdk.Context, index *big.Int) {
+	store := ctx.KVStore(k.storeKey)
+	bz := index.Bytes()
+	store.Set([]byte(types.DaiYieldEpochPrefix), bz)
+}
+
+// GetCurrentDaiYieldEpochNumber gets the current epoch number
+func (k Keeper) GetCurrentDaiYieldEpochNumber(ctx sdk.Context) (index *big.Int, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(types.DaiYieldEpochPrefix))
+	if bz == nil {
+		return nil, false
+	}
+	index = new(big.Int).SetBytes(bz)
+	return index, true
+}
+
 // GetSDAIEventManagerForTestingOnly returns the sDAI event manager for testing only
 func (k Keeper) GetSDAIEventManagerForTestingOnly() *sdaiserver.SDAIEventManager {
 	return k.sDAIEventManager

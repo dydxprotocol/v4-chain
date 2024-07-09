@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
+
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 )
 
@@ -40,6 +41,10 @@ const (
 
 	// storedDripRate is the prefix for the key-value store for historical drip rate
 	StoredDripRatePrefix = "StoredDripRatePrefix:"
+
+	// DaiYieldEpochPrefix is the prefix for the key-value store for DaiYieldEpoch
+	// The key vakue store is implemented as an array of size 100
+	DaiYieldEpochPrefix = "DaiYieldEpoch:"
 )
 
 // State
@@ -53,6 +58,9 @@ const (
 
 	// Maker RAY value which stores decimal points
 	SDAI_DECIMALS = 27
+
+	// The number of DaiYieldEpochParams we store
+	DAI_YIELD_ARRAY_SIZE = 1000
 )
 
 func GetPendingSendPacketKey(channelId string, sequenceNumber uint64) []byte {

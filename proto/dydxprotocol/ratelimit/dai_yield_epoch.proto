@@ -1,0 +1,27 @@
+syntax = "proto3";
+package dydxprotocol.ratelimit;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "dydxprotocol/prices/market_price.proto";
+
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types";
+
+// DaiYieldEpochParams defines the parameters for the DaiYieldEpoch
+message DaiYieldEpochParams {
+  
+    // Amount of trading DAI minted during the epoch
+    string tradingDaiMinted = 1;
+    
+    // Total amount of trading DAI available before minting for the epoch
+    string totalTradingDaiPreMint = 2;
+    
+    // Total amount of trading DAI claimed for the epoch
+    string totalTradingDaiClaimedForEpoch = 3;
+    
+    // Block number corresponding to the epoch
+    uint64 blockNumber = 4;
+
+    // Market prices for the epoch
+    repeated dydxprotocol.prices.MarketPrice epochMarketPrices = 5;
+}
