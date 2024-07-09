@@ -1,41 +1,23 @@
 // import { Worker } from 'worker_threads';
 import path from 'path';
 
-import {
-  stats,
-  logger,
-  InfoObject,
-} from '@dydxprotocol-indexer/base';
-import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
-import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
-import { KafkaMessage } from 'kafkajs';
+import { InfoObject, logger, stats } from '@dydxprotocol-indexer/base';
 import { updateOnBatchFunction, updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
-import {
-  Batch,
-  EachBatchPayload,
-  KafkaMessage,
-} from 'kafkajs';
+import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+import { Batch, EachBatchPayload, KafkaMessage } from 'kafkajs';
 import _ from 'lodash';
 import Piscina from 'piscina';
 
 import config from '../config';
-import {
-  createChannelDataMessage,
-  createChannelBatchDataMessage,
-} from '../helpers/message';
+import { createChannelBatchDataMessage, createChannelDataMessage } from '../helpers/message';
 import { sendMessage } from '../helpers/wss';
 import {
-  MessageToForward,
-  Channel,
-  SubscriptionInfo,
-  Connection,
+  Channel, Connection, MessageToForward, SubscriptionInfo,
 } from '../types';
 import { Index } from '../websocket/index';
 import { MAX_TIMEOUT_INTEGER } from './constants';
 import { Subscriptions } from './subscription';
-import getMessagesToForward, {
-  getChannels,
-} from './workers/from-kafka-helpers';
+import getMessagesToForward, { getChannels } from './workers/from-kafka-helpers';
 
 const piscina = new Piscina({
   filename: path.resolve(__dirname, 'workers/blank-worker.js'),
@@ -69,7 +51,8 @@ export class MessageForwarder {
     this.started = false;
     this.stopped = false;
     this.messageBuffer = {};
-    this.batchSending = setTimeout(() => {}, MAX_TIMEOUT_INTEGER);
+    this.batchSending = setTimeout(() => {
+    }, MAX_TIMEOUT_INTEGER);
   }
 
   public start(): void {
@@ -99,7 +82,9 @@ export class MessageForwarder {
 
     this.started = true;
     this.batchSending = setInterval(
-      () => { this.forwardBatchedMessages(); },
+      () => {
+        this.forwardBatchedMessages();
+      },
       BATCH_SEND_INTERVAL_MS,
     );
   }
@@ -328,7 +313,7 @@ export class MessageForwarder {
 
     // Buffer messages if the subscription is for batched messages
     if (this.subscriptions.batchedSubscriptions[message.channel] &&
-       this.subscriptions.batchedSubscriptions[message.channel][message.id]) {
+      this.subscriptions.batchedSubscriptions[message.channel][message.id]) {
       const bufferKey: string = this.getMessageBufferKey(
         message.channel,
         message.id,
