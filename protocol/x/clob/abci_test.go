@@ -82,7 +82,7 @@ func TestEndBlocker_Failure(t *testing.T) {
 				expiredOrder := constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20
 
 				ks.ClobKeeper.SetLongTermOrderPlacement(ctx, expiredOrder, blockHeight)
-				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+				ks.ClobKeeper.AddStatefulOrderIdExpiration(
 					ctx,
 					expiredOrder.MustGetUnixGoodTilBlockTime(),
 					expiredOrder.OrderId,
@@ -246,7 +246,7 @@ func TestEndBlocker_Success(t *testing.T) {
 				}
 				for _, order := range orders {
 					ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, 0)
-					ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+					ks.ClobKeeper.AddStatefulOrderIdExpiration(
 						ctx,
 						order.MustGetUnixGoodTilBlockTime(),
 						order.OrderId,
@@ -289,9 +289,9 @@ func TestEndBlocker_Success(t *testing.T) {
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
 				ExpiredStatefulOrderIds: []types.OrderId{
+					constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price25_GTBT15_StopLoss25.OrderId,
 					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 					constants.ConditionalOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT15_TakeProfit20.OrderId,
-					constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price25_GTBT15_StopLoss25.OrderId,
 				},
 				BlockHeight: blockHeight,
 			},
@@ -477,7 +477,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 					blockHeight,
 				)
-				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+				ks.ClobKeeper.AddStatefulOrderIdExpiration(
 					ctx,
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.MustGetUnixGoodTilBlockTime(),
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
@@ -493,7 +493,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10,
 					blockHeight,
 				)
-				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+				ks.ClobKeeper.AddStatefulOrderIdExpiration(
 					ctx,
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.MustGetUnixGoodTilBlockTime(),
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
@@ -519,7 +519,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 					blockHeight,
 				)
-				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+				ks.ClobKeeper.AddStatefulOrderIdExpiration(
 					ctx,
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.MustGetUnixGoodTilBlockTime(),
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
@@ -549,8 +549,8 @@ func TestEndBlocker_Success(t *testing.T) {
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
 				ExpiredStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 					constants.LongTermOrder_Bob_Num0_Id1_Clob0_Buy45_Price10_GTBT10.OrderId,
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 				},
 				BlockHeight:               blockHeight,
 				OrderIdsFilledInLastBlock: []types.OrderId{orderIdThree},
@@ -808,7 +808,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			}
 
 			for time, expected := range tc.expectedStatefulOrderTimeSlice {
-				actual := ks.ClobKeeper.GetStatefulOrdersTimeSlice(ctx, time)
+				actual := ks.ClobKeeper.GetStatefulOrderIdExpirations(ctx, time)
 				require.Equal(t, expected, actual)
 			}
 

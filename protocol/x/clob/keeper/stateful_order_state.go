@@ -175,23 +175,68 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 	)
 }
 
-// GetStatefulOrdersTimeSlice gets a slice of stateful order IDs that expire at `goodTilBlockTime`,
-// sorted by order ID.
-func (k Keeper) GetStatefulOrdersTimeSlice(ctx sdk.Context, goodTilBlockTime time.Time) (
+// GetStatefulOrderIdExpirations gets a slice of stateful order IDs that expire at `goodTilBlockTime`,
+// sorted by order ID state key.
+func (k Keeper) GetStatefulOrderIdExpirations(ctx sdk.Context, goodTilBlockTime time.Time) (
 	orderIds []types.OrderId,
 ) {
-	store := k.getStatefulOrdersTimeSliceStore(ctx)
-	statefulOrdersTimeSliceBytes := store.Get(sdk.FormatTimeBytes(goodTilBlockTime))
+	return k.GetOrderIds(
+		ctx,
+		ctx.KVStore(k.storeKey),
+		fmt.Sprintf(types.StatefulOrdersExpirationsKeyPrefix, sdk.FormatTimeString(goodTilBlockTime)),
+	)
+}
 
-	// If there are no stateful orders that expire at this block, then return an empty slice.
-	if statefulOrdersTimeSliceBytes == nil {
-		return []types.OrderId{}
+// RemoveStatefulOrderIdExpiration removes a stateful order id expiration for an order id and
+// `goodTilBlockTime`.
+func (k Keeper) RemoveStatefulOrderIdExpiration(
+	ctx sdk.Context,
+	goodTilBlockTime time.Time,
+	orderId types.OrderId,
+) {
+	k.RemoveUnorderedOrderId(
+		ctx,
+		ctx.KVStore(k.storeKey),
+		fmt.Sprintf(types.StatefulOrdersExpirationsKeyPrefix, sdk.FormatTimeString(goodTilBlockTime)),
+		orderId,
+	)
+}
+
+// AddStatefulOrderIdExpiration adds a stateful order id expiration for an order id and
+// `goodTilBlockTime`.
+func (k Keeper) AddStatefulOrderIdExpiration(
+	ctx sdk.Context,
+	goodTilBlockTime time.Time,
+	orderId types.OrderId,
+) {
+	k.SetUnorderedOrderId(
+		ctx,
+		ctx.KVStore(k.storeKey),
+		fmt.Sprintf(types.StatefulOrdersExpirationsKeyPrefix, sdk.FormatTimeString(goodTilBlockTime)),
+		orderId,
+	)
+}
+
+// RemoveExpiredStatefulOrders removes the stateful order id expirations up to `blockTime` and
+// returns the removed order ids as a slice.
+func (k Keeper) RemoveExpiredStatefulOrders(ctx sdk.Context, blockTime time.Time) (
+	expiredOrderIds []types.OrderId,
+) {
+	expiredOrderIds = make([]types.OrderId, 0)
+	store := ctx.KVStore(k.storeKey)
+	it := store.Iterator(
+		[]byte(fmt.Sprintf(types.StatefulOrdersExpirationsKeyPrefix, sdk.FormatTimeString(time.Time{}))),
+		storetypes.PrefixEndBytes(
+			[]byte(fmt.Sprintf(types.StatefulOrdersExpirationsKeyPrefix, sdk.FormatTimeString(blockTime))),
+		),
+	)
+	for ; it.Valid(); it.Next() {
+		var orderId types.OrderId
+		k.cdc.MustUnmarshal(it.Value(), &orderId)
+		expiredOrderIds = append(expiredOrderIds, orderId)
+		store.Delete(it.Key())
 	}
-
-	var longTermOrders types.StatefulOrderTimeSliceValue
-	k.cdc.MustUnmarshal(statefulOrdersTimeSliceBytes, &longTermOrders)
-
-	return longTermOrders.OrderIds
+	return expiredOrderIds
 }
 
 // GetNextStatefulOrderTransactionIndex returns the next stateful order block transaction index
@@ -263,37 +308,6 @@ func (k Keeper) MustTriggerConditionalOrder(
 	untriggeredConditionalOrderStore.Delete(orderKey)
 }
 
-// MustAddOrderToStatefulOrdersTimeSlice adds a new `OrderId` to an existing time slice, or creates a new time slice
-// containing the `OrderId` and writes it to state. It first sorts all order IDs before writing them
-// to state to avoid non-determinism issues.
-func (k Keeper) MustAddOrderToStatefulOrdersTimeSlice(
-	ctx sdk.Context,
-	goodTilBlockTime time.Time,
-	orderId types.OrderId,
-) {
-	// If this is a Short-Term order, panic.
-	orderId.MustBeStatefulOrder()
-
-	longTermOrdersExpiringAtTime := k.GetStatefulOrdersTimeSlice(ctx, goodTilBlockTime)
-
-	// Panic if this order ID is already written to state.
-	for _, foundOrderId := range longTermOrdersExpiringAtTime {
-		if orderId == foundOrderId {
-			panic(
-				fmt.Sprintf(
-					"MustAddOrderToStatefulOrdersTimeSlice: order ID %v is already contained in state for time %v",
-					orderId,
-					goodTilBlockTime,
-				),
-			)
-		}
-	}
-
-	longTermOrdersExpiringAtTime = append(longTermOrdersExpiringAtTime, orderId)
-
-	k.setStatefulOrdersTimeSliceInState(ctx, goodTilBlockTime, longTermOrdersExpiringAtTime)
-}
-
 // MustRemoveStatefulOrder removes an order by `OrderId` from an existing time slice. If the time slice is empty
 // after removing the `OrderId`, then the time slice is pruned from state. For the `OrderId` which is removed,
 // this method also calls `DeleteStatefulOrderPlacement` to remove the order placement from state.
@@ -310,35 +324,7 @@ func (k Keeper) MustRemoveStatefulOrder(
 	}
 
 	goodTilBlockTime := longTermOrderPlacement.Order.MustGetUnixGoodTilBlockTime()
-	longTermOrdersExpiringAtTime := k.GetStatefulOrdersTimeSlice(ctx, goodTilBlockTime)
-	updatedStatefulOrdersExpiringAtTime := make([]types.OrderId, 0, len(longTermOrdersExpiringAtTime))
-
-	// Loop through all order IDs and remove any that equal `orderId`.
-	for _, longTermOrderId := range longTermOrdersExpiringAtTime {
-		if longTermOrderId != orderId {
-			updatedStatefulOrdersExpiringAtTime = append(updatedStatefulOrdersExpiringAtTime, longTermOrderId)
-		}
-	}
-
-	// Panic if the length of the new list is not one less, since that indicates no element was removed.
-	if len(longTermOrdersExpiringAtTime) != len(updatedStatefulOrdersExpiringAtTime)+1 {
-		panic(
-			fmt.Sprintf(
-				"MustRemoveStatefulOrder: order ID %v is not in state for time %v",
-				orderId,
-				goodTilBlockTime,
-			),
-		)
-	}
-
-	// If `updatedStatefulOrdersExpiringAtTime` is empty, remove the key prefix from state.
-	// Else, set the updated list of order IDs in state.
-	if len(updatedStatefulOrdersExpiringAtTime) == 0 {
-		store := k.getStatefulOrdersTimeSliceStore(ctx)
-		store.Delete(sdk.FormatTimeBytes(goodTilBlockTime))
-	} else {
-		k.setStatefulOrdersTimeSliceInState(ctx, goodTilBlockTime, updatedStatefulOrdersExpiringAtTime)
-	}
+	k.RemoveStatefulOrderIdExpiration(ctx, goodTilBlockTime, orderId)
 
 	// Remove the order fill amount from state.
 	k.RemoveOrderFillAmount(ctx, orderId)
@@ -358,31 +344,6 @@ func (k Keeper) IsConditionalOrderTriggered(
 	store := k.GetTriggeredConditionalOrderPlacementStore(ctx)
 	orderKey := orderId.ToStateKey()
 	return store.Has(orderKey)
-}
-
-// RemoveExpiredStatefulOrdersTimeSlices iterates all time slices from 0 until the time specified by
-// `blockTime` (inclusive) and removes the time slices from state. It returns all order IDs that were removed.
-func (k Keeper) RemoveExpiredStatefulOrdersTimeSlices(ctx sdk.Context, blockTime time.Time) (
-	expiredOrderIds []types.OrderId,
-) {
-	statefulOrderPlacementIterator := k.getStatefulOrdersTimeSliceIterator(ctx, blockTime)
-
-	defer statefulOrderPlacementIterator.Close()
-
-	expiredOrderIds = make([]types.OrderId, 0)
-	store := ctx.KVStore(k.storeKey)
-
-	// Delete all orders from state that expire before or at `blockTime`.
-	for ; statefulOrderPlacementIterator.Valid(); statefulOrderPlacementIterator.Next() {
-		statefulOrderTimeSlice := types.StatefulOrderTimeSliceValue{}
-		value := statefulOrderPlacementIterator.Value()
-		k.cdc.MustUnmarshal(value, &statefulOrderTimeSlice)
-		expiredOrderIds = append(expiredOrderIds, statefulOrderTimeSlice.OrderIds...)
-
-		store.Delete(statefulOrderPlacementIterator.Key())
-	}
-
-	return expiredOrderIds
 }
 
 // GetAllStatefulOrders iterates over all stateful order placements and returns a list
@@ -428,44 +389,6 @@ func (k Keeper) getStatefulOrders(statefulOrderIterator dbm.Iterator) []types.Or
 	}
 
 	return sortedOrders
-}
-
-// setStatefulOrdersTimeSliceInState sets a sorted list of order IDs in state at a `goodTilBlockTime`.
-// This function automatically sorts the order IDs before writing them to state.
-func (k Keeper) setStatefulOrdersTimeSliceInState(
-	ctx sdk.Context,
-	goodTilBlockTime time.Time,
-	orderIds []types.OrderId,
-) {
-	// Sort the order IDs.
-	types.MustSortAndHaveNoDuplicates(orderIds)
-
-	statefulOrderPlacement := types.StatefulOrderTimeSliceValue{
-		OrderIds: orderIds,
-	}
-	b := k.cdc.MustMarshal(&statefulOrderPlacement)
-	store := k.getStatefulOrdersTimeSliceStore(ctx)
-	store.Set(
-		sdk.FormatTimeBytes(goodTilBlockTime),
-		b,
-	)
-}
-
-// getStatefulOrdersTimeSliceIterator returns an iterator over all stateful order time slice values
-// from time 0 until `endTime`.
-func (k Keeper) getStatefulOrdersTimeSliceIterator(ctx sdk.Context, endTime time.Time) storetypes.Iterator {
-	store := ctx.KVStore(k.storeKey)
-	startKey := []byte(types.StatefulOrdersTimeSlicePrefix)
-	endKey := append(
-		startKey,
-		storetypes.InclusiveEndBytes(
-			sdk.FormatTimeBytes(endTime),
-		)...,
-	)
-	return store.Iterator(
-		startKey,
-		endKey,
-	)
 }
 
 // getAllOrdersIterator returns an iterator over all stateful orders, which includes all

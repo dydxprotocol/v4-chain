@@ -53,10 +53,13 @@ const (
 	// key-per-order format.
 	LegacyBlockHeightToPotentiallyPrunableOrdersPrefix = "ExpHt:"
 
-	// StatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful orders that
-	// expire at a given timestamp, sorted by order ID.
-	StatefulOrdersTimeSlicePrefix = "ExpTm:"
-)
+	// Deprecated: LegacyStatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful
+	// orders that expire at a given timestamp, sorted by order ID. Do not use.
+	LegacyStatefulOrdersTimeSlicePrefix = "ExpTm:"
+
+	// StatefulOrdersTimeSliceKeyPrefix is used to store orders that expire at a certain time.
+	// The specifier should be replaced with the time.
+	StatefulOrdersExpirationsKeyPrefix = "Exp/%s:"
 
 	// TriggeredConditionalOrderKeyPrefix is the key to retrieve an triggered conditional order and
 	// information about when it was triggered.

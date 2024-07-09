@@ -2,7 +2,6 @@ package types
 
 import (
 	"math/big"
-	"time"
 
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,11 +71,6 @@ type MemClobKeeper interface {
 		ctx sdk.Context,
 		order Order,
 		blockHeight uint32,
-	)
-	MustAddOrderToStatefulOrdersTimeSlice(
-		ctx sdk.Context,
-		goodTilBlockTime time.Time,
-		orderId OrderId,
 	)
 	OffsetSubaccountPerpetualPosition(
 		ctx sdk.Context,

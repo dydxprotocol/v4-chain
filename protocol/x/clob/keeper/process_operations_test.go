@@ -2452,7 +2452,7 @@ func setupProcessProposerOperationsTestCase(
 		require.Falsef(t, exists, "Duplicate pre-existing stateful order (%+v)", order)
 		seenOrderIds[order.GetOrderId()] = struct{}{}
 		ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, blockHeight)
-		ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+		ks.ClobKeeper.AddStatefulOrderIdExpiration(
 			ctx,
 			order.MustGetUnixGoodTilBlockTime(),
 			order.OrderId,
@@ -2464,7 +2464,7 @@ func setupProcessProposerOperationsTestCase(
 		require.Falsef(t, exists, "Duplicate pre-existing stateful order (%+v)", order)
 		seenOrderIds[order.GetOrderId()] = struct{}{}
 		ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, blockHeight)
-		ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+		ks.ClobKeeper.AddStatefulOrderIdExpiration(
 			ctx,
 			order.MustGetUnixGoodTilBlockTime(),
 			order.OrderId,
