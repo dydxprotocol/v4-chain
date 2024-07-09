@@ -11,6 +11,10 @@ import (
 	log "cosmossdk.io/log"
 
 	mock "github.com/stretchr/testify/mock"
+	
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	subaccountstypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
@@ -426,6 +430,15 @@ func (_m *MemClobKeeper) ValidateSubaccountEquityTierLimitForStatefulOrder(ctx t
 	}
 
 	return r0
+}
+
+// Placeholder to satisfy interface implementation of types.MemClobKeeper
+func (f *MemClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	order clobtypes.PendingOpenOrder,
+) satypes.UpdateResult {
+	return satypes.Success
 }
 
 // NewMemClobKeeper creates a new instance of MemClobKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

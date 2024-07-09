@@ -2141,6 +2141,8 @@ func (m *MemClobPriceTimePriority) GetMidPrice(
 // would receive if they sold (or bought) from the order book using `impactNotionalAmount`.
 // Returns `hasEnoughLiquidity = false` if the orderbook doesn't have
 // enough orders on the side to absorb the impact notional amount.
+// Note that isBid refers to the side of the maker, not the taker. eg. for a Buy order that
+// matches with maker asks, isBid = false.
 func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 	ctx sdk.Context,
 	clobPair types.ClobPair,
@@ -2151,10 +2153,68 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 	impactPriceSubticks *big.Rat,
 	hasEnoughLiquidity bool,
 ) {
+	hasSufficientCollat := func(
+		makerOrder types.Order,
+		remainingImpactQuoteQuantums *big.Int,
+	) bool {
+		// Calculate the match size in units of base quantums between remainingImpactQuoteQuantums and
+		// a maker order, baseQuantums = 10^-quantumConversionExp * quoteQuantums / subticks
+		scale := new(big.Rat).SetInt(new(big.Int).Exp(
+			big.NewInt(10),
+			big.NewInt(int64(-clobPair.GetQuantumConversionExponent())),
+			nil,
+		))
+		remainingImpactBaseQuantumsRat := new(big.Rat).Mul(
+			new(big.Rat).Quo(
+				new(big.Rat).SetInt(remainingImpactQuoteQuantums),
+				new(big.Rat).SetUint64(makerOrder.GetSubticks()),
+			),
+			scale,
+		)
+		remainingImpactBaseQuantums := new(big.Int).Quo(
+			remainingImpactBaseQuantumsRat.Num(),
+			remainingImpactBaseQuantumsRat.Denom(),
+		)
+
+		matchBaseQuantums := satypes.BaseQuantums(remainingImpactBaseQuantums.Uint64())
+		if remainingImpactBaseQuantums.Cmp(makerOrder.GetBaseQuantums().ToBigInt()) >= 0 {
+			matchBaseQuantums = makerOrder.GetBaseQuantums()
+		}
+
+		// Check if the maker order has sufficient collateral to fulfill the match.
+		// Instead of directly checking margin, we leverage AddOrderToOrderbookSubaccountUpdatesCheck
+		// by creating an order that would have the same collat requirements as the match.
+		// eg. a maker ask that matches 10 base quantums has the same collateral requirement
+		// as that maker placing a new 10 base ask at the same price (subticks).
+		equivalentOrder := types.PendingOpenOrder{
+			RemainingQuantums: matchBaseQuantums,
+			IsBuy:             makerOrder.IsBuy(),
+			Subticks:          makerOrder.GetOrderSubticks(),
+			ClobPairId:        clobPair.GetClobPairId(),
+		}
+
+		updateCheckResult := m.clobKeeper.AddOrderToOrderbookSubaccountUpdatesCheck(
+			ctx,
+			makerOrder.GetSubaccountId(),
+			equivalentOrder,
+		)
+
+		if updateCheckResult == satypes.Success {
+			return true
+		} else if updateCheckResult == satypes.NewlyUndercollateralized ||
+			updateCheckResult == satypes.StillUndercollateralized {
+			return false
+		} else {
+			log.InfoLog(ctx, "AddOrderCheck returned unexpected result during collateralization check")
+			return false
+		}
+	}
+
 	remainingImpactQuoteQuantums := new(big.Int).Set(impactNotionalQuoteQuantums)
 	accumulatedBaseQuantums := new(big.Rat).SetInt64(0)
 
 	makerLevelOrder, foundMakerOrder := orderbook.getBestOrderOnSide(isBid)
+
 	if impactNotionalQuoteQuantums.Sign() == 0 && foundMakerOrder {
 		// Impact notional is zero, returns the price of the best order as impact price.
 		return makerLevelOrder.Value.Order.GetOrderSubticks().ToBigRat(), true
@@ -2162,6 +2222,12 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 
 	for remainingImpactQuoteQuantums.Sign() > 0 && foundMakerOrder {
 		makerOrder := makerLevelOrder.Value.Order
+
+		if !hasSufficientCollat(makerOrder, remainingImpactQuoteQuantums) {
+			makerLevelOrder, foundMakerOrder = orderbook.findNextBestLevelOrder(makerLevelOrder)
+			continue
+		}
+
 		makerRemainingSize, makerHasRemainingSize := m.GetOrderRemainingAmount(ctx, makerOrder)
 		if !makerHasRemainingSize {
 			panic(fmt.Sprintf("getImpactPriceSubticks: maker order has no remaining amount (%+v)", makerOrder))
