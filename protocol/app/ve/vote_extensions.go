@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/log"
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
+	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
@@ -22,20 +23,24 @@ type VoteExtensionHandler struct {
 
 	veCodec codec.VoteExtensionCodec
 
-	pk ExtendVotePricesKeeper
+	pricesKeeper ExtendVotePricesKeeper
+
+	priceApplier veaggregator.PriceApplier
 }
 
 func NewVoteExtensionHandler(
 	logger log.Logger,
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
 	vecodec codec.VoteExtensionCodec,
-	pricekeeper ExtendVotePricesKeeper,
+	pk ExtendVotePricesKeeper,
+	priceApplier veaggregator.PriceApplier,
 ) *VoteExtensionHandler {
 	return &VoteExtensionHandler{
 		logger:          logger,
 		indexPriceCache: indexPriceCache,
 		veCodec:         vecodec,
-		pk:              pricekeeper,
+		pricesKeeper:    pk,
+		priceApplier:    priceApplier,
 	}
 }
 
@@ -63,10 +68,23 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 			return nil, err
 		}
 
-		// TODO: call the method used to write prices to state, in the same way preBlocker does
+		reqFinalizeBlock := &abci.RequestFinalizeBlock{
+			Txs:    req.Txs,
+			Height: req.Height,
+		}
 
+		if _, err = h.priceApplier.ApplyPricesFromVoteExtensions(ctx, reqFinalizeBlock); err != nil {
+			h.logger.Error(
+				"failed to aggregate oracle votes",
+				"height", req.Height,
+				"err", err,
+			)
+			err = PreBlockError{err}
+
+			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
+		}
 		// TODO: does the daemon needs some time to warm up or can we include this in the first block
-		pu := h.pk.GetValidMarketPriceUpdates(ctx)
+		pu := h.pricesKeeper.GetValidMarketPriceUpdates(ctx)
 
 		if len(pu.MarketPriceUpdates) == 0 {
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, fmt.Errorf("no valid median prices")
@@ -158,7 +176,7 @@ func (h *VoteExtensionHandler) transformDaemonPricesToVE(
 
 		// Check if the marketId is valid
 		// TODO: check if this is necessary given that we call GetValidMarketPriceUpdates in the ExtendVoteHandler
-		if market, ok = h.pk.GetMarketParam(ctx, marketId); !ok {
+		if market, ok = h.pricesKeeper.GetMarketParam(ctx, marketId); !ok {
 			h.logger.Debug("market id not found", "marketId", marketId)
 			continue
 		}
@@ -201,7 +219,7 @@ func (h *VoteExtensionHandler) ValidateDaemonVE(
 }
 
 func (h *VoteExtensionHandler) GetMaxPairs(ctx sdk.Context) uint32 {
-	markets := h.pk.GetAllMarketParams(ctx)
+	markets := h.pricesKeeper.GetAllMarketParams(ctx)
 	// TODO: check how to handle this query in prepare / process proposal
 	// given that pairs can be created/removed
 	return uint32(len(markets))

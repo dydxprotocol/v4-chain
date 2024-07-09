@@ -7,12 +7,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
-
 	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 )
 
@@ -24,6 +23,7 @@ type TestExtendedVoteTC struct {
 }
 
 func TestExtendVoteHandler(t *testing.T) {
+
 	tests := map[string]TestExtendedVoteTC{
 		"nil request returns error": {
 			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
@@ -48,6 +48,7 @@ func TestExtendVoteHandler(t *testing.T) {
 				indexPriceCache,
 				votecodec,
 				tc.pricesKeeper(),
+				mPriceApplier,
 			)
 
 			req := &cometabci.RequestExtendVote{}
@@ -103,6 +104,8 @@ func TestVerifyVoteHandler(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx, _, _, indexPriceCache, _, _ := keepertest.PricesKeepers(t)
 
+			mPriceApplier := &mocks.PriceApplier{}
+
 			votecodec := vecodec.NewDefaultVoteExtensionCodec()
 
 			handler := ve.NewVoteExtensionHandler(
@@ -110,6 +113,7 @@ func TestVerifyVoteHandler(t *testing.T) {
 				indexPriceCache,
 				votecodec,
 				tc.pricesKeeper(),
+				mPriceApplier,
 			).VerifyVoteExtensionHandler()
 
 			resp, err := handler(ctx, tc.getReq())

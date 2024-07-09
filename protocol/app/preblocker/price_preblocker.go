@@ -2,7 +2,6 @@ package daemon
 
 import (
 	"fmt"
-	"math/big"
 
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -11,7 +10,6 @@ import (
 	"cosmossdk.io/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
-	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 )
 
@@ -26,39 +24,22 @@ type PreBlockHandler struct { //golint:ignore
 	keeper pk.Keeper
 
 	// price applier writes the aggregated prices to state.
-	pa veaggregator.PriceApplier
+	priceApplier veaggregator.PriceApplier
 }
 
 // NewOraclePreBlockHandler returns a new PreBlockHandler. The handler
 // is responsible for writing oracle data included in vote extensions to state.
 func NewDaemonPreBlockHandler(
 	logger log.Logger,
-	aggregateFn func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error),
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
 	pk pk.Keeper,
-	veCodec codec.VoteExtensionCodec,
-	ecCodec codec.ExtendedCommitCodec,
+	priceApplier veaggregator.PriceApplier,
 ) *PreBlockHandler {
 
-	aggregator := veaggregator.NewVeAggregator(
-		logger,
-		indexPriceCache,
-		pk,
-		aggregateFn,
-	)
-
-	priceApplier := veaggregator.NewPriceWriter(
-		aggregator,
-		pk,
-		veCodec,
-		ecCodec,
-		logger,
-	)
-
 	return &PreBlockHandler{
-		logger: logger,
-		keeper: pk,
-		pa:     priceApplier,
+		logger:       logger,
+		keeper:       pk,
+		priceApplier: priceApplier,
 	}
 }
 
@@ -89,7 +70,7 @@ func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinaliz
 		"height", req.Height,
 	)
 
-	_, err = pbh.pa.ApplyPricesFromVoteExtensions(ctx, req)
+	_, err = pbh.priceApplier.ApplyPricesFromVoteExtensions(ctx, req)
 	if err != nil {
 		pbh.logger.Error(
 			"failed to apply prices from vote extensions",

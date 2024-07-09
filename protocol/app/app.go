@@ -101,6 +101,9 @@ import (
 	timelib "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/time"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/rate_limit"
 
+	// VE
+	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
+
 	// Mempool
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mempool"
 
@@ -939,23 +942,37 @@ func New(
 	voteCodec := vecodec.NewDefaultVoteExtensionCodec()
 	extInfoCodec := vecodec.NewDefaultExtendedCommitCodec()
 
-	if !appFlags.NonValidatingFullNode {
-		app.InitVoteExtensions(logger, indexPriceCache, voteCodec, app.PricesKeeper)
-	}
-
 	aggregatorFn := voteweighted.Median(
 		logger,
 		app.ConsumerKeeper,
 		voteweighted.DefaultPowerThreshold,
 	)
-	app.pricePreBlocker = *daemonpreblocker.NewDaemonPreBlockHandler(
+
+	aggregator := veaggregator.NewVeAggregator(
 		logger,
-		aggregatorFn,
 		indexPriceCache,
+		app.PricesKeeper,
+		aggregatorFn,
+	)
+
+	priceApplier := veaggregator.NewPriceWriter(
+		aggregator,
 		app.PricesKeeper,
 		voteCodec,
 		extInfoCodec,
+		logger,
 	)
+
+	app.pricePreBlocker = *daemonpreblocker.NewDaemonPreBlockHandler(
+		logger,
+		indexPriceCache,
+		app.PricesKeeper,
+		priceApplier,
+	)
+
+	if !appFlags.NonValidatingFullNode {
+		app.InitVoteExtensions(logger, indexPriceCache, voteCodec, app.PricesKeeper, priceApplier)
+	}
 
 	/****  Module Options ****/
 
@@ -1378,8 +1395,9 @@ func (app *App) InitVoteExtensions(
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
 	veCodec vecodec.VoteExtensionCodec,
 	pricesKeeper pricesmodulekeeper.Keeper,
+	priceApplier veaggregator.PriceApplier,
 ) {
-	veHandler := ve.NewVoteExtensionHandler(logger, indexPriceCache, veCodec, pricesKeeper)
+	veHandler := ve.NewVoteExtensionHandler(logger, indexPriceCache, veCodec, pricesKeeper, priceApplier)
 	app.SetExtendVoteHandler(veHandler.ExtendVoteHandler())
 	app.SetVerifyVoteExtensionHandler(veHandler.VerifyVoteExtensionHandler())
 
