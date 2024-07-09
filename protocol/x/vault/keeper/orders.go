@@ -329,16 +329,13 @@ func (k Keeper) GetVaultClobOrders(
 			skewedSpreadPpmI,
 			side == clobtypes.Order_SIDE_SELL,
 		)
+		divisor := lib.BigIntOneMillion() // delayed division by 1 million as noted above.
+		divisor.Mul(divisor, oracleSubticks.Denom())
 		if side == clobtypes.Order_SIDE_SELL {
-			subticks = lib.BigDivCeil(subticks, oracleSubticks.Denom())
+			subticks = lib.BigDivCeil(subticks, divisor)
 		} else {
-			subticks = new(big.Int).Quo(subticks, oracleSubticks.Denom())
+			subticks = new(big.Int).Quo(subticks, divisor)
 		}
-		subticks = lib.BigMulPpm( // delayed division by 1 million (rounding up) as noted above.
-			subticks,
-			big.NewInt(1),
-			side == clobtypes.Order_SIDE_SELL,
-		)
 
 		// Bound subticks between the minimum and maximum subticks.
 		subticksPerTick := lib.BigU(clobPair.SubticksPerTick)
