@@ -43,6 +43,10 @@ func AddQuoteBalanceFromPerpetualPositions(
 		quoteBalance.Add(quoteBalance, position.GetQuoteBalance())
 	}
 
+	if quoteBalance.Sign() == 0 {
+		return assetPositions
+	}
+
 	// Add the quote balance to asset positions.
 	return salib.CalculateUpdatedAssetPositions(
 		assetPositions,
