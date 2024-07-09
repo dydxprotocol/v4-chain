@@ -405,3 +405,8 @@ func (k Keeper) GetSDAIPrice(ctx sdk.Context) (price *big.Int, found bool) {
 	price = new(big.Int).SetBytes(bz)
 	return price, true
 }
+
+// GetSDAIEventManagerForTestingOnly returns the sDAI event manager for testing only
+func (k Keeper) GetSDAIEventManagerForTestingOnly() *sdaiserver.SDAIEventManager {
+	return k.sDAIEventManager
+}

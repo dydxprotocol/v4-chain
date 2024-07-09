@@ -41,14 +41,14 @@ func (k msgServer) UpdateSDAIConversionRate(
 			return nil, err
 		}
 
-		if blockNumber == bigEthereumBlockNumber {
+		if blockNumber.Cmp(bigEthereumBlockNumber) == 0 {
 
 			conversionRate, err := ConvertStringToBigInt(event.ConversionRate)
 			if err != nil {
 				return nil, err
 			}
 
-			if bigConversionRate == conversionRate {
+			if bigConversionRate.Cmp(conversionRate) == 0 {
 
 				currentRate, ok := k.GetSDAIPrice(ctx)
 
