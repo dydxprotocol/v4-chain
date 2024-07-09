@@ -2,7 +2,6 @@ package types
 
 import (
 	"math/big"
-	"time"
 
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -103,20 +102,9 @@ type ClobKeeper interface {
 		orderId OrderId,
 	)
 	RemoveOrderFillAmount(ctx sdk.Context, orderId OrderId)
-	MustAddOrderToStatefulOrdersTimeSlice(
-		ctx sdk.Context,
-		goodTilBlockTime time.Time,
-		orderId OrderId,
-	)
-	GetStatefulOrdersTimeSlice(ctx sdk.Context, goodTilBlockTime time.Time) (
-		orderIds []OrderId,
-	)
 	MustRemoveStatefulOrder(
 		ctx sdk.Context,
 		orderId OrderId,
-	)
-	RemoveExpiredStatefulOrdersTimeSlices(ctx sdk.Context, blockTime time.Time) (
-		expiredOrderIds []OrderId,
 	)
 	GetProcessProposerMatchesEvents(ctx sdk.Context) ProcessProposerMatchesEvents
 	MustSetProcessProposerMatchesEvents(

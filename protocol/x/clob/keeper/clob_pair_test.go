@@ -663,7 +663,7 @@ func TestUpdateClobPair_FinalSettlement(t *testing.T) {
 	}
 	for _, order := range statefulOrders {
 		ks.ClobKeeper.SetLongTermOrderPlacement(ks.Ctx, order, 5)
-		ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+		ks.ClobKeeper.AddStatefulOrderIdExpiration(
 			ks.Ctx,
 			order.MustGetUnixGoodTilBlockTime(),
 			order.GetOrderId(),
