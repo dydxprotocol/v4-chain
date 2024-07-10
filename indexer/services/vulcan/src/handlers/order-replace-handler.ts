@@ -535,6 +535,16 @@ export class OrderReplaceHandler extends Handler {
     removeOrderResult: RemoveOrderResult,
   ): Promise<number> {
     const redisOrder: RedisOrder = removeOrderResult.removedOrder!;
+    logger.info({
+      at: 'OrderReplaceHandler#updatePriceLevelsCache',
+      message: 'Orderbook price level before removing old order',
+      orderbookLevel: OrderbookLevelsCache.getOrderbookLevel(
+        redisOrder.ticker,
+        protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
+        redisOrder.price,
+        redisClient,
+      ),
+    });
     return OrderbookLevelsCache.updatePriceLevel({
       ticker: redisOrder.ticker,
       side: protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
