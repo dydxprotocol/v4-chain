@@ -450,8 +450,39 @@ func (k Keeper) getSettledSubaccount(
 		perpetuals[p.PerpetualId] = perpetual
 	}
 
+	subaccount = k.ClaimYieldForSubaccount(subaccount)
+
 	return GetSettledSubaccountWithPerpetuals(subaccount, perpetuals)
 }
+
+
+func (k Keeper) ClaimYieldForSubaccount(
+	subaccount types.Subaccount
+) (
+	subaccount types.Subaccount,
+	err err,
+) {
+	epochLastClaimed := subaccount.EpochYieldLastClaimed
+	assetPositions := subaccount.AssetPositions
+	perpetualPositions := subaccount.PerpetualPositions
+
+	// TODO: Implement the two functions below
+	perpetualPrices, err := k.GetHistoricalPricesSinceEpoch(epochLastClaimed)
+	if err != nil {
+		return err
+	}
+	yieldAmount, err := k.GetYieldAmountForPositions(assetPositions, perpetualPositions, perpetualPrices)
+	if err != nil {
+		return err
+	}
+
+	// Transfer Yield amount 
+	currPositionSize := subaccount.GetUsdcPosition()
+	newUsdcPosition := new(big.Int).Add(currPositionSizeyieldAmount)
+	subaccount.SetUsdcAssetPosition(newUsdcPosition)
+	return subaccount
+}
+
 
 // GetSettledSubaccountWithPerpetuals returns 1. a new settled subaccount given an unsettled subaccount,
 // updating the USDC AssetPosition, FundingIndex, and LastFundingPayment fields accordingly
