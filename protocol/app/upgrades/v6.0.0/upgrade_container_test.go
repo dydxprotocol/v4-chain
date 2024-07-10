@@ -217,47 +217,23 @@ func postUpgradeMarketMapState(node *containertest.Node, t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, marketMapResp)
 	resp := marketmapmoduletypes.MarketMapResponse{}
-	err = proto.UnmarshalText(resp.String(), &resp)
+	err = proto.UnmarshalText(marketMapResp.String(), &resp)
 	require.NoError(t, err)
 
-	require.Equal(t, "dydxprotocol", resp.ChainId)
+	require.Equal(t, "localdydxprotocol", resp.ChainId)
 	require.Equal(t, expectedMarketMap, resp.MarketMap)
 }
 
 var expectedMarketMap = marketmapmoduletypes.MarketMap{
 	Markets: map[string]marketmapmoduletypes.Market{
 		"ADA/USD": {
-			Ticker: marketmapmoduletypes.Ticker{
-				CurrencyPair:     slinkytypes.CurrencyPair{Base: "ADA", Quote: "USD"},
-				Decimals:         0xa,
-				MinProviderCount: 0x3,
-				Enabled:          true,
-				Metadata_JSON:    "",
-			}, ProviderConfigs: []marketmapmoduletypes.ProviderConfig{
-				{
-					Name: "binance_ws", OffChainTicker: "ADAUSDT",
-					NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"},
-					Invert:          false,
-					Metadata_JSON:   "",
-				},
-				{
-					Name: "bybit_ws", OffChainTicker: "ADAUSDT",
-					NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"},
-					Invert:          false,
-					Metadata_JSON:   "",
-				},
-				{
-					Name:            "coinbase_ws",
-					OffChainTicker:  "ADA-USD",
-					NormalizeByPair: nil,
-					Invert:          false, Metadata_JSON: "",
-				},
-				{
-					Name: "gate_ws", OffChainTicker: "ADA_USDT", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: "",
-				},
-				{Name: "huobi_ws", OffChainTicker: "adausdt", NormalizeByPair: &slinkytypes.
-					CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
-				{Name: "kraken_api", OffChainTicker: "ADAUSD", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
+			Ticker: marketmapmoduletypes.Ticker{CurrencyPair: slinkytypes.CurrencyPair{Base: "ADA", Quote: "USD"}, Decimals: 0xa, MinProviderCount: 0x3, Enabled: true, Metadata_JSON: ""}, ProviderConfigs: []marketmapmoduletypes.ProviderConfig{
+				{Name: "binance_ws", OffChainTicker: "ADAUSDT", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
+				{Name: "bybit_ws", OffChainTicker: "ADAUSDT", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
+				{Name: "coinbase_ws", OffChainTicker: "ADA-USD", NormalizeByPair: nil, Invert: false, Metadata_JSON: ""},
+				{Name: "gate_ws", OffChainTicker: "ADA_USDT", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
+				{Name: "huobi_ws", OffChainTicker: "adausdt", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
+				{Name: "kraken_api", OffChainTicker: "ADAUSD", NormalizeByPair: nil, Invert: false, Metadata_JSON: ""},
 				{Name: "kucoin_ws", OffChainTicker: "ADA-USDT", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
 				{Name: "mexc_ws", OffChainTicker: "ADAUSDT", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
 				{Name: "okx_ws", OffChainTicker: "ADA-USDT", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
@@ -276,13 +252,7 @@ var expectedMarketMap = marketmapmoduletypes.MarketMap{
 			},
 		},
 		"APT/USD": {
-			Ticker: marketmapmoduletypes.Ticker{
-				CurrencyPair:     slinkytypes.CurrencyPair{Base: "APT", Quote: "USD"},
-				Decimals:         0x9,
-				MinProviderCount: 0x3,
-				Enabled:          true,
-				Metadata_JSON:    "",
-			},
+			Ticker: marketmapmoduletypes.Ticker{CurrencyPair: slinkytypes.CurrencyPair{Base: "APT", Quote: "USD"}, Decimals: 0x9, MinProviderCount: 0x3, Enabled: true, Metadata_JSON: ""},
 			ProviderConfigs: []marketmapmoduletypes.ProviderConfig{
 				{Name: "binance_ws", OffChainTicker: "APTUSDT", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
 				{Name: "bybit_ws", OffChainTicker: "APTUSDT", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
@@ -344,13 +314,7 @@ var expectedMarketMap = marketmapmoduletypes.MarketMap{
 				{Name: "okx_ws", OffChainTicker: "BCH-USDT", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
 			},
 		}, "BLUR/USD": {
-			Ticker: marketmapmoduletypes.Ticker{
-				CurrencyPair:     slinkytypes.CurrencyPair{Base: "BLUR", Quote: "USD"},
-				Decimals:         0xa,
-				MinProviderCount: 0x3,
-				Enabled:          true,
-				Metadata_JSON:    "",
-			},
+			Ticker: marketmapmoduletypes.Ticker{CurrencyPair: slinkytypes.CurrencyPair{Base: "BLUR", Quote: "USD"}, Decimals: 0xa, MinProviderCount: 0x3, Enabled: true, Metadata_JSON: ""},
 			ProviderConfigs: []marketmapmoduletypes.ProviderConfig{
 				{Name: "coinbase_ws", OffChainTicker: "BLUR-USD", NormalizeByPair: nil, Invert: false, Metadata_JSON: ""},
 				{Name: "gate_ws", OffChainTicker: "BLUR_USDT", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
@@ -652,9 +616,9 @@ var expectedMarketMap = marketmapmoduletypes.MarketMap{
 				{Name: "binance_ws", OffChainTicker: "USDCUSDT", NormalizeByPair: nil, Invert: true, Metadata_JSON: ""},
 				{Name: "bybit_ws", OffChainTicker: "USDCUSDT", NormalizeByPair: nil, Invert: true, Metadata_JSON: ""},
 				{Name: "coinbase_ws", OffChainTicker: "USDT-USD", NormalizeByPair: nil, Invert: false, Metadata_JSON: ""},
-				{Name: "huobi_ws", OffChainTicker: "ethusdt", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: true, Metadata_JSON: ""},
+				{Name: "huobi_ws", OffChainTicker: "ethusdt", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "ETH", Quote: "USD"}, Invert: true, Metadata_JSON: ""},
 				{Name: "kraken_api", OffChainTicker: "USDTZUSD", NormalizeByPair: nil, Invert: false, Metadata_JSON: ""},
-				{Name: "kucoin_ws", OffChainTicker: "BTC-USDT", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: true, Metadata_JSON: ""},
+				{Name: "kucoin_ws", OffChainTicker: "BTC-USDT", NormalizeByPair: &slinkytypes.CurrencyPair{Base: "BTC", Quote: "USD"}, Invert: true, Metadata_JSON: ""},
 				{Name: "okx_ws", OffChainTicker: "USDC-USDT", NormalizeByPair: nil, Invert: true, Metadata_JSON: ""},
 			},
 		},
