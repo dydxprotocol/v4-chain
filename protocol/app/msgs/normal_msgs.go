@@ -214,6 +214,7 @@ var (
 		"/ibc.applications.interchain_accounts.v1.InterchainAccount": nil,
 
 		// wasm
+		// TODO(OTE-461): Audit and remove unnecessary messages
 		"/cosmwasm.wasm.v1.AcceptedMessageKeysFilter":                  nil,
 		"/cosmwasm.wasm.v1.AcceptedMessagesFilter":                     nil,
 		"/cosmwasm.wasm.v1.AllowAllMessagesFilter":                     nil,

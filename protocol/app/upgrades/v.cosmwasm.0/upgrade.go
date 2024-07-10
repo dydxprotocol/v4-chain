@@ -87,6 +87,7 @@ func InitializeModuleAccs(ctx sdk.Context, ak authkeeper.AccountKeeper) {
 	}
 }
 
+// TODO(OTE-535): remove duplicated code from v6 upgrade
 func removeStatefulFOKOrders(ctx sdk.Context, k clobtypes.ClobKeeper) {
 	allStatefulOrders := k.GetAllStatefulOrders(ctx)
 	for _, order := range allStatefulOrders {
@@ -112,6 +113,7 @@ func removeStatefulFOKOrders(ctx sdk.Context, k clobtypes.ClobKeeper) {
 	}
 }
 
+// TODO(OTE-535): remove duplicated code from v6 upgrade
 func initRevShareModuleState(
 	ctx sdk.Context,
 	revShareKeeper revsharetypes.RevShareKeeper,

@@ -14,6 +14,7 @@ const (
 	UpgradeName = "v6.cosmwasm.0"
 )
 
+// TODO(OTE-535): remove duplicated code from v6 upgrade
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: UpgradeName,
 	StoreUpgrades: store.StoreUpgrades{

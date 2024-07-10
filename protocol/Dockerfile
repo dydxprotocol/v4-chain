@@ -27,6 +27,8 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 COPY . .
 
 # See https://github.com/CosmWasm/wasmvm/releases
+# Download the wasmvm library for the target architecture (aarch64 or x86_64)
+# x86_64 is needed for CI, local macs support aarch64
 RUN if [ "$(uname -m)" = "aarch64" ]; then \
   wget -O /lib/libwasmvm_muslc.a https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.aarch64.a; \
     elif [ "$(uname -m)" = "x86_64" ]; then \
