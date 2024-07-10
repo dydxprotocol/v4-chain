@@ -25,9 +25,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
-)
+var GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
 func removeStatefulFOKOrders(ctx sdk.Context, k clobtypes.ClobKeeper) {
 	allStatefulOrders := k.GetAllStatefulOrders(ctx)
