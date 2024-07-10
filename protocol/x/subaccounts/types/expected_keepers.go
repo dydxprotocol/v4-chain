@@ -98,3 +98,7 @@ type BankKeeper interface {
 type BlocktimeKeeper interface {
 	GetDowntimeInfoFor(ctx sdk.Context, duration time.Duration) blocktimetypes.AllDowntimeInfo_DowntimeInfo
 }
+
+type RatelimitKeeper interface {
+	GetDAIYieldEpochParamsForEpoch(ctx sdk.Context, epoch uint64) (params types.DaiYieldEpochParams, err error)
+}

@@ -894,6 +894,7 @@ func New(
 		app.AssetsKeeper,
 		app.BankKeeper,
 		app.PerpetualsKeeper,
+		app.RatelimitKeeper,
 		app.BlockTimeKeeper,
 		app.IndexerEventManager,
 	)
