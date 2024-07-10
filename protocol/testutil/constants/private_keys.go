@@ -16,6 +16,11 @@ var (
 	CarlPrivateKey  = privateKeyFromMnenomic(CarlMnenomic)
 	DavePrivateKey  = privateKeyFromMnenomic(DaveMnenomic)
 
+	AlicePubKey = AlicePrivateKey.PubKey()
+	BobPubKey   = BobPrivateKey.PubKey()
+	CarlPubKey  = CarlPrivateKey.PubKey()
+	DavePubKey  = DavePrivateKey.PubKey()
+
 	privateKeyMap = map[string]cryptotypes.PrivKey{
 		AliceAccAddress.String(): AlicePrivateKey,
 		BobAccAddress.String():   BobPrivateKey,
@@ -39,6 +44,16 @@ func privateKeyFromMnenomic(mnenomic string) cryptotypes.PrivKey {
 		panic(err)
 	}
 	return privKey
+}
+
+func GetPublicKeyFromAddress(accAddress string) cryptotypes.PubKey {
+	privKey, exists := privateKeyMap[accAddress]
+	if !exists {
+		panic(fmt.Errorf(
+			"Unable to look-up private key, acc %s does not match any well known account.",
+			accAddress))
+	}
+	return privKey.PubKey()
 }
 
 // GetPrivateKeyFromAddress returns the private key for the specified account address.

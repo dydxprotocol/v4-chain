@@ -17,4 +17,8 @@ var (
 	BobConsAddress   = sdk.ConsAddress(BobPrivateKey.PubKey().Address())
 	CarlConsAddress  = sdk.ConsAddress(CarlPrivateKey.PubKey().Address())
 	DaveConsAddress  = sdk.ConsAddress(DavePrivateKey.PubKey().Address())
+	AliceAddressBz   = AlicePrivateKey.PubKey().Address().Bytes()
+	BobAddressBz     = BobPrivateKey.PubKey().Address().Bytes()
+	CarlAddressBz    = CarlPrivateKey.PubKey().Address().Bytes()
+	DaveAddressBz    = DavePrivateKey.PubKey().Address().Bytes()
 )

@@ -1,6 +1,7 @@
 package preblocker_test
 
 import (
+	"math/big"
 	"testing"
 
 	"cosmossdk.io/log"
@@ -13,26 +14,30 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	pricestest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/prices"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	cometabci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 	"github.com/stretchr/testify/suite"
 )
 
 type PreBlockTestSuite struct {
 	suite.Suite
 
-	validator       sdk.ConsAddress
-	ctx             sdk.Context
-	marketPairs     []pricestypes.MarketParam
-	pricesKeeper    *pk.Keeper
-	indexPriceCache *pricefeedtypes.MarketToExchangePrices
-	priceApplier    veaggregator.PriceApplier
-	handler         *preblocker.PreBlockHandler
-	voteCodec       vecodec.VoteExtensionCodec
-	extCodec        vecodec.ExtendedCommitCodec
-	logger          log.Logger
+	validator         sdk.ConsAddress
+	ctx               sdk.Context
+	marketParamPrices []pricestypes.MarketParamPrice
+	pricesKeeper      *pk.Keeper
+	indexPriceCache   *pricefeedtypes.MarketToExchangePrices
+	priceApplier      veaggregator.PriceApplier
+	handler           *preblocker.PreBlockHandler
+	ccvStore          *mocks.CCValidatorStore
+	voteCodec         vecodec.VoteExtensionCodec
+	extCodec          vecodec.ExtendedCommitCodec
+	logger            log.Logger
 }
 
 func TestPreBlockTestSuite(t *testing.T) {
@@ -42,7 +47,8 @@ func TestPreBlockTestSuite(t *testing.T) {
 func (s *PreBlockTestSuite) SetupTest() {
 	s.validator = constants.AliceConsAddress
 
-	ctx, pricesKeeper, _, indexPriceCahce, _, _ := keepertest.PricesKeepers(s.T())
+	ctx, pricesKeeper, _, indexPriceCahce, _, mockTimeProvider := keepertest.PricesKeepers(s.T())
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	s.ctx = ctx
 	s.pricesKeeper = pricesKeeper
 	s.indexPriceCache = indexPriceCahce
@@ -53,9 +59,11 @@ func (s *PreBlockTestSuite) SetupTest() {
 	s.logger = log.NewTestLogger(s.T())
 
 	mCCVStore := &mocks.CCValidatorStore{}
+	s.ccvStore = mCCVStore
+
 	aggregationFn := voteweighted.Median(
 		s.logger,
-		mCCVStore,
+		s.ccvStore,
 		voteweighted.DefaultPowerThreshold,
 	)
 
@@ -74,11 +82,35 @@ func (s *PreBlockTestSuite) SetupTest() {
 		s.logger,
 	)
 
+	s.marketParamPrices = s.setMarketPrices()
+
+	s.createTestMarkets()
+
 }
 
 func (s *PreBlockTestSuite) TestPreBlocker() {
-
 	s.Run("fail on nil request", func() {
+		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 3)
+		s.handler = preblocker.NewDaemonPreBlockHandler(
+			s.logger,
+			s.indexPriceCache,
+			*s.pricesKeeper,
+			s.priceApplier,
+		)
+
+		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
+
+		prePrices := s.getAllMarketPrices()
+
+		_, err := s.handler.PreBlocker(s.ctx, nil)
+		s.Require().Error(err)
+
+		s.Require().True(s.ensurePricesEqualToCurrent(prePrices))
+
+	})
+
+	s.Run("skip when vote extensions are disabled", func() {
+		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 1)
 
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
@@ -86,8 +118,284 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 			*s.pricesKeeper,
 			s.priceApplier,
 		)
-		_, err := s.handler.PreBlocker(s.ctx, nil)
-		s.Require().Error(err)
+
+		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
+
+		prePrices := s.getAllMarketPrices()
+
+		_, err := s.handler.PreBlocker(s.ctx, &cometabci.RequestFinalizeBlock{})
+		s.Require().NoError(err)
+
+		s.Require().True(s.ensurePricesEqualToCurrent(prePrices))
+
+	})
+
+	s.Run("ignore vote-extensions w/ prices for non-existent pairs", func() {
+		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 3)
+
+		s.handler = preblocker.NewDaemonPreBlockHandler(
+			s.logger,
+			s.indexPriceCache,
+			*s.pricesKeeper,
+			s.priceApplier,
+		)
+
+		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
+
+		priceBz, err := big.NewInt(1).GobEncode()
+		s.Require().NoError(err)
+
+		prices := map[uint32][]byte{
+			10: priceBz, // 10 is a nonexistent market
+		}
+
+		extCommitBz := s.getVoteExtensionsForValidatorsWithSamePrices(
+			[]string{"alice", "bob"},
+			prices,
+		)
+
+		s.prepareCCVMockResponsesForValidators([]string{"alice", "bob"})
+
+		prePrices := s.getAllMarketPrices()
+
+		_, err = s.handler.PreBlocker(s.ctx, &cometabci.RequestFinalizeBlock{
+			Txs: [][]byte{extCommitBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
+		})
+		s.Require().NoError(err)
+
+		s.Require().True(s.ensurePricesEqualToCurrent(prePrices))
+
+	})
+
+	s.Run("multiple markets to write prices for", func() {
+		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 3)
+
+		s.handler = preblocker.NewDaemonPreBlockHandler(
+			s.logger,
+			s.indexPriceCache,
+			*s.pricesKeeper,
+			s.priceApplier,
+		)
+
+		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
+
+		price1 := uint64(1)
+		price2 := uint64(2)
+		price3 := uint64(3)
+
+		price1Bz, err := big.NewInt(int64(price1)).GobEncode()
+		s.Require().NoError(err)
+		price2Bz, err := big.NewInt(int64(price2)).GobEncode()
+		s.Require().NoError(err)
+		price3Bz, err := big.NewInt(int64(price3)).GobEncode()
+		s.Require().NoError(err)
+
+		prices := map[uint32][]byte{
+			6: price1Bz,
+			7: price2Bz,
+			8: price3Bz,
+		}
+
+		extCommitBz := s.getVoteExtensionsForValidatorsWithSamePrices(
+			[]string{"alice", "bob"},
+			prices,
+		)
+
+		s.prepareCCVMockResponsesForValidators([]string{"alice", "bob"})
+
+		_, err = s.handler.PreBlocker(s.ctx, &cometabci.RequestFinalizeBlock{
+			Txs: [][]byte{extCommitBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
+		})
+		s.Require().NoError(err)
+
+		s.arePriceUpdatesCorrect(
+			map[uint32]uint64{
+				6: price1,
+				7: price2,
+				8: price3,
+			},
+		)
+	})
+
+	s.Run("test throws error if can't get extCommitInfo", func() {
+		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 3)
+
+		s.handler = preblocker.NewDaemonPreBlockHandler(
+			s.logger,
+			s.indexPriceCache,
+			*s.pricesKeeper,
+			s.priceApplier,
+		)
+
+		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
+
+		_, err := s.handler.PreBlocker(s.ctx, &cometabci.RequestFinalizeBlock{
+			Txs: [][]byte{{1, 2, 3, 4}, {1, 2, 3, 4}},
+		})
+
+		s.Require().EqualError(err, "proposal does not contain enough set messages (VE's, proposed operations, or premium votes): 2")
 
 	})
 }
+
+func (s *PreBlockTestSuite) getAllMarketPrices() []pricestypes.MarketPrice {
+	return s.pricesKeeper.GetAllMarketPrices(s.ctx)
+}
+
+func (s *PreBlockTestSuite) arePriceUpdatesCorrect(
+	correctPrices map[uint32]uint64,
+) bool {
+	prices := s.getAllMarketPrices()
+	if len(prices) != len(correctPrices) {
+		return false
+	}
+
+	for _, price := range prices {
+		correctPrice, ok := correctPrices[price.Id]
+		if !ok {
+			return false
+		}
+
+		if price.Price != correctPrice {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *PreBlockTestSuite) ensurePricesEqualToCurrent(before []pricestypes.MarketPrice) bool {
+	currPrices := s.getAllMarketPrices()
+	if len(before) != len(currPrices) {
+		return false
+	}
+
+	for i, price := range before {
+		if price.Id != currPrices[i].Id {
+			return false
+		}
+		if price.Exponent != currPrices[i].Exponent {
+			return false
+		}
+		if price.Price != currPrices[i].Price {
+			return false
+		}
+
+	}
+	return true
+}
+
+func (s *PreBlockTestSuite) createTestMarkets() {
+	keepertest.CreateTestPriceMarkets(
+		s.T(),
+		s.ctx,
+		s.pricesKeeper,
+		s.marketParamPrices,
+	)
+}
+
+func (s *PreBlockTestSuite) getVoteExtension(
+	prices map[uint32][]byte,
+	val sdk.ConsAddress,
+) cometabci.ExtendedVoteInfo {
+	ve, err := vetesting.CreateExtendedVoteInfo(
+		val,
+		prices,
+		s.voteCodec,
+	)
+	s.Require().NoError(err)
+	return ve
+}
+
+func (s *PreBlockTestSuite) getExtendedCommitInfoBz(
+	votes []cometabci.ExtendedVoteInfo,
+) []byte {
+
+	_, extCommitBz, err := vetesting.CreateExtendedCommitInfo(
+		votes,
+		s.extCodec,
+	)
+	s.Require().NoError(err)
+	return extCommitBz
+}
+
+func (s *PreBlockTestSuite) setMarketPrices() []pricestypes.MarketParamPrice {
+	return []pricestypes.MarketParamPrice{
+		*pricestest.GenerateMarketParamPrice(
+			pricestest.WithId(6),
+			pricestest.WithMinExchanges(2),
+		),
+		*pricestest.GenerateMarketParamPrice(
+			pricestest.WithId(7),
+			pricestest.WithMinExchanges(2),
+		),
+		*pricestest.GenerateMarketParamPrice(
+			pricestest.WithId(8),
+			pricestest.WithMinExchanges(2),
+			pricestest.WithExponent(-8),
+		),
+		*pricestest.GenerateMarketParamPrice(
+			pricestest.WithId(9),
+			pricestest.WithMinExchanges(2),
+			pricestest.WithExponent(-9),
+		),
+	}
+}
+
+func (s *PreBlockTestSuite) buildCCValidator(name string, power int64) ccvtypes.CrossChainValidator {
+	if name == "alice" {
+		val, _ := ccvtypes.NewCCValidator(
+			constants.AliceAddressBz,
+			power,
+			constants.AlicePubKey,
+		)
+		s.ccvStore.On("GetCCValidator", s.ctx, constants.AliceAddressBz).Return(val, true)
+		return val
+	} else {
+		val, _ := ccvtypes.NewCCValidator(
+			constants.BobAddressBz,
+			power,
+			constants.BobPubKey,
+		)
+		s.ccvStore.On("GetCCValidator", s.ctx, constants.BobAddressBz).Return(val, true)
+		return val
+	}
+}
+
+func (s *PreBlockTestSuite) prepareCCVMockResponsesForValidators(validators []string) {
+	var vals []ccvtypes.CrossChainValidator
+	for _, valName := range validators {
+		val := s.buildCCValidator(valName, 1)
+		vals = append(vals, val)
+	}
+	s.ccvStore.On("GetAllCCValidator", s.ctx).Return(vals)
+
+}
+
+func (s *PreBlockTestSuite) getVoteExtensionsForValidatorsWithSamePrices(
+	validators []string,
+	prices map[uint32][]byte,
+) []byte {
+	var votes []cometabci.ExtendedVoteInfo
+	for _, valName := range validators {
+		ve := s.getVoteExtension(prices, s.getValidatorAddr(valName))
+		votes = append(votes, ve)
+	}
+	return s.getExtendedCommitInfoBz(votes)
+}
+
+func (s *PreBlockTestSuite) getValidatorAddr(name string) sdk.ConsAddress {
+	if name == "alice" {
+		return constants.AliceConsAddress
+	} else {
+		return constants.BobConsAddress
+	}
+}
+
+// func (s *PreBlockTestSuite) setMarketPrices(prices pricestypes.MarketPriceUpdates) error {
+// 	for _, price := range prices.MarketPriceUpdates {
+// 		if err := s.pricesKeeper.UpdateMarketPrice(s.ctx, price); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
