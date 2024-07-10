@@ -30,4 +30,7 @@ message Subaccount {
   // Set by the owner. If true, then margin trades can be made in this
   // subaccount.
   bool margin_enabled = 4;
+  // The last yield epoch for this subaccount, indicating the epoch
+  // when the subaccount last claimed their sDAI yield.
+  uint64 last_yield_epoch = 5;
 }
