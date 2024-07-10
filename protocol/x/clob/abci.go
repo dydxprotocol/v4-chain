@@ -125,9 +125,6 @@ func EndBlocker(
 		processProposerMatchesEvents,
 	)
 
-	// Prune any rate limiting information that is no longer relevant.
-	keeper.PruneRateLimits(ctx)
-
 	// Emit relevant metrics at the end of every block.
 	metrics.SetGauge(
 		metrics.InsuranceFundBalance,
@@ -145,6 +142,9 @@ func PrepareCheckState(
 		// Prepare check state is for the next block.
 		log.BlockHeight, ctx.BlockHeight()+1,
 	)
+
+	// Prune any rate limiting information that is no longer relevant.
+	keeper.PruneRateLimits(ctx)
 
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
