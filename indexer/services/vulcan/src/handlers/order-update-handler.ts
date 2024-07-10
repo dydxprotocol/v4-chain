@@ -121,6 +121,11 @@ export class OrderUpdateHandler extends Handler {
         updateResult,
         sizeDeltaInQuantums,
       );
+      logger.info({
+        at: 'OrderUpdateHandler#handle',
+        message: 'Updating orderbook price levels cache size',
+        updatedQuantums,
+      });
 
       const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
         .getPerpetualMarketFromTicker(updateResult.order!.ticker);

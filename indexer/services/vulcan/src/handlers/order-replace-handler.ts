@@ -506,6 +506,12 @@ export class OrderReplaceHandler extends Handler {
       ),
       this.generateTimingStatsOptions('update_price_level_cache'),
     );
+    logger.info({
+      at: 'OrderReplaceHandler#removeOldOrderFromOrderbook',
+      message: 'Removed old order from orderbook price levels cache',
+      updatedQuantums,
+    });
+
     if (sendWebsocketMessage) {
       const orderbookMessage: Message = {
         value: this.createOrderbookWebsocketMessage(
