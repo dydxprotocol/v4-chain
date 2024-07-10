@@ -51,7 +51,7 @@ func (k Keeper) CheckFirstDAIYieldEpoch(ctx sdk.Context) (*big.Int, bool) {
 
 func (k Keeper) GetCurrentDAIYieldEpochBlockNumber(ctx sdk.Context, currentEpoch *big.Int) (uint64, bool) {
 
-	params, found := k.GetDaiYieldEpochParams(ctx, currentEpoch.Uint64()%types.DAI_YIELD_ARRAY_SIZE)
+	params, found := k.GetDaiYieldEpochParams(ctx, currentEpoch.Uint64()%types.MAX_NUM_YIELD_EPOCHS_STORED)
 	if !found {
 		return 0, false
 	}
@@ -64,7 +64,7 @@ func (k Keeper) GetCurrentDAIYieldEpochBlockNumber(ctx sdk.Context, currentEpoch
 
 func (k Keeper) PruneOldDAIYieldEpoch(ctx sdk.Context, newEpoch uint64) error {
 
-	params, found := k.GetDaiYieldEpochParams(ctx, newEpoch%types.DAI_YIELD_ARRAY_SIZE)
+	params, found := k.GetDaiYieldEpochParams(ctx, newEpoch%types.MAX_NUM_YIELD_EPOCHS_STORED)
 	if !found {
 		return nil
 	}
@@ -77,6 +77,60 @@ func (k Keeper) PruneOldDAIYieldEpoch(ctx sdk.Context, newEpoch uint64) error {
 	// no need to explicitly delete the epoch params as they will get overwritten
 	return nil
 
+}
+
+func (k Keeper) GetDAIYieldEpochParams(
+	ctx sdk.Context, 
+	epoch *big.Int,
+) (
+	params types.DaiYieldEpochParams,
+	err error,
+){
+	isStored, err := k.isEpochStored(ctx, epoch)
+	if err != nil {
+		return types.DaiYieldEpochParams{}, err
+	}
+	if !isStored {
+		return types.DaiYieldEpochParams{}, errorsmod.New("Trying to get params for non-stored epoch number.")
+	}
+
+	epochIndex = epoch.Uint64() % types.MAX_NUM_YIELD_EPOCHS_STORED
+
+	params, success = k.GetDaiYieldEpochParams(ctx, epochIndex)
+	if !success {
+		return types.DaiYieldEpochParams{}, errorsmod.New("Could not get yield epoch params from store")
+	}
+	return params, nil
+}
+
+func (k Keeper) isEpochStored(
+	ctx sdk.Context,
+	epoch *big.Int,
+) (
+	isStored bool,
+	err error,
+) {
+	currEpoch, success := k.GetCurrentDaiYieldEpochNumber(ctx)
+	if !success {
+		return false, errorsmod.New("Could not get current yield epoch number from store.")
+	}
+
+	if epoch.Cmp(currEpoch) > 0 || epoch.Cmp(big.NewInt(0)) < 0 {
+		return false, nil
+	}
+
+	maxEpochsStored := big.NewInt(types.MAX_NUM_YIELD_EPOCHS_STORED)
+	if currEpoch.Cmp(maxEpochsStored) < 0 {
+		return true, nil
+	}
+
+	lastInvalidEpoch := new(big.Int).Sub(currEpoch, maxEpochsStored)
+
+	if epoch.Cmp(lastInvalidEpoch) <= 0 {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func (k Keeper) TransferRemainingDAIYieldToInsuranceFund(ctx sdk.Context, TradingDaiMinted string, TotalTradingDaiClaimedForEpoch string) error {
@@ -130,7 +184,7 @@ func (k Keeper) CreateAndStoreNewDaiYieldEpochParams(ctx sdk.Context) error {
 
 	yieldParams := k.CreateNewDaiYieldEpochParams(ctx, tDAISupply, tradingDaiMinted, yieldCollectedByInsuranceFund)
 
-	k.SetDaiYieldEpochParams(ctx, newEpoch%types.DAI_YIELD_ARRAY_SIZE, yieldParams)
+	k.SetDaiYieldEpochParams(ctx, newEpoch%types.MAX_NUM_YIELD_EPOCHS_STORED, yieldParams)
 
 	k.SetCurrentDaiYieldEpochNumber(ctx, big.NewInt(int64(newEpoch)))
 

@@ -60,7 +60,7 @@ const (
 	SDAI_DECIMALS = 27
 
 	// The number of DaiYieldEpochParams we store
-	DAI_YIELD_ARRAY_SIZE = 1000
+	MAX_NUM_YIELD_EPOCHS_STORED = 1000
 
 	// The minimum number of blocks until we accept a new epoch
 	DAI_YIELD_MIN_EPOCH_BLOCKS = 100000
