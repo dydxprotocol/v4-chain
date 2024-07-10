@@ -438,21 +438,21 @@ func (k Keeper) GetDaiYieldEpochParams(ctx sdk.Context, index uint64) (types.Dai
 }
 
 // SetCurrentDaiYieldEpochNumber sets the current epoch number
-func (k Keeper) SetCurrentDaiYieldEpochNumber(ctx sdk.Context, index *big.Int) {
+func (k Keeper) SetCurrentDaiYieldEpochNumber(ctx sdk.Context, epoch uint64) {
 	store := ctx.KVStore(k.storeKey)
-	bz := index.Bytes()
+	bz := sdk.Uint64ToBigEndian(epoch)
 	store.Set([]byte(types.DaiYieldEpochPrefix), bz)
 }
 
 // GetCurrentDaiYieldEpochNumber gets the current epoch number
-func (k Keeper) GetCurrentDaiYieldEpochNumber(ctx sdk.Context) (index *big.Int, found bool) {
+func (k Keeper) GetCurrentDaiYieldEpochNumber(ctx sdk.Context) (epoch uint64, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get([]byte(types.DaiYieldEpochPrefix))
 	if bz == nil {
-		return nil, false
+		return 0, false
 	}
-	index = new(big.Int).SetBytes(bz)
-	return index, true
+	epoch = sdk.BigEndianToUint64(bz)
+	return epoch, true
 }
 
 // GetSDAIEventManagerForTestingOnly returns the sDAI event manager for testing only
