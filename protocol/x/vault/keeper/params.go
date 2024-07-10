@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
@@ -18,7 +19,7 @@ func (k Keeper) GetParams(
 }
 
 // SetParams updates `Params` in state.
-// Returns an error iff validation fails.
+// Returns an error if validation fails.
 func (k Keeper) SetParams(
 	ctx sdk.Context,
 	params types.Params,
@@ -30,6 +31,43 @@ func (k Keeper) SetParams(
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&params)
 	store.Set([]byte(types.ParamsKey), b)
+
+	return nil
+}
+
+// GetVaultParams returns `VaultParams` in state for a given vault.
+func (k Keeper) GetVaultParams(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+) (
+	vaultParams types.VaultParams,
+	exists bool,
+) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))
+
+	b := store.Get(vaultId.ToStateKey())
+	if b == nil {
+		return vaultParams, false
+	}
+
+	k.cdc.MustUnmarshal(b, &vaultParams)
+	return vaultParams, true
+}
+
+// SetVaultParams sets `VaultParams` in state for a given vault.
+// Returns an error if validation fails.
+func (k Keeper) SetVaultParams(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+	vaultParams types.VaultParams,
+) error {
+	if err := vaultParams.Validate(); err != nil {
+		return err
+	}
+
+	b := k.cdc.MustMarshal(&vaultParams)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))
+	store.Set(vaultId.ToStateKey(), b)
 
 	return nil
 }

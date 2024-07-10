@@ -1,13 +1,14 @@
 package clob_test
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -61,33 +62,35 @@ func TestReduceOnlyOrders(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(95_000_550_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(95_000_550_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(100),
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(100),
+							big.NewInt(0),
+							big.NewInt(0),
+						),
 					},
 				},
 				{
 					Id: &constants.Alice_Num1,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(504_997_500_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(504_997_500_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(99_999_900),
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(99_999_900),
+							big.NewInt(0),
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -122,33 +125,35 @@ func TestReduceOnlyOrders(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(95_000_550_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(95_000_550_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(100),
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(100),
+							big.NewInt(0),
+							big.NewInt(0),
+						),
 					},
 				},
 				{
 					Id: &constants.Alice_Num1,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(504_997_500_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(504_997_500_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(99_999_900),
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(99_999_900),
+							big.NewInt(0),
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -183,33 +188,35 @@ func TestReduceOnlyOrders(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(9_250_0825_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(9_250_0825_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(150),
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(150),
+							big.NewInt(0),
+							big.NewInt(0),
+						),
 					},
 				},
 				{
 					Id: &constants.Alice_Num1,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(507_496_250_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(507_496_250_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(99_999_850),
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(99_999_850),
+							big.NewInt(0),
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -253,33 +260,35 @@ func TestReduceOnlyOrders(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(375_013_750_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(375_013_750_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(25_000_000),
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(25_000_000),
+							big.NewInt(0),
+							big.NewInt(0),
+						),
 					},
 				},
 				{
 					Id: &constants.Alice_Num1,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(624_937_500_000),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(624_937_500_000),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(75_000_000),
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(75_000_000),
+							big.NewInt(0),
+							big.NewInt(0),
+						),
 					},
 				},
 			},

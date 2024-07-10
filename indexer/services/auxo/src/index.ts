@@ -30,6 +30,7 @@ import _ from 'lodash';
 
 import config from './config';
 import {
+  BAZOOKA_DB_MIGRATION_AND_CREATE_KAFKA_PAYLOAD,
   BAZOOKA_DB_MIGRATION_PAYLOAD,
   BAZOOKA_LAMBDA_FUNCTION_NAME,
   ECS_SERVICE_NAMES,
@@ -40,7 +41,7 @@ import { AuxoEventJson, EcsServiceNames, TaskDefinitionArnMap } from './types';
 /**
  * Upgrades all services and run migrations
  * 1. Upgrade Bazooka
- * 2. Run db migration in Bazooka
+ * 2. Run db migration in Bazooka, and update kafka topics
  * 3. Create new ECS Task Definition for ECS Services with new image
  * 4. Upgrade all ECS Services (comlink, ender, roundtable, socks, vulcan)
  */
@@ -66,8 +67,18 @@ export async function handler(
     // 1. Upgrade Bazooka
     await upgradeBazooka(lambda, ecr, event);
 
-    // 2. Run db migration in Bazooka
-    await runDbMigration(lambda);
+    // 2. Run db migration in Bazooka,
+    // boolean flag used to determine if new kafka topics should be created
+    await runDbAndKafkaMigration(event.addNewKafkaTopics, lambda);
+
+    if (event.onlyRunDbMigrationAndCreateKafkaTopics) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          message: 'success',
+        }),
+      };
+    }
 
     // 3. Create new ECS Task Definition for ECS Services with new image
     const taskDefinitionArnMap: TaskDefinitionArnMap = await createNewEcsTaskDefinitions(
@@ -192,16 +203,20 @@ async function getImageDetail(
 
 }
 
-async function runDbMigration(
+async function runDbAndKafkaMigration(
+  createNewKafkaTopics: boolean,
   lambda: ECRClient,
 ): Promise<void> {
   logger.info({
     at: 'index#runDbMigration',
     message: 'Running db migration',
   });
+  const payload = createNewKafkaTopics
+    ? BAZOOKA_DB_MIGRATION_AND_CREATE_KAFKA_PAYLOAD
+    : BAZOOKA_DB_MIGRATION_PAYLOAD;
   const response: InvokeCommandOutput = await lambda.send(new InvokeCommand({
     FunctionName: BAZOOKA_LAMBDA_FUNCTION_NAME,
-    Payload: BAZOOKA_DB_MIGRATION_PAYLOAD,
+    Payload: payload,
     // RequestResponse means that the lambda is synchronously invoked
     InvocationType: 'RequestResponse',
   }));

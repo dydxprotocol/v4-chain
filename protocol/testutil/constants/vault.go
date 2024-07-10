@@ -6,17 +6,17 @@ import (
 )
 
 var (
-	Vault_Clob_0 = types.VaultId{
+	Vault_Clob0 = types.VaultId{
 		Type:   types.VaultType_VAULT_TYPE_CLOB,
 		Number: 0,
 	}
-	Vault_Clob_1 = types.VaultId{
+	Vault_Clob1 = types.VaultId{
 		Type:   types.VaultType_VAULT_TYPE_CLOB,
 		Number: 1,
 	}
 
 	MsgDepositToVault_Clob0_Alice0_100 = &types.MsgDepositToVault{
-		VaultId:       &Vault_Clob_0,
+		VaultId:       &Vault_Clob0,
 		SubaccountId:  &Alice_Num0,
 		QuoteQuantums: dtypes.NewInt(100),
 	}

@@ -12,7 +12,7 @@ import (
 func TestGenesis(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
-	got := feetiers.ExportGenesis(ctx, tApp.App.FeeTiersKeeper)
+	got := feetiers.ExportGenesis(ctx, *tApp.App.FeeTiersKeeper)
 	require.NotNil(t, got)
 	require.Equal(t, types.DefaultGenesis(), got)
 }

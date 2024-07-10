@@ -20,4 +20,10 @@ const (
 
 	// ParamsKey is the key to retrieve Params.
 	ParamsKey = "Params"
+
+	// VaultParamsKeyPrefix is the prefix to retrieve all VaultParams.
+	VaultParamsKeyPrefix = "VaultParams:"
+
+	// VaultAddressKeyPrefix is the prefix to retrieve all vault addresses.
+	VaultAddressKeyPrefix = "VaultAddress:"
 )

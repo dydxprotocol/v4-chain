@@ -102,10 +102,11 @@ func (k Keeper) ProcessSingleMatch(
 	makerSubticks := makerMatchableOrder.GetOrderSubticks()
 
 	// Calculate the number of quote quantums for the match based on the maker order subticks.
-	bigFillQuoteQuantums, err := getFillQuoteQuantums(clobPair, makerSubticks, fillAmount)
-	if err != nil {
-		return false, takerUpdateResult, makerUpdateResult, err
-	}
+	bigFillQuoteQuantums := types.FillAmountToQuoteQuantums(
+		makerSubticks,
+		fillAmount,
+		clobPair.QuantumConversionExponent,
+	)
 
 	if bigFillQuoteQuantums.Sign() == 0 {
 		// Note: If `subticks`, `baseQuantums`, are small enough, `quantumConversionExponent` is negative,
@@ -426,13 +427,17 @@ func (k Keeper) persistMatchedOrders(
 		)
 	}
 
+	// TODO: get perpetual from perpetualId once and pass it to the functions that need the full
+	// perpetual object. This will reduce the number of times we need to get the perpetual from the
+	// keeper.
+
 	if err := k.subaccountsKeeper.TransferInsuranceFundPayments(ctx, insuranceFundDelta, perpetualId); err != nil {
 		return takerUpdateResult, makerUpdateResult, err
 	}
 
-	// Transfer the fee amount from subacounts module to fee collector module account.
+	// Distribute the fee amount from subacounts module to fee collector and rev share accounts
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)
-	if err := k.subaccountsKeeper.TransferFeesToFeeCollectorModule(
+	if err := k.subaccountsKeeper.DistributeFees(
 		ctx,
 		assettypes.AssetUsdc.Id,
 		bigTotalFeeQuoteQuantums,

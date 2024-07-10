@@ -32,7 +32,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgDepositToVault is the Msg/DepositToVault request type.
+// MsgDepositToVault deposits the specified asset from the subaccount to the
+// vault.
 type MsgDepositToVault struct {
 	// The vault to deposit into.
 	VaultId *VaultId `protobuf:"bytes,1,opt,name=vault_id,json=vaultId,proto3" json:"vault_id,omitempty"`

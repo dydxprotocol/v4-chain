@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"context"
 	"errors"
+	"math/big"
 	"testing"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
@@ -204,17 +206,23 @@ func TestPlaceOrder_Error(t *testing.T) {
 
 			for _, order := range tc.StatefulOrders {
 				ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, 5)
-				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+				ks.ClobKeeper.AddStatefulOrderIdExpiration(
 					ctx,
 					order.MustGetUnixGoodTilBlockTime(),
 					order.GetOrderId(),
 				)
 			}
 
+			for _, orderId := range tc.PlacedStatefulCancellations {
+				ks.ClobKeeper.AddDeliveredCancelledOrderId(
+					ctx,
+					orderId,
+				)
+			}
+
 			processProposerMatchesEvents := types.ProcessProposerMatchesEvents{
-				BlockHeight:                        6,
-				PlacedStatefulCancellationOrderIds: tc.PlacedStatefulCancellations,
-				RemovedStatefulOrderIds:            tc.RemovedOrderIds,
+				BlockHeight:             6,
+				RemovedStatefulOrderIds: tc.RemovedOrderIds,
 			}
 			ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
 				ctx,
@@ -383,13 +391,12 @@ func TestPlaceOrder_Success(t *testing.T) {
 			_, found := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, tc.StatefulOrderPlacement.GetOrderId())
 			require.True(t, found)
 
-			// Ensure placement exists in `ProcessProposerMatchesEvents`.
-			events := ks.ClobKeeper.GetProcessProposerMatchesEvents(ctx)
+			// Ensure placement exists in memstore.
 			var placements []types.OrderId
 			if tc.StatefulOrderPlacement.IsConditionalOrder() {
-				placements = events.GetPlacedConditionalOrderIds()
+				placements = ks.ClobKeeper.GetDeliveredConditionalOrderIds(ctx)
 			} else {
-				placements = events.GetPlacedLongTermOrderIds()
+				placements = ks.ClobKeeper.GetDeliveredLongTermOrderIds(ctx)
 			}
 			require.Len(t, placements, 1)
 			require.Equal(t, placements[0], tc.StatefulOrderPlacement.OrderId)
@@ -504,10 +511,10 @@ func TestHandleMsgPlaceOrder(t *testing.T) {
 							{
 								Id: &testOrder.OrderId.SubaccountId,
 								AssetPositions: []*satypes.AssetPosition{
-									{
-										AssetId:  assettypes.AssetUsdc.Id,
-										Quantums: dtypes.NewInt(tc.assetQuantums),
-									},
+									testutil.CreateSingleAssetPosition(
+										assettypes.AssetUsdc.Id,
+										big.NewInt(tc.assetQuantums),
+									),
 								},
 							},
 						}
@@ -532,7 +539,7 @@ func TestHandleMsgPlaceOrder(t *testing.T) {
 			// Add order to placed cancellations / removals if specified.
 			ppme := k.GetProcessProposerMatchesEvents(ctx)
 			if tc.cancellationExists {
-				ppme.PlacedStatefulCancellationOrderIds = []types.OrderId{testOrder.OrderId}
+				k.AddDeliveredCancelledOrderId(ctx, testOrder.OrderId)
 			}
 			if tc.removalExists {
 				ppme.RemovedStatefulOrderIds = []types.OrderId{testOrder.OrderId}

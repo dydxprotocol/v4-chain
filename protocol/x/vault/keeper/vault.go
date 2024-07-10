@@ -98,4 +98,55 @@ func (k Keeper) DecommissionVault(
 	for ; ownerSharesIterator.Valid(); ownerSharesIterator.Next() {
 		ownerSharesStore.Delete(ownerSharesIterator.Key())
 	}
+
+	// Delete from vault address store.
+	vaultAddressStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultAddressKeyPrefix))
+	vaultAddressStore.Delete([]byte(vaultId.ToModuleAccountAddress()))
+}
+
+// AddVaultToAddressStore adds a vault's address to the vault address store.
+func (k Keeper) AddVaultToAddressStore(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+) {
+	vaultAddressStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultAddressKeyPrefix))
+	vaultAddressStore.Set([]byte(vaultId.ToModuleAccountAddress()), []byte{})
+}
+
+// IsVault checks if a given address is the address of an existing vault.
+func (k Keeper) IsVault(
+	ctx sdk.Context,
+	address string,
+) bool {
+	vaultAddressStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultAddressKeyPrefix))
+	return vaultAddressStore.Has([]byte(address))
+}
+
+// GetAllVaults returns all vaults with their total shares, owner shares, and individual params.
+// Note: This function is only used for exporting module state.
+func (k Keeper) GetAllVaults(ctx sdk.Context) []*types.Vault {
+	vaults := []*types.Vault{}
+	totalSharesIterator := k.getTotalSharesIterator(ctx)
+	defer totalSharesIterator.Close()
+	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
+		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
+		if err != nil {
+			panic(err)
+		}
+
+		var totalShares types.NumShares
+		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
+
+		allOwnerShares := k.GetAllOwnerShares(ctx, *vaultId)
+
+		vaultParams, _ := k.GetVaultParams(ctx, *vaultId)
+
+		vaults = append(vaults, &types.Vault{
+			VaultId:     vaultId,
+			TotalShares: &totalShares,
+			OwnerShares: allOwnerShares,
+			VaultParams: &vaultParams,
+		})
+	}
+	return vaults
 }

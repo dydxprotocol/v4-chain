@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"testing"
 
-	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
@@ -28,7 +28,7 @@ func TestGetErrorFromUpdateResults(t *testing.T) {
 				SubaccountId: types.SubaccountId{
 					Owner: "owner",
 				},
-				AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
+				AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(1)),
 			}},
 			expectedErr: types.ErrFailedToUpdateSubaccounts,
 		},
@@ -39,7 +39,7 @@ func TestGetErrorFromUpdateResults(t *testing.T) {
 				SubaccountId: types.SubaccountId{
 					Owner: "owner",
 				},
-				AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
+				AssetUpdates: testutil.CreateUsdcAssetUpdates(big.NewInt(1)),
 			}},
 			expectPanic: true,
 		},

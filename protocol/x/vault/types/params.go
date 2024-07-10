@@ -44,3 +44,8 @@ func (p Params) Validate() error {
 
 	return nil
 }
+
+// Validate validates individual vault parameters.
+func (v VaultParams) Validate() error {
+	return nil
+}

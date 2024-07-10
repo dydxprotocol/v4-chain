@@ -13,12 +13,12 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
@@ -487,7 +487,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 					Id: &constants.Dave_Num0,
 					// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
 					// to close 1 BTC short is $54,999 and we close both positions at this price.
-					AssetPositions: keepertest.CreateUsdcAssetPosition(
+					AssetPositions: testutil.CreateUsdcAssetPositions(
 						big.NewInt(50_000_000_000 + 54_999_000_000),
 					),
 				},
@@ -515,7 +515,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				},
 				{
 					Id: &constants.Dave_Num0,
-					AssetPositions: keepertest.CreateUsdcAssetPosition(
+					AssetPositions: testutil.CreateUsdcAssetPositions(
 						big.NewInt(100_000_000_000 - 54_999_000_000),
 					),
 				},
@@ -538,10 +538,12 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 						&constants.Usdc_Asset_50_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(50_000_000), // 0.5 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(50_000_000), // 0.5 BTC
+							big.NewInt(0),
+							big.NewInt(0),
+						),
 					},
 				},
 				{
@@ -550,10 +552,12 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 						&constants.Usdc_Asset_50_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(50_000_000), // 0.5 BTC
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(50_000_000), // 0.5 BTC
+							big.NewInt(0),
+							big.NewInt(0),
+						),
 					},
 				},
 			},
@@ -568,7 +572,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 					Id: &constants.Dave_Num0,
 					// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
 					// to close 0.5 BTC short is $27,499.5 and we close both positions at this price.
-					AssetPositions: keepertest.CreateUsdcAssetPosition(
+					AssetPositions: testutil.CreateUsdcAssetPositions(
 						big.NewInt(50_000_000_000 + 27_499_500_000),
 					),
 				},
@@ -576,7 +580,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 					Id: &constants.Dave_Num1,
 					// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
 					// to close 0.5 BTC short is $27,499.5 and we close both positions at this price.
-					AssetPositions: keepertest.CreateUsdcAssetPosition(
+					AssetPositions: testutil.CreateUsdcAssetPositions(
 						big.NewInt(50_000_000_000 + 27_499_500_000),
 					),
 				},
@@ -612,7 +616,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 					Id: &constants.Dave_Num0,
 					// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
 					// to close 1 BTC short is $54,999 and we close both positions at this price.
-					AssetPositions: keepertest.CreateUsdcAssetPosition(
+					AssetPositions: testutil.CreateUsdcAssetPositions(
 						big.NewInt(50_000_000_000 + 54_999_000_000),
 					),
 				},
@@ -644,7 +648,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 					Id: &constants.Dave_Num0,
 					// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
 					// to close 1 BTC short is $54,999 and we close both positions at this price.
-					AssetPositions: keepertest.CreateUsdcAssetPosition(
+					AssetPositions: testutil.CreateUsdcAssetPositions(
 						big.NewInt(50_000_000_000 + 54_999_000_000),
 					),
 				},
@@ -676,7 +680,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 					Id: &constants.Dave_Num1,
 					// TNC of liquidated subaccount is $0, which means the bankruptcy price
 					// to close 1 BTC short is $50,000 and we close both positions at this price.
-					AssetPositions: keepertest.CreateUsdcAssetPosition(
+					AssetPositions: testutil.CreateUsdcAssetPositions(
 						big.NewInt(50_000_000_000 + 50_000_000_000),
 					),
 				},
@@ -717,19 +721,20 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  1,
-							Quantums:     dtypes.NewInt(1_000_000_000), // 1 ETH
-							FundingIndex: dtypes.NewInt(0),
-						},
+						testutil.CreateSinglePerpetualPosition(
+							1,
+							big.NewInt(1_000_000_000), // 1 ETH
+							big.NewInt(0),
+							big.NewInt(0),
+						),
 					},
-					AssetPositions: keepertest.CreateUsdcAssetPosition(
+					AssetPositions: testutil.CreateUsdcAssetPositions(
 						big.NewInt(-3_000_000_000),
 					),
 				},
 				{
 					Id: &constants.Dave_Num0,
-					AssetPositions: keepertest.CreateUsdcAssetPosition(
+					AssetPositions: testutil.CreateUsdcAssetPositions(
 						big.NewInt(50_000_000_000 + 50_000_000_000),
 					),
 				},
@@ -923,7 +928,7 @@ func TestProcessDeleveraging(t *testing.T) {
 				Id: &constants.Dave_Num0,
 				// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
 				// to close 1 BTC short is $54,999 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(50_000_000_000 + 54_999_000_000),
 				),
 			},
@@ -940,7 +945,7 @@ func TestProcessDeleveraging(t *testing.T) {
 				Id: &constants.Dave_Num0,
 				// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
 				// to close 1 BTC short is $54,999 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(-45_001_000_000 + 54_999_000_000),
 				),
 			},
@@ -957,7 +962,7 @@ func TestProcessDeleveraging(t *testing.T) {
 				Id: &constants.Dave_Num0,
 				// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
 				// to close 1 BTC short is $54,999 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(-50_000_000_000 + 54_999_000_000),
 				),
 			},
@@ -974,7 +979,7 @@ func TestProcessDeleveraging(t *testing.T) {
 				Id: &constants.Dave_Num0,
 				// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
 				// to close 1 BTC short is $54,999 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(-50_001_000_000 + 54_999_000_000)),
 			},
 		},
@@ -990,7 +995,7 @@ func TestProcessDeleveraging(t *testing.T) {
 				Id: &constants.Dave_Num0,
 				// TNC of liquidated subaccount is $0, which means the bankruptcy price
 				// to close 1 BTC short is $50,000 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(50_000_000_000 + 50_000_000_000),
 				),
 			},
@@ -1007,7 +1012,7 @@ func TestProcessDeleveraging(t *testing.T) {
 				Id: &constants.Dave_Num0,
 				// TNC of liquidated subaccount is $0, which means the bankruptcy price
 				// to close 1 BTC short is $50,000 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(-45_001_000_000 + 50_000_000_000),
 				),
 			},
@@ -1053,7 +1058,7 @@ func TestProcessDeleveraging(t *testing.T) {
 				Id: &constants.Dave_Num0,
 				// TNC of liquidated subaccount is $-1, which means the bankruptcy price
 				// to close 1 BTC short is $49,999 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(50_000_000_000 + 49_999_000_000),
 				),
 			},
@@ -1070,7 +1075,7 @@ func TestProcessDeleveraging(t *testing.T) {
 				Id: &constants.Dave_Num0,
 				// TNC of liquidated subaccount is $-1, which means the bankruptcy price
 				// to close 1 BTC short is $49,999 and we close both positions at this price.
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(-45_001_000_000 + 49_999_000_000),
 				),
 			},
@@ -1110,30 +1115,32 @@ func TestProcessDeleveraging(t *testing.T) {
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
 				Id: &constants.Carl_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(54_999_000_000 - 5_499_900_000),
 				),
 				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(-90_000_000), // -0.9 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(-90_000_000), // -0.9 BTC
+						big.NewInt(0),
+						big.NewInt(0),
+					),
 				},
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					// TNC of liquidated subaccount is $4,999, which means the bankruptcy price
 					// to close 0.1 BTC short is $5,499.9 and we close both positions at this price.
 					big.NewInt(50_000_000_000 + 5_499_900_000),
 				),
 				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(90_000_000), // 0.9 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(90_000_000), // 0.9 BTC
+						big.NewInt(0),
+						big.NewInt(0),
+					),
 				},
 			},
 		},
@@ -1157,20 +1164,24 @@ func TestProcessDeleveraging(t *testing.T) {
 			liquidatedSubaccount: satypes.Subaccount{
 				Id: &constants.Carl_Num0,
 				AssetPositions: []*satypes.AssetPosition{
-					{
-						AssetId:  0,
-						Quantums: dtypes.NewInt(80_800_000_000), // $80,800
-					},
+					testutil.CreateSingleAssetPosition(
+						0,
+						big.NewInt(80_800_000_000), // $80,800
+					),
 				},
 				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId: 0,
-						Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
-					},
-					{
-						PerpetualId: 1,
-						Quantums:    dtypes.NewInt(-10_000_000_000), // -10 ETH
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(-100_000_000), // -1 BTC
+						big.NewInt(0),
+						big.NewInt(0),
+					),
+					testutil.CreateSinglePerpetualPosition(
+						1,
+						big.NewInt(-10_000_000_000), // -10 ETH
+						big.NewInt(0),
+						big.NewInt(0),
+					),
 				},
 			},
 			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
@@ -1178,23 +1189,24 @@ func TestProcessDeleveraging(t *testing.T) {
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
 				Id: &constants.Carl_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					// TNC of liquidated subaccount is $800, MMR(BTC) = $5,000, MMR(ETH) = $3,000,
 					// which means the bankruptcy price to close 1 BTC short is $50,500
 					// and we close both positions at this price.
 					big.NewInt(80_800_000_000 - 50_500_000_000),
 				),
 				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId:  1,
-						Quantums:     dtypes.NewInt(-10_000_000_000), // -10 ETH
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						1,
+						big.NewInt(-10_000_000_000), // -10 ETH
+						big.NewInt(0),
+						big.NewInt(0),
+					),
 				},
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(50_000_000_000 + 50_500_000_000),
 				),
 			},
@@ -1352,13 +1364,13 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
 				Id: &constants.Carl_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(100_000_000_000 - 50_000_000_000),
 				),
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(50_000_000_000 + 50_000_000_000),
 				),
 			},
@@ -1370,13 +1382,13 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(50_000_000_000 + 50_000_000_000),
 				),
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
 				Id: &constants.Carl_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(54_999_000_000 - 50_000_000_000),
 				),
 			},
@@ -1388,7 +1400,7 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
 				Id: &constants.Carl_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(100_000_000_000 - 50_000_000_000),
 				),
 			},
@@ -1411,13 +1423,13 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
 				Id: &constants.Carl_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(54_999_000_000 - 50_000_000_000),
 				),
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
-				AssetPositions: keepertest.CreateUsdcAssetPosition(
+				AssetPositions: testutil.CreateUsdcAssetPositions(
 					big.NewInt(50_000_000_000 + 50_000_000_000),
 				),
 			},
@@ -1573,16 +1585,18 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 			liquidatedSubaccount: satypes.Subaccount{
 				Id: &constants.Carl_Num0,
 				AssetPositions: []*satypes.AssetPosition{
-					{
-						AssetId:  0,
-						Quantums: dtypes.NewInt(45_001_000_000), // $45,001, TNC = -$4,999
-					},
+					testutil.CreateSingleAssetPosition(
+						0,
+						big.NewInt(45_001_000_000), // $45,001, TNC = -$4,999
+					),
 				},
 				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId: 0,
-						Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(-100_000_000), // -1 BTC
+						big.NewInt(0),
+						big.NewInt(0),
+					),
 				},
 			},
 			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
@@ -1592,16 +1606,18 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 			liquidatedSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
 				AssetPositions: []*satypes.AssetPosition{
-					{
-						AssetId:  0,
-						Quantums: dtypes.NewInt(-50_000_000_000 - 4_999_000_000),
-					},
+					testutil.CreateSingleAssetPosition(
+						0,
+						big.NewInt(-50_000_000_000-4_999_000_000),
+					),
 				},
 				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId: 0,
-						Quantums:    dtypes.NewInt(100_000_000),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(100_000_000),
+						big.NewInt(0),
+						big.NewInt(0),
+					),
 				},
 			},
 			offsettingSubaccount: constants.Carl_Num0_1BTC_Short_100000USD,

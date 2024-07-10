@@ -8,6 +8,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
@@ -39,7 +40,7 @@ func TestVault(t *testing.T) {
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
 				Number: 0,
 			},
-			vaultId:        constants.Vault_Clob_0,
+			vaultId:        constants.Vault_Clob0,
 			asset:          big.NewInt(100),
 			perpId:         0,
 			inventory:      big.NewInt(200),
@@ -51,7 +52,7 @@ func TestVault(t *testing.T) {
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
 				Number: 0,
 			},
-			vaultId:        constants.Vault_Clob_0,
+			vaultId:        constants.Vault_Clob0,
 			asset:          big.NewInt(100),
 			perpId:         0,
 			inventory:      big.NewInt(-200),
@@ -63,7 +64,7 @@ func TestVault(t *testing.T) {
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
 				Number: 1, // Non-existent vault.
 			},
-			vaultId:     constants.Vault_Clob_0,
+			vaultId:     constants.Vault_Clob0,
 			asset:       big.NewInt(100),
 			perpId:      0,
 			inventory:   big.NewInt(200),
@@ -72,7 +73,7 @@ func TestVault(t *testing.T) {
 		},
 		"Error: nil request": {
 			req:         nil,
-			vaultId:     constants.Vault_Clob_0,
+			vaultId:     constants.Vault_Clob0,
 			asset:       big.NewInt(100),
 			perpId:      0,
 			inventory:   big.NewInt(200),
@@ -92,16 +93,18 @@ func TestVault(t *testing.T) {
 							{
 								Id: tc.vaultId.ToSubaccountId(),
 								AssetPositions: []*satypes.AssetPosition{
-									{
-										AssetId:  assettypes.AssetUsdc.Id,
-										Quantums: dtypes.NewIntFromBigInt(tc.asset),
-									},
+									testutil.CreateSingleAssetPosition(
+										assettypes.AssetUsdc.Id,
+										tc.asset,
+									),
 								},
 								PerpetualPositions: []*satypes.PerpetualPosition{
-									{
-										PerpetualId: tc.perpId,
-										Quantums:    dtypes.NewIntFromBigInt(tc.inventory),
-									},
+									testutil.CreateSinglePerpetualPosition(
+										tc.perpId,
+										tc.inventory,
+										big.NewInt(0),
+										big.NewInt(0),
+									),
 								},
 							},
 						}
@@ -127,7 +130,7 @@ func TestVault(t *testing.T) {
 					SubaccountId: *tc.vaultId.ToSubaccountId(),
 					Equity:       dtypes.NewIntFromBigInt(tc.expectedEquity),
 					Inventory:    dtypes.NewIntFromBigInt(tc.inventory),
-					TotalShares:  tc.totalShares.Uint64(),
+					TotalShares:  vaulttypes.BigIntToNumShares(tc.totalShares),
 				}
 				require.Equal(t, expectedResponse, *response)
 			}
@@ -157,12 +160,12 @@ func TestAllVaults(t *testing.T) {
 		"Success": {
 			req: &vaulttypes.QueryAllVaultsRequest{},
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: map[vaulttypes.VaultId]*big.Int{
-				constants.Vault_Clob_0: big.NewInt(100),
-				constants.Vault_Clob_1: big.NewInt(200),
+				constants.Vault_Clob0: big.NewInt(100),
+				constants.Vault_Clob1: big.NewInt(200),
 			},
 			assets: []*big.Int{
 				big.NewInt(1_000),
@@ -177,12 +180,12 @@ func TestAllVaults(t *testing.T) {
 		"Error: nil request": {
 			req: nil,
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob_0,
-				constants.Vault_Clob_1,
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
 			},
 			totalShares: map[vaulttypes.VaultId]*big.Int{
-				constants.Vault_Clob_0: big.NewInt(100),
-				constants.Vault_Clob_1: big.NewInt(200),
+				constants.Vault_Clob0: big.NewInt(100),
+				constants.Vault_Clob1: big.NewInt(200),
 			},
 			assets: []*big.Int{
 				big.NewInt(1_000),
@@ -209,16 +212,18 @@ func TestAllVaults(t *testing.T) {
 							subaccounts = append(subaccounts, satypes.Subaccount{
 								Id: vaultId.ToSubaccountId(),
 								AssetPositions: []*satypes.AssetPosition{
-									{
-										AssetId:  assettypes.AssetUsdc.Id,
-										Quantums: dtypes.NewIntFromBigInt(tc.assets[i]),
-									},
+									testutil.CreateSingleAssetPosition(
+										assettypes.AssetUsdc.Id,
+										tc.assets[i],
+									),
 								},
 								PerpetualPositions: []*satypes.PerpetualPosition{
-									{
-										PerpetualId: tc.perpIds[i],
-										Quantums:    dtypes.NewIntFromBigInt(tc.inventories[i]),
-									},
+									testutil.CreateSinglePerpetualPosition(
+										tc.perpIds[i],
+										tc.inventories[i],
+										big.NewInt(0),
+										big.NewInt(0),
+									),
 								},
 							})
 						}

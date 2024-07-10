@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/big"
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
@@ -12,12 +13,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	testutil_bank "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -40,20 +41,24 @@ func TestProcessProposerMatches_Liquidation_Undercollateralized_Determinism(t *t
 			{
 				Id: &constants.Dave_Num0,
 				AssetPositions: []*satypes.AssetPosition{
-					{
-						AssetId:  0,
-						Quantums: dtypes.NewInt(-45_001_000_000), // -$45,001
-					},
+					testutil.CreateSingleAssetPosition(
+						0,
+						big.NewInt(-45_001_000_000), // -$45,001
+					),
 				},
 				PerpetualPositions: []*satypes.PerpetualPosition{
-					{
-						PerpetualId: 0,
-						Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
-					},
-					{
-						PerpetualId: 1,
-						Quantums:    dtypes.NewInt(1000),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(100_000_000), // 1 BTC
+						big.NewInt(0),
+						big.NewInt(0),
+					),
+					testutil.CreateSinglePerpetualPosition(
+						1,
+						big.NewInt(1000),
+						big.NewInt(0),
+						big.NewInt(0),
+					),
 				},
 			},
 		},
@@ -411,18 +416,20 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(-50_000_000), // .5 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(-50_000_000), // .5 BTC
+						big.NewInt(0),
+						big.NewInt(0),
+					),
 				},
 				constants.Dave_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(50_000_000), // .5 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(50_000_000), // .5 BTC
+						big.NewInt(0),
+						big.NewInt(0),
+					),
 				},
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
@@ -516,18 +523,20 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(-50_000_000), // .5 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(-50_000_000), // .5 BTC
+						big.NewInt(0),
+						big.NewInt(0),
+					),
 				},
 				constants.Dave_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(50_000_000), // .5 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(50_000_000), // .5 BTC
+						big.NewInt(0),
+						big.NewInt(0),
+					),
 				},
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
@@ -833,18 +842,20 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(-50_000_000), // .5 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(-50_000_000), // .5 BTC
+						big.NewInt(0),
+						big.NewInt(0),
+					),
 				},
 				constants.Dave_Num0: {
-					{
-						PerpetualId:  0,
-						Quantums:     dtypes.NewInt(50_000_000), // .5 BTC
-						FundingIndex: dtypes.ZeroInt(),
-					},
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(50_000_000), // .5 BTC
+						big.NewInt(0),
+						big.NewInt(0),
+					),
 				},
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
@@ -874,16 +885,18 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(5_499),
-						},
+						testutil.CreateSingleAssetPosition(
+							0,
+							big.NewInt(5_499),
+						),
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(-10), // Liquidatable position is smaller than StepBaseQuantums
-						},
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(-10), // Liquidatable position is smaller than StepBaseQuantums
+							big.NewInt(0),
+							big.NewInt(0),
+						),
 					},
 				},
 				constants.Dave_Num0_1BTC_Long_50000USD,

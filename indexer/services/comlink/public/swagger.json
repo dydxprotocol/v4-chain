@@ -1286,6 +1286,37 @@
         ],
         "type": "object",
         "additionalProperties": false
+      },
+      "TransferBetweenResponse": {
+        "properties": {
+          "pageSize": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalResults": {
+            "type": "number",
+            "format": "double"
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
+          "transfersSubset": {
+            "items": {
+              "$ref": "#/components/schemas/TransferResponseObject"
+            },
+            "type": "array"
+          },
+          "totalNetTransfers": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "transfersSubset",
+          "totalNetTransfers"
+        ],
+        "type": "object",
+        "additionalProperties": false
       }
     },
     "securitySchemes": {}
@@ -1980,7 +2011,7 @@
         ]
       }
     },
-    "/historical-pnl/parentSubaccount": {
+    "/historical-pnl/parentSubaccountNumber": {
       "get": {
         "operationId": "GetHistoricalPnlForParentSubaccount",
         "responses": {
@@ -2838,6 +2869,77 @@
             "schema": {
               "format": "double",
               "type": "number"
+            }
+          }
+        ]
+      }
+    },
+    "/transfers/between": {
+      "get": {
+        "operationId": "GetTransferBetween",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferBetweenResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "sourceAddress",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sourceSubaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "recipientAddress",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "recipientSubaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
             }
           }
         ]

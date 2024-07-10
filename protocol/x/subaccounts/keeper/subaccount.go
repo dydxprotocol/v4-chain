@@ -323,14 +323,13 @@ func (k Keeper) UpdateSubaccounts(
 		}
 	}
 
-	// Apply the updates to perpetual positions.
-	salib.UpdatePerpetualPositions(
-		settledUpdates,
-		perpInfos,
-	)
-
-	// Apply the updates to asset positions.
-	salib.UpdateAssetPositions(settledUpdates)
+	// Apply the updates to asset positions and perpetual positions.
+	for i := range settledUpdates {
+		settledUpdates[i].SettledSubaccount = salib.CalculateUpdatedSubaccount(
+			settledUpdates[i],
+			perpInfos,
+		)
+	}
 
 	// Transfer collateral between collateral pools for any isolated perpetual positions that changed
 	// state due to an update.
@@ -430,32 +429,6 @@ func (k Keeper) CanUpdateSubaccounts(
 
 	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType, perpInfos)
 	return success, successPerUpdate, err
-}
-
-func checkPositionUpdatable(
-	ctx sdk.Context,
-	pk types.ProductKeeper,
-	p types.PositionSize,
-) (
-	err error,
-) {
-	updatable, err := pk.IsPositionUpdatable(
-		ctx,
-		p.GetId(),
-	)
-	if err != nil {
-		return err
-	}
-
-	if !updatable {
-		return errorsmod.Wrapf(
-			types.ErrProductPositionNotUpdatable,
-			"type: %v, id: %d",
-			p.GetProductType(),
-			p.GetId(),
-		)
-	}
-	return nil
 }
 
 // internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts and compute
@@ -587,23 +560,38 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	for i, u := range settledUpdates {
 		// Check all updated perps are updatable.
 		for _, perpUpdate := range u.PerpetualUpdates {
-			err := checkPositionUpdatable(ctx, k.perpetualsKeeper, perpUpdate)
+			updatable, err := k.perpetualsKeeper.IsPositionUpdatable(ctx, perpUpdate.GetId())
 			if err != nil {
 				return false, nil, err
+			}
+			if !updatable {
+				return false, nil, errorsmod.Wrapf(
+					types.ErrProductPositionNotUpdatable,
+					"type: perpetual, id: %d",
+					perpUpdate.GetId(),
+				)
 			}
 		}
 
 		// Check all updated assets are updatable.
 		for _, assetUpdate := range u.AssetUpdates {
-			err := checkPositionUpdatable(ctx, k.assetsKeeper, assetUpdate)
+			updatable, err := k.assetsKeeper.IsPositionUpdatable(ctx, assetUpdate.GetId())
 			if err != nil {
 				return false, nil, err
+			}
+			if !updatable {
+				return false, nil, errorsmod.Wrapf(
+					types.ErrProductPositionNotUpdatable,
+					"type: asset, id: %d",
+					assetUpdate.GetId(),
+				)
 			}
 		}
 
 		// Get the new collateralization and margin requirements with the update applied.
+		updatedSubaccount := salib.CalculateUpdatedSubaccount(u, perpInfos)
 		riskNew, err := salib.GetRiskForSubaccount(
-			u,
+			updatedSubaccount,
 			perpInfos,
 		)
 		if err != nil {
@@ -616,10 +604,6 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		// We must now check if the state transition is valid.
 		if !riskNew.IsInitialCollateralized() {
 			// Get the current collateralization and margin requirements without the update applied.
-			emptyUpdate := types.SettledUpdate{
-				SettledSubaccount: u.SettledSubaccount,
-			}
-
 			bytes, err := proto.Marshal(u.SettledSubaccount.Id)
 			if err != nil {
 				return false, nil, err
@@ -629,7 +613,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			// Cache the current collateralization and margin requirements for the subaccount.
 			if _, ok := riskCurMap[saKey]; !ok {
 				riskCurMap[saKey], err = salib.GetRiskForSubaccount(
-					emptyUpdate,
+					u.SettledSubaccount,
 					perpInfos,
 				)
 				if err != nil {
@@ -685,9 +669,10 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 		AssetUpdates:      update.AssetUpdates,
 		PerpetualUpdates:  update.PerpetualUpdates,
 	}
+	updatedSubaccount := salib.CalculateUpdatedSubaccount(settledUpdate, perpInfos)
 
 	return salib.GetRiskForSubaccount(
-		settledUpdate,
+		updatedSubaccount,
 		perpInfos,
 	)
 }

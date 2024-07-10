@@ -19,21 +19,21 @@ func TestMsgDepositToVault_ValidateBasic(t *testing.T) {
 	}{
 		"Success": {
 			msg: types.MsgDepositToVault{
-				VaultId:       &constants.Vault_Clob_0,
+				VaultId:       &constants.Vault_Clob0,
 				SubaccountId:  &constants.Alice_Num0,
 				QuoteQuantums: dtypes.NewInt(1),
 			},
 		},
 		"Success: max uint64 quote quantums": {
 			msg: types.MsgDepositToVault{
-				VaultId:       &constants.Vault_Clob_0,
+				VaultId:       &constants.Vault_Clob0,
 				SubaccountId:  &constants.Alice_Num0,
 				QuoteQuantums: dtypes.NewIntFromUint64(math.MaxUint64),
 			},
 		},
 		"Failure: quote quantums greater than max uint64": {
 			msg: types.MsgDepositToVault{
-				VaultId:      &constants.Vault_Clob_0,
+				VaultId:      &constants.Vault_Clob0,
 				SubaccountId: &constants.Alice_Num0,
 				QuoteQuantums: dtypes.NewIntFromBigInt(
 					new(big.Int).Add(
@@ -46,7 +46,7 @@ func TestMsgDepositToVault_ValidateBasic(t *testing.T) {
 		},
 		"Failure: zero quote quantums": {
 			msg: types.MsgDepositToVault{
-				VaultId:       &constants.Vault_Clob_0,
+				VaultId:       &constants.Vault_Clob0,
 				SubaccountId:  &constants.Alice_Num0,
 				QuoteQuantums: dtypes.NewInt(0),
 			},
@@ -54,7 +54,7 @@ func TestMsgDepositToVault_ValidateBasic(t *testing.T) {
 		},
 		"Failure: negative quote quantums": {
 			msg: types.MsgDepositToVault{
-				VaultId:       &constants.Vault_Clob_0,
+				VaultId:       &constants.Vault_Clob0,
 				SubaccountId:  &constants.Alice_Num0,
 				QuoteQuantums: dtypes.NewInt(-1),
 			},
@@ -62,7 +62,7 @@ func TestMsgDepositToVault_ValidateBasic(t *testing.T) {
 		},
 		"Failure: invalid subaccount owner": {
 			msg: types.MsgDepositToVault{
-				VaultId: &constants.Vault_Clob_0,
+				VaultId: &constants.Vault_Clob0,
 				SubaccountId: &satypes.SubaccountId{
 					Owner:  "invalid-owner",
 					Number: 0,

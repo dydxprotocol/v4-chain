@@ -884,18 +884,12 @@ func (k Keeper) GenerateProcessProposerMatchesEvents(
 	filledOrderIds := lib.GetSortedKeys[types.SortedOrders](seenOrderIdsFilledInLastBlock)
 	removedOrderIds := lib.GetSortedKeys[types.SortedOrders](seenOrderIdsRemovedInLastBlock)
 
-	// PlacedLongTermOrderIds to be populated in MsgHandler for MsgPlaceOrder.
-	// PlacedConditionalOrderIds to be populated in MsgHandler for MsgPlaceOrder.
 	// ConditionalOrderIdsTriggeredInLastBlock to be populated in EndBlocker.
 	// ExpiredOrderId to be populated in the EndBlocker.
-	// PlacedStatefulCancellation to be populated in MsgHandler for MsgCancelOrder.
 	return types.ProcessProposerMatchesEvents{
-		PlacedLongTermOrderIds:                  []types.OrderId{},
 		ExpiredStatefulOrderIds:                 []types.OrderId{},
 		OrderIdsFilledInLastBlock:               filledOrderIds,
-		PlacedStatefulCancellationOrderIds:      []types.OrderId{},
 		RemovedStatefulOrderIds:                 removedOrderIds,
-		PlacedConditionalOrderIds:               []types.OrderId{},
 		ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
 		BlockHeight:                             lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 	}
