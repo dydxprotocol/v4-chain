@@ -150,13 +150,24 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 // GetVaultClobOrders returns a list of long term orders for a given CLOB vault.
 // Let n be number of layers, then the function returns orders at [a_0, b_0, a_1, b_1, ..., a_{n-1}, b_{n-1}]
 // where a_i and b_i are the ask price and bid price at i-th layer. To compute a_i and b_i:
-// - a_i = oraclePrice * (1 + skew_i) * (1 + spread)^{i+1}
-// - b_i = oraclePrice * (1 + skew_i) / (1 + spread)^{i+1}
-// - skew_i = -leverage_i * spread * skew_factor
+// - a_i = oraclePrice * (1 + ask_spread_i)
+// - b_i = oraclePrice * (1 - bid_spread_i)
+//
+// - ask_spread_i = (1 + skew_i) * spread
+// - bid_spread_i = (1 - skew_i) * spread
+//
+// - skew_i is computed differently based on order side and leverage_i:
+//   - ask, leverage_i < 0: (skew_factor * leverage_i - 1)^2 - 1
+//   - bid, leverage_i < 0: -skew_factor * leverage_i
+//   - ask, leverage_i >= 0: -skew_factor * leverage_i
+//   - bid, leverage_i >= 0: -((skew_factor * leverage_i + 1)^2 - 1)
+//
 // - leverage_i = leverage +/- i * order_size_pct\ (- for ask and + for bid)
 // - leverage = open notional / equity
+//
 // - spread = max(spread_min, spread_buffer + min_price_change)
-// and size of each order is calculated as `order_size * equity / oraclePrice`.
+//
+// size of each order is calculated as `order_size_pct * equity / oraclePrice`.
 func (k Keeper) GetVaultClobOrders(
 	ctx sdk.Context,
 	vaultId types.VaultId,
@@ -269,51 +280,63 @@ func (k Keeper) GetVaultClobOrders(
 	) *clobtypes.Order {
 		// Ask: leverage_i = leverage - i * order_size_pct
 		// Bid: leverage_i = leverage + i * order_size_pct
-		// skew_i = -leverage_i * spread * skew_factor
 		leveragePpmI := lib.BigU(layer)
 		leveragePpmI.Mul(leveragePpmI, orderSizePctPpm)
 		if side == clobtypes.Order_SIDE_SELL {
 			leveragePpmI.Neg(leveragePpmI)
 		}
 		leveragePpmI.Add(leveragePpmI, leveragePpm)
-		skewPpmI := leveragePpmI.
-			Mul(leveragePpmI, spreadPpm).
-			Mul(leveragePpmI, skewFactorPpm).
-			Quo(leveragePpmI, lib.BigIntOneMillion()).
-			Quo(leveragePpmI, lib.BigIntOneMillion()).
-			Neg(leveragePpmI)
 
-		// spread_i = spread * (layer+1)
-		// negated for buys
-		spreadPpmI := lib.BigU(layer + 1)
-		spreadPpmI.Mul(spreadPpmI, spreadPpm)
-		if side == clobtypes.Order_SIDE_BUY {
-			spreadPpmI.Neg(spreadPpmI)
+		// Calculate skew.
+		skewPpmI := lib.BigMulPpm(leveragePpmI, skewFactorPpm, true)
+		if leveragePpm.Sign() < 0 {
+			if side == clobtypes.Order_SIDE_SELL {
+				// ask when short: skew_i = (skew_factor * leverage_i - 1)^2 - 1
+				skewPpmI.Sub(skewPpmI, lib.BigIntOneMillion())
+				skewPpmI = lib.BigMulPpm(skewPpmI, skewPpmI, true)
+				skewPpmI.Sub(skewPpmI, lib.BigIntOneMillion())
+			} else {
+				// bid when short: skew_i = -skew_factor * leverage_i
+				skewPpmI.Neg(skewPpmI)
+			}
+		} else {
+			if side == clobtypes.Order_SIDE_SELL {
+				// ask when long: skew_i = -skew_factor * leverage_i
+				skewPpmI.Neg(skewPpmI)
+			} else {
+				// bid when long: skew_i = -((skew_factor * leverage_i + 1)^2 - 1)
+				skewPpmI.Add(skewPpmI, lib.BigIntOneMillion())
+				skewPpmI = lib.BigMulPpm(skewPpmI, skewPpmI, true)
+				skewPpmI.Sub(skewPpmI, lib.BigIntOneMillion())
+				skewPpmI.Neg(skewPpmI)
+			}
 		}
 
-		// price = oracleprice * (1 + skew_i + spread_i)
-		// price <= oracleprice for buys
-		// price >= oracleprice for sells
-		spreadSkewPpm := new(big.Int).Add(spreadPpmI, skewPpmI)
-		if side == clobtypes.Order_SIDE_SELL && spreadSkewPpm.Sign() < 0 {
-			spreadSkewPpm.SetUint64(0)
-		} else if side == clobtypes.Order_SIDE_BUY && spreadSkewPpm.Sign() > 0 {
-			spreadSkewPpm.SetUint64(0)
+		// Calculate skewed spread.
+		skewedSpreadPpmI := lib.BigIntOneMillion()
+		if side == clobtypes.Order_SIDE_SELL {
+			skewedSpreadPpmI.Add(skewedSpreadPpmI, skewPpmI)
+		} else {
+			skewedSpreadPpmI.Sub(skewPpmI, skewedSpreadPpmI)
 		}
-		spreadSkewPpm.Add(spreadSkewPpm, lib.BigIntOneMillion())
-		orderSubticksNum := lib.BigMulPpm(
+		// To maintain precision, delay division by 1 million until after multiplying skewed spread with oracle price.
+		skewedSpreadPpmI.Mul(skewedSpreadPpmI, spreadPpm)
+		skewedSpreadPpmI.Add(skewedSpreadPpmI, lib.BigIntOneTrillion())
+
+		// Determine order subticks.
+		subticks := lib.BigMulPpm(
 			oracleSubticks.Num(),
-			spreadSkewPpm,
+			skewedSpreadPpmI,
 			side == clobtypes.Order_SIDE_SELL,
 		)
-
-		// Determine the subticks.
-		var subticks *big.Int
+		divisor := lib.BigIntOneMillion() // delayed division by 1 million as noted above.
+		divisor.Mul(divisor, oracleSubticks.Denom())
 		if side == clobtypes.Order_SIDE_SELL {
-			subticks = lib.BigDivCeil(orderSubticksNum, oracleSubticks.Denom())
+			subticks = lib.BigDivCeil(subticks, divisor)
 		} else {
-			subticks = new(big.Int).Quo(orderSubticksNum, oracleSubticks.Denom())
+			subticks = new(big.Int).Quo(subticks, divisor)
 		}
+
 		// Bound subticks between the minimum and maximum subticks.
 		subticksPerTick := lib.BigU(clobPair.SubticksPerTick)
 		subticks = lib.BigIntRoundToMultiple(
