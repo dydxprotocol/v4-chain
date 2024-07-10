@@ -1,5 +1,3 @@
-//go:build all || container_test
-
 package v_6_0_0_test
 
 import (
