@@ -25,4 +25,6 @@ message Vault {
   repeated OwnerShare owner_shares = 3;
   // The individual parameters of the vault.
   VaultParams vault_params = 4;
+  // The client IDs of the most recently placed orders of the vault.
+  repeated uint32 most_recent_client_ids = 5;
 }
