@@ -13,75 +13,90 @@ var (
 		0,
 		big.NewInt(100_000_000), // 1 BTC
 		big.NewInt(0),
+		big.NewInt(0),
 	)
 	Short_Perp_1ETH_NegativeFunding = *testutil.CreateSinglePerpetualPosition(
 		1,
 		big.NewInt(-100_000_000), // 1 ETH
 		big.NewInt(-1),
+		big.NewInt(0),
 	)
 	PerpetualPosition_OneBTCLong = *testutil.CreateSinglePerpetualPosition(
 		0,
 		big.NewInt(100_000_000), // 1 BTC, $50,000 notional.
+		big.NewInt(0),
 		big.NewInt(0),
 	)
 	PerpetualPosition_OneBTCShort = *testutil.CreateSinglePerpetualPosition(
 		0,
 		big.NewInt(-100_000_000), // 1 BTC, -$50,000 notional.
 		big.NewInt(0),
+		big.NewInt(0),
 	)
 	PerpetualPosition_OneTenthBTCLong = *testutil.CreateSinglePerpetualPosition(
 		0,
 		big.NewInt(10_000_000), // 0.1 BTC, $5,000 notional.
+		big.NewInt(0),
 		big.NewInt(0),
 	)
 	PerpetualPosition_OneTenthBTCShort = *testutil.CreateSinglePerpetualPosition(
 		0,
 		big.NewInt(-10_000_000), // 0.1 BTC, -$5,000 notional.
 		big.NewInt(0),
+		big.NewInt(0),
 	)
 	PerpetualPosition_OneHundredthBTCLong = *testutil.CreateSinglePerpetualPosition(
 		0,
 		big.NewInt(1_000_000), // 0.01 BTC, $500 notional.
+		big.NewInt(0),
 		big.NewInt(0),
 	)
 	PerpetualPosition_OneHundredthBTCShort = *testutil.CreateSinglePerpetualPosition(
 		0,
 		big.NewInt(-1_000_000), // 0.01 BTC, -$500 notional.
 		big.NewInt(0),
+		big.NewInt(0),
 	)
 	PerpetualPosition_FourThousandthsBTCLong = *testutil.CreateSinglePerpetualPosition(
 		0,
 		big.NewInt(400_000), // 0.004 BTC, $200 notional.
+		big.NewInt(0),
 		big.NewInt(0),
 	)
 	PerpetualPosition_FourThousandthsBTCShort = *testutil.CreateSinglePerpetualPosition(
 		0,
 		big.NewInt(-400_000), // 0.004 BTC, -$200 notional.
 		big.NewInt(0),
+		big.NewInt(0),
 	)
 	PerpetualPosition_OneAndHalfBTCLong = *testutil.CreateSinglePerpetualPosition(
 		0,
 		big.NewInt(150_000_000), // 1.5 BTC, $75,000 notional.
+		big.NewInt(0),
 		big.NewInt(0),
 	)
 	PerpetualPosition_OneTenthEthLong = *testutil.CreateSinglePerpetualPosition(
 		1,
 		big.NewInt(100_000_000), // 0.1 ETH, $300 notional.
 		big.NewInt(0),
+		big.NewInt(0),
 	)
 	PerpetualPosition_OneTenthEthShort = *testutil.CreateSinglePerpetualPosition(
 		1,
 		big.NewInt(-100_000_000), // 0.1 ETH, -$300 notional.
+		big.NewInt(0),
 		big.NewInt(0),
 	)
 	PerpetualPosition_MaxUint64EthLong = *testutil.CreateSinglePerpetualPosition(
 		1,
 		big.NewInt(0).SetUint64(math.MaxUint64), // 18,446,744,070 ETH, $55,340,232,210,000 notional.
 		big.NewInt(0),
+		big.NewInt(0),
 	)
 	PerpetualPosition_MaxUint64EthShort = *testutil.CreateSinglePerpetualPosition(
 		1,
 		BigNegMaxUint64(), // 18,446,744,070 ETH, -$55,340,232,210,000 notional.
+		big.NewInt(0),
 		big.NewInt(0),
 	)
 	// Long position for arbitrary isolated market
@@ -89,10 +104,12 @@ var (
 		3,
 		big.NewInt(1_000_000_000),
 		big.NewInt(0),
+		big.NewInt(0),
 	)
 	PerpetualPosition_OneISO2Long = *testutil.CreateSinglePerpetualPosition(
 		4,
 		big.NewInt(10_000_000),
+		big.NewInt(0),
 		big.NewInt(0),
 	)
 	// Short position for arbitrary isolated market
@@ -100,10 +117,12 @@ var (
 		3,
 		big.NewInt(-100_000_000),
 		big.NewInt(0),
+		big.NewInt(0),
 	)
 	PerpetualPosition_OneISO2Short = *testutil.CreateSinglePerpetualPosition(
 		4,
 		big.NewInt(-10_000_000),
+		big.NewInt(0),
 		big.NewInt(0),
 	)
 

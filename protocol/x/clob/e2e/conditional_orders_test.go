@@ -569,6 +569,7 @@ func TestConditionalOrder(t *testing.T) {
 							0,
 							big.NewInt(25_000_000),
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -610,6 +611,7 @@ func TestConditionalOrder(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(50_000_000),
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -690,6 +692,7 @@ func TestConditionalOrder(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(25_000_000),
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -1724,6 +1727,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							0,
 							big.NewInt(25_000_000),
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -1765,6 +1769,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(50_000_000),
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -1845,6 +1850,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(25_000_000),
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},

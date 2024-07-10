@@ -103,6 +103,7 @@ func TestVault(t *testing.T) {
 										tc.perpId,
 										tc.inventory,
 										big.NewInt(0),
+										big.NewInt(0),
 									),
 								},
 							},
@@ -220,6 +221,7 @@ func TestAllVaults(t *testing.T) {
 									testutil.CreateSinglePerpetualPosition(
 										tc.perpIds[i],
 										tc.inventories[i],
+										big.NewInt(0),
 										big.NewInt(0),
 									),
 								},

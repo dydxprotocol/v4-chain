@@ -624,6 +624,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							big.NewInt(int64(
 								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -646,6 +647,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							Clob_0.MustGetPerpetualId(),
 							big.NewInt(-int64(
 								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -749,6 +751,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													big.NewInt(int64(
 														LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 													big.NewInt(0),
+													big.NewInt(0),
 												),
 											},
 											[]*satypes.AssetPosition{
@@ -780,6 +783,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													Clob_0.MustGetPerpetualId(),
 													big.NewInt(-int64(
 														LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
+													big.NewInt(0),
 													big.NewInt(0),
 												),
 											},
@@ -951,6 +955,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							big.NewInt(int64(
 								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.GetQuantums())),
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -976,6 +981,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 								PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums()+
 									PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums(),
 							)),
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -1090,6 +1096,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													big.NewInt(int64(
 														PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums())),
 													big.NewInt(0),
+													big.NewInt(0),
 												),
 											},
 											[]*satypes.AssetPosition{
@@ -1121,6 +1128,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													Clob_0.MustGetPerpetualId(),
 													big.NewInt(-int64(
 														PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums())),
+													big.NewInt(0),
 													big.NewInt(0),
 												),
 											},
@@ -1255,6 +1263,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 															PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums(),
 													)),
 													big.NewInt(0),
+													big.NewInt(0),
 												),
 											},
 											[]*satypes.AssetPosition{
@@ -1288,6 +1297,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													// Order was fully filled
 													big.NewInt(int64(
 														LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.GetQuantums())),
+													big.NewInt(0),
 													big.NewInt(0),
 												),
 											},
@@ -1544,6 +1554,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 							big.NewInt(int64(
 								Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -1566,6 +1577,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 							Clob_0.MustGetPerpetualId(),
 							big.NewInt(-int64(
 								Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -1652,6 +1664,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 													big.NewInt(int64(
 														Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 													big.NewInt(0),
+													big.NewInt(0),
 												),
 											},
 											[]*satypes.AssetPosition{
@@ -1683,6 +1696,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 													Clob_0.MustGetPerpetualId(),
 													big.NewInt(-int64(
 														Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
+													big.NewInt(0),
 													big.NewInt(0),
 												),
 											},

@@ -126,6 +126,7 @@ func TestProcessProposerOperations(t *testing.T) {
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -138,6 +139,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -222,12 +224,14 @@ func TestProcessProposerOperations(t *testing.T) {
 						0,
 						big.NewInt(1_000_000_000-100_000_000),
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Alice_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(1_000_000_000+100_000_000),
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -252,6 +256,7 @@ func TestProcessProposerOperations(t *testing.T) {
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -264,6 +269,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -348,12 +354,14 @@ func TestProcessProposerOperations(t *testing.T) {
 						0,
 						big.NewInt(1_000_000_000-100_000_000),
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Alice_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(1_000_000_000+100_000_000),
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -378,6 +386,7 @@ func TestProcessProposerOperations(t *testing.T) {
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -390,6 +399,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -461,12 +471,14 @@ func TestProcessProposerOperations(t *testing.T) {
 						0,
 						big.NewInt(1_000_000_000-5),
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Alice_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(1_000_000_000+5),
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -491,6 +503,7 @@ func TestProcessProposerOperations(t *testing.T) {
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -503,6 +516,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -555,12 +569,14 @@ func TestProcessProposerOperations(t *testing.T) {
 						0,
 						big.NewInt(1_000_000_000-5),
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Alice_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(1_000_000_000+5),
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -585,6 +601,7 @@ func TestProcessProposerOperations(t *testing.T) {
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -598,6 +615,7 @@ func TestProcessProposerOperations(t *testing.T) {
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -610,6 +628,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -721,6 +740,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						0,
 						big.NewInt(1_000_000_000-10),
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Alice_Num0: {
@@ -728,12 +748,14 @@ func TestProcessProposerOperations(t *testing.T) {
 						0,
 						big.NewInt(1_000_000_000+10+15),
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Carl_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(1_000_000_000-15),
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1111,12 +1133,14 @@ func TestProcessProposerOperations(t *testing.T) {
 						0,
 						big.NewInt(-100_000_000+50_000_000),
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Dave_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(100_000_000-50_000_000),
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1321,6 +1345,7 @@ func TestProcessProposerOperations(t *testing.T) {
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -1333,6 +1358,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -1475,6 +1501,7 @@ func TestProcessProposerOperations(t *testing.T) {
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -1487,6 +1514,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -1541,12 +1569,14 @@ func TestProcessProposerOperations(t *testing.T) {
 						0,
 						big.NewInt(1_000_000_000-5),
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Alice_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(1_000_000_000+5),
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1571,6 +1601,7 @@ func TestProcessProposerOperations(t *testing.T) {
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -1583,6 +1614,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -1627,6 +1659,7 @@ func TestProcessProposerOperations(t *testing.T) {
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -1639,6 +1672,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
