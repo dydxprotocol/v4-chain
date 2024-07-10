@@ -1,9 +1,9 @@
 package keeper_test
 
 import (
-	"math"
 	"math/big"
 	"testing"
+	"time"
 
 	"github.com/cometbft/cometbft/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -13,6 +13,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -118,10 +119,10 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
 
-			// Initialize tApp and ctx (in deliverTx mode).
+			// Initialize tApp.
 			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
-				// Initialize each vault with quote quantums to be able to place orders.
+				// Initialize each vault with enough quote quantums to be actively quoting.
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *satypes.GenesisState) {
@@ -168,45 +169,20 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			allStatefulOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
 			require.Len(t, allStatefulOrders, 0)
 
-			// Simulate vault orders placed in last block.
-			numPreviousOrders := 0
-			previousOrders := make(map[vaulttypes.VaultId][]*clobtypes.Order)
-			for i, vaultId := range tc.vaultIds {
-				if tc.totalShares[i].Sign() > 0 && tc.assetQuantums[i].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
-					orders, err := tApp.App.VaultKeeper.GetVaultClobOrders(
-						ctx.WithBlockHeight(ctx.BlockHeight()-1),
-						vaultId,
-					)
-					require.NoError(t, err)
-					for _, order := range orders {
-						err := tApp.App.VaultKeeper.PlaceVaultClobOrder(ctx, order)
-						require.NoError(t, err)
-					}
-					previousOrders[vaultId] = orders
-					numPreviousOrders += len(orders)
-				}
-			}
-			require.Len(t, tApp.App.ClobKeeper.GetAllStatefulOrders(ctx), numPreviousOrders)
-
 			// Refresh all vault orders.
 			tApp.App.VaultKeeper.RefreshAllVaultOrders(ctx)
 
-			// Check orders are as expected, i.e. orders from last block have been
-			// cancelled and orders from this block have been placed.
-			numExpectedOrders := 0
-			allExpectedOrderIds := make(map[clobtypes.OrderId]bool)
-			expectedIndexerEvents := make([]indexer_manager.IndexerTendermintEvent, 0)
+			// Check expected orders and order placement indexer events.
+			allExpectedOrders := []clobtypes.Order{}
+			expectedIndexerEvents := []*indexer_manager.IndexerTendermintEvent{}
 			indexerEventIndex := 0
-			for vault_index, vaultId := range tc.vaultIds {
-				if tc.totalShares[vault_index].Sign() > 0 &&
-					tc.assetQuantums[vault_index].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
+			for i, vaultId := range tc.vaultIds {
+				if tc.totalShares[i].Sign() > 0 && tc.assetQuantums[i].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
 					expectedOrders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, vaultId)
 					require.NoError(t, err)
-					numExpectedOrders += len(expectedOrders)
-					ordersToCancel := previousOrders[vaultId]
-					for i, order := range expectedOrders {
-						allExpectedOrderIds[order.OrderId] = true
-						orderToCancel := ordersToCancel[i]
+
+					for _, order := range expectedOrders {
+						allExpectedOrders = append(allExpectedOrders, *order)
 						event := indexer_manager.IndexerTendermintEvent{
 							Subtype: indexerevents.SubtypeStatefulOrder,
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{
@@ -215,33 +191,25 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 							EventIndex: uint32(indexerEventIndex),
 							Version:    indexerevents.StatefulOrderEventVersion,
 							DataBytes: indexer_manager.GetBytes(
-								indexerevents.NewLongTermOrderReplacementEvent(
-									orderToCancel.OrderId,
+								indexerevents.NewLongTermOrderPlacementEvent(
 									*order,
 								),
 							),
 						}
 						indexerEventIndex += 1
-						expectedIndexerEvents = append(expectedIndexerEvents, event)
+						expectedIndexerEvents = append(expectedIndexerEvents, &event)
 					}
 				}
 			}
 			allStatefulOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
-			require.Len(t, allStatefulOrders, numExpectedOrders)
-			for _, order := range allStatefulOrders {
-				require.True(t, allExpectedOrderIds[order.OrderId])
-			}
-
-			// test that the indexer events emitted are as expected
+			require.ElementsMatch(t, allExpectedOrders, allStatefulOrders)
 			block := tApp.App.VaultKeeper.GetIndexerEventManager().ProduceBlock(ctx)
-			require.Len(t, block.Events, numExpectedOrders)
-			for i, event := range block.Events {
-				require.Equal(t, expectedIndexerEvents[i], *event)
-			}
+			require.ElementsMatch(t, expectedIndexerEvents, block.Events)
 		})
 	}
 }
 
+// TODO (TRA-498): verify placement and replacement indexer events in this test instead of the one above.
 func TestRefreshVaultClobOrders(t *testing.T) {
 	tests := map[string]struct {
 		/* --- Setup --- */
@@ -254,6 +222,9 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 		"Success - Refresh Orders from Vault for Clob Pair 0": {
 			vaultId: constants.Vault_Clob0,
 		},
+		"Success - Refresh Orders from Vault for Clob Pair 1": {
+			vaultId: constants.Vault_Clob1,
+		},
 		"Error - Refresh Orders from Vault for Clob Pair 4321 (non-existent clob pair)": {
 			vaultId: vaulttypes.VaultId{
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
@@ -265,10 +236,36 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// Initialize tApp and ctx (in deliverTx mode).
-			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			// Initialize tApp.
+			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
+			appOpts := map[string]interface{}{
+				indexer.MsgSenderInstanceForTest: msgSender,
+			}
+			params := vaulttypes.DefaultParams()
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
-				// Initialize vault with quote quantums to be able to place orders.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *vaulttypes.GenesisState) {
+						genesisState.Vaults = []*vaulttypes.Vault{
+							{
+								VaultId: &tc.vaultId,
+								TotalShares: &vaulttypes.NumShares{
+									NumShares: dtypes.NewInt(10),
+								},
+								OwnerShares: []*vaulttypes.OwnerShare{
+									{
+										Owner: constants.AliceAccAddress.String(),
+										Shares: &vaulttypes.NumShares{
+											NumShares: dtypes.NewInt(10),
+										},
+									},
+								},
+							},
+						}
+					},
+				)
+				// Initialize vault with enough quote quantums to be actively quoting.
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *satypes.GenesisState) {
@@ -278,7 +275,7 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 								AssetPositions: []*satypes.AssetPosition{
 									testutil.CreateSingleAssetPosition(
 										assettypes.AssetUsdc.Id,
-										big.NewInt(1_000_000_000), // 1,000 USDC
+										params.ActivationThresholdQuoteQuantums.BigInt(),
 									),
 								},
 							},
@@ -287,34 +284,69 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				)
 				return genesis
 			}).Build()
-			ctx := tApp.InitChain().WithIsCheckTx(false)
+			ctx := tApp.InitChain()
 
-			// Check that there's no stateful orders yet.
-			allStatefulOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
-			require.Len(t, allStatefulOrders, 0)
-
-			// Refresh vault orders.
-			err := tApp.App.VaultKeeper.RefreshVaultClobOrders(ctx, tc.vaultId)
-			allStatefulOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
 			if tc.expectedErr != nil {
-				// Check that the error is as expected.
-				require.ErrorContains(t, err, tc.expectedErr.Error())
-				// Check that there's no stateful orders.
-				require.Len(t, allStatefulOrders, 0)
+				// Verify that no order is placed and chain doesn't halt.
+				require.Empty(t, tApp.App.ClobKeeper.GetAllStatefulOrders(ctx))
+				tApp.AdvanceToBlock(uint32(tApp.GetBlockHeight())+1, testapp.AdvanceToBlockOptions{})
 				return
-			} else {
-				// Check that there's no error.
-				require.NoError(t, err)
-				// Check that the number of orders is as expected.
-				params := tApp.App.VaultKeeper.GetParams(ctx)
-				require.Len(t, allStatefulOrders, int(params.Layers*2))
-				// Check that the orders are as expected.
-				expectedOrders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, tc.vaultId)
-				require.NoError(t, err)
-				for i := uint32(0); i < params.Layers*2; i++ {
-					require.Equal(t, *expectedOrders[i], allStatefulOrders[i])
-				}
 			}
+
+			// Vault should place its initial orders.
+			initialOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
+			require.Len(t, initialOrders, int(params.Layers*2))
+
+			// Advance to next block with no price updates / order matches and vault should not refresh its orders.
+			msgSender.Clear()
+			ctx = tApp.AdvanceToBlock(uint32(tApp.GetBlockHeight())+1, testapp.AdvanceToBlockOptions{})
+			require.Equal(
+				t,
+				initialOrders,
+				tApp.App.ClobKeeper.GetAllStatefulOrders(ctx),
+			)
+
+			// Advance to next block with price updates and vault should replace its old orders with new ones.
+			msgSender.Clear()
+			marketPrice, err := tApp.App.PricesKeeper.GetMarketPrice(ctx, tc.vaultId.Number)
+			require.NoError(t, err)
+			msgUpdateMarketPrices := &pricestypes.MsgUpdateMarketPrices{
+				MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
+					{
+						MarketId: tc.vaultId.Number,
+						Price:    marketPrice.Price * 2,
+					},
+				},
+			}
+			ctx = tApp.AdvanceToBlock(
+				uint32(tApp.GetBlockHeight())+1,
+				testapp.AdvanceToBlockOptions{
+					DeliverTxsOverride: [][]byte{
+						testtx.MustGetTxBytes(msgUpdateMarketPrices),
+					},
+				},
+			)
+			newOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
+			require.Len(t, newOrders, int(params.Layers*2))
+			for i, newOrder := range newOrders {
+				require.Equal(
+					t,
+					*tc.vaultId.GetClobOrderId(initialOrders[i].OrderId.ClientId ^ 1),
+					newOrder.OrderId,
+				)
+			}
+
+			// Advance to next block where vault orders have expired and vaults should place new orders.
+			ctx = tApp.AdvanceToBlock(
+				uint32(tApp.GetBlockHeight())+1,
+				testapp.AdvanceToBlockOptions{
+					BlockTime: ctx.BlockTime().Add(
+						time.Second * time.Duration(params.OrderExpirationSeconds+1),
+					),
+				},
+			)
+			newOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
+			require.Len(t, newOrders, int(params.Layers*2))
 		})
 	}
 }
@@ -796,7 +828,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 				return &clobtypes.Order{
 					OrderId: clobtypes.OrderId{
 						SubaccountId: *tc.vaultId.ToSubaccountId(),
-						ClientId:     tApp.App.VaultKeeper.GetVaultClobOrderClientId(ctx, side, layer),
+						ClientId:     vaulttypes.GetVaultClobOrderClientId(side, layer),
 						OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 						ClobPairId:   tc.vaultId.Number,
 					},
@@ -890,13 +922,13 @@ func TestGetVaultClobOrderIds(t *testing.T) {
 			for i := uint32(0); i < tc.layers; i++ {
 				expectedOrderIds[2*i] = &clobtypes.OrderId{
 					SubaccountId: *tc.vaultId.ToSubaccountId(),
-					ClientId:     tApp.App.VaultKeeper.GetVaultClobOrderClientId(ctx, clobtypes.Order_SIDE_SELL, uint8(i)),
+					ClientId:     vaulttypes.GetVaultClobOrderClientId(clobtypes.Order_SIDE_SELL, uint8(i)),
 					OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 					ClobPairId:   tc.vaultId.Number,
 				}
 				expectedOrderIds[2*i+1] = &clobtypes.OrderId{
 					SubaccountId: *tc.vaultId.ToSubaccountId(),
-					ClientId:     tApp.App.VaultKeeper.GetVaultClobOrderClientId(ctx, clobtypes.Order_SIDE_BUY, uint8(i)),
+					ClientId:     vaulttypes.GetVaultClobOrderClientId(clobtypes.Order_SIDE_BUY, uint8(i)),
 					OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 					ClobPairId:   tc.vaultId.Number,
 				}
@@ -915,83 +947,29 @@ func TestGetVaultClobOrderIds(t *testing.T) {
 	}
 }
 
-func TestGetVaultClobOrderClientId(t *testing.T) {
-	tests := map[string]struct {
-		/* --- Setup --- */
-		// side.
-		side clobtypes.Order_Side
-		// block height.
-		blockHeight int64
-		// layer.
-		layer uint8
+func TestGetSetMostRecentClientIds(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.VaultKeeper
+	vault0 := constants.Vault_Clob0
+	clientIds0 := []uint32{111, 222, 333, 444}
+	vault1 := constants.Vault_Clob1
+	clientIds1 := []uint32{0, 1, 987654321, 555666, 3453, 1010101010}
 
-		/* --- Expectations --- */
-		// Expected client ID.
-		expectedClientId uint32
-	}{
-		"Buy, Block Height Odd, Layer 1": {
-			side:             clobtypes.Order_SIDE_BUY, // 0<<31
-			blockHeight:      1,                        // 1<<30
-			layer:            1,                        // 1<<22
-			expectedClientId: 0<<31 | 1<<30 | 1<<22,
-		},
-		"Buy, Block Height Even, Layer 1": {
-			side:             clobtypes.Order_SIDE_BUY, // 0<<31
-			blockHeight:      2,                        // 0<<30
-			layer:            1,                        // 1<<22
-			expectedClientId: 0<<31 | 0<<30 | 1<<22,
-		},
-		"Sell, Block Height Odd, Layer 2": {
-			side:             clobtypes.Order_SIDE_SELL, // 1<<31
-			blockHeight:      1,                         // 1<<30
-			layer:            2,                         // 2<<22
-			expectedClientId: 1<<31 | 1<<30 | 2<<22,
-		},
-		"Sell, Block Height Even, Layer 2": {
-			side:             clobtypes.Order_SIDE_SELL, // 1<<31
-			blockHeight:      2,                         // 0<<30
-			layer:            2,                         // 2<<22
-			expectedClientId: 1<<31 | 0<<30 | 2<<22,
-		},
-		"Buy, Block Height Even, Layer Max Uint8": {
-			side:             clobtypes.Order_SIDE_BUY, // 0<<31
-			blockHeight:      123456,                   // 0<<30
-			layer:            math.MaxUint8,            // 255<<22
-			expectedClientId: 0<<31 | 0<<30 | 255<<22,
-		},
-		"Sell, Block Height Odd, Layer 0": {
-			side:             clobtypes.Order_SIDE_SELL, // 1<<31
-			blockHeight:      12345654321,               // 1<<30
-			layer:            0,                         // 0<<22
-			expectedClientId: 1<<31 | 1<<30 | 0<<22,
-		},
-		"Sell, Block Height Odd (negative), Layer 202": {
-			side: clobtypes.Order_SIDE_SELL, // 1<<31
-			// Negative block height shouldn't happen but blockHeight
-			// is represented as int64.
-			blockHeight:      -678987, // 1<<30
-			layer:            202,     // 202<<22
-			expectedClientId: 1<<31 | 1<<30 | 202<<22,
-		},
-		"Buy, Block Height Even (zero), Layer 157": {
-			side:             clobtypes.Order_SIDE_SELL, // 1<<31
-			blockHeight:      0,                         // 0<<30
-			layer:            157,                       // 157<<22
-			expectedClientId: 1<<31 | 0<<30 | 157<<22,
-		},
-	}
+	// Returns empty array if doesn't exist.
+	require.Empty(t, k.GetMostRecentClientIds(ctx, vault0))
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).Build()
-			ctx := tApp.InitChain()
+	// Set client IDs of vault0 and verify.
+	k.SetMostRecentClientIds(ctx, vault0, []uint32{})
+	require.Empty(t, k.GetMostRecentClientIds(ctx, vault0))
+	k.SetMostRecentClientIds(ctx, vault0, clientIds0)
+	require.Equal(t, clientIds0, k.GetMostRecentClientIds(ctx, vault0))
 
-			clientId := tApp.App.VaultKeeper.GetVaultClobOrderClientId(
-				ctx.WithBlockHeight(tc.blockHeight),
-				tc.side,
-				tc.layer,
-			)
-			require.Equal(t, tc.expectedClientId, clientId)
-		})
-	}
+	// Set client IDs of vault1 and verify.
+	k.SetMostRecentClientIds(ctx, vault1, []uint32{})
+	require.Empty(t, k.GetMostRecentClientIds(ctx, vault1))
+	k.SetMostRecentClientIds(ctx, vault1, clientIds1)
+	require.Equal(t, clientIds1, k.GetMostRecentClientIds(ctx, vault1))
+	k.SetMostRecentClientIds(ctx, vault1, clientIds0)
+	require.Equal(t, clientIds0, k.GetMostRecentClientIds(ctx, vault1))
 }

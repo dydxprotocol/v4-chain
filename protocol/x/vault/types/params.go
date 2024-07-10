@@ -14,7 +14,7 @@ func DefaultParams() Params {
 		SpreadBufferPpm:                  1_500,                        // 15 bps
 		SkewFactorPpm:                    2_000_000,                    // 2
 		OrderSizePctPpm:                  100_000,                      // 10%
-		OrderExpirationSeconds:           2,                            // 2 seconds
+		OrderExpirationSeconds:           10,                           // 10 seconds
 		ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000), // 1_000 USDC
 	}
 }

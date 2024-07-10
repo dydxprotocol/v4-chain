@@ -33,6 +33,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 				panic(err)
 			}
 		}
+		k.SetMostRecentClientIds(ctx, *vault.VaultId, vault.MostRecentClientIds)
 		k.AddVaultToAddressStore(ctx, *vault.VaultId)
 	}
 }
