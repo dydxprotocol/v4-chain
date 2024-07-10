@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
@@ -28,6 +29,7 @@ type BankKeeper interface {
 	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
 
 type BlockTimeKeeper interface {
@@ -36,6 +38,12 @@ type BlockTimeKeeper interface {
 
 type PricesKeeper interface {
 	GetAllMarketPrices(ctx sdk.Context) []prices.MarketPrice
+}
+
+type PerpetualsKeeper interface {
+	GetAllPerpetuals(ctx sdk.Context) []perptypes.Perpetual
+	GetInsuranceFundModuleAddress(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error)
+	IsIsolatedPerpetual(ctx sdk.Context, perpetualId uint32) (bool, error)
 }
 
 // ICS4Wrapper defines the expected ICS4Wrapper for middleware
