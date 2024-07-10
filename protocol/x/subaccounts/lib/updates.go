@@ -299,6 +299,7 @@ func CalculateUpdatedPerpetualPositions(
 			positionsMap[update.PerpetualId] = &types.PerpetualPosition{
 				PerpetualId:  update.PerpetualId,
 				Quantums:     dtypes.NewIntFromBigInt(update.GetBigQuantums()),
+				QuoteBalance: dtypes.ZeroInt(),
 				FundingIndex: perpInfo.Perpetual.FundingIndex,
 			}
 		}
@@ -363,6 +364,7 @@ func GetRiskForSubaccount(
 			perpInfo.Price,
 			perpInfo.LiquidityTier,
 			pos.GetBigQuantums(),
+			pos.GetQuoteBalance(),
 		)
 		risk.AddInPlace(r)
 	}

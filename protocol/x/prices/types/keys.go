@@ -16,4 +16,7 @@ const (
 
 	// MarketPriceKeyPrefix is the prefix to retrieve all MarketPrices
 	MarketPriceKeyPrefix = "Price:"
+
+	// NextIDKey is the key for the next market ID
+	NextMarketIDKey = "NextMarketID"
 )

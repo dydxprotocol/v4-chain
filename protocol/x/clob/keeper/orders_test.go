@@ -860,7 +860,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			for _, order := range tc.existingOrders {
 				if order.IsStatefulOrder() {
 					ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, blockHeight)
-					ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+					ks.ClobKeeper.AddStatefulOrderIdExpiration(
 						ctx,
 						order.MustGetUnixGoodTilBlockTime(),
 						order.GetOrderId(),
@@ -881,7 +881,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			// by the time PlaceOrder was called, as PlaceOrder is called in PrepareCheckState for stateful orders.
 			if tc.order.IsStatefulOrder() {
 				ks.ClobKeeper.SetLongTermOrderPlacement(ctx, tc.order, blockHeight)
-				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+				ks.ClobKeeper.AddStatefulOrderIdExpiration(
 					ctx,
 					tc.order.MustGetUnixGoodTilBlockTime(),
 					tc.order.GetOrderId(),
@@ -903,7 +903,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			// Verify test expectations.
 			require.ErrorIs(t, err, tc.expectedErr)
 			statefulOrderPlacement, _ := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, tc.order.OrderId)
-			statefulOrderIds := ks.ClobKeeper.GetStatefulOrdersTimeSlice(ctx, tc.order.MustGetUnixGoodTilBlockTime())
+			statefulOrderIds := ks.ClobKeeper.GetStatefulOrderIdExpirations(ctx, tc.order.MustGetUnixGoodTilBlockTime())
 			if err == nil {
 				require.Equal(t, tc.expectedOrderStatus, orderStatus)
 				require.Equal(t, tc.expectedFilledSize, orderSizeOptimisticallyFilledFromMatching)

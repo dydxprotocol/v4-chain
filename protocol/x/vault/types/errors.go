@@ -85,19 +85,4 @@ var (
 		16,
 		"TotalShares does not match sum of OwnerShares",
 	)
-	ErrInvalidWithdrawalAmount = errorsmod.Register(
-		ModuleName,
-		17,
-		"Withdrawal amount is invalid",
-	)
-	ErrVaultNotFound = errorsmod.Register(
-		ModuleName,
-		18,
-		"Vault not found",
-	)
-	ErrOwnerShareNotFound = errorsmod.Register(
-		ModuleName,
-		19,
-		"Owner share not found",
-	)
 )
