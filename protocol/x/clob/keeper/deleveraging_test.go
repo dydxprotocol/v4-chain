@@ -542,6 +542,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 							0,
 							big.NewInt(50_000_000), // 0.5 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -554,6 +555,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(50_000_000), // 0.5 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -722,6 +724,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							1,
 							big.NewInt(1_000_000_000), // 1 ETH
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -1120,6 +1123,7 @@ func TestProcessDeleveraging(t *testing.T) {
 						0,
 						big.NewInt(-90_000_000), // -0.9 BTC
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 			},
@@ -1134,6 +1138,7 @@ func TestProcessDeleveraging(t *testing.T) {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(90_000_000), // 0.9 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1169,10 +1174,12 @@ func TestProcessDeleveraging(t *testing.T) {
 						0,
 						big.NewInt(-100_000_000), // -1 BTC
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 					testutil.CreateSinglePerpetualPosition(
 						1,
 						big.NewInt(-10_000_000_000), // -10 ETH
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1192,6 +1199,7 @@ func TestProcessDeleveraging(t *testing.T) {
 					testutil.CreateSinglePerpetualPosition(
 						1,
 						big.NewInt(-10_000_000_000), // -10 ETH
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1587,6 +1595,7 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 						0,
 						big.NewInt(-100_000_000), // -1 BTC
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 			},
@@ -1606,6 +1615,7 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(100_000_000),
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},

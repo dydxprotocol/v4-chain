@@ -124,7 +124,7 @@ func TestGetRiskForSubaccount(t *testing.T) {
 			subaccount: types.Subaccount{
 				Id: &subaccountId,
 				PerpetualPositions: []*types.PerpetualPosition{
-					testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0)),
+					testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0), big.NewInt(0)),
 				},
 				AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(100)),
 			},
@@ -142,8 +142,8 @@ func TestGetRiskForSubaccount(t *testing.T) {
 			subaccount: types.Subaccount{
 				Id: &subaccountId,
 				PerpetualPositions: []*types.PerpetualPosition{
-					testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0)),
-					testutil.CreateSinglePerpetualPosition(2, big.NewInt(-25), big.NewInt(0)),
+					testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0), big.NewInt(0)),
+					testutil.CreateSinglePerpetualPosition(2, big.NewInt(-25), big.NewInt(0), big.NewInt(0)),
 				},
 				AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(110)),
 			},
@@ -176,7 +176,7 @@ func TestGetRiskForSubaccount_Panic(t *testing.T) {
 	subaccount := types.Subaccount{
 		Id: &types.SubaccountId{Owner: "test", Number: 1},
 		PerpetualPositions: []*types.PerpetualPosition{
-			testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0)),
+			testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0), big.NewInt(0)),
 		},
 		AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(100)),
 	}

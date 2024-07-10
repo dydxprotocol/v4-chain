@@ -192,10 +192,12 @@ func TestGenesisState_Validate(t *testing.T) {
 								2, // out of order.
 								big.NewInt(1_000),
 								big.NewInt(0),
+								big.NewInt(0),
 							),
 							testutil.CreateSinglePerpetualPosition(
 								1,
 								big.NewInt(1_000),
+								big.NewInt(0),
 								big.NewInt(0),
 							),
 						},
@@ -216,6 +218,7 @@ func TestGenesisState_Validate(t *testing.T) {
 							testutil.CreateSinglePerpetualPosition(
 								0,
 								big.NewInt(0), // quantum cannot be zero.
+								big.NewInt(0),
 								big.NewInt(0),
 							),
 						},

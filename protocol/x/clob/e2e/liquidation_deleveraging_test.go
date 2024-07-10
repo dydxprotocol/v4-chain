@@ -183,6 +183,7 @@ func TestLiquidationConfig(t *testing.T) {
 							0,
 							big.NewInt(-90_000_000), // -0.9 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -198,6 +199,7 @@ func TestLiquidationConfig(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(90_000_000), // 0.9 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -245,6 +247,7 @@ func TestLiquidationConfig(t *testing.T) {
 							0,
 							big.NewInt(-90_000_000), // -0.9 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -260,6 +263,7 @@ func TestLiquidationConfig(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(90_000_000), // 0.9 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -307,6 +311,7 @@ func TestLiquidationConfig(t *testing.T) {
 							0,
 							big.NewInt(-90_000_000), // -0.9 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -322,6 +327,7 @@ func TestLiquidationConfig(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(90_000_000), // 0.9 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -373,6 +379,7 @@ func TestLiquidationConfig(t *testing.T) {
 							0,
 							big.NewInt(-90_000_000), // -0.9 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -388,6 +395,7 @@ func TestLiquidationConfig(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(90_000_000), // 0.9 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -446,6 +454,7 @@ func TestLiquidationConfig(t *testing.T) {
 							0,
 							big.NewInt(-90_000_000), // -0.9 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -461,6 +470,7 @@ func TestLiquidationConfig(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(-10_000_000), // -0.1 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -518,6 +528,7 @@ func TestLiquidationConfig(t *testing.T) {
 							0,
 							big.NewInt(10_000_000), // 0.1 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -533,6 +544,7 @@ func TestLiquidationConfig(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(90_000_000), // 0.9 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -732,6 +744,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							0,
 							big.NewInt(-75_000_000), // -0.75 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -747,6 +760,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(75_000_000), // 0.75 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -832,6 +846,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							0,
 							big.NewInt(-75_000_000), // -0.75 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -847,6 +862,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(75_000_000), // 0.75 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -922,6 +938,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							0,
 							big.NewInt(-75_000_000), // -0.75 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -977,6 +994,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							0,
 							// Deleveraging fails for remaining amount.
 							big.NewInt(-50_000_000), // -0.5 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},

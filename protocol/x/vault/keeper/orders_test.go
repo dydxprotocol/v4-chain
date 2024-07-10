@@ -760,6 +760,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 									tc.perpetual.Params.Id,
 									tc.vaultInventoryBaseQuantums,
 									big.NewInt(0),
+									big.NewInt(0),
 								),
 							)
 						}
