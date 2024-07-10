@@ -78,7 +78,7 @@ export default class CandleModel extends Model {
 
   startingOpenInterest!: string;
 
-  midBookPriceOpen!: number;
+  orderbookMidPriceOpen?: number;
 
-  midBookPriceClose!: number;
+  orderbookMidPriceClose?: number;
 }

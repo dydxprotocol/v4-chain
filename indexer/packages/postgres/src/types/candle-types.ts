@@ -12,8 +12,8 @@ export interface CandleCreateObject {
   usdVolume: string;
   trades: number;
   startingOpenInterest: string;
-  bookMidPriceOpen: number;
-  bookMidPriceClose: number;
+  orderbookMidPriceOpen?: number;
+  orderbookMidPriceClose?: number;
 }
 
 export interface CandleUpdateObject {
@@ -26,8 +26,8 @@ export interface CandleUpdateObject {
   usdVolume?: string;
   trades?: number;
   startingOpenInterest?: string;
-  bookMidPriceOpen?: number;
-  bookMidPriceClose?: number;
+  orderbookMidPriceOpen?: number;
+  orderbookMidPriceClose?: number;
 }
 
 export enum CandleResolution {
