@@ -123,12 +123,12 @@ func (k Keeper) CreateAndStoreNewDaiYieldEpochParams(ctx sdk.Context) error {
 		return err
 	}
 
-	tDAISupply, tradingDaiMinted, err := k.MintYieldGeneratedDuringEpoch(ctx)
+	tDAISupply, tradingDaiMinted, yieldCollectedByInsuranceFund, err := k.MintYieldGeneratedDuringEpoch(ctx)
 	if err != nil {
 		return err
 	}
 
-	yieldParams := k.CreateNewDaiYieldEpochParams(ctx, tDAISupply, tradingDaiMinted)
+	yieldParams := k.CreateNewDaiYieldEpochParams(ctx, tDAISupply, tradingDaiMinted, yieldCollectedByInsuranceFund)
 
 	k.SetDaiYieldEpochParams(ctx, newEpoch%types.DAI_YIELD_ARRAY_SIZE, yieldParams)
 
@@ -137,9 +137,8 @@ func (k Keeper) CreateAndStoreNewDaiYieldEpochParams(ctx sdk.Context) error {
 	return nil
 }
 
-func (k Keeper) MintYieldGeneratedDuringEpoch(ctx sdk.Context) (*big.Int, *big.Int, error) {
+func (k Keeper) MintYieldGeneratedDuringEpoch(ctx sdk.Context) (*big.Int, *big.Int, *big.Int, error) {
 
-	// get sDAI supply
 	sDAISupplyCoins := k.bankKeeper.GetSupply(ctx, types.SDaiDenom)
 	sDAISupply := sDAISupplyCoins.Amount.BigInt()
 
@@ -148,11 +147,11 @@ func (k Keeper) MintYieldGeneratedDuringEpoch(ctx sdk.Context) (*big.Int, *big.I
 
 	tradingDAIAfterYield, err := k.GetTradingDAIFromSDAIAmount(ctx, sDAISupply)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	if tradingDAIAfterYield.Cmp(tDAISupply) <= 0 {
-		return nil, nil, errorsmod.Wrap(
+		return nil, nil, nil, errorsmod.Wrap(
 			types.ErrInvalidSDAIConversionRate,
 			"Trading DAI supply is less than the sDAI supply",
 		)
@@ -164,13 +163,84 @@ func (k Keeper) MintYieldGeneratedDuringEpoch(ctx sdk.Context) (*big.Int, *big.I
 	if err := k.bankKeeper.MintCoins(
 		ctx, types.PoolAccount, tradingDAICoins,
 	); err != nil {
-		return nil, nil, errorsmod.Wrap(err, "failed to mint new trading DAI")
+		return nil, nil, nil, errorsmod.Wrap(err, "failed to mint new trading DAI")
 	}
 
-	return tDAISupply, tradingDaiToMint, nil
+	yieldCollectedByInsuranceFund, err := k.CollectYieldForInsuranceFunds(ctx, tradingDaiToMint, tDAISupply)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return tDAISupply, tradingDaiToMint, yieldCollectedByInsuranceFund, nil
 }
 
-func (k Keeper) CreateNewDaiYieldEpochParams(ctx sdk.Context, tradingDaiSupplyBeforeNewEpoch *big.Int, tradingDaiMinted *big.Int) types.DaiYieldEpochParams {
+func (k Keeper) CollectYieldForInsuranceFunds(ctx sdk.Context, tradingDaiMinted *big.Int, tradingDaiSupplyBeforeNewEpoch *big.Int) (*big.Int, error) {
+
+	perpetuals := k.perpetualsKeeper.GetAllPerpetuals(ctx)
+
+	totalYieldCollected := big.NewInt(0)
+
+	collectedYieldForCrossMarketInsuranceFund := false
+
+	for _, perpetual := range perpetuals {
+		isIsolated, err := k.perpetualsKeeper.IsIsolatedPerpetual(ctx, perpetual.Params.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		if !isIsolated && collectedYieldForCrossMarketInsuranceFund {
+			continue
+		}
+
+		insuranceFundModuleAddress, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetual.Params.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		yieldCollected, err := k.CollectYieldForInsuranceFund(ctx, insuranceFundModuleAddress, tradingDaiMinted, tradingDaiSupplyBeforeNewEpoch)
+		if err != nil {
+			return nil, err
+		}
+
+		totalYieldCollected.Add(totalYieldCollected, yieldCollected)
+
+		if !isIsolated {
+			collectedYieldForCrossMarketInsuranceFund = true
+		}
+
+	}
+
+	return totalYieldCollected, nil
+}
+
+func (k Keeper) CollectYieldForInsuranceFund(ctx sdk.Context, address sdk.AccAddress, tradingDaiMinted *big.Int, tradingDaiSupplyBeforeNewEpoch *big.Int) (*big.Int, error) {
+
+	if tradingDaiSupplyBeforeNewEpoch.Cmp(big.NewInt(0)) == 0 {
+		return big.NewInt(0), nil
+	}
+
+	balance := k.bankKeeper.GetBalance(ctx, address, types.TradingDAIDenom)
+
+	bigBalance := balance.Amount.BigInt()
+
+	if bigBalance.Cmp(big.NewInt(0)) == 0 {
+		return big.NewInt(0), nil
+	}
+
+	// yield = (balance * tradingDaiMinted) / tradingDaiSupplyBeforeNewEpoch
+	yield := bigBalance.Mul(bigBalance, tradingDaiMinted)
+	yield = yield.Div(yield, tradingDaiSupplyBeforeNewEpoch)
+
+	yieldCoins := sdk.NewCoins(sdk.NewCoin(types.TradingDAIDenom, sdkmath.NewIntFromBigInt(yield)))
+
+	if err := k.bankKeeper.SendCoins(ctx, authtypes.NewModuleAddress(types.PoolAccount), address, yieldCoins); err != nil {
+		return nil, errorsmod.Wrap(err, "failed to send yield to the insurance fund")
+	}
+
+	return yield, nil
+}
+
+func (k Keeper) CreateNewDaiYieldEpochParams(ctx sdk.Context, tradingDaiSupplyBeforeNewEpoch *big.Int, tradingDaiMinted *big.Int, yieldCollectedByInsuranceFund *big.Int) types.DaiYieldEpochParams {
 
 	marketPrices := k.pricesKeeper.GetAllMarketPrices(ctx)
 
@@ -183,7 +253,7 @@ func (k Keeper) CreateNewDaiYieldEpochParams(ctx sdk.Context, tradingDaiSupplyBe
 	yieldParams := types.DaiYieldEpochParams{
 		TradingDaiMinted:               tradingDaiMinted.String(),
 		TotalTradingDaiPreMint:         tradingDaiSupplyBeforeNewEpoch.String(),
-		TotalTradingDaiClaimedForEpoch: "0",
+		TotalTradingDaiClaimedForEpoch: yieldCollectedByInsuranceFund.String(),
 		BlockNumber:                    uint64(ctx.BlockHeight()),
 		EpochMarketPrices:              marketPricesPtrs,
 	}

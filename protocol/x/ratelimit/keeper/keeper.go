@@ -31,6 +31,7 @@ type (
 		bankKeeper       types.BankKeeper
 		blockTimeKeeper  types.BlockTimeKeeper
 		pricesKeeper     types.PricesKeeper
+		perpetualsKeeper types.PerpetualsKeeper
 		ics4Wrapper      types.ICS4Wrapper
 
 		// the addresses capable of executing MsgSetLimitParams message.
@@ -45,6 +46,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
 	pricesKeeper types.PricesKeeper,
+	perpetualsKeeper types.PerpetualsKeeper,
 	ics4Wrapper types.ICS4Wrapper,
 	authorities []string,
 ) *Keeper {
@@ -55,6 +57,7 @@ func NewKeeper(
 		bankKeeper:       bankKeeper,
 		blockTimeKeeper:  blockTimeKeeper,
 		pricesKeeper:     pricesKeeper,
+		perpetualsKeeper: perpetualsKeeper,
 		ics4Wrapper:      ics4Wrapper,
 		authorities:      lib.UniqueSliceToSet(authorities),
 	}
