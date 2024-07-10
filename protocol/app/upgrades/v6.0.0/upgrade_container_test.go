@@ -1,16 +1,18 @@
 package v_6_0_0_test
 
 import (
-	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 	"testing"
 	"time"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
+
 	"github.com/cosmos/gogoproto/proto"
 	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	v_6_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v6.0.0"
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
