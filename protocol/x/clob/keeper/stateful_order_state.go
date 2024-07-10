@@ -230,6 +230,7 @@ func (k Keeper) RemoveExpiredStatefulOrders(ctx sdk.Context, blockTime time.Time
 			[]byte(fmt.Sprintf(types.StatefulOrdersExpirationsKeyPrefix, sdk.FormatTimeString(blockTime))),
 		),
 	)
+	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var orderId types.OrderId
 		k.cdc.MustUnmarshal(it.Value(), &orderId)
