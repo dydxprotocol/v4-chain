@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
@@ -22,6 +23,10 @@ import (
 	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"go.uber.org/zap"
+)
+
+var (
+	GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
 )
 
 func removeStatefulFOKOrders(ctx sdk.Context, k clobtypes.ClobKeeper) {
@@ -52,8 +57,8 @@ func removeStatefulFOKOrders(ctx sdk.Context, k clobtypes.ClobKeeper) {
 func setMarketMapParams(ctx sdk.Context, mmk marketmapkeeper.Keeper) {
 	err := mmk.SetParams(ctx, marketmaptypes.Params{
 		// todo fill out these fields
-		MarketAuthorities: nil,
-		Admin:             "",
+		MarketAuthorities: []string{GovAuthority},
+		Admin:             GovAuthority,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to set x/mm params %v", err))

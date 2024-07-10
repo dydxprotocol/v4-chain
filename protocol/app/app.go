@@ -622,7 +622,7 @@ func New(
 
 	app.GovKeeper = govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
 		),
 	)
 
@@ -653,7 +653,7 @@ func New(
 	// Create ICA Host Keeper
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec,
-		keys[icahosttypes.StoreKey], // key
+		keys[icahosttypes.StoreKey],                 // key
 		app.getSubspace(icahosttypes.SubModuleName), // paramSpace
 		app.IBCKeeper.ChannelKeeper,                 // ics4Wrapper, may be replaced with middleware such as ics29 fee
 		app.IBCKeeper.ChannelKeeper,                 // channelKeeper
@@ -905,7 +905,7 @@ func New(
 	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
 
 	app.MarketMapKeeper = *marketmapmodulekeeper.NewKeeper(
-		runtime.NewKVStoreService(storetypes.NewKVStoreKey(marketmapmoduletypes.StoreKey)),
+		runtime.NewKVStoreService(keys[marketmapmoduletypes.StoreKey]),
 		appCodec,
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 	)
