@@ -390,12 +390,3 @@ func (s *PreBlockTestSuite) getValidatorAddr(name string) sdk.ConsAddress {
 		return constants.BobConsAddress
 	}
 }
-
-// func (s *PreBlockTestSuite) setMarketPrices(prices pricestypes.MarketPriceUpdates) error {
-// 	for _, price := range prices.MarketPriceUpdates {
-// 		if err := s.pricesKeeper.UpdateMarketPrice(s.ctx, price); err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
