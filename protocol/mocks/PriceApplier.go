@@ -43,22 +43,6 @@ func (_m *PriceApplier) ApplyPricesFromVoteExtensions(ctx types.Context, req *ab
 	return r0, r1
 }
 
-// GetPricesForValidator provides a mock function with given fields: validator
-func (_m *PriceApplier) GetPricesForValidator(validator types.ConsAddress) map[string]*big.Int {
-	ret := _m.Called(validator)
-
-	var r0 map[string]*big.Int
-	if rf, ok := ret.Get(0).(func(types.ConsAddress) map[string]*big.Int); ok {
-		r0 = rf(validator)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]*big.Int)
-		}
-	}
-
-	return r0
-}
-
 type mockConstructorTestingTNewPriceApplier interface {
 	mock.TestingT
 	Cleanup(func())

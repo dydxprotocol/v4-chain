@@ -6,7 +6,6 @@ import (
 	"math/big"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
-	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	ptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +17,7 @@ type PriceWriter struct {
 	va VoteAggregator
 
 	// pk is the prices keeper that is used to write prices to state.
-	pk pk.Keeper
+	pk PriceApplierPricesKeeper
 
 	// logger
 	logger log.Logger
@@ -34,15 +33,11 @@ type PriceApplier interface {
 	// prices aggregated from vote-extensions are returned if no errors are encountered in execution,
 	// otherwise an error is returned + nil prices.
 	ApplyPricesFromVoteExtensions(ctx sdk.Context, req *abci.RequestFinalizeBlock) (map[string]*big.Int, error)
-
-	// GetPriceForValidator gets the prices reported by a given validator. This method depends
-	// on the prices from the latest set of aggregated votes.
-	GetPricesForValidator(validator sdk.ConsAddress) map[string]*big.Int
 }
 
 func NewPriceWriter(
 	va VoteAggregator,
-	pk pk.Keeper,
+	pk PriceApplierPricesKeeper,
 	voteExtensionCodec codec.VoteExtensionCodec,
 	extendedCommitCodec codec.ExtendedCommitCodec,
 	logger log.Logger,
@@ -132,8 +127,4 @@ func (pw *PriceWriter) ApplyPricesFromVoteExtensions(ctx sdk.Context, req *abci.
 	}
 	return prices, nil
 
-}
-
-func (pw *PriceWriter) GetPricesForValidator(validator sdk.ConsAddress) map[string]*big.Int {
-	return pw.va.GetPriceForValidator(validator)
 }
