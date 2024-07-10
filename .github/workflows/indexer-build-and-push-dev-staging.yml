@@ -6,53 +6,14 @@ on: # yamllint disable-line rule:truthy
       - main
       - 'release/indexer/v[0-9]+.[0-9]+.x'  # e.g. release/indexer/v0.1.x
       - 'release/indexer/v[0-9]+.x'  # e.g. release/indexer/v1.x
+      - 'adam/ct-973-add-midbookopen-and-midbookclose-values-to-candles'
     # TODO(DEC-837): Customize github build and push to ECR by service with paths
 
 jobs:
-  # Build and push to dev
-  call-build-and-push-ecs-services-dev:
-    name: (Dev) Build and Push ECS Services
-    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
-    with:
-      ENVIRONMENT: dev
-    secrets: inherit
-
-  # Build and push to dev2
-  call-build-and-push-ecs-services-dev2:
-    name: (Dev2) Build and Push ECS Services
-    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
-    with:
-      ENVIRONMENT: dev2
-    secrets: inherit
-
-  # Build and push to dev3
-  call-build-and-push-ecs-services-dev3:
-    name: (Dev3) Build and Push ECS Services
-    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
-    with:
-      ENVIRONMENT: dev3
-    secrets: inherit
-
-  # Build and push to dev4
-  call-build-and-push-ecs-services-dev4:
-    name: (Dev4) Build and Push ECS Services
-    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
-    with:
-      ENVIRONMENT: dev4
-    secrets: inherit
-
   # Build and push to dev5
   call-build-and-push-ecs-services-dev5:
     name: (Dev5) Build and Push ECS Services
     uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: dev5
-    secrets: inherit
-
-  # Build and push to staging
-  call-build-and-push-ecs-services-staging:
-    name: (Staging) Build and Push ECS Services
-    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
-    with:
-      ENVIRONMENT: staging
     secrets: inherit
