@@ -213,15 +213,27 @@ func postUpgradeMarketMapperRevShareChecks(node *containertest.Node, t *testing.
 
 func postUpgradeMarketMapState(node *containertest.Node, t *testing.T) {
 	// check that the market map state has been initialized
-	marketMapResp, err := containertest.Query(node, marketmapmoduletypes.NewQueryClient, marketmapmoduletypes.QueryClient.MarketMap, &marketmapmoduletypes.MarketMapRequest{})
+	resp, err := containertest.Query(node, marketmapmoduletypes.NewQueryClient,
+		marketmapmoduletypes.QueryClient.MarketMap, &marketmapmoduletypes.MarketMapRequest{})
 	require.NoError(t, err)
-	require.NotNil(t, marketMapResp)
-	resp := marketmapmoduletypes.MarketMapResponse{}
-	err = proto.UnmarshalText(marketMapResp.String(), &resp)
+	require.NotNil(t, resp)
+	marketMapResp := marketmapmoduletypes.MarketMapResponse{}
+	err = proto.UnmarshalText(resp.String(), &marketMapResp)
 	require.NoError(t, err)
 
-	require.Equal(t, "localdydxprotocol", resp.ChainId)
-	require.Equal(t, expectedMarketMap, resp.MarketMap)
+	require.Equal(t, "localdydxprotocol", marketMapResp.ChainId)
+	require.Equal(t, expectedMarketMap, marketMapResp.MarketMap)
+
+	// check that the market map state has been initialized
+	resp, err = containertest.Query(node, marketmapmoduletypes.NewQueryClient,
+		marketmapmoduletypes.QueryClient.Params, &marketmapmoduletypes.ParamsRequest{})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	paramsResp := marketmapmoduletypes.ParamsResponse{}
+	err = proto.UnmarshalText(resp.String(), &paramsResp)
+	require.NoError(t, err)
+
+	require.Equal(t, "localdydxprotocol", paramsResp.Params)
 }
 
 var expectedMarketMap = marketmapmoduletypes.MarketMap{

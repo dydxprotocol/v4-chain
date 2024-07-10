@@ -1685,16 +1685,6 @@
         "min_num_votes_per_sample": 15
       }
     },
-    "marketmap": {
-      "last_updated": "0",
-      "market_map": {
-        "markets": {}
-      },
-      "params": {
-        "admin": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
-        "market_authorities": ["dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky"]
-      }
-    },
     "prices": {
       "market_params": [
         {

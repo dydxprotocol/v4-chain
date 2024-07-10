@@ -25,6 +25,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// GovAuthority is the module account address of x/gov.
 var GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
 func removeStatefulFOKOrders(ctx sdk.Context, k clobtypes.ClobKeeper) {
@@ -54,8 +55,8 @@ func removeStatefulFOKOrders(ctx sdk.Context, k clobtypes.ClobKeeper) {
 
 func setMarketMapParams(ctx sdk.Context, mmk marketmapkeeper.Keeper) {
 	err := mmk.SetParams(ctx, marketmaptypes.Params{
-		// todo fill out these fields
-		MarketAuthorities: []string{GovAuthority},
+		// init so that gov is the admin and a market authority
+		MarketAuthorities: []string{GovAuthority /* TODO: add skip market map authority*/},
 		Admin:             GovAuthority,
 	})
 	if err != nil {
@@ -64,6 +65,8 @@ func setMarketMapParams(ctx sdk.Context, mmk marketmapkeeper.Keeper) {
 }
 
 func migratePricesToMarketMap(ctx sdk.Context, pk pricestypes.PricesKeeper, mmk marketmapkeeper.Keeper) {
+	// fill out config with dummy variables to pass validation.  This handler is only used to run the
+	// ConvertMarketParamsToMarketMap member function.
 	h, err := dydx.NewAPIHandler(zap.NewNop(), config.APIConfig{
 		Enabled:          true,
 		Timeout:          1,
@@ -145,9 +148,9 @@ func CreateUpgradeHandler(
 
 		// Migrate x/prices params to x/marketmap Markets
 		migratePricesToMarketMap(sdkCtx, pricesKeeper, mmKeeper)
-
 		// Set x/marketmap Params
 		setMarketMapParams(sdkCtx, mmKeeper)
+
 		// Initialize the rev share module state.
 		initRevShareModuleState(sdkCtx, revShareKeeper, pricesKeeper)
 
