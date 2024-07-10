@@ -5,7 +5,7 @@ export async function up(knex: Knex): Promise<void> {
     .schema
     .alterTable('candles', (table) => {
       table.decimal('orderbookMidPriceOpen', null);
-      table.decimal('orderbookMidPriceCLose', null);
+      table.decimal('orderbookMidPriceClose', null);
     });
 }
 
