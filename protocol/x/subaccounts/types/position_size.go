@@ -124,6 +124,13 @@ func (pu PerpetualUpdate) GetBigQuantums() *big.Int {
 	return pu.BigQuantumsDelta
 }
 
+func (pu PerpetualUpdate) GetBigQuoteBalance() *big.Int {
+	if pu.BigQuoteBalanceDelta == nil {
+		return new(big.Int)
+	}
+	return pu.BigQuoteBalanceDelta
+}
+
 func (pu PerpetualUpdate) GetId() uint32 {
 	return pu.PerpetualId
 }
