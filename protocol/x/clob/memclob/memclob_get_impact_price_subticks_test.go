@@ -48,7 +48,7 @@ func TestMemClobPriceTimePriority_getImpactPriceSubticks(t *testing.T) {
 	}
 
 	subaccountsForPreciseCollatTests := []satypes.Subaccount{
-		constants.Bob_Num0_10_000USD,
+		constants.Bob_Num0_50_000USD,
 	}
 
 	// makerBids/Asks should be set close to the oralce price so as to not affect
@@ -232,7 +232,7 @@ func TestMemClobPriceTimePriority_getImpactPriceSubticks(t *testing.T) {
 			subaccounts:                 subaccountsForPreciseCollatTests,
 			makerOrders:                 makerAsks[:1], // only use single order
 			isBid:                       false,
-			impactNotionalQuoteQuantums: big.NewInt(10_000_000_000),
+			impactNotionalQuoteQuantums: big.NewInt(50_000_000_000),
 			expectedImpactPriceSubticks: big.NewRat(500_000_000, 1),
 			expectedHasEnoughLiquidity:  true,
 		},
@@ -241,7 +241,7 @@ func TestMemClobPriceTimePriority_getImpactPriceSubticks(t *testing.T) {
 			subaccounts:                 subaccountsForPreciseCollatTests,
 			makerOrders:                 makerAsks[:1], // only use single order
 			isBid:                       false,
-			impactNotionalQuoteQuantums: big.NewInt(10_001_000_000),
+			impactNotionalQuoteQuantums: big.NewInt(50_001_000_000),
 			expectedImpactPriceSubticks: nil,
 			expectedHasEnoughLiquidity:  false,
 		},
@@ -250,7 +250,7 @@ func TestMemClobPriceTimePriority_getImpactPriceSubticks(t *testing.T) {
 			subaccounts:                 subaccountsForPreciseCollatTests,
 			makerOrders:                 makerBids[:1], // only use single order
 			isBid:                       true,
-			impactNotionalQuoteQuantums: big.NewInt(10_000_000_000),
+			impactNotionalQuoteQuantums: big.NewInt(50_000_000_000),
 			expectedImpactPriceSubticks: big.NewRat(500_000_000, 1),
 			expectedHasEnoughLiquidity:  true,
 		},
@@ -259,7 +259,7 @@ func TestMemClobPriceTimePriority_getImpactPriceSubticks(t *testing.T) {
 			subaccounts:                 subaccountsForPreciseCollatTests,
 			makerOrders:                 makerBids[:1], // only use single order
 			isBid:                       true,
-			impactNotionalQuoteQuantums: big.NewInt(10_001_000_000),
+			impactNotionalQuoteQuantums: big.NewInt(50_001_000_000),
 			expectedImpactPriceSubticks: nil,
 			expectedHasEnoughLiquidity:  false,
 		},

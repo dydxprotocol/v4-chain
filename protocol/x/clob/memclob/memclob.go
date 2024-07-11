@@ -2156,39 +2156,23 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 	hasSufficientCollat := func(
 		makerOrder types.Order,
 		makerOrderRemainingSize satypes.BaseQuantums,
-		remainingImpactQuoteQuantums *big.Int,
 	) bool {
-		// Calculate the match size in units of base quantums between remainingImpactQuoteQuantums and
-		// a maker order, baseQuantums = 10^-quantumConversionExp * quoteQuantums / subticks
-		scale := new(big.Rat).SetInt(new(big.Int).Exp(
-			big.NewInt(10),
-			big.NewInt(int64(-clobPair.GetQuantumConversionExponent())),
-			nil,
-		))
-		remainingImpactBaseQuantumsRat := new(big.Rat).Mul(
-			new(big.Rat).Quo(
-				new(big.Rat).SetInt(remainingImpactQuoteQuantums),
-				new(big.Rat).SetUint64(makerOrder.GetSubticks()),
-			),
-			scale,
-		)
-		remainingImpactBaseQuantums := new(big.Int).Quo(
-			remainingImpactBaseQuantumsRat.Num(),
-			remainingImpactBaseQuantumsRat.Denom(),
-		)
+		// Collat check during impact price calculation is not precise, we aim for "good enough"
+		// Assumptions causing imprecision:
+		// 1. Each order is considered in isolation without taking into account NC/margin effects
+		// of prior hypothetical fills for the subaccount. Eg. if a maker has 2 bids in the
+		// orderbook, when we process the 2nd bid, the account's NC and margin requirements will
+		// affected by the fulfillment of the first bid.
+		// 2. We perform collat check using the makerOrderRemainingSize instead of the
+		// matchSize = min(remainingImpact, makerOrderRemainingSize). In real matching, the collat
+		// check would use the matchSize, but given assumption 1 and our goal of "good enough", we
+		// sacrifice some precision for simplicity.
 
-		matchBaseQuantums := satypes.BaseQuantums(remainingImpactBaseQuantums.Uint64())
-		if remainingImpactBaseQuantums.Cmp(makerOrderRemainingSize.ToBigInt()) >= 0 {
-			matchBaseQuantums = makerOrderRemainingSize
-		}
-
-		// Check if the maker order has sufficient collateral to fulfill the match.
 		// Instead of directly checking margin, we leverage AddOrderToOrderbookSubaccountUpdatesCheck
-		// by creating an order that would have the same collat requirements as the match.
-		// eg. a maker ask that matches 10 base quantums has the same collateral requirement
-		// as that maker placing a new 10 base ask at the same price (subticks).
+		// by creating an order that would have the same collat requirements. An equivalent order is
+		// simply a new order on the same size with the makerOrderRemainingSize.
 		equivalentOrder := types.PendingOpenOrder{
-			RemainingQuantums: matchBaseQuantums,
+			RemainingQuantums: makerOrderRemainingSize,
 			IsBuy:             makerOrder.IsBuy(),
 			Subticks:          makerOrder.GetOrderSubticks(),
 			ClobPairId:        clobPair.GetClobPairId(),
@@ -2229,7 +2213,7 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 			panic(fmt.Sprintf("getImpactPriceSubticks: maker order has no remaining amount (%+v)", makerOrder))
 		}
 
-		if !hasSufficientCollat(makerOrder, makerRemainingSize, remainingImpactQuoteQuantums) {
+		if !hasSufficientCollat(makerOrder, makerRemainingSize) {
 			makerLevelOrder, foundMakerOrder = orderbook.findNextBestLevelOrder(makerLevelOrder)
 			continue
 		}
