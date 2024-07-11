@@ -436,7 +436,10 @@ func TestMintYieldGeneratedDuringEpoch(t *testing.T) {
 
 			// Mint initial sDAI supply
 			if !tc.initialSDAISupply.IsZero() {
-				require.NoError(t, bankKeeper.MintCoins(ctx, types.PoolAccount, tc.initialSDAISupply))
+				mintingErr := bankKeeper.MintCoins(ctx, types.PoolAccount, tc.initialSDAISupply)
+				require.NoError(t, mintingErr)
+				sendingErr := bankKeeper.SendCoinsFromModuleToModule(ctx, types.PoolAccount, types.SDAIPoolAccount, tc.initialSDAISupply)
+				require.NoError(t, sendingErr)
 			}
 
 			// Mint initial tradingDAI supply

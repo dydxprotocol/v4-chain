@@ -30,6 +30,8 @@ const (
 
 	PoolAccount = ibctransfertypes.ModuleName
 
+	SDAIPoolAccount = "sDAIPoolAccount"
+
 	// This is the name of the sDAI token
 	SDaiDenom = "sDAI" // TODO: change
 

@@ -112,7 +112,7 @@ func (k Keeper) MintTradingDAIToUserAccount(
 	sDAICoins := sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewIntFromBigInt(sDAIAmount)))
 	tradingDAICoins := sdk.NewCoins(sdk.NewCoin(types.TradingDAIDenom, sdkmath.NewIntFromBigInt(tradingDAIAmount)))
 
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, userAddr, types.PoolAccount, sDAICoins); err != nil {
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, userAddr, types.SDAIPoolAccount, sDAICoins); err != nil {
 		return errorsmod.Wrap(err, "failed to send sDAI to ratelimit module")
 	}
 
@@ -153,7 +153,7 @@ func (k Keeper) WithdrawSDAIFromTradingDAI(
 		return errorsmod.Wrap(err, "failed to burn trading DAI transferred to the pool account")
 	}
 
-	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.PoolAccount, userAddr, sDAICoins); err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.SDAIPoolAccount, userAddr, sDAICoins); err != nil {
 		return errorsmod.Wrap(err, "failed to send sDAI to user account")
 	}
 

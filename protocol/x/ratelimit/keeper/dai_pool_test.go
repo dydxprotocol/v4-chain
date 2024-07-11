@@ -488,7 +488,7 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 				// Check initial balance
 				initialPoolSDAIBalance := bankKeeper.GetBalance(
 					ctx,
-					accountKeeper.GetModuleAddress(types.PoolAccount),
+					accountKeeper.GetModuleAddress(types.SDAIPoolAccount),
 					types.SDaiDenom,
 				).Amount.BigInt()
 				initialPoolTDAIBalance := bankKeeper.GetBalance(
@@ -522,7 +522,7 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 					// Verify state change
 					endingPoolSDAIBalance := bankKeeper.GetBalance(
 						ctx,
-						accountKeeper.GetModuleAddress(types.PoolAccount),
+						accountKeeper.GetModuleAddress(types.SDAIPoolAccount),
 						types.SDaiDenom,
 					).Amount.BigInt()
 					endingPoolTDAIBalance := bankKeeper.GetBalance(
@@ -687,6 +687,8 @@ func TestWithdrawSDAIFromTradingDAI(t *testing.T) {
 				sDAICoins := sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewIntFromBigInt(transfer.sDAIAmount)))
 				mintingErr := bankKeeper.MintCoins(ctx, types.PoolAccount, sDAICoins)
 				require.NoError(t, mintingErr)
+				sendingErr := bankKeeper.SendCoinsFromModuleToModule(ctx, types.PoolAccount, types.SDAIPoolAccount, sDAICoins)
+				require.NoError(t, sendingErr)
 
 				tDAICoins := sdk.NewCoins(sdk.NewCoin(types.TradingDAIDenom, sdkmath.NewIntFromBigInt(transfer.userInitialTDAIBalance)))
 
@@ -694,13 +696,13 @@ func TestWithdrawSDAIFromTradingDAI(t *testing.T) {
 				// TODO: Make sure that we also test cases, where the user does not have enought tDAI to mint the given amount of sDAI
 				mintingErr = bankKeeper.MintCoins(ctx, types.PoolAccount, tDAICoins)
 				require.NoError(t, mintingErr)
-				sendingErr := bankKeeper.SendCoinsFromModuleToAccount(ctx, types.PoolAccount, transfer.userAddr, tDAICoins)
+				sendingErr = bankKeeper.SendCoinsFromModuleToAccount(ctx, types.PoolAccount, transfer.userAddr, tDAICoins)
 				require.NoError(t, sendingErr)
 
 				// Check initial balance
 				initialPoolSDAIBalance := bankKeeper.GetBalance(
 					ctx,
-					accountKeeper.GetModuleAddress(types.PoolAccount),
+					accountKeeper.GetModuleAddress(types.SDAIPoolAccount),
 					types.SDaiDenom,
 				).Amount.BigInt()
 				initialPoolTDAIBalance := bankKeeper.GetBalance(
@@ -734,7 +736,7 @@ func TestWithdrawSDAIFromTradingDAI(t *testing.T) {
 					// Verify state change
 					endingPoolSDAIBalance := bankKeeper.GetBalance(
 						ctx,
-						accountKeeper.GetModuleAddress(types.PoolAccount),
+						accountKeeper.GetModuleAddress(types.SDAIPoolAccount),
 						types.SDaiDenom,
 					).Amount.BigInt()
 					endingPoolTDAIBalance := bankKeeper.GetBalance(
