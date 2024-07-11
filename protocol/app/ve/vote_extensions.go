@@ -206,8 +206,6 @@ func (h *VoteExtensionHandler) ValidateDaemonVE(
 	ve types.DaemonVoteExtension,
 ) error {
 	maxPairs := h.GetMaxPairs(ctx)
-	fmt.Println("maxPairs", maxPairs)
-	fmt.Println("len(ve.Prices)", len(ve.Prices))
 	if uint32(len(ve.Prices)) > maxPairs {
 		return fmt.Errorf("too many prices in daemon vote extension: %d > %d", len(ve.Prices), maxPairs)
 	}

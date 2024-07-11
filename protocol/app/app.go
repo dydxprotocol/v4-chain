@@ -226,6 +226,8 @@ type App struct {
 
 	cdc               *codec.LegacyAmino
 	appCodec          codec.Codec
+	voteCodec         vecodec.VoteExtensionCodec
+	extCodec          vecodec.ExtendedCommitCodec
 	txConfig          client.TxConfig
 	interfaceRegistry types.InterfaceRegistry
 	event             runtime.EventService
@@ -939,8 +941,8 @@ func New(
 	)
 
 	/****  ve daemon initializer ****/
-	voteCodec := vecodec.NewDefaultVoteExtensionCodec()
-	extInfoCodec := vecodec.NewDefaultExtendedCommitCodec()
+	app.voteCodec = vecodec.NewDefaultVoteExtensionCodec()
+	app.extCodec = vecodec.NewDefaultExtendedCommitCodec()
 
 	aggregatorFn := voteweighted.Median(
 		logger,
@@ -958,8 +960,8 @@ func New(
 	priceApplier := veaggregator.NewPriceWriter(
 		aggregator,
 		app.PricesKeeper,
-		voteCodec,
-		extInfoCodec,
+		app.voteCodec,
+		app.extCodec,
 		logger,
 	)
 
@@ -971,7 +973,7 @@ func New(
 	)
 
 	if !appFlags.NonValidatingFullNode {
-		app.InitVoteExtensions(logger, indexPriceCache, voteCodec, app.PricesKeeper, priceApplier)
+		app.InitVoteExtensions(logger, indexPriceCache, app.voteCodec, app.PricesKeeper, priceApplier)
 	}
 
 	/****  Module Options ****/
@@ -1218,8 +1220,8 @@ func New(
 				app.ClobKeeper,
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
-				voteCodec,
-				extInfoCodec,
+				app.voteCodec,
+				app.extCodec,
 				veValidationFn,
 			),
 		)
@@ -1245,8 +1247,8 @@ func New(
 				app.ClobKeeper,
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
-				extInfoCodec,
-				voteCodec,
+				app.extCodec,
+				app.voteCodec,
 				veValidationFn,
 			),
 		)

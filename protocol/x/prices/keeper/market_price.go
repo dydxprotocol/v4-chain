@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 	"sort"
 	"time"
@@ -76,6 +77,7 @@ func (k Keeper) UpdateMarketPrice(
 
 	// Writes to the store are delayed so that the updates are atomically applied to state.
 
+	fmt.Println("starting to update market price", marketPrice.Id, "to", marketPrice.Price)
 	// Store the modified market price.
 	b := k.cdc.MustMarshal(&marketPrice)
 	marketPriceStore.Set(lib.Uint32ToKey(marketPrice.Id), b)

@@ -14,7 +14,7 @@ import (
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
@@ -108,7 +108,6 @@ func ValidateVoteExtensions(
 		return fmt.Errorf("comet info not found")
 	}
 	commitInfo := cometInfo.GetLastCommit()
-
 	// Check that both extCommit + commit are ordered in accordance with vp/address.
 	if err := ValidateExtendedCommitAgainstLastCommit(extCommit, commitInfo); err != nil {
 		return err
@@ -183,11 +182,10 @@ func ValidateVoteExtensions(
 		if !exists {
 			continue
 		}
-		// TODO: verify this gets the pub key properly
-		pubKeyProto := v.GetPubkey()
-		var pubKey cmtprotocrypto.PublicKey
-		if err := codectypes.NewInterfaceRegistry().UnpackAny(pubKeyProto, &pubKey); err != nil {
-			return fmt.Errorf("failed to unmarshal public key: %w", err)
+
+		pubKey, err := GetPubKeyByConsAddr(v)
+		if err != nil {
+			return fmt.Errorf("failed to get public key for validator %X: %w", valConsAddr, err)
 		}
 
 		cmtPubKey, err := cryptoenc.PubKeyFromProto(pubKey)
@@ -209,6 +207,7 @@ func ValidateVoteExtensions(
 		if !cmtPubKey.VerifySignature(extSignBytes, vote.ExtensionSignature) {
 			return fmt.Errorf("failed to verify validator %X vote extension signature", valConsAddr)
 		}
+
 	}
 
 	// This check is probably unnecessary, but better safe than sorry.
@@ -280,4 +279,19 @@ func ValidateExtendedCommitAgainstLastCommit(ec abci.ExtendedCommitInfo, lc come
 	}
 
 	return nil
+}
+
+// GetPubKeyByConsAddr returns the public key of a validator given the consensus addr.
+func GetPubKeyByConsAddr(ccvalidator ccvtypes.CrossChainValidator) (cmtprotocrypto.PublicKey, error) {
+
+	consPubKey, err := ccvalidator.ConsPubKey()
+	if err != nil {
+		return cmtprotocrypto.PublicKey{}, fmt.Errorf("could not get pubkey for val %s: %w", ccvalidator.String(), err)
+	}
+	tmPubKey, err := cryptocodec.ToCmtProtoPublicKey(consPubKey)
+	if err != nil {
+		return cmtprotocrypto.PublicKey{}, err
+	}
+
+	return tmPubKey, nil
 }
