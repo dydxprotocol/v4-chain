@@ -19,7 +19,7 @@ func (k Keeper) CheckCurrentDAIYieldEpochElapsed(ctx sdk.Context) (bool, error) 
 		return true, nil
 	}
 
-	blockNumber, found := k.GetCurrentDAIYieldEpochBlockNumber(ctx, currentEpoch)
+	epochStartBlockNumber, found := k.GetCurrentDAIYieldEpochBlockNumber(ctx, currentEpoch)
 	// this case should never be reached but we return true as the epochs are malconfigured
 	// perhaps an epoch was missed
 	if !found {
@@ -29,15 +29,17 @@ func (k Keeper) CheckCurrentDAIYieldEpochElapsed(ctx sdk.Context) (bool, error) 
 		)
 	}
 
-	// get the current block number
 	currentBlockNumber := ctx.BlockHeight()
 
-	// check if the current block number is greater than the epoch block number
-	if uint64(currentBlockNumber) < blockNumber+uint64(types.DAI_YIELD_MIN_EPOCH_BLOCKS) {
+	if k.DAIYieldEpochHasElapsed(uint64(currentBlockNumber), epochStartBlockNumber) {
 		return true, nil
 	}
 
 	return false, nil
+}
+
+func (k Keeper) DAIYieldEpochHasElapsed(currentBlockNumber uint64, epochStartBlockNumber uint64) bool {
+	return currentBlockNumber >= epochStartBlockNumber+uint64(types.DAI_YIELD_MIN_EPOCH_BLOCKS)
 }
 
 func (k Keeper) CheckFirstDAIYieldEpoch(ctx sdk.Context) (*big.Int, bool) {
@@ -107,23 +109,7 @@ func (k Keeper) TransferRemainingDAIYieldToInsuranceFund(ctx sdk.Context, Tradin
 }
 
 func (k Keeper) CreateAndStoreNewDaiYieldEpochParams(ctx sdk.Context) error {
-
-	currentEpoch, found := k.GetCurrentDaiYieldEpochNumber(ctx)
-	if !found {
-		return errorsmod.Wrap(
-			types.ErrInvalidSDAIConversionRate,
-			"DAI yield epoch not found",
-		)
-	}
-
-	newEpoch := currentEpoch.Uint64() + 1
-
-	err := k.PruneOldDAIYieldEpoch(ctx, newEpoch)
-	if err != nil {
-		return err
-	}
-
-	tDAISupply, tradingDaiMinted, yieldCollectedByInsuranceFund, err := k.MintYieldGeneratedDuringEpoch(ctx)
+	tDAISupply, tradingDaiMinted, yieldCollectedByInsuranceFund, newEpoch, err := k.CalculateYieldParamsForNewEpoch(ctx)
 	if err != nil {
 		return err
 	}
@@ -137,10 +123,39 @@ func (k Keeper) CreateAndStoreNewDaiYieldEpochParams(ctx sdk.Context) error {
 	return nil
 }
 
+func (k Keeper) CalculateYieldParamsForNewEpoch(ctx sdk.Context) (*big.Int, *big.Int, *big.Int, uint64, error) {
+	tDAISupply := new(big.Int)
+	tradingDaiMinted := new(big.Int)
+	yieldCollectedByInsuranceFund := new(big.Int)
+	newEpoch := uint64(0)
+
+	currentEpoch, found := k.GetCurrentDaiYieldEpochNumber(ctx)
+
+	if found {
+		newEpoch = currentEpoch.Uint64() + 1
+
+		err := k.PruneOldDAIYieldEpoch(ctx, newEpoch)
+		if err != nil {
+			return nil, nil, nil, 0, err
+		}
+
+		tDAISupply, tradingDaiMinted, yieldCollectedByInsuranceFund, err = k.MintYieldGeneratedDuringEpoch(ctx)
+		if err != nil {
+			return nil, nil, nil, 0, err
+		}
+	}
+
+	return tDAISupply, tradingDaiMinted, yieldCollectedByInsuranceFund, newEpoch, nil
+}
+
 func (k Keeper) MintYieldGeneratedDuringEpoch(ctx sdk.Context) (*big.Int, *big.Int, *big.Int, error) {
 
 	sDAISupplyCoins := k.bankKeeper.GetSupply(ctx, types.SDaiDenom)
 	sDAISupply := sDAISupplyCoins.Amount.BigInt()
+
+	if sDAISupply.Cmp(big.NewInt(0)) <= 0 {
+		return big.NewInt(0), big.NewInt(0), big.NewInt(0), nil
+	}
 
 	tDAISupplyCoins := k.bankKeeper.GetSupply(ctx, types.TradingDAIDenom)
 	tDAISupply := tDAISupplyCoins.Amount.BigInt()

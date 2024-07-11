@@ -1171,3 +1171,106 @@ func TestIncrementCapacitiesForDenom(t *testing.T) {
 		})
 	}
 }
+
+// Setting a valid sDAI price stores the correct byte representation in the KVStore
+func TestSetSDAIPrice(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	price := big.NewInt(123456789)
+
+	// Test SetSDAIPrice
+	k.SetSDAIPrice(ctx, price)
+
+	// Test GetSDAIPrice
+	gotPrice, found := k.GetSDAIPrice(ctx)
+	require.True(t, found, "sDAI price not found in store")
+	require.Equal(t, price, gotPrice, "retrieved sDAI price does not match the set value")
+}
+
+// we should test not setting and just getting the price and expect found to be false
+func TestGetSDAIPriceWhenNotSet(t *testing.T) {
+	// Setup
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	// Test
+	price, found := k.GetSDAIPrice(ctx)
+
+	// Assertion
+	require.Nil(t, price, "Expected price to be nil when not set")
+	require.False(t, found, "Expected found to be false when price is not set")
+}
+
+// SetCurrentDaiYieldEpochNumber correctly stores the epoch number in the KVStore
+func TestSetCurrentDaiYieldEpochNumber(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	epochNumber := big.NewInt(42)
+
+	// Test SetCurrentDaiYieldEpochNumber
+	k.SetCurrentDaiYieldEpochNumber(ctx, epochNumber)
+
+	// Test GetCurrentDaiYieldEpochNumber
+	gotEpochNumber, found := k.GetCurrentDaiYieldEpochNumber(ctx)
+	require.True(t, found, "epoch number not found in store")
+	require.Equal(t, epochNumber, gotEpochNumber, "retrieved epoch number does not match the set value")
+}
+
+// GetCurrentDaiYieldEpochNumber returns found as false when the epoch number does not exist in the KVStore
+func TestGetCurrentDaiYieldEpochNumberWhenNotSet(t *testing.T) {
+	// Setup
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	// Test
+	epochNumber, found := k.GetCurrentDaiYieldEpochNumber(ctx)
+
+	// Assertion
+	require.Nil(t, epochNumber, "Expected epoch number to be nil when not set")
+	require.False(t, found, "Expected found to be false when epoch number is not set")
+}
+
+func TestSetDaiYieldEpochParams(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	index := uint64(1)
+	params := types.DaiYieldEpochParams{
+		TradingDaiMinted:               "1000",
+		TotalTradingDaiPreMint:         "5000",
+		TotalTradingDaiClaimedForEpoch: "2000",
+		BlockNumber:                    42,
+		EpochMarketPrices:              nil,
+	}
+
+	// Test SetDaiYieldEpochParams
+	k.SetDaiYieldEpochParams(ctx, index, params)
+
+	// Test GetDaiYieldEpochParams
+	gotParams, found := k.GetDaiYieldEpochParams(ctx, index)
+	require.True(t, found, "DaiYieldEpochParams not found in store")
+	require.Equal(t, params, gotParams, "retrieved DaiYieldEpochParams do not match the set value")
+}
+
+// Retrieves DaiYieldEpochParams when none exist
+func TestGetDaiYieldEpochParamsWhenNotSet(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	index := uint64(1)
+
+	// Test GetDaiYieldEpochParams
+	params, found := k.GetDaiYieldEpochParams(ctx, index)
+
+	// Assertion
+	require.False(t, found, "Expected found to be false when DaiYieldEpochParams are not set")
+	require.Equal(t, types.DaiYieldEpochParams{}, params, "Expected default DaiYieldEpochParams when not set")
+}

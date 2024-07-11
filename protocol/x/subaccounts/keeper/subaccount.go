@@ -450,39 +450,37 @@ func (k Keeper) getSettledSubaccount(
 		perpetuals[p.PerpetualId] = perpetual
 	}
 
-	subaccount = k.ClaimYieldForSubaccount(subaccount)
+	subaccount, err = k.ClaimYieldForSubaccount(subaccount)
 
 	return GetSettledSubaccountWithPerpetuals(subaccount, perpetuals)
 }
 
-
 func (k Keeper) ClaimYieldForSubaccount(
-	subaccount types.Subaccount
-) (
 	subaccount types.Subaccount,
-	err err,
+) (
+	claimedSubaccount types.Subaccount,
+	err error,
 ) {
-	epochLastClaimed := subaccount.EpochYieldLastClaimed
-	assetPositions := subaccount.AssetPositions
-	perpetualPositions := subaccount.PerpetualPositions
+	// epochLastClaimed := subaccount.EpochYieldLastClaimed
+	// assetPositions := subaccount.AssetPositions
+	// perpetualPositions := subaccount.PerpetualPositions
 
-	// TODO: Implement the two functions below
-	perpetualPrices, err := k.GetHistoricalPricesSinceEpoch(epochLastClaimed)
-	if err != nil {
-		return err
-	}
-	yieldAmount, err := k.GetYieldAmountForPositions(assetPositions, perpetualPositions, perpetualPrices)
-	if err != nil {
-		return err
-	}
+	// // TODO: Implement the two functions below
+	// perpetualPrices, err := k.GetHistoricalPricesSinceEpoch(epochLastClaimed)
+	// if err != nil {
+	// 	return subaccount, err
+	// }
+	// yieldAmount, err := k.GetYieldAmountForPositions(assetPositions, perpetualPositions, perpetualPrices)
+	// if err != nil {
+	// 	return subaccount, err
+	// }
 
-	// Transfer Yield amount 
-	currPositionSize := subaccount.GetUsdcPosition()
-	newUsdcPosition := new(big.Int).Add(currPositionSizeyieldAmount)
-	subaccount.SetUsdcAssetPosition(newUsdcPosition)
-	return subaccount
+	// // Transfer Yield amount
+	// currPositionSize := subaccount.GetUsdcPosition()
+	// newUsdcPosition := new(big.Int).Add(currPositionSize, yieldAmount)
+	// subaccount.SetUsdcAssetPosition(newUsdcPosition)
+	return subaccount, nil
 }
-
 
 // GetSettledSubaccountWithPerpetuals returns 1. a new settled subaccount given an unsettled subaccount,
 // updating the USDC AssetPosition, FundingIndex, and LastFundingPayment fields accordingly
