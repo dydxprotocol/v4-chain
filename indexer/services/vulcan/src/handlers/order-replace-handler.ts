@@ -130,6 +130,9 @@ export class OrderReplaceHandler extends Handler {
       // This is not expected because the replaced orders either have different order IDs or
       // should have been removed before being placed again
       stats.increment(`${config.SERVICE_NAME}.replace_order_handler.place_order_result_replaced_order`, 1);
+      await this.removeReplacedOrderFromOrderbook(
+        placeOrderResult,
+      );
     }
 
     // If an order was removed from the Orders cache, update the orderbook levels cache.
@@ -492,7 +495,29 @@ export class OrderReplaceHandler extends Handler {
   }
 
   /**
-   * Updates the orderbook and sends a message to socks for the change in the orderbook.
+   * Removes the replaced order from the orderbook.
+   * @param placeOrderResult
+   */
+  protected async removeReplacedOrderFromOrderbook(
+    placeOrderResult: PlaceOrderResult,
+  ): Promise<void> {
+    const updatedQuantums: number = await runFuncWithTimingStat(
+      this.updatePriceLevelsCache(
+        placeOrderResult.oldOrder!,
+        placeOrderResult.oldTotalFilledQuantums!,
+      ),
+      this.generateTimingStatsOptions('update_price_level_cache'),
+    );
+    logger.info({
+      at: 'OrderReplaceHandler#removeReplacedOrderFromOrderbook',
+      message: 'Removed replaced order from orderbook price levels cache',
+      updatedQuantums,
+      placeOrderResult,
+    });
+  }
+
+  /**
+   * Removes old order from orderbook and sends a message to socks for the change in the orderbook.
    * @param removeOrderResult
    * @param perpetualMarket
    */
@@ -504,7 +529,8 @@ export class OrderReplaceHandler extends Handler {
   ): Promise<void> {
     const updatedQuantums: number = await runFuncWithTimingStat(
       this.updatePriceLevelsCache(
-        removeOrderResult,
+        removeOrderResult.removedOrder!,
+        removeOrderResult.totalFilledQuantums!,
       ),
       this.generateTimingStatsOptions('update_price_level_cache'),
     );
@@ -530,44 +556,46 @@ export class OrderReplaceHandler extends Handler {
 
   /**
    * Update orderbookLevelsCache, and assumes that the order is resting on the book
-   * @param removeOrderResult
+   * @param removedOrder
+   * @param removedTotalFilledQuantums
    * @returns
    */
   // eslint-disable-next-line @typescript-eslint/require-await
   protected async updatePriceLevelsCache(
-    removeOrderResult: RemoveOrderResult,
+    removedOrder: RedisOrder,
+    removedTotalFilledQuantums: number,
   ): Promise<number> {
-    const redisOrder: RedisOrder = removeOrderResult.removedOrder!;
     const orderbookLevel = await OrderbookLevelsCache.getOrderbookLevel(
-      redisOrder.ticker,
-      protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
-      redisOrder.price,
+      removedOrder.ticker,
+      protocolTranslations.protocolOrderSideToOrderSide(removedOrder.order!.side),
+      removedOrder.price,
       redisClient,
     );
     logger.info({
       at: 'OrderReplaceHandler#updatePriceLevelsCache',
       message: 'Orderbook price level before removing old order',
       orderbookLevel,
-      removeOrderResult,
+      removedOrder,
+      removedTotalFilledQuantums,
     });
     return OrderbookLevelsCache.updatePriceLevel({
-      ticker: redisOrder.ticker,
-      side: protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
-      humanPrice: redisOrder.price,
+      ticker: removedOrder.ticker,
+      side: protocolTranslations.protocolOrderSideToOrderSide(removedOrder.order!.side),
+      humanPrice: removedOrder.price,
       sizeDeltaInQuantums: this.getSizeDeltaInQuantums(
-        removeOrderResult,
-        redisOrder,
+        removedTotalFilledQuantums,
+        removedOrder,
       ),
       client: redisClient,
     });
   }
 
   protected getSizeDeltaInQuantums(
-    removeOrderResult: RemoveOrderResult,
+    removedTotalFilledQuantums: number,
     redisOrder: RedisOrder,
   ): string {
     const sizeDelta: Big = Big(
-      removeOrderResult.totalFilledQuantums!.toString(),
+      removedTotalFilledQuantums.toString(),
     ).minus(
       redisOrder.order!.quantums.toString(),
     );
@@ -579,9 +607,8 @@ export class OrderReplaceHandler extends Handler {
       logger.info({
         at: 'OrderReplaceHandler#getSizeDeltaInQuantums',
         message: 'Total filled of order exceeds quantums of order',
-        totalFilled: removeOrderResult.totalFilledQuantums!.toString(),
+        totalFilled: removedTotalFilledQuantums.toString(),
         quantums: redisOrder.order!.quantums.toString(),
-        removeOrderResult,
         redisOrder,
       });
       return '0';
