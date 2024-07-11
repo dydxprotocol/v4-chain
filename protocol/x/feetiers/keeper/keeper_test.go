@@ -75,7 +75,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 			3,
 		},
 		"vault is top tier regardless of stats": {
-			constants.Vault_Clob0.ToModuleAccountAddress(),
+			constants.Vault_Clob_0.ToModuleAccountAddress(),
 			&stattypes.UserStats{
 				TakerNotional: 10,
 				MakerNotional: 10,
@@ -92,7 +92,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
-			tApp.App.VaultKeeper.AddVaultToAddressStore(ctx, constants.Vault_Clob0)
+			tApp.App.VaultKeeper.AddVaultToAddressStore(ctx, constants.Vault_Clob_0)
 			k := tApp.App.FeeTiersKeeper
 			err := k.SetPerpetualFeeParams(
 				ctx,

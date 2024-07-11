@@ -235,13 +235,13 @@ func TestAddVaultToAddressStore(t *testing.T) {
 	}{
 		"Add 1 vault to vault address store": {
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob0,
+				constants.Vault_Clob_0,
 			},
 		},
 		"Add 2 vaults to vault address store": {
 			vaultIds: []vaulttypes.VaultId{
-				constants.Vault_Clob0,
-				constants.Vault_Clob1,
+				constants.Vault_Clob_0,
+				constants.Vault_Clob_1,
 			},
 		},
 	}
@@ -273,7 +273,7 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 			func(genesisState *vaulttypes.GenesisState) {
 				genesisState.Vaults = []*vaulttypes.Vault{
 					{
-						VaultId: &constants.Vault_Clob0,
+						VaultId: &constants.Vault_Clob_0,
 						TotalShares: &vaulttypes.NumShares{
 							NumShares: dtypes.NewInt(10),
 						},
@@ -294,7 +294,7 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 			func(genesisState *satypes.GenesisState) {
 				genesisState.Subaccounts = []satypes.Subaccount{
 					{
-						Id: constants.Vault_Clob0.ToSubaccountId(),
+						Id: constants.Vault_Clob_0.ToSubaccountId(),
 						AssetPositions: []*satypes.AssetPosition{
 							{
 								AssetId:  assettypes.AssetUsdc.Id,
@@ -345,8 +345,8 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 	}).Build()
 	ctx := tApp.InitChain()
 
-	vaultClob0Address := constants.Vault_Clob0.ToModuleAccountAddress()
-	vaultClob1Address := constants.Vault_Clob1.ToModuleAccountAddress()
+	vaultClob0Address := constants.Vault_Clob_0.ToModuleAccountAddress()
+	vaultClob1Address := constants.Vault_Clob_1.ToModuleAccountAddress()
 	aliceAddress := constants.AliceAccAddress.String()
 
 	// Vault in genesis state should be in best fee tier.
@@ -371,7 +371,7 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 			FeeAmt:               constants.TestFeeCoins_5Cents,
 		},
 		&vaulttypes.MsgDepositToVault{
-			VaultId:       &constants.Vault_Clob1,
+			VaultId:       &constants.Vault_Clob_1,
 			SubaccountId:  &constants.Alice_Num0,
 			QuoteQuantums: dtypes.NewInt(1),
 		},

@@ -427,7 +427,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 				OrderExpirationSeconds:           4,         // 4 seconds
 				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 			},
-			vaultId:                    constants.Vault_Clob1,
+			vaultId:                    constants.Vault_Clob_1,
 			vaultAssetQuoteQuantums:    big.NewInt(2_000_000_000), // 2,000 USDC
 			vaultInventoryBaseQuantums: big.NewInt(-250_000_000),  // -0.25 ETH
 			clobPair:                   constants.ClobPair_Eth,
@@ -849,15 +849,15 @@ func TestGetVaultClobOrderIds(t *testing.T) {
 		expectedErr error
 	}{
 		"Vault Clob 0, 2 layers": {
-			vaultId: constants.Vault_Clob0,
+			vaultId: constants.Vault_Clob_0,
 			layers:  2,
 		},
 		"Vault Clob 1, 7 layers": {
-			vaultId: constants.Vault_Clob1,
+			vaultId: constants.Vault_Clob_1,
 			layers:  7,
 		},
 		"Vault Clob 0, 0 layers": {
-			vaultId: constants.Vault_Clob0,
+			vaultId: constants.Vault_Clob_0,
 			layers:  0,
 		},
 		"Vault Clob 797 (non-existent clob pair), 2 layers": {
