@@ -2170,7 +2170,7 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 
 		// Instead of directly checking margin, we leverage AddOrderToOrderbookSubaccountUpdatesCheck
 		// by creating an order that would have the same collat requirements. An equivalent order is
-		// simply a new order on the same size with the makerOrderRemainingSize.
+		// simply a new order at the same price/side and size = makerOrderRemainingSize.
 		equivalentOrder := types.PendingOpenOrder{
 			RemainingQuantums: makerOrderRemainingSize,
 			IsBuy:             makerOrder.IsBuy(),
