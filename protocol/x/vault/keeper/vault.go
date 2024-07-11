@@ -141,11 +141,14 @@ func (k Keeper) GetAllVaults(ctx sdk.Context) []*types.Vault {
 
 		vaultParams, _ := k.GetVaultParams(ctx, *vaultId)
 
+		mostRecentClientIds := k.GetMostRecentClientIds(ctx, *vaultId)
+
 		vaults = append(vaults, &types.Vault{
-			VaultId:     vaultId,
-			TotalShares: &totalShares,
-			OwnerShares: allOwnerShares,
-			VaultParams: &vaultParams,
+			VaultId:             vaultId,
+			TotalShares:         &totalShares,
+			OwnerShares:         allOwnerShares,
+			VaultParams:         &vaultParams,
+			MostRecentClientIds: mostRecentClientIds,
 		})
 	}
 	return vaults
