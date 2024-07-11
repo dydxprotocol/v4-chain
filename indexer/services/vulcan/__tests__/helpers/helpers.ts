@@ -1,6 +1,7 @@
 import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
 import { OrderSide } from '@dydxprotocol-indexer/postgres';
 import {
+  OpenOrdersCache,
   redisTestConstants,
   OrderbookLevelsCache,
   CanceledOrdersCache,
@@ -55,6 +56,17 @@ export async function expectOrderbookLevelCache(
     redisClient,
   );
   expect(level).toEqual(size);
+}
+
+export async function expectOpenOrderIds(
+  clobPairId: string,
+  openOrderIds: string[],
+): Promise<void> {
+  const openOrders: string[] = await OpenOrdersCache.getOpenOrderIds(clobPairId, redisClient);
+  expect(openOrders).toHaveLength(openOrderIds.length);
+  openOrderIds.forEach((orderId: string) => {
+    expect(openOrders).toContain(orderId);
+  });
 }
 
 export function setTransactionHash(

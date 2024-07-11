@@ -8,6 +8,7 @@ import {
   QUOTE_CURRENCY_ATOMIC_RESOLUTION,
 } from '@dydxprotocol-indexer/postgres';
 import {
+  OpenOrdersCache,
   OrderbookLevels,
   OrderbookLevelsCache,
 } from '@dydxprotocol-indexer/redis';
@@ -46,6 +47,15 @@ export default async function runTask(): Promise<void> {
       },
     );
     statOrderbook(crossedOrderbookLevels, market, 'crossed_orderbook');
+    const openOrders: string[] = await OpenOrdersCache.getOpenOrderIds(
+      market.clobPairId,
+      redisClient,
+    );
+    stats.gauge(
+      `${config.SERVICE_NAME}.open_orders_count`,
+      openOrders.length,
+      { clob_pair_id: market.clobPairId },
+    );
   }
 }
 

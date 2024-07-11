@@ -33,6 +33,7 @@ import {
   TimeInForce, blockHeightRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
+  OpenOrdersCache,
   OrderbookLevelsCache,
   OrderData,
   OrdersCache,
@@ -66,6 +67,7 @@ import { redisClient } from '../../src/helpers/redis/redis-controller';
 
 import {
   expectCanceledOrderStatus,
+  expectOpenOrderIds,
   expectOrderbookLevelCache,
   handleOrderUpdate,
 } from '../helpers/helpers';
@@ -428,7 +430,18 @@ describe('OrderRemoveHandler', () => {
         OrderTable.create(removedOrder),
         // Must be done after adding orders to all caches to overwrite the ordersDataCache
         setOrderToRestingOnOrderbook(removedRedisOrder),
+        // Add the order to open orders cache to test that it's removed by the handler
+        OpenOrdersCache.addOpenOrder(
+          removedRedisOrder.id,
+          testConstants.defaultPerpetualMarket.clobPairId,
+          redisClient,
+        ),
       ]);
+
+      await expectOpenOrderIds(
+        testConstants.defaultPerpetualMarket.clobPairId,
+        [removedRedisOrder.id],
+      );
 
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
@@ -456,6 +469,8 @@ describe('OrderRemoveHandler', () => {
         expectOrdersCacheEmpty(expectedOrderUuid),
         expectOrdersDataCacheEmpty(removedOrderId),
         expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
+        // Check order is removed from open orders cache
+        expectOpenOrderIds(testConstants.defaultPerpetualMarket.clobPairId, []),
         expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.CANCELED),
       ]);
 
@@ -853,7 +868,6 @@ describe('OrderRemoveHandler', () => {
             orderId: removedRedisOrder.order!.orderId!,
             totalFilledQuantums: removedRedisOrder.order!.quantums.add(Long.fromValue(100, true)),
           },
-          orderReplace: undefined,
         };
         await handleOrderUpdate(exceedsFilledUpdate);
 
@@ -1007,7 +1021,6 @@ describe('OrderRemoveHandler', () => {
         const fullyFilledUpdate: redisTestConstants.OffChainUpdateOrderUpdateUpdateMessage = {
           orderPlace: undefined,
           orderRemove: undefined,
-          orderReplace: undefined,
           orderUpdate: {
             orderId: removedRedisOrder.order!.orderId!,
             totalFilledQuantums: removedRedisOrder.order!.quantums,
@@ -1557,7 +1570,6 @@ describe('OrderRemoveHandler', () => {
       const exceedsFilledUpdate: redisTestConstants.OffChainUpdateOrderUpdateUpdateMessage = {
         orderPlace: undefined,
         orderRemove: undefined,
-        orderReplace: undefined,
         orderUpdate: {
           orderId: removedRedisOrder.order!.orderId!,
           totalFilledQuantums: defaultQuantums.add(Long.fromValue(100, true)),
@@ -2221,7 +2233,7 @@ describe('OrderRemoveHandler', () => {
       const subaccountProducerRecord: ProducerRecord = producerSendSpy.mock.calls[0][0];
       expectWebsocketSubaccountMessage(
         subaccountProducerRecord,
-        [expectedSubaccountMessage],
+        expectedSubaccountMessage,
         defaultKafkaHeaders,
       );
     }
