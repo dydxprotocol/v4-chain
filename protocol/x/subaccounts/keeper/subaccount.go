@@ -22,6 +22,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	assetstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -586,7 +587,14 @@ func (k Keeper) calculateSubaccountPositionValueFromMarketPrices(
 	positionValue.Add(positionValue, assetPositionValue)
 	positionValue.Add(positionvalue, perpetualPositionValue)
 
-	// TODO: total value will be in quotequantums. Make sure to conver this to unit of minted tokens
+	// Convert position value from quantums to full coin
+	// TODO: [YBCP-14] Handle conversions more appropriately
+	quoteAssetId := assetstypes.AssetUsdc.Id
+	convertedQuantums, positionValue, err := k.assetsKeeper.ConvertAssetToFullCoin(ctx, positionValue)
+	if err != nil {
+		return err
+	}
+	return positionValue
 }
 
 func (k Keeper) getPositionValueFromAssets(

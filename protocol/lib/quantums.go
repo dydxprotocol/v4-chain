@@ -155,3 +155,26 @@ func FundingRateToIndex(
 		priceExponent,
 	)
 }
+
+
+// QuoteQuantumsToFullCoinAmount converts a base quantum amount to the
+// equivalent amount in full coins. Rounds down if result is not an integer.
+// Calculates the following:
+//
+// `fullCoinAmount = floor(bigQuantums * 10^(atomicResolution))`
+func QuoteQuantumsToFullCoinAmount(
+	bigQuantums *big.Int,
+	atomicResolution int32,
+) (
+	fullCoinAmount *big.Int
+) {
+	ratResult := new(big.Rat).SetInt(bigQuantums)
+
+	ratResult.Mul(
+		ratResult,
+		RatPow10(atomicResolution),
+	)
+
+	fullCoinAmount := BigRatRound(ratResult, false)
+	return fullCoinAmount
+}

@@ -317,6 +317,51 @@ func (k Keeper) ConvertAssetToCoin(
 	return bigConvertedQuantums, sdk.NewCoin(asset.Denom, sdkmath.NewIntFromBigInt(bigConvertedDenomAmount)), nil
 }
 
+
+// ConvertAssetToFullCoin converts the given `assetId` and `quantums` 
+// to the amount of full coins given by the atomic resolution.
+// fullCointAmount = quantums * 10^(atomic_resolution)
+//
+// If the resulting full coin amount is not an integer, it is rounded
+// down and `convertedQuantums` of the equal value is returned. If
+// quantums amount is negative or 0, returns 0 as a result.
+func (k Keeper) ConvertAssetToFullCoin(
+	ctx sdk.Context,
+	assetId uint32,
+	quantums *big.Int,
+) (
+	convertedQuantums *big.Int,
+	fullCoinAmount *big.Int,
+	err error,
+) {
+	asset, exists := k.GetAsset(ctx, assetId)
+	if !exists {
+		return nil, nil, errorsmod.Wrap(
+			types.ErrAssetDoesNotExist, lib.UintToString(assetId))
+	}
+
+	if lib.AbsInt32(asset.AtomicResolution) > types.MaxAssetUnitExponentAbs {
+		return nil, nil, errorsmod.Wrapf(
+			types.ErrInvalidAssetAtomicResolution,
+			"asset: %+v",
+			asset,
+		)
+	}
+
+	if quantums.Sign() <= 0 {
+		return big.NewInt(0), big.NewInt(0), nil
+	}
+
+	fullCoinAmount := lib.QuoteQuantumsToFullCoinAmount(quantums, asset.AtomicResolution)
+
+	convertedQuantums := lib.BigMulPow10(
+		fullCoinAmount,
+		asset.AtomicResolution,
+	)
+
+	return convertedQuantums, fullCoinAmount, nil
+}
+
 // IsPositionUpdatable returns whether position of an asset is updatable.
 func (k Keeper) IsPositionUpdatable(
 	ctx sdk.Context,
