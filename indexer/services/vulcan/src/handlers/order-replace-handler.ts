@@ -160,6 +160,12 @@ export class OrderReplaceHandler extends Handler {
         headers,
         sendOrderbookMessage,
       );
+    } else {
+      logger.info({
+        at: 'OrderReplaceHandler#handle',
+        message: 'Did not remove old order from orderbook',
+        removeOrderResult,
+      });
     }
 
     // TODO(CLOB-597): Remove this logic and log erorrs once best-effort-open is not sent for
