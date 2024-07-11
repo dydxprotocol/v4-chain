@@ -54,16 +54,9 @@ func TestPriceWriter(t *testing.T) {
 			1: []byte("price1"),
 		}
 
-		vote1, err := vetesting.CreateExtendedVoteInfo(
+		_, extCommitInfoBz, err := vetesting.CreateSingleValidatorExtendedCommitInfo(
 			constants.AliceConsAddress,
 			prices,
-			voteCodec,
-		)
-		require.NoError(t, err)
-
-		_, extCommitInfoBz, err := vetesting.CreateExtendedCommitInfo(
-			[]cometabci.ExtendedVoteInfo{vote1},
-			extCodec,
 		)
 		require.NoError(t, err)
 
@@ -94,17 +87,9 @@ func TestPriceWriter(t *testing.T) {
 			1: priceBz,
 		}
 
-		vote1, err := vetesting.CreateExtendedVoteInfo(
+		_, extCommitInfoBz, err := vetesting.CreateSingleValidatorExtendedCommitInfo(
 			constants.AliceConsAddress,
 			prices,
-			voteCodec,
-		)
-
-		require.NoError(t, err)
-
-		_, extCommitInfoBz, err := vetesting.CreateExtendedCommitInfo(
-			[]cometabci.ExtendedVoteInfo{vote1},
-			extCodec,
 		)
 		require.NoError(t, err)
 
@@ -148,23 +133,24 @@ func TestPriceWriter(t *testing.T) {
 			1: price2Bz,
 		}
 
-		vote1, err := vetesting.CreateExtendedVoteInfo(
-			constants.AliceConsAddress,
-			prices1,
-			voteCodec,
+		vote1, err := vetesting.CreateSignedExtendedVoteInfo(
+			vetesting.NewDefaultSignedVeInfo(
+				constants.AliceConsAddress,
+				prices1,
+			),
 		)
 		require.NoError(t, err)
 
-		vote2, err := vetesting.CreateExtendedVoteInfo(
-			constants.BobConsAddress,
-			prices2,
-			voteCodec,
+		vote2, err := vetesting.CreateSignedExtendedVoteInfo(
+			vetesting.NewDefaultSignedVeInfo(
+				constants.BobConsAddress,
+				prices2,
+			),
 		)
 		require.NoError(t, err)
 
 		_, extCommitInfoBz, err := vetesting.CreateExtendedCommitInfo(
 			[]cometabci.ExtendedVoteInfo{vote1, vote2},
-			extCodec,
 		)
 		require.NoError(t, err)
 

@@ -215,17 +215,17 @@ func TestPrepareProposalHandler(t *testing.T) {
 
 			request: func() *cometabci.RequestPrepareProposal {
 
-				valVoteInfo, err := vetesting.CreateExtendedVoteInfo(
-					constants.AliceConsAddress,
-					constants.ValidVEPrice,
-					votecodec,
+				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.AliceConsAddress,
+						constants.ValidVEPrice,
+					),
 				)
 
 				require.NoError(t, err)
 
 				commitInfo, bz, err := vetesting.CreateExtendedCommitInfo(
 					[]cometabci.ExtendedVoteInfo{valVoteInfo},
-					extcodec,
 				)
 				require.NoError(t, err)
 
@@ -264,17 +264,17 @@ func TestPrepareProposalHandler(t *testing.T) {
 
 			request: func() *cometabci.RequestPrepareProposal {
 
-				valVoteInfo, err := vetesting.CreateExtendedVoteInfo(
-					constants.AliceConsAddress,
-					constants.ValidVEPrice,
-					votecodec,
+				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.AliceConsAddress,
+						constants.ValidVEPrice,
+					),
 				)
 
 				require.NoError(t, err)
 
 				commitInfo, bz, err := vetesting.CreateExtendedCommitInfo(
 					[]cometabci.ExtendedVoteInfo{valVoteInfo},
-					extcodec,
 				)
 				require.NoError(t, err)
 
@@ -335,17 +335,17 @@ func TestPrepareProposalHandler(t *testing.T) {
 
 			request: func() *cometabci.RequestPrepareProposal {
 
-				valVoteInfo, err := vetesting.CreateExtendedVoteInfo(
-					constants.AliceConsAddress,
-					constants.ValidVEPrice,
-					votecodec,
+				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.AliceConsAddress,
+						constants.ValidVEPrice,
+					),
 				)
 
 				require.NoError(t, err)
 
 				commitInfo, bz, err := vetesting.CreateExtendedCommitInfo(
 					[]cometabci.ExtendedVoteInfo{valVoteInfo},
-					extcodec,
 				)
 
 				require.NoError(t, err)
@@ -387,17 +387,17 @@ func TestPrepareProposalHandler(t *testing.T) {
 					constants.Msg_Send_TxBytes,            // others.
 				}
 
-				valVoteInfo, err := vetesting.CreateExtendedVoteInfo(
-					constants.AliceConsAddress,
-					constants.ValidVEPrice,
-					votecodec,
+				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.AliceConsAddress,
+						constants.ValidVEPrice,
+					),
 				)
 
 				require.NoError(t, err)
 
 				commitInfo, bz, err := vetesting.CreateExtendedCommitInfo(
 					[]cometabci.ExtendedVoteInfo{valVoteInfo},
-					extcodec,
 				)
 
 				require.NoError(t, err)
@@ -441,24 +441,25 @@ func TestPrepareProposalHandler(t *testing.T) {
 					constants.Msg_Send_TxBytes,            // others.
 				}
 
-				valVoteInfoAlice, err := vetesting.CreateExtendedVoteInfo(
-					constants.AliceConsAddress,
-					constants.ValidVEPrice,
-					votecodec,
+				valVoteInfoAlice, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.AliceConsAddress,
+						constants.ValidVEPrice,
+					),
 				)
 				require.NoError(t, err)
 
-				valVoteInfoBob, err := vetesting.CreateExtendedVoteInfo(
-					constants.BobConsAddress,
-					constants.ValidVEPrice,
-					votecodec,
+				valVoteInfoBob, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.BobConsAddress,
+						constants.ValidVEPrice,
+					),
 				)
 
 				require.NoError(t, err)
 
 				commitInfo, bz, err := vetesting.CreateExtendedCommitInfo(
 					[]cometabci.ExtendedVoteInfo{valVoteInfoAlice, valVoteInfoBob},
-					extcodec,
 				)
 
 				require.NoError(t, err)
@@ -502,24 +503,25 @@ func TestPrepareProposalHandler(t *testing.T) {
 					constants.Msg_Send_TxBytes,            // others.
 				}
 
-				valVoteInfoAlice, err := vetesting.CreateExtendedVoteInfo(
-					constants.AliceConsAddress,
-					constants.ValidVEPrice,
-					votecodec,
+				valVoteInfoAlice, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.AliceConsAddress,
+						constants.ValidVEPrice,
+					),
 				)
 				require.NoError(t, err)
 
-				valVoteInfoBob, err := vetesting.CreateExtendedVoteInfo(
-					constants.BobConsAddress,
-					constants.ValidVEPrice,
-					votecodec,
+				valVoteInfoBob, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.BobConsAddress,
+						constants.ValidVEPrice,
+					),
 				)
 
 				require.NoError(t, err)
 
 				commitInfo, bz, err := vetesting.CreateExtendedCommitInfo(
 					[]cometabci.ExtendedVoteInfo{valVoteInfoAlice, valVoteInfoBob},
-					extcodec,
 				)
 
 				require.NoError(t, err)
