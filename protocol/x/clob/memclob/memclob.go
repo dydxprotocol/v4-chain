@@ -2155,6 +2155,7 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 ) {
 	hasSufficientCollat := func(
 		makerOrder types.Order,
+		makerOrderRemainingSize satypes.BaseQuantums,
 		remainingImpactQuoteQuantums *big.Int,
 	) bool {
 		// Calculate the match size in units of base quantums between remainingImpactQuoteQuantums and
@@ -2177,8 +2178,8 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 		)
 
 		matchBaseQuantums := satypes.BaseQuantums(remainingImpactBaseQuantums.Uint64())
-		if remainingImpactBaseQuantums.Cmp(makerOrder.GetBaseQuantums().ToBigInt()) >= 0 {
-			matchBaseQuantums = makerOrder.GetBaseQuantums()
+		if remainingImpactBaseQuantums.Cmp(makerOrderRemainingSize.ToBigInt()) >= 0 {
+			matchBaseQuantums = makerOrderRemainingSize
 		}
 
 		// Check if the maker order has sufficient collateral to fulfill the match.
@@ -2223,14 +2224,14 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 	for remainingImpactQuoteQuantums.Sign() > 0 && foundMakerOrder {
 		makerOrder := makerLevelOrder.Value.Order
 
-		if !hasSufficientCollat(makerOrder, remainingImpactQuoteQuantums) {
-			makerLevelOrder, foundMakerOrder = orderbook.findNextBestLevelOrder(makerLevelOrder)
-			continue
-		}
-
 		makerRemainingSize, makerHasRemainingSize := m.GetOrderRemainingAmount(ctx, makerOrder)
 		if !makerHasRemainingSize {
 			panic(fmt.Sprintf("getImpactPriceSubticks: maker order has no remaining amount (%+v)", makerOrder))
+		}
+
+		if !hasSufficientCollat(makerOrder, makerRemainingSize, remainingImpactQuoteQuantums) {
+			makerLevelOrder, foundMakerOrder = orderbook.findNextBestLevelOrder(makerLevelOrder)
+			continue
 		}
 
 		quoteQuantumsIfFullyMatched := types.FillAmountToQuoteQuantums(
