@@ -57,6 +57,8 @@ describe('candleHelper', () => {
 
   const defaultPrice: string = defaultTradeContent.price;
   const defaultPrice2: string = '15000';
+  const defaultOrderBookMidPriceOpen: string = '12000';
+  const defaultOrderBookMidPriceClose: string = '13000';
   const defaultCandle: CandleCreateObject = {
     startedAt: '',
     ticker: testConstants.defaultPerpetualMarket.ticker,
@@ -71,6 +73,8 @@ describe('candleHelper', () => {
     ).toString(),
     trades: 2,
     startingOpenInterest: '0',
+    orderbookMidPriceClose: defaultOrderBookMidPriceClose,
+    orderbookMidPriceOpen: defaultOrderBookMidPriceOpen,
   };
   const startedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
     testConstants.createdDateTime,
@@ -180,6 +184,8 @@ describe('candleHelper', () => {
     const startingOpenInterest: string = '200';
     const baseTokenVolume: string = '10';
     const usdVolume: string = Big(existingPrice).times(baseTokenVolume).toString();
+    const orderbookMidPriceClose = '7500';
+    const orderbookMidPriceOpen = '8000';
     await Promise.all(
       _.map(Object.values(CandleResolution), (resolution: CandleResolution) => {
         const currentStartedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
@@ -199,6 +205,8 @@ describe('candleHelper', () => {
           usdVolume,
           trades: existingTrades,
           startingOpenInterest,
+          orderbookMidPriceClose,
+          orderbookMidPriceOpen,
         });
       }),
     );
@@ -234,6 +242,8 @@ describe('candleHelper', () => {
           usdVolume: Big(defaultCandle.usdVolume).plus(usdVolume).toString(),
           trades: existingTrades + 2,
           startingOpenInterest,
+          orderbookMidPriceClose: '6000',
+          orderbookMidPriceOpen,
         };
       },
     );
@@ -261,6 +271,8 @@ describe('candleHelper', () => {
         usdVolume: '10000',
         trades: existingTrades,
         startingOpenInterest: existingStartingOpenInterest,
+        orderbookMidPriceClose: '7500',
+        orderbookMidPriceOpen: '8000',
       },
       '100', // open interest
       false, // block contains trades
@@ -277,6 +289,8 @@ describe('candleHelper', () => {
         usdVolume: '0',
         trades: 0,
         startingOpenInterest: '100',
+        orderbookMidPriceClose: '7500',
+        orderbookMidPriceOpen: '8000',
       },
     ],
     [
@@ -293,6 +307,8 @@ describe('candleHelper', () => {
         usdVolume: '10000',
         trades: existingTrades,
         startingOpenInterest: existingStartingOpenInterest,
+        orderbookMidPriceClose: '3000',
+        orderbookMidPriceOpen: '3500',
       },
       '100', // open interest
       true, // block contains trades
@@ -318,6 +334,8 @@ describe('candleHelper', () => {
         usdVolume: '0',
         trades: 0,
         startingOpenInterest: existingStartingOpenInterest,
+        orderbookMidPriceClose: '5000',
+        orderbookMidPriceOpen: '4000',
       },
       '100', // open interest
       true, // block contains trades
@@ -350,6 +368,8 @@ describe('candleHelper', () => {
         usdVolume: '10000',
         trades: existingTrades,
         startingOpenInterest: existingStartingOpenInterest,
+        orderbookMidPriceClose: '5000',
+        orderbookMidPriceOpen: '6000',
       },
       '100', // open interest
       false, // block contains trades
@@ -366,6 +386,8 @@ describe('candleHelper', () => {
         usdVolume: '10000',
         trades: existingTrades,
         startingOpenInterest: existingStartingOpenInterest,
+        orderbookMidPriceClose: '5000',
+        orderbookMidPriceOpen: '6000',
       },
       false, // contains kafka messages
     ],
