@@ -53,8 +53,13 @@ func (k Keeper) GetTradingDAIFromSDAIAmount(ctx sdk.Context, sDAI *big.Int) (*bi
 		return nil, errors.New("sDAI price not found")
 	}
 
+	if sDAIPrice.Cmp(big.NewInt(0)) == 0 {
+		return nil, errors.New("sDAI price is zero")
+	}
+
 	// Calculate shares = assets * RAY / chi. Shares and tDAI amount are equivalent
 	tDAI := new(big.Int).Mul(sDAI, new(big.Int).Exp(big.NewInt(types.BASE_10), big.NewInt(types.SDAI_DECIMALS), nil))
+
 	tDAI = tDAI.Div(tDAI, sDAIPrice)
 
 	return tDAI, nil
@@ -74,6 +79,10 @@ func (k Keeper) GetTradingDAIFromSDAIAmountAndRoundUp(ctx sdk.Context, sDAI *big
 	sDAIPrice, found := k.GetSDAIPrice(ctx)
 	if !found {
 		return nil, errors.New("sDAI price not found")
+	}
+
+	if sDAIPrice.Cmp(big.NewInt(0)) == 0 {
+		return nil, errors.New("sDAI price is zero")
 	}
 
 	// Calculate shares = _divup(assets * RAY / chi)
