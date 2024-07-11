@@ -175,15 +175,16 @@ export class OrderUpdateHandler extends Handler {
     sizeDeltaInQuantums: Big,
   ): Promise<number> {
     const redisOrder: RedisOrder = updateResult.order!;
+    const orderbookLevel = OrderbookLevelsCache.getOrderbookLevel(
+      redisOrder.ticker,
+      protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
+      redisOrder.price,
+      redisClient,
+    );
     logger.info({
       at: 'OrderUpdateHandler#updatePriceLevelsCache',
       message: 'Orderbook price level before order update',
-      orderbookLevel: OrderbookLevelsCache.getOrderbookLevel(
-        redisOrder.ticker,
-        protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
-        redisOrder.price,
-        redisClient,
-      ),
+      orderbookLevel,
     });
 
     return runFuncWithTimingStat(
