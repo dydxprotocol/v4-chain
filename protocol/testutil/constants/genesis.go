@@ -26,6 +26,9 @@ const GenesisState = `{
     },
     "version": {
       "app": "0"
+    },
+    "abci": {
+      "vote_extensions_enable_height": "1"
     }
   },
   "app_hash": "",
@@ -289,7 +292,7 @@ const GenesisState = `{
         "initial_val_set": [
         {
           "pub_key": {
-          "ed25519": "RrclQz9bIhkIy/gfL485g3PYMeiIku4qeo495787X10="
+          "ed25519": "ujY14AgopV907IYgPAk/5x8c9267S4fQf89nyeCPTes="
           },
           "power": "500"
         },
@@ -301,7 +304,7 @@ const GenesisState = `{
         },
         {
           "pub_key": {
-          "ed25519": "mAN6RXYxSM4MNGSIriYiS7pHuwAcOHDQAy9/wnlSzOI="
+          "ed25519": "QlG+iYe6AyYpvY1z9RNJKCVlH14Q/qSz4EjGdGCru3o="
           },
           "power": "500"
         }

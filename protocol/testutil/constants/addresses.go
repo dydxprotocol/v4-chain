@@ -21,4 +21,12 @@ var (
 	BobAddressBz     = BobPrivateKey.PubKey().Address().Bytes()
 	CarlAddressBz    = CarlPrivateKey.PubKey().Address().Bytes()
 	DaveAddressBz    = DavePrivateKey.PubKey().Address().Bytes()
+
+	AliceEthosConsAddress = sdk.ConsAddress(AliceEthosPrivateKey.PubKey().Address())
+	BobEthosConsAddress   = sdk.ConsAddress(BobEthosPrivateKey.PubKey().Address())
+	CarlEthosConsAddress  = sdk.ConsAddress(CarlEthosPrivateKey.PubKey().Address())
+
+	AliceEthosAddressBz = AliceEthosPrivateKey.PubKey().Address().Bytes()
+	BobEthosAddressBz   = BobEthosPrivateKey.PubKey().Address().Bytes()
+	CarlEthosAddressBz  = CarlEthosPrivateKey.PubKey().Address().Bytes()
 )
