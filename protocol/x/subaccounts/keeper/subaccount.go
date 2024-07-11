@@ -469,28 +469,39 @@ func (k Keeper) ClaimYieldForSubaccount(
 	yieldAmount *big.Int,
 	err error,
 ) {
-	epochLastClaimed := subaccount.SetEpochYieldLastClaimed()
 	currEpoch := k.getCurrEpoch()
-
-	firstEpochUnclaimed := epochLastClaimed + 1
-	lastPossibleEpochClaimed := currEpoch - ratelimittypes.MAX_NUM_YIELD_EPOCHS_STORED + 1
-	firstEpochUnclaimed = max(firstEpochUnclaimed, lastPossibleEpochClaimed)
-
+	lastEpochUnclaimed := k.getLastEpochClaimed(subaccount, currEpoch)
 	yieldAmount = 0
-	for epoch := firstEpochUnclaimed; epoch <= currEpoch; epoch++ {
+
+	for epoch := lastEpochUnclaimed; epoch <= currEpoch; epoch++ {
 		epochYield, err := k.calculateYieldInEpochForSubaccount(ctx, subaccount, epoch)
 		if err != nil {
 			return big.NewInt(0), err
 		}
 		// TODO: not perfectly atomic. Atomicity needed?
-		err := k.addNewYieldToStoredEpochParamsForEpoch(ctx, epoch, epochYield)
+		err = k.updateStateForSubaccountYieldClaimInEpoch(ctx, subaccount, epoch, epochYield)
 		if err != nil {
 			return big.NewInt(0), err
 		}
-		k.SetEpochYieldLastClaimed(epoch)
-		k.updateSubaccountAssetsWithNewYield(subaccount, epochYield)
 	}
 	return yieldAmount, nil
+}
+
+func (k Keeper) getLastEpochClaimed(
+	subaccount types.Subaccount,
+	currEpoch uint64,
+) (
+	lastEpochUnclaimed uint64,
+) {
+	epochLastClaimed := subaccount.GetEpochYieldLastClaimed()
+	lastEpochUnclaimed := epochLastClaimed + 1
+	lastPossibleEpochUnclaimed := 0
+	if currEpoch >= ratelimittypes.MAX_NUM_YIELD_EPOCHS_STORED  {
+		lastPossibleEpochUnclaimed = currEpoch - ratelimittypes.MAX_NUM_YIELD_EPOCHS_STORED + 1
+	}
+
+	lastEpochUnclaimed = max(lastEpochUnclaimed, lastPossibleEpochClaimed)
+	return lastEpochUnclaimed
 }
 
 func (k Keeper) calculateYieldInEpochForSubaccount(
@@ -676,6 +687,23 @@ func (k Keeper) getSubaccountYieldAtEpochFromPosition(
 	}
 	
 	return yieldAmount, nil	
+}
+
+func (k Keeper) updateStateForSubaccountYieldClaimInEpoch(
+	ctx sdk.Context, 
+	subacccount types.Subaccount, 
+	epoch uint64,
+	newYield *big.Int,
+) (
+	err error,
+) {
+	err := k.addNewYieldToStoredEpochParamsForEpoch(ctx, epoch, epochYield)
+	if err != nil {
+		return err
+	}
+	subaccount.SetEpochYieldLastClaimed(epoch)
+	k.updateSubaccountAssetsWithNewYield(subaccount, epochYield)
+	return nil
 }
 
 func (k Keeper) addNewYieldToStoredEpochParamsForEpoch(
