@@ -60,7 +60,6 @@ type SubaccountsKeeper interface {
 		assetId uint32,
 		quantums *big.Int,
 	) (err error)
-	SetSubaccount(ctx sdk.Context, subaccount satypes.Subaccount)
 	GetSubaccount(
 		ctx sdk.Context,
 		id satypes.SubaccountId,

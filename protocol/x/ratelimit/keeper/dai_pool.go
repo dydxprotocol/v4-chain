@@ -38,13 +38,15 @@ func DivideAndRoundUp(x, y *big.Int) (*big.Int, error) {
 	return result, nil
 }
 
-// Converts sDAI to corresponding amount of tDAI, implementing the following maker code
-/* 	https://etherscan.deth.net/address/0x83f20f44975d03b1b09e64809b757c47f942beea
-function deposit(uint256 assets, address receiver) external returns (uint256 shares) {
-	uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
-	shares = assets * RAY / chi;
-	_mint(assets, shares, receiver);
-}
+/*
+Converts sDAI to corresponding amount of tDAI, implementing the following maker code
+https://etherscan.deth.net/address/0x83f20f44975d03b1b09e64809b757c47f942beea
+
+	function deposit(uint256 assets, address receiver) external returns (uint256 shares) {
+		uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
+		shares = assets * RAY / chi;
+		_mint(assets, shares, receiver);
+	}
 */
 func (k Keeper) GetTradingDAIFromSDAIAmount(ctx sdk.Context, sDAI *big.Int) (*big.Int, error) {
 	// Get the current sDAI price
@@ -65,9 +67,10 @@ func (k Keeper) GetTradingDAIFromSDAIAmount(ctx sdk.Context, sDAI *big.Int) (*bi
 	return tDAI, nil
 }
 
-// Inspired by the following maker code.
 /*
-	// https://etherscan.deth.net/address/0x83f20f44975d03b1b09e64809b757c47f942beea
+Inspired by the following maker code.
+https://etherscan.deth.net/address/0x83f20f44975d03b1b09e64809b757c47f942beea
+
 	function withdraw(uint256 assets, address receiver, address owner) external returns (uint256 shares) {
 		uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
 		shares = _divup(assets * RAY, chi);
