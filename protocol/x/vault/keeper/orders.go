@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -72,78 +73,50 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 }
 
 // RefreshVaultClobOrders refreshes orders of a CLOB vault.
+// Note: Client IDs are deterministically constructed based on layer and side. A client ID has its
+// last bit flipped only upon order replacement.
 func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (err error) {
-	// Cancel CLOB orders from last block.
-	orderIdsToCancel, err := k.GetVaultClobOrderIds(
-		ctx.WithBlockHeight(ctx.BlockHeight()-1),
-		vaultId,
-	)
-	if err != nil {
-		log.ErrorLogWithError(ctx, "Failed to get vault clob order IDs to cancel", err, "vaultId", vaultId)
-		return err
-	}
-	orderExpirationSeconds := k.GetParams(ctx).OrderExpirationSeconds
-	for _, orderId := range orderIdsToCancel {
-		if _, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, *orderId); exists {
-			err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
-				*orderId,
-				uint32(ctx.BlockTime().Unix())+orderExpirationSeconds,
-			), true)
-			if err != nil {
-				log.ErrorLogWithError(ctx, "Failed to cancel order", err, "orderId", orderId, "vaultId", vaultId)
-			}
-			vaultId.IncrCounterWithLabels(
-				metrics.VaultCancelOrder,
-				metrics.GetLabelForBoolValue(metrics.Success, err == nil),
-			)
-		}
-	}
-	// Place new CLOB orders.
+	// Get client IDs of most recently placed orders, if any.
+	mostRecentClientIds := k.GetMostRecentClientIds(ctx, vaultId)
+	// Get orders to place.
 	ordersToPlace, err := k.GetVaultClobOrders(ctx, vaultId)
 	if err != nil {
 		log.ErrorLogWithError(ctx, "Failed to get vault clob orders to place", err, "vaultId", vaultId)
 		return err
 	}
 
-	for i, order := range ordersToPlace {
-		err := k.PlaceVaultClobOrder(ctx, order)
-		if err != nil {
-			log.ErrorLogWithError(ctx, "Failed to place order", err, "order", order, "vaultId", vaultId)
-		}
-
-		vaultId.IncrCounterWithLabels(
-			metrics.VaultPlaceOrder,
-			metrics.GetLabelForBoolValue(metrics.Success, err == nil),
-		)
-
-		// Send indexer messages. We expect orderIdsToCancel and ordersToPlace to have the same length
-		// and the order to place at each index to be a replacement of the order to cancel at the same index.
-		replacedOrderId := orderIdsToCancel[i]
-		if replacedOrderId == nil {
-			k.GetIndexerEventManager().AddTxnEvent(
-				ctx,
-				indexerevents.SubtypeStatefulOrder,
-				indexerevents.StatefulOrderEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewLongTermOrderPlacementEvent(
-						*order,
-					),
-				),
-			)
+	clientIds := make([]uint32, len(ordersToPlace))
+	for i, orderToPlace := range ordersToPlace {
+		if i >= len(mostRecentClientIds) { // when a vault first starts quoting or when `layers` increases.
+			// Place order.
+			err = k.PlaceVaultClobOrder(ctx, vaultId, orderToPlace)
 		} else {
-			k.GetIndexerEventManager().AddTxnEvent(
-				ctx,
-				indexerevents.SubtypeStatefulOrder,
-				indexerevents.StatefulOrderEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewLongTermOrderReplacementEvent(
-						*replacedOrderId,
-						*order,
-					),
-				),
-			)
+			oldClientId := mostRecentClientIds[i]
+			oldOrderId := vaultId.GetClobOrderId(oldClientId)
+			oldOrderPlacement, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, *oldOrderId)
+			if !exists {
+				// Place order.
+				err = k.PlaceVaultClobOrder(ctx, vaultId, orderToPlace)
+			} else if oldOrderPlacement.Order.Quantums != orderToPlace.Quantums ||
+				oldOrderPlacement.Order.Subticks != orderToPlace.Subticks {
+				// Replace old order with new order.
+				// Flip last bit of old client ID to get new client ID to make sure they are different
+				// as order placement fails if the same order ID is already marked for cancellation.
+				orderToPlace.OrderId.ClientId = oldClientId ^ 1
+				err = k.ReplaceVaultClobOrder(ctx, vaultId, oldOrderId, orderToPlace)
+			} else {
+				// No need to place/replace as existing order is already as desired.
+				clientIds[i] = oldClientId
+				continue
+			}
 		}
+		if err != nil {
+			log.ErrorLogWithError(ctx, "Failed to place/replace vault clob order", err, "vaultId", vaultId)
+		}
+		clientIds[i] = orderToPlace.OrderId.ClientId
 	}
+	k.SetMostRecentClientIds(ctx, vaultId, clientIds)
+
 	return nil
 }
 
@@ -400,7 +373,7 @@ func (k Keeper) GetVaultClobOrderIds(
 	) *clobtypes.OrderId {
 		return &clobtypes.OrderId{
 			SubaccountId: *vault,
-			ClientId:     k.GetVaultClobOrderClientId(ctx, side, uint8(layer)),
+			ClientId:     types.GetVaultClobOrderClientId(side, uint8(layer)),
 			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 			ClobPairId:   clobPair.Id,
 		}
@@ -419,37 +392,108 @@ func (k Keeper) GetVaultClobOrderIds(
 	return orderIds, nil
 }
 
-// GetVaultClobOrderClientId returns the client ID for a CLOB order where
-// - 1st bit is `side-1` (subtract 1 as buy_side = 1, sell_side = 2)
-//
-// - 2nd bit is `block height % 2`
-//   - block height bit alternates between 0 and 1 to ensure that client IDs
-//     are different in two consecutive blocks (otherwise, order placement would
-//     fail because the same order IDs are already marked for cancellation)
-//
-// - next 8 bits are `layer`
-func (k Keeper) GetVaultClobOrderClientId(
+// internalPlaceVaultClobOrder places a vault CLOB order internal to the protocol, skipping various
+// logs, metrics, and validations
+func (k Keeper) internalPlaceVaultClobOrder(
 	ctx sdk.Context,
-	side clobtypes.Order_Side,
-	layer uint8,
-) uint32 {
-	sideBit := uint32(side - 1)
-	sideBit <<= 31
-
-	blockHeightBit := uint32(ctx.BlockHeight() % 2)
-	blockHeightBit <<= 30
-
-	layerBits := uint32(layer) << 22
-
-	return sideBit | blockHeightBit | layerBits
-}
-
-// PlaceVaultClobOrder places a vault CLOB order as an order internal to the protocol,
-// skipping various logs, metrics, and validations.
-func (k Keeper) PlaceVaultClobOrder(
-	ctx sdk.Context,
+	vaultId types.VaultId,
 	order *clobtypes.Order,
 ) error {
-	// Place an internal clob order.
-	return k.clobKeeper.HandleMsgPlaceOrder(ctx, clobtypes.NewMsgPlaceOrder(*order), true)
+	err := k.clobKeeper.HandleMsgPlaceOrder(ctx, clobtypes.NewMsgPlaceOrder(*order), true)
+	if err != nil {
+		log.ErrorLogWithError(ctx, "Failed to place order", err, "order", order, "vaultId", vaultId)
+	}
+	vaultId.IncrCounterWithLabels(
+		metrics.VaultPlaceOrder,
+		metrics.GetLabelForBoolValue(metrics.Success, err == nil),
+	)
+	return err
+}
+
+// PlaceVaultClobOrder places a vault CLOB order and emits order placement indexer event.
+func (k Keeper) PlaceVaultClobOrder(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+	order *clobtypes.Order,
+) error {
+	err := k.internalPlaceVaultClobOrder(ctx, vaultId, order)
+
+	if err == nil {
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeStatefulOrder,
+			indexerevents.StatefulOrderEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewLongTermOrderPlacementEvent(
+					*order,
+				),
+			),
+		)
+	}
+	return err
+}
+
+// ReplaceVaultClobOrder replaces a vault CLOB order internal to the protocol and
+// emits order replacement indexer event.
+func (k Keeper) ReplaceVaultClobOrder(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+	oldOrderId *clobtypes.OrderId,
+	newOrder *clobtypes.Order,
+) error {
+	// Cancel old order.
+	err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
+		*oldOrderId,
+		uint32(ctx.BlockTime().Unix())+k.GetParams(ctx).OrderExpirationSeconds,
+	), true)
+	vaultId.IncrCounterWithLabels(
+		metrics.VaultCancelOrder,
+		metrics.GetLabelForBoolValue(metrics.Success, err == nil),
+	)
+	if err != nil {
+		log.ErrorLogWithError(ctx, "Failed to cancel order", err, "orderId", oldOrderId, "vaultId", vaultId)
+		return err
+	}
+
+	// Place new order.
+	err = k.internalPlaceVaultClobOrder(ctx, vaultId, newOrder)
+
+	// Emit order replacement indexer event.
+	if err == nil {
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeStatefulOrder,
+			indexerevents.StatefulOrderEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewLongTermOrderReplacementEvent(
+					*oldOrderId,
+					*newOrder,
+				),
+			),
+		)
+	}
+	return err
+}
+
+// GetMostRecentClientIds returns the most recent client IDs for a vault.
+func (k Keeper) GetMostRecentClientIds(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+) []uint32 {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.MostRecentClientIdsKeyPrefix))
+	bytes := store.Get(vaultId.ToStateKey())
+	if bytes == nil {
+		return []uint32{}
+	}
+	return lib.BytesToUint32Array(bytes)
+}
+
+// SetMostRecentClientIds sets the most recent client IDs for a vault.
+func (k Keeper) SetMostRecentClientIds(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+	clientIds []uint32,
+) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.MostRecentClientIdsKeyPrefix))
+	store.Set(vaultId.ToStateKey(), lib.Uint32ArrayToBytes(clientIds))
 }
