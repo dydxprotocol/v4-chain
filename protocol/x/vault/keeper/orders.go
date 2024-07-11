@@ -389,9 +389,9 @@ func (k Keeper) GetVaultClobOrderIds(
 	return orderIds, nil
 }
 
-// internalPlaceVaultClobOrder places a vault CLOB order internal to the protocol, skipping various
+// PlaceVaultClobOrder places a vault CLOB order internal to the protocol, skipping various
 // logs, metrics, and validations
-func (k Keeper) internalPlaceVaultClobOrder(
+func (k Keeper) PlaceVaultClobOrder(
 	ctx sdk.Context,
 	vaultId types.VaultId,
 	order *clobtypes.Order,
@@ -404,16 +404,6 @@ func (k Keeper) internalPlaceVaultClobOrder(
 		metrics.VaultPlaceOrder,
 		metrics.GetLabelForBoolValue(metrics.Success, err == nil),
 	)
-	return err
-}
-
-// PlaceVaultClobOrder places a vault CLOB order and emits order placement indexer event.
-func (k Keeper) PlaceVaultClobOrder(
-	ctx sdk.Context,
-	vaultId types.VaultId,
-	order *clobtypes.Order,
-) error {
-	err := k.internalPlaceVaultClobOrder(ctx, vaultId, order)
 	return err
 }
 
@@ -440,7 +430,7 @@ func (k Keeper) ReplaceVaultClobOrder(
 	}
 
 	// Place new order.
-	err = k.internalPlaceVaultClobOrder(ctx, vaultId, newOrder)
+	err = k.PlaceVaultClobOrder(ctx, vaultId, newOrder)
 	return err
 }
 
