@@ -564,29 +564,51 @@ func (k Keeper) getHistoricalPricesForEpoch(
 func (k Keeper) calculateSubaccountPositionValueFromMarketPrices(
 	ctx sdk.Context,
 	subaccount types.Subaccount,
-	perpetualPrices []*prices.MarketPrice,
+	marketPrices []*prices.MarketPrice,
 ) (
 	positionValue *big.Int,
 	err error,
 ) {
 	assetPositions := subaccount.AssetPositions
 	perpetualPositions := subaccount.PerpetualPositions
-	// TODO: calculate the actual position value
+	positionValue := big.NewInt(0)
 
-	// TODO: Modify below. it is like in getInternalNetCollateralAndMarginRequirements
-	// iterate over all assets
-		// GetNet Collateral from price for assets --> trivial: trading dai always worth 1 trading dai.
-		// Can use current GetNetCollateral function
+	assetPositionValue, err := k.getPositionValueFromAssets(ctx, assetPositions)
+	if err != nil {
+		return big.NewInt(0), err
+	}
 
-	// iterate over all perpetual positions
-	// Get NetCollateral from market price for perpetual
-	// Boils down to GetNetNotionalInQuoteQuantums with appropriate market price
-	id := size.GetId()
-	bigQuantums := size.GetBigQuantums()
-	bigNetCollateralQuoteQuantums, err := pk.GetNetCollateral(ctx, id, bigQuantums)
+	perpetualPositionValue, err := k.getPositionValueFromPerpetuals(ctx, perpetualPositions, marketPrices)
+	if err != nil {
+		return big.NewInt(0), err 
+	}
+
+	positionValue.Add(positionValue, assetPositionValue)
+	positionValue.Add(positionvalue, perpetualPositionValue)
 
 	// TODO: total value will be in quotequantums. Make sure to conver this to unit of minted tokens
+}
 
+func (k Keeper) getPositionValueFromAssets(
+	ctx sdk.Context,
+	assetPositions []*AssetPosition,
+)(
+	positionValue *big.Int,
+	err error,
+) {
+	// NOTE: Assume quote unit is only existing asset unit
+	positionValue := big.NewInt(0)
+
+	for _, position := range assetPositions {
+		sizeInBigQuantums := position.GetBigQuantums()
+		assetId := position.GetId()
+		assetValue, err := k.assetsKeeper.GetNetCollateral(ctx, assetId, sizeInBigQuantums)
+		if err != nil {
+			return big.NewInt(0), err
+		}
+		totalValue.Add(totalValue, value)
+	}
+	return totalValue, nil
 }
 
 
