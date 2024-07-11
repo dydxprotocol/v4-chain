@@ -372,8 +372,8 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 			// Advance to next block where vault should replace its orders to update their sizes.
 			// Deposit to vault to increase its equity, resulting in a larger order size.
 			msgDepositToVault := vaulttypes.MsgDepositToVault{
-				VaultId:       &tc.vaultId,
-				SubaccountId:  &constants.Alice_Num0,
+				VaultId:       &(tc.vaultId),
+				SubaccountId:  &(constants.Alice_Num0),
 				QuoteQuantums: params.ActivationThresholdQuoteQuantums,
 			}
 			CheckTx_MsgDepositToVault := testapp.MustMakeCheckTx(
