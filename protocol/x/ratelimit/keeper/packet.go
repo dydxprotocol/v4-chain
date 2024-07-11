@@ -69,10 +69,36 @@ func (k Keeper) AcknowledgeIBCTransferPacket(
 
 	// If the ack failed, undo the change to the capacity
 	k.UndoSendPacket(ctx, packetInfo.ChannelID, packet.Sequence, packetInfo.Denom, packetInfo.Amount)
+	return nil
+}
+
+// Middleware implementation for OnAckPacket
+// It is called on the sender chain when a relayer relays back the acknowledgement from the receiver chain.
+// On the dYdX chain, this includes the “response” of the receiver chain for outbound transfer from dYdX.
+func (k Keeper) UndoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	acknowledgement []byte,
+) error {
+	// Check whether the ack was a success or error
+	ackResponse, err := util.UnpackAcknowledgementResponseForTransfer(ctx, k.Logger(ctx), acknowledgement)
+	if err != nil {
+		return err
+	}
+
+	// If the ack was successful return
+	if ackResponse.Status == types.AckResponseStatus_SUCCESS {
+		return nil
+	}
+
+	// Parse the denom, channelId, and amount from the packet
+	packetInfo, err := util.ParsePacketInfo(packet, types.PACKET_SEND)
+	if err != nil {
+		return err
+	}
 
 	// Redeposit sDAI
-	k.MintTradingDAIToUserAccount(ctx, packetInfo.Sender, packetInfo.Amount)
-	return nil
+	return k.MintTradingDAIToUserAccount(ctx, packetInfo.Sender, packetInfo.Amount)
 }
 
 // Middleware implementation for OnTimeout
@@ -86,10 +112,17 @@ func (k Keeper) TimeoutIBCTransferPacket(ctx sdk.Context, packet channeltypes.Pa
 	}
 
 	k.UndoSendPacket(ctx, packetInfo.ChannelID, packet.Sequence, packetInfo.Denom, packetInfo.Amount)
+	return nil
+}
+
+func (k Keeper) UndoMintTradingDAIIfAfterTimeoutIBCTransferPacket(ctx sdk.Context, packet channeltypes.Packet) error {
+	packetInfo, err := util.ParsePacketInfo(packet, types.PACKET_SEND)
+	if err != nil {
+		return err
+	}
 
 	// Redeposit sDAI
-	k.MintTradingDAIToUserAccount(ctx, packetInfo.Sender, packetInfo.Amount)
-	return nil
+	return k.MintTradingDAIToUserAccount(ctx, packetInfo.Sender, packetInfo.Amount)
 }
 
 // If a SendPacket fails or times out, undo the capacity decrease that happened during the send
