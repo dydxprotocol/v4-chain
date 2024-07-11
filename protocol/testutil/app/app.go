@@ -34,6 +34,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	testlog "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/logger"
+	vetestutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
@@ -683,6 +684,7 @@ func (tApp *TestApp) AdvanceToBlock(
 		tApp.header.NextValidatorsHash = tApp.App.LastCommitID().Hash
 
 		deliverTxs := options.DeliverTxsOverride
+
 		if deliverTxs == nil {
 			// Prepare the proposal and process it.
 			prepareRequest := abcitypes.RequestPrepareProposal{
@@ -692,6 +694,12 @@ func (tApp *TestApp) AdvanceToBlock(
 				Time:               tApp.header.Time,
 				NextValidatorsHash: tApp.header.NextValidatorsHash,
 				ProposerAddress:    tApp.header.ProposerAddress,
+				LocalLastCommit: vetestutil.GetEmptyLocalLastCommit(
+					tApp.App.ConsumerKeeper.GetAllCCValidator(tApp.App.NewContextLegacy(true, tApp.header)),
+					tApp.header.Height,
+					0,
+					"localdydxprotocol",
+				),
 			}
 			if options.RequestPrepareProposalTxsOverride != nil {
 				prepareRequest.Txs = options.RequestPrepareProposalTxsOverride
@@ -729,6 +737,7 @@ func (tApp *TestApp) AdvanceToBlock(
 				Time:               tApp.header.Time,
 				NextValidatorsHash: tApp.header.NextValidatorsHash,
 				ProposerAddress:    tApp.header.ProposerAddress,
+				ProposedLastCommit: vetestutil.GetEmptyProposedLastCommit(),
 			}
 			processResponse, processErr := tApp.App.ProcessProposal(&processRequest)
 
@@ -830,6 +839,7 @@ func (tApp *TestApp) AdvanceToBlock(
 				finalizeBlockErr,
 			)
 			for i, txResult := range finalizeBlockResponse.TxResults {
+				// TODO: only do this if VE's are enabled, they aren't enabled in all tests like funding_e2e
 				if i == 0 {
 					// The first transaction is the block proposal is a VE
 					continue
