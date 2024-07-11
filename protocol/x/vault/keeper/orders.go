@@ -73,7 +73,7 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 }
 
 // RefreshVaultClobOrders refreshes orders of a CLOB vault.
-// Note: Order IDs are deterministically constructed based on layer and side. An order ID has its
+// Note: Client IDs are deterministically constructed based on layer and side. A client ID has its
 // last bit flipped only upon order replacement.
 func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (err error) {
 	// Get client IDs of most recently placed orders, if any.
@@ -104,6 +104,10 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 				// as order placement fails if the same order ID is already marked for cancellation.
 				orderToPlace.OrderId.ClientId = oldClientId ^ 1
 				err = k.ReplaceVaultClobOrder(ctx, vaultId, oldOrderId, orderToPlace)
+			} else {
+				// No need to place/replace as existing order is already as desired.
+				clientIds[i] = oldClientId
+				continue
 			}
 		}
 		if err != nil {

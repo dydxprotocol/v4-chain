@@ -279,6 +279,15 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 									),
 								},
 							},
+							{
+								Id: &constants.Alice_Num0,
+								AssetPositions: []*satypes.AssetPosition{
+									testutil.CreateSingleAssetPosition(
+										assettypes.AssetUsdc.Id,
+										params.ActivationThresholdQuoteQuantums.BigInt(),
+									),
+								},
+							},
 						}
 					},
 				)
@@ -334,6 +343,11 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 					*tc.vaultId.GetClobOrderId(initialOrders[i].OrderId.ClientId ^ 1),
 					newOrder.OrderId,
 				)
+				require.Equal(
+					t,
+					uint32(ctx.BlockTime().Unix())+params.OrderExpirationSeconds,
+					newOrder.GetGoodTilBlockTime(),
+				)
 			}
 
 			// Advance to next block where vault orders have expired and vaults should place new orders.
@@ -347,6 +361,48 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 			)
 			newOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
 			require.Len(t, newOrders, int(params.Layers*2))
+			for _, newOrder := range newOrders {
+				require.Equal(
+					t,
+					uint32(ctx.BlockTime().Unix())+params.OrderExpirationSeconds,
+					newOrder.GetGoodTilBlockTime(),
+				)
+			}
+
+			// Advance to next block where vault should replace its orders to update their sizes.
+			// Deposit to vault to increase its equity, resulting in a larger order size.
+			msgDepositToVault := vaulttypes.MsgDepositToVault{
+				VaultId:       &tc.vaultId,
+				SubaccountId:  &constants.Alice_Num0,
+				QuoteQuantums: params.ActivationThresholdQuoteQuantums,
+			}
+			CheckTx_MsgDepositToVault := testapp.MustMakeCheckTx(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: constants.Alice_Num0.Owner,
+					Gas:                  constants.TestGasLimit,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgDepositToVault,
+			)
+			checkTxResp := tApp.CheckTx(CheckTx_MsgDepositToVault)
+			require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+			ctx = tApp.AdvanceToBlock(
+				uint32(tApp.GetBlockHeight())+1,
+				testapp.AdvanceToBlockOptions{
+					BlockTime: ctx.BlockTime().Add(time.Second),
+				},
+			)
+			newOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
+			for _, newOrder := range newOrders {
+				require.Equal(
+					t,
+					uint32(ctx.BlockTime().Unix())+params.OrderExpirationSeconds,
+					newOrder.GetGoodTilBlockTime(),
+				)
+			}
 		})
 	}
 }
@@ -948,28 +1004,47 @@ func TestGetVaultClobOrderIds(t *testing.T) {
 }
 
 func TestGetSetMostRecentClientIds(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder(t).Build()
-	ctx := tApp.InitChain()
-	k := tApp.App.VaultKeeper
-	vault0 := constants.Vault_Clob0
-	clientIds0 := []uint32{111, 222, 333, 444}
-	vault1 := constants.Vault_Clob1
-	clientIds1 := []uint32{0, 1, 987654321, 555666, 3453, 1010101010}
+	tests := map[string]struct {
+		/* --- Setup --- */
+		// Vault ID.
+		vaultId vaulttypes.VaultId
+		// Client IDs.
+		clientIds []uint32
+	}{
+		"Vault Clob 0, non-existent client IDs": {
+			vaultId: constants.Vault_Clob0,
+		},
+		"Vault Clob 0, empty client IDs": {
+			vaultId:   constants.Vault_Clob0,
+			clientIds: []uint32{},
+		},
+		"Vault Clob 0, 4 client IDs": {
+			vaultId:   constants.Vault_Clob0,
+			clientIds: []uint32{111, 222, 333, 444},
+		},
+		"Vault Clob 1, 6 client IDs": {
+			vaultId:   constants.Vault_Clob0,
+			clientIds: []uint32{0, 1, 987654321, 555666, 3453, 1010101010},
+		},
+	}
 
-	// Returns empty array if doesn't exist.
-	require.Empty(t, k.GetMostRecentClientIds(ctx, vault0))
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.VaultKeeper
 
-	// Set client IDs of vault0 and verify.
-	k.SetMostRecentClientIds(ctx, vault0, []uint32{})
-	require.Empty(t, k.GetMostRecentClientIds(ctx, vault0))
-	k.SetMostRecentClientIds(ctx, vault0, clientIds0)
-	require.Equal(t, clientIds0, k.GetMostRecentClientIds(ctx, vault0))
+			// Set most recent client IDs if provided.
+			if tc.clientIds != nil {
+				k.SetMostRecentClientIds(ctx, tc.vaultId, tc.clientIds)
+			}
 
-	// Set client IDs of vault1 and verify.
-	k.SetMostRecentClientIds(ctx, vault1, []uint32{})
-	require.Empty(t, k.GetMostRecentClientIds(ctx, vault1))
-	k.SetMostRecentClientIds(ctx, vault1, clientIds1)
-	require.Equal(t, clientIds1, k.GetMostRecentClientIds(ctx, vault1))
-	k.SetMostRecentClientIds(ctx, vault1, clientIds0)
-	require.Equal(t, clientIds0, k.GetMostRecentClientIds(ctx, vault1))
+			// Verify most recent client IDs.
+			if tc.clientIds == nil {
+				require.Empty(t, k.GetMostRecentClientIds(ctx, tc.vaultId))
+			} else {
+				require.Equal(t, tc.clientIds, k.GetMostRecentClientIds(ctx, tc.vaultId))
+			}
+		})
+	}
 }
