@@ -302,18 +302,29 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				return
 			}
 
+			// Helper function that verifies that most recent client IDs up-to-date with vault orders.
+			verifyMostRecentClientIds := func() {
+				mostRecentClientIds := tApp.App.VaultKeeper.GetMostRecentClientIds(ctx, tc.vaultId)
+				allStatefulOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
+				for i, order := range allStatefulOrders {
+					require.Equal(t, mostRecentClientIds[i], order.OrderId.ClientId)
+				}
+			}
+
 			// Vault should place its initial orders.
 			initialOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
 			require.Len(t, initialOrders, int(params.Layers*2))
+			verifyMostRecentClientIds()
 
-			// Advance to next block with no price updates / order matches and vault should not refresh its orders.
+			// Advance to a few blocks with no price updates / order matches and vault should not refresh its orders.
 			msgSender.Clear()
-			ctx = tApp.AdvanceToBlock(uint32(tApp.GetBlockHeight())+1, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(uint32(tApp.GetBlockHeight())+12, testapp.AdvanceToBlockOptions{})
 			require.Equal(
 				t,
 				initialOrders,
 				tApp.App.ClobKeeper.GetAllStatefulOrders(ctx),
 			)
+			verifyMostRecentClientIds()
 
 			// Advance to next block with price updates and vault should replace its old orders with new ones.
 			msgSender.Clear()
@@ -337,6 +348,7 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 			)
 			newOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
 			require.Len(t, newOrders, int(params.Layers*2))
+			verifyMostRecentClientIds()
 			for i, newOrder := range newOrders {
 				require.Equal(
 					t,
@@ -361,6 +373,7 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 			)
 			newOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
 			require.Len(t, newOrders, int(params.Layers*2))
+			verifyMostRecentClientIds()
 			for _, newOrder := range newOrders {
 				require.Equal(
 					t,
@@ -371,6 +384,7 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 
 			// Advance to next block where vault should replace its orders to update their sizes.
 			// Deposit to vault to increase its equity, resulting in a larger order size.
+			// TODO (TRA-500): add scenario of filled orders.
 			msgDepositToVault := vaulttypes.MsgDepositToVault{
 				VaultId:       &(tc.vaultId),
 				SubaccountId:  &(constants.Alice_Num0),
@@ -396,6 +410,7 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				},
 			)
 			newOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
+			verifyMostRecentClientIds()
 			for _, newOrder := range newOrders {
 				require.Equal(
 					t,
