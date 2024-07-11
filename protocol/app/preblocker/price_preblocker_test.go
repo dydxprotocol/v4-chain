@@ -230,10 +230,10 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
 
 		_, err := s.handler.PreBlocker(s.ctx, &cometabci.RequestFinalizeBlock{
-			Txs: [][]byte{{1, 2, 3, 4}, {1, 2, 3, 4}},
+			Txs: [][]byte{},
 		})
 
-		s.Require().EqualError(err, "proposal does not contain enough set messages (VE's, proposed operations, or premium votes): 2")
+		s.Require().EqualError(err, "proposal does not contain enough set messages (VE's, proposed operations, or premium votes): 0")
 
 	})
 }
@@ -297,10 +297,15 @@ func (s *PreBlockTestSuite) getVoteExtension(
 	prices map[uint32][]byte,
 	val sdk.ConsAddress,
 ) cometabci.ExtendedVoteInfo {
-	ve, err := vetesting.CreateExtendedVoteInfo(
-		val,
-		prices,
-		s.voteCodec,
+	ve, err := vetesting.CreateSignedExtendedVoteInfo(
+		vetesting.SignedVEInfo{
+			Val:     val,
+			Power:   500,
+			Prices:  prices,
+			Height:  3,
+			Round:   0,
+			ChainId: "localdydxprotocol",
+		},
 	)
 	s.Require().NoError(err)
 	return ve
@@ -312,7 +317,6 @@ func (s *PreBlockTestSuite) getExtendedCommitInfoBz(
 
 	_, extCommitBz, err := vetesting.CreateExtendedCommitInfo(
 		votes,
-		s.extCodec,
 	)
 	s.Require().NoError(err)
 	return extCommitBz
@@ -377,13 +381,13 @@ func (s *PreBlockTestSuite) getVoteExtensionsForValidatorsWithSamePrices(
 ) []byte {
 	var votes []cometabci.ExtendedVoteInfo
 	for _, valName := range validators {
-		ve := s.getVoteExtension(prices, s.getValidatorAddr(valName))
+		ve := s.getVoteExtension(prices, s.getValidatorConsAddr(valName))
 		votes = append(votes, ve)
 	}
 	return s.getExtendedCommitInfoBz(votes)
 }
 
-func (s *PreBlockTestSuite) getValidatorAddr(name string) sdk.ConsAddress {
+func (s *PreBlockTestSuite) getValidatorConsAddr(name string) sdk.ConsAddress {
 	if name == "alice" {
 		return constants.AliceConsAddress
 	} else {
