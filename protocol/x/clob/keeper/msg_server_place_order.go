@@ -114,35 +114,31 @@ func (k Keeper) HandleMsgPlaceOrder(
 
 	// 4. Emit the new order placement indexer event.
 	if order.IsConditionalOrder() {
-		if !isInternalOrder { // vault order indexer event logic is handled elsewhere
-			k.GetIndexerEventManager().AddTxnEvent(
-				ctx,
-				indexerevents.SubtypeStatefulOrder,
-				indexerevents.StatefulOrderEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewConditionalOrderPlacementEvent(
-						order,
-					),
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeStatefulOrder,
+			indexerevents.StatefulOrderEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewConditionalOrderPlacementEvent(
+					order,
 				),
-			)
-		}
+			),
+		)
 		processProposerMatchesEvents.PlacedConditionalOrderIds = append(
 			processProposerMatchesEvents.PlacedConditionalOrderIds,
 			order.OrderId,
 		)
 	} else {
-		if !isInternalOrder { // vault order indexer event logic is handled elsewhere
-			k.GetIndexerEventManager().AddTxnEvent(
-				ctx,
-				indexerevents.SubtypeStatefulOrder,
-				indexerevents.StatefulOrderEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewLongTermOrderPlacementEvent(
-						order,
-					),
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeStatefulOrder,
+			indexerevents.StatefulOrderEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewLongTermOrderPlacementEvent(
+					order,
 				),
-			)
-		}
+			),
+		)
 		processProposerMatchesEvents.PlacedLongTermOrderIds = append(
 			processProposerMatchesEvents.PlacedLongTermOrderIds,
 			order.OrderId,
