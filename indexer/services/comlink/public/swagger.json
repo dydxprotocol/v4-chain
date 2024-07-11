@@ -303,6 +303,12 @@
           "startingOpenInterest": {
             "type": "string"
           },
+          "orderbookMidPriceOpen": {
+            "type": "string"
+          },
+          "orderbookMidPriceClose": {
+            "type": "string"
+          },
           "id": {
             "type": "string"
           }
