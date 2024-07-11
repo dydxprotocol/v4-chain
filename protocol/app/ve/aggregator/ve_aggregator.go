@@ -28,7 +28,7 @@ func GetDaemonVotes(
 	veCodec codec.VoteExtensionCodec,
 	extCommitCodec codec.ExtendedCommitCodec,
 ) ([]Vote, error) {
-	if len(proposal) < constants.MinTxsCount {
+	if len(proposal) < constants.InjectedNonTxCount {
 		return nil, fmt.Errorf("proposal does not contain enough set messages (VE's, proposed operations, or premium votes): %d", len(proposal))
 	}
 
