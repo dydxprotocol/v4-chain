@@ -137,6 +137,7 @@ export class OrderUpdateHandler extends Handler {
         at: 'OrderUpdateHandler#handle',
         message: 'Updating orderbook price levels cache size',
         updatedQuantums,
+        updateResult,
       });
 
       const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
@@ -175,7 +176,7 @@ export class OrderUpdateHandler extends Handler {
     sizeDeltaInQuantums: Big,
   ): Promise<number> {
     const redisOrder: RedisOrder = updateResult.order!;
-    const orderbookLevel = OrderbookLevelsCache.getOrderbookLevel(
+    const orderbookLevel = await OrderbookLevelsCache.getOrderbookLevel(
       redisOrder.ticker,
       protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
       redisOrder.price,
@@ -185,6 +186,7 @@ export class OrderUpdateHandler extends Handler {
       at: 'OrderUpdateHandler#updatePriceLevelsCache',
       message: 'Orderbook price level before order update',
       orderbookLevel,
+      updateResult,
     });
 
     return runFuncWithTimingStat(

@@ -510,6 +510,7 @@ export class OrderReplaceHandler extends Handler {
       at: 'OrderReplaceHandler#removeOldOrderFromOrderbook',
       message: 'Removed old order from orderbook price levels cache',
       updatedQuantums,
+      removeOrderResult,
     });
 
     if (sendWebsocketMessage) {
@@ -535,7 +536,7 @@ export class OrderReplaceHandler extends Handler {
     removeOrderResult: RemoveOrderResult,
   ): Promise<number> {
     const redisOrder: RedisOrder = removeOrderResult.removedOrder!;
-    const orderbookLevel = OrderbookLevelsCache.getOrderbookLevel(
+    const orderbookLevel = await OrderbookLevelsCache.getOrderbookLevel(
       redisOrder.ticker,
       protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
       redisOrder.price,
@@ -545,6 +546,7 @@ export class OrderReplaceHandler extends Handler {
       at: 'OrderReplaceHandler#updatePriceLevelsCache',
       message: 'Orderbook price level before removing old order',
       orderbookLevel,
+      removeOrderResult,
     });
     return OrderbookLevelsCache.updatePriceLevel({
       ticker: redisOrder.ticker,
