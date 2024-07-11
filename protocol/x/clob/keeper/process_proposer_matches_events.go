@@ -144,6 +144,7 @@ func (k Keeper) ResetOrderedOrderIds(
 ) {
 	prefixStore := prefix.NewStore(store, []byte(keyPrefix))
 	it := prefixStore.Iterator(nil, nil)
+	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		prefixStore.Delete(it.Key())
 	}
@@ -153,6 +154,7 @@ func (k Keeper) ResetOrderedOrderIds(
 func (k Keeper) ResetUnorderedOrderIds(ctx sdk.Context, store storetypes.KVStore, keyPrefix string) {
 	prefixStore := prefix.NewStore(store, []byte(keyPrefix))
 	it := prefixStore.Iterator(nil, nil)
+	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		prefixStore.Delete(it.Key())
 	}
@@ -186,6 +188,7 @@ func (k Keeper) GetOrderIds(
 	ret := []types.OrderId{}
 	prefixStore := prefix.NewStore(store, []byte(keyPrefix))
 	it := prefixStore.Iterator(nil, nil)
+	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var orderId types.OrderId
 		k.cdc.MustUnmarshal(it.Value(), &orderId)
