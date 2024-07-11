@@ -107,16 +107,7 @@ func (k Keeper) SetDAIYieldEpochParamsForEpoch(
 ) (,
 	err error,
 ){
-	isStored, err := k.isEpochStored(ctx, epoch)
-	if err != nil {
-		return err
-	}
-	if !isStored {
-		return errorsmod.New("Trying to get params for non-stored epoch number.")
-	}
-
 	epochIndex = k.getEpochIndexFromEpoch(epoch)
-
 	params, success = k.SetDaiYieldEpochParams(ctx, epochIndex, params)
 	if !success {
 		return errorsmod.New("Could not get yield epoch params from store")
@@ -154,7 +145,7 @@ func (k Keeper) isEpochStored(
 		return true, nil
 	}
 
-	lastInvalidEpoch := currEpoch - maxEpochsStored
+	lastInvalidEpoch := currEpoch - types.MAX_NUM_YIELD_EPOCHS_STORED
 
 	if epoch <= lastInvalidEpoch {
 		return false, nil
