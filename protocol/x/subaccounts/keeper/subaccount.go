@@ -23,6 +23,7 @@ import (
 	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	assetstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -452,71 +453,45 @@ func (k Keeper) getSettledSubaccount(
 		perpetuals[p.PerpetualId] = perpetual
 	}
 
-	subaccount = k.ClaimYieldForSubaccount(subaccount)
+	// TODO: We assume subaccount is passed as a pointer here.
+	yieldAmount, err = k.ClaimYieldForSubaccount(subaccount)
+	if err != nil {
+		return err
+	}
 
 	return GetSettledSubaccountWithPerpetuals(subaccount, perpetuals)
 }
 
-
 func (k Keeper) ClaimYieldForSubaccount(
-	ctx sdk.Context,
-	subaccount types.Subaccount,
-) (
-	yield *big.Int,
-	err error,
-) {
-	// Get Yield Amount
-	yieldAmount := k.getNewYieldAmountForSubaccount(subaccount)
-	if err != nil {
-		return 0, err
-	}
-
-	// Transfer Yield amount 
-	// TODO: Yield should be immediately transferred in the loop in the getNewYieldAmountForSubaccount function
-	currPositionSize := subaccount.GetUsdcPosition()
-	newUsdcPosition := new(big.Int).Add(currPositionSize, yieldAmount)
-	subaccount.SetUsdcAssetPosition(newUsdcPosition)
-	return subaccount, nil
-}
-
-
-func (k Keeper) getNewYieldAmountForSubaccount(
 	ctx sdk.Context,
 	subaccount types.Subaccount,
 ) (
 	yieldAmount *big.Int,
 	err error,
 ) {
-	epochLastClaimed := subaccount.EpochYieldLastClaimed
-	firstEpochUnclaimed := epochLastClaimed + 1
+	epochLastClaimed := subaccount.SetEpochYieldLastClaimed()
 	currEpoch := k.getCurrEpoch()
 
-	yieldAmount = 0
-	// TODO: Handle epochs that are too old
-	yieldMap := make(map[uint64]*big.Int)
-	for epoch := firstEpochUnclaimed; epoch <= currEpoch; epoch++ {
-		epochYield, err := k.calculateYieldInEpochForSubaccount(subaccount, epoch)
-		if err != nil {
-			return 0, err
-		}
-		yieldMap[epoch] = epochYield
-		yieldAmount.Add(yieldAmount, epochYield)
-		// TODO: Change last yield collected epoch. 
-		// NOTE: This is how we can make the epoch update atomic. We change the 
-		// last collected epoch for the yield at the end of every iteration. 
-		// If we fail, then all the previous epoch will have been changed and
-		// we don't need to revert any changes
-		// 
-	}
+	firstEpochUnclaimed := epochLastClaimed + 1
+	lastPossibleEpochClaimed := currEpoch - ratelimittypes.MAX_NUM_YIELD_EPOCHS_STORED + 1
+	firstEpochUnclaimed = max(firstEpochUnclaimed, lastPossibleEpochClaimed)
 
-	// TODO: Looping over all epoch again is inefficient. Could do this in the
-	// iteration and return err if it doesn't work.
-	// TODO: the below is currently non-atomic. Doesn't revert state change
-	// on failure
-	err := k.addNewYieldToStoredEpochParamsForAllEpochs(ctx, yieldMap)
+	yieldAmount = 0
+	for epoch := firstEpochUnclaimed; epoch <= currEpoch; epoch++ {
+		epochYield, err := k.calculateYieldInEpochForSubaccount(ctx, subaccount, epoch)
+		if err != nil {
+			return big.NewInt(0), err
+		}
+		// TODO: not perfectly atomic. Atomicity needed?
+		err := k.addNewYieldToStoredEpochParamsForEpoch(ctx, epoch, epochYield)
+		if err != nil {
+			return big.NewInt(0), err
+		}
+		k.SetEpochYieldLastClaimed(epoch)
+		k.updateSubaccountAssetsWithNewYield(subaccount, epochYield)
+	}
 	return yieldAmount, nil
 }
-
 
 func (k Keeper) calculateYieldInEpochForSubaccount(
 	ctx sdk.Context,
@@ -528,22 +503,21 @@ func (k Keeper) calculateYieldInEpochForSubaccount(
 ) {
 	marketPrices, err := k.getHistoricalPricesForEpoch(epoch)
 	if err != nil {
-		return 0, err
+		return big.NewInt(0), err
 	}
 
 	subaccountPositionValue, err := k.calculateSubaccountPositionValueFromMarketPrices(subaccount, marketPrices)
 	if err != nil {
-		return 0, err
+		return big.NewInt(0), err
 	}
 
 	yieldAmount, err := k.getSubaccountYieldAtEpochFromPosition(subaccountPositionValue, epoch)
 	if err != nil {
-		return 0, err
+		return big.NewInt(0), err
 	}
 
 	return yieldAmount, nil
 }
-
 
 func (k Keeper) getHistoricalPricesForEpoch(
 	ctx sdk.Context,
@@ -560,7 +534,6 @@ func (k Keeper) getHistoricalPricesForEpoch(
 	epochMarketPrices = params.EpochMarketPrices
 	return epochMarketPrices
 }
-
 
 func (k Keeper) calculateSubaccountPositionValueFromMarketPrices(
 	ctx sdk.Context,
@@ -705,22 +678,6 @@ func (k Keeper) getSubaccountYieldAtEpochFromPosition(
 	return yieldAmount, nil	
 }
 
-
-
-func (k Keeper) addNewYieldToStoredEpochParamsForAllEpochs(
-	ctx sdk.Context,
-	epochToNewYield map[uint64]*big.Int,
-) error {
-	for epoch, newYield := range epochToNewYield {
-		err := k.addNewYieldToStoredEpochParamsForEpoch(ctx, epoch, newYield)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-
 func (k Keeper) addNewYieldToStoredEpochParamsForEpoch(
 	ctx sdk.Context,
 	epoch uint64,
@@ -741,9 +698,15 @@ func (k Keeper) addNewYieldToStoredEpochParamsForEpoch(
 	return nil
 }
 
-
-
-
+func (k Keeper) updateSubaccountAssetsWithNewYield(
+	ctx sdk.Context,
+	subacccount types.Subaccount,
+	yieldAmount *big.Int,
+) {
+	currPositionSize := subaccount.GetUsdcPosition()
+	newUsdcPosition := new(big.Int).Add(currPositionSize, yieldAmount)
+	subaccount.SetUsdcAssetPosition(newUsdcPosition)
+}
 
 // GetSettledSubaccountWithPerpetuals returns 1. a new settled subaccount given an unsettled subaccount,
 // updating the USDC AssetPosition, FundingIndex, and LastFundingPayment fields accordingly

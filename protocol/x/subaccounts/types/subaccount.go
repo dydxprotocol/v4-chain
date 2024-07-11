@@ -105,3 +105,14 @@ func (m *Subaccount) getUsdcAssetPosition() *AssetPosition {
 	}
 	return firstAsset
 }
+
+func (m *Subaccount) SetEpochYieldLastClaimed() (epoch uint64) {
+	return m.EpochYieldLastClaimed
+}
+
+func (m *Subaccount) SetEpochYieldLastClaimed(newEpoch uint64) {
+	if m == nil {
+		return
+	}
+	m.EpochYieldLastClaimed = newEpoch
+}
