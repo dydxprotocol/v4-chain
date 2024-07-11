@@ -132,15 +132,11 @@ export class OrderReplaceHandler extends Handler {
       stats.increment(`${config.SERVICE_NAME}.replace_order_handler.place_order_result_replaced_order`, 1);
     }
 
-    // If an order was removed from the Orders cache and was resting on the book, update the
-    // orderbook levels cache
-    // Orders that require immediate execution do not rest on the book, and also should not lead
-    // to an update to the orderbook levels cache
-    if (
-      removeOrderResult.removed &&
-      removeOrderResult.restingOnBook === true &&
-      !requiresImmediateExecution(removeOrderResult.removedOrder!.order!.timeInForce)
-    ) {
+    // If an order was removed from the Orders cache, update the orderbook levels cache.
+    // Assume that all removed orders are resting on the book or would be resting on book
+    // but haven't been added to the book yet because this message was received before the
+    // expected order update message for the removed order.
+    if (removeOrderResult.removed) {
       // Don't send orderbook message if price is the same to prevent flickering because
       // the order update will send the correct size update
       const sendOrderbookMessage: boolean = (
