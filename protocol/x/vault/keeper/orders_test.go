@@ -110,6 +110,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			activationThresholdQuoteQuantums: big.NewInt(123_456_789),
 		},
 	}
+
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Enable testapp's indexer event manager
@@ -202,7 +203,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			}
 			allStatefulOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
 			require.ElementsMatch(t, allExpectedOrders, allStatefulOrders)
-			block := tApp.App.VaultKeeper.GetIndexerEventManager().ProduceBlock(ctx)
+			block := tApp.App.IndexerEventManager.ProduceBlock(ctx)
 			require.ElementsMatch(t, expectedIndexerEvents, block.Events)
 		})
 	}
