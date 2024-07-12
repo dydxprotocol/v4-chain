@@ -2,7 +2,6 @@ import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-inde
 import {
   IndexerTendermintEvent,
   IndexerOrder,
-  IndexerOrderId,
   StatefulOrderEventV1,
   StatefulOrderEventV1_StatefulOrderPlacementV1,
   OrderRemovalReason,
@@ -10,7 +9,6 @@ import {
   StatefulOrderEventV1_ConditionalOrderPlacementV1,
   StatefulOrderEventV1_ConditionalOrderTriggeredV1,
   StatefulOrderEventV1_LongTermOrderPlacementV1,
-  StatefulOrderEventV1_LongTermOrderReplacementV1,
   IndexerOrder_ConditionType,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
@@ -20,7 +18,6 @@ import { ConditionalOrderPlacementHandler } from '../handlers/stateful-order/con
 import { ConditionalOrderTriggeredHandler } from '../handlers/stateful-order/conditional-order-triggered-handler';
 import { StatefulOrderPlacementHandler } from '../handlers/stateful-order/stateful-order-placement-handler';
 import { StatefulOrderRemovalHandler } from '../handlers/stateful-order/stateful-order-removal-handler';
-import { StatefulOrderReplacementHandler } from '../handlers/stateful-order/stateful-order-replacement-handler';
 import { validateOrderAndReturnErrorMessage, validateOrderIdAndReturnErrorMessage } from './helpers';
 import { Validator } from './validator';
 
@@ -31,12 +28,11 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       this.event.orderRemoval === undefined &&
       this.event.conditionalOrderPlacement === undefined &&
       this.event.conditionalOrderTriggered === undefined &&
-      this.event.longTermOrderPlacement === undefined &&
-      this.event.orderReplacement === undefined
+      this.event.longTermOrderPlacement === undefined
     ) {
       return this.logAndThrowParseMessageError(
         'One of orderPlace, orderRemoval, conditionalOrderPlacement, conditionalOrderTriggered, ' +
-        'longTermOrderPlacement, orderReplacement must be defined in StatefulOrderEvent',
+        'longTermOrderPlacement must be defined in StatefulOrderEvent',
         { event: this.event },
       );
     }
@@ -48,10 +44,8 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       this.validateConditionalOrderPlacement(this.event.conditionalOrderPlacement);
     } else if (this.event.conditionalOrderTriggered !== undefined) {
       this.validateConditionalOrderTriggered(this.event.conditionalOrderTriggered);
-    } else if (this.event.longTermOrderPlacement !== undefined) {
+    } else { // longTermOrderPlacement
       this.validateLongTermOrderPlacement(this.event.longTermOrderPlacement!);
-    } else if (this.event.orderReplacement !== undefined) {
-      this.validateOrderReplacement(this.event.orderReplacement!);
     }
   }
 
@@ -199,45 +193,6 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
     }
   }
 
-  private validateOrderReplacement(
-    orderReplacement: StatefulOrderEventV1_LongTermOrderReplacementV1,
-  ): void {
-    const oldOrderId: IndexerOrderId | undefined = orderReplacement.oldOrderId;
-    const order: IndexerOrder | undefined = orderReplacement.order;
-
-    if (oldOrderId === undefined) {
-      return this.logAndThrowParseMessageError(
-        'StatefulOrderEvent order replacement must contain an oldOrderId',
-        { event: this.event },
-      );
-    }
-    const orderIdErrorMessage: string | undefined = validateOrderIdAndReturnErrorMessage(
-      oldOrderId,
-    );
-    if (orderIdErrorMessage !== undefined) {
-      return this.logAndThrowParseMessageError(
-        `StatefulOrderEvent order replacement oldOrderId error: ${orderIdErrorMessage}`,
-        { event: this.event },
-      );
-    }
-
-    if (order === undefined) {
-      return this.logAndThrowParseMessageError(
-        'StatefulOrderEvent order replacement must contain an order',
-        { event: this.event },
-      );
-    }
-
-    this.validateStatefulOrder(order);
-
-    if (order.orderId!.orderFlags !== ORDER_FLAG_LONG_TERM) {
-      return this.logAndThrowParseMessageError(
-        `StatefulOrderEvent order replacement must have order flag ${ORDER_FLAG_LONG_TERM}`,
-        { event: this.event },
-      );
-    }
-  }
-
   public getHandlerInitializer() : HandlerInitializer | undefined {
     if (this.event.orderPlace !== undefined) {
       return StatefulOrderPlacementHandler;
@@ -249,8 +204,6 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       return ConditionalOrderTriggeredHandler;
     } else if (this.event.longTermOrderPlacement !== undefined) {
       return StatefulOrderPlacementHandler;
-    } else if (this.event.orderReplacement !== undefined) {
-      return StatefulOrderReplacementHandler;
     }
     return undefined;
   }
