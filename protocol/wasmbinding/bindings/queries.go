@@ -2,6 +2,7 @@ package bindings
 
 import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	subaccountstypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -16,4 +17,8 @@ type SubaccountRequestWrapper struct {
 
 type PerpeutalClobDetailsRequestWrapper struct {
 	PerpetualClobDetails clobtypes.QueryGetPerpetualClobDetailsRequest `json:"perpetual_clob_details"`
+}
+
+type LiquidityTiersRequestWrapper struct {
+	LiquidityTiers perptypes.QueryAllLiquidityTiersRequest `json:"liquidity_tiers"`
 }

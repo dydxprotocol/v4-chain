@@ -7,5 +7,6 @@ use serde::{Deserialize, Serialize};
 pub enum DydxRoute {
     MarketPrice,
     Subaccount,
+    LiquidityTiers,
     PerpetualClobDetails,
 }

@@ -123,3 +123,40 @@ pub struct PerpetualClobDetails {
     pub perpetual: Perpetual,
     pub clob_pair: ClobPair,
 }
+
+/// LiquidityTier stores margin information.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct LiquidityTier {
+    /// Unique id.
+    #[serde(default)]
+    pub id: u32,
+    /// The name of the tier purely for mnemonic purposes, e.g. "Gold".
+    #[serde(default)]
+    pub name: String,
+    /// The margin fraction needed to open a position.
+    /// In parts-per-million.
+    #[serde(default)]
+    pub initial_margin_ppm: u32,
+    /// The fraction of the initial-margin that the maintenance-margin is,
+    /// e.g. 50%. In parts-per-million.
+    #[serde(default)]
+    pub maintenance_fraction_ppm: u32,
+    /// The impact notional amount (in quote quantums) is used to determine impact
+    /// bid/ask prices and its recommended value is 500 USDC / initial margin
+    /// fraction.
+    /// - Impact bid price = average execution price for a market sell of the
+    /// impact notional value.
+    /// - Impact ask price = average execution price for a market buy of the
+    /// impact notional value.
+    #[serde(default)]
+    pub impact_notional: u64,
+    /// Lower cap for Open Interest Margin Fraction (OIMF), in quote quantums.
+    /// IMF is not affected when OI <= open_interest_lower_cap.
+    #[serde(default)]
+    pub open_interest_lower_cap: u64,
+    /// Upper cap for Open Interest Margin Fraction (OIMF), in quote quantums.
+    /// IMF scales linearly to 100% as OI approaches open_interest_upper_cap.
+    /// If zero, then the IMF does not scale with OI.
+    #[serde(default)]
+    pub open_interest_upper_cap: u64,
+}
