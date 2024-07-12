@@ -18,7 +18,7 @@ func TestCheckCurrentDAIYieldEpochElapsed(t *testing.T) {
 	testCases := []struct {
 		name            string
 		isFirstBlock    bool
-		currentEpoch    *big.Int
+		currentEpoch    uint64
 		blockNumber     uint64
 		currentBlock    int64
 		expectedElapsed bool
@@ -33,7 +33,7 @@ func TestCheckCurrentDAIYieldEpochElapsed(t *testing.T) {
 		{
 			name:            "Epoch not elapsed",
 			isFirstBlock:    false,
-			currentEpoch:    big.NewInt(1),
+			currentEpoch:    uint64(1),
 			blockNumber:     100,
 			currentBlock:    150,
 			expectedElapsed: false,
@@ -42,7 +42,7 @@ func TestCheckCurrentDAIYieldEpochElapsed(t *testing.T) {
 		{
 			name:            "Epoch elapsed",
 			isFirstBlock:    false,
-			currentEpoch:    big.NewInt(1),
+			currentEpoch:    uint64(1),
 			blockNumber:     100,
 			currentBlock:    300,
 			expectedElapsed: true,
@@ -51,7 +51,7 @@ func TestCheckCurrentDAIYieldEpochElapsed(t *testing.T) {
 		{
 			name:            "Epoch not found",
 			isFirstBlock:    false,
-			currentEpoch:    big.NewInt(1),
+			currentEpoch:    uint64(1),
 			blockNumber:     0,
 			currentBlock:    200,
 			expectedElapsed: false,
@@ -68,7 +68,8 @@ func TestCheckCurrentDAIYieldEpochElapsed(t *testing.T) {
 			if !tc.isFirstBlock {
 				k.SetCurrentDaiYieldEpochNumber(ctx, tc.currentEpoch)
 				if tc.blockNumber != 0 {
-					k.SetDaiYieldEpochParams(ctx, tc.currentEpoch.Uint64()%types.DAI_YIELD_ARRAY_SIZE, types.DaiYieldEpochParams{
+					epochIndex := tc.currentEpoch % types.MAX_NUM_YIELD_EPOCHS_STORED
+					k.SetDaiYieldEpochParams(ctx, epochIndex, types.DaiYieldEpochParams{
 						BlockNumber: tc.blockNumber,
 					})
 				}
@@ -128,20 +129,20 @@ func TestDAIYieldEpochHasElapsed(t *testing.T) {
 func TestCheckFirstDAIYieldEpoch(t *testing.T) {
 	testCases := []struct {
 		name          string
-		currentEpoch  *big.Int
-		expectedEpoch *big.Int
+		currentEpoch  uint64
+		expectedEpoch uint64
 		expectedFirst bool
 	}{
 		{
 			name:          "Epoch not found",
-			currentEpoch:  nil,
-			expectedEpoch: nil,
+			currentEpoch:  0,
+			expectedEpoch: 0,
 			expectedFirst: true,
 		},
 		{
 			name:          "Epoch found",
-			currentEpoch:  big.NewInt(1),
-			expectedEpoch: big.NewInt(1),
+			currentEpoch:  uint64(1),
+			expectedEpoch: uint64(1),
 			expectedFirst: false,
 		},
 	}
@@ -152,7 +153,7 @@ func TestCheckFirstDAIYieldEpoch(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.RatelimitKeeper
 
-			if tc.currentEpoch != nil {
+			if !tc.expectedFirst {
 				k.SetCurrentDaiYieldEpochNumber(ctx, tc.currentEpoch)
 			}
 
@@ -166,28 +167,28 @@ func TestCheckFirstDAIYieldEpoch(t *testing.T) {
 func TestGetCurrentDAIYieldEpochBlockNumber(t *testing.T) {
 	testCases := []struct {
 		name          string
-		currentEpoch  *big.Int
+		currentEpoch  uint64
 		blockNumber   uint64
 		expectedFound bool
 		expectedBlock uint64
 	}{
 		{
 			name:          "Epoch params found",
-			currentEpoch:  big.NewInt(1),
+			currentEpoch:  uint64(1),
 			blockNumber:   100,
 			expectedFound: true,
 			expectedBlock: 100,
 		},
 		{
 			name:          "Epoch params not found",
-			currentEpoch:  big.NewInt(2),
+			currentEpoch:  uint64(2),
 			blockNumber:   0,
 			expectedFound: false,
 			expectedBlock: 0,
 		},
 		{
 			name:          "Test the modding of the array index",
-			currentEpoch:  big.NewInt(150),
+			currentEpoch:  uint64(150),
 			blockNumber:   100,
 			expectedFound: true,
 			expectedBlock: 100,
@@ -201,7 +202,8 @@ func TestGetCurrentDAIYieldEpochBlockNumber(t *testing.T) {
 			k := tApp.App.RatelimitKeeper
 
 			if tc.expectedFound {
-				k.SetDaiYieldEpochParams(ctx, tc.currentEpoch.Uint64()%types.DAI_YIELD_ARRAY_SIZE, types.DaiYieldEpochParams{
+				epochIndex := tc.currentEpoch % types.MAX_NUM_YIELD_EPOCHS_STORED
+				k.SetDaiYieldEpochParams(ctx, epochIndex, types.DaiYieldEpochParams{
 					BlockNumber: tc.blockNumber,
 				})
 			}
@@ -314,7 +316,7 @@ func TestTransferRemainingDAIYieldToInsuranceFund(t *testing.T) {
 func TestCalculateYieldParamsForNewEpoch(t *testing.T) {
 	testCases := []struct {
 		name                     string
-		currentEpoch             *big.Int
+		currentEpoch             uint64
 		expectedTDAISupply       *big.Int
 		expectedTradingDaiMinted *big.Int
 		expectedYieldCollected   *big.Int
@@ -323,7 +325,7 @@ func TestCalculateYieldParamsForNewEpoch(t *testing.T) {
 	}{
 		{
 			name:                     "First time, no current epoch set",
-			currentEpoch:             nil,
+			currentEpoch:             0,
 			expectedTDAISupply:       big.NewInt(0),
 			expectedTradingDaiMinted: big.NewInt(0),
 			expectedYieldCollected:   big.NewInt(0),
@@ -332,7 +334,7 @@ func TestCalculateYieldParamsForNewEpoch(t *testing.T) {
 		},
 		{
 			name:                     "Subsequent time, current epoch set",
-			currentEpoch:             big.NewInt(1),
+			currentEpoch:             uint64(1),
 			expectedTDAISupply:       big.NewInt(0),
 			expectedTradingDaiMinted: big.NewInt(0),
 			expectedYieldCollected:   big.NewInt(0),
@@ -347,7 +349,7 @@ func TestCalculateYieldParamsForNewEpoch(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.RatelimitKeeper
 
-			if tc.currentEpoch != nil {
+			if tc.expectedNewEpoch != 0 {
 				k.SetCurrentDaiYieldEpochNumber(ctx, tc.currentEpoch)
 			}
 

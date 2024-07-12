@@ -472,7 +472,7 @@ func (k Keeper) ClaimYieldForSubaccount(
 ) {
 	currEpoch, found := k.ratelimitKeeper.GetCurrentDaiYieldEpochNumber(ctx)
 	if !found {
-		return big.NewInt(0), err
+		return big.NewInt(0), errorsmod.Wrap(ratelimittypes.ErrEpochNotRetrieved, "could not retrive yield epoch number when claiming yield for subaccount")
 	}
 	lastEpochUnclaimed := k.getLastEpochClaimed(subaccount, currEpoch)
 	yieldAmount = big.NewInt(0)

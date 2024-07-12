@@ -114,7 +114,7 @@ func TestMsgUpdateSDAIConversionRatePostFirstEpoch(t *testing.T) {
 		name                string
 		input               *types.MsgUpdateSDAIConversionRate
 		daiYieldEpochParams types.DaiYieldEpochParams
-		epoch               int64
+		epoch               uint64
 		expectedSDAIRate    string
 		expErr              bool
 	}{
@@ -133,7 +133,7 @@ func TestMsgUpdateSDAIConversionRatePostFirstEpoch(t *testing.T) {
 				EpochMarketPrices:              []*pricetypes.MarketPrice{},
 			},
 			expectedSDAIRate: "1",
-			epoch:            1,
+			epoch:            uint64(1),
 			expErr:           false,
 		},
 		{
@@ -151,7 +151,7 @@ func TestMsgUpdateSDAIConversionRatePostFirstEpoch(t *testing.T) {
 				EpochMarketPrices:              []*pricetypes.MarketPrice{},
 			},
 			expectedSDAIRate: "1",
-			epoch:            1,
+			epoch:            uint64(1),
 			expErr:           true,
 		},
 	}
@@ -164,8 +164,8 @@ func TestMsgUpdateSDAIConversionRatePostFirstEpoch(t *testing.T) {
 			ms := keeper.NewMsgServerImpl(k)
 
 			k.SetSDAIPrice(ctx, big.NewInt(0))
-			k.SetCurrentDaiYieldEpochNumber(ctx, big.NewInt(tc.epoch))
-			k.SetDaiYieldEpochParams(ctx, uint64(tc.epoch), tc.daiYieldEpochParams)
+			k.SetCurrentDaiYieldEpochNumber(ctx, tc.epoch)
+			k.SetDaiYieldEpochParams(ctx, tc.epoch, tc.daiYieldEpochParams)
 
 			ctx = ctx.WithBlockHeight(110)
 

@@ -64,6 +64,10 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		id satypes.SubaccountId,
 	) (val satypes.Subaccount)
+	SetSubaccount(
+		ctx sdk.Context,
+		subaccount satypes.Subaccount,
+	)
 }
 
 // AccountKeeper defines the expected account keeper used for simulations.

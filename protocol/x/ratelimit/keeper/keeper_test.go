@@ -1210,7 +1210,7 @@ func TestSetCurrentDaiYieldEpochNumber(t *testing.T) {
 	ctx := tApp.InitChain()
 	k := tApp.App.RatelimitKeeper
 
-	epochNumber := big.NewInt(42)
+	epochNumber := uint64(42)
 
 	// Test SetCurrentDaiYieldEpochNumber
 	k.SetCurrentDaiYieldEpochNumber(ctx, epochNumber)
@@ -1232,7 +1232,7 @@ func TestGetCurrentDaiYieldEpochNumberWhenNotSet(t *testing.T) {
 	epochNumber, found := k.GetCurrentDaiYieldEpochNumber(ctx)
 
 	// Assertion
-	require.Nil(t, epochNumber, "Expected epoch number to be nil when not set")
+	require.Equal(t, epochNumber, uint64(0), "Expected epoch number to be nil when not set")
 	require.False(t, found, "Expected found to be false when epoch number is not set")
 }
 
