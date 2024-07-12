@@ -122,6 +122,13 @@ func TestGetMarginedUpdates(t *testing.T) {
 						big.NewInt(0),
 						big.NewInt(2_500_000_000-50_000_000_000),
 					),
+					testutil.CreateSinglePerpetualPosition(
+						1,
+						big.NewInt(1_000_000_000), // 1 ETH
+						big.NewInt(0),
+						// Extra collateral in ETH position.
+						big.NewInt(10_000_000_000),
+					),
 				},
 			},
 			perpetualUpdates: []types.PerpetualUpdate{
