@@ -140,6 +140,12 @@ func (im IBCMiddleware) OnRecvPacket(
 	// TODO(CORE-855): Add an E2E test for this.
 	im.keeper.IncrementCapacitiesForDenom(ctx, ibcTransferPacketInfo.Denom, ibcTransferPacketInfo.Amount)
 
+	ack := im.app.OnRecvPacket(ctx, packet, relayer)
+
+	if !ack.Success() {
+		return ack
+	}
+
 	if ibcTransferPacketInfo.Denom == types.SDaiDenom {
 		err := im.keeper.MintTradingDAIToUserAccount(ctx, ibcTransferPacketInfo.Receiver, ibcTransferPacketInfo.Amount)
 		if err != nil {
@@ -147,7 +153,7 @@ func (im IBCMiddleware) OnRecvPacket(
 		}
 	}
 
-	return im.app.OnRecvPacket(ctx, packet, relayer)
+	return ack
 }
 
 // OnAcknowledgementPacket implements the IBCMiddleware interface
@@ -161,7 +167,12 @@ func (im IBCMiddleware) OnAcknowledgementPacket(
 		im.keeper.Logger(ctx).Error(fmt.Sprintf("ICS20 OnAckPacket failed: %s", err.Error()))
 		return err
 	}
-	return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+	err := im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+	if err != nil {
+		return err
+	}
+
+	return im.keeper.UndoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(ctx, packet, acknowledgement)
 }
 
 // OnTimeoutPacket implements the IBCMiddleware interface
@@ -174,7 +185,12 @@ func (im IBCMiddleware) OnTimeoutPacket(
 		im.keeper.Logger(ctx).Error(fmt.Sprintf("ICS20 OnTimeoutPacket failed: %s", err.Error()))
 		return err
 	}
-	return im.app.OnTimeoutPacket(ctx, packet, relayer)
+	err := im.app.OnTimeoutPacket(ctx, packet, relayer)
+	if err != nil {
+		return err
+	}
+
+	return im.keeper.UndoMintTradingDAIIfAfterTimeoutIBCTransferPacket(ctx, packet)
 }
 
 // SendPacket implements the ICS4 Wrapper interface

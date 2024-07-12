@@ -95,5 +95,5 @@ func (app *App) GetStakingKeeper() ibctestingtypes.StakingKeeper {
 }
 
 func (app *App) GetTestPerpetualsKeeper() perpetualskeeper.Keeper {
-	return *app.PerpetualsKeeper
+	return app.PerpetualsKeeper
 }

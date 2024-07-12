@@ -30,6 +30,8 @@ const (
 
 	PoolAccount = ibctransfertypes.ModuleName
 
+	SDAIPoolAccount = "sDAIPoolAccount"
+
 	// This is the name of the sDAI token
 	SDaiDenom = "sDAI" // TODO: change
 
@@ -63,7 +65,7 @@ const (
 	MAX_NUM_YIELD_EPOCHS_STORED = 1000
 
 	// The minimum number of blocks until we accept a new epoch
-	DAI_YIELD_MIN_EPOCH_BLOCKS = 100000
+	DAI_YIELD_MIN_EPOCH_BLOCKS = 100
 )
 
 func GetPendingSendPacketKey(channelId string, sequenceNumber uint64) []byte {

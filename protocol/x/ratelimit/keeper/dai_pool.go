@@ -38,13 +38,15 @@ func DivideAndRoundUp(x, y *big.Int) (*big.Int, error) {
 	return result, nil
 }
 
-// Converts sDAI to corresponding amount of tDAI, implementing the following maker code
-/* 	https://etherscan.deth.net/address/0x83f20f44975d03b1b09e64809b757c47f942beea
-function deposit(uint256 assets, address receiver) external returns (uint256 shares) {
-	uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
-	shares = assets * RAY / chi;
-	_mint(assets, shares, receiver);
-}
+/*
+Converts sDAI to corresponding amount of tDAI, implementing the following maker code
+https://etherscan.deth.net/address/0x83f20f44975d03b1b09e64809b757c47f942beea
+
+	function deposit(uint256 assets, address receiver) external returns (uint256 shares) {
+		uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
+		shares = assets * RAY / chi;
+		_mint(assets, shares, receiver);
+	}
 */
 func (k Keeper) GetTradingDAIFromSDAIAmount(ctx sdk.Context, sDAI *big.Int) (*big.Int, error) {
 	// Get the current sDAI price
@@ -53,16 +55,22 @@ func (k Keeper) GetTradingDAIFromSDAIAmount(ctx sdk.Context, sDAI *big.Int) (*bi
 		return nil, errors.New("sDAI price not found")
 	}
 
+	if sDAIPrice.Cmp(big.NewInt(0)) == 0 {
+		return nil, errors.New("sDAI price is zero")
+	}
+
 	// Calculate shares = assets * RAY / chi. Shares and tDAI amount are equivalent
 	tDAI := new(big.Int).Mul(sDAI, new(big.Int).Exp(big.NewInt(types.BASE_10), big.NewInt(types.SDAI_DECIMALS), nil))
+
 	tDAI = tDAI.Div(tDAI, sDAIPrice)
 
 	return tDAI, nil
 }
 
-// Inspired by the following maker code.
 /*
-	// https://etherscan.deth.net/address/0x83f20f44975d03b1b09e64809b757c47f942beea
+Inspired by the following maker code.
+https://etherscan.deth.net/address/0x83f20f44975d03b1b09e64809b757c47f942beea
+
 	function withdraw(uint256 assets, address receiver, address owner) external returns (uint256 shares) {
 		uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
 		shares = _divup(assets * RAY, chi);
@@ -74,6 +82,10 @@ func (k Keeper) GetTradingDAIFromSDAIAmountAndRoundUp(ctx sdk.Context, sDAI *big
 	sDAIPrice, found := k.GetSDAIPrice(ctx)
 	if !found {
 		return nil, errors.New("sDAI price not found")
+	}
+
+	if sDAIPrice.Cmp(big.NewInt(0)) == 0 {
+		return nil, errors.New("sDAI price is zero")
 	}
 
 	// Calculate shares = _divup(assets * RAY / chi)
@@ -103,7 +115,7 @@ func (k Keeper) MintTradingDAIToUserAccount(
 	sDAICoins := sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewIntFromBigInt(sDAIAmount)))
 	tradingDAICoins := sdk.NewCoins(sdk.NewCoin(types.TradingDAIDenom, sdkmath.NewIntFromBigInt(tradingDAIAmount)))
 
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, userAddr, types.PoolAccount, sDAICoins); err != nil {
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, userAddr, types.SDAIPoolAccount, sDAICoins); err != nil {
 		return errorsmod.Wrap(err, "failed to send sDAI to ratelimit module")
 	}
 
@@ -144,7 +156,7 @@ func (k Keeper) WithdrawSDAIFromTradingDAI(
 		return errorsmod.Wrap(err, "failed to burn trading DAI transferred to the pool account")
 	}
 
-	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.PoolAccount, userAddr, sDAICoins); err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.SDAIPoolAccount, userAddr, sDAICoins); err != nil {
 		return errorsmod.Wrap(err, "failed to send sDAI to user account")
 	}
 

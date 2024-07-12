@@ -5,6 +5,7 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
 	perpetualsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
@@ -19,10 +20,11 @@ func TestModuleAccountsToAddresses(t *testing.T) {
 
 		ibctransfertypes.ModuleName:                "dydx1yl6hdjhmkf37639730gffanpzndzdpmh8xcdh5",
 		satypes.ModuleName:                         "dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6",
-		perpetualsmoduletypes.InsuranceFundName:   "dydx1c7ptc87hkd54e3r7zjy92q29xkq7t79w64slrq",
+		perpetualsmoduletypes.InsuranceFundName:    "dydx1c7ptc87hkd54e3r7zjy92q29xkq7t79w64slrq",
 		icatypes.ModuleName:                        "dydx1vlthgax23ca9syk7xgaz347xmf4nunefw3cnv8",
 		consumertypes.ConsumerRedistributeName:     "dydx1x69dz0c0emw8m2c6kp5v6c08kgjxmu30yn6p5y",
 		consumertypes.ConsumerToSendToProviderName: "dydx1ywtansy6ss0jtq8ckrcv6jzkps8yh8mf37gcch",
+		ratelimittypes.SDAIPoolAccount:             "dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0",
 	}
 
 	require.True(t, len(expectedModuleAccToAddresses) == len(app.GetMaccPerms()))
@@ -50,6 +52,7 @@ func TestMaccPerms(t *testing.T) {
 		"fee_collector":            nil,
 		"insurance_fund":           nil,
 		"subaccounts":              nil,
+		"sDAIPoolAccount":          nil,
 		"transfer":                 {"minter", "burner"},
 		"interchainaccounts":       nil,
 		"cons_redistribute":        nil,
@@ -67,6 +70,7 @@ func TestModuleAccountAddrs(t *testing.T) {
 		"dydx1c7ptc87hkd54e3r7zjy92q29xkq7t79w64slrq": true, // x/clob.insuranceFund
 		"dydx1x69dz0c0emw8m2c6kp5v6c08kgjxmu30yn6p5y": true, // x/ccvconsumer.ConsumerRedistribute
 		"dydx1ywtansy6ss0jtq8ckrcv6jzkps8yh8mf37gcch": true, // x/ccvconsumer.ConsumerToSendToProvider
+		"dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0": true, // x/ratelimit.SDAIPoolAccount
 	}
 
 	require.Equal(t, expectedModuleAccAddresses, app.ModuleAccountAddrs())

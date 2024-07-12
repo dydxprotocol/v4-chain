@@ -267,7 +267,7 @@ type App struct {
 
 	FeeTiersKeeper feetiersmodulekeeper.Keeper
 
-	PerpetualsKeeper *perpetualsmodulekeeper.Keeper
+	PerpetualsKeeper perpetualsmodulekeeper.Keeper
 
 	StatsKeeper statsmodulekeeper.Keeper
 
@@ -569,7 +569,7 @@ func New(
 		app.BankKeeper,
 		app.BlockTimeKeeper,
 		&app.PricesKeeper,
-		app.PerpetualsKeeper,
+		&app.PerpetualsKeeper,
 		app.IBCKeeper.ChannelKeeper, // ICS4Wrapper
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
@@ -848,7 +848,7 @@ func New(
 	)
 	delayMsgModule := delaymsgmodule.NewAppModule(appCodec, app.DelayMsgKeeper)
 
-	app.PerpetualsKeeper = perpetualsmodulekeeper.NewKeeper(
+	app.PerpetualsKeeper = *perpetualsmodulekeeper.NewKeeper(
 		appCodec,
 		keys[perpetualsmoduletypes.StoreKey],
 		app.PricesKeeper,
@@ -861,7 +861,7 @@ func New(
 		},
 		tkeys[perpetualsmoduletypes.TransientStoreKey],
 	)
-	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper)
+	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, &app.PerpetualsKeeper)
 
 	app.StatsKeeper = *statsmodulekeeper.NewKeeper(
 		appCodec,
