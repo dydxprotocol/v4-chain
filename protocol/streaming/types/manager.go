@@ -5,24 +5,21 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-type GrpcStreamingManager interface {
+type FullNodeStreamingManager interface {
 	Enabled() bool
 	Stop()
-	// L3+ Orderbook updates.
+
+	// GRPC streams
 	Subscribe(
 		req clobtypes.StreamOrderbookUpdatesRequest,
 		srv clobtypes.Query_StreamOrderbookUpdatesServer,
 	) (
 		err error,
 	)
-	InitializeNewGrpcStreams(
+
+	// L3+ Orderbook updates.
+	InitializeNewStreams(
 		getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
-		blockHeight uint32,
-		execMode sdk.ExecMode,
-	)
-	SendSnapshot(
-		offchainUpdates *clobtypes.OffchainUpdates,
-		subscriptionId uint32,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
@@ -32,7 +29,6 @@ type GrpcStreamingManager interface {
 		execMode sdk.ExecMode,
 	)
 	SendOrderbookFillUpdates(
-		ctx sdk.Context,
 		orderbookFills []clobtypes.StreamOrderbookFill,
 		blockHeight uint32,
 		execMode sdk.ExecMode,

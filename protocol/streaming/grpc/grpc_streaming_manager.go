@@ -7,14 +7,13 @@ import (
 
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/gogoproto/proto"
-	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/types"
+	streaming_util "github.com/dydxprotocol/v4-chain/protocol/streaming/util"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-var _ types.GrpcStreamingManager = (*GrpcStreamingManagerImpl)(nil)
+var _ types.FullNodeStreamingManager = (*GrpcStreamingManagerImpl)(nil)
 
 // GrpcStreamingManagerImpl is an implementation for managing gRPC streaming subscriptions.
 type GrpcStreamingManagerImpl struct {
@@ -219,7 +218,7 @@ func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 		time.Now(),
 	)
 
-	v1updates, err := GetOffchainUpdatesV1(offchainUpdates)
+	v1updates, err := streaming_util.GetOffchainUpdatesV1(offchainUpdates)
 	if err != nil {
 		panic(err)
 	}
@@ -298,7 +297,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	// Unmarshal each per-clob pair message to v1 updates.
 	updatesByClobPairId := make(map[uint32][]clobtypes.StreamUpdate)
 	for clobPairId, update := range updates {
-		v1updates, err := GetOffchainUpdatesV1(update)
+		v1updates, err := streaming_util.GetOffchainUpdatesV1(update)
 		if err != nil {
 			panic(err)
 		}
@@ -322,7 +321,6 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 // SendOrderbookFillUpdates groups fills by their clob pair ids and
 // sends messages to the subscribers.
 func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
-	ctx sdk.Context,
 	orderbookFills []clobtypes.StreamOrderbookFill,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
@@ -442,7 +440,7 @@ func (sm *GrpcStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 	sm.EmitMetrics()
 }
 
-func (sm *GrpcStreamingManagerImpl) InitializeNewGrpcStreams(
+func (sm *GrpcStreamingManagerImpl) InitializeNewStreams(
 	getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
@@ -470,18 +468,4 @@ func (sm *GrpcStreamingManagerImpl) InitializeNewGrpcStreams(
 			},
 		)
 	}
-}
-
-// GetOffchainUpdatesV1 unmarshals messages in offchain updates to OffchainUpdateV1.
-func GetOffchainUpdatesV1(offchainUpdates *clobtypes.OffchainUpdates) ([]ocutypes.OffChainUpdateV1, error) {
-	v1updates := make([]ocutypes.OffChainUpdateV1, 0)
-	for _, message := range offchainUpdates.Messages {
-		var update ocutypes.OffChainUpdateV1
-		err := proto.Unmarshal(message.Message.Value, &update)
-		if err != nil {
-			return nil, err
-		}
-		v1updates = append(v1updates, update)
-	}
-	return v1updates, nil
 }
