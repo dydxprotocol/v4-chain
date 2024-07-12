@@ -45,10 +45,11 @@ func getMarginedUpdate(
 	for _, pos := range updatedSubaccount.PerpetualPositions {
 		updatedPositionMap[pos.PerpetualId] = pos
 	}
+	currentQuoteBalance := updatedSubaccount.GetUsdcPosition()
 
 	// For each of the updated positions, check if the position is margined and
 	// if we need to move any collateral.
-	rebalancingNeeded := false
+	extraCollateralNeeded := make(map[uint32]*big.Int)
 	for _, u := range update.PerpetualUpdates {
 		pos := updatedPositionMap[u.PerpetualId]
 		if pos == nil {
@@ -64,6 +65,7 @@ func getMarginedUpdate(
 				u.PerpetualId,
 				pos.GetQuoteBalance(),
 			)
+			currentQuoteBalance.Add(currentQuoteBalance, pos.GetQuoteBalance())
 			continue
 		}
 
@@ -77,19 +79,47 @@ func getMarginedUpdate(
 		)
 
 		// case 2: the position is undercollateralized w.r.t. the maintenance margin requirement.
-		// In this case, we need to rebalance the collateral across all positions.
+		// In this case, we need to move collateral from the main quote balance and potentially
+		// need to rebalance across all positions.
 		if !risk.IsMaintenanceCollateralized() {
-			rebalancingNeeded = true
+			collateralNeeded := new(big.Int).Sub(risk.MMR, risk.NC)
+
+			if currentQuoteBalance.Cmp(collateralNeeded) >= 0 {
+				// case 2a: the main quote balance has enough collateral.
+				moveCollateralToPosition(
+					marginedAssetUpdates,
+					marginedPerpetualUpdates,
+					u.PerpetualId,
+					collateralNeeded,
+				)
+				currentQuoteBalance.Sub(currentQuoteBalance, collateralNeeded)
+			} else {
+				// case 2b: the main quote balance does not have enough collateral
+				// we need to rebalance collateral across all positions.
+				extraCollateralNeeded[u.PerpetualId] = collateralNeeded
+			}
 		}
 	}
 
 	// Deal with undercollateralized positions if needed.
-	if rebalancingNeeded {
+	if len(extraCollateralNeeded) > 0 {
+		// Withdraw as much as possible from the other positions without going below
+		// their maintenance margin requirements.
+		currentQuoteBalance.Add(
+			currentQuoteBalance,
+			withdrawCollateralFromPerpetualPositions(
+				update.SettledSubaccount,
+				marginedAssetUpdates,
+				marginedPerpetualUpdates,
+				perpInfos,
+			),
+		)
+		// Distribute the collateral to those under collateralized positions.
 		rebalanceCollateralAcrossPositions(
-			update.SettledSubaccount,
+			currentQuoteBalance,
 			marginedAssetUpdates,
 			marginedPerpetualUpdates,
-			perpInfos,
+			extraCollateralNeeded,
 		)
 	}
 
@@ -106,53 +136,20 @@ func getMarginedUpdate(
 }
 
 // rebalanceCollateralAcrossPositions rebalances the collateral across all positions
-// by first withdrawing as much as possible from the other positions without going below
-// their maintenance margin requirements, and then moving collateral to the undercollateralized
-// positions.
+// by moving collateral to the undercollateralized positions.
 func rebalanceCollateralAcrossPositions(
-	subaccount types.Subaccount,
+	mainQuoteBalance *big.Int,
 	assetUpdates map[uint32]types.AssetUpdate,
 	perpetualUpdates map[uint32]types.PerpetualUpdate,
-	perpInfos perptypes.PerpInfos,
+	extraCollateralNeeded map[uint32]*big.Int,
 ) {
-	// Withdraw as much as possible from the other positions without going below
-	// their maintenance margin requirements.
-	withdrawCollateralFromPerpetualPositions(
-		subaccount,
-		assetUpdates,
-		perpetualUpdates,
-		perpInfos,
-	)
+	sortedKeys := lib.GetSortedKeys[lib.Sortable[uint32]](extraCollateralNeeded)
+	for _, perpetualId := range sortedKeys {
+		collateralNeeded := extraCollateralNeeded[perpetualId]
+		collateralToTransfer := lib.BigMin(collateralNeeded, mainQuoteBalance)
 
-	// Calculate the updated subaccount after withdrawing collateral.
-	updatedSubaccount := salib.CalculateUpdatedSubaccount(
-		types.SettledUpdate{
-			SettledSubaccount: subaccount,
-			AssetUpdates:      lib.MapToSortedSlice[lib.Sortable[uint32]](assetUpdates),
-			PerpetualUpdates:  lib.MapToSortedSlice[lib.Sortable[uint32]](perpetualUpdates),
-		},
-		perpInfos,
-	)
-	mainQuoteBalance := updatedSubaccount.GetUsdcPosition()
-
-	for _, pos := range updatedSubaccount.PerpetualPositions {
-		perpInfo := perpInfos.MustGet(pos.PerpetualId)
-		risk := perplib.GetNetCollateralAndMarginRequirements(
-			perpInfo.Perpetual,
-			perpInfo.Price,
-			perpInfo.LiquidityTier,
-			pos.GetBigQuantums(),
-			pos.GetQuoteBalance(),
-		)
-
-		// Move collateral to the position if it is undercollateralized.
-		if !risk.IsMaintenanceCollateralized() {
-			collateralNeeded := new(big.Int).Sub(risk.MMR, risk.NC)
-			collateralToTransfer := lib.BigMin(collateralNeeded, mainQuoteBalance)
-
-			moveCollateralToPosition(assetUpdates, perpetualUpdates, pos.PerpetualId, collateralToTransfer)
-			mainQuoteBalance.Sub(mainQuoteBalance, collateralToTransfer)
-		}
+		moveCollateralToPosition(assetUpdates, perpetualUpdates, perpetualId, collateralToTransfer)
+		mainQuoteBalance.Sub(mainQuoteBalance, collateralToTransfer)
 	}
 }
 
@@ -164,7 +161,8 @@ func withdrawCollateralFromPerpetualPositions(
 	assetUpdates map[uint32]types.AssetUpdate,
 	perpetualUpdates map[uint32]types.PerpetualUpdate,
 	perpInfos perptypes.PerpInfos,
-) {
+) (collateralWithdrawn *big.Int) {
+	collateralWithdrawn = new(big.Int)
 	for _, pos := range subaccount.PerpetualPositions {
 		perpInfo := perpInfos.MustGet(pos.PerpetualId)
 		risk := perplib.GetNetCollateralAndMarginRequirements(
@@ -186,8 +184,10 @@ func withdrawCollateralFromPerpetualPositions(
 				pos.PerpetualId,
 				extraCollateral,
 			)
+			collateralWithdrawn.Add(collateralWithdrawn, extraCollateral)
 		}
 	}
+	return collateralWithdrawn
 }
 
 func moveCollateralToMainQuoteBalance(
