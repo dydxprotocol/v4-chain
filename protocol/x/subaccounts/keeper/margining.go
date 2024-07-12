@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -59,12 +58,11 @@ func getMarginedUpdate(
 		// case 1: the position is fully closed, but there is still some collateral left.
 		// move the remaining collateral to the main quote balance.
 		if pos.Quantums.Sign() == 0 {
-			moveCollateralToPosition(
+			moveCollateralToMainQuoteBalance(
 				marginedAssetUpdates,
 				marginedPerpetualUpdates,
 				u.PerpetualId,
-				// Negate the quote balance to move it to the main quote balance.
-				new(big.Int).Neg(pos.GetQuoteBalance()),
+				pos.GetQuoteBalance(),
 			)
 			continue
 		}
@@ -151,7 +149,6 @@ func rebalanceCollateralAcrossPositions(
 		if !risk.IsMaintenanceCollateralized() {
 			collateralNeeded := new(big.Int).Sub(risk.MMR, risk.NC)
 			collateralToTransfer := lib.BigMin(collateralNeeded, mainQuoteBalance)
-			fmt.Println("collateralToTransfer: ", collateralToTransfer.String())
 
 			moveCollateralToPosition(assetUpdates, perpetualUpdates, pos.PerpetualId, collateralToTransfer)
 			mainQuoteBalance.Sub(mainQuoteBalance, collateralToTransfer)
@@ -183,15 +180,28 @@ func withdrawCollateralFromPerpetualPositions(
 		extraCollateral := new(big.Int).Sub(risk.NC, risk.MMR)
 
 		if extraCollateral.Sign() > 0 {
-			moveCollateralToPosition(
+			moveCollateralToMainQuoteBalance(
 				assetUpdates,
 				perpetualUpdates,
 				pos.PerpetualId,
-				// Negate the quote balance to move it to the main quote balance.
-				new(big.Int).Neg(extraCollateral),
+				extraCollateral,
 			)
 		}
 	}
+}
+
+func moveCollateralToMainQuoteBalance(
+	assetUpdates map[uint32]types.AssetUpdate,
+	perpetualUpdates map[uint32]types.PerpetualUpdate,
+	perpetualId uint32,
+	collateral *big.Int,
+) {
+	moveCollateralToPosition(
+		assetUpdates,
+		perpetualUpdates,
+		perpetualId,
+		new(big.Int).Neg(collateral),
+	)
 }
 
 func moveCollateralToPosition(
