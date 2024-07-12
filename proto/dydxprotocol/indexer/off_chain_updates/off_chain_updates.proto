@@ -3,6 +3,8 @@ package dydxprotocol.indexer.off_chain_updates;
 
 import "dydxprotocol/indexer/shared/removal_reason.proto";
 import "dydxprotocol/indexer/protocol/v1/clob.proto";
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types";
 
@@ -35,6 +37,10 @@ message OrderPlaceV1 {
     // out by protocol.
     ORDER_PLACEMENT_STATUS_OPENED = 2;
   }
+
+  // The timestamp of the order placement.
+  google.protobuf.Timestamp time_stamp = 3
+      [ (gogoproto.nullable) = true, (gogoproto.stdtime) = true ];
 }
 
 // OrderRemove messages contain the id of the order removed, the reason for the
@@ -69,6 +75,10 @@ message OrderRemoveV1 {
     // An order was fully-filled. Only sent by the Indexer for stateful orders.
     ORDER_REMOVAL_STATUS_FILLED = 3;
   }
+
+  // The timestamp of the order removal.
+  google.protobuf.Timestamp time_stamp = 4
+      [ (gogoproto.nullable) = true, (gogoproto.stdtime) = true ];
 }
 
 // OrderUpdate messages contain the id of the order being updated, and the
@@ -78,13 +88,27 @@ message OrderUpdateV1 {
   uint64 total_filled_quantums = 2;
 }
 
+// OrderReplace messages contain the old order ID and the replacement order.
+message OrderReplaceV1 {
+  dydxprotocol.indexer.protocol.v1.IndexerOrderId old_order_id =
+      1; // vault replaces orders with a different order ID
+  dydxprotocol.indexer.protocol.v1.IndexerOrder order = 2;
+  dydxprotocol.indexer.off_chain_updates.OrderPlaceV1.OrderPlacementStatus
+      placement_status = 3;
+
+  google.protobuf.Timestamp time_stamp = 4
+      [ (gogoproto.nullable) = true, (gogoproto.stdtime) = true ];
+}
+
 // An OffChainUpdate message is the message type which will be sent on Kafka to
 // the Indexer.
 message OffChainUpdateV1 {
-  // Contains one of an OrderPlaceV1, OrderRemoveV1, and OrderUpdateV1 message.
+  // Contains one of an OrderPlaceV1, OrderRemoveV1, OrderUpdateV1, and
+  // OrderReplaceV1 message.
   oneof update_message {
     OrderPlaceV1 order_place = 1;
     OrderRemoveV1 order_remove = 2;
     OrderUpdateV1 order_update = 3;
+    OrderReplaceV1 order_replace = 4;
   }
 }

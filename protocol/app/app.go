@@ -1090,6 +1090,7 @@ func New(
 		app.PricesKeeper,
 		app.SendingKeeper,
 		app.SubaccountsKeeper,
+		app.IndexerEventManager,
 		[]string{
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
@@ -1244,6 +1245,9 @@ func New(
 		perpetualsmoduletypes.ModuleName,
 		statsmoduletypes.ModuleName,
 		satypes.ModuleName,
+		// should be before clob EndBlocker so that vault order cancels are
+		// processed before any vault order expirations (handled by clob)
+		vaultmoduletypes.ModuleName,
 		clobmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 		vestmoduletypes.ModuleName,
@@ -1251,7 +1255,6 @@ func New(
 		epochsmoduletypes.ModuleName,
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
-		vaultmoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
