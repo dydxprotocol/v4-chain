@@ -835,6 +835,22 @@ func (k Keeper) PersistMatchDeleveragingToState(
 				),
 			),
 		)
+		// if GRPC streaming is on, emit a generated clob match to stream.
+		if streamingManager := k.GetGrpcStreamingManager(); streamingManager.Enabled() {
+			streamOrderbookFill := types.StreamOrderbookFill{
+				ClobMatch: &types.ClobMatch{
+					Match: &types.ClobMatch_MatchPerpetualDeleveraging{
+						MatchPerpetualDeleveraging: matchDeleveraging,
+					},
+				},
+			}
+			k.SendOrderbookFillUpdates(
+				ctx,
+				[]types.StreamOrderbookFill{
+					streamOrderbookFill,
+				},
+			)
+		}
 	}
 
 	return nil
