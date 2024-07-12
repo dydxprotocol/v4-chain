@@ -7,6 +7,7 @@ import {
   testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import {
+  OpenOrdersCache,
   OrderbookLevelsCache,
   redis,
 } from '@dydxprotocol-indexer/redis';
@@ -39,8 +40,25 @@ describe('orderbook-instrumentation', () => {
   });
 
   it('succeeds with empty orderbook', async () => {
+    const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
+      {},
+      [],
+      {},
+    );
+
     await orderbookInstrumentationTask();
-    expect(stats.gauge).toHaveBeenCalledTimes(0);
+
+    perpetualMarkets.forEach((perpetualMarket: PerpetualMarketFromDatabase) => {
+      const tags: Object = { clob_pair_id: perpetualMarket.clobPairId };
+      expect(stats.gauge).toHaveBeenCalledWith(
+        'roundtable.open_orders_count',
+        0,
+        tags,
+      );
+    });
+
+    // Only open orders stat should have been sent
+    expect(stats.gauge).toHaveBeenCalledTimes(perpetualMarkets.length);
   });
 
   it('succeeds with stats', async () => {
@@ -95,6 +113,7 @@ describe('orderbook-instrumentation', () => {
             sizeDeltaInQuantums: '3500',
             client: redisClient,
           }),
+          OpenOrdersCache.addOpenOrder('orderUuid', perpetualMarket.clobPairId, redisClient),
         ]);
       },
       ));
@@ -145,6 +164,13 @@ describe('orderbook-instrumentation', () => {
       expect(stats.gauge).toHaveBeenCalledWith(
         'roundtable.crossed_orderbook.best_ask_subticks',
         priceToSubticks('45000', perpetualMarket),
+        tags,
+      );
+
+      // Check for open order count being gauged
+      expect(stats.gauge).toHaveBeenCalledWith(
+        'roundtable.open_orders_count',
+        1,
         tags,
       );
     });

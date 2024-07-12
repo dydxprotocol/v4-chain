@@ -33,6 +33,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import * as redisPackage from '@dydxprotocol-indexer/redis';
 import {
+  OpenOrdersCache,
   PriceLevel,
   OrdersCache,
   OrderbookLevels,
@@ -59,7 +60,7 @@ import { KafkaMessage } from 'kafkajs';
 import Long from 'long';
 import { redisClient, redisClient as client } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
-import { expectCanceledOrderStatus, handleInitialOrderPlace } from '../helpers/helpers';
+import { expectCanceledOrderStatus, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';
 import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
 import { OrderbookSide } from '../../src/lib/types';
 import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
@@ -592,6 +593,16 @@ describe('order-place-handler', () => {
         sizeDeltaInQuantums: oldPriceLevelInitialQuantums.toString(),
         client,
       });
+      // Add the order to the open orders cache to check if it is removed after replacement
+      await OpenOrdersCache.addOpenOrder(
+        expectedRedisOrder.id,
+        testConstants.defaultPerpetualMarket.clobPairId.toString(),
+        client,
+      );
+      await expectOpenOrderIds(
+        testConstants.defaultPerpetualMarket.clobPairId,
+        [expectedRedisOrder.id],
+      );
 
       // Handle the order place off-chain update with the replacement order
       await onMessage(orderReplacementMessage);
@@ -612,6 +623,9 @@ describe('order-place-handler', () => {
         expect(orderbook.asks).toHaveLength(0);
         expect(orderbook.bids).toContainEqual(expectedPriceLevel);
       }
+
+      // Check the order was removed from the open orders cache
+      await expectOpenOrderIds(testConstants.defaultPerpetualMarket.clobPairId, []);
 
       expect(logger.error).not.toHaveBeenCalled();
       const orderbookContents: OrderbookMessageContents = {
@@ -1229,7 +1243,7 @@ function expectWebsocketMessagesSent(
 
     expectWebsocketSubaccountMessage(
       producerSendSpy.mock.calls[callIndex][0],
-      [subaccountMessage],
+      subaccountMessage,
       defaultKafkaHeaders,
     );
     callIndex += 1;

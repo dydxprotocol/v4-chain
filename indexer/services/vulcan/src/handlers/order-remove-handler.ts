@@ -20,6 +20,7 @@ import {
   OrderType,
 } from '@dydxprotocol-indexer/postgres';
 import {
+  OpenOrdersCache,
   OrderbookLevelsCache,
   OrdersCache,
   RemoveOrderResult,
@@ -111,6 +112,15 @@ export class OrderRemoveHandler extends Handler {
       orderRemove,
       removeOrderResult,
     });
+
+    if (removeOrderResult.removed) {
+      const clobPairId: string = orderRemove.removedOrderId!.clobPairId.toString();
+      await OpenOrdersCache.removeOpenOrder(
+        removeOrderResult.removedOrder!.id,
+        clobPairId,
+        redisClient,
+      );
+    }
 
     if (
       orderRemove.reason === OrderRemovalReason.ORDER_REMOVAL_REASON_INDEXER_EXPIRED

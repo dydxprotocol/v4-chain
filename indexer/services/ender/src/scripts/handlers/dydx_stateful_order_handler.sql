@@ -21,43 +21,10 @@ DECLARE
     perpetual_market_record perpetual_markets%ROWTYPE;
     order_record orders%ROWTYPE;
     subaccount_record subaccounts%ROWTYPE;
-
-    errors_response jsonb[]; /* Array of error responses to return to the client. */
 BEGIN
-    /* For order replacement, remove old order first and don't return immediately */
-    IF event_data->'orderReplacement' IS NOT NULL THEN
-        order_id = event_data->'orderReplacement'->'oldOrderId';
-        order_record."status" = 'CANCELED';
-
-        clob_pair_id = (order_id->'clobPairId')::bigint;
-        perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
-
-        subaccount_id = dydx_uuid_from_subaccount_id(order_id->'subaccountId');
-        SELECT * INTO subaccount_record FROM subaccounts WHERE "id" = subaccount_id;
-        IF NOT FOUND THEN
-            RAISE EXCEPTION 'Subaccount for order not found: %', order_;
-        END IF;
-
-        order_record."id" = dydx_uuid_from_order_id(order_id);
-        order_record."updatedAt" = block_time;
-        order_record."updatedAtHeight" = block_height;
-        UPDATE orders
-        SET
-            "status" = order_record."status",
-            "updatedAt" = order_record."updatedAt",
-            "updatedAtHeight" = order_record."updatedAtHeight"
-        WHERE "id" = order_record."id"
-        RETURNING * INTO order_record;
-
-        IF NOT FOUND THEN
-            errors_response = array_append(errors_response, '"StatefulOrderReplacementHandler#Unable to cancel replaced order because orderId not found"'::jsonb);
-        END IF;
-    END IF;
-    order_record := NULL; /* Reset order_record so the order place below doesn't carry over any values set above. */
-
     /** TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent. */
-    IF event_data->'orderPlace' IS NOT NULL OR event_data->'longTermOrderPlacement' IS NOT NULL OR event_data->'conditionalOrderPlacement' IS NOT NULL OR event_data->'orderReplacement' IS NOT NULL THEN
-        order_ = coalesce(event_data->'orderPlace'->'order', event_data->'longTermOrderPlacement'->'order', event_data->'conditionalOrderPlacement'->'order', event_data->'orderReplacement'->'order');
+    IF event_data->'orderPlace' IS NOT NULL OR event_data->'longTermOrderPlacement' IS NOT NULL OR event_data->'conditionalOrderPlacement' IS NOT NULL THEN
+        order_ = coalesce(event_data->'orderPlace'->'order', event_data->'longTermOrderPlacement'->'order', event_data->'conditionalOrderPlacement'->'order');
         clob_pair_id = (order_->'orderId'->'clobPairId')::bigint;
 
         perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
@@ -127,9 +94,7 @@ BEGIN
                 'order',
                 dydx_to_jsonb(order_record),
                 'perpetual_market',
-                dydx_to_jsonb(perpetual_market_record),
-                'errors',
-                to_jsonb(errors_response)
+                dydx_to_jsonb(perpetual_market_record)
             );
     ELSIF event_data->'conditionalOrderTriggered' IS NOT NULL OR event_data->'orderRemoval' IS NOT NULL THEN
         CASE
@@ -171,12 +136,10 @@ BEGIN
                 'perpetual_market',
                 dydx_to_jsonb(perpetual_market_record),
                 'subaccount',
-                dydx_to_jsonb(subaccount_record),
-                'errors',
-                to_jsonb(errors_response)
+                dydx_to_jsonb(subaccount_record)
             );
     ELSE
-        RAISE EXCEPTION 'Unknown sub-event type %', event_data;
+        RAISE EXCEPTION 'Unkonwn sub-event type %', event_data;
     END IF;
 END;
 $$ LANGUAGE plpgsql;
