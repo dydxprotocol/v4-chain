@@ -42,7 +42,6 @@ type ClobKeeper interface {
 	HandleMsgCancelOrder(
 		ctx sdk.Context,
 		msg *MsgCancelOrder,
-		isInternalOrder bool,
 	) (err error)
 	HandleMsgPlaceOrder(
 		ctx sdk.Context,
