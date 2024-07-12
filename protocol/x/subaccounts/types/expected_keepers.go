@@ -7,6 +7,7 @@ import (
 
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -48,6 +49,15 @@ type AssetsKeeper interface {
 	) (
 		convertedQuantums *big.Int,
 		coin sdk.Coin,
+		err error,
+	)
+	ConvertAssetToFullCoin(
+		ctx sdk.Context,
+		assetId uint32,
+		quantums *big.Int,
+	) (
+		convertedQuantums *big.Int,
+		fullCoinAmount *big.Int,
 		err error,
 	)
 }
@@ -101,4 +111,6 @@ type BlocktimeKeeper interface {
 
 type RatelimitKeeper interface {
 	GetDAIYieldEpochParamsForEpoch(ctx sdk.Context, epoch uint64) (params types.DaiYieldEpochParams, err error)
+	GetCurrentDaiYieldEpochNumber(ctx sdk.Context) (epoch uint64, found bool)
+	SetDAIYieldEpochParamsForEpoch(ctx sdk.Context, epoch uint64, params types.DaiYieldEpochParams) (err error)
 }

@@ -32,7 +32,7 @@ func (k Keeper) CheckCurrentDAIYieldEpochElapsed(ctx sdk.Context) (bool, error) 
 	currentBlockNumber := ctx.BlockHeight()
 
 	// check if the current block number is greater than the epoch block number
-	if uint64(currentBlockNumber) < blockNumber + types.DAI_YIELD_MIN_EPOCH_BLOCKS {
+	if uint64(currentBlockNumber) < blockNumber+types.DAI_YIELD_MIN_EPOCH_BLOCKS {
 		return true, nil
 	}
 
@@ -43,14 +43,14 @@ func (k Keeper) CheckFirstDAIYieldEpoch(ctx sdk.Context) (uint64, bool) {
 
 	currentEpoch, found := k.GetCurrentDaiYieldEpochNumber(ctx)
 	if !found {
-		return nil, true
+		return 0, true
 	}
 	return currentEpoch, false
 }
 
 func (k Keeper) GetCurrentDAIYieldEpochBlockNumber(ctx sdk.Context, currentEpoch uint64) (uint64, bool) {
-	params, err := k.GetDAIYieldEpochParamsForEpoch(ctx, epochIndex)
-	if err {
+	params, err := k.GetDAIYieldEpochParamsForEpoch(ctx, currentEpoch)
+	if err != nil {
 		return 0, false
 	}
 
@@ -59,12 +59,12 @@ func (k Keeper) GetCurrentDAIYieldEpochBlockNumber(ctx sdk.Context, currentEpoch
 }
 
 func (k Keeper) PruneOldDAIYieldEpoch(ctx sdk.Context, newEpoch uint64) error {
-	params, err := k.GetDAIYieldEpochParamsForEpoch(ctx, epochIndex)
-	if err {
+	params, err := k.GetDAIYieldEpochParamsForEpoch(ctx, newEpoch)
+	if err != nil {
 		return err
 	}
 
-	err := k.TransferRemainingDAIYieldToInsuranceFund(ctx, params.TradingDaiMinted, params.TotalTradingDaiClaimedForEpoch)
+	err = k.TransferRemainingDAIYieldToInsuranceFund(ctx, params.TradingDaiMinted, params.TotalTradingDaiClaimedForEpoch)
 	if err != nil {
 		return err
 	}
@@ -74,56 +74,49 @@ func (k Keeper) PruneOldDAIYieldEpoch(ctx sdk.Context, newEpoch uint64) error {
 
 }
 
-
 func (k Keeper) GetDAIYieldEpochParamsForEpoch(
-	ctx sdk.Context, 
+	ctx sdk.Context,
 	epoch uint64,
 ) (
 	params types.DaiYieldEpochParams,
 	err error,
-){
+) {
 	isStored, err := k.isEpochStored(ctx, epoch)
 	if err != nil {
 		return types.DaiYieldEpochParams{}, err
 	}
 	if !isStored {
-		return types.DaiYieldEpochParams{}, errorsmod.New("Trying to get params for non-stored epoch number.")
+		return types.DaiYieldEpochParams{}, errorsmod.Wrap(types.ErrEpochNotStored, "Could not find epoch info when getting yield epoch params.")
 	}
 
-	epochIndex = epochIndex = k.getEpochIndexFromEpoch(epoch)
+	epochIndex := k.getEpochIndexFromEpoch(epoch)
 
-	params, success = k.GetDaiYieldEpochParams(ctx, epochIndex)
+	params, success := k.GetDaiYieldEpochParams(ctx, epochIndex)
 	if !success {
-		return types.DaiYieldEpochParams{}, errorsmod.New("Could not get yield epoch params from store")
+		return types.DaiYieldEpochParams{}, errorsmod.Wrap(types.ErrEpochNotRetrieved, "Could not retrieve epoch info when getting yield epoch params.")
 	}
 	return params, nil
 }
 
-
 func (k Keeper) SetDAIYieldEpochParamsForEpoch(
-	ctx sdk.Context, 
+	ctx sdk.Context,
 	epoch uint64,
 	params types.DaiYieldEpochParams,
-) (,
+) (
 	err error,
-){
-	epochIndex = k.getEpochIndexFromEpoch(epoch)
-	params, success = k.SetDaiYieldEpochParams(ctx, epochIndex, params)
-	if !success {
-		return errorsmod.New("Could not get yield epoch params from store")
-	}
+) {
+	epochIndex := k.getEpochIndexFromEpoch(epoch)
+	k.SetDaiYieldEpochParams(ctx, epochIndex, params)
 	return nil
 }
 
-
 func (k Keeper) getEpochIndexFromEpoch(
-	epoch uint64
+	epoch uint64,
 ) (
-	epochIndex uint64
+	epochIndex uint64,
 ) {
 	return epoch % types.MAX_NUM_YIELD_EPOCHS_STORED
 }
-
 
 func (k Keeper) isEpochStored(
 	ctx sdk.Context,
@@ -134,7 +127,7 @@ func (k Keeper) isEpochStored(
 ) {
 	currEpoch, success := k.GetCurrentDaiYieldEpochNumber(ctx)
 	if !success {
-		return false, errorsmod.New("Could not get current yield epoch number from store.")
+		return false, errorsmod.Wrap(types.ErrEpochNotRetrieved, "Could not retrieve yield epoch number when checking if epoch stored")
 	}
 
 	if epoch > currEpoch {
@@ -153,7 +146,6 @@ func (k Keeper) isEpochStored(
 
 	return true, nil
 }
-
 
 func (k Keeper) TransferRemainingDAIYieldToInsuranceFund(ctx sdk.Context, TradingDaiMinted string, TotalTradingDaiClaimedForEpoch string) error {
 

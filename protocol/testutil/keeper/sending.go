@@ -76,6 +76,15 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 		)
 		ks.AccountKeeper, _ = createAccountKeeper(stateStore, db, cdc, registry)
 		ks.BankKeeper, _ = createBankKeeper(stateStore, db, cdc, ks.AccountKeeper)
+		ratelimitKeeper, _ := createRatelimitKeeper(
+			stateStore,
+			db,
+			cdc,
+			ks.PricesKeeper,
+			blockTimeKeeper,
+			ks.BankKeeper,
+			ks.PerpetualsKeeper,
+		)
 		if saKeeper == nil {
 			ks.SubaccountsKeeper, _ = createSubaccountsKeeper(
 				stateStore,
@@ -84,6 +93,7 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 				ks.AssetsKeeper,
 				ks.BankKeeper,
 				ks.PerpetualsKeeper,
+				ratelimitKeeper,
 				blockTimeKeeper,
 				transientStoreKey,
 				true,

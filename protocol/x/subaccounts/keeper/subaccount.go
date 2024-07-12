@@ -20,15 +20,16 @@ import (
 	indexer_manager "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	assetstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	assetstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
-	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gometrics "github.com/hashicorp/go-metrics"
-	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
 
 // SetSubaccount set a specific subaccount in the store from its index.
@@ -195,7 +196,7 @@ func (k Keeper) getRandomBytes(ctx sdk.Context, rand *rand.Rand) ([]byte, error)
 	forwardItr := store.Iterator(nil, nil)
 	defer forwardItr.Close()
 	if !forwardItr.Valid() {
-		return nil, errors.New("No subaccounts")
+		return nil, errors.New("no subaccounts")
 	}
 
 	// Use the reverse iterator to get the last valid key.
@@ -454,9 +455,9 @@ func (k Keeper) getSettledSubaccount(
 	}
 
 	// TODO: We assume subaccount is passed as a pointer here.
-	yieldAmount, err = k.ClaimYieldForSubaccount(subaccount)
+	_, err = k.ClaimYieldForSubaccount(ctx, subaccount)
 	if err != nil {
-		return err
+		return types.Subaccount{}, nil, err
 	}
 
 	return GetSettledSubaccountWithPerpetuals(subaccount, perpetuals)
@@ -469,9 +470,12 @@ func (k Keeper) ClaimYieldForSubaccount(
 	yieldAmount *big.Int,
 	err error,
 ) {
-	currEpoch := k.getCurrEpoch()
+	currEpoch, found := k.ratelimitKeeper.GetCurrentDaiYieldEpochNumber(ctx)
+	if !found {
+		return big.NewInt(0), err
+	}
 	lastEpochUnclaimed := k.getLastEpochClaimed(subaccount, currEpoch)
-	yieldAmount = 0
+	yieldAmount = big.NewInt(0)
 
 	for epoch := lastEpochUnclaimed; epoch <= currEpoch; epoch++ {
 		epochYield, err := k.calculateYieldInEpochForSubaccount(ctx, subaccount, epoch)
@@ -494,35 +498,35 @@ func (k Keeper) getLastEpochClaimed(
 	lastEpochUnclaimed uint64,
 ) {
 	epochLastClaimed := subaccount.GetEpochYieldLastClaimed()
-	lastEpochUnclaimed := epochLastClaimed + 1
-	lastPossibleEpochUnclaimed := 0
-	if currEpoch >= ratelimittypes.MAX_NUM_YIELD_EPOCHS_STORED  {
-		lastPossibleEpochUnclaimed = currEpoch - ratelimittypes.MAX_NUM_YIELD_EPOCHS_STORED + 1
+	lastEpochUnclaimed = epochLastClaimed + 1
+	lastPossibleEpochUnclaimed := uint64(0)
+	if currEpoch >= ratelimittypes.MAX_NUM_YIELD_EPOCHS_STORED {
+		lastPossibleEpochUnclaimed = uint64(currEpoch - ratelimittypes.MAX_NUM_YIELD_EPOCHS_STORED + 1)
 	}
 
-	lastEpochUnclaimed = max(lastEpochUnclaimed, lastPossibleEpochClaimed)
+	lastEpochUnclaimed = max(lastEpochUnclaimed, lastPossibleEpochUnclaimed)
 	return lastEpochUnclaimed
 }
 
 func (k Keeper) calculateYieldInEpochForSubaccount(
 	ctx sdk.Context,
-	subacccount types.Subaccount,
-	epoch uin64,
+	subaccount types.Subaccount,
+	epoch uint64,
 ) (
 	yieldAmount *big.Int,
 	err error,
 ) {
-	marketPrices, err := k.getHistoricalPricesForEpoch(epoch)
+	marketPrices, err := k.getHistoricalPricesForEpoch(ctx, epoch)
 	if err != nil {
 		return big.NewInt(0), err
 	}
 
-	subaccountPositionValue, err := k.calculateSubaccountPositionValueFromMarketPrices(subaccount, marketPrices)
+	subaccountPositionValue, err := k.calculateSubaccountPositionValueFromMarketPrices(ctx, subaccount, marketPrices)
 	if err != nil {
 		return big.NewInt(0), err
 	}
 
-	yieldAmount, err := k.getSubaccountYieldAtEpochFromPosition(subaccountPositionValue, epoch)
+	yieldAmount, err = k.getSubaccountYieldAtEpochFromPosition(ctx, subaccountPositionValue, epoch)
 	if err != nil {
 		return big.NewInt(0), err
 	}
@@ -534,16 +538,16 @@ func (k Keeper) getHistoricalPricesForEpoch(
 	ctx sdk.Context,
 	epoch uint64,
 ) (
-	perpetualPrices []*prices.MarketPrice,
+	epochMarketPrices []*prices.MarketPrice,
 	err error,
 ) {
-	params, err := k.ratelimitKeeper.GetDAIYieldEpochParamsForEpoch(epoch)
+	params, err := k.ratelimitKeeper.GetDAIYieldEpochParamsForEpoch(ctx, epoch)
 	if err != nil {
-		return big.NewInt(0), err
+		return []*prices.MarketPrice{}, err
 	}
 
 	epochMarketPrices = params.EpochMarketPrices
-	return epochMarketPrices
+	return epochMarketPrices, nil
 }
 
 func (k Keeper) calculateSubaccountPositionValueFromMarketPrices(
@@ -556,7 +560,7 @@ func (k Keeper) calculateSubaccountPositionValueFromMarketPrices(
 ) {
 	assetPositions := subaccount.AssetPositions
 	perpetualPositions := subaccount.PerpetualPositions
-	positionValue := big.NewInt(0)
+	positionValue = big.NewInt(0)
 
 	assetPositionValue, err := k.getPositionValueFromAssets(ctx, assetPositions)
 	if err != nil {
@@ -565,31 +569,31 @@ func (k Keeper) calculateSubaccountPositionValueFromMarketPrices(
 
 	perpetualPositionValue, err := k.getPositionValueFromPerpetuals(ctx, perpetualPositions, marketPrices)
 	if err != nil {
-		return big.NewInt(0), err 
+		return big.NewInt(0), err
 	}
 
 	positionValue.Add(positionValue, assetPositionValue)
-	positionValue.Add(positionvalue, perpetualPositionValue)
+	positionValue.Add(positionValue, perpetualPositionValue)
 
 	// Convert position value from quantums to full coin
 	// TODO: [YBCP-14] Handle conversions more appropriately
 	quoteAssetId := assetstypes.AssetUsdc.Id
-	convertedQuantums, positionValue, err := k.assetsKeeper.ConvertAssetToFullCoin(ctx, positionValue)
+	_, positionValue, err = k.assetsKeeper.ConvertAssetToFullCoin(ctx, quoteAssetId, positionValue)
 	if err != nil {
-		return err
+		return big.NewInt(0), err
 	}
-	return positionValue
+	return positionValue, nil
 }
 
 func (k Keeper) getPositionValueFromAssets(
 	ctx sdk.Context,
-	assetPositions []*AssetPosition,
-)(
+	assetPositions []*types.AssetPosition,
+) (
 	positionValue *big.Int,
 	err error,
 ) {
 	// NOTE: Assume quote unit is only existing asset unit
-	positionValue := big.NewInt(0)
+	positionValue = big.NewInt(0)
 
 	for _, position := range assetPositions {
 		sizeInBigQuantums := position.GetBigQuantums()
@@ -598,22 +602,21 @@ func (k Keeper) getPositionValueFromAssets(
 		if err != nil {
 			return big.NewInt(0), err
 		}
-		totalValue.Add(totalValue, value)
+		positionValue.Add(positionValue, assetValue)
 	}
-	return totalValue, nil
+	return positionValue, nil
 }
-
 
 func (k Keeper) getPositionValueFromPerpetuals(
 	ctx sdk.Context,
-	perpetualPositions []*PerpetualPosition,
+	perpetualPositions []*types.PerpetualPosition,
 	perpetualPrices []*prices.MarketPrice,
-)(
+) (
 	positionValue *big.Int,
 	err error,
 ) {
 	// TODO: Might be more useful to convert this to map in epoch store
-	marketPriceMap, err := k.createMarketPriceMapFromList(ctx, perpetualPrices)
+	marketPriceMap, err := k.createMarketPriceMapFromList(perpetualPrices)
 	if err != nil {
 		return nil, err
 	}
@@ -629,10 +632,10 @@ func (k Keeper) getPositionValueFromPerpetuals(
 		marketId := perpetual.Params.MarketId
 		marketPrice, exists := marketPriceMap[marketId]
 		if !exists {
-			return nil, errorsmod.New("market price not found")
+			return nil, errorsmod.Wrap(types.ErrPerpetualPositionPriceNotPresentForEpoch, "market price not found")
 		}
 
-		value := k.perpetualsKeeper.GetNetNotionalInQuoteQuantums(perpetual, *marketPrice, sizeInBigQuantums)
+		value := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, *marketPrice, sizeInBigQuantums)
 		totalValue.Add(totalValue, value)
 	}
 
@@ -640,7 +643,6 @@ func (k Keeper) getPositionValueFromPerpetuals(
 }
 
 func (k Keeper) createMarketPriceMapFromList(
-	ctx sdk.Context,
 	perpetualPrices []*prices.MarketPrice,
 ) (
 	map[uint32]*prices.MarketPrice,
@@ -658,8 +660,8 @@ func (k Keeper) createMarketPriceMapFromList(
 	return marketPriceMap, nil
 }
 
-
 func (k Keeper) getSubaccountYieldAtEpochFromPosition(
+	ctx sdk.Context,
 	subaccountPositionValueInDai *big.Int,
 	epoch uint64,
 ) (
@@ -667,14 +669,25 @@ func (k Keeper) getSubaccountYieldAtEpochFromPosition(
 	err error,
 ) {
 
-	params, err := k.ratelimitKeeper.GetDAIYieldEpochParamsForEpoch(epoch)
+	params, err := k.ratelimitKeeper.GetDAIYieldEpochParamsForEpoch(ctx, epoch)
 	if err != nil {
 		return big.NewInt(0), err
 	}
 
-	tradingDaiMintedInEpoch := ratelimitkeeper.ConvertStringToBigInt(params.TradingDaiMinted)
-	tradingDaiPreMint := ratelimitkeeper.ConvertStringToBigInt(params.TotalTradingDaiPreMint)
-	tradingDaiClaimedForEpoch := ratelimitkeeper.ConvertStringToBigInt(params.TotalTradingDaiClaimedForEpoch)
+	tradingDaiMintedInEpoch, err := ratelimitkeeper.ConvertStringToBigInt(params.TradingDaiMinted)
+	if err != nil {
+		return big.NewInt(0), err
+	}
+
+	tradingDaiPreMint, err := ratelimitkeeper.ConvertStringToBigInt(params.TotalTradingDaiPreMint)
+	if err != nil {
+		return big.NewInt(0), err
+	}
+
+	tradingDaiClaimedForEpoch, err := ratelimitkeeper.ConvertStringToBigInt(params.TotalTradingDaiClaimedForEpoch)
+	if err != nil {
+		return big.NewInt(0), err
+	}
 
 	yieldAmount = new(big.Int).Mul(subaccountPositionValueInDai, tradingDaiMintedInEpoch)
 	yieldAmount = new(big.Int).Div(yieldAmount, tradingDaiPreMint)
@@ -683,26 +696,26 @@ func (k Keeper) getSubaccountYieldAtEpochFromPosition(
 	newClaimedAmount := new(big.Int).Add(tradingDaiClaimedForEpoch, yieldAmount)
 
 	if newClaimedAmount.Cmp(tradingDaiMintedInEpoch) > 0 {
-		return big.NewInt(0), errorsmod.New("Cannot claim trading DAI to subaccount: Claiming more than permitted.")
+		return big.NewInt(0), errorsmod.Wrap(types.ErrYieldClaim, "cannot claim trading DAI to subaccount: Claiming more than permitted")
 	}
-	
-	return yieldAmount, nil	
+
+	return yieldAmount, nil
 }
 
 func (k Keeper) updateStateForSubaccountYieldClaimInEpoch(
-	ctx sdk.Context, 
-	subacccount types.Subaccount, 
+	ctx sdk.Context,
+	subaccount types.Subaccount,
 	epoch uint64,
 	newYield *big.Int,
 ) (
 	err error,
 ) {
-	err := k.addNewYieldToStoredEpochParamsForEpoch(ctx, epoch, epochYield)
+	err = k.addNewYieldToStoredEpochParamsForEpoch(ctx, epoch, newYield)
 	if err != nil {
 		return err
 	}
 	subaccount.SetEpochYieldLastClaimed(epoch)
-	k.updateSubaccountAssetsWithNewYield(subaccount, epochYield)
+	k.updateSubaccountAssetsWithNewYield(subaccount, newYield)
 	return nil
 }
 
@@ -715,7 +728,11 @@ func (k Keeper) addNewYieldToStoredEpochParamsForEpoch(
 	if err != nil {
 		return err
 	}
-	tradingDaiClaimedForEpoch := ratelimitkeeper.ConvertStringToBigInt(params.TotalTradingDaiClaimedForEpoch)
+	tradingDaiClaimedForEpoch, err := ratelimitkeeper.ConvertStringToBigInt(params.TotalTradingDaiClaimedForEpoch)
+	if err != nil {
+		return err
+	}
+
 	tradingDaiClaimedForEpoch.Add(tradingDaiClaimedForEpoch, newYield)
 	params.TotalTradingDaiClaimedForEpoch = tradingDaiClaimedForEpoch.String()
 
@@ -727,8 +744,7 @@ func (k Keeper) addNewYieldToStoredEpochParamsForEpoch(
 }
 
 func (k Keeper) updateSubaccountAssetsWithNewYield(
-	ctx sdk.Context,
-	subacccount types.Subaccount,
+	subaccount types.Subaccount,
 	yieldAmount *big.Int,
 ) {
 	currPositionSize := subaccount.GetUsdcPosition()
@@ -1276,7 +1292,7 @@ func applyUpdatesToPositions[
 		id := update.GetId()
 		_, exists := updateMap[id]
 		if exists {
-			errMsg := fmt.Sprintf("Multiple updates exist for position %v", update.GetId())
+			errMsg := fmt.Sprintf("multiple updates exist for position %v", update.GetId())
 			return nil, errorsmod.Wrap(types.ErrNonUniqueUpdatesPosition, errMsg)
 		}
 

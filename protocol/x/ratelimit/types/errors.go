@@ -66,4 +66,14 @@ var (
 		1012,
 		"The SDAI rate has not been initialised",
 	)
+	ErrEpochNotStored = errorsmod.Register(
+		ModuleName,
+		1013,
+		"Epoch info is not stored",
+	)
+	ErrEpochNotRetrieved = errorsmod.Register(
+		ModuleName,
+		1014,
+		"Epoch info could not be retrieved from store",
+	)
 )

@@ -63,5 +63,5 @@ type ICS4Wrapper interface {
 		timeoutTimestamp uint64,
 		data []byte,
 	) (sequence uint64, err error)
-	GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool)
+	GetAppVersion(ctx sdk.Context, portID string, channelID string) (string, bool)
 }

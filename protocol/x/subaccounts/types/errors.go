@@ -65,10 +65,17 @@ var (
 		403,
 		"cannot revert perpetual open interest for OIMF calculation",
 	)
+	ErrPerpetualPositionPriceNotPresentForEpoch = errorsmod.Register(
+		ModuleName,
+		404,
+		"price for perpetual position not found for epoch",
+	)
 
 	// 500 - 599: transfer related.
 	ErrAssetTransferQuantumsNotPositive = errorsmod.Register(
 		ModuleName, 500, "asset transfer quantums is not positive")
 	ErrAssetTransferThroughBankNotImplemented = errorsmod.Register(
 		ModuleName, 501, "asset transfer (other than USDC) through the bank module is not implemented")
+	ErrYieldClaim = errorsmod.Register(
+		ModuleName, 502, "error when claiming yield for subaccount")
 )

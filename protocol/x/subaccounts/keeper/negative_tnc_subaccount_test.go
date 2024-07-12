@@ -225,7 +225,7 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state and test parameters.
-			ctx, subaccountsKeeper, pricesKeeper, perpetualsKeeper, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, subaccountsKeeper, pricesKeeper, perpetualsKeeper, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
@@ -248,7 +248,7 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 
 func TestGetSetNegativeTncSubaccountSeenAtBlock_PanicsOnDecreasingBlock(t *testing.T) {
 	// Setup keeper state and test parameters.
-	ctx, subaccountsKeeper, pricesKeeper, perpetualsKeeper, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	ctx, subaccountsKeeper, pricesKeeper, perpetualsKeeper, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 	keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 	keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)

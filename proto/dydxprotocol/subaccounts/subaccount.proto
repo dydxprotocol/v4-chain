@@ -32,5 +32,5 @@ message Subaccount {
   bool margin_enabled = 4;
   // The last yield epoch for this subaccount, indicating the epoch
   // when the subaccount last claimed their sDAI yield.
-  uint64 epoch_yield_last_claimed = 5;
+  uint64 yield_last_claimed_epoch = 5;
 }

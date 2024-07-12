@@ -192,7 +192,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
@@ -451,7 +451,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
@@ -724,7 +724,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _ :=
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ :=
 				keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
@@ -1050,7 +1050,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _ :=
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ :=
 				keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
@@ -1274,7 +1274,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
@@ -1492,7 +1492,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, perpsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpsKeeper)

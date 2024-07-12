@@ -58,3 +58,4 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=ExchangeConfigUpdater --dir=./daemons/pricefeed/client/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=EthQueryClient --dir=./daemons/sDAIOracle/client/eth_query_client --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=SDAIServiceClient --dir=./daemons/sDAIOracle/api --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=ICS4Wrapper --dir=x/ratelimit/types --recursive --output=./mocks --replace-type github.com/cosmos/ibc-go/v8/modules/core/02-client/types=clienttypes:github.com/cosmos/ibc-go/v8/modules/core/02-client/types

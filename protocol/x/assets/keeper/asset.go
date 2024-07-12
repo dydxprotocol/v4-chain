@@ -317,8 +317,7 @@ func (k Keeper) ConvertAssetToCoin(
 	return bigConvertedQuantums, sdk.NewCoin(asset.Denom, sdkmath.NewIntFromBigInt(bigConvertedDenomAmount)), nil
 }
 
-
-// ConvertAssetToFullCoin converts the given `assetId` and `quantums` 
+// ConvertAssetToFullCoin converts the given `assetId` and `quantums`
 // to the amount of full coins given by the atomic resolution.
 // fullCointAmount = quantums * 10^(atomic_resolution)
 //
@@ -352,12 +351,12 @@ func (k Keeper) ConvertAssetToFullCoin(
 		return big.NewInt(0), big.NewInt(0), nil
 	}
 
-	fullCoinAmount := lib.QuoteQuantumsToFullCoinAmount(quantums, asset.AtomicResolution)
+	fullCoinAmount = lib.QuoteQuantumsToFullCoinAmount(quantums, asset.AtomicResolution)
 
-	convertedQuantums := lib.BigMulPow10(
+	convertedQuantums = lib.BigMulPow10(
 		fullCoinAmount,
 		asset.AtomicResolution,
-	)
+	).Num()
 
 	return convertedQuantums, fullCoinAmount, nil
 }

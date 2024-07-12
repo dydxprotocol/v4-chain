@@ -268,7 +268,7 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 		},
 	} {
 		t.Run(testName, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, _, blocktimeKeeper, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, _, _, blocktimeKeeper, _ := keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)

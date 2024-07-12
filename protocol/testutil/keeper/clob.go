@@ -110,6 +110,15 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			db,
 			cdc,
 		)
+		ratelimitKeeper, _ := createRatelimitKeeper(
+			stateStore,
+			db,
+			cdc,
+			ks.PricesKeeper,
+			ks.BlockTimeKeeper,
+			bankKeeper,
+			ks.PerpetualsKeeper,
+		)
 		ks.SubaccountsKeeper, _ = createSubaccountsKeeper(
 			stateStore,
 			db,
@@ -117,6 +126,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.AssetsKeeper,
 			bankKeeper,
 			ks.PerpetualsKeeper,
+			ratelimitKeeper,
 			ks.BlockTimeKeeper,
 			indexerEventsTransientStoreKey,
 			true,
