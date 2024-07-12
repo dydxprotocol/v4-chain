@@ -14,8 +14,6 @@ import (
 
 	subaccountstypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
-	time "time"
-
 	types "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -547,26 +545,6 @@ func (_m *ClobKeeper) GetStatePosition(ctx types.Context, subaccountId subaccoun
 	return r0
 }
 
-// GetStatefulOrdersTimeSlice provides a mock function with given fields: ctx, goodTilBlockTime
-func (_m *ClobKeeper) GetStatefulOrdersTimeSlice(ctx types.Context, goodTilBlockTime time.Time) []clobtypes.OrderId {
-	ret := _m.Called(ctx, goodTilBlockTime)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetStatefulOrdersTimeSlice")
-	}
-
-	var r0 []clobtypes.OrderId
-	if rf, ok := ret.Get(0).(func(types.Context, time.Time) []clobtypes.OrderId); ok {
-		r0 = rf(ctx, goodTilBlockTime)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]clobtypes.OrderId)
-		}
-	}
-
-	return r0
-}
-
 // GetSubaccountLiquidationInfo provides a mock function with given fields: ctx, subaccountId
 func (_m *ClobKeeper) GetSubaccountLiquidationInfo(ctx types.Context, subaccountId subaccountstypes.SubaccountId) clobtypes.SubaccountLiquidationInfo {
 	ret := _m.Called(ctx, subaccountId)
@@ -645,17 +623,17 @@ func (_m *ClobKeeper) GetSubaccountMaxNotionalLiquidatable(ctx types.Context, su
 	return r0, r1
 }
 
-// HandleMsgCancelOrder provides a mock function with given fields: ctx, msg, isInternalOrder
-func (_m *ClobKeeper) HandleMsgCancelOrder(ctx types.Context, msg *clobtypes.MsgCancelOrder, isInternalOrder bool) error {
-	ret := _m.Called(ctx, msg, isInternalOrder)
+// HandleMsgCancelOrder provides a mock function with given fields: ctx, msg
+func (_m *ClobKeeper) HandleMsgCancelOrder(ctx types.Context, msg *clobtypes.MsgCancelOrder) error {
+	ret := _m.Called(ctx, msg)
 
 	if len(ret) == 0 {
 		panic("no return value specified for HandleMsgCancelOrder")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgCancelOrder, bool) error); ok {
-		r0 = rf(ctx, msg, isInternalOrder)
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgCancelOrder) error); ok {
+		r0 = rf(ctx, msg)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -874,11 +852,6 @@ func (_m *ClobKeeper) MaybeGetLiquidationOrder(ctx types.Context, subaccountId s
 // MigratePruneableOrders provides a mock function with given fields: ctx
 func (_m *ClobKeeper) MigratePruneableOrders(ctx types.Context) {
 	_m.Called(ctx)
-}
-
-// MustAddOrderToStatefulOrdersTimeSlice provides a mock function with given fields: ctx, goodTilBlockTime, orderId
-func (_m *ClobKeeper) MustAddOrderToStatefulOrdersTimeSlice(ctx types.Context, goodTilBlockTime time.Time, orderId clobtypes.OrderId) {
-	_m.Called(ctx, goodTilBlockTime, orderId)
 }
 
 // MustRemoveStatefulOrder provides a mock function with given fields: ctx, orderId
@@ -1151,26 +1124,6 @@ func (_m *ClobKeeper) RateLimitPlaceOrder(ctx types.Context, order *clobtypes.Ms
 // RemoveClobPair provides a mock function with given fields: ctx, id
 func (_m *ClobKeeper) RemoveClobPair(ctx types.Context, id clobtypes.ClobPairId) {
 	_m.Called(ctx, id)
-}
-
-// RemoveExpiredStatefulOrdersTimeSlices provides a mock function with given fields: ctx, blockTime
-func (_m *ClobKeeper) RemoveExpiredStatefulOrdersTimeSlices(ctx types.Context, blockTime time.Time) []clobtypes.OrderId {
-	ret := _m.Called(ctx, blockTime)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RemoveExpiredStatefulOrdersTimeSlices")
-	}
-
-	var r0 []clobtypes.OrderId
-	if rf, ok := ret.Get(0).(func(types.Context, time.Time) []clobtypes.OrderId); ok {
-		r0 = rf(ctx, blockTime)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]clobtypes.OrderId)
-		}
-	}
-
-	return r0
 }
 
 // RemoveOrderFillAmount provides a mock function with given fields: ctx, orderId

@@ -8,8 +8,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -28,7 +26,6 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 	defer totalSharesIterator.Close()
 	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
 		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
-
 		if err != nil {
 			log.ErrorLogWithError(ctx, "Failed to get vault ID from state key", err)
 			continue
@@ -392,9 +389,9 @@ func (k Keeper) GetVaultClobOrderIds(
 	return orderIds, nil
 }
 
-// internalPlaceVaultClobOrder places a vault CLOB order internal to the protocol, skipping various
+// PlaceVaultClobOrder places a vault CLOB order internal to the protocol, skipping various
 // logs, metrics, and validations
-func (k Keeper) internalPlaceVaultClobOrder(
+func (k Keeper) PlaceVaultClobOrder(
 	ctx sdk.Context,
 	vaultId types.VaultId,
 	order *clobtypes.Order,
@@ -410,29 +407,6 @@ func (k Keeper) internalPlaceVaultClobOrder(
 	return err
 }
 
-// PlaceVaultClobOrder places a vault CLOB order and emits order placement indexer event.
-func (k Keeper) PlaceVaultClobOrder(
-	ctx sdk.Context,
-	vaultId types.VaultId,
-	order *clobtypes.Order,
-) error {
-	err := k.internalPlaceVaultClobOrder(ctx, vaultId, order)
-
-	if err == nil {
-		k.GetIndexerEventManager().AddTxnEvent(
-			ctx,
-			indexerevents.SubtypeStatefulOrder,
-			indexerevents.StatefulOrderEventVersion,
-			indexer_manager.GetBytes(
-				indexerevents.NewLongTermOrderPlacementEvent(
-					*order,
-				),
-			),
-		)
-	}
-	return err
-}
-
 // ReplaceVaultClobOrder replaces a vault CLOB order internal to the protocol and
 // emits order replacement indexer event.
 func (k Keeper) ReplaceVaultClobOrder(
@@ -445,7 +419,7 @@ func (k Keeper) ReplaceVaultClobOrder(
 	err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
 		*oldOrderId,
 		uint32(ctx.BlockTime().Unix())+k.GetParams(ctx).OrderExpirationSeconds,
-	), true)
+	))
 	vaultId.IncrCounterWithLabels(
 		metrics.VaultCancelOrder,
 		metrics.GetLabelForBoolValue(metrics.Success, err == nil),
@@ -456,22 +430,7 @@ func (k Keeper) ReplaceVaultClobOrder(
 	}
 
 	// Place new order.
-	err = k.internalPlaceVaultClobOrder(ctx, vaultId, newOrder)
-
-	// Emit order replacement indexer event.
-	if err == nil {
-		k.GetIndexerEventManager().AddTxnEvent(
-			ctx,
-			indexerevents.SubtypeStatefulOrder,
-			indexerevents.StatefulOrderEventVersion,
-			indexer_manager.GetBytes(
-				indexerevents.NewLongTermOrderReplacementEvent(
-					*oldOrderId,
-					*newOrder,
-				),
-			),
-		)
-	}
+	err = k.PlaceVaultClobOrder(ctx, vaultId, newOrder)
 	return err
 }
 
