@@ -24,7 +24,7 @@ func (sm *NoopGrpcStreamingManager) Subscribe(
 ) (
 	err error,
 ) {
-	return clobtypes.ErrGrpcStreamingManagerNotEnabled
+	return types.ErrNotImplemented
 }
 
 func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
