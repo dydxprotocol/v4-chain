@@ -43,7 +43,6 @@ func Median(
 ) func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error) {
 	return func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error) {
 		priceInfo := make(map[string]PriceInfo)
-
 		for valAddr, valPrices := range vePrices {
 			addr, err := sdk.ConsAddressFromBech32(valAddr)
 			if err != nil {
@@ -96,7 +95,6 @@ func Median(
 		}
 		prices := make(map[string]*big.Int)
 		totalPower := GetTotalPower(ctx, vStore)
-
 		for pair, info := range priceInfo {
 			// The total voting power % that submitted a price update for the given currency pair must be
 			// greater than the threshold to be included in the final oracle price.

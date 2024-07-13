@@ -92,7 +92,6 @@ func TestQueryMessage(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			fmt.Println("PRINTING TEST CASE", name)
 
 			genesisChanges := getGenesisChanges(name)
 

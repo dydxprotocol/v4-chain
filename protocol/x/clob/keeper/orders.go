@@ -257,6 +257,8 @@ func (k Keeper) PlaceStatefulOrder(
 	ctx sdk.Context,
 	msg *types.MsgPlaceOrder,
 ) (err error) {
+	fmt.Println("-----------------------------------------NEW STATEFUL ORDER-----------------------------------------")
+
 	defer func() {
 		if err != nil {
 			telemetry.IncrCounterWithLabels(
@@ -300,6 +302,7 @@ func (k Keeper) PlaceStatefulOrder(
 	// 4. Perform a collateralization check for the full size of the order to mitigate spam.
 	// TODO(CLOB-725): Consider using a pessimistic collateralization check.
 	if !order.IsConditionalOrder() {
+		fmt.Println("XXX IT IS NOT CONDITIONAL")
 		_, successPerSubaccountUpdate := k.AddOrderToOrderbookCollatCheck(
 			ctx,
 			order.GetClobPairId(),
@@ -314,6 +317,7 @@ func (k Keeper) PlaceStatefulOrder(
 				},
 			},
 		)
+		fmt.Println("XXX SUCCESS PER SUB ACCOUNT UPDATE", successPerSubaccountUpdate)
 
 		if !successPerSubaccountUpdate[order.OrderId.SubaccountId].IsSuccess() {
 			return errorsmod.Wrapf(

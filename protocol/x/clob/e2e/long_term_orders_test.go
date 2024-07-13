@@ -121,10 +121,13 @@ func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
 			response abcitypes.ResponseFinalizeBlock,
 		) (haltChain bool) {
 			for txIndex, execResult := range response.TxResults {
-				if txIndex == 1 {
+				if txIndex == 2 {
 					require.True(t, execResult.IsErr())
 					require.Equal(t, clobtypes.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder.ABCICode(), execResult.Code)
 				} else {
+					if txIndex == 0 {
+						continue // skip the first tx, which is the vote extensions
+					}
 					require.True(t, execResult.IsOK(), "Expected DeliverTx to succeed. Response log: %+v", execResult.Log)
 				}
 			}
@@ -352,8 +355,8 @@ func TestImmediateExecutionLongTermOrders(t *testing.T) {
 			},
 		},
 		ExpectedDeliverTxErrors: map[int]string{
-			0: clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error(),
 			1: clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error(),
+			2: clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error(),
 		},
 	}
 	blockAdvancement.AdvanceToBlock(ctx, 2, tApp, t)

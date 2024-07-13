@@ -112,7 +112,7 @@ func NewVeAggregator(
 	}
 }
 func (ma *MedianAggregator) AggregateDaemonVE(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error) {
-
+	ma.prices = make(map[string]map[string]*big.Int)
 	for _, vote := range votes {
 		consAddr := vote.ConsAddress.String()
 		if err := ma.addVoteToAggregator(ctx, vote.ConsAddress.String(), vote.DaemonVoteExtension); err != nil {
@@ -124,7 +124,6 @@ func (ma *MedianAggregator) AggregateDaemonVE(ctx sdk.Context, votes []Vote) (ma
 			return nil, err
 		}
 	}
-
 	prices, err := ma.aggregateFn(ctx, ma.prices)
 	if err != nil {
 		ma.logger.Error(
@@ -194,7 +193,6 @@ func (ma *MedianAggregator) addVoteToAggregator(ctx sdk.Context, address string,
 			"validator_address", address,
 			"num_prices", len(prices),
 		)
-
 		ma.prices[address] = prices
 
 	}

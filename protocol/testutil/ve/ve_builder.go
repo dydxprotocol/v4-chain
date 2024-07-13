@@ -9,11 +9,11 @@ import (
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	cometabci "github.com/cometbft/cometbft/abci/types"
+	cometproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
+	ccvkeeper "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/keeper"
 	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
-
-	cometproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -258,7 +258,7 @@ func signVoteExtension(
 	privKey := constants.GetPrivKeyFromConsAddress(veInfo.Val)
 
 	cve := cometproto.CanonicalVoteExtension{
-		Height:    veInfo.Height - 1,
+		Height:    veInfo.Height,
 		Round:     veInfo.Round,
 		ChainId:   veInfo.ChainId,
 		Extension: voteExtension,
@@ -279,4 +279,43 @@ func marshalDelimited(msg proto.Message) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func GetInjectedExtendedCommitInfoForTestApp(
+	consumerKeeper *ccvkeeper.Keeper,
+	ctx sdk.Context,
+	prices map[uint32]uint64,
+	height int64,
+) (cometabci.ExtendedCommitInfo, []byte, error) {
+
+	var pricesBz = make(map[uint32][]byte, len(prices))
+	for marketId, price := range prices {
+		encodedPrice, err := GetIndexPriceCacheEncodedPrice(new(big.Int).SetUint64(price))
+		if err != nil {
+			return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to encode price: %v", err)
+		}
+
+		pricesBz[marketId] = encodedPrice
+	}
+
+	validators := consumerKeeper.GetAllCCValidator(ctx)
+
+	var veSignedInfos []SignedVEInfo
+	for _, v := range validators {
+		veSignedInfos = append(veSignedInfos, SignedVEInfo{
+			Val:     sdk.ConsAddress(v.Address),
+			Power:   v.GetPower(),
+			Prices:  pricesBz,
+			Height:  height,
+			Round:   0,
+			ChainId: "localdydxprotocol",
+		})
+	}
+
+	extCommitInfo, extCommitBz, err := CreateSignedExtendedCommitInfo(veSignedInfos)
+	if err != nil {
+		return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to create signed extended commit info: %v", err)
+	}
+	return extCommitInfo, extCommitBz, nil
+
 }

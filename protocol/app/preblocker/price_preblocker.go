@@ -48,7 +48,6 @@ func NewDaemonPreBlockHandler(
 // and writing to the prices module store.
 
 func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (resp *sdk.ResponsePreBlock, err error) {
-
 	if req == nil {
 		ctx.Logger().Error(
 			"received nil RequestFinalizeBlock in prices PreBlocker",
