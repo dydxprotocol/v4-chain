@@ -5,8 +5,10 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
+	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
@@ -24,6 +26,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 	"github.com/syndtr/goleveldb/leveldb/testutil"
+
+	sDAIStore "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/contract"
+	sDAITypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 )
 
 var (
@@ -83,6 +89,35 @@ func TestParallelAnteHandler_ClobAndOther(t *testing.T) {
 	}).WithNonDeterminismChecksEnabled(false).Build()
 	ctx := tApp.InitChain()
 
+	time.Sleep(1 * time.Second)
+	ethClient, err := ethclient.Dial(sDAITypes.ETHRPC)
+	require.NoError(t, err)
+
+	rate, blockNumber, err := sDAIStore.QueryDaiConversionRate(ethClient)
+	require.NoError(t, err)
+
+	ethClient.Close()
+
+	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+		Sender:              constants.Alice_Num0.Owner,
+		ConversionRate:      rate,
+		EthereumBlockNumber: blockNumber,
+	}
+
+	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+			Gas:                  1200000,
+			FeeAmt:               constants.TestFeeCoins_5Cents,
+		},
+		&msgUpdateSDAIConversionRate,
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
 	accounts := make([]sdktypes.AccountI, len(simAccounts))
 	for i, simAccount := range simAccounts {
 		accounts[i] = tApp.App.AccountKeeper.GetAccount(ctx, simAccount.Address)
@@ -138,7 +173,7 @@ func TestParallelAnteHandler_ClobAndOther(t *testing.T) {
 						},
 					},
 					constants.TestFeeCoins_5Cents,
-					100_000,
+					120_000,
 					ctx.ChainID(),
 					[]uint64{account.GetAccountNumber()},
 					[]uint64{sequenceNumber},

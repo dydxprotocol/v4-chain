@@ -303,7 +303,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 			// Verify expected indexer events.
 			expectedOnchainMessages := []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
 				&indexer_manager.IndexerTendermintBlock{
-					Height: 3,
+					Height: 4,
 					Time:   ctx.BlockTime(),
 					Events: []*indexer_manager.IndexerTendermintEvent{
 						{
@@ -532,7 +532,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			// Check for expected indexer events.
 			expectedOnchainMessages := []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
 				&indexer_manager.IndexerTendermintBlock{
-					Height: 3,
+					Height: 4,
 					Time:   ctx.BlockTime(),
 					Events: []*indexer_manager.IndexerTendermintEvent{
 						{
@@ -750,12 +750,13 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 				subaccountQuantumsAfterWithdraw,
 				subaccountQuantumsBeforeWithdraw.Sub(subaccountQuantumsBeforeWithdraw, tc.quantums),
 			)
+
 			// Check that there are no offchain messages.
 			require.Empty(t, msgSender.GetOffchainMessages())
 			// Check for expected indexer events.
 			expectedOnchainMessages := []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
 				&indexer_manager.IndexerTendermintBlock{
-					Height: 3,
+					Height: 4,
 					Time:   ctx.BlockTime(),
 					Events: []*indexer_manager.IndexerTendermintEvent{
 						{
