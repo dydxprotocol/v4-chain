@@ -188,7 +188,7 @@ func TestGetCurrentDAIYieldEpochBlockNumber(t *testing.T) {
 		},
 		{
 			name:          "Test the modding of the array index",
-			currentEpoch:  uint64(150),
+			currentEpoch:  uint64(1500),
 			blockNumber:   100,
 			expectedFound: true,
 			expectedBlock: 100,
@@ -201,9 +201,10 @@ func TestGetCurrentDAIYieldEpochBlockNumber(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.RatelimitKeeper
 
+			k.SetCurrentDaiYieldEpochNumber(ctx, tc.currentEpoch)
+
 			if tc.expectedFound {
-				epochIndex := tc.currentEpoch % types.MAX_NUM_YIELD_EPOCHS_STORED
-				k.SetDaiYieldEpochParams(ctx, epochIndex, types.DaiYieldEpochParams{
+				k.SetDAIYieldEpochParamsForEpoch(ctx, tc.currentEpoch, types.DaiYieldEpochParams{
 					BlockNumber: tc.blockNumber,
 				})
 			}
@@ -349,7 +350,7 @@ func TestCalculateYieldParamsForNewEpoch(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.RatelimitKeeper
 
-			if tc.expectedNewEpoch != 0 {
+			if tc.expectedNewEpoch > 0 {
 				k.SetCurrentDaiYieldEpochNumber(ctx, tc.currentEpoch)
 			}
 
