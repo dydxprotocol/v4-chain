@@ -226,7 +226,6 @@ import (
 
 	// Full Node Streaming
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
-	grpc_streaming "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc"
 	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 )
 
@@ -1969,7 +1968,7 @@ func getFullNodeStreamingManagerFromOptions(
 ) (manager streamingtypes.FullNodeStreamingManager) {
 	if appFlags.GrpcStreamingEnabled {
 		logger.Info("GRPC streaming is enabled")
-		return grpc_streaming.NewGrpcStreamingManager(
+		return streaming.NewGrpcStreamingManager(
 			logger,
 			appFlags.GrpcStreamingFlushIntervalMs,
 			appFlags.GrpcStreamingMaxBatchSize,

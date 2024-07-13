@@ -1,4 +1,4 @@
-package grpc
+package streaming
 
 import (
 	"fmt"
@@ -47,7 +47,7 @@ type OrderbookSubscription struct {
 	clobPairIds []uint32
 
 	// Stream
-	srv clobtypes.Query_StreamOrderbookUpdatesServer
+	srv types.OutgoingMessageSender
 
 	// Channel to buffer writes before the stream
 	updatesChannel chan []clobtypes.StreamUpdate
@@ -116,13 +116,11 @@ func (sm *GrpcStreamingManagerImpl) EmitMetrics() {
 
 // Subscribe subscribes to the orderbook updates stream.
 func (sm *GrpcStreamingManagerImpl) Subscribe(
-	req clobtypes.StreamOrderbookUpdatesRequest,
-	srv clobtypes.Query_StreamOrderbookUpdatesServer,
+	clobPairIds []uint32,
+	srv types.OutgoingMessageSender,
 ) (
 	err error,
 ) {
-	clobPairIds := req.GetClobPairId()
-
 	// Perform some basic validation on the request.
 	if len(clobPairIds) == 0 {
 		return clobtypes.ErrInvalidGrpcStreamingRequest

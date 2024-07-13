@@ -1,4 +1,4 @@
-package grpc
+package streaming
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,8 +19,8 @@ func (sm *NoopGrpcStreamingManager) Enabled() bool {
 }
 
 func (sm *NoopGrpcStreamingManager) Subscribe(
-	req clobtypes.StreamOrderbookUpdatesRequest,
-	srv clobtypes.Query_StreamOrderbookUpdatesServer,
+	_ []uint32,
+	_ types.OutgoingMessageSender,
 ) (
 	err error,
 ) {

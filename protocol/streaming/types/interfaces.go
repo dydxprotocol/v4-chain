@@ -9,10 +9,10 @@ type FullNodeStreamingManager interface {
 	Enabled() bool
 	Stop()
 
-	// GRPC streams
+	// Subscribe to streams
 	Subscribe(
-		req clobtypes.StreamOrderbookUpdatesRequest,
-		srv clobtypes.Query_StreamOrderbookUpdatesServer,
+		clobPairIds []uint32,
+		srv OutgoingMessageSender,
 	) (
 		err error,
 	)
@@ -33,4 +33,8 @@ type FullNodeStreamingManager interface {
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
+}
+
+type OutgoingMessageSender interface {
+	Send(*clobtypes.StreamOrderbookUpdatesResponse) error
 }
