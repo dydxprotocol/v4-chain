@@ -2,7 +2,6 @@ package sending_test
 
 import (
 	"bytes"
-	"fmt"
 	"math/big"
 	"testing"
 	"time"
@@ -38,6 +37,7 @@ import (
 )
 
 func TestMsgCreateTransfer(t *testing.T) {
+
 	tests := map[string]struct {
 		/* Setup */
 		// Initial balance of sender subaccount.
@@ -130,6 +130,14 @@ func TestMsgCreateTransfer(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			time.Sleep(1 * time.Second)
+			ethClient, err := ethclient.Dial(sDAITypes.ETHRPC)
+			require.NoError(t, err)
+
+			rate, blockNumber, err := sDAIStore.QueryDaiConversionRate(ethClient)
+			require.NoError(t, err)
+
+			ethClient.Close()
 			// Set up tApp with indexer and sender subaccount balance of USDC.
 			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
 			appOpts := map[string]interface{}{
@@ -176,6 +184,28 @@ func TestMsgCreateTransfer(t *testing.T) {
 				return genesis
 			}).WithAppOptions(appOpts).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              tc.senderSubaccountId.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
@@ -224,7 +254,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 
 			if tc.deliverTxFails {
 				// Check that DeliverTx fails on MsgCreateTransfer.
-				tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+				tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
 					ValidateFinalizeBlock: func(
 						context sdktypes.Context,
 						request abcitypes.RequestFinalizeBlock,
@@ -243,7 +273,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 				return
 			} else {
 				// Advance to block 3.
-				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+				ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 			}
 
 			// Verify expected sender subaccount balance.
@@ -338,6 +368,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 }
 
 func TestMsgDepositToSubaccount(t *testing.T) {
+
 	tests := map[string]struct {
 		// Account address.
 		accountAccAddress sdktypes.AccAddress
@@ -400,6 +431,14 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			time.Sleep(1 * time.Second)
+			ethClient, err := ethclient.Dial(sDAITypes.ETHRPC)
+			require.NoError(t, err)
+
+			rate, blockNumber, err := sDAIStore.QueryDaiConversionRate(ethClient)
+			require.NoError(t, err)
+
+			ethClient.Close()
 			// Set up tApp.
 			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
 			appOpts := map[string]interface{}{
@@ -407,6 +446,28 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			}
 			tApp := testapp.NewTestAppBuilder(t).WithNonDeterminismChecksEnabled(false).WithAppOptions(appOpts).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              tc.accountAccAddress.String(),
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
 
@@ -450,7 +511,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			// Check that no indexer events are emitted so far.
 			require.Empty(t, msgSender.GetOnchainMessages())
 			// Advance to block 3 for transactions to be delivered.
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 
 			// Check expected account balance.
 			accountBalanceAfterDeposit := tApp.App.BankKeeper.GetBalance(ctx, tc.accountAccAddress, tc.asset.Denom)
@@ -594,6 +655,14 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			time.Sleep(1 * time.Second)
+			ethClient, err := ethclient.Dial(sDAITypes.ETHRPC)
+			require.NoError(t, err)
+
+			rate, blockNumber, err := sDAIStore.QueryDaiConversionRate(ethClient)
+			require.NoError(t, err)
+
+			ethClient.Close()
 			// Set up tApp.
 			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
 			appOpts := map[string]interface{}{
@@ -601,6 +670,28 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 			}
 			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              tc.subaccountId.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
 
@@ -644,7 +735,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 			// Check that no indexer events are emitted so far.
 			require.Empty(t, msgSender.GetOnchainMessages())
 			// Advance to block 3 for transactions to be delivered.
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 
 			// Check expected account balance.
 			accountBalanceAfterWithdraw := tApp.App.BankKeeper.GetBalance(ctx, tc.accountAccAddress, tc.asset.Denom)
@@ -705,6 +796,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 				},
 			)}
 			require.ElementsMatch(t, expectedOnchainMessages, msgSender.GetOnchainMessages())
+
 		})
 	}
 }
@@ -785,15 +877,6 @@ func getSubaccountAssetQuantums(
 
 func TestWithdrawalGating_ChainOutage(t *testing.T) {
 
-	time.Sleep(1 * time.Second)
-	ethClient, err := ethclient.Dial(sDAITypes.ETHRPC)
-	require.NoError(t, err)
-
-	rate, blockNumber, err := sDAIStore.QueryDaiConversionRate(ethClient)
-	require.NoError(t, err)
-
-	ethClient.Close()
-
 	tests := map[string]struct {
 		// State.
 		subaccount satypes.Subaccount
@@ -816,37 +899,45 @@ func TestWithdrawalGating_ChainOutage(t *testing.T) {
 
 			expectedWithdrawalsGated: true,
 		},
-		// `30 minutes passes between blocks and transfers are gated after the chain restarts`: {
-		// 	subaccount: constants.Dave_Num1_10_000USD,
+		`30 minutes passes between blocks and transfers are gated after the chain restarts`: {
+			subaccount: constants.Dave_Num1_10_000USD,
 
-		// 	secondsBetweenBlocks: 60 * 30,
+			secondsBetweenBlocks: 60 * 30,
 
-		// 	isWithdrawal: false,
+			isWithdrawal: false,
 
-		// 	expectedWithdrawalsGated: true,
-		// },
-		// `Under 5 minutes passes between blocks and withdrawals are not gated after the chain restarts`: {
-		// 	subaccount: constants.Dave_Num1_10_000USD,
+			expectedWithdrawalsGated: true,
+		},
+		`Under 5 minutes passes between blocks and withdrawals are not gated after the chain restarts`: {
+			subaccount: constants.Dave_Num1_10_000USD,
 
-		// 	secondsBetweenBlocks: 299,
+			secondsBetweenBlocks: 299,
 
-		// 	isWithdrawal: true,
+			isWithdrawal: true,
 
-		// 	expectedWithdrawalsGated: false,
-		// },
-		// `Under 5 minutes passes between blocks and transfers are not gated after the chain restarts`: {
-		// 	subaccount: constants.Dave_Num1_10_000USD,
+			expectedWithdrawalsGated: false,
+		},
+		`Under 5 minutes passes between blocks and transfers are not gated after the chain restarts`: {
+			subaccount: constants.Dave_Num1_10_000USD,
 
-		// 	secondsBetweenBlocks: 299,
+			secondsBetweenBlocks: 299,
 
-		// 	isWithdrawal: false,
+			isWithdrawal: false,
 
-		// 	expectedWithdrawalsGated: false,
-		// },
+			expectedWithdrawalsGated: false,
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			time.Sleep(1 * time.Second)
+			ethClient, err := ethclient.Dial(sDAITypes.ETHRPC)
+			require.NoError(t, err)
+
+			rate, blockNumber, err := sDAIStore.QueryDaiConversionRate(ethClient)
+			require.NoError(t, err)
+
+			ethClient.Close()
 			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
@@ -886,30 +977,6 @@ func TestWithdrawalGating_ChainOutage(t *testing.T) {
 				BlockTime: startTime,
 			})
 
-			// sDAIEventManager := tApp.App.RatelimitKeeper.GetSDAIEventManagerForTestingOnly()
-			// sDAIEventManager.AddsDAIEvent(&api.AddsDAIEventsRequest{
-			// 	ConversionRate:      rate,
-			// 	EthereumBlockNumber: blockNumber,
-			// })
-
-			// sDAIEventManager = tApp.ParallelApp.RatelimitKeeper.GetSDAIEventManagerForTestingOnly()
-			// sDAIEventManager.AddsDAIEvent(&api.AddsDAIEventsRequest{
-			// 	ConversionRate:      rate,
-			// 	EthereumBlockNumber: blockNumber,
-			// })
-
-			// sDAIEventManager = tApp.CrashingApp.RatelimitKeeper.GetSDAIEventManagerForTestingOnly()
-			// sDAIEventManager.AddsDAIEvent(&api.AddsDAIEventsRequest{
-			// 	ConversionRate:      rate,
-			// 	EthereumBlockNumber: blockNumber,
-			// })
-
-			// sDAIEventManager = tApp.NoCheckTxApp.RatelimitKeeper.GetSDAIEventManagerForTestingOnly()
-			// sDAIEventManager.AddsDAIEvent(&api.AddsDAIEventsRequest{
-			// 	ConversionRate:      rate,
-			// 	EthereumBlockNumber: blockNumber,
-			// })
-
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:              tc.subaccount.Id.Owner,
 				ConversionRate:      rate,
@@ -934,9 +1001,6 @@ func TestWithdrawalGating_ChainOutage(t *testing.T) {
 			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 				BlockTime: startTime.Add((time.Duration(tc.secondsBetweenBlocks) * time.Second)),
 			})
-
-			currentDAIYieldEpochBlockNumber, found := tApp.App.RatelimitKeeper.GetCurrentDAIYieldEpochBlockNumber(ctx, 0)
-			fmt.Println("currentDAIYieldEpochBlockNumber", currentDAIYieldEpochBlockNumber, found)
 
 			// Verify withdrawals are blocked by trying to create a transfer message that withdraws funds.
 			var msg proto.Message

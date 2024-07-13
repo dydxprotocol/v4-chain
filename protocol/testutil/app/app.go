@@ -401,9 +401,9 @@ type TestApp struct {
 	// TODO(CLOB-545): Hide App and copy the pointers to keepers to be prevent incorrect usage of App.CheckTx over
 	// TestApp.CheckTx.
 	App                *app.App
-	ParallelApp        *app.App
-	NoCheckTxApp       *app.App
-	CrashingApp        *app.App
+	parallelApp        *app.App
+	noCheckTxApp       *app.App
+	crashingApp        *app.App
 	restartCrashingApp func()
 	builder            TestAppBuilder
 	genesis            types.GenesisDoc
@@ -504,7 +504,7 @@ func (tApp *TestApp) initChainIfNeeded() {
 				tApp.builder.t.Fatal(err)
 				return
 			}
-			tApp.ParallelApp = app
+			tApp.parallelApp = app
 
 			tApp.builder.t.Cleanup(func() {
 				doneErr := shutdownFn()
@@ -532,7 +532,7 @@ func (tApp *TestApp) initChainIfNeeded() {
 				tApp.builder.t.Fatal(err)
 				return
 			}
-			tApp.NoCheckTxApp = app
+			tApp.noCheckTxApp = app
 
 			tApp.builder.t.Cleanup(func() {
 				doneErr := shutdownFn()
@@ -560,7 +560,7 @@ func (tApp *TestApp) initChainIfNeeded() {
 				tApp.builder.t.Fatal(err)
 				return
 			}
-			tApp.CrashingApp = app
+			tApp.crashingApp = app
 
 			tApp.builder.t.Cleanup(func() {
 				doneErr := shutdownFn()
@@ -578,7 +578,7 @@ func (tApp *TestApp) initChainIfNeeded() {
 			tApp.restartCrashingApp = func() {
 				// We shutdown the instance of the existing crashingApp.
 				doneOrRestartErr := shutdownFn()
-				tApp.CrashingApp = nil
+				tApp.crashingApp = nil
 
 				if err == nil {
 					app, shutdownFn, doneOrRestartErr = launchValidatorInDir(validatorHomeDir, filteredAppOptions)
@@ -595,7 +595,7 @@ func (tApp *TestApp) initChainIfNeeded() {
 				}
 
 				// Update the crashingApp pointer to the new instance of the application.
-				tApp.CrashingApp = app
+				tApp.crashingApp = app
 			}
 		}
 	}
@@ -614,9 +614,9 @@ func (tApp *TestApp) initChainIfNeeded() {
 	}
 
 	if tApp.builder.enableNonDeterminismChecks {
-		initChain(tApp.builder.t, tApp.ParallelApp, initChainRequest, initChainResponse.AppHash)
-		initChain(tApp.builder.t, tApp.NoCheckTxApp, initChainRequest, initChainResponse.AppHash)
-		initChain(tApp.builder.t, tApp.CrashingApp, initChainRequest, initChainResponse.AppHash)
+		initChain(tApp.builder.t, tApp.parallelApp, initChainRequest, initChainResponse.AppHash)
+		initChain(tApp.builder.t, tApp.noCheckTxApp, initChainRequest, initChainResponse.AppHash)
+		initChain(tApp.builder.t, tApp.crashingApp, initChainRequest, initChainResponse.AppHash)
 	}
 
 	finalizeBlockRequest := abcitypes.RequestFinalizeBlock{
@@ -632,9 +632,9 @@ func (tApp *TestApp) initChainIfNeeded() {
 	_, err = tApp.App.Commit()
 	require.NoError(tApp.builder.t, err)
 	if tApp.builder.enableNonDeterminismChecks {
-		finalizeBlockAndCommit(tApp.builder.t, tApp.ParallelApp, finalizeBlockRequest, tApp.App)
-		finalizeBlockAndCommit(tApp.builder.t, tApp.NoCheckTxApp, finalizeBlockRequest, tApp.App)
-		finalizeBlockAndCommit(tApp.builder.t, tApp.CrashingApp, finalizeBlockRequest, tApp.App)
+		finalizeBlockAndCommit(tApp.builder.t, tApp.parallelApp, finalizeBlockRequest, tApp.App)
+		finalizeBlockAndCommit(tApp.builder.t, tApp.noCheckTxApp, finalizeBlockRequest, tApp.App)
+		finalizeBlockAndCommit(tApp.builder.t, tApp.crashingApp, finalizeBlockRequest, tApp.App)
 	}
 
 	tApp.header = tmproto.Header{
@@ -705,7 +705,6 @@ func (tApp *TestApp) AdvanceToBlock(
 			if options.RequestPrepareProposalTxsOverride != nil {
 				prepareRequest.Txs = options.RequestPrepareProposalTxsOverride
 			}
-			fmt.Println("PREPARE")
 			prepareResponse, prepareErr := tApp.App.PrepareProposal(&prepareRequest)
 
 			if options.ValidateRespPrepare != nil {
@@ -740,7 +739,7 @@ func (tApp *TestApp) AdvanceToBlock(
 				NextValidatorsHash: tApp.header.NextValidatorsHash,
 				ProposerAddress:    tApp.header.ProposerAddress,
 			}
-			fmt.Println("PROCESS")
+
 			processResponse, processErr := tApp.App.ProcessProposal(&processRequest)
 
 			if options.ValidateRespProcess != nil {
@@ -765,7 +764,7 @@ func (tApp *TestApp) AdvanceToBlock(
 
 			// Check that all instances of the application can process the proposoal and come to the same result.
 			if tApp.builder.enableNonDeterminismChecks {
-				parallelProcessResponse, parallelProcessErr := tApp.ParallelApp.ProcessProposal(&processRequest)
+				parallelProcessResponse, parallelProcessErr := tApp.parallelApp.ProcessProposal(&processRequest)
 				require.Truef(
 					tApp.builder.t,
 					parallelProcessErr == nil && parallelProcessResponse.IsAccepted(),
@@ -774,7 +773,7 @@ func (tApp *TestApp) AdvanceToBlock(
 					parallelProcessResponse,
 					parallelProcessErr,
 				)
-				noCheckTxProcessResponse, noCheckTxProcessErr := tApp.NoCheckTxApp.ProcessProposal(&processRequest)
+				noCheckTxProcessResponse, noCheckTxProcessErr := tApp.noCheckTxApp.ProcessProposal(&processRequest)
 				require.Truef(
 					tApp.builder.t,
 					noCheckTxProcessErr == nil && noCheckTxProcessResponse.IsAccepted(),
@@ -783,7 +782,7 @@ func (tApp *TestApp) AdvanceToBlock(
 					noCheckTxProcessResponse,
 					noCheckTxProcessErr,
 				)
-				crashingProcessResponse, crashingProcessErr := tApp.CrashingApp.ProcessProposal(&processRequest)
+				crashingProcessResponse, crashingProcessErr := tApp.crashingApp.ProcessProposal(&processRequest)
 				require.Truef(
 					tApp.builder.t,
 					crashingProcessErr == nil && crashingProcessResponse.IsAccepted(),
@@ -821,7 +820,7 @@ func (tApp *TestApp) AdvanceToBlock(
 			NextValidatorsHash: tApp.header.NextValidatorsHash,
 			ProposerAddress:    tApp.header.ProposerAddress,
 		}
-		fmt.Println("FINALIZE")
+
 		finalizeBlockResponse, finalizeBlockErr := tApp.App.FinalizeBlock(&finalizeBlockRequest)
 
 		if options.ValidateFinalizeBlock != nil {
@@ -859,12 +858,12 @@ func (tApp *TestApp) AdvanceToBlock(
 
 		// Finalize and commit all the blocks for the non-determinism checkers.
 		if tApp.builder.enableNonDeterminismChecks {
-			fmt.Println("parallel")
-			finalizeBlockAndCommit(tApp.builder.t, tApp.ParallelApp, finalizeBlockRequest, tApp.App)
-			fmt.Println("noCheckTx")
-			finalizeBlockAndCommit(tApp.builder.t, tApp.NoCheckTxApp, finalizeBlockRequest, tApp.App)
-			fmt.Println("crashing")
-			finalizeBlockAndCommit(tApp.builder.t, tApp.CrashingApp, finalizeBlockRequest, tApp.App)
+
+			finalizeBlockAndCommit(tApp.builder.t, tApp.parallelApp, finalizeBlockRequest, tApp.App)
+
+			finalizeBlockAndCommit(tApp.builder.t, tApp.noCheckTxApp, finalizeBlockRequest, tApp.App)
+
+			finalizeBlockAndCommit(tApp.builder.t, tApp.crashingApp, finalizeBlockRequest, tApp.App)
 		}
 
 		// Recheck the remaining transactions in the mempool pruning any that have failed during recheck.
@@ -880,7 +879,7 @@ func (tApp *TestApp) AdvanceToBlock(
 			}
 
 			if tApp.builder.enableNonDeterminismChecks {
-				parallelRecheckTxResponse, parallelRecheckTxErr := tApp.ParallelApp.CheckTx(&recheckTxRequest)
+				parallelRecheckTxResponse, parallelRecheckTxErr := tApp.parallelApp.CheckTx(&recheckTxRequest)
 				require.Truef(
 					tApp.builder.t,
 					recheckTxResponse.Code == parallelRecheckTxResponse.Code &&
@@ -1085,7 +1084,7 @@ func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseChe
 	if tApp.builder.enableNonDeterminismChecks {
 		// We expect the parallel app to always produce the same result since all in memory state should be
 		// consistent with tApp.App and produce the same result.
-		parallelRes, parallelErr := tApp.ParallelApp.CheckTx(&req)
+		parallelRes, parallelErr := tApp.parallelApp.CheckTx(&req)
 		require.Truef(
 			tApp.builder.t,
 			res.Code == parallelRes.Code && ((err == nil && parallelErr == nil) || (err != nil && parallelErr != nil)),
@@ -1098,7 +1097,7 @@ func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseChe
 
 		// The crashing app may or may not be able to get to a recoverable state that would produce equivalent
 		// results. For example short-term orders and cancellations will be lost from in-memory state.
-		crashingRes, crashingErr := tApp.CrashingApp.CheckTx(&req)
+		crashingRes, crashingErr := tApp.crashingApp.CheckTx(&req)
 		if tApp.builder.enableCrashingAppCheckTxNonDeterminismChecks {
 			require.Truef(
 				tApp.builder.t,

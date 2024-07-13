@@ -179,21 +179,6 @@ func (k Keeper) TransferRemainingDAIYieldToInsuranceFund(ctx sdk.Context, Tradin
 
 func (k Keeper) CreateAndStoreNewDaiYieldEpochParams(ctx sdk.Context) error {
 
-	currentEpoch, found := k.GetCurrentDaiYieldEpochNumber(ctx)
-	if !found {
-		return errorsmod.Wrap(
-			types.ErrInvalidSDAIConversionRate,
-			"DAI yield epoch not found",
-		)
-	}
-
-	newEpoch := currentEpoch + 1
-
-	err := k.PruneOldDAIYieldEpoch(ctx, newEpoch)
-	if err != nil {
-		return err
-	}
-
 	tDAISupply, tradingDaiMinted, yieldCollectedByInsuranceFund, newEpoch, err := k.CalculateYieldParamsForNewEpoch(ctx)
 	if err != nil {
 		return err
