@@ -233,6 +233,7 @@ import (
 	// Full Node Streaming
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
 	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/ws"
 )
 
 var (
@@ -752,7 +753,11 @@ func New(
 		indexerFlags.SendOffchainData,
 	)
 
-	app.FullNodeStreamingManager = getFullNodeStreamingManagerFromOptions(appFlags, logger)
+	app.FullNodeStreamingManager = getFullNodeStreamingManagerFromOptions(
+		appFlags,
+		appCodec,
+		logger,
+	)
 
 	timeProvider := &timelib.TimeProviderImpl{}
 
@@ -2015,16 +2020,27 @@ func getIndexerFromOptions(
 // from the specified options. This function will default to returning a no-op instance.
 func getFullNodeStreamingManagerFromOptions(
 	appFlags flags.Flags,
+	cdc codec.Codec,
 	logger log.Logger,
 ) (manager streamingtypes.FullNodeStreamingManager) {
 	if appFlags.GrpcStreamingEnabled {
-		logger.Info("GRPC streaming is enabled")
-		return streaming.NewFullNodeStreamingManager(
+		logger.Info("Full node streaming is enabled")
+		manager := streaming.NewFullNodeStreamingManager(
 			logger,
 			appFlags.GrpcStreamingFlushIntervalMs,
 			appFlags.GrpcStreamingMaxBatchSize,
 			appFlags.GrpcStreamingMaxChannelBufferSize,
 		)
+
+		// Start websocket server.
+		// TODO: use separate flag to control websocket server.
+		wsServer := ws.NewWebsocketServer(
+			manager,
+			cdc,
+			logger,
+		)
+		wsServer.Start()
+		return manager
 	}
 	return streaming.NewNoopGrpcStreamingManager()
 }
