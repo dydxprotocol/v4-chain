@@ -454,7 +454,7 @@ func (k Keeper) getSettledSubaccount(
 		perpetuals[p.PerpetualId] = perpetual
 	}
 
-	// TODO: We assume subaccount is passed as a pointer here.
+	// We assume subaccount is passed as a pointer here.
 	_, err = k.ClaimYieldForSubaccount(ctx, subaccount)
 	if err != nil {
 		return types.Subaccount{}, nil, err

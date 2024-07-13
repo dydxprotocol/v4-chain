@@ -62,6 +62,14 @@ func (k Keeper) GetCurrentDAIYieldEpochBlockNumber(ctx sdk.Context, currentEpoch
 }
 
 func (k Keeper) PruneOldDAIYieldEpoch(ctx sdk.Context, newEpoch uint64) error {
+	epochIndexPopulated, err := k.isEpochStored(ctx, newEpoch)
+	if err != nil {
+		return err
+	}
+	if !epochIndexPopulated {
+		return nil
+	}
+
 	params, err := k.GetDAIYieldEpochParamsForEpoch(ctx, newEpoch)
 	if err != nil {
 		return err
@@ -89,14 +97,14 @@ func (k Keeper) GetDAIYieldEpochParamsForEpoch(
 		return types.DaiYieldEpochParams{}, err
 	}
 	if !isStored {
-		return types.DaiYieldEpochParams{}, errorsmod.Wrap(types.ErrEpochNotStored, "Could not find epoch info when getting yield epoch params.")
+		return types.DaiYieldEpochParams{}, errorsmod.Wrap(types.ErrEpochNotStored, "could not find epoch info when getting yield epoch params")
 	}
 
 	epochIndex := k.getEpochIndexFromEpoch(epoch)
 
 	params, success := k.GetDaiYieldEpochParams(ctx, epochIndex)
 	if !success {
-		return types.DaiYieldEpochParams{}, errorsmod.Wrap(types.ErrEpochNotRetrieved, "Could not retrieve epoch info when getting yield epoch params.")
+		return types.DaiYieldEpochParams{}, errorsmod.Wrap(types.ErrEpochNotRetrieved, "could not retrieve epoch info when getting yield epoch params")
 	}
 	return params, nil
 }
