@@ -224,9 +224,9 @@ import (
 	servicemetrics "github.com/skip-mev/slinky/service/metrics"
 	promserver "github.com/skip-mev/slinky/service/servers/prometheus"
 
-	// Grpc Streaming
-	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc"
-	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
+	// Full Node Streaming
+	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
+	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 )
 
 var (
@@ -333,9 +333,9 @@ type App struct {
 	// module configurator
 	configurator module.Configurator
 
-	IndexerEventManager  indexer_manager.IndexerEventManager
-	GrpcStreamingManager streamingtypes.GrpcStreamingManager
-	Server               *daemonserver.Server
+	IndexerEventManager      indexer_manager.IndexerEventManager
+	FullNodeStreamingManager streamingtypes.FullNodeStreamingManager
+	Server                   *daemonserver.Server
 
 	// startDaemons encapsulates the logic that starts all daemons and daemon services. This function contains a
 	// closure of all relevant data structures that are shared with various keepers. Daemon services startup is
@@ -469,8 +469,8 @@ func New(
 			if app.SlinkyClient != nil {
 				app.SlinkyClient.Stop()
 			}
-			if app.GrpcStreamingManager != nil {
-				app.GrpcStreamingManager.Stop()
+			if app.FullNodeStreamingManager != nil {
+				app.FullNodeStreamingManager.Stop()
 			}
 			return nil
 		},
@@ -732,7 +732,7 @@ func New(
 		indexerFlags.SendOffchainData,
 	)
 
-	app.GrpcStreamingManager = getGrpcStreamingManagerFromOptions(appFlags, logger)
+	app.FullNodeStreamingManager = getFullNodeStreamingManagerFromOptions(appFlags, logger)
 
 	timeProvider := &timelib.TimeProviderImpl{}
 
@@ -1041,7 +1041,7 @@ func New(
 	logger.Info("Parsed CLOB flags", "Flags", clobFlags)
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
-	memClob.SetGenerateOrderbookUpdates(app.GrpcStreamingManager.Enabled())
+	memClob.SetGenerateOrderbookUpdates(app.FullNodeStreamingManager.Enabled())
 
 	app.ClobKeeper = clobmodulekeeper.NewKeeper(
 		appCodec,
@@ -1064,7 +1064,7 @@ func New(
 		app.StatsKeeper,
 		app.RewardsKeeper,
 		app.IndexerEventManager,
-		app.GrpcStreamingManager,
+		app.FullNodeStreamingManager,
 		txConfig.TxDecoder(),
 		clobFlags,
 		rate_limit.NewPanicRateLimiter[sdk.Msg](),
@@ -1960,15 +1960,15 @@ func getIndexerFromOptions(
 	return indexerMessageSender, indexerFlags
 }
 
-// getGrpcStreamingManagerFromOptions returns an instance of a streamingtypes.GrpcStreamingManager from the specified
-// options. This function will default to returning a no-op instance.
-func getGrpcStreamingManagerFromOptions(
+// getFullNodeStreamingManagerFromOptions returns an instance of a streamingtypes.FullNodeStreamingManager
+// from the specified options. This function will default to returning a no-op instance.
+func getFullNodeStreamingManagerFromOptions(
 	appFlags flags.Flags,
 	logger log.Logger,
-) (manager streamingtypes.GrpcStreamingManager) {
+) (manager streamingtypes.FullNodeStreamingManager) {
 	if appFlags.GrpcStreamingEnabled {
 		logger.Info("GRPC streaming is enabled")
-		return streaming.NewGrpcStreamingManager(
+		return streaming.NewFullNodeStreamingManager(
 			logger,
 			appFlags.GrpcStreamingFlushIntervalMs,
 			appFlags.GrpcStreamingMaxBatchSize,

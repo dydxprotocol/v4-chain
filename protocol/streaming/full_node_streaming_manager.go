@@ -1,4 +1,4 @@
-package grpc
+package streaming
 
 import (
 	"fmt"
@@ -7,17 +7,16 @@ import (
 
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/gogoproto/proto"
-	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/types"
+	streaming_util "github.com/dydxprotocol/v4-chain/protocol/streaming/util"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-var _ types.GrpcStreamingManager = (*GrpcStreamingManagerImpl)(nil)
+var _ types.FullNodeStreamingManager = (*FullNodeStreamingManagerImpl)(nil)
 
-// GrpcStreamingManagerImpl is an implementation for managing gRPC streaming subscriptions.
-type GrpcStreamingManagerImpl struct {
+// FullNodeStreamingManagerImpl is an implementation for managing streaming subscriptions.
+type FullNodeStreamingManagerImpl struct {
 	sync.Mutex
 
 	logger log.Logger
@@ -26,9 +25,10 @@ type GrpcStreamingManagerImpl struct {
 	orderbookSubscriptions map[uint32]*OrderbookSubscription
 	nextSubscriptionId     uint32
 
-	// grpc stream will batch and flush out messages every 10 ms.
+	// stream will batch and flush out messages every 10 ms.
 	ticker *time.Ticker
 	done   chan bool
+
 	// map of clob pair id to stream updates.
 	streamUpdateCache map[uint32][]clobtypes.StreamUpdate
 	numUpdatesInCache uint32
@@ -48,20 +48,20 @@ type OrderbookSubscription struct {
 	clobPairIds []uint32
 
 	// Stream
-	srv clobtypes.Query_StreamOrderbookUpdatesServer
+	messageSender types.OutgoingMessageSender
 
 	// Channel to buffer writes before the stream
 	updatesChannel chan []clobtypes.StreamUpdate
 }
 
-func NewGrpcStreamingManager(
+func NewFullNodeStreamingManager(
 	logger log.Logger,
 	flushIntervalMs uint32,
 	maxUpdatesInCache uint32,
 	maxSubscriptionChannelSize uint32,
-) *GrpcStreamingManagerImpl {
-	logger = logger.With(log.ModuleKey, "grpc-streaming")
-	grpcStreamingManager := &GrpcStreamingManagerImpl{
+) *FullNodeStreamingManagerImpl {
+	logger = logger.With(log.ModuleKey, "full-node-streaming")
+	fullNodeStreamingManager := &FullNodeStreamingManagerImpl{
 		logger:                 logger,
 		orderbookSubscriptions: make(map[uint32]*OrderbookSubscription),
 		nextSubscriptionId:     0,
@@ -80,25 +80,25 @@ func NewGrpcStreamingManager(
 	go func() {
 		for {
 			select {
-			case <-grpcStreamingManager.ticker.C:
-				grpcStreamingManager.FlushStreamUpdates()
-			case <-grpcStreamingManager.done:
-				grpcStreamingManager.logger.Info(
-					"GRPC Stream poller goroutine shutting down",
+			case <-fullNodeStreamingManager.ticker.C:
+				fullNodeStreamingManager.FlushStreamUpdates()
+			case <-fullNodeStreamingManager.done:
+				fullNodeStreamingManager.logger.Info(
+					"Stream poller goroutine shutting down",
 				)
 				return
 			}
 		}
 	}()
 
-	return grpcStreamingManager
+	return fullNodeStreamingManager
 }
 
-func (sm *GrpcStreamingManagerImpl) Enabled() bool {
+func (sm *FullNodeStreamingManagerImpl) Enabled() bool {
 	return true
 }
 
-func (sm *GrpcStreamingManagerImpl) EmitMetrics() {
+func (sm *FullNodeStreamingManagerImpl) EmitMetrics() {
 	metrics.SetGauge(
 		metrics.GrpcStreamNumUpdatesBuffered,
 		float32(sm.numUpdatesInCache),
@@ -116,24 +116,22 @@ func (sm *GrpcStreamingManagerImpl) EmitMetrics() {
 }
 
 // Subscribe subscribes to the orderbook updates stream.
-func (sm *GrpcStreamingManagerImpl) Subscribe(
-	req clobtypes.StreamOrderbookUpdatesRequest,
-	srv clobtypes.Query_StreamOrderbookUpdatesServer,
+func (sm *FullNodeStreamingManagerImpl) Subscribe(
+	clobPairIds []uint32,
+	messageSender types.OutgoingMessageSender,
 ) (
 	err error,
 ) {
-	clobPairIds := req.GetClobPairId()
-
 	// Perform some basic validation on the request.
 	if len(clobPairIds) == 0 {
-		return clobtypes.ErrInvalidGrpcStreamingRequest
+		return types.ErrInvalidStreamingRequest
 	}
 
 	sm.Lock()
 	subscription := &OrderbookSubscription{
 		subscriptionId: sm.nextSubscriptionId,
 		clobPairIds:    clobPairIds,
-		srv:            srv,
+		messageSender:  messageSender,
 		updatesChannel: make(chan []clobtypes.StreamUpdate, sm.maxSubscriptionChannelSize),
 	}
 
@@ -156,7 +154,7 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 			metrics.GrpcSendResponseToSubscriberCount,
 			1,
 		)
-		err = subscription.srv.Send(
+		err = subscription.messageSender.Send(
 			&clobtypes.StreamOrderbookUpdatesResponse{
 				Updates: updates,
 			},
@@ -165,7 +163,7 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 			// On error, remove the subscription from the streaming manager
 			sm.logger.Error(
 				fmt.Sprintf(
-					"Error sending out update for grpc streaming subscription %+v. Dropping subsciption connection.",
+					"Error sending out update for streaming subscription %+v. Dropping subsciption connection.",
 					subscription.subscriptionId,
 				),
 				"err", err,
@@ -184,9 +182,9 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 	return err
 }
 
-// removeSubscription removes a subscription from the grpc streaming manager.
+// removeSubscription removes a subscription from the streaming manager.
 // The streaming manager's lock should already be acquired before calling this.
-func (sm *GrpcStreamingManagerImpl) removeSubscription(
+func (sm *FullNodeStreamingManagerImpl) removeSubscription(
 	subscriptionIdToRemove uint32,
 ) {
 	subscription := sm.orderbookSubscriptions[subscriptionIdToRemove]
@@ -196,18 +194,18 @@ func (sm *GrpcStreamingManagerImpl) removeSubscription(
 	close(subscription.updatesChannel)
 	delete(sm.orderbookSubscriptions, subscriptionIdToRemove)
 	sm.logger.Info(
-		fmt.Sprintf("Removed grpc streaming subscription id %+v", subscriptionIdToRemove),
+		fmt.Sprintf("Removed streaming subscription id %+v", subscriptionIdToRemove),
 	)
 }
 
-func (sm *GrpcStreamingManagerImpl) Stop() {
+func (sm *FullNodeStreamingManagerImpl) Stop() {
 	sm.done <- true
 }
 
 // SendSnapshot sends messages to a particular subscriber without buffering.
 // Note this method requires the lock and assumes that the lock has already been
 // acquired by the caller.
-func (sm *GrpcStreamingManagerImpl) SendSnapshot(
+func (sm *FullNodeStreamingManagerImpl) SendSnapshot(
 	offchainUpdates *clobtypes.OffchainUpdates,
 	subscriptionId uint32,
 	blockHeight uint32,
@@ -219,7 +217,7 @@ func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 		time.Now(),
 	)
 
-	v1updates, err := GetOffchainUpdatesV1(offchainUpdates)
+	v1updates, err := streaming_util.GetOffchainUpdatesV1(offchainUpdates)
 	if err != nil {
 		panic(err)
 	}
@@ -230,7 +228,7 @@ func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 		if !ok {
 			sm.logger.Error(
 				fmt.Sprintf(
-					"GRPC Streaming subscription id %+v not found. This should not happen.",
+					"Streaming subscription id %+v not found. This should not happen.",
 					subscriptionId,
 				),
 			)
@@ -257,7 +255,7 @@ func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 		default:
 			sm.logger.Error(
 				fmt.Sprintf(
-					"GRPC Streaming subscription id %+v channel full capacity. Dropping subscription connection.",
+					"Streaming subscription id %+v channel full capacity. Dropping subscription connection.",
 					subscriptionId,
 				),
 			)
@@ -274,7 +272,7 @@ func (sm *GrpcStreamingManagerImpl) SendSnapshot(
 
 // SendOrderbookUpdates groups updates by their clob pair ids and
 // sends messages to the subscribers.
-func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
+func (sm *FullNodeStreamingManagerImpl) SendOrderbookUpdates(
 	offchainUpdates *clobtypes.OffchainUpdates,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
@@ -298,7 +296,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	// Unmarshal each per-clob pair message to v1 updates.
 	updatesByClobPairId := make(map[uint32][]clobtypes.StreamUpdate)
 	for clobPairId, update := range updates {
-		v1updates, err := GetOffchainUpdatesV1(update)
+		v1updates, err := streaming_util.GetOffchainUpdatesV1(update)
 		if err != nil {
 			panic(err)
 		}
@@ -321,8 +319,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 
 // SendOrderbookFillUpdates groups fills by their clob pair ids and
 // sends messages to the subscribers.
-func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
-	ctx sdk.Context,
+func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdates(
 	orderbookFills []clobtypes.StreamOrderbookFill,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
@@ -356,7 +353,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 	sm.AddUpdatesToCache(updatesByClobPairId, uint32(len(orderbookFills)))
 }
 
-func (sm *GrpcStreamingManagerImpl) AddUpdatesToCache(
+func (sm *FullNodeStreamingManagerImpl) AddUpdatesToCache(
 	updatesByClobPairId map[uint32][]clobtypes.StreamUpdate,
 	numUpdatesToAdd uint32,
 ) {
@@ -375,7 +372,7 @@ func (sm *GrpcStreamingManagerImpl) AddUpdatesToCache(
 
 	// Remove all subscriptions and wipe the buffer if buffer overflows.
 	if sm.numUpdatesInCache > sm.maxUpdatesInCache {
-		sm.logger.Error("GRPC Streaming buffer full capacity. Dropping messages and all subscriptions. " +
+		sm.logger.Error("Streaming buffer full capacity. Dropping messages and all subscriptions. " +
 			"Disconnect all clients and increase buffer size via the grpc-stream-buffer-size flag.")
 		for id := range sm.orderbookSubscriptions {
 			sm.removeSubscription(id)
@@ -386,7 +383,7 @@ func (sm *GrpcStreamingManagerImpl) AddUpdatesToCache(
 	sm.EmitMetrics()
 }
 
-func (sm *GrpcStreamingManagerImpl) FlushStreamUpdates() {
+func (sm *FullNodeStreamingManagerImpl) FlushStreamUpdates() {
 	sm.Lock()
 	defer sm.Unlock()
 	sm.FlushStreamUpdatesWithLock()
@@ -395,7 +392,7 @@ func (sm *GrpcStreamingManagerImpl) FlushStreamUpdates() {
 // FlushStreamUpdatesWithLock takes in a map of clob pair id to stream updates and emits them to subscribers.
 // Note this method requires the lock and assumes that the lock has already been
 // acquired by the caller.
-func (sm *GrpcStreamingManagerImpl) FlushStreamUpdatesWithLock() {
+func (sm *FullNodeStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 	defer metrics.ModuleMeasureSince(
 		metrics.FullNodeGrpc,
 		metrics.GrpcFlushUpdatesLatency,
@@ -432,7 +429,7 @@ func (sm *GrpcStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 	for _, id := range idsToRemove {
 		sm.logger.Error(
 			fmt.Sprintf(
-				"GRPC Streaming subscription id %+v channel full capacity. Dropping subscription connection.",
+				"Streaming subscription id %+v channel full capacity. Dropping subscription connection.",
 				id,
 			),
 		)
@@ -442,7 +439,7 @@ func (sm *GrpcStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 	sm.EmitMetrics()
 }
 
-func (sm *GrpcStreamingManagerImpl) InitializeNewGrpcStreams(
+func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 	getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
@@ -470,18 +467,4 @@ func (sm *GrpcStreamingManagerImpl) InitializeNewGrpcStreams(
 			},
 		)
 	}
-}
-
-// GetOffchainUpdatesV1 unmarshals messages in offchain updates to OffchainUpdateV1.
-func GetOffchainUpdatesV1(offchainUpdates *clobtypes.OffchainUpdates) ([]ocutypes.OffChainUpdateV1, error) {
-	v1updates := make([]ocutypes.OffChainUpdateV1, 0)
-	for _, message := range offchainUpdates.Messages {
-		var update ocutypes.OffChainUpdateV1
-		err := proto.Unmarshal(message.Message.Value, &update)
-		if err != nil {
-			return nil, err
-		}
-		v1updates = append(v1updates, update)
-	}
-	return v1updates, nil
 }

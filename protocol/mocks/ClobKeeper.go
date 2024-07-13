@@ -706,8 +706,8 @@ func (_m *ClobKeeper) InitializeEquityTierLimit(ctx types.Context, config clobty
 	return r0
 }
 
-// InitializeNewGrpcStreams provides a mock function with given fields: ctx
-func (_m *ClobKeeper) InitializeNewGrpcStreams(ctx types.Context) {
+// InitializeNewStreams provides a mock function with given fields: ctx
+func (_m *ClobKeeper) InitializeNewStreams(ctx types.Context) {
 	_m.Called(ctx)
 }
 
