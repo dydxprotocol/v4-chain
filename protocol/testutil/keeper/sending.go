@@ -16,6 +16,7 @@ import (
 	delaymsgtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -34,6 +35,7 @@ type SendingKeepersTestContext struct {
 	PerpetualsKeeper  *perpkeeper.Keeper
 	AssetsKeeper      *assetskeeper.Keeper
 	SubaccountsKeeper types.SubaccountsKeeper
+	RatelimitKeeper   *ratelimitkeeper.Keeper
 	StoreKey          storetypes.StoreKey
 }
 
@@ -76,7 +78,7 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 		)
 		ks.AccountKeeper, _ = createAccountKeeper(stateStore, db, cdc, registry)
 		ks.BankKeeper, _ = createBankKeeper(stateStore, db, cdc, ks.AccountKeeper)
-		ratelimitKeeper, _ := createRatelimitKeeper(
+		ks.RatelimitKeeper, _ = createRatelimitKeeper(
 			stateStore,
 			db,
 			cdc,
@@ -93,7 +95,7 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 				ks.AssetsKeeper,
 				ks.BankKeeper,
 				ks.PerpetualsKeeper,
-				ratelimitKeeper,
+				ks.RatelimitKeeper,
 				blockTimeKeeper,
 				transientStoreKey,
 				true,

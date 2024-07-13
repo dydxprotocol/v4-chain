@@ -53,27 +53,27 @@ var (
 	)
 	ErrValueIsNegative = errorsmod.Register(
 		ModuleName,
-		1010,
+		1110,
 		"Value is negative",
 	)
 	ErrInvalidSDAIConversionRate = errorsmod.Register(
 		ModuleName,
-		1011,
+		1111,
 		"Proposed SDAI conversion rate is invalid",
 	)
 	ErrSDAIConversionRateNotInitisialised = errorsmod.Register(
 		ModuleName,
-		1012,
+		1112,
 		"The SDAI rate has not been initialised",
 	)
 	ErrEpochNotStored = errorsmod.Register(
 		ModuleName,
-		1013,
+		1113,
 		"Epoch info is not stored",
 	)
 	ErrEpochNotRetrieved = errorsmod.Register(
 		ModuleName,
-		1014,
+		1114,
 		"Epoch info could not be retrieved from store",
 	)
 )

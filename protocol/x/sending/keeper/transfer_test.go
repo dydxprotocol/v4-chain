@@ -119,6 +119,8 @@ func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 	keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 	keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
 
+	ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
+
 	perpetuals := []perptypes.Perpetual{
 		constants.BtcUsd_100PercentMarginRequirement,
 	}
@@ -242,9 +244,12 @@ func TestProcessTransfer(t *testing.T) {
 
 func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 	ks := keepertest.SendingKeepers(t)
+
 	ks.Ctx = ks.Ctx.WithBlockHeight(5)
 	keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 	keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+
+	ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 
 	perpetuals := []perptypes.Perpetual{
 		constants.BtcUsd_100PercentMarginRequirement,

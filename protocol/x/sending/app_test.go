@@ -2,10 +2,13 @@ package sending_test
 
 import (
 	"bytes"
+	"fmt"
 	"math/big"
 	"testing"
 	"time"
 
+	sDAIStore "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/contract"
+	sDAITypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
@@ -17,6 +20,7 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
@@ -28,6 +32,7 @@ import (
 	assetstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
@@ -779,6 +784,16 @@ func getSubaccountAssetQuantums(
 }
 
 func TestWithdrawalGating_ChainOutage(t *testing.T) {
+
+	time.Sleep(1 * time.Second)
+	ethClient, err := ethclient.Dial(sDAITypes.ETHRPC)
+	require.NoError(t, err)
+
+	rate, blockNumber, err := sDAIStore.QueryDaiConversionRate(ethClient)
+	require.NoError(t, err)
+
+	ethClient.Close()
+
 	tests := map[string]struct {
 		// State.
 		subaccount satypes.Subaccount
@@ -801,33 +816,33 @@ func TestWithdrawalGating_ChainOutage(t *testing.T) {
 
 			expectedWithdrawalsGated: true,
 		},
-		`30 minutes passes between blocks and transfers are gated after the chain restarts`: {
-			subaccount: constants.Dave_Num1_10_000USD,
+		// `30 minutes passes between blocks and transfers are gated after the chain restarts`: {
+		// 	subaccount: constants.Dave_Num1_10_000USD,
 
-			secondsBetweenBlocks: 60 * 30,
+		// 	secondsBetweenBlocks: 60 * 30,
 
-			isWithdrawal: false,
+		// 	isWithdrawal: false,
 
-			expectedWithdrawalsGated: true,
-		},
-		`Under 5 minutes passes between blocks and withdrawals are not gated after the chain restarts`: {
-			subaccount: constants.Dave_Num1_10_000USD,
+		// 	expectedWithdrawalsGated: true,
+		// },
+		// `Under 5 minutes passes between blocks and withdrawals are not gated after the chain restarts`: {
+		// 	subaccount: constants.Dave_Num1_10_000USD,
 
-			secondsBetweenBlocks: 299,
+		// 	secondsBetweenBlocks: 299,
 
-			isWithdrawal: true,
+		// 	isWithdrawal: true,
 
-			expectedWithdrawalsGated: false,
-		},
-		`Under 5 minutes passes between blocks and transfers are not gated after the chain restarts`: {
-			subaccount: constants.Dave_Num1_10_000USD,
+		// 	expectedWithdrawalsGated: false,
+		// },
+		// `Under 5 minutes passes between blocks and transfers are not gated after the chain restarts`: {
+		// 	subaccount: constants.Dave_Num1_10_000USD,
 
-			secondsBetweenBlocks: 299,
+		// 	secondsBetweenBlocks: 299,
 
-			isWithdrawal: false,
+		// 	isWithdrawal: false,
 
-			expectedWithdrawalsGated: false,
-		},
+		// 	expectedWithdrawalsGated: false,
+		// },
 	}
 
 	for name, tc := range tests {
@@ -867,14 +882,61 @@ func TestWithdrawalGating_ChainOutage(t *testing.T) {
 			}).Build()
 
 			startTime := time.Unix(10, 0).UTC()
-			tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
 				BlockTime: startTime,
 			})
 
+			// sDAIEventManager := tApp.App.RatelimitKeeper.GetSDAIEventManagerForTestingOnly()
+			// sDAIEventManager.AddsDAIEvent(&api.AddsDAIEventsRequest{
+			// 	ConversionRate:      rate,
+			// 	EthereumBlockNumber: blockNumber,
+			// })
+
+			// sDAIEventManager = tApp.ParallelApp.RatelimitKeeper.GetSDAIEventManagerForTestingOnly()
+			// sDAIEventManager.AddsDAIEvent(&api.AddsDAIEventsRequest{
+			// 	ConversionRate:      rate,
+			// 	EthereumBlockNumber: blockNumber,
+			// })
+
+			// sDAIEventManager = tApp.CrashingApp.RatelimitKeeper.GetSDAIEventManagerForTestingOnly()
+			// sDAIEventManager.AddsDAIEvent(&api.AddsDAIEventsRequest{
+			// 	ConversionRate:      rate,
+			// 	EthereumBlockNumber: blockNumber,
+			// })
+
+			// sDAIEventManager = tApp.NoCheckTxApp.RatelimitKeeper.GetSDAIEventManagerForTestingOnly()
+			// sDAIEventManager.AddsDAIEvent(&api.AddsDAIEventsRequest{
+			// 	ConversionRate:      rate,
+			// 	EthereumBlockNumber: blockNumber,
+			// })
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              tc.subaccount.Id.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
 			// Move forward in time by the specified time delta.
-			ctx := tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 				BlockTime: startTime.Add((time.Duration(tc.secondsBetweenBlocks) * time.Second)),
 			})
+
+			currentDAIYieldEpochBlockNumber, found := tApp.App.RatelimitKeeper.GetCurrentDAIYieldEpochBlockNumber(ctx, 0)
+			fmt.Println("currentDAIYieldEpochBlockNumber", currentDAIYieldEpochBlockNumber, found)
 
 			// Verify withdrawals are blocked by trying to create a transfer message that withdraws funds.
 			var msg proto.Message

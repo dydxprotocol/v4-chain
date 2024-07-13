@@ -192,12 +192,14 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, ratelimitKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
+
+			ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
 
 			// Set up Subaccounts module account.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
@@ -451,12 +453,14 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, ratelimitKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
+
+			ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
 
 			// Set up Subaccounts module account.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
@@ -724,13 +728,14 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ :=
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, ratelimitKeeper, _, _ :=
 				keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
+			ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
 
 			// Set up Subaccounts module account.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
@@ -1050,13 +1055,15 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ :=
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, ratelimitKeeper, _, _ :=
 				keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
+
+			ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
 
 			// Set up Subaccounts module account.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})

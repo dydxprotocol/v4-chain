@@ -242,7 +242,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	genesisJson := am.ExportGenesis(ctx, cdc)
 	expected := `{"subaccounts":[{"id":{"owner":"foo","number":127},`
 	expected += `"asset_positions":[{"asset_id":0,"quantums":"1000","index":"0"}],`
-	expected += `"perpetual_positions":[],"margin_enabled":false}]}`
+	expected += `"perpetual_positions":[],"margin_enabled":false,"yield_last_claimed_epoch":"0"}]}`
 	require.Equal(t, expected, string(genesisJson))
 }
 

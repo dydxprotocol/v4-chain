@@ -1,9 +1,15 @@
 package types
 
 import (
+	"log"
 	"sync"
+	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/api"
+
+	store "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/contract"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 // sDAIEventManager maintains an array of ethereum block height
@@ -21,10 +27,44 @@ type SDAIEventManager struct {
 
 // NewsDAIEventManager creates a new sDAIEventManager.
 func NewsDAIEventManager() *SDAIEventManager {
-	return &SDAIEventManager{
-		lastTenEvents:    [10]api.AddsDAIEventsRequest{},
-		nextIndexInArray: 0,
+
+	events, err := getInitialEvents(3)
+	if err != nil {
+		log.Fatalf("Failed to get initial events: %v", err)
 	}
+
+	return &SDAIEventManager{
+		lastTenEvents:    events,
+		nextIndexInArray: 1,
+	}
+}
+
+func getInitialEvents(numOfEvents int) ([10]api.AddsDAIEventsRequest, error) {
+
+	// Initialize an Ethereum client from an RPC endpoint.
+	time.Sleep(1 * time.Second)
+	ethClient, err := ethclient.Dial(types.ETHRPC)
+	if err != nil {
+		return [10]api.AddsDAIEventsRequest{}, err
+	}
+
+	rates, blockNumbers, err := store.QueryDaiConversionRateForPastBlocks(ethClient, int64(numOfEvents), 3)
+	if err != nil {
+		return [10]api.AddsDAIEventsRequest{}, err
+	}
+
+	events := [10]api.AddsDAIEventsRequest{}
+
+	for i := 0; i < numOfEvents; i++ {
+		events[i] = api.AddsDAIEventsRequest{
+			EthereumBlockNumber: blockNumbers[i],
+			ConversionRate:      rates[i],
+		}
+	}
+
+	ethClient.Close()
+
+	return events, nil
 }
 
 func (s *SDAIEventManager) AddsDAIEvent(event *api.AddsDAIEventsRequest) error {
