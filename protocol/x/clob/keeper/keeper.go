@@ -28,9 +28,8 @@ type (
 		transientStoreKey storetypes.StoreKey
 		authorities       map[string]struct{}
 
-		MemClob                      types.MemClob
-		UntriggeredConditionalOrders map[types.ClobPairId]*UntriggeredConditionalOrders
-		PerpetualIdToClobPairId      map[uint32][]types.ClobPairId
+		MemClob                 types.MemClob
+		PerpetualIdToClobPairId map[uint32][]types.ClobPairId
 
 		subaccountsKeeper types.SubaccountsKeeper
 		assetsKeeper      types.AssetsKeeper
@@ -92,28 +91,27 @@ func NewKeeper(
 	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
 ) *Keeper {
 	keeper := &Keeper{
-		cdc:                          cdc,
-		storeKey:                     storeKey,
-		memKey:                       memKey,
-		transientStoreKey:            liquidationsStoreKey,
-		authorities:                  lib.UniqueSliceToSet(authorities),
-		MemClob:                      memClob,
-		UntriggeredConditionalOrders: make(map[types.ClobPairId]*UntriggeredConditionalOrders),
-		PerpetualIdToClobPairId:      make(map[uint32][]types.ClobPairId),
-		subaccountsKeeper:            subaccountsKeeper,
-		assetsKeeper:                 assetsKeeper,
-		blockTimeKeeper:              blockTimeKeeper,
-		bankKeeper:                   bankKeeper,
-		feeTiersKeeper:               feeTiersKeeper,
-		perpetualsKeeper:             perpetualsKeeper,
-		pricesKeeper:                 pricesKeeper,
-		statsKeeper:                  statsKeeper,
-		rewardsKeeper:                rewardsKeeper,
-		indexerEventManager:          indexerEventManager,
-		streamingManager:             grpcStreamingManager,
-		memStoreInitialized:          &atomic.Bool{}, // False by default.
-		initialized:                  &atomic.Bool{}, // False by default.
-		txDecoder:                    txDecoder,
+		cdc:                     cdc,
+		storeKey:                storeKey,
+		memKey:                  memKey,
+		transientStoreKey:       liquidationsStoreKey,
+		authorities:             lib.UniqueSliceToSet(authorities),
+		MemClob:                 memClob,
+		PerpetualIdToClobPairId: make(map[uint32][]types.ClobPairId),
+		subaccountsKeeper:       subaccountsKeeper,
+		assetsKeeper:            assetsKeeper,
+		blockTimeKeeper:         blockTimeKeeper,
+		bankKeeper:              bankKeeper,
+		feeTiersKeeper:          feeTiersKeeper,
+		perpetualsKeeper:        perpetualsKeeper,
+		pricesKeeper:            pricesKeeper,
+		statsKeeper:             statsKeeper,
+		rewardsKeeper:           rewardsKeeper,
+		indexerEventManager:     indexerEventManager,
+		streamingManager:        grpcStreamingManager,
+		memStoreInitialized:     &atomic.Bool{}, // False by default.
+		initialized:             &atomic.Bool{}, // False by default.
+		txDecoder:               txDecoder,
 		mevTelemetryConfig: MevTelemetryConfig{
 			Enabled:    clobFlags.MevTelemetryEnabled,
 			Hosts:      clobFlags.MevTelemetryHosts,
@@ -188,9 +186,6 @@ func (k Keeper) Initialize(ctx sdk.Context) {
 	// Initialize the untriggered conditional orders data structure with untriggered
 	// conditional orders in state.
 	k.HydrateClobPairAndPerpetualMapping(checkCtx)
-	// Initialize the untriggered conditional orders data structure with untriggered
-	// conditional orders in state.
-	k.HydrateUntriggeredConditionalOrders(checkCtx)
 }
 
 // InitMemStore initializes the memstore of the `clob` keeper.
