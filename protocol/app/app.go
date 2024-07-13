@@ -1968,7 +1968,7 @@ func getFullNodeStreamingManagerFromOptions(
 ) (manager streamingtypes.FullNodeStreamingManager) {
 	if appFlags.GrpcStreamingEnabled {
 		logger.Info("GRPC streaming is enabled")
-		return streaming.NewGrpcStreamingManager(
+		return streaming.NewFullNodeStreamingManager(
 			logger,
 			appFlags.GrpcStreamingFlushIntervalMs,
 			appFlags.GrpcStreamingMaxBatchSize,

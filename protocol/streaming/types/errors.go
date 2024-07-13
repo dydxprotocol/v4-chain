@@ -7,5 +7,10 @@ const (
 )
 
 var (
-	ErrNotImplemented = errorsmod.Register(ModuleName, 1, "Not implemented")
+	ErrNotImplemented          = errorsmod.Register(ModuleName, 1, "Not implemented")
+	ErrInvalidStreamingRequest = errorsmod.Register(
+		ModuleName,
+		2,
+		"Invalid full node streaming request",
+	)
 )
