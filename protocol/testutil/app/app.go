@@ -811,7 +811,6 @@ func (tApp *TestApp) AdvanceToBlock(
 		if tApp.builder.enableNonDeterminismChecks {
 			tApp.restartCrashingApp()
 		}
-		fmt.Println("FINAL DELIVER TXS COUNT", len(deliverTxs))
 		// Finalize the block
 		finalizeBlockRequest := abcitypes.RequestFinalizeBlock{
 			Txs:                deliverTxs,
@@ -823,7 +822,6 @@ func (tApp *TestApp) AdvanceToBlock(
 		}
 
 		finalizeBlockResponse, finalizeBlockErr := tApp.App.FinalizeBlock(&finalizeBlockRequest)
-		// fmt.Println("XXX FINALIZE BLOCK RESPONSE", finalizeBlockResponse, finalizeBlockErr)
 		if options.ValidateFinalizeBlock != nil {
 			tApp.halted = options.ValidateFinalizeBlock(
 				tApp.App.NewContextLegacy(false, tApp.header),
@@ -847,7 +845,6 @@ func (tApp *TestApp) AdvanceToBlock(
 					// The first transaction is the block proposal is a VE
 					continue
 				}
-				fmt.Println("XXX TX RESULT XXX", i, txResult)
 
 				require.Conditionf(
 					tApp.builder.t,

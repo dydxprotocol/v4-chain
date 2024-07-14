@@ -170,7 +170,6 @@ func (k Keeper) getSettledUpdates(
 
 	// Iterate over all updates and query the relevant `Subaccounts`.
 	for i, u := range updates {
-		fmt.Println("XXX UPDATE:", u)
 		settledSubaccount, exists := idToSettledSubaccount[u.SubaccountId]
 		var fundingPayments map[uint32]dtypes.SerializableInt
 
@@ -588,7 +587,6 @@ func (k Keeper) internalCanUpdateSubaccounts(
 				emptyUpdate,
 			)
 			if err != nil {
-				fmt.Println("XXX ERROR AFTER GET MARGIN REQUIRMENTS:", err)
 				return false, nil, err
 			}
 
@@ -601,10 +599,9 @@ func (k Keeper) internalCanUpdateSubaccounts(
 				bigNewMaintenanceMargin,
 			)
 		}
-		fmt.Println("XXX RESULT:", result)
+
 		// If this state transition is not valid, the overall success is now false.
 		if !result.IsSuccess() {
-			fmt.Println("XXX RESULT IS NOT SUCCESS:", result)
 			success = false
 		}
 
@@ -642,14 +639,13 @@ func IsValidStateTransitionForUndercollateralizedSubaccount(
 ) types.UpdateResult {
 	// Determine whether the subaccount was previously undercollateralized before the update.
 	var underCollateralizationResult = types.StillUndercollateralized
-	fmt.Println("CUR INITIAL MARGIN:", bigCurInitialMargin, "CUR NET COLLATERAL:", bigCurNetCollateral, "CUR MAINTENANCE MARGIN:", bigCurMaintenanceMargin, "NEW MAINTENANCE MARGIN:", bigNewMaintenanceMargin)
+
 	if bigCurInitialMargin.Cmp(bigCurNetCollateral) <= 0 {
 		underCollateralizationResult = types.NewlyUndercollateralized
 	}
 
 	// If the maintenance margin is increasing, then the subaccount is undercollateralized.
 	if bigNewMaintenanceMargin.Cmp(bigCurMaintenanceMargin) > 0 {
-		fmt.Println("XXX NEW MAINTENANCE MARGIN IS GREATER THAN CUR MAINTENANCE MARGIN")
 		return underCollateralizationResult
 	}
 
@@ -777,7 +773,6 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	calculate := func(pk types.ProductKeeper, size types.PositionSize) error {
 		id := size.GetId()
 		bigQuantums := size.GetBigQuantums()
-		fmt.Println("XXX ID:", id, "QUANTUMS:", bigQuantums)
 		bigNetCollateralQuoteQuantums, err := pk.GetNetCollateral(ctx, id, bigQuantums)
 		if err != nil {
 			return err
@@ -789,13 +784,11 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 			bigMaintenanceMarginRequirements,
 			err := pk.GetMarginRequirements(ctx, id, bigQuantums)
 		if err != nil {
-			fmt.Println("XXX ERR IN GET MARGIN REQUIRMENTS:", err)
 			return err
 		}
 
 		bigInitialMargin.Add(bigInitialMargin, bigInitialMarginRequirements)
 		bigMaintenanceMargin.Add(bigMaintenanceMargin, bigMaintenanceMarginRequirements)
-		fmt.Println("XXX BIG NET COLLATERAL:", bigNetCollateral, "BIG INITIAL MARGIN:", bigInitialMargin, "BIG MAINTENANCE MARGIN:", bigMaintenanceMargin)
 		return nil
 	}
 
