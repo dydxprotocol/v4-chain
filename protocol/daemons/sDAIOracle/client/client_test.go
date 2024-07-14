@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"cosmossdk.io/log"
 	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
@@ -39,64 +40,86 @@ func TestStart_EthRpcEndpointNotSet(t *testing.T) {
 	)
 }
 
-func TestStart_TcpConnectionFails(t *testing.T) {
-	errorMsg := "Failed to create connection"
-
-	// Mock the gRPC client to return an error when creating a TCP connection.
-	mockGrpcClient := &mocks.GrpcClient{}
-	mockGrpcClient.On("NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint).Return(nil, errors.New(errorMsg))
-
-	// Override default daemon flags with a non-empty EthRpcEndpoint.
-	daemonFlagsWithEthRpcEndpoint := daemonflags.GetDefaultDaemonFlags()
-	daemonFlagsWithEthRpcEndpoint.SDAI.EthRpcEndpoint = "http://localhost:8545"
-
-	require.EqualError(
-		t,
-		client.NewClient(log.NewNopLogger()).Start(
-			grpc.Ctx,
-			daemonFlagsWithEthRpcEndpoint,
-			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
-			mockGrpcClient,
-		),
-		errorMsg,
-	)
-	mockGrpcClient.AssertCalled(t, "NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint)
-	mockGrpcClient.AssertNotCalled(t, "NewGrpcConnection", grpc.Ctx, grpc.SocketPath)
-	mockGrpcClient.AssertNotCalled(t, "CloseConnection", grpc.GrpcConn)
-}
-
-func TestStart_UnixSocketConnectionFails(t *testing.T) {
-	errorMsg := "Failed to create connection"
-
+// TODO: Maybe this is better suited as integration test.
+func TestStartAndStop(t *testing.T) {
 	// Mock the gRPC client to
-	// - return a successful TCP connection.
-	// - return an error when creating a gRPC connection.
-	// - successfully close the TCP connection.
+	// - successfully establish the gRPC connection
+	// - successfully close the gRPC connection.
+
 	mockGrpcClient := &mocks.GrpcClient{}
-	mockGrpcClient.On("NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint).Return(grpc.GrpcConn, nil)
-	mockGrpcClient.On("NewGrpcConnection", grpc.Ctx, grpc.SocketPath).Return(nil, errors.New(errorMsg))
+	mockGrpcClient.On("NewGrpcConnection", grpc.Ctx, grpc.SocketPath).Return(grpc.GrpcConn, nil)
 	mockGrpcClient.On("CloseConnection", grpc.GrpcConn).Return(nil)
 
 	// Override default daemon flags with a non-empty EthRpcEndpoint.
 	daemonFlagsWithEthRpcEndpoint := daemonflags.GetDefaultDaemonFlags()
 	daemonFlagsWithEthRpcEndpoint.SDAI.EthRpcEndpoint = "http://localhost:8545"
 
+	currClient := client.NewClient(log.NewNopLogger())
+	appFlags := appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil))
+
+	// Start the client in a separate goroutine
+	go func() {
+		require.NoError(
+			t,
+			currClient.Start(
+				grpc.Ctx,
+				daemonFlagsWithEthRpcEndpoint,
+				appFlags,
+				mockGrpcClient,
+			),
+		)
+	}()
+
+	// Allow some time for the client to start
+	time.Sleep(1 * time.Second)
+
+	// Call the Stop function
+	currClient.Stop()
+
+	// Allow some time for the client to stop
+	time.Sleep(1 * time.Second)
+
+	// Verify that the task loop has stopped
+	mockGrpcClient.AssertNotCalled(t, "NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint)
+	mockGrpcClient.AssertCalled(t, "NewGrpcConnection", grpc.Ctx, grpc.SocketPath)
+
+	// We fail without establishing gRPC connection. This means we should not have to close a connection
+	mockGrpcClient.AssertNumberOfCalls(t, "CloseConnection", 1)
+	mockGrpcClient.AssertCalled(t, "CloseConnection", grpc.GrpcConn)
+}
+
+func TestStart_UnixSocketConnectionFails(t *testing.T) {
+	errorMsg := "Failed to create connection"
+
+	// Mock the gRPC client to
+	// - return an error when creating a gRPC connection.
+	mockGrpcClient := &mocks.GrpcClient{}
+	mockGrpcClient.On("NewGrpcConnection", grpc.Ctx, grpc.SocketPath).Return(nil, errors.New(errorMsg))
+
+	// Override default daemon flags with a non-empty EthRpcEndpoint.
+	daemonFlagsWithEthRpcEndpoint := daemonflags.GetDefaultDaemonFlags()
+	daemonFlagsWithEthRpcEndpoint.SDAI.EthRpcEndpoint = "http://localhost:8545"
+
+	currClient := client.NewClient(log.NewNopLogger())
+	appFlags := appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil))
+
 	require.EqualError(
 		t,
-		client.NewClient(log.NewNopLogger()).Start(
+		currClient.Start(
 			grpc.Ctx,
 			daemonFlagsWithEthRpcEndpoint,
-			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
+			appFlags,
 			mockGrpcClient,
 		),
 		errorMsg,
 	)
-	mockGrpcClient.AssertCalled(t, "NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint)
+
+	mockGrpcClient.AssertNotCalled(t, "NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint)
 	mockGrpcClient.AssertCalled(t, "NewGrpcConnection", grpc.Ctx, grpc.SocketPath)
 
-	// Assert that the connection from NewTcpConnection is closed.
-	mockGrpcClient.AssertNumberOfCalls(t, "CloseConnection", 1)
-	mockGrpcClient.AssertCalled(t, "CloseConnection", grpc.GrpcConn)
+	// We fail without establishing gRPC connection. This means we should not have to close a connection
+	mockGrpcClient.AssertNumberOfCalls(t, "CloseConnection", 0)
+	mockGrpcClient.AssertNotCalled(t, "CloseConnection", grpc.GrpcConn)
 }
 
 // FakeSubTaskRunner is a mock implementation of SubTaskRunner that returns the specified results in order.

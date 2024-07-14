@@ -23,10 +23,13 @@ type Client struct {
 
 	// logger is the logger used by the sDAI daemon.
 	logger log.Logger
+
+	stop chan bool
 }
 
 func NewClient(logger log.Logger) *Client {
 	logger = logger.With(log.ModuleKey, types.SDAIOracleDaemonModuleName)
+	stop := make(chan bool, 1)
 	return &Client{
 		HealthCheckable: daemontypes.NewTimeBoundedHealthCheckable(
 			types.SDAIOracleDaemonModuleName,
@@ -34,6 +37,7 @@ func NewClient(logger log.Logger) *Client {
 			logger,
 		),
 		logger: logger,
+		stop:   stop,
 	}
 }
 
@@ -44,6 +48,7 @@ func (c *Client) Start(
 	appFlags appflags.Flags,
 	grpcClient daemontypes.GrpcClient,
 ) error {
+
 	// Log the daemon flags.
 	c.logger.Info(
 		"Starting sDAI daemon with flags",
@@ -57,6 +62,7 @@ func (c *Client) Start(
 
 	// Make a connection to the private daemon gRPC server.
 	daemonConn, err := grpcClient.NewGrpcConnection(ctx, flags.Shared.SocketAddress)
+
 	if err != nil {
 		c.logger.Error("Failed to establish gRPC connection to socket address", "error", err)
 		return err
@@ -79,7 +85,7 @@ func (c *Client) Start(
 	defer func() { ethClient.Close() }()
 
 	ticker := time.NewTicker(time.Duration(flags.SDAI.LoopDelayMs) * time.Millisecond)
-	stop := make(chan bool, 1)
+	// stop := make(chan bool, 1)
 
 	queryClient := &ethqueryclienttypes.EthQueryClientImpl{}
 	// Run the main task loop at an interval.
@@ -87,7 +93,7 @@ func (c *Client) Start(
 		ctx,
 		c,
 		ticker,
-		stop,
+		c.stop,
 		&SubTaskRunnerImpl{},
 		ethClient,
 		queryClient,
@@ -95,6 +101,11 @@ func (c *Client) Start(
 	)
 
 	return nil
+}
+
+// Stop signals the daemon to stop.
+func (c *Client) Stop() {
+	c.stop <- true
 }
 
 // StartsDAIDaemonTaskLoop operates the continuous loop that runs the sDAI daemon. It receives as arguments
