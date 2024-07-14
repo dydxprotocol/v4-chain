@@ -130,7 +130,7 @@ func PrepareProposalHandler(
 			// set empty VE's on first block to maintain minTxs invariant within block
 			err := txs.SetExtInfoBz([]byte{})
 			if err != nil {
-				ctx.Logger().Error(fmt.Sprintf("SetExtInfoBz (empty) error: %v", err))
+				ctx.Logger().Error(fmt.Sprintf("SetExtInfoBz error: %v", err))
 				recordErrorMetricsWithLabel(metrics.FundingTx)
 				return &EmptyPrepareProposalResponse, nil
 			}

@@ -1,8 +1,6 @@
 package funding_test
 
 import (
-	"fmt"
-	"math/big"
 	"testing"
 	"time"
 
@@ -16,11 +14,9 @@ import (
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cometbft/cometbft/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/require"
 )
@@ -154,78 +150,78 @@ func TestFunding(t *testing.T) {
 		expectedFundingPremiums       []perptypes.MarketPremiums
 		expectedFundingIndex          int64
 	}{
-		// "Index price below impact bid, positive funding, longs pay shorts": {
-		// 	testHumanOrders: []clobtest.TestHumanOrder{
-		// 		// Unmatched orders to generate funding premiums.
-		// 		{
-		// 			Order:      OrderTemplate_Bob_Num0_Id0_Clob0_Sell_LongTerm,
-		// 			HumanPrice: "28005",
-		// 			HumanSize:  "2",
-		// 		},
-		// 		{
-		// 			Order:      OrderTemplate_Alice_Num0_Id0_Clob0_Buy_LongTerm,
-		// 			HumanPrice: "28000",
-		// 			HumanSize:  "2",
-		// 		},
-		// 		// Matched orders to set up positions for Alice, Bob and Carl
-		// 		{
-		// 			Order:      OrderTemplate_Bob_Num0_Id1_Clob0_Sell_LongTerm,
-		// 			HumanPrice: "28003",
-		// 			HumanSize:  "1",
-		// 		},
-		// 		{
-		// 			Order:      OrderTemplate_Alice_Num0_Id1_Clob0_Buy_LongTerm,
-		// 			HumanPrice: "28003",
-		// 			HumanSize:  "0.8",
-		// 		},
-		// 		{
-		// 			Order:      OrderTemplate_Carl_Num0_Id0_Clob0_Buy_LongTerm,
-		// 			HumanPrice: "28003",
-		// 			HumanSize:  "0.2",
-		// 		},
-		// 	},
-		// 	initialIndexPrice: map[uint32]string{
-		// 		TestMarketId: "28002",
-		// 	},
-		// 	indexPriceForPremium: map[uint32]string{
-		// 		TestMarketId: "27960",
-		// 	},
-		// 	oracelPriceForFundingIndex: map[uint32]string{
-		// 		TestMarketId: "27000",
-		// 	},
-		// 	expectedFundingPremiums: []perptypes.MarketPremiums{
-		// 		{
-		// 			PerpetualId: 0,
-		// 			// 28_000 / 27_960 - 1 ~= 0.001430
-		// 			Premiums: constants.GenerateConstantFundingPremiums(1430, 60),
-		// 		},
-		// 	},
-		// 	// 1430 / 8 * 27000 * 10^(btc_atomic_resolution - quote_atomic_resolution) ~= 482.625
-		// 	expectedFundingIndex: 482,
-		// 	expectedSubaccountSettlements: []expectedSettlements{
-		// 		{
-		// 			SubaccountId: constants.Alice_Num0,
-		// 			// Alice is long 0.8 BTC, pays funding
-		// 			// Theoretical (from funding rate): 0.00143 / 8 * 27_000 * 0.8 ~= $3.864
-		// 			// Actual (from funding index): 482 * 8e9 (base quantums) / 1e6 (quote atomic) = $3.856
-		// 			Settlement: -3_856_000,
-		// 		},
-		// 		{
-		// 			SubaccountId: constants.Bob_Num0,
-		// 			// Bob is short 1 BTC, receives funding
-		// 			// Theoretical (from funding rate): 0.00143 / 8 * 27_000 * 1 ~= $4.82625
-		// 			// Actual (from funding index): 482 * 1e10 (base quantums) / 1e6 (quote atomic) = $4.82
-		// 			Settlement: 4_820_000,
-		// 		},
-		// 		{
-		// 			SubaccountId: constants.Carl_Num0,
-		// 			// Carl is long 0.2 BTC, pays funding
-		// 			// Theoretical (from funding rate): 0.00143 / 8 * 27_000 * 0.2 ~= $0.96525
-		// 			// Actual (from funding index): 482 * 2e9 (base quantums) / 1e6 (quote atomic) = $0.964
-		// 			Settlement: -964_000,
-		// 		},
-		// 	},
-		// },
+		"Index price below impact bid, positive funding, longs pay shorts": {
+			testHumanOrders: []clobtest.TestHumanOrder{
+				// Unmatched orders to generate funding premiums.
+				{
+					Order:      OrderTemplate_Bob_Num0_Id0_Clob0_Sell_LongTerm,
+					HumanPrice: "28005",
+					HumanSize:  "2",
+				},
+				{
+					Order:      OrderTemplate_Alice_Num0_Id0_Clob0_Buy_LongTerm,
+					HumanPrice: "28000",
+					HumanSize:  "2",
+				},
+				// Matched orders to set up positions for Alice, Bob and Carl
+				{
+					Order:      OrderTemplate_Bob_Num0_Id1_Clob0_Sell_LongTerm,
+					HumanPrice: "28003",
+					HumanSize:  "1",
+				},
+				{
+					Order:      OrderTemplate_Alice_Num0_Id1_Clob0_Buy_LongTerm,
+					HumanPrice: "28003",
+					HumanSize:  "0.8",
+				},
+				{
+					Order:      OrderTemplate_Carl_Num0_Id0_Clob0_Buy_LongTerm,
+					HumanPrice: "28003",
+					HumanSize:  "0.2",
+				},
+			},
+			initialIndexPrice: map[uint32]string{
+				TestMarketId: "28002",
+			},
+			indexPriceForPremium: map[uint32]string{
+				TestMarketId: "27960",
+			},
+			oracelPriceForFundingIndex: map[uint32]string{
+				TestMarketId: "27000",
+			},
+			expectedFundingPremiums: []perptypes.MarketPremiums{
+				{
+					PerpetualId: 0,
+					// 28_000 / 27_960 - 1 ~= 0.001430
+					Premiums: constants.GenerateConstantFundingPremiums(1430, 60),
+				},
+			},
+			// 1430 / 8 * 27000 * 10^(btc_atomic_resolution - quote_atomic_resolution) ~= 482.625
+			expectedFundingIndex: 482,
+			expectedSubaccountSettlements: []expectedSettlements{
+				{
+					SubaccountId: constants.Alice_Num0,
+					// Alice is long 0.8 BTC, pays funding
+					// Theoretical (from funding rate): 0.00143 / 8 * 27_000 * 0.8 ~= $3.864
+					// Actual (from funding index): 482 * 8e9 (base quantums) / 1e6 (quote atomic) = $3.856
+					Settlement: -3_856_000,
+				},
+				{
+					SubaccountId: constants.Bob_Num0,
+					// Bob is short 1 BTC, receives funding
+					// Theoretical (from funding rate): 0.00143 / 8 * 27_000 * 1 ~= $4.82625
+					// Actual (from funding index): 482 * 1e10 (base quantums) / 1e6 (quote atomic) = $4.82
+					Settlement: 4_820_000,
+				},
+				{
+					SubaccountId: constants.Carl_Num0,
+					// Carl is long 0.2 BTC, pays funding
+					// Theoretical (from funding rate): 0.00143 / 8 * 27_000 * 0.2 ~= $0.96525
+					// Actual (from funding index): 482 * 2e9 (base quantums) / 1e6 (quote atomic) = $0.964
+					Settlement: -964_000,
+				},
+			},
+		},
 		"Index price above impact ask, negative funding, final funding rate clamped": {
 			testHumanOrders: []clobtest.TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
@@ -300,62 +296,62 @@ func TestFunding(t *testing.T) {
 				},
 			},
 		},
-		// "Index price between impact bid and ask, zero funding": {
-		// 	testHumanOrders: []clobtest.TestHumanOrder{
-		// 		// Unmatched orders to generate funding premiums.
-		// 		{
-		// 			Order:      OrderTemplate_Bob_Num0_Id0_Clob0_Sell_LongTerm,
-		// 			HumanPrice: "28005", // Impact ask price
-		// 			HumanSize:  "2",
-		// 		},
-		// 		{
-		// 			Order:      OrderTemplate_Alice_Num0_Id0_Clob0_Buy_LongTerm,
-		// 			HumanPrice: "28000", // Impact bid price
-		// 			HumanSize:  "2",
-		// 		},
-		// 		// Matched orders to set up positions for Alice, Bob and Carl
-		// 		{
-		// 			Order:      OrderTemplate_Bob_Num0_Id1_Clob0_Sell_LongTerm,
-		// 			HumanPrice: "28003",
-		// 			HumanSize:  "1",
-		// 		},
-		// 		{
-		// 			Order:      OrderTemplate_Alice_Num0_Id1_Clob0_Buy_LongTerm,
-		// 			HumanPrice: "28003",
-		// 			HumanSize:  "0.8",
-		// 		},
-		// 		{
-		// 			Order:      OrderTemplate_Carl_Num0_Id0_Clob0_Buy_LongTerm,
-		// 			HumanPrice: "28003",
-		// 			HumanSize:  "0.2",
-		// 		},
-		// 	},
-		// 	initialIndexPrice: map[uint32]string{
-		// 		0: "28002",
-		// 	},
-		// 	indexPriceForPremium: map[uint32]string{
-		// 		0: "28003", // Between impact bid and ask
-		// 	},
-		// 	oracelPriceForFundingIndex: map[uint32]string{
-		// 		0: "27500",
-		// 	},
-		// 	expectedFundingPremiums: nil,
-		// 	expectedFundingIndex:    0,
-		// 	expectedSubaccountSettlements: []expectedSettlements{
-		// 		{
-		// 			SubaccountId: constants.Alice_Num0,
-		// 			Settlement:   0,
-		// 		},
-		// 		{
-		// 			SubaccountId: constants.Bob_Num0,
-		// 			Settlement:   0,
-		// 		},
-		// 		{
-		// 			SubaccountId: constants.Carl_Num0,
-		// 			Settlement:   0,
-		// 		},
-		// 	},
-		// },
+		"Index price between impact bid and ask, zero funding": {
+			testHumanOrders: []clobtest.TestHumanOrder{
+				// Unmatched orders to generate funding premiums.
+				{
+					Order:      OrderTemplate_Bob_Num0_Id0_Clob0_Sell_LongTerm,
+					HumanPrice: "28005", // Impact ask price
+					HumanSize:  "2",
+				},
+				{
+					Order:      OrderTemplate_Alice_Num0_Id0_Clob0_Buy_LongTerm,
+					HumanPrice: "28000", // Impact bid price
+					HumanSize:  "2",
+				},
+				// Matched orders to set up positions for Alice, Bob and Carl
+				{
+					Order:      OrderTemplate_Bob_Num0_Id1_Clob0_Sell_LongTerm,
+					HumanPrice: "28003",
+					HumanSize:  "1",
+				},
+				{
+					Order:      OrderTemplate_Alice_Num0_Id1_Clob0_Buy_LongTerm,
+					HumanPrice: "28003",
+					HumanSize:  "0.8",
+				},
+				{
+					Order:      OrderTemplate_Carl_Num0_Id0_Clob0_Buy_LongTerm,
+					HumanPrice: "28003",
+					HumanSize:  "0.2",
+				},
+			},
+			initialIndexPrice: map[uint32]string{
+				0: "28002",
+			},
+			indexPriceForPremium: map[uint32]string{
+				0: "28003", // Between impact bid and ask
+			},
+			oracelPriceForFundingIndex: map[uint32]string{
+				0: "27500",
+			},
+			expectedFundingPremiums: nil,
+			expectedFundingIndex:    0,
+			expectedSubaccountSettlements: []expectedSettlements{
+				{
+					SubaccountId: constants.Alice_Num0,
+					Settlement:   0,
+				},
+				{
+					SubaccountId: constants.Bob_Num0,
+					Settlement:   0,
+				},
+				{
+					SubaccountId: constants.Carl_Num0,
+					Settlement:   0,
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -442,16 +438,14 @@ func TestFunding(t *testing.T) {
 				BlockTime: SecondFundingTick.Add(-BlockTimeDuration),
 			})
 
-			extCommitBz, err := getInjectedExtendedCommitInfo(
-				tApp,
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
 				ctx,
-				pricestypes.NewMarketPriceUpdate(
-					0,
-					pricestest.MustHumanPriceToMarketPrice(
-						tc.oracelPriceForFundingIndex[0],
-						-5,
-					),
-				),
+				map[uint32]uint64{0: pricestest.MustHumanPriceToMarketPrice(
+					tc.oracelPriceForFundingIndex[0],
+					-5,
+				)},
+				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
 
@@ -467,8 +461,6 @@ func TestFunding(t *testing.T) {
 			// Check that the funding index is correctly updated.
 			btcPerp, err := tApp.App.PerpetualsKeeper.GetPerpetual(ctx, 0)
 
-			// updates := priceKeeper.GetValidMarketPriceUpdates(ctx)
-			// fmt.Println("XXX UPDATES XXX", updates)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedFundingIndex, btcPerp.FundingIndex.BigInt().Int64())
 
@@ -540,41 +532,4 @@ func TestFunding(t *testing.T) {
 			)
 		})
 	}
-}
-
-func getInjectedExtendedCommitInfo(
-	tApp *testapp.TestApp,
-	ctx sdk.Context,
-	priceUpdate *pricestypes.MarketPriceUpdates_MarketPriceUpdate,
-) ([]byte, error) {
-
-	validators := tApp.App.ConsumerKeeper.GetAllCCValidator(ctx)
-
-	encodedPrice, err := vetesting.GetIndexPriceCacheEncodedPrice(new(big.Int).SetUint64(priceUpdate.Price))
-	if err != nil {
-		return nil, fmt.Errorf("failed to encode price: %v", err)
-	}
-
-	prices := map[uint32][]byte{
-		priceUpdate.MarketId: encodedPrice,
-	}
-
-	var veSignedInfos []vetesting.SignedVEInfo
-	for _, v := range validators {
-		veSignedInfos = append(veSignedInfos, vetesting.SignedVEInfo{
-			Val:     sdk.ConsAddress(v.Address),
-			Power:   v.GetPower(),
-			Prices:  prices,
-			Height:  ctx.BlockHeight() + 1,
-			Round:   0,
-			ChainId: "localdydxprotocol",
-		})
-	}
-
-	_, extCommitBz, err := vetesting.CreateSignedExtendedCommitInfo(veSignedInfos)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create signed extended commit info: %v", err)
-	}
-	return extCommitBz, nil
-
 }

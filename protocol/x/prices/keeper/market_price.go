@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math/big"
 	"sort"
 	"time"
@@ -32,6 +31,7 @@ func (k Keeper) UpdateMarketPrice(
 	ctx sdk.Context,
 	update *types.MarketPriceUpdates_MarketPriceUpdate,
 ) error {
+
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
 		time.Now(),
@@ -76,8 +76,6 @@ func (k Keeper) UpdateMarketPrice(
 	)
 
 	// Writes to the store are delayed so that the updates are atomically applied to state.
-
-	fmt.Println("starting to update market price", marketPrice.Id, "to", marketPrice.Price)
 	// Store the modified market price.
 	b := k.cdc.MustMarshal(&marketPrice)
 	marketPriceStore.Set(lib.Uint32ToKey(marketPrice.Id), b)

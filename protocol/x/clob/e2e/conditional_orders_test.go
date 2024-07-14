@@ -4,18 +4,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/types"
-
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
+	"github.com/cometbft/cometbft/types"
+
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	feetiertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
@@ -26,8 +27,8 @@ func TestConditionalOrder(t *testing.T) {
 		orders               []clobtypes.Order
 		ordersForSecondBlock []clobtypes.Order
 
-		priceUpdateForFirstBlock  *prices.MsgUpdateMarketPrices
-		priceUpdateForSecondBlock *prices.MsgUpdateMarketPrices
+		priceUpdateForFirstBlock  map[uint32]uint64
+		priceUpdateForSecondBlock map[uint32]uint64
 
 		expectedInTriggeredStateAfterBlock map[uint32]map[clobtypes.OrderId]bool
 
@@ -43,8 +44,8 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 			},
-			priceUpdateForFirstBlock:  &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForFirstBlock:  map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: true,
@@ -62,8 +63,8 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001,
 			},
-			priceUpdateForFirstBlock:  &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForFirstBlock:  map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001.OrderId: true,
@@ -81,8 +82,8 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001,
 			},
-			priceUpdateForFirstBlock:  &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForFirstBlock:  map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001.OrderId: true,
@@ -100,8 +101,8 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49999,
 			},
-			priceUpdateForFirstBlock:  &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForFirstBlock:  map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49999.OrderId: true,
@@ -119,11 +120,10 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49995,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{},
+
+			priceUpdateForSecondBlock: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -142,11 +142,9 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50005,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_300_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{
+				0: 5_000_300_000,
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -165,11 +163,9 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50005,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_300_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{
+				0: 5_000_300_000,
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -188,11 +184,9 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49995,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -211,12 +205,10 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: true,
@@ -234,11 +226,9 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -257,12 +247,10 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_300_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{
+				0: 5_000_300_000,
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001.OrderId: true,
@@ -280,11 +268,9 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_300_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{
+				0: 5_000_300_000,
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -303,12 +289,10 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_300_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{
+				0: 5_000_300_000,
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001.OrderId: true,
@@ -326,11 +310,9 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_300_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{
+				0: 5_000_300_000,
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -349,12 +331,10 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49999,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49999.OrderId: true,
@@ -372,11 +352,9 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49999,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -397,11 +375,9 @@ func TestConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -426,11 +402,9 @@ func TestConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001,
 				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_300_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{
+				0: 5_000_300_000,
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -455,11 +429,9 @@ func TestConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001,
 				constants.Order_Carl_Num0_Id3_Clob0_Buy025BTC_Price50000,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_300_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{
+				0: 5_000_300_000,
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -484,11 +456,9 @@ func TestConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49999,
 				constants.Order_Carl_Num0_Id3_Clob0_Buy025BTC_Price50000,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -511,15 +481,11 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_300_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{
+				0: 5_000_300_000,
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_000_000),
-				},
+			priceUpdateForSecondBlock: map[uint32]uint64{
+				0: 5_000_000_000,
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -540,12 +506,10 @@ func TestConditionalOrder(t *testing.T) {
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50000_GTBT10,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_400_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{
+				0: 5_000_400_000,
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: true},
 				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: false},
@@ -580,12 +544,10 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Sell05BTC_Price50000_GTBT10_TP_50003_FOK,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_400_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{
+				0: 5_000_400_000,
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Sell05BTC_Price50000_GTBT10_TP_50003_FOK.OrderId: true},
 				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Sell05BTC_Price50000_GTBT10_TP_50003_FOK.OrderId: false},
@@ -612,12 +574,10 @@ func TestConditionalOrder(t *testing.T) {
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_PO,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Sell05BTC_Price50000_GTBT10_TP_50003_FOK,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_400_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{
+				0: 5_000_400_000,
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Sell05BTC_Price50000_GTBT10_TP_50003_FOK.OrderId: true},
 				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Sell05BTC_Price50000_GTBT10_TP_50003_FOK.OrderId: false},
@@ -654,12 +614,10 @@ func TestConditionalOrder(t *testing.T) {
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_400_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{
+				0: 5_000_400_000,
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: true},
 				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: false},
@@ -696,12 +654,10 @@ func TestConditionalOrder(t *testing.T) {
 				constants.LongTermOrder_Dave_Num0_Id1_Clob0_Sell025BTC_Price50001_GTBT10,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_600_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{
+				0: 4_999_600_000,
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
 				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
@@ -731,12 +687,10 @@ func TestConditionalOrder(t *testing.T) {
 			ordersForSecondBlock: []clobtypes.Order{
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50000_GTBT10,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_600_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{
+				0: 4_999_600_000,
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
 				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
@@ -776,12 +730,10 @@ func TestConditionalOrder(t *testing.T) {
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50000_GTBT10,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_600_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{
+				0: 4_999_600_000,
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
 				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: false},
@@ -806,8 +758,8 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 			},
-			priceUpdateForFirstBlock:  &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForFirstBlock:  map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: true,
@@ -827,11 +779,9 @@ func TestConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
 			},
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			priceUpdateForFirstBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -922,13 +872,16 @@ func TestConditionalOrder(t *testing.T) {
 			// Add an empty premium vote.
 			deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
 
-			// Add the price update.
-			txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
-			require.NoError(t, txBuilder.SetMsgs(tc.priceUpdateForFirstBlock))
-			priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
+			extCommitInfo, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				tc.priceUpdateForFirstBlock,
+				1,
+			)
 			require.NoError(t, err)
 
-			deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
+			// ve info has to be first in block
+			deliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 
 			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,
@@ -948,13 +901,18 @@ func TestConditionalOrder(t *testing.T) {
 				}
 			}
 
-			// Advance to the next block with new price updates.
-			deliverTxsOverride = [][]byte{tApp.GetProposedOperationsTx()}
-			txBuilder = encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
-			require.NoError(t, txBuilder.SetMsgs(tc.priceUpdateForSecondBlock))
-			priceUpdateTxBytes, err = encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
+			extCommitInfo, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				tc.priceUpdateForSecondBlock,
+				tApp.GetHeader().Height-1, // prepare proposal gets called for block 2
+			)
 			require.NoError(t, err)
-			deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
+
+			// Advance to the next block with new price updates.
+			deliverTxsOverride = [][]byte{tApp.GetProposedOperationsTx(
+				extCommitInfo,
+			)}
 
 			// Place orders for second block
 			for _, order := range tc.ordersForSecondBlock {
@@ -971,6 +929,16 @@ func TestConditionalOrder(t *testing.T) {
 					}
 				}
 			}
+
+			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				tc.priceUpdateForSecondBlock,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+
+			deliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 
 			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,
@@ -2153,7 +2121,7 @@ func TestConditionalOrderCancellation(t *testing.T) {
 		subaccounts []satypes.Subaccount
 		orders      []clobtypes.Order
 
-		priceUpdate                       *prices.MsgUpdateMarketPrices
+		priceUpdate                       map[uint32]uint64
 		expectedConditionalOrderTriggered bool
 	}{
 		"untriggered conditional order is cancelled": {
@@ -2164,10 +2132,8 @@ func TestConditionalOrderCancellation(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50005,
 			},
 
-			priceUpdate: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_300_000),
-				},
+			priceUpdate: map[uint32]uint64{
+				0: 5_000_300_000,
 			},
 			expectedConditionalOrderTriggered: false,
 		},
@@ -2179,10 +2145,8 @@ func TestConditionalOrderCancellation(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 			},
 
-			priceUpdate: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			priceUpdate: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
 			expectedConditionalOrderTriggered: true,
 		},
@@ -2196,10 +2160,8 @@ func TestConditionalOrderCancellation(t *testing.T) {
 				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
 			},
 
-			priceUpdate: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_300_000),
-				},
+			priceUpdate: map[uint32]uint64{
+				0: 5_000_300_000,
 			},
 			expectedConditionalOrderTriggered: true,
 		},
@@ -2275,13 +2237,16 @@ func TestConditionalOrderCancellation(t *testing.T) {
 			// Add an empty premium vote.
 			deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
 
-			// Add the price update.
-			txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
-			require.NoError(t, txBuilder.SetMsgs(tc.priceUpdate))
-			priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
+			// // Add the price update.
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				tc.priceUpdate,
+				tApp.GetHeader().Height,
+			)
 			require.NoError(t, err)
 
-			deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
+			deliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 
 			// Advance to the next block, updating the price.
 			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
@@ -2341,7 +2306,7 @@ func TestConditionalOrderExpiration(t *testing.T) {
 		orders      []clobtypes.Order
 
 		firstBlockTime                time.Time
-		firstPriceUpdate              *prices.MsgUpdateMarketPrices
+		firstPriceUpdate              map[uint32]uint64
 		firstExistInStateExpectations map[clobtypes.OrderId]bool
 		firstExpectedTriggered        map[clobtypes.OrderId]bool
 
@@ -2360,10 +2325,8 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			},
 			firstBlockTime: time.Unix(5, 0).UTC(),
 			// Does not trigger above conditional order.
-			firstPriceUpdate: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			firstPriceUpdate: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
 			firstExistInStateExpectations: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49995.OrderId: true,
@@ -2391,10 +2354,8 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			},
 			firstBlockTime: time.Unix(5, 0).UTC(),
 			// Does not trigger above conditional order.
-			firstPriceUpdate: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			firstPriceUpdate: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
 			firstExistInStateExpectations: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49995.OrderId: true,
@@ -2422,10 +2383,8 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			},
 			firstBlockTime: time.Unix(5, 0).UTC(),
 			// Triggers above conditional order.
-			firstPriceUpdate: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			firstPriceUpdate: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
 			firstExistInStateExpectations: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: true,
@@ -2453,10 +2412,8 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			},
 			firstBlockTime: time.Unix(5, 0).UTC(),
 			// Triggers above conditional order.
-			firstPriceUpdate: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			firstPriceUpdate: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
 			firstExistInStateExpectations: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: true,
@@ -2486,10 +2443,8 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			},
 			firstBlockTime: time.Unix(5, 0).UTC(),
 			// Triggers above conditional order.
-			firstPriceUpdate: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 4_999_700_000),
-				},
+			firstPriceUpdate: map[uint32]uint64{
+				0: 4_999_700_000,
 			},
 			firstExistInStateExpectations: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49999.OrderId: true,
@@ -2583,12 +2538,14 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
 
 			// Add the price update.
-			txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
-			require.NoError(t, txBuilder.SetMsgs(tc.firstPriceUpdate))
-			priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				tc.firstPriceUpdate,
+				tApp.GetHeader().Height,
+			)
 			require.NoError(t, err)
-
-			deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
+			deliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 
 			// Advance to the next block, updating the price.
 			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{

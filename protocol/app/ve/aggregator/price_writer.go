@@ -54,6 +54,7 @@ func NewPriceWriter(
 func (pw *PriceWriter) ApplyPricesFromVoteExtensions(ctx sdk.Context, req *abci.RequestFinalizeBlock) (map[string]*big.Int, error) {
 	votes, err := GetDaemonVotes(req.Txs, pw.voteExtensionCodec, pw.extendedCommitCodec)
 	if err != nil {
+
 		pw.logger.Error(
 			"failed to get extended commit info from proposal",
 			"height", req.Height,
@@ -87,6 +88,7 @@ func (pw *PriceWriter) ApplyPricesFromVoteExtensions(ctx sdk.Context, req *abci.
 		pair := market.Pair
 		price, ok := prices[pair]
 		if !ok || price == nil {
+
 			pw.logger.Debug(
 				"no price for currency pair",
 				"currency_pair", pair,
@@ -119,7 +121,7 @@ func (pw *PriceWriter) ApplyPricesFromVoteExtensions(ctx sdk.Context, req *abci.
 
 			return nil, err
 		}
-		pw.logger.Debug(
+		pw.logger.Info(
 			"set price for currency pair",
 			"currency_pair", pair,
 			"quote_price", newPrice.Price,
