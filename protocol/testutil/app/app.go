@@ -823,7 +823,7 @@ func (tApp *TestApp) AdvanceToBlock(
 		}
 
 		finalizeBlockResponse, finalizeBlockErr := tApp.App.FinalizeBlock(&finalizeBlockRequest)
-
+		// fmt.Println("XXX FINALIZE BLOCK RESPONSE", finalizeBlockResponse, finalizeBlockErr)
 		if options.ValidateFinalizeBlock != nil {
 			tApp.halted = options.ValidateFinalizeBlock(
 				tApp.App.NewContextLegacy(false, tApp.header),
