@@ -14,24 +14,24 @@ const (
 	UpgradeName = "v6.0.0"
 )
 
-var Upgrade = upgrades.Upgrade{
-	UpgradeName: UpgradeName,
-	StoreUpgrades: store.StoreUpgrades{
-		Added: []string{
-			listingtypes.StoreKey,
-			revsharetypes.StoreKey,
-			marketmapmoduletypes.StoreKey,
-		},
-	},
-}
-
 var (
-	expectedParams = marketmapmoduletypes.Params{
+	Upgrade = upgrades.Upgrade{
+		UpgradeName: UpgradeName,
+		StoreUpgrades: store.StoreUpgrades{
+			Added: []string{
+				listingtypes.StoreKey,
+				revsharetypes.StoreKey,
+				marketmapmoduletypes.StoreKey,
+			},
+		},
+	}
+
+	DefaultMarketMapParams = marketmapmoduletypes.Params{
 		MarketAuthorities: []string{"dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky"},
 		Admin:             "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
 	}
 
-	expectedMarketMap = marketmapmoduletypes.MarketMap{
+	DefaultMarketMap = marketmapmoduletypes.MarketMap{
 		Markets: map[string]marketmapmoduletypes.Market{
 			"ADA/USD": {
 				Ticker: marketmapmoduletypes.Ticker{

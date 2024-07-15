@@ -234,7 +234,7 @@ func postUpgradeMarketMapState(node *containertest.Node, t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, "localdydxprotocol", marketMapResp.ChainId)
-	require.Equal(t, expectedMarketMap, marketMapResp.MarketMap)
+	require.Equal(t, v_6_0_0.DefaultMarketMap, marketMapResp.MarketMap)
 
 	// check that the market map params have been initialized
 	resp, err = containertest.Query(node, marketmapmoduletypes.NewQueryClient,
@@ -245,5 +245,5 @@ func postUpgradeMarketMapState(node *containertest.Node, t *testing.T) {
 	err = proto.UnmarshalText(resp.String(), &paramsResp)
 	require.NoError(t, err)
 
-	require.Equal(t, expectedParams, paramsResp.Params)
+	require.Equal(t, v_6_0_0.DefaultMarketMapParams, paramsResp.Params)
 }
