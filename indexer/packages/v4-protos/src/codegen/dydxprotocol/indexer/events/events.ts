@@ -624,7 +624,6 @@ export interface StatefulOrderEventV1 {
   conditionalOrderPlacement?: StatefulOrderEventV1_ConditionalOrderPlacementV1;
   conditionalOrderTriggered?: StatefulOrderEventV1_ConditionalOrderTriggeredV1;
   longTermOrderPlacement?: StatefulOrderEventV1_LongTermOrderPlacementV1;
-  orderReplacement?: StatefulOrderEventV1_LongTermOrderReplacementV1;
 }
 /**
  * StatefulOrderEvent message contains information about a change to a stateful
@@ -639,7 +638,6 @@ export interface StatefulOrderEventV1SDKType {
   conditional_order_placement?: StatefulOrderEventV1_ConditionalOrderPlacementV1SDKType;
   conditional_order_triggered?: StatefulOrderEventV1_ConditionalOrderTriggeredV1SDKType;
   long_term_order_placement?: StatefulOrderEventV1_LongTermOrderPlacementV1SDKType;
-  order_replacement?: StatefulOrderEventV1_LongTermOrderReplacementV1SDKType;
 }
 /** A stateful order placement contains an order. */
 
@@ -709,20 +707,6 @@ export interface StatefulOrderEventV1_LongTermOrderPlacementV1 {
 /** A long term order placement contains an order. */
 
 export interface StatefulOrderEventV1_LongTermOrderPlacementV1SDKType {
-  order?: IndexerOrderSDKType;
-}
-/** A long term order replacement contains an old order ID and the new order. */
-
-export interface StatefulOrderEventV1_LongTermOrderReplacementV1 {
-  /** vault replaces orders with a different order ID */
-  oldOrderId?: IndexerOrderId;
-  order?: IndexerOrder;
-}
-/** A long term order replacement contains an old order ID and the new order. */
-
-export interface StatefulOrderEventV1_LongTermOrderReplacementV1SDKType {
-  /** vault replaces orders with a different order ID */
-  old_order_id?: IndexerOrderIdSDKType;
   order?: IndexerOrderSDKType;
 }
 /**
@@ -2403,8 +2387,7 @@ function createBaseStatefulOrderEventV1(): StatefulOrderEventV1 {
     orderRemoval: undefined,
     conditionalOrderPlacement: undefined,
     conditionalOrderTriggered: undefined,
-    longTermOrderPlacement: undefined,
-    orderReplacement: undefined
+    longTermOrderPlacement: undefined
   };
 }
 
@@ -2428,10 +2411,6 @@ export const StatefulOrderEventV1 = {
 
     if (message.longTermOrderPlacement !== undefined) {
       StatefulOrderEventV1_LongTermOrderPlacementV1.encode(message.longTermOrderPlacement, writer.uint32(58).fork()).ldelim();
-    }
-
-    if (message.orderReplacement !== undefined) {
-      StatefulOrderEventV1_LongTermOrderReplacementV1.encode(message.orderReplacement, writer.uint32(66).fork()).ldelim();
     }
 
     return writer;
@@ -2466,10 +2445,6 @@ export const StatefulOrderEventV1 = {
           message.longTermOrderPlacement = StatefulOrderEventV1_LongTermOrderPlacementV1.decode(reader, reader.uint32());
           break;
 
-        case 8:
-          message.orderReplacement = StatefulOrderEventV1_LongTermOrderReplacementV1.decode(reader, reader.uint32());
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -2486,7 +2461,6 @@ export const StatefulOrderEventV1 = {
     message.conditionalOrderPlacement = object.conditionalOrderPlacement !== undefined && object.conditionalOrderPlacement !== null ? StatefulOrderEventV1_ConditionalOrderPlacementV1.fromPartial(object.conditionalOrderPlacement) : undefined;
     message.conditionalOrderTriggered = object.conditionalOrderTriggered !== undefined && object.conditionalOrderTriggered !== null ? StatefulOrderEventV1_ConditionalOrderTriggeredV1.fromPartial(object.conditionalOrderTriggered) : undefined;
     message.longTermOrderPlacement = object.longTermOrderPlacement !== undefined && object.longTermOrderPlacement !== null ? StatefulOrderEventV1_LongTermOrderPlacementV1.fromPartial(object.longTermOrderPlacement) : undefined;
-    message.orderReplacement = object.orderReplacement !== undefined && object.orderReplacement !== null ? StatefulOrderEventV1_LongTermOrderReplacementV1.fromPartial(object.orderReplacement) : undefined;
     return message;
   }
 
@@ -2721,61 +2695,6 @@ export const StatefulOrderEventV1_LongTermOrderPlacementV1 = {
 
   fromPartial(object: DeepPartial<StatefulOrderEventV1_LongTermOrderPlacementV1>): StatefulOrderEventV1_LongTermOrderPlacementV1 {
     const message = createBaseStatefulOrderEventV1_LongTermOrderPlacementV1();
-    message.order = object.order !== undefined && object.order !== null ? IndexerOrder.fromPartial(object.order) : undefined;
-    return message;
-  }
-
-};
-
-function createBaseStatefulOrderEventV1_LongTermOrderReplacementV1(): StatefulOrderEventV1_LongTermOrderReplacementV1 {
-  return {
-    oldOrderId: undefined,
-    order: undefined
-  };
-}
-
-export const StatefulOrderEventV1_LongTermOrderReplacementV1 = {
-  encode(message: StatefulOrderEventV1_LongTermOrderReplacementV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.oldOrderId !== undefined) {
-      IndexerOrderId.encode(message.oldOrderId, writer.uint32(10).fork()).ldelim();
-    }
-
-    if (message.order !== undefined) {
-      IndexerOrder.encode(message.order, writer.uint32(18).fork()).ldelim();
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): StatefulOrderEventV1_LongTermOrderReplacementV1 {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseStatefulOrderEventV1_LongTermOrderReplacementV1();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.oldOrderId = IndexerOrderId.decode(reader, reader.uint32());
-          break;
-
-        case 2:
-          message.order = IndexerOrder.decode(reader, reader.uint32());
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<StatefulOrderEventV1_LongTermOrderReplacementV1>): StatefulOrderEventV1_LongTermOrderReplacementV1 {
-    const message = createBaseStatefulOrderEventV1_LongTermOrderReplacementV1();
-    message.oldOrderId = object.oldOrderId !== undefined && object.oldOrderId !== null ? IndexerOrderId.fromPartial(object.oldOrderId) : undefined;
     message.order = object.order !== undefined && object.order !== null ? IndexerOrder.fromPartial(object.order) : undefined;
     return message;
   }

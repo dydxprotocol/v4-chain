@@ -626,16 +626,16 @@ func (_m *ClobKeeper) GetSubaccountMaxNotionalLiquidatable(ctx types.Context, su
 }
 
 // HandleMsgCancelOrder provides a mock function with given fields: ctx, msg
-func (_m *ClobKeeper) HandleMsgCancelOrder(ctx types.Context, msg *clobtypes.MsgCancelOrder, isInternalOrder bool) error {
-	ret := _m.Called(ctx, msg, isInternalOrder)
+func (_m *ClobKeeper) HandleMsgCancelOrder(ctx types.Context, msg *clobtypes.MsgCancelOrder) error {
+	ret := _m.Called(ctx, msg)
 
 	if len(ret) == 0 {
 		panic("no return value specified for HandleMsgCancelOrder")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgCancelOrder, bool) error); ok {
-		r0 = rf(ctx, msg, isInternalOrder)
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgCancelOrder) error); ok {
+		r0 = rf(ctx, msg)
 	} else {
 		r0 = ret.Error(0)
 	}
