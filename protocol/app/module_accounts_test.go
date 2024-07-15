@@ -1,9 +1,11 @@
 package app_test
 
 import (
-	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"testing"
 
+	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
+
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -36,6 +38,7 @@ func TestModuleAccountsToAddresses(t *testing.T) {
 		vestmoduletypes.CommunityVesterAccountName:   "dydx1wxje320an3karyc6mjw4zghs300dmrjkwn7xtk",
 		icatypes.ModuleName:                          "dydx1vlthgax23ca9syk7xgaz347xmf4nunefw3cnv8",
 		marketmapmoduletypes.ModuleName:              "dydx16j3d86dww8p2rzdlqsv7wle98cxzjxw6gjjyzn",
+		wasmtypes.ModuleName:                         "dydx1xds4f0m87ajl3a6az6s2enhxrd0wta48eljwng",
 	}
 
 	require.True(t, len(expectedModuleAccToAddresses) == len(app.GetMaccPerms()),
@@ -76,6 +79,7 @@ func TestMaccPerms(t *testing.T) {
 		"community_treasury":     nil,
 		"community_vester":       nil,
 		"marketmap":              nil,
+		"wasm":                   {"burner"},
 	}
 	require.Equal(t, expectedMaccPerms, maccPerms, "default macc perms list does not match expected")
 }
@@ -97,6 +101,7 @@ func TestModuleAccountAddrs(t *testing.T) {
 		"dydx15ztc7xy42tn2ukkc0qjthkucw9ac63pgp70urn": true, // x/vest.communityTreasury
 		"dydx1wxje320an3karyc6mjw4zghs300dmrjkwn7xtk": true, // x/vest.communityVester
 		"dydx16j3d86dww8p2rzdlqsv7wle98cxzjxw6gjjyzn": true, // x/marketmap
+		"dydx1xds4f0m87ajl3a6az6s2enhxrd0wta48eljwng": true, // wasm
 	}
 
 	require.Equal(t, expectedModuleAccAddresses, app.ModuleAccountAddrs())

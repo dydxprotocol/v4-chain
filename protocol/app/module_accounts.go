@@ -36,7 +36,8 @@ var (
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		icatypes.ModuleName:            nil,
-		// TODO(cosmwasm feature branch)
+		// https://github.com/CosmWasm/wasmvm/blob/1c3fdc2a4402e527617ec72fe53f114b24899a01/types/msg.go#L116-L121
+		// required to burn given coins from the contract's account.
 		wasmtypes.ModuleName: {authtypes.Burner},
 		// -------- dYdX custom module accounts --------
 		// bridge module account mints tokens for bridged funds.

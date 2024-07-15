@@ -14,6 +14,7 @@ ARG GOLANG_1_22_ALPINE_DIGEST="cdc86d9f363e8786845bea2040312b4efa321b828acdeb26f
 FROM golang@sha256:${GOLANG_1_22_ALPINE_DIGEST} as builder
 ARG VERSION
 ARG COMMIT
+ARG WASMVM_VERSION=v1.5.2
 
 RUN set -eux; apk add --no-cache ca-certificates build-base; apk add git linux-headers bash binutils-gold
 
@@ -28,12 +29,17 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 COPY . .
 
 # See https://github.com/CosmWasm/wasmvm/releases
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.5.0/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
-RUN sha256sum /lib/libwasmvm_muslc.aarch64.a | grep 2687afbdae1bc6c7c8b05ae20dfb8ffc7ddc5b4e056697d0f37853dfe294e913
+# Download the wasmvm library for the target architecture (aarch64 or x86_64)
+# x86_64 is needed for CI, local macs support aarch64
+RUN if [ "$(uname -m)" = "aarch64" ]; then \
+  wget -O /lib/libwasmvm_muslc.a https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.aarch64.a; \
+    elif [ "$(uname -m)" = "x86_64" ]; then \
+  wget -O /lib/libwasmvm_muslc.a https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.x86_64.a; \
+    else \
+  echo "Unsupported architecture"; \
+    fi
 
-# Copy the library you want to the final location that will be found by the linker flag `-lwasmvm_muslc`
-RUN cp /lib/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.a
-
+    
 # Build dydxprotocold binary
 # force it to use static lib (from above) not standard libgo_cosmwasm.so file
 RUN --mount=type=cache,target=/root/.cache/go-build \
