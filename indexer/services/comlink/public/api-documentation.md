@@ -1695,9 +1695,6 @@ fetch(`${baseURL}/orders?address=string&subaccountNumber=0.1`,
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
-|type|HARD_TRADE|
-|type|FAILED_HARD_TRADE|
-|type|TRANSFER_PLACEHOLDER|
 
 > Example responses
 
@@ -1800,9 +1797,6 @@ Status Code **200**
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
-|type|HARD_TRADE|
-|type|FAILED_HARD_TRADE|
-|type|TRANSFER_PLACEHOLDER|
 |timeInForce|GTT|
 |timeInForce|FOK|
 |timeInForce|IOC|
@@ -1895,9 +1889,6 @@ fetch(`${baseURL}/orders/parentSubaccountNumber?address=string&parentSubaccountN
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
-|type|HARD_TRADE|
-|type|FAILED_HARD_TRADE|
-|type|TRANSFER_PLACEHOLDER|
 
 > Example responses
 
@@ -2000,9 +1991,6 @@ Status Code **200**
 |type|TRAILING_STOP|
 |type|TAKE_PROFIT|
 |type|TAKE_PROFIT_MARKET|
-|type|HARD_TRADE|
-|type|FAILED_HARD_TRADE|
-|type|TRANSFER_PLACEHOLDER|
 |timeInForce|GTT|
 |timeInForce|FOK|
 |timeInForce|IOC|
@@ -2970,18 +2958,18 @@ fetch(`${baseURL}/transfers/between?sourceAddress=string&sourceSubaccountNumber=
 
 ```json
 {
-  "pageSize": 0.1,
-  "totalResults": 0.1,
-  "offset": 0.1,
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
   "transfersSubset": [
     {
       "id": "string",
       "sender": {
-        "subaccountNumber": 0.1,
+        "subaccountNumber": 0,
         "address": "string"
       },
       "recipient": {
-        "subaccountNumber": 0.1,
+        "subaccountNumber": 0,
         "address": "string"
       },
       "size": "string",
@@ -4410,9 +4398,6 @@ or
 |*anonymous*|TRAILING_STOP|
 |*anonymous*|TAKE_PROFIT|
 |*anonymous*|TAKE_PROFIT_MARKET|
-|*anonymous*|HARD_TRADE|
-|*anonymous*|FAILED_HARD_TRADE|
-|*anonymous*|TRANSFER_PLACEHOLDER|
 
 ## OrderResponseObject
 
@@ -5035,18 +5020,18 @@ or
 
 ```json
 {
-  "pageSize": 0.1,
-  "totalResults": 0.1,
-  "offset": 0.1,
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
   "transfersSubset": [
     {
       "id": "string",
       "sender": {
-        "subaccountNumber": 0.1,
+        "subaccountNumber": 0,
         "address": "string"
       },
       "recipient": {
-        "subaccountNumber": 0.1,
+        "subaccountNumber": 0,
         "address": "string"
       },
       "size": "string",
@@ -5066,9 +5051,9 @@ or
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|pageSize|number(double)|false|none|none|
-|totalResults|number(double)|false|none|none|
-|offset|number(double)|false|none|none|
+|pageSize|integer(int32)|false|none|none|
+|totalResults|integer(int32)|false|none|none|
+|offset|integer(int32)|false|none|none|
 |transfersSubset|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
 |totalNetTransfers|string|true|none|none|
 

@@ -808,10 +808,7 @@
           "STOP_MARKET",
           "TRAILING_STOP",
           "TAKE_PROFIT",
-          "TAKE_PROFIT_MARKET",
-          "HARD_TRADE",
-          "FAILED_HARD_TRADE",
-          "TRANSFER_PLACEHOLDER"
+          "TAKE_PROFIT_MARKET"
         ],
         "type": "string"
       },
@@ -1293,16 +1290,16 @@
       "TransferBetweenResponse": {
         "properties": {
           "pageSize": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "totalResults": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "offset": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "transfersSubset": {
             "items": {
