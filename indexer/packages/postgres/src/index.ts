@@ -16,6 +16,7 @@ export { default as PerpetualPositionModel } from './models/perpetual-position-m
 export { default as TransferModel } from './models/transfer-model';
 export { default as TradingRewardModel } from './models/trading-reward-model';
 export { default as TradingRewardAggregationModel } from './models/trading-reward-aggregation-model';
+export { default as SubaccountUsernamesModel } from './models/subaccount-usernames-model';
 
 export * as AssetTable from './stores/asset-table';
 export * as AssetPositionTable from './stores/asset-position-table';
