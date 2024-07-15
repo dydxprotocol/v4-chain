@@ -1399,7 +1399,6 @@ fetch(`${baseURL}/historical-pnl/parentSubaccountNumber?address=string&parentSub
 |createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
 |createdOnOrAfterHeight|query|number(double)|false|none|
 |createdOnOrAfter|query|[IsoString](#schemaisostring)|false|none|
-|page|query|number(double)|false|none|
 
 > Example responses
 
