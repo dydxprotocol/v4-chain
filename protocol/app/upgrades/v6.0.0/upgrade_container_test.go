@@ -6,13 +6,14 @@ import (
 	"testing"
 	"time"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/gogoproto/proto"
 	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	v_6_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v6.0.0"
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"

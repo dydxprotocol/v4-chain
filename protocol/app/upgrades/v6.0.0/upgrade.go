@@ -5,10 +5,6 @@ import (
 	"fmt"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
@@ -23,6 +19,11 @@ import (
 	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"go.uber.org/zap"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // GovAuthority is the module account address of x/gov.
