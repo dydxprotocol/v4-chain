@@ -64,4 +64,8 @@ describe('SubaccountUsernames store', () => {
     await SubaccountUsernamesTable.create(defaultSubaccountUsername);
     await expect(SubaccountUsernamesTable.create(duplicatedSubaccountUsername)).rejects.toThrow();
   });
+
+  it('Creation of row without subaccountId fails', async () => {
+    await expect(SubaccountUsernamesTable.create({ ...defaultSubaccountUsername, subaccountId: '' })).rejects.toThrow();
+  });
 });
