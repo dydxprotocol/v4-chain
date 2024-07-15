@@ -24,7 +24,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/h2non/gock v1.2.0
-	github.com/holiman/uint256 v1.2.4
+	github.com/holiman/uint256 v1.3.0
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
@@ -60,14 +60,14 @@ require (
 	github.com/cosmos/ibc-go/v8 v8.2.0
 	github.com/cosmos/rosetta v0.50.3
 	github.com/deckarep/golang-set/v2 v2.6.0
-	github.com/ethereum/go-ethereum v1.14.6
+	github.com/ethereum/go-ethereum v1.14.7
 	github.com/go-kit/log v0.2.1
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rs/zerolog v1.32.0
 	github.com/shopspring/decimal v1.3.1
-	github.com/skip-mev/slinky v1.0.4-0.20240710182126-f342fcf45d25
+	github.com/skip-mev/slinky v1.0.4-0.20240715165738-8218f83b6eb1
 	github.com/spf13/viper v1.19.0
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d
 	go.uber.org/zap v1.27.0
