@@ -38,7 +38,8 @@ func TestModuleAccountsToAddresses(t *testing.T) {
 		marketmapmoduletypes.ModuleName:              "dydx16j3d86dww8p2rzdlqsv7wle98cxzjxw6gjjyzn",
 	}
 
-	require.True(t, len(expectedModuleAccToAddresses) == len(app.GetMaccPerms()), "expected %d, got %d", len(expectedModuleAccToAddresses), len(app.GetMaccPerms()))
+	require.True(t, len(expectedModuleAccToAddresses) == len(app.GetMaccPerms()),
+		"expected %d, got %d", len(expectedModuleAccToAddresses), len(app.GetMaccPerms()))
 	for acc, address := range expectedModuleAccToAddresses {
 		expectedAddr := authtypes.NewModuleAddress(acc).String()
 		require.Equal(t, address, expectedAddr, "module (%v) should have address (%s)", acc, expectedAddr)
