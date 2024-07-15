@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/store"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	tmtypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -140,7 +141,8 @@ var skippedGenesisModules = map[string]interface{}{
 	// https://github.com/cosmos/ibc-go/blob/2551dea/modules/apps/27-interchain-accounts/simulation/proposals.go#L23
 	// adds both ICA host and controller messages while the app only supports host messages causing the
 	// simulation to fail due to unroutable controller messages.
-	icatypes.ModuleName: nil,
+	icatypes.ModuleName:  nil,
+	wasmtypes.ModuleName: nil,
 }
 
 // WithRandomlyGeneratedOperationsSimulationManager uses the default weighted operations of each of

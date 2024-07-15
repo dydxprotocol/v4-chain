@@ -1,5 +1,4 @@
 {
-  "app_hash": null,
   "app_name": "dydxprotocold",
   "app_state": {
     "assets": {
@@ -521,7 +520,6 @@
         }
       }
     },
-    "consensus": null,
     "crisis": {
       "constant_fee": {
         "amount": "1000000000000000000",
@@ -756,7 +754,6 @@
     },
     "gov": {
       "constitution": "",
-      "deposit_params": null,
       "deposits": [],
       "params": {
         "burn_proposal_deposit_prevote": false,
@@ -788,9 +785,7 @@
       },
       "proposals": [],
       "starting_proposal_id": "1",
-      "tally_params": null,
-      "votes": [],
-      "voting_params": null
+      "votes": []
     },
     "govplus": {},
     "ibc": {
@@ -858,7 +853,6 @@
     "listing": {
       "hard_cap_for_markets": 0
     },
-    "params": null,
     "perpetuals": {
       "liquidity_tiers": [
         {
@@ -1845,9 +1839,21 @@
           "vester_account": "rewards_vester"
         }
       ]
+    },
+    "wasm": {
+      "codes": [],
+      "contracts": [],
+      "params": {
+        "code_upload_access": {
+          "addresses": [],
+          "permission": "Everybody"
+        },
+        "instantiate_default_permission": "Everybody"
+      },
+      "sequences": []
     }
   },
-  "app_version": "5.0.0-dev0-155-g6e95ca92",
+  "app_version": "5.0.0-dev0-342-g99b658d8",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {
