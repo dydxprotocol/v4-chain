@@ -11,7 +11,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	"github.com/skip-mev/slinky/oracle/config"
 	"github.com/skip-mev/slinky/providers/apis/dydx"
@@ -109,7 +108,7 @@ func migratePricesToMarketMap(ctx sdk.Context, pk pricestypes.PricesKeeper, mmk 
 func initRevShareModuleState(
 	ctx sdk.Context,
 	revShareKeeper revsharetypes.RevShareKeeper,
-	priceKeeper pricetypes.PricesKeeper,
+	priceKeeper pricestypes.PricesKeeper,
 ) {
 	// Initialize the rev share module state.
 	params := revsharetypes.MarketMapperRevenueShareParams{
