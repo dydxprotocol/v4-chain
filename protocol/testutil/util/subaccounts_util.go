@@ -44,12 +44,13 @@ func CreateSinglePerpetualPosition(
 	perpetualId uint32,
 	quantums *big.Int,
 	fundingIndex *big.Int,
+	quoteBalance *big.Int,
 ) *satypes.PerpetualPosition {
 	return &satypes.PerpetualPosition{
 		PerpetualId:  perpetualId,
 		Quantums:     dtypes.NewIntFromBigInt(quantums),
 		FundingIndex: dtypes.NewIntFromBigInt(fundingIndex),
-		QuoteBalance: dtypes.NewInt(0),
+		QuoteBalance: dtypes.NewIntFromBigInt(quoteBalance),
 	}
 }
 
@@ -90,6 +91,7 @@ func ChangeUsdcBalance(subaccount satypes.Subaccount, deltaQuantums int64) satyp
 				pp.PerpetualId,
 				pp.Quantums.BigInt(),
 				pp.FundingIndex.BigInt(),
+				pp.GetQuoteBalance(),
 			),
 		)
 	}

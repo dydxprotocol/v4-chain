@@ -4,11 +4,10 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
+	perp_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -124,12 +123,12 @@ func TestGetRiskForSubaccount(t *testing.T) {
 			subaccount: types.Subaccount{
 				Id: &subaccountId,
 				PerpetualPositions: []*types.PerpetualPosition{
-					testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0)),
+					testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0), big.NewInt(0)),
 				},
 				AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(100)),
 			},
 			perpInfos: perptypes.PerpInfos{
-				1: createPerpInfo(1, -6, 100, 0),
+				1: perp_testutil.CreatePerpInfo(1, -6, 100, 0),
 			},
 			expectedRisk: margin.Risk{
 				NC:  big.NewInt(100*100 + 100),
@@ -142,14 +141,14 @@ func TestGetRiskForSubaccount(t *testing.T) {
 			subaccount: types.Subaccount{
 				Id: &subaccountId,
 				PerpetualPositions: []*types.PerpetualPosition{
-					testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0)),
-					testutil.CreateSinglePerpetualPosition(2, big.NewInt(-25), big.NewInt(0)),
+					testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0), big.NewInt(0)),
+					testutil.CreateSinglePerpetualPosition(2, big.NewInt(-25), big.NewInt(0), big.NewInt(0)),
 				},
 				AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(110)),
 			},
 			perpInfos: perptypes.PerpInfos{
-				1: createPerpInfo(1, -6, 100, 0),
-				2: createPerpInfo(2, -6, 200, 0),
+				1: perp_testutil.CreatePerpInfo(1, -6, 100, 0),
+				2: perp_testutil.CreatePerpInfo(2, -6, 200, 0),
 			},
 			expectedRisk: margin.Risk{
 				NC:  big.NewInt((100*100 + 100) + (-25*200 + 10)),
@@ -176,7 +175,7 @@ func TestGetRiskForSubaccount_Panic(t *testing.T) {
 	subaccount := types.Subaccount{
 		Id: &types.SubaccountId{Owner: "test", Number: 1},
 		PerpetualPositions: []*types.PerpetualPosition{
-			testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0)),
+			testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0), big.NewInt(0)),
 		},
 		AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(100)),
 	}
@@ -186,37 +185,4 @@ func TestGetRiskForSubaccount_Panic(t *testing.T) {
 	require.Panics(t, func() {
 		_, _ = lib.GetRiskForSubaccount(subaccount, emptyPerpInfos)
 	})
-}
-
-func createPerpInfo(
-	id uint32,
-	atomicResolution int32,
-	price uint64,
-	priceExponent int32,
-) perptypes.PerpInfo {
-	return perptypes.PerpInfo{
-		Perpetual: perptypes.Perpetual{
-			Params: perptypes.PerpetualParams{
-				Id:               id,
-				Ticker:           "test ticker",
-				MarketId:         id,
-				AtomicResolution: atomicResolution,
-				LiquidityTier:    id,
-			},
-			FundingIndex: dtypes.NewInt(0),
-			OpenInterest: dtypes.NewInt(0),
-		},
-		Price: pricetypes.MarketPrice{
-			Id:       id,
-			Exponent: priceExponent,
-			Price:    price,
-		},
-		LiquidityTier: perptypes.LiquidityTier{
-			Id:                     id,
-			InitialMarginPpm:       100_000,
-			MaintenanceFractionPpm: 500_000,
-			OpenInterestLowerCap:   0,
-			OpenInterestUpperCap:   0,
-		},
-	}
 }

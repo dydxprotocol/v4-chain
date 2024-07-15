@@ -83,6 +83,7 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 				uint32(3),
 				big.NewInt(int64(orderQuantums)),
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -104,6 +105,7 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 			testutil.CreateSinglePerpetualPosition(
 				uint32(3),
 				big.NewInt(-1*int64(orderQuantums)),
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -127,6 +129,7 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 				uint32(3),
 				// Alice buys 1 more ISO,
 				big.NewInt(2*int64(orderQuantums)),
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},

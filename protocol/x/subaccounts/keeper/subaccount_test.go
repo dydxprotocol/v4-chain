@@ -141,6 +141,7 @@ func TestGetCollateralPool(t *testing.T) {
 					constants.IsoUsd_IsolatedMarket.GetId(),
 					big.NewInt(100_000_000),
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedAddress: authtypes.NewModuleAddress(
@@ -412,6 +413,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(100_000_000), // 1 BTC
 					big.NewInt(-30),         // indexDelta=20, settlement=-20*100
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
@@ -419,6 +421,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(100_000_000), // 1 BTC
 					big.NewInt(-10),
+					big.NewInt(0),
 				),
 			},
 			expectedAssetPositions: []*types.AssetPosition{
@@ -433,6 +436,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(0),
 						big.NewInt(100_000_000),
 						big.NewInt(-10),
+						big.NewInt(0),
 					),
 				},
 			},
@@ -470,6 +474,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					big.NewInt(500_000), // 0.005 BTC
 					// indexDelta=-17, settlement=17*500_000/1_000_000=8
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
@@ -477,6 +482,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(500_000), // 1 BTC
 					big.NewInt(-17),
+					big.NewInt(0),
 				),
 			},
 			expectedAssetPositions: []*types.AssetPosition{
@@ -491,6 +497,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(0),
 						big.NewInt(500_000),
 						big.NewInt(-17),
+						big.NewInt(0),
 					),
 				},
 			},
@@ -529,6 +536,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(300_000_000), // 3 BTC
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -536,6 +544,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					testutil.CreateSinglePerpetualPosition(
 						uint32(0),
 						big.NewInt(300_000_000), // 3 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -628,6 +637,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(50_000_000), // .50 BTC
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -635,6 +645,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					testutil.CreateSinglePerpetualPosition(
 						uint32(0),
 						big.NewInt(50_000_000), // .50 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -685,6 +696,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(0),
 						big.NewInt(0),
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 			},
@@ -728,6 +740,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(-100_000_000), // -1 BTC
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{},
@@ -736,6 +749,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					// Position closed update.
 					testutil.CreateSinglePerpetualPosition(
 						uint32(0),
+						big.NewInt(0),
 						big.NewInt(0),
 						big.NewInt(0),
 					),
@@ -781,10 +795,12 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(-100_000_000), // -1 BTC
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(1),
 					big.NewInt(-1_000_000_000_000_000_000), // -1 ETH
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -792,6 +808,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				testutil.CreateSinglePerpetualPosition(
 					uint32(0),
 					big.NewInt(-200_000_000), // -2 BTC
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -801,10 +818,12 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(0),
 						big.NewInt(-200_000_000), // -2 BTC
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 					// Position closed update.
 					testutil.CreateSinglePerpetualPosition(
 						uint32(1),
+						big.NewInt(0),
 						big.NewInt(0),
 						big.NewInt(0),
 					),
@@ -895,10 +914,12 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(-100_000_000), // -1 BTC
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(1),
 					big.NewInt(-1_000_000_000), // -1 ETH
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -906,6 +927,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				testutil.CreateSinglePerpetualPosition(
 					uint32(1),
 					big.NewInt(-2_000_000_000), // -2 ETH
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -916,10 +938,12 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(0),
 						big.NewInt(0),
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 					testutil.CreateSinglePerpetualPosition(
 						uint32(1),
 						big.NewInt(-2_000_000_000), // -2 ETH
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -970,6 +994,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(100_000_000), // 1 BTC
 					big.NewInt(-15),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -978,6 +1003,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(0),
 						big.NewInt(100_000_000), // 1 BTC
 						big.NewInt(-15),
+						big.NewInt(0),
 					),
 				},
 			},
@@ -1022,6 +1048,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(-100_000_000), // 1 BTC
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -1029,6 +1056,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					testutil.CreateSinglePerpetualPosition(
 						uint32(0),
 						big.NewInt(-100_000_000), // 1 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1078,6 +1106,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(1),
 					big.NewInt(1_000_000_000), // 1 ETH
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -1085,6 +1114,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					testutil.CreateSinglePerpetualPosition(
 						uint32(1),
 						big.NewInt(1_000_000_000), // 1 ETH
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1123,6 +1153,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(1),
 					big.NewInt(500_000_000), // 5 ETH
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
@@ -1131,6 +1162,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(1),
 					big.NewInt(-500_000_000), // -5 ETH
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -1138,6 +1170,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					testutil.CreateSinglePerpetualPosition(
 						uint32(1),
 						big.NewInt(-500_000_000), // -5 ETH
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1176,6 +1209,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(2),
 					big.NewInt(1_000_000_000), // 1 SOL
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
@@ -1184,10 +1218,12 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(1),
 					big.NewInt(1_000_000_000), // 1 ETH
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(2),
 					big.NewInt(1_000_000_000), // 1 SOL
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -1196,6 +1232,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					testutil.CreateSinglePerpetualPosition(
 						uint32(1),
 						big.NewInt(1_000_000_000), // 1 ETH
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1233,10 +1270,12 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(1),
 					big.NewInt(1_000_000_000), // 1 ETH
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(2),
 					big.NewInt(1_000_000_000), // 1 SOL
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -1246,10 +1285,12 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(1),
 					big.NewInt(1_000_000_000), // 1 ETH
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(2),
 					big.NewInt(1_000_000_000), // 1 SOL
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -1258,6 +1299,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					testutil.CreateSinglePerpetualPosition(
 						uint32(0),
 						big.NewInt(100_000_000), // 1 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1300,6 +1342,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(2),
 					big.NewInt(1_000_000_000), // 1 SOL
 					big.NewInt(1700),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
@@ -1307,11 +1350,13 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(1),
 					big.NewInt(1_000_000_000), // 1 ETH
 					big.NewInt(-5000),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(2),
 					big.NewInt(1_000_000_000), // 1 SOL
 					big.NewInt(2000),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -1320,11 +1365,13 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(1),
 						big.NewInt(1_000_000_000), // 1 ETH
 						big.NewInt(-5000),
+						big.NewInt(0),
 					),
 					testutil.CreateSinglePerpetualPosition(
 						uint32(2),
 						big.NewInt(1_000_000_000), // 1 SOL
 						big.NewInt(2000),
+						big.NewInt(0),
 					),
 				},
 			},
@@ -1367,10 +1414,12 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(1),
 					big.NewInt(1_000_000_000), // 1 ETH
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(2),
 					big.NewInt(1_000_000_000), // 1 SOL
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -1379,15 +1428,18 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(200_000_000), // 2 BTC
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(1),
 					big.NewInt(2_000_000_000), // 2 ETH
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(2),
 					big.NewInt(2_000_000_000), // 2 SOL
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -1397,15 +1449,18 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(0),
 						big.NewInt(200_000_000), // 2 BTC
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 					testutil.CreateSinglePerpetualPosition(
 						uint32(1),
 						big.NewInt(2_000_000_000), // 2 ETH
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 					testutil.CreateSinglePerpetualPosition(
 						uint32(2),
 						big.NewInt(2_000_000_000), // 2 SOL
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1449,6 +1504,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(1),
 					big.NewInt(1_000_000_000), // 1 ETH
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{},
@@ -1457,6 +1513,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					// Position closed update.
 					testutil.CreateSinglePerpetualPosition(
 						uint32(1),
+						big.NewInt(0),
 						big.NewInt(0),
 						big.NewInt(0),
 					),
@@ -1468,6 +1525,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					testutil.CreateSinglePerpetualPosition(
 						uint32(0),
 						big.NewInt(100_000_000), // 1 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1600,6 +1658,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(1_000_000), // 0.01 BTC
 					big.NewInt(-7),        // indexDelta=-3, settlement=3
+					big.NewInt(0),
 				),
 			},
 			updates: []types.Update{
@@ -1612,6 +1671,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(1_000_000), // 0.01 BTC
 					big.NewInt(-10),       // indexDelta=-3, settlement=3
+					big.NewInt(0),
 				),
 			},
 			expectedAssetPositions: []*types.AssetPosition{
@@ -1629,6 +1689,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(0),
 						big.NewInt(1_000_000),
 						big.NewInt(-10),
+						big.NewInt(0),
 					),
 				},
 			},
@@ -1672,6 +1733,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big_testutil.MustFirst(new(big.Int).SetString("18446744073709551616", 10)), // 1 BTC
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -1679,6 +1741,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					testutil.CreateSinglePerpetualPosition(
 						uint32(0),
 						big_testutil.MustFirst(new(big.Int).SetString("18446744073709551616", 10)), // 1 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1697,6 +1760,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(0).SetUint64(math.MaxUint64),
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedAssetPositions: []*types.AssetPosition{
@@ -1712,6 +1776,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 						new(big.Int).SetUint64(math.MaxUint64),
 						new(big.Int).SetUint64(1),
 					),
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -1734,6 +1799,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 							new(big.Int).SetUint64(math.MaxUint64),
 							new(big.Int).SetUint64(1),
 						),
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -1778,12 +1844,14 @@ func TestUpdateSubaccounts(t *testing.T) {
 					big.NewInt(-100_000_000), // -1 BTC
 					// indexDelta=-5
 					big.NewInt(-5),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(1),
 					big.NewInt(-2_000_000_000), // -2 ETH
 					// indexDelta=-2
 					big.NewInt(-6),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
@@ -1791,11 +1859,13 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(-100_000_000), // -1 BTC
 					big.NewInt(-10),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(1),
 					big.NewInt(-1_000_000_000), // -1 ETH
 					big.NewInt(-8),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -1804,11 +1874,13 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(0),
 						big.NewInt(-100_000_000), // -1 BTC
 						big.NewInt(-10),
+						big.NewInt(0),
 					),
 					testutil.CreateSinglePerpetualPosition(
 						uint32(1),
 						big.NewInt(-1_000_000_000), // -1 ETH
 						big.NewInt(-8),
+						big.NewInt(0),
 					),
 				},
 			},
@@ -1856,12 +1928,14 @@ func TestUpdateSubaccounts(t *testing.T) {
 					big.NewInt(-100_000_000), // -1 BTC
 					// indexDelta=0
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(1),
 					big.NewInt(-2_000_000_000), // -2 ETH
 					// indexDelta=-2
 					big.NewInt(-6),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
@@ -1869,11 +1943,13 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(-100_000_000), // -1 BTC
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(1),
 					big.NewInt(-1_000_000_000), // -1 ETH
 					big.NewInt(-8),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -1883,6 +1959,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(1),
 						big.NewInt(-1_000_000_000), // -1 ETH
 						big.NewInt(-8),
+						big.NewInt(0),
 					),
 				},
 			},
@@ -1928,12 +2005,14 @@ func TestUpdateSubaccounts(t *testing.T) {
 					big.NewInt(-100_000_000), // -1 BTC
 					// indexDelta=-5
 					big.NewInt(-5),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(1),
 					big.NewInt(-1_000_000_000), // -1 ETH
 					// indexDelta=-2
 					big.NewInt(-6),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
@@ -1941,6 +2020,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(-100_000_000), // -1 BTC
 					big.NewInt(-10),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -1949,10 +2029,12 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(0),
 						big.NewInt(-100_000_000), // -1 BTC
 						big.NewInt(-10),
+						big.NewInt(0),
 					),
 					// Position closed update.
 					testutil.CreateSinglePerpetualPosition(
 						uint32(1),
+						big.NewInt(0),
 						big.NewInt(0),
 						big.NewInt(0),
 					),
@@ -2002,6 +2084,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					big.NewInt(-1_000_000_000), // -1 ETH
 					// indexDelta=0
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{},
@@ -2010,6 +2093,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					// Position closed update.
 					testutil.CreateSinglePerpetualPosition(
 						uint32(1),
+						big.NewInt(0),
 						big.NewInt(0),
 						big.NewInt(0),
 					),
@@ -2059,10 +2143,12 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(100),
 					big.NewInt(1_000_000_000),
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(101),
 					big.NewInt(1_000_000_000),
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -2071,10 +2157,12 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(100),
 					big.NewInt(1_000_000_000),
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(101),
 					big.NewInt(1_000_000_000),
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -2174,12 +2262,14 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(3),
 					big.NewInt(1_000_000_000), // 1 ISO
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				testutil.CreateSinglePerpetualPosition(
 					uint32(3),
 					big.NewInt(1_000_000_000),
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -2214,12 +2304,14 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(3),
 					big.NewInt(1_000_000_000), // 1 ISO
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				testutil.CreateSinglePerpetualPosition(
 					uint32(3),
 					big.NewInt(1_000_000_000),
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -2254,12 +2346,14 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(100_000_000), // 1 BTC
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				testutil.CreateSinglePerpetualPosition(
 					uint32(0),
 					big.NewInt(100_000_000),
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -2305,6 +2399,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(3),
 					big.NewInt(1_000_000_000), // 1 ISO
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -2312,6 +2407,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					testutil.CreateSinglePerpetualPosition(
 						uint32(3),
 						big.NewInt(1_000_000_000), // 1 ISO
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -2369,6 +2465,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(3),
 					big.NewInt(1_000_000_000), // 1 ISO
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{},
@@ -2376,6 +2473,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				defaultSubaccountId: {
 					testutil.CreateSinglePerpetualPosition(
 						uint32(3),
+						big.NewInt(0),
 						big.NewInt(0),
 						big.NewInt(0),
 					),
@@ -2453,12 +2551,14 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(3),
 					big.NewInt(1_000_000_000), // 1 ISO
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				testutil.CreateSinglePerpetualPosition(
 					uint32(3),
 					big.NewInt(1_000_000_000), // 1 ISO
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -2554,6 +2654,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(-9_000_000_000),
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -2562,12 +2663,14 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(0),
 						big.NewInt(-9_000_000_000),
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Bob_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						uint32(0),
 						big.NewInt(9_000_000_000),
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -2587,6 +2690,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				testutil.CreateSinglePerpetualPosition(
 					uint32(0),
 					big.NewInt(100_000_000), // 1 BTC
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -2635,6 +2739,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 							uint32(0),
 							big.NewInt(-200_000_000), // -2 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -2665,6 +2770,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(10_000_000), // 0.1 BTC
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -2673,12 +2779,14 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(0),
 						big.NewInt(10_000_000), // 0.1 BTC
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Bob_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						uint32(0),
 						big.NewInt(-110_000_000), // -1.1 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -2698,6 +2806,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				testutil.CreateSinglePerpetualPosition(
 					uint32(0),
 					big.NewInt(100_000_000), // 1 BTC
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -2742,6 +2851,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 							uint32(0),
 							big.NewInt(10_000_000), // 0.1 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -2772,6 +2882,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(10_000_000), // 0.1 BTC
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -2780,12 +2891,14 @@ func TestUpdateSubaccounts(t *testing.T) {
 						uint32(0),
 						big.NewInt(10_000_000), // 0.1 BTC
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Bob_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						uint32(0),
 						big.NewInt(100_000_000), // 1 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -4779,6 +4892,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					uint32(999999),
 					big.NewInt(0).SetUint64(math.MaxUint64),
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			updates: []types.Update{
@@ -4793,6 +4907,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				testutil.CreateSinglePerpetualPosition(
 					uint32(0),
 					big.NewInt(0).SetUint64(math.MaxUint64),
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -5019,6 +5134,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(1_000_000), // 0.01 BTC,
 					big.NewInt(-99),       // indexDelta=99, net settlement=-99
+					big.NewInt(0),
 				),
 			},
 			updates: []types.Update{
@@ -5041,6 +5157,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(1_000_000), // 0.01 BTC,
 					big.NewInt(-100),      // indexDelta=100, net settlement=-100
+					big.NewInt(0),
 				),
 			},
 			updates: []types.Update{
@@ -5063,6 +5180,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(1_000_000), // 0.01 BTC,
 					big.NewInt(-200),      // indexDelta=200, net settlement=-200
+					big.NewInt(0),
 				),
 			},
 			updates: []types.Update{
@@ -5086,6 +5204,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(1_000_000), // 0.01 BTC,
 					big.NewInt(-200),      // indexDelta=200, net settlement=-200
+					big.NewInt(0),
 				),
 			},
 			updates: []types.Update{
@@ -5108,6 +5227,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(1_000_000), // 0.01 BTC,
 					big.NewInt(100),       // indexDelta=-100, net settlement=100
+					big.NewInt(0),
 				),
 			},
 			updates: []types.Update{
@@ -5128,6 +5248,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(1_000_000), // 0.01 BTC,
 					big.NewInt(100),       // indexDelta=-100, net settlement=100
+					big.NewInt(0),
 				),
 			},
 			updates: []types.Update{
@@ -5149,6 +5270,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(1_000_000), // 0.01 BTC,
 					big.NewInt(-100),      // indexDelta=100, net settlement=-100
+					big.NewInt(0),
 				),
 			},
 			updates: []types.Update{
@@ -5170,6 +5292,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					uint32(0),
 					big.NewInt(1_000_000), // 0.01 BTC,
 					big.NewInt(3),         // indexDelta=-3, net settlement=3
+					big.NewInt(0),
 				),
 			},
 			updates: []types.Update{
@@ -5207,10 +5330,12 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					uint32(100),
 					big.NewInt(1_000_000_000),
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 				testutil.CreateSinglePerpetualPosition(
 					uint32(101),
 					big.NewInt(1_000_000_000),
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -5288,6 +5413,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					uint32(3),
 					big.NewInt(1_000_000_000), // 1 ISO
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			updates: []types.Update{
@@ -5314,6 +5440,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					uint32(3),
 					big.NewInt(1_000_000_000), // 1 ISO
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			updates: []types.Update{
@@ -5339,6 +5466,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				testutil.CreateSinglePerpetualPosition(
 					uint32(0),
 					big.NewInt(100_000_000), // 1 BTC
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -5516,6 +5644,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 					uint32(0),
 					big.NewInt(100_000_000), // 1 BTC
 					big.NewInt(62500),       // 0.0125% rate at BTC=50,000 USDC
+					big.NewInt(0),
 				),
 			},
 		},
@@ -5530,6 +5659,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 					uint32(0),
 					big.NewInt(-100_000_000), // 1 BTC
 					big.NewInt(62500),        // 0.0125% rate at BTC=50,000 USDC
+					big.NewInt(0),
 				),
 			},
 		},
@@ -5546,6 +5676,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 					uint32(999999999),
 					big.NewInt(-100_000_000), // 1 BTC
 					big.NewInt(62500),        // 0.0125% rate at BTC=50,000 USDC
+					big.NewInt(0),
 				),
 			},
 			expectedErr: perptypes.ErrPerpetualDoesNotExist,
@@ -5609,6 +5740,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 					uint32(0),
 					big.NewInt(0).SetUint64(math.MaxUint64),
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			perpetualUpdates: []types.PerpetualUpdate{
@@ -5628,6 +5760,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 					new(big.Int).Neg(
 						new(big.Int).SetUint64(math.MaxUint64),
 					),
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -5743,6 +5876,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 					uint32(1),
 					big.NewInt(500_000_000), // .5 ETH
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			perpetualUpdates: []types.PerpetualUpdate{
@@ -5765,6 +5899,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 				testutil.CreateSinglePerpetualPosition(
 					uint32(0),
 					big.NewInt(100_000_000), // 1 BTC
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},

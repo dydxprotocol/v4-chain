@@ -2891,6 +2891,109 @@ fetch(`${baseURL}/transfers/parentSubaccountNumber?address=string&parentSubaccou
 This operation does not require authentication
 </aside>
 
+## GetTransferBetween
+
+<a id="opIdGetTransferBetween"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.get(f'{baseURL}/transfers/between', params={
+  'sourceAddress': 'string',  'sourceSubaccountNumber': '0.1',  'recipientAddress': 'string',  'recipientSubaccountNumber': '0.1'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/transfers/between?sourceAddress=string&sourceSubaccountNumber=0.1&recipientAddress=string&recipientSubaccountNumber=0.1`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /transfers/between`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|sourceAddress|query|string|true|none|
+|sourceSubaccountNumber|query|number(double)|true|none|
+|recipientAddress|query|string|true|none|
+|recipientSubaccountNumber|query|number(double)|true|none|
+|createdBeforeOrAtHeight|query|number(double)|false|none|
+|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "pageSize": 0.1,
+  "totalResults": 0.1,
+  "offset": 0.1,
+  "transfersSubset": [
+    {
+      "id": "string",
+      "sender": {
+        "subaccountNumber": 0.1,
+        "address": "string"
+      },
+      "recipient": {
+        "subaccountNumber": 0.1,
+        "address": "string"
+      },
+      "size": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string",
+      "symbol": "string",
+      "type": "TRANSFER_IN",
+      "transactionHash": "string"
+    }
+  ],
+  "totalNetTransfers": "string"
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[TransferBetweenResponse](#schematransferbetweenresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 # Schemas
 
 ## PerpetualPositionStatus
@@ -4907,4 +5010,50 @@ or
 |totalResults|number(double)|false|none|none|
 |offset|number(double)|false|none|none|
 |transfers|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
+
+## TransferBetweenResponse
+
+<a id="schematransferbetweenresponse"></a>
+<a id="schema_TransferBetweenResponse"></a>
+<a id="tocStransferbetweenresponse"></a>
+<a id="tocstransferbetweenresponse"></a>
+
+```json
+{
+  "pageSize": 0.1,
+  "totalResults": 0.1,
+  "offset": 0.1,
+  "transfersSubset": [
+    {
+      "id": "string",
+      "sender": {
+        "subaccountNumber": 0.1,
+        "address": "string"
+      },
+      "recipient": {
+        "subaccountNumber": 0.1,
+        "address": "string"
+      },
+      "size": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string",
+      "symbol": "string",
+      "type": "TRANSFER_IN",
+      "transactionHash": "string"
+    }
+  ],
+  "totalNetTransfers": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|pageSize|number(double)|false|none|none|
+|totalResults|number(double)|false|none|none|
+|offset|number(double)|false|none|none|
+|transfersSubset|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
+|totalNetTransfers|string|true|none|none|
 

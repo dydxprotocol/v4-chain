@@ -536,6 +536,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 				0,
 				big.NewInt(100_000_000),
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}, carl)
@@ -553,6 +554,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 			testutil.CreateSinglePerpetualPosition(
 				0,
 				big.NewInt(-100_000_000),
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
