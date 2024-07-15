@@ -14,7 +14,6 @@ func init() {
 	txIndicesAndOffsets := []int{
 		constants.ProposedOperationsTxIndex,
 		constants.AddPremiumVotesTxLenOffset,
-		constants.ExtInfoBzIndex,
 	}
 	if constants.MinTxsCount != len(txIndicesAndOffsets) {
 		panic("minTxsCount does not match expected count of Txs.")
@@ -29,7 +28,6 @@ func init() {
 		panic("firstOtherTxIndex is <= the maximum offset")
 	}
 	txIndicesForMinTxsCount := []int{
-		constants.ExtInfoBzIndex,
 		constants.ProposedOperationsTxIndex,
 		constants.AddPremiumVotesTxLenOffset + constants.MinTxsCount,
 	}

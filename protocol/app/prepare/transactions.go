@@ -119,9 +119,9 @@ func (t *PrepareProposalTxs) GetAvailableBytes() uint64 {
 // GetTxsInOrder returns a list of txs in an order that the `ProcessProposal` expects.
 func (t *PrepareProposalTxs) GetTxsInOrder(veEnabled bool) ([][]byte, error) {
 
-	if !veEnabled && len(t.ExtInfoBz) > 0 {
-		return nil, errors.New("extInfoBz must not be set; VE is disabled")
-	}
+	// if !veEnabled && len(t.ExtInfoBz) > 0 {
+	// 	return nil, errors.New("extInfoBz must not be set; VE is disabled")
+	// }
 
 	if len(t.AddPremiumVotesTx) == 0 {
 		return nil, errors.New("AddPremiumVotesTx must be set")
@@ -130,10 +130,12 @@ func (t *PrepareProposalTxs) GetTxsInOrder(veEnabled bool) ([][]byte, error) {
 	var txsToReturn [][]byte
 
 	// 1. ve info. it gets included even if empty
-	if t.ExtInfoBz != nil {
-		txsToReturn = append(txsToReturn, t.ExtInfoBz)
-	} else {
-		return nil, errors.New("ExtInfoBz must be set")
+	if veEnabled {
+		if t.ExtInfoBz != nil {
+			txsToReturn = append(txsToReturn, t.ExtInfoBz)
+		} else {
+			return nil, errors.New("ExtInfoBz must be set")
+		}
 	}
 
 	// 2. Proposed operations.

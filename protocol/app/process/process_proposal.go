@@ -66,7 +66,7 @@ func ProcessProposalHandler(
 		veEnabled := ve.AreVoteExtensionsEnabled(ctx)
 
 		if veEnabled {
-			if len(req.Txs) < constants.MinTxsCount {
+			if len(req.Txs) < constants.MinTxsCount+1 {
 				ctx.Logger().Error("failed to process proposal: missing commit info", "num_txs", len(req.Txs))
 
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil

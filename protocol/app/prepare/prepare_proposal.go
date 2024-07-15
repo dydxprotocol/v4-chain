@@ -127,13 +127,13 @@ func PrepareProposalHandler(
 				return &EmptyPrepareProposalResponse, nil
 			}
 		} else {
-			// set empty VE's on first block to maintain minTxs invariant within block
-			err := txs.SetExtInfoBz([]byte{})
-			if err != nil {
-				ctx.Logger().Error(fmt.Sprintf("SetExtInfoBz error: %v", err))
-				recordErrorMetricsWithLabel(metrics.FundingTx)
-				return &EmptyPrepareProposalResponse, nil
-			}
+			// // set empty VE's on first block to maintain minTxs invariant within block
+			// err := txs.SetExtInfoBz([]byte{})
+			// if err != nil {
+			// 	ctx.Logger().Error(fmt.Sprintf("SetExtInfoBz error: %v", err))
+			// 	recordErrorMetricsWithLabel(metrics.FundingTx)
+			// 	return &EmptyPrepareProposalResponse, nil
+			// }
 		}
 
 		fundingTxResp, err := GetAddPremiumVotesTx(ctx, txConfig, perpetualKeeper)
