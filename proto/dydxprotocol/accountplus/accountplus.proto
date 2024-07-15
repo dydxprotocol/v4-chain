@@ -1,0 +1,19 @@
+syntax = "proto3";
+package dydxprotocol.accountplus;
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types";
+
+// Account State
+message AccountState {
+  string address = 1;
+  TimestampNonceDetails timestamp_nonce_details = 2;
+}
+
+// Timestamp nonce details
+message TimestampNonceDetails {
+  // unsorted list of n most recent timestamp nonces
+  repeated uint64 timestamp_nonces = 3;
+
+  // most recent timestamp nonce that was ejected from list above
+  uint64 latest_ejected_nonce = 4;
+}
