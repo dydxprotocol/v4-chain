@@ -1,0 +1,15 @@
+syntax = "proto3";
+package dydxprotocol.accountplus;
+
+import "dydxprotocol/accountplus/accountplus.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types";
+
+message GenesisState {
+    repeated AccountState accounts = 1;
+}
+
+message AccountState {
+  string address = 1;
+  TimestampNonceDetails details = 2;
+}
