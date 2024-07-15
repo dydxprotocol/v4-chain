@@ -2087,15 +2087,6 @@
             "schema": {
               "$ref": "#/components/schemas/IsoString"
             }
-          },
-          {
-            "in": "query",
-            "name": "page",
-            "required": false,
-            "schema": {
-              "format": "double",
-              "type": "number"
-            }
           }
         ]
       }
