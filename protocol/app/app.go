@@ -1205,13 +1205,15 @@ func New(
 		perpetualsmoduletypes.ModuleName,
 		statsmoduletypes.ModuleName,
 		satypes.ModuleName,
+		// should be before clob EndBlocker so that vault order cancels are
+		// processed before any vault order expirations (handled by clob)
+		vaultmoduletypes.ModuleName,
 		clobmoduletypes.ModuleName,
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
-		vaultmoduletypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
