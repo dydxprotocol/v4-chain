@@ -92,6 +92,7 @@ func ProcessProposalHandler(
 				)
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
+			req.Txs = req.Txs[:len(req.Txs)-1]
 		}
 		// Update the current block height and consensus round.
 		if ctx.BlockHeight() != currentBlockHeight {
