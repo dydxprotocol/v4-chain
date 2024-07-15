@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"math"
 	"math/rand"
 	"os"
@@ -263,6 +264,8 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = vaulttypes.ModuleName
 	case revsharetypes.GenesisState:
 		moduleName = revsharetypes.ModuleName
+	case marketmapmoduletypes.GenesisState:
+		moduleName = marketmapmoduletypes.ModuleName
 	default:
 		panic(fmt.Errorf("Unsupported type %T", t))
 	}
