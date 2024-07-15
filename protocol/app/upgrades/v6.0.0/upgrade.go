@@ -56,7 +56,7 @@ func removeStatefulFOKOrders(ctx sdk.Context, k clobtypes.ClobKeeper) {
 func setMarketMapParams(ctx sdk.Context, mmk marketmapkeeper.Keeper) {
 	err := mmk.SetParams(ctx, marketmaptypes.Params{
 		// init so that gov is the admin and a market authority
-		MarketAuthorities: []string{GovAuthority /* TODO: add skip market map authority*/},
+		MarketAuthorities: []string{GovAuthority},
 		Admin:             GovAuthority,
 	})
 	if err != nil {
