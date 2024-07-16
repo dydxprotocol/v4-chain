@@ -183,13 +183,12 @@ export default async function runTask(
       },
     );
 
-    const complianceStatus: ComplianceStatusFromDatabase[] = await
+    const closeOnlyStatuses: ComplianceStatusFromDatabase[] = await
     ComplianceStatusTable.findAll(
       { address: addressesToQuery, status: ComplianceStatus.CLOSE_ONLY },
       [],
     );
-    // get complianceStatus addresses
-    const complianceStatusAddresses: string[] = _.chain(complianceStatus)
+    const closeOnlyAddresses: string[] = _.chain(closeOnlyStatuses)
       .map(ComplianceDataColumns.address)
       .uniq()
       .value();
@@ -209,7 +208,7 @@ export default async function runTask(
           return acc;
         }, [])
       .filter((complianceStatusUpsertObject: ComplianceStatusUpsertObject) => {
-        return !complianceStatusAddresses.includes(complianceStatusUpsertObject.address);
+        return !closeOnlyAddresses.includes(complianceStatusUpsertObject.address);
       });
 
     stats.timing(
