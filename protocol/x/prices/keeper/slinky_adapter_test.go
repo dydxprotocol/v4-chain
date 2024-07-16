@@ -26,7 +26,7 @@ func TestGetCurrencyPairFromID(t *testing.T) {
 		require.True(t, found)
 	}
 	_, found := keeper.GetCurrencyPairFromID(ctx, uint64(marketNumber+1))
-	require.True(t, !found)
+	require.False(t, found)
 }
 
 func TestIDForCurrencyPair(t *testing.T) {
@@ -50,7 +50,7 @@ func TestIDForCurrencyPair(t *testing.T) {
 		Base:  fmt.Sprint(marketNumber + 1),
 		Quote: fmt.Sprint(marketNumber + 1),
 	})
-	require.True(t, !found)
+	require.False(t, found)
 }
 
 func TestGetPriceForCurrencyPair(t *testing.T) {

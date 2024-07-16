@@ -15,4 +15,6 @@ func TestModuleKeys(t *testing.T) {
 func TestStateKeys(t *testing.T) {
 	require.Equal(t, "Param:", types.MarketParamKeyPrefix)
 	require.Equal(t, "Price:", types.MarketPriceKeyPrefix)
+	require.Equal(t, "CurrencyPairID:", types.CurrencyPairIDPrefix)
+
 }

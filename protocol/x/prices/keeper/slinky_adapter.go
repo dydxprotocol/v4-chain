@@ -5,7 +5,9 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
 
@@ -21,23 +23,17 @@ import (
  * store for converting to and from Slinky's on chain price data.
  */
 
-func (k Keeper) GetCurrencyPairFromID(ctx sdk.Context, id uint64) (cp slinkytypes.CurrencyPair, found bool) {
-	// check in the keeper's cache first
-	pair, found := k.currencyPairIDCache.GetCurrencyPairFromID(id)
-	if found {
-		cp, err := slinkytypes.CurrencyPairFromString(pair)
-		if err != nil {
-			k.Logger(ctx).Error("CurrencyPairFromString", "error", err)
-			return cp, false
-		}
-		return cp, true
-	}
+// getCurrencyPairIDStore returns a prefix store for market IDs corresponding to currency pairs.
+func (k Keeper) getCurrencyPairIDStore(ctx sdk.Context) prefix.Store {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.CurrencyPairIDPrefix))
+}
 
+func (k Keeper) GetCurrencyPairFromID(ctx sdk.Context, id uint64) (cp slinkytypes.CurrencyPair, found bool) {
 	mp, found := k.GetMarketParam(ctx, uint32(id))
 	if !found {
 		return cp, false
 	}
-	pair = mp.Pair
+	pair := mp.Pair
 
 	cp, err := slinky.MarketPairToCurrencyPair(pair)
 	if err != nil {
@@ -49,10 +45,10 @@ func (k Keeper) GetCurrencyPairFromID(ctx sdk.Context, id uint64) (cp slinkytype
 }
 
 func (k Keeper) GetIDForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPair) (uint64, bool) {
-	// check in the keeper's cache first
-	id, found := k.currencyPairIDCache.GetIDForCurrencyPair(cp.String())
+	// Try to get corresponding market ID of the currency pair from the store
+	marketId, found := k.GetCurrencyPairIDFromCache(ctx, cp)
 	if found {
-		return id, true
+		return uint64(marketId), true
 	}
 
 	// if not found, iterate through all market params and find the id
@@ -66,11 +62,40 @@ func (k Keeper) GetIDForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPai
 
 		// compare the currency pairs to the one that we're looking for
 		if strings.EqualFold(mpCp.String(), cp.String()) {
+			k.AddCurrencyPairIDToCache(ctx, mp.Id, cp)
+
 			return uint64(mp.Id), true
 		}
 	}
 
 	return 0, false
+}
+
+func (k Keeper) GetCurrencyPairIDFromCache(ctx sdk.Context, cp slinkytypes.CurrencyPair) (marketId uint64, found bool) {
+	currencyPairString := cp.String()
+	currencyPairIDStore := k.getCurrencyPairIDStore(ctx)
+	var result gogotypes.UInt64Value
+	b := currencyPairIDStore.Get([]byte(currencyPairString))
+	if b == nil {
+		return 0, false
+	} else {
+		k.cdc.MustUnmarshal(b, &result)
+		return result.Value, true
+	}
+}
+
+func (k Keeper) AddCurrencyPairIDToCache(ctx sdk.Context, marketId uint32, cp slinkytypes.CurrencyPair) {
+	currencyPairString := cp.String()
+	currencyPairIDStore := k.getCurrencyPairIDStore(ctx)
+	value := gogotypes.UInt64Value{Value: uint64(marketId)}
+	b := k.cdc.MustMarshal(&value)
+	currencyPairIDStore.Set([]byte(currencyPairString), b)
+}
+
+func (k Keeper) RemoveCurrencyPairFromCache(ctx sdk.Context, cp slinkytypes.CurrencyPair) {
+	currencyPairString := cp.String()
+	currencyPairIDStore := k.getCurrencyPairIDStore(ctx)
+	currencyPairIDStore.Delete([]byte(currencyPairString))
 }
 
 func (k Keeper) GetPriceForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPair) (oracletypes.QuotePrice, error) {

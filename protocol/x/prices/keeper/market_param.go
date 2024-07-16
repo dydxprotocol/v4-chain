@@ -57,13 +57,17 @@ func (k Keeper) ModifyMarketParam(
 
 	// if the market pair has been changed, we need to update the in-memory market pair cache
 	if existingParam.Pair != updatedMarketParam.Pair {
-		// remove the old cache entry
-		k.currencyPairIDCache.Remove(uint64(existingParam.Id))
+		oldCurrencyPair, err := slinky.MarketPairToCurrencyPair(existingParam.Pair)
+		if err == nil {
+			k.RemoveCurrencyPairFromCache(ctx, oldCurrencyPair)
+		} else {
+			k.Logger(ctx).Error("failed to remove currency pair from cache", "pair", existingParam.Pair)
+		}
 
 		// add the new cache entry
-		cp, err := slinky.MarketPairToCurrencyPair(updatedMarketParam.Pair)
+		newCurrencyPair, err := slinky.MarketPairToCurrencyPair(updatedMarketParam.Pair)
 		if err == nil {
-			k.currencyPairIDCache.AddCurrencyPair(uint64(updatedMarketParam.Id), cp.String())
+			k.AddCurrencyPairIDToCache(ctx, updatedMarketParam.Id, newCurrencyPair)
 		} else {
 			k.Logger(ctx).Error("failed to add currency pair to cache", "pair", updatedMarketParam.Pair)
 		}
