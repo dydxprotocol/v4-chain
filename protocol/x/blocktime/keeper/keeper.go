@@ -103,6 +103,15 @@ func (k Keeper) UpdateAllDowntimeInfo(ctx sdk.Context) {
 		metrics.BlockTimeMs,
 	)
 
+	metrics.AddSampleWithLabels(
+		metrics.BlockTimeDistribution,
+		float32(delta.Milliseconds()),
+		metrics.GetLabelForStringValue(
+			metrics.Proposer,
+			sdk.ConsAddress(ctx.BlockHeader().ProposerAddress).String(),
+		),
+	)
+
 	allInfo := k.GetAllDowntimeInfo(ctx)
 
 	for _, info := range allInfo.Infos {
