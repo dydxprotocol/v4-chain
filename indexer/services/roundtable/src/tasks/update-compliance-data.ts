@@ -6,13 +6,14 @@ import {
   ComplianceDataFromDatabase,
   ComplianceReason,
   ComplianceStatus,
-  ComplianceTable,
+  ComplianceStatusFromDatabase,
   ComplianceStatusTable,
+  ComplianceStatusUpsertObject,
+  ComplianceTable,
   IsoString,
   SubaccountColumns,
   SubaccountFromDatabase,
   SubaccountTable,
-  ComplianceStatusUpsertObject,
 } from '@dydxprotocol-indexer/postgres';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
@@ -182,6 +183,17 @@ export default async function runTask(
       },
     );
 
+    const complianceStatus: ComplianceStatusFromDatabase[] = await
+    ComplianceStatusTable.findAll(
+      { address: addressesToQuery, status: ComplianceStatus.CLOSE_ONLY },
+      [],
+    );
+    // get complianceStatus addresses
+    const complianceStatusAddresses: string[] = _.chain(complianceStatus)
+      .map(ComplianceDataColumns.address)
+      .uniq()
+      .value();
+
     const complianceStatusUpsertObjects: ComplianceStatusUpsertObject[] = complianceCreateObjects
       .reduce(
         (acc: ComplianceStatusUpsertObject[], complianceDataObject: ComplianceDataCreateObject) => {
@@ -195,7 +207,10 @@ export default async function runTask(
             acc.push(upsertStatus);
           }
           return acc;
-        }, []);
+        }, [])
+      .filter((complianceStatusUpsertObject: ComplianceStatusUpsertObject) => {
+        return !complianceStatusAddresses.includes(complianceStatusUpsertObject.address);
+      });
 
     stats.timing(
       `${config.SERVICE_NAME}.${taskName}.query_compliance_data`,
@@ -266,13 +281,13 @@ async function getComplianceData(
     );
     const successResponses: PromiseFulfilledResult<ComplianceClientResponse>[] = responses.filter(
       (result: PromiseSettledResult<ComplianceClientResponse>):
-        result is PromiseFulfilledResult<ComplianceClientResponse> => {
+      result is PromiseFulfilledResult<ComplianceClientResponse> => {
         return result.status === 'fulfilled';
       },
     );
     const failedResponses: PromiseRejectedResult[] = responses.filter(
       (result: PromiseSettledResult<ComplianceClientResponse>):
-        result is PromiseRejectedResult => {
+      result is PromiseRejectedResult => {
         return result.status === 'rejected';
       },
     );
