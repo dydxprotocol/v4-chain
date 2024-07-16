@@ -78,8 +78,8 @@
             "nullable": true
           },
           "subaccountNumber": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           }
         },
         "required": [
@@ -123,8 +123,8 @@
             "type": "string"
           },
           "subaccountNumber": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           }
         },
         "required": [
@@ -150,8 +150,8 @@
             "type": "string"
           },
           "subaccountNumber": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "equity": {
             "type": "string"
@@ -214,8 +214,8 @@
             "type": "string"
           },
           "parentSubaccountNumber": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "equity": {
             "type": "string"
@@ -466,8 +466,8 @@
             "type": "string"
           },
           "subaccountNumber": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           }
         },
         "required": [
@@ -490,16 +490,16 @@
       "FillResponse": {
         "properties": {
           "pageSize": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "totalResults": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "offset": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "fills": {
             "items": {
@@ -651,16 +651,16 @@
       "HistoricalPnlResponse": {
         "properties": {
           "pageSize": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "totalResults": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "offset": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "historicalPnl": {
             "items": {
@@ -881,8 +881,8 @@
             "type": "string"
           },
           "subaccountNumber": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           }
         },
         "required": [
@@ -946,8 +946,8 @@
             "type": "string"
           },
           "trades24H": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "nextFundingRate": {
             "type": "string"
@@ -962,12 +962,12 @@
             "type": "string"
           },
           "atomicResolution": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "quantumConversionExponent": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "tickSize": {
             "type": "string"
@@ -976,12 +976,12 @@
             "type": "string"
           },
           "stepBaseQuantums": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "subticksPerTick": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "marketType": {
             "$ref": "#/components/schemas/PerpetualMarketType"
@@ -1132,16 +1132,16 @@
       "TradeResponse": {
         "properties": {
           "pageSize": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "totalResults": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "offset": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "trades": {
             "items": {
@@ -1173,8 +1173,8 @@
           "sender": {
             "properties": {
               "subaccountNumber": {
-                "type": "number",
-                "format": "double"
+                "type": "integer",
+                "format": "int32"
               },
               "address": {
                 "type": "string"
@@ -1188,8 +1188,8 @@
           "recipient": {
             "properties": {
               "subaccountNumber": {
-                "type": "number",
-                "format": "double"
+                "type": "integer",
+                "format": "int32"
               },
               "address": {
                 "type": "string"
@@ -1236,16 +1236,16 @@
       "TransferResponse": {
         "properties": {
           "pageSize": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "totalResults": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "offset": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "transfers": {
             "items": {
@@ -1263,16 +1263,16 @@
       "ParentSubaccountTransferResponse": {
         "properties": {
           "pageSize": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "totalResults": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "offset": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "transfers": {
             "items": {
@@ -1290,16 +1290,16 @@
       "TransferBetweenResponse": {
         "properties": {
           "pageSize": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "totalResults": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "offset": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "transfersSubset": {
             "items": {

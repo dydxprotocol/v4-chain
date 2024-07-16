@@ -35,13 +35,22 @@ func (k Keeper) CreateMarket(
 ) (marketId uint32, err error) {
 	marketId = k.PricesKeeper.AcquireNextMarketID(ctx)
 
+	// Get market details from marketmap
+	market, err := k.MarketMapKeeper.GetMarket(ctx, ticker)
+	if err != nil {
+		return 0, err
+	}
+
 	// Create a new market
 	_, err = k.PricesKeeper.CreateMarket(
 		ctx,
 		pricestypes.MarketParam{
 			Id:   marketId,
 			Pair: ticker,
-
+			// Set the price exponent to the negative of the number of decimals
+			Exponent: int32(market.Ticker.Decimals * -1),
+			MinExchanges: uint32(market.Ticker.MinProviderCount),
+			MinPriceChangePpm:
 		},
 		pricestypes.MarketPrice{
 			Id: marketId,
@@ -74,5 +83,4 @@ func (k Keeper) CreateClobPair(
 
 	return clobPair.Id, nil
 }
-
 
