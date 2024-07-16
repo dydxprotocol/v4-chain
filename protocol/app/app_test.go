@@ -1,6 +1,7 @@
 package app_test
 
 import (
+	marketmapmodule "github.com/skip-mev/slinky/x/marketmap"
 	"reflect"
 	"strings"
 	"testing"
@@ -219,6 +220,9 @@ func TestModuleBasics(t *testing.T) {
 		vaultmodule.AppModuleBasic{},
 		listingmodule.AppModuleBasic{},
 		revsharemodule.AppModuleBasic{},
+
+		// slinky marketmap
+		marketmapmodule.AppModuleBasic{},
 	)
 
 	app := testapp.DefaultTestApp(nil)
