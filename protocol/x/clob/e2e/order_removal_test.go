@@ -1,7 +1,6 @@
 package clob_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
@@ -674,7 +673,6 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					*clobtypes.NewMsgPlaceOrder(order),
 				) {
 					resp := tApp.CheckTx(checkTx)
-					fmt.Println("XXXX resp", resp)
 					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 					deliverTxsOverride = append(deliverTxsOverride, checkTx.Tx)
 				}

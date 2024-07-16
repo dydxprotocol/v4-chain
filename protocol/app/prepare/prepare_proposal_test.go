@@ -601,6 +601,8 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 		txs [][]byte
 
 		expectedTxs [][]byte
+
+		veEnabled bool
 	}{
 		"Valid: all others txs contain disallow msgs": {
 			txs: [][]byte{
@@ -608,12 +610,13 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				multiMsgsTxHasDisallowMixedTxBytes, // filtered out.
 			},
 			expectedTxs: [][]byte{
-				constants.ValidEmptyExtInfoBytes,                 // ve.
 				constants.ValidEmptyMsgProposedOperationsTxBytes, // order.
 				// no other txs.
 				constants.ValidMsgAddPremiumVotesTxBytes, // funding.
 
 			},
+
+			veEnabled: false,
 		},
 		"Valid: some others txs contain disallow msgs": {
 			txs: [][]byte{
@@ -624,13 +627,13 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				constants.ValidMsgAddPremiumVotesTxBytes, // filtered out.
 			},
 			expectedTxs: [][]byte{
-				constants.ValidEmptyExtInfoBytes,                 // ve.
 				constants.ValidEmptyMsgProposedOperationsTxBytes, // order.
 				constants.Msg_SendAndTransfer_TxBytes,            // others.
 				constants.Msg_Send_TxBytes,                       // others.
 				constants.ValidMsgAddPremiumVotesTxBytes,         // funding.
 
 			},
+			veEnabled: false,
 		},
 	}
 
@@ -653,6 +656,10 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				Return(constants.ValidEmptyCrossChainValidator, true)
 
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
+
+			if tc.veEnabled {
+				ctx = vetesting.GetVeEnabledCtx(ctx, 3)
+			}
 
 			handler := prepare.PrepareProposalHandler(
 				encodingCfg.TxConfig,

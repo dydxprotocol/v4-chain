@@ -31,21 +31,21 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 		expectedErr error
 	}{
 		"Less than min num txs": {
-			txsBytes: [][]byte{{}, validOperationsTx}, // need at least 4.
+			txsBytes: [][]byte{validOperationsTx}, // need at least 2.
 			expectedErr: errorsmod.Wrapf(
 				process.ErrUnexpectedNumMsgs,
-				"Expected the proposal to contain at least 3 txs, but got 2",
+				"Expected the proposal to contain at least 2 txs, but got 1",
 			),
 		},
 		"Order tx decoding fails": {
-			txsBytes: [][]byte{{}, invalidTxBytes, validAddFundingTx},
+			txsBytes: [][]byte{invalidTxBytes, validAddFundingTx},
 			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
 		"Add funding tx decoding fails": {
-			txsBytes: [][]byte{{}, validOperationsTx, invalidTxBytes},
+			txsBytes: [][]byte{validOperationsTx, invalidTxBytes},
 			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
@@ -53,7 +53,6 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 		},
 		"Other txs fails: invalid bytes": {
 			txsBytes: [][]byte{
-				{}, // empty for ve.
 				validOperationsTx,
 				validSendTx,    // other tx: valid.
 				invalidTxBytes, // other tx: invalid.
@@ -66,7 +65,6 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 		},
 		"Other txs fails: app-injected msg": {
 			txsBytes: [][]byte{
-				{}, // empty for ve.
 				validOperationsTx,
 				validSendTx,       // other tx: valid.
 				validAddFundingTx, // other tx: invalid due to app-injected msg.
@@ -75,6 +73,18 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 			expectedErr: errorsmod.Wrapf(
 				process.ErrUnexpectedMsgType,
 				"Invalid msg type or content in OtherTxs *types.MsgAddPremiumVotes",
+			),
+		},
+		"VE injection fails due to invalid bytes": {
+			txsBytes: [][]byte{
+				{}, // empty ve.
+				validOperationsTx,
+				validSendTx,
+				validAddFundingTx,
+			},
+			expectedErr: errorsmod.Wrapf(
+				process.ErrUnexpectedNumMsgs,
+				"Expected 1 num of msgs, but got 0",
 			),
 		},
 	}
@@ -120,14 +130,12 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 	}{
 		"Valid: no other tx": {
 			txsBytes: [][]byte{
-				{}, // empty for ve.
 				validOperationsTx,
 				validAddFundingTx,
 			},
 		},
 		"Valid: single other tx": {
 			txsBytes: [][]byte{
-				{}, // empty for ve.
 				validOperationsTx,
 				validSingleMsgOtherTx,
 				validAddFundingTx,
@@ -137,7 +145,6 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 		},
 		"Valid: mult other txs": {
 			txsBytes: [][]byte{
-				{}, // empty for ve.
 				validOperationsTx,
 				validSingleMsgOtherTx,
 				validMultiMsgOtherTx,
@@ -205,7 +212,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 		expectedErr error
 	}{
 		"AddFunding tx validation fails": {
-			txsBytes: [][]byte{{}, validOperationsTx, invalidAddFundingTx},
+			txsBytes: [][]byte{validOperationsTx, invalidAddFundingTx},
 			expectedErr: errorsmod.Wrap(
 				process.ErrMsgValidateBasic,
 				"premium votes must be sorted by perpetual id in ascending order and "+
@@ -213,7 +220,6 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 		},
 		"Other txs validation fails: single tx": {
 			txsBytes: [][]byte{
-				{}, // empty for ve.
 				validOperationsTx,
 				validSingleMsgOtherTx,
 				invalidSingleMsgOtherTx,
@@ -223,7 +229,6 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 		},
 		"Other txs validation fails: multi txs": {
 			txsBytes: [][]byte{
-				{},
 				validOperationsTx,
 				validSingleMsgOtherTx,
 				invalidMultiMsgOtherTx,
@@ -276,14 +281,12 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 	}{
 		"No other txs": {
 			txsBytes: [][]byte{
-				{},
 				validOperationsTx,
 				validAddFundingTx,
 			},
 		},
 		"Single other txs": {
 			txsBytes: [][]byte{
-				{},
 				validOperationsTx,
 				validSingleMsgOtherTx,
 				validAddFundingTx,
@@ -291,7 +294,6 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 		},
 		"Multi other txs": {
 			txsBytes: [][]byte{
-				{},
 				validOperationsTx,
 				validSingleMsgOtherTx,
 				validMultiMsgOtherTx,
