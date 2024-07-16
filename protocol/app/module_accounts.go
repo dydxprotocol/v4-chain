@@ -14,6 +14,7 @@ import (
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
+	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 
 	"golang.org/x/exp/maps"
 )
@@ -49,6 +50,8 @@ var (
 		vestmoduletypes.CommunityTreasuryAccountName: nil,
 		// community vester account vests funds into the community treasury.
 		vestmoduletypes.CommunityVesterAccountName: nil,
+		// Slinky marketmap module permissions.
+		marketmapmoduletypes.ModuleName: nil,
 	}
 	// Blocked module accounts which cannot receive external funds.
 	// By default, all non-custom modules (except for gov) are blocked. This prevents
