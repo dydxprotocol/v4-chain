@@ -19,7 +19,7 @@ export interface TimestampNonceDetails {
   timestampNonces: Long[];
   /** most recent timestamp nonce that was ejected from list above */
 
-  latestEjectedNonce: Long;
+  maxEjectedNonce: Long;
 }
 /** Timestamp nonce details */
 
@@ -28,7 +28,7 @@ export interface TimestampNonceDetailsSDKType {
   timestamp_nonces: Long[];
   /** most recent timestamp nonce that was ejected from list above */
 
-  latest_ejected_nonce: Long;
+  max_ejected_nonce: Long;
 }
 
 function createBaseAccountState(): AccountState {
@@ -89,13 +89,13 @@ export const AccountState = {
 function createBaseTimestampNonceDetails(): TimestampNonceDetails {
   return {
     timestampNonces: [],
-    latestEjectedNonce: Long.UZERO
+    maxEjectedNonce: Long.UZERO
   };
 }
 
 export const TimestampNonceDetails = {
   encode(message: TimestampNonceDetails, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    writer.uint32(26).fork();
+    writer.uint32(10).fork();
 
     for (const v of message.timestampNonces) {
       writer.uint64(v);
@@ -103,8 +103,8 @@ export const TimestampNonceDetails = {
 
     writer.ldelim();
 
-    if (!message.latestEjectedNonce.isZero()) {
-      writer.uint32(32).uint64(message.latestEjectedNonce);
+    if (!message.maxEjectedNonce.isZero()) {
+      writer.uint32(16).uint64(message.maxEjectedNonce);
     }
 
     return writer;
@@ -119,7 +119,7 @@ export const TimestampNonceDetails = {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
-        case 3:
+        case 1:
           if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
 
@@ -132,8 +132,8 @@ export const TimestampNonceDetails = {
 
           break;
 
-        case 4:
-          message.latestEjectedNonce = (reader.uint64() as Long);
+        case 2:
+          message.maxEjectedNonce = (reader.uint64() as Long);
           break;
 
         default:
@@ -148,7 +148,7 @@ export const TimestampNonceDetails = {
   fromPartial(object: DeepPartial<TimestampNonceDetails>): TimestampNonceDetails {
     const message = createBaseTimestampNonceDetails();
     message.timestampNonces = object.timestampNonces?.map(e => Long.fromValue(e)) || [];
-    message.latestEjectedNonce = object.latestEjectedNonce !== undefined && object.latestEjectedNonce !== null ? Long.fromValue(object.latestEjectedNonce) : Long.UZERO;
+    message.maxEjectedNonce = object.maxEjectedNonce !== undefined && object.maxEjectedNonce !== null ? Long.fromValue(object.maxEjectedNonce) : Long.UZERO;
     return message;
   }
 

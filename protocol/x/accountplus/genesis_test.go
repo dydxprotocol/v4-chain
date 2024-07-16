@@ -2,7 +2,6 @@ package accountplus_test
 
 import (
 	"math"
-	"sort"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +11,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/require"
 )
 
@@ -27,15 +25,15 @@ func TestImportExportGenesis(t *testing.T) {
 					{
 						Address: constants.AliceAccAddress.String(),
 						TimestampNonceDetails: &types.TimestampNonceDetails{
-							TimestampNonces:    []uint64{baseTsNonce + 1, baseTsNonce + 2, baseTsNonce + 3},
-							LatestEjectedNonce: baseTsNonce,
+							TimestampNonces: []uint64{baseTsNonce + 1, baseTsNonce + 2, baseTsNonce + 3},
+							MaxEjectedNonce: baseTsNonce,
 						},
 					},
 					{
 						Address: constants.BobAccAddress.String(),
 						TimestampNonceDetails: &types.TimestampNonceDetails{
-							TimestampNonces:    []uint64{baseTsNonce + 5, baseTsNonce + 6, baseTsNonce + 7},
-							LatestEjectedNonce: baseTsNonce + 1,
+							TimestampNonces: []uint64{baseTsNonce + 5, baseTsNonce + 6, baseTsNonce + 7},
+							MaxEjectedNonce: baseTsNonce + 1,
 						},
 					},
 				},
@@ -50,6 +48,7 @@ func TestImportExportGenesis(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			// TODO: deprecated, reference protocol/vest/genesis_test.go for up to date initialization
 			ctx, k, _, _ := keepertest.TimestampNonceKeepers(t)
 
 			// Initialize genesis state
@@ -79,16 +78,9 @@ func requireGenesisStatesEqual(t *testing.T, actualGenesisState, expectedGenesis
 
 func compareAccountStates(t *testing.T, actualAccountStates, expectedAccountStates []*types.AccountState) {
 	require.Equal(t, len(actualAccountStates), len(expectedAccountStates), "GenesisState.Accounts length mismatch")
-
-	// Sort the Accounts by ID to ensure we compare the correct Accounts
-	sort.Slice(actualAccountStates, func(i, j int) bool {
-		return actualAccountStates[i].Address < actualAccountStates[j].Address
-	})
-	sort.Slice(expectedAccountStates, func(i, j int) bool {
-		return expectedAccountStates[i].Address < expectedAccountStates[j].Address
-	})
-
 	// Iterate through the account states and test equality on each field
+	// We require that the ordering of accountState be deterministic so that should more complicated logic
+	// be introduced in the future, this test can catch any unintended effects.
 	for i := range actualAccountStates {
 		require.Equal(
 			t,
@@ -108,15 +100,14 @@ func compareTimestampNonceDetails(t *testing.T, actualDetails, expectedDetails *
 	equal := cmp.Equal(
 		actualDetails.GetTimestampNonces(),
 		expectedDetails.GetTimestampNonces(),
-		cmpopts.SortSlices(func(a, b uint64) bool { return a < b }),
 	)
 
 	require.True(t, equal, "TimestampNonces mismatch for account")
 
 	require.Equal(
 		t,
-		actualDetails.GetLatestEjectedNonce(),
-		expectedDetails.GetLatestEjectedNonce(),
+		actualDetails.GetMaxEjectedNonce(),
+		expectedDetails.GetMaxEjectedNonce(),
 		"LastEjectedNonce mismatch",
 	)
 }

@@ -12,8 +12,8 @@ message AccountState {
 // Timestamp nonce details
 message TimestampNonceDetails {
   // unsorted list of n most recent timestamp nonces
-  repeated uint64 timestamp_nonces = 3;
+  repeated uint64 timestamp_nonces = 1;
 
   // most recent timestamp nonce that was ejected from list above
-  uint64 latest_ejected_nonce = 4;
+  uint64 max_ejected_nonce = 2;
 }
