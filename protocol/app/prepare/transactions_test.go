@@ -450,9 +450,20 @@ func Test_GetTxsInOrder(t *testing.T) {
 			fundingTx:          []byte{2, 3},
 			extInfoBz:          []byte{11, 12},
 
-			expectedTxs: nil,
-			expectedErr: errors.New("extInfoBz must not be set; VE is disabled"),
+			expectedTxs: [][]byte{{4, 5}, {6}, {7, 8}, {9}, {10}, {2, 3}},
+			expectedErr: nil,
 			veEnabled:   false,
+		},
+		"ve enabled with no extInfo": {
+			operationsTx:       []byte{4, 5},
+			otherTxs:           [][]byte{{6}, {7, 8}},
+			otherAdditionalTxs: [][]byte{{9}, {10}},
+			fundingTx:          []byte{2, 3},
+			extInfoBz:          nil,
+
+			expectedTxs: nil,
+			expectedErr: errors.New("ExtInfoBz must be set"),
+			veEnabled:   true,
 		},
 	}
 

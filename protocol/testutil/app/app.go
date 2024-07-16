@@ -732,6 +732,7 @@ func (tApp *TestApp) AdvanceToBlock(
 			if options.RequestProcessProposalTxsOverride != nil {
 				prepareResponse.Txs = options.RequestProcessProposalTxsOverride
 			}
+
 			processRequest := abcitypes.RequestProcessProposal{
 				Txs:                prepareResponse.Txs,
 				Hash:               tApp.header.AppHash,
@@ -1161,7 +1162,7 @@ func (tApp *TestApp) GetProposedOperationsTx(
 		err,
 	)
 
-	return response.Txs[appconstants.ProposedOperationsTxIndex]
+	return response.Txs[appconstants.ProposedOperationsTxIndexWithVE]
 }
 
 // prepareValidatorHomeDir launches a validator using the `start` command with the specified genesis doc and application

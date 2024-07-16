@@ -14,11 +14,10 @@ const (
 	InjectedNonTxCount = 1
 	// block structure
 	// this is three becuase the first place in the block is for VE's
-	MinTxsCount                = 3
-	ExtInfoBzIndex             = 0
-	ProposedOperationsTxIndex  = 1
-	AddPremiumVotesTxLenOffset = -1
-	LastOtherTxLenOffset       = AddPremiumVotesTxLenOffset
-	FirstOtherTxIndex          = ProposedOperationsTxIndex + 1
-	NonVeMinTxsCount           = 2
+	MinTxsCount                     = 2
+	ProposedOperationsTxIndex       = 0
+	ProposedOperationsTxIndexWithVE = ProposedOperationsTxIndex + 1
+	AddPremiumVotesTxLenOffset      = -1
+	LastOtherTxLenOffset            = AddPremiumVotesTxLenOffset
+	FirstOtherTxIndex               = ProposedOperationsTxIndex + 1
 )

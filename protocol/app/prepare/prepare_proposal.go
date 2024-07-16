@@ -39,7 +39,7 @@ type OperationsTxResponse struct {
 // PrepareProposalHandler is responsible for preparing a block proposal that's returned to Tendermint via ABCI++.
 //
 // The returned txs are gathered in the following way to fit within the given request's max bytes:
-//   - "Fixed" Group: Bytes=unbound. Includes price updates and premium votes.
+//   - "Fixed" Group: Bytes=unbound. Includes price updates and premium votes and VEs.
 //   - "Others" Group: Bytes=25% of max bytes minus "Fixed" Group size. Includes txs in the request.
 //   - "Order" Group: Bytes=75% of max bytes minus "Fixed" Group size. Includes order matches.
 //   - If there are extra available bytes and there are more txs in "Other" group, add more txs from this group.
@@ -121,14 +121,6 @@ func PrepareProposalHandler(
 			}
 
 			err = txs.SetExtInfoBz(extInfoBz)
-			if err != nil {
-				ctx.Logger().Error(fmt.Sprintf("SetExtInfoBz error: %v", err))
-				recordErrorMetricsWithLabel(metrics.FundingTx)
-				return &EmptyPrepareProposalResponse, nil
-			}
-		} else {
-			// set empty VE's on first block to maintain minTxs invariant within block
-			err := txs.SetExtInfoBz([]byte{})
 			if err != nil {
 				ctx.Logger().Error(fmt.Sprintf("SetExtInfoBz error: %v", err))
 				recordErrorMetricsWithLabel(metrics.FundingTx)

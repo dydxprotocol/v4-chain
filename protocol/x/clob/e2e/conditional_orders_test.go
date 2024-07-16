@@ -872,11 +872,11 @@ func TestConditionalOrder(t *testing.T) {
 			// Add an empty premium vote.
 			deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
 
-			extCommitInfo, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.priceUpdateForFirstBlock,
-				1,
+				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
 
@@ -901,7 +901,7 @@ func TestConditionalOrder(t *testing.T) {
 				}
 			}
 
-			extCommitInfo, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
+			extCommitInfo, _, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.priceUpdateForSecondBlock,

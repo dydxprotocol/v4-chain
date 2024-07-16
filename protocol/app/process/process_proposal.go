@@ -66,13 +66,22 @@ func ProcessProposalHandler(
 		veEnabled := ve.AreVoteExtensionsEnabled(ctx)
 
 		if veEnabled {
-			if len(req.Txs) < constants.MinTxsCount {
+
+			if len(req.Txs) < constants.MinTxsCount+1 {
 				ctx.Logger().Error("failed to process proposal: missing commit info", "num_txs", len(req.Txs))
 
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
 
 			extCommitBz := req.Txs[constants.DaemonInfoIndex]
+
+			defer func() {
+				// re-append the ve into the transactions to return to comet BFT
+				// this gets removed to initially to not obstruct logic in validating
+				// all other non-ve transactions
+				// FLOW: validate ve -> remove ve -> validate all other txs -> re-append ve
+				req.Txs = append([][]byte{extCommitBz}, req.Txs...)
+			}()
 
 			var extInfo abci.ExtendedCommitInfo
 			extInfo, err := extCodec.Decode(extCommitBz)
@@ -92,7 +101,9 @@ func ProcessProposalHandler(
 				)
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
+			req.Txs = req.Txs[1:]
 		}
+
 		// Update the current block height and consensus round.
 		if ctx.BlockHeight() != currentBlockHeight {
 			currentBlockHeight = ctx.BlockHeight()
