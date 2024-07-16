@@ -185,7 +185,10 @@ export default async function runTask(
 
     const closeOnlyStatuses: ComplianceStatusFromDatabase[] = await
     ComplianceStatusTable.findAll(
-      { address: addressesToQuery, status: ComplianceStatus.CLOSE_ONLY },
+      {
+        address: addressesToQuery,
+        status: [ComplianceStatus.CLOSE_ONLY, ComplianceStatus.BLOCKED],
+      },
       [],
     );
     const closeOnlyAddresses: string[] = _.chain(closeOnlyStatuses)

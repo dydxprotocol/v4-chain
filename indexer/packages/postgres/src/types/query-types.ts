@@ -283,7 +283,7 @@ export interface ComplianceDataQueryConfig extends QueryConfig {
 
 export interface ComplianceStatusQueryConfig extends QueryConfig {
   [QueryableField.ADDRESS]?: string[];
-  [QueryableField.STATUS]?: string;
+  [QueryableField.STATUS]?: string[];
   [QueryableField.CREATED_BEFORE_OR_AT]?: string;
   [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
   [QueryableField.REASON]?: string;
