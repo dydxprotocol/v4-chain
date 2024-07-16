@@ -299,25 +299,38 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 			if tc.expectedErr != nil {
 				// Verify that no order is placed and chain doesn't halt.
 				require.Empty(t, tApp.App.ClobKeeper.GetAllStatefulOrders(ctx))
-				tApp.AdvanceToBlock(uint32(tApp.GetBlockHeight())+1, testapp.AdvanceToBlockOptions{})
+				tApp.AdvanceToBlock(uint32(tApp.GetBlockHeight())+12, testapp.AdvanceToBlockOptions{})
 				return
 			}
 
-			// Helper function that verifies that most recent client IDs up-to-date with vault orders.
-			verifyMostRecentClientIds := func() {
+			// Helper function that verifies that most recent client IDs are up-to-date with vault orders.
+			verifyMostRecentClientIds := func(expectedClientIds []uint32) {
+				// Verify that most recent client IDs are as expected.
 				mostRecentClientIds := tApp.App.VaultKeeper.GetMostRecentClientIds(ctx, tc.vaultId)
+				require.Equal(t, expectedClientIds, mostRecentClientIds)
+
+				// Verify that stateful order IDs have expected client IDs.
 				allStatefulOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
 				for i, order := range allStatefulOrders {
-					require.Equal(t, mostRecentClientIds[i], order.OrderId.ClientId)
+					require.Equal(t, expectedClientIds[i], order.OrderId.ClientId)
 				}
 			}
+			// Get canonical and flipped client IDs of this vault's orders.
+			orderIds, err := tApp.App.VaultKeeper.GetVaultClobOrderIds(ctx, tc.vaultId)
+			require.NoError(t, err)
+			canonicalClientIds := make([]uint32, len(orderIds))
+			flippedClientIds := make([]uint32, len(orderIds))
+			for i, orderId := range orderIds {
+				canonicalClientIds[i] = orderId.ClientId
+				flippedClientIds[i] = orderId.ClientId ^ 1
+			}
 
-			// Vault should place its initial orders.
+			// Vault should place its initial orders (client IDs should be canonical).
 			initialOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
 			require.Len(t, initialOrders, int(params.Layers*2))
-			verifyMostRecentClientIds()
+			verifyMostRecentClientIds(canonicalClientIds)
 
-			// Advance to a few blocks with no price updates / order matches and vault should not refresh its orders.
+			// Advance a few blocks with no price updates / order matches and vault should not refresh its orders.
 			msgSender.Clear()
 			ctx = tApp.AdvanceToBlock(uint32(tApp.GetBlockHeight())+12, testapp.AdvanceToBlockOptions{})
 			require.Equal(
@@ -325,9 +338,9 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				initialOrders,
 				tApp.App.ClobKeeper.GetAllStatefulOrders(ctx),
 			)
-			verifyMostRecentClientIds()
+			verifyMostRecentClientIds(canonicalClientIds)
 
-			// Advance to next block with price updates and vault should replace its old orders with new ones.
+			// Advance to next block with price updates and vault should replace its old orders with new ones (client IDs should be flipped).
 			msgSender.Clear()
 			marketPrice, err := tApp.App.PricesKeeper.GetMarketPrice(ctx, tc.vaultId.Number)
 			require.NoError(t, err)
@@ -349,32 +362,7 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 			)
 			newOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
 			require.Len(t, newOrders, int(params.Layers*2))
-			verifyMostRecentClientIds()
-			for i, newOrder := range newOrders {
-				require.Equal(
-					t,
-					*tc.vaultId.GetClobOrderId(initialOrders[i].OrderId.ClientId ^ 1),
-					newOrder.OrderId,
-				)
-				require.Equal(
-					t,
-					uint32(ctx.BlockTime().Unix())+params.OrderExpirationSeconds,
-					newOrder.GetGoodTilBlockTime(),
-				)
-			}
-
-			// Advance to next block where vault orders have expired and vaults should place new orders.
-			ctx = tApp.AdvanceToBlock(
-				uint32(tApp.GetBlockHeight())+1,
-				testapp.AdvanceToBlockOptions{
-					BlockTime: ctx.BlockTime().Add(
-						time.Second * time.Duration(params.OrderExpirationSeconds+1),
-					),
-				},
-			)
-			newOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
-			require.Len(t, newOrders, int(params.Layers*2))
-			verifyMostRecentClientIds()
+			verifyMostRecentClientIds(flippedClientIds)
 			for _, newOrder := range newOrders {
 				require.Equal(
 					t,
@@ -383,7 +371,34 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				)
 			}
 
-			// Advance to next block where vault should replace its orders to update their sizes.
+			advanceToBlockWhereOrdersExpire := func(expectedClientIds []uint32) {
+				ctx = tApp.AdvanceToBlock(
+					uint32(tApp.GetBlockHeight())+1,
+					testapp.AdvanceToBlockOptions{
+						BlockTime: ctx.BlockTime().Add(
+							time.Second * time.Duration(params.OrderExpirationSeconds+1),
+						),
+					},
+				)
+				newOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
+				require.Len(t, newOrders, int(params.Layers*2))
+				verifyMostRecentClientIds(expectedClientIds)
+				for _, newOrder := range newOrders {
+					require.Equal(
+						t,
+						uint32(ctx.BlockTime().Unix())+params.OrderExpirationSeconds,
+						newOrder.GetGoodTilBlockTime(),
+					)
+				}
+			}
+			// Advance to next block where vault orders have expired and vault should place new orders (client IDs should be back to canonical).
+			advanceToBlockWhereOrdersExpire(canonicalClientIds)
+			// Advance to next block where vault orders have expired and vault should place new orders (client IDs should be flipped).
+			advanceToBlockWhereOrdersExpire(flippedClientIds)
+			// Advance to next block where vault orders have expired and vault should place new orders (client IDs should be back to canonical).
+			advanceToBlockWhereOrdersExpire(canonicalClientIds)
+
+			// Advance to next block where vault should replace its orders to update their sizes (client IDs should be flipped).
 			// Deposit to vault to increase its equity, resulting in a larger order size.
 			// TODO (TRA-500): add scenario of filled orders.
 			msgDepositToVault := vaulttypes.MsgDepositToVault{
@@ -411,7 +426,7 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				},
 			)
 			newOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
-			verifyMostRecentClientIds()
+			verifyMostRecentClientIds(flippedClientIds)
 			for _, newOrder := range newOrders {
 				require.Equal(
 					t,
