@@ -79,7 +79,7 @@ func (m *AccountState) GetTimestampNonceDetails() *TimestampNonceDetails {
 type TimestampNonceDetails struct {
 	// unsorted list of n most recent timestamp nonces
 	TimestampNonces []uint64 `protobuf:"varint,1,rep,packed,name=timestamp_nonces,json=timestampNonces,proto3" json:"timestamp_nonces,omitempty"`
-	// most recent timestamp nonce that was ejected from list above
+	// max timestamp nonce that was ejected from list above
 	MaxEjectedNonce uint64 `protobuf:"varint,2,opt,name=max_ejected_nonce,json=maxEjectedNonce,proto3" json:"max_ejected_nonce,omitempty"`
 }
 

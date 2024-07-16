@@ -17,7 +17,7 @@ export interface AccountStateSDKType {
 export interface TimestampNonceDetails {
   /** unsorted list of n most recent timestamp nonces */
   timestampNonces: Long[];
-  /** most recent timestamp nonce that was ejected from list above */
+  /** max timestamp nonce that was ejected from list above */
 
   maxEjectedNonce: Long;
 }
@@ -26,7 +26,7 @@ export interface TimestampNonceDetails {
 export interface TimestampNonceDetailsSDKType {
   /** unsorted list of n most recent timestamp nonces */
   timestamp_nonces: Long[];
-  /** most recent timestamp nonce that was ejected from list above */
+  /** max timestamp nonce that was ejected from list above */
 
   max_ejected_nonce: Long;
 }
