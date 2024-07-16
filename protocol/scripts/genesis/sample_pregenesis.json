@@ -858,6 +858,18 @@
     "listing": {
       "hard_cap_for_markets": 0
     },
+    "marketmap": {
+      "last_updated": "0",
+      "market_map": {
+        "markets": {}
+      },
+      "params": {
+        "admin": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
+        "market_authorities": [
+          "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky"
+        ]
+      }
+    },
     "params": null,
     "perpetuals": {
       "liquidity_tiers": [
@@ -1847,7 +1859,7 @@
       ]
     }
   },
-  "app_version": "5.0.0-dev0-155-g6e95ca92",
+  "app_version": "5.0.0-dev0-385-gb5b86472",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {
