@@ -352,6 +352,18 @@ var (
 		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParamsResponse":              {},
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":                            {},
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse":                    {},
+
+		// slinky marketmap messages
+		"/slinky.marketmap.v1.MsgCreateMarkets":                   {},
+		"/slinky.marketmap.v1.MsgCreateMarketsResponse":           {},
+		"/slinky.marketmap.v1.MsgParams":                          {},
+		"/slinky.marketmap.v1.MsgParamsResponse":                  {},
+		"/slinky.marketmap.v1.MsgRemoveMarketAuthorities":         {},
+		"/slinky.marketmap.v1.MsgRemoveMarketAuthoritiesResponse": {},
+		"/slinky.marketmap.v1.MsgUpdateMarkets":                   {},
+		"/slinky.marketmap.v1.MsgUpdateMarketsResponse":           {},
+		"/slinky.marketmap.v1.MsgUpsertMarkets":                   {},
+		"/slinky.marketmap.v1.MsgUpsertMarketsResponse":           {},
 	}
 
 	// DisallowMsgs are messages that cannot be externally submitted.
