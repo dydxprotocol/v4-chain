@@ -6,6 +6,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -13,9 +14,12 @@ import (
 )
 
 func TestCreateMarket(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, revShareKeeper := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, revShareKeeper, marketMapKeeper := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
+
+	currencyPair, _ := slinky.MarketPairToCurrencyPair(constants.BtcUsdPair)
+	mmMarket, _ := marketMapKeeper.GetMarket(ctx, currencyPair.String())
 
 	marketParam, err := keeper.CreateMarket(
 		ctx,

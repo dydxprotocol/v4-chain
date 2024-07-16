@@ -24,6 +24,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	revsharekeeper "github.com/dydxprotocol/v4-chain/protocol/x/revshare/keeper"
+	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -35,6 +36,7 @@ func PricesKeepers(t testing.TB) (
 	indexPriceCache *pricefeedserver_types.MarketToExchangePrices,
 	mockTimeProvider *mocks.TimeProvider,
 	revShareKeeper *revsharekeeper.Keeper,
+	marketMapKeeper *marketmapkeeper.Keeper,
 ) {
 	ctx = initKeepers(t, func(
 		db *dbm.MemDB,
@@ -45,15 +47,14 @@ func PricesKeepers(t testing.TB) (
 	) []GenesisInitializer {
 		// Necessary keeper for testing
 		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc)
-
 		// Define necessary keepers here for unit tests
 		keeper, storeKey, indexPriceCache, mockTimeProvider =
-			createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper)
+			createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper, marketMapKeeper)
 
 		return []GenesisInitializer{keeper}
 	})
 
-	return ctx, keeper, storeKey, indexPriceCache, mockTimeProvider, revShareKeeper
+	return ctx, keeper, storeKey, indexPriceCache, mockTimeProvider, revShareKeeper, marketMapKeeper
 }
 
 func createPricesKeeper(
@@ -62,6 +63,7 @@ func createPricesKeeper(
 	cdc *codec.ProtoCodec,
 	transientStoreKey storetypes.StoreKey,
 	revShareKeeper *revsharekeeper.Keeper,
+	marketMapKeeper *marketmapkeeper.Keeper,
 ) (
 	*keeper.Keeper,
 	storetypes.StoreKey,
@@ -94,6 +96,7 @@ func createPricesKeeper(
 			lib.GovModuleAddress.String(),
 		},
 		revShareKeeper,
+		marketMapKeeper,
 	)
 
 	return k, storeKey, indexPriceCache, mockTimeProvider

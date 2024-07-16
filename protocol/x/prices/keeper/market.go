@@ -48,6 +48,22 @@ func (k Keeper) CreateMarket(
 			)
 		}
 	}
+	// check that the market exists in market map
+	currencyPair, err := slinky.MarketPairToCurrencyPair(marketParam.Pair)
+	if err != nil {
+		return types.MarketParam{}, errorsmod.Wrapf(
+			types.ErrMarketPairConversionFailed,
+			marketParam.Pair,
+		)
+	}
+	currencyPairStr := currencyPair.String()
+	_, err = k.MarketMapKeeper.GetMarket(ctx, currencyPairStr)
+	if err != nil {
+		return types.MarketParam{}, errorsmod.Wrapf(
+			types.ErrTickerNotFoundInMarketMap,
+			marketParam.Pair,
+		)
+	}
 
 	paramBytes := k.cdc.MustMarshal(&marketParam)
 	priceBytes := k.cdc.MustMarshal(&marketPrice)
@@ -59,19 +75,7 @@ func (k Keeper) CreateMarket(
 	marketPriceStore.Set(lib.Uint32ToKey(marketPrice.Id), priceBytes)
 
 	// add the pair to the currency-pair-id cache
-	cp, err := slinky.MarketPairToCurrencyPair(marketParam.Pair)
-	if err != nil {
-		k.Logger(ctx).Error(
-			"failed to add currency pair to cache due to failed conversion",
-			"pair",
-			marketParam.Pair,
-			"err",
-			err,
-		)
-	} else {
-		// add the pair to the currency-pair-id cache
-		k.currencyPairIDCache.AddCurrencyPair(uint64(marketParam.Id), cp.String())
-	}
+	k.currencyPairIDCache.AddCurrencyPair(uint64(marketParam.Id), currencyPairStr)
 
 	// Generate indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(
@@ -93,6 +97,17 @@ func (k Keeper) CreateMarket(
 	// create a new market rev share
 	k.RevShareKeeper.CreateNewMarketRevShare(ctx, marketParam.Id)
 
+	// enable the market in the market map
+	err = k.MarketMapKeeper.EnableMarket(ctx, currencyPairStr)
+	if err != nil {
+		k.Logger(ctx).Error(
+			"failed to enable market in market map",
+			"market ticker",
+			currencyPairStr,
+			"err",
+			err,
+		)
+	}
 	return marketParam, nil
 }
 
