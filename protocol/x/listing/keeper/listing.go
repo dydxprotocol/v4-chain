@@ -27,6 +27,7 @@ func (k Keeper) GetMarketsHardCap(ctx sdk.Context) (hardCap uint32) {
 }
 
 // Function to wrap the creation of a new clob pair
+// Note: This will only list long-tail/isolated markets
 func (k Keeper) CreateClobPair(
 	ctx sdk.Context,
 	perpetualId uint32,
