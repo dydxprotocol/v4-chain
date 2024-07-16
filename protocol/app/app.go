@@ -381,6 +381,10 @@ func New(
 	if err := appFlags.Validate(); err != nil {
 		panic(err)
 	}
+	if appFlags.OptimisticExecutionEnabled {
+		// TODO(OTE-573): Remove warning once OE is fully supported.
+		logger.Warn("Optimistic execution is enabled. This is a test feature not intended for production use!")
+	}
 
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 

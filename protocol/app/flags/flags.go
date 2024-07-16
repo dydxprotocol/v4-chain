@@ -138,6 +138,10 @@ func (f *Flags) Validate() error {
 
 	// Grpc streaming
 	if f.GrpcStreamingEnabled {
+		if f.OptimisticExecutionEnabled {
+			// TODO(OTE-456): Finish gRPC streaming x OE integration.
+			return fmt.Errorf("grpc streaming cannot be enabled together with optimistic execution")
+		}
 		if !f.GrpcEnable {
 			return fmt.Errorf("grpc.enable must be set to true - grpc streaming requires gRPC server")
 		}
