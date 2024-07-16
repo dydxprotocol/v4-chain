@@ -48,6 +48,7 @@ func GetDaemonVotes(
 			ConsAddress:         voteInfo.Validator.Address,
 			DaemonVoteExtension: voteExtension,
 		}
+
 	}
 
 	return votes, nil
@@ -89,7 +90,7 @@ type MedianAggregator struct {
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices
 
 	// keeper is used to fetch the marketParam object
-	pk pk.Keeper
+	pricesKeeper pk.Keeper
 
 	// prices is a map of validator address to a map of currency pair to price
 	prices map[string]map[string]*big.Int
@@ -108,7 +109,7 @@ func NewVeAggregator(
 		indexPriceCache: indexPriceCache,
 		prices:          make(map[string]map[string]*big.Int),
 		aggregateFn:     aggregateFn,
-		pk:              pricekeeper,
+		pricesKeeper:    pricekeeper,
 	}
 }
 func (ma *MedianAggregator) AggregateDaemonVE(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error) {
@@ -159,13 +160,13 @@ func (ma *MedianAggregator) addVoteToAggregator(ctx sdk.Context, address string,
 			continue
 		}
 
-		market, exists := ma.pk.GetMarketParam(ctx, marketId)
+		market, exists := ma.pricesKeeper.GetMarketParam(ctx, marketId)
 		if !exists {
 			ma.logger.Debug("market id not found", "market_id", marketId)
 			continue
 		}
 
-		pu, err := ma.pk.GetMarketPriceUpdateFromBytes(marketId, priceBz)
+		pu, err := ma.pricesKeeper.GetMarketPriceUpdateFromBytes(marketId, priceBz)
 		if err != nil {
 			ma.logger.Debug(
 				"failed to decode price",
@@ -179,7 +180,7 @@ func (ma *MedianAggregator) addVoteToAggregator(ctx sdk.Context, address string,
 		prices[market.Pair] = new(big.Int).SetUint64(pu.Price)
 	}
 
-	if ma.pk.PerformStatefulPriceUpdateValidation(ctx, &priceupdates, false) != nil {
+	if ma.pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, &priceupdates, false) != nil {
 		ma.logger.Debug(
 			"failed to validate price updates",
 			"num_price_updates", len(priceupdates.MarketPriceUpdates),

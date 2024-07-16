@@ -277,6 +277,16 @@ var (
 		},
 	}
 
+	ValidSingleVEPrice = map[uint32][]byte{
+		MarketId0: Price5Bytes,
+	}
+
+	ValidVEPricesWithOneInvalid = map[uint32][]byte{
+		MarketId0: Price5Bytes,
+		MarketId1: Price6Bytes,
+		MarketId2: []byte("invalid"),
+	}
+
 	ValidVEPrice = map[uint32][]byte{
 		MarketId0: Price5Bytes,
 		MarketId1: Price6Bytes,

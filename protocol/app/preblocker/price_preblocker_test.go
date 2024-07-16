@@ -13,6 +13,7 @@ import (
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	ethosutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ethos"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	pricestest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/prices"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
@@ -45,7 +46,7 @@ func TestPreBlockTestSuite(t *testing.T) {
 }
 
 func (s *PreBlockTestSuite) SetupTest() {
-	s.validator = constants.AliceConsAddress
+	s.validator = constants.AliceEthosConsAddress
 
 	ctx, pricesKeeper, _, indexPriceCahce, _, mockTimeProvider := keepertest.PricesKeepers(s.T())
 	mockTimeProvider.On("Now").Return(constants.TimeT)
@@ -154,7 +155,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 			prices,
 		)
 
-		s.prepareCCVMockResponsesForValidators([]string{"alice", "bob"})
+		s.mockCCVStoreGetAllValidatorsCall([]string{"alice", "bob"})
 
 		prePrices := s.getAllMarketPrices()
 
@@ -201,7 +202,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 			prices,
 		)
 
-		s.prepareCCVMockResponsesForValidators([]string{"alice", "bob"})
+		s.mockCCVStoreGetAllValidatorsCall([]string{"alice", "bob"})
 
 		_, err = s.handler.PreBlocker(s.ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
@@ -345,30 +346,16 @@ func (s *PreBlockTestSuite) setMarketPrices() []pricestypes.MarketParamPrice {
 	}
 }
 
-func (s *PreBlockTestSuite) buildCCValidator(name string, power int64) ccvtypes.CrossChainValidator {
-	if name == "alice" {
-		val, _ := ccvtypes.NewCCValidator(
-			constants.AliceAddressBz,
-			power,
-			constants.AlicePubKey,
-		)
-		s.ccvStore.On("GetCCValidator", s.ctx, constants.AliceAddressBz).Return(val, true)
-		return val
-	} else {
-		val, _ := ccvtypes.NewCCValidator(
-			constants.BobAddressBz,
-			power,
-			constants.BobPubKey,
-		)
-		s.ccvStore.On("GetCCValidator", s.ctx, constants.BobAddressBz).Return(val, true)
-		return val
-	}
+func (s *PreBlockTestSuite) buildAndMockCCValidator(name string, power int64) ccvtypes.CrossChainValidator {
+	val := ethosutils.BuildCCValidator(name, power)
+	s.ccvStore.On("GetCCValidator", s.ctx, val.Address).Return(val, true)
+	return val
 }
 
-func (s *PreBlockTestSuite) prepareCCVMockResponsesForValidators(validators []string) {
+func (s *PreBlockTestSuite) mockCCVStoreGetAllValidatorsCall(validators []string) {
 	var vals []ccvtypes.CrossChainValidator
 	for _, valName := range validators {
-		val := s.buildCCValidator(valName, 1)
+		val := s.buildAndMockCCValidator(valName, 1)
 		vals = append(vals, val)
 	}
 	s.ccvStore.On("GetAllCCValidator", s.ctx).Return(vals)
@@ -389,8 +376,8 @@ func (s *PreBlockTestSuite) getVoteExtensionsForValidatorsWithSamePrices(
 
 func (s *PreBlockTestSuite) getValidatorConsAddr(name string) sdk.ConsAddress {
 	if name == "alice" {
-		return constants.AliceConsAddress
+		return constants.AliceEthosConsAddress
 	} else {
-		return constants.BobConsAddress
+		return constants.BobEthosConsAddress
 	}
 }
