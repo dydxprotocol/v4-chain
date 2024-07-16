@@ -51,6 +51,7 @@ export const configSchema = {
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_DAILY: parseBoolean({ default: true }),
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_WEEKLY: parseBoolean({ default: true }),
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_MONTHLY: parseBoolean({ default: true }),
+  LOOPS_ENABLED_SUBACCOUNT_USERNAME_GENERATOR: parseBoolean({ default: true }),
 
   // Loop Timing
   LOOPS_INTERVAL_MS_MARKET_UPDATER: parseInteger({
@@ -100,6 +101,9 @@ export const configSchema = {
   }),
   LOOPS_INTERVAL_MS_PERFORM_COMPLIANCE_STATUS_TRANSITIONS: parseInteger({
     default: ONE_HOUR_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_SUBACCOUNT_USERNAME_GENERATOR: parseInteger({
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
 
   // Start delay

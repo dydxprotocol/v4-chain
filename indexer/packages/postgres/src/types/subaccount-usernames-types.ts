@@ -9,3 +9,7 @@ export enum SubaccountUsernamesColumns {
   username = 'username',
   subaccountId = 'subaccountId',
 }
+
+export interface SubaccountsWithoutUsernamesResult {
+  subaccountId: string
+}

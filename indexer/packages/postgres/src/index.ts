@@ -40,6 +40,7 @@ export * as ComplianceTable from './stores/compliance-table';
 export * as ComplianceStatusTable from './stores/compliance-status-table';
 export * as TradingRewardTable from './stores/trading-reward-table';
 export * as TradingRewardAggregationTable from './stores/trading-reward-aggregation-table';
+export * as SubaccountUsernamesTable from './stores/subaccount-usernames-table';
 
 export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
 export * as assetRefresher from './loops/asset-refresher';

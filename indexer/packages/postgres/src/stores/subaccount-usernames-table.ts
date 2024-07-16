@@ -4,6 +4,7 @@ import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import {
   verifyAllRequiredFields,
   setupBaseQuery,
+  rawQuery,
 } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import SubaccountUsernamesModel from '../models/subaccount-usernames-model';
@@ -13,6 +14,7 @@ import {
   SubaccountUsernamesQueryConfig,
   SubaccountUsernamesColumns,
   SubaccountUsernamesCreateObject,
+  SubaccountsWithoutUsernamesResult,
   Options,
   Ordering,
   QueryableField,
@@ -91,4 +93,22 @@ export async function findByUsername(
     options,
   );
   return (await baseQuery).find((subaccountUsername) => subaccountUsername.username === username);
+}
+
+export async function getSubaccountsWithoutUsernames(
+) : Promise<SubaccountsWithoutUsernamesResult[]> {
+  const queryString: string = `
+    SELECT id as "subaccountId"
+    FROM subaccounts
+    WHERE id NOT IN (
+      SELECT "subaccountId" FROM subaccount_usernames
+    )
+    AND subaccounts."subaccountNumber"=0
+  `;
+
+  const result: {
+    rows: SubaccountsWithoutUsernamesResult[],
+  } = await rawQuery(queryString, DEFAULT_POSTGRES_OPTIONS);
+
+  return result.rows;
 }

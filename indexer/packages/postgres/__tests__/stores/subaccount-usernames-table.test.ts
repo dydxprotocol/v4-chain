@@ -1,5 +1,6 @@
 import { SubaccountUsernamesFromDatabase } from '../../src/types';
 import * as SubaccountUsernamesTable from '../../src/stores/subaccount-usernames-table';
+import * as SubaccountsTable from '../../src/stores/subaccount-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import {
   defaultSubaccountUsername,
@@ -67,5 +68,15 @@ describe('SubaccountUsernames store', () => {
 
   it('Creation of row without subaccountId fails', async () => {
     await expect(SubaccountUsernamesTable.create({ ...defaultSubaccountUsername, subaccountId: '' })).rejects.toThrow();
+  });
+
+  it('Get subaccount ids which arent in the subaccount usernames table', async () => {
+    const subaccounts = await SubaccountsTable.findAll({
+      subaccountNumber: 0,
+    }, [], { readReplica: true });
+    const subaccountLength = subaccounts.length;
+    await SubaccountUsernamesTable.create(defaultSubaccountUsername);
+    const subaccountIds = await SubaccountUsernamesTable.getSubaccountsWithoutUsernames();
+    expect(subaccountIds.length).toEqual(subaccountLength - 1);
   });
 });
