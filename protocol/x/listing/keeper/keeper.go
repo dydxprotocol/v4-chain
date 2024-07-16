@@ -16,6 +16,7 @@ type (
 		cdc         codec.BinaryCodec
 		storeKey    storetypes.StoreKey
 		authorities map[string]struct{}
+		ClobKeeper  types.ClobKeeper
 	}
 )
 

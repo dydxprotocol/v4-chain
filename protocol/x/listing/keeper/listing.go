@@ -2,6 +2,8 @@ package keeper
 
 import (
 	gogotypes "github.com/cosmos/gogoproto/types"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
@@ -22,4 +24,29 @@ func (k Keeper) GetMarketsHardCap(ctx sdk.Context) (hardCap uint32) {
 	var result gogotypes.UInt32Value
 	k.cdc.MustUnmarshal(b, &result)
 	return result.Value
+}
+
+// Function to wrap the creation of a new clob pair
+// Note: This will only list long-tail/isolated markets
+func (k Keeper) CreateClobPair(
+	ctx sdk.Context,
+	perpetualId uint32,
+) (clobPairId uint32, err error) {
+	clobPairId = k.ClobKeeper.AcquireNextClobPairID(ctx)
+
+	// Create a new clob pair
+	clobPair, err := k.ClobKeeper.CreatePerpetualClobPair(
+		ctx,
+		clobPairId,
+		perpetualId,
+		satypes.BaseQuantums(types.DefaultStepBaseQuantums),
+		types.DefaultQuantumConversionExponent,
+		types.SubticksPerTick_LongTail,
+		clobtypes.ClobPair_STATUS_ACTIVE,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	return clobPair.Id, nil
 }
