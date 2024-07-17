@@ -174,12 +174,12 @@ export default async function runTask(
       },
       [],
     );
-    const closeOnlyAddresses: string[] = _.chain(closeOnlyAndBlockedStatuses)
+    const closeOnlyAndBlockedAddresses: string[] = _.chain(closeOnlyAndBlockedStatuses)
       .map(ComplianceDataColumns.address)
       .uniq()
       .value();
 
-    addressesToQuery = _.without(addressesToQuery, ...closeOnlyAddresses);
+    addressesToQuery = _.without(addressesToQuery, ...closeOnlyAndBlockedAddresses);
 
     // Get compliance data for addresses
     const startQueryProvider: number = Date.now();
