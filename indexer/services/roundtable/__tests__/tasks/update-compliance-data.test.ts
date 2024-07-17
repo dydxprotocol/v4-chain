@@ -260,25 +260,7 @@ describe('update-compliance-data', () => {
       updatedAt: createdAt,
     });
 
-    const riskScore: string = '85.00';
-    setupMockProvider(
-      mockProvider,
-      { [testConstants.defaultAddress]: { blocked: true, riskScore } },
-    );
-
     await updateComplianceDataTask(mockProvider);
-
-    const complianceData: ComplianceDataFromDatabase[] = await ComplianceTable.findAll({}, [], {});
-    expect(complianceData).toHaveLength(1);
-    expectUpdatedCompliance(
-      complianceData[0],
-      {
-        address: testConstants.defaultAddress,
-        blocked: true,
-        riskScore,
-      },
-      mockProvider.provider,
-    );
 
     const complianceStatusData: ComplianceStatusFromDatabase[] = await
     ComplianceStatusTable.findAll({}, [], {});
@@ -294,8 +276,8 @@ describe('update-compliance-data', () => {
       activeAddresses: 1,
       newAddresses: 0,
       oldAddresses: 0,
-      addressesScreened: 1,
-      upserted: 1,
+      addressesScreened: 0,
+      upserted: 0,
       statusUpserted: 0,
     },
     mockProvider.provider,

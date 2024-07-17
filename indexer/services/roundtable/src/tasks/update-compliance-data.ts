@@ -166,6 +166,21 @@ export default async function runTask(
       { provider: complianceProvider.provider },
     );
 
+    const closeOnlyAndBlockedStatuses: ComplianceStatusFromDatabase[] = await
+    ComplianceStatusTable.findAll(
+      {
+        address: addressesToQuery,
+        status: [ComplianceStatus.CLOSE_ONLY, ComplianceStatus.BLOCKED],
+      },
+      [],
+    );
+    const closeOnlyAddresses: string[] = _.chain(closeOnlyAndBlockedStatuses)
+      .map(ComplianceDataColumns.address)
+      .uniq()
+      .value();
+
+    addressesToQuery = _.without(addressesToQuery, ...closeOnlyAddresses);
+
     // Get compliance data for addresses
     const startQueryProvider: number = Date.now();
     const complianceResponses: ComplianceClientResponse[] = await getComplianceData(
@@ -183,19 +198,6 @@ export default async function runTask(
       },
     );
 
-    const closeOnlyStatuses: ComplianceStatusFromDatabase[] = await
-    ComplianceStatusTable.findAll(
-      {
-        address: addressesToQuery,
-        status: [ComplianceStatus.CLOSE_ONLY, ComplianceStatus.BLOCKED],
-      },
-      [],
-    );
-    const closeOnlyAddresses: string[] = _.chain(closeOnlyStatuses)
-      .map(ComplianceDataColumns.address)
-      .uniq()
-      .value();
-
     const complianceStatusUpsertObjects: ComplianceStatusUpsertObject[] = complianceCreateObjects
       .reduce(
         (acc: ComplianceStatusUpsertObject[], complianceDataObject: ComplianceDataCreateObject) => {
@@ -209,10 +211,7 @@ export default async function runTask(
             acc.push(upsertStatus);
           }
           return acc;
-        }, [])
-      .filter((complianceStatusUpsertObject: ComplianceStatusUpsertObject) => {
-        return !closeOnlyAddresses.includes(complianceStatusUpsertObject.address);
-      });
+        }, []);
 
     stats.timing(
       `${config.SERVICE_NAME}.${taskName}.query_compliance_data`,
