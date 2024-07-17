@@ -171,6 +171,9 @@ export const configSchema = {
 
   // Uncross orderbook
   STALE_ORDERBOOK_LEVEL_THRESHOLD_SECONDS: parseInteger({ default: 10 }),
+
+  // Subaccount username generator
+  SUBACCOUNT_USERNAME_NUM_RANDOM_DIGITS: parseInteger({ default: 3 }),
 };
 
 export default parseSchema(configSchema);

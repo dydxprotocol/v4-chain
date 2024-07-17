@@ -5,14 +5,14 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { generateUsername } from 'unique-username-generator';
 
-const RANDOM_DIGITS = 3;
+import config from '../config';
 
 export default async function runTask(): Promise<void> {
   const subaccounts:
   SubaccountsWithoutUsernamesResult[] = await
   SubaccountUsernamesTable.getSubaccountsWithoutUsernames();
   for (const subaccount of subaccounts) {
-    const username: string = generateUsername('', RANDOM_DIGITS);
+    const username: string = generateUsername('', config.SUBACCOUNT_USERNAME_NUM_RANDOM_DIGITS);
     try {
       // if insert fails, try it in the next roundtable cycle
       // There are roughly 50 Billion possible usernames with 3 random digits

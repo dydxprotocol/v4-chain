@@ -1,4 +1,4 @@
-import { SubaccountUsernamesFromDatabase } from '../../src/types';
+import { SubaccountUsernamesFromDatabase, SubaccountsWithoutUsernamesResult } from '../../src/types';
 import * as SubaccountUsernamesTable from '../../src/stores/subaccount-usernames-table';
 import * as SubaccountsTable from '../../src/stores/subaccount-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
@@ -76,7 +76,8 @@ describe('SubaccountUsernames store', () => {
     }, [], { readReplica: true });
     const subaccountLength = subaccounts.length;
     await SubaccountUsernamesTable.create(defaultSubaccountUsername);
-    const subaccountIds = await SubaccountUsernamesTable.getSubaccountsWithoutUsernames();
+    const subaccountIds: SubaccountsWithoutUsernamesResult[] = await
+    SubaccountUsernamesTable.getSubaccountsWithoutUsernames();
     expect(subaccountIds.length).toEqual(subaccountLength - 1);
   });
 });
