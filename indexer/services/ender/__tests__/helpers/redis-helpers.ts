@@ -1,3 +1,4 @@
+import { NodeEnv } from '@dydxprotocol-indexer/base';
 import { OrderSide } from '@dydxprotocol-indexer/postgres';
 import {
   NextFundingCache,
@@ -45,5 +46,20 @@ export async function updatePriceLevel(
     humanPrice: price,
     sizeDeltaInQuantums: quantums,
     client: redisClient,
+  });
+}
+
+export function clearOrderbookLevelsCacheForTests() {
+  if (process.env.NODE_ENV !== NodeEnv.TEST) {
+    throw Error('cannot clear orderbook levels outside of test environment');
+  }
+
+  redisClient.keys('v4/orderbookLevels/*', (err, keys) => {
+    if (err) return;
+
+    for (let i = 0; i < keys.length; i++) {
+      redisClient.del(keys[i], (_innerErr, _reply) => {
+      });
+    }
   });
 }
