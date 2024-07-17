@@ -41,6 +41,9 @@ func TestAddFlagsToCommand(t *testing.T) {
 		fmt.Sprintf("Has %s flag", flags.GrpcStreamingMaxChannelBufferSize): {
 			flagName: flags.GrpcStreamingMaxChannelBufferSize,
 		},
+		fmt.Sprintf("Has %s flag", flags.OptimisticExecutionEnabled): {
+			flagName: flags.OptimisticExecutionEnabled,
+		},
 	}
 
 	for name, tc := range tests {
@@ -57,11 +60,12 @@ func TestValidate(t *testing.T) {
 	}{
 		"success (default values)": {
 			flags: flags.Flags{
-				NonValidatingFullNode: flags.DefaultNonValidatingFullNode,
-				DdAgentHost:           flags.DefaultDdAgentHost,
-				DdTraceAgentPort:      flags.DefaultDdTraceAgentPort,
-				GrpcAddress:           config.DefaultGRPCAddress,
-				GrpcEnable:            true,
+				NonValidatingFullNode:      flags.DefaultNonValidatingFullNode,
+				DdAgentHost:                flags.DefaultDdAgentHost,
+				DdTraceAgentPort:           flags.DefaultDdTraceAgentPort,
+				GrpcAddress:                config.DefaultGRPCAddress,
+				GrpcEnable:                 true,
+				OptimisticExecutionEnabled: false,
 			},
 		},
 		"success - full node & gRPC disabled": {
@@ -79,6 +83,22 @@ func TestValidate(t *testing.T) {
 				GrpcStreamingMaxBatchSize:         2000,
 				GrpcStreamingMaxChannelBufferSize: 2000,
 			},
+		},
+		"success - optimistic execution": {
+			flags: flags.Flags{
+				NonValidatingFullNode:      false,
+				GrpcEnable:                 true,
+				OptimisticExecutionEnabled: true,
+			},
+		},
+		"failure - optimistic execution cannot be enabled with gRPC streaming": {
+			flags: flags.Flags{
+				NonValidatingFullNode:      false,
+				GrpcEnable:                 true,
+				GrpcStreamingEnabled:       true,
+				OptimisticExecutionEnabled: true,
+			},
+			expectedErr: fmt.Errorf("grpc streaming cannot be enabled together with optimistic execution"),
 		},
 		"failure - gRPC disabled": {
 			flags: flags.Flags{
@@ -153,6 +173,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 		expectedGrpcStreamingFlushMs              uint32
 		expectedGrpcStreamingBatchSize            uint32
 		expectedGrpcStreamingMaxChannelBufferSize uint32
+		expectedOptimisticExecutionEnabled        bool
 	}{
 		"Sets to default if unset": {
 			expectedNonValidatingFullNodeFlag:         false,
@@ -164,6 +185,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcStreamingFlushMs:              50,
 			expectedGrpcStreamingBatchSize:            2000,
 			expectedGrpcStreamingMaxChannelBufferSize: 2000,
+			expectedOptimisticExecutionEnabled:        false,
 		},
 		"Sets values from options": {
 			optsMap: map[string]any{
@@ -176,6 +198,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 				flags.GrpcStreamingFlushIntervalMs:      uint32(408),
 				flags.GrpcStreamingMaxBatchSize:         uint32(650),
 				flags.GrpcStreamingMaxChannelBufferSize: uint32(972),
+				flags.OptimisticExecutionEnabled:        "true",
 			},
 			expectedNonValidatingFullNodeFlag:         true,
 			expectedDdAgentHost:                       "agentHostTest",
@@ -186,6 +209,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcStreamingFlushMs:              408,
 			expectedGrpcStreamingBatchSize:            650,
 			expectedGrpcStreamingMaxChannelBufferSize: 972,
+			expectedOptimisticExecutionEnabled:        true,
 		},
 	}
 
