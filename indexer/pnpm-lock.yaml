@@ -182,7 +182,6 @@ importers:
       pg: ^8.7.3
       ts-node: ^10.8.2
       typescript: ^4.7.4
-      unique-username-generator: ^1.3.0
       uuid: ^8.3.2
     dependencies:
       '@dydxprotocol-indexer/base': link:../base
@@ -199,7 +198,6 @@ importers:
       objection-unique: 1.2.2_objection@2.2.18
       pg: 8.7.3
       ts-node: 10.8.2_2dd5d46eecda2aef953638919121af58
-      unique-username-generator: 1.3.0
       uuid: 8.3.2
     devDependencies:
       '@dydxprotocol-indexer/dev': link:../dev
@@ -10003,7 +10001,7 @@ packages:
       pretty-format: 28.1.1
       slash: 3.0.0
       strip-json-comments: 3.1.1
-      ts-node: 10.8.2_2dd5d46eecda2aef953638919121af58
+      ts-node: 10.8.2_2ee97d30e4a239eb38d57e3751ee8d16
     transitivePeerDependencies:
       - supports-color
 
@@ -13146,7 +13144,6 @@ packages:
       typescript: 4.9.5
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
-    dev: true
 
   /ts-node/10.8.2_4ea55324100c26d4019c6e6bcc89fac6:
     resolution: {integrity: sha512-LYdGnoGddf1D6v8REPtIH+5iq/gTDuZqv2/UJUU7tKjuEU8xVZorBM+buCGNjj+pGEud+sOoM4CX3/YzINpENA==}
