@@ -115,22 +115,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 // perpetual (in quote quantums).
 // This calls the Bank Keeper’s GetBalance() function for the Module Address of the insurance fund.
 func (k Keeper) GetInsuranceFundBalance(ctx sdk.Context, perpetualId uint32) (balance *big.Int) {
-	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
-	if !exists {
-		panic("GetInsuranceFundBalance: Usdc asset not found in state")
-	}
-	insuranceFundAddr, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
-	if err != nil {
-		return nil
-	}
-	insuranceFundBalance := k.bankKeeper.GetBalance(
-		ctx,
-		insuranceFundAddr,
-		usdcAsset.Denom,
-	)
-
-	// Return as big.Int.
-	return insuranceFundBalance.Amount.BigInt()
+	return new(big.Int).SetUint64(0)
 }
 
 func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int) {
@@ -625,8 +610,10 @@ func (k Keeper) GetSomeSubaccounts(
 				SubaccountId: subaccountId,
 				PerpetualId:  finalSettlementPerpetualId,
 			})
+			log.InfoLog(ctx, fmt.Sprintf("subaccount to deleverage: %d, perpetual id: %d", subaccountId, finalSettlementPerpetualId))
 		}
 	}
+	log.InfoLog(ctx, fmt.Sprintf("number of subaccounts to deleverage: %d", len(subaccounts)))
 	return subaccounts
 }
 
