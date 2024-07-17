@@ -47,6 +47,7 @@ import {
   PnlTicksCreateObject,
   PositionSide,
   SubaccountCreateObject,
+  SubaccountUsernamesCreateObject,
   TendermintEventCreateObject,
   TimeInForce,
   TradingRewardAggregationCreateObject,
@@ -838,3 +839,19 @@ export const defaultTradingRewardAggregationId: string = TradingRewardAggregatio
   defaultTradingRewardAggregation.period,
   defaultTradingRewardAggregation.startedAtHeight,
 );
+
+// ============== Subaccount Usernames ==============
+export const defaultSubaccountUsername: SubaccountUsernamesCreateObject = {
+  username: 'LyingRaisin32',
+  subaccountId: defaultSubaccountId,
+};
+
+export const defaultSubaccountUsername2: SubaccountUsernamesCreateObject = {
+  username: 'LyingRaisin33',
+  subaccountId: defaultSubaccountId2,
+};
+
+export const duplicatedSubaccountUsername: SubaccountUsernamesCreateObject = {
+  username: 'LyingRaisin32',
+  subaccountId: defaultSubaccountId3,
+};
