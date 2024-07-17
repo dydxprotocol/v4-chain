@@ -11,6 +11,7 @@ import (
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,7 +29,9 @@ func TestCreateOracleMarket(t *testing.T) {
 		expectedErr     string
 	}{
 		"Succeeds: create new oracle market (id = 1)": {
-			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {},
+			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {
+				keepertest.CreateMarketInMarketMapFromParams(t, ctx, pricesKeeper.MarketMapKeeper.(*marketmapkeeper.Keeper), []pricestypes.MarketParam{testMarket1.Param})
+			},
 			msg: &pricestypes.MsgCreateOracleMarket{
 				Authority: lib.GovModuleAddress.String(),
 				Params:    testMarket1.Param,
@@ -91,7 +94,7 @@ func TestCreateOracleMarket(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			ctx, pricesKeeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			msgServer := keeper.NewMsgServerImpl(pricesKeeper)
 			tc.setup(t, ctx, pricesKeeper)

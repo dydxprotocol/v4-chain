@@ -10,7 +10,28 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
+	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
+)
+
+var (
+	btcusd = marketmaptypes.Market{
+		Ticker: marketmaptypes.Ticker{
+			CurrencyPair: slinkytypes.CurrencyPair{
+				Base:  "BTC",
+				Quote: "USD",
+			},
+			Decimals:         8,
+			MinProviderCount: 1,
+		},
+		ProviderConfigs: []marketmaptypes.ProviderConfig{
+			{
+				Name:           "kucoin",
+				OffChainTicker: "btc-usdt",
+			},
+		},
+	}
 )
 
 func TestCreateMarket(t *testing.T) {
@@ -18,8 +39,10 @@ func TestCreateMarket(t *testing.T) {
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 
+	require.NoError(t, marketMapKeeper.CreateMarket(ctx, btcusd))
 	currencyPair, _ := slinky.MarketPairToCurrencyPair(constants.BtcUsdPair)
 	mmMarket, _ := marketMapKeeper.GetMarket(ctx, currencyPair.String())
+	require.False(t, mmMarket.Ticker.Enabled)
 
 	marketParam, err := keeper.CreateMarket(
 		ctx,
@@ -65,6 +88,10 @@ func TestCreateMarket(t *testing.T) {
 	revShareParams := revShareKeeper.GetMarketMapperRevenueShareParams(ctx)
 	revShareDetails, err := revShareKeeper.GetMarketMapperRevShareDetails(ctx, marketParam.Id)
 	require.NoError(t, err)
+
+	// Verify market is enabled in market map
+	mmMarket, _ = marketMapKeeper.GetMarket(ctx, currencyPair.String())
+	require.True(t, mmMarket.Ticker.Enabled)
 
 	expirationTs := uint64(ctx.BlockTime().Unix() + int64(revShareParams.ValidDays*24*3600))
 	require.Equal(t, revShareDetails.ExpirationTs, expirationTs)
@@ -153,7 +180,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, mockTimeKeeper, _ := keepertest.PricesKeepers(t)
+			ctx, keeper, _, _, mockTimeKeeper, _, _ := keepertest.PricesKeepers(t)
 			ctx = ctx.WithTxBytes(constants.TestTxBytes)
 
 			mockTimeKeeper.On("Now").Return(constants.TimeT)
@@ -202,7 +229,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 }
 
 func TestGetAllMarketParamPrices(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 
@@ -216,7 +243,7 @@ func TestGetAllMarketParamPrices(t *testing.T) {
 }
 
 func TestAcquireNextMarketID(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 
@@ -240,8 +267,10 @@ func TestAcquireNextMarketID(t *testing.T) {
 	require.Equal(t, nextMarketID+1, nextMarketIDFromStore)
 
 	// Create a market with the next market ID outside of acquire flow
-	_, err := keeper.CreateMarket(
+	_, err := keepertest.CreateTestMarket(
+		t,
 		ctx,
+		keeper,
 		types.MarketParam{
 			Id:                 nextMarketIDFromStore,
 			Pair:               "TEST-USD",
