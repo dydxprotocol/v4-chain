@@ -12,36 +12,78 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-// sDAIEventManager maintains an array of ethereum block height
-// to sDAI conversion rate. Methods are goroutine safe.
-type SDAIEventManager struct {
-	// Exclusive mutex taken when reading or writing
-	sync.Mutex
+var (
+	SDAIEventFetcher      EventFetcher = &EthEventFetcher{}
+	InitialNumEvents                   = 3
+	FirstNextIndexInArray              = InitialNumEvents
+	TestSDAIEventRequests              = []api.AddsDAIEventsRequest{
+		{
+			EthereumBlockNumber: "12345",
+			ConversionRate:      "1006681181716810314385961731",
+		},
+		{
+			EthereumBlockNumber: "12346",
+			ConversionRate:      "1016681181716810314385961731",
+		},
+		{
+			EthereumBlockNumber: "12347",
+			ConversionRate:      "1026681181716810314385961731",
+		},
+		{
+			EthereumBlockNumber: "12348",
+			ConversionRate:      "1036681181716810314385961731",
+		},
+		{
+			EthereumBlockNumber: "12349",
+			ConversionRate:      "1046681181716810314385961731",
+		},
+		{
+			EthereumBlockNumber: "12350",
+			ConversionRate:      "1056681181716810314385961731",
+		},
+		{
+			EthereumBlockNumber: "12351",
+			ConversionRate:      "1066681181716810314385961731",
+		},
+		{
+			EthereumBlockNumber: "12352",
+			ConversionRate:      "1076681181716810314385961731",
+		},
+		{
+			EthereumBlockNumber: "12353",
+			ConversionRate:      "1086681181716810314385961731",
+		},
+		{
+			EthereumBlockNumber: "12354",
+			ConversionRate:      "1096681181716810314385961731",
+		},
+	}
+)
 
-	// Array to store the last 10 Ethereum block heights and conversion rates
-	lastTenEvents [10]api.AddsDAIEventsRequest
+type MockEventFetcher struct{}
 
-	// Index of the array where we should store the next api.AddsDAIEventsRequest
-	nextIndexInArray int
+func (m *MockEventFetcher) GetInitialEvents(numOfEvents int) ([10]api.AddsDAIEventsRequest, error) {
+	events := [10]api.AddsDAIEventsRequest{}
+	for i := 0; i < numOfEvents; i++ {
+		events[i] = TestSDAIEventRequests[i]
+	}
+	return events, nil
 }
 
-// NewsDAIEventManager creates a new sDAIEventManager.
-func NewsDAIEventManager() *SDAIEventManager {
+type MockEventFetcherNoEvents struct{}
 
-	events, err := getInitialEvents(3)
-	if err != nil {
-		log.Fatalf("Failed to get initial events: %v", err)
-	}
-
-	return &SDAIEventManager{
-		lastTenEvents:    events,
-		nextIndexInArray: 1,
-	}
+func (m *MockEventFetcherNoEvents) GetInitialEvents(numOfEvents int) ([10]api.AddsDAIEventsRequest, error) {
+	events := [10]api.AddsDAIEventsRequest{}
+	return events, nil
 }
 
-func getInitialEvents(numOfEvents int) ([10]api.AddsDAIEventsRequest, error) {
+type EventFetcher interface {
+	GetInitialEvents(numOfEvents int) ([10]api.AddsDAIEventsRequest, error)
+}
 
-	// Initialize an Ethereum client from an RPC endpoint.
+type EthEventFetcher struct{}
+
+func (r *EthEventFetcher) GetInitialEvents(numOfEvents int) ([10]api.AddsDAIEventsRequest, error) {
 	time.Sleep(1 * time.Second)
 	ethClient, err := ethclient.Dial(types.ETHRPC)
 	if err != nil {
@@ -67,6 +109,34 @@ func getInitialEvents(numOfEvents int) ([10]api.AddsDAIEventsRequest, error) {
 	return events, nil
 }
 
+// sDAIEventManager maintains an array of ethereum block height
+// to sDAI conversion rate. Methods are goroutine safe.
+type SDAIEventManager struct {
+	// Exclusive mutex taken when reading or writing
+	sync.Mutex
+
+	// Array to store the last 10 Ethereum block heights and conversion rates
+	lastTenEvents [10]api.AddsDAIEventsRequest
+
+	// Index of the array where we should store the next api.AddsDAIEventsRequest
+	nextIndexInArray int
+}
+
+// NewsDAIEventManager creates a new sDAIEventManager.
+func NewsDAIEventManager() *SDAIEventManager {
+
+	events, err := SDAIEventFetcher.GetInitialEvents(InitialNumEvents)
+
+	if err != nil {
+		log.Fatalf("Failed to get initial events: %v", err)
+	}
+
+	return &SDAIEventManager{
+		lastTenEvents:    events,
+		nextIndexInArray: InitialNumEvents,
+	}
+}
+
 func (s *SDAIEventManager) AddsDAIEvent(event *api.AddsDAIEventsRequest) error {
 	s.Lock()
 	defer s.Unlock()
@@ -81,7 +151,8 @@ func (s *SDAIEventManager) AddsDAIEvent(event *api.AddsDAIEventsRequest) error {
 }
 
 // GetLastTensDAIEvents returns the last ten sDAI events.
-func (s *SDAIEventManager) GetLastTensDAIEvents() [10]api.AddsDAIEventsRequest {
+// TODO: This does not handle the circular buffer
+func (s *SDAIEventManager) GetLastTensDAIEventsUnordered() [10]api.AddsDAIEventsRequest {
 	s.Lock()
 	defer s.Unlock()
 

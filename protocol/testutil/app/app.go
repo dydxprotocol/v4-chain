@@ -31,6 +31,7 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
 	appconstants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
+	sdaitypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	testlog "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/logger"
@@ -1199,6 +1200,9 @@ func launchValidatorInDir(
 	validatorHomeDir string,
 	appOptions map[string]interface{},
 ) (a *app.App, shutdownFn func() error, err error) {
+	// Ensure mocking of the sDAI Event Manager here
+	sdaitypes.SDAIEventFetcher = &sdaitypes.MockEventFetcher{}
+
 	// Create a context that can be cancelled to stop the Cosmos App.
 	done := make(chan error, 1)
 	parentCtx, cancelFn := context.WithCancel(context.Background())
