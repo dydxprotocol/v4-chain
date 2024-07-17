@@ -145,6 +145,7 @@ func CreateMarketInMarketMapFromParams(
 	require.NoError(t, err)
 
 	for _, market := range mm.MarketMap.Markets {
+		market.Ticker.Enabled = false
 		require.NoError(t, mmk.CreateMarket(ctx, market))
 	}
 }
@@ -158,7 +159,12 @@ func CreateTestMarket(
 	marketParam types.MarketParam,
 	marketPrice types.MarketPrice,
 ) (types.MarketParam, error) {
-	CreateMarketInMarketMapFromParams(t, ctx, k.MarketMapKeeper.(*marketmapkeeper.Keeper), []types.MarketParam{marketParam})
+	CreateMarketInMarketMapFromParams(
+		t,
+		ctx,
+		k.MarketMapKeeper.(*marketmapkeeper.Keeper),
+		[]types.MarketParam{marketParam},
+	)
 
 	return k.CreateMarket(
 		ctx,
