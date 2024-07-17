@@ -623,3 +623,20 @@ export interface HistoricalBlockTradingReward {
   createdAt: IsoString,
   createdAtHeight: string,
 }
+
+/* ------- Social Trading Types ------- */
+
+export interface TraderSearchResponse {
+  result?: TraderSearchResponseObject
+}
+
+export interface TraderSearchRequest {
+  username: string,
+}
+
+export interface TraderSearchResponseObject {
+  address: string,
+  subaccountNumber: number,
+  subaccountId: string,
+  username: string,
+}

@@ -20,6 +20,7 @@ import {
   PositionSide,
   protocolTranslations,
   SubaccountFromDatabase,
+  SubaccountUsernamesFromDatabase,
   SubaccountTable,
   TimeInForce,
   TradingRewardAggregationFromDatabase,
@@ -58,6 +59,7 @@ import {
   SubaccountResponseObject,
   TradeResponseObject,
   TransferResponseObject,
+  TraderSearchResponse,
 } from '../types';
 
 /**
@@ -304,6 +306,20 @@ export function pnlTicksToResponseObject(
     createdAt: pnlTicks.createdAt,
     blockHeight: pnlTicks.blockHeight,
     blockTime: pnlTicks.blockTime,
+  };
+}
+
+export function SubaccountInfoToTraderSearchResponse(
+  subaccount: SubaccountFromDatabase,
+  subaccountUsername: SubaccountUsernamesFromDatabase,
+): TraderSearchResponse {
+  return {
+    result: {
+      address: subaccount.address,
+      subaccountNumber: subaccount.subaccountNumber,
+      subaccountId: subaccount.id,
+      username: subaccountUsername.username,
+    },
   };
 }
 
