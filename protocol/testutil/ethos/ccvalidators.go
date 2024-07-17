@@ -45,3 +45,30 @@ func BuildAndMockCCValidator(
 	mCCVStore.On("GetCCValidator", ctx, val.Address).Return(val, true)
 	return val
 }
+
+func NewGetAllCCValidatorMockReturn(
+	ctx sdk.Context,
+	names []string,
+) *mocks.CCValidatorStore {
+	mCCVStore := &mocks.CCValidatorStore{}
+	var vals []ccvtypes.CrossChainValidator
+	for _, name := range names {
+		vals = append(vals, BuildAndMockCCValidator(ctx, name, 500, mCCVStore))
+	}
+	mCCVStore.On("GetAllCCValidator", ctx).Return(vals)
+	return mCCVStore
+}
+
+func NewGetAllCCValidatorMockReturnWithPowers(
+	ctx sdk.Context,
+	names []string,
+	powers map[string]int64,
+) *mocks.CCValidatorStore {
+	mCCVStore := &mocks.CCValidatorStore{}
+	var vals []ccvtypes.CrossChainValidator
+	for _, name := range names {
+		vals = append(vals, BuildAndMockCCValidator(ctx, name, powers[name], mCCVStore))
+	}
+	mCCVStore.On("GetAllCCValidator", ctx).Return(vals)
+	return mCCVStore
+}

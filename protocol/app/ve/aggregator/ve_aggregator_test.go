@@ -7,14 +7,12 @@ import (
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	ethosutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ethos"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,7 +27,7 @@ func SetupTest(t *testing.T, vals []string) (sdk.Context, veaggregator.VoteAggre
 
 	keepertest.CreateTestMarkets(t, ctx, pk)
 
-	mCCVStore := NewGetAllCCValidatorMockReturn(ctx, vals)
+	mCCVStore := ethosutils.NewGetAllCCValidatorMockReturn(ctx, vals)
 
 	aggregateFn := voteweighted.Median(
 		ctx.Logger(),
@@ -406,17 +404,4 @@ func TestVEAggregator(t *testing.T) {
 		require.Equal(t, constants.Price6Big, prices[constants.EthUsdPair])
 	})
 
-}
-
-func NewGetAllCCValidatorMockReturn(
-	ctx sdk.Context,
-	names []string,
-) *mocks.CCValidatorStore {
-	mCCVStore := &mocks.CCValidatorStore{}
-	var vals []ccvtypes.CrossChainValidator
-	for _, name := range names {
-		vals = append(vals, ethosutils.BuildAndMockCCValidator(ctx, name, 500, mCCVStore))
-	}
-	mCCVStore.On("GetAllCCValidator", ctx).Return(vals)
-	return mCCVStore
 }

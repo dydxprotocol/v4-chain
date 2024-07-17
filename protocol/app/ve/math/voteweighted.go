@@ -1,7 +1,6 @@
 package voteweighted
 
 import (
-	"fmt"
 	"math/big"
 	"sort"
 
@@ -96,7 +95,7 @@ func Median(
 		}
 		prices := make(map[string]*big.Int)
 		totalPower := GetTotalPower(ctx, vStore)
-		fmt.Println("totalPower", totalPower)
+
 		for pair, info := range priceInfo {
 			// The total voting power % that submitted a price update for the given currency pair must be
 			// greater than the threshold to be included in the final oracle price.
@@ -146,6 +145,7 @@ func ComputeMedian(priceInfo PriceInfo) *big.Int {
 		sum = sum.Add(math.NewInt(price.VoteWeight))
 
 		if sum.GTE(middle) {
+
 			return price.Price
 		}
 
