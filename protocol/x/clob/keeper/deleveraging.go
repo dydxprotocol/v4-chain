@@ -41,24 +41,24 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		log.Subaccount, subaccountId,
 	)
 
-	shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
-		ctx,
-		subaccountId,
-		perpetualId,
-	)
-	if err != nil {
-		return new(big.Int), err
-	}
-
-	// Early return to skip deleveraging if the subaccount doesn't have negative equity or a position in a final
-	// settlement market.
-	if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
-		metrics.IncrCounter(
-			metrics.ClobPrepareCheckStateCannotDeleverageSubaccount,
-			1,
-		)
-		return new(big.Int), nil
-	}
+	//shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
+	//	ctx,
+	//	subaccountId,
+	//	perpetualId,
+	//)
+	//if err != nil {
+	//	return new(big.Int), err
+	//}
+	//
+	//// Early return to skip deleveraging if the subaccount doesn't have negative equity or a position in a final
+	//// settlement market.
+	//if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
+	//	metrics.IncrCounter(
+	//		metrics.ClobPrepareCheckStateCannotDeleverageSubaccount,
+	//		1,
+	//	)
+	//	return new(big.Int), nil
+	//}
 
 	// Deleverage the entire position for the given perpetual id.
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
@@ -76,7 +76,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		subaccountId,
 		perpetualId,
 		deltaQuantums,
-		shouldDeleverageAtOraclePrice,
+		true,
 	)
 
 	labels := []metrics.Label{
@@ -626,6 +626,29 @@ func (k Keeper) ProcessDeleveraging(
 	return nil
 }
 
+func (k Keeper) GetSomeSubaccounts(
+	ctx sdk.Context,
+) []subaccountToDeleverage {
+	subaccounts := make([]subaccountToDeleverage, 0)
+	for _, clobPair := range k.GetAllClobPairs(ctx) {
+		if clobPair.Status != types.ClobPair_STATUS_FINAL_SETTLEMENT {
+			continue
+		}
+
+		finalSettlementPerpetualId := clobPair.MustGetPerpetualId()
+		subaccountsWithPosition := k.DaemonLiquidationInfo.GetSubaccountsWithOpenPositions(
+			finalSettlementPerpetualId,
+		)
+		for _, subaccountId := range subaccountsWithPosition {
+			subaccounts = append(subaccounts, subaccountToDeleverage{
+				SubaccountId: subaccountId,
+				PerpetualId:  finalSettlementPerpetualId,
+			})
+		}
+	}
+	return subaccounts
+}
+
 // GetSubaccountsWithPositionsInFinalSettlementMarkets uses the subaccountOpenPositionInfo returned from the
 // liquidations daemon to fetch subaccounts with open positions in final settlement markets. These subaccounts
 // will be deleveraged in either at the oracle price if non-negative TNC or at bankruptcy price if negative TNC. This
@@ -679,7 +702,7 @@ func (k Keeper) DeleverageSubaccounts(
 	)
 
 	// For each unfilled liquidation, attempt to deleverage the subaccount.
-	for i := 0; i < int(k.Flags.MaxDeleveragingAttemptsPerBlock) && i < len(subaccountsToDeleverage); i++ {
+	for i := 0; i < 15 && i < len(subaccountsToDeleverage); i++ {
 		subaccountId := subaccountsToDeleverage[i].SubaccountId
 		perpetualId := subaccountsToDeleverage[i].PerpetualId
 		_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId)
