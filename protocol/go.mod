@@ -441,7 +441,9 @@ replace (
 	// Use dYdX fork of CometBFT
 	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20240426214049-c8beeeada40a
 	// Use dYdX fork of Cosmos SDK
-	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240606183841-18966898625f
+	//github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240606183841-18966898625f
+	github.com/cosmos/cosmos-sdk v0.50.6 => github.com/StreamFinance-Protocol/cosmos-sdk v0.0.0-20240717023708-4319b4658810
+
 	github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240408175732-0fca9d69cbc4
 	github.com/ethos-works/ethos-avs => ./ethos/ethos-avs
 	github.com/ethos-works/ethos/ethos-chain => ./ethos/ethos-chain
@@ -459,6 +461,8 @@ replace (
 	// https://github.com/dydxprotocol/cosmos-sdk/blob/fbb26831d28f66e86bfc31283b4be9290929a4a5/go.mod#L171
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+
+	github.com/cosmos/ibc-go/v8 v8.3.1 => github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240717020622-b8df5191a4bf
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2
