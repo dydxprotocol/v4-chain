@@ -59,7 +59,7 @@ export async function findAll(
   }
 
   if (status !== undefined) {
-    baseQuery = baseQuery.where(ComplianceStatusColumns.status, status);
+    baseQuery = baseQuery.whereIn(ComplianceStatusColumns.status, status);
   }
 
   if (reason !== undefined) {

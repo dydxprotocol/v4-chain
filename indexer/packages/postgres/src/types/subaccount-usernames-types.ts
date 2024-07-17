@@ -1,0 +1,11 @@
+/* ------- SUBACCOUNT USERNAME TYPES ------- */
+
+export interface SubaccountUsernamesCreateObject {
+  username: string,
+  subaccountId: string,
+}
+
+export enum SubaccountUsernamesColumns {
+  username = 'username',
+  subaccountId = 'subaccountId',
+}
