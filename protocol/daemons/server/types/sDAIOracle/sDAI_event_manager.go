@@ -1,7 +1,6 @@
 package types
 
 import (
-	"log"
 	"sync"
 	"time"
 
@@ -28,14 +27,14 @@ type SDAIEventManager struct {
 // NewsDAIEventManager creates a new sDAIEventManager.
 func NewsDAIEventManager() *SDAIEventManager {
 
-	events, err := getInitialEvents(3)
-	if err != nil {
-		log.Fatalf("Failed to get initial events: %v", err)
-	}
+	// events, err := getInitialEvents(3)
+	// if err != nil {
+	// 	log.Fatalf("Failed to get initial events: %v", err)
+	// }
 
 	return &SDAIEventManager{
-		lastTenEvents:    events,
-		nextIndexInArray: 1,
+		lastTenEvents:    [10]api.AddsDAIEventsRequest{},
+		nextIndexInArray: 0,
 	}
 }
 
