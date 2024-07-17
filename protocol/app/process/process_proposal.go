@@ -4,9 +4,10 @@ import (
 	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 
-	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	error_lib "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/error"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
@@ -63,7 +64,7 @@ func ProcessProposalHandler(
 			error_lib.LogErrorWithOptionalContext(ctx, "UpdateSmoothedPrices failed", err)
 		}
 
-		veEnabled := ve.AreVoteExtensionsEnabled(ctx)
+		veEnabled := veutils.AreVoteExtensionsEnabled(ctx)
 
 		if veEnabled {
 

@@ -1,4 +1,4 @@
-package aggregator_test
+package price_writer_test
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
-	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
+	pricewriter "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
@@ -32,7 +32,7 @@ func TestPriceWriter(t *testing.T) {
 
 	pricesKeeper := &mocks.PriceApplierPricesKeeper{}
 
-	pricesApplier := veaggregator.NewPriceWriter(
+	pricesApplier := pricewriter.NewPriceApplier(
 		voteAggregator,
 		pricesKeeper,
 		voteCodec,

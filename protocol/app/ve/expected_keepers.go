@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,16 +18,18 @@ type PreparePricesKeeper interface {
 
 	GetValidMarketPriceUpdates(ctx sdk.Context) *pricestypes.MarketPriceUpdates
 	GetAllMarketParams(ctx sdk.Context) []pricestypes.MarketParam
-	GetMarketPriceUpdateFromBytes(id uint32, bz []byte) (*pricestypes.MarketPriceUpdates_MarketPriceUpdate, error)
 }
 
 type ExtendVotePricesKeeper interface {
 	GetValidMarketPriceUpdates(ctx sdk.Context) *pricestypes.MarketPriceUpdates
 	GetAllMarketParams(ctx sdk.Context) []pricestypes.MarketParam
-	GetMarketPriceUpdateFromBytes(id uint32, bz []byte) (*pricestypes.MarketPriceUpdates_MarketPriceUpdate, error)
 	GetMarketParam(ctx sdk.Context, id uint32) (market pricestypes.MarketParam, exists bool)
 }
 
 type ExtendVoteIndexPriceCache interface {
 	GetVEEncodedPrice(price *big.Int) ([]byte, error)
+}
+
+type VEPriceApplier interface {
+	ApplyPricesFromVoteExtensions(ctx sdk.Context, req *abci.RequestFinalizeBlock) (map[string]*big.Int, error)
 }

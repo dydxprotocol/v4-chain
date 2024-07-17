@@ -6,18 +6,17 @@ import (
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/prepare"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	prepareutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perpetualtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-
-	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -668,7 +667,7 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				&mockPricesKeeper,
 				vecodec.NewDefaultVoteExtensionCodec(),
 				vecodec.NewDefaultExtendedCommitCodec(),
-				ve.NewValidateVoteExtensionsFn(&mockConsumerKeeper),
+				veutils.NewValidateVoteExtensionsFn(&mockConsumerKeeper),
 			)
 
 			req := cometabci.RequestPrepareProposal{
@@ -896,8 +895,6 @@ func setMockResponses(
 
 	mPricesKeeper.On("GetAllMarketParams", mock.Anything).
 		Return(tc.pricesParamsResp)
-	mPricesKeeper.On("GetMarketPriceUpdateFromBytes", mock.Anything, mock.Anything).
-		Return(tc.pricesMarketPriceFromByesResp, nil)
 	mPricesKeeper.On("PerformStatefulPriceUpdateValidation", mock.Anything, mock.Anything, mock.Anything).
 		Return(nil)
 	mPerpKeeper.On("GetAddPremiumVotes", mock.Anything).

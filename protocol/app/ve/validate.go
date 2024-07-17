@@ -1,7 +1,13 @@
 package ve
 
 import (
+	"fmt"
+
+	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
+	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cometproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -98,5 +104,38 @@ func ValidateExtendedCommitInfo(
 			return err
 		}
 	}
+	return nil
+}
+
+func ValidateDaemonVoteExtension(
+	ctx sdk.Context,
+	ve vetypes.DaemonVoteExtension,
+	pk PreparePricesKeeper,
+) error {
+	// TODO: how do you account for removed prices from the prev and current block
+	params := pk.GetAllMarketParams(ctx)
+	if uint64(len(ve.Prices)) > uint64(len(params)) {
+		return fmt.Errorf("number of oracle vote extension pairs of %d greater than maximum expected pairs of %d", uint64(len(ve.Prices)), uint64(len(params)))
+	}
+	var priceupdates pricestypes.MarketPriceUpdates
+	// Verify prices are valid.
+	for id, bz := range ve.Prices {
+		pu, err := veutils.GetMarketPriceUpdateFromBytes(id, bz)
+		if err != nil {
+			return fmt.Errorf("failed to get market price update from bytes: %w", err)
+		}
+
+		priceupdates.MarketPriceUpdates = append(priceupdates.MarketPriceUpdates, pu)
+
+		// Ensure that the price bytes are not too long.
+		if len(bz) > constants.MaximumPriceSize {
+			return fmt.Errorf("price bytes are too long: %d", len(bz))
+		}
+	}
+
+	if err := pk.PerformStatefulPriceUpdateValidation(ctx, &priceupdates, false); err != nil {
+		return fmt.Errorf("failed to perform deterministic price update validation: %w", err)
+	}
+
 	return nil
 }

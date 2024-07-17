@@ -25,7 +25,6 @@ type PreparePricesKeeper interface {
 		marketPriceUpdates *pricestypes.MarketPriceUpdates,
 		performNonDeterministicValidation bool,
 	) error
-	GetMarketPriceUpdateFromBytes(id uint32, bz []byte) (*pricestypes.MarketPriceUpdates_MarketPriceUpdate, error)
 	GetValidMarketPriceUpdates(ctx sdk.Context) *pricestypes.MarketPriceUpdates
 	GetAllMarketParams(ctx sdk.Context) []pricestypes.MarketParam
 }

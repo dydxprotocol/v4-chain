@@ -1,10 +1,11 @@
-package aggregator
+package price_writer
 
 import (
 	"cosmossdk.io/log"
 
 	"math/big"
 
+	aggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	ptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -12,9 +13,9 @@ import (
 )
 
 // PriceWriter is an interface that defines the methods required to aggregate and apply prices from VE's
-type PriceWriter struct {
+type PriceApplier struct {
 	// va is a VoteAggregator that is used to aggregate votes into prices.
-	va VoteAggregator
+	va aggregator.VoteAggregator
 
 	// pk is the prices keeper that is used to write prices to state.
 	pk PriceApplierPricesKeeper
@@ -27,22 +28,14 @@ type PriceWriter struct {
 	extendedCommitCodec codec.ExtendedCommitCodec
 }
 
-type PriceApplier interface {
-	// ApplyPricesFromVoteExtensions derives the aggregate prices per asset in accordance with the given
-	// vote extensions + VoteAggregator. If a price exists for an asset, it is written to state. The
-	// prices aggregated from vote-extensions are returned if no errors are encountered in execution,
-	// otherwise an error is returned + nil prices.
-	ApplyPricesFromVoteExtensions(ctx sdk.Context, req *abci.RequestFinalizeBlock) (map[string]*big.Int, error)
-}
-
-func NewPriceWriter(
-	va VoteAggregator,
+func NewPriceApplier(
+	va aggregator.VoteAggregator,
 	pk PriceApplierPricesKeeper,
 	voteExtensionCodec codec.VoteExtensionCodec,
 	extendedCommitCodec codec.ExtendedCommitCodec,
 	logger log.Logger,
-) PriceApplier {
-	return &PriceWriter{
+) *PriceApplier {
+	return &PriceApplier{
 		va:                  va,
 		pk:                  pk,
 		logger:              logger,
@@ -51,8 +44,8 @@ func NewPriceWriter(
 	}
 }
 
-func (pw *PriceWriter) ApplyPricesFromVoteExtensions(ctx sdk.Context, req *abci.RequestFinalizeBlock) (map[string]*big.Int, error) {
-	votes, err := GetDaemonVotes(req.Txs, pw.voteExtensionCodec, pw.extendedCommitCodec)
+func (pw *PriceApplier) ApplyPricesFromVoteExtensions(ctx sdk.Context, req *abci.RequestFinalizeBlock) (map[string]*big.Int, error) {
+	votes, err := aggregator.GetDaemonVotes(req.Txs, pw.voteExtensionCodec, pw.extendedCommitCodec)
 	if err != nil {
 
 		pw.logger.Error(

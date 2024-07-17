@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/log"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
-	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
+	priceapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
+	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 )
 
@@ -24,7 +24,7 @@ type PreBlockHandler struct { //golint:ignore
 	keeper pk.Keeper
 
 	// price applier writes the aggregated prices to state.
-	priceApplier veaggregator.PriceApplier
+	priceApplier *priceapplier.PriceApplier
 }
 
 // NewOraclePreBlockHandler returns a new PreBlockHandler. The handler
@@ -33,7 +33,7 @@ func NewDaemonPreBlockHandler(
 	logger log.Logger,
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
 	pk pk.Keeper,
-	priceApplier veaggregator.PriceApplier,
+	priceApplier *priceapplier.PriceApplier,
 ) *PreBlockHandler {
 
 	return &PreBlockHandler{
@@ -57,7 +57,7 @@ func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinaliz
 		return &sdk.ResponsePreBlock{}, fmt.Errorf("received nil RequestFinalizeBlock in prices preblocker: height %d", ctx.BlockHeight())
 	}
 
-	if !ve.AreVoteExtensionsEnabled(ctx) {
+	if !veutils.AreVoteExtensionsEnabled(ctx) {
 		pbh.logger.Info(
 			"vote extensions are not enabled, skipping prices pre-blocker",
 			"height", ctx.BlockHeight(),

@@ -1,4 +1,4 @@
-package aggregator
+package price_writer
 
 import (
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
@@ -14,7 +14,6 @@ type PriceApplierPricesKeeper interface {
 
 	GetValidMarketPriceUpdates(ctx sdk.Context) *pricestypes.MarketPriceUpdates
 	GetAllMarketParams(ctx sdk.Context) []pricestypes.MarketParam
-	GetMarketPriceUpdateFromBytes(id uint32, bz []byte) (*pricestypes.MarketPriceUpdates_MarketPriceUpdate, error)
 
 	UpdateMarketPrice(
 		ctx sdk.Context,

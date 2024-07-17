@@ -8,6 +8,7 @@ import (
 
 	preblocker "github.com/StreamFinance-Protocol/stream-chain/protocol/app/preblocker"
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
+	priceapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
@@ -33,7 +34,7 @@ type PreBlockTestSuite struct {
 	marketParamPrices []pricestypes.MarketParamPrice
 	pricesKeeper      *pk.Keeper
 	indexPriceCache   *pricefeedtypes.MarketToExchangePrices
-	priceApplier      veaggregator.PriceApplier
+	priceApplier      *priceapplier.PriceApplier
 	handler           *preblocker.PreBlockHandler
 	ccvStore          *mocks.CCValidatorStore
 	voteCodec         vecodec.VoteExtensionCodec
@@ -75,7 +76,7 @@ func (s *PreBlockTestSuite) SetupTest() {
 		aggregationFn,
 	)
 
-	s.priceApplier = veaggregator.NewPriceWriter(
+	s.priceApplier = priceapplier.NewPriceApplier(
 		aggregator,
 		*s.pricesKeeper,
 		s.voteCodec,
@@ -98,7 +99,6 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 			*s.pricesKeeper,
 			s.priceApplier,
 		)
-
 		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
 
 		prePrices := s.getAllMarketPrices()

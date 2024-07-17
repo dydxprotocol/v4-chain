@@ -11,6 +11,7 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 )
 
@@ -80,7 +81,7 @@ func PrepareProposalHandler(
 			return &EmptyPrepareProposalResponse, nil
 		}
 
-		voteExtensionsEnabled := ve.AreVoteExtensionsEnabled(ctx)
+		voteExtensionsEnabled := veutils.AreVoteExtensionsEnabled(ctx)
 		if voteExtensionsEnabled {
 			ctx.Logger().Info(
 				"Providing oracle data using vote extensions",

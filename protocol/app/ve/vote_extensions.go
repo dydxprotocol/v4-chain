@@ -6,9 +6,9 @@ import (
 
 	"cosmossdk.io/log"
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
-	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
+	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	pricetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -18,14 +18,13 @@ import (
 type VoteExtensionHandler struct {
 	logger log.Logger
 
-	// used to encode prices before they are put into a VE
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices
 
 	veCodec codec.VoteExtensionCodec
 
 	pricesKeeper ExtendVotePricesKeeper
 
-	priceApplier veaggregator.PriceApplier
+	priceApplier VEPriceApplier
 }
 
 func NewVoteExtensionHandler(
@@ -33,7 +32,7 @@ func NewVoteExtensionHandler(
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
 	vecodec codec.VoteExtensionCodec,
 	pk ExtendVotePricesKeeper,
-	priceApplier veaggregator.PriceApplier,
+	priceApplier VEPriceApplier,
 ) *VoteExtensionHandler {
 	return &VoteExtensionHandler{
 		logger:          logger,
@@ -183,7 +182,7 @@ func (h *VoteExtensionHandler) transformDaemonPricesToVE(
 
 		rawPrice := new(big.Int).SetUint64(price)
 
-		encodedPrice, err := h.indexPriceCache.GetVEEncodedPrice(rawPrice)
+		encodedPrice, err := veutils.GetVEEncodedPrice(rawPrice)
 
 		if err != nil {
 			h.logger.Debug("failed to encode price", "price", price, "market", market.Pair, "err", err)

@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-	"math/big"
 	"sync"
 	"time"
 
@@ -126,30 +124,4 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 	}
 
 	return marketIdToMedianPrice
-}
-
-func (mte *MarketToExchangePrices) GetVEEncodedPrice(
-	price *big.Int,
-) ([]byte, error) {
-	if price.Sign() < 0 {
-		return nil, fmt.Errorf("price must be non-negative %v", price.String())
-	}
-
-	return price.GobEncode()
-}
-
-func (mte *MarketToExchangePrices) GetVEDecodedPrice(
-	priceBz []byte,
-) (*big.Int, error) {
-	var price big.Int
-	err := price.GobDecode(priceBz)
-	if err != nil {
-		return nil, err
-	}
-
-	if price.Sign() < 0 {
-		return nil, fmt.Errorf("price must be non-negative %v", price.String())
-	}
-
-	return &price, nil
 }

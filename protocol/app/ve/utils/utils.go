@@ -1,13 +1,12 @@
-package ve
+package ve_utils
 
 import (
 	"bytes"
 	"fmt"
+	"math/big"
 	"slices"
 
 	"cosmossdk.io/core/comet"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
-	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
@@ -20,39 +19,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 )
-
-func ValidateDaemonVoteExtension(
-	ctx sdk.Context,
-	ve vetypes.DaemonVoteExtension,
-	pk PreparePricesKeeper,
-) error {
-	// TODO: how do you account for removed prices from the prev and current block
-	params := pk.GetAllMarketParams(ctx)
-	if uint64(len(ve.Prices)) > uint64(len(params)) {
-		return fmt.Errorf("number of oracle vote extension pairs of %d greater than maximum expected pairs of %d", uint64(len(ve.Prices)), uint64(len(params)))
-	}
-	var priceupdates pricestypes.MarketPriceUpdates
-	// Verify prices are valid.
-	for id, bz := range ve.Prices {
-		pu, err := pk.GetMarketPriceUpdateFromBytes(id, bz)
-		if err != nil {
-			return fmt.Errorf("failed to get market price update from bytes: %w", err)
-		}
-
-		priceupdates.MarketPriceUpdates = append(priceupdates.MarketPriceUpdates, pu)
-
-		// Ensure that the price bytes are not too long.
-		if len(bz) > constants.MaximumPriceSize {
-			return fmt.Errorf("price bytes are too long: %d", len(bz))
-		}
-	}
-
-	if err := pk.PerformStatefulPriceUpdateValidation(ctx, &priceupdates, false); err != nil {
-		return fmt.Errorf("failed to perform deterministic price update validation: %w", err)
-	}
-
-	return nil
-}
 
 func AreVoteExtensionsEnabled(ctx sdk.Context) bool {
 	cp := ctx.ConsensusParams()
@@ -294,4 +260,47 @@ func GetPubKeyByConsAddr(ccvalidator ccvtypes.CrossChainValidator) (cmtprotocryp
 	}
 
 	return tmPubKey, nil
+}
+
+func GetMarketPriceUpdateFromBytes(
+	id uint32,
+	bz []byte,
+) (*pricestypes.MarketPriceUpdates_MarketPriceUpdate, error) {
+	var priceUpdate pricestypes.MarketPriceUpdates_MarketPriceUpdate
+	price, err := GetVEDecodedPrice(bz)
+
+	if err != nil {
+		return nil, err
+	}
+	priceUpdate = pricestypes.MarketPriceUpdates_MarketPriceUpdate{
+		MarketId: id,
+		Price:    price.Uint64(),
+	}
+	return &priceUpdate, nil
+}
+
+func GetVEEncodedPrice(
+	price *big.Int,
+) ([]byte, error) {
+	if price.Sign() < 0 {
+		return nil, fmt.Errorf("price must be non-negative %v", price.String())
+	}
+
+	return price.GobEncode()
+}
+
+func GetVEDecodedPrice(
+	priceBz []byte,
+) (*big.Int, error) {
+	var price big.Int
+	err := price.GobDecode(priceBz)
+	if err != nil {
+		return nil, err
+	}
+
+	if price.Sign() < 0 {
+		return nil, fmt.Errorf("price must be non-negative %v", price.String())
+	}
+
+	return &price, nil
 }

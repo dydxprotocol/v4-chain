@@ -5,10 +5,10 @@ import (
 	"math/big"
 
 	"cosmossdk.io/log"
-
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
+	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
@@ -86,9 +86,6 @@ type VoteAggregator interface {
 type MedianAggregator struct {
 	logger log.Logger
 
-	// used to decode prices from the vote extension
-	indexPriceCache *pricefeedtypes.MarketToExchangePrices
-
 	// keeper is used to fetch the marketParam object
 	pricesKeeper pk.Keeper
 
@@ -105,11 +102,10 @@ func NewVeAggregator(
 	aggregateFn func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error),
 ) VoteAggregator {
 	return &MedianAggregator{
-		logger:          logger,
-		indexPriceCache: indexPriceCache,
-		prices:          make(map[string]map[string]*big.Int),
-		aggregateFn:     aggregateFn,
-		pricesKeeper:    pricekeeper,
+		logger:       logger,
+		prices:       make(map[string]map[string]*big.Int),
+		aggregateFn:  aggregateFn,
+		pricesKeeper: pricekeeper,
 	}
 }
 func (ma *MedianAggregator) AggregateDaemonVE(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error) {
@@ -166,7 +162,7 @@ func (ma *MedianAggregator) addVoteToAggregator(ctx sdk.Context, address string,
 			continue
 		}
 
-		pu, err := ma.pricesKeeper.GetMarketPriceUpdateFromBytes(marketId, priceBz)
+		pu, err := veutils.GetMarketPriceUpdateFromBytes(marketId, priceBz)
 		if err != nil {
 			ma.logger.Debug(
 				"failed to decode price",

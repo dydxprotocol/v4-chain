@@ -103,8 +103,10 @@ import (
 
 	// VE
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
+	priceapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
+	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 
 	// Mempool
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mempool"
@@ -957,7 +959,7 @@ func New(
 		aggregatorFn,
 	)
 
-	priceApplier := veaggregator.NewPriceWriter(
+	priceApplier := priceapplier.NewPriceApplier(
 		aggregator,
 		app.PricesKeeper,
 		app.voteCodec,
@@ -1208,7 +1210,7 @@ func New(
 	app.SetPrecommiter(app.Precommitter)
 	app.SetPrepareCheckStater(app.PrepareCheckStater)
 
-	veValidationFn := ve.NewValidateVoteExtensionsFn(app.ConsumerKeeper)
+	veValidationFn := veutils.NewValidateVoteExtensionsFn(app.ConsumerKeeper)
 
 	// PrepareProposal setup.
 	if appFlags.NonValidatingFullNode {
@@ -1397,7 +1399,7 @@ func (app *App) InitVoteExtensions(
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
 	veCodec vecodec.VoteExtensionCodec,
 	pricesKeeper pricesmodulekeeper.Keeper,
-	priceApplier veaggregator.PriceApplier,
+	priceApplier *priceapplier.PriceApplier,
 ) {
 	veHandler := ve.NewVoteExtensionHandler(logger, indexPriceCache, veCodec, pricesKeeper, priceApplier)
 	app.SetExtendVoteHandler(veHandler.ExtendVoteHandler())
