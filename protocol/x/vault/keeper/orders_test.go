@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -209,23 +210,107 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 	}
 }
 
-// TODO (TRA-498): verify placement and replacement indexer events in this test instead of the one above.
 func TestRefreshVaultClobOrders(t *testing.T) {
 	tests := map[string]struct {
 		/* --- Setup --- */
 		// Vault ID.
-		vaultId vaulttypes.VaultId
+		vaultId      vaulttypes.VaultId
+		advanceBlock func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context
 
 		/* --- Expectations --- */
-		expectedErr error
+		ordersShouldRefresh bool
+		expectedErr         error
 	}{
+<<<<<<< HEAD
 		"Success - Refresh Orders from Vault for Clob Pair 0": {
 			vaultId: constants.Vault_Clob_0,
 		},
 		"Success - Refresh Orders from Vault for Clob Pair 1": {
 			vaultId: constants.Vault_Clob_1,
+=======
+		"Success - Orders do not refresh": {
+			vaultId: constants.Vault_Clob0,
+			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+				return tApp.AdvanceToBlock(
+					uint32(tApp.GetBlockHeight())+1,
+					testapp.AdvanceToBlockOptions{
+						BlockTime: ctx.BlockTime().Add(time.Second),
+					},
+				)
+			},
+			ordersShouldRefresh: false,
 		},
-		"Error - Refresh Orders from Vault for Clob Pair 4321 (non-existent clob pair)": {
+		"Success - Orders refresh due to expiration": {
+			vaultId: constants.Vault_Clob0,
+			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+				return tApp.AdvanceToBlock(
+					uint32(tApp.GetBlockHeight())+5,
+					testapp.AdvanceToBlockOptions{
+						BlockTime: ctx.BlockTime().Add(
+							time.Second * time.Duration(vaulttypes.DefaultParams().OrderExpirationSeconds),
+						),
+					},
+				)
+			},
+			ordersShouldRefresh: true,
+>>>>>>> 17b1e14f ([TRA-504] flip vault order client IDs on order expiration/fill (#1927))
+		},
+		"Success - Orders refresh due to price updates": {
+			vaultId: constants.Vault_Clob0,
+			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+				marketPrice, err := tApp.App.PricesKeeper.GetMarketPrice(ctx, constants.Vault_Clob0.Number)
+				require.NoError(t, err)
+				msgUpdateMarketPrices := &pricestypes.MsgUpdateMarketPrices{
+					MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
+						{
+							MarketId: constants.Vault_Clob0.Number,
+							Price:    marketPrice.Price * 2,
+						},
+					},
+				}
+				return tApp.AdvanceToBlock(
+					uint32(tApp.GetBlockHeight())+1,
+					testapp.AdvanceToBlockOptions{
+						BlockTime: ctx.BlockTime().Add(time.Second),
+						DeliverTxsOverride: [][]byte{
+							testtx.MustGetTxBytes(msgUpdateMarketPrices),
+						},
+					},
+				)
+			},
+			ordersShouldRefresh: true,
+		},
+		"Success - Orders refresh due to order size increase": {
+			vaultId: constants.Vault_Clob0,
+			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+				msgDepositToVault := vaulttypes.MsgDepositToVault{
+					VaultId:       &constants.Vault_Clob0,
+					SubaccountId:  &(constants.Alice_Num0),
+					QuoteQuantums: dtypes.NewInt(87_654_321),
+				}
+				CheckTx_MsgDepositToVault := testapp.MustMakeCheckTx(
+					ctx,
+					tApp.App,
+					testapp.MustMakeCheckTxOptions{
+						AccAddressForSigning: constants.Alice_Num0.Owner,
+						Gas:                  constants.TestGasLimit,
+						FeeAmt:               constants.TestFeeCoins_5Cents,
+					},
+					&msgDepositToVault,
+				)
+				checkTxResp := tApp.CheckTx(CheckTx_MsgDepositToVault)
+				require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+				return tApp.AdvanceToBlock(
+					uint32(tApp.GetBlockHeight())+1,
+					testapp.AdvanceToBlockOptions{
+						BlockTime: ctx.BlockTime().Add(time.Second * 2),
+					},
+				)
+			},
+			ordersShouldRefresh: true,
+		},
+		"Error - Vault for non-existent Clob Pair 4321": {
 			vaultId: vaulttypes.VaultId{
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
 				Number: 4321,
@@ -237,12 +322,8 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Initialize tApp.
-			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
-			appOpts := map[string]interface{}{
-				indexer.MsgSenderInstanceForTest: msgSender,
-			}
 			params := vaulttypes.DefaultParams()
-			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -251,13 +332,13 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 							{
 								VaultId: &tc.vaultId,
 								TotalShares: &vaulttypes.NumShares{
-									NumShares: dtypes.NewInt(10),
+									NumShares: dtypes.NewInt(100),
 								},
 								OwnerShares: []*vaulttypes.OwnerShare{
 									{
 										Owner: constants.AliceAccAddress.String(),
 										Shares: &vaulttypes.NumShares{
-											NumShares: dtypes.NewInt(10),
+											NumShares: dtypes.NewInt(100),
 										},
 									},
 								},
@@ -298,124 +379,64 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 			if tc.expectedErr != nil {
 				// Verify that no order is placed and chain doesn't halt.
 				require.Empty(t, tApp.App.ClobKeeper.GetAllStatefulOrders(ctx))
-				tApp.AdvanceToBlock(uint32(tApp.GetBlockHeight())+1, testapp.AdvanceToBlockOptions{})
+				tApp.AdvanceToBlock(uint32(tApp.GetBlockHeight())+12, testapp.AdvanceToBlockOptions{})
 				return
 			}
 
-			// Helper function that verifies that most recent client IDs up-to-date with vault orders.
-			verifyMostRecentClientIds := func() {
-				mostRecentClientIds := tApp.App.VaultKeeper.GetMostRecentClientIds(ctx, tc.vaultId)
+			// Helper function that verifies that vault orders are as expected.
+			verifyVaultOrders := func(expectedGTBT uint32, expectedClientIds []uint32) {
 				allStatefulOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
-				for i, order := range allStatefulOrders {
-					require.Equal(t, mostRecentClientIds[i], order.OrderId.ClientId)
+				// Verify that number of vault orders is `layers * 2`.
+				require.Len(t, allStatefulOrders, int(params.Layers*2))
+				// Verify that GTBT of orders is as expected.
+				for _, order := range allStatefulOrders {
+					require.Equal(t, expectedGTBT, order.GetGoodTilBlockTime())
 				}
+
+				// Verify that stateful order IDs have expected client IDs.
+				for i, order := range allStatefulOrders {
+					require.Equal(t, expectedClientIds[i], order.OrderId.ClientId)
+				}
+
+				// Verify that most recent client IDs are as expected.
+				mostRecentClientIds := tApp.App.VaultKeeper.GetMostRecentClientIds(ctx, tc.vaultId)
+				require.Equal(t, expectedClientIds, mostRecentClientIds)
+			}
+			// Get canonical and flipped client IDs of this vault's orders.
+			orderIds, err := tApp.App.VaultKeeper.GetVaultClobOrderIds(ctx, tc.vaultId)
+			require.NoError(t, err)
+			canonicalClientIds := make([]uint32, len(orderIds))
+			flippedClientIds := make([]uint32, len(orderIds))
+			for i, orderId := range orderIds {
+				canonicalClientIds[i] = orderId.ClientId
+				flippedClientIds[i] = orderId.ClientId ^ 1
 			}
 
-			// Vault should place its initial orders.
+			// Vault should place its initial orders (client IDs should be canonical).
 			initialOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
 			require.Len(t, initialOrders, int(params.Layers*2))
-			verifyMostRecentClientIds()
-
-			// Advance to a few blocks with no price updates / order matches and vault should not refresh its orders.
-			msgSender.Clear()
-			ctx = tApp.AdvanceToBlock(uint32(tApp.GetBlockHeight())+12, testapp.AdvanceToBlockOptions{})
-			require.Equal(
-				t,
-				initialOrders,
-				tApp.App.ClobKeeper.GetAllStatefulOrders(ctx),
+			verifyVaultOrders(
+				uint32(ctx.BlockTime().Unix())+params.OrderExpirationSeconds,
+				canonicalClientIds,
 			)
-			verifyMostRecentClientIds()
 
-			// Advance to next block with price updates and vault should replace its old orders with new ones.
-			msgSender.Clear()
-			marketPrice, err := tApp.App.PricesKeeper.GetMarketPrice(ctx, tc.vaultId.Number)
-			require.NoError(t, err)
-			msgUpdateMarketPrices := &pricestypes.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
-					{
-						MarketId: tc.vaultId.Number,
-						Price:    marketPrice.Price * 2,
-					},
-				},
-			}
-			ctx = tApp.AdvanceToBlock(
-				uint32(tApp.GetBlockHeight())+1,
-				testapp.AdvanceToBlockOptions{
-					DeliverTxsOverride: [][]byte{
-						testtx.MustGetTxBytes(msgUpdateMarketPrices),
-					},
-				},
-			)
-			newOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
-			require.Len(t, newOrders, int(params.Layers*2))
-			verifyMostRecentClientIds()
-			for i, newOrder := range newOrders {
-				require.Equal(
-					t,
-					*tc.vaultId.GetClobOrderId(initialOrders[i].OrderId.ClientId ^ 1),
-					newOrder.OrderId,
-				)
-				require.Equal(
-					t,
+			if tc.ordersShouldRefresh {
+				ctx = tc.advanceBlock(ctx, tApp)
+				verifyVaultOrders(
 					uint32(ctx.BlockTime().Unix())+params.OrderExpirationSeconds,
-					newOrder.GetGoodTilBlockTime(),
+					flippedClientIds, // Client IDs should be flipped.
 				)
-			}
-
-			// Advance to next block where vault orders have expired and vaults should place new orders.
-			ctx = tApp.AdvanceToBlock(
-				uint32(tApp.GetBlockHeight())+1,
-				testapp.AdvanceToBlockOptions{
-					BlockTime: ctx.BlockTime().Add(
-						time.Second * time.Duration(params.OrderExpirationSeconds+1),
-					),
-				},
-			)
-			newOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
-			require.Len(t, newOrders, int(params.Layers*2))
-			verifyMostRecentClientIds()
-			for _, newOrder := range newOrders {
-				require.Equal(
-					t,
+				ctx = tc.advanceBlock(ctx, tApp)
+				verifyVaultOrders(
 					uint32(ctx.BlockTime().Unix())+params.OrderExpirationSeconds,
-					newOrder.GetGoodTilBlockTime(),
+					canonicalClientIds, // Client IDs should be back to canonical.
 				)
-			}
-
-			// Advance to next block where vault should replace its orders to update their sizes.
-			// Deposit to vault to increase its equity, resulting in a larger order size.
-			// TODO (TRA-500): add scenario of filled orders.
-			msgDepositToVault := vaulttypes.MsgDepositToVault{
-				VaultId:       &(tc.vaultId),
-				SubaccountId:  &(constants.Alice_Num0),
-				QuoteQuantums: params.ActivationThresholdQuoteQuantums,
-			}
-			CheckTx_MsgDepositToVault := testapp.MustMakeCheckTx(
-				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: constants.Alice_Num0.Owner,
-					Gas:                  constants.TestGasLimit,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgDepositToVault,
-			)
-			checkTxResp := tApp.CheckTx(CheckTx_MsgDepositToVault)
-			require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
-
-			ctx = tApp.AdvanceToBlock(
-				uint32(tApp.GetBlockHeight())+1,
-				testapp.AdvanceToBlockOptions{
-					BlockTime: ctx.BlockTime().Add(time.Second),
-				},
-			)
-			newOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
-			verifyMostRecentClientIds()
-			for _, newOrder := range newOrders {
-				require.Equal(
-					t,
-					uint32(ctx.BlockTime().Unix())+params.OrderExpirationSeconds,
-					newOrder.GetGoodTilBlockTime(),
+			} else {
+				oldBlockTime := uint32(ctx.BlockTime().Unix())
+				ctx = tc.advanceBlock(ctx, tApp)
+				verifyVaultOrders(
+					oldBlockTime+params.OrderExpirationSeconds,
+					canonicalClientIds,
 				)
 			}
 		})
