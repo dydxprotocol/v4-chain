@@ -53,7 +53,6 @@ async function searchTrader(
 
     const subaccount = await SubaccountTable.findById(subaccountUsername.subaccountId);
     if (!subaccount) {
-      // throw nto found erroe with the subaccountId
       throw new NotFoundError(`Subaccount not found:${subaccountUsername.subaccountId}`);
     }
 
