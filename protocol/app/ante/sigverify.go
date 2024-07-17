@@ -59,6 +59,12 @@ func (svd SigVerificationDecorator) AnteHandle(
 		return ctx, err
 	}
 
+	fmt.Println("sigverify YYYYYYYYY")
+	fmt.Println(sigTx)
+	fmt.Println(signers)
+	fmt.Println(sigs)
+	fmt.Println("YYYYYYYYY")
+
 	// check that signer length and signature length are the same
 	if len(sigs) != len(signers) {
 		err := errorsmod.Wrapf(

@@ -280,33 +280,33 @@ const GenesisState = `{
         "allow_update_after_misbehaviour": false
         },
         "consensus_state": {
-      "timestamp": "2024-04-15T09:57:02.687079137Z",
-        "root": {
-          "hash": "EH9YbrWC3Qojy8ycl5GhOdVEC1ifPIGUUItL70bTkHo="
-        },
-        "next_validators_hash": "632730A03DEF630F77B61DF4092629007AE020B789713158FABCB104962FA54F"
-        },
-        "initial_val_set": [
-        {
-          "pub_key": {
-          "ed25519": "RrclQz9bIhkIy/gfL485g3PYMeiIku4qeo495787X10="
+          "timestamp": "2024-04-15T09:57:02.687079137Z",
+            "root": {
+              "hash": "EH9YbrWC3Qojy8ycl5GhOdVEC1ifPIGUUItL70bTkHo="
+            },
+            "next_validators_hash": "632730A03DEF630F77B61DF4092629007AE020B789713158FABCB104962FA54F"
+            },
+            "initial_val_set": [
+            {
+              "pub_key": {
+              "ed25519": "ujY14AgopV907IYgPAk/5x8c9267S4fQf89nyeCPTes="
+              },
+              "power": "500"
+            },
+            {
+              "pub_key": {
+              "ed25519": "Ui5Gf1+mtWUdH8u3xlmzdKID+F3PK0sfXZ73GZ6q6is="
+              },
+              "power": "500"
+            },
+            {
+              "pub_key": {
+              "ed25519": "QlG+iYe6AyYpvY1z9RNJKCVlH14Q/qSz4EjGdGCru3o="
+              },
+              "power": "500"
+            }
+            ]
           },
-          "power": "500"
-        },
-        {
-          "pub_key": {
-          "ed25519": "Ui5Gf1+mtWUdH8u3xlmzdKID+F3PK0sfXZ73GZ6q6is="
-          },
-          "power": "500"
-        },
-        {
-          "pub_key": {
-          "ed25519": "mAN6RXYxSM4MNGSIriYiS7pHuwAcOHDQAy9/wnlSzOI="
-          },
-          "power": "500"
-        }
-        ]
-      },
       "new_chain": true
 	  },
     "capability": {
