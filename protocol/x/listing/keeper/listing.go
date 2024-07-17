@@ -102,13 +102,13 @@ func (k Keeper) CreatePerpetual(
 ) (perpetualId uint32, err error) {
 	perpetualId = k.PerpetualsKeeper.AcquireNextPerpetualID(ctx)
 
-	// Calculate atomic resolution from market map reference price
+	// TODO: Calculate atomic resolution from market map reference price
+	// TODO: get reference price once market map decoding functions are available
 	var atomicResolution int32
 	//marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, ticker)
 	//if err != nil {
 	//	return 0, err
 	//}
-	// TODO: get reference price once market map decoding functions are available
 
 	// Create a new perpetual
 	perpetual, err := k.PerpetualsKeeper.CreatePerpetual(
