@@ -697,8 +697,8 @@ github.com/Shopify/toxiproxy/v2 v2.5.0 h1:i4LPT+qrSlKNtQf5QliVjdP08GyAH8+BUIc9gT
 github.com/Shopify/toxiproxy/v2 v2.5.0/go.mod h1:yhM2epWtAmel9CB8r2+L+PCmhH6yH2pITaPAo7jxJl0=
 github.com/StackExchange/wmi v1.2.1 h1:VIkavFPXSjcnS+O8yTq7NI32k0R5Aj+v39y29VYDOSA=
 github.com/StackExchange/wmi v1.2.1/go.mod h1:rcmrprowKIVzvc+NUiLncP2uuArMWLCbu9SBzvHz7e8=
-github.com/StreamFinance-Protocol/cosmos-sdk v0.0.0-20240717023708-4319b4658810 h1:/2WtFcyqdjrfF6UUDirC4k+pRalCFWZiNAk9TIWBkGA=
-github.com/StreamFinance-Protocol/cosmos-sdk v0.0.0-20240717023708-4319b4658810/go.mod h1:NruCXox2SOkVq2ZC5Bs8s2sT+jjVqBEU59wXyZOkCkM=
+github.com/StreamFinance-Protocol/cosmos-sdk v0.0.0-20240717045549-71f63b1c99f6 h1:WhhHko9PaCX0qbPYtQHxL2Xm/VVQqSH1g/LRHDPqnTY=
+github.com/StreamFinance-Protocol/cosmos-sdk v0.0.0-20240717045549-71f63b1c99f6/go.mod h1:NruCXox2SOkVq2ZC5Bs8s2sT+jjVqBEU59wXyZOkCkM=
 github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240717020622-b8df5191a4bf h1:Z8ih9x7TUAxS2fv0rLCrBYqsqmtCRwZuxpIzXCYruOc=
 github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240717020622-b8df5191a4bf/go.mod h1:/5l6y+xWuO/XwgpFkGqMsEaY3WE1hEv3HhIzH3E0Jbc=
 github.com/VictoriaMetrics/fastcache v1.12.2 h1:N0y9ASrJ0F6h0QaC3o6uJb3NIZ9VKLjCM7NQbSmF7WI=
