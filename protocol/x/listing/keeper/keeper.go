@@ -13,12 +13,13 @@ import (
 
 type (
 	Keeper struct {
-		cdc             codec.BinaryCodec
-		storeKey        storetypes.StoreKey
-		authorities     map[string]struct{}
-		PricesKeeper    types.PricesKeeper
-		ClobKeeper      types.ClobKeeper
-		MarketMapKeeper types.MarketMapKeeper
+		cdc              codec.BinaryCodec
+		storeKey         storetypes.StoreKey
+		authorities      map[string]struct{}
+		PricesKeeper     types.PricesKeeper
+		ClobKeeper       types.ClobKeeper
+		MarketMapKeeper  types.MarketMapKeeper
+		PerpetualsKeeper types.PerpetualsKeeper
 	}
 )
 
