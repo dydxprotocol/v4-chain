@@ -9,17 +9,14 @@ import (
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
-	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	pricetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type VoteExtensionHandler struct {
-	logger log.Logger
-
-	indexPriceCache *pricefeedtypes.MarketToExchangePrices
-
+	logger  log.Logger
+	
 	veCodec codec.VoteExtensionCodec
 
 	pricesKeeper ExtendVotePricesKeeper
@@ -29,17 +26,15 @@ type VoteExtensionHandler struct {
 
 func NewVoteExtensionHandler(
 	logger log.Logger,
-	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
 	vecodec codec.VoteExtensionCodec,
 	pk ExtendVotePricesKeeper,
 	priceApplier VEPriceApplier,
 ) *VoteExtensionHandler {
 	return &VoteExtensionHandler{
-		logger:          logger,
-		indexPriceCache: indexPriceCache,
-		veCodec:         vecodec,
-		pricesKeeper:    pk,
-		priceApplier:    priceApplier,
+		logger:       logger,
+		veCodec:      vecodec,
+		pricesKeeper: pk,
+		priceApplier: priceApplier,
 	}
 }
 

@@ -119,7 +119,7 @@ func TestExtendVoteHandler(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, _, _, indexPriceCache, _, _ := keepertest.PricesKeepers(t)
+			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 			ctx = vetestutils.GetVeEnabledCtx(ctx, 3)
 			votecodec := vecodec.NewDefaultVoteExtensionCodec()
 
@@ -127,7 +127,6 @@ func TestExtendVoteHandler(t *testing.T) {
 
 			h := ve.NewVoteExtensionHandler(
 				log.NewTestLogger(t),
-				indexPriceCache,
 				votecodec,
 				tc.pricesKeeper(),
 				mPriceApplier,
@@ -329,14 +328,13 @@ func TestVerifyVoteHandler(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, _, _, indexPriceCache, _, _ := keepertest.PricesKeepers(t)
+			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 			ctx = vetestutils.GetVeEnabledCtx(ctx, 3)
 			mPriceApplier := &mocks.VEPriceApplier{}
 			mPricesKeeper := tc.pricesKeeper()
 
 			handler := ve.NewVoteExtensionHandler(
 				log.NewTestLogger(t),
-				indexPriceCache,
 				votecodec,
 				mPricesKeeper,
 				mPriceApplier,

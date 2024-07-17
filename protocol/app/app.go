@@ -975,7 +975,7 @@ func New(
 	)
 
 	if !appFlags.NonValidatingFullNode {
-		app.InitVoteExtensions(logger, indexPriceCache, app.voteCodec, app.PricesKeeper, priceApplier)
+		app.InitVoteExtensions(logger, app.voteCodec, app.PricesKeeper, priceApplier)
 	}
 
 	/****  Module Options ****/
@@ -1396,12 +1396,11 @@ func (app *App) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sd
 
 func (app *App) InitVoteExtensions(
 	logger log.Logger,
-	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
 	veCodec vecodec.VoteExtensionCodec,
 	pricesKeeper pricesmodulekeeper.Keeper,
 	priceApplier *priceapplier.PriceApplier,
 ) {
-	veHandler := ve.NewVoteExtensionHandler(logger, indexPriceCache, veCodec, pricesKeeper, priceApplier)
+	veHandler := ve.NewVoteExtensionHandler(logger, veCodec, pricesKeeper, priceApplier)
 	app.SetExtendVoteHandler(veHandler.ExtendVoteHandler())
 	app.SetVerifyVoteExtensionHandler(veHandler.VerifyVoteExtensionHandler())
 
