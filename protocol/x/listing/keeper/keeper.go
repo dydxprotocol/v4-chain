@@ -27,11 +27,19 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	authorities []string,
+	pricesKeeper types.PricesKeeper,
+	clobKeeper types.ClobKeeper,
+	marketMapKeeper types.MarketMapKeeper,
+	perpetualsKeeper types.PerpetualsKeeper,
 ) *Keeper {
 	return &Keeper{
-		cdc:         cdc,
-		storeKey:    storeKey,
-		authorities: lib.UniqueSliceToSet(authorities),
+		cdc:              cdc,
+		storeKey:         storeKey,
+		authorities:      lib.UniqueSliceToSet(authorities),
+		PricesKeeper:     pricesKeeper,
+		ClobKeeper:       clobKeeper,
+		MarketMapKeeper:  marketMapKeeper,
+		PerpetualsKeeper: perpetualsKeeper,
 	}
 }
 
