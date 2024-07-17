@@ -41,25 +41,6 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		log.Subaccount, subaccountId,
 	)
 
-	//shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
-	//	ctx,
-	//	subaccountId,
-	//	perpetualId,
-	//)
-	//if err != nil {
-	//	return new(big.Int), err
-	//}
-	//
-	//// Early return to skip deleveraging if the subaccount doesn't have negative equity or a position in a final
-	//// settlement market.
-	//if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
-	//	metrics.IncrCounter(
-	//		metrics.ClobPrepareCheckStateCannotDeleverageSubaccount,
-	//		1,
-	//	)
-	//	return new(big.Int), nil
-	//}
-
 	// Deleverage the entire position for the given perpetual id.
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 	position, exists := subaccount.GetPerpetualPositionForId(perpetualId)
