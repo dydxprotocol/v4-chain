@@ -260,6 +260,14 @@ export interface SubaccountUsernamesFromDatabase {
   subaccountId: string;
 }
 
+export interface LeaderboardPNLFromDatabase {
+  subaccountId: string;
+  timeSpan: string;
+  pnl: string;
+  currentEquity: string;
+  rank: number;
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string } };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:
