@@ -221,7 +221,18 @@ func PrepareCheckState(
 		offchainUpdates = replayUpdates
 	}
 
-	subaccountsToDeleverage := keeper.GetSomeSubaccounts(ctx)
+	// 6. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
+	liquidatableSubaccountIds := keeper.DaemonLiquidationInfo.GetLiquidatableSubaccountIds()
+	subaccountsToDeleverage, err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, liquidatableSubaccountIds)
+	if err != nil {
+		panic(err)
+	}
+	// Add subaccounts with open positions in final settlement markets to the slice of subaccounts/perps
+	// to be deleveraged.
+	subaccountsToDeleverage = append(
+		subaccountsToDeleverage,
+		keeper.GetSubaccountsWithPositionsInFinalSettlementMarkets(ctx)...,
+	)
 
 	// 7. Deleverage subaccounts.
 	// TODO(CLOB-1052) - decouple steps 6 and 7 by using DaemonLiquidationInfo.NegativeTncSubaccounts
