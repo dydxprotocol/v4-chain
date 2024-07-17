@@ -665,11 +665,11 @@ describe('orders-controller#V4', () => {
         postgresOrderToResponseObject({
           ...testConstants.defaultOrder,
           id: testConstants.defaultOrderId,
-        }, testConstants.isolatedSubaccount.subaccountNumber),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         postgresOrderToResponseObject({
           ...untriggeredOrder,
           id: untriggeredOrderId,
-        }, testConstants.isolatedSubaccount.subaccountNumber),
+        }, testConstants.defaultSubaccount.subaccountNumber),
       ]);
 
       const response2 = await sendRequest({
@@ -685,7 +685,7 @@ describe('orders-controller#V4', () => {
         postgresOrderToResponseObject({
           ...untriggeredOrder,
           id: untriggeredOrderId,
-        }, testConstants.isolatedSubaccount.subaccountNumber),
+        }, testConstants.defaultSubaccount.subaccountNumber),
       ]);
     });
 
