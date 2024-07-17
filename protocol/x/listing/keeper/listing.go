@@ -3,6 +3,7 @@ package keeper
 import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,6 +25,45 @@ func (k Keeper) GetMarketsHardCap(ctx sdk.Context) (hardCap uint32) {
 	var result gogotypes.UInt32Value
 	k.cdc.MustUnmarshal(b, &result)
 	return result.Value
+}
+
+// Function to wrap the creation of a new market
+// Note: This will only list long-tail/isolated markets
+// TODO (TRA-505): Add tests once market mapper testutils become available
+func (k Keeper) CreateMarket(
+	ctx sdk.Context,
+	ticker string,
+) (marketId uint32, err error) {
+	marketId = k.PricesKeeper.AcquireNextMarketID(ctx)
+
+	// Get market details from marketmap
+	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, ticker)
+	if err != nil {
+		return 0, err
+	}
+
+	// Create a new market
+	market, err := k.PricesKeeper.CreateMarket(
+		ctx,
+		pricestypes.MarketParam{
+			Id:   marketId,
+			Pair: ticker,
+			// Set the price exponent to the negative of the number of decimals
+			Exponent:          int32(marketMapDetails.Ticker.Decimals) * -1,
+			MinExchanges:      uint32(marketMapDetails.Ticker.MinProviderCount),
+			MinPriceChangePpm: types.MinPriceChangePpm_LongTail,
+		},
+		pricestypes.MarketPrice{
+			Id:       marketId,
+			Exponent: int32(marketMapDetails.Ticker.Decimals) * -1,
+			Price:    0,
+		},
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	return market.Id, nil
 }
 
 // Function to wrap the creation of a new clob pair
