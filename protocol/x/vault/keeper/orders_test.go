@@ -221,15 +221,8 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 		ordersShouldRefresh bool
 		expectedErr         error
 	}{
-<<<<<<< HEAD
-		"Success - Refresh Orders from Vault for Clob Pair 0": {
-			vaultId: constants.Vault_Clob_0,
-		},
-		"Success - Refresh Orders from Vault for Clob Pair 1": {
-			vaultId: constants.Vault_Clob_1,
-=======
 		"Success - Orders do not refresh": {
-			vaultId: constants.Vault_Clob0,
+			vaultId: constants.Vault_Clob_0,
 			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
 				return tApp.AdvanceToBlock(
 					uint32(tApp.GetBlockHeight())+1,
@@ -241,7 +234,7 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 			ordersShouldRefresh: false,
 		},
 		"Success - Orders refresh due to expiration": {
-			vaultId: constants.Vault_Clob0,
+			vaultId: constants.Vault_Clob_0,
 			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
 				return tApp.AdvanceToBlock(
 					uint32(tApp.GetBlockHeight())+5,
@@ -253,17 +246,16 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				)
 			},
 			ordersShouldRefresh: true,
->>>>>>> 17b1e14f ([TRA-504] flip vault order client IDs on order expiration/fill (#1927))
 		},
 		"Success - Orders refresh due to price updates": {
-			vaultId: constants.Vault_Clob0,
+			vaultId: constants.Vault_Clob_0,
 			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
-				marketPrice, err := tApp.App.PricesKeeper.GetMarketPrice(ctx, constants.Vault_Clob0.Number)
+				marketPrice, err := tApp.App.PricesKeeper.GetMarketPrice(ctx, constants.Vault_Clob_0.Number)
 				require.NoError(t, err)
 				msgUpdateMarketPrices := &pricestypes.MsgUpdateMarketPrices{
 					MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
 						{
-							MarketId: constants.Vault_Clob0.Number,
+							MarketId: constants.Vault_Clob_0.Number,
 							Price:    marketPrice.Price * 2,
 						},
 					},
@@ -281,10 +273,10 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 			ordersShouldRefresh: true,
 		},
 		"Success - Orders refresh due to order size increase": {
-			vaultId: constants.Vault_Clob0,
+			vaultId: constants.Vault_Clob_0,
 			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
 				msgDepositToVault := vaulttypes.MsgDepositToVault{
-					VaultId:       &constants.Vault_Clob0,
+					VaultId:       &constants.Vault_Clob_0,
 					SubaccountId:  &(constants.Alice_Num0),
 					QuoteQuantums: dtypes.NewInt(87_654_321),
 				}
