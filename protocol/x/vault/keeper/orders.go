@@ -91,8 +91,15 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 			oldClientId := mostRecentClientIds[i]
 			oldOrderId := vaultId.GetClobOrderId(oldClientId)
 			oldOrderPlacement, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, *oldOrderId)
-			if !exists {
-				// Place order.
+			if !exists { // when order expires / fully fills.
+				// Flip client ID because
+				// - for an expired order: order expiration event is a block event and order placement
+				//   is a tx event. As block events are processed after tx events, indexer will set
+				//   new order to expired status if same order ID is used.
+				// - for a fully filled order: a fully filled order is added to `RemovedStatefulOrderIds`
+				//   in x/clob, which is checked against when placing an order. Order placement fails
+				//   if same order ID is used.
+				orderToPlace.OrderId.ClientId = oldClientId ^ 1
 				err = k.PlaceVaultClobOrder(ctx, vaultId, orderToPlace)
 			} else if oldOrderPlacement.Order.Quantums != orderToPlace.Quantums ||
 				oldOrderPlacement.Order.Subticks != orderToPlace.Subticks {
