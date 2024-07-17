@@ -8,8 +8,10 @@ import (
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
@@ -113,8 +115,14 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			// Enable testapp's indexer event manager
+			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
+			appOpts := map[string]interface{}{
+				indexer.MsgSenderInstanceForTest: msgSender,
+			}
+
 			// Initialize tApp.
-			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				// Initialize each vault with enough quote quantums to be actively quoting.
 				testapp.UpdateGenesisDocWithAppStateForModule(
