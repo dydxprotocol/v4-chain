@@ -11,12 +11,14 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/shared/types"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -30,6 +32,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/memclob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
@@ -114,6 +117,12 @@ func TestEndBlocker_Failure(t *testing.T) {
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 			ctx := ks.Ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(tc.blockTime)
+
+			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+			require.NoError(t, conversionErr)
+			ks.RatelimitKeeper.SetSDAIPrice(ctx, rate)
+			ks.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(ctx)
 
 			for _, orderId := range tc.expiredStatefulOrderIds {
 				mockIndexerEventManager.On("AddBlockEvent",
@@ -1026,6 +1035,33 @@ func TestLiquidateSubaccounts(t *testing.T) {
 			}).Build()
 
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			// Move forward in time by the specified time delta.
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+
 			// Create all existing orders.
 			existingOrderMsgs := make([]types.MsgPlaceOrder, len(tc.existingOrders))
 			for i, order := range tc.existingOrders {
@@ -1320,7 +1356,14 @@ func TestPrepareCheckState(t *testing.T) {
 				mock.Anything,
 			).Return(nil)
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+
 			ctx := ks.Ctx.WithIsCheckTx(true).WithBlockHeight(int64(tc.processProposerMatchesEvents.BlockHeight))
+			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+			require.NoError(t, conversionErr)
+			ks.RatelimitKeeper.SetSDAIPrice(ctx, rate)
+			ks.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(ctx)
+
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
 
