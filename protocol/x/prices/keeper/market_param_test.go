@@ -16,7 +16,7 @@ import (
 )
 
 func TestModifyMarketParam(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
@@ -47,7 +47,7 @@ func TestModifyMarketParam(t *testing.T) {
 }
 
 func TestModifyMarketParamUpdatesCache(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 
@@ -180,7 +180,7 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, mockTimeKeeper, _, _ := keepertest.PricesKeepers(t)
+			ctx, keeper, _, _, mockTimeKeeper, _ := keepertest.PricesKeepers(t)
 			mockTimeKeeper.On("Now").Return(constants.TimeT)
 			ctx = ctx.WithTxBytes(constants.TestTxBytes)
 			keepertest.CreateNMarkets(t, ctx, keeper, 2)
@@ -201,7 +201,7 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 }
 
 func TestGetMarketParam(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	for _, item := range items {
@@ -216,13 +216,13 @@ func TestGetMarketParam(t *testing.T) {
 }
 
 func TestGetMarketParam_NotFound(t *testing.T) {
-	ctx, keeper, _, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
 	_, exists := keeper.GetMarketParam(ctx, uint32(0))
 	require.False(t, exists)
 }
 
 func TestGetAllMarketParams(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	params := make([]types.MarketParam, len(items))
