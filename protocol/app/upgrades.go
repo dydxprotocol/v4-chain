@@ -16,7 +16,18 @@ var (
 	Upgrades = []upgrades.Upgrade{
 		v5_0_0.Upgrade,
 	}
-	Forks = []upgrades.Fork{}
+	Forks = []upgrades.Fork{
+		{
+			UpgradeHeight: 17272001,
+			UpgradeName:   v5_0_0.UpgradeName,
+			UpgradeInfo: `{
+				"binaries": {
+				  "linux/amd64": "https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv5.0.0/dydxprotocold-v5.0.0-linux-amd64.tar.gz",
+				  "linux/arm64": "https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv5.0.0/dydxprotocold-v5.0.0-linux-arm64.tar.gz"
+				}
+			}`,
+		},
+	}
 )
 
 // setupUpgradeHandlers registers the upgrade handlers to perform custom upgrade
