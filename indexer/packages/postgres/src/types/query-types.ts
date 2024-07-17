@@ -102,8 +102,8 @@ export interface SubaccountQueryConfig extends QueryConfig {
 }
 
 export interface SubaccountUsernamesQueryConfig extends QueryConfig {
-  [QueryableField.USERNAME]?: string;
-  [QueryableField.SUBACCOUNT_ID]?: string;
+  [QueryableField.USERNAME]?: string[];
+  [QueryableField.SUBACCOUNT_ID]?: string[];
 }
 
 export interface WalletQueryConfig extends QueryConfig {

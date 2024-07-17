@@ -42,11 +42,11 @@ export async function findAll(
   );
 
   if (username) {
-    baseQuery = baseQuery.where(SubaccountUsernamesColumns.username, username);
+    baseQuery = baseQuery.whereIn(SubaccountUsernamesColumns.username, username);
   }
 
   if (subaccountId) {
-    baseQuery = baseQuery.where(SubaccountUsernamesColumns.subaccountId, subaccountId);
+    baseQuery = baseQuery.whereIn(SubaccountUsernamesColumns.subaccountId, subaccountId);
   }
 
   if (options.orderBy !== undefined) {
