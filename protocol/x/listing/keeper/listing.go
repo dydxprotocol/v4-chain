@@ -29,6 +29,7 @@ func (k Keeper) GetMarketsHardCap(ctx sdk.Context) (hardCap uint32) {
 
 // Function to wrap the creation of a new market
 // Note: This will only list long-tail/isolated markets
+// TODO (TRA-505): Add tests once market mapper testutils become available
 func (k Keeper) CreateMarket(
 	ctx sdk.Context,
 	ticker string,
@@ -36,27 +37,33 @@ func (k Keeper) CreateMarket(
 	marketId = k.PricesKeeper.AcquireNextMarketID(ctx)
 
 	// Get market details from marketmap
-	market, err := k.MarketMapKeeper.GetMarket(ctx, ticker)
+	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, ticker)
 	if err != nil {
 		return 0, err
 	}
 
 	// Create a new market
-	_, err = k.PricesKeeper.CreateMarket(
+	market, err := k.PricesKeeper.CreateMarket(
 		ctx,
 		pricestypes.MarketParam{
 			Id:   marketId,
 			Pair: ticker,
 			// Set the price exponent to the negative of the number of decimals
-			Exponent: int32(market.Ticker.Decimals * -1),
-			MinExchanges: uint32(market.Ticker.MinProviderCount),
-			MinPriceChangePpm:
+			Exponent:          int32(marketMapDetails.Ticker.Decimals) * -1,
+			MinExchanges:      uint32(marketMapDetails.Ticker.MinProviderCount),
+			MinPriceChangePpm: types.MinPriceChangePpm_LongTail,
 		},
 		pricestypes.MarketPrice{
-			Id: marketId,
+			Id:       marketId,
+			Exponent: int32(marketMapDetails.Ticker.Decimals) * -1,
+			Price:    0,
 		},
+	)
+	if err != nil {
+		return 0, err
+	}
 
-
+	return market.Id, nil
 }
 
 // Function to wrap the creation of a new clob pair
@@ -83,4 +90,3 @@ func (k Keeper) CreateClobPair(
 
 	return clobPair.Id, nil
 }
-
