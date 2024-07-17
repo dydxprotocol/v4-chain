@@ -15,25 +15,31 @@ import (
 )
 
 type VoteExtensionHandler struct {
-	logger  log.Logger
-	
+	logger log.Logger
+
+	// encoding and decoding vote extensions
 	veCodec codec.VoteExtensionCodec
 
+	// fetching valid price updates and current markets
 	pricesKeeper ExtendVotePricesKeeper
 
+	// writing prices to the store
+	// prices are written to the store here to ensure
+	// GetValidMarketPriceUpdates returns the latest
+	// accurate prices
 	priceApplier VEPriceApplier
 }
 
 func NewVoteExtensionHandler(
 	logger log.Logger,
 	vecodec codec.VoteExtensionCodec,
-	pk ExtendVotePricesKeeper,
+	pricesKeeper ExtendVotePricesKeeper,
 	priceApplier VEPriceApplier,
 ) *VoteExtensionHandler {
 	return &VoteExtensionHandler{
 		logger:       logger,
 		veCodec:      vecodec,
-		pricesKeeper: pk,
+		pricesKeeper: pricesKeeper,
 		priceApplier: priceApplier,
 	}
 }
@@ -45,7 +51,6 @@ func NewVoteExtensionHandler(
 func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 	return func(ctx sdk.Context, req *abci.RequestExtendVote) (resp *abci.ResponseExtendVote, err error) {
 		defer func() {
-			// catch panics if possible
 			if r := recover(); r != nil {
 				h.logger.Error(
 					"recovered from panic in ExtendVoteHandler",
@@ -57,7 +62,6 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 		}()
 
 		if req == nil {
-			ctx.Logger().Error("extend vote handler received a nil request")
 			err = fmt.Errorf("nil request for extend vote")
 			return nil, err
 		}
@@ -67,6 +71,7 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 			Height: req.Height,
 		}
 
+		// apply prices to ensure GetValidMarketPriceUpdates returns the latest prices
 		if _, err = h.priceApplier.ApplyPricesFromVoteExtensions(ctx, reqFinalizeBlock); err != nil {
 			h.logger.Error(
 				"failed to aggregate oracle votes",
@@ -77,28 +82,27 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
 		}
-		// TODO: does the daemon needs some time to warm up or can we include this in the first block
-		pu := h.pricesKeeper.GetValidMarketPriceUpdates(ctx)
 
-		if len(pu.MarketPriceUpdates) == 0 {
+		priceUpdates := h.pricesKeeper.GetValidMarketPriceUpdates(ctx)
+		if len(priceUpdates.MarketPriceUpdates) == 0 {
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, fmt.Errorf("no valid median prices")
 		}
 
-		voteExt, err := h.transformDaemonPricesToVE(ctx, pu.MarketPriceUpdates)
+		voteExt, err := h.transformDaemonPricesToVE(ctx, priceUpdates.MarketPriceUpdates)
 		if err != nil {
 			h.logger.Error("failed to transform prices to vote extension", "height", req.Height, "err", err)
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
 		}
 
-		bz, err := h.veCodec.Encode(voteExt)
+		veBytes, err := h.veCodec.Encode(voteExt)
 		if err != nil {
 			h.logger.Error("failed to encode vote extension", "height", req.Height, "err", err)
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
 		}
 
-		h.logger.Debug("extending vote with daemon prices", "height", req.Height, "prices", len(pu.MarketPriceUpdates))
+		h.logger.Debug("extending vote with daemon prices", "height", req.Height, "prices", len(priceUpdates.MarketPriceUpdates))
 
-		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
+		return &abci.ResponseExtendVote{VoteExtension: veBytes}, nil
 	}
 }
 
