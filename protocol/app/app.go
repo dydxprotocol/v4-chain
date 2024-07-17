@@ -1156,6 +1156,10 @@ func New(
 		[]string{
 			lib.GovModuleAddress.String(),
 		},
+		app.PricesKeeper,
+		app.ClobKeeper,
+		&app.MarketMapKeeper,
+		app.PerpetualsKeeper,
 	)
 	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
 
