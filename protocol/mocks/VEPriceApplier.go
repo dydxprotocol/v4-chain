@@ -17,8 +17,8 @@ type VEPriceApplier struct {
 	mock.Mock
 }
 
-// ApplyPricesFromVoteExtensions provides a mock function with given fields: ctx, req
-func (_m *VEPriceApplier) ApplyPricesFromVoteExtensions(ctx types.Context, req *abcitypes.RequestFinalizeBlock) (map[string]*big.Int, error) {
+// ApplyPricesFromVE provides a mock function with given fields: ctx, req
+func (_m *VEPriceApplier) ApplyPricesFromVE(ctx types.Context, req *abcitypes.RequestFinalizeBlock) (map[string]*big.Int, error) {
 	ret := _m.Called(ctx, req)
 
 	var r0 map[string]*big.Int

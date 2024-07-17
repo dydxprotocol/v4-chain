@@ -69,7 +69,7 @@ func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinaliz
 		"height", req.Height,
 	)
 
-	_, err = pbh.priceApplier.ApplyPricesFromVoteExtensions(ctx, req)
+	_, err = pbh.priceApplier.ApplyPricesFromVE(ctx, req)
 	if err != nil {
 		pbh.logger.Error(
 			"failed to apply prices from vote extensions",

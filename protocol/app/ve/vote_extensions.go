@@ -50,6 +50,7 @@ func NewVoteExtensionHandler(
 // ensuring liveness in the case of a price daemon failure
 func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 	return func(ctx sdk.Context, req *abci.RequestExtendVote) (resp *abci.ResponseExtendVote, err error) {
+
 		defer func() {
 			if r := recover(); r != nil {
 				h.logger.Error(
@@ -71,8 +72,8 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 			Height: req.Height,
 		}
 
-		// apply prices to ensure GetValidMarketPriceUpdates returns the latest prices
-		if _, err = h.priceApplier.ApplyPricesFromVoteExtensions(ctx, reqFinalizeBlock); err != nil {
+		// apply prices from prev block to ensure that the prices are up to date
+		if _, err = h.priceApplier.ApplyPricesFromVE(ctx, reqFinalizeBlock); err != nil {
 			h.logger.Error(
 				"failed to aggregate oracle votes",
 				"height", req.Height,
@@ -83,24 +84,17 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
 		}
 
-		priceUpdates := h.pricesKeeper.GetValidMarketPriceUpdates(ctx)
-		if len(priceUpdates.MarketPriceUpdates) == 0 {
-			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, fmt.Errorf("no valid median prices")
-		}
-
-		voteExt, err := h.transformDaemonPricesToVE(ctx, priceUpdates.MarketPriceUpdates)
+		veBytes, err := h.GetVEBytesFromCurrPrices(ctx)
 		if err != nil {
-			h.logger.Error("failed to transform prices to vote extension", "height", req.Height, "err", err)
+			h.logger.Error(
+				"failed to get vote extension bytes from current prices",
+				"height", req.Height,
+				"err", err,
+			)
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
 		}
 
-		veBytes, err := h.veCodec.Encode(voteExt)
-		if err != nil {
-			h.logger.Error("failed to encode vote extension", "height", req.Height, "err", err)
-			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
-		}
-
-		h.logger.Debug("extending vote with daemon prices", "height", req.Height, "prices", len(priceUpdates.MarketPriceUpdates))
+		h.logger.Debug("extending vote with daemon prices", "height", req.Height)
 
 		return &abci.ResponseExtendVote{VoteExtension: veBytes}, nil
 	}
@@ -113,7 +107,6 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 	) (_ *abci.ResponseVerifyVoteExtension, err error) {
 
 		if req == nil {
-			ctx.Logger().Error("extend vote handler received a nil request")
 			err = fmt.Errorf("nil request for verify vote")
 			return nil, err
 		}
@@ -128,19 +121,9 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 		}
 
-		ve, err := h.veCodec.Decode(req.VoteExtension)
-		if err != nil {
+		if err := h.ValidateVEPriceByteSize(ctx, h.pricesKeeper, req.VoteExtension); err != nil {
 			h.logger.Error(
-				"failed to decode vote extension",
-				"height", req.Height,
-				"err", err,
-			)
-			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, err
-		}
-
-		if err := h.ValidateDaemonVE(ctx, h.pricesKeeper, ve); err != nil {
-			h.logger.Error(
-				"failed to validate vote extension",
+				"failed to decode and validate vote extension",
 				"height", req.Height,
 				"err", err,
 			)
@@ -155,55 +138,84 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 	}
+
 }
 
-// encode the prices from the daemon into VE data using GobEncode
+func (h *VoteExtensionHandler) GetVEBytesFromCurrPrices(ctx sdk.Context) ([]byte, error) {
+	priceUpdates := h.pricesKeeper.GetValidMarketPriceUpdates(ctx)
+
+	if len(priceUpdates.MarketPriceUpdates) == 0 {
+		return nil, fmt.Errorf("no valid median prices")
+	}
+
+	voteExt, err := h.transformDaemonPricesToVE(priceUpdates.MarketPriceUpdates)
+	if err != nil {
+		return nil, err
+	}
+
+	veBytes, err := h.veCodec.Encode(voteExt)
+	if err != nil {
+		return nil, err
+	}
+
+	return veBytes, nil
+}
+
 func (h *VoteExtensionHandler) transformDaemonPricesToVE(
-	ctx sdk.Context,
 	priceupdates []*pricetypes.MarketPriceUpdates_MarketPriceUpdate,
 ) (types.DaemonVoteExtension, error) {
 
 	vePrices := make(map[uint32][]byte)
-	for _, pu := range priceupdates {
+
+	for _, priceUpdate := range priceupdates {
 		// check if the marketId is valid
-		var market pricetypes.MarketParam
-		var ok bool
-
-		marketId := pu.GetMarketId()
-		price := pu.GetPrice()
-
-		// Check if the marketId is valid
-		// TODO: check if this is necessary given that we call GetValidMarketPriceUpdates in the ExtendVoteHandler
-		if market, ok = h.pricesKeeper.GetMarketParam(ctx, marketId); !ok {
-			h.logger.Debug("market id not found", "marketId", marketId)
-			continue
-		}
-
-		rawPrice := new(big.Int).SetUint64(price)
-
-		encodedPrice, err := veutils.GetVEEncodedPrice(rawPrice)
+		encodedPrice, err := h.GetEncodedPriceFromPriceUpdate(priceUpdate)
 
 		if err != nil {
-			h.logger.Debug("failed to encode price", "price", price, "market", market.Pair, "err", err)
+			h.logger.Debug(
+				"failed to encode price",
+				"price", priceUpdate.GetPrice(),
+				"market", priceUpdate.GetMarketId(),
+				"err", err,
+			)
 			continue
 		}
 
-		h.logger.Info("transformed daemon price", "market", market.Pair, "price", price)
-
-		vePrices[marketId] = encodedPrice
+		vePrices[priceUpdate.GetMarketId()] = encodedPrice
 	}
-	h.logger.Info("transformed daemon prices", "prices", len(vePrices))
+
 	return types.DaemonVoteExtension{
 		Prices: vePrices,
 	}, nil
 }
 
-func (h *VoteExtensionHandler) ValidateDaemonVE(
+func (h *VoteExtensionHandler) GetEncodedPriceFromPriceUpdate(
+	priceUpdate *pricetypes.MarketPriceUpdates_MarketPriceUpdate,
+) ([]byte, error) {
+
+	price := new(big.Int).SetUint64(priceUpdate.GetPrice())
+
+	encodedPrice, err := veutils.GetVEEncodedPrice(price)
+	if err != nil {
+		return nil, err
+	}
+
+	return encodedPrice, nil
+
+}
+
+func (h *VoteExtensionHandler) ValidateVEPriceByteSize(
 	ctx sdk.Context,
 	pricesKeeper ExtendVotePricesKeeper,
-	ve types.DaemonVoteExtension,
+	veBytes []byte,
 ) error {
-	maxPairs := h.GetMaxPairs(ctx)
+
+	ve, err := h.veCodec.Decode(veBytes)
+	if err != nil {
+		return fmt.Errorf("failed to decode vote extension: %v", err)
+	}
+
+	maxPairs := h.GetMaxMarketPairs(ctx)
 	if uint32(len(ve.Prices)) > maxPairs {
 		return fmt.Errorf("too many prices in daemon vote extension: %d > %d", len(ve.Prices), maxPairs)
 	}
@@ -212,18 +224,12 @@ func (h *VoteExtensionHandler) ValidateDaemonVE(
 		if len(bz) > constants.MaximumPriceSize {
 			return fmt.Errorf("price bytes are too long: %d", len(bz))
 		}
-		// TODO: Should we check we can decode here
-		// if _, err := pricesKeeper.GetMarketPriceUpdateFromBytes(id, bz); err != nil {
-		// 	return fmt.Errorf("failed to decode price: %v", err)
-		// }
 	}
 
 	return nil
 }
 
-func (h *VoteExtensionHandler) GetMaxPairs(ctx sdk.Context) uint32 {
+func (h *VoteExtensionHandler) GetMaxMarketPairs(ctx sdk.Context) uint32 {
 	markets := h.pricesKeeper.GetAllMarketParams(ctx)
-	// TODO: check how to handle this query in prepare / process proposal
-	// given that pairs can be created/removed
 	return uint32(len(markets))
 }

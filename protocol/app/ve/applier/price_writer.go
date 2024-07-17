@@ -44,7 +44,7 @@ func NewPriceApplier(
 	}
 }
 
-func (pw *PriceApplier) ApplyPricesFromVoteExtensions(ctx sdk.Context, req *abci.RequestFinalizeBlock) (map[string]*big.Int, error) {
+func (pw *PriceApplier) ApplyPricesFromVE(ctx sdk.Context, req *abci.RequestFinalizeBlock) (map[string]*big.Int, error) {
 	votes, err := aggregator.GetDaemonVotes(req.Txs, pw.voteExtensionCodec, pw.extendedCommitCodec)
 	if err != nil {
 

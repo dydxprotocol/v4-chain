@@ -41,7 +41,7 @@ func TestPriceWriter(t *testing.T) {
 	)
 
 	t.Run("if extracting oracle votes fails, fail", func(t *testing.T) {
-		prices, err := pricesApplier.ApplyPricesFromVoteExtensions(ctx, &cometabci.RequestFinalizeBlock{
+		prices, err := pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{[]byte("garbage"), {1, 2, 3, 4}, {1, 2, 3, 4}},
 		})
 
@@ -72,7 +72,7 @@ func TestPriceWriter(t *testing.T) {
 			},
 		}).Return(nil, fmt.Errorf("fail")).Once()
 
-		returnedPrices, err := pricesApplier.ApplyPricesFromVoteExtensions(ctx, &cometabci.RequestFinalizeBlock{
+		returnedPrices, err := pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
 		})
 
@@ -113,7 +113,7 @@ func TestPriceWriter(t *testing.T) {
 			},
 		)
 
-		_, err = pricesApplier.ApplyPricesFromVoteExtensions(ctx, &cometabci.RequestFinalizeBlock{
+		_, err = pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
 		})
 
@@ -182,7 +182,7 @@ func TestPriceWriter(t *testing.T) {
 
 		pricesKeeper.On("UpdateMarketPrice", ctx, mock.Anything).Return(nil)
 
-		prices, err := pricesApplier.ApplyPricesFromVoteExtensions(ctx, &cometabci.RequestFinalizeBlock{
+		prices, err := pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
 		})
 
