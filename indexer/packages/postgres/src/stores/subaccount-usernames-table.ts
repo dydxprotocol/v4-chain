@@ -95,8 +95,8 @@ export async function findByUsername(
   return (await baseQuery).find((subaccountUsername) => subaccountUsername.username === username);
 }
 
-export async function getSubaccountsWithoutUsernames(
-) : Promise<SubaccountsWithoutUsernamesResult[]> {
+export async function getSubaccountsWithoutUsernames():
+Promise<SubaccountsWithoutUsernamesResult[]> {
   const queryString: string = `
     SELECT id as "subaccountId"
     FROM subaccounts
