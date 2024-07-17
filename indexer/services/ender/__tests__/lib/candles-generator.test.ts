@@ -18,6 +18,7 @@ import {
   testMocks,
   Transaction,
   helpers,
+  OrderSide,
 } from '@dydxprotocol-indexer/postgres';
 import { CandleMessage, CandleMessage_Resolution } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -26,11 +27,12 @@ import {
   clearCandlesMap, getCandlesMap, startCandleCache,
 } from '../../src/caches/candle-cache';
 import config from '../../src/config';
-import { CandlesGenerator } from '../../src/lib/candles-generator';
+import { CandlesGenerator, getOrderbookMidPriceMap } from '../../src/lib/candles-generator';
 import { KafkaPublisher } from '../../src/lib/kafka-publisher';
 import { ConsolidatedKafkaEvent } from '../../src/lib/types';
 import { defaultTradeContent, defaultTradeKafkaEvent } from '../helpers/constants';
 import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from '../helpers/kafka-publisher-helpers';
+import { updatePriceLevel } from '../helpers/redis-helpers';
 
 describe('candleHelper', () => {
   beforeAll(async () => {
@@ -57,8 +59,6 @@ describe('candleHelper', () => {
 
   const defaultPrice: string = defaultTradeContent.price;
   const defaultPrice2: string = '15000';
-  const defaultOrderBookMidPriceOpen: string = '12000';
-  const defaultOrderBookMidPriceClose: string = '13000';
   const defaultCandle: CandleCreateObject = {
     startedAt: '',
     ticker: testConstants.defaultPerpetualMarket.ticker,
@@ -73,8 +73,8 @@ describe('candleHelper', () => {
     ).toString(),
     trades: 2,
     startingOpenInterest: '0',
-    orderbookMidPriceClose: defaultOrderBookMidPriceClose,
-    orderbookMidPriceOpen: defaultOrderBookMidPriceOpen,
+    orderbookMidPriceClose: undefined,
+    orderbookMidPriceOpen: undefined,
   };
   const startedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
     testConstants.createdDateTime,
@@ -126,6 +126,8 @@ describe('candleHelper', () => {
           id: CandleTable.uuid(currentStartedAt, defaultCandle.ticker, resolution),
           startedAt: currentStartedAt,
           resolution,
+          orderbookMidPriceClose: null,
+          orderbookMidPriceOpen: null,
         };
       },
     );
@@ -167,6 +169,8 @@ describe('candleHelper', () => {
           startedAt: currentStartedAt,
           resolution,
           startingOpenInterest: openInterest,
+          orderbookMidPriceClose: null,
+          orderbookMidPriceOpen: null,
         };
       },
     );
@@ -242,8 +246,8 @@ describe('candleHelper', () => {
           usdVolume: Big(defaultCandle.usdVolume).plus(usdVolume).toString(),
           trades: existingTrades + 2,
           startingOpenInterest,
-          orderbookMidPriceClose: '6000',
-          orderbookMidPriceOpen,
+          orderbookMidPriceClose: '7500',
+          orderbookMidPriceOpen: '8000',
         };
       },
     );
@@ -271,8 +275,8 @@ describe('candleHelper', () => {
         usdVolume: '10000',
         trades: existingTrades,
         startingOpenInterest: existingStartingOpenInterest,
-        orderbookMidPriceClose: '7500',
-        orderbookMidPriceOpen: '8000',
+        orderbookMidPriceClose: undefined,
+        orderbookMidPriceOpen: undefined,
       },
       '100', // open interest
       false, // block contains trades
@@ -289,8 +293,8 @@ describe('candleHelper', () => {
         usdVolume: '0',
         trades: 0,
         startingOpenInterest: '100',
-        orderbookMidPriceClose: '7500',
-        orderbookMidPriceOpen: '8000',
+        orderbookMidPriceClose: null,
+        orderbookMidPriceOpen: null,
       },
     ],
     [
@@ -318,6 +322,8 @@ describe('candleHelper', () => {
         startedAt,
         resolution: CandleResolution.ONE_MINUTE,
         startingOpenInterest: '100',
+        orderbookMidPriceClose: null,
+        orderbookMidPriceOpen: null,
       },
     ],
     [
@@ -334,8 +340,8 @@ describe('candleHelper', () => {
         usdVolume: '0',
         trades: 0,
         startingOpenInterest: existingStartingOpenInterest,
-        orderbookMidPriceClose: '5000',
-        orderbookMidPriceOpen: '4000',
+        orderbookMidPriceClose: undefined,
+        orderbookMidPriceOpen: undefined,
       },
       '100', // open interest
       true, // block contains trades
@@ -345,6 +351,8 @@ describe('candleHelper', () => {
         startedAt,
         resolution: CandleResolution.ONE_MINUTE,
         startingOpenInterest: existingStartingOpenInterest,
+        orderbookMidPriceClose: null,
+        orderbookMidPriceOpen: null,
       },
     ],
     [
@@ -431,6 +439,23 @@ describe('candleHelper', () => {
 
     await validateCandlesCache();
     expectTimingStats();
+  });
+
+  it('successfully creates an orderbook price map for each market', async () => {
+    await updatePriceLevel('ISO-USD', '110000', OrderSide.BUY);
+    await updatePriceLevel('ISO-USD', '120000', OrderSide.SELL);
+
+    await updatePriceLevel('ETH-USD', '100000', OrderSide.BUY);
+    await updatePriceLevel('ETH-USD', '200000', OrderSide.SELL);
+
+    const map = await getOrderbookMidPriceMap();
+    expect(map).toEqual({
+      'BTC-USD': undefined,
+      'ETH-USD': '150000',
+      'ISO-USD': '115000',
+      'ISO2-USD': undefined,
+      'SHIB-USD': undefined,
+    });
   });
 });
 

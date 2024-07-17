@@ -304,10 +304,12 @@
             "type": "string"
           },
           "orderbookMidPriceOpen": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "orderbookMidPriceClose": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "id": {
             "type": "string"
