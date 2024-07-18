@@ -14,57 +14,36 @@ func TestMsgUpdateSDAIConversionRate_ValidateBasic(t *testing.T) {
 	}{
 		"Valid": {
 			msg: types.MsgUpdateSDAIConversionRate{
-				Sender:              "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-				ConversionRate:      "1",
-				EthereumBlockNumber: "1",
+				Sender:         "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+				ConversionRate: "1",
 			},
 			err: false,
 		},
 		"Invalid: empty sender": {
 			msg: types.MsgUpdateSDAIConversionRate{
-				Sender:              "",
-				ConversionRate:      "1",
-				EthereumBlockNumber: "1",
+				Sender:         "",
+				ConversionRate: "1",
 			},
 			err: true,
 		},
 		"Invalid: incorrect sender": {
 			msg: types.MsgUpdateSDAIConversionRate{
-				Sender:              "incorrect_sender",
-				ConversionRate:      "1",
-				EthereumBlockNumber: "1",
+				Sender:         "incorrect_sender",
+				ConversionRate: "1",
 			},
 			err: true,
 		},
 		"Invalid: empty conversion rate": {
 			msg: types.MsgUpdateSDAIConversionRate{
-				Sender:              "dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-				ConversionRate:      "",
-				EthereumBlockNumber: "1",
+				Sender:         "dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
+				ConversionRate: "",
 			},
 			err: true,
 		},
 		"Invalid: negative conversion rate": {
 			msg: types.MsgUpdateSDAIConversionRate{
-				Sender:              "dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-				ConversionRate:      "-1",
-				EthereumBlockNumber: "1",
-			},
-			err: true,
-		},
-		"Invalid: empty ethereum block number": {
-			msg: types.MsgUpdateSDAIConversionRate{
-				Sender:              "dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-				ConversionRate:      "1",
-				EthereumBlockNumber: "",
-			},
-			err: true,
-		},
-		"Invalid: negative ethereum block number": {
-			msg: types.MsgUpdateSDAIConversionRate{
-				Sender:              "dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-				ConversionRate:      "1",
-				EthereumBlockNumber: "-1",
+				Sender:         "dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
+				ConversionRate: "-1",
 			},
 			err: true,
 		},

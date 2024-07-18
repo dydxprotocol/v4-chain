@@ -12,42 +12,36 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/types"
 )
 
-func QueryDaiConversionRate(client *ethclient.Client) (string, string, error) {
+func QueryDaiConversionRate(client *ethclient.Client) (string, error) {
 	// Create an instance of the contract
 	instance, err := NewStore(types.MakerContractAddress, client)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	// Query the chi variable
 	sDAIExchangeRate, err := instance.Chi(nil)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	header, err := client.HeaderByNumber(context.Background(), nil)
-	if err != nil {
-		return "", "", err
-	}
-
-	return sDAIExchangeRate.String(), header.Number.String(), nil
+	return sDAIExchangeRate.String(), nil
 }
 
-func QueryDaiConversionRateForPastBlocks(client *ethclient.Client, blocks int64, maxRetries int) ([]string, []string, error) {
+func QueryDaiConversionRateForPastBlocks(client *ethclient.Client, blocks int64, maxRetries int) ([]string, error) {
 	var rates []string
-	var blockNumbers []string
 
 	// Get the latest block number
 	latestHeader, err := client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	latestBlockNumber := latestHeader.Number.Int64()
 
 	// Create an instance of the contract
 	instance, err := NewStore(types.MakerContractAddress, client)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	for i := int64(0); i < blocks; i++ {
@@ -63,15 +57,14 @@ func QueryDaiConversionRateForPastBlocks(client *ethclient.Client, blocks int64,
 				break
 			}
 			if retry == maxRetries-1 || !strings.Contains(err.Error(), "capacity") {
-				return nil, nil, err
+				return nil, err
 			}
 
 			time.Sleep(time.Second * 1)
 		}
 
 		rates = append(rates, sDAIExchangeRate.String())
-		blockNumbers = append(blockNumbers, big.NewInt(blockNumber).String())
 	}
 
-	return rates, blockNumbers, nil
+	return rates, nil
 }

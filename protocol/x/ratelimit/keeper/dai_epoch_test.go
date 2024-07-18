@@ -14,7 +14,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func TestCheckCurrentDAIYieldEpochElapsed(t *testing.T) {
+func TestHasCurrentDAIYieldEpochElapsed(t *testing.T) {
 	testCases := []struct {
 		name            string
 		isFirstBlock    bool
@@ -77,7 +77,7 @@ func TestCheckCurrentDAIYieldEpochElapsed(t *testing.T) {
 
 			ctx = ctx.WithBlockHeight(tc.currentBlock)
 
-			elapsed, err := k.CheckCurrentDAIYieldEpochElapsed(ctx)
+			elapsed, err := k.HasCurrentDAIYieldEpochElapsed(ctx)
 			if tc.expectedError {
 				require.Error(t, err)
 			} else {
@@ -88,45 +88,7 @@ func TestCheckCurrentDAIYieldEpochElapsed(t *testing.T) {
 	}
 }
 
-func TestDAIYieldEpochHasElapsed(t *testing.T) {
-	testCases := []struct {
-		name                  string
-		currentBlockNumber    uint64
-		epochStartBlockNumber uint64
-		expectedElapsed       bool
-	}{
-		{
-			name:                  "Epoch not elapsed",
-			currentBlockNumber:    150,
-			epochStartBlockNumber: 100,
-			expectedElapsed:       false,
-		},
-		{
-			name:                  "Epoch just elapsed",
-			currentBlockNumber:    200,
-			epochStartBlockNumber: 100,
-			expectedElapsed:       true,
-		},
-		{
-			name:                  "Epoch long elapsed",
-			currentBlockNumber:    250,
-			epochStartBlockNumber: 100,
-			expectedElapsed:       true,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).Build()
-			_ = tApp.InitChain()
-			k := tApp.App.RatelimitKeeper
-			elapsed := k.DAIYieldEpochHasElapsed(tc.currentBlockNumber, tc.epochStartBlockNumber)
-			require.Equal(t, tc.expectedElapsed, elapsed)
-		})
-	}
-}
-
-func TestCheckFirstDAIYieldEpoch(t *testing.T) {
+func TestCheckIsFirstDAIYieldEpoch(t *testing.T) {
 	testCases := []struct {
 		name          string
 		currentEpoch  uint64
@@ -157,7 +119,7 @@ func TestCheckFirstDAIYieldEpoch(t *testing.T) {
 				k.SetCurrentDaiYieldEpochNumber(ctx, tc.currentEpoch)
 			}
 
-			epoch, first := k.CheckFirstDAIYieldEpoch(ctx)
+			epoch, first := k.CheckIsFirstDAIYieldEpoch(ctx)
 			require.Equal(t, tc.expectedFirst, first)
 			require.Equal(t, tc.expectedEpoch, epoch)
 		})

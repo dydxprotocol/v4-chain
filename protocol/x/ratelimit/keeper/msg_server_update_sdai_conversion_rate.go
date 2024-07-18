@@ -17,7 +17,7 @@ func (k msgServer) UpdateSDAIConversionRate(
 ) (*types.MsgUpdateSDAIConversionRateResponse, error) {
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
-	elapsed, err := k.CheckCurrentDAIYieldEpochElapsed(ctx)
+	elapsed, err := k.HasCurrentDAIYieldEpochElapsed(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -33,49 +33,37 @@ func (k msgServer) UpdateSDAIConversionRate(
 		return nil, err
 	}
 
-	bigEthereumBlockNumber, err := ConvertStringToBigInt(msg.EthereumBlockNumber)
-	if err != nil {
-		return nil, err
-	}
-
 	lastTenEvents := k.sDAIEventManager.GetLastTensDAIEventsUnordered()
 
 	for _, event := range lastTenEvents {
 
-		if event.EthereumBlockNumber == "" || event.ConversionRate == "" {
+		if event.ConversionRate == "" {
 			continue
 		}
 
-		blockNumber, err := ConvertStringToBigInt(event.EthereumBlockNumber)
+		conversionRate, err := ConvertStringToBigInt(event.ConversionRate)
 		if err != nil {
 			return nil, err
 		}
 
-		if blockNumber.Cmp(bigEthereumBlockNumber) == 0 {
+		if bigConversionRate.Cmp(conversionRate) == 0 {
 
-			conversionRate, err := ConvertStringToBigInt(event.ConversionRate)
-			if err != nil {
-				return nil, err
+			currentRate, initialized := k.GetSDAIPrice(ctx)
+
+			if initialized && conversionRate.Cmp(currentRate) <= 0 {
+				return nil, errorsmod.Wrap(
+					types.ErrInvalidSDAIConversionRate,
+					"The suggested sDAI conversion rate must be greater than the curret one",
+				)
 			}
 
-			if bigConversionRate.Cmp(conversionRate) == 0 {
+			k.SetSDAIPrice(ctx, conversionRate)
 
-				currentRate, initialized := k.GetSDAIPrice(ctx)
+			k.CreateAndStoreNewDaiYieldEpochParams(ctx)
 
-				if initialized && conversionRate.Cmp(currentRate) <= 0 {
-					return nil, errorsmod.Wrap(
-						types.ErrInvalidSDAIConversionRate,
-						"The suggested sDAI conversion rate must be greater than the curret one",
-					)
-				}
-
-				k.SetSDAIPrice(ctx, conversionRate)
-
-				k.CreateAndStoreNewDaiYieldEpochParams(ctx)
-
-				return &types.MsgUpdateSDAIConversionRateResponse{}, nil
-			}
+			return &types.MsgUpdateSDAIConversionRateResponse{}, nil
 		}
+
 	}
 
 	return nil, errorsmod.Wrap(

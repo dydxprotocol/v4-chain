@@ -21,20 +21,18 @@ func TestRunsDAIDaemonTaskLoop(t *testing.T) {
 	errAddSDAIEvents := errors.New("failed to add sDAI events")
 
 	tests := map[string]struct {
-		chainId             int
-		chainIdError        error
-		daiRate             string
-		ethereumBlockHeight string
-		queryDaiErr         error
-		addsDAIEventsErr    error
+		chainId          int
+		chainIdError     error
+		daiRate          string
+		queryDaiErr      error
+		addsDAIEventsErr error
 
 		expectedErrorString string
 		expectedError       error
 	}{
 		"Success": {
-			chainId:             constants.EthChainId,
-			daiRate:             constants.SDAIRate,
-			ethereumBlockHeight: constants.EthereumBlockNumber,
+			chainId: constants.EthChainId,
+			daiRate: constants.SDAIRate,
 		},
 		"Error getting chain id": {
 			chainIdError:  errChainId,
@@ -54,11 +52,10 @@ func TestRunsDAIDaemonTaskLoop(t *testing.T) {
 			expectedError: errQuerysDAIRate,
 		},
 		"Error adding sDAI events": {
-			chainId:             constants.EthChainId,
-			daiRate:             constants.SDAIRate,
-			ethereumBlockHeight: constants.EthereumBlockNumber,
-			addsDAIEventsErr:    errAddSDAIEvents,
-			expectedError:       errAddSDAIEvents,
+			chainId:          constants.EthChainId,
+			daiRate:          constants.SDAIRate,
+			addsDAIEventsErr: errAddSDAIEvents,
+			expectedError:    errAddSDAIEvents,
 		},
 	}
 
@@ -71,7 +68,7 @@ func TestRunsDAIDaemonTaskLoop(t *testing.T) {
 			mockServiceClient := mocks.SDAIServiceClient{}
 
 			mockQueryClient.On("ChainID", ctx, mock.Anything).Return(big.NewInt(int64(tc.chainId)), tc.chainIdError)
-			mockQueryClient.On("QueryDaiConversionRate", mock.Anything).Return(tc.daiRate, tc.ethereumBlockHeight, tc.queryDaiErr)
+			mockQueryClient.On("QueryDaiConversionRate", mock.Anything).Return(tc.daiRate, tc.queryDaiErr)
 			mockServiceClient.On("AddsDAIEvents", ctx, mock.Anything).Return(nil, tc.addsDAIEventsErr)
 
 			subTaskRunner := &client.SubTaskRunnerImpl{}

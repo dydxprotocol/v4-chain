@@ -12,9 +12,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func (k Keeper) CheckCurrentDAIYieldEpochElapsed(ctx sdk.Context) (bool, error) {
+func (k Keeper) HasCurrentDAIYieldEpochElapsed(ctx sdk.Context) (bool, error) {
 
-	currentEpoch, first := k.CheckFirstDAIYieldEpoch(ctx)
+	currentEpoch, first := k.CheckIsFirstDAIYieldEpoch(ctx)
 	if first {
 		return true, nil
 	}
@@ -31,18 +31,18 @@ func (k Keeper) CheckCurrentDAIYieldEpochElapsed(ctx sdk.Context) (bool, error) 
 
 	currentBlockNumber := ctx.BlockHeight()
 
-	if k.DAIYieldEpochHasElapsed(uint64(currentBlockNumber), epochStartBlockNumber) {
+	if k.dAIYieldEpochHasElapsed(uint64(currentBlockNumber), epochStartBlockNumber) {
 		return true, nil
 	}
 
 	return false, nil
 }
 
-func (k Keeper) DAIYieldEpochHasElapsed(currentBlockNumber uint64, epochStartBlockNumber uint64) bool {
+func (k Keeper) dAIYieldEpochHasElapsed(currentBlockNumber uint64, epochStartBlockNumber uint64) bool {
 	return currentBlockNumber >= epochStartBlockNumber+uint64(types.DAI_YIELD_MIN_EPOCH_BLOCKS)
 }
 
-func (k Keeper) CheckFirstDAIYieldEpoch(ctx sdk.Context) (uint64, bool) {
+func (k Keeper) CheckIsFirstDAIYieldEpoch(ctx sdk.Context) (currentEpoch uint64, isFirstEpoch bool) {
 
 	currentEpoch, found := k.GetCurrentDaiYieldEpochNumber(ctx)
 	if !found {
