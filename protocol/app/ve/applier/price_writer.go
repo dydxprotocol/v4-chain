@@ -47,7 +47,6 @@ func NewPriceApplier(
 func (pw *PriceApplier) ApplyPricesFromVE(ctx sdk.Context, req *abci.RequestFinalizeBlock) (map[string]*big.Int, error) {
 	votes, err := aggregator.GetDaemonVotes(req.Txs, pw.voteExtensionCodec, pw.extendedCommitCodec)
 	if err != nil {
-
 		pw.logger.Error(
 			"failed to get extended commit info from proposal",
 			"height", req.Height,
@@ -81,7 +80,6 @@ func (pw *PriceApplier) ApplyPricesFromVE(ctx sdk.Context, req *abci.RequestFina
 		pair := market.Pair
 		price, ok := prices[pair]
 		if !ok || price == nil {
-
 			pw.logger.Debug(
 				"no price for currency pair",
 				"currency_pair", pair,
@@ -121,5 +119,4 @@ func (pw *PriceApplier) ApplyPricesFromVE(ctx sdk.Context, req *abci.RequestFina
 		)
 	}
 	return prices, nil
-
 }

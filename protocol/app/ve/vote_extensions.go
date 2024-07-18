@@ -38,14 +38,12 @@ func NewVoteExtensionHandler(
 	pricesKeeper ExtendVotePricesKeeper,
 	priceApplier VEPriceApplier,
 ) *VoteExtensionHandler {
-
 	return &VoteExtensionHandler{
 		logger:       logger,
 		veCodec:      vecodec,
 		pricesKeeper: pricesKeeper,
 		priceApplier: priceApplier,
 	}
-
 }
 
 // Returns a handler that extends pre-commit votes with the current
@@ -54,7 +52,6 @@ func NewVoteExtensionHandler(
 // ensuring liveness in the case of a price daemon failure
 func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 	return func(ctx sdk.Context, request *abci.RequestExtendVote) (resp *abci.ResponseExtendVote, err error) {
-
 		defer func() {
 			if recovery := recover(); recovery != nil {
 				h.logger.Error(
@@ -107,7 +104,6 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 		ctx sdk.Context,
 		req *abci.RequestVerifyVoteExtension,
 	) (_ *abci.ResponseVerifyVoteExtension, err error) {
-
 		if req == nil {
 			err = fmt.Errorf("nil request for verify vote")
 			return nil, err
@@ -133,7 +129,6 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 
 		return acceptResponse, nil
 	}
-
 }
 
 func (h *VoteExtensionHandler) GetVEBytesFromCurrPrices(ctx sdk.Context) ([]byte, error) {
@@ -160,7 +155,6 @@ func (h *VoteExtensionHandler) GetVEBytesFromCurrPrices(ctx sdk.Context) ([]byte
 func (h *VoteExtensionHandler) transformDaemonPricesToVE(
 	priceupdates []*pricetypes.MarketPriceUpdates_MarketPriceUpdate,
 ) (types.DaemonVoteExtension, error) {
-
 	vePrices := make(map[uint32][]byte)
 
 	for _, priceUpdate := range priceupdates {
@@ -181,7 +175,6 @@ func (h *VoteExtensionHandler) transformDaemonPricesToVE(
 func (h *VoteExtensionHandler) GetEncodedPriceFromPriceUpdate(
 	priceUpdate *pricetypes.MarketPriceUpdates_MarketPriceUpdate,
 ) ([]byte, error) {
-
 	price := new(big.Int).SetUint64(priceUpdate.GetPrice())
 
 	encodedPrice, err := veutils.GetVEEncodedPrice(price)
@@ -190,7 +183,6 @@ func (h *VoteExtensionHandler) GetEncodedPriceFromPriceUpdate(
 	}
 
 	return encodedPrice, nil
-
 }
 
 func (h *VoteExtensionHandler) ValidateVEPriceByteSize(
@@ -198,10 +190,9 @@ func (h *VoteExtensionHandler) ValidateVEPriceByteSize(
 	pricesKeeper ExtendVotePricesKeeper,
 	veBytes []byte,
 ) error {
-
 	ve, err := h.veCodec.Decode(veBytes)
 	if err != nil {
-		return fmt.Errorf("failed to decode vote extension: %v", err)
+		return fmt.Errorf("failed to decode vote extension: %w", err)
 	}
 
 	maxPairs := h.GetMaxMarketPairs(ctx)

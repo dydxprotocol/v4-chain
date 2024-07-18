@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/core/comet"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cometabci "github.com/cometbft/cometbft/abci/types"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -35,7 +34,7 @@ func AreVEEnabled(ctx sdk.Context) bool {
 
 // NewDefaultValidateVoteExtensionsFn returns a new DefaultValidateVoteExtensionsFn.
 func NewValidateVoteExtensionsFn(validatorStore ValidatorStore) ValidateVoteExtensionsFn {
-	return func(ctx sdk.Context, info cometabci.ExtendedCommitInfo) error {
+	return func(ctx sdk.Context, info abci.ExtendedCommitInfo) error {
 		return ValidateVoteExtensions(ctx, validatorStore, info)
 	}
 }
@@ -173,7 +172,6 @@ func ValidateVoteExtensions(
 		if !cmtPubKey.VerifySignature(extSignBytes, vote.ExtensionSignature) {
 			return fmt.Errorf("failed to verify validator %X vote extension signature", valConsAddr)
 		}
-
 	}
 
 	// This check is probably unnecessary, but better safe than sorry.
@@ -249,7 +247,6 @@ func ValidateExtendedCommitAgainstLastCommit(ec abci.ExtendedCommitInfo, lc come
 
 // GetPubKeyByConsAddr returns the public key of a validator given the consensus addr.
 func GetPubKeyByConsAddr(ccvalidator ccvtypes.CrossChainValidator) (cmtprotocrypto.PublicKey, error) {
-
 	consPubKey, err := ccvalidator.ConsPubKey()
 	if err != nil {
 		return cmtprotocrypto.PublicKey{}, fmt.Errorf("could not get pubkey for val %s: %w", ccvalidator.String(), err)

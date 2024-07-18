@@ -41,7 +41,7 @@ var (
 		18, 3, 2, 27, 95, 10, 7, 8, 1, 18, 3, 2, 234, 102, 40, 2,
 	}
 	// return value of the following function call
-	// (empty prices vote extension from 3 validators wiht 500 power and block hiehgt 3)
+	// (empty prices vote extension from 3 validators with 500 power and block hiehgt 3)
 	// 	LocalLastCommit: vetestutil.GetEmptyLocalLastCommit(
 	//				tApp.App.ConsumerKeeper.GetAllCCValidator(tApp.App.NewContextLegacy(true, tApp.header)),
 	//					tApp.header.Height,

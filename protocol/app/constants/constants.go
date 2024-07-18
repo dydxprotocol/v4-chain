@@ -13,7 +13,7 @@ const (
 	DaemonInfoIndex    = 0
 	InjectedNonTxCount = 1
 	// block structure
-	// this is three becuase the first place in the block is for VE's
+	// this is three because the first place in the block is for VE's
 	MinTxsCount                     = 2
 	MinTxsCountWithVE               = MinTxsCount + 1
 	ProposedOperationsTxIndex       = 0

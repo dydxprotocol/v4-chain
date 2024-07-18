@@ -47,7 +47,6 @@ func ProcessProposalHandler(
 	veCodec codec.VoteExtensionCodec,
 	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
 ) sdk.ProcessProposalHandler {
-
 	return func(ctx sdk.Context, request *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 		defer telemetry.ModuleMeasureSince(
 			ModuleName,
@@ -66,7 +65,6 @@ func ProcessProposalHandler(
 		}
 
 		if veutils.AreVEEnabled(ctx) {
-
 			if len(request.Txs) < constants.MinTxsCountWithVE {
 				ctx.Logger().Error("failed to process proposal: missing commit info", "num_txs", len(request.Txs))
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
@@ -94,7 +92,6 @@ func ProcessProposalHandler(
 				ctx.Logger().Error("failed to decode and validate ve", "err", err)
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
-
 		}
 
 		txs, err := DecodeProcessProposalTxs(txConfig.TxDecoder(), request, pricesKeeper)
@@ -149,7 +146,6 @@ func DecodeAndValidateVE(
 	); err != nil {
 		return err
 	}
-	// should this happend even if it fails?
 	req.Txs = req.Txs[1:]
 	return nil
 }

@@ -762,7 +762,6 @@ func New(
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
 			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
-
 		}
 
 		// Start the Metrics Daemon.
@@ -1401,7 +1400,6 @@ func (app *App) InitVoteExtensions(
 	veHandler := ve.NewVoteExtensionHandler(logger, veCodec, pricesKeeper, priceApplier)
 	app.SetExtendVoteHandler(veHandler.ExtendVoteHandler())
 	app.SetVerifyVoteExtensionHandler(veHandler.VerifyVoteExtensionHandler())
-
 }
 
 // BeginBlocker application updates every begin block

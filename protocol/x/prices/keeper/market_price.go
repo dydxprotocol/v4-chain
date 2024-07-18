@@ -31,7 +31,6 @@ func (k Keeper) UpdateMarketPrice(
 	ctx sdk.Context,
 	update *types.MarketPriceUpdates_MarketPriceUpdate,
 ) error {
-
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
 		time.Now(),

@@ -36,9 +36,6 @@ var (
 	passingTxEncoderOne = func(tx sdktypes.Tx) ([]byte, error) {
 		return []byte{1}, nil
 	}
-	passingTxEncoderTwo = func(tx sdktypes.Tx) ([]byte, error) {
-		return []byte{1, 2}, nil
-	}
 	passingTxEncoderFour = func(tx sdktypes.Tx) ([]byte, error) {
 		return []byte{1, 2, 3, 4}, nil
 	}
@@ -213,7 +210,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 			height: 3,
 
 			request: func() *cometabci.RequestPrepareProposal {
-
 				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
@@ -262,7 +258,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 			height: 3,
 
 			request: func() *cometabci.RequestPrepareProposal {
-
 				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
@@ -333,7 +328,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 			expectedPrices: constants.ValidVEPrice,
 
 			request: func() *cometabci.RequestPrepareProposal {
-
 				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
@@ -357,7 +351,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 				)
 
 				return prop
-
 			},
 
 			expectedTxs: [][]byte{
@@ -409,7 +402,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 				)
 
 				return prop
-
 			},
 
 			expectedTxs: [][]byte{
@@ -471,7 +463,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 				)
 
 				return prop
-
 			},
 
 			expectedTxs: [][]byte{
@@ -533,7 +524,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 				)
 
 				return prop
-
 			},
 
 			expectedTxs: [][]byte{
@@ -875,7 +865,6 @@ func createRequestPrepareProposal(
 	height int64,
 	maxBytes int64,
 ) *cometabci.RequestPrepareProposal {
-
 	return &cometabci.RequestPrepareProposal{
 		Txs:             txs,
 		LocalLastCommit: extendedCommitInfo,
@@ -898,7 +887,6 @@ func setMockResponses(
 	mPerpKeeper *mocks.PreparePerpetualsKeeper,
 	tc PerpareProposalHandlerTC,
 ) {
-
 	mPricesKeeper.On("GetAllMarketParams", mock.Anything).
 		Return(tc.pricesParamsResp)
 	mPricesKeeper.On("PerformStatefulPriceUpdateValidation", mock.Anything, mock.Anything, mock.Anything).
@@ -914,24 +902,6 @@ func getResponseTransactionsWithoutExtInfo(txs [][]byte) [][]byte {
 		return txs
 	}
 	return txs[1:]
-}
-
-func getPricesFromExtInfoBytes(bz []byte, extcodec vecodec.ExtendedCommitCodec, votecodec vecodec.VoteExtensionCodec) map[uint32][]byte {
-
-	extCommitInfo, err := extcodec.Decode(bz)
-	if err != nil {
-		return nil
-	}
-	for _, vote := range extCommitInfo.Votes {
-		if vote.VoteExtension != nil {
-			voteExt, err := votecodec.Decode(vote.VoteExtension)
-			if err != nil {
-				return nil
-			}
-			return voteExt.Prices
-		}
-	}
-	return nil
 }
 
 func validateVotesAgainstExpectedPrices(t *testing.T, expectedPrices map[uint32][]byte, extCommitInfoBz []byte, extcodec vecodec.ExtendedCommitCodec, votecodec vecodec.VoteExtensionCodec) {

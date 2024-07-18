@@ -118,7 +118,6 @@ func Median(
 					"num_validators", len(info.Prices),
 				)
 			}
-
 		}
 		return prices, nil
 	}
@@ -145,7 +144,6 @@ func ComputeMedian(priceInfo PriceInfo) *big.Int {
 		sum = sum.Add(math.NewInt(price.VoteWeight))
 
 		if sum.GTE(middle) {
-
 			return price.Price
 		}
 

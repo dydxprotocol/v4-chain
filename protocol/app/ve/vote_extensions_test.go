@@ -26,7 +26,6 @@ type TestExtendedVoteTC struct {
 }
 
 func TestExtendVoteHandler(t *testing.T) {
-
 	tests := map[string]TestExtendedVoteTC{
 		"nil request returns error": {
 			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
@@ -52,7 +51,6 @@ func TestExtendVoteHandler(t *testing.T) {
 				)
 
 				return mPricesKeeper
-
 			},
 			expectedResponse: &vetypes.DaemonVoteExtension{
 				Prices: nil,
@@ -230,7 +228,6 @@ func TestVerifyVoteHandler(t *testing.T) {
 					constants.TestMarketParams,
 				)
 				return mPricesKeeper
-
 			},
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
 				extBz, err := vetestutils.CreateVoteExtensionBytes(
@@ -350,5 +347,4 @@ func TestVerifyVoteHandler(t *testing.T) {
 			}
 		})
 	}
-
 }

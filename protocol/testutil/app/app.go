@@ -924,7 +924,6 @@ func finalizeBlockAndCommit(
 	request abcitypes.RequestFinalizeBlock,
 	expectedApp *app.App,
 ) {
-
 	_, err := app.FinalizeBlock(&request)
 	require.NoError(t, err)
 	_, err = app.Commit()

@@ -15,7 +15,6 @@ func FullNodeProcessProposalHandler(
 	perpetualKeeper ProcessPerpetualKeeper,
 	pricesKeeper ProcessPricesKeeper,
 ) sdk.ProcessProposalHandler {
-
 	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 		// Always return `abci.ResponseProcessProposal_ACCEPT`
 		response := &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}

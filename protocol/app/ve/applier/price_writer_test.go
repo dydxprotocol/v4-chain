@@ -118,7 +118,6 @@ func TestPriceWriter(t *testing.T) {
 		})
 
 		require.NoError(t, err)
-
 	})
 
 	t.Run("update prices in state", func(t *testing.T) {
@@ -190,6 +189,5 @@ func TestPriceWriter(t *testing.T) {
 		require.Equal(t, map[string]*big.Int{
 			constants.BtcUsdPair: big.NewInt(150),
 		}, prices)
-
 	})
 }

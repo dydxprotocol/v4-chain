@@ -369,8 +369,6 @@ func TestVoteWeightedMedian(t *testing.T) {
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedPrices, prices)
-
 		})
 	}
-
 }

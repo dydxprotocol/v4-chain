@@ -20,7 +20,6 @@ func CleanAndValidateExtendedCommitInfo(
 	pk PreparePricesKeeper,
 	validateVoteExtensionsFn func(ctx sdk.Context, extCommitInfo cometabci.ExtendedCommitInfo) error,
 ) (cometabci.ExtendedCommitInfo, error) {
-
 	for i, vote := range extCommitInfo.Votes {
 		if err := validateVoteExtension(ctx, vote, veCodec, pk); err != nil {
 			ctx.Logger().Info(

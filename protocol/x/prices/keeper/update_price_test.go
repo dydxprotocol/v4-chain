@@ -23,7 +23,7 @@ var (
 
 	validMarket0UpdateResult = &types.MarketPriceUpdates{
 		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
-			&types.MarketPriceUpdates_MarketPriceUpdate{
+			{
 				MarketId: constants.MarketId0,
 				Price:    fiveBillionAndFiveMillion,
 			},

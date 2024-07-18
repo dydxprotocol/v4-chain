@@ -87,7 +87,6 @@ func (s *PreBlockTestSuite) SetupTest() {
 	s.marketParamPrices = s.setMarketPrices()
 
 	s.createTestMarkets()
-
 }
 
 func (s *PreBlockTestSuite) TestPreBlocker() {
@@ -105,7 +104,6 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		s.Require().Error(err)
 
 		s.Require().True(s.ensurePricesEqualToCurrent(prePrices))
-
 	})
 
 	s.Run("skip when vote extensions are disabled", func() {
@@ -124,7 +122,6 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		s.Require().NoError(err)
 
 		s.Require().True(s.ensurePricesEqualToCurrent(prePrices))
-
 	})
 
 	s.Run("ignore vote-extensions w/ prices for non-existent pairs", func() {
@@ -159,7 +156,6 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		s.Require().NoError(err)
 
 		s.Require().True(s.ensurePricesEqualToCurrent(prePrices))
-
 	})
 
 	s.Run("multiple markets to write prices for", func() {
@@ -225,7 +221,6 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		})
 
 		s.Require().EqualError(err, "proposal does not contain enough set messages (VE's, proposed operations, or premium votes): 0")
-
 	})
 }
 
@@ -270,7 +265,6 @@ func (s *PreBlockTestSuite) ensurePricesEqualToCurrent(before []pricestypes.Mark
 		if price.Price != currPrices[i].Price {
 			return false
 		}
-
 	}
 	return true
 }
@@ -305,7 +299,6 @@ func (s *PreBlockTestSuite) getVoteExtension(
 func (s *PreBlockTestSuite) getExtendedCommitInfoBz(
 	votes []cometabci.ExtendedVoteInfo,
 ) []byte {
-
 	_, extCommitBz, err := vetesting.CreateExtendedCommitInfo(
 		votes,
 	)
@@ -349,7 +342,6 @@ func (s *PreBlockTestSuite) mockCCVStoreGetAllValidatorsCall(validators []string
 		vals = append(vals, val)
 	}
 	s.ccvStore.On("GetAllCCValidator", s.ctx).Return(vals)
-
 }
 
 func (s *PreBlockTestSuite) getVoteExtensionsForValidatorsWithSamePrices(

@@ -62,7 +62,6 @@ func PrepareProposalHandler(
 	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
 ) sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, request *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
-
 		var finalTxs [][]byte
 
 		defer telemetry.ModuleMeasureSince(
@@ -273,7 +272,6 @@ func SetProposedOperationsTx(
 	}
 
 	return operationsTxResp, nil
-
 }
 
 func SetOneFourthOtherTxsAndGetRemainder(
@@ -295,7 +293,6 @@ func SetOneFourthOtherTxsAndGetRemainder(
 		}
 	}
 	return otherTxsRemainder, nil
-
 }
 
 // GetAddPremiumVotesTx returns a tx containing `MsgAddPremiumVotes`.

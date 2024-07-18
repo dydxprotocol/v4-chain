@@ -36,7 +36,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 				priceUpdateIndexerEvents,
 			),
 		)
-
 	}
 }
 

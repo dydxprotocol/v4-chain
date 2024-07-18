@@ -257,7 +257,6 @@ func (k Keeper) PlaceStatefulOrder(
 	ctx sdk.Context,
 	msg *types.MsgPlaceOrder,
 ) (err error) {
-
 	defer func() {
 		if err != nil {
 			telemetry.IncrCounterWithLabels(

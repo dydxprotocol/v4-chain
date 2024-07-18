@@ -59,7 +59,6 @@ func CreateSignedExtendedCommitInfo(
 	}
 
 	return CreateExtendedCommitInfo(votes)
-
 }
 
 func GetEmptyLocalLastCommit(
@@ -68,10 +67,8 @@ func GetEmptyLocalLastCommit(
 	round int64,
 	chainId string,
 ) cometabci.ExtendedCommitInfo {
-
 	var votes []cometabci.ExtendedVoteInfo
 	for _, validator := range validators {
-
 		ve, err := CreateSignedExtendedVoteInfo(
 			SignedVEInfo{
 				Val:     sdk.ConsAddress(validator.Address),
@@ -87,7 +84,6 @@ func GetEmptyLocalLastCommit(
 			panic(err)
 		}
 		votes = append(votes, ve)
-
 	}
 	extCommitInfo, _, _ := CreateExtendedCommitInfo(votes)
 	return extCommitInfo
@@ -108,21 +104,6 @@ func CreateExtendedCommitInfo(
 
 	return extendedCommitInfo, bz, nil
 }
-
-// CreateExtendedVoteInfo creates an extended vote info with the given prices, timestamp and height.
-// func CreateExtendedVoteInfo(
-// 	consAddr sdk.ConsAddress,
-// 	prices map[uint32][]byte,
-// 	codec vecodec.VoteExtensionCodec,
-// ) (cometabci.ExtendedVoteInfo, error) {
-// 	return cometabci.ExtendedVoteInfo{
-// 		Validator: cometabci.Validator{
-// 			Address: consAddr,
-// 			Power:   500,
-// 		},
-// 		VoteExtension:      CreateVoteExtension(prices),
-// 	}
-// }
 
 // CreateExtendedVoteInfoWithPower CreateExtendedVoteInfo creates an extended vote info
 // with the given power, prices, timestamp and height.
@@ -287,12 +268,11 @@ func GetInjectedExtendedCommitInfoForTestApp(
 	prices map[uint32]uint64,
 	height int64,
 ) (cometabci.ExtendedCommitInfo, []byte, error) {
-
 	var pricesBz = make(map[uint32][]byte, len(prices))
 	for marketId, price := range prices {
 		encodedPrice, err := GetIndexPriceCacheEncodedPrice(new(big.Int).SetUint64(price))
 		if err != nil {
-			return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to encode price: %v", err)
+			return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to encode price: %w", err)
 		}
 
 		pricesBz[marketId] = encodedPrice
@@ -314,8 +294,7 @@ func GetInjectedExtendedCommitInfoForTestApp(
 
 	extCommitInfo, extCommitBz, err := CreateSignedExtendedCommitInfo(veSignedInfos)
 	if err != nil {
-		return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to create signed extended commit info: %v", err)
+		return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to create signed extended commit info: %w", err)
 	}
 	return extCommitInfo, extCommitBz, nil
-
 }

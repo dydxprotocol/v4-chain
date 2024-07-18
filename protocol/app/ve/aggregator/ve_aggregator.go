@@ -48,7 +48,6 @@ func GetDaemonVotes(
 			ConsAddress:         voteInfo.Validator.Address,
 			DaemonVoteExtension: voteExtension,
 		}
-
 	}
 
 	return votes, nil
@@ -183,7 +182,6 @@ func (ma *MedianAggregator) addVoteToAggregator(ctx sdk.Context, address string,
 		)
 
 		ma.prices[address] = nil
-
 	} else {
 		ma.logger.Debug(
 			"adding prices to aggregator",
@@ -191,10 +189,8 @@ func (ma *MedianAggregator) addVoteToAggregator(ctx sdk.Context, address string,
 			"num_prices", len(prices),
 		)
 		ma.prices[address] = prices
-
 	}
 	return nil
-
 }
 
 func (ma *MedianAggregator) GetPriceForValidator(validator sdk.ConsAddress) map[string]*big.Int {

@@ -118,7 +118,6 @@ func (t *PrepareProposalTxs) GetAvailableBytes() uint64 {
 
 // GetTxsInOrder returns a list of txs in an order that the `ProcessProposal` expects.
 func (t *PrepareProposalTxs) GetTxsInOrder(veEnabled bool) ([][]byte, error) {
-
 	if len(t.AddPremiumVotesTx) == 0 {
 		return nil, errors.New("AddPremiumVotesTx must be set")
 	}
