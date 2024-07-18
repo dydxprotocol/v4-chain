@@ -20,7 +20,6 @@ import {
 import * as pg from 'pg';
 
 import config from '../../config';
-
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
 

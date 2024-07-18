@@ -267,7 +267,6 @@ export class MessageForwarder {
     this.messageBuffer = {};
   }
 
-
   private forwardBatchedVersionedMessagesBySubaccountNumber(
     batchedMessages: VersionedContents[],
     batchedSubscriber: SubscriptionInfo,

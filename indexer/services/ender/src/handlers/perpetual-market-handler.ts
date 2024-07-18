@@ -9,7 +9,9 @@ import { generatePerpetualMarketMessage } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
 
-export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2> {
+export class PerpetualMarketCreationHandler extends Handler<
+  PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2
+> {
   eventType: string = 'PerpetualMarketCreateEvent';
 
   public getParallelizationIds(): string[] {

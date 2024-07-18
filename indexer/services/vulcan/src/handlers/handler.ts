@@ -4,8 +4,9 @@ import {
 } from '@dydxprotocol-indexer/kafka';
 import { OrderbookMessageContents, PerpetualMarketFromDatabase, protocolTranslations } from '@dydxprotocol-indexer/postgres';
 import { OffChainUpdateV1, OrderbookMessage, RedisOrder } from '@dydxprotocol-indexer/v4-protos';
-import { OrderbookSide } from 'src/lib/types';
 import { IHeaders } from 'kafkajs';
+import { OrderbookSide } from 'src/lib/types';
+
 import { orderSideToOrderbookSide } from './helpers';
 
 export abstract class Handler {

@@ -6,7 +6,6 @@ import {
 import { checkSchema, ParamSchema } from 'express-validator';
 
 import config from '../../config';
-import { MAX_SUBACCOUNT_NUMBER } from '../../constants';
 
 export const CheckSubaccountSchema = checkSchema({
   address: {

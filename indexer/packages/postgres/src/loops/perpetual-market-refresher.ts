@@ -11,7 +11,6 @@ import {
 } from '../types';
 import { startUpdateLoop } from './loopHelper';
 
-
 let idToPerpetualMarket: Record<string, PerpetualMarketFromDatabase> = {};
 
 // TODO(DEC-642): Update the in-memory mapping of perpetual market tickers to ids from websocket

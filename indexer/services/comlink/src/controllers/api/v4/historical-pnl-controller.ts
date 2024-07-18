@@ -88,6 +88,7 @@ class HistoricalPnlController extends Controller {
       }),
     };
   }
+
   @Get('/parentSubaccount')
   async getHistoricalPnlForParentSubaccount(
     @Query() address: string,

@@ -50,7 +50,6 @@ export class LiquidityTierHandlerBase<T> extends Handler<T> {
   }
 }
 
-
 export class LiquidityTierHandler extends LiquidityTierHandlerBase<LiquidityTierUpsertEventV1> {
 }
 

@@ -147,7 +147,7 @@ export default class PerpetualMarketModel extends Model {
   stepBaseQuantums!: number;
 
   liquidityTierId!: number;
-  
+
   marketType!: PerpetualMarketType;
 
   baseOpenInterest!: string;

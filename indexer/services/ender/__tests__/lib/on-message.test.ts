@@ -139,7 +139,6 @@ describe('on-message', () => {
     ).finish(),
   );
 
-
   it('successfully processes block with transaction event', async () => {
     const transactionIndex: number = 0;
     const eventIndex: number = 0;

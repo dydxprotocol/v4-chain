@@ -198,7 +198,7 @@ async function findLatestPricesByDateTime(
     .groupBy('marketId');
 
   const oraclePrices: OraclePriceFromDatabase[] = await baseQuery
-  .innerJoin(subQuery.as('sub'), function joinConditions() {
+    .innerJoin(subQuery.as('sub'), function joinConditions() {
       this
         .on('oracle_prices.marketId', '=', 'sub.marketId')
         .andOn('oracle_prices.effectiveAt', '=', 'sub.maxEffectiveAt');

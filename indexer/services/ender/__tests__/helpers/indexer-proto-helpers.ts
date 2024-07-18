@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import Long from 'long';
+
 import {
   createKafkaMessage,
   MARKETS_WEBSOCKET_MESSAGE_VERSION,
@@ -59,6 +59,7 @@ import {
 } from '@dydxprotocol-indexer/v4-protos/build/codegen/dydxprotocol/indexer/protocol/v1/perpetual';
 import { IHeaders, Message, ProducerRecord } from 'kafkajs';
 import _ from 'lodash';
+import Long from 'long';
 
 import {
   convertPerpetualPosition,

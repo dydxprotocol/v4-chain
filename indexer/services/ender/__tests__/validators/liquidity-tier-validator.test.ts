@@ -3,7 +3,7 @@ import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   LiquidityTierUpsertEventV1,
-  LiquidityTierUpsertEventV2
+  LiquidityTierUpsertEventV2,
 } from '@dydxprotocol-indexer/v4-protos';
 import { dbHelpers, testMocks } from '@dydxprotocol-indexer/postgres';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
