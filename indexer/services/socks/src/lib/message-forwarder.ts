@@ -129,6 +129,7 @@ export class MessageForwarder {
     stats.timing(
       'socks.batch_time_in_queue',
       batchTimeInQueue,
+      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       metricTags,
     );
 
@@ -167,11 +168,13 @@ export class MessageForwarder {
     stats.timing(
       'socks.batch_processing_time',
       batchProcessingTime,
+      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       metricTags,
     );
     stats.timing(
       'socks.batch_size',
       batch.messages.length,
+      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       metricTags,
     );
   }
