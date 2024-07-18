@@ -1,3 +1,7 @@
+import path from 'path';
+
+import { Model } from 'objection';
+
 import { NumericPattern } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
 import BaseModel from './base-model';
@@ -12,7 +16,16 @@ export default class LeaderboardPnlModel extends BaseModel {
     return ['address', 'timeSpan'];
   }
 
-  static relationMappings = {};
+  static relationMappings = {
+    wallets: {
+      relation: Model.BelongsToOneRelation,
+      modelClass: path.join(__dirname, 'wallet-model'),
+      join: {
+        from: 'leaderboard_pnl.address',
+        to: 'wallets.address',
+      },
+    },
+  };
 
   static get jsonSchema() {
     return {

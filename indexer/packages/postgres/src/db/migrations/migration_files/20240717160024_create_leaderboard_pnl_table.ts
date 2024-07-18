@@ -2,7 +2,7 @@ import * as Knex from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
   return knex.schema.createTable('leaderboard_pnl', (table) => {
-    table.string('address').notNullable();
+    table.string('address').notNullable().references('address').inTable('wallets');
     table.enum(
       'timeSpan',
       [
