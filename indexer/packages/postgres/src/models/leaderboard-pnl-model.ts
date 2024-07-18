@@ -35,7 +35,7 @@ export default class LeaderboardPnlModel extends BaseModel {
         'timeSpan',
         'pnl',
         'currentEquity',
-        'rank'
+        'rank',
       ],
       properties: {
         subaccountId: { type: 'string' },
