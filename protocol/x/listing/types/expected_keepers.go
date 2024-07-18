@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
@@ -35,4 +36,18 @@ type MarketMapKeeper interface {
 		ctx sdk.Context,
 		ticker string,
 	) (marketmaptypes.Market, error)
+}
+
+type PerpetualsKeeper interface {
+	CreatePerpetual(
+		ctx sdk.Context,
+		id uint32,
+		ticker string,
+		marketId uint32,
+		atomicResolution int32,
+		defaultFundingPpm int32,
+		liquidityTier uint32,
+		marketType perpetualtypes.PerpetualMarketType,
+	) (perpetualtypes.Perpetual, error)
+	AcquireNextPerpetualID(ctx sdk.Context) uint32
 }
