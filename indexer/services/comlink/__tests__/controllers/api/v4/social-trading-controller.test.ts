@@ -9,7 +9,6 @@ import { RequestMethod } from '../../../../src/types';
 import { sendRequest } from '../../../helpers/helpers';
 
 describe('social-trading-controller', () => {
-
   beforeAll(async () => {
     await dbHelpers.migrate();
   });

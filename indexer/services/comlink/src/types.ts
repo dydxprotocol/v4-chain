@@ -631,7 +631,7 @@ export interface TraderSearchResponse {
 }
 
 export interface TraderSearchRequest {
-  username: string,
+  searchParam: string,
 }
 
 export interface TraderSearchResponseObject {

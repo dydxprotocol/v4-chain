@@ -309,7 +309,7 @@ export function pnlTicksToResponseObject(
   };
 }
 
-export function SubaccountInfoToTraderSearchResponse(
+export function subaccountInfoToTraderSearchResponse(
   subaccount: SubaccountFromDatabase,
   subaccountUsername: SubaccountUsernamesFromDatabase,
 ): TraderSearchResponse {

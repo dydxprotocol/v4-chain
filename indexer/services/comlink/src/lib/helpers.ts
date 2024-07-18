@@ -526,3 +526,8 @@ export function getChildSubaccountIds(address: string, parentSubaccountNum: numb
     (subaccountNumber: number): string => SubaccountTable.uuid(address, subaccountNumber),
   );
 }
+
+export function checkIfValidDydxAddress(address: string): boolean {
+  const pattern = /^dydx[0-9a-z]{39}$/;
+  return pattern.test(address);
+}
