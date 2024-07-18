@@ -20,7 +20,7 @@ import (
 	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 )
 
-func AreVoteExtensionsEnabled(ctx sdk.Context) bool {
+func AreVEEnabled(ctx sdk.Context) bool {
 	cp := ctx.ConsensusParams()
 	if cp.Abci == nil || cp.Abci.VoteExtensionsEnableHeight == 0 {
 		return false
@@ -82,7 +82,7 @@ func ValidateVoteExtensions(
 	// Start checking vote extensions only **after** the vote extensions enable
 	// height, because when `currentHeight == VoteExtensionsEnableHeight`
 	// PrepareProposal doesn't get any vote extensions in its request.
-	extensionsEnabled := AreVoteExtensionsEnabled(ctx)
+	extensionsEnabled := AreVEEnabled(ctx)
 	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
 		var buf bytes.Buffer
 		if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {

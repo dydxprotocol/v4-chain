@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func PruneAndValidateExtendedCommitInfo(
+func CleanAndValidateExtendedCommitInfo(
 	ctx sdk.Context,
 	extCommitInfo cometabci.ExtendedCommitInfo,
 	veCodec codec.VoteExtensionCodec,

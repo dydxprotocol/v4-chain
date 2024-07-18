@@ -41,7 +41,7 @@ func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinaliz
 		)
 	}
 
-	if !veutils.AreVoteExtensionsEnabled(ctx) {
+	if !veutils.AreVEEnabled(ctx) {
 		pbh.logger.Info(
 			"vote extensions are not enabled, skipping prices pre-blocker",
 			"height", ctx.BlockHeight(),

@@ -55,10 +55,7 @@ func PrepareProposalHandler(
 ) sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
 
-		var (
-			extInfoBz []byte
-			finalTxs  [][]byte
-		)
+		var finalTxs [][]byte
 
 		defer telemetry.ModuleMeasureSince(
 			ModuleName,
@@ -74,128 +71,97 @@ func PrepareProposalHandler(
 		}
 
 		txs, err := NewPrepareProposalTxs(req)
-
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("NewPrepareProposalTxs error: %v", err))
 			recordErrorMetricsWithLabel(metrics.PrepareProposalTxs)
 			return &EmptyPrepareProposalResponse, nil
 		}
 
-		voteExtensionsEnabled := veutils.AreVoteExtensionsEnabled(ctx)
-		if voteExtensionsEnabled {
+		//------------------------ VOTE EXTENSIONS ------------------------
+
+		if veutils.AreVEEnabled(ctx) {
 			ctx.Logger().Info(
 				"Providing oracle data using vote extensions",
 				"height", req.Height,
 			)
 
-			// Get the vote extnesions
-			extCommitInfo, err := ve.PruneAndValidateExtendedCommitInfo(
+			if err := SetVE(
 				ctx,
-				req.LocalLastCommit,
-				veCodec,
+				req,
+				&txs,
 				pricesKeeper,
+				veCodec,
+				extCommitCodec,
 				validateVoteExtensionFn,
-			)
-
-			if err != nil {
+			); err != nil {
 				ctx.Logger().Error(
-					"failed to prune extended commit info",
+					"failed to inject vote extensions into block",
 					"height", req.Height,
-					"local_last_commit", req.LocalLastCommit,
 					"err", err,
 				)
-
-				return &EmptyPrepareProposalResponse, nil
-			}
-
-			// Create the vote extension injection data which will be injected into the proposal. These contain the
-			// oracle data for the current block which will be committed to state in PreBlock.
-			extInfoBz, err = extCommitCodec.Encode(extCommitInfo)
-			if err != nil {
-				ctx.Logger().Error(
-					"failed to extended commit info",
-					"commit_info", extCommitInfo,
-					"err", err,
-				)
-
-				return &abci.ResponsePrepareProposal{Txs: make([][]byte, 0)}, nil
-			}
-
-			err = txs.SetExtInfoBz(extInfoBz)
-			if err != nil {
-				ctx.Logger().Error(fmt.Sprintf("SetExtInfoBz error: %v", err))
-				recordErrorMetricsWithLabel(metrics.FundingTx)
 				return &EmptyPrepareProposalResponse, nil
 			}
 		}
 
-		fundingTxResp, err := GetAddPremiumVotesTx(ctx, txConfig, perpetualKeeper)
-		if err != nil {
+		//------------------------ PREMIUM VOTES ------------------------
+		fundingTxResp, err := SetPremiumVotesTx(
+			ctx,
+			txConfig,
+			req,
+			&txs,
+			perpetualKeeper,
+		)
 
-			ctx.Logger().Error(fmt.Sprintf("GetAddPremiumVotesTx error: %v", err))
-			recordErrorMetricsWithLabel(metrics.FundingTx)
-			return &EmptyPrepareProposalResponse, nil
-		}
-		err = txs.SetAddPremiumVotesTx(fundingTxResp.Tx)
 		if err != nil {
-
-			ctx.Logger().Error(fmt.Sprintf("SetAddPremiumVotesTx error: %v", err))
+			ctx.Logger().Error(
+				"failed to inject premium votes into block",
+				"height", req.Height,
+				"err", err,
+			)
 			recordErrorMetricsWithLabel(metrics.FundingTx)
 			return &EmptyPrepareProposalResponse, nil
 		}
 
-		// Gather "Other" group messages.
-		otherBytesAllocated := txs.GetAvailableBytes() / 4 // ~25% of the remainder.
-		// filter out txs that have disallow messages.
-		txsWithoutDisallowMsgs := RemoveDisallowMsgs(ctx, txConfig.TxDecoder(), req.Txs)
-		otherTxsToInclude, otherTxsRemainder := GetGroupMsgOther(txsWithoutDisallowMsgs, otherBytesAllocated)
-		if len(otherTxsToInclude) > 0 {
-			err := txs.AddOtherTxs(otherTxsToInclude)
-			if err != nil {
-				ctx.Logger().Error(fmt.Sprintf("AddOtherTxs error: %v", err))
-				recordErrorMetricsWithLabel(metrics.OtherTxs)
-				return &EmptyPrepareProposalResponse, nil
-			}
+		//------------------------ OTHER TXS ------------------------
+		otherTxsRemainder, err := SetOneFourthOtherTxsAndGetRemainder(
+			ctx,
+			txConfig,
+			req,
+			&txs,
+		)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("AddOtherTxs error: %v", err))
+			recordErrorMetricsWithLabel(metrics.OtherTxs)
+			return &EmptyPrepareProposalResponse, nil
 		}
 
-		// Gather "OperationsRelated" group messages.
-		// TODO(DEC-1237): ensure ProposedOperations is within a certain size.
-		operationsTxResp, err := GetProposedOperationsTx(ctx, txConfig, clobKeeper)
+		//------------------------ PROPOSED OPERATIONS ------------------------
+		operationsTxResp, err := SetProposedOperationsTx(
+			ctx,
+			txConfig,
+			clobKeeper,
+			&txs,
+		)
+
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetProposedOperationsTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.OperationsTx)
 			return &EmptyPrepareProposalResponse, nil
 		}
-		err = txs.SetProposedOperationsTx(operationsTxResp.Tx)
-		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("SetProposedOperationsTx error: %v", err))
-			recordErrorMetricsWithLabel(metrics.OperationsTx)
+
+		//------------------------ REMAINDER TXS ------------------------
+		if err := FillRemainderWithOtherTxs(
+			ctx,
+			&txs,
+			otherTxsRemainder,
+		); err != nil {
+			ctx.Logger().Error(fmt.Sprintf("AddOtherTxs (additional) error: %v", err))
+			recordErrorMetricsWithLabel(metrics.OtherTxs)
 			return &EmptyPrepareProposalResponse, nil
 		}
 
-		// Try to pack in more "Other" txs.
-		availableBytes := txs.GetAvailableBytes()
-		if availableBytes > 0 && len(otherTxsRemainder) > 0 {
-			moreOtherTxsToInclude, _ := GetGroupMsgOther(otherTxsRemainder, availableBytes)
-			if len(moreOtherTxsToInclude) > 0 {
-				err = txs.AddOtherTxs(moreOtherTxsToInclude)
-				if err != nil {
-
-					ctx.Logger().Error(fmt.Sprintf("AddOtherTxs (additional) error: %v", err))
-					recordErrorMetricsWithLabel(metrics.OtherTxs)
-					return &EmptyPrepareProposalResponse, nil
-				}
-			}
-		}
-
-		if voteExtensionsEnabled {
-			finalTxs, err = txs.GetTxsInOrder(true)
-		} else {
-			finalTxs, err = txs.GetTxsInOrder(false)
-		}
-
+		finalTxs, err = GetFinalTxs(ctx, txs)
 		if err != nil {
-
 			ctx.Logger().Error(fmt.Sprintf("GetTxsInOrder error: %v", err))
 			recordErrorMetricsWithLabel(metrics.GetTxsInOrder)
 			return &EmptyPrepareProposalResponse, nil
@@ -214,6 +180,119 @@ func PrepareProposalHandler(
 
 		return &abci.ResponsePrepareProposal{Txs: finalTxs}, nil
 	}
+}
+
+func SetVE(
+	ctx sdk.Context,
+	req *abci.RequestPrepareProposal,
+	txs *PrepareProposalTxs,
+	pricesKeeper PreparePricesKeeper,
+	voteCodec codec.VoteExtensionCodec,
+	extCodec codec.ExtendedCommitCodec,
+	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
+) error {
+	cleanExtCommitInfo, err := ve.CleanAndValidateExtendedCommitInfo(
+		ctx,
+		req.LocalLastCommit,
+		voteCodec,
+		pricesKeeper,
+		validateVoteExtensionFn,
+	)
+
+	if err != nil {
+		return err
+	}
+	// Create the vote extension injection data which will be injected into the proposal. These contain the
+	// oracle data for the current block which will be committed to state in PreBlock.
+	extInfoBz, err := extCodec.Encode(cleanExtCommitInfo)
+	if err != nil {
+		return err
+	}
+
+	err = txs.SetExtInfoBz(extInfoBz)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func FillRemainderWithOtherTxs(
+	ctx sdk.Context,
+	txs *PrepareProposalTxs,
+	otherTxsRemainder [][]byte,
+) error {
+	// Try to pack in more "Other" txs.
+	availableBytes := txs.GetAvailableBytes()
+	if availableBytes > 0 && len(otherTxsRemainder) > 0 {
+		moreOtherTxsToInclude, _ := GetGroupMsgOther(otherTxsRemainder, availableBytes)
+		if len(moreOtherTxsToInclude) > 0 {
+			if err := txs.AddOtherTxs(moreOtherTxsToInclude); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func SetPremiumVotesTx(
+	ctx sdk.Context,
+	txConfig client.TxConfig,
+	req *abci.RequestPrepareProposal,
+	txs *PrepareProposalTxs,
+	perpetualKeeper PreparePerpetualsKeeper,
+) (FundingTxResponse, error) {
+	fundingTxResp, err := GetAddPremiumVotesTx(ctx, txConfig, perpetualKeeper)
+	if err != nil {
+		return fundingTxResp, err
+	}
+
+	if err := txs.SetAddPremiumVotesTx(fundingTxResp.Tx); err != nil {
+		return fundingTxResp, err
+	}
+
+	return fundingTxResp, nil
+}
+
+func SetProposedOperationsTx(
+	ctx sdk.Context,
+	txConfig client.TxConfig,
+	clobKeeper PrepareClobKeeper,
+	txs *PrepareProposalTxs,
+) (OperationsTxResponse, error) {
+	// Gather "OperationsRelated" group messages.
+	// TODO(DEC-1237): ensure ProposedOperations is within a certain size.
+	operationsTxResp, err := GetProposedOperationsTx(ctx, txConfig, clobKeeper)
+	if err != nil {
+		return operationsTxResp, err
+	}
+	if err := txs.SetProposedOperationsTx(operationsTxResp.Tx); err != nil {
+		return operationsTxResp, err
+	}
+
+	return operationsTxResp, nil
+
+}
+
+func SetOneFourthOtherTxsAndGetRemainder(
+	ctx sdk.Context,
+	txConfig client.TxConfig,
+	req *abci.RequestPrepareProposal,
+	txs *PrepareProposalTxs,
+) ([][]byte, error) {
+	// Gather "Other" group messages.
+	otherBytesAllocated := txs.GetAvailableBytes() / 4 // ~25% of the remainder.
+	// filter out txs that have disallow messages.
+	txsWithoutDisallowMsgs := RemoveDisallowMsgs(ctx, txConfig.TxDecoder(), req.Txs)
+	otherTxsToInclude, otherTxsRemainder := GetGroupMsgOther(txsWithoutDisallowMsgs, otherBytesAllocated)
+	if len(otherTxsToInclude) > 0 {
+		err := txs.AddOtherTxs(otherTxsToInclude)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return otherTxsRemainder, nil
+
 }
 
 // GetAddPremiumVotesTx returns a tx containing `MsgAddPremiumVotes`.
@@ -266,6 +345,13 @@ func GetProposedOperationsTx(
 		Tx:            tx,
 		NumOperations: len(msgOperations.GetOperationsQueue()),
 	}, nil
+}
+
+func GetFinalTxs(ctx sdk.Context, txs PrepareProposalTxs) ([][]byte, error) {
+	if veutils.AreVEEnabled(ctx) {
+		return txs.GetTxsInOrder(true)
+	}
+	return txs.GetTxsInOrder(false)
 }
 
 // EncodeMsgsIntoTxBytes encodes the given msgs into a single transaction.

@@ -64,7 +64,7 @@ func ProcessProposalHandler(
 			error_lib.LogErrorWithOptionalContext(ctx, "UpdateSmoothedPrices failed", err)
 		}
 
-		veEnabled := veutils.AreVoteExtensionsEnabled(ctx)
+		veEnabled := veutils.AreVEEnabled(ctx)
 
 		if veEnabled {
 
