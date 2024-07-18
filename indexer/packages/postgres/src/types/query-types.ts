@@ -86,6 +86,8 @@ export enum QueryableField {
   STARTED_AT_HEIGHT_BEFORE_OR_AT = 'startedAtHeightBeforeOrAt',
   REASON = 'reason',
   USERNAME = 'username',
+  TIMESPAN = 'timeSpan',
+  RANK = 'rank',
 }
 
 export interface QueryConfig {
@@ -312,4 +314,10 @@ export interface TradingRewardAggregationQueryConfig extends QueryConfig {
   [QueryableField.PERIOD]?: TradingRewardAggregationPeriod;
   [QueryableField.STARTED_AT_BEFORE_OR_AT]?: IsoString;
   [QueryableField.STARTED_AT_HEIGHT_BEFORE_OR_AT]?: string;
+}
+
+export interface LeaderboardPnlQueryConfig extends QueryConfig {
+  [QueryableField.SUBACCOUNT_ID]?: string[];
+  [QueryableField.TIMESPAN]?: string[];
+  [QueryableField.RANK]?: number[];
 }

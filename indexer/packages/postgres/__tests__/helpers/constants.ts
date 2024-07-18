@@ -31,6 +31,7 @@ import {
   FillCreateObject,
   FillType,
   FundingIndexUpdatesCreateObject,
+  LeaderboardPnlCreateObject,
   Liquidity,
   LiquidityTiersCreateObject,
   MarketCreateObject,
@@ -854,4 +855,38 @@ export const defaultSubaccountUsername2: SubaccountUsernamesCreateObject = {
 export const duplicatedSubaccountUsername: SubaccountUsernamesCreateObject = {
   username: 'LyingRaisin32',
   subaccountId: defaultSubaccountId3,
+};
+
+// ============== Leaderboard pnl Data ==============
+
+export const defaultLeaderboardPnlOneDay: LeaderboardPnlCreateObject = {
+  subaccountId: defaultSubaccountId,
+  timeSpan: 'ONE_DAY',
+  pnl: '10000',
+  currentEquity: '1000',
+  rank: 1,
+};
+
+export const defaultLeaderboardPnl2OneDay: LeaderboardPnlCreateObject = {
+  subaccountId: defaultSubaccountId2,
+  timeSpan: 'ONE_DAY',
+  pnl: '100',
+  currentEquity: '10000',
+  rank: 2,
+};
+
+export const defaultLeaderboardPnl1AllTime: LeaderboardPnlCreateObject = {
+  subaccountId: defaultSubaccountId,
+  timeSpan: 'ALL_TIME',
+  pnl: '10000',
+  currentEquity: '1000',
+  rank: 1,
+};
+
+export const defaultLeaderboardPnlOneDayToUpsert: LeaderboardPnlCreateObject = {
+  subaccountId: defaultSubaccountId,
+  timeSpan: 'ONE_DAY',
+  pnl: '100000',
+  currentEquity: '1000',
+  rank: 1,
 };
