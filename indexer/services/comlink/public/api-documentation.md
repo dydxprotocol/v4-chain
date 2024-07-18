@@ -660,6 +660,7 @@ fetch(`${baseURL}/candles/perpetualMarkets/{ticker}?resolution=1MIN`,
 |limit|query|number(double)|false|none|
 |fromISO|query|string|false|none|
 |toISO|query|string|false|none|
+|includeOrderbook|query|boolean|false|none|
 
 #### Enumerated Values
 

@@ -1568,6 +1568,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "includeOrderbook",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ]
       }

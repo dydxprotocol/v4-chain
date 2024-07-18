@@ -4,6 +4,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
+import _ from 'lodash';
 import {
   Controller, Get, Path, Query, Route,
 } from 'tsoa';
@@ -29,6 +30,7 @@ class CandleController extends Controller {
       @Query() limit?: number,
       @Query() fromISO?: string,
       @Query() toISO?: string,
+      @Query() includeOrderbook?: boolean,
   ): Promise<CandleResponse> {
     const candles: CandleFromDatabase[] = await CandleTable.findAll(
       {
@@ -41,10 +43,30 @@ class CandleController extends Controller {
       [],
     );
 
-    return {
-      candles: candles.map(candleToResponseObject),
-    };
+    return includeOrderbook
+      ? { candles: useOrderbookForHLOC(candles).map(candleToResponseObject) }
+      : { candles: candles.map(candleToResponseObject) };
   }
+}
+
+function useOrderbookForHLOC(candles: CandleFromDatabase[]): CandleFromDatabase[] {
+  return candles.map((candle) => {
+    if (candle.trades > 0) {
+      return candle;
+    }
+
+    const open = candle.orderbookMidPriceOpen ?? candle.open;
+    const close = candle.orderbookMidPriceClose ?? candle.close;
+    const [low, high] = _.orderBy([open, close]);
+
+    return {
+      ...candle,
+      open,
+      high,
+      low,
+      close,
+    };
+  });
 }
 
 router.get(
@@ -71,7 +93,13 @@ router.get(
       optional: true,
       isISO8601: true,
     },
-  }),
+    includeOrderbook: {
+      in: 'query',
+      optional: true,
+      isBoolean: true,
+    },
+  },
+  ),
   handleValidationErrors,
   async (req: express.Request, res: express.Response) => {
     const {
@@ -80,6 +108,7 @@ router.get(
       fromISO,
       toISO,
       limit,
+      includeOrderbook,
     }: CandleRequest = matchedData(req) as CandleRequest;
 
     const start: number = Date.now();
@@ -91,6 +120,7 @@ router.get(
         limit,
         fromISO,
         toISO,
+        includeOrderbook,
       );
 
       return res.send(response);

@@ -485,6 +485,7 @@ export interface CandleRequest extends LimitRequest {
   resolution: CandleResolution,
   fromISO?: IsoString,
   toISO?: IsoString,
+  includeOrderbook?: boolean,
 }
 
 export interface SparklinesRequest {
