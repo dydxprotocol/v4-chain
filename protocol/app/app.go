@@ -969,8 +969,6 @@ func New(
 
 	app.pricePreBlocker = *daemonpreblocker.NewDaemonPreBlockHandler(
 		logger,
-		indexPriceCache,
-		app.PricesKeeper,
 		priceApplier,
 	)
 

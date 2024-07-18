@@ -95,8 +95,6 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 3)
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
-			s.indexPriceCache,
-			*s.pricesKeeper,
 			s.priceApplier,
 		)
 		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
@@ -115,8 +113,6 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
-			s.indexPriceCache,
-			*s.pricesKeeper,
 			s.priceApplier,
 		)
 
@@ -136,8 +132,6 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
-			s.indexPriceCache,
-			*s.pricesKeeper,
 			s.priceApplier,
 		)
 
@@ -173,8 +167,6 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
-			s.indexPriceCache,
-			*s.pricesKeeper,
 			s.priceApplier,
 		)
 
@@ -223,8 +215,6 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
-			s.indexPriceCache,
-			*s.pricesKeeper,
 			s.priceApplier,
 		)
 

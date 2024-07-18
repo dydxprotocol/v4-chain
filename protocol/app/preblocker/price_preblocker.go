@@ -3,14 +3,11 @@ package preblocker
 import (
 	"fmt"
 
-	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
-	abci "github.com/cometbft/cometbft/abci/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"cosmossdk.io/log"
 	priceapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
-	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
+	abci "github.com/cometbft/cometbft/abci/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // PreBlockHandler is responsible for aggregating daemon data from each
@@ -19,26 +16,16 @@ import (
 type PreBlockHandler struct { //golint:ignore
 	logger log.Logger
 
-	// keeper is the keeper for the prices module. This is utilized to write
-	// daemon price data to state.
-	keeper pk.Keeper
-
 	// price applier writes the aggregated prices to state.
 	priceApplier *priceapplier.PriceApplier
 }
 
-// NewOraclePreBlockHandler returns a new PreBlockHandler. The handler
-// is responsible for writing oracle data included in vote extensions to state.
 func NewDaemonPreBlockHandler(
 	logger log.Logger,
-	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
-	pk pk.Keeper,
 	priceApplier *priceapplier.PriceApplier,
 ) *PreBlockHandler {
-
 	return &PreBlockHandler{
 		logger:       logger,
-		keeper:       pk,
 		priceApplier: priceApplier,
 	}
 }
@@ -46,15 +33,12 @@ func NewDaemonPreBlockHandler(
 // PreBlocker is called by the base app before the block is finalized. It
 // is responsible for aggregating price daemon data from each validator
 // and writing to the prices module store.
-
 func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (resp *sdk.ResponsePreBlock, err error) {
 	if req == nil {
-		ctx.Logger().Error(
-			"received nil RequestFinalizeBlock in prices PreBlocker",
-			"height", ctx.BlockHeight(),
+		return &sdk.ResponsePreBlock{}, fmt.Errorf(
+			"received nil RequestFinalizeBlock in prices preblocker: height %d",
+			ctx.BlockHeight(),
 		)
-
-		return &sdk.ResponsePreBlock{}, fmt.Errorf("received nil RequestFinalizeBlock in prices preblocker: height %d", ctx.BlockHeight())
 	}
 
 	if !veutils.AreVoteExtensionsEnabled(ctx) {
@@ -64,10 +48,6 @@ func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinaliz
 		)
 		return &sdk.ResponsePreBlock{}, nil
 	}
-	pbh.logger.Debug(
-		"executing the prices pre-block hook",
-		"height", req.Height,
-	)
 
 	_, err = pbh.priceApplier.ApplyPricesFromVE(ctx, req)
 	if err != nil {
