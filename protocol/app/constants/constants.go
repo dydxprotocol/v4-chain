@@ -7,7 +7,7 @@ const (
 
 	// MaximumPriceSize defines the maximum size of a price in bytes. This allows
 	// up to 32 bytes for the price and 1 byte for the sign (positive/negative).
-	MaximumPriceSize = 33
+	MaximumPriceSizeInBytes = 33
 
 	// where in the proposal the injected VE's are located
 	DaemonInfoIndex    = 0

@@ -42,7 +42,7 @@ type TxSetterParams struct {
 	Ctx      sdk.Context
 	TxConfig client.TxConfig
 	Txs      *PrepareProposalTxs
-	Req      *abci.RequestPrepareProposal
+	Request  *abci.RequestPrepareProposal
 }
 
 // PrepareProposalHandler is responsible for preparing a block proposal that's returned to Tendermint via ABCI++.
@@ -61,7 +61,7 @@ func PrepareProposalHandler(
 	extCommitCodec codec.ExtendedCommitCodec,
 	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
 ) sdk.PrepareProposalHandler {
-	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
+	return func(ctx sdk.Context, request *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
 
 		var finalTxs [][]byte
 
@@ -73,12 +73,12 @@ func PrepareProposalHandler(
 			metrics.Latency,
 		)
 
-		if req == nil {
+		if request == nil {
 			ctx.Logger().Error("PrepareProposalHandler received a nil request")
 			return &EmptyPrepareProposalResponse, nil
 		}
 
-		txs, err := NewPrepareProposalTxs(req)
+		txs, err := NewPrepareProposalTxs(request)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("NewPrepareProposalTxs error: %v", err))
 			recordErrorMetricsWithLabel(metrics.PrepareProposalTxs)
@@ -89,7 +89,7 @@ func PrepareProposalHandler(
 			Ctx:      ctx,
 			TxConfig: txConfig,
 			Txs:      &txs,
-			Req:      req,
+			Request:  request,
 		}
 
 		//------------------------ VOTE EXTENSIONS ------------------------
@@ -97,7 +97,7 @@ func PrepareProposalHandler(
 		if veutils.AreVEEnabled(ctx) {
 			ctx.Logger().Info(
 				"Providing oracle data using vote extensions",
-				"height", req.Height,
+				"height", request.Height,
 			)
 
 			if err := SetVE(
@@ -109,7 +109,7 @@ func PrepareProposalHandler(
 			); err != nil {
 				ctx.Logger().Error(
 					"failed to inject vote extensions into block",
-					"height", req.Height,
+					"height", request.Height,
 					"err", err,
 				)
 				return &EmptyPrepareProposalResponse, nil
@@ -125,7 +125,7 @@ func PrepareProposalHandler(
 		if err != nil {
 			ctx.Logger().Error(
 				"failed to inject premium votes into block",
-				"height", req.Height,
+				"height", request.Height,
 				"err", err,
 			)
 			recordErrorMetricsWithLabel(metrics.FundingTx)
@@ -178,7 +178,7 @@ func PrepareProposalHandler(
 				fundingTx:           fundingTxResp,
 				operationsTx:        operationsTxResp,
 				numTxsToReturn:      len(finalTxs),
-				numTxsInOriginalReq: len(req.Txs),
+				numTxsInOriginalReq: len(request.Txs),
 			},
 		)
 
@@ -195,7 +195,7 @@ func SetVE(
 ) error {
 	cleanExtCommitInfo, err := ve.CleanAndValidateExtendedCommitInfo(
 		txSetterParams.Ctx,
-		txSetterParams.Req.LocalLastCommit,
+		txSetterParams.Request.LocalLastCommit,
 		voteCodec,
 		pricesKeeper,
 		validateVoteExtensionFn,
@@ -285,7 +285,7 @@ func SetOneFourthOtherTxsAndGetRemainder(
 	txsWithoutDisallowMsgs := RemoveDisallowMsgs(
 		txSetterParams.Ctx,
 		txSetterParams.TxConfig.TxDecoder(),
-		txSetterParams.Req.Txs,
+		txSetterParams.Request.Txs,
 	)
 	otherTxsToInclude, otherTxsRemainder := GetGroupMsgOther(txsWithoutDisallowMsgs, otherBytesAllocated)
 	if len(otherTxsToInclude) > 0 {

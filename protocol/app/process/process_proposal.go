@@ -19,6 +19,11 @@ import (
 
 const ConsensusRound = sdk.ContextKey("consensus_round")
 
+var (
+	acceptResponse = &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+	rejectResponse = &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+)
+
 // ProcessProposalHandler is responsible for ensuring that the list of txs in the proposed block are valid.
 // Specifically, this validates:
 //   - Tx bytes can be decoded to a valid tx.
@@ -43,7 +48,7 @@ func ProcessProposalHandler(
 	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
 ) sdk.ProcessProposalHandler {
 
-	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+	return func(ctx sdk.Context, request *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 		defer telemetry.ModuleMeasureSince(
 			ModuleName,
 			time.Now(),
@@ -62,24 +67,24 @@ func ProcessProposalHandler(
 
 		if veutils.AreVEEnabled(ctx) {
 
-			if len(req.Txs) < constants.MinTxsCountWithVE {
-				ctx.Logger().Error("failed to process proposal: missing commit info", "num_txs", len(req.Txs))
+			if len(request.Txs) < constants.MinTxsCountWithVE {
+				ctx.Logger().Error("failed to process proposal: missing commit info", "num_txs", len(request.Txs))
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
 
-			extCommitBz := req.Txs[constants.DaemonInfoIndex]
+			extCommitBz := request.Txs[constants.DaemonInfoIndex]
 
 			defer func() {
 				// re-append the ve into the transactions to return to comet BFT
 				// this gets removed to initially to not obstruct logic in validating
 				// all other non-ve transactions
 				// FLOW: validate ve -> remove ve -> validate all other txs -> re-append ve
-				req.Txs = append([][]byte{extCommitBz}, req.Txs...)
+				request.Txs = append([][]byte{extCommitBz}, request.Txs...)
 			}()
 
 			if err := DecodeAndValidateVE(
 				ctx,
-				req,
+				request,
 				extCommitBz,
 				validateVoteExtensionFn,
 				pricesKeeper,
@@ -92,11 +97,11 @@ func ProcessProposalHandler(
 
 		}
 
-		txs, err := DecodeProcessProposalTxs(txConfig.TxDecoder(), req, pricesKeeper)
+		txs, err := DecodeProcessProposalTxs(txConfig.TxDecoder(), request, pricesKeeper)
 		if err != nil {
 			error_lib.LogErrorWithOptionalContext(ctx, "DecodeProcessProposalTxs failed", err)
 			recordErrorMetricsWithLabel(metrics.Decode)
-			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+			return rejectResponse, nil
 		}
 
 		err = txs.Validate()
@@ -104,7 +109,7 @@ func ProcessProposalHandler(
 		if err != nil {
 			error_lib.LogErrorWithOptionalContext(ctx, "DecodeProcessProposalTxs.Validate failed", err)
 			recordErrorMetricsWithLabel(metrics.Validate)
-			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+			return rejectResponse, nil
 		}
 
 		// Measure MEV metrics if enabled.
@@ -113,9 +118,9 @@ func ProcessProposalHandler(
 		// }
 
 		// Record a success metric.
-		recordSuccessMetrics(ctx, txs, len(req.Txs))
+		recordSuccessMetrics(ctx, txs, len(request.Txs))
 
-		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
+		return acceptResponse, nil
 	}
 }
 

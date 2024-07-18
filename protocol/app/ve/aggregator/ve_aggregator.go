@@ -146,7 +146,7 @@ func (ma *MedianAggregator) addVoteToAggregator(ctx sdk.Context, address string,
 
 	prices := make(map[string]*big.Int, len(ve.Prices))
 	for marketId, priceBz := range ve.Prices {
-		if len(priceBz) > constants.MaximumPriceSize {
+		if len(priceBz) > constants.MaximumPriceSizeInBytes {
 			ma.logger.Debug(
 				"failed to store price, bytes are too long",
 				"market_id", marketId,

@@ -128,7 +128,7 @@ func ValidateDaemonVoteExtension(
 		priceupdates.MarketPriceUpdates = append(priceupdates.MarketPriceUpdates, pu)
 
 		// Ensure that the price bytes are not too long.
-		if len(bz) > constants.MaximumPriceSize {
+		if len(bz) > constants.MaximumPriceSizeInBytes {
 			return fmt.Errorf("price bytes are too long: %d", len(bz))
 		}
 	}

@@ -33,8 +33,8 @@ func NewDaemonPreBlockHandler(
 // PreBlocker is called by the base app before the block is finalized. It
 // is responsible for aggregating price daemon data from each validator
 // and writing to the prices module store.
-func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (resp *sdk.ResponsePreBlock, err error) {
-	if req == nil {
+func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, request *abci.RequestFinalizeBlock) (resp *sdk.ResponsePreBlock, err error) {
+	if request == nil {
 		return &sdk.ResponsePreBlock{}, fmt.Errorf(
 			"received nil RequestFinalizeBlock in prices preblocker: height %d",
 			ctx.BlockHeight(),
@@ -49,11 +49,11 @@ func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinaliz
 		return &sdk.ResponsePreBlock{}, nil
 	}
 
-	_, err = pbh.priceApplier.ApplyPricesFromVE(ctx, req)
+	_, err = pbh.priceApplier.ApplyPricesFromVE(ctx, request)
 	if err != nil {
 		pbh.logger.Error(
 			"failed to apply prices from vote extensions",
-			"height", req.Height,
+			"height", request.Height,
 			"err", err,
 		)
 
