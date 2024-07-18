@@ -1,4 +1,4 @@
-import { SubaccountUsernamesFromDatabase, SubaccountsWithoutUsernamesResult } from '../../src/types';
+import { SubaccountFromDatabase, SubaccountUsernamesFromDatabase, SubaccountsWithoutUsernamesResult } from '../../src/types';
 import * as SubaccountUsernamesTable from '../../src/stores/subaccount-usernames-table';
 import * as SubaccountsTable from '../../src/stores/subaccount-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
@@ -40,7 +40,7 @@ describe('SubaccountUsernames store', () => {
     SubaccountUsernamesFromDatabase[] = await SubaccountUsernamesTable.findAll(
       {},
       [],
-      { readReplica: true },
+      {},
     );
 
     expect(subaccountUsernames.length).toEqual(2);
@@ -71,9 +71,9 @@ describe('SubaccountUsernames store', () => {
   });
 
   it('Get subaccount ids which arent in the subaccount usernames table', async () => {
-    const subaccounts = await SubaccountsTable.findAll({
+    const subaccounts: SubaccountFromDatabase[] = await SubaccountsTable.findAll({
       subaccountNumber: 0,
-    }, [], { readReplica: true });
+    }, [], {});
     const subaccountLength = subaccounts.length;
     await SubaccountUsernamesTable.create(defaultSubaccountUsername);
     const subaccountIds: SubaccountsWithoutUsernamesResult[] = await
