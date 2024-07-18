@@ -260,7 +260,7 @@ export interface SubaccountUsernamesFromDatabase {
   subaccountId: string;
 }
 
-export interface LeaderboardPNLFromDatabase {
+export interface LeaderboardPnlFromDatabase {
   subaccountId: string;
   timeSpan: string;
   pnl: string;

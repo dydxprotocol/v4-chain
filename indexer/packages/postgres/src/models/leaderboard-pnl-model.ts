@@ -6,7 +6,7 @@ import { NumericPattern } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
 import BaseModel from './base-model';
 
-export default class LeaderboardPNLModel extends BaseModel {
+export default class LeaderboardPnlModel extends BaseModel {
 
   static get tableName() {
     return 'leaderboard_pnl';

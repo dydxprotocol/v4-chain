@@ -1,6 +1,6 @@
 /* ------- LEADERBOARD PNL TYPES ------- */
 
-export interface LeaderboardPNLCreateObject {
+export interface LeaderboardPnlCreateObject {
   subaccountId: string;
   pnl: string;
   timeSpan: string;
@@ -8,7 +8,7 @@ export interface LeaderboardPNLCreateObject {
   rank: number;
 }
 
-export enum LeaderboardPNLColumns {
+export enum LeaderboardPnlColumns {
   subaccountId = 'subaccountId',
   timeSpan = 'timeSpan',
   pnl = 'pnl',

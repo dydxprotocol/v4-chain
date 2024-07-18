@@ -1,5 +1,5 @@
-import { LeaderboardPNLFromDatabase } from '../../src/types';
-import * as LeaderboardPNLTable from '../../src/stores/leaderboard-pnl-table';
+import { LeaderboardPnlFromDatabase } from '../../src/types';
+import * as LeaderboardPnlTable from '../../src/stores/leaderboard-pnl-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import {
   defaultLeaderboardPnl2OneDay,
@@ -9,7 +9,7 @@ import {
 } from '../helpers/constants';
 import { seedData } from '../helpers/mock-generators';
 
-describe('LeaderboardPNL store', () => {
+describe('LeaderboardPnl store', () => {
   beforeEach(async () => {
     await seedData();
   });
@@ -26,74 +26,70 @@ describe('LeaderboardPNL store', () => {
     await teardown();
   });
 
-  it('Successfully creates a LeaderboardPNL', async () => {
-    await LeaderboardPNLTable.create(defaultLeaderboardPnlOneDay);
+  it('Successfully creates a LeaderboardPnl', async () => {
+    await LeaderboardPnlTable.create(defaultLeaderboardPnlOneDay);
   });
 
-  it('Successfully creates multiple LeaderboardPNLs', async () => {
+  it('Successfully creates multiple LeaderboardPnls', async () => {
     await Promise.all([
-      LeaderboardPNLTable.create(defaultLeaderboardPnlOneDay),
-      LeaderboardPNLTable.create(defaultLeaderboardPnl2OneDay),
-      LeaderboardPNLTable.create(defaultLeaderboardPnl1AllTime),
+      LeaderboardPnlTable.create(defaultLeaderboardPnlOneDay),
+      LeaderboardPnlTable.create(defaultLeaderboardPnl2OneDay),
+      LeaderboardPnlTable.create(defaultLeaderboardPnl1AllTime),
     ]);
 
-    const leaderboardPNLs: LeaderboardPNLFromDatabase[] = await LeaderboardPNLTable.findAll(
+    const leaderboardPnls: LeaderboardPnlFromDatabase[] = await LeaderboardPnlTable.findAll(
       {},
       [],
-      { readReplica: true },
     );
 
-    expect(leaderboardPNLs.length).toEqual(3);
+    expect(leaderboardPnls.length).toEqual(3);
   });
 
-  it('Successfully finds LeaderboardPNL with subaccountId and timespan', async () => {
+  it('Successfully finds LeaderboardPnl with subaccountId and timespan', async () => {
     await Promise.all([
-      LeaderboardPNLTable.create(defaultLeaderboardPnlOneDay),
-      LeaderboardPNLTable.create(defaultLeaderboardPnl2OneDay),
-      LeaderboardPNLTable.create(defaultLeaderboardPnl1AllTime),
+      LeaderboardPnlTable.create(defaultLeaderboardPnlOneDay),
+      LeaderboardPnlTable.create(defaultLeaderboardPnl2OneDay),
+      LeaderboardPnlTable.create(defaultLeaderboardPnl1AllTime),
     ]);
 
-    const leaderboardPNL: LeaderboardPNLFromDatabase[] = await LeaderboardPNLTable.findAll(
+    const leaderboardPnl: LeaderboardPnlFromDatabase[] = await LeaderboardPnlTable.findAll(
       {
         subaccountId: [defaultLeaderboardPnlOneDay.subaccountId],
         timeSpan: [defaultLeaderboardPnlOneDay.timeSpan],
       },
       [],
-      { readReplica: true },
     );
 
-    expect(leaderboardPNL.length).toEqual(1);
-    expect(leaderboardPNL[0]).toEqual(expect.objectContaining(defaultLeaderboardPnlOneDay));
+    expect(leaderboardPnl.length).toEqual(1);
+    expect(leaderboardPnl[0]).toEqual(expect.objectContaining(defaultLeaderboardPnlOneDay));
   });
 
-  it('Successfully upserts a LeaderboardPNL', async () => {
-    await LeaderboardPNLTable.upsert(defaultLeaderboardPnlOneDay);
+  it('Successfully upserts a LeaderboardPnl', async () => {
+    await LeaderboardPnlTable.upsert(defaultLeaderboardPnlOneDay);
 
-    await LeaderboardPNLTable.upsert(defaultLeaderboardPnlOneDayToUpsert);
+    await LeaderboardPnlTable.upsert(defaultLeaderboardPnlOneDayToUpsert);
 
-    const leaderboardPNLs: LeaderboardPNLFromDatabase[] = await LeaderboardPNLTable.findAll(
+    const leaderboardPnls: LeaderboardPnlFromDatabase[] = await LeaderboardPnlTable.findAll(
       {},
       [],
-      { readReplica: true },
     );
 
-    expect(leaderboardPNLs.length).toEqual(1);
-    expect(leaderboardPNLs[0]).toEqual(
+    expect(leaderboardPnls.length).toEqual(1);
+    expect(leaderboardPnls[0]).toEqual(
       expect.objectContaining(defaultLeaderboardPnlOneDayToUpsert));
   });
 
-  it('Successfully bulk upserts LeaderboardPNLs', async () => {
-    await LeaderboardPNLTable.bulkUpsert(
+  it('Successfully bulk upserts LeaderboardPnls', async () => {
+    await LeaderboardPnlTable.bulkUpsert(
       [defaultLeaderboardPnlOneDay, defaultLeaderboardPnl2OneDay]);
 
-    const leaderboardPNLs: LeaderboardPNLFromDatabase[] = await LeaderboardPNLTable.findAll(
+    const leaderboardPnls: LeaderboardPnlFromDatabase[] = await LeaderboardPnlTable.findAll(
       {},
       [],
-      { readReplica: true },
     );
 
-    expect(leaderboardPNLs.length).toEqual(2);
-    expect(leaderboardPNLs[0]).toEqual(expect.objectContaining(defaultLeaderboardPnlOneDay));
-    expect(leaderboardPNLs[1]).toEqual(expect.objectContaining(defaultLeaderboardPnl2OneDay));
+    expect(leaderboardPnls.length).toEqual(2);
+    expect(leaderboardPnls[0]).toEqual(expect.objectContaining(defaultLeaderboardPnlOneDay));
+    expect(leaderboardPnls[1]).toEqual(expect.objectContaining(defaultLeaderboardPnl2OneDay));
   });
 });

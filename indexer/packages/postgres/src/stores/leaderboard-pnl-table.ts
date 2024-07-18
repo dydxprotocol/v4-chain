@@ -12,13 +12,13 @@ import {
   generateBulkUpsertString,
 } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
-import LeaderboardPNLModel from '../models/leaderboard-pnl-model';
+import LeaderboardPnlModel from '../models/leaderboard-pnl-model';
 import {
   QueryConfig,
-  LeaderboardPNLCreateObject,
-  LeaderboardPNLFromDatabase,
-  LeaderboardPNLColumns,
-  LeaderboardPNLQueryConfig,
+  LeaderboardPnlCreateObject,
+  LeaderboardPnlFromDatabase,
+  LeaderboardPnlColumns,
+  LeaderboardPnlQueryConfig,
   Options,
   Ordering,
   QueryableField,
@@ -30,10 +30,10 @@ export async function findAll(
     timeSpan,
     rank,
     limit,
-  }: LeaderboardPNLQueryConfig,
+  }: LeaderboardPnlQueryConfig,
   requiredFields: QueryableField[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<LeaderboardPNLFromDatabase[]> {
+): Promise<LeaderboardPnlFromDatabase[]> {
   verifyAllRequiredFields(
     {
       subaccountId,
@@ -44,21 +44,21 @@ export async function findAll(
     requiredFields,
   );
 
-  let baseQuery: QueryBuilder<LeaderboardPNLModel> = setupBaseQuery<LeaderboardPNLModel>(
-    LeaderboardPNLModel,
+  let baseQuery: QueryBuilder<LeaderboardPnlModel> = setupBaseQuery<LeaderboardPnlModel>(
+    LeaderboardPnlModel,
     options,
   );
 
   if (subaccountId) {
-    baseQuery = baseQuery.whereIn(LeaderboardPNLColumns.subaccountId, subaccountId);
+    baseQuery = baseQuery.whereIn(LeaderboardPnlColumns.subaccountId, subaccountId);
   }
 
   if (timeSpan) {
-    baseQuery = baseQuery.whereIn(LeaderboardPNLColumns.timeSpan, timeSpan);
+    baseQuery = baseQuery.whereIn(LeaderboardPnlColumns.timeSpan, timeSpan);
   }
 
   if (rank) {
-    baseQuery = baseQuery.whereIn(LeaderboardPNLColumns.rank, rank);
+    baseQuery = baseQuery.whereIn(LeaderboardPnlColumns.rank, rank);
   }
 
   if (options.orderBy !== undefined) {
@@ -70,7 +70,7 @@ export async function findAll(
     }
   } else {
     baseQuery = baseQuery.orderBy(
-      LeaderboardPNLColumns.rank,
+      LeaderboardPnlColumns.rank,
       Ordering.ASC,
     );
   }
@@ -83,60 +83,59 @@ export async function findAll(
 }
 
 export async function create(
-  leaderboardPNLToCreate: LeaderboardPNLCreateObject,
+  leaderboardPnlToCreate: LeaderboardPnlCreateObject,
   options: Options = { txId: undefined },
-): Promise<LeaderboardPNLFromDatabase> {
-  return LeaderboardPNLModel.query(
+): Promise<LeaderboardPnlFromDatabase> {
+  return LeaderboardPnlModel.query(
     Transaction.get(options.txId),
   ).insert({
-    ...leaderboardPNLToCreate,
+    ...leaderboardPnlToCreate,
   }).returning('*');
 }
 
 export async function upsert(
-  LeaderboardPNLToUpsert: LeaderboardPNLCreateObject,
+  LeaderboardPnlToUpsert: LeaderboardPnlCreateObject,
   options: Options = { txId: undefined },
-): Promise<LeaderboardPNLFromDatabase> {
-  const leaderboardPNLs: LeaderboardPNLModel[] = await LeaderboardPNLModel.query(
+): Promise<LeaderboardPnlFromDatabase> {
+  const leaderboardPnls: LeaderboardPnlModel[] = await LeaderboardPnlModel.query(
     Transaction.get(options.txId),
   ).upsert({
-    ...LeaderboardPNLToUpsert,
+    ...LeaderboardPnlToUpsert,
   }).returning('*');
-  return leaderboardPNLs[0];
+  return leaderboardPnls[0];
 }
 
 export async function bulkUpsert(
-  leaderboardPNLObjects: LeaderboardPNLCreateObject[],
+  leaderboardPnlObjects: LeaderboardPnlCreateObject[],
   options: Options = { txId: undefined },
 ): Promise<void> {
-
-  leaderboardPNLObjects.forEach(
-    (leaderboardPNLObject: LeaderboardPNLCreateObject) => verifyAllInjectableVariables(
-      Object.values(leaderboardPNLObject),
+  leaderboardPnlObjects.forEach(
+    (leaderboardPnlObject: LeaderboardPnlCreateObject) => verifyAllInjectableVariables(
+      Object.values(leaderboardPnlObject),
     ),
   );
 
-  const columns: LeaderboardPNLColumns[] = _.keys(
-    leaderboardPNLObjects[0]) as LeaderboardPNLColumns[];
-  const rows: string[] = setBulkRowsForUpdate<LeaderboardPNLColumns>({
-    objectArray: leaderboardPNLObjects,
+  const columns: LeaderboardPnlColumns[] = _.keys(
+    leaderboardPnlObjects[0]) as LeaderboardPnlColumns[];
+  const rows: string[] = setBulkRowsForUpdate<LeaderboardPnlColumns>({
+    objectArray: leaderboardPnlObjects,
     columns,
     numericColumns: [
-      LeaderboardPNLColumns.rank,
+      LeaderboardPnlColumns.rank,
     ],
     stringColumns: [
-      LeaderboardPNLColumns.subaccountId,
-      LeaderboardPNLColumns.timeSpan,
-      LeaderboardPNLColumns.currentEquity,
-      LeaderboardPNLColumns.pnl,
+      LeaderboardPnlColumns.subaccountId,
+      LeaderboardPnlColumns.timeSpan,
+      LeaderboardPnlColumns.currentEquity,
+      LeaderboardPnlColumns.pnl,
     ],
   });
 
   const query: string = generateBulkUpsertString({
-    table: LeaderboardPNLModel.tableName,
+    table: LeaderboardPnlModel.tableName,
     objectRows: rows,
     columns,
-    uniqueIdentifiers: [LeaderboardPNLColumns.subaccountId, LeaderboardPNLColumns.timeSpan],
+    uniqueIdentifiers: [LeaderboardPnlColumns.subaccountId, LeaderboardPnlColumns.timeSpan],
   });
 
   const transaction: Knex.Transaction | undefined = Transaction.get(options.txId);

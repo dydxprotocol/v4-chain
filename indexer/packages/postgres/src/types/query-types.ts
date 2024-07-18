@@ -316,7 +316,7 @@ export interface TradingRewardAggregationQueryConfig extends QueryConfig {
   [QueryableField.STARTED_AT_HEIGHT_BEFORE_OR_AT]?: string;
 }
 
-export interface LeaderboardPNLQueryConfig extends QueryConfig {
+export interface LeaderboardPnlQueryConfig extends QueryConfig {
   [QueryableField.SUBACCOUNT_ID]?: string[];
   [QueryableField.TIMESPAN]?: string[];
   [QueryableField.RANK]?: number[];
