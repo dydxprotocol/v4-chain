@@ -92,11 +92,10 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
+			_, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			// Run.
 			_, err := process.DecodeProcessProposalTxs(
-				ctx,
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				pricesKeeper,
@@ -159,11 +158,10 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
+			_, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			// Run.
 			ppt, err := process.DecodeProcessProposalTxs(
-				ctx,
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				pricesKeeper,
@@ -247,7 +245,6 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
 
 			ppt, err := process.DecodeProcessProposalTxs(
-				ctx,
 				encodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				pricesKeeper,
@@ -311,7 +308,6 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
 
 			ppt, err := process.DecodeProcessProposalTxs(
-				ctx,
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				pricesKeeper,

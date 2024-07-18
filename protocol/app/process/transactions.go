@@ -56,7 +56,6 @@ type ProcessProposalTxs struct {
 
 // DecodeProcessProposalTxs returns a new `processProposalTxs`.
 func DecodeProcessProposalTxs(
-	ctx sdk.Context,
 	decoder sdk.TxDecoder,
 	req *abci.RequestProcessProposal,
 	pricesKeeper ProcessPricesKeeper,

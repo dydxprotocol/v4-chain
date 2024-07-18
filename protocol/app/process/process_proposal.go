@@ -10,7 +10,6 @@ import (
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	error_lib "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/error"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -43,9 +42,6 @@ func ProcessProposalHandler(
 	veCodec codec.VoteExtensionCodec,
 	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
 ) sdk.ProcessProposalHandler {
-	// Keep track of the current block height and consensus round.
-	currentBlockHeight := int64(0)
-	currentConsensusRound := int64(0)
 
 	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 		defer telemetry.ModuleMeasureSince(
@@ -64,13 +60,10 @@ func ProcessProposalHandler(
 			error_lib.LogErrorWithOptionalContext(ctx, "UpdateSmoothedPrices failed", err)
 		}
 
-		veEnabled := veutils.AreVEEnabled(ctx)
+		if veutils.AreVEEnabled(ctx) {
 
-		if veEnabled {
-
-			if len(req.Txs) < constants.MinTxsCount+1 {
+			if len(req.Txs) < constants.MinTxsCountWithVE {
 				ctx.Logger().Error("failed to process proposal: missing commit info", "num_txs", len(req.Txs))
-
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
 
@@ -84,41 +77,22 @@ func ProcessProposalHandler(
 				req.Txs = append([][]byte{extCommitBz}, req.Txs...)
 			}()
 
-			var extInfo abci.ExtendedCommitInfo
-			extInfo, err := extCodec.Decode(extCommitBz)
-			if err != nil {
-				ctx.Logger().Error("failed to decode extended commit info", "err", err)
-
+			if err := DecodeAndValidateVE(
+				ctx,
+				req,
+				extCommitBz,
+				validateVoteExtensionFn,
+				pricesKeeper,
+				veCodec,
+				extCodec,
+			); err != nil {
+				ctx.Logger().Error("failed to decode and validate ve", "err", err)
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
-			// TODO: PreparePricesKeeper and ProcessPricesKeeper are the same (clean up)
-			if err := ve.ValidateExtendedCommitInfo(ctx, req.Height, extInfo, veCodec, pricesKeeper.(ve.PreparePricesKeeper), validateVoteExtensionFn); err != nil {
 
-				ctx.Logger().Error(
-					"failed to validate extended commit info",
-					"height", req.Height,
-					"commit_info", extInfo,
-					"err", err,
-				)
-				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-			}
-			req.Txs = req.Txs[1:]
 		}
 
-		// Update the current block height and consensus round.
-		if ctx.BlockHeight() != currentBlockHeight {
-			currentBlockHeight = ctx.BlockHeight()
-			currentConsensusRound = 0
-		} else {
-			currentConsensusRound += 1
-		}
-		ctx = ctx.WithValue(ConsensusRound, currentConsensusRound)
-		ctx = log.AddPersistentTagsToLogger(
-			ctx,
-			log.Module, ModuleName,
-		)
-
-		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, pricesKeeper)
+		txs, err := DecodeProcessProposalTxs(txConfig.TxDecoder(), req, pricesKeeper)
 		if err != nil {
 			error_lib.LogErrorWithOptionalContext(ctx, "DecodeProcessProposalTxs failed", err)
 			recordErrorMetricsWithLabel(metrics.Decode)
@@ -126,6 +100,7 @@ func ProcessProposalHandler(
 		}
 
 		err = txs.Validate()
+
 		if err != nil {
 			error_lib.LogErrorWithOptionalContext(ctx, "DecodeProcessProposalTxs.Validate failed", err)
 			recordErrorMetricsWithLabel(metrics.Validate)
@@ -142,4 +117,34 @@ func ProcessProposalHandler(
 
 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
 	}
+}
+
+func DecodeAndValidateVE(
+	ctx sdk.Context,
+	req *abci.RequestProcessProposal,
+	extCommitBz []byte,
+	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
+	pricesKeeper ProcessPricesKeeper,
+	voteCodec codec.VoteExtensionCodec,
+	extCodec codec.ExtendedCommitCodec,
+
+) error {
+	var extInfo abci.ExtendedCommitInfo
+	extInfo, err := extCodec.Decode(extCommitBz)
+	if err != nil {
+		return err
+	}
+	if err := ve.ValidateExtendedCommitInfo(
+		ctx,
+		req.Height,
+		extInfo,
+		voteCodec,
+		pricesKeeper.(ve.PreparePricesKeeper),
+		validateVoteExtensionFn,
+	); err != nil {
+		return err
+	}
+	// should this happend even if it fails?
+	req.Txs = req.Txs[1:]
+	return nil
 }
