@@ -139,6 +139,11 @@ export const defaultWallet2: WalletCreateObject = {
   totalTradingRewards: denomToHumanReadableConversion(1),
 };
 
+export const defaultWallet3: WalletCreateObject = {
+  address: defaultAddress2,
+  totalTradingRewards: denomToHumanReadableConversion(0),
+};
+
 // ============== Assets ==============
 
 export const defaultAsset: AssetCreateObject = {

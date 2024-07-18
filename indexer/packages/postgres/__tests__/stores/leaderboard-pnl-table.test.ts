@@ -6,12 +6,15 @@ import {
   defaultLeaderboardPnlOneDay,
   defaultLeaderboardPnl1AllTime,
   defaultLeaderboardPnlOneDayToUpsert,
+  defaultWallet3,
 } from '../helpers/constants';
 import { seedData } from '../helpers/mock-generators';
+import { WalletTable } from '../../src';
 
 describe('LeaderboardPnl store', () => {
   beforeEach(async () => {
     await seedData();
+    await WalletTable.create(defaultWallet3);
   });
 
   beforeAll(async () => {
