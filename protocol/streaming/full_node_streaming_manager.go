@@ -10,6 +10,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	streaming_util "github.com/dydxprotocol/v4-chain/protocol/streaming/util"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/ws"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -35,6 +36,8 @@ type FullNodeStreamingManagerImpl struct {
 
 	maxUpdatesInCache          uint32
 	maxSubscriptionChannelSize uint32
+
+	websocketStreamServer *ws.WebsocketServer
 }
 
 // OrderbookSubscription represents a active subscription to the orderbook updates stream.
@@ -96,6 +99,12 @@ func NewFullNodeStreamingManager(
 
 func (sm *FullNodeStreamingManagerImpl) Enabled() bool {
 	return true
+}
+
+func (sm *FullNodeStreamingManagerImpl) SetWebsocketServer(
+	server *ws.WebsocketServer,
+) {
+	sm.websocketStreamServer = server
 }
 
 func (sm *FullNodeStreamingManagerImpl) EmitMetrics() {
@@ -200,6 +209,9 @@ func (sm *FullNodeStreamingManagerImpl) removeSubscription(
 
 func (sm *FullNodeStreamingManagerImpl) Stop() {
 	sm.done <- true
+	if sm.websocketStreamServer != nil {
+		sm.websocketStreamServer.Shutdown()
+	}
 }
 
 // SendSnapshot sends messages to a particular subscriber without buffering.

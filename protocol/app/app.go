@@ -2033,13 +2033,19 @@ func getFullNodeStreamingManagerFromOptions(
 		)
 
 		// Start websocket server.
-		// TODO: use separate flag to control websocket server.
-		wsServer := ws.NewWebsocketServer(
-			manager,
-			cdc,
-			logger,
-		)
-		wsServer.Start()
+		if appFlags.WebsocketStreamingEnabled {
+			port := appFlags.WebsocketStreamingPort
+			logger.Info("Websocket full node streaming is enabled")
+			wsServer := ws.NewWebsocketServer(
+				manager,
+				cdc,
+				logger,
+				port,
+			)
+			manager.SetWebsocketServer(wsServer)
+			wsServer.Start()
+		}
+
 		return manager
 	}
 	return streaming.NewNoopGrpcStreamingManager()
