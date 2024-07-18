@@ -2,7 +2,7 @@ import * as Knex from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
   return knex.schema.createTable('leaderboard_pnl', (table) => {
-    table.uuid('subaccountId').notNullable().references('id').inTable('subaccounts');
+    table.string('address').notNullable();
     table.enum(
       'timeSpan',
       [
@@ -16,7 +16,7 @@ export async function up(knex: Knex): Promise<void> {
     table.string('pnl').notNullable();
     table.string('currentEquity').notNullable();
     table.integer('rank').notNullable();
-    table.primary(['subaccountId', 'timeSpan']);
+    table.primary(['address', 'timeSpan']);
   });
 }
 

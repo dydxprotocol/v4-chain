@@ -13,32 +13,23 @@ export default class LeaderboardPnlModel extends BaseModel {
   }
 
   static get idColumn() {
-    return ['subaccountId', 'timeSpan'];
+    return ['address', 'timeSpan'];
   }
 
-  static relationMappings = {
-    subaccount: {
-      relation: Model.BelongsToOneRelation,
-      modelClass: path.join(__dirname, 'subaccount-model'),
-      join: {
-        from: 'leaderboard_pnl.subaccountId',
-        to: 'subaccounts.id',
-      },
-    },
-  };
+  static relationMappings = {};
 
   static get jsonSchema() {
     return {
       type: 'object',
       required: [
-        'subaccountId',
+        'address',
         'timeSpan',
         'pnl',
         'currentEquity',
         'rank',
       ],
       properties: {
-        subaccountId: { type: 'string' },
+        address: { type: 'string' },
         timeSpan: { type: 'string' },
         pnl: { type: 'string', pattern: NumericPattern },
         currentEquity: { type: 'string', pattern: NumericPattern },
@@ -47,7 +38,7 @@ export default class LeaderboardPnlModel extends BaseModel {
     };
   }
 
-  subaccountId!: string;
+  address!: string;
 
   timeSpan!: string;
 

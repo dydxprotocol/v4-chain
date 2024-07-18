@@ -65,6 +65,7 @@ export const createdHeight: string = '2';
 export const invalidTicker: string = 'INVALID-INVALID';
 export const dydxChain: string = 'dydx';
 export const defaultAddress: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf';
+export const defaultAddress2: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc575lnf';
 export const blockedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
 
 // ============== Subaccounts ==============
@@ -860,7 +861,7 @@ export const duplicatedSubaccountUsername: SubaccountUsernamesCreateObject = {
 // ============== Leaderboard pnl Data ==============
 
 export const defaultLeaderboardPnlOneDay: LeaderboardPnlCreateObject = {
-  subaccountId: defaultSubaccountId,
+  address: defaultAddress,
   timeSpan: 'ONE_DAY',
   pnl: '10000',
   currentEquity: '1000',
@@ -868,7 +869,7 @@ export const defaultLeaderboardPnlOneDay: LeaderboardPnlCreateObject = {
 };
 
 export const defaultLeaderboardPnl2OneDay: LeaderboardPnlCreateObject = {
-  subaccountId: defaultSubaccountId2,
+  address: defaultAddress2,
   timeSpan: 'ONE_DAY',
   pnl: '100',
   currentEquity: '10000',
@@ -876,7 +877,7 @@ export const defaultLeaderboardPnl2OneDay: LeaderboardPnlCreateObject = {
 };
 
 export const defaultLeaderboardPnl1AllTime: LeaderboardPnlCreateObject = {
-  subaccountId: defaultSubaccountId,
+  address: defaultAddress,
   timeSpan: 'ALL_TIME',
   pnl: '10000',
   currentEquity: '1000',
@@ -884,7 +885,7 @@ export const defaultLeaderboardPnl1AllTime: LeaderboardPnlCreateObject = {
 };
 
 export const defaultLeaderboardPnlOneDayToUpsert: LeaderboardPnlCreateObject = {
-  subaccountId: defaultSubaccountId,
+  address: defaultAddress,
   timeSpan: 'ONE_DAY',
   pnl: '100000',
   currentEquity: '1000',

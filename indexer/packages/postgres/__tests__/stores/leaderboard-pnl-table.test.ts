@@ -45,7 +45,7 @@ describe('LeaderboardPnl store', () => {
     expect(leaderboardPnls.length).toEqual(3);
   });
 
-  it('Successfully finds LeaderboardPnl with subaccountId and timespan', async () => {
+  it('Successfully finds LeaderboardPnl with address and timespan', async () => {
     await Promise.all([
       LeaderboardPnlTable.create(defaultLeaderboardPnlOneDay),
       LeaderboardPnlTable.create(defaultLeaderboardPnl2OneDay),
@@ -54,7 +54,7 @@ describe('LeaderboardPnl store', () => {
 
     const leaderboardPnl: LeaderboardPnlFromDatabase[] = await LeaderboardPnlTable.findAll(
       {
-        subaccountId: [defaultLeaderboardPnlOneDay.subaccountId],
+        address: [defaultLeaderboardPnlOneDay.address],
         timeSpan: [defaultLeaderboardPnlOneDay.timeSpan],
       },
       [],
