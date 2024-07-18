@@ -34,12 +34,11 @@ class SocialTradingController extends Controller {
     @Query() searchParam: string,
   ): Promise<TraderSearchResponse> {
     if (checkIfValidDydxAddress(searchParam)) {
-
       const subaccounts: SubaccountFromDatabase[] = await
       SubaccountTable.findAll({
         address: searchParam,
         subaccountNumber: 0,
-      }, [], {});
+      }, []);
       const subaccount: SubaccountFromDatabase = subaccounts[0];
 
       if (!subaccount) {
@@ -49,7 +48,7 @@ class SocialTradingController extends Controller {
       const subaccountUsernames: SubaccountUsernamesFromDatabase[] = await
       SubaccountUsernamesTable.findAll({
         subaccountId: [subaccount.id],
-      }, [], {});
+      }, []);
 
       return subaccountInfoToTraderSearchResponse(subaccount, subaccountUsernames[0]);
     }
@@ -60,14 +59,11 @@ class SocialTradingController extends Controller {
     if (!subaccountUsername) {
       throw new NotFoundError(`Subaccount not found:${searchParam}`);
     }
-
+    // subaccount search below cannot be undefined because of foreign key constraint
     const subaccount: SubaccountFromDatabase | undefined = await
     SubaccountTable.findById(subaccountUsername.subaccountId);
-    if (!subaccount) {
-      throw new NotFoundError(`Subaccount not found:${subaccountUsername.subaccountId}`);
-    }
 
-    return subaccountInfoToTraderSearchResponse(subaccount, subaccountUsername);
+    return subaccountInfoToTraderSearchResponse(subaccount!, subaccountUsername);
 
   }
 }

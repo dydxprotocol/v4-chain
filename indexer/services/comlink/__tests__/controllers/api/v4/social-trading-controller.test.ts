@@ -28,7 +28,7 @@ describe('social-trading-controller', () => {
   });
 
   it('successfuly fetches subaccount info by address', async () => {
-    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll({}, [], {});
+    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll({}, []);
     const subaccount: SubaccountFromDatabase = subaccounts[0];
 
     const subaccountUsernames: SubaccountUsernamesFromDatabase = await
@@ -55,7 +55,7 @@ describe('social-trading-controller', () => {
 
   it('successfuly fetches subaccount info by username', async () => {
 
-    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll({}, [], {});
+    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll({}, []);
     const subaccount: SubaccountFromDatabase = subaccounts[0];
     const subaccountUsernames: SubaccountUsernamesFromDatabase = await
     SubaccountUsernamesTable.create({
