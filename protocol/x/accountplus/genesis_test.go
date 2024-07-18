@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/testutils"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
-	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,6 +18,11 @@ func TestImportExportGenesis(t *testing.T) {
 	baseTsNonce := uint64(math.Pow(2, 40))
 	tests := map[string]struct {
 		genesisState *types.GenesisState
+		// The order of this list may not match the order in GenesisState. We want our tests to be deterministic so
+		// order of expectedAccountStates was manually set based on test debug. This ordering only be changed if
+		// additional accounts added to genesisState. If a feature breaks the existing ordering, then should look into
+		// why.
+		expectedAccountStates []*types.AccountState
 	}{
 		"non-empty genesis": {
 			genesisState: &types.GenesisState{
@@ -36,6 +41,36 @@ func TestImportExportGenesis(t *testing.T) {
 							MaxEjectedNonce: baseTsNonce + 1,
 						},
 					},
+					{
+						Address: constants.CarlAccAddress.String(),
+						TimestampNonceDetails: &types.TimestampNonceDetails{
+							TimestampNonces: []uint64{baseTsNonce + 5, baseTsNonce + 6, baseTsNonce + 7},
+							MaxEjectedNonce: baseTsNonce + 1,
+						},
+					},
+				},
+			},
+			expectedAccountStates: []*types.AccountState{
+				{
+					Address: constants.AliceAccAddress.String(),
+					TimestampNonceDetails: &types.TimestampNonceDetails{
+						TimestampNonces: []uint64{baseTsNonce + 1, baseTsNonce + 2, baseTsNonce + 3},
+						MaxEjectedNonce: baseTsNonce,
+					},
+				},
+				{
+					Address: constants.CarlAccAddress.String(),
+					TimestampNonceDetails: &types.TimestampNonceDetails{
+						TimestampNonces: []uint64{baseTsNonce + 5, baseTsNonce + 6, baseTsNonce + 7},
+						MaxEjectedNonce: baseTsNonce + 1,
+					},
+				},
+				{
+					Address: constants.BobAccAddress.String(),
+					TimestampNonceDetails: &types.TimestampNonceDetails{
+						TimestampNonces: []uint64{baseTsNonce + 5, baseTsNonce + 6, baseTsNonce + 7},
+						MaxEjectedNonce: baseTsNonce + 1,
+					},
 				},
 			},
 		},
@@ -43,71 +78,48 @@ func TestImportExportGenesis(t *testing.T) {
 			genesisState: &types.GenesisState{
 				Accounts: []*types.AccountState{},
 			},
+			expectedAccountStates: []*types.AccountState{},
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// TODO: deprecated, reference protocol/vest/genesis_test.go for up to date initialization
-			ctx, k, _, _ := keepertest.TimestampNonceKeepers(t)
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.AccountPlusKeeper
 
 			// Initialize genesis state
-			accountplus.InitGenesis(ctx, *k, *tc.genesisState)
+			accountplus.InitGenesis(ctx, k, *tc.genesisState)
 
 			// Check that keeper state is correct
-			compareKeeperWithGenesisState(t, ctx, k, tc.genesisState)
+			compareKeeperWithGenesisState(t, ctx, &k, tc.expectedAccountStates)
 
 			// Export the genesis state
-			exportedGenesis := accountplus.ExportGenesis(ctx, *k)
+			exportedGenesis := accountplus.ExportGenesis(ctx, k)
 
 			// Ensure the exported state matches the expected state
-			requireGenesisStatesEqual(t, tc.genesisState, &exportedGenesis)
+			expectedGenesis := &types.GenesisState{
+				Accounts: tc.expectedAccountStates,
+			}
+			requireGenesisStatesEqual(t, exportedGenesis, expectedGenesis)
 		})
 	}
 }
 
-func compareKeeperWithGenesisState(t *testing.T, ctx sdk.Context, k *keeper.Keeper, genesisState *types.GenesisState) {
-	accountStates := k.GetAllAccountStates(ctx)
+func compareKeeperWithGenesisState(
+	t *testing.T,
+	ctx sdk.Context,
+	k *keeper.Keeper,
+	expectedAccountStates []*types.AccountState,
+) {
+	// Compare states. Order matters.
+	isEqual := testutils.CompareAccountStateLists(k.GetAllAccountStates(ctx), expectedAccountStates)
 
-	compareAccountStates(t, accountStates, genesisState.GetAccounts())
+	require.True(t, isEqual, "Keeper account states does not match Genesis account states")
 }
 
 func requireGenesisStatesEqual(t *testing.T, actualGenesisState, expectedGenesisState *types.GenesisState) {
-	compareAccountStates(t, actualGenesisState.GetAccounts(), expectedGenesisState.GetAccounts())
-}
+	isEqual := testutils.CompareAccountStateLists(actualGenesisState.GetAccounts(), expectedGenesisState.GetAccounts())
 
-func compareAccountStates(t *testing.T, actualAccountStates, expectedAccountStates []*types.AccountState) {
-	require.Equal(t, len(actualAccountStates), len(expectedAccountStates), "GenesisState.Accounts length mismatch")
-	// Iterate through the account states and test equality on each field
-	// We require that the ordering of accountState be deterministic so that should more complicated logic
-	// be introduced in the future, this test can catch any unintended effects.
-	for i := range actualAccountStates {
-		require.Equal(
-			t,
-			actualAccountStates[i].Address,
-			expectedAccountStates[i].Address,
-			"Account address mismatch at index %d", i,
-		)
-		compareTimestampNonceDetails(
-			t,
-			actualAccountStates[i].GetTimestampNonceDetails(),
-			expectedAccountStates[i].GetTimestampNonceDetails(),
-		)
-	}
-}
-
-func compareTimestampNonceDetails(t *testing.T, actualDetails, expectedDetails *types.TimestampNonceDetails) {
-	equal := cmp.Equal(
-		actualDetails.GetTimestampNonces(),
-		expectedDetails.GetTimestampNonces(),
-	)
-
-	require.True(t, equal, "TimestampNonces mismatch for account")
-
-	require.Equal(
-		t,
-		actualDetails.GetMaxEjectedNonce(),
-		expectedDetails.GetMaxEjectedNonce(),
-		"LastEjectedNonce mismatch",
-	)
+	require.True(t, isEqual, "Genesis states mismatch")
 }

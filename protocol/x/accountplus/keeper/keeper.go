@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/log"
@@ -60,6 +61,40 @@ func (k Keeper) SetGenesisState(ctx sdk.Context, data types.GenesisState) error 
 	}
 
 	return nil
+}
+
+func (k Keeper) InitializeAccount(ctx sdk.Context, address sdk.AccAddress) (types.AccountState, error) {
+	store := ctx.KVStore(k.storeKey)
+
+	if _, found := k.getAccountState(store, address); found {
+		return types.AccountState{}, errors.New(
+			"Cannot initialize AccountState for address with existing AccountState, address: " + address.String(),
+		)
+	}
+
+	initialAccountState := types.AccountState{
+		Address:               address.String(),
+		TimestampNonceDetails: k.DeepCopyTimestampNonceDetails(InitialTimestampNonceDetails),
+	}
+
+	k.setAccountState(store, address, initialAccountState)
+
+	return initialAccountState, nil
+}
+
+// Get the AccountState from KVStore for a given account address
+func (k Keeper) getAccountState(
+	store storetypes.KVStore,
+	address sdk.AccAddress,
+) (types.AccountState, bool) {
+	bz := store.Get(address.Bytes())
+	if bz == nil {
+		return types.AccountState{}, false
+	}
+
+	var accountState types.AccountState
+	k.cdc.MustUnmarshal(bz, &accountState)
+	return accountState, true
 }
 
 // Set the AccountState into KVStore for a given account address
