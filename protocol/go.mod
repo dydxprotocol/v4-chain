@@ -427,9 +427,11 @@ replace (
 	cosmossdk.io/core => cosmossdk.io/core v0.11.0
 	// Use Stream fork of CometBFT
 	github.com/cometbft/cometbft => github.com/StreamFinance-Protocol/cometbft v0.0.0-20240409171441-c50784d39a5f
+
 	// Use dYdX fork of Cosmos SDK
 	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240606183841-18966898625f
 	github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240408175732-0fca9d69cbc4
+
 	github.com/ethos-works/ethos-avs => ./ethos/ethos-avs
 	github.com/ethos-works/ethos/ethos-chain => ./ethos/ethos-chain
 
