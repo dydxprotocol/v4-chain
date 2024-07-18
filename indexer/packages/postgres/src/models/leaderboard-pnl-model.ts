@@ -1,7 +1,3 @@
-import path from 'path';
-
-import { Model } from 'objection';
-
 import { NumericPattern } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
 import BaseModel from './base-model';
