@@ -19,9 +19,8 @@ func TestImportExportGenesis(t *testing.T) {
 	tests := map[string]struct {
 		genesisState *types.GenesisState
 		// The order of this list may not match the order in GenesisState. We want our tests to be deterministic so
-		// order of expectedAccountStates was manually set based on test debug. This ordering only be changed if
-		// additional accounts added to genesisState. If a feature breaks the existing ordering, then should look into
-		// why.
+		// order of expectedAccountStates was manually set based on test debug. This ordering should only be changed if
+		// additional accounts added to genesisState. If a feature breaks the existing ordering, should look into ßwhy.
 		expectedAccountStates []*types.AccountState
 	}{
 		"non-empty genesis": {
@@ -121,5 +120,5 @@ func compareKeeperWithGenesisState(
 func requireGenesisStatesEqual(t *testing.T, actualGenesisState, expectedGenesisState *types.GenesisState) {
 	isEqual := testutils.CompareAccountStateLists(actualGenesisState.GetAccounts(), expectedGenesisState.GetAccounts())
 
-	require.True(t, isEqual, "Genesis states mismatch")
+	require.True(t, isEqual, "GenesisState mismatch")
 }

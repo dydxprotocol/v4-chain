@@ -48,7 +48,7 @@ func TestInitializeAccount(t *testing.T) {
 
 		expectedAccount := types.AccountState{
 			Address:               constants.CarlAccAddress.String(),
-			TimestampNonceDetails: k.DeepCopyTimestampNonceDetails(keeper.InitialTimestampNonceDetails),
+			TimestampNonceDetails: keeper.DeepCopyTimestampNonceDetails(keeper.InitialTimestampNonceDetails),
 		}
 
 		account, err := k.InitializeAccount(ctx, constants.CarlAccAddress)

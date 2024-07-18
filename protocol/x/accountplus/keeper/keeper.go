@@ -74,7 +74,7 @@ func (k Keeper) InitializeAccount(ctx sdk.Context, address sdk.AccAddress) (type
 
 	initialAccountState := types.AccountState{
 		Address:               address.String(),
-		TimestampNonceDetails: k.DeepCopyTimestampNonceDetails(InitialTimestampNonceDetails),
+		TimestampNonceDetails: DeepCopyTimestampNonceDetails(InitialTimestampNonceDetails),
 	}
 
 	k.setAccountState(store, address, initialAccountState)
