@@ -6,8 +6,7 @@ import (
 	"testing"
 	"time"
 
-	sDAIStore "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/contract"
-	sDAITypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/types"
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
@@ -19,7 +18,6 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
@@ -130,14 +128,6 @@ func TestMsgCreateTransfer(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			time.Sleep(1 * time.Second)
-			ethClient, err := ethclient.Dial(sDAITypes.ETHRPC)
-			require.NoError(t, err)
-
-			rate, blockNumber, err := sDAIStore.QueryDaiConversionRate(ethClient)
-			require.NoError(t, err)
-
-			ethClient.Close()
 			// Set up tApp with indexer and sender subaccount balance of USDC.
 			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
 			appOpts := map[string]interface{}{
@@ -184,6 +174,9 @@ func TestMsgCreateTransfer(t *testing.T) {
 				return genesis
 			}).WithAppOptions(appOpts).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:              tc.senderSubaccountId.Owner,
@@ -431,14 +424,6 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			time.Sleep(1 * time.Second)
-			ethClient, err := ethclient.Dial(sDAITypes.ETHRPC)
-			require.NoError(t, err)
-
-			rate, blockNumber, err := sDAIStore.QueryDaiConversionRate(ethClient)
-			require.NoError(t, err)
-
-			ethClient.Close()
 			// Set up tApp.
 			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
 			appOpts := map[string]interface{}{
@@ -447,8 +432,11 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).WithNonDeterminismChecksEnabled(false).WithAppOptions(appOpts).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              tc.accountAccAddress.String(),
+				Sender:              tc.subaccountId.Owner,
 				ConversionRate:      rate,
 				EthereumBlockNumber: blockNumber,
 			}
@@ -655,14 +643,6 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			time.Sleep(1 * time.Second)
-			ethClient, err := ethclient.Dial(sDAITypes.ETHRPC)
-			require.NoError(t, err)
-
-			rate, blockNumber, err := sDAIStore.QueryDaiConversionRate(ethClient)
-			require.NoError(t, err)
-
-			ethClient.Close()
 			// Set up tApp.
 			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
 			appOpts := map[string]interface{}{
@@ -670,6 +650,9 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 			}
 			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:              tc.subaccountId.Owner,
@@ -931,14 +914,6 @@ func TestWithdrawalGating_ChainOutage(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			time.Sleep(1 * time.Second)
-			ethClient, err := ethclient.Dial(sDAITypes.ETHRPC)
-			require.NoError(t, err)
-
-			rate, blockNumber, err := sDAIStore.QueryDaiConversionRate(ethClient)
-			require.NoError(t, err)
-
-			ethClient.Close()
 			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
@@ -977,6 +952,9 @@ func TestWithdrawalGating_ChainOutage(t *testing.T) {
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
 				BlockTime: startTime,
 			})
+
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:              tc.subaccount.Id.Owner,

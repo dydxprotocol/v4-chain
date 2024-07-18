@@ -5,11 +5,10 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
-	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
-	"github.com/ethereum/go-ethereum/ethclient"
 
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -27,8 +26,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/syndtr/goleveldb/leveldb/testutil"
 
-	sDAIStore "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/contract"
-	sDAITypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/types"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 )
 
@@ -89,14 +86,8 @@ func TestParallelAnteHandler_ClobAndOther(t *testing.T) {
 	}).WithNonDeterminismChecksEnabled(false).Build()
 	ctx := tApp.InitChain()
 
-	time.Sleep(1 * time.Second)
-	ethClient, err := ethclient.Dial(sDAITypes.ETHRPC)
-	require.NoError(t, err)
-
-	rate, blockNumber, err := sDAIStore.QueryDaiConversionRate(ethClient)
-	require.NoError(t, err)
-
-	ethClient.Close()
+	rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 		Sender:              constants.Alice_Num0.Owner,
@@ -118,6 +109,9 @@ func TestParallelAnteHandler_ClobAndOther(t *testing.T) {
 		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 
+	// Advance to next block to store conversion rate update
+	tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 	accounts := make([]sdktypes.AccountI, len(simAccounts))
 	for i, simAccount := range simAccounts {
 		accounts[i] = tApp.App.AccountKeeper.GetAccount(ctx, simAccount.Address)
@@ -133,13 +127,14 @@ func TestParallelAnteHandler_ClobAndOther(t *testing.T) {
 	// Start a block advancement thread.
 	wg.Add(1)
 	blockHeight := atomic.Uint64{}
-	blockHeight.Store(1)
+	blockHeight.Store(2)
+
 	go func() {
 		defer wg.Done()
 		defer func() {
 			blockLimitReached.Store(true)
 		}()
-		for i := uint32(2); i < 50; i++ {
+		for i := uint32(3); i < 50; i++ {
 			tApp.AdvanceToBlock(i, testapp.AdvanceToBlockOptions{})
 			blockHeight.Store(uint64(i))
 		}

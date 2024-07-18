@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -39,16 +38,7 @@ func (k msgServer) UpdateSDAIConversionRate(
 		return nil, err
 	}
 
-	lastTenEvents := k.sDAIEventManager.GetLastTensDAIEvents()
-
-	fmt.Println("SERVER")
-	fmt.Printf("sDAIEventManager pointer address: %p\n", k.sDAIEventManager)
-	fmt.Println("lastTenEvents")
-	fmt.Println(lastTenEvents)
-	fmt.Println("bigConversionRate")
-	fmt.Println(bigConversionRate)
-	fmt.Println("bigEthereumBlockNumber")
-	fmt.Println(bigEthereumBlockNumber)
+	lastTenEvents := k.sDAIEventManager.GetLastTensDAIEventsUnordered()
 
 	for _, event := range lastTenEvents {
 
@@ -78,8 +68,6 @@ func (k msgServer) UpdateSDAIConversionRate(
 						"The suggested sDAI conversion rate must be greater than the curret one",
 					)
 				}
-
-				fmt.Println("MATCHED")
 
 				k.SetSDAIPrice(ctx, conversionRate)
 
