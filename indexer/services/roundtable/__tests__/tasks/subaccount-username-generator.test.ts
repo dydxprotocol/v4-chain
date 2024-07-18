@@ -5,6 +5,8 @@ import {
 
   testMocks,
   dbHelpers,
+  SubaccountUsernamesFromDatabase,
+  SubaccountFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import subaccountUsernameGenerator from '../../src/tasks/subaccount-username-generator';
 
@@ -29,18 +31,21 @@ describe('subaccount-username-generator', () => {
   });
 
   it('Successfully creates a username for all subaccount', async () => {
-    const subaccounts = await SubaccountTable.findAll({
+    const subaccounts: SubaccountFromDatabase[] = await
+    SubaccountTable.findAll({
       subaccountNumber: 0,
     }, [QueryableField.SUBACCOUNT_NUMBER], {});
 
-    const subaccountsLength = subaccounts.length;
-    const subaccountsWithUsernames = await SubaccountUsernamesTable.findAll(
-      {}, [], { readReplica: true });
+    const subaccountsLength: number = subaccounts.length;
+    const subaccountsWithUsernames: SubaccountUsernamesFromDatabase[] = await
+    SubaccountUsernamesTable.findAll(
+      {}, [], {});
     expect(subaccountsWithUsernames.length).toEqual(0);
 
     await subaccountUsernameGenerator();
-    const subaccountsWithUsernamesAfter = await SubaccountUsernamesTable.findAll(
-      {}, [], { readReplica: true });
+    const subaccountsWithUsernamesAfter: SubaccountUsernamesFromDatabase[] = await
+    SubaccountUsernamesTable.findAll(
+      {}, [], {});
 
     expect(subaccountsWithUsernamesAfter.length).toEqual(subaccountsLength);
   });
