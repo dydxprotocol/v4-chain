@@ -2,6 +2,7 @@ import { stats } from '@dydxprotocol-indexer/base';
 import {
   SubaccountFromDatabase,
   SubaccountTable,
+  SubaccountUsernamesFromDatabase,
   SubaccountUsernamesTable,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
@@ -34,7 +35,8 @@ class SocialTradingController extends Controller {
   ): Promise<TraderSearchResponse> {
     if (checkIfValidDydxAddress(searchParam)) {
 
-      const subaccounts = await SubaccountTable.findAll({
+      const subaccounts: SubaccountFromDatabase[] = await
+      SubaccountTable.findAll({
         address: searchParam,
         subaccountNumber: 0,
       }, [], {});
@@ -44,14 +46,16 @@ class SocialTradingController extends Controller {
         throw new NotFoundError(`Subaccount not found:${searchParam}`);
       }
 
-      const subaccountUsernames = await SubaccountUsernamesTable.findAll({
+      const subaccountUsernames: SubaccountUsernamesFromDatabase[] = await
+      SubaccountUsernamesTable.findAll({
         subaccountId: [subaccount.id],
       }, [], {});
 
       return subaccountInfoToTraderSearchResponse(subaccount, subaccountUsernames[0]);
     }
 
-    const subaccountUsername = await SubaccountUsernamesTable.findByUsername(searchParam);
+    const subaccountUsername: SubaccountUsernamesFromDatabase | undefined = await
+    SubaccountUsernamesTable.findByUsername(searchParam);
 
     if (!subaccountUsername) {
       throw new NotFoundError(`Subaccount not found:${searchParam}`);
@@ -84,7 +88,7 @@ router.get('/search',
     try {
       const { searchParam } = matchedData(req) as TraderSearchRequest;
       const controller: SocialTradingController = new SocialTradingController();
-      const response = await controller.searchTrader(searchParam);
+      const response: TraderSearchResponse = await controller.searchTrader(searchParam);
       return res.send(response);
     } catch (error) {
       return handleControllerError(
