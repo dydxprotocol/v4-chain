@@ -181,7 +181,7 @@ export class CandlesGenerator {
         _.forEach(
           Object.values(CandleResolution),
           (resolution: CandleResolution) => {
-            promises.push(this.createUpdateOrPassPostgresCandle(
+            promises.push(...this.createUpdateOrPassPostgresCandle(
               blockCandleUpdate,
               perpetualMarket.ticker,
               resolution,
@@ -219,13 +219,13 @@ export class CandlesGenerator {
    * If there is a previous candle & we're creating a new one (this occurs at the
    * beginning of a resolution period) set the previous candles orderbookMidPriceClose
    */
-  private async createUpdateOrPassPostgresCandle(
+  private createUpdateOrPassPostgresCandle(
     blockCandleUpdate: BlockCandleUpdate | undefined,
     ticker: string,
     resolution: CandleResolution,
     openInterestMap: OpenInterestMap,
     orderbookMidPrice: OrderbookMidPrice,
-  ): Promise<CandleFromDatabase | undefined> {
+  ): Promise<CandleFromDatabase | undefined>[] {
     const currentStartTime: DateTime = CandlesGenerator.calculateNormalizedCandleStartTime(
       this.blockTimestamp,
       resolution,
@@ -239,17 +239,17 @@ export class CandlesGenerator {
     if (existingCandle === undefined) {
       // - Candle doesn't exist & there is no block update - do nothing
       if (blockCandleUpdate === undefined) {
-        return;
+        return [];
       }
       // - Candle doesn't exist & there is a block update - create candle
-      return this.createCandleInPostgres(
+      return [this.createCandleInPostgres(
         currentStartTime,
         blockCandleUpdate,
         ticker,
         resolution,
         openInterestMap,
         orderbookMidPrice,
-      );
+      )];
     }
 
     const sameStartTime: boolean = existingCandle.startedAt === currentStartTime.toISO();
@@ -258,41 +258,41 @@ export class CandlesGenerator {
       //   update previous candle orderbookMidPriceClose
 
       // TODO: Maybe change this to return the candle instead of creating it
-      await this.updateCandleWithOrderbookMidPriceInPostgres(
+      const previousCandleUpdate = this.updateCandleWithOrderbookMidPriceInPostgres(
         existingCandle,
         orderbookMidPrice,
       );
 
       if (blockCandleUpdate !== undefined) {
-        return this.createCandleInPostgres(
+        return [previousCandleUpdate, this.createCandleInPostgres(
           currentStartTime,
           blockCandleUpdate,
           ticker,
           resolution,
           openInterestMap,
           orderbookMidPrice,
-        );
+        )];
       }
       // - Candle exists & !sameStartTime & there is no block update - create empty candle
       //   update previous candle orderbookMidPriceClose/Open
-      return this.createEmptyCandleInPostgres(
+      return [previousCandleUpdate, this.createEmptyCandleInPostgres(
         currentStartTime,
         ticker,
         resolution,
         openInterestMap,
         existingCandle,
         orderbookMidPrice,
-      );
+      )];
     }
     if (blockCandleUpdate === undefined) {
       // - Candle exists & sameStartTime & no block update - do nothing
-      return;
+      return [];
     }
     // - Candle exists & sameStartTime & block update - update candle
-    return this.updateCandleInPostgres(
+    return [this.updateCandleInPostgres(
       existingCandle,
       blockCandleUpdate,
-    );
+    )];
   }
 
   /**
