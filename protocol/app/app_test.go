@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	marketmapmodule "github.com/skip-mev/slinky/x/marketmap"
+
 	evidencemodule "cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
@@ -220,6 +222,9 @@ func TestModuleBasics(t *testing.T) {
 		listingmodule.AppModuleBasic{},
 		revsharemodule.AppModuleBasic{},
 		accountplusmodule.AppModuleBasic{},
+
+		// slinky marketmap
+		marketmapmodule.AppModuleBasic{},
 	)
 
 	app := testapp.DefaultTestApp(nil)

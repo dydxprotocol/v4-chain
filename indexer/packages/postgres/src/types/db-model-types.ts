@@ -255,6 +255,11 @@ export interface TradingRewardAggregationFromDatabase {
   amount: string;
 }
 
+export interface SubaccountUsernamesFromDatabase {
+  username: string;
+  subaccountId: string;
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string } };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:

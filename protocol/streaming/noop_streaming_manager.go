@@ -1,12 +1,12 @@
-package grpc
+package streaming
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-var _ types.GrpcStreamingManager = (*NoopGrpcStreamingManager)(nil)
+var _ types.FullNodeStreamingManager = (*NoopGrpcStreamingManager)(nil)
 
 type NoopGrpcStreamingManager struct{}
 
@@ -19,20 +19,12 @@ func (sm *NoopGrpcStreamingManager) Enabled() bool {
 }
 
 func (sm *NoopGrpcStreamingManager) Subscribe(
-	req clobtypes.StreamOrderbookUpdatesRequest,
-	srv clobtypes.Query_StreamOrderbookUpdatesServer,
+	_ []uint32,
+	_ types.OutgoingMessageSender,
 ) (
 	err error,
 ) {
-	return clobtypes.ErrGrpcStreamingManagerNotEnabled
-}
-
-func (sm *NoopGrpcStreamingManager) SendSnapshot(
-	updates *clobtypes.OffchainUpdates,
-	subscriptionId uint32,
-	blockHeight uint32,
-	execMode sdk.ExecMode,
-) {
+	return types.ErrNotImplemented
 }
 
 func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
@@ -43,14 +35,13 @@ func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
 }
 
 func (sm *NoopGrpcStreamingManager) SendOrderbookFillUpdates(
-	ctx sdk.Context,
 	orderbookFills []clobtypes.StreamOrderbookFill,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
 }
 
-func (sm *NoopGrpcStreamingManager) InitializeNewGrpcStreams(
+func (sm *NoopGrpcStreamingManager) InitializeNewStreams(
 	getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
 	blockHeight uint32,
 	execMode sdk.ExecMode,

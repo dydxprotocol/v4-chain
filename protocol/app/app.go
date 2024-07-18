@@ -192,6 +192,9 @@ import (
 	vestmodule "github.com/dydxprotocol/v4-chain/protocol/x/vest"
 	vestmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/vest/keeper"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
+	marketmapmodule "github.com/skip-mev/slinky/x/marketmap"
+	marketmapmodulekeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 
 	// IBC
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
@@ -227,9 +230,9 @@ import (
 	servicemetrics "github.com/skip-mev/slinky/service/metrics"
 	promserver "github.com/skip-mev/slinky/service/servers/prometheus"
 
-	// Grpc Streaming
-	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc"
-	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
+	// Full Node Streaming
+	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
+	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 )
 
 var (
@@ -296,6 +299,8 @@ type App struct {
 	GovPlusKeeper         govplusmodulekeeper.Keeper
 	AccountPlusKeeper     accountplusmodulekeeper.Keeper
 
+	MarketMapKeeper marketmapmodulekeeper.Keeper
+
 	PricesKeeper pricesmodulekeeper.Keeper
 
 	AssetsKeeper assetsmodulekeeper.Keeper
@@ -337,9 +342,9 @@ type App struct {
 	// module configurator
 	configurator module.Configurator
 
-	IndexerEventManager  indexer_manager.IndexerEventManager
-	GrpcStreamingManager streamingtypes.GrpcStreamingManager
-	Server               *daemonserver.Server
+	IndexerEventManager      indexer_manager.IndexerEventManager
+	FullNodeStreamingManager streamingtypes.FullNodeStreamingManager
+	Server                   *daemonserver.Server
 
 	// startDaemons encapsulates the logic that starts all daemons and daemon services. This function contains a
 	// closure of all relevant data structures that are shared with various keepers. Daemon services startup is
@@ -385,6 +390,10 @@ func New(
 	if err := appFlags.Validate(); err != nil {
 		panic(err)
 	}
+	if appFlags.OptimisticExecutionEnabled {
+		// TODO(OTE-573): Remove warning once OE is fully supported.
+		logger.Warn("Optimistic execution is enabled. This is a test feature not intended for production use!")
+	}
 
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 
@@ -395,6 +404,11 @@ func New(
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
+
+	// Enable optimistic block execution.
+	if appFlags.OptimisticExecutionEnabled {
+		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
+	}
 
 	bApp := baseapp.NewBaseApp(appconstants.AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -441,6 +455,7 @@ func New(
 		vaultmoduletypes.StoreKey,
 		revsharemoduletypes.StoreKey,
 		accountplusmoduletypes.StoreKey,
+		marketmapmoduletypes.StoreKey,
 	)
 	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
 	tkeys := storetypes.NewTransientStoreKeys(
@@ -474,8 +489,8 @@ func New(
 			if app.SlinkyClient != nil {
 				app.SlinkyClient.Stop()
 			}
-			if app.GrpcStreamingManager != nil {
-				app.GrpcStreamingManager.Stop()
+			if app.FullNodeStreamingManager != nil {
+				app.FullNodeStreamingManager.Stop()
 			}
 			return nil
 		},
@@ -737,7 +752,7 @@ func New(
 		indexerFlags.SendOffchainData,
 	)
 
-	app.GrpcStreamingManager = getGrpcStreamingManagerFromOptions(appFlags, logger)
+	app.FullNodeStreamingManager = getFullNodeStreamingManagerFromOptions(appFlags, logger)
 
 	timeProvider := &timelib.TimeProviderImpl{}
 
@@ -903,6 +918,14 @@ func New(
 	)
 	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
 
+	app.MarketMapKeeper = *marketmapmodulekeeper.NewKeeper(
+		runtime.NewKVStoreService(keys[marketmapmoduletypes.StoreKey]),
+		appCodec,
+		authtypes.NewModuleAddress(govtypes.ModuleName),
+	)
+
+	marketmapModule := marketmapmodule.NewAppModule(appCodec, &app.MarketMapKeeper)
+
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
 		appCodec,
 		keys[pricesmoduletypes.StoreKey],
@@ -1046,7 +1069,7 @@ func New(
 	logger.Info("Parsed CLOB flags", "Flags", clobFlags)
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
-	memClob.SetGenerateOrderbookUpdates(app.GrpcStreamingManager.Enabled())
+	memClob.SetGenerateOrderbookUpdates(app.FullNodeStreamingManager.Enabled())
 
 	app.ClobKeeper = clobmodulekeeper.NewKeeper(
 		appCodec,
@@ -1069,7 +1092,7 @@ func New(
 		app.StatsKeeper,
 		app.RewardsKeeper,
 		app.IndexerEventManager,
-		app.GrpcStreamingManager,
+		app.FullNodeStreamingManager,
 		txConfig.TxDecoder(),
 		clobFlags,
 		rate_limit.NewPanicRateLimiter[sdk.Msg](),
@@ -1124,7 +1147,6 @@ func New(
 		app.PricesKeeper,
 		app.SendingKeeper,
 		app.SubaccountsKeeper,
-		app.IndexerEventManager,
 		[]string{
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
@@ -1139,6 +1161,10 @@ func New(
 		[]string{
 			lib.GovModuleAddress.String(),
 		},
+		app.PricesKeeper,
+		app.ClobKeeper,
+		&app.MarketMapKeeper,
+		app.PerpetualsKeeper,
 	)
 	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
 
@@ -1219,6 +1245,7 @@ func New(
 		listingModule,
 		revShareModule,
 		accountplusModule,
+		marketmapModule,
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
@@ -1269,6 +1296,7 @@ func New(
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
+		marketmapmoduletypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
@@ -1315,6 +1343,7 @@ func New(
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
+		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
@@ -1362,6 +1391,7 @@ func New(
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
+		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
 
@@ -1405,6 +1435,7 @@ func New(
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
+		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,
 
 		// Auth must be migrated after staking.
@@ -1977,15 +2008,15 @@ func getIndexerFromOptions(
 	return indexerMessageSender, indexerFlags
 }
 
-// getGrpcStreamingManagerFromOptions returns an instance of a streamingtypes.GrpcStreamingManager from the specified
-// options. This function will default to returning a no-op instance.
-func getGrpcStreamingManagerFromOptions(
+// getFullNodeStreamingManagerFromOptions returns an instance of a streamingtypes.FullNodeStreamingManager
+// from the specified options. This function will default to returning a no-op instance.
+func getFullNodeStreamingManagerFromOptions(
 	appFlags flags.Flags,
 	logger log.Logger,
-) (manager streamingtypes.GrpcStreamingManager) {
+) (manager streamingtypes.FullNodeStreamingManager) {
 	if appFlags.GrpcStreamingEnabled {
 		logger.Info("GRPC streaming is enabled")
-		return streaming.NewGrpcStreamingManager(
+		return streaming.NewFullNodeStreamingManager(
 			logger,
 			appFlags.GrpcStreamingFlushIntervalMs,
 			appFlags.GrpcStreamingMaxBatchSize,

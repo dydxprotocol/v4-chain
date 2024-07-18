@@ -258,7 +258,7 @@ func (k Keeper) RemoveOrderFillAmount(ctx sdk.Context, orderId types.OrderId) {
 	orderAmountFilledStore.Delete(orderId.ToStateKey())
 
 	// If grpc stream is on, zero out the fill amount.
-	if k.GetGrpcStreamingManager().Enabled() {
+	if k.GetFullNodeStreamingManager().Enabled() {
 		allUpdates := types.NewOffchainUpdates()
 		if message, success := off_chain_updates.CreateOrderUpdateMessage(
 			ctx,

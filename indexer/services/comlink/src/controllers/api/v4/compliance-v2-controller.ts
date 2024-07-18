@@ -280,7 +280,7 @@ router.post(
       const response = {
         status: complianceStatusFromDatabase!.status,
         reason: complianceStatusFromDatabase!.reason,
-        updatedAt,
+        updatedAt: complianceStatusFromDatabase!.updatedAt,
       };
 
       return res.send(response);
