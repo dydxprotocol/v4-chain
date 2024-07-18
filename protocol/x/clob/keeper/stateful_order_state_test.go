@@ -1073,7 +1073,7 @@ func TestGetAllStatefulOrders(t *testing.T) {
 	}
 }
 
-func TestMigrateOrderExpirationState(t *testing.T) {
+func TestUnsafeMigrateOrderExpirationState(t *testing.T) {
 	tests := map[string]struct {
 		timeSlicesToOrderIds map[time.Time][]types.OrderId
 	}{
@@ -1106,7 +1106,7 @@ func TestMigrateOrderExpirationState(t *testing.T) {
 				ks.ClobKeeper.LegacySetStatefulOrdersTimeSliceInState(ks.Ctx, timestamp, orderIds)
 			}
 
-			ks.ClobKeeper.MigrateOrderExpirationState(ks.Ctx)
+			ks.ClobKeeper.UnsafeMigrateOrderExpirationState(ks.Ctx)
 
 			oldStore := prefix.NewStore(
 				ks.Ctx.KVStore(ks.StoreKey),

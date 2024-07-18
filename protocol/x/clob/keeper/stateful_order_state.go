@@ -456,9 +456,10 @@ func (k Keeper) SetStatefulOrderCount(
 	}
 }
 
-// MigrateOrderExpirationState migrates order expiration state from slices based on time to individual keys.
+// UnsafeMigrateOrderExpirationState migrates order expiration state from slices based on time to
+// individual keys.
 // Deprecated: Only intended for use in the v5.2 upgrade handler.
-func (k Keeper) MigrateOrderExpirationState(ctx sdk.Context) {
+func (k Keeper) UnsafeMigrateOrderExpirationState(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 
 	prefixStore := prefix.NewStore(
