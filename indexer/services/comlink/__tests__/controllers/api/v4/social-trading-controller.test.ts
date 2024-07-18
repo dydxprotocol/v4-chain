@@ -3,8 +3,10 @@ import {
   SubaccountTable,
   testMocks,
   SubaccountUsernamesTable,
+  SubaccountFromDatabase,
+  SubaccountUsernamesFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
-
+import request from 'supertest';
 import { RequestMethod } from '../../../../src/types';
 import { sendRequest } from '../../../helpers/helpers';
 
@@ -26,15 +28,16 @@ describe('social-trading-controller', () => {
   });
 
   it('successfuly fetches subaccount info by address', async () => {
-    const subaccounts = await SubaccountTable.findAll({}, [], { readReplica: true });
-    const subaccount = subaccounts[0];
+    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll({}, [], {});
+    const subaccount: SubaccountFromDatabase = subaccounts[0];
 
-    const subaccountUsernames = await SubaccountUsernamesTable.create({
+    const subaccountUsernames: SubaccountUsernamesFromDatabase = await
+    SubaccountUsernamesTable.create({
       subaccountId: subaccount.id,
       username: 'test_username',
     });
 
-    const response = await sendRequest({
+    const response: request.Response = await sendRequest({
       type: RequestMethod.GET,
       path: `/v4/trader/search?searchParam=${subaccount.address}`,
     });
@@ -52,14 +55,15 @@ describe('social-trading-controller', () => {
 
   it('successfuly fetches subaccount info by username', async () => {
 
-    const subaccounts = await SubaccountTable.findAll({}, [], { readReplica: true });
-    const subaccount = subaccounts[0];
-    const subaccountUsernames = await SubaccountUsernamesTable.create({
+    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll({}, [], {});
+    const subaccount: SubaccountFromDatabase = subaccounts[0];
+    const subaccountUsernames: SubaccountUsernamesFromDatabase = await
+    SubaccountUsernamesTable.create({
       subaccountId: subaccount.id,
       username: 'test_username',
     });
 
-    const response = await sendRequest({
+    const response: request.Response = await sendRequest({
       type: RequestMethod.GET,
       path: `/v4/trader/search?searchParam=${subaccountUsernames.username}`,
     });

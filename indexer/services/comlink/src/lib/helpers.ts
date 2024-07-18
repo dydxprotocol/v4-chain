@@ -528,6 +528,6 @@ export function getChildSubaccountIds(address: string, parentSubaccountNum: numb
 }
 
 export function checkIfValidDydxAddress(address: string): boolean {
-  const pattern = /^dydx[0-9a-z]{39}$/;
+  const pattern: RegExp = /^dydx[0-9a-z]{39}$/;
   return pattern.test(address);
 }
