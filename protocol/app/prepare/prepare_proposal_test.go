@@ -707,7 +707,7 @@ func TestGetAddPremiumVotesTx(t *testing.T) {
 			keeperResp: &perpetualtypes.MsgAddPremiumVotes{},
 			txEncoder:  emptyTxEncoder, // returns empty tx.
 
-			expectedErr: fmt.Errorf("Invalid tx: []"),
+			expectedErr: fmt.Errorf("invalid tx: []"),
 		},
 		"valid message, but encoding fails": {
 			keeperResp: &perpetualtypes.MsgAddPremiumVotes{}, // empty
@@ -731,8 +731,11 @@ func TestGetAddPremiumVotesTx(t *testing.T) {
 			mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
 			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
 				Return(tc.keeperResp)
-
-			resp, err := prepare.GetAddPremiumVotesTx(ctx, mockTxConfig, &mockPerpKeeper)
+			txSetterParams := prepare.TxSetterParams{
+				Ctx:      ctx,
+				TxConfig: mockTxConfig,
+			}
+			resp, err := prepare.GetAddPremiumVotesTx(txSetterParams, &mockPerpKeeper)
 			if tc.expectedErr != nil {
 				require.Equal(t, err, tc.expectedErr)
 			} else {
@@ -771,7 +774,7 @@ func TestGetProposedOperationsTx(t *testing.T) {
 			keeperResp: &clobtypes.MsgProposedOperations{},
 			txEncoder:  emptyTxEncoder, // returns empty tx.
 
-			expectedErr: fmt.Errorf("Invalid tx: []"),
+			expectedErr: fmt.Errorf("invalid tx: []"),
 		},
 		"valid message, but encoding fails": {
 			keeperResp: &clobtypes.MsgProposedOperations{}, // empty
@@ -795,8 +798,11 @@ func TestGetProposedOperationsTx(t *testing.T) {
 			mockTxConfig := createMockTxConfig(nil, []sdktypes.TxEncoder{tc.txEncoder})
 			mockClobKeeper := mocks.PrepareClobKeeper{}
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).Return(tc.keeperResp)
-
-			resp, err := prepare.GetProposedOperationsTx(ctx, mockTxConfig, &mockClobKeeper)
+			txSetterParams := prepare.TxSetterParams{
+				Ctx:      ctx,
+				TxConfig: mockTxConfig,
+			}
+			resp, err := prepare.GetProposedOperationsTx(txSetterParams, &mockClobKeeper)
 			if tc.expectedErr != nil {
 				require.Equal(t, err, tc.expectedErr)
 			} else {

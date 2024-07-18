@@ -37,6 +37,14 @@ type OperationsTxResponse struct {
 	NumOperations int
 }
 
+// common params between tx setters
+type TxSetterParams struct {
+	Ctx      sdk.Context
+	TxConfig client.TxConfig
+	Txs      *PrepareProposalTxs
+	Req      *abci.RequestPrepareProposal
+}
+
 // PrepareProposalHandler is responsible for preparing a block proposal that's returned to Tendermint via ABCI++.
 //
 // The returned txs are gathered in the following way to fit within the given request's max bytes:
@@ -77,6 +85,13 @@ func PrepareProposalHandler(
 			return &EmptyPrepareProposalResponse, nil
 		}
 
+		txSetterParams := TxSetterParams{
+			Ctx:      ctx,
+			TxConfig: txConfig,
+			Txs:      &txs,
+			Req:      req,
+		}
+
 		//------------------------ VOTE EXTENSIONS ------------------------
 
 		if veutils.AreVEEnabled(ctx) {
@@ -86,9 +101,7 @@ func PrepareProposalHandler(
 			)
 
 			if err := SetVE(
-				ctx,
-				req,
-				&txs,
+				txSetterParams,
 				pricesKeeper,
 				veCodec,
 				extCommitCodec,
@@ -105,10 +118,7 @@ func PrepareProposalHandler(
 
 		//------------------------ PREMIUM VOTES ------------------------
 		fundingTxResp, err := SetPremiumVotesTx(
-			ctx,
-			txConfig,
-			req,
-			&txs,
+			txSetterParams,
 			perpetualKeeper,
 		)
 
@@ -124,10 +134,7 @@ func PrepareProposalHandler(
 
 		//------------------------ OTHER TXS ------------------------
 		otherTxsRemainder, err := SetOneFourthOtherTxsAndGetRemainder(
-			ctx,
-			txConfig,
-			req,
-			&txs,
+			txSetterParams,
 		)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("AddOtherTxs error: %v", err))
@@ -137,10 +144,8 @@ func PrepareProposalHandler(
 
 		//------------------------ PROPOSED OPERATIONS ------------------------
 		operationsTxResp, err := SetProposedOperationsTx(
-			ctx,
-			txConfig,
+			txSetterParams,
 			clobKeeper,
-			&txs,
 		)
 
 		if err != nil {
@@ -151,8 +156,7 @@ func PrepareProposalHandler(
 
 		//------------------------ REMAINDER TXS ------------------------
 		if err := FillRemainderWithOtherTxs(
-			ctx,
-			&txs,
+			txSetterParams,
 			otherTxsRemainder,
 		); err != nil {
 			ctx.Logger().Error(fmt.Sprintf("AddOtherTxs (additional) error: %v", err))
@@ -183,17 +187,15 @@ func PrepareProposalHandler(
 }
 
 func SetVE(
-	ctx sdk.Context,
-	req *abci.RequestPrepareProposal,
-	txs *PrepareProposalTxs,
+	txSetterParams TxSetterParams,
 	pricesKeeper PreparePricesKeeper,
 	voteCodec codec.VoteExtensionCodec,
 	extCodec codec.ExtendedCommitCodec,
 	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
 ) error {
 	cleanExtCommitInfo, err := ve.CleanAndValidateExtendedCommitInfo(
-		ctx,
-		req.LocalLastCommit,
+		txSetterParams.Ctx,
+		txSetterParams.Req.LocalLastCommit,
 		voteCodec,
 		pricesKeeper,
 		validateVoteExtensionFn,
@@ -209,7 +211,7 @@ func SetVE(
 		return err
 	}
 
-	err = txs.SetExtInfoBz(extInfoBz)
+	err = txSetterParams.Txs.SetExtInfoBz(extInfoBz)
 	if err != nil {
 		return err
 	}
@@ -218,16 +220,15 @@ func SetVE(
 }
 
 func FillRemainderWithOtherTxs(
-	ctx sdk.Context,
-	txs *PrepareProposalTxs,
+	txSetterParams TxSetterParams,
 	otherTxsRemainder [][]byte,
 ) error {
 	// Try to pack in more "Other" txs.
-	availableBytes := txs.GetAvailableBytes()
+	availableBytes := txSetterParams.Txs.GetAvailableBytes()
 	if availableBytes > 0 && len(otherTxsRemainder) > 0 {
 		moreOtherTxsToInclude, _ := GetGroupMsgOther(otherTxsRemainder, availableBytes)
 		if len(moreOtherTxsToInclude) > 0 {
-			if err := txs.AddOtherTxs(moreOtherTxsToInclude); err != nil {
+			if err := txSetterParams.Txs.AddOtherTxs(moreOtherTxsToInclude); err != nil {
 				return err
 			}
 		}
@@ -236,18 +237,18 @@ func FillRemainderWithOtherTxs(
 }
 
 func SetPremiumVotesTx(
-	ctx sdk.Context,
-	txConfig client.TxConfig,
-	req *abci.RequestPrepareProposal,
-	txs *PrepareProposalTxs,
+	txSetterParams TxSetterParams,
 	perpetualKeeper PreparePerpetualsKeeper,
 ) (FundingTxResponse, error) {
-	fundingTxResp, err := GetAddPremiumVotesTx(ctx, txConfig, perpetualKeeper)
+	fundingTxResp, err := GetAddPremiumVotesTx(
+		txSetterParams,
+		perpetualKeeper,
+	)
 	if err != nil {
 		return fundingTxResp, err
 	}
 
-	if err := txs.SetAddPremiumVotesTx(fundingTxResp.Tx); err != nil {
+	if err := txSetterParams.Txs.SetAddPremiumVotesTx(fundingTxResp.Tx); err != nil {
 		return fundingTxResp, err
 	}
 
@@ -255,18 +256,19 @@ func SetPremiumVotesTx(
 }
 
 func SetProposedOperationsTx(
-	ctx sdk.Context,
-	txConfig client.TxConfig,
+	txSetterParams TxSetterParams,
 	clobKeeper PrepareClobKeeper,
-	txs *PrepareProposalTxs,
 ) (OperationsTxResponse, error) {
 	// Gather "OperationsRelated" group messages.
 	// TODO(DEC-1237): ensure ProposedOperations is within a certain size.
-	operationsTxResp, err := GetProposedOperationsTx(ctx, txConfig, clobKeeper)
+	operationsTxResp, err := GetProposedOperationsTx(
+		txSetterParams,
+		clobKeeper,
+	)
 	if err != nil {
 		return operationsTxResp, err
 	}
-	if err := txs.SetProposedOperationsTx(operationsTxResp.Tx); err != nil {
+	if err := txSetterParams.Txs.SetProposedOperationsTx(operationsTxResp.Tx); err != nil {
 		return operationsTxResp, err
 	}
 
@@ -275,18 +277,19 @@ func SetProposedOperationsTx(
 }
 
 func SetOneFourthOtherTxsAndGetRemainder(
-	ctx sdk.Context,
-	txConfig client.TxConfig,
-	req *abci.RequestPrepareProposal,
-	txs *PrepareProposalTxs,
+	txSetterParams TxSetterParams,
 ) ([][]byte, error) {
 	// Gather "Other" group messages.
-	otherBytesAllocated := txs.GetAvailableBytes() / 4 // ~25% of the remainder.
+	otherBytesAllocated := txSetterParams.Txs.GetAvailableBytes() / 4 // ~25% of the remainder.
 	// filter out txs that have disallow messages.
-	txsWithoutDisallowMsgs := RemoveDisallowMsgs(ctx, txConfig.TxDecoder(), req.Txs)
+	txsWithoutDisallowMsgs := RemoveDisallowMsgs(
+		txSetterParams.Ctx,
+		txSetterParams.TxConfig.TxDecoder(),
+		txSetterParams.Req.Txs,
+	)
 	otherTxsToInclude, otherTxsRemainder := GetGroupMsgOther(txsWithoutDisallowMsgs, otherBytesAllocated)
 	if len(otherTxsToInclude) > 0 {
-		err := txs.AddOtherTxs(otherTxsToInclude)
+		err := txSetterParams.Txs.AddOtherTxs(otherTxsToInclude)
 		if err != nil {
 			return nil, err
 		}
@@ -297,22 +300,21 @@ func SetOneFourthOtherTxsAndGetRemainder(
 
 // GetAddPremiumVotesTx returns a tx containing `MsgAddPremiumVotes`.
 func GetAddPremiumVotesTx(
-	ctx sdk.Context,
-	txConfig client.TxConfig,
+	txSetterParams TxSetterParams,
 	perpetualsKeeper PreparePerpetualsKeeper,
 ) (FundingTxResponse, error) {
 	// Get premium votes.
-	msgAddPremiumVotes := perpetualsKeeper.GetAddPremiumVotes(ctx)
+	msgAddPremiumVotes := perpetualsKeeper.GetAddPremiumVotes(txSetterParams.Ctx)
 	if msgAddPremiumVotes == nil {
 		return FundingTxResponse{}, fmt.Errorf("MsgAddPremiumVotes cannot be nil")
 	}
 
-	tx, err := EncodeMsgsIntoTxBytes(txConfig, msgAddPremiumVotes)
+	tx, err := EncodeMsgsIntoTxBytes(txSetterParams.TxConfig, msgAddPremiumVotes)
 	if err != nil {
 		return FundingTxResponse{}, err
 	}
 	if len(tx) == 0 {
-		return FundingTxResponse{}, fmt.Errorf("Invalid tx: %v", tx)
+		return FundingTxResponse{}, fmt.Errorf("invalid tx: %v", tx)
 	}
 
 	return FundingTxResponse{
@@ -323,22 +325,21 @@ func GetAddPremiumVotesTx(
 
 // GetProposedOperationsTx returns a tx containing `MsgProposedOperations`.
 func GetProposedOperationsTx(
-	ctx sdk.Context,
-	txConfig client.TxConfig,
+	txSetterParams TxSetterParams,
 	clobKeeper PrepareClobKeeper,
 ) (OperationsTxResponse, error) {
 	// Get the order and fill messages from the CLOB keeper.
-	msgOperations := clobKeeper.GetOperations(ctx)
+	msgOperations := clobKeeper.GetOperations(txSetterParams.Ctx)
 	if msgOperations == nil {
 		return OperationsTxResponse{}, fmt.Errorf("MsgProposedOperations cannot be nil")
 	}
 
-	tx, err := EncodeMsgsIntoTxBytes(txConfig, msgOperations)
+	tx, err := EncodeMsgsIntoTxBytes(txSetterParams.TxConfig, msgOperations)
 	if err != nil {
 		return OperationsTxResponse{}, err
 	}
 	if len(tx) == 0 {
-		return OperationsTxResponse{}, fmt.Errorf("Invalid tx: %v", tx)
+		return OperationsTxResponse{}, fmt.Errorf("invalid tx: %v", tx)
 	}
 
 	return OperationsTxResponse{
