@@ -28,7 +28,7 @@ import (
 const (
 	// When polling a node, poll every `pollFrequencyNs` and give up after `pollAttempts` attempts.
 	pollFrequencyNs = time.Second
-	pollAttempts    = 60
+	pollAttempts    = 300
 	cometPort       = "26657/tcp"
 	grpcPort        = "9090/tcp"
 )
@@ -71,7 +71,6 @@ func (n *Node) Wait(numBlocks int64) error {
 func (n *Node) WaitUntilBlockHeight(height int64) error {
 	for i := 0; i < pollAttempts; i++ {
 		latestHeight, err := n.LatestBlockHeight()
-
 		if err == nil && latestHeight >= height {
 			return nil
 		}
@@ -90,6 +89,18 @@ func (n *Node) LatestBlockHeight() (int64, error) {
 		return 0, err
 	}
 	return status.SyncInfo.LatestBlockHeight, nil
+}
+
+func (n *Node) LatestBlockTime() (time.Time, error) {
+	cometClient, err := n.createCometClient()
+	if err != nil {
+		return time.Time{}, err
+	}
+	status, err := cometClient.Status(context.Background())
+	if err != nil {
+		return time.Time{}, err
+	}
+	return status.SyncInfo.LatestBlockTime, nil
 }
 
 // Get a `Context` to be used for broadcasting tx given a signer address.
