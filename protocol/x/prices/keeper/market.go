@@ -48,7 +48,7 @@ func (k Keeper) CreateMarket(
 			)
 		}
 	}
-	// check that the market exists in market map
+	// Validate that market pair is formatted as a valid currency pair
 	currencyPair, err := slinky.MarketPairToCurrencyPair(marketParam.Pair)
 	if err != nil {
 		return types.MarketParam{}, errorsmod.Wrapf(

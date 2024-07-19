@@ -29,7 +29,7 @@ func TestCreateMarket(t *testing.T) {
 	}
 
 	// Create the test market in the market map and verify it is not enabled
-	keepertest.CreateMarketInMarketMapFromParams(
+	keepertest.CreateMarketsInMarketMapFromParams(
 		t,
 		ctx,
 		keeper.MarketMapKeeper.(*marketmapkeeper.Keeper),

@@ -107,7 +107,7 @@ func createPricesKeeper(
 }
 
 // Convert MarketParams into MarketMap markets and create them in the MarketMap keeper.
-func CreateMarketInMarketMapFromParams(
+func CreateMarketsInMarketMapFromParams(
 	t testing.TB,
 	ctx sdk.Context,
 	mmk *marketmapkeeper.Keeper,
@@ -157,7 +157,7 @@ func CreateTestMarket(
 	marketParam types.MarketParam,
 	marketPrice types.MarketPrice,
 ) (types.MarketParam, error) {
-	CreateMarketInMarketMapFromParams(
+	CreateMarketsInMarketMapFromParams(
 		t,
 		ctx,
 		k.MarketMapKeeper.(*marketmapkeeper.Keeper),

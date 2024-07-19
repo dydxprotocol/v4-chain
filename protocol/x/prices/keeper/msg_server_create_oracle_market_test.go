@@ -31,7 +31,7 @@ func TestCreateOracleMarket(t *testing.T) {
 	}{
 		"Succeeds: create new oracle market (id = 1)": {
 			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {
-				keepertest.CreateMarketInMarketMapFromParams(
+				keepertest.CreateMarketsInMarketMapFromParams(
 					t,
 					ctx,
 					pricesKeeper.MarketMapKeeper.(*marketmapkeeper.Keeper),
@@ -104,6 +104,17 @@ func TestCreateOracleMarket(t *testing.T) {
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			msgServer := keeper.NewMsgServerImpl(pricesKeeper)
 			tc.setup(t, ctx, pricesKeeper)
+
+			// Check that market is disabled in MarketMap before creating Oracle market for it
+			if len(tc.expectedMarkets) > 0 && tc.expectedErr == "" {
+				for i := range tc.expectedMarkets {
+					market := tc.expectedMarkets[i]
+
+					currencyPair, _ := slinky.MarketPairToCurrencyPair(market.Param.Pair)
+					mmMarket, _ := pricesKeeper.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+					require.False(t, mmMarket.Ticker.Enabled)
+				}
+			}
 
 			_, err := msgServer.CreateOracleMarket(ctx, tc.msg)
 			if tc.expectedErr != "" {
