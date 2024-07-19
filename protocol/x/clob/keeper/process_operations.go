@@ -696,43 +696,43 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	perpetualId := matchDeleveraging.GetPerpetualId()
 
 	// Validate that the provided subaccount can be deleveraged.
-	shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
-		ctx,
-		liquidatedSubaccountId,
-		perpetualId,
-	)
-	if err != nil {
-		panic(
-			fmt.Sprintf(
-				"PersistMatchDeleveragingToState: Failed to determine if subaccount can be deleveraged. "+
-					"SubaccountId %+v, error %+v",
-				liquidatedSubaccountId,
-				err,
-			),
-		)
-	}
-
-	if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
-		// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
-		return errorsmod.Wrapf(
-			types.ErrInvalidDeleveragedSubaccount,
-			"Subaccount %+v failed deleveraging validation",
-			liquidatedSubaccountId,
-		)
-	}
-
-	if matchDeleveraging.IsFinalSettlement != shouldDeleverageAtOraclePrice {
-		// Throw error if the isFinalSettlement flag does not match the expected value. This prevents misuse or lack
-		// of use of the isFinalSettlement flag. The isFinalSettlement flag should be set to true if-and-only-if the
-		// subaccount has non-negative TNC and the market is in final settlement. Otherwise, it must be false.
-		return errorsmod.Wrapf(
-			types.ErrDeleveragingIsFinalSettlementFlagMismatch,
-			"MatchPerpetualDeleveraging %+v has isFinalSettlement flag (%v), expected (%v)",
-			matchDeleveraging,
-			matchDeleveraging.IsFinalSettlement,
-			shouldDeleverageAtOraclePrice,
-		)
-	}
+	//shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
+	//	ctx,
+	//	liquidatedSubaccountId,
+	//	perpetualId,
+	//)
+	//if err != nil {
+	//	panic(
+	//		fmt.Sprintf(
+	//			"PersistMatchDeleveragingToState: Failed to determine if subaccount can be deleveraged. "+
+	//				"SubaccountId %+v, error %+v",
+	//			liquidatedSubaccountId,
+	//			err,
+	//		),
+	//	)
+	//}
+	//
+	//if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
+	//	// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
+	//	return errorsmod.Wrapf(
+	//		types.ErrInvalidDeleveragedSubaccount,
+	//		"Subaccount %+v failed deleveraging validation",
+	//		liquidatedSubaccountId,
+	//	)
+	//}
+	//
+	//if matchDeleveraging.IsFinalSettlement != shouldDeleverageAtOraclePrice {
+	//	// Throw error if the isFinalSettlement flag does not match the expected value. This prevents misuse or lack
+	//	// of use of the isFinalSettlement flag. The isFinalSettlement flag should be set to true if-and-only-if the
+	//	// subaccount has non-negative TNC and the market is in final settlement. Otherwise, it must be false.
+	//	return errorsmod.Wrapf(
+	//		types.ErrDeleveragingIsFinalSettlementFlagMismatch,
+	//		"MatchPerpetualDeleveraging %+v has isFinalSettlement flag (%v), expected (%v)",
+	//		matchDeleveraging,
+	//		matchDeleveraging.IsFinalSettlement,
+	//		shouldDeleverageAtOraclePrice,
+	//	)
+	//}
 
 	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
 	position, exists := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId)
@@ -749,35 +749,35 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	// If there are zero-fill deleveraging operations, this is a sentinel value to indicate a subaccount could not be
 	// liquidated or deleveraged and still has negative equity. Mark the current block number in state to indicate a
 	// negative TNC subaccount was seen.
-	if len(matchDeleveraging.GetFills()) == 0 {
-		if !shouldDeleverageAtBankruptcyPrice {
-			return errorsmod.Wrapf(
-				types.ErrZeroFillDeleveragingForNonNegativeTncSubaccount,
-				fmt.Sprintf(
-					"PersistMatchDeleveragingToState: zero-fill deleveraging operation included for subaccount %+v"+
-						" and perpetual %d but subaccount isn't negative TNC",
-					liquidatedSubaccountId,
-					perpetualId,
-				),
-			)
-		}
-
-		metrics.IncrCountMetricWithLabels(
-			types.ModuleName,
-			metrics.SubaccountsNegativeTncSubaccountSeen,
-			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
-			metrics.GetLabelForBoolValue(metrics.IsLong, position.GetIsLong()),
-			metrics.GetLabelForBoolValue(metrics.DeliverTx, true),
-		)
-		if err = k.subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(
-			ctx,
-			perpetualId,
-			lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-		); err != nil {
-			return err
-		}
-		return nil
-	}
+	//if len(matchDeleveraging.GetFills()) == 0 {
+	//	if !shouldDeleverageAtBankruptcyPrice {
+	//		return errorsmod.Wrapf(
+	//			types.ErrZeroFillDeleveragingForNonNegativeTncSubaccount,
+	//			fmt.Sprintf(
+	//				"PersistMatchDeleveragingToState: zero-fill deleveraging operation included for subaccount %+v"+
+	//					" and perpetual %d but subaccount isn't negative TNC",
+	//				liquidatedSubaccountId,
+	//				perpetualId,
+	//			),
+	//		)
+	//	}
+	//
+	//	metrics.IncrCountMetricWithLabels(
+	//		types.ModuleName,
+	//		metrics.SubaccountsNegativeTncSubaccountSeen,
+	//		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+	//		metrics.GetLabelForBoolValue(metrics.IsLong, position.GetIsLong()),
+	//		metrics.GetLabelForBoolValue(metrics.DeliverTx, true),
+	//	)
+	//	if err = k.subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(
+	//		ctx,
+	//		perpetualId,
+	//		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+	//	); err != nil {
+	//		return err
+	//	}
+	//	return nil
+	//}
 
 	for _, fill := range matchDeleveraging.GetFills() {
 		deltaBaseQuantums := new(big.Int).SetUint64(fill.FillAmount)
