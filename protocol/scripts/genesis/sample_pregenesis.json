@@ -636,6 +636,9 @@
       "validator_historical_rewards": [],
       "validator_slash_events": []
     },
+    "dydxaccountplus": {
+      "accounts": []
+    },
     "epochs": {
       "epoch_info_list": [
         {
@@ -1859,7 +1862,7 @@
       ]
     }
   },
-  "app_version": "5.0.0-dev0-385-gb5b86472",
+  "app_version": "5.0.0-dev0-378-ge9777b09",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {

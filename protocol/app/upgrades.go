@@ -30,6 +30,8 @@ func (app *App) setupUpgradeHandlers() {
 		v6_0_0.CreateUpgradeHandler(
 			app.ModuleManager,
 			app.configurator,
+			app.AccountKeeper,
+			app.AccountPlusKeeper,
 			app.ClobKeeper,
 			app.PricesKeeper,
 			app.MarketMapKeeper,
