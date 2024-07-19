@@ -33,6 +33,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	prices_keeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	marketmap_keeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -59,7 +60,7 @@ func getValidGenesisStr() string {
 }
 
 func createAppModule(t *testing.T) clob.AppModule {
-	am, _, _, _, _, _ := createAppModuleWithKeeper(t)
+	am, _, _, _, _, _, _ := createAppModuleWithKeeper(t)
 	return am
 }
 
@@ -71,6 +72,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 	*clob_keeper.Keeper,
 	*prices_keeper.Keeper,
 	*perp_keeper.Keeper,
+	*marketmap_keeper.Keeper,
 	sdk.Context,
 	*mocks.IndexerEventManager,
 ) {
@@ -99,7 +101,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 		nil,
 		nil,
 		nil,
-	), ks.ClobKeeper, ks.PricesKeeper, ks.PerpetualsKeeper, ks.Ctx, mockIndexerEventManager
+	), ks.ClobKeeper, ks.PricesKeeper, ks.PerpetualsKeeper, ks.MarketMapKeeper, ks.Ctx, mockIndexerEventManager
 }
 
 func createAppModuleBasic(t *testing.T) clob.AppModuleBasic {
