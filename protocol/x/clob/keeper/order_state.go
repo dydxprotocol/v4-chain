@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"bytes"
-	"encoding/binary"
 
 	"cosmossdk.io/store/prefix"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/off_chain_updates"
@@ -236,28 +235,6 @@ func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (
 	}
 
 	return prunedOrderIds
-}
-
-// MigratePruneableOrders is used to migrate prunable orders from key-per-height to key-per-order format.
-func (k Keeper) MigratePruneableOrders(ctx sdk.Context) {
-	store := prefix.NewStore(
-		ctx.KVStore(k.storeKey),
-		[]byte(types.LegacyBlockHeightToPotentiallyPrunableOrdersPrefix), // nolint:staticcheck
-	)
-	it := store.Iterator(nil, nil)
-	defer it.Close()
-
-	for ; it.Valid(); it.Next() {
-		if it.Value() == nil {
-			continue
-		}
-
-		height := binary.BigEndian.Uint32(it.Key())
-		var potentiallyPrunableOrders types.PotentiallyPrunableOrders
-		k.cdc.MustUnmarshal(it.Value(), &potentiallyPrunableOrders)
-		k.AddOrdersForPruning(ctx, potentiallyPrunableOrders.OrderIds, height)
-		store.Delete(it.Key())
-	}
 }
 
 // RemoveOrderFillAmount removes the fill amount of an Order from state and the memstore.
