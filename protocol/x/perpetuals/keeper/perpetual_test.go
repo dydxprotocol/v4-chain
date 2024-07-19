@@ -424,11 +424,13 @@ func TestHasPerpetual(t *testing.T) {
 		*perptest.GeneratePerpetual(perptest.WithId(999)),
 	}
 
-	_, err := pc.PricesKeeper.CreateMarket(
+	_, err := keepertest.CreateTestMarket(
+		t,
 		pc.Ctx,
+		pc.PricesKeeper,
 		pricestypes.MarketParam{
 			Id:                 0,
-			Pair:               "marketName",
+			Pair:               "base-quote",
 			Exponent:           -10,
 			MinExchanges:       uint32(1),
 			MinPriceChangePpm:  uint32(50),
@@ -813,11 +815,13 @@ func TestGetNetNotional_Success(t *testing.T) {
 			keepertest.CreateTestLiquidityTiers(t, pc.Ctx, pc.PerpetualsKeeper)
 			// Create a new market param and price.
 			marketId := uint32(0)
-			_, err := pc.PricesKeeper.CreateMarket(
+			_, err := keepertest.CreateTestMarket(
+				t,
 				pc.Ctx,
+				pc.PricesKeeper,
 				pricestypes.MarketParam{
 					Id:                 marketId,
-					Pair:               "marketName",
+					Pair:               "base-quote",
 					Exponent:           tc.exponent,
 					MinExchanges:       uint32(1),
 					MinPriceChangePpm:  uint32(50),
@@ -968,11 +972,13 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, pc.Ctx, pc.PerpetualsKeeper) // Create a new market param and price.
 			marketId := keepertest.GetNumMarkets(t, pc.Ctx, pc.PricesKeeper)
-			_, err := pc.PricesKeeper.CreateMarket(
+			_, err := keepertest.CreateTestMarket(
+				t,
 				pc.Ctx,
+				pc.PricesKeeper,
 				pricestypes.MarketParam{
 					Id:                 marketId,
-					Pair:               "marketName",
+					Pair:               "base-quote",
 					Exponent:           tc.exponent,
 					MinExchanges:       uint32(1),
 					MinPriceChangePpm:  uint32(50),
