@@ -105,7 +105,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		validateMemo:             ante.NewValidateMemoDecorator(options.AccountKeeper),
 		validateBasic:            ante.NewValidateBasicDecorator(),
 		validateSigCount:         ante.NewValidateSigCountDecorator(options.AccountKeeper),
-		incrementSequence:        ante.NewIncrementSequenceDecorator(options.AccountKeeper),
+		incrementSequence:        customante.NewDydxIncrementSequenceDecorator(options.AccountKeeper),
 		sigVerification:          customante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		consumeTxSizeGas:         ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		deductFee: ante.NewDeductFeeDecorator(
@@ -140,7 +140,7 @@ type lockingAnteHandler struct {
 	validateMemo             ante.ValidateMemoDecorator
 	validateBasic            ante.ValidateBasicDecorator
 	validateSigCount         ante.ValidateSigCountDecorator
-	incrementSequence        ante.IncrementSequenceDecorator
+	incrementSequence        customante.DydxIncrementSequenceDecorator
 	sigVerification          customante.SigVerificationDecorator
 	consumeTxSizeGas         ante.ConsumeTxSizeGasDecorator
 	deductFee                ante.DeductFeeDecorator
