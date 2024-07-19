@@ -15,7 +15,7 @@ import (
 )
 
 func TestCreateMarket(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, revShareKeeper := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, revShareKeeper, marketMapKeeper := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 
@@ -28,19 +28,7 @@ func TestCreateMarket(t *testing.T) {
 		MinPriceChangePpm:  uint32(9_999),
 	}
 
-	// Creating a market should fail if market does not exist in MarketMap
-	_, err := keeper.CreateMarket(
-		ctx,
-		testMarketParams,
-		types.MarketPrice{
-			Id:       0,
-			Exponent: int32(-6),
-			Price:    constants.FiveBillion,
-		},
-	)
-	require.Error(t, err)
-
-	// Create market in market map and validate that it's not enabled before we create a new Oracle Market
+	// Validate that market in Market Map is not enabled before we create a new Oracle Market
 	keepertest.CreateMarketInMarketMapFromParams(
 		t,
 		ctx,
@@ -48,7 +36,7 @@ func TestCreateMarket(t *testing.T) {
 		[]types.MarketParam{testMarketParams},
 	)
 	currencyPair, _ := slinky.MarketPairToCurrencyPair(constants.BtcUsdPair)
-	mmMarket, _ := keeper.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+	mmMarket, _ := marketMapKeeper.GetMarket(ctx, currencyPair.String())
 	require.False(t, mmMarket.Ticker.Enabled)
 
 	marketParam, err := keeper.CreateMarket(
@@ -90,7 +78,7 @@ func TestCreateMarket(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify market is enabled in market map
-	mmMarket, _ = keeper.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+	mmMarket, _ = marketMapKeeper.GetMarket(ctx, currencyPair.String())
 	require.True(t, mmMarket.Ticker.Enabled)
 
 	expirationTs := uint64(ctx.BlockTime().Unix() + int64(revShareParams.ValidDays*24*3600))
@@ -180,7 +168,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, mockTimeKeeper, _ := keepertest.PricesKeepers(t)
+			ctx, keeper, _, _, mockTimeKeeper, _, _ := keepertest.PricesKeepers(t)
 			ctx = ctx.WithTxBytes(constants.TestTxBytes)
 
 			mockTimeKeeper.On("Now").Return(constants.TimeT)
@@ -229,7 +217,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 }
 
 func TestGetAllMarketParamPrices(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 
@@ -243,7 +231,7 @@ func TestGetAllMarketParamPrices(t *testing.T) {
 }
 
 func TestAcquireNextMarketID(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 

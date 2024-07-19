@@ -12,7 +12,7 @@ import (
 )
 
 func TestGetCurrencyPairFromID(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	marketNumber := 10
@@ -29,7 +29,7 @@ func TestGetCurrencyPairFromID(t *testing.T) {
 }
 
 func TestIDForCurrencyPair(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	marketNumber := 10
@@ -53,7 +53,7 @@ func TestIDForCurrencyPair(t *testing.T) {
 }
 
 func TestGetPriceForCurrencyPair(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	marketNumber := 10
@@ -76,7 +76,7 @@ func TestGetPriceForCurrencyPair(t *testing.T) {
 	require.Error(t, err)
 }
 func TestGetNumCurrencyPairs(t *testing.T) {
-	ctx, keeper, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	marketNumber := 10
