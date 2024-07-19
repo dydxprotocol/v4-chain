@@ -1,6 +1,7 @@
 package voteweighted
 
 import (
+	"fmt"
 	"math/big"
 	"sort"
 
@@ -43,36 +44,25 @@ func Median(
 	validatorStore CCValidatorStore,
 	threshold math.LegacyDec,
 ) AggregateFn {
-	return func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error) {
+	return func(ctx sdk.Context, vePricesPerValidator map[string]map[string]*big.Int) (map[string]*big.Int, error) {
 		priceInfo := make(map[string]PriceInfo)
-		for valAddr, valPrices := range vePrices {
-			addr, err := sdk.ConsAddressFromBech32(valAddr)
+		for validatorAddr, validatorPrices := range vePricesPerValidator {
+
+			validatorPower, err := getValidatorPowerByAddress(ctx, validatorStore, validatorAddr)
 			if err != nil {
 				logger.Info(
-					"failed to convert validator address, skipping",
-					"validator_address", valAddr,
+					"failed to get validator power, skipping",
+					"validator_address", validatorAddr,
 					"err", err,
 				)
 				continue
 			}
 
-			validator, found := validatorStore.GetCCValidator(ctx, addr.Bytes())
-			if !found {
-				logger.Info(
-					"failed to retrieve validator from store, skipping",
-					"validator_address", valAddr,
-				)
-
-				continue
-			}
-
-			valPower := validator.GetPower()
-
-			for pair, price := range valPrices {
+			for pair, price := range validatorPrices {
 				if price == nil {
 					logger.Info(
 						"price is nil, skipping",
-						"validator_address", valAddr,
+						"validator_address", validatorAddr,
 						"currency_pair", pair,
 					)
 					continue
@@ -88,27 +78,28 @@ func Median(
 				pInfo := priceInfo[pair]
 				priceInfo[pair] = PriceInfo{
 					Prices: append(pInfo.Prices, PricePerValidator{
-						VoteWeight: valPower,
+						VoteWeight: validatorPower,
 						Price:      price,
 					}),
-					TotalWeight: pInfo.TotalWeight.Add(math.NewInt(valPower)),
+					TotalWeight: pInfo.TotalWeight.Add(math.NewInt(validatorPower)),
 				}
 			}
 		}
-		prices := make(map[string]*big.Int)
+
+		finalPrices := make(map[string]*big.Int)
 		totalPower := GetTotalPower(ctx, validatorStore)
 
 		for pair, info := range priceInfo {
 			// The total voting power % that submitted a price update for the given currency pair must be
 			// greater than the threshold to be included in the final oracle price.
 			if percentSubmitted := math.LegacyNewDecFromInt(info.TotalWeight).Quo(math.LegacyNewDecFromInt(totalPower)); percentSubmitted.GTE(threshold) {
-				prices[pair] = ComputeMedian(info)
+				finalPrices[pair] = ComputeMedian(info)
 				logger.Info(
 					"computed stake-weighted median price for currency pair",
 					"currency_pair", pair,
 					"percent_submitted", percentSubmitted.String(),
 					"threshold", threshold.String(),
-					"final_price", prices[pair].String(),
+					"final_price", finalPrices[pair].String(),
 					"num_validators", len(info.Prices),
 				)
 			} else {
@@ -121,9 +112,10 @@ func Median(
 				)
 			}
 		}
-		return prices, nil
+		return finalPrices, nil
 	}
 }
+
 func ComputeMedian(priceInfo PriceInfo) *big.Int {
 	// Sort the prices by price.
 	sort.SliceStable(priceInfo.Prices, func(i, j int) bool {
@@ -156,4 +148,25 @@ func ComputeMedian(priceInfo PriceInfo) *big.Int {
 	}
 
 	return nil
+}
+
+func getValidatorPowerByAddress(
+	ctx sdk.Context,
+	validatorStore CCValidatorStore,
+	validatorAddr string,
+) (int64, error) {
+
+	addr, err := sdk.ConsAddressFromBech32(validatorAddr)
+	if err != nil {
+		return 0, err
+	}
+
+	validator, found := validatorStore.GetCCValidator(ctx, addr.Bytes())
+	if !found {
+		return 0, fmt.Errorf("validator not found")
+	}
+
+	validatorPower := validator.GetPower()
+	return validatorPower, nil
+
 }
