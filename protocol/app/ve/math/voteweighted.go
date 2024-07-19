@@ -16,6 +16,8 @@ type CCValidatorStore interface {
 	GetCCValidator(ctx sdk.Context, addr []byte) (types.CrossChainValidator, bool)
 }
 
+type AggregateFn func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error)
+
 // DefaultPowerThreshold defines the total voting power % that must be
 // submitted in order for a currency pair to be considered for the
 // final oracle price. We provide a default supermajority threshold
@@ -38,9 +40,9 @@ type (
 
 func Median(
 	logger log.Logger,
-	vStore CCValidatorStore,
+	validatorStore CCValidatorStore,
 	threshold math.LegacyDec,
-) func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error) {
+) AggregateFn {
 	return func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error) {
 		priceInfo := make(map[string]PriceInfo)
 		for valAddr, valPrices := range vePrices {
@@ -54,7 +56,7 @@ func Median(
 				continue
 			}
 
-			validator, found := vStore.GetCCValidator(ctx, addr.Bytes())
+			validator, found := validatorStore.GetCCValidator(ctx, addr.Bytes())
 			if !found {
 				logger.Info(
 					"failed to retrieve validator from store, skipping",
@@ -94,7 +96,7 @@ func Median(
 			}
 		}
 		prices := make(map[string]*big.Int)
-		totalPower := GetTotalPower(ctx, vStore)
+		totalPower := GetTotalPower(ctx, validatorStore)
 
 		for pair, info := range priceInfo {
 			// The total voting power % that submitted a price update for the given currency pair must be
