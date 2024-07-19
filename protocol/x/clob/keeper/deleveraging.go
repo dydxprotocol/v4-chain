@@ -682,6 +682,14 @@ func (k Keeper) DeleverageSubaccounts(
 		metrics.Latency,
 	)
 
+	log.InfoLog(
+		ctx,
+		fmt.Sprintf(
+			"wliu deleveraging %d subaccounts",
+			len(subaccountsToDeleverage),
+		),
+	)
+
 	// For each unfilled liquidation, attempt to deleverage the subaccount.
 	for i := 0; i < 15 && i < len(subaccountsToDeleverage); i++ {
 		subaccountId := subaccountsToDeleverage[i].SubaccountId
@@ -697,6 +705,14 @@ func (k Keeper) DeleverageSubaccounts(
 			)
 			return err
 		}
+		log.InfoLog(
+			ctx,
+			fmt.Sprintf(
+				"wliu deleveraged subaccount %s for perpetual %d",
+				subaccountId,
+				perpetualId,
+			),
+		)
 	}
 
 	return nil
