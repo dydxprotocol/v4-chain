@@ -23,7 +23,7 @@ type Vote struct {
 	DaemonVoteExtension vetypes.DaemonVoteExtension
 }
 
-func GetDaemonVotes(
+func GetDaemonVotesFromBlock(
 	proposal [][]byte,
 	veCodec codec.VoteExtensionCodec,
 	extCommitCodec codec.ExtendedCommitCodec,
@@ -75,7 +75,7 @@ type VoteAggregator interface {
 	// price aggregator but can be replaced by the application.
 	//
 	// Notice: This method overwrites the VoteAggregator's local view of prices.
-	AggregateDaemonVE(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error)
+	AggregateDaemonVEIntoFinalPrices(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error)
 
 	// GetPriceForValidator gets the prices reported by a given validator. This method depends
 	// on the prices from the latest set of aggregated votes.
@@ -107,7 +107,7 @@ func NewVeAggregator(
 		pricesKeeper: pricekeeper,
 	}
 }
-func (ma *MedianAggregator) AggregateDaemonVE(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error) {
+func (ma *MedianAggregator) AggregateDaemonVEIntoFinalPrices(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error) {
 	ma.prices = make(map[string]map[string]*big.Int)
 	for _, vote := range votes {
 		consAddr := vote.ConsAddress.String()

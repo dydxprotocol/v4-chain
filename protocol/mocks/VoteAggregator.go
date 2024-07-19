@@ -17,8 +17,8 @@ type VoteAggregator struct {
 	mock.Mock
 }
 
-// AggregateDaemonVE provides a mock function with given fields: ctx, votes
-func (_m *VoteAggregator) AggregateDaemonVE(ctx types.Context, votes []aggregator.Vote) (map[string]*big.Int, error) {
+// AggregateDaemonVEIntoFinalPrices provides a mock function with given fields: ctx, votes
+func (_m *VoteAggregator) AggregateDaemonVEIntoFinalPrices(ctx types.Context, votes []aggregator.Vote) (map[string]*big.Int, error) {
 	ret := _m.Called(ctx, votes)
 
 	var r0 map[string]*big.Int

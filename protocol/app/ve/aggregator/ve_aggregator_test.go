@@ -50,10 +50,10 @@ func TestVEAggregator(t *testing.T) {
 
 		proposal := [][]byte{commitBz}
 
-		votes, err := veaggregator.GetDaemonVotes(proposal, voteCodec, extCodec)
+		votes, err := veaggregator.GetDaemonVotesFromBlock(proposal, voteCodec, extCodec)
 		require.NoError(t, err)
 
-		prices, err := handler.AggregateDaemonVE(ctx, votes)
+		prices, err := handler.AggregateDaemonVEIntoFinalPrices(ctx, votes)
 		require.NoError(t, err)
 		require.Len(t, prices, 0)
 	})
@@ -73,9 +73,9 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 
 		proposal := [][]byte{commitBz}
-		votes, err := veaggregator.GetDaemonVotes(proposal, voteCodec, extCodec)
+		votes, err := veaggregator.GetDaemonVotesFromBlock(proposal, voteCodec, extCodec)
 		require.NoError(t, err)
-		prices, err := handler.AggregateDaemonVE(ctx, votes)
+		prices, err := handler.AggregateDaemonVEIntoFinalPrices(ctx, votes)
 		require.NoError(t, err)
 		require.Len(t, prices, 1)
 
@@ -98,9 +98,9 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 
 		proposal := [][]byte{commitBz}
-		votes, err := veaggregator.GetDaemonVotes(proposal, voteCodec, extCodec)
+		votes, err := veaggregator.GetDaemonVotesFromBlock(proposal, voteCodec, extCodec)
 		require.NoError(t, err)
-		prices, err := handler.AggregateDaemonVE(ctx, votes)
+		prices, err := handler.AggregateDaemonVEIntoFinalPrices(ctx, votes)
 		require.NoError(t, err)
 		require.Len(t, prices, 3)
 
@@ -132,9 +132,9 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 
 		proposal := [][]byte{commitBz}
-		votes, err := veaggregator.GetDaemonVotes(proposal, voteCodec, extCodec)
+		votes, err := veaggregator.GetDaemonVotesFromBlock(proposal, voteCodec, extCodec)
 		require.NoError(t, err)
-		prices, err := handler.AggregateDaemonVE(ctx, votes)
+		prices, err := handler.AggregateDaemonVEIntoFinalPrices(ctx, votes)
 		require.NoError(t, err)
 		require.Len(t, prices, 1)
 
@@ -165,9 +165,9 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 
 		proposal := [][]byte{commitBz}
-		votes, err := veaggregator.GetDaemonVotes(proposal, voteCodec, extCodec)
+		votes, err := veaggregator.GetDaemonVotesFromBlock(proposal, voteCodec, extCodec)
 		require.NoError(t, err)
-		prices, err := handler.AggregateDaemonVE(ctx, votes)
+		prices, err := handler.AggregateDaemonVEIntoFinalPrices(ctx, votes)
 		require.NoError(t, err)
 		require.Len(t, prices, 3)
 
@@ -214,9 +214,9 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 
 		proposal := [][]byte{commitBz}
-		votes, err := veaggregator.GetDaemonVotes(proposal, voteCodec, extCodec)
+		votes, err := veaggregator.GetDaemonVotesFromBlock(proposal, voteCodec, extCodec)
 		require.NoError(t, err)
-		prices, err := handler.AggregateDaemonVE(ctx, votes)
+		prices, err := handler.AggregateDaemonVEIntoFinalPrices(ctx, votes)
 		require.NoError(t, err)
 		require.Len(t, prices, 1)
 
@@ -255,9 +255,9 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 
 		proposal := [][]byte{commitBz}
-		votes, err := veaggregator.GetDaemonVotes(proposal, voteCodec, extCodec)
+		votes, err := veaggregator.GetDaemonVotesFromBlock(proposal, voteCodec, extCodec)
 		require.NoError(t, err)
-		prices, err := handler.AggregateDaemonVE(ctx, votes)
+		prices, err := handler.AggregateDaemonVEIntoFinalPrices(ctx, votes)
 		require.NoError(t, err)
 		require.Len(t, prices, 3)
 
@@ -285,9 +285,9 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 
 		proposal := [][]byte{commitBz}
-		votes, err := veaggregator.GetDaemonVotes(proposal, voteCodec, extCodec)
+		votes, err := veaggregator.GetDaemonVotesFromBlock(proposal, voteCodec, extCodec)
 		require.NoError(t, err)
-		prices, err := handler.AggregateDaemonVE(ctx, votes)
+		prices, err := handler.AggregateDaemonVEIntoFinalPrices(ctx, votes)
 		require.NoError(t, err)
 		require.Len(t, prices, 0)
 	})
@@ -308,9 +308,9 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 
 		proposal := [][]byte{commitBz}
-		votes, err := veaggregator.GetDaemonVotes(proposal, voteCodec, extCodec)
+		votes, err := veaggregator.GetDaemonVotesFromBlock(proposal, voteCodec, extCodec)
 		require.NoError(t, err)
-		prices, err := handler.AggregateDaemonVE(ctx, votes)
+		prices, err := handler.AggregateDaemonVEIntoFinalPrices(ctx, votes)
 		require.NoError(t, err)
 		require.Len(t, prices, 0)
 	})
@@ -348,9 +348,9 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 
 		proposal := [][]byte{commitBz}
-		votes, err := veaggregator.GetDaemonVotes(proposal, voteCodec, extCodec)
+		votes, err := veaggregator.GetDaemonVotesFromBlock(proposal, voteCodec, extCodec)
 		require.NoError(t, err)
-		prices, err := handler.AggregateDaemonVE(ctx, votes)
+		prices, err := handler.AggregateDaemonVEIntoFinalPrices(ctx, votes)
 		require.NoError(t, err)
 		require.Len(t, prices, 1)
 
@@ -389,9 +389,9 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 
 		proposal := [][]byte{commitBz}
-		votes, err := veaggregator.GetDaemonVotes(proposal, voteCodec, extCodec)
+		votes, err := veaggregator.GetDaemonVotesFromBlock(proposal, voteCodec, extCodec)
 		require.NoError(t, err)
-		prices, err := handler.AggregateDaemonVE(ctx, votes)
+		prices, err := handler.AggregateDaemonVEIntoFinalPrices(ctx, votes)
 		require.NoError(t, err)
 		require.Len(t, prices, 2)
 

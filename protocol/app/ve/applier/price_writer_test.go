@@ -63,7 +63,7 @@ func TestPriceWriter(t *testing.T) {
 		ctx := sdk.Context{}
 
 		// fail vote aggregation
-		voteAggregator.On("AggregateDaemonVE", ctx, []aggregator.Vote{
+		voteAggregator.On("AggregateDaemonVEIntoFinalPrices", ctx, []aggregator.Vote{
 			{
 				DaemonVoteExtension: vetypes.DaemonVoteExtension{
 					Prices: prices,
@@ -93,7 +93,7 @@ func TestPriceWriter(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		voteAggregator.On("AggregateDaemonVE", ctx, []aggregator.Vote{
+		voteAggregator.On("AggregateDaemonVEIntoFinalPrices", ctx, []aggregator.Vote{
 			{
 				DaemonVoteExtension: vetypes.DaemonVoteExtension{
 					Prices: prices,
@@ -153,7 +153,7 @@ func TestPriceWriter(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		voteAggregator.On("AggregateDaemonVE", ctx, []aggregator.Vote{
+		voteAggregator.On("AggregateDaemonVEIntoFinalPrices", ctx, []aggregator.Vote{
 			{
 				DaemonVoteExtension: vetypes.DaemonVoteExtension{
 					Prices: prices1,

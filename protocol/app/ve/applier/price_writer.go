@@ -48,7 +48,7 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
 ) (map[string]*big.Int, error) {
-	votes, err := aggregator.GetDaemonVotes(request.Txs, pa.voteExtensionCodec, pa.extendedCommitCodec)
+	votes, err := aggregator.GetDaemonVotesFromBlock(request.Txs, pa.voteExtensionCodec, pa.extendedCommitCodec)
 	if err != nil {
 		pa.logger.Error(
 			"failed to get extended commit info from proposal",
@@ -60,7 +60,7 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 		return nil, err
 	}
 
-	prices, err := pa.voteAggregator.AggregateDaemonVE(ctx, votes)
+	prices, err := pa.voteAggregator.AggregateDaemonVEIntoFinalPrices(ctx, votes)
 	if err != nil {
 		pa.logger.Error(
 			"failed to aggregate prices",
@@ -73,25 +73,12 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 
 	marketParams := pa.pricesKeeper.GetAllMarketParams(ctx)
 
+	pricesWrittenToState := make(map[string]*big.Int)
+
 	for _, market := range marketParams {
 		pair := market.Pair
-		price, ok := prices[pair]
-		if !ok || price == nil {
-			pa.logger.Debug(
-				"no price for currency pair",
-				"currency_pair", pair,
-			)
-
-			continue
-		}
-
-		if price.Sign() == -1 {
-			pa.logger.Error(
-				"price is negative",
-				"currency_pair", pair,
-				"price", price.String(),
-			)
-
+		shouldWritePrice, price := pa.ShouldWritePriceToStore(prices, pair)
+		if !shouldWritePrice {
 			continue
 		}
 
@@ -109,11 +96,40 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 
 			return nil, err
 		}
+
 		pa.logger.Info(
 			"set price for currency pair",
 			"currency_pair", pair,
 			"quote_price", newPrice.Price,
 		)
+
+		pricesWrittenToState[pair] = price
 	}
-	return prices, nil
+	return pricesWrittenToState, nil
+}
+
+func (pa *PriceApplier) ShouldWritePriceToStore(
+	prices map[string]*big.Int,
+	marketPairToUpdate string,
+) (bool, *big.Int) {
+	price, ok := prices[marketPairToUpdate]
+	if !ok || price == nil {
+		pa.logger.Debug(
+			"no price for currency pair",
+			"currency_pair", marketPairToUpdate,
+		)
+		return false, nil
+	}
+
+	if price.Sign() == -1 {
+		pa.logger.Error(
+			"price is negative",
+			"currency_pair", marketPairToUpdate,
+			"price", price.String(),
+		)
+
+		return false, nil
+	}
+
+	return true, price
 }
