@@ -77,11 +77,11 @@ func (s *PreBlockTestSuite) SetupTest() {
 	)
 
 	s.priceApplier = priceapplier.NewPriceApplier(
+		s.logger,
 		aggregator,
 		*s.pricesKeeper,
 		s.voteCodec,
 		s.extCodec,
-		s.logger,
 	)
 
 	s.marketParamPrices = s.setMarketPrices()

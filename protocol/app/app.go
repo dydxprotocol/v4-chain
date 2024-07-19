@@ -959,11 +959,11 @@ func New(
 	)
 
 	priceApplier := priceapplier.NewPriceApplier(
+		logger,
 		aggregator,
 		app.PricesKeeper,
 		app.voteCodec,
 		app.extCodec,
-		logger,
 	)
 
 	app.pricePreBlocker = *daemonpreblocker.NewDaemonPreBlockHandler(

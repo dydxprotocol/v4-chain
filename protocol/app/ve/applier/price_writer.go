@@ -29,11 +29,11 @@ type PriceApplier struct {
 }
 
 func NewPriceApplier(
+	logger log.Logger,
 	voteAggregator aggregator.VoteAggregator,
 	pricesKeeper PriceApplierPricesKeeper,
 	voteExtensionCodec codec.VoteExtensionCodec,
 	extendedCommitCodec codec.ExtendedCommitCodec,
-	logger log.Logger,
 ) *PriceApplier {
 	return &PriceApplier{
 		voteAggregator:      voteAggregator,

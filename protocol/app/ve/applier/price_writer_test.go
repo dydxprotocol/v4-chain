@@ -33,11 +33,11 @@ func TestPriceWriter(t *testing.T) {
 	pricesKeeper := &mocks.PriceApplierPricesKeeper{}
 
 	pricesApplier := pricewriter.NewPriceApplier(
+		log.NewNopLogger(),
 		voteAggregator,
 		pricesKeeper,
 		voteCodec,
 		extCodec,
-		log.NewNopLogger(),
 	)
 
 	t.Run("if extracting oracle votes fails, fail", func(t *testing.T) {
