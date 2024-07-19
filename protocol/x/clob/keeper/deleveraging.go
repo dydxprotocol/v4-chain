@@ -610,21 +610,19 @@ func (k Keeper) ProcessDeleveraging(
 func (k Keeper) GetSomeSubaccounts(
 	ctx sdk.Context,
 ) []subaccountToDeleverage {
+	count := 0
+	allAccounts := k.subaccountsKeeper.GetAllSubaccount(ctx)
 	subaccounts := make([]subaccountToDeleverage, 0)
-	for _, clobPair := range k.GetAllClobPairs(ctx) {
-		if clobPair.Status != types.ClobPair_STATUS_FINAL_SETTLEMENT {
-			continue
-		}
-
-		finalSettlementPerpetualId := clobPair.MustGetPerpetualId()
-		subaccountsWithPosition := k.DaemonLiquidationInfo.GetSubaccountsWithOpenPositions(
-			finalSettlementPerpetualId,
-		)
-		for _, subaccountId := range subaccountsWithPosition {
+	for _, acc := range allAccounts {
+		for _, perpPosition := range acc.PerpetualPositions {
 			subaccounts = append(subaccounts, subaccountToDeleverage{
-				SubaccountId: subaccountId,
-				PerpetualId:  finalSettlementPerpetualId,
+				SubaccountId: *acc.Id,
+				PerpetualId:  perpPosition.PerpetualId,
 			})
+			count++
+			if count >= 15 {
+				return subaccounts
+			}
 		}
 	}
 	return subaccounts
