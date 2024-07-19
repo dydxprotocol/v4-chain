@@ -5,6 +5,7 @@ import (
 
 	"github.com/cometbft/cometbft/types"
 
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	clobtestutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -14,6 +15,7 @@ import (
 	feetiertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
@@ -288,6 +290,31 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			}).WithNonDeterminismChecksEnabled(!tc.disableNonDeterminismChecks).Build()
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 			// Create all orders.
 			deliverTxsOverride := make([][]byte, 0)
 			deliverTxsOverride = append(
@@ -321,7 +348,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
 
 			// Advance to the next block, updating the price.
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,
 			})
 
@@ -348,7 +375,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 			}
 			// Advance to the next block, persisting removals in operations queue to state.
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 
 			if tc.subsequentOrder != nil {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -361,7 +388,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			}
 
 			// Advance to the next block, persisting removals in operations queue to state.
-			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 
 			require.Equal(t, len(tc.orders), len(tc.expectedOrderRemovals))
 
@@ -679,6 +706,31 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			}).Build()
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 			// Create all orders and add to deliverTxsOverride
 			deliverTxsOverride := make([][]byte, 0)
 			for _, order := range tc.orders {
@@ -703,7 +755,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			}
 
 			// Advance to the next block, updating the price.
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,
 			})
 			// Make sure stateful orders are in state.
@@ -713,7 +765,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			}
 
 			// Next block will have invalid Order Removals injected in proposal.
-			tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: [][]byte{testtx.MustGetTxBytes(tc.msgProposedOperations)},
 				ValidateFinalizeBlock: func(
 					ctx sdktypes.Context,
@@ -897,6 +949,31 @@ func TestOrderRemoval(t *testing.T) {
 			}).WithNonDeterminismChecksEnabled(!tc.disableNonDeterminismChecks).Build()
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 			// Create all orders.
 			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
 				ctx,
@@ -933,14 +1010,14 @@ func TestOrderRemoval(t *testing.T) {
 
 			// First block only persists stateful orders to state without matching them.
 			// Therefore, both orders should be in state at this point.
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 			_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, tc.firstOrder.OrderId)
 			require.True(t, found)
 			_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, tc.secondOrder.OrderId)
 			require.True(t, found)
 
 			// Verify expectations.
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 			_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, tc.firstOrder.OrderId)
 			require.Equal(t, tc.expectedFirstOrderRemoved, !found)
 
@@ -991,6 +1068,31 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 	}).Build()
 	ctx := tApp.InitChain()
 
+	rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+		Sender:              constants.Alice_Num0.Owner,
+		ConversionRate:      rate,
+		EthereumBlockNumber: blockNumber,
+	}
+
+	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+			Gas:                  1200000,
+			FeeAmt:               constants.TestFeeCoins_5Cents,
+		},
+		&msgUpdateSDAIConversionRate,
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 	// Create a resting order for alice.
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
 		ctx,
@@ -1036,12 +1138,12 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 
-	_ = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+	_ = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
 	// Local operations queue would be [placement(Alice_Order), ..., removal(Alice_Order)].
 	// Let's say block proposer does not include these operations. Make sure we don't panic in this case.
-	_ = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+	_ = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
 		DeliverTxsOverride: [][]byte{},
 	})
-	_ = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+	_ = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 }

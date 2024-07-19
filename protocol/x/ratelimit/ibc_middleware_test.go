@@ -1,7 +1,6 @@
 package ratelimit_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -156,22 +155,6 @@ func setupChainForIBC(t *testing.T, coord *ibctesting.Coordinator, chainID strin
 
 	// commit genesis block
 	chain.NextBlock()
-
-	fmt.Println("XXXXX")
-	for _, send := range senderAccounts {
-		fmt.Println(send.SenderAccount.GetAddress())
-		fmt.Println(send.SenderAccount.GetAccountNumber())
-
-		accounts := chain.App.(*app.App).AccountKeeper.GetAccount(chain.GetContext(), send.SenderAccount.GetAddress())
-		if accounts != nil {
-			fmt.Println(accounts.GetAccountNumber())
-			fmt.Println(accounts.GetAddress())
-			fmt.Println(accounts.GetPubKey())
-			fmt.Println(accounts.GetSequence())
-		} else {
-			fmt.Println("ACCOUNT IS NIL")
-		}
-	}
 
 	return chain
 

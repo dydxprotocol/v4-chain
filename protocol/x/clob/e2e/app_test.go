@@ -34,6 +34,10 @@ import (
 	stattypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
+
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 )
 
 var (
@@ -356,6 +360,12 @@ func TestHydrationInPreBlocker(t *testing.T) {
 		return genesis
 	}).WithNonDeterminismChecksEnabled(false).Build()
 
+	rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+	require.NoError(t, conversionErr)
+	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
+
 	// Let's add some pre-existing orders to state.
 	// Note that the order is not added to memclob.
 	tApp.App.ClobKeeper.SetLongTermOrderPlacement(
@@ -369,9 +379,9 @@ func TestHydrationInPreBlocker(t *testing.T) {
 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 	)
 
+	ctx := tApp.InitChain()
 	// Advance one block so that pre blocker is called and clob is hydrated.
-	_ = tApp.InitChain()
-	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Order should exist in state
 	_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(
@@ -433,6 +443,12 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 		)
 		return genesis
 	}).WithNonDeterminismChecksEnabled(false).Build()
+
+	rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+	require.NoError(t, conversionErr)
+	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
 
 	// 1. Let's add some pre-existing orders to state before clob is initialized.
 	tApp.App.ClobKeeper.SetLongTermOrderPlacement(
@@ -604,6 +620,31 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 
 	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
+	rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+		Sender:              constants.Alice_Num0.Owner,
+		ConversionRate:      rate,
+		EthereumBlockNumber: blockNumber,
+	}
+
+	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+			Gas:                  1200000,
+			FeeAmt:               constants.TestFeeCoins_5Cents,
+		},
+		&msgUpdateSDAIConversionRate,
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+
 	expectedFills := make([]clobtypes.Order, 300)
 	expectedCancels := make([]clobtypes.Order, len(simAccounts)-len(expectedFills))
 	checkTxsPerAccount := make([][]abcitypes.RequestCheckTx, len(simAccounts))
@@ -751,7 +792,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 	wgFinish.Wait()
 
 	// Advance the block and ensure that the appropriate orders were filled and cancelled.
-	tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+	tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 	for _, expectedFill := range expectedFills {
 		exists, amount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, expectedFill.OrderId)
 		require.True(t, exists)
@@ -891,11 +932,42 @@ func TestStats(t *testing.T) {
 	}
 	tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 
+	// rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	// rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+	// require.NoError(t, conversionErr)
+	// tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+	// tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
+
 	// Epochs start at block height 2.
 	startTime := time.Unix(10, 0).UTC()
 	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
 		BlockTime: startTime,
 	})
+
+	rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+		Sender:              constants.Alice_Num0.Owner,
+		ConversionRate:      rate,
+		EthereumBlockNumber: blockNumber,
+	}
+
+	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+			Gas:                  1200000,
+			FeeAmt:               constants.TestFeeCoins_5Cents,
+		},
+		&msgUpdateSDAIConversionRate,
+	) {
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
 	aliceAddress := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0).Id.MustGetAccAddress().String()
 	bobAddress := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0).Id.MustGetAccAddress().String()

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 
 	"github.com/cometbft/cometbft/types"
@@ -17,6 +18,7 @@ import (
 	feetiertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
@@ -607,7 +609,32 @@ func TestLiquidationConfig(t *testing.T) {
 				return genesis
 			}).Build()
 
-			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx := tApp.InitChain()
+
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// Create all existing orders.
 			existingOrderMsgs := make([]clobtypes.MsgPlaceOrder, len(tc.placedMatchableOrders))
@@ -1182,6 +1209,32 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			// Move forward in time by the specified time delta.
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+
 			// Create all existing orders.
 			existingOrderMsgs := make([]clobtypes.MsgPlaceOrder, len(tc.placedMatchableOrders))
 			for i, matchableOrder := range tc.placedMatchableOrders {
@@ -1199,7 +1252,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			require.NoError(t, err)
 
 			// Verify test expectations.
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 			for _, expectedSubaccount := range tc.expectedSubaccounts {
 				require.Equal(
 					t,

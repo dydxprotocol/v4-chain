@@ -4,9 +4,11 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
@@ -21,6 +23,8 @@ import (
 	testtx "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/tx"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
@@ -623,6 +627,22 @@ func TestPlaceOrder(t *testing.T) {
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
 			tApp = testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
+
+			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+			require.NoError(t, conversionErr)
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}))
+
 			ctx = tApp.InitChain()
 
 			// Clear any messages produced prior to these checkTx calls.
@@ -1052,6 +1072,31 @@ func TestShortTermOrderReplacements(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 			for i, block := range tc.blocks {
 				for _, order := range block.ordersToPlace {
 					for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, order) {
@@ -1069,7 +1114,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 					require.Equal(t, expectations.expectedFillAmount, uint64(fillAmount))
 				}
 
-				ctx = tApp.AdvanceToBlock(uint32(i+2), testapp.AdvanceToBlockOptions{})
+				ctx = tApp.AdvanceToBlock(uint32(i+3), testapp.AdvanceToBlockOptions{})
 			}
 		})
 	}
@@ -1235,6 +1280,31 @@ func TestCancelShortTermOrder(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 			// Place first block orders and cancels
 			for _, order := range tc.firstBlockOrders {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, order) {
@@ -1249,7 +1319,7 @@ func TestCancelShortTermOrder(t *testing.T) {
 			}
 
 			// Advance block
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
 			// Place second block orders and cancels
 			for _, order := range tc.secondBlockOrders {
@@ -1293,7 +1363,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		"IOC sell fully matches": {
 			blocks: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1328,7 +1398,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		"IOC buy fully matches": {
 			blocks: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1363,7 +1433,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		"IOC sell partially matches and is not placed on the book": {
 			blocks: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1398,7 +1468,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		"IOC buy partially matches and is not placed on the book": {
 			blocks: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1433,7 +1503,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		"IOC fails CheckTx if previously filled": {
 			blocks: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1456,7 +1526,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					},
 				},
 				{
-					Block: 3,
+					Block: 4,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1483,7 +1553,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		"FOK buy fully matches": {
 			blocks: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1518,7 +1588,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		"FOK sell fully matches": {
 			blocks: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1553,7 +1623,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		"FOK buy partially matches, fails, and is not placed on the book": {
 			blocks: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1589,7 +1659,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		"FOK sell partially matches, fails, and is not placed on the book": {
 			blocks: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1625,7 +1695,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		"FOK fails CheckTx if previously filled": {
 			blocks: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1648,7 +1718,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					},
 				},
 				{
-					Block: 3,
+					Block: 4,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1675,7 +1745,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		"Post-only buy does not cross and is placed on the book": {
 			blocks: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1710,7 +1780,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		"Post-only sell does not cross and is placed on the book": {
 			blocks: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1745,7 +1815,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		"Post-only buy crosses and is not placed on the book": {
 			blocks: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1781,7 +1851,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		"Post-only sell crosses and is not placed on the book": {
 			blocks: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
@@ -1820,6 +1890,31 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
+
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			for _, block := range tc.blocks {
 				for _, order := range block.Msgs {

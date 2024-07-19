@@ -5,11 +5,13 @@ import (
 	"testing"
 	"time"
 
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -681,6 +683,31 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 			for _, allowedOrder := range tc.allowedOrders {
 				for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(allowedOrder)) {
 					resp := tApp.CheckTx(tx)
@@ -689,7 +716,7 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			}
 
 			if tc.advanceBlock {
-				ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 			}
 
 			if tc.cancellation != nil {
@@ -700,7 +727,7 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			}
 
 			if tc.advanceBlock {
-				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+				ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 			}
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.limitedOrder)) {
@@ -724,7 +751,7 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			}
 
 			// Ensure that any successful transactions can be delivered.
-			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+			tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 		})
 	}
 }
@@ -872,6 +899,31 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 				}).Build()
 
 			ctx := tApp.InitChain()
+
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.firstOrder)) {
 				resp := tApp.CheckTx(tx)
@@ -1186,12 +1238,37 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.makerOrder)) {
 				resp := tApp.CheckTx(tx)
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 			if tc.advanceBlock {
-				ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 			}
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.takerOrder)) {
@@ -1199,7 +1276,7 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 			if tc.advanceBlock {
-				ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+				ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 			}
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.extraOrder)) {
@@ -1213,7 +1290,7 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 			}
 
 			// Ensure that any successful transactions can be delivered.
-			tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
+			tApp.AdvanceToBlock(6, testapp.AdvanceToBlockOptions{})
 		})
 	}
 }

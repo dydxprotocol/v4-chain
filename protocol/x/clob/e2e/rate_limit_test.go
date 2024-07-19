@@ -3,9 +3,13 @@ package clob_test
 import (
 	"testing"
 
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cometbft/cometbft/types"
@@ -146,6 +150,31 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				}).Build()
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 			firstCheckTx := testapp.MustMakeCheckTx(
 				ctx,
 				tApp.App,
@@ -154,7 +183,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				},
 				tc.firstMsg,
 			)
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 			// First transaction should be allowed.
 			resp := tApp.CheckTx(firstCheckTx)
 			require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
@@ -174,21 +203,21 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 			require.Contains(t, resp.Log, "exceeds configured block rate limit")
 
 			// Rate limit of 1 over two blocks should still apply, total should be 3 now (2 in block 2, 1 in block 3).
-			tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
-			resp = tApp.CheckTx(secondCheckTx)
-			require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
-			require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
-			require.Contains(t, resp.Log, "exceeds configured block rate limit")
-
-			// Rate limit of 1 over two blocks should still apply, total should be 2 now (1 in block 3, 1 in block 4).
 			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 			resp = tApp.CheckTx(secondCheckTx)
 			require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
 			require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
 			require.Contains(t, resp.Log, "exceeds configured block rate limit")
 
+			// Rate limit of 1 over two blocks should still apply, total should be 2 now (1 in block 3, 1 in block 4).
+			tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
+			resp = tApp.CheckTx(secondCheckTx)
+			require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+			require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
+			require.Contains(t, resp.Log, "exceeds configured block rate limit")
+
 			// Advancing two blocks should make the total count 0 now and the msg should be accepted.
-			tApp.AdvanceToBlock(6, testapp.AdvanceToBlockOptions{})
+			tApp.AdvanceToBlock(7, testapp.AdvanceToBlockOptions{})
 			resp = tApp.CheckTx(secondCheckTx)
 			require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 		})
@@ -278,6 +307,31 @@ func TestCombinedPlaceCancelBatchCancel_RateLimitsAreEnforced(t *testing.T) {
 				}).Build()
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 			firstCheckTxArray := []abcitypes.RequestCheckTx{}
 			for _, msg := range tc.firstBatch {
 				checkTx := testapp.MustMakeCheckTx(
@@ -315,7 +369,7 @@ func TestCombinedPlaceCancelBatchCancel_RateLimitsAreEnforced(t *testing.T) {
 				thirdCheckTxArray = append(thirdCheckTxArray, checkTx)
 			}
 
-			tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 			// First batch of transactions.
 			for idx, checkTx := range firstCheckTxArray {
 				resp := tApp.CheckTx(checkTx)
@@ -328,7 +382,7 @@ func TestCombinedPlaceCancelBatchCancel_RateLimitsAreEnforced(t *testing.T) {
 				}
 			}
 			// Advance one block
-			tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 			// Second batch of transactions.
 			for idx, checkTx := range secondCheckTxArray {
 				resp := tApp.CheckTx(checkTx)
@@ -341,7 +395,7 @@ func TestCombinedPlaceCancelBatchCancel_RateLimitsAreEnforced(t *testing.T) {
 				}
 			}
 			// Advance one block
-			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+			tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 			// Third batch of transactions.
 			for idx, checkTx := range thirdCheckTxArray {
 				resp := tApp.CheckTx(checkTx)
@@ -354,7 +408,7 @@ func TestCombinedPlaceCancelBatchCancel_RateLimitsAreEnforced(t *testing.T) {
 				}
 			}
 			// Advance one block
-			tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
+			tApp.AdvanceToBlock(6, testapp.AdvanceToBlockOptions{})
 			lastCheckTx := testapp.MustMakeCheckTx(
 				ctx,
 				tApp.App,
@@ -371,6 +425,21 @@ func TestCombinedPlaceCancelBatchCancel_RateLimitsAreEnforced(t *testing.T) {
 
 func TestCancellationAndMatchInTheSameBlock_Regression(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
+
+	rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+	require.NoError(t, conversionErr)
+	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
+
+	tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.ParallelApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}))
+
+	tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.NoCheckTxApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}))
+
+	tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.CrashingApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}))
 
 	LPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20 := *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
@@ -495,7 +564,33 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
-			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			ctx := tApp.InitChain()
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
 				ctx, tApp.App, LPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20) {
 				resp := tApp.CheckTx(checkTx)
@@ -592,7 +687,32 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 					)
 					return genesis
 				}).Build()
-			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			ctx := tApp.InitChain()
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// First placement should pass since the order is unknown.
 			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -650,6 +770,22 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreNotRateLimited(t *te
 		)
 		return genesis
 	}).Build()
+
+	// Initialize sDAI Epoch price
+	rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+	require.NoError(t, conversionErr)
+	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
+
+	tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.ParallelApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}))
+
+	tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.NoCheckTxApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}))
+
+	tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.CrashingApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}))
 	ctx := tApp.InitChain()
 
 	firstMarketCheckTx := testapp.MustMakeCheckTx(
@@ -748,7 +884,32 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 					})
 				return genesis
 			}).Build()
-			ctx := tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
+			ctx := tApp.InitChain()
+
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 
 			// First tx fails due to GTB being too low.
 			replayLessGTBTx := testapp.MustMakeCheckTx(

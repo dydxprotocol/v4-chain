@@ -3,6 +3,7 @@ package clob_test
 import (
 	"testing"
 
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -10,6 +11,7 @@ import (
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
@@ -509,6 +511,31 @@ func TestReduceOnlyOrders(t *testing.T) {
 				}).Build()
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 			// Create all orders.
 			deliverTxsOverride := make([][]byte, 0)
 			deliverTxsOverride = append(
@@ -543,13 +570,13 @@ func TestReduceOnlyOrders(t *testing.T) {
 				deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
 			}
 
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,
 			})
 
 			if expectedTriggeredOrders, ok := tc.expectedInTriggeredStateAfterBlock[2]; ok {
 				for orderId, triggered := range expectedTriggeredOrders {
-					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 2)
+					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 3)
 				}
 			}
 
@@ -588,13 +615,13 @@ func TestReduceOnlyOrders(t *testing.T) {
 				deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
 			}
 
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,
 			})
 
 			if expectedTriggeredOrders, ok := tc.expectedInTriggeredStateAfterBlock[3]; ok {
 				for orderId, triggered := range expectedTriggeredOrders {
-					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 3)
+					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 4)
 				}
 			}
 
@@ -691,6 +718,31 @@ func TestReduceOnlyOrderFailure(t *testing.T) {
 				return genesis
 			}).Build()
 			ctx := tApp.InitChain()
+
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			for idx, order := range tc.orders {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -983,6 +1035,31 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 				Build()
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
+
+			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
+				Sender:              constants.Alice_Num0.Owner,
+				ConversionRate:      rate,
+				EthereumBlockNumber: blockNumber,
+			}
+
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
+					Gas:                  1200000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgUpdateSDAIConversionRate,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 			// place first set of orders.
 			for _, order := range tc.firstOrders {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -995,7 +1072,7 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 				}
 			}
 			// Advance the block to persist matches.
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
 			// validate order fill amounts.
 			if orderMap, exists := tc.expectedOrderFillAmounts[2]; exists {
@@ -1033,7 +1110,7 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 			}
 
 			// Advance the block to persist matches.
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 
 			// validate order fill amounts.
 			if orderMap, exists := tc.expectedOrderFillAmounts[3]; exists {
