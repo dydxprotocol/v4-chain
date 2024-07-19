@@ -118,7 +118,7 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 			return acceptResponse, nil
 		}
 
-		if err := h.ValidateVEPriceByteSize(ctx, h.pricesKeeper, req.VoteExtension); err != nil {
+		if err := h.ValidateVEMarketsAndPrices(ctx, h.pricesKeeper, req.VoteExtension); err != nil {
 			h.logger.Error(
 				"failed to decode and validate vote extension",
 				"height", req.Height,
@@ -185,7 +185,7 @@ func (h *VoteExtensionHandler) GetEncodedPriceFromPriceUpdate(
 	return encodedPrice, nil
 }
 
-func (h *VoteExtensionHandler) ValidateVEPriceByteSize(
+func (h *VoteExtensionHandler) ValidateVEMarketsAndPrices(
 	ctx sdk.Context,
 	pricesKeeper ExtendVotePricesKeeper,
 	veBytes []byte,
