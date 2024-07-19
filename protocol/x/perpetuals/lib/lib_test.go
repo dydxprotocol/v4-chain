@@ -433,7 +433,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, atomic resolution 4": {
 			price:                        5_555,
-			exponent:                     0,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -4,
 			bigBaseQuantums:              big.NewInt(7_000),
 			initialMarginPpm:             uint32(oneBip * 100),
@@ -463,7 +463,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"InitialMargin 10_000 BIPs (max), MaintenanceMargin 10_000 BIPs (max), atomic resolution 6": {
 			price:                        5_555,
-			exponent:                     0,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(7_000),
 			initialMarginPpm:             uint32(oneBip * 10_000),
@@ -473,7 +473,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"InitialMargin 100 BIPs, MaintenanceMargin 100 BIPs, atomic resolution 6": {
 			price:                        5_555,
-			exponent:                     0,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(7_000),
 			initialMarginPpm:             uint32(oneBip * 100),
@@ -493,7 +493,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"InitialMargin 0 BIPs (min), MaintenanceMargin 0 BIPs (min), atomic resolution 6": {
 			price:                        5_555,
-			exponent:                     0,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(7_000),
 			initialMarginPpm:             uint32(oneBip * 0),
@@ -503,7 +503,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"Price is zero, atomic resolution 6": {
 			price:                        0,
-			exponent:                     1,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(-7_000),
 			initialMarginPpm:             uint32(oneBip * 1),
@@ -513,7 +513,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"Price and quantums are max uints": {
 			price:                        math.MaxUint64,
-			exponent:                     1,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              new(big.Int).SetUint64(math.MaxUint64),
 			initialMarginPpm:             uint32(oneBip * 1),
@@ -527,7 +527,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, atomic resolution 6": {
 			price:                        5_555,
-			exponent:                     0,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(7_000),
 			initialMarginPpm:             uint32(oneBip * 100),
@@ -539,7 +539,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"InitialMargin 20%, MaintenanceMargin 10%, atomic resolution 6": {
 			price:                        36_750,
-			exponent:                     0,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(12_000),
 			initialMarginPpm:             uint32(200_000),
@@ -552,7 +552,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"InitialMargin 5%, MaintenanceMargin 3%, atomic resolution 6": {
 			price:                        123_456,
-			exponent:                     0,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(74_523),
 			initialMarginPpm:             uint32(50_000),
@@ -565,7 +565,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"InitialMargin 25%, MaintenanceMargin 15%, atomic resolution 6": {
 			price:                        123_456,
-			exponent:                     0,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(74_523),
 			initialMarginPpm:             uint32(250_000),
@@ -576,7 +576,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"OIMF: IM 20%, scaled to 60%, MaintenanceMargin 10%, atomic resolution 6": {
 			price:                        36_750,
-			exponent:                     0,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(12_000),
 			initialMarginPpm:             uint32(200_000),
@@ -593,7 +593,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"OIMF: IM 20%, scaled to 100%, MaintenanceMargin 10%, atomic resolution 6": {
 			price:                        36_750,
-			exponent:                     0,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(12_000),
 			initialMarginPpm:             uint32(200_000),
@@ -609,7 +609,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"OIMF: IM 20%, lower_cap < realistic open interest < upper_cap, MaintenanceMargin 10%, atomic resolution 6": {
 			price:                        36_750,
-			exponent:                     0,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(12_000),
 			initialMarginPpm:             uint32(200_000),
@@ -633,11 +633,13 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 			pc := keepertest.PerpetualsKeepers(t)
 			// Create a new market param and price.
 			marketId := keepertest.GetNumMarkets(t, pc.Ctx, pc.PricesKeeper)
-			_, err := pc.PricesKeeper.CreateMarket(
+			_, err := keepertest.CreateTestMarket(
+				t,
 				pc.Ctx,
+				pc.PricesKeeper,
 				pricestypes.MarketParam{
 					Id:                 marketId,
-					Pair:               "marketName",
+					Pair:               "base-quote",
 					Exponent:           tc.exponent,
 					MinExchanges:       uint32(1),
 					MinPriceChangePpm:  uint32(50),

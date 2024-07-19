@@ -37,7 +37,6 @@ func TestCreateOracleMarket(t *testing.T) {
 					pricesKeeper.MarketMapKeeper.(*marketmapkeeper.Keeper),
 					[]pricestypes.MarketParam{testMarket1.Param},
 				)
-
 			},
 			msg: &pricestypes.MsgCreateOracleMarket{
 				Authority: lib.GovModuleAddress.String(),

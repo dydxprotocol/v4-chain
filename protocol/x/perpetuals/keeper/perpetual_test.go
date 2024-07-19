@@ -1124,11 +1124,13 @@ func TestGetNetCollateral_Success(t *testing.T) {
 			keepertest.CreateTestLiquidityTiers(t, pc.Ctx, pc.PerpetualsKeeper) // Test setup.
 			// Create a new market.
 			marketId := keepertest.GetNumMarkets(t, pc.Ctx, pc.PricesKeeper)
-			_, err := pc.PricesKeeper.CreateMarket(
+			_, err := keepertest.CreateTestMarket(
+				t,
 				pc.Ctx,
+				pc.PricesKeeper,
 				pricestypes.MarketParam{
 					Id:                 marketId,
-					Pair:               "marketName",
+					Pair:               "base-quote",
 					Exponent:           tc.exponent,
 					MinExchanges:       uint32(1),
 					MinPriceChangePpm:  uint32(50),
