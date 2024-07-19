@@ -433,9 +433,10 @@ func (k Keeper) CanUpdateSubaccounts(
 }
 
 // getSettledSubaccount returns 1. a new settled subaccount given an unsettled subaccount,
-// updating the USDC AssetPosition, FundingIndex, and LastFundingPayment fields accordingly
-// (does not persist any changes) and 2. a map with perpetual ID as key and last funding
-// payment as value (for emitting funding payments to indexer).
+// updating the USDC AssetPosition (including yield claims), FundingIndex, and L
+// astFundingPayment fields accordingly (does not persist any changes) and 2. a map with
+// perpetual ID as key and last funding payment as value (for emitting funding payments to
+// indexer).
 func (k Keeper) getSettledSubaccount(
 	ctx sdk.Context,
 	subaccount types.Subaccount,
@@ -454,8 +455,10 @@ func (k Keeper) getSettledSubaccount(
 		perpetuals[p.PerpetualId] = perpetual
 	}
 
+	// TODO: Would be good if we could call this from within GetSettledSubaccountWithPerpetual
+	// because GetSettledSubaccountWithPerpetuals is called from liquidation daemon to check for liquidations
 	// We assume subaccount is passed as a pointer here.
-	_, err = k.ClaimYieldForSubaccount(ctx, subaccount)
+	subaccount, _, err = k.ClaimYieldForSubaccount(ctx, subaccount)
 	if err != nil {
 		return types.Subaccount{}, nil, err
 	}
@@ -467,12 +470,13 @@ func (k Keeper) ClaimYieldForSubaccount(
 	ctx sdk.Context,
 	subaccount types.Subaccount,
 ) (
+	subaccountWithYield types.Subaccount,
 	yieldAmount *big.Int,
 	err error,
 ) {
 	currEpoch, found := k.ratelimitKeeper.GetCurrentDaiYieldEpochNumber(ctx)
 	if !found {
-		return big.NewInt(0), errorsmod.Wrap(ratelimittypes.ErrEpochNotRetrieved, "could not retrive yield epoch number when claiming yield for subaccount")
+		return types.Subaccount{}, big.NewInt(0), errorsmod.Wrap(ratelimittypes.ErrEpochNotRetrieved, "could not retrive yield epoch number when claiming yield for subaccount")
 	}
 	lastEpochUnclaimed := k.getLastEpochClaimed(subaccount, currEpoch)
 	yieldAmount = big.NewInt(0)
@@ -480,15 +484,17 @@ func (k Keeper) ClaimYieldForSubaccount(
 	for epoch := lastEpochUnclaimed; epoch <= currEpoch; epoch++ {
 		epochYield, err := k.calculateYieldInEpochForSubaccount(ctx, subaccount, epoch)
 		if err != nil {
-			return big.NewInt(0), err
+			return types.Subaccount{}, big.NewInt(0), err
 		}
-		// TODO: not perfectly atomic. Atomicity needed?
-		err = k.updateStateForSubaccountYieldClaimInEpoch(ctx, subaccount, epoch, epochYield)
+
+		// TODO: Need to update the subaccount struct, but not write to store
+		// Should not write to epoch state
+		subaccount, err = k.updateSubaccountWithYieldClaimedInEpoch(ctx, subaccount, epoch, epochYield)
 		if err != nil {
-			return big.NewInt(0), err
+			return types.Subaccount{}, big.NewInt(0), err
 		}
 	}
-	return yieldAmount, nil
+	return subaccount, yieldAmount, nil
 }
 
 func (k Keeper) getLastEpochClaimed(
@@ -585,6 +591,7 @@ func (k Keeper) calculateSubaccountPositionValueFromMarketPrices(
 	return positionValue, nil
 }
 
+// TODO [YBCP-15]: Adapt this function to multi-collateral
 func (k Keeper) getPositionValueFromAssets(
 	ctx sdk.Context,
 	assetPositions []*types.AssetPosition,
@@ -592,7 +599,7 @@ func (k Keeper) getPositionValueFromAssets(
 	positionValue *big.Int,
 	err error,
 ) {
-	// NOTE: Assume quote unit is only existing asset unit
+	// NOTE: assume quote unit is only the existing asset unit
 	positionValue = big.NewInt(0)
 
 	for _, position := range assetPositions {
@@ -702,21 +709,24 @@ func (k Keeper) getSubaccountYieldAtEpochFromPosition(
 	return yieldAmount, nil
 }
 
-func (k Keeper) updateStateForSubaccountYieldClaimInEpoch(
+func (k Keeper) updateSubaccountWithYieldClaimedInEpoch(
 	ctx sdk.Context,
 	subaccount types.Subaccount,
 	epoch uint64,
 	newYield *big.Int,
 ) (
+	subaccountWithYield types.Subaccount,
 	err error,
 ) {
+
+	// TODO [YBCP-16]: Adapt this to changed quote currency
 	err = k.addNewYieldToStoredEpochParamsForEpoch(ctx, epoch, newYield)
 	if err != nil {
-		return err
+		return types.Subaccount{}, err
 	}
 	subaccount.SetEpochYieldLastClaimed(epoch)
 	k.updateSubaccountAssetsWithNewYield(subaccount, newYield)
-	return nil
+	return subaccount, nil
 }
 
 func (k Keeper) addNewYieldToStoredEpochParamsForEpoch(
