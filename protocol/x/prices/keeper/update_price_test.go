@@ -16,7 +16,6 @@ const (
 )
 
 var (
-	// MsgUpdateMarketPrices test constants.
 	emptyResult = &types.MarketPriceUpdates{
 		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{},
 	}

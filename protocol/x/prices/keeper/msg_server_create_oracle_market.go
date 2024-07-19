@@ -45,7 +45,7 @@ func (k msgServer) CreateOracleMarket(
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
 	// Use zero oracle price to create the new market.
-	// Note that valid oracle price updates cannot be zero (checked in MsgUpdateMarketPrices.ValidateBasic),
+	// Note that valid oracle price updates cannot be zero,
 	// so a zero oracle price indicates that the oracle price has never been updated.
 	zeroMarketPrice := types.MarketPrice{
 		Id:       msg.Params.Id,

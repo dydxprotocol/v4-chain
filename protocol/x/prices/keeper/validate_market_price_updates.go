@@ -22,7 +22,7 @@ const (
 	CrossingPriceUpdateCutoffPpm = uint32(500_000) // 50%
 )
 
-// PerformStatefulPriceUpdateValidation performs stateful validations on `MsgUpdateMarketPrices`.
+// PerformStatefulPriceUpdateValidation performs stateful validations on `UpdateMarketPrices`.
 // Depending on the input, this func performs non-deterministic stateful validation.
 func (k Keeper) PerformStatefulPriceUpdateValidation(
 	ctx sdk.Context,
@@ -282,7 +282,7 @@ func (k Keeper) validatePriceAccuracy(
 }
 
 // GetMarketsMissingFromPriceUpdates returns a list of market ids that should have been included but
-// not present in the `MsgUpdateMarketPrices`.
+// not present in the VE prices.
 //
 // Note: this is NOT determistic, because it relies on "index price" that is subject to each validator.
 func (k Keeper) GetMarketsMissingFromPriceUpdates(

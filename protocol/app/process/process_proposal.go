@@ -26,17 +26,15 @@ var (
 
 // ProcessProposalHandler is responsible for ensuring that the list of txs in the proposed block are valid.
 // Specifically, this validates:
+//   - The number of txs in the proposal is at least `MinTxsCount`.
+//   - VEs are valid .
 //   - Tx bytes can be decoded to a valid tx.
 //   - Txs are ordered correctly.
 //   - Required "app-injected message" txs are included.
 //   - No duplicate "app-injected message" txs are present (i.e. no "app-injected msg" in "other" txs).
 //   - All messages are "valid" (i.e. `Msg.ValidateBasic` does not return errors).
-//   - All proposed prices within `MsgUpdateMarketPrices` are valid according to non-deterministic validation.
 //
-// Note: `MsgUpdateMarketPrices` is an exception to only doing stateless validation. In order for this msg
-// to be valid, the proposed price update values are compared against the local index price. Because the
-// outcome depends on the local index price, this validation is dependent on "in-memory state"; therefore,
-// this check is NOT stateless.
+
 // Note: stakingKeeper and perpetualKeeper are only needed for MEV calculations.
 func ProcessProposalHandler(
 	txConfig client.TxConfig,

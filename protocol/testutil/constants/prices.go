@@ -305,8 +305,7 @@ var (
 		102: Price7Bytes,
 	}
 
-	ValidEmptyMarketParams = []types.MarketParam{}
-	// `MsgUpdateMarketPrices`.
+	ValidEmptyMarketParams         = []types.MarketParam{}
 	EmptyUpdateMarketPrices        = &types.MarketPriceUpdates{}
 	EmptyUpdateMarketPricesTxBytes []byte
 

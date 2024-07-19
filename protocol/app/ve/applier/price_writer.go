@@ -14,11 +14,11 @@ import (
 
 // PriceWriter is an interface that defines the methods required to aggregate and apply prices from VE's
 type PriceApplier struct {
-	// va is a VoteAggregator that is used to aggregate votes into prices.
-	va aggregator.VoteAggregator
+	// used to aggregate votes into final prices
+	voteAggregator aggregator.VoteAggregator
 
 	// pk is the prices keeper that is used to write prices to state.
-	pk PriceApplierPricesKeeper
+	pricesKeeper PriceApplierPricesKeeper
 
 	// logger
 	logger log.Logger
@@ -29,58 +29,55 @@ type PriceApplier struct {
 }
 
 func NewPriceApplier(
-	va aggregator.VoteAggregator,
-	pk PriceApplierPricesKeeper,
+	voteAggregator aggregator.VoteAggregator,
+	pricesKeeper PriceApplierPricesKeeper,
 	voteExtensionCodec codec.VoteExtensionCodec,
 	extendedCommitCodec codec.ExtendedCommitCodec,
 	logger log.Logger,
 ) *PriceApplier {
 	return &PriceApplier{
-		va:                  va,
-		pk:                  pk,
+		voteAggregator:      voteAggregator,
+		pricesKeeper:        pricesKeeper,
 		logger:              logger,
 		voteExtensionCodec:  voteExtensionCodec,
 		extendedCommitCodec: extendedCommitCodec,
 	}
 }
 
-func (pw *PriceApplier) ApplyPricesFromVE(ctx sdk.Context, req *abci.RequestFinalizeBlock) (map[string]*big.Int, error) {
-	votes, err := aggregator.GetDaemonVotes(req.Txs, pw.voteExtensionCodec, pw.extendedCommitCodec)
+func (pa *PriceApplier) ApplyPricesFromVE(
+	ctx sdk.Context,
+	request *abci.RequestFinalizeBlock,
+) (map[string]*big.Int, error) {
+	votes, err := aggregator.GetDaemonVotes(request.Txs, pa.voteExtensionCodec, pa.extendedCommitCodec)
 	if err != nil {
-		pw.logger.Error(
+		pa.logger.Error(
 			"failed to get extended commit info from proposal",
-			"height", req.Height,
-			"num_txs", len(req.Txs),
+			"height", request.Height,
+			"num_txs", len(request.Txs),
 			"err", err,
 		)
 
 		return nil, err
 	}
 
-	pw.logger.Debug(
-		"got oracle vote extensions",
-		"height", req.Height,
-		"num_votes", len(votes),
-	)
-
-	prices, err := pw.va.AggregateDaemonVE(ctx, votes)
+	prices, err := pa.voteAggregator.AggregateDaemonVE(ctx, votes)
 	if err != nil {
-		pw.logger.Error(
+		pa.logger.Error(
 			"failed to aggregate prices",
-			"height", req.Height,
+			"height", request.Height,
 			"err", err,
 		)
 
 		return nil, err
 	}
 
-	marketParams := pw.pk.GetAllMarketParams(ctx)
+	marketParams := pa.pricesKeeper.GetAllMarketParams(ctx)
 
 	for _, market := range marketParams {
 		pair := market.Pair
 		price, ok := prices[pair]
 		if !ok || price == nil {
-			pw.logger.Debug(
+			pa.logger.Debug(
 				"no price for currency pair",
 				"currency_pair", pair,
 			)
@@ -89,7 +86,7 @@ func (pw *PriceApplier) ApplyPricesFromVE(ctx sdk.Context, req *abci.RequestFina
 		}
 
 		if price.Sign() == -1 {
-			pw.logger.Error(
+			pa.logger.Error(
 				"price is negative",
 				"currency_pair", pair,
 				"price", price.String(),
@@ -103,8 +100,8 @@ func (pw *PriceApplier) ApplyPricesFromVE(ctx sdk.Context, req *abci.RequestFina
 			Price:    price.Uint64(),
 		}
 
-		if err := pw.pk.UpdateMarketPrice(ctx, &newPrice); err != nil {
-			pw.logger.Error(
+		if err := pa.pricesKeeper.UpdateMarketPrice(ctx, &newPrice); err != nil {
+			pa.logger.Error(
 				"failed to set price for currency pair",
 				"currency_pair", pair,
 				"err", err,
@@ -112,7 +109,7 @@ func (pw *PriceApplier) ApplyPricesFromVE(ctx sdk.Context, req *abci.RequestFina
 
 			return nil, err
 		}
-		pw.logger.Info(
+		pa.logger.Info(
 			"set price for currency pair",
 			"currency_pair", pair,
 			"quote_price", newPrice.Price,
