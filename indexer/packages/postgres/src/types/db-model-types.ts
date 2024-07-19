@@ -255,6 +255,19 @@ export interface TradingRewardAggregationFromDatabase {
   amount: string;
 }
 
+export interface SubaccountUsernamesFromDatabase {
+  username: string;
+  subaccountId: string;
+}
+
+export interface LeaderboardPnlFromDatabase {
+  address: string;
+  timeSpan: string;
+  pnl: string;
+  currentEquity: string;
+  rank: number;
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string } };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:

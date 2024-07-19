@@ -386,6 +386,10 @@ func New(
 	if err := appFlags.Validate(); err != nil {
 		panic(err)
 	}
+	if appFlags.OptimisticExecutionEnabled {
+		// TODO(OTE-573): Remove warning once OE is fully supported.
+		logger.Warn("Optimistic execution is enabled. This is a test feature not intended for production use!")
+	}
 
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 
@@ -396,6 +400,11 @@ func New(
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
+
+	// Enable optimistic block execution.
+	if appFlags.OptimisticExecutionEnabled {
+		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
+	}
 
 	bApp := baseapp.NewBaseApp(appconstants.AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -1149,6 +1158,10 @@ func New(
 		[]string{
 			lib.GovModuleAddress.String(),
 		},
+		app.PricesKeeper,
+		app.ClobKeeper,
+		&app.MarketMapKeeper,
+		app.PerpetualsKeeper,
 	)
 	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
 
