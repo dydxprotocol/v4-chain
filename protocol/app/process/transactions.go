@@ -5,6 +5,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -58,7 +59,7 @@ type ProcessProposalTxs struct {
 func DecodeProcessProposalTxs(
 	decoder sdk.TxDecoder,
 	req *abci.RequestProcessProposal,
-	pricesKeeper ProcessPricesKeeper,
+	pricesKeeper ve.PreBlockExecPricesKeeper,
 ) (*ProcessProposalTxs, error) {
 	// Check len.
 	numTxs := len(req.Txs)

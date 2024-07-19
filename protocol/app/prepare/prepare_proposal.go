@@ -56,7 +56,7 @@ func PrepareProposalHandler(
 	txConfig client.TxConfig,
 	clobKeeper PrepareClobKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
-	pricesKeeper PreparePricesKeeper,
+	pricesKeeper ve.PreBlockExecPricesKeeper,
 	veCodec codec.VoteExtensionCodec,
 	extCommitCodec codec.ExtendedCommitCodec,
 	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
@@ -179,7 +179,7 @@ func PrepareProposalHandler(
 
 func SetVE(
 	txSetterUtils TxSetterUtils,
-	pricesKeeper PreparePricesKeeper,
+	pricesKeeper ve.PreBlockExecPricesKeeper,
 	voteCodec codec.VoteExtensionCodec,
 	extCodec codec.ExtendedCommitCodec,
 	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,

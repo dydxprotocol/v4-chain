@@ -20,7 +20,7 @@ import (
 
 type TestExtendedVoteTC struct {
 	expectedResponse  *vetypes.DaemonVoteExtension
-	pricesKeeper      func() *mocks.ExtendVotePricesKeeper
+	pricesKeeper      func() *mocks.PreBlockExecPricesKeeper
 	extendVoteRequest func() *cometabci.RequestExtendVote
 	expectedError     bool
 }
@@ -28,8 +28,8 @@ type TestExtendedVoteTC struct {
 func TestExtendVoteHandler(t *testing.T) {
 	tests := map[string]TestExtendedVoteTC{
 		"nil request returns error": {
-			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
-				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				return mPricesKeeper
 			},
 			extendVoteRequest: func() *cometabci.RequestExtendVote {
@@ -37,8 +37,8 @@ func TestExtendVoteHandler(t *testing.T) {
 			},
 		},
 		"price daemon returns no prices": {
-			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
-				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).Return(
 					&pricestypes.MarketPriceUpdates{
 						MarketPriceUpdates: []*pricestypes.MarketPriceUpdates_MarketPriceUpdate{},
@@ -57,8 +57,8 @@ func TestExtendVoteHandler(t *testing.T) {
 			},
 		},
 		"oracle service returns single price": {
-			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
-				mpricesKeeper := &mocks.ExtendVotePricesKeeper{}
+			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+				mpricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mpricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).Return(
 					constants.ValidSingleMarketPriceUpdate,
 				)
@@ -76,8 +76,8 @@ func TestExtendVoteHandler(t *testing.T) {
 			},
 		},
 		"oracle service returns multiple prices": {
-			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
-				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).Return(
 					constants.ValidMarketPriceUpdates,
 				)
@@ -104,8 +104,8 @@ func TestExtendVoteHandler(t *testing.T) {
 			},
 		},
 		"getting prices panics": {
-			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
-				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).Panic("panic")
 				return mPricesKeeper
 			},
@@ -160,7 +160,7 @@ func TestExtendVoteHandler(t *testing.T) {
 
 type TestVerifyExtendedVoteTC struct {
 	getReq           func() *cometabci.RequestVerifyVoteExtension
-	pricesKeeper     func() *mocks.ExtendVotePricesKeeper
+	pricesKeeper     func() *mocks.PreBlockExecPricesKeeper
 	expectedResponse *cometabci.ResponseVerifyVoteExtension
 	expectedError    bool
 }
@@ -169,8 +169,8 @@ func TestVerifyVoteHandler(t *testing.T) {
 	votecodec := vecodec.NewDefaultVoteExtensionCodec()
 	tests := map[string]TestVerifyExtendedVoteTC{
 		"nil request returns error": {
-			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
-				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				return mPricesKeeper
 			},
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
@@ -180,8 +180,8 @@ func TestVerifyVoteHandler(t *testing.T) {
 			expectedError:    true,
 		},
 		"empty vote extension": {
-			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
-				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				return mPricesKeeper
 			},
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
@@ -193,8 +193,8 @@ func TestVerifyVoteHandler(t *testing.T) {
 			expectedError: false,
 		},
 		"empty vote extension - 1 valid price": {
-			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
-				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mPricesKeeper.On("GetMaxPairs", mock.Anything).Return(1)
 				return mPricesKeeper
 			},
@@ -207,8 +207,8 @@ func TestVerifyVoteHandler(t *testing.T) {
 			expectedError: false,
 		},
 		"malformed bytes returns error": {
-			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
-				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				return mPricesKeeper
 			},
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
@@ -222,8 +222,8 @@ func TestVerifyVoteHandler(t *testing.T) {
 			expectedError: true,
 		},
 		"valid vote extension - multple valid prices": {
-			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
-				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mPricesKeeper.On("GetAllMarketParams", mock.Anything).Return(
 					constants.TestMarketParams,
 				)
@@ -245,8 +245,8 @@ func TestVerifyVoteHandler(t *testing.T) {
 			expectedError: false,
 		},
 		"invalid vote extension - multple valid prices - should fail": {
-			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
-				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mPricesKeeper.On("GetAllMarketParams", mock.Anything).Return(
 					constants.TestMarketParams[1:], // two prices
 				)
@@ -268,8 +268,8 @@ func TestVerifyVoteHandler(t *testing.T) {
 			expectedError: true,
 		},
 		"vote extension with no prices": {
-			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
-				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mPricesKeeper.On("GetAllMarketParams", mock.Anything).Return(
 					[]pricestypes.MarketParam{}, // two prices
 				)
@@ -295,8 +295,8 @@ func TestVerifyVoteHandler(t *testing.T) {
 			expectedError: false,
 		},
 		"vote extension with malformed prices": {
-			pricesKeeper: func() *mocks.ExtendVotePricesKeeper {
-				mPricesKeeper := &mocks.ExtendVotePricesKeeper{}
+			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mPricesKeeper.On("GetAllMarketParams", mock.Anything).Return(
 					[]pricestypes.MarketParam{constants.TestMarketParams[0]},
 				)

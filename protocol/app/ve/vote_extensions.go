@@ -8,7 +8,6 @@ import (
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
-	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	pricetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,7 +20,7 @@ type VoteExtensionHandler struct {
 	voteCodec codec.VoteExtensionCodec
 
 	// fetching valid price updates and current markets
-	pricesKeeper ExtendVotePricesKeeper
+	pricesKeeper PreBlockExecPricesKeeper
 
 	// writing prices to the prices module store
 	priceApplier VEPriceApplier
@@ -35,7 +34,7 @@ var (
 func NewVoteExtensionHandler(
 	logger log.Logger,
 	voteCodec codec.VoteExtensionCodec,
-	pricesKeeper ExtendVotePricesKeeper,
+	pricesKeeper PreBlockExecPricesKeeper,
 	priceApplier VEPriceApplier,
 ) *VoteExtensionHandler {
 	return &VoteExtensionHandler{
@@ -120,7 +119,7 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 
 		if err := ValidateVEMarketsAndPrices(
 			ctx,
-			h.pricesKeeper.(priceskeeper.Keeper),
+			h.pricesKeeper,
 			req.VoteExtension,
 			h.voteCodec,
 		); err != nil {

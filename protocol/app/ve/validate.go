@@ -10,7 +10,6 @@ import (
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
-	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -43,7 +42,7 @@ func CleanAndValidateExtCommitInfo(
 	ctx sdk.Context,
 	extCommitInfo cometabci.ExtendedCommitInfo,
 	veCodec codec.VoteExtensionCodec,
-	pricesKeeper PreparePricesKeeper,
+	pricesKeeper PreBlockExecPricesKeeper,
 	validateVEConsensusInfo ValidateVEConsensusInfoFn,
 ) (cometabci.ExtendedCommitInfo, error) {
 	for i, vote := range extCommitInfo.Votes {
@@ -77,7 +76,7 @@ func ValidateExtendedCommitInfo(
 	height int64,
 	extCommitInfo cometabci.ExtendedCommitInfo,
 	veCodec codec.VoteExtensionCodec,
-	pk PreparePricesKeeper,
+	pk PreBlockExecPricesKeeper,
 	validateVEConsensusInfo ValidateVEConsensusInfoFn,
 ) error {
 	if err := validateVEConsensusInfo(ctx, extCommitInfo); err != nil {
@@ -109,13 +108,13 @@ func validateIndividualVoteExtension(
 	ctx sdk.Context,
 	vote cometabci.ExtendedVoteInfo,
 	voteCodec codec.VoteExtensionCodec,
-	pricesKeeper PreparePricesKeeper,
+	pricesKeeper PreBlockExecPricesKeeper,
 ) error {
 	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
 		return nil
 	}
 
-	if err := ValidateVEMarketsAndPrices(ctx, pricesKeeper.(priceskeeper.Keeper), vote.VoteExtension, voteCodec); err != nil {
+	if err := ValidateVEMarketsAndPrices(ctx, pricesKeeper, vote.VoteExtension, voteCodec); err != nil {
 		return err
 	}
 
@@ -124,7 +123,7 @@ func validateIndividualVoteExtension(
 
 func ValidateVEMarketsAndPrices(
 	ctx sdk.Context,
-	pricesKeeper priceskeeper.Keeper,
+	pricesKeeper PreBlockExecPricesKeeper,
 	veBytes []byte,
 	voteCodec codec.VoteExtensionCodec,
 ) error {
@@ -148,9 +147,9 @@ func ValidateVEMarketsAndPrices(
 func ValidateMarketCountInVE(
 	ctx sdk.Context,
 	ve vetypes.DaemonVoteExtension,
-	pricesKeeper priceskeeper.Keeper,
+	pricesKeeper PreBlockExecPricesKeeper,
 ) error {
-	maxPairs := veutils.GetMaxMarketPairs(ctx, pricesKeeper)
+	maxPairs := GetMaxMarketPairs(ctx, pricesKeeper)
 	if uint32(len(ve.Prices)) > maxPairs {
 		return fmt.Errorf(
 			"number of oracle vote extension pairs of %d greater than maximum expected pairs of %d",
@@ -429,4 +428,9 @@ func validateVoteAddress(vote cometabci.ExtendedVoteInfo, lcVote comet.VoteInfo,
 		return fmt.Errorf("extended commit vote power %d does not match last commit vote power %d", vote.Validator.Power, lcVote.Validator().Power())
 	}
 	return nil
+}
+
+func GetMaxMarketPairs(ctx sdk.Context, pricesKeeper PreBlockExecPricesKeeper) uint32 {
+	markets := pricesKeeper.GetAllMarketParams(ctx)
+	return uint32(len(markets))
 }

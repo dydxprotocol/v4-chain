@@ -6,27 +6,10 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 )
-
-// ProcessPricesKeeper defines the expected Prices keeper used for `ProcessProposal`.
-type ProcessPricesKeeper interface {
-	PerformStatefulPriceUpdateValidation(
-		ctx sdk.Context,
-		marketPriceUpdates *pricestypes.MarketPriceUpdates,
-		performNonDeterministicValidation bool,
-	) error
-
-	UpdateSmoothedPrices(
-		ctx sdk.Context,
-		linearInterpolateFunc func(v0 uint64, v1 uint64, ppm uint32) (uint64, error),
-	) error
-
-	GetAllMarketParams(ctx sdk.Context) []pricestypes.MarketParam
-}
 
 // ProcessClobKeeper defines the expected clob keeper used for `ProcessProposal`.
 type ProcessClobKeeper interface {

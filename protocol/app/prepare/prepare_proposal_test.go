@@ -628,7 +628,7 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mockPricesKeeper := mocks.PreparePricesKeeper{}
+			mockPricesKeeper := mocks.PreBlockExecPricesKeeper{}
 			mockPricesKeeper.On("GetAllMarketParams", mock.Anything).
 				Return(constants.ValidEmptyMarketParams)
 
@@ -873,8 +873,8 @@ func createRequestPrepareProposal(
 	}
 }
 
-func buildMockKeepers() (*mocks.PreparePricesKeeper, *mocks.PrepareClobKeeper, *mocks.PreparePerpetualsKeeper) {
-	mPricesk := &mocks.PreparePricesKeeper{}
+func buildMockKeepers() (*mocks.PreBlockExecPricesKeeper, *mocks.PrepareClobKeeper, *mocks.PreparePerpetualsKeeper) {
+	mPricesk := &mocks.PreBlockExecPricesKeeper{}
 	mClobk := &mocks.PrepareClobKeeper{}
 	mPerpk2 := &mocks.PreparePerpetualsKeeper{}
 
@@ -882,7 +882,7 @@ func buildMockKeepers() (*mocks.PreparePricesKeeper, *mocks.PrepareClobKeeper, *
 }
 
 func setMockResponses(
-	mPricesKeeper *mocks.PreparePricesKeeper,
+	mPricesKeeper *mocks.PreBlockExecPricesKeeper,
 	mClobKeeper *mocks.PrepareClobKeeper,
 	mPerpKeeper *mocks.PreparePerpetualsKeeper,
 	tc PerpareProposalHandlerTC,

@@ -1,6 +1,7 @@
 package process
 
 import (
+	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,7 +14,7 @@ func FullNodeProcessProposalHandler(
 	txConfig client.TxConfig,
 	clobKeeper ProcessClobKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
-	pricesKeeper ProcessPricesKeeper,
+	pricesKeeper ve.PreBlockExecPricesKeeper,
 ) sdk.ProcessProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 		// Always return `abci.ResponseProcessProposal_ACCEPT`

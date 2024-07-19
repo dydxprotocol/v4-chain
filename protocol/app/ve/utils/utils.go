@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/big"
 
-	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto"
@@ -51,11 +50,6 @@ func GetMarketPriceUpdateFromBytes(
 		Price:    price.Uint64(),
 	}
 	return &priceUpdate, nil
-}
-
-func GetMaxMarketPairs(ctx sdk.Context, pricesKeeper priceskeeper.Keeper) uint32 {
-	markets := pricesKeeper.GetAllMarketParams(ctx)
-	return uint32(len(markets))
 }
 
 func GetVEEncodedPrice(

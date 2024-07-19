@@ -40,10 +40,10 @@ func ProcessProposalHandler(
 	txConfig client.TxConfig,
 	clobKeeper ProcessClobKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
-	pricesKeeper ProcessPricesKeeper,
+	pricesKeeper ve.PreBlockExecPricesKeeper,
 	extCodec codec.ExtendedCommitCodec,
 	veCodec codec.VoteExtensionCodec,
-	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
+	validateVoteExtensionFn ve.ValidateVEConsensusInfoFn,
 ) sdk.ProcessProposalHandler {
 	return func(ctx sdk.Context, request *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 		defer telemetry.ModuleMeasureSince(
@@ -123,8 +123,8 @@ func DecodeAndValidateVE(
 	ctx sdk.Context,
 	req *abci.RequestProcessProposal,
 	extCommitBz []byte,
-	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
-	pricesKeeper ProcessPricesKeeper,
+	validateVoteExtensionFn ve.ValidateVEConsensusInfoFn,
+	pricesKeeper ve.PreBlockExecPricesKeeper,
 	voteCodec codec.VoteExtensionCodec,
 	extCodec codec.ExtendedCommitCodec,
 
@@ -139,7 +139,7 @@ func DecodeAndValidateVE(
 		req.Height,
 		extInfo,
 		voteCodec,
-		pricesKeeper.(ve.PreparePricesKeeper),
+		pricesKeeper,
 		validateVoteExtensionFn,
 	); err != nil {
 		return err
