@@ -181,7 +181,7 @@ const (
 // MatchableOrder is an interface that a matchable order must conform to. This interface is used
 // to generalize matching between standard orders and liquidations.
 type MatchableOrder interface {
-	// GetSubaccountID returns the `SubaccountId` of the subaccount that placed the order.
+	// GetSubaccountId returns the `SubaccountId` of the subaccount that placed the order.
 	// In the case of a `LiquidationOrder`, it refers to the subaccount that is being liquidated.
 	GetSubaccountId() satypes.SubaccountId
 	// GetClobPairId returns the CLOB pair ID that this order should be matched against.
