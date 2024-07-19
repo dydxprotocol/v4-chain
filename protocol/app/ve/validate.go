@@ -8,7 +8,6 @@ import (
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cometproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -117,24 +116,8 @@ func ValidateDaemonVoteExtension(
 		return err
 	}
 
-	var priceupdates pricestypes.MarketPriceUpdates
-	// Verify prices are valid.
-	for marketId, priceBytes := range ve.Prices {
-		priceUpdate, err := veutils.GetMarketPriceUpdateFromBytes(marketId, priceBytes)
-		if err != nil {
-			return fmt.Errorf("failed to get market price update from bytes: %w", err)
-		}
-
-		priceupdates.MarketPriceUpdates = append(priceupdates.MarketPriceUpdates, priceUpdate)
-
-		// Ensure that the price bytes are not too long.
-		if len(priceBytes) > constants.MaximumPriceSizeInBytes {
-			return fmt.Errorf("price bytes are too long: %d", len(priceBytes))
-		}
-	}
-
-	if err := pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, &priceupdates, false); err != nil {
-		return fmt.Errorf("failed to perform deterministic price update validation: %w", err)
+	if err := ValidatePricesBytesSizeInVE(ctx, ve); err != nil {
+		return err
 	}
 
 	return nil
