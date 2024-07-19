@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/prepare"
+	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
-	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	prepareutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -657,7 +657,7 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				&mockPricesKeeper,
 				vecodec.NewDefaultVoteExtensionCodec(),
 				vecodec.NewDefaultExtendedCommitCodec(),
-				veutils.NewValidateVEConsensusInfo(&mockConsumerKeeper),
+				ve.NewValidateVEConsensusInfo(&mockConsumerKeeper),
 			)
 
 			req := cometabci.RequestPrepareProposal{

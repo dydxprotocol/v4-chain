@@ -106,7 +106,6 @@ import (
 	priceapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
-	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 
 	// Mempool
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mempool"
@@ -1207,7 +1206,7 @@ func New(
 	app.SetPrecommiter(app.Precommitter)
 	app.SetPrepareCheckStater(app.PrepareCheckStater)
 
-	veValidationFn := veutils.NewValidateVEConsensusInfo(app.ConsumerKeeper)
+	veValidationFn := ve.NewValidateVEConsensusInfo(app.ConsumerKeeper)
 
 	// PrepareProposal setup.
 	if appFlags.NonValidatingFullNode {
