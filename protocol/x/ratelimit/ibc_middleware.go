@@ -128,6 +128,7 @@ func (im IBCMiddleware) OnRecvPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
+
 	ibcTransferPacketInfo, err := util.ParsePacketInfo(packet, types.PACKET_RECV)
 	if err != nil {
 		im.keeper.Logger(ctx).Error(fmt.Sprintf("ICS20 receive packet could not be parsed: %s", err.Error()))

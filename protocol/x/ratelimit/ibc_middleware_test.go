@@ -1,6 +1,7 @@
 package ratelimit_test
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
@@ -32,6 +33,7 @@ import (
 
 var (
 	globalStartTime = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
+	chainIDPrefix   = "localdydxprotocol"
 )
 
 type KeeperTestSuite struct {
@@ -60,7 +62,7 @@ func createSignersByAddress(t *testing.T, val *ccvtypes.CrossChainValidator) (st
 
 	pubKey, err := priv.GetPubKey()
 	require.NoError(t, err)
-	validator := cmttypes.NewValidator(pubKey, 1)
+	validator := cmttypes.NewValidator(pubKey, 500)
 
 	return pubKey.Address().String(), priv, validator
 }
@@ -83,6 +85,7 @@ func setupChainForIBC(t *testing.T, coord *ibctesting.Coordinator, chainID strin
 	simAccounts := simtypes.RandomAccounts(r, 10)
 	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
+		genesis.ChainID = chainID // Update chain_id to chainID
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
 			func(genesisState *auth.GenesisState) {
@@ -169,7 +172,7 @@ func NewCoordinator(t *testing.T, n int) *ibctesting.Coordinator {
 	}
 
 	for i := 1; i <= n; i++ {
-		chainID := ibctesting.GetChainID(i)
+		chainID := GetChainID(i)
 		chains[chainID] = setupChainForIBC(t, coord, chainID)
 	}
 	coord.Chains = chains
@@ -177,11 +180,15 @@ func NewCoordinator(t *testing.T, n int) *ibctesting.Coordinator {
 	return coord
 }
 
+func GetChainID(i int) string {
+	return chainIDPrefix + "-" + strconv.Itoa(i)
+}
+
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator = NewCoordinator(suite.T(), 3)
-	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(1))
-	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(2))
-	suite.chainC = suite.coordinator.GetChain(ibctesting.GetChainID(3))
+	suite.chainA = suite.coordinator.GetChain(GetChainID(1))
+	suite.chainB = suite.coordinator.GetChain(GetChainID(2))
+	suite.chainC = suite.coordinator.GetChain(GetChainID(3))
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.chainA.GetContext(), suite.chainA.App.(*app.App).InterfaceRegistry())
 	transfertypes.RegisterQueryServer(queryHelper, suite.chainA.App.(*app.App).TransferKeeper)
@@ -205,7 +212,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 		{
 			"successful transfer with native token",
 			func() {
-				expEscrowAmount = sdkmath.NewInt(1)
+				expEscrowAmount = sdkmath.NewInt(100)
 			}, true,
 		},
 	}
@@ -246,12 +253,11 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 				memo,
 			)
 
-			res, err := suite.chainA.GetSimApp().TransferKeeper.Transfer(suite.chainA.GetContext(), msg)
+			res, err := suite.chainA.App.(*app.App).TransferKeeper.Transfer(suite.chainA.GetContext(), msg)
 
 			// check total amount in escrow of sent token denom on sending chain
-			amount := suite.chainA.GetSimApp().TransferKeeper.GetTotalEscrowForDenom(suite.chainA.GetContext(), coin.GetDenom())
+			amount := suite.chainA.App.(*app.App).TransferKeeper.GetTotalEscrowForDenom(suite.chainA.GetContext(), coin.GetDenom())
 			suite.Require().Equal(expEscrowAmount, amount.Amount)
-			suite.Require().Equal(1, 0)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
