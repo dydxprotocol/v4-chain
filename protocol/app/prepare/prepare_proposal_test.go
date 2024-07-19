@@ -721,7 +721,7 @@ func TestGetAddPremiumVotesTx(t *testing.T) {
 			mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
 			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
 				Return(tc.keeperResp)
-			txSetterParams := prepare.TxSetterParams{
+			txSetterParams := prepare.TxSetterUtils{
 				Ctx:      ctx,
 				TxConfig: mockTxConfig,
 			}
@@ -788,7 +788,7 @@ func TestGetProposedOperationsTx(t *testing.T) {
 			mockTxConfig := createMockTxConfig(nil, []sdktypes.TxEncoder{tc.txEncoder})
 			mockClobKeeper := mocks.PrepareClobKeeper{}
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).Return(tc.keeperResp)
-			txSetterParams := prepare.TxSetterParams{
+			txSetterParams := prepare.TxSetterUtils{
 				Ctx:      ctx,
 				TxConfig: mockTxConfig,
 			}

@@ -38,7 +38,7 @@ type OperationsTxResponse struct {
 }
 
 // common params between tx setters
-type TxSetterParams struct {
+type TxSetterUtils struct {
 	Ctx      sdk.Context
 	TxConfig client.TxConfig
 	Txs      *PrepareProposalTxs
@@ -84,7 +84,7 @@ func PrepareProposalHandler(
 			return &EmptyPrepareProposalResponse, nil
 		}
 
-		txSetterParams := TxSetterParams{
+		txSetterUtils := TxSetterUtils{
 			Ctx:      ctx,
 			TxConfig: txConfig,
 			Txs:      &txs,
@@ -92,32 +92,24 @@ func PrepareProposalHandler(
 		}
 
 		//------------------------ VOTE EXTENSIONS ------------------------
-
-		if veutils.AreVEEnabled(ctx) {
-			ctx.Logger().Info(
-				"Providing oracle data using vote extensions",
+		if err := SetVE(
+			txSetterUtils,
+			pricesKeeper,
+			veCodec,
+			extCommitCodec,
+			validateVoteExtensionFn,
+		); err != nil {
+			ctx.Logger().Error(
+				"failed to inject vote extensions into block",
 				"height", request.Height,
+				"err", err,
 			)
-
-			if err := SetVE(
-				txSetterParams,
-				pricesKeeper,
-				veCodec,
-				extCommitCodec,
-				validateVoteExtensionFn,
-			); err != nil {
-				ctx.Logger().Error(
-					"failed to inject vote extensions into block",
-					"height", request.Height,
-					"err", err,
-				)
-				return &EmptyPrepareProposalResponse, nil
-			}
+			return &EmptyPrepareProposalResponse, nil
 		}
 
 		//------------------------ PREMIUM VOTES ------------------------
 		fundingTxResp, err := SetPremiumVotesTx(
-			txSetterParams,
+			txSetterUtils,
 			perpetualKeeper,
 		)
 
@@ -133,7 +125,7 @@ func PrepareProposalHandler(
 
 		//------------------------ OTHER TXS ------------------------
 		otherTxsRemainder, err := SetOneFourthOtherTxsAndGetRemainder(
-			txSetterParams,
+			txSetterUtils,
 		)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("AddOtherTxs error: %v", err))
@@ -143,7 +135,7 @@ func PrepareProposalHandler(
 
 		//------------------------ PROPOSED OPERATIONS ------------------------
 		operationsTxResp, err := SetProposedOperationsTx(
-			txSetterParams,
+			txSetterUtils,
 			clobKeeper,
 		)
 
@@ -155,7 +147,7 @@ func PrepareProposalHandler(
 
 		//------------------------ REMAINDER TXS ------------------------
 		if err := FillRemainderWithOtherTxs(
-			txSetterParams,
+			txSetterUtils,
 			otherTxsRemainder,
 		); err != nil {
 			ctx.Logger().Error(fmt.Sprintf("AddOtherTxs (additional) error: %v", err))
@@ -186,15 +178,24 @@ func PrepareProposalHandler(
 }
 
 func SetVE(
-	txSetterParams TxSetterParams,
+	txSetterUtils TxSetterUtils,
 	pricesKeeper PreparePricesKeeper,
 	voteCodec codec.VoteExtensionCodec,
 	extCodec codec.ExtendedCommitCodec,
 	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
 ) error {
-	cleanExtCommitInfo, err := ve.CleanAndValidateExtendedCommitInfo(
-		txSetterParams.Ctx,
-		txSetterParams.Request.LocalLastCommit,
+	if !veutils.AreVEEnabled(txSetterUtils.Ctx) {
+		return nil
+	}
+
+	txSetterUtils.Ctx.Logger().Info(
+		"Providing oracle data using vote extensions",
+		"height", txSetterUtils.Request.Height,
+	)
+
+	cleanExtCommitInfo, err := ve.CleanAndValidateExtCommitInfo(
+		txSetterUtils.Ctx,
+		txSetterUtils.Request.LocalLastCommit,
 		voteCodec,
 		pricesKeeper,
 		validateVoteExtensionFn,
@@ -210,7 +211,7 @@ func SetVE(
 		return err
 	}
 
-	err = txSetterParams.Txs.SetExtInfoBz(extInfoBz)
+	err = txSetterUtils.Txs.SetExtInfoBz(extInfoBz)
 	if err != nil {
 		return err
 	}
@@ -219,15 +220,15 @@ func SetVE(
 }
 
 func FillRemainderWithOtherTxs(
-	txSetterParams TxSetterParams,
+	txSetterUtils TxSetterUtils,
 	otherTxsRemainder [][]byte,
 ) error {
 	// Try to pack in more "Other" txs.
-	availableBytes := txSetterParams.Txs.GetAvailableBytes()
+	availableBytes := txSetterUtils.Txs.GetAvailableBytes()
 	if availableBytes > 0 && len(otherTxsRemainder) > 0 {
 		moreOtherTxsToInclude, _ := GetGroupMsgOther(otherTxsRemainder, availableBytes)
 		if len(moreOtherTxsToInclude) > 0 {
-			if err := txSetterParams.Txs.AddOtherTxs(moreOtherTxsToInclude); err != nil {
+			if err := txSetterUtils.Txs.AddOtherTxs(moreOtherTxsToInclude); err != nil {
 				return err
 			}
 		}
@@ -236,18 +237,18 @@ func FillRemainderWithOtherTxs(
 }
 
 func SetPremiumVotesTx(
-	txSetterParams TxSetterParams,
+	txSetterUtils TxSetterUtils,
 	perpetualKeeper PreparePerpetualsKeeper,
 ) (FundingTxResponse, error) {
 	fundingTxResp, err := GetAddPremiumVotesTx(
-		txSetterParams,
+		txSetterUtils,
 		perpetualKeeper,
 	)
 	if err != nil {
 		return fundingTxResp, err
 	}
 
-	if err := txSetterParams.Txs.SetAddPremiumVotesTx(fundingTxResp.Tx); err != nil {
+	if err := txSetterUtils.Txs.SetAddPremiumVotesTx(fundingTxResp.Tx); err != nil {
 		return fundingTxResp, err
 	}
 
@@ -255,19 +256,19 @@ func SetPremiumVotesTx(
 }
 
 func SetProposedOperationsTx(
-	txSetterParams TxSetterParams,
+	txSetterUtils TxSetterUtils,
 	clobKeeper PrepareClobKeeper,
 ) (OperationsTxResponse, error) {
 	// Gather "OperationsRelated" group messages.
 	// TODO(DEC-1237): ensure ProposedOperations is within a certain size.
 	operationsTxResp, err := GetProposedOperationsTx(
-		txSetterParams,
+		txSetterUtils,
 		clobKeeper,
 	)
 	if err != nil {
 		return operationsTxResp, err
 	}
-	if err := txSetterParams.Txs.SetProposedOperationsTx(operationsTxResp.Tx); err != nil {
+	if err := txSetterUtils.Txs.SetProposedOperationsTx(operationsTxResp.Tx); err != nil {
 		return operationsTxResp, err
 	}
 
@@ -275,19 +276,19 @@ func SetProposedOperationsTx(
 }
 
 func SetOneFourthOtherTxsAndGetRemainder(
-	txSetterParams TxSetterParams,
+	txSetterUtils TxSetterUtils,
 ) ([][]byte, error) {
 	// Gather "Other" group messages.
-	otherBytesAllocated := txSetterParams.Txs.GetAvailableBytes() / 4 // ~25% of the remainder.
+	otherBytesAllocated := txSetterUtils.Txs.GetAvailableBytes() / 4 // ~25% of the remainder.
 	// filter out txs that have disallow messages.
 	txsWithoutDisallowMsgs := RemoveDisallowMsgs(
-		txSetterParams.Ctx,
-		txSetterParams.TxConfig.TxDecoder(),
-		txSetterParams.Request.Txs,
+		txSetterUtils.Ctx,
+		txSetterUtils.TxConfig.TxDecoder(),
+		txSetterUtils.Request.Txs,
 	)
 	otherTxsToInclude, otherTxsRemainder := GetGroupMsgOther(txsWithoutDisallowMsgs, otherBytesAllocated)
 	if len(otherTxsToInclude) > 0 {
-		err := txSetterParams.Txs.AddOtherTxs(otherTxsToInclude)
+		err := txSetterUtils.Txs.AddOtherTxs(otherTxsToInclude)
 		if err != nil {
 			return nil, err
 		}
@@ -297,16 +298,16 @@ func SetOneFourthOtherTxsAndGetRemainder(
 
 // GetAddPremiumVotesTx returns a tx containing `MsgAddPremiumVotes`.
 func GetAddPremiumVotesTx(
-	txSetterParams TxSetterParams,
+	txSetterUtils TxSetterUtils,
 	perpetualsKeeper PreparePerpetualsKeeper,
 ) (FundingTxResponse, error) {
 	// Get premium votes.
-	msgAddPremiumVotes := perpetualsKeeper.GetAddPremiumVotes(txSetterParams.Ctx)
+	msgAddPremiumVotes := perpetualsKeeper.GetAddPremiumVotes(txSetterUtils.Ctx)
 	if msgAddPremiumVotes == nil {
 		return FundingTxResponse{}, fmt.Errorf("MsgAddPremiumVotes cannot be nil")
 	}
 
-	tx, err := EncodeMsgsIntoTxBytes(txSetterParams.TxConfig, msgAddPremiumVotes)
+	tx, err := EncodeMsgsIntoTxBytes(txSetterUtils.TxConfig, msgAddPremiumVotes)
 	if err != nil {
 		return FundingTxResponse{}, err
 	}
@@ -322,16 +323,16 @@ func GetAddPremiumVotesTx(
 
 // GetProposedOperationsTx returns a tx containing `MsgProposedOperations`.
 func GetProposedOperationsTx(
-	txSetterParams TxSetterParams,
+	txSetterUtils TxSetterUtils,
 	clobKeeper PrepareClobKeeper,
 ) (OperationsTxResponse, error) {
 	// Get the order and fill messages from the CLOB keeper.
-	msgOperations := clobKeeper.GetOperations(txSetterParams.Ctx)
+	msgOperations := clobKeeper.GetOperations(txSetterUtils.Ctx)
 	if msgOperations == nil {
 		return OperationsTxResponse{}, fmt.Errorf("MsgProposedOperations cannot be nil")
 	}
 
-	tx, err := EncodeMsgsIntoTxBytes(txSetterParams.TxConfig, msgOperations)
+	tx, err := EncodeMsgsIntoTxBytes(txSetterUtils.TxConfig, msgOperations)
 	if err != nil {
 		return OperationsTxResponse{}, err
 	}

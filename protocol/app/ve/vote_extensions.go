@@ -9,6 +9,7 @@ import (
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
+	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	pricetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -195,7 +196,7 @@ func (h *VoteExtensionHandler) ValidateVEMarketsAndPrices(
 		return fmt.Errorf("failed to decode vote extension: %w", err)
 	}
 
-	maxPairs := h.GetMaxMarketPairs(ctx)
+	maxPairs := veutils.GetMaxMarketPairs(ctx, h.pricesKeeper.(priceskeeper.Keeper))
 	if uint32(len(ve.Prices)) > maxPairs {
 		return fmt.Errorf("too many prices in daemon vote extension: %d > %d", len(ve.Prices), maxPairs)
 	}
@@ -207,9 +208,4 @@ func (h *VoteExtensionHandler) ValidateVEMarketsAndPrices(
 	}
 
 	return nil
-}
-
-func (h *VoteExtensionHandler) GetMaxMarketPairs(ctx sdk.Context) uint32 {
-	markets := h.pricesKeeper.GetAllMarketParams(ctx)
-	return uint32(len(markets))
 }

@@ -132,20 +132,8 @@ func (ma *MedianAggregator) addVoteToAggregator(
 		prices[market.Pair] = new(big.Int).SetUint64(pu.Price)
 	}
 
-	if ma.pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, &priceupdates, false) != nil {
-		ma.logger.Debug(
-			"failed to validate price updates",
-			"num_price_updates", len(priceupdates.MarketPriceUpdates),
-		)
-		ma.perValidatorPrices[address] = nil
-	} else {
-		ma.logger.Debug(
-			"adding prices to aggregator",
-			"validator_address", address,
-			"num_prices", len(prices),
-		)
-		ma.perValidatorPrices[address] = prices
-	}
+	ma.perValidatorPrices[address] = prices
+
 }
 
 func (ma *MedianAggregator) GetPriceForValidator(validator sdk.ConsAddress) map[string]*big.Int {

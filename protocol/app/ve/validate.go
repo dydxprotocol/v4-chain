@@ -7,21 +7,24 @@ import (
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
+	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cometproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func CleanAndValidateExtendedCommitInfo(
+type ValidateVoteExtensionsFn func(ctx sdk.Context, extCommitInfo cometabci.ExtendedCommitInfo) error
+
+func CleanAndValidateExtCommitInfo(
 	ctx sdk.Context,
 	extCommitInfo cometabci.ExtendedCommitInfo,
 	veCodec codec.VoteExtensionCodec,
-	pk PreparePricesKeeper,
-	validateVoteExtensionsFn func(ctx sdk.Context, extCommitInfo cometabci.ExtendedCommitInfo) error,
+	pricesKeeper PreparePricesKeeper,
+	validateVoteExtensionsFn ValidateVoteExtensionsFn,
 ) (cometabci.ExtendedCommitInfo, error) {
 	for i, vote := range extCommitInfo.Votes {
-		if err := validateVoteExtension(ctx, vote, veCodec, pk); err != nil {
+		if err := validateVoteExtension(ctx, vote, veCodec, pricesKeeper); err != nil {
 			ctx.Logger().Info(
 				"failed to validate vote extension - pruning vote",
 				"err", err,
@@ -53,9 +56,8 @@ func validateVoteExtension(
 	ctx sdk.Context,
 	vote cometabci.ExtendedVoteInfo,
 	voteExtensionCodec codec.VoteExtensionCodec,
-	pk PreparePricesKeeper,
+	pricesKeeper PreparePricesKeeper,
 ) error {
-	// vote is not voted for if VE is nil
 	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
 		return nil
 	}
@@ -66,7 +68,7 @@ func validateVoteExtension(
 	}
 
 	// The vote extensions are from the previous block.
-	if err := ValidateDaemonVoteExtension(ctx, voteExt, pk); err != nil {
+	if err := ValidateDaemonVoteExtension(ctx, voteExt, pricesKeeper); err != nil {
 		return err
 	}
 
@@ -109,32 +111,61 @@ func ValidateExtendedCommitInfo(
 func ValidateDaemonVoteExtension(
 	ctx sdk.Context,
 	ve vetypes.DaemonVoteExtension,
-	pk PreparePricesKeeper,
+	pricesKeeper PreparePricesKeeper,
 ) error {
-	// TODO: how do you account for removed prices from the prev and current block
-	params := pk.GetAllMarketParams(ctx)
-	if uint64(len(ve.Prices)) > uint64(len(params)) {
-		return fmt.Errorf("number of oracle vote extension pairs of %d greater than maximum expected pairs of %d", uint64(len(ve.Prices)), uint64(len(params)))
+	if err := ValidateMarketCountInVE(ctx, ve, pricesKeeper); err != nil {
+		return err
 	}
+
 	var priceupdates pricestypes.MarketPriceUpdates
 	// Verify prices are valid.
-	for id, bz := range ve.Prices {
-		pu, err := veutils.GetMarketPriceUpdateFromBytes(id, bz)
+	for marketId, priceBytes := range ve.Prices {
+		priceUpdate, err := veutils.GetMarketPriceUpdateFromBytes(marketId, priceBytes)
 		if err != nil {
 			return fmt.Errorf("failed to get market price update from bytes: %w", err)
 		}
 
-		priceupdates.MarketPriceUpdates = append(priceupdates.MarketPriceUpdates, pu)
+		priceupdates.MarketPriceUpdates = append(priceupdates.MarketPriceUpdates, priceUpdate)
 
 		// Ensure that the price bytes are not too long.
-		if len(bz) > constants.MaximumPriceSizeInBytes {
-			return fmt.Errorf("price bytes are too long: %d", len(bz))
+		if len(priceBytes) > constants.MaximumPriceSizeInBytes {
+			return fmt.Errorf("price bytes are too long: %d", len(priceBytes))
 		}
 	}
 
-	if err := pk.PerformStatefulPriceUpdateValidation(ctx, &priceupdates, false); err != nil {
+	if err := pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, &priceupdates, false); err != nil {
 		return fmt.Errorf("failed to perform deterministic price update validation: %w", err)
 	}
 
+	return nil
+}
+
+func ValidateMarketCountInVE(
+	ctx sdk.Context,
+	ve vetypes.DaemonVoteExtension,
+	pricesKeeper PreparePricesKeeper,
+) error {
+	maxPairs := veutils.GetMaxMarketPairs(ctx, pricesKeeper.(priceskeeper.Keeper))
+	if uint32(len(ve.Prices)) > maxPairs {
+		return fmt.Errorf(
+			"number of oracle vote extension pairs of %d greater than maximum expected pairs of %d",
+			uint64(len(ve.Prices)),
+			uint64(maxPairs),
+		)
+	}
+	return nil
+}
+
+func ValidatePricesBytesSizeInVE(
+	ctx sdk.Context,
+	ve vetypes.DaemonVoteExtension,
+) error {
+	for _, priceBytes := range ve.Prices {
+
+		// Ensure that the price bytes are not too long.
+		if len(priceBytes) > constants.MaximumPriceSizeInBytes {
+			return fmt.Errorf("price bytes are too long: %d", len(priceBytes))
+		}
+	}
 	return nil
 }

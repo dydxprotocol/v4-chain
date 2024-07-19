@@ -7,7 +7,7 @@ import (
 
 	aggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
-	ptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -77,12 +77,12 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 
 	for _, market := range marketParams {
 		pair := market.Pair
-		shouldWritePrice, price := pa.ShouldWritePriceToStore(prices, pair)
+		shouldWritePrice, price := pa.ShouldWritePriceToStore(ctx, prices, market)
 		if !shouldWritePrice {
 			continue
 		}
 
-		newPrice := ptypes.MarketPriceUpdates_MarketPriceUpdate{
+		newPrice := pricestypes.MarketPriceUpdates_MarketPriceUpdate{
 			MarketId: market.Id,
 			Price:    price.Uint64(),
 		}
@@ -109,9 +109,11 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 }
 
 func (pa *PriceApplier) ShouldWritePriceToStore(
+	ctx sdk.Context,
 	prices map[string]*big.Int,
-	marketPairToUpdate string,
+	marketToUpdate pricestypes.MarketParam,
 ) (bool, *big.Int) {
+	marketPairToUpdate := marketToUpdate.Pair
 	price, ok := prices[marketPairToUpdate]
 	if !ok || price == nil {
 		pa.logger.Debug(
@@ -124,6 +126,24 @@ func (pa *PriceApplier) ShouldWritePriceToStore(
 	if price.Sign() == -1 {
 		pa.logger.Error(
 			"price is negative",
+			"currency_pair", marketPairToUpdate,
+			"price", price.String(),
+		)
+
+		return false, nil
+	}
+	priceUpdate := pricestypes.MarketPriceUpdates{
+		MarketPriceUpdates: []*pricestypes.MarketPriceUpdates_MarketPriceUpdate{
+			{
+				MarketId: marketToUpdate.Id,
+				Price:    price.Uint64(),
+			},
+		},
+	}
+
+	if pa.pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, &priceUpdate, false) != nil {
+		pa.logger.Error(
+			"price update validation failed",
 			"currency_pair", marketPairToUpdate,
 			"price", price.String(),
 		)

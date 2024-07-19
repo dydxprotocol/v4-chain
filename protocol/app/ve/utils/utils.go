@@ -7,6 +7,7 @@ import (
 	"slices"
 
 	"cosmossdk.io/core/comet"
+	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
@@ -274,6 +275,11 @@ func GetMarketPriceUpdateFromBytes(
 		Price:    price.Uint64(),
 	}
 	return &priceUpdate, nil
+}
+
+func GetMaxMarketPairs(ctx sdk.Context, pricesKeeper priceskeeper.Keeper) uint32 {
+	markets := pricesKeeper.GetAllMarketParams(ctx)
+	return uint32(len(markets))
 }
 
 func GetVEEncodedPrice(
