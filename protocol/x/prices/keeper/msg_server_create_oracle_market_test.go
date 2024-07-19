@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -11,6 +12,7 @@ import (
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,7 +30,14 @@ func TestCreateOracleMarket(t *testing.T) {
 		expectedErr     string
 	}{
 		"Succeeds: create new oracle market (id = 1)": {
-			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {},
+			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {
+				keepertest.CreateMarketInMarketMapFromParams(
+					t,
+					ctx,
+					pricesKeeper.MarketMapKeeper.(*marketmapkeeper.Keeper),
+					[]pricestypes.MarketParam{testMarket1.Param},
+				)
+			},
 			msg: &pricestypes.MsgCreateOracleMarket{
 				Authority: lib.GovModuleAddress.String(),
 				Params:    testMarket1.Param,
@@ -105,6 +114,17 @@ func TestCreateOracleMarket(t *testing.T) {
 			gotAllMarketParamPrices, err := pricesKeeper.GetAllMarketParamPrices(ctx)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedMarkets, gotAllMarketParamPrices)
+
+			// Check if the market is enabled in MarketMap
+			if len(tc.expectedMarkets) > 0 {
+				for i := range tc.expectedMarkets {
+					market := tc.expectedMarkets[i]
+
+					currencyPair, _ := slinky.MarketPairToCurrencyPair(market.Param.Pair)
+					mmMarket, _ := pricesKeeper.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+					require.True(t, mmMarket.Ticker.Enabled)
+				}
+			}
 		})
 	}
 }

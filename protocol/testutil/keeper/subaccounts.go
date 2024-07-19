@@ -51,12 +51,14 @@ func SubaccountsKeepers(t testing.TB, msgSenderEnabled bool) (
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
 		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc)
+		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
 		pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
 			db,
 			cdc,
 			transientStoreKey,
 			revShareKeeper,
+			marketMapKeeper,
 		)
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 		perpetualsKeeper, _ = createPerpetualsKeeper(stateStore, db, cdc, pricesKeeper, epochsKeeper, transientStoreKey)

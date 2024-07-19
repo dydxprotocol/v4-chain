@@ -30,7 +30,6 @@ var (
 		206,
 		"Market pair conversion to currency pair failed",
 	)
-	ErrTickerNotFoundInMarketMap = errorsmod.Register(ModuleName, 207, "Ticker not found in market map")
 
 	// 300 - 399: Price related errors.
 	ErrIndexPriceNotAvailable = errorsmod.Register(ModuleName, 300, "Index price is not available")

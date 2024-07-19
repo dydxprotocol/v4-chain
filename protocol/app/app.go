@@ -924,6 +924,7 @@ func New(
 			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 		app.RevShareKeeper,
+		&app.MarketMapKeeper,
 	)
 	pricesModule := pricesmodule.NewAppModule(
 		appCodec,
@@ -931,6 +932,7 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.RevShareKeeper,
+		&app.MarketMapKeeper,
 	)
 
 	app.AssetsKeeper = *assetsmodulekeeper.NewKeeper(

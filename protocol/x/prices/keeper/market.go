@@ -57,13 +57,6 @@ func (k Keeper) CreateMarket(
 		)
 	}
 	currencyPairStr := currencyPair.String()
-	_, err = k.MarketMapKeeper.GetMarket(ctx, currencyPairStr)
-	if err != nil {
-		return types.MarketParam{}, errorsmod.Wrapf(
-			types.ErrTickerNotFoundInMarketMap,
-			marketParam.Pair,
-		)
-	}
 
 	paramBytes := k.cdc.MustMarshal(&marketParam)
 	priceBytes := k.cdc.MustMarshal(&marketPrice)
