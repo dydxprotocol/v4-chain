@@ -1,0 +1,6 @@
+FROM postgres:12-bullseye
+COPY initialize-docker-postgres-user.sh /docker-entrypoint-initdb.d/
+
+RUN apt update && apt install -y postgresql-12-plpgsql-check postgresql-12-plprofiler postgresql-12-pldebugger
+
+CMD ["postgres", "-c", "shared_preload_libraries=pg_stat_statements,plpgsql,plpgsql_check,plprofiler,plugin_debugger", "-c", "plpgsql_check.mode=every_start", "-c", "plpgsql_check.fatal_errors=yes", "-c", "plpgsql_check.show_nonperformance_warnings=true", "-c", "plpgsql_check.show_performance_warnings=true", "-c", "plprofiler.enabled=on", "-c", "plprofiler.collect_interval=10"]

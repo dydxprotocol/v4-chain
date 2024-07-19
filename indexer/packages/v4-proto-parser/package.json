@@ -1,0 +1,37 @@
+{
+  "name": "@dydxprotocol-indexer/v4-proto-parser",
+  "version": "0.0.1",
+  "description": "",
+  "main": "build/src/index.js",
+  "devDependencies": {
+    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@types/jest": "^28.1.4",
+    "@types/luxon": "^3.0.0",
+    "@types/node": "^18.0.3",
+    "jest": "^28.1.2",
+    "typescript": "^4.7.4"
+  },
+  "scripts": {
+    "lint": "eslint --ext .ts,.js .",
+    "lint:fix": "eslint --ext .ts,.js . --fix",
+    "build": "rm -rf build/ && tsc",
+    "build:prod": "pnpm run build",
+    "build:watch": "pnpm run build -- --watch",
+    "test": "NODE_ENV=test jest --runInBand --forceExit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dydxprotocol/indexer.git"
+  },
+  "author": "",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/dydxprotocol/indexer/issues"
+  },
+  "homepage": "https://github.com/dydxprotocol/indexer#readme",
+  "dependencies": {
+    "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
+    "dotenv-flow": "^3.2.0",
+    "long": "^5.2.1"
+  }
+}

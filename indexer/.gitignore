@@ -1,0 +1,39 @@
+# dependencies
+node_modules
+
+# build
+build
+
+# misc
+.DS_Store
+
+# --- Services ---
+# dependencies
+services/*/node_modules
+
+# build
+services/*/build
+
+# testing
+services/*/coverage
+services/*/junit.xml
+
+# misc
+services/*/.DS_Store
+
+# --- Packages ---
+# dependencies
+packages/*/node_modules
+
+# build
+packages/*/build
+
+# testing
+packages/*/coverage
+packages/*/junit.xml
+
+# misc
+packages/*/.DS_Store
+
+# IDE
+.idea/*

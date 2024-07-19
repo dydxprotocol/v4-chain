@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "big.js": ["@types/big.js"]
+    },
+    "outDir": "build",
+  },
+  "include": [
+    "src",
+    "__tests__",
+  ]
+}

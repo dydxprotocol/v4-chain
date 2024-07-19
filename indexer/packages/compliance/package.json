@@ -1,0 +1,36 @@
+{
+  "name": "@dydxprotocol-indexer/compliance",
+  "version": "0.0.1",
+  "description": "",
+  "main": "build/src/index.js",
+  "devDependencies": {
+    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "jest": "^28.1.2",
+    "@types/jest": "^28.1.4",
+    "typescript": "^4.7.4"
+  },
+  "scripts": {
+    "lint": "eslint --ext .ts,.js .",
+    "lint:fix": "eslint --ext .ts,.js . --fix",
+    "build": "rm -rf build/ && tsc",
+    "build:prod": "pnpm run build",
+    "build:watch": "pnpm run build -- --watch",
+    "test": "TZ=UTC NODE_ENV=test jest --runInBand --forceExit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dydxprotocol/indexer.git"
+  },
+  "author": "",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/dydxprotocol/indexer/issues"
+  },
+  "homepage": "https://github.com/dydxprotocol/indexer#readme",
+  "dependencies": {
+    "@dydxprotocol-indexer/base": "workspace:^0.0.1",
+    "axios": "^1.2.1",
+    "dotenv-flow": "^3.2.0",
+    "lodash": "^4.17.21"
+  }
+}

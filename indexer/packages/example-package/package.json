@@ -1,0 +1,31 @@
+{
+  "name": "@dydxprotocol-indexer/example-package",
+  "version": "0.0.1",
+  "description": "",
+  "main": "build/index.js",
+  "devDependencies": {
+    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "typescript": "^4.7.4"
+  },
+  "scripts": {
+    "lint": "eslint --ext .ts,.js .",
+    "lint:fix": "eslint --ext .ts,.js . --fix",
+    "build": "rm -rf build/ && tsc",
+    "build:prod": "pnpm run build",
+    "build:watch": "pnpm run build -- --watch",
+    "test": "echo \"Error: no test specified\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dydxprotocol/indexer.git"
+  },
+  "author": "",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/dydxprotocol/indexer/issues"
+  },
+  "homepage": "https://github.com/dydxprotocol/indexer#readme",
+  "dependencies": {
+    "dotenv-flow": "^3.2.0"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "@dydxprotocol-indexer/redis",
+  "version": "0.0.1",
+  "description": "",
+  "main": "build/src/index.js",
+  "devDependencies": {
+    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@types/big.js": "^6.1.5",
+    "@types/bluebird": "^3.5.33",
+    "@types/jest": "^28.1.4",
+    "@types/lodash": "^4.14.182",
+    "@types/luxon": "^3.0.0",
+    "@types/node": "^18.0.3",
+    "@types/redis": "2.8.27",
+    "jest": "^28.1.2",
+    "typescript": "^4.7.4"
+  },
+  "scripts": {
+    "lint": "eslint --ext .ts,.js .",
+    "lint:fix": "eslint --ext .ts,.js . --fix",
+    "build": "rm -rf build/ && tsc && cp -r src/scripts build/src/scripts",
+    "build:prod": "pnpm run build",
+    "build:watch": "pnpm run build -- --watch",
+    "test": "NODE_ENV=test jest --runInBand --forceExit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dydxprotocol/indexer.git"
+  },
+  "author": "",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/dydxprotocol/indexer/issues"
+  },
+  "homepage": "https://github.com/dydxprotocol/indexer#readme",
+  "dependencies": {
+    "@dydxprotocol-indexer/base": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
+    "big.js": "^6.2.1",
+    "bluebird": "^3.7.2",
+    "dotenv-flow": "^3.2.0",
+    "lodash": "^4.17.21",
+    "long": "^5.2.1",
+    "luxon": "^3.0.1",
+    "redis": "2.8.0"
+  }
+}

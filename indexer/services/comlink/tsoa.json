@@ -1,0 +1,16 @@
+{
+  "entryFile": "src/index.ts",
+  "noImplicitAdditionalProperties": "throw-on-extras",
+  "spec": {
+    "outputDirectory": "public",
+    "specVersion": 3,
+    "title": "Indexer API"
+  },
+  "swagger": {
+    "entryFile": "./src/index.ts"
+  },
+  "swaggerJson": "swagger.json",
+  "routes": {
+    "routesDir": "src"
+  }
+}

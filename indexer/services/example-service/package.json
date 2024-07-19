@@ -1,0 +1,38 @@
+{
+  "name": "example-service",
+  "version": "0.0.1",
+  "description": "",
+  "main": "build/index",
+  "scripts": {
+    "start": "node --heapsnapshot-signal=SIGUSR2 -r dotenv-flow/config build/src/index.js",
+    "build": "rm -rf build/ && tsc",
+    "build:prod": "pnpm run build",
+    "build:watch": "pnpm run build -- --watch",
+    "coverage": "pnpm test -- --coverage",
+    "lint": "eslint --ext .ts,.js .",
+    "lint:fix": "eslint --ext .ts,.js . --fix",
+    "test": "NODE_ENV=test jest --runInBand --forceExit"
+  },
+  "author": "",
+  "license": "BSL",
+  "dependencies": {
+    "dotenv-flow": "^3.2.0"
+  },
+  "devDependencies": {
+    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@types/jest": "^28.1.4",
+    "@types/node": "^18.0.3",
+    "jest": "^28.1.2",
+    "ts-node": "^10.8.2",
+    "tsconfig-paths": "^4.0.0",
+    "typescript": "^4.7.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dydxprotocol/indexer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dydxprotocol/indexer/issues"
+  },
+  "homepage": "https://github.com/dydxprotocol/indexer#readme"
+}
