@@ -13,17 +13,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type ValidateVoteExtensionsFn func(ctx sdk.Context, extCommitInfo cometabci.ExtendedCommitInfo) error
-
 func CleanAndValidateExtCommitInfo(
 	ctx sdk.Context,
 	extCommitInfo cometabci.ExtendedCommitInfo,
 	veCodec codec.VoteExtensionCodec,
 	pricesKeeper PreparePricesKeeper,
-	validateVoteExtensionsFn ValidateVoteExtensionsFn,
+	validateVEConsensusInfo veutils.ValidateVEConsensusInfoFn,
 ) (cometabci.ExtendedCommitInfo, error) {
 	for i, vote := range extCommitInfo.Votes {
-		if err := validateVoteExtension(ctx, vote, veCodec, pricesKeeper); err != nil {
+		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pricesKeeper); err != nil {
 			ctx.Logger().Info(
 				"failed to validate vote extension - pruning vote",
 				"err", err,
@@ -31,15 +29,12 @@ func CleanAndValidateExtCommitInfo(
 			)
 
 			// failed to validate this vote-extension, mark it as absent in the original commit
-			vote.BlockIdFlag = cometproto.BlockIDFlagAbsent
-			vote.ExtensionSignature = nil
-			vote.VoteExtension = nil
-			extCommitInfo.Votes[i] = vote
+			pruneVoteFromExtCommitInfo(&vote, &extCommitInfo, i)
 		}
 	}
 
 	// validate after pruning
-	if err := validateVoteExtensionsFn(ctx, extCommitInfo); err != nil {
+	if err := validateVEConsensusInfo(ctx, extCommitInfo); err != nil {
 		ctx.Logger().Error(
 			"failed to validate vote extensions; vote extensions may not comprise a super-majority",
 			"err", err,
@@ -51,38 +46,15 @@ func CleanAndValidateExtCommitInfo(
 	return extCommitInfo, nil
 }
 
-func validateVoteExtension(
-	ctx sdk.Context,
-	vote cometabci.ExtendedVoteInfo,
-	voteExtensionCodec codec.VoteExtensionCodec,
-	pricesKeeper PreparePricesKeeper,
-) error {
-	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
-		return nil
-	}
-
-	voteExt, err := voteExtensionCodec.Decode(vote.VoteExtension)
-	if err != nil {
-		return err
-	}
-
-	// The vote extensions are from the previous block.
-	if err := ValidateDaemonVoteExtension(ctx, voteExt, pricesKeeper); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func ValidateExtendedCommitInfo(
 	ctx sdk.Context,
 	height int64,
 	extCommitInfo cometabci.ExtendedCommitInfo,
 	veCodec codec.VoteExtensionCodec,
 	pk PreparePricesKeeper,
-	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo cometabci.ExtendedCommitInfo) error,
+	validateVEConsensusInfo veutils.ValidateVEConsensusInfoFn,
 ) error {
-	if err := validateVoteExtensionFn(ctx, extCommitInfo); err != nil {
+	if err := validateVEConsensusInfo(ctx, extCommitInfo); err != nil {
 		ctx.Logger().Error(
 			"failed to validate vote extension",
 			"height", height,
@@ -94,7 +66,7 @@ func ValidateExtendedCommitInfo(
 	for _, vote := range extCommitInfo.Votes {
 		addr := sdk.ConsAddress(vote.Validator.Address)
 
-		if err := validateVoteExtension(ctx, vote, veCodec, pk); err != nil {
+		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pk); err != nil {
 			ctx.Logger().Error(
 				"failed to validate vote extension",
 				"height", height,
@@ -107,11 +79,35 @@ func ValidateExtendedCommitInfo(
 	return nil
 }
 
-func ValidateDaemonVoteExtension(
+func validateIndividualVoteExtension(
 	ctx sdk.Context,
-	ve vetypes.DaemonVoteExtension,
+	vote cometabci.ExtendedVoteInfo,
+	voteCodec codec.VoteExtensionCodec,
 	pricesKeeper PreparePricesKeeper,
 ) error {
+	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
+		return nil
+	}
+
+	if err := ValidateVEMarketsAndPrices(ctx, pricesKeeper.(priceskeeper.Keeper), vote.VoteExtension, voteCodec); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ValidateVEMarketsAndPrices(
+	ctx sdk.Context,
+	pricesKeeper priceskeeper.Keeper,
+	veBytes []byte,
+	voteCodec codec.VoteExtensionCodec,
+) error {
+	ve, err := voteCodec.Decode(veBytes)
+
+	if err != nil {
+		return err
+	}
+
 	if err := ValidateMarketCountInVE(ctx, ve, pricesKeeper); err != nil {
 		return err
 	}
@@ -126,9 +122,9 @@ func ValidateDaemonVoteExtension(
 func ValidateMarketCountInVE(
 	ctx sdk.Context,
 	ve vetypes.DaemonVoteExtension,
-	pricesKeeper PreparePricesKeeper,
+	pricesKeeper priceskeeper.Keeper,
 ) error {
-	maxPairs := veutils.GetMaxMarketPairs(ctx, pricesKeeper.(priceskeeper.Keeper))
+	maxPairs := veutils.GetMaxMarketPairs(ctx, pricesKeeper)
 	if uint32(len(ve.Prices)) > maxPairs {
 		return fmt.Errorf(
 			"number of oracle vote extension pairs of %d greater than maximum expected pairs of %d",
@@ -151,4 +147,15 @@ func ValidatePricesBytesSizeInVE(
 		}
 	}
 	return nil
+}
+
+func pruneVoteFromExtCommitInfo(
+	vote *cometabci.ExtendedVoteInfo,
+	extCommitInfo *cometabci.ExtendedCommitInfo,
+	index int,
+) {
+	vote.BlockIdFlag = cometproto.BlockIDFlagAbsent
+	vote.ExtensionSignature = nil
+	vote.VoteExtension = nil
+	extCommitInfo.Votes[index] = *vote
 }

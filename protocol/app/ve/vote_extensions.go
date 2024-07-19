@@ -5,7 +5,6 @@ import (
 	"math/big"
 
 	"cosmossdk.io/log"
-	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
@@ -19,7 +18,7 @@ type VoteExtensionHandler struct {
 	logger log.Logger
 
 	// encoding and decoding vote extensions
-	veCodec codec.VoteExtensionCodec
+	voteCodec codec.VoteExtensionCodec
 
 	// fetching valid price updates and current markets
 	pricesKeeper ExtendVotePricesKeeper
@@ -35,13 +34,13 @@ var (
 
 func NewVoteExtensionHandler(
 	logger log.Logger,
-	vecodec codec.VoteExtensionCodec,
+	voteCodec codec.VoteExtensionCodec,
 	pricesKeeper ExtendVotePricesKeeper,
 	priceApplier VEPriceApplier,
 ) *VoteExtensionHandler {
 	return &VoteExtensionHandler{
 		logger:       logger,
-		veCodec:      vecodec,
+		voteCodec:    voteCodec,
 		pricesKeeper: pricesKeeper,
 		priceApplier: priceApplier,
 	}
@@ -119,7 +118,12 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 			return acceptResponse, nil
 		}
 
-		if err := h.ValidateVEMarketsAndPrices(ctx, h.pricesKeeper, req.VoteExtension); err != nil {
+		if err := ValidateVEMarketsAndPrices(
+			ctx,
+			h.pricesKeeper.(priceskeeper.Keeper),
+			req.VoteExtension,
+			h.voteCodec,
+		); err != nil {
 			h.logger.Error(
 				"failed to decode and validate vote extension",
 				"height", req.Height,
@@ -145,7 +149,7 @@ func (h *VoteExtensionHandler) GetVEBytesFromCurrPrices(ctx sdk.Context) ([]byte
 		return nil, err
 	}
 
-	veBytes, err := h.veCodec.Encode(voteExt)
+	veBytes, err := h.voteCodec.Encode(voteExt)
 	if err != nil {
 		return nil, err
 	}
@@ -184,28 +188,4 @@ func (h *VoteExtensionHandler) GetEncodedPriceFromPriceUpdate(
 	}
 
 	return encodedPrice, nil
-}
-
-func (h *VoteExtensionHandler) ValidateVEMarketsAndPrices(
-	ctx sdk.Context,
-	pricesKeeper ExtendVotePricesKeeper,
-	veBytes []byte,
-) error {
-	ve, err := h.veCodec.Decode(veBytes)
-	if err != nil {
-		return fmt.Errorf("failed to decode vote extension: %w", err)
-	}
-
-	maxPairs := veutils.GetMaxMarketPairs(ctx, h.pricesKeeper.(priceskeeper.Keeper))
-	if uint32(len(ve.Prices)) > maxPairs {
-		return fmt.Errorf("too many prices in daemon vote extension: %d > %d", len(ve.Prices), maxPairs)
-	}
-
-	for _, priceBytes := range ve.Prices {
-		if len(priceBytes) > constants.MaximumPriceSizeInBytes {
-			return fmt.Errorf("price bytes are too long: %d", len(priceBytes))
-		}
-	}
-
-	return nil
 }

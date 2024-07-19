@@ -1207,7 +1207,7 @@ func New(
 	app.SetPrecommiter(app.Precommitter)
 	app.SetPrepareCheckStater(app.PrepareCheckStater)
 
-	veValidationFn := veutils.NewValidateVoteExtensionsFn(app.ConsumerKeeper)
+	veValidationFn := veutils.NewValidateVEConsensusInfo(app.ConsumerKeeper)
 
 	// PrepareProposal setup.
 	if appFlags.NonValidatingFullNode {

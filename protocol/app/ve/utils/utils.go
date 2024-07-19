@@ -34,9 +34,9 @@ func AreVEEnabled(ctx sdk.Context) bool {
 }
 
 // NewDefaultValidateVoteExtensionsFn returns a new DefaultValidateVoteExtensionsFn.
-func NewValidateVoteExtensionsFn(validatorStore ValidatorStore) ValidateVoteExtensionsFn {
+func NewValidateVEConsensusInfo(validatorStore ValidatorStore) ValidateVEConsensusInfoFn {
 	return func(ctx sdk.Context, info abci.ExtendedCommitInfo) error {
-		return ValidateVoteExtensions(ctx, validatorStore, info)
+		return ValidateVEConsensusInfo(ctx, validatorStore, info)
 	}
 }
 
@@ -45,7 +45,7 @@ func NewValidateVoteExtensionsFn(validatorStore ValidatorStore) ValidateVoteExte
 // the signed vote extensions included in the proposal are valid and provide
 // a super-majority of vote extensions for the current block. This method is
 // expected to be used in PrepareProposal and ProcessProposal.
-type ValidateVoteExtensionsFn func(
+type ValidateVEConsensusInfoFn func(
 	ctx sdk.Context,
 	extInfo abci.ExtendedCommitInfo,
 ) error
@@ -62,7 +62,7 @@ type ValidatorStore interface {
 // a proposer in PrepareProposal. It returns an error if any signature is invalid
 // or if unexpected vote extensions and/or signatures are found or less than 2/3
 // power is received.
-func ValidateVoteExtensions(
+func ValidateVEConsensusInfo(
 	ctx sdk.Context,
 	valStore ValidatorStore,
 	extCommit abci.ExtendedCommitInfo,

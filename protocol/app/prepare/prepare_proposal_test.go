@@ -657,7 +657,7 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				&mockPricesKeeper,
 				vecodec.NewDefaultVoteExtensionCodec(),
 				vecodec.NewDefaultExtendedCommitCodec(),
-				veutils.NewValidateVoteExtensionsFn(&mockConsumerKeeper),
+				veutils.NewValidateVEConsensusInfo(&mockConsumerKeeper),
 			)
 
 			req := cometabci.RequestPrepareProposal{
