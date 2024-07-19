@@ -326,12 +326,12 @@ func (_m *ClobKeeper) GetIndexerEventManager() indexer_manager.IndexerEventManag
 	return r0
 }
 
-// GetInsuranceFundBalance provides a mock function with given fields: ctx, perpetualId
-func (_m *ClobKeeper) GetInsuranceFundBalance(ctx types.Context, perpetualId uint32) *big.Int {
+// GetInsuranceFundBalanceInQuoteQuantums provides a mock function with given fields: ctx, perpetualId
+func (_m *ClobKeeper) GetInsuranceFundBalanceInQuoteQuantums(ctx types.Context, perpetualId uint32) *big.Int {
 	ret := _m.Called(ctx, perpetualId)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetInsuranceFundBalance")
+		panic("no return value specified for GetInsuranceFundBalanceInQuoteQuantums")
 	}
 
 	var r0 *big.Int
@@ -813,11 +813,6 @@ func (_m *ClobKeeper) MaybeGetLiquidationOrder(ctx types.Context, subaccountId s
 	}
 
 	return r0, r1
-}
-
-// MigratePruneableOrders provides a mock function with given fields: ctx
-func (_m *ClobKeeper) MigratePruneableOrders(ctx types.Context) {
-	_m.Called(ctx)
 }
 
 // MustAddOrderToStatefulOrdersTimeSlice provides a mock function with given fields: ctx, goodTilBlockTime, orderId

@@ -2897,7 +2897,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			}
 
 			for i, p := range tc.perpetuals {
-				perpetualsKeeper.SetPerpetualForTest(
+				perpetualsKeeper.ValidateAndSetPerpetual(
 					ctx,
 					p,
 				)

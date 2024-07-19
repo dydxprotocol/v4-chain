@@ -130,10 +130,10 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	return quantumsDeleveraged, err
 }
 
-// GetInsuranceFundBalance returns the current balance of the specific insurance fund (in quote quantums).
+// GetInsuranceFundBalanceInQuoteQuantums returns the current balance of the specific insurance fund (in quote quantums).
 // perpetual (in quote quantums).
 // This calls the Bank Keeper’s GetBalance() function for the Module Address of the insurance fund.
-func (k Keeper) GetInsuranceFundBalance(
+func (k Keeper) GetInsuranceFundBalanceInQuoteQuantums(
 	ctx sdk.Context,
 	perpetualId uint32,
 ) (
@@ -141,7 +141,7 @@ func (k Keeper) GetInsuranceFundBalance(
 ) {
 	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
 	if !exists {
-		panic("GetInsuranceFundBalance: Usdc asset not found in state")
+		panic("GetInsuranceFundBalanceInQuoteQuantums: Usdc asset not found in state")
 	}
 	insuranceFundAddr, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
 	if err != nil {
@@ -294,7 +294,7 @@ func (k Keeper) IsValidInsuranceFundDelta(
 
 	// The insurance fund delta is valid if the insurance fund balance is non-negative after adding
 	// the delta.
-	currentInsuranceFundBalance := k.GetInsuranceFundBalance(ctx, perpetualId)
+	currentInsuranceFundBalance := k.GetInsuranceFundBalanceInQuoteQuantums(ctx, perpetualId)
 	return new(big.Int).Add(currentInsuranceFundBalance, insuranceFundDelta).Sign() >= 0
 }
 

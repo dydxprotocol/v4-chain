@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetInsuranceFundBalance(t *testing.T) {
+func TestGetInsuranceFundBalanceInQuoteQuantums(t *testing.T) {
 	tests := map[string]struct {
 		// Setup
 		assets               []assettypes.Asset
@@ -91,7 +91,7 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 		"panics when asset not found in state": {
 			assets:        []assettypes.Asset{},
 			perpetualId:   0,
-			expectedError: errors.New("GetInsuranceFundBalance: Usdc asset not found in state"),
+			expectedError: errors.New("GetInsuranceFundBalanceInQuoteQuantums: Usdc asset not found in state"),
 		},
 	}
 
@@ -144,14 +144,14 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 					t,
 					tc.expectedError.Error(),
 					func() {
-						ks.ClobKeeper.GetInsuranceFundBalance(ks.Ctx, tc.perpetualId)
+						ks.ClobKeeper.GetInsuranceFundBalanceInQuoteQuantums(ks.Ctx, tc.perpetualId)
 					},
 				)
 			} else {
 				require.Equal(
 					t,
 					tc.expectedInsuranceFundBalance,
-					ks.ClobKeeper.GetInsuranceFundBalance(ks.Ctx, tc.perpetualId),
+					ks.ClobKeeper.GetInsuranceFundBalanceInQuoteQuantums(ks.Ctx, tc.perpetualId),
 				)
 			}
 		})

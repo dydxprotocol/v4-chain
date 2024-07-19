@@ -149,62 +149,6 @@ func (k Keeper) AddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, p
 	}
 }
 
-// Deprecated: Do not use. Retained for testing purposes.
-// LegacyAddOrdersForPruning is the old key-per-height format of storing orders to prune.
-func (k Keeper) LegacyAddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, prunableBlockHeight uint32) {
-	// Retrieve an instance of the store.
-	store := prefix.NewStore(
-		ctx.KVStore(k.storeKey),
-		[]byte(types.LegacyBlockHeightToPotentiallyPrunableOrdersPrefix),
-	)
-
-	// Retrieve the `PotentiallyPrunableOrders` bytes from the store.
-	potentiallyPrunableOrdersBytes := store.Get(
-		lib.Uint32ToKey(prunableBlockHeight),
-	)
-
-	var potentiallyPrunableOrdersSet = make(map[types.OrderId]bool)
-	var potentiallyPrunableOrders = types.PotentiallyPrunableOrders{}
-	var potentiallyPrunableOrderIds = make([]types.OrderId, len(orderIds))
-
-	// Initialize `potentiallyPrunableOrderIds` with the provided `orderIds`.
-	// Copy to avoid mutating the provided `orderIds`.
-	copy(potentiallyPrunableOrderIds, orderIds)
-
-	// If the state already contains `potentiallyPrunableOrders` for this `prunableBlockHeight`, add them to the list of
-	// `potentiallyPrunableOrderIds`.
-	if potentiallyPrunableOrdersBytes != nil {
-		k.cdc.MustUnmarshal(potentiallyPrunableOrdersBytes, &potentiallyPrunableOrders)
-		potentiallyPrunableOrderIds = append(potentiallyPrunableOrders.OrderIds, potentiallyPrunableOrderIds...)
-	}
-
-	// Iterate over all `potentiallyPrunableOrderIds` and place them in the set in order to dedupe them.
-	for _, orderId := range potentiallyPrunableOrderIds {
-		potentiallyPrunableOrdersSet[orderId] = true
-	}
-
-	// Iterate over the set and build a list of `dedupedOrderIds`.
-	var dedupedOrderIds = make([]types.OrderId, 0, len(potentiallyPrunableOrdersSet))
-	for orderId := range potentiallyPrunableOrdersSet {
-		dedupedOrderIds = append(dedupedOrderIds, orderId)
-	}
-
-	// Sort the orderIds so that the state write is deterministic.
-	types.MustSortAndHaveNoDuplicates(dedupedOrderIds)
-
-	// Set the new `dedupedOrderIds` on the `potentiallyPrunableOrders`.
-	potentiallyPrunableOrders.OrderIds = dedupedOrderIds
-
-	// Marshal `prunableOrders` back to bytes.
-	potentiallyPrunableOrdersBytes = k.cdc.MustMarshal(&potentiallyPrunableOrders)
-
-	// Write `prunableOrders` to state for the appropriate block height.
-	store.Set(
-		lib.Uint32ToKey(prunableBlockHeight),
-		potentiallyPrunableOrdersBytes,
-	)
-}
-
 // PruneOrdersForBlockHeight checks all orders for prunability given the provided `blockHeight`.
 // If an order is deemed prunable at this `blockHeight`, then it is pruned.
 // Note: An order is only deemed prunable if the `prunableBlockHeight` on the `OrderFillState` is less than or equal
