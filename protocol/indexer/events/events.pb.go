@@ -1887,7 +1887,7 @@ func (m *PerpetualMarketCreateEventV2) GetMarketType() types.PerpetualMarketType
 	if m != nil {
 		return m.MarketType
 	}
-	return types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED
+	return types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
 }
 
 // LiquidityTierUpsertEventV1 message contains all the information to

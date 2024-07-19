@@ -393,34 +393,6 @@ func (_m *PerpetualsKeeper) SetParams(ctx types.Context, params perpetualstypes.
 	return r0
 }
 
-// SetPerpetualMarketType provides a mock function with given fields: ctx, id, marketType
-func (_m *PerpetualsKeeper) SetPerpetualMarketType(ctx types.Context, id uint32, marketType perpetualstypes.PerpetualMarketType) (perpetualstypes.Perpetual, error) {
-	ret := _m.Called(ctx, id, marketType)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SetPerpetualMarketType")
-	}
-
-	var r0 perpetualstypes.Perpetual
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, perpetualstypes.PerpetualMarketType) (perpetualstypes.Perpetual, error)); ok {
-		return rf(ctx, id, marketType)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, perpetualstypes.PerpetualMarketType) perpetualstypes.Perpetual); ok {
-		r0 = rf(ctx, id, marketType)
-	} else {
-		r0 = ret.Get(0).(perpetualstypes.Perpetual)
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, perpetualstypes.PerpetualMarketType) error); ok {
-		r1 = rf(ctx, id, marketType)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // ValidateAndSetPerpetual provides a mock function with given fields: ctx, perpetual
 func (_m *PerpetualsKeeper) ValidateAndSetPerpetual(ctx types.Context, perpetual perpetualstypes.Perpetual) error {
 	ret := _m.Called(ctx, perpetual)

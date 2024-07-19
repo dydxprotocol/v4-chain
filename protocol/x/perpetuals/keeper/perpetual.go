@@ -175,42 +175,6 @@ func (k Keeper) ModifyPerpetual(
 	return perpetual, nil
 }
 
-func (k Keeper) SetPerpetualMarketType(
-	ctx sdk.Context,
-	perpetualId uint32,
-	marketType types.PerpetualMarketType,
-) (types.Perpetual, error) {
-	if marketType == types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED {
-		return types.Perpetual{}, errorsmod.Wrap(
-			types.ErrInvalidMarketType,
-			fmt.Sprintf("invalid market type %v for perpetual %d", marketType, perpetualId),
-		)
-	}
-
-	// Get perpetual.
-	perpetual, err := k.GetPerpetual(ctx, perpetualId)
-	if err != nil {
-		return perpetual, err
-	}
-
-	if perpetual.Params.MarketType != types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED {
-		return types.Perpetual{}, errorsmod.Wrap(
-			types.ErrInvalidMarketType,
-			fmt.Sprintf("perpetual %d already has market type %v", perpetualId, perpetual.Params.MarketType),
-		)
-	}
-
-	// Modify perpetual.
-	perpetual.Params.MarketType = marketType
-
-	// Store the modified perpetual.
-	if err := k.ValidateAndSetPerpetual(ctx, perpetual); err != nil {
-		return types.Perpetual{}, err
-	}
-
-	return perpetual, nil
-}
-
 // GetPerpetual returns a perpetual from its id.
 func (k Keeper) GetPerpetual(
 	ctx sdk.Context,
@@ -1298,13 +1262,6 @@ func (k Keeper) SetEmptyPremiumVotes(
 		types.PremiumStore{},
 		types.PremiumVotesKey,
 	)
-}
-
-func (k Keeper) SetPerpetualForTest(
-	ctx sdk.Context,
-	perpetual types.Perpetual,
-) {
-	k.setPerpetual(ctx, perpetual)
 }
 
 func (k Keeper) setPerpetual(

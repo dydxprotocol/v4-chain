@@ -23,6 +23,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+
 	"cosmossdk.io/store/prefix"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	big_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/big"
@@ -202,18 +204,6 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			expectedError:     types.ErrTickerEmptyString,
 		},
-		"Unspecified market type": {
-			id:                0,
-			ticker:            "",
-			marketId:          0,
-			atomicResolution:  -10,
-			defaultFundingPpm: 0,
-			liquidityTier:     0,
-			expectedError: errorsmod.Wrap(
-				types.ErrInvalidMarketType,
-				fmt.Sprintf("market type %v", types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED),
-			),
-		},
 		"Invalid market type": {
 			id:                0,
 			ticker:            "",
@@ -317,84 +307,6 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 			require.Error(t, err)
 			require.EqualError(t, err, tc.expectedError.Error())
 		})
-	}
-}
-
-func TestSetPerpetualMarketType(t *testing.T) {
-	tests := map[string]struct {
-		currType      types.PerpetualMarketType
-		newType       types.PerpetualMarketType
-		errorExpected bool
-		expectedError error
-	}{
-		"success": {
-			currType:      types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED,
-			newType:       types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
-			errorExpected: false,
-		},
-		"failure - setting to unspecified": {
-			currType:      types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
-			newType:       types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED,
-			errorExpected: true,
-			expectedError: errorsmod.Wrap(
-				types.ErrInvalidMarketType,
-				fmt.Sprintf(
-					"invalid market type %v for perpetual %d",
-					types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED, 0,
-				),
-			),
-		},
-		"failure - market type already set": {
-			currType:      types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
-			newType:       types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
-			errorExpected: true,
-			expectedError: errorsmod.Wrap(
-				types.ErrInvalidMarketType,
-				fmt.Sprintf(
-					"perpetual %d already has market type %v",
-					0,
-					types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
-				),
-			),
-		},
-	}
-
-	// Test setup.
-	for name, tc := range tests {
-		t.Run(
-			name, func(t *testing.T) {
-				pc := keepertest.PerpetualsKeepers(t)
-				// Create liquidity tiers and perpetuals,
-				perp := keepertest.CreateLiquidityTiersAndNPerpetuals(
-					t,
-					pc.Ctx,
-					pc.PerpetualsKeeper,
-					pc.PricesKeeper,
-					1,
-				)[0]
-				perp.Params.MarketType = tc.currType
-				pc.PerpetualsKeeper.SetPerpetualForTest(pc.Ctx, perp)
-
-				_, err := pc.PerpetualsKeeper.SetPerpetualMarketType(
-					pc.Ctx,
-					perp.Params.Id,
-					tc.newType,
-				)
-
-				if tc.errorExpected {
-					require.EqualError(t, err, tc.expectedError.Error())
-				} else {
-					require.NoError(t, err)
-
-					rst, err := pc.PerpetualsKeeper.GetPerpetual(
-						pc.Ctx,
-						perp.Params.Id,
-					)
-					require.NoError(t, err)
-					require.Equal(t, tc.newType, rst.Params.MarketType)
-				}
-			},
-		)
 	}
 }
 
@@ -3539,9 +3451,16 @@ func TestIsIsolatedPerpetual(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(
 			name, func(t *testing.T) {
-				pc := keepertest.PerpetualsKeepers(t)
-				pc.PerpetualsKeeper.SetPerpetualForTest(pc.Ctx, tc.perp)
-				isIsolated, err := pc.PerpetualsKeeper.IsIsolatedPerpetual(pc.Ctx, tc.perp.Params.Id)
+				ctx, _, pricesKeeper, perpetualsKeeper, _, _, _, _, _ := testutil.SubaccountsKeepers(
+					t,
+					false,
+				)
+				ctx = ctx.WithTxBytes(constants.TestTxBytes)
+				testutil.CreateTestMarkets(t, ctx, pricesKeeper)
+				testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+
+				perpetualsKeeper.ValidateAndSetPerpetual(ctx, tc.perp)
+				isIsolated, err := perpetualsKeeper.IsIsolatedPerpetual(ctx, tc.perp.Params.Id)
 				require.NoError(t, err)
 				require.Equal(t, tc.expected, isIsolated)
 			},
