@@ -6,7 +6,7 @@ import { FillType, Liquidity } from './fill-types';
 import {
   OrderSide, OrderStatus, OrderType, TimeInForce,
 } from './order-types';
-import { PerpetualMarketStatus } from './perpetual-market-types';
+import { PerpetualMarketStatus, PerpetualMarketType } from './perpetual-market-types';
 import { PerpetualPositionStatus } from './perpetual-position-types';
 import { PositionSide } from './position-types';
 
@@ -84,6 +84,8 @@ export interface PerpetualMarketFromDatabase {
   subticksPerTick: number;
   stepBaseQuantums: number;
   liquidityTierId: number;
+  marketType: PerpetualMarketType;
+  baseOpenInterest: string;
 }
 
 export interface FillFromDatabase {
@@ -173,6 +175,8 @@ export interface LiquidityTiersFromDatabase {
   name: string;
   initialMarginPpm: string;
   maintenanceFractionPpm: string;
+  openInterestLowerCap?: string;
+  openInterestUpperCap?: string;
 }
 
 export interface CandleFromDatabase extends IdBasedModelFromDatabase {

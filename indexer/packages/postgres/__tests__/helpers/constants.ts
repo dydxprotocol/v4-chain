@@ -36,6 +36,7 @@ import {
   OrderType,
   PerpetualMarketCreateObject,
   PerpetualMarketStatus,
+  PerpetualMarketType,
   PerpetualPositionCreateObject,
   PerpetualPositionStatus,
   PnlTicksCreateObject,
@@ -46,7 +47,6 @@ import {
   TransactionCreateObject,
   TransferCreateObject,
 } from '../../src/types';
-import { denomToHumanReadableConversion } from './conversion-helpers';
 
 export const createdDateTime: DateTime = DateTime.utc();
 export const createdHeight: string = '2';
@@ -93,6 +93,29 @@ export const defaultSubaccountId3: string = SubaccountTable.uuid(
   defaultSubaccount3.subaccountNumber,
 );
 
+export const isolatedSubaccount: SubaccountCreateObject = {
+  address: defaultAddress,
+  subaccountNumber: 128,
+  updatedAt: createdDateTime.toISO(),
+  updatedAtHeight: createdHeight,
+};
+
+export const isolatedSubaccount2: SubaccountCreateObject = {
+  address: defaultAddress,
+  subaccountNumber: 256,
+  updatedAt: createdDateTime.toISO(),
+  updatedAtHeight: createdHeight,
+};
+
+export const isolatedSubaccountId: string = SubaccountTable.uuid(
+  defaultAddress,
+  isolatedSubaccount.subaccountNumber,
+);
+export const isolatedSubaccountId2: string = SubaccountTable.uuid(
+  defaultAddress,
+  isolatedSubaccount2.subaccountNumber,
+);
+
 // ============== Assets ==============
 
 export const defaultAsset: AssetCreateObject = {
@@ -137,6 +160,16 @@ export const defaultAssetPositionId2: string = AssetPositionTable.uuid(
   defaultAssetPosition2.subaccountId,
   defaultAssetPosition2.assetId,
 );
+export const isolatedSubaccountAssetPosition: AssetPositionCreateObject = {
+  subaccountId: isolatedSubaccountId,
+  assetId: '0',
+  size: '5000',
+  isLong: true,
+};
+export const isolatedSubaccountAssetPositionId: string = AssetPositionTable.uuid(
+  isolatedSubaccountAssetPosition.subaccountId,
+  isolatedSubaccountAssetPosition.assetId,
+);
 
 // ============== PerpetualMarkets ==============
 
@@ -156,6 +189,8 @@ export const defaultPerpetualMarket: PerpetualMarketCreateObject = {
   subticksPerTick: 100,
   stepBaseQuantums: 10,
   liquidityTierId: 0,
+  marketType: PerpetualMarketType.CROSS,
+  baseOpenInterest: '100000',
 };
 export const defaultPerpetualMarket2: PerpetualMarketCreateObject = {
   id: '1',
@@ -173,6 +208,8 @@ export const defaultPerpetualMarket2: PerpetualMarketCreateObject = {
   subticksPerTick: 10,
   stepBaseQuantums: 1,
   liquidityTierId: 0,
+  marketType: PerpetualMarketType.CROSS,
+  baseOpenInterest: '100000',
 };
 export const defaultPerpetualMarket3: PerpetualMarketCreateObject = {
   id: '2',
@@ -190,6 +227,48 @@ export const defaultPerpetualMarket3: PerpetualMarketCreateObject = {
   subticksPerTick: 10,
   stepBaseQuantums: 1,
   liquidityTierId: 0,
+  marketType: PerpetualMarketType.CROSS,
+  baseOpenInterest: '100000',
+};
+
+export const isolatedPerpetualMarket: PerpetualMarketCreateObject = {
+  id: '3',
+  clobPairId: '4',
+  ticker: 'ISO-USD',
+  marketId: 3,
+  status: PerpetualMarketStatus.ACTIVE,
+  priceChange24H: '0.000000001',
+  volume24H: '10000000',
+  trades24H: 200,
+  nextFundingRate: '1.2',
+  openInterest: '40000',
+  quantumConversionExponent: -16,
+  atomicResolution: -2,
+  subticksPerTick: 10,
+  stepBaseQuantums: 1,
+  liquidityTierId: 0,
+  marketType: PerpetualMarketType.ISOLATED,
+  baseOpenInterest: '100000',
+};
+
+export const isolatedPerpetualMarket2: PerpetualMarketCreateObject = {
+  id: '4',
+  clobPairId: '5',
+  ticker: 'ISO2-USD',
+  marketId: 4,
+  status: PerpetualMarketStatus.ACTIVE,
+  priceChange24H: '0.000000001',
+  volume24H: '10000000',
+  trades24H: 200,
+  nextFundingRate: '1.2',
+  openInterest: '40000',
+  quantumConversionExponent: -16,
+  atomicResolution: -2,
+  subticksPerTick: 10,
+  stepBaseQuantums: 1,
+  liquidityTierId: 0,
+  marketType: PerpetualMarketType.ISOLATED,
+  baseOpenInterest: '100000',
 };
 
 // ============== Orders ==============
@@ -198,6 +277,25 @@ export const defaultOrder: OrderCreateObject = {
   subaccountId: defaultSubaccountId,
   clientId: '1',
   clobPairId: '1',
+  side: OrderSide.BUY,
+  size: '25',
+  totalFilled: '0',
+  price: '20000',
+  type: OrderType.LIMIT,
+  status: OrderStatus.OPEN,
+  timeInForce: TimeInForce.FOK,
+  reduceOnly: false,
+  goodTilBlock: '100',
+  orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+  clientMetadata: '0',
+  updatedAt: '2023-01-22T00:00:00.000Z',
+  updatedAtHeight: '1',
+};
+
+export const isolatedMarketOrder: OrderCreateObject = {
+  subaccountId: isolatedSubaccountId,
+  clientId: '1',
+  clobPairId: '4',
   side: OrderSide.BUY,
   size: '25',
   totalFilled: '0',
@@ -249,6 +347,13 @@ export const defaultConditionalOrderId: string = OrderTable.uuid(
   defaultConditionalOrder.clientId,
   defaultConditionalOrder.clobPairId,
   defaultConditionalOrder.orderFlags,
+);
+
+export const isolatedMarketOrderId: string = OrderTable.uuid(
+  isolatedMarketOrder.subaccountId,
+  isolatedMarketOrder.clientId,
+  isolatedMarketOrder.clobPairId,
+  isolatedMarketOrder.orderFlags,
 );
 
 // ============== Blocks ==============
@@ -341,6 +446,28 @@ export const defaultPerpetualPositionId: string = PerpetualPositionTable.uuid(
   defaultPerpetualPosition.openEventId,
 );
 
+export const isolatedPerpetualPosition: PerpetualPositionCreateObject = {
+  subaccountId: isolatedSubaccountId,
+  perpetualId: isolatedPerpetualMarket.id,
+  side: PositionSide.LONG,
+  status: PerpetualPositionStatus.OPEN,
+  size: '10',
+  maxSize: '25',
+  entryPrice: '20000',
+  sumOpen: '10',
+  sumClose: '0',
+  createdAt: createdDateTime.toISO(),
+  createdAtHeight: createdHeight,
+  openEventId: defaultTendermintEventId,
+  lastEventId: defaultTendermintEventId2,
+  settledFunding: '200000',
+};
+
+export const isolatedPerpetualPositionId: string = PerpetualPositionTable.uuid(
+  isolatedPerpetualPosition.subaccountId,
+  isolatedPerpetualPosition.openEventId,
+);
+
 // ============== Fills ==============
 
 export const defaultFill: FillCreateObject = {
@@ -354,6 +481,42 @@ export const defaultFill: FillCreateObject = {
   price: '20000',
   quoteAmount: '200000',
   eventId: defaultTendermintEventId,
+  transactionHash: '', // TODO: Add a real transaction Hash
+  createdAt: createdDateTime.toISO(),
+  createdAtHeight: createdHeight,
+  clientMetadata: '0',
+  fee: '1.1',
+};
+
+export const isolatedMarketFill: FillCreateObject = {
+  subaccountId: isolatedSubaccountId,
+  side: OrderSide.BUY,
+  liquidity: Liquidity.TAKER,
+  type: FillType.LIMIT,
+  clobPairId: '4',
+  orderId: isolatedMarketOrderId,
+  size: '10',
+  price: '20000',
+  quoteAmount: '200000',
+  eventId: defaultTendermintEventId2,
+  transactionHash: '', // TODO: Add a real transaction Hash
+  createdAt: createdDateTime.toISO(),
+  createdAtHeight: createdHeight,
+  clientMetadata: '0',
+  fee: '1.1',
+};
+
+export const isolatedMarketFill2: FillCreateObject = {
+  subaccountId: isolatedSubaccountId2,
+  side: OrderSide.BUY,
+  liquidity: Liquidity.TAKER,
+  type: FillType.LIMIT,
+  clobPairId: '4',
+  orderId: isolatedMarketOrderId,
+  size: '10',
+  price: '20000',
+  quoteAmount: '200000',
+  eventId: defaultTendermintEventId3,
   transactionHash: '', // TODO: Add a real transaction Hash
   createdAt: createdDateTime.toISO(),
   createdAtHeight: createdHeight,
@@ -460,6 +623,22 @@ export const defaultMarket3: MarketCreateObject = {
   oraclePrice: '0.000000065',
 };
 
+export const isolatedMarket: MarketCreateObject = {
+  id: 3,
+  pair: 'ISO-USD',
+  exponent: -12,
+  minPriceChangePpm: 50,
+  oraclePrice: '0.000000075',
+};
+
+export const isolatedMarket2: MarketCreateObject = {
+  id: 4,
+  pair: 'ISO2-USD',
+  exponent: -12,
+  minPriceChangePpm: 50,
+  oraclePrice: '0.000000085',
+};
+
 // ============== LiquidityTiers ==============
 
 export const defaultLiquidityTier: LiquidityTiersCreateObject = {
@@ -474,6 +653,8 @@ export const defaultLiquidityTier2: LiquidityTiersCreateObject = {
   name: 'Mid-Cap',
   initialMarginPpm: '100000',  // 10%
   maintenanceFractionPpm: '500000',  // 50%
+  openInterestLowerCap: '0',
+  openInterestUpperCap: '5000000',
 };
 
 // ============== OraclePrices ==============
@@ -552,6 +733,22 @@ export const defaultFundingIndexUpdateId: string = FundingIndexUpdatesTable.uuid
   defaultFundingIndexUpdate.effectiveAtHeight,
   defaultFundingIndexUpdate.eventId,
   defaultFundingIndexUpdate.perpetualId,
+);
+
+export const isolatedMarketFundingIndexUpdate: FundingIndexUpdatesCreateObject = {
+  perpetualId: isolatedPerpetualMarket.id,
+  eventId: defaultTendermintEventId,
+  rate: '0.0004',
+  oraclePrice: '10000',
+  fundingIndex: '10200',
+  effectiveAt: createdDateTime.toISO(),
+  effectiveAtHeight: createdHeight,
+};
+
+export const isolatedMarketFundingIndexUpdateId: string = FundingIndexUpdatesTable.uuid(
+  isolatedMarketFundingIndexUpdate.effectiveAtHeight,
+  isolatedMarketFundingIndexUpdate.eventId,
+  isolatedMarketFundingIndexUpdate.perpetualId,
 );
 
 // ========= Compliance Data ==========

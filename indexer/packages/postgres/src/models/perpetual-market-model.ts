@@ -8,7 +8,7 @@ import {
   NumericPattern,
 } from '../lib/validators';
 import {
-  PerpetualMarketStatus,
+  PerpetualMarketStatus, PerpetualMarketType,
 } from '../types';
 
 export default class PerpetualMarketModel extends Model {
@@ -66,6 +66,7 @@ export default class PerpetualMarketModel extends Model {
         'subticksPerTick',
         'stepBaseQuantums',
         'liquidityTierId',
+        'marketType',
       ],
       properties: {
         id: { type: 'string', pattern: IntegerPattern },
@@ -83,6 +84,8 @@ export default class PerpetualMarketModel extends Model {
         subticksPerTick: { type: 'integer' },
         stepBaseQuantums: { type: 'integer' },
         liquidityTierId: { type: 'integer' },
+        marketType: { type: 'string' },
+        baseOpenInterest: { type: 'string', pattern: NumericPattern },
       },
     };
   }
@@ -110,6 +113,8 @@ export default class PerpetualMarketModel extends Model {
       subticksPerTick: 'integer',
       stepBaseQuantums: 'integer',
       liquidityTierId: 'integer',
+      marketType: 'string',
+      baseOpenInterest: 'string',
     };
   }
 
@@ -142,4 +147,8 @@ export default class PerpetualMarketModel extends Model {
   stepBaseQuantums!: number;
 
   liquidityTierId!: number;
+
+  marketType!: PerpetualMarketType;
+
+  baseOpenInterest!: string;
 }

@@ -1,4 +1,4 @@
-import { getChannel, getMessageToForward } from '../../src/helpers/from-kafka-helpers';
+import { getChannels, getMessageToForward } from '../../src/helpers/from-kafka-helpers';
 import { InvalidForwardMessageError, InvalidTopicError } from '../../src/lib/errors';
 import {
   Channel,
@@ -18,6 +18,9 @@ import {
   orderbookMessage,
   subaccountMessage,
   tradesMessage,
+  childSubaccountMessage,
+  defaultChildAccNumber,
+  defaultTransferContents,
 } from '../constants';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage } from './kafka';
@@ -34,22 +37,27 @@ import {
   testMocks,
   perpetualMarketRefresher,
   CandleResolution,
+  TransferSubaccountMessageContents,
+  SubaccountMessageContents, TransferType,
 } from '@dydxprotocol-indexer/postgres';
 
 describe('from-kafka-helpers', () => {
   describe('getChannel', () => {
     it.each([
-      [WebsocketTopics.TO_WEBSOCKETS_CANDLES, Channel.V4_CANDLES],
-      [WebsocketTopics.TO_WEBSOCKETS_MARKETS, Channel.V4_MARKETS],
-      [WebsocketTopics.TO_WEBSOCKETS_ORDERBOOKS, Channel.V4_ORDERBOOK],
-      [WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS, Channel.V4_ACCOUNTS],
-      [WebsocketTopics.TO_WEBSOCKETS_TRADES, Channel.V4_TRADES],
-    ])('gets correct channel for topic %s', (topic: WebsocketTopics, channel: Channel) => {
-      expect(getChannel(topic)).toEqual(channel);
+      [WebsocketTopics.TO_WEBSOCKETS_CANDLES, [Channel.V4_CANDLES]],
+      [WebsocketTopics.TO_WEBSOCKETS_MARKETS, [Channel.V4_MARKETS]],
+      [WebsocketTopics.TO_WEBSOCKETS_ORDERBOOKS, [Channel.V4_ORDERBOOK]],
+      [
+        WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS,
+        [Channel.V4_ACCOUNTS, Channel.V4_PARENT_ACCOUNTS],
+      ],
+      [WebsocketTopics.TO_WEBSOCKETS_TRADES, [Channel.V4_TRADES]],
+    ])('gets correct channel for topic %s', (topic: WebsocketTopics, channels: Channel[]) => {
+      expect(getChannels(topic)).toEqual(channels);
     });
 
     it('throws InvalidTopicError for invalid topic', () => {
-      expect(() => { getChannel(invalidTopic); }).toThrow(new InvalidTopicError(invalidTopic));
+      expect(() => { getChannels(invalidTopic); }).toThrow(new InvalidTopicError(invalidTopic));
     });
   });
 
@@ -130,6 +138,129 @@ describe('from-kafka-helpers', () => {
       expect(messageToForward.channel).toEqual(Channel.V4_TRADES);
       expect(messageToForward.id).toEqual(btcTicker);
       expect(messageToForward.contents).toEqual(defaultContents);
+    });
+
+    it('gets correct MessageToForward for subaccount message for parent subaccount channel', () => {
+      const message: KafkaMessage = createKafkaMessage(
+        Buffer.from(Uint8Array.from(SubaccountMessage.encode(childSubaccountMessage).finish())),
+      );
+      const messageToForward: MessageToForward = getMessageToForward(
+        Channel.V4_PARENT_ACCOUNTS,
+        message,
+      );
+
+      expect(messageToForward.channel).toEqual(Channel.V4_PARENT_ACCOUNTS);
+      expect(messageToForward.id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
+      expect(messageToForward.contents).toEqual(defaultContents);
+      expect(messageToForward.subaccountNumber).toBeDefined();
+      expect(messageToForward.subaccountNumber).toEqual(defaultChildAccNumber);
+    });
+
+    it('filters out transfers between child subaccounts for parent subaccount channel', () => {
+      const transferContents: SubaccountMessageContents = {
+        transfers: {
+          ...defaultTransferContents,
+          sender: {
+            address: defaultOwner,
+            subaccountNumber: defaultAccNumber,
+          },
+          recipient: {
+            address: defaultOwner,
+            subaccountNumber: defaultChildAccNumber,
+          },
+          type: TransferType.TRANSFER_IN,
+        },
+      };
+      const message: KafkaMessage = createKafkaMessage(
+        Buffer.from(Uint8Array.from(SubaccountMessage.encode(
+          {
+            ...childSubaccountMessage,
+            contents: JSON.stringify(transferContents),
+          },
+        ).finish())),
+      );
+      const messageToForward: MessageToForward = getMessageToForward(
+        Channel.V4_PARENT_ACCOUNTS,
+        message,
+      );
+
+      expect(messageToForward.channel).toEqual(Channel.V4_PARENT_ACCOUNTS);
+      expect(messageToForward.id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
+      expect(messageToForward.contents).toEqual({});
+      expect(messageToForward.subaccountNumber).toBeDefined();
+      expect(messageToForward.subaccountNumber).toEqual(defaultChildAccNumber);
+    });
+
+    it.each([
+      [
+        'transfer between other parent/child subaccount',
+        {
+          ...defaultTransferContents,
+          sender: {
+            address: defaultOwner,
+            subaccountNumber: defaultAccNumber + 1,
+          },
+          recipient: {
+            address: defaultOwner,
+            subaccountNumber: defaultChildAccNumber,
+          },
+        },
+      ],
+      [
+        'deposit',
+        {
+          ...defaultTransferContents,
+          sender: {
+            address: defaultOwner,
+            subaccountNumber: undefined,
+          },
+          recipient: {
+            address: defaultOwner,
+            subaccountNumber: defaultChildAccNumber,
+          },
+          type: TransferType.DEPOSIT,
+        },
+      ],
+      [
+        'withdraw',
+        {
+          ...defaultTransferContents,
+          sender: {
+            address: defaultOwner,
+            subaccountNumber: defaultChildAccNumber,
+          },
+          recipient: {
+            address: defaultOwner,
+            subaccountNumber: undefined,
+          },
+          type: TransferType.WITHDRAWAL,
+        },
+      ],
+    ])('does not filter out transfer message for (%s)', (
+      _name: string,
+      transfer: TransferSubaccountMessageContents,
+    ) => {
+      const transferContents: SubaccountMessageContents = {
+        transfers: transfer,
+      };
+      const message: KafkaMessage = createKafkaMessage(
+        Buffer.from(Uint8Array.from(SubaccountMessage.encode(
+          {
+            ...childSubaccountMessage,
+            contents: JSON.stringify(transferContents),
+          },
+        ).finish())),
+      );
+      const messageToForward: MessageToForward = getMessageToForward(
+        Channel.V4_PARENT_ACCOUNTS,
+        message,
+      );
+
+      expect(messageToForward.channel).toEqual(Channel.V4_PARENT_ACCOUNTS);
+      expect(messageToForward.id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
+      expect(messageToForward.contents).toEqual(transferContents);
+      expect(messageToForward.subaccountNumber).toBeDefined();
+      expect(messageToForward.subaccountNumber).toEqual(defaultChildAccNumber);
     });
 
     it('throws InvalidForwardMessageError for empty message', () => {

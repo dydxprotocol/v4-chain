@@ -16,6 +16,8 @@ export interface PerpetualMarketCreateObject {
   subticksPerTick: number;
   stepBaseQuantums: number;
   liquidityTierId: number;
+  marketType: PerpetualMarketType;
+  baseOpenInterest: string;
 }
 
 export interface PerpetualMarketUpdateObject {
@@ -61,4 +63,9 @@ export enum PerpetualMarketStatus {
   POST_ONLY = 'POST_ONLY',
   INITIALIZING = 'INITIALIZING',
   FINAL_SETTLEMENT = 'FINAL_SETTLEMENT',
+}
+
+export enum PerpetualMarketType {
+  CROSS = 'CROSS',
+  ISOLATED = 'ISOLATED',
 }
