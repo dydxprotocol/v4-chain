@@ -349,6 +349,8 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, mockIndexerEventManager)
 
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
+
 			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
@@ -755,6 +757,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -1239,6 +1242,7 @@ func TestProcessDeleveraging(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -1458,6 +1462,7 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -1619,6 +1624,7 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)

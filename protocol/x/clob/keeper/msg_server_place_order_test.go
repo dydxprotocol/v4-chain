@@ -90,6 +90,8 @@ func TestPlaceOrder_Error(t *testing.T) {
 			indexerEventManager := &mocks.IndexerEventManager{}
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
+
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
 			mockLogger := &mocks.Logger{}
@@ -267,6 +269,8 @@ func TestPlaceOrder_Success(t *testing.T) {
 			indexerEventManager := &mocks.IndexerEventManager{}
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
+
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
 			require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))

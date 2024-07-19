@@ -853,6 +853,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			)
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 			ctx := ks.Ctx.WithIsCheckTx(true)
 
 			// Create the default markets.
@@ -1248,6 +1249,7 @@ func TestGetMidPrices(t *testing.T) {
 			).Return(nil)
 
 			ks := keepertest.NewClobKeepersTestContext(t, memclob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 			ctx := ks.Ctx.WithIsCheckTx(true)
 
 			// Create the default markets.

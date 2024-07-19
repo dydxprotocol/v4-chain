@@ -289,6 +289,7 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			)
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 
 			ctx := ks.Ctx.WithIsCheckTx(true)
 			// Create the default markets.
@@ -409,6 +410,7 @@ func TestPlacePerpetualLiquidation_validateLiquidationAgainstClobPairStatus(t *t
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockBankKeeper := &mocks.BankKeeper{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 			ctx := ks.Ctx.WithIsCheckTx(true)
 
 			// Create the default markets.
@@ -1164,6 +1166,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			mockIndexerEventManager.On("Enabled").Return(false)
 			ks := keepertest.NewClobKeepersTestContext(t, memclob, bankKeeper, mockIndexerEventManager)
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 
 			ctx := ks.Ctx.WithIsCheckTx(true)
 
@@ -2062,6 +2065,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			mockIndexerEventManager.On("Enabled").Return(false)
 			ks := keepertest.NewClobKeepersTestContext(t, memclob, bankKeeper, mockIndexerEventManager)
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 
 			ctx := ks.Ctx.WithIsCheckTx(true)
 
@@ -2237,6 +2241,8 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 	memClob.On("SetClobKeeper", mock.Anything).Return()
 
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+	ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
+
 	ctx := ks.Ctx.WithTxBytes(constants.TestTxBytes)
 	// CheckTx mode set correctly
 	ctx = ctx.WithIsCheckTx(true)
@@ -2372,6 +2378,7 @@ func TestIsLiquidatable(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -2790,6 +2797,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -3320,6 +3328,7 @@ func TestGetFillablePrice(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 
 			// Initialize the liquidations config.
 			if tc.liquidationConfig != nil {
@@ -3756,6 +3765,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -4733,6 +4743,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 				),
 			)
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 			ctx := ks.Ctx.WithIsCheckTx(true)
 
 			// Create the default markets.

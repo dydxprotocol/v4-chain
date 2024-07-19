@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 
@@ -30,8 +31,10 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	statstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -721,6 +724,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			).Return(nil)
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 			ctx := ks.Ctx.WithIsCheckTx(true)
 
 			// Create the default markets.
@@ -969,6 +973,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			).Return(nil)
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
 			ctx := ks.Ctx.WithIsCheckTx(true)
 
 			// Create the default markets.
@@ -1833,6 +1838,12 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 					})
 					return genesis
 				}).Build()
+
+			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+			require.NoError(t, conversionErr)
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
 
 			ctx := tApp.AdvanceToBlock(
 				// Stateful validation happens at blockHeight+1 for short term order placements.

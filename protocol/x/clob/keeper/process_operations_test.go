@@ -2337,6 +2337,8 @@ func setupProcessProposerOperationsTestCase(
 		mockIndexerEventManager,
 	)
 
+	ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
+
 	// set DeliverTx mode.
 	ctx = ks.Ctx.WithIsCheckTx(false)
 
