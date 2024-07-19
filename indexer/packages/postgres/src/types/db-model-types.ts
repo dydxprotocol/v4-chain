@@ -261,7 +261,7 @@ export interface SubaccountUsernamesFromDatabase {
 }
 
 export interface LeaderboardPnlFromDatabase {
-  subaccountId: string;
+  address: string;
   timeSpan: string;
   pnl: string;
   currentEquity: string;

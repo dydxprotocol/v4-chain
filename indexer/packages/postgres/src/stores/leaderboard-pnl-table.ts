@@ -26,7 +26,7 @@ import {
 
 export async function findAll(
   {
-    subaccountId,
+    address,
     timeSpan,
     rank,
     limit,
@@ -36,7 +36,7 @@ export async function findAll(
 ): Promise<LeaderboardPnlFromDatabase[]> {
   verifyAllRequiredFields(
     {
-      subaccountId,
+      address,
       timeSpan,
       rank,
       limit,
@@ -49,8 +49,8 @@ export async function findAll(
     options,
   );
 
-  if (subaccountId) {
-    baseQuery = baseQuery.whereIn(LeaderboardPnlColumns.subaccountId, subaccountId);
+  if (address) {
+    baseQuery = baseQuery.whereIn(LeaderboardPnlColumns.address, address);
   }
 
   if (timeSpan) {
@@ -124,7 +124,7 @@ export async function bulkUpsert(
       LeaderboardPnlColumns.rank,
     ],
     stringColumns: [
-      LeaderboardPnlColumns.subaccountId,
+      LeaderboardPnlColumns.address,
       LeaderboardPnlColumns.timeSpan,
       LeaderboardPnlColumns.currentEquity,
       LeaderboardPnlColumns.pnl,
@@ -135,7 +135,7 @@ export async function bulkUpsert(
     table: LeaderboardPnlModel.tableName,
     objectRows: rows,
     columns,
-    uniqueIdentifiers: [LeaderboardPnlColumns.subaccountId, LeaderboardPnlColumns.timeSpan],
+    uniqueIdentifiers: [LeaderboardPnlColumns.address, LeaderboardPnlColumns.timeSpan],
   });
 
   const transaction: Knex.Transaction | undefined = Transaction.get(options.txId);

@@ -317,7 +317,7 @@ export interface TradingRewardAggregationQueryConfig extends QueryConfig {
 }
 
 export interface LeaderboardPnlQueryConfig extends QueryConfig {
-  [QueryableField.SUBACCOUNT_ID]?: string[];
+  [QueryableField.ADDRESS]?: string[];
   [QueryableField.TIMESPAN]?: string[];
   [QueryableField.RANK]?: number[];
 }

@@ -1,7 +1,7 @@
 /* ------- LEADERBOARD PNL TYPES ------- */
 
 export interface LeaderboardPnlCreateObject {
-  subaccountId: string;
+  address: string;
   pnl: string;
   timeSpan: string;
   currentEquity: string;
@@ -9,7 +9,7 @@ export interface LeaderboardPnlCreateObject {
 }
 
 export enum LeaderboardPnlColumns {
-  subaccountId = 'subaccountId',
+  address = 'address',
   timeSpan = 'timeSpan',
   pnl = 'pnl',
   currentEquity = 'currentEquity',

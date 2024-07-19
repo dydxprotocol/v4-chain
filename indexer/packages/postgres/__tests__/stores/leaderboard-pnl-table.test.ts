@@ -6,12 +6,15 @@ import {
   defaultLeaderboardPnlOneDay,
   defaultLeaderboardPnl1AllTime,
   defaultLeaderboardPnlOneDayToUpsert,
+  defaultWallet3,
 } from '../helpers/constants';
 import { seedData } from '../helpers/mock-generators';
+import { WalletTable } from '../../src';
 
 describe('LeaderboardPnl store', () => {
   beforeEach(async () => {
     await seedData();
+    await WalletTable.create(defaultWallet3);
   });
 
   beforeAll(async () => {
@@ -45,7 +48,7 @@ describe('LeaderboardPnl store', () => {
     expect(leaderboardPnls.length).toEqual(3);
   });
 
-  it('Successfully finds LeaderboardPnl with subaccountId and timespan', async () => {
+  it('Successfully finds LeaderboardPnl with address and timespan', async () => {
     await Promise.all([
       LeaderboardPnlTable.create(defaultLeaderboardPnlOneDay),
       LeaderboardPnlTable.create(defaultLeaderboardPnl2OneDay),
@@ -54,7 +57,7 @@ describe('LeaderboardPnl store', () => {
 
     const leaderboardPnl: LeaderboardPnlFromDatabase[] = await LeaderboardPnlTable.findAll(
       {
-        subaccountId: [defaultLeaderboardPnlOneDay.subaccountId],
+        address: [defaultLeaderboardPnlOneDay.address],
         timeSpan: [defaultLeaderboardPnlOneDay.timeSpan],
       },
       [],
