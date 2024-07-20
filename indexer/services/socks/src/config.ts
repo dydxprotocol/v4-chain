@@ -33,7 +33,7 @@ export const configSchema = {
   WS_HEARTBEAT_INTERVAL_MS: parseInteger(),
   WS_HEARTBEAT_TIMEOUT_MS: parseInteger(),
 
-  RATE_LIMIT_ENABLED: parseBoolean({ default: true }),
+  RATE_LIMIT_ENABLED: parseBoolean({ default: false }),
   RATE_LIMIT_SUBSCRIBE_POINTS: parseNumber({ default: 2 }),
   RATE_LIMIT_SUBSCRIBE_DURATION_MS: parseInteger({ default: 1000 }),
   RATE_LIMIT_PING_POINTS: parseNumber({ default: 5 }),

@@ -15,12 +15,6 @@ Example:
 pnpm run validate-pnl -- \
 --s 964e4f37-1314-5181-bcf9-d3b0a30d86ed \
 --p d6f67aac-749d-5f62-8a55-ef825915b575 d6f67aac-749d-5f62-8a55-ef825915b575
-
-KAFKA_BROKER_URLS=...kafka.ap-northeast-1.amazonaws.com:9092 \
-SERVICE_NAME=scripts pnpm run print-block -- --h 9265388
-
-SERVICE_NAME=script pnpm run print-candle-time-boundaries -- \
---t 2024-02-28T10:01:36.17+00:00
 ```
 
 ### EnvVars

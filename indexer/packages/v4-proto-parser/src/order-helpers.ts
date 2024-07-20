@@ -24,15 +24,6 @@ export function isStatefulOrder(orderFlag: number | String): boolean {
   return numberOrderFlag === ORDER_FLAG_CONDITIONAL || numberOrderFlag === ORDER_FLAG_LONG_TERM;
 }
 
-export function isLongTermOrder(orderFlag: number | String): boolean {
-  const numberOrderFlag: number = Number(orderFlag);
-  // A string that is not a number will be converted to NaN, and should return false.
-  if (Number.isNaN(numberOrderFlag)) {
-    return false;
-  }
-  return numberOrderFlag === ORDER_FLAG_LONG_TERM;
-}
-
 export function requiresImmediateExecution(tif: IndexerOrder_TimeInForce): boolean {
   return (
     tif === IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL ||

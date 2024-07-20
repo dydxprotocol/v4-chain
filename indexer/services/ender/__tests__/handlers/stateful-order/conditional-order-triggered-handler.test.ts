@@ -107,13 +107,7 @@ describe('conditionalOrderTriggeredHandler', () => {
     });
   });
 
-  it.each([
-    ['transaction event', 0],
-    ['block event', -1],
-  ])('successfully triggers order and sends to vulcan (as %s)', async (
-    _name: string,
-    transactionIndex: number,
-  ) => {
+  it('successfully triggers order and sends to vulcan', async () => {
     await OrderTable.create({
       ...testConstants.defaultOrderGoodTilBlockTime,
       orderFlags: conditionalOrderId.orderFlags.toString(),
@@ -123,7 +117,6 @@ describe('conditionalOrderTriggeredHandler', () => {
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       defaultStatefulOrderEvent,
-      transactionIndex,
     );
 
     await onMessage(kafkaMessage);
@@ -150,7 +143,6 @@ describe('conditionalOrderTriggeredHandler', () => {
       producerSendMock,
       orderId: conditionalOrderId,
       offchainUpdate: expectedOffchainUpdate,
-      headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'ConditionalOrderTriggered' },
     });
   });
 

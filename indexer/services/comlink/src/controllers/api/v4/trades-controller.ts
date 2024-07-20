@@ -43,7 +43,7 @@ class TradesController extends Controller {
   @Get('/perpetualMarket/:ticker')
   async getTrades(
     @Path() ticker: string,
-      @Query() limit?: number,
+      @Query() limit: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
   ): Promise<TradeResponse> {

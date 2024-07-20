@@ -2,16 +2,16 @@ import {
   stats,
   logger,
   InfoObject,
-  STATS_NO_SAMPLING,
+  safeJsonStringify,
 } from '@dydxprotocol-indexer/base';
-import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
+import { addOnMessageFunction } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 import _ from 'lodash';
 
 import config from '../config';
 import {
-  getChannels,
-  getMessagesToForward,
+  getChannel,
+  getMessageToForward,
 } from '../helpers/from-kafka-helpers';
 import {
   createChannelDataMessage,
@@ -34,7 +34,6 @@ const BUFFER_KEY_SEPARATOR: string = ':';
 type VersionedContents = {
   contents: string;
   version: string;
-  subaccountNumber?: number;
 };
 
 export class MessageForwarder {
@@ -64,7 +63,7 @@ export class MessageForwarder {
 
     // Kafkajs requires the function passed into `eachMessage` be an async function.
     // eslint-disable-next-line @typescript-eslint/require-await
-    updateOnMessageFunction(async (topic, message): Promise<void> => {
+    addOnMessageFunction(async (topic, message): Promise<void> => {
       return this.onMessage(topic, message);
     });
 
@@ -86,10 +85,9 @@ export class MessageForwarder {
   }
 
   public onMessage(topic: string, message: KafkaMessage): void {
-    const start: number = Date.now();
     stats.timing(
       `${config.SERVICE_NAME}.message_time_in_queue`,
-      start - Number(message.timestamp),
+      Date.now() - Number(message.timestamp),
       config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       {
         topic,
@@ -102,8 +100,8 @@ export class MessageForwarder {
       offset: message.offset,
     };
 
-    const channels: Channel[] = getChannels(topic);
-    if (channels.length === 0) {
+    const channel: Channel | undefined = getChannel(topic);
+    if (channel === undefined) {
       logger.error({
         ...errProps,
         at: loggerAt,
@@ -111,38 +109,34 @@ export class MessageForwarder {
       });
       return;
     }
-    errProps.channels = channels;
+    errProps.channel = channel;
 
-    // Decode the message based on the topic
-    const messagesToForward = getMessagesToForward(topic, message);
-    for (const messageToForward of messagesToForward) {
-
-      const startForwardMessage: number = Date.now();
-      this.forwardMessage(messageToForward);
-      const end: number = Date.now();
-      stats.timing(
-        `${config.SERVICE_NAME}.forward_message`,
-        end - startForwardMessage,
-        config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
-        {
-          topic,
-          channel: String(messageToForward.channel),
-        },
-      );
-
-      const originalMessageTimestamp = message.headers?.message_received_timestamp;
-      if (originalMessageTimestamp !== undefined) {
-        stats.timing(
-          `${config.SERVICE_NAME}.message_time_since_received`,
-          startForwardMessage - Number(originalMessageTimestamp),
-          STATS_NO_SAMPLING,
-          {
-            topic,
-            event_type: String(message.headers?.event_type),
-          },
-        );
-      }
+    let messageToForward: MessageToForward;
+    try {
+      messageToForward = getMessageToForward(channel, message);
+    } catch (error) {
+      logger.error({
+        ...errProps,
+        at: loggerAt,
+        message: 'Failed to get message to forward from kafka message',
+        kafkaMessage: safeJsonStringify(message),
+        error,
+      });
+      return;
     }
+
+    const start: number = Date.now();
+    this.forwardMessage(messageToForward);
+    const end: number = Date.now();
+    stats.timing(
+      `${config.SERVICE_NAME}.forward_message`,
+      end - start,
+      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+      {
+        topic,
+        channel: String(channel),
+      },
+    );
   }
 
   public forwardMessage(message: MessageToForward): void {
@@ -200,7 +194,6 @@ export class MessageForwarder {
       this.messageBuffer[bufferKey].push({
         contents: message.contents,
         version: message.version,
-        subaccountNumber: message.subaccountNumber,
       } as VersionedContents);
       forwardedToSubscribers = true;
     }
@@ -253,12 +246,28 @@ export class MessageForwarder {
             .batchedSubscriptions[channelString][id];
           batchedSubscribers.forEach(
             (batchedSubscriber: SubscriptionInfo) => {
-              this.forwardBatchedVersionedMessagesBySubaccountNumber(
+              const batchedVersionedMessages: _.Dictionary<VersionedContents[]> = _.groupBy(
                 batchedMessages,
-                batchedSubscriber,
-                channel,
-                id,
+                (c) => c.version,
               );
+              _.forEach(batchedVersionedMessages, (msgs, version) => {
+                try {
+                  this.forwardToClientBatch(
+                    msgs,
+                    batchedSubscriber.connectionId,
+                    channel,
+                    id,
+                    version,
+                  );
+                } catch (error) {
+                  logger.error({
+                    at: 'message-forwarder#forwardBatchedMessages',
+                    message: error.message,
+                    connectionId: batchedSubscriber.connectionId,
+                    error,
+                  });
+                }
+              });
             },
           );
         }
@@ -267,53 +276,12 @@ export class MessageForwarder {
     this.messageBuffer = {};
   }
 
-  private forwardBatchedVersionedMessagesBySubaccountNumber(
-    batchedMessages: VersionedContents[],
-    batchedSubscriber: SubscriptionInfo,
-    channel: Channel,
-    id: string,
-  ): void {
-    const batchedVersionedMessages: _.Dictionary<VersionedContents[]> = _.groupBy(
-      batchedMessages,
-      (c) => c.version,
-    );
-    _.forEach(batchedVersionedMessages, (versionedMsgs, version) => {
-      const batchedMessagesBySubaccountNumber: _.Dictionary<VersionedContents[]> = _.groupBy(
-        versionedMsgs,
-        (c) => c.subaccountNumber,
-      );
-      _.forEach(batchedMessagesBySubaccountNumber, (msgs, subaccountNumberKey) => {
-        const subaccountNumber: number | undefined = Number.isNaN(Number(subaccountNumberKey))
-          ? undefined
-          : Number(subaccountNumberKey);
-        try {
-          this.forwardToClientBatch(
-            msgs,
-            batchedSubscriber.connectionId,
-            channel,
-            id,
-            version,
-            subaccountNumber,
-          );
-        } catch (error) {
-          logger.error({
-            at: 'message-forwarder#forwardBatchedMessages',
-            message: error.message,
-            connectionId: batchedSubscriber.connectionId,
-            error,
-          });
-        }
-      });
-    });
-  }
-
   public forwardToClientBatch(
     batchedMessages: VersionedContents[],
     connectionId: string,
     channel: Channel,
     id: string,
     version: string,
-    subaccountNumber?: number,
   ): void {
     const connection: Connection = this.index.connections[connectionId];
     if (!connection) {
@@ -339,7 +307,6 @@ export class MessageForwarder {
         id,
         version,
         batchedMessages.map((c) => c.contents),
-        subaccountNumber,
       ),
     );
   }
@@ -389,7 +356,6 @@ export class MessageForwarder {
         message.id,
         message.version,
         message.contents,
-        message.subaccountNumber,
       ),
     );
     return 1;

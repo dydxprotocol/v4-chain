@@ -75,7 +75,6 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     const blockProcessor: BlockProcessor = new BlockProcessor(
       indexerTendermintBlock,
       txId,
-      message.timestamp,
     );
     const kafkaPublisher: KafkaPublisher = await blockProcessor.process();
 

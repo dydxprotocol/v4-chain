@@ -11,7 +11,7 @@
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
-    "test": "NODE_ENV=test jest --maxWorkers 1 --forceExit"
+    "test": "NODE_ENV=test jest --runInBand --forceExit"
   },
   "author": "",
   "license": "AGPL-3.0",
@@ -28,7 +28,7 @@
     "dotenv-flow": "^3.2.0",
     "express": "^4.18.1",
     "express-request-id": "^1.4.0",
-    "kafkajs": "^2.2.4",
+    "kafkajs": "^2.1.0",
     "lodash": "^4.17.21",
     "nocache": "^3.0.4",
     "response-time": "^2.3.2",

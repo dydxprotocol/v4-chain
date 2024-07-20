@@ -21,10 +21,7 @@ import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
   defaultDateTime,
   defaultHeight,
-  defaultOrderId,
-  defaultPreviousHeight,
-  defaultTime,
-  defaultTxHash,
+  defaultOrderId, defaultPreviousHeight, defaultTime, defaultTxHash,
 } from '../../helpers/constants';
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 import { updateBlockCache } from '../../../src/caches/block-cache';
@@ -104,20 +101,13 @@ describe('statefulOrderRemovalHandler', () => {
     });
   });
 
-  it.each([
-    ['transaction event', 0],
-    ['block event', -1],
-  ])('successfully cancels and removes order (as %s)', async (
-    _name: string,
-    transactionIndex: number,
-  ) => {
+  it('successfully cancels and removes order', async () => {
     await OrderTable.create({
       ...testConstants.defaultOrder,
       clientId: '0',
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       defaultStatefulOrderEvent,
-      transactionIndex,
     );
 
     await onMessage(kafkaMessage);
@@ -140,7 +130,6 @@ describe('statefulOrderRemovalHandler', () => {
       producerSendMock,
       orderId: defaultOrderId,
       offchainUpdate: expectedOffchainUpdate,
-      headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderRemoval' },
     });
   });
 

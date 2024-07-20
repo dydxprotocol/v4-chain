@@ -211,7 +211,6 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
   public createHandlers(
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
-    messageReceivedTimestamp: string,
   ): Handler<StatefulOrderEventV1>[] {
     const Initializer:
     HandlerInitializer | undefined = this.getHandlerInitializer();
@@ -228,7 +227,6 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       indexerTendermintEvent,
       txId,
       this.event,
-      messageReceivedTimestamp,
     );
 
     return [handler];

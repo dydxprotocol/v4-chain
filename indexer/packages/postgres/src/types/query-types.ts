@@ -25,7 +25,6 @@ export enum QueryableField {
   PRICE = 'price',
   TYPE = 'type',
   STATUS = 'status',
-  STATUSES = 'statuses',
   POST_ONLY = 'postOnly',
   REDUCE_ONLY = 'reduceOnly',
   PERPETUAL_ID = 'perpetualId',
@@ -120,7 +119,7 @@ export interface OrderQueryConfig extends QueryConfig {
   [QueryableField.TOTAL_FILLED]?: string;
   [QueryableField.PRICE]?: string;
   [QueryableField.TYPE]?: OrderType;
-  [QueryableField.STATUSES]?: OrderStatus[];
+  [QueryableField.STATUS]?: OrderStatus;
   [QueryableField.POST_ONLY]?: boolean;
   [QueryableField.REDUCE_ONLY]?: boolean;
   [QueryableField.GOOD_TIL_BLOCK_BEFORE_OR_AT]?: string;

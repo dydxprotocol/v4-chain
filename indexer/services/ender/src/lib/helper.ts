@@ -8,6 +8,7 @@ import {
 import {
   IndexerTendermintEvent,
   IndexerTendermintEvent_BlockEvent,
+  Timestamp,
   OrderFillEventV1,
   MarketEventV1,
   SubaccountUpdateEventV1,
@@ -17,19 +18,20 @@ import {
   FundingEventV1,
   AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
-  PerpetualMarketCreateEventV2,
   LiquidityTierUpsertEventV1,
-  LiquidityTierUpsertEventV2,
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
   SubaccountMessage,
-  OpenInterestUpdateEventV1,
   DeleveragingEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
 
+import {
+  MILLIS_IN_NANOS,
+  SECONDS_IN_MILLIS,
+} from '../constants';
 import {
   AnnotatedSubaccountMessage,
   DydxIndexerSubtypes,
@@ -65,6 +67,15 @@ export function convertToSubaccountMessage(
     ['orderId', 'isFill', 'subaccountMessageContents'],
   );
   return subaccountMessage;
+}
+
+export function protoTimestampToDate(
+  protoTime: Timestamp,
+): Date {
+  const timeInMillis: number = Number(protoTime.seconds) * SECONDS_IN_MILLIS +
+    Math.floor(protoTime.nanos / MILLIS_IN_NANOS);
+
+  return new Date(timeInMillis);
 }
 
 export function dateToDateTime(
@@ -152,44 +163,18 @@ export function indexerTendermintEventToEventProtoWithType(
       };
     }
     case (DydxIndexerSubtypes.PERPETUAL_MARKET.toString()): {
-      if (version === 1) {
-        return {
-          type: DydxIndexerSubtypes.PERPETUAL_MARKET,
-          eventProto: PerpetualMarketCreateEventV1.decode(eventDataBinary),
-          indexerTendermintEvent: event,
-          version,
-          blockEventIndex,
-        };
-      } else if (version === 2) {
-        return {
-          type: DydxIndexerSubtypes.PERPETUAL_MARKET,
-          eventProto: PerpetualMarketCreateEventV2.decode(eventDataBinary),
-          indexerTendermintEvent: event,
-          version,
-          blockEventIndex,
-        };
-      } else {
-        const message: string = `Invalid version for perpetual market event: ${version}`;
-        logger.error({
-          at: 'helpers#indexerTendermintEventToEventWithType',
-          message,
-        });
-        return undefined;
-      }
+      return {
+        type: DydxIndexerSubtypes.PERPETUAL_MARKET,
+        eventProto: PerpetualMarketCreateEventV1.decode(eventDataBinary),
+        indexerTendermintEvent: event,
+        version,
+        blockEventIndex,
+      };
     }
     case (DydxIndexerSubtypes.LIQUIDITY_TIER.toString()): {
-      if (version === 1) {
-        return {
-          type: DydxIndexerSubtypes.LIQUIDITY_TIER,
-          eventProto: LiquidityTierUpsertEventV1.decode(eventDataBinary),
-          indexerTendermintEvent: event,
-          version,
-          blockEventIndex,
-        };
-      }
       return {
         type: DydxIndexerSubtypes.LIQUIDITY_TIER,
-        eventProto: LiquidityTierUpsertEventV2.decode(eventDataBinary),
+        eventProto: LiquidityTierUpsertEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
@@ -217,15 +202,6 @@ export function indexerTendermintEventToEventProtoWithType(
       return {
         type: DydxIndexerSubtypes.DELEVERAGING,
         eventProto: DeleveragingEventV1.decode(eventDataBinary),
-        indexerTendermintEvent: event,
-        version,
-        blockEventIndex,
-      };
-    }
-    case (DydxIndexerSubtypes.OPEN_INTEREST_UPDATE.toString()): {
-      return {
-        type: DydxIndexerSubtypes.OPEN_INTEREST_UPDATE,
-        eventProto: OpenInterestUpdateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,

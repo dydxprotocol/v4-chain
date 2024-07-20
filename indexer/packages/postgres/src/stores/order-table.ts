@@ -60,7 +60,7 @@ export async function findAll(
     totalFilled,
     price,
     type,
-    statuses,
+    status,
     reduceOnly,
     orderFlags,
     goodTilBlockBeforeOrAt,
@@ -83,7 +83,7 @@ export async function findAll(
       totalFilled,
       price,
       type,
-      statuses,
+      status,
       reduceOnly,
       orderFlags,
       goodTilBlockBeforeOrAt,
@@ -134,8 +134,8 @@ export async function findAll(
     baseQuery = baseQuery.where(OrderColumns.type, type);
   }
 
-  if (statuses !== undefined) {
-    baseQuery = baseQuery.whereIn(OrderColumns.status, statuses);
+  if (status !== undefined) {
+    baseQuery = baseQuery.where(OrderColumns.status, status);
   }
 
   if (reduceOnly !== undefined) {
@@ -199,13 +199,13 @@ export async function create(
   return OrderModel.query(
     Transaction.get(options.txId),
   ).insert({
-    ...orderToCreate,
     id: uuid(
       orderToCreate.subaccountId,
       orderToCreate.clientId,
       orderToCreate.clobPairId,
       orderToCreate.orderFlags,
     ),
+    ...orderToCreate,
   }).returning('*');
 }
 

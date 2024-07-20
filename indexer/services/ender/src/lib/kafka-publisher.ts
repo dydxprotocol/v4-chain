@@ -247,7 +247,6 @@ export class KafkaPublisher {
           return {
             key: message.key,
             value: Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(message.value).finish())),
-            headers: message.headers,
           };
         }),
       });

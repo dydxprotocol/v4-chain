@@ -54,10 +54,6 @@ export class ConditionalOrderTriggeredHandler extends
       this.generateConsolidatedVulcanKafkaEvent(
         getOrderIdHash(order.orderId!),
         offChainUpdate,
-        {
-          message_received_timestamp: this.messageReceivedTimestamp,
-          event_type: 'ConditionalOrderTriggered',
-        },
       ),
     ];
   }

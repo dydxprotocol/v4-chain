@@ -170,8 +170,8 @@ export async function create(
   return FillModel.query(
     Transaction.get(options.txId),
   ).insert({
-    ...fillToCreate,
     id: uuid(fillToCreate.eventId, fillToCreate.liquidity),
+    ...fillToCreate,
   }).returning('*');
 }
 

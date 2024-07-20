@@ -46,24 +46,13 @@ BEGIN
             WHEN '"asset"'::jsonb THEN
                 rval[i] = dydx_asset_create_handler(event_data);
             WHEN '"perpetual_market"'::jsonb THEN
-                CASE (event_->'version')::int
-                    WHEN 1 THEN
-                        rval[i] = dydx_perpetual_market_v1_handler(event_data);
-                    WHEN 2 THEN
-                        rval[i] = dydx_perpetual_market_v2_handler(event_data);
-                    ELSE
-                        NULL;
-                END CASE;
+                rval[i] = dydx_perpetual_market_handler(event_data);
             WHEN '"liquidity_tier"'::jsonb THEN
                 rval[i] = dydx_liquidity_tier_handler(event_data);
             WHEN '"update_perpetual"'::jsonb THEN
                 rval[i] = dydx_update_perpetual_handler(event_data);
             WHEN '"update_clob_pair"'::jsonb THEN
                 rval[i] = dydx_update_clob_pair_handler(event_data);
-            WHEN '"funding_values"'::jsonb THEN
-                rval[i] = dydx_funding_handler(block_height, block_time, event_data, event_index, transaction_index);
-            WHEN '"open_interest_update"'::jsonb THEN
-                rval[i] = dydx_open_interest_update_handler(event_data);
             ELSE
                 NULL;
             END CASE;

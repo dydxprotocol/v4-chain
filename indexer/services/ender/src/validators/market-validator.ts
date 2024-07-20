@@ -104,7 +104,6 @@ export class MarketValidator extends Validator<MarketEventV1> {
   public createHandlers(
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
-    _: string,
   ): Handler<MarketEventV1>[] {
     const Initializer:
     HandlerInitializer | undefined = this.getHandlerInitializer();

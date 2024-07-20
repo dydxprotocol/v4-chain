@@ -122,16 +122,9 @@ describe('conditionalOrderPlacementHandler', () => {
     });
   });
 
-  it.each([
-    ['transaction event', 0],
-    ['block event', -1],
-  ])('successfully places order (as %s)', async (
-    _name: string,
-    transactionIndex: number,
-  ) => {
+  it('successfully places order', async () => {
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       defaultStatefulOrderEvent,
-      transactionIndex,
     );
 
     await onMessage(kafkaMessage);
@@ -162,8 +155,6 @@ describe('conditionalOrderPlacementHandler', () => {
       producerSendMock,
       defaultOrder.orderId!.subaccountId!,
       order!,
-      defaultHeight.toString(),
-      transactionIndex,
     );
   });
 

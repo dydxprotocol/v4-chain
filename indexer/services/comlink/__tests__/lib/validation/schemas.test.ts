@@ -3,11 +3,8 @@ import { getQueryString, sendRequestToApp } from '../../helpers/helpers';
 import { schemaTestApp } from './helpers';
 import request from 'supertest';
 import config from '../../../src/config';
-import {
-  testConstants,
-  MAX_PARENT_SUBACCOUNTS,
-  CHILD_SUBACCOUNT_MULTIPLIER,
-} from '@dydxprotocol-indexer/postgres';
+import { testConstants } from '@dydxprotocol-indexer/postgres';
+import { MAX_SUBACCOUNT_NUMBER } from '../../../src/constants';
 
 describe('schemas', () => {
   const positiveNonInteger: number = 3.2;
@@ -22,28 +19,25 @@ describe('schemas', () => {
         'missing subaccountNumber',
         { address: defaultAddress },
         'subaccountNumber',
-        'subaccountNumber must be a non-negative integer less than 128001',
+        'subaccountNumber must be a non-negative integer less than 128',
       ],
       [
         'non-integer subaccountNumber',
         { address: defaultAddress, subaccountNumber: positiveNonInteger },
         'subaccountNumber',
-        'subaccountNumber must be a non-negative integer less than 128001',
+        'subaccountNumber must be a non-negative integer less than 128',
       ],
       [
         'negative subaccountNumber',
         { address: defaultAddress, subaccountNumber: negativeInteger },
         'subaccountNumber',
-        'subaccountNumber must be a non-negative integer less than 128001',
+        'subaccountNumber must be a non-negative integer less than 128',
       ],
       [
         'subaccountNumber greater than maximum subaccount number',
-        {
-          address: defaultAddress,
-          subaccountNumber: MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER + 1,
-        },
+        { address: defaultAddress, subaccountNumber: MAX_SUBACCOUNT_NUMBER + 1 },
         'subaccountNumber',
-        'subaccountNumber must be a non-negative integer less than 128001',
+        'subaccountNumber must be a non-negative integer less than 128',
       ],
     ])('Returns 400 when validation fails: %s', async (
       _reason: string,

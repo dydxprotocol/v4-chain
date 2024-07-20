@@ -23,6 +23,7 @@ import {
   protocolTranslations,
   SubaccountMessageContents,
   assetRefresher,
+  testConversionHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
@@ -43,6 +44,7 @@ import {
   defaultTime,
   defaultTransferEvent,
   defaultTxHash,
+  defaultWalletAddress,
   defaultWithdrawalEvent,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';

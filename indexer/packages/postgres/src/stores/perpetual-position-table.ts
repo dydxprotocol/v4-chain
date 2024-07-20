@@ -148,8 +148,8 @@ export async function create(
   return PerpetualPositionModel.query(
     Transaction.get(options.txId),
   ).insert({
-    ...perpetualPositionToCreate,
     id: uuid(perpetualPositionToCreate.subaccountId, perpetualPositionToCreate.openEventId),
+    ...perpetualPositionToCreate,
   }).returning('*');
 }
 

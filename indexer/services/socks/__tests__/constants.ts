@@ -6,11 +6,6 @@ import {
   TRADES_WEBSOCKET_MESSAGE_VERSION,
 } from '@dydxprotocol-indexer/kafka';
 import {
-  TransferSubaccountMessageContents,
-  TransferType,
-  MAX_PARENT_SUBACCOUNTS,
-} from '@dydxprotocol-indexer/postgres';
-import {
   CandleMessage,
   CandleMessage_Resolution,
   MarketMessage,
@@ -33,19 +28,9 @@ export const defaultTxIndex: number = 1;
 export const defaultEventIndex: number = 3;
 export const defaultOwner: string = 'owner';
 export const defaultAccNumber: number = 4;
-export const defaultChildAccNumber: number = defaultAccNumber + MAX_PARENT_SUBACCOUNTS;
-export const defaultChildAccNumber2: number = defaultAccNumber + 2 * MAX_PARENT_SUBACCOUNTS;
 export const defaultSubaccountId: SubaccountId = {
   owner: defaultOwner,
   number: defaultAccNumber,
-};
-export const defaultChildSubaccountId: SubaccountId = {
-  owner: defaultOwner,
-  number: defaultChildAccNumber,
-};
-export const defaultChildSubaccountId2: SubaccountId = {
-  owner: defaultOwner,
-  number: defaultChildAccNumber2,
 };
 export const defaultContents: Object = {
   prop: 'property',
@@ -96,28 +81,4 @@ export const tradesMessage: TradeMessage = {
   clobPairId: btcClobPairId,
   contents: defaultContentsString,
   version: TRADES_WEBSOCKET_MESSAGE_VERSION,
-};
-
-export const childSubaccountMessage: SubaccountMessage = {
-  ...commonMsgProps,
-  subaccountId: defaultChildSubaccountId,
-  contents: defaultContentsString,
-  version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
-};
-
-export const defaultTransferContents: TransferSubaccountMessageContents = {
-  sender: {
-    address: defaultOwner,
-    subaccountNumber: defaultAccNumber,
-  },
-  recipient: {
-    address: defaultOwner,
-    subaccountNumber: defaultChildAccNumber,
-  },
-  symbol: 'USDC',
-  size: '1',
-  type: TransferType.TRANSFER_IN,
-  transactionHash: '0x1',
-  createdAt: '2023-10-05T14:48:00.000Z',
-  createdAtHeight: '10',
 };

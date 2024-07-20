@@ -122,12 +122,12 @@ export async function create(
   return FundingIndexUpdatesModel.query(
     Transaction.get(options.txId),
   ).insert({
-    ...fundingIndexUpdateToCreate,
     id: uuid(
       fundingIndexUpdateToCreate.effectiveAtHeight,
       fundingIndexUpdateToCreate.eventId,
       fundingIndexUpdateToCreate.perpetualId,
     ),
+    ...fundingIndexUpdateToCreate,
   }).returning('*');
 }
 
@@ -193,17 +193,9 @@ export async function findFundingIndexMap(
       options,
     );
 
-  // Assuming block time of 1 second, this should be 4 hours of blocks
-  const FOUR_HOUR_OF_BLOCKS = Big(3600).times(4);
   const fundingIndexUpdates: FundingIndexUpdatesFromDatabase[] = await baseQuery
     .distinctOn(FundingIndexUpdatesColumns.perpetualId)
     .where(FundingIndexUpdatesColumns.effectiveAtHeight, '<=', effectiveBeforeOrAtHeight)
-    // Optimization to reduce number of rows needed to scan
-    .where(
-      FundingIndexUpdatesColumns.effectiveAtHeight,
-      '>',
-      Big(effectiveBeforeOrAtHeight).minus(FOUR_HOUR_OF_BLOCKS).toFixed(),
-    )
     .orderBy(FundingIndexUpdatesColumns.perpetualId)
     .orderBy(FundingIndexUpdatesColumns.effectiveAtHeight, Ordering.DESC)
     .returning('*');

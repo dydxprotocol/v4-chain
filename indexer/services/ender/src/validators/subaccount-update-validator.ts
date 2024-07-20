@@ -19,7 +19,6 @@ export class SubaccountUpdateValidator extends Validator<SubaccountUpdateEventV1
   public createHandlers(
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
-    _: string,
   ): Handler<SubaccountUpdate>[] {
     return [
       new SubaccountUpdateHandler(

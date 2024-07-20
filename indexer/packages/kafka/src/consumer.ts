@@ -1,9 +1,7 @@
 import {
   logger,
 } from '@dydxprotocol-indexer/base';
-import {
-  Consumer, ConsumerRunConfig, EachBatchPayload, KafkaMessage,
-} from 'kafkajs';
+import { Consumer, ConsumerRunConfig, KafkaMessage } from 'kafkajs';
 import { v4 as uuidv4 } from 'uuid';
 
 import config from './config';
@@ -23,28 +21,12 @@ export const consumer: Consumer = kafka.consumer({
 });
 
 // List of functions to run per message consumed.
-let onMessageFunction: (topic: string, message: KafkaMessage) => Promise<void>;
+const onMessageFunctions: ((topic: string, message: KafkaMessage) => Promise<void>)[] = [];
 
-// List of function to be run per batch consumed.
-let onBatchFunction: (payload: EachBatchPayload) => Promise<void>;
-
-/**
- * Overwrite function to be run on each kafka message
- * @param onMessage
- */
-export function updateOnMessageFunction(
+export function addOnMessageFunction(
   onMessage: (topic: string, message: KafkaMessage) => Promise<void>,
 ): void {
-  onMessageFunction = onMessage;
-}
-
-/**
- * Overwrite function to be run on each kafka batch
- */
-export function updateOnBatchFunction(
-  onBatch: (payload: EachBatchPayload) => Promise<void>,
-): void {
-  onBatchFunction = onBatch;
+  onMessageFunctions.push(onMessage);
 }
 
 // Whether the consumer is stopped.
@@ -84,22 +66,20 @@ export async function stopConsumer(): Promise<void> {
   await consumer.disconnect();
 }
 
-export async function startConsumer(batchProcessing: boolean = false): Promise<void> {
+export async function startConsumer(): Promise<void> {
   const consumerRunConfig: ConsumerRunConfig = {
-    // The last offset of each batch will be committed if processing does not error.
-    // The commit will still happen if the number of messages in the batch < autoCommitThreshold.
-    eachBatchAutoResolve: true,
     partitionsConsumedConcurrently: config.KAFKA_CONCURRENT_PARTITIONS,
     autoCommit: true,
   };
 
-  if (batchProcessing) {
-    consumerRunConfig.eachBatch = onBatchFunction;
-  } else {
-    consumerRunConfig.eachMessage = async ({ topic, message }) => {
-      await onMessageFunction(topic, message);
-    };
-  }
+  consumerRunConfig.eachMessage = async ({ topic, message }) => {
+    await Promise.all(
+      onMessageFunctions.map(
+        async (onMessage: (topic: string, message: KafkaMessage) => Promise<void>) => {
+          await onMessage(topic, message);
+        }),
+    );
+  };
 
   await consumer.run(consumerRunConfig);
 

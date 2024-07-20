@@ -23,8 +23,6 @@ import {
   SubaccountTable,
   TimeInForce,
   TransferFromDatabase,
-  TransferType,
-  parentSubaccountHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, PriceLevel } from '@dydxprotocol-indexer/redis';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
@@ -40,7 +38,6 @@ import {
   HistoricalFundingResponseObject,
   MarketAndTypeByClobPairId,
   OrderbookResponseObject,
-  ParentSubaccountTransferResponseObject,
   OrderbookResponsePriceLevel,
   OrderResponseObject,
   PerpetualMarketResponseObject,
@@ -114,7 +111,6 @@ export function perpetualPositionToResponseObject(
 export function assetPositionToResponseObject(
   position: AssetPositionFromDatabase,
   assetMap: AssetById,
-  subaccountNumber: number,
 ): AssetPositionResponseObject {
 
   return {
@@ -122,7 +118,6 @@ export function assetPositionToResponseObject(
     side: position.isLong ? PositionSide.LONG : PositionSide.SHORT,
     size: position.size,
     assetId: position.assetId,
-    subaccountNumber,
   };
 }
 
@@ -135,7 +130,6 @@ export function assetPositionToResponseObject(
 export function fillToResponseObject(
   fill: FillFromDatabase,
   marketsByClobPairId: MarketAndTypeByClobPairId,
-  subaccountNumber: number,
 ): FillResponseObject {
   return {
     id: fill.id,
@@ -151,7 +145,6 @@ export function fillToResponseObject(
     createdAtHeight: fill.createdAtHeight,
     orderId: fill.orderId,
     clientMetadata: fill.clientMetadata,
-    subaccountNumber,
   };
 }
 
@@ -230,62 +223,6 @@ export function transferToResponseObject(
   };
 }
 
-export function transferToParentSubaccountResponseObject(
-  transfer: TransferFromDatabase,
-  assetMap: AssetById,
-  subaccountMap: SubaccountById,
-  parentSubaccountNumber: number,
-): ParentSubaccountTransferResponseObject {
-
-  const senderParentSubaccountNum = transfer.senderWalletAddress
-    ? undefined
-    : parentSubaccountHelpers.getParentSubaccountNum(
-      subaccountMap[transfer.senderSubaccountId!].subaccountNumber,
-    );
-
-  const recipientParentSubaccountNum = transfer.recipientWalletAddress
-    ? undefined
-    : parentSubaccountHelpers.getParentSubaccountNum(
-      subaccountMap[transfer.recipientSubaccountId!].subaccountNumber,
-    );
-
-  // Determine transfer type based on parent subaccount number.
-  let transferType: TransferType = TransferType.TRANSFER_IN;
-  if (senderParentSubaccountNum === parentSubaccountNumber) {
-    if (transfer.recipientSubaccountId) {
-      transferType = TransferType.TRANSFER_OUT;
-    } else {
-      transferType = TransferType.WITHDRAWAL;
-    }
-  } else if (recipientParentSubaccountNum === parentSubaccountNumber) {
-    if (transfer.senderSubaccountId) {
-      transferType = TransferType.TRANSFER_IN;
-    } else {
-      transferType = TransferType.DEPOSIT;
-    }
-  }
-
-  return {
-    id: transfer.id,
-    sender: {
-      address: transfer.senderWalletAddress ?? subaccountMap[transfer.senderSubaccountId!].address,
-      parentSubaccountNumber: senderParentSubaccountNum,
-    },
-    recipient: {
-      address: transfer.recipientWalletAddress ?? subaccountMap[
-        transfer.recipientSubaccountId!
-      ].address,
-      parentSubaccountNumber: recipientParentSubaccountNum,
-    },
-    size: transfer.size,
-    createdAt: transfer.createdAt,
-    createdAtHeight: transfer.createdAtHeight,
-    symbol: assetMap[transfer.assetId].symbol,
-    type: transferType,
-    transactionHash: transfer.transactionHash,
-  };
-}
-
 export function pnlTicksToResponseObject(
   pnlTicks: PnlTicksFromDatabase,
 ): PnlTicksResponseObject {
@@ -354,10 +291,6 @@ export function perpetualMarketToResponseObject(
     stepSize: protocolTranslations.getStepSize(perpetualMarket),
     stepBaseQuantums: perpetualMarket.stepBaseQuantums,
     subticksPerTick: perpetualMarket.subticksPerTick,
-    marketType: perpetualMarket.marketType,
-    openInterestLowerCap: liquidityTier.openInterestLowerCap,
-    openInterestUpperCap: liquidityTier.openInterestUpperCap,
-    baseOpenInterest: perpetualMarket.baseOpenInterest,
   };
 }
 
@@ -389,7 +322,6 @@ function OrderbookPriceLevelsToResponsePriceLevels(
 export function mergePostgresAndRedisOrdersToResponseObjects(
   postgresOrderMap: PostgresOrderMap,
   redisOrderMap: RedisOrderMap,
-  subaccountIdToNumber: Record<string, number>,
 ): OrderResponseObject[] {
   const orderIds: string[] = _.uniq(
     Object.keys(redisOrderMap).concat(Object.keys(postgresOrderMap)),
@@ -398,7 +330,6 @@ export function mergePostgresAndRedisOrdersToResponseObjects(
   return _.map(orderIds, (orderId: string) => {
     return postgresAndRedisOrderToResponseObject(
       postgresOrderMap[orderId],
-      subaccountIdToNumber,
       redisOrderMap[orderId],
     ) as OrderResponseObject;
   });
@@ -411,13 +342,11 @@ export function mergePostgresAndRedisOrdersToResponseObjects(
  * If both postgres and redis are defined, then generate the response object from postgresOrder
  * and override the size, price, and goodTilBlock fields with the redisOrder.
  * @param postgresOrder
- * @param subaccountIdToNumber
  * @param redisOrder
  * @returns
  */
 export function postgresAndRedisOrderToResponseObject(
   postgresOrder: OrderFromDatabase | undefined,
-  subaccountIdToNumber: Record<string, number>,
   redisOrder?: RedisOrder | null,
 ): OrderResponseObject | undefined {
   if (postgresOrder === undefined) {
@@ -428,10 +357,7 @@ export function postgresAndRedisOrderToResponseObject(
     return redisOrderToResponseObject(redisOrder);
   }
 
-  const orderResponse: OrderResponseObject = postgresOrderToResponseObject(
-    postgresOrder,
-    subaccountIdToNumber[postgresOrder.subaccountId],
-  );
+  const orderResponse: OrderResponseObject = postgresOrderToResponseObject(postgresOrder);
   if (redisOrder === null || redisOrder === undefined) {
     return orderResponse;
   }
@@ -453,7 +379,6 @@ export function postgresAndRedisOrderToResponseObject(
 
 export function postgresOrderToResponseObject(
   order: OrderFromDatabase,
-  subaccountNumber: number,
 ): OrderResponseObject {
   return {
     ...order,
@@ -464,7 +389,6 @@ export function postgresOrderToResponseObject(
     createdAtHeight: order.createdAtHeight ?? undefined,
     ticker: perpetualMarketRefresher.getPerpetualMarketTicker(order.clobPairId)!,
     triggerPrice: order.triggerPrice ?? undefined,
-    subaccountNumber,
   };
 }
 
@@ -495,7 +419,6 @@ export function redisOrderToResponseObject(
     ticker: perpetualMarketRefresher.getPerpetualMarketTicker(clobPairId)!,
     orderFlags: redisOrder.order!.orderId!.orderFlags.toString(),
     clientMetadata: redisOrder.order!.clientMetadata.toString(),
-    subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
   };
 }
 

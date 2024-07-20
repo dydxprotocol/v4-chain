@@ -326,8 +326,6 @@ export function generatePerpetualMarketMessage(
             Number(liquidityTier.maintenanceFractionPpm),
           ),
         ),
-        openInterestLowerCap: liquidityTier.openInterestLowerCap,
-        openInterestUpperCap: liquidityTier.openInterestUpperCap,
       };
     })
     .value();

@@ -121,7 +121,6 @@ describe('block-processor', () => {
     const blockProcessor: BlockProcessor = new BlockProcessor(
       block,
       txId,
-      defaultDateTime.toString(),
     );
     blockProcessor.batchedHandlers = batchedHandlers;
     blockProcessor.syncHandlers = syncHandlers;
@@ -150,7 +149,6 @@ describe('block-processor', () => {
     const blockProcessor: BlockProcessor = new BlockProcessor(
       block,
       txId,
-      defaultDateTime.toString(),
     );
     blockProcessor.batchedHandlers = batchedHandlers;
     blockProcessor.syncHandlers = syncHandlers;

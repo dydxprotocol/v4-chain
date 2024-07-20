@@ -147,7 +147,6 @@ export async function validatePnl(
   const pnlTick: PnlTicksFromDatabase | undefined = await
   PnlTicksTable.findById(pnlUuid, { readReplica: true });
   if (pnlTick === undefined) {
-    // eslint-disable-next-line no-console
     console.log(`Pnl tick with uuid ${pnlUuid} not found.`);
     return;
   }
@@ -159,13 +158,11 @@ export async function validatePnl(
   const computedPnl: Big = await getPnl(subaccountId, blockHeight);
   // if computedPnl differs from totalPnl by more than 0.1%, log an error.
   if (computedPnl.minus(totalPnl).abs().gt(Big(totalPnl).abs().mul(0.001))) {
-    // eslint-disable-next-line no-console
     console.log(`Pnl mismatch for subaccount ${subaccountId} at block height ${blockHeight}:
       Computed: ${computedPnl.toString()},
       Actual: ${totalPnl},
       Pnl tick uuid: ${pnlUuid}`);
   } else {
-    // eslint-disable-next-line no-console
     console.log(`Pnl matches for subaccount ${subaccountId} at block height ${blockHeight}`);
   }
 }

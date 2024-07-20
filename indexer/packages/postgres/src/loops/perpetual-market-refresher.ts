@@ -1,7 +1,4 @@
-import {
-  stats,
-  NodeEnv,
-} from '@dydxprotocol-indexer/base';
+import { stats, delay, NodeEnv } from '@dydxprotocol-indexer/base';
 import _ from 'lodash';
 
 import config from '../config';
@@ -9,7 +6,6 @@ import * as PerpetualMarketTable from '../stores/perpetual-market-table';
 import {
   Options, PerpetualMarketColumns, PerpetualMarketFromDatabase, PerpetualMarketsMap,
 } from '../types';
-import { startUpdateLoop } from './loopHelper';
 
 let idToPerpetualMarket: Record<string, PerpetualMarketFromDatabase> = {};
 
@@ -20,11 +16,10 @@ let idToPerpetualMarket: Record<string, PerpetualMarketFromDatabase> = {};
  * Refresh loop to cache the list of all perpetual markets from the database in-memory.
  */
 export async function start(): Promise<void> {
-  await startUpdateLoop(
-    updatePerpetualMarkets,
-    config.PERPETUAL_MARKETS_REFRESHER_INTERVAL_MS,
-    'updatePerpetualMarkets',
-  );
+  for (;;) {
+    await updatePerpetualMarkets();
+    await delay(config.PERPETUAL_MARKETS_REFRESHER_INTERVAL_MS);
+  }
 }
 
 /**

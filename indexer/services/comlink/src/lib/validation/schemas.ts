@@ -1,11 +1,8 @@
-import {
-  perpetualMarketRefresher,
-  MAX_PARENT_SUBACCOUNTS,
-  CHILD_SUBACCOUNT_MULTIPLIER,
-} from '@dydxprotocol-indexer/postgres';
+import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 import { checkSchema, ParamSchema } from 'express-validator';
 
 import config from '../../config';
+import { MAX_SUBACCOUNT_NUMBER } from '../../constants';
 
 export const CheckSubaccountSchema = checkSchema({
   address: {
@@ -15,23 +12,9 @@ export const CheckSubaccountSchema = checkSchema({
   subaccountNumber: {
     in: ['params', 'query'],
     isInt: {
-      options: { gt: -1, lt: MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER + 1 },
+      options: { gt: -1, lt: MAX_SUBACCOUNT_NUMBER + 1 },
     },
-    errorMessage: 'subaccountNumber must be a non-negative integer less than 128001',
-  },
-});
-
-export const CheckParentSubaccountSchema = checkSchema({
-  address: {
-    in: ['params', 'query'],
-    isString: true,
-  },
-  parentSubaccountNumber: {
-    in: ['params', 'query'],
-    isInt: {
-      options: { gt: -1, lt: MAX_PARENT_SUBACCOUNTS },
-    },
-    errorMessage: 'parentSubaccountNumber must be a non-negative integer less than 128',
+    errorMessage: 'subaccountNumber must be a non-negative integer less than 128',
   },
 });
 

@@ -18,7 +18,6 @@ import {
   OffChainUpdateV1,
   SubaccountId,
 } from '@dydxprotocol-indexer/v4-protos';
-import { IHeaders } from 'kafkajs';
 import { DateTime } from 'luxon';
 import * as pg from 'pg';
 
@@ -34,7 +33,6 @@ export type HandlerInitializer = new (
   indexerTendermintEvent: IndexerTendermintEvent,
   txId: number,
   event: EventMessage,
-  messageReceivedTimestamp?: string,
 ) => Handler<EventMessage>;
 
 /**
@@ -51,7 +49,6 @@ export abstract class Handler<T> {
   blockEventIndex: number;
   event: T;
   abstract eventType: string;
-  messageReceivedTimestamp?: string;
 
   constructor(
     block: IndexerTendermintBlock,
@@ -59,7 +56,6 @@ export abstract class Handler<T> {
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
     event: T,
-    messageReceivedTimestamp?: string,
   ) {
     this.block = block;
     this.blockEventIndex = blockEventIndex;
@@ -67,7 +63,6 @@ export abstract class Handler<T> {
     this.timestamp = DateTime.fromJSDate(block.time!);
     this.txId = txId;
     this.event = event;
-    this.messageReceivedTimestamp = messageReceivedTimestamp;
   }
 
   /**
@@ -183,7 +178,6 @@ export abstract class Handler<T> {
   protected generateConsolidatedVulcanKafkaEvent(
     key: Buffer,
     offChainUpdate: OffChainUpdateV1,
-    headers?: IHeaders,
   ): ConsolidatedKafkaEvent {
     stats.increment(`${config.SERVICE_NAME}.create_vulcan_kafka_event`, 1);
 
@@ -192,7 +186,6 @@ export abstract class Handler<T> {
       message: {
         key,
         value: offChainUpdate,
-        headers,
       },
     };
   }

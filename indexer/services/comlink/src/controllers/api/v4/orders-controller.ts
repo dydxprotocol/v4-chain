@@ -7,9 +7,7 @@ import {
   OrderColumns,
   OrderFromDatabase,
   Ordering,
-  OrderQueryConfig,
   OrderSide,
-  OrderStatus,
   OrderTable,
   OrderType,
   perpetualMarketRefresher,
@@ -33,14 +31,12 @@ import { redisClient } from '../../../helpers/redis/redis-controller';
 import { complianceCheck } from '../../../lib/compliance-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
-  getChildSubaccountNums,
   handleControllerError,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import {
   CheckLimitSchema,
-  CheckParentSubaccountSchema,
   CheckSubaccountSchema,
   CheckTickerOptionalQuerySchema,
 } from '../../../lib/validation/schemas';
@@ -53,146 +49,11 @@ import {
 import { sanitizeArray } from '../../../request-helpers/sanitizers';
 import { validateArray } from '../../../request-helpers/validators';
 import {
-  GetOrderRequest,
-  ListOrderRequest,
-  OrderResponseObject,
-  ParentSubaccountListOrderRequest,
-  PostgresOrderMap,
-  RedisOrderMap,
+  GetOrderRequest, ListOrderRequest, OrderResponseObject, PostgresOrderMap, RedisOrderMap,
 } from '../../../types';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'orders-controller';
-
-/**
- * Lists orders for a set of subaccounts based on various filters.
- * @param subaccountIdToNumber A mapping of subaccount IDs to their corresponding numbers.
- * @param limit The maximum number of orders to return.
- * @param ticker Optional ticker to filter orders by.
- * @param side Optional order side to filter orders by.
- * @param type Optional order type to filter orders by.
- * @param status Optional array of order statuses to filter orders by.
- * @param goodTilBlockBeforeOrAt Optional filter for orders good until a specific block.
- * @param goodTilBlockTimeBeforeOrAt Optional filter for orders good until a specific time.
- * @param returnLatestOrders Flag indicating whether to return the latest orders.
- * @returns An array of order response objects.
- */
-async function listOrdersCommon(
-  subaccountIdToNumber: Record<string, number>,
-  limit?: number,
-  ticker?: string,
-  side?: OrderSide,
-  type?: OrderType,
-  status?: APIOrderStatus[],
-  goodTilBlockBeforeOrAt?: number,
-  goodTilBlockTimeBeforeOrAt?: IsoString,
-  returnLatestOrders?: boolean,
-): Promise<OrderResponseObject[]> {
-  let clobPairId: string | undefined;
-  if (ticker !== undefined) {
-    clobPairId = perpetualMarketRefresher.getClobPairIdFromTicker(ticker);
-  }
-
-  const subaccountIds: string[] = Object.keys(subaccountIdToNumber);
-
-  const orderQueryConfig: OrderQueryConfig = {
-    subaccountId: subaccountIds,
-    limit,
-    clobPairId,
-    side,
-    type,
-    goodTilBlockBeforeOrAt: goodTilBlockBeforeOrAt?.toString(),
-    goodTilBlockTimeBeforeOrAt,
-  };
-  if (!_.isEmpty(status)) {
-    // BEST_EFFORT_OPENED status is not filtered out, because it's a minor optimization,
-    // is more confusing, and is not going to affect the result of the query.
-    orderQueryConfig.statuses = status as OrderStatus[];
-  }
-  const ordering: Ordering = returnLatestOrders !== undefined
-    ? returnLatestOrdersToOrdering(returnLatestOrders)
-    : Ordering.DESC;
-  const [
-    redisOrderMap,
-    postgresOrders,
-  ]: [
-    RedisOrderMap,
-    OrderFromDatabase[],
-  ] = await Promise.all([
-    getRedisOrderMapForSubaccountIds(
-      subaccountIds,
-      clobPairId,
-      side,
-      type,
-      goodTilBlockBeforeOrAt,
-      goodTilBlockTimeBeforeOrAt,
-    ),
-    OrderTable.findAll(
-      orderQueryConfig, [], {
-        ...DEFAULT_POSTGRES_OPTIONS,
-        orderBy: [
-          // Order by `goodTilBlock` and then order by `goodTilBlockTime`
-          // This way, orders with `goodTilBlock` defined are ordered before orders with
-          // `goodTilBlockTime` if order is asecnding, and after if descending
-          [OrderColumns.goodTilBlock, ordering],
-          [OrderColumns.goodTilBlockTime, ordering],
-        ],
-      },
-    ),
-  ]);
-
-  const redisOrderIds: string[] = _.map(
-    Object.values(redisOrderMap),
-    (redisOrder: RedisOrder) => {
-      return OrderTable.orderIdToUuid(redisOrder.order!.orderId!);
-    },
-  );
-  const postgresOrderIdsToFetch: string[] = _.difference(
-    redisOrderIds,
-    _.map(postgresOrders, OrderColumns.id),
-  );
-
-  // Postgres is regarded as the source of truth, so for any redis orders not returned from the
-  // initial postgres query, we need to fetch them from Postgres to ensure we have the most
-  // accurate status. For example, if the user is querying for `status: [BEST_EFFORT_OPENED]`,
-  // we need to fetch all orders from Postgres, because if the order in postgres is 'OPENED',
-  // then we do not want to return this order to the user as 'BEST_EFFORT_OPENED'.
-  let additionalPostgresOrders: OrderFromDatabase[] = [];
-  if (!_.isEmpty(postgresOrderIdsToFetch)) {
-    additionalPostgresOrders = await OrderTable.findAll({
-      id: postgresOrderIdsToFetch,
-    }, [], {
-      ...DEFAULT_POSTGRES_OPTIONS,
-    });
-  }
-
-  const postgresOrderMap: PostgresOrderMap = _.keyBy(
-    _.concat(postgresOrders, additionalPostgresOrders),
-    OrderColumns.id,
-  );
-
-  let mergedResponses: OrderResponseObject[] = mergePostgresAndRedisOrdersToResponseObjects(
-    postgresOrderMap,
-    redisOrderMap,
-    subaccountIdToNumber,
-  );
-
-  if (status !== undefined) {
-    mergedResponses = _.filter(
-      mergedResponses,
-      (orderResponse: OrderResponseObject, _index: number) => {
-        return status.includes(orderResponse.status);
-      },
-    );
-  }
-
-  return sortAndLimitResponses(
-    mergedResponses,
-    ordering,
-    limit || config.API_LIMIT_V4,
-  );
-
-}
 
 @Route('orders')
 class OrdersController extends Controller {
@@ -200,7 +61,7 @@ class OrdersController extends Controller {
   async listOrders(
     @Query() address: string,
       @Query() subaccountNumber: number,
-      @Query() limit?: number,
+      @Query() limit: number,
       @Query() ticker?: string,
       @Query() side?: OrderSide,
       @Query() type?: OrderType,
@@ -209,51 +70,71 @@ class OrdersController extends Controller {
       @Query() goodTilBlockTimeBeforeOrAt?: IsoString,
       @Query() returnLatestOrders?: boolean,
   ): Promise<OrderResponseObject[]> {
-    const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
+    let clobPairId: string | undefined;
+    if (ticker !== undefined) {
+      clobPairId = perpetualMarketRefresher.getClobPairIdFromTicker(ticker);
+    }
 
-    return listOrdersCommon(
-      { [subaccountId]: subaccountNumber },
-      limit,
-      ticker,
-      side,
-      type,
-      status,
-      goodTilBlockBeforeOrAt,
-      goodTilBlockTimeBeforeOrAt,
-      returnLatestOrders,
+    const ordering: Ordering = returnLatestOrders !== undefined
+      ? returnLatestOrdersToOrdering(returnLatestOrders)
+      : Ordering.DESC;
+    const [
+      redisOrderMap,
+      postgresOrders,
+    ]: [
+      RedisOrderMap,
+      OrderFromDatabase[],
+    ] = await Promise.all([
+      getRedisOrderMapForSubaccountId(
+        SubaccountTable.uuid(address, subaccountNumber),
+        clobPairId,
+        side,
+        type,
+        goodTilBlockBeforeOrAt,
+        goodTilBlockTimeBeforeOrAt,
+      ),
+      OrderTable.findAll(
+        {
+          subaccountId: [SubaccountTable.uuid(address, subaccountNumber)],
+          limit,
+          clobPairId,
+          side,
+          type,
+          goodTilBlockBeforeOrAt: goodTilBlockBeforeOrAt?.toString(),
+          goodTilBlockTimeBeforeOrAt,
+        }, [], {
+          ...DEFAULT_POSTGRES_OPTIONS,
+          orderBy: [
+            // Order by `goodTilBlock` and then order by `goodTilBlockTime`
+            // This way, orders with `goodTilBlock` defined are ordered before orders with
+            // `goodTilBlockTime` if order is asecnding, and after if descending
+            [OrderColumns.goodTilBlock, ordering],
+            [OrderColumns.goodTilBlockTime, ordering],
+          ],
+        },
+      ),
+    ]);
+
+    const postgresOrderMap: PostgresOrderMap = _.keyBy(postgresOrders, OrderColumns.id);
+
+    let mergedResponses: OrderResponseObject[] = mergePostgresAndRedisOrdersToResponseObjects(
+      postgresOrderMap,
+      redisOrderMap,
     );
-  }
 
-  @Get('/parentSubaccountNumber')
-  async listOrdersForParentSubaccount(
-    @Query() address: string,
-      @Query() parentSubaccountNumber: number,
-      @Query() limit?: number,
-      @Query() ticker?: string,
-      @Query() side?: OrderSide,
-      @Query() type?: OrderType,
-      @Query() status?: APIOrderStatus[],
-      @Query() goodTilBlockBeforeOrAt?: number,
-      @Query() goodTilBlockTimeBeforeOrAt?: IsoString,
-      @Query() returnLatestOrders?: boolean,
-  ): Promise<OrderResponseObject[]> {
-    const childIdtoSubaccountNumber: Record<string, number> = {};
-    getChildSubaccountNums(parentSubaccountNumber).forEach(
-      (subaccountNum: number) => {
-        childIdtoSubaccountNumber[SubaccountTable.uuid(address, subaccountNum)] = subaccountNum;
-      },
-    );
+    if (status !== undefined) {
+      mergedResponses = _.filter(
+        mergedResponses,
+        (orderResponse: OrderResponseObject, _index: number) => {
+          return status.includes(orderResponse.status);
+        },
+      );
+    }
 
-    return listOrdersCommon(
-      childIdtoSubaccountNumber,
+    return sortAndLimitResponses(
+      mergedResponses,
+      ordering,
       limit,
-      ticker,
-      side,
-      type,
-      status,
-      goodTilBlockBeforeOrAt,
-      goodTilBlockTimeBeforeOrAt,
-      returnLatestOrders,
     );
   }
 
@@ -272,29 +153,8 @@ class OrdersController extends Controller {
       OrdersCache.getOrder(orderId, redisClient),
     ]);
 
-    // Get subaccount number and subaccountId from either Redis or Postgres
-    let subaccountNumber: number | undefined;
-    let subaccountId: string | undefined;
-    if (redisOrder !== null) {
-      subaccountNumber = redisOrder.order!.orderId!.subaccountId!.number;
-      subaccountId = SubaccountTable.uuid(
-        redisOrder.order!.orderId!.subaccountId!.owner,
-        subaccountNumber,
-      );
-    } else if (postgresOrder !== undefined) {
-      const subaccount = await SubaccountTable.findById(postgresOrder.subaccountId);
-      if (subaccount === undefined) {
-        throw new NotFoundError(`Unable to find subaccount id ${postgresOrder.subaccountId}`);
-      }
-      subaccountNumber = subaccount.subaccountNumber;
-      subaccountId = postgresOrder.subaccountId;
-    } else {
-      throw new NotFoundError(`Unable to find order id ${orderId}`);
-    }
-
     const order: OrderResponseObject | undefined = postgresAndRedisOrderToResponseObject(
       postgresOrder,
-      { [subaccountId]: subaccountNumber },
       redisOrder,
     );
     if (order === undefined) {
@@ -381,14 +241,11 @@ router.get(
       returnLatestOrders,
     }: ListOrderRequest = matchedData(req) as ListOrderRequest;
 
-    // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
-    const subaccountNum: number = +subaccountNumber;
-
     try {
       const controller: OrdersController = new OrdersController();
       const response: OrderResponseObject[] = await controller.listOrders(
         address,
-        subaccountNum,
+        subaccountNumber,
         limit,
         ticker,
         side,
@@ -411,117 +268,6 @@ router.get(
     } finally {
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.list_orders.timing`,
-        Date.now() - start,
-      );
-    }
-  },
-);
-
-router.get(
-  '/parentSubaccountNumber',
-  rateLimiterMiddleware(getReqRateLimiter),
-  ...CheckParentSubaccountSchema,
-  ...CheckLimitSchema,
-  ...CheckTickerOptionalQuerySchema,
-  ...checkSchema({
-    side: {
-      in: 'query',
-      isIn: {
-        options: [Object.values(OrderSide)],
-        errorMessage: `side must be one of ${Object.values(OrderSide)}`,
-      },
-      optional: true,
-    },
-    type: {
-      in: 'query',
-      isIn: {
-        options: [Object.values(OrderType)],
-        errorMessage: `type must be one of ${Object.values(OrderType)}`,
-      },
-      optional: true,
-    },
-    // TODO(DEC-1462): Add /active-orders endpoint fetching mainly from Redis once fully-filled
-    // orders are removed from Redis. Until then, orders have to be merged with Postgres orders
-    // to get the correct status.
-    status: {
-      in: ['query'],
-      optional: true,
-      customSanitizer: {
-        options: sanitizeArray,
-      },
-      custom: {
-        options: (inputArray) => validateArray(inputArray, Object.values(APIOrderStatusEnum)),
-        errorMessage: `status must be one of ${Object.values(APIOrderStatusEnum)}`,
-      },
-    },
-    goodTilBlockBeforeOrAt: {
-      in: 'query',
-      optional: true,
-      isInt: {
-        options: { gt: 0 },
-      },
-    },
-    goodTilBlockTimeBeforeOrAt: {
-      in: 'query',
-      optional: true,
-      isISO8601: true,
-    },
-    returnLatestOrders: {
-      in: 'query',
-      isBoolean: true,
-      optional: true,
-    },
-  }),
-  query('goodTilBlock').if(query('goodTilBlockTime').exists()).isEmpty()
-    .withMessage('Cannot provide both goodTilBlock and goodTilBlockTime'),
-  handleValidationErrors,
-  complianceCheck,
-  ExportResponseCodeStats({ controllerName }),
-  async (req: express.Request, res: express.Response) => {
-    const start: number = Date.now();
-    const {
-      address,
-      parentSubaccountNumber,
-      limit,
-      ticker,
-      side,
-      type,
-      status,
-      goodTilBlockBeforeOrAt,
-      goodTilBlockTimeBeforeOrAt,
-      returnLatestOrders,
-    }: ParentSubaccountListOrderRequest = matchedData(req) as ParentSubaccountListOrderRequest;
-
-    // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
-    const parentSubaccountNum: number = +parentSubaccountNumber;
-
-    try {
-      const controller: OrdersController = new OrdersController();
-      const response: OrderResponseObject[] = await controller.listOrdersForParentSubaccount(
-        address,
-        parentSubaccountNum,
-        limit,
-        ticker,
-        side,
-        type,
-        status,
-        goodTilBlockBeforeOrAt,
-        goodTilBlockTimeBeforeOrAt,
-        returnLatestOrders,
-      );
-
-      return res.send(response);
-    } catch (error) {
-      return handleControllerError(
-        'OrdersController GET /parentSubaccountNumber',
-        'Orders error',
-        error,
-        req,
-        res,
-      );
-    } finally {
-      stats.timing(
-        `${config.SERVICE_NAME}.${controllerName}.list_orders_parent_subaccount.timing`,
         Date.now() - start,
       );
     }
@@ -570,11 +316,11 @@ router.get(
 /* ------- ORDER HELPERS ------- */
 
 /**
- * Gets a RedisOrderMap filtered by subaccounts, and if provided,
+ * Gets a RedisOrderMap filtered by subaccount, and if provided,
  * by clobPairId, side, type, goodTilBlock, and goodTilBlockTime
  * Note: When filtering by `goodTilBlock` all orders without a `goodTilBlock` will be filtered out
  * and the same with `goodTilBlockTime`. Both cannot be provided as that should be an invalid query.
- * @param subaccountIds
+ * @param subaccountId
  * @param clobPairId
  * @param side
  * @param type
@@ -582,8 +328,8 @@ router.get(
  * @param goodTilBlockTimeBeforeOrAt
  * @returns
  */
-async function getRedisOrderMapForSubaccountIds(
-  subaccountIds: string[],
+async function getRedisOrderMapForSubaccountId(
+  subaccountId: string,
   clobPairId?: string,
   side?: OrderSide,
   type?: OrderType,
@@ -596,14 +342,10 @@ async function getRedisOrderMapForSubaccountIds(
     return {};
   }
 
-  const subaccountOrderIds: string[] = (await Promise.all(
-    subaccountIds.map((subaccountId) => {
-      return SubaccountOrderIdsCache.getOrderIdsForSubaccount(
-        subaccountId,
-        redisClient,
-      );
-    }),
-  )).flat();
+  const subaccountOrderIds: string[] = await SubaccountOrderIdsCache.getOrderIdsForSubaccount(
+    subaccountId,
+    redisClient,
+  );
 
   const nullableRedisOrders: (RedisOrder | null)[] = await Promise.all(
     _.map(subaccountOrderIds, (orderId: string) => OrdersCache.getOrder(orderId, redisClient)),

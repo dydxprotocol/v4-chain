@@ -193,7 +193,7 @@ async function getImageDetail(
 }
 
 async function runDbMigration(
-  lambda: LambdaClient, // note solal Changed ECRClient to LambdaClient
+  lambda: ECRClient,
 ): Promise<void> {
   logger.info({
     at: 'index#runDbMigration',

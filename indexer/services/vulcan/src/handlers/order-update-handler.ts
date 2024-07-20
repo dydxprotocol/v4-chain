@@ -24,7 +24,7 @@ import {
   RedisOrder,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
-import { IHeaders, Message } from 'kafkajs';
+import { Message } from 'kafkajs';
 
 import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
@@ -51,7 +51,7 @@ import { Handler } from './handler';
  *  price level is capped to the size of the order in quantums
  */
 export class OrderUpdateHandler extends Handler {
-  protected async handle(update: OffChainUpdateV1, headers: IHeaders): Promise<void> {
+  protected async handle(update: OffChainUpdateV1): Promise<void> {
     logger.info({
       at: 'OrderUpdateHandler#handle',
       message: 'Received OffChainUpdate with OrderUpdate.',
@@ -171,9 +171,6 @@ export class OrderUpdateHandler extends Handler {
           perpetualMarket,
           updatedQuantums,
         ),
-        headers: {
-          message_received_timestamp: headers.message_received_timestamp,
-        },
       };
       sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
     }

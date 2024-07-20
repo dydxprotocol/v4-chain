@@ -56,6 +56,5 @@ export abstract class Validator<T extends object> {
   public abstract createHandlers(
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
-    messageReceivedTimestamp: string,
   ): Handler<EventMessage>[];
 }

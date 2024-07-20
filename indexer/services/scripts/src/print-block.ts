@@ -1,6 +1,6 @@
 import { logger, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
 import {
-  updateOnMessageFunction,
+  addOnMessageFunction,
   consumer,
   producer,
   startConsumer,
@@ -66,7 +66,7 @@ export async function connect(height: number): Promise<void> {
     fromBeginning: true,
   });
 
-  updateOnMessageFunction((_topic: string, message: KafkaMessage): Promise<void> => {
+  addOnMessageFunction((_topic: string, message: KafkaMessage): Promise<void> => {
     return printMessageAtHeight(message, height);
   });
 

@@ -1,14 +1,12 @@
 import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
-import { PerpetualMarketCreateEventV1, IndexerTendermintEvent, PerpetualMarketCreateEventV2 } from '@dydxprotocol-indexer/v4-protos';
+import { PerpetualMarketCreateEventV1, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 
 import { Handler } from '../handlers/handler';
 import { PerpetualMarketCreationHandler } from '../handlers/perpetual-market-handler';
 import { Validator } from './validator';
 
-export class PerpetualMarketValidator extends Validator<
-  PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2
-> {
+export class PerpetualMarketValidator extends Validator<PerpetualMarketCreateEventV1> {
   public validate(): void {
     if (perpetualMarketRefresher.getPerpetualMarketFromId(this.event.id.toString()) !== undefined) {
       return this.logAndThrowParseMessageError(
@@ -40,7 +38,6 @@ export class PerpetualMarketValidator extends Validator<
   public createHandlers(
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
-    _: string,
   ): Handler<PerpetualMarketCreateEventV1>[] {
     const handler: Handler<PerpetualMarketCreateEventV1> = new PerpetualMarketCreationHandler(
       this.block,

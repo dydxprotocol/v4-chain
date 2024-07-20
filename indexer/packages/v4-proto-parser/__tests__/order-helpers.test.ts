@@ -1,5 +1,5 @@
 import { IndexerOrderId } from '@dydxprotocol-indexer/v4-protos';
-import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '../src/order-helpers';
+import { getOrderIdHash, isStatefulOrder } from '../src/order-helpers';
 import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '../src';
 
 describe('getOrderIdHash', () => {
@@ -63,25 +63,5 @@ describe('isStatefulOrder', () => {
     isStateful: boolean,
   ) => {
     expect(isStatefulOrder(flag)).toEqual(isStateful);
-  });
-});
-
-describe('isLongTermOrder', () => {
-  it.each([
-    [ORDER_FLAG_SHORT_TERM.toString(), 'string', false],
-    ['4', 'string', false],
-    [ORDER_FLAG_CONDITIONAL.toString(), 'string', false],
-    [ORDER_FLAG_LONG_TERM.toString(), 'string', true],
-    [ORDER_FLAG_SHORT_TERM, 'number', false],
-    [3, 'number', false],
-    [ORDER_FLAG_CONDITIONAL, 'number', false],
-    [ORDER_FLAG_LONG_TERM, 'number', true],
-    ['abc', 'string', false],
-  ])('Checks if flag %s with type %s is a long term order', (
-    flag: number | string,
-    _type: string,
-    isLongTerm: boolean,
-  ) => {
-    expect(isLongTermOrder(flag)).toEqual(isLongTerm);
   });
 });

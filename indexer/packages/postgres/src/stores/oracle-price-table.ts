@@ -117,8 +117,8 @@ export async function create(
   return OraclePriceModel.query(
     Transaction.get(options.txId),
   ).insert({
-    ...oraclePriceToCreate,
     id: uuid(oraclePriceToCreate.marketId, oraclePriceToCreate.effectiveAtHeight),
+    ...oraclePriceToCreate,
   }).returning('*');
 }
 
@@ -198,7 +198,7 @@ async function findLatestPricesByDateTime(
     .groupBy('marketId');
 
   const oraclePrices: OraclePriceFromDatabase[] = await baseQuery
-    .innerJoin(subQuery.as('sub'), function joinConditions() {
+    .innerJoin(subQuery.as('sub'), function () {
       this
         .on('oracle_prices.marketId', '=', 'sub.marketId')
         .andOn('oracle_prices.effectiveAt', '=', 'sub.maxEffectiveAt');

@@ -1,11 +1,9 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import {
-  consumer, producer, KafkaTopics, updateOnMessageFunction, updateOnBatchFunction,
+  consumer, producer, KafkaTopics, addOnMessageFunction,
 } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 
-import config from '../../config';
-import { onBatch } from '../../lib/on-batch';
 import { onMessage } from '../../lib/on-message';
 
 export async function connect(): Promise<void> {
@@ -22,21 +20,9 @@ export async function connect(): Promise<void> {
     fromBeginning: true,
   });
 
-  if (config.BATCH_PROCESSING_ENABLED) {
-    logger.info({
-      at: 'consumers#connect',
-      message: 'Batch processing enabled',
-    });
-    updateOnBatchFunction(onBatch);
-  } else {
-    logger.info({
-      at: 'consumers#connect',
-      message: 'Batch processing disabled. Processing each message individually',
-    });
-    updateOnMessageFunction((_topic: string, message: KafkaMessage): Promise<void> => {
-      return onMessage(message);
-    });
-  }
+  addOnMessageFunction((_topic: string, message: KafkaMessage): Promise<void> => {
+    return onMessage(message);
+  });
 
   logger.info({
     at: 'consumers#connect',

@@ -39,41 +39,41 @@ import * as _42 from "./indexer/events/events";
 import * as _43 from "./indexer/indexer_manager/event";
 import * as _44 from "./indexer/off_chain_updates/off_chain_updates";
 import * as _45 from "./indexer/protocol/v1/clob";
-import * as _46 from "./indexer/protocol/v1/perpetual";
-import * as _47 from "./indexer/protocol/v1/subaccount";
-import * as _48 from "./indexer/redis/redis_order";
-import * as _49 from "./indexer/shared/removal_reason";
-import * as _50 from "./indexer/socks/messages";
-import * as _51 from "./perpetuals/genesis";
-import * as _52 from "./perpetuals/params";
-import * as _53 from "./perpetuals/perpetual";
-import * as _54 from "./perpetuals/query";
-import * as _55 from "./perpetuals/tx";
-import * as _56 from "./prices/genesis";
-import * as _57 from "./prices/market_param";
-import * as _58 from "./prices/market_price";
-import * as _59 from "./prices/query";
-import * as _60 from "./prices/tx";
-import * as _61 from "./ratelimit/capacity";
-import * as _62 from "./ratelimit/genesis";
-import * as _63 from "./ratelimit/limit_params";
-import * as _64 from "./ratelimit/pending_send_packet";
-import * as _65 from "./ratelimit/query";
-import * as _66 from "./ratelimit/tx";
-import * as _67 from "./sending/genesis";
-import * as _68 from "./sending/query";
-import * as _69 from "./sending/transfer";
-import * as _70 from "./sending/tx";
-import * as _71 from "./stats/genesis";
-import * as _72 from "./stats/params";
-import * as _73 from "./stats/query";
-import * as _74 from "./stats/stats";
-import * as _75 from "./stats/tx";
-import * as _76 from "./subaccounts/asset_position";
-import * as _77 from "./subaccounts/genesis";
-import * as _78 from "./subaccounts/perpetual_position";
-import * as _79 from "./subaccounts/query";
-import * as _80 from "./subaccounts/subaccount";
+import * as _46 from "./indexer/protocol/v1/subaccount";
+import * as _47 from "./indexer/redis/redis_order";
+import * as _48 from "./indexer/shared/removal_reason";
+import * as _49 from "./indexer/socks/messages";
+import * as _50 from "./perpetuals/genesis";
+import * as _51 from "./perpetuals/params";
+import * as _52 from "./perpetuals/perpetual";
+import * as _53 from "./perpetuals/query";
+import * as _54 from "./perpetuals/tx";
+import * as _55 from "./prices/genesis";
+import * as _56 from "./prices/market_param";
+import * as _57 from "./prices/market_price";
+import * as _58 from "./prices/query";
+import * as _59 from "./prices/tx";
+import * as _60 from "./ratelimit/capacity";
+import * as _61 from "./ratelimit/genesis";
+import * as _62 from "./ratelimit/limit_params";
+import * as _63 from "./ratelimit/pending_send_packet";
+import * as _64 from "./ratelimit/query";
+import * as _65 from "./ratelimit/tx";
+import * as _66 from "./sending/genesis";
+import * as _67 from "./sending/query";
+import * as _68 from "./sending/transfer";
+import * as _69 from "./sending/tx";
+import * as _70 from "./stats/genesis";
+import * as _71 from "./stats/params";
+import * as _72 from "./stats/query";
+import * as _73 from "./stats/stats";
+import * as _74 from "./stats/tx";
+import * as _75 from "./subaccounts/asset_position";
+import * as _76 from "./subaccounts/genesis";
+import * as _77 from "./subaccounts/perpetual_position";
+import * as _78 from "./subaccounts/query";
+import * as _79 from "./subaccounts/subaccount";
+import * as _80 from "./ve/ve";
 import * as _88 from "./assets/query.lcd";
 import * as _89 from "./blocktime/query.lcd";
 import * as _90 from "./clob/query.lcd";
@@ -182,68 +182,69 @@ export namespace dydxprotocol {
     };
     export namespace protocol {
       export const v1 = { ..._45,
-        ..._46,
-        ..._47
+        ..._46
       };
     }
-    export const redis = { ..._48
+    export const redis = { ..._47
     };
-    export const shared = { ..._49
+    export const shared = { ..._48
     };
-    export const socks = { ..._50
+    export const socks = { ..._49
     };
   }
-  export const perpetuals = { ..._51,
+  export const perpetuals = { ..._50,
+    ..._51,
     ..._52,
     ..._53,
     ..._54,
-    ..._55,
     ..._94,
     ..._105,
     ..._115
   };
-  export const prices = { ..._56,
+  export const prices = { ..._55,
+    ..._56,
     ..._57,
     ..._58,
     ..._59,
-    ..._60,
     ..._95,
     ..._106,
     ..._116
   };
-  export const ratelimit = { ..._61,
+  export const ratelimit = { ..._60,
+    ..._61,
     ..._62,
     ..._63,
     ..._64,
     ..._65,
-    ..._66,
     ..._96,
     ..._107,
     ..._117
   };
-  export const sending = { ..._67,
+  export const sending = { ..._66,
+    ..._67,
     ..._68,
     ..._69,
-    ..._70,
     ..._108,
     ..._118
   };
-  export const stats = { ..._71,
+  export const stats = { ..._70,
+    ..._71,
     ..._72,
     ..._73,
     ..._74,
-    ..._75,
     ..._97,
     ..._109,
     ..._119
   };
-  export const subaccounts = { ..._76,
+  export const subaccounts = { ..._75,
+    ..._76,
     ..._77,
     ..._78,
     ..._79,
-    ..._80,
     ..._98,
     ..._110
+  };
+  export const ve = { ..._80
   };
   export const ClientFactory = { ..._120,
     ..._121,

@@ -10,7 +10,6 @@ import {
   ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
   producer,
   SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
-  getTriggerPrice,
 } from '@dydxprotocol-indexer/kafka';
 import {
   APIOrderStatus,
@@ -56,14 +55,13 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import Long from 'long';
+import { convertToRedisOrder, getTriggerPrice } from '../../src/handlers/helpers';
 import { redisClient, redisClient as client } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
 import { expectCanceledOrderStatus, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';
 import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
 import { OrderbookSide } from '../../src/lib/types';
-import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
-import config from '../../src/config';
-import { defaultKafkaHeaders } from '../helpers/constants';
+import { getOrderIdHash, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
@@ -82,10 +80,6 @@ describe('order-place-handler', () => {
 
   afterAll(() => {
     jest.useRealTimers();
-  });
-
-  afterEach(() => {
-    config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = true;
   });
 
   describe('handle', () => {
@@ -123,23 +117,23 @@ describe('order-place-handler', () => {
       quantums: Long.fromValue(500_000, true),
       subticks: Long.fromValue(1_000_000, true),
     };
-    const replacedOrder: RedisOrder = redisPackage.convertToRedisOrder(
+    const replacedOrder: RedisOrder = convertToRedisOrder(
       replacementOrder,
       testConstants.defaultPerpetualMarket,
     );
-    const replacedOrderGoodTilBlockTime: RedisOrder = redisPackage.convertToRedisOrder(
+    const replacedOrderGoodTilBlockTime: RedisOrder = convertToRedisOrder(
       replacementOrderGoodTilBlockTime,
       testConstants.defaultPerpetualMarket,
     );
-    const replacedOrderConditional: RedisOrder = redisPackage.convertToRedisOrder(
+    const replacedOrderConditional: RedisOrder = convertToRedisOrder(
       replacementOrderConditional,
       testConstants.defaultPerpetualMarket,
     );
-    const replacedOrderFok: RedisOrder = redisPackage.convertToRedisOrder(
+    const replacedOrderFok: RedisOrder = convertToRedisOrder(
       replacementOrderFok,
       testConstants.defaultPerpetualMarket,
     );
-    const replacedOrderIoc: RedisOrder = redisPackage.convertToRedisOrder(
+    const replacedOrderIoc: RedisOrder = convertToRedisOrder(
       replacementOrderIoc,
       testConstants.defaultPerpetualMarket,
     );
@@ -197,11 +191,6 @@ describe('order-place-handler', () => {
     const replacementMessageIoc: KafkaMessage = createKafkaMessage(
       Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(replacementUpdateIoc).finish())),
     );
-    [replacementMessage, replacementMessageGoodTilBlockTime, replacementMessageConditional,
-      replacementMessageFok, replacementMessageIoc].forEach((message) => {
-      // eslint-disable-next-line no-param-reassign
-      message.headers = defaultKafkaHeaders;
-    });
     const dbDefaultOrder: OrderFromDatabase = {
       ...testConstants.defaultOrder,
       id: testConstants.defaultOrderId,
@@ -289,7 +278,7 @@ describe('order-place-handler', () => {
       expectedOrderUuid: string,
       expectSubaccountMessageSent: boolean,
     ) => {
-      const expectedOrder: RedisOrder = redisPackage.convertToRedisOrder(
+      const expectedOrder: RedisOrder = convertToRedisOrder(
         orderToPlace,
         testConstants.defaultPerpetualMarket,
       );
@@ -841,38 +830,19 @@ describe('order-place-handler', () => {
         redisTestConstants.defaultOrderGoodTilBlockTime,
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         dbOrderGoodTilBlockTime,
-        false,
       ],
       [
         'conditional',
         redisTestConstants.defaultConditionalOrder,
         redisTestConstants.defaultRedisOrderConditional,
         dbConditionalOrder,
-        false,
-      ],
-      [
-        'good-til-block-time',
-        redisTestConstants.defaultOrderGoodTilBlockTime,
-        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
-        dbOrderGoodTilBlockTime,
-        true,
-      ],
-      [
-        'conditional',
-        redisTestConstants.defaultConditionalOrder,
-        redisTestConstants.defaultRedisOrderConditional,
-        dbConditionalOrder,
-        true,
       ],
     ])('handles order place with OPEN placement status, exists initially (with %s)', async (
       _name: string,
       orderToPlace: IndexerOrder,
       expectedRedisOrder: RedisOrder,
       placedOrder: OrderFromDatabase,
-      sendSubaccountWebsocketMessage: boolean,
     ) => {
-      // eslint-disable-next-line max-len
-      config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = sendSubaccountWebsocketMessage;
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
       // Handle the order place event for the initial order with BEST_EFFORT_OPENED
@@ -913,9 +883,7 @@ describe('order-place-handler', () => {
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.OPEN,
         // Subaccount messages should be sent for stateful order with OPEN status
-        !(
-          isLongTermOrder(expectedRedisOrder.order!.orderId!.orderFlags) &&
-          !sendSubaccountWebsocketMessage),
+        true,
       );
 
       expect(logger.error).not.toHaveBeenCalled();
@@ -1231,11 +1199,7 @@ function expectWebsocketMessagesSent(
       version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
     });
 
-    expectWebsocketSubaccountMessage(
-      producerSendSpy.mock.calls[callIndex][0],
-      subaccountMessage,
-      defaultKafkaHeaders,
-    );
+    expectWebsocketSubaccountMessage(producerSendSpy.mock.calls[callIndex][0], subaccountMessage);
     callIndex += 1;
   }
 
