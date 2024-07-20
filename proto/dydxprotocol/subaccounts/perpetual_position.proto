@@ -23,4 +23,7 @@ message PerpetualPosition {
                              "protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
+  // The current yield index last time this position was settled.
+  // Should be converted from string to big.Rat.
+  string yield_index = 4;
 }

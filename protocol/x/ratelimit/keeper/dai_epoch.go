@@ -187,16 +187,18 @@ func (k Keeper) TransferRemainingDAIYieldToInsuranceFund(ctx sdk.Context, Tradin
 
 func (k Keeper) CreateAndStoreNewDaiYieldEpochParams(ctx sdk.Context) error {
 
-	tDAISupply, tradingDaiMinted, yieldCollectedByInsuranceFund, newEpoch, err := k.CalculateYieldParamsForNewEpoch(ctx)
+	tradingDaiSupplyBeforeNewEpoch, tradingDaiMinted, yieldCollectedByInsuranceFund, newEpoch, err := k.CalculateYieldParamsForNewEpoch(ctx)
 	if err != nil {
 		return err
 	}
 
-	yieldParams := k.CreateNewDaiYieldEpochParams(ctx, tDAISupply, tradingDaiMinted, yieldCollectedByInsuranceFund)
+	yieldParams := k.CreateNewDaiYieldEpochParams(ctx, tradingDaiSupplyBeforeNewEpoch, tradingDaiMinted, yieldCollectedByInsuranceFund)
 
 	k.SetDAIYieldEpochParamsForEpoch(ctx, newEpoch, yieldParams)
 
 	k.SetCurrentDaiYieldEpochNumber(ctx, newEpoch)
+
+	k.perpetualsKeeper.ProcessNewYieldEpoch(ctx, tradingDaiSupplyBeforeNewEpoch, tradingDaiMinted)
 
 	return nil
 }
@@ -333,19 +335,24 @@ func (k Keeper) CollectYieldForInsuranceFund(ctx sdk.Context, address sdk.AccAdd
 	return yield, nil
 }
 
-func (k Keeper) CreateNewDaiYieldEpochParams(ctx sdk.Context, tradingDaiSupplyBeforeNewEpoch *big.Int, tradingDaiMinted *big.Int, yieldCollectedByInsuranceFund *big.Int) types.DaiYieldEpochParams {
+func (k Keeper) CreateNewDaiYieldEpochParams(
+	ctx sdk.Context,
+	tradingDaiSupplyBeforeNewEpoch *big.Int,
+	tradingDaiMinted *big.Int,
+	yieldCollectedByInsuranceFund *big.Int,
+) types.DaiYieldEpochParams {
 
 	marketPrices := k.pricesKeeper.GetAllMarketPrices(ctx)
 
-	// Convert []MarketPrice to []*MarketPrice
 	marketPricesPtrs := make([]*pricetypes.MarketPrice, len(marketPrices))
 	for i := range marketPrices {
 		marketPricesPtrs[i] = &marketPrices[i]
 	}
 
 	yieldParams := types.DaiYieldEpochParams{
-		TradingDaiMinted:               tradingDaiMinted.String(),
-		TotalTradingDaiPreMint:         tradingDaiSupplyBeforeNewEpoch.String(),
+		TradingDaiMinted:       tradingDaiMinted.String(),
+		TotalTradingDaiPreMint: tradingDaiSupplyBeforeNewEpoch.String(),
+		// TODO: Double check the below
 		TotalTradingDaiClaimedForEpoch: yieldCollectedByInsuranceFund.String(),
 		BlockNumber:                    uint64(ctx.BlockHeight()),
 		EpochMarketPrices:              marketPricesPtrs,

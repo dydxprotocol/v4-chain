@@ -642,6 +642,64 @@ func (k Keeper) GetRemoveSampleTailsFunc(
 	}
 }
 
+func (k Keeper) ProcessNewYieldEpoch(
+	ctx sdk.Context,
+	totalTDaiPreMint *big.Int,
+	totalTDaiMinted *big.Int,
+) {
+	allPerps := k.GetAllPerpetuals(ctx)
+
+	for _, perp := range allPerps {
+
+		// TODO: This makes price fetching in CrateNewDaiYieldEpochParams obsolete
+		marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.Params.MarketId)
+		if err != nil {
+			panic(err)
+		}
+
+		// Calculate yield index for this epoch
+		currEpochYieldIndex, err := k.CalculateYieldIndexForEpoch(ctx, totalTDaiPreMint, totalTDaiMinted, marketPrice, perp)
+		if err != nil {
+			panic(err)
+		}
+
+		// Get current cumulative yield index
+		cumulativeYieldIndex, _ := new(big.Rat).SetString(perp.YieldIndex)
+		newYieldIndex := new(big.Rat).Add(cumulativeYieldIndex, currEpochYieldIndex)
+
+		// TODO: Decide on how many decimal places this should be and convert to constant
+		perp.YieldIndex = newYieldIndex.FloatString(10)
+		k.setPerpetual(ctx, perp)
+	}
+}
+
+func (k Keeper) CalculateYieldIndexForEpoch(
+	ctx sdk.Context,
+	totalTDaiPreMint *big.Int,
+	totalTDaiMinted *big.Int,
+	marketPrice pricestypes.MarketPrice,
+	perpetual types.Perpetual,
+) (
+	yieldIndex *big.Rat,
+	err error,
+) {
+
+	oneBaseQuantum := big.NewInt(1)
+
+	priceForOneBaseQuantum := lib.BaseToQuoteQuantums(
+		oneBaseQuantum,
+		perpetual.Params.AtomicResolution,
+		marketPrice.Price,
+		marketPrice.Exponent,
+	)
+
+	totalDaiMintedTimesPrice := new(big.Int).Mul(totalTDaiMinted, priceForOneBaseQuantum)
+
+	yieldIndex = new(big.Rat).SetFrac(totalDaiMintedTimesPrice, totalTDaiPreMint)
+
+	return yieldIndex, nil
+}
+
 // MaybeProcessNewFundingTickEpoch processes funding ticks if the current block
 // is the start of a new funding-tick epoch. Otherwise, do nothing.
 func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
