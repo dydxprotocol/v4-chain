@@ -244,13 +244,13 @@ func initRootCmd(
 
 	rootCmd.AddCommand(rosettaCmd.RosettaCommand(tempApp.InterfaceRegistry(), tempApp.AppCodec()))
 
-    rootCmd.AddCommand(
-        snapshot.Cmd(
-            func(logger log.Logger, db dbm.DB, writer io.Writer, options servertypes.AppOptions) servertypes.Application {
-                return appInterceptor(newApp(logger, db, writer, options))
-            },
-        ),
-    )
+	rootCmd.AddCommand(
+		snapshot.Cmd(
+			func(logger log.Logger, db dbm.DB, writer io.Writer, options servertypes.AppOptions) servertypes.Application {
+				return appInterceptor(newApp(logger, db, writer, options))
+			},
+		),
+	)
 }
 
 // autoCliOpts returns options based upon the modules in the dYdX v4 app.
