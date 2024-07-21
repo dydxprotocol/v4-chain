@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
+	v_5_2_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v5.2.0"
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -21,21 +22,21 @@ const (
 )
 
 func TestStateUpgrade(t *testing.T) {
-	// testnet, err := containertest.NewTestnetWithPreupgradeGenesis()
-	// require.NoError(t, err, "failed to create testnet - is docker daemon running?")
-	// err = testnet.Start()
-	// require.NoError(t, err)
-	// defer testnet.MustCleanUp()
-	// node := testnet.Nodes["alice"]
-	// nodeAddress := constants.AliceAccAddress.String()
+	testnet, err := containertest.NewTestnetWithPreupgradeGenesis()
+	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
+	err = testnet.Start()
+	require.NoError(t, err)
+	defer testnet.MustCleanUp()
+	node := testnet.Nodes["alice"]
+	nodeAddress := constants.AliceAccAddress.String()
 
-	// preUpgradeSetups(node, t)
-	// preUpgradeChecks(node, t)
+	preUpgradeSetups(node, t)
+	preUpgradeChecks(node, t)
 
-	// err = containertest.UpgradeTestnet(nodeAddress, t, node, v_5_2_0.UpgradeName)
-	// require.NoError(t, err)
+	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_5_2_0.UpgradeName)
+	require.NoError(t, err)
 
-	// postUpgradeChecks(node, t)
+	postUpgradeChecks(node, t)
 }
 
 /*** Preupgrade Setup ***/
