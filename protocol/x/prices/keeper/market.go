@@ -80,30 +80,9 @@ func (k Keeper) CreateMarket(
 		),
 	)
 
-	k.marketToCreatedAt[marketParam.Id] = k.timeProvider.Now()
 	metrics.SetMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
 
 	return marketParam, nil
-}
-
-// IsRecentlyAvailable returns true if the market was recently made available to the pricefeed daemon. A market is
-// considered recently available either if it was recently created, or if the pricefeed daemon was recently started. If
-// an index price does not exist for a recently available market, the protocol does not consider this an error
-// condition, as it is expected that the pricefeed daemon will eventually provide a price for the market within a
-// few seconds.
-func (k Keeper) IsRecentlyAvailable(ctx sdk.Context, marketId uint32) bool {
-	createdAt, ok := k.marketToCreatedAt[marketId]
-
-	if !ok {
-		return false
-	}
-
-	// The comparison condition considers both market age and price daemon warmup time because a market can be
-	// created before or after the daemon starts. We use block height as a proxy for daemon warmup time because
-	// the price daemon is started when the gRPC service comes up, which typically occurs just before the first
-	// block is processed.
-	return k.timeProvider.Now().Sub(createdAt) < types.MarketIsRecentDuration ||
-		ctx.BlockHeight() < types.PriceDaemonInitializationBlocks
 }
 
 // GetAllMarketParamPrices returns a slice of MarketParam, MarketPrice tuples for all markets.

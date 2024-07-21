@@ -56,10 +56,7 @@ const (
 	// StatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful orders that
 	// expire at a given timestamp, sorted by order ID.
 	StatefulOrdersTimeSlicePrefix = "ExpTm:"
-)
 
-// Store / Memstore
-const (
 	// TriggeredConditionalOrderKeyPrefix is the key to retrieve an triggered conditional order and
 	// information about when it was triggered.
 	TriggeredConditionalOrderKeyPrefix = PlacedStatefulOrderKeyPrefix + "T:"
