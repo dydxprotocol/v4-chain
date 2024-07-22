@@ -21,6 +21,13 @@ const (
 	CarlDaveETHQuantums = 2_000_000
 )
 
+var (
+	VaultClob17 = vaulttypes.VaultId{
+		Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+		Number: 17,
+	}
+)
+
 func TestStateUpgrade(t *testing.T) {
 	testnet, err := containertest.NewTestnetWithPreupgradeGenesis()
 	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
@@ -186,10 +193,7 @@ func preUpgradeSetupVaults(node *containertest.Node, t *testing.T) {
 	require.NoError(t, containertest.BroadcastTx(
 		node,
 		&vaulttypes.MsgDepositToVault{
-			VaultId: &vaulttypes.VaultId{
-				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
-				Number: 17,
-			},
+			VaultId:       &VaultClob17,
 			SubaccountId:  &constants.Carl_Num0,
 			QuoteQuantums: params.Params.ActivationThresholdQuoteQuantums,
 		},
@@ -203,6 +207,25 @@ func preUpgradeSetupVaults(node *containertest.Node, t *testing.T) {
 /*** Preupgrade Check ***/
 func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 	// Add test for your upgrade handler logic below
+	preUpgradeCheckVaultWorstFeeTier(node, t)
+}
+
+func preUpgradeCheckVaultWorstFeeTier(node *containertest.Node, t *testing.T) {
+	// Verify that there are more than one fee tiers.
+	numFeeTiers := getNumFeeTiers(node, t)
+	require.Greater(t, numFeeTiers, 1)
+
+	// Verify that every vault set up in pre-upgrade is of the worst fee tier.
+	// Note: we hardcode vault addresses here (instead of querying) because
+	// QueryAllVaultsResponse in 5.2.0 isn't backwards compatible with that in 5.1.0.
+	vaultAddresses := []string{
+		constants.Vault_Clob_0.ToSubaccountId().Owner,
+		constants.Vault_Clob_1.ToSubaccountId().Owner,
+		VaultClob17.ToSubaccountId().Owner,
+	}
+	for _, vaultAddress := range vaultAddresses {
+		require.Zero(t, getUserFeeTierIndex(node, t, vaultAddress))
+	}
 }
 
 /*** Postupgrade Check ***/
@@ -224,11 +247,15 @@ func postUpgradeCheckVaultModuleParams(node *containertest.Node, t *testing.T) {
 	err = proto.UnmarshalText(resp.String(), params)
 	require.NoError(t, err)
 
-	// Ensure that `OrderExpirationSeconds` is updated to 60.
+	// Verify that `OrderExpirationSeconds` is updated to 60.
 	require.Equal(t, uint32(60), params.Params.OrderExpirationSeconds)
 }
 
 func postUpgradeCheckVaultBestFeeTier(node *containertest.Node, t *testing.T) {
+	// Verify that there are more than one fee tiers.
+	numFeeTiers := getNumFeeTiers(node, t)
+	require.Greater(t, numFeeTiers, 1)
+
 	// Get all vaults.
 	allVaults := &vaulttypes.QueryAllVaultsResponse{}
 	resp, err := containertest.Query(
@@ -240,12 +267,22 @@ func postUpgradeCheckVaultBestFeeTier(node *containertest.Node, t *testing.T) {
 	require.NoError(t, err)
 	err = proto.UnmarshalText(resp.String(), allVaults)
 	require.NoError(t, err)
-	// Ensure that there are vaults.
-	require.NotEmpty(t, allVaults.Vaults)
+	// Verify that the three vaults from preupgrade setup still exist.
+	require.Len(t, allVaults.Vaults, 3)
 
-	// Get fee tiers.
+	// Verify that every vault is of the best fee tier.
+	bestFeeTierIndex := numFeeTiers - 1
+	for _, vault := range allVaults.Vaults {
+		userFeeTierIndex := getUserFeeTierIndex(node, t, vault.SubaccountId.Owner)
+		require.Equal(t, bestFeeTierIndex, int(userFeeTierIndex))
+	}
+}
+
+/*** Helper Functions ***/
+// getNumFeeTiers verifies returns the number of fee tiers.
+func getNumFeeTiers(node *containertest.Node, t *testing.T) int {
 	feeParams := &feetierstypes.QueryPerpetualFeeParamsResponse{}
-	resp, err = containertest.Query(
+	resp, err := containertest.Query(
 		node,
 		feetierstypes.NewQueryClient,
 		feetierstypes.QueryClient.PerpetualFeeParams,
@@ -255,22 +292,23 @@ func postUpgradeCheckVaultBestFeeTier(node *containertest.Node, t *testing.T) {
 	err = proto.UnmarshalText(resp.String(), feeParams)
 	require.NoError(t, err)
 
-	// Verify that every vault is of the best fee tier.
-	bestFeeTierIndex := len(feeParams.Params.Tiers) - 1
-	for _, vault := range allVaults.Vaults {
-		userFeeTier := &feetierstypes.QueryUserFeeTierResponse{}
-		resp, err = containertest.Query(
-			node,
-			feetierstypes.NewQueryClient,
-			feetierstypes.QueryClient.UserFeeTier,
-			&feetierstypes.QueryUserFeeTierRequest{
-				User: vault.SubaccountId.Owner,
-			},
-		)
-		require.NoError(t, err)
-		err = proto.UnmarshalText(resp.String(), userFeeTier)
-		require.NoError(t, err)
+	return len(feeParams.Params.Tiers)
+}
 
-		require.Equal(t, bestFeeTierIndex, int(userFeeTier.Index))
-	}
+// getUserFeeTierIndex returns which fee tier that `address` belongs to.
+func getUserFeeTierIndex(node *containertest.Node, t *testing.T, address string) uint32 {
+	userFeeTier := &feetierstypes.QueryUserFeeTierResponse{}
+	resp, err := containertest.Query(
+		node,
+		feetierstypes.NewQueryClient,
+		feetierstypes.QueryClient.UserFeeTier,
+		&feetierstypes.QueryUserFeeTierRequest{
+			User: address,
+		},
+	)
+	require.NoError(t, err)
+	err = proto.UnmarshalText(resp.String(), userFeeTier)
+	require.NoError(t, err)
+
+	return userFeeTier.Index
 }
