@@ -453,7 +453,7 @@ func (k Keeper) getSettledSubaccount(
 
 	assetYieldIndex, found := k.ratelimitKeeper.GetAssetYieldIndex(ctx)
 	if !found {
-		return types.Subaccount{}, nil, errors.New("Could not find asset yield index")
+		return types.Subaccount{}, nil, errors.New("could not find asset yield index")
 	}
 
 	return GetSettledSubaccountWithPerpetuals(subaccount, perpetuals, assetYieldIndex)
@@ -479,66 +479,44 @@ func GetSettledSubaccountWithPerpetuals(
 	fundingPayments = make(map[uint32]dtypes.SerializableInt)
 	totalNewYield := big.NewInt(0)
 
-	/* Calculate Asset Yield */
-	assetYield, err := calculateAssetYieldInQuoteQuantums(subaccount, assetYieldIndex)
+	totalNewYield, err = calculateTotalYieldWithAssetYieldAdded(subaccount, assetYieldIndex, totalNewYield)
 	if err != nil {
 		return types.Subaccount{}, nil, err
 	}
-	totalNewYield.Add(totalNewYield, assetYield)
 
 	// Iterate through and settle all perpetual positions.
-	for _, p := range subaccount.PerpetualPositions {
-		perpetual, found := perpetuals[p.PerpetualId]
+	for _, perpetualPosition := range subaccount.PerpetualPositions {
+		perpetual, found := perpetuals[perpetualPosition.PerpetualId]
 		if !found {
 			return types.Subaccount{},
 				nil,
 				errorsmod.Wrap(
-					perptypes.ErrPerpetualDoesNotExist, lib.UintToString(p.PerpetualId),
+					perptypes.ErrPerpetualDoesNotExist, lib.UintToString(perpetualPosition.PerpetualId),
 				)
 		}
 
 		/* Calculate Perp Yield */
-		perpYieldIndex, err := getCurrentYieldIndexForPerp(perpetual)
+		var perpYieldIndex *big.Rat = new(big.Rat)
+		totalNewYield, perpYieldIndex, err = calculateTotalYieldWithPerpYieldAdded(perpetual, perpetualPosition, totalNewYield)
 		if err != nil {
 			return types.Subaccount{}, nil, err
 		}
-		perpYield, err := calculatePerpetualYieldInQuoteQuantums(p, perpYieldIndex)
-		if err != nil {
-			return types.Subaccount{}, nil, err
-		}
-		totalNewYield.Add(totalNewYield, perpYield)
 
 		/* Calculate Funding Rates*/
+		bigNetSettlementPpm, newPerpetualPosition, err := getFundingRateUpdateForPerp(perpetual, perpetualPosition, perpYieldIndex)
+		if err != nil {
+			return types.Subaccount{}, nil, err
+		}
 
-		// Call the stateless utility function to get the net settlement and new funding index.
-		bigNetSettlementPpm, newFundingIndex := perpkeeper.GetSettlementPpmWithPerpetual(
-			perpetual,
-			p.GetBigQuantums(),
-			p.FundingIndex.BigInt(),
-		)
 		// Record non-zero funding payment (to be later emitted in SubaccountUpdateEvent to indexer).
 		// Note: Funding payment is the negative of settlement, i.e. positive settlement is equivalent
 		// to a negative funding payment (position received funding payment) and vice versa.
 		if bigNetSettlementPpm.Cmp(lib.BigInt0()) != 0 {
-			fundingPayments[p.PerpetualId] = dtypes.NewIntFromBigInt(
-				new(big.Int).Neg(
-					new(big.Int).Div(bigNetSettlementPpm, lib.BigIntOneMillion()),
-				),
-			)
+			fundingPayments[perpetualPosition.PerpetualId] = getFundingPaymentAsSerializableInt(bigNetSettlementPpm)
 		}
 
-		// Aggregate all net settlements.
 		totalNetSettlementPpm.Add(totalNetSettlementPpm, bigNetSettlementPpm)
-
-		// Update cached funding index of the perpetual position.
-		newPerpetualPositions = append(
-			newPerpetualPositions, &types.PerpetualPosition{
-				PerpetualId:  p.PerpetualId,
-				Quantums:     p.Quantums,
-				FundingIndex: dtypes.NewIntFromBigInt(newFundingIndex),
-				YieldIndex:   perpYieldIndex.String(),
-			},
-		)
+		newPerpetualPositions = append(newPerpetualPositions, &newPerpetualPosition)
 	}
 
 	newSubaccount := types.Subaccount{
@@ -555,16 +533,87 @@ func GetSettledSubaccountWithPerpetuals(
 	}
 
 	newUsdcPosition := new(big.Int).Add(subaccount.GetUsdcPosition(), totalNewYield)
+	totalNetSettlement := totalNetSettlementPpm.Div(totalNetSettlementPpm, lib.BigIntOneMillion())
+	newUsdcPosition.Add(newUsdcPosition, totalNetSettlement)
 
-	newUsdcPosition.Add(
-		newUsdcPosition,
-		// `Div` implements Euclidean division (unlike Go). When the diviser is positive,
-		// division result always rounds towards negative infinity.
-		totalNetSettlementPpm.Div(totalNetSettlementPpm, lib.BigIntOneMillion()),
-	)
 	// TODO(CLOB-993): Remove this function and use `UpdateAssetPositions` instead.
 	newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
 	return newSubaccount, fundingPayments, nil
+}
+
+func calculateTotalYieldWithAssetYieldAdded(
+	subaccount types.Subaccount,
+	assetYieldIndex *big.Rat,
+	totalYield *big.Int,
+) (
+	newTotalYield *big.Int,
+	err error,
+) {
+	assetYield, err := calculateAssetYieldInQuoteQuantums(subaccount, assetYieldIndex)
+	if err != nil {
+		return nil, err
+	}
+	newTotalYield = new(big.Int).Add(totalYield, assetYield)
+	return newTotalYield, nil
+}
+
+func calculateTotalYieldWithPerpYieldAdded(
+	perpetual perptypes.Perpetual,
+	perpetualPosition *types.PerpetualPosition,
+	totalYield *big.Int,
+) (
+	newTotalYield *big.Int,
+	perpYieldIndex *big.Rat,
+	err error,
+) {
+	perpYieldIndex, err = getCurrentYieldIndexForPerp(perpetual)
+	if err != nil {
+		return nil, nil, err
+	}
+	perpYield, err := calculatePerpetualYieldInQuoteQuantums(perpetualPosition, perpYieldIndex)
+	if err != nil {
+		return nil, nil, err
+	}
+	newTotalYield = new(big.Int).Add(totalYield, perpYield)
+
+	return newTotalYield, perpYieldIndex, nil
+}
+
+func getFundingRateUpdateForPerp(
+	perpetual perptypes.Perpetual,
+	perpetualPosition *types.PerpetualPosition,
+	perpYieldIndex *big.Rat,
+) (
+	bigNetSettlementPpm *big.Int,
+	newPerpetualPosition types.PerpetualPosition,
+	err error,
+) {
+
+	// Call the stateless utility function to get the net settlement and new funding index.
+	bigNetSettlementPpm, newFundingIndex := perpkeeper.GetSettlementPpmWithPerpetual(
+		perpetual,
+		perpetualPosition.GetBigQuantums(),
+		perpetualPosition.FundingIndex.BigInt(),
+	)
+
+	newPerpetualPosition = types.PerpetualPosition{
+		PerpetualId:  perpetualPosition.PerpetualId,
+		Quantums:     perpetualPosition.Quantums,
+		FundingIndex: dtypes.NewIntFromBigInt(newFundingIndex),
+		YieldIndex:   perpYieldIndex.String(),
+	}
+
+	return bigNetSettlementPpm, newPerpetualPosition, nil
+}
+
+func getFundingPaymentAsSerializableInt(
+	bigNetSettlementPpm *big.Int,
+) (
+	fundingPayment dtypes.SerializableInt,
+) {
+	dividedSettlement := new(big.Int).Div(bigNetSettlementPpm, lib.BigIntOneMillion())
+	negatedSettlement := new(big.Int).Neg(dividedSettlement)
+	return dtypes.NewIntFromBigInt(negatedSettlement)
 }
 
 func calculateAssetYieldInQuoteQuantums(
