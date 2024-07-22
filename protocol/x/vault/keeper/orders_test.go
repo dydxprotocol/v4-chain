@@ -819,7 +819,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 		},
 		"Error - Market price is zero": {
 			vaultParams:                vaulttypes.DefaultParams(),
-			vaultId:                    constants.Vault_Clob0,
+			vaultId:                    constants.Vault_Clob_0,
 			vaultAssetQuoteQuantums:    big.NewInt(1_000_000_000), // 1,000 USDC
 			vaultInventoryBaseQuantums: big.NewInt(0),
 			clobPair:                   constants.ClobPair_Btc,
