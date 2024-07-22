@@ -455,6 +455,31 @@ func (k Keeper) GetCurrentDaiYieldEpochNumber(ctx sdk.Context) (epoch uint64, fo
 	return epoch, true
 }
 
+// SetAssetYieldIndex sets the current asset yield index
+func (k Keeper) SetAssetYieldIndex(ctx sdk.Context, yieldIndex *big.Rat) {
+	store := ctx.KVStore(k.storeKey)
+	bz, err := yieldIndex.GobEncode()
+	if err != nil {
+		panic("Could not decode yield index when setting asset yield index.")
+	}
+	store.Set([]byte(types.AssetYieldIndexPrefix), bz)
+}
+
+// GetSetAssetYieldIndex gets the current asset yield index
+func (k Keeper) GetAssetYieldIndex(ctx sdk.Context) (yieldIndex *big.Rat, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(types.AssetYieldIndexPrefix))
+	if bz == nil {
+		return nil, false
+	}
+	yieldIndex = new(big.Rat)
+	err := yieldIndex.GobDecode(bz)
+	if err != nil {
+		panic("Could not decode yield index when getting asset yield index.")
+	}
+	return yieldIndex, true
+}
+
 // GetSDAIEventManagerForTestingOnly returns the sDAI event manager for testing only
 func (k Keeper) GetSDAIEventManagerForTestingOnly() *sdaiserver.SDAIEventManager {
 	return k.sDAIEventManager

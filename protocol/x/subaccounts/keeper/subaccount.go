@@ -479,6 +479,7 @@ func (k Keeper) ClaimYieldForSubaccount(
 		return types.Subaccount{}, big.NewInt(0), errorsmod.Wrap(ratelimittypes.ErrEpochNotRetrieved, "could not retrive yield epoch number when claiming yield for subaccount")
 	}
 	lastEpochUnclaimed := k.getLastEpochClaimed(subaccount, currEpoch)
+
 	yieldAmount = big.NewInt(0)
 
 	for epoch := lastEpochUnclaimed; epoch <= currEpoch; epoch++ {
@@ -495,23 +496,6 @@ func (k Keeper) ClaimYieldForSubaccount(
 		}
 	}
 	return subaccount, yieldAmount, nil
-}
-
-func (k Keeper) getLastEpochClaimed(
-	subaccount types.Subaccount,
-	currEpoch uint64,
-) (
-	lastEpochUnclaimed uint64,
-) {
-	epochLastClaimed := subaccount.GetEpochYieldLastClaimed()
-	lastEpochUnclaimed = epochLastClaimed + 1
-	lastPossibleEpochUnclaimed := uint64(0)
-	if currEpoch >= ratelimittypes.MAX_NUM_YIELD_EPOCHS_STORED {
-		lastPossibleEpochUnclaimed = uint64(currEpoch - ratelimittypes.MAX_NUM_YIELD_EPOCHS_STORED + 1)
-	}
-
-	lastEpochUnclaimed = max(lastEpochUnclaimed, lastPossibleEpochUnclaimed)
-	return lastEpochUnclaimed
 }
 
 func (k Keeper) calculateYieldInEpochForSubaccount(
@@ -724,7 +708,7 @@ func (k Keeper) updateSubaccountWithYieldClaimedInEpoch(
 	if err != nil {
 		return types.Subaccount{}, err
 	}
-	subaccount.SetEpochYieldLastClaimed(epoch)
+	//subaccount.SetEpochYieldLastClaimed(epoch)
 	k.updateSubaccountAssetsWithNewYield(subaccount, newYield)
 	return subaccount, nil
 }
@@ -780,6 +764,9 @@ func GetSettledSubaccountWithPerpetuals(
 
 	newPerpetualPositions := []*types.PerpetualPosition{}
 	fundingPayments = make(map[uint32]dtypes.SerializableInt)
+
+	// TODO: implement yield claiming and return the total amount of yield
+	// totalNewYield := big.NewInt(0)
 
 	// Iterate through and settle all perpetual positions.
 	for _, p := range subaccount.PerpetualPositions {

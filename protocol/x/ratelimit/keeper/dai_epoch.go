@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -198,8 +199,30 @@ func (k Keeper) CreateAndStoreNewDaiYieldEpochParams(ctx sdk.Context) error {
 
 	k.SetCurrentDaiYieldEpochNumber(ctx, newEpoch)
 
+	err = k.SetNewYieldIndex(ctx, tradingDaiSupplyBeforeNewEpoch, tradingDaiMinted)
+	if err != nil {
+		return err
+	}
+
 	k.perpetualsKeeper.ProcessNewYieldEpoch(ctx, tradingDaiSupplyBeforeNewEpoch, tradingDaiMinted)
 
+	return nil
+}
+
+func (k Keeper) SetNewYieldIndex(
+	ctx sdk.Context,
+	totalTDaiPreMint *big.Int,
+	totalTDaiMinted *big.Int,
+) error {
+	assetYieldIndex, found := k.GetAssetYieldIndex(ctx)
+	if !found {
+		return errors.New("Could not retrieve asset yield index")
+	}
+
+	ratio := new(big.Rat).SetFrac(totalTDaiMinted, totalTDaiPreMint)
+	assetYieldIndex = assetYieldIndex.Add(assetYieldIndex, ratio)
+
+	k.SetAssetYieldIndex(ctx, assetYieldIndex)
 	return nil
 }
 
@@ -211,6 +234,7 @@ func (k Keeper) CalculateYieldParamsForNewEpoch(ctx sdk.Context) (*big.Int, *big
 
 	currentEpoch, found := k.GetCurrentDaiYieldEpochNumber(ctx)
 
+	// TODO: What if this is not found? We don't return an error if not found
 	if found {
 		newEpoch = currentEpoch + 1
 

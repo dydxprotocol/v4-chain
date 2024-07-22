@@ -60,6 +60,7 @@ func (k msgServer) UpdateSDAIConversionRate(
 
 			if bigConversionRate.Cmp(conversionRate) == 0 {
 
+				// TODO [YBCP-20]: Handle initializations better
 				currentRate, initialized := k.GetSDAIPrice(ctx)
 
 				if initialized && conversionRate.Cmp(currentRate) <= 0 {
@@ -67,6 +68,10 @@ func (k msgServer) UpdateSDAIConversionRate(
 						types.ErrInvalidSDAIConversionRate,
 						"The suggested sDAI conversion rate must be greater than the curret one",
 					)
+				}
+
+				if !initialized {
+					k.SetAssetYieldIndex(ctx, new(big.Rat).SetInt64(0))
 				}
 
 				k.SetSDAIPrice(ctx, conversionRate)

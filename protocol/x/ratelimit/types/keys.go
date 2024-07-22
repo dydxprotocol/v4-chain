@@ -45,8 +45,12 @@ const (
 	StoredDripRatePrefix = "StoredDripRatePrefix:"
 
 	// DaiYieldEpochPrefix is the prefix for the key-value store for DaiYieldEpoch
-	// The key vakue store is implemented as an array of size 100
+	// The key value store is implemented as an array of size 100
 	DaiYieldEpochPrefix = "DaiYieldEpoch:"
+
+	// AssetYieldIndexPrefix si the prefix for the key value store that tracks
+	// the cumulative yield index across all yield epochs.
+	AssetYieldIndexPrefix = "AssetYieldIndex:"
 )
 
 // State
