@@ -60,6 +60,7 @@ func createAppModuleWithKeeper(t *testing.T) (prices.AppModule, *prices_keeper.K
 		nil,
 		nil,
 		nil,
+		nil,
 	), keeper, ctx
 }
 

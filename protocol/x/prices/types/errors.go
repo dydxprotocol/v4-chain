@@ -25,6 +25,11 @@ var (
 	ErrMarketPricesAndParamsDontMatch = errorsmod.Register(ModuleName, 203, "Market prices and params don't match")
 	ErrMarketParamAlreadyExists       = errorsmod.Register(ModuleName, 204, "Market params already exists")
 	ErrMarketParamPairAlreadyExists   = errorsmod.Register(ModuleName, 205, "Market params pair already exists")
+	ErrMarketPairConversionFailed     = errorsmod.Register(
+		ModuleName,
+		206,
+		"Market pair conversion to currency pair failed",
+	)
 
 	// 300 - 399: Price related errors.
 	ErrIndexPriceNotAvailable = errorsmod.Register(ModuleName, 300, "Index price is not available")

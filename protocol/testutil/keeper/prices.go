@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+	"go.uber.org/zap"
 
 	"github.com/cosmos/gogoproto/proto"
 
@@ -24,6 +25,10 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	revsharekeeper "github.com/dydxprotocol/v4-chain/protocol/x/revshare/keeper"
+	"github.com/skip-mev/slinky/oracle/config"
+	"github.com/skip-mev/slinky/providers/apis/dydx"
+	dydxtypes "github.com/skip-mev/slinky/providers/apis/dydx/types"
+	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -45,10 +50,10 @@ func PricesKeepers(t testing.TB) (
 	) []GenesisInitializer {
 		// Necessary keeper for testing
 		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc)
-
+		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
 		// Define necessary keepers here for unit tests
 		keeper, storeKey, indexPriceCache, mockTimeProvider =
-			createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper)
+			createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper, marketMapKeeper)
 
 		return []GenesisInitializer{keeper}
 	})
@@ -62,6 +67,7 @@ func createPricesKeeper(
 	cdc *codec.ProtoCodec,
 	transientStoreKey storetypes.StoreKey,
 	revShareKeeper *revsharekeeper.Keeper,
+	marketMapKeeper *marketmapkeeper.Keeper,
 ) (
 	*keeper.Keeper,
 	storetypes.StoreKey,
@@ -94,9 +100,75 @@ func createPricesKeeper(
 			lib.GovModuleAddress.String(),
 		},
 		revShareKeeper,
+		marketMapKeeper,
 	)
 
 	return k, storeKey, indexPriceCache, mockTimeProvider
+}
+
+// Convert MarketParams into MarketMap markets and create them in the MarketMap keeper.
+func CreateMarketsInMarketMapFromParams(
+	t testing.TB,
+	ctx sdk.Context,
+	mmk *marketmapkeeper.Keeper,
+	allMarketParams []types.MarketParam,
+) {
+	// fill out config with dummy variables to pass validation.  This handler is only used to run the
+	// ConvertMarketParamsToMarketMap member function.
+	h, err := dydx.NewAPIHandler(zap.NewNop(), config.APIConfig{
+		Enabled:          true,
+		Timeout:          1,
+		Interval:         1,
+		ReconnectTimeout: 1,
+		MaxQueries:       1,
+		Atomic:           false,
+		Endpoints:        []config.Endpoint{{URL: "upgrade"}},
+		BatchSize:        0,
+		Name:             dydx.Name,
+	})
+	require.NoError(t, err)
+
+	var mpr dydxtypes.QueryAllMarketParamsResponse
+	for _, mp := range allMarketParams {
+		mpr.MarketParams = append(mpr.MarketParams, dydxtypes.MarketParam{
+			Id:                 mp.Id,
+			Pair:               mp.Pair,
+			Exponent:           mp.Exponent,
+			MinExchanges:       mp.MinExchanges,
+			MinPriceChangePpm:  mp.MinPriceChangePpm,
+			ExchangeConfigJson: mp.ExchangeConfigJson,
+		})
+	}
+	mm, err := h.ConvertMarketParamsToMarketMap(mpr)
+	require.NoError(t, err)
+
+	for _, market := range mm.MarketMap.Markets {
+		market.Ticker.Enabled = false
+		require.NoError(t, mmk.CreateMarket(ctx, market))
+	}
+}
+
+// CreateTestMarket creates a market with the given MarketParam and MarketPrice. It creates this market
+// in the market map first.
+func CreateTestMarket(
+	t testing.TB,
+	ctx sdk.Context,
+	k *keeper.Keeper,
+	marketParam types.MarketParam,
+	marketPrice types.MarketPrice,
+) (types.MarketParam, error) {
+	CreateMarketsInMarketMapFromParams(
+		t,
+		ctx,
+		k.MarketMapKeeper.(*marketmapkeeper.Keeper),
+		[]types.MarketParam{marketParam},
+	)
+
+	return k.CreateMarket(
+		ctx,
+		marketParam,
+		marketPrice,
+	)
 }
 
 // CreateTestMarkets creates a standard set of test markets for testing.
@@ -104,8 +176,10 @@ func createPricesKeeper(
 // defined in constants.TestMarkets.
 func CreateTestMarkets(t testing.TB, ctx sdk.Context, k *keeper.Keeper) {
 	for i, marketParam := range constants.TestMarketParams {
-		_, err := k.CreateMarket(
+		_, err := CreateTestMarket(
+			t,
 			ctx,
+			k,
 			marketParam,
 			constants.TestMarketPrices[i],
 		)
@@ -273,8 +347,10 @@ func CreateTestPriceMarkets(
 	// Create a new market param and price.
 	marketId := uint32(0)
 	for _, m := range markets {
-		_, err := pricesKeeper.CreateMarket(
+		_, err := CreateTestMarket(
+			t,
 			ctx,
+			pricesKeeper,
 			m.Param,
 			m.Price,
 		)
