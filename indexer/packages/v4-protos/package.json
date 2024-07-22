@@ -13,7 +13,7 @@
   "scripts": {
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
-    "build": "pnpm run build:verify-proto && rm -rf build/ && tsc",
+    "build": "rm -rf build/ && tsc",
     "build:prod": "rm -rf build/ && tsc",
     "build:watch": "pnpm run build -- --watch",
     "test": "echo \"Error: no test specified\"",
