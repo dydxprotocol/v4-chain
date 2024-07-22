@@ -65,12 +65,14 @@ func PerpetualsKeepersWithClobHelpers(
 		) []GenesisInitializer {
 			// Define necessary keepers here for unit tests
 			revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
+			marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
 			pc.PricesKeeper, _, pc.IndexPriceCache, pc.MockTimeProvider = createPricesKeeper(
 				stateStore,
 				db,
 				cdc,
 				transientStoreKey,
 				revShareKeeper,
+				marketMapKeeper,
 			)
 			pc.EpochsKeeper, _ = createEpochsKeeper(stateStore, db, cdc)
 			pc.PerpetualsKeeper, pc.StoreKey = createPerpetualsKeeperWithClobHelpers(
