@@ -178,6 +178,12 @@ func (k Keeper) GetVaultClobOrders(
 			err,
 			fmt.Sprintf("VaultId: %v", vaultId),
 		)
+	} else if marketPrice.Price == 0 {
+		// Market price can be zero upon market initialization or due to invalid exchange config.
+		return orders, errorsmod.Wrap(
+			types.ErrZeroMarketPrice,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
 	}
 
 	// Calculate leverage = open notional / equity.
@@ -215,6 +221,8 @@ func (k Keeper) GetVaultClobOrders(
 	orderSize.Quo(orderSize, lib.BigIntOneMillion())
 
 	// Round (towards-zero) order size to the nearest multiple of step size.
+	// Note: below division by StepBaseQuantums is safe as x/clob disallows
+	// a clob pair's StepBaseQuantums to be zero.
 	stepSize := lib.BigU(clobPair.StepBaseQuantums)
 	orderSize.Quo(orderSize, stepSize).Mul(orderSize, stepSize)
 
@@ -315,6 +323,8 @@ func (k Keeper) GetVaultClobOrders(
 		}
 
 		// Bound subticks between the minimum and maximum subticks.
+		// Note: below division by SubticksPerTick is safe as x/clob disallows
+		// a clob pair's SubticksPerTick to be zero.
 		subticksPerTick := lib.BigU(clobPair.SubticksPerTick)
 		subticks = lib.BigIntRoundToMultiple(
 			subticks,
