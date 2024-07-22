@@ -233,11 +233,13 @@ test-unit-and-integration:
 benchmark:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='$(build_tags)' -bench=. ./...
 
-test-container:
-	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./...
+test-container: # run ./app/upgrades/v5.2.0 first to avoid resource conflict
+	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./app/upgrades/v5.2.0
+	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' $$(go list ./... | grep -v './app/upgrades/v5.2.0')
 
-test-container-accept:
-	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./... -args -accept
+test-container-accept: # run ./app/upgrades/v5.2.0 first to avoid resource conflict
+	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./app/upgrades/v5.2.0 -args -accept
+	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' $$(go list ./... | grep -v './app/upgrades/v5.2.0') -args -accept
 
 test-container-build:
 	$(MAKE) localnet-build

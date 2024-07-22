@@ -282,6 +282,10 @@ func TestUpgrade(t *testing.T) {
 	defer testnet.MustCleanUp()
 	node := testnet.Nodes["alice"]
 
+	// Wait until block height 50 as upgrade occurs at block height 60.
+	err = node.WaitUntilBlockHeight(50)
+	require.NoError(t, err)
+
 	err = UpgradeTestnet(constants.AliceAccAddress.String(), t, node, UpgradeToVersion)
 	require.NoError(t, err)
 }

@@ -28,7 +28,7 @@ func UpgradeTestnet(nodeAddress string, t *testing.T, node *Node, upgradeToVersi
 				Authority: GovModuleAddress,
 				Plan: upgrade.Plan{
 					Name:   upgradeToVersion,
-					Height: 10,
+					Height: 60,
 				},
 			},
 		},
@@ -61,6 +61,6 @@ func UpgradeTestnet(nodeAddress string, t *testing.T, node *Node, upgradeToVersi
 		))
 	}
 
-	err = node.WaitUntilBlockHeight(12)
+	err = node.WaitUntilBlockHeight(64)
 	return err
 }
