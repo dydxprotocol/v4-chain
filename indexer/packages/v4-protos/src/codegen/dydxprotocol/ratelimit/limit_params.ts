@@ -148,7 +148,7 @@ export const Limiter = {
     }
 
     if (message.baselineMinimum.length !== 0) {
-      writer.uint32(26).Uint8Array(message.baselineMinimum);
+      writer.uint32(26).bytes(message.baselineMinimum);
     }
 
     if (message.baselineTvlPpm !== 0) {
@@ -172,7 +172,7 @@ export const Limiter = {
           break;
 
         case 3:
-          message.baselineMinimum = reader.Uint8Array();
+          message.baselineMinimum = reader.bytes();
           break;
 
         case 4:

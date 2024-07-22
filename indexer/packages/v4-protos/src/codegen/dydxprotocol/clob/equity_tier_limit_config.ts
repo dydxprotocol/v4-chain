@@ -120,7 +120,7 @@ function createBaseEquityTierLimit(): EquityTierLimit {
 export const EquityTierLimit = {
   encode(message: EquityTierLimit, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.usdTncRequired.length !== 0) {
-      writer.uint32(10).Uint8Array(message.usdTncRequired);
+      writer.uint32(10).bytes(message.usdTncRequired);
     }
 
     if (message.limit !== 0) {
@@ -140,7 +140,7 @@ export const EquityTierLimit = {
 
       switch (tag >>> 3) {
         case 1:
-          message.usdTncRequired = reader.Uint8Array();
+          message.usdTncRequired = reader.bytes();
           break;
 
         case 2:

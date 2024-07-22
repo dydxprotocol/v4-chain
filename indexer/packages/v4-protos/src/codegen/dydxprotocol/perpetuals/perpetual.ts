@@ -275,7 +275,7 @@ export const Perpetual = {
     }
 
     if (message.fundingIndex.length !== 0) {
-      writer.uint32(18).Uint8Array(message.fundingIndex);
+      writer.uint32(18).bytes(message.fundingIndex);
     }
 
     return writer;
@@ -295,7 +295,7 @@ export const Perpetual = {
           break;
 
         case 2:
-          message.fundingIndex = reader.Uint8Array();
+          message.fundingIndex = reader.bytes();
           break;
 
         default:

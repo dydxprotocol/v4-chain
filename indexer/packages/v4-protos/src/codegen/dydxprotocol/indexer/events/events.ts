@@ -1158,7 +1158,7 @@ export const FundingUpdateV1 = {
     }
 
     if (message.fundingIndex.length !== 0) {
-      writer.uint32(26).Uint8Array(message.fundingIndex);
+      writer.uint32(26).bytes(message.fundingIndex);
     }
 
     return writer;
@@ -1182,7 +1182,7 @@ export const FundingUpdateV1 = {
           break;
 
         case 3:
-          message.fundingIndex = reader.Uint8Array();
+          message.fundingIndex = reader.bytes();
           break;
 
         default:
