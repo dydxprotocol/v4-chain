@@ -817,6 +817,21 @@ func TestGetVaultClobOrders(t *testing.T) {
 			perpetual:                  constants.BtcUsd_0DefaultFunding_10AtomicResolution,
 			expectedErr:                vaulttypes.ErrNonPositiveEquity,
 		},
+		"Error - Market price is zero": {
+			vaultParams:                vaulttypes.DefaultParams(),
+			vaultId:                    constants.Vault_Clob0,
+			vaultAssetQuoteQuantums:    big.NewInt(1_000_000_000), // 1,000 USDC
+			vaultInventoryBaseQuantums: big.NewInt(0),
+			clobPair:                   constants.ClobPair_Btc,
+			marketParam:                constants.TestMarketParams[0],
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    0,
+			},
+			perpetual:   constants.BtcUsd_0DefaultFunding_10AtomicResolution,
+			expectedErr: vaulttypes.ErrZeroMarketPrice,
+		},
 	}
 
 	for name, tc := range tests {
