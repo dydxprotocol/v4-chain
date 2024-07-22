@@ -5,12 +5,10 @@ import (
 	"fmt"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
@@ -133,26 +131,9 @@ func initRevShareModuleState(
 	}
 }
 
-func initAccountplusModuleState(
-	ctx sdk.Context,
-	accountKeeper authkeeper.AccountKeeper,
-	accountplusKeeper accountpluskeeper.Keeper,
-) {
-	accounts := accountKeeper.GetAllAccounts(ctx)
-	for _, account := range accounts {
-		_, err := accountplusKeeper.InitializeAccount(ctx, account.GetAddress())
-		panic(fmt.Sprintf(
-			"failed to initialize accountplus state for address %s caused by\n %d",
-			account.GetAddress().String(),
-			err))
-	}
-}
-
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
-	accountKeeper authkeeper.AccountKeeper,
-	accountplusKeeper accountpluskeeper.Keeper,
 	clobKeeper clobtypes.ClobKeeper,
 	pricesKeeper pricestypes.PricesKeeper,
 	mmKeeper marketmapkeeper.Keeper,
@@ -172,8 +153,6 @@ func CreateUpgradeHandler(
 
 		// Initialize the rev share module state.
 		initRevShareModuleState(sdkCtx, revShareKeeper, pricesKeeper)
-
-		initAccountplusModuleState(sdkCtx, accountKeeper, accountplusKeeper)
 
 		sdkCtx.Logger().Info("Successfully removed stateful orders from state")
 

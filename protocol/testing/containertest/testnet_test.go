@@ -274,14 +274,14 @@ func TestMarketPrices(t *testing.T) {
 	assertPricesWithTimeout(t, node, expectedPrices, 30*time.Second)
 }
 
-// func TestUpgrade(t *testing.T) {
-// 	testnet, err := NewTestnetWithPreupgradeGenesis()
-// 	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
-// 	err = testnet.Start()
-// 	require.NoError(t, err)
-// 	defer testnet.MustCleanUp()
-// 	node := testnet.Nodes["alice"]
+func TestUpgrade(t *testing.T) {
+	testnet, err := NewTestnetWithPreupgradeGenesis()
+	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
+	err = testnet.Start()
+	require.NoError(t, err)
+	defer testnet.MustCleanUp()
+	node := testnet.Nodes["alice"]
 
-// 	err = UpgradeTestnet(constants.AliceAccAddress.String(), t, node, UpgradeToVersion)
-// 	require.NoError(t, err)
-// }
+	err = UpgradeTestnet(constants.AliceAccAddress.String(), t, node, UpgradeToVersion)
+	require.NoError(t, err)
+}

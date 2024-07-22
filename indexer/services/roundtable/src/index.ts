@@ -20,6 +20,7 @@ import performComplianceStatusTransitionsTask from './tasks/perform-compliance-s
 import pnlInstrumentationTask from './tasks/pnl-instrumentation';
 import removeExpiredOrdersTask from './tasks/remove-expired-orders';
 import removeOldOrderUpdatesTask from './tasks/remove-old-order-updates';
+import subaccountUsernameGeneratorTask from './tasks/subaccount-username-generator';
 import takeFastSyncSnapshotTask from './tasks/take-fast-sync-snapshot';
 import trackLag from './tasks/track-lag';
 import uncrossOrderbookTask from './tasks/uncross-orderbook';
@@ -189,6 +190,14 @@ async function start(): Promise<void> {
       aggregateTradingRewardsTasks(TradingRewardAggregationPeriod.MONTHLY),
       'aggregate_trading_rewards_monthly',
       config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS,
+    );
+  }
+
+  if (config.LOOPS_ENABLED_SUBACCOUNT_USERNAME_GENERATOR) {
+    startLoop(
+      subaccountUsernameGeneratorTask,
+      'subaccount_username_generator',
+      config.LOOPS_INTERVAL_MS_SUBACCOUNT_USERNAME_GENERATOR,
     );
   }
 

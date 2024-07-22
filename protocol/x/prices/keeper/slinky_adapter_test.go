@@ -91,7 +91,7 @@ func TestBadMarketData(t *testing.T) {
 			ExchangeConfigJson: "{}",
 		},
 		types.MarketPrice{})
-	require.NoError(t, err)
+	require.Error(t, err)
 
 	_, found := keeper.GetCurrencyPairFromID(ctx, uint64(0))
 	require.False(t, found)

@@ -31,6 +31,7 @@ import {
   FillCreateObject,
   FillType,
   FundingIndexUpdatesCreateObject,
+  LeaderboardPnlCreateObject,
   Liquidity,
   LiquidityTiersCreateObject,
   MarketCreateObject,
@@ -64,6 +65,7 @@ export const createdHeight: string = '2';
 export const invalidTicker: string = 'INVALID-INVALID';
 export const dydxChain: string = 'dydx';
 export const defaultAddress: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf';
+export const defaultAddress2: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc575lnf';
 export const blockedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
 
 // ============== Subaccounts ==============
@@ -135,6 +137,11 @@ export const defaultWallet: WalletCreateObject = {
 export const defaultWallet2: WalletCreateObject = {
   address: defaultWalletAddress,
   totalTradingRewards: denomToHumanReadableConversion(1),
+};
+
+export const defaultWallet3: WalletCreateObject = {
+  address: defaultAddress2,
+  totalTradingRewards: denomToHumanReadableConversion(0),
 };
 
 // ============== Assets ==============
@@ -854,4 +861,38 @@ export const defaultSubaccountUsername2: SubaccountUsernamesCreateObject = {
 export const duplicatedSubaccountUsername: SubaccountUsernamesCreateObject = {
   username: 'LyingRaisin32',
   subaccountId: defaultSubaccountId3,
+};
+
+// ============== Leaderboard pnl Data ==============
+
+export const defaultLeaderboardPnlOneDay: LeaderboardPnlCreateObject = {
+  address: defaultAddress,
+  timeSpan: 'ONE_DAY',
+  pnl: '10000',
+  currentEquity: '1000',
+  rank: 1,
+};
+
+export const defaultLeaderboardPnl2OneDay: LeaderboardPnlCreateObject = {
+  address: defaultAddress2,
+  timeSpan: 'ONE_DAY',
+  pnl: '100',
+  currentEquity: '10000',
+  rank: 2,
+};
+
+export const defaultLeaderboardPnl1AllTime: LeaderboardPnlCreateObject = {
+  address: defaultAddress,
+  timeSpan: 'ALL_TIME',
+  pnl: '10000',
+  currentEquity: '1000',
+  rank: 1,
+};
+
+export const defaultLeaderboardPnlOneDayToUpsert: LeaderboardPnlCreateObject = {
+  address: defaultAddress,
+  timeSpan: 'ONE_DAY',
+  pnl: '100000',
+  currentEquity: '1000',
+  rank: 1,
 };
