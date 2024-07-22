@@ -6,11 +6,16 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
+// The rate limiting is only performed during `CheckTx`.
+// Rate limiting during `ReCheckTx` might result in over counting.
+func (k *Keeper) ShouldRateLimit(ctx sdk.Context) bool {
+	return ctx.IsCheckTx() && !ctx.IsReCheckTx()
+}
+
 // RateLimitCancelOrder passes order cancellations with valid clob pairs to `cancelOrderRateLimiter`.
-// The rate limiting is only performed during `CheckTx` and `ReCheckTx`.
 func (k *Keeper) RateLimitCancelOrder(ctx sdk.Context, msg *types.MsgCancelOrder) error {
-	// Only rate limit during `CheckTx` and `ReCheckTx`.
-	if lib.IsDeliverTxMode(ctx) {
+	// Only rate limit during `CheckTx`.
+	if !k.ShouldRateLimit(ctx) {
 		return nil
 	}
 
@@ -37,8 +42,8 @@ func (k *Keeper) RateLimitCancelOrder(ctx sdk.Context, msg *types.MsgCancelOrder
 // RateLimitPlaceOrder passes orders with valid clob pairs to `placeOrderRateLimiter`.
 // The rate limiting is only performed during `CheckTx` and `ReCheckTx`.
 func (k *Keeper) RateLimitPlaceOrder(ctx sdk.Context, msg *types.MsgPlaceOrder) error {
-	// Only rate limit during `CheckTx` and `ReCheckTx`.
-	if lib.IsDeliverTxMode(ctx) {
+	// Only rate limit during `CheckTx`.
+	if !k.ShouldRateLimit(ctx) {
 		return nil
 	}
 
@@ -65,8 +70,8 @@ func (k *Keeper) RateLimitPlaceOrder(ctx sdk.Context, msg *types.MsgPlaceOrder) 
 // RateLimitBatchCancel passes orders with valid clob pairs to `placeOrderRateLimiter`.
 // The rate limiting is only performed during `CheckTx` and `ReCheckTx`.
 func (k *Keeper) RateLimitBatchCancel(ctx sdk.Context, msg *types.MsgBatchCancel) error {
-	// Only rate limit during `CheckTx` and `ReCheckTx`.
-	if lib.IsDeliverTxMode(ctx) {
+	// Only rate limit during `CheckTx`.
+	if !k.ShouldRateLimit(ctx) {
 		return nil
 	}
 
