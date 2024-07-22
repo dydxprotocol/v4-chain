@@ -3,6 +3,7 @@ package keeper
 import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
@@ -89,4 +90,40 @@ func (k Keeper) CreateClobPair(
 	}
 
 	return clobPair.Id, nil
+}
+
+// Function to wrap the creation of a new perpetual
+// Note: This will only list long-tail/isolated markets
+// TODO: Complete implementation and add tests pending marketmap decoding functions and testutils
+func (k Keeper) CreatePerpetual(
+	ctx sdk.Context,
+	marketId uint32,
+	ticker string,
+) (perpetualId uint32, err error) {
+	perpetualId = k.PerpetualsKeeper.AcquireNextPerpetualID(ctx)
+
+	// TODO: Calculate atomic resolution from market map reference price
+	// TODO: get reference price once market map decoding functions are available
+	var atomicResolution int32
+	//marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, ticker)
+	//if err != nil {
+	//	return 0, err
+	//}
+
+	// Create a new perpetual
+	perpetual, err := k.PerpetualsKeeper.CreatePerpetual(
+		ctx,
+		perpetualId,
+		ticker,
+		marketId,
+		atomicResolution,
+		types.DefaultFundingPpm,
+		types.LiquidityTier_LongTail,
+		perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	return perpetual.GetId(), nil
 }

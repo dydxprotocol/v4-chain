@@ -677,7 +677,6 @@ async function setupInitialSubaccounts(
 ): Promise<void> {
   const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll({
     address: testConstants.defaultAddress,
-    subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
   }, [], {});
   await setupSubaccounts(deltaSeconds, _.map(subaccounts, 'id'));
 }
