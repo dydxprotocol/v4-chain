@@ -13,7 +13,7 @@ export interface DaemonVoteExtension_PricesEntrySDKType {
 export interface DaemonVoteExtension {
   /**
    * Prices defines a map of marketId -> price.Bytes() . i.e. 1 ->
-   * 0x123.. (Uint8Array). Notice the `id` function is determined by the
+   * 0x123.. (bytes). Notice the `id` function is determined by the
    * `marketParams` used in the VoteExtensionHandler.
    */
   prices: {
@@ -25,7 +25,7 @@ export interface DaemonVoteExtension {
 export interface DaemonVoteExtensionSDKType {
   /**
    * Prices defines a map of marketId -> price.Bytes() . i.e. 1 ->
-   * 0x123.. (Uint8Array). Notice the `id` function is determined by the
+   * 0x123.. (bytes). Notice the `id` function is determined by the
    * `marketParams` used in the VoteExtensionHandler.
    */
   prices: {
@@ -47,7 +47,7 @@ export const DaemonVoteExtension_PricesEntry = {
     }
 
     if (message.value.length !== 0) {
-      writer.uint32(18).Uint8Array(message.value);
+      writer.uint32(18).bytes(message.value);
     }
 
     return writer;
@@ -67,7 +67,7 @@ export const DaemonVoteExtension_PricesEntry = {
           break;
 
         case 2:
-          message.value = reader.Uint8Array();
+          message.value = reader.bytes();
           break;
 
         default:
@@ -138,7 +138,7 @@ export const DaemonVoteExtension = {
       [key: number]: Uint8Array;
     }>((acc, [key, value]) => {
       if (value !== undefined) {
-        acc[Number(key)] = value;
+        acc[Number(key)] = bytes.fromPartial(value);
       }
 
       return acc;

@@ -7,7 +7,7 @@ function replaceBytes(filePath) {
   let data = fs.readFileSync(filePath, 'utf8');
 
   // Replace 'bytes' with 'Uint8Array'
-  data = data.replace(/\bbytes\b/g, 'Uint8Array');
+  data = data.replace(/: bytes\b/g, ': Uint8Array');
 
   // Replace 'bytes.fromAmino(value)' with 'value'
   data = data.replace(
