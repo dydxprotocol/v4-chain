@@ -54,7 +54,7 @@ export const AssetPosition = {
     }
 
     if (message.quantums.length !== 0) {
-      writer.uint32(18).bytes(message.quantums);
+      writer.uint32(18).Uint8Array(message.quantums);
     }
 
     if (!message.index.isZero()) {
@@ -78,7 +78,7 @@ export const AssetPosition = {
           break;
 
         case 2:
-          message.quantums = reader.bytes();
+          message.quantums = reader.Uint8Array();
           break;
 
         case 3:

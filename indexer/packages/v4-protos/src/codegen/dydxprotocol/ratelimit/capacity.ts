@@ -60,7 +60,7 @@ export const DenomCapacity = {
     }
 
     for (const v of message.capacityList) {
-      writer.uint32(18).bytes(v!);
+      writer.uint32(18).Uint8Array(v!);
     }
 
     return writer;
@@ -80,7 +80,7 @@ export const DenomCapacity = {
           break;
 
         case 2:
-          message.capacityList.push(reader.bytes());
+          message.capacityList.push(reader.Uint8Array());
           break;
 
         default:
@@ -115,7 +115,7 @@ export const LimiterCapacity = {
     }
 
     if (message.capacity.length !== 0) {
-      writer.uint32(18).bytes(message.capacity);
+      writer.uint32(18).Uint8Array(message.capacity);
     }
 
     return writer;
@@ -135,7 +135,7 @@ export const LimiterCapacity = {
           break;
 
         case 2:
-          message.capacity = reader.bytes();
+          message.capacity = reader.Uint8Array();
           break;
 
         default:

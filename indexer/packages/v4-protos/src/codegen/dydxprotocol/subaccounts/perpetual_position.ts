@@ -52,11 +52,11 @@ export const PerpetualPosition = {
     }
 
     if (message.quantums.length !== 0) {
-      writer.uint32(18).bytes(message.quantums);
+      writer.uint32(18).Uint8Array(message.quantums);
     }
 
     if (message.fundingIndex.length !== 0) {
-      writer.uint32(26).bytes(message.fundingIndex);
+      writer.uint32(26).Uint8Array(message.fundingIndex);
     }
 
     return writer;
@@ -76,11 +76,11 @@ export const PerpetualPosition = {
           break;
 
         case 2:
-          message.quantums = reader.bytes();
+          message.quantums = reader.Uint8Array();
           break;
 
         case 3:
-          message.fundingIndex = reader.bytes();
+          message.fundingIndex = reader.Uint8Array();
           break;
 
         default:

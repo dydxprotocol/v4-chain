@@ -186,15 +186,15 @@ export const IndexerPerpetualPosition = {
     }
 
     if (message.quantums.length !== 0) {
-      writer.uint32(18).bytes(message.quantums);
+      writer.uint32(18).Uint8Array(message.quantums);
     }
 
     if (message.fundingIndex.length !== 0) {
-      writer.uint32(26).bytes(message.fundingIndex);
+      writer.uint32(26).Uint8Array(message.fundingIndex);
     }
 
     if (message.fundingPayment.length !== 0) {
-      writer.uint32(34).bytes(message.fundingPayment);
+      writer.uint32(34).Uint8Array(message.fundingPayment);
     }
 
     return writer;
@@ -214,15 +214,15 @@ export const IndexerPerpetualPosition = {
           break;
 
         case 2:
-          message.quantums = reader.bytes();
+          message.quantums = reader.Uint8Array();
           break;
 
         case 3:
-          message.fundingIndex = reader.bytes();
+          message.fundingIndex = reader.Uint8Array();
           break;
 
         case 4:
-          message.fundingPayment = reader.bytes();
+          message.fundingPayment = reader.Uint8Array();
           break;
 
         default:
@@ -260,7 +260,7 @@ export const IndexerAssetPosition = {
     }
 
     if (message.quantums.length !== 0) {
-      writer.uint32(18).bytes(message.quantums);
+      writer.uint32(18).Uint8Array(message.quantums);
     }
 
     if (!message.index.isZero()) {
@@ -284,7 +284,7 @@ export const IndexerAssetPosition = {
           break;
 
         case 2:
-          message.quantums = reader.bytes();
+          message.quantums = reader.Uint8Array();
           break;
 
         case 3:

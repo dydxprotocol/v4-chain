@@ -13,7 +13,7 @@ export interface DaemonVoteExtension_PricesEntrySDKType {
 export interface DaemonVoteExtension {
   /**
    * Prices defines a map of marketId -> price.Bytes() . i.e. 1 ->
-   * 0x123.. (bytes). Notice the `id` function is determined by the
+   * 0x123.. (Uint8Array). Notice the `id` function is determined by the
    * `marketParams` used in the VoteExtensionHandler.
    */
   prices: {
@@ -25,7 +25,7 @@ export interface DaemonVoteExtension {
 export interface DaemonVoteExtensionSDKType {
   /**
    * Prices defines a map of marketId -> price.Bytes() . i.e. 1 ->
-   * 0x123.. (bytes). Notice the `id` function is determined by the
+   * 0x123.. (Uint8Array). Notice the `id` function is determined by the
    * `marketParams` used in the VoteExtensionHandler.
    */
   prices: {
@@ -36,30 +36,24 @@ export interface DaemonVoteExtensionSDKType {
 function createBaseDaemonVoteExtension_PricesEntry(): DaemonVoteExtension_PricesEntry {
   return {
     key: 0,
-    value: new Uint8Array(),
+    value: new Uint8Array()
   };
 }
 
 export const DaemonVoteExtension_PricesEntry = {
-  encode(
-    message: DaemonVoteExtension_PricesEntry,
-    writer: _m0.Writer = _m0.Writer.create()
-  ): _m0.Writer {
+  encode(message: DaemonVoteExtension_PricesEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.key !== 0) {
       writer.uint32(8).uint32(message.key);
     }
 
     if (message.value.length !== 0) {
-      writer.uint32(18).bytes(message.value);
+      writer.uint32(18).Uint8Array(message.value);
     }
 
     return writer;
   },
 
-  decode(
-    input: _m0.Reader | Uint8Array,
-    length?: number
-  ): DaemonVoteExtension_PricesEntry {
+  decode(input: _m0.Reader | Uint8Array, length?: number): DaemonVoteExtension_PricesEntry {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseDaemonVoteExtension_PricesEntry();
@@ -73,7 +67,7 @@ export const DaemonVoteExtension_PricesEntry = {
           break;
 
         case 2:
-          message.value = reader.bytes();
+          message.value = reader.Uint8Array();
           break;
 
         default:
@@ -85,35 +79,28 @@ export const DaemonVoteExtension_PricesEntry = {
     return message;
   },
 
-  fromPartial(
-    object: DeepPartial<DaemonVoteExtension_PricesEntry>
-  ): DaemonVoteExtension_PricesEntry {
+  fromPartial(object: DeepPartial<DaemonVoteExtension_PricesEntry>): DaemonVoteExtension_PricesEntry {
     const message = createBaseDaemonVoteExtension_PricesEntry();
     message.key = object.key ?? 0;
     message.value = object.value ?? new Uint8Array();
     return message;
-  },
+  }
+
 };
 
 function createBaseDaemonVoteExtension(): DaemonVoteExtension {
   return {
-    prices: {},
+    prices: {}
   };
 }
 
 export const DaemonVoteExtension = {
-  encode(
-    message: DaemonVoteExtension,
-    writer: _m0.Writer = _m0.Writer.create()
-  ): _m0.Writer {
+  encode(message: DaemonVoteExtension, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     Object.entries(message.prices).forEach(([key, value]) => {
-      DaemonVoteExtension_PricesEntry.encode(
-        {
-          key: key as any,
-          value,
-        },
-        writer.uint32(10).fork()
-      ).ldelim();
+      DaemonVoteExtension_PricesEntry.encode({
+        key: (key as any),
+        value
+      }, writer.uint32(10).fork()).ldelim();
     });
     return writer;
   },
@@ -128,10 +115,7 @@ export const DaemonVoteExtension = {
 
       switch (tag >>> 3) {
         case 1:
-          const entry1 = DaemonVoteExtension_PricesEntry.decode(
-            reader,
-            reader.uint32()
-          );
+          const entry1 = DaemonVoteExtension_PricesEntry.decode(reader, reader.uint32());
 
           if (entry1.value !== undefined) {
             message.prices[entry1.key] = entry1.value;
@@ -154,11 +138,12 @@ export const DaemonVoteExtension = {
       [key: number]: Uint8Array;
     }>((acc, [key, value]) => {
       if (value !== undefined) {
-        acc[Number(key)] = new Uint8Array(value);
+        acc[Number(key)] = value;
       }
 
       return acc;
     }, {});
     return message;
-  },
+  }
+
 };

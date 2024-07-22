@@ -13,11 +13,11 @@
   "scripts": {
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
-    "build": "rm -rf build/ && tsc",
+    "build": "pnpm run build:verify-proto && rm -rf build/ && tsc",
     "build:prod": "rm -rf build/ && tsc",
     "build:watch": "pnpm run build -- --watch",
     "test": "echo \"Error: no test specified\"",
-    "build:proto": "(cd ../../.. && make proto-export) && rm -rf src/codegen && telescope transpile --protoDirs ../../../.proto-export --outPath ./src/codegen --no-includeAminos --includeLCDClients --includeRPCClients",
+    "build:proto": "(cd ../../.. && make proto-export) && rm -rf src/codegen && telescope transpile --protoDirs ../../../.proto-export --outPath ./src/codegen --no-includeAminos --includeLCDClients --includeRPCClients && node ./type_remappings.js",
     "build:verify-proto": "pnpm run build:proto && git diff --exit-code src/codegen"
   },
   "repository": {

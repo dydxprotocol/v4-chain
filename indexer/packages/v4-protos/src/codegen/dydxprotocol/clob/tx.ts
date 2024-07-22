@@ -742,7 +742,7 @@ export const OperationRaw = {
     }
 
     if (message.shortTermOrderPlacement !== undefined) {
-      writer.uint32(18).bytes(message.shortTermOrderPlacement);
+      writer.uint32(18).Uint8Array(message.shortTermOrderPlacement);
     }
 
     if (message.orderRemoval !== undefined) {
@@ -766,7 +766,7 @@ export const OperationRaw = {
           break;
 
         case 2:
-          message.shortTermOrderPlacement = reader.bytes();
+          message.shortTermOrderPlacement = reader.Uint8Array();
           break;
 
         case 3:

@@ -130,7 +130,7 @@ export interface IndexerTendermintEvent {
   /** Version of the event. */
 
   version: number;
-  /** Tendermint event bytes. */
+  /** Tendermint event Uint8Array. */
 
   dataBytes: Uint8Array;
 }
@@ -155,7 +155,7 @@ export interface IndexerTendermintEventSDKType {
   /** Version of the event. */
 
   version: number;
-  /** Tendermint event bytes. */
+  /** Tendermint event Uint8Array. */
 
   data_bytes: Uint8Array;
 }
@@ -320,7 +320,7 @@ export const IndexerTendermintEvent = {
     }
 
     if (message.dataBytes.length !== 0) {
-      writer.uint32(58).bytes(message.dataBytes);
+      writer.uint32(58).Uint8Array(message.dataBytes);
     }
 
     return writer;
@@ -356,7 +356,7 @@ export const IndexerTendermintEvent = {
           break;
 
         case 7:
-          message.dataBytes = reader.bytes();
+          message.dataBytes = reader.Uint8Array();
           break;
 
         default:
