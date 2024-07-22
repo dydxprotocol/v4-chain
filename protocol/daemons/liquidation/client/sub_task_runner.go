@@ -59,6 +59,7 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 		marketPrices,
 		perpetuals,
 		liquidityTiers,
+		assetYieldIndex,
 		err := daemonClient.FetchApplicationStateAtBlockHeight(
 		ctx,
 		lastCommittedBlockHeight,
@@ -76,6 +77,7 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 		marketPrices,
 		perpetuals,
 		liquidityTiers,
+		assetYieldIndex,
 	)
 	if err != nil {
 		return err
@@ -114,6 +116,7 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 	marketPricesMap map[uint32]pricestypes.MarketPrice,
 	perpetualsMap map[uint32]perptypes.Perpetual,
 	liquidityTiersMap map[uint32]perptypes.LiquidityTier,
+	assetYieldIndex *big.Rat,
 	err error,
 ) {
 	defer telemetry.ModuleMeasureSince(
@@ -129,13 +132,13 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 	// Subaccounts
 	subaccounts, err = c.GetAllSubaccounts(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err
 	}
 
 	// Market prices
 	marketPrices, err := c.GetAllMarketPrices(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err
 	}
 	marketPricesMap = lib.UniqueSliceToMap(marketPrices, func(m pricestypes.MarketPrice) uint32 {
 		return m.Id
@@ -144,7 +147,7 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 	// Perpetuals
 	perpetuals, err := c.GetAllPerpetuals(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err
 	}
 	perpetualsMap = lib.UniqueSliceToMap(perpetuals, func(p perptypes.Perpetual) uint32 {
 		return p.Params.Id
@@ -153,13 +156,19 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 	// Liquidity tiers
 	liquidityTiers, err := c.GetAllLiquidityTiers(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err
 	}
 	liquidityTiersMap = lib.UniqueSliceToMap(liquidityTiers, func(l perptypes.LiquidityTier) uint32 {
 		return l.Id
 	})
 
-	return subaccounts, marketPricesMap, perpetualsMap, liquidityTiersMap, nil
+	// Yield Index
+	assetYieldIndex, err = c.GetAssetYieldIndex(queryCtx)
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+
+	return subaccounts, marketPricesMap, perpetualsMap, liquidityTiersMap, assetYieldIndex, nil
 }
 
 // GetLiquidatableSubaccountIds verifies collateralization statuses of subaccounts with
@@ -169,6 +178,7 @@ func (c *Client) GetLiquidatableSubaccountIds(
 	marketPrices map[uint32]pricestypes.MarketPrice,
 	perpetuals map[uint32]perptypes.Perpetual,
 	liquidityTiers map[uint32]perptypes.LiquidityTier,
+	assetYieldIndex *big.Rat,
 ) (
 	liquidatableSubaccountIds []satypes.SubaccountId,
 	negativeTncSubaccountIds []satypes.SubaccountId,
@@ -195,6 +205,7 @@ func (c *Client) GetLiquidatableSubaccountIds(
 			marketPrices,
 			perpetuals,
 			liquidityTiers,
+			assetYieldIndex,
 		)
 		if err != nil {
 			c.logger.Error("Error checking collateralization status", "error", err)
@@ -281,6 +292,7 @@ func (c *Client) CheckSubaccountCollateralization(
 	marketPrices map[uint32]pricestypes.MarketPrice,
 	perpetuals map[uint32]perptypes.Perpetual,
 	liquidityTiers map[uint32]perptypes.LiquidityTier,
+	assetYieldIndex *big.Rat,
 ) (
 	isLiquidatable bool,
 	hasNegativeTnc bool,
@@ -298,6 +310,7 @@ func (c *Client) CheckSubaccountCollateralization(
 	settledSubaccount, _, err := sakeeper.GetSettledSubaccountWithPerpetuals(
 		unsettledSubaccount,
 		perpetuals,
+		assetYieldIndex,
 	)
 	if err != nil {
 		return false, false, err

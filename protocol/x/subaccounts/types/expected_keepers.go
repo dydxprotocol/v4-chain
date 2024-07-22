@@ -113,4 +113,5 @@ type RatelimitKeeper interface {
 	GetDAIYieldEpochParamsForEpoch(ctx sdk.Context, epoch uint64) (params types.DaiYieldEpochParams, err error)
 	GetCurrentDaiYieldEpochNumber(ctx sdk.Context) (epoch uint64, found bool)
 	SetDAIYieldEpochParamsForEpoch(ctx sdk.Context, epoch uint64, params types.DaiYieldEpochParams) (err error)
+	GetAssetYieldIndex(ctx sdk.Context) (yieldIndex *big.Rat, found bool)
 }
