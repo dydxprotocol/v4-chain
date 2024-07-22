@@ -19,7 +19,7 @@ function replaceBytes(filePath) {
   data = data.replace(/Uint8Array\.toAmino\(([^)]+)\)/g, '$1');
 
   // Replace 'Uint8Array.fromPartial(value)' with 'value'
-  data = data.replace(/Uint8Array\.fromPartial\(([^)]+)\)/g, '$1');
+  data = data.replace(/bytes\.fromPartial\(([^)]+)\)/g, '$1');
 
   fs.writeFileSync(filePath, data, 'utf8');
 }

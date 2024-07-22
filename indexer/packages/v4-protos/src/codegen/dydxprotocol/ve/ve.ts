@@ -138,7 +138,7 @@ export const DaemonVoteExtension = {
       [key: number]: Uint8Array;
     }>((acc, [key, value]) => {
       if (value !== undefined) {
-        acc[Number(key)] = bytes.fromPartial(value);
+        acc[Number(key)] = value;
       }
 
       return acc;
