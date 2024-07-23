@@ -20,7 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	prices_keeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
@@ -52,7 +51,7 @@ func createAppModule(t *testing.T) prices.AppModule {
 func createAppModuleWithKeeper(t *testing.T) (prices.AppModule, *prices_keeper.Keeper, sdk.Context) {
 	appCodec := codec.NewProtoCodec(module.InterfaceRegistry)
 
-	ctx, keeper, _, _, mockTimeProvider, _, _ := keeper.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 	// Mock the time provider response for market creation.
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 

@@ -19,7 +19,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testutil_json "github.com/dydxprotocol/v4-chain/protocol/testutil/json"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	epochs_keeper "github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
 	epoch_types "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
@@ -48,7 +47,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 ) {
 	appCodec := codec.NewProtoCodec(module.InterfaceRegistry)
 
-	pc := keeper.PerpetualsKeepers(t)
+	pc := keepertest.PerpetualsKeepers(t)
 
 	return perpetuals.NewAppModule(
 		appCodec,

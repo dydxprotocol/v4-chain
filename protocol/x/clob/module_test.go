@@ -286,7 +286,7 @@ func TestAppModule_RegisterServices(t *testing.T) {
 }
 
 func TestAppModule_InitExportGenesis(t *testing.T) {
-	am, keeper, pricesKeeper, perpetualsKeeper, marketMapKeeper, ctx, mockIndexerEventManager := createAppModuleWithKeeper(t)
+	am, keeper, pricesKeeper, perpetualsKeeper, marketMapKeeper, ctx, mockIndexerEventManager := createAppModuleWithKeeper(t) //nolint:lll
 	ctx = ctx.WithBlockTime(constants.TimeT)
 	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	gs := json.RawMessage(getValidGenesisStr())

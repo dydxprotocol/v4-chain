@@ -281,7 +281,8 @@ func TestUpdatePerpetualsParams(t *testing.T) {
 					&genesis,
 					func(genesisState *marketmaptypes.GenesisState) {
 						markets := make(map[string]marketmaptypes.Market)
-						for i, _ := range append(tc.genesisMarketIds, TEST_PERPETUAL_PARAMS.MarketId) {
+						marketIds := append(tc.genesisMarketIds, TEST_PERPETUAL_PARAMS.MarketId)
+						for i := range marketIds {
 							ticker := marketmaptypes.Ticker{
 								CurrencyPair:     slinkytypes.CurrencyPair{Base: fmt.Sprintf("%d", i), Quote: fmt.Sprintf("%d", i)},
 								Decimals:         8,
