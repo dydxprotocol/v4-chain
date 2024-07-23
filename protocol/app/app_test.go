@@ -1,13 +1,12 @@
 package app_test
 
 import (
-	marketmapmodule "github.com/skip-mev/slinky/x/marketmap"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
-	listingmodule "github.com/dydxprotocol/v4-chain/protocol/x/listing"
+	marketmapmodule "github.com/skip-mev/slinky/x/marketmap"
 
 	evidencemodule "cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
@@ -34,6 +33,7 @@ import (
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
 	blocktimemodule "github.com/dydxprotocol/v4-chain/protocol/x/blocktime"
 	bridgemodule "github.com/dydxprotocol/v4-chain/protocol/x/bridge"
@@ -42,6 +42,7 @@ import (
 	epochsmodule "github.com/dydxprotocol/v4-chain/protocol/x/epochs"
 	feetiersmodule "github.com/dydxprotocol/v4-chain/protocol/x/feetiers"
 	govplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/govplus"
+	listingmodule "github.com/dydxprotocol/v4-chain/protocol/x/listing"
 	perpetualsmodule "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	pricesmodule "github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	ratelimitmodule "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit"
@@ -220,6 +221,7 @@ func TestModuleBasics(t *testing.T) {
 		vaultmodule.AppModuleBasic{},
 		listingmodule.AppModuleBasic{},
 		revsharemodule.AppModuleBasic{},
+		accountplusmodule.AppModuleBasic{},
 
 		// slinky marketmap
 		marketmapmodule.AppModuleBasic{},
