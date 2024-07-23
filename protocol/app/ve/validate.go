@@ -57,16 +57,6 @@ func CleanAndValidateExtCommitInfo(
 		}
 	}
 
-	// validate after pruning
-	if err := validateVEConsensusInfo(ctx, extCommitInfo); err != nil {
-		ctx.Logger().Error(
-			"failed to validate vote extensions; vote extensions may not comprise a super-majority",
-			"err", err,
-		)
-
-		return cometabci.ExtendedCommitInfo{}, err
-	}
-
 	return extCommitInfo, nil
 }
 
@@ -207,7 +197,7 @@ func ValidateVEConsensusInfo(
 	currentHeight := ctx.HeaderInfo().Height
 	chainID := ctx.HeaderInfo().ChainID
 	commitInfo := ctx.CometInfo().GetLastCommit()
-	// Check that both extCommit + commit are ordered in accordance with vp/address.
+
 	if err := ValidateExtendedCommitAgainstLastCommit(extCommit, commitInfo); err != nil {
 		return err
 	}
