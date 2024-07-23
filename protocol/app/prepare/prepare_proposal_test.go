@@ -889,7 +889,7 @@ func setMockResponses(
 ) {
 	mPricesKeeper.On("GetAllMarketParams", mock.Anything).
 		Return(tc.pricesParamsResp)
-	mPricesKeeper.On("PerformStatefulPriceUpdateValidation", mock.Anything, mock.Anything, mock.Anything).
+	mPricesKeeper.On("PerformStatefulPriceUpdateValidation", mock.Anything, mock.Anything).
 		Return(nil)
 	mPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
 		Return(tc.fundingResp)

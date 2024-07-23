@@ -141,7 +141,7 @@ func (pa *PriceApplier) ShouldWritePriceToStore(
 		},
 	}
 
-	if pa.pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, &priceUpdate, false) != nil {
+	if pa.pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, &priceUpdate) != nil {
 		pa.logger.Error(
 			"price update validation failed",
 			"currency_pair", marketPairToUpdate,

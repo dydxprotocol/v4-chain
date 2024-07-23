@@ -32,7 +32,7 @@ func TestPriceWriter(t *testing.T) {
 
 	pricesKeeper := &mocks.PriceApplierPricesKeeper{}
 
-	pricesKeeper.On("PerformStatefulPriceUpdateValidation", ctx, mock.Anything, mock.Anything).Return(nil)
+	pricesKeeper.On("PerformStatefulPriceUpdateValidation", ctx, mock.Anything).Return(nil)
 
 	pricesApplier := pricewriter.NewPriceApplier(
 		log.NewNopLogger(),

@@ -13,7 +13,6 @@ type PreBlockExecPricesKeeper interface {
 	PerformStatefulPriceUpdateValidation(
 		ctx sdk.Context,
 		marketPriceUpdates *pricestypes.MarketPriceUpdates,
-		performNonDeterministicValidation bool,
 	) error
 
 	UpdateSmoothedPrices(

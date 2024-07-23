@@ -35,7 +35,6 @@ type PricesKeeper interface {
 	PerformStatefulPriceUpdateValidation(
 		ctx sdk.Context,
 		marketPriceUpdates *MarketPriceUpdates,
-		performNonDeterministicValidation bool,
 	) error
 
 	// Proposal related.

@@ -215,13 +215,13 @@ func (_m *PricesKeeper) ModifyMarketParam(ctx types.Context, param pricestypes.M
 	return r0, r1
 }
 
-// PerformStatefulPriceUpdateValidation provides a mock function with given fields: ctx, marketPriceUpdates, performNonDeterministicValidation
-func (_m *PricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, marketPriceUpdates *pricestypes.MarketPriceUpdates, performNonDeterministicValidation bool) error {
-	ret := _m.Called(ctx, marketPriceUpdates, performNonDeterministicValidation)
+// PerformStatefulPriceUpdateValidation provides a mock function with given fields: ctx, marketPriceUpdates
+func (_m *PricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, marketPriceUpdates *pricestypes.MarketPriceUpdates) error {
+	ret := _m.Called(ctx, marketPriceUpdates)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdates, bool) error); ok {
-		r0 = rf(ctx, marketPriceUpdates, performNonDeterministicValidation)
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdates) error); ok {
+		r0 = rf(ctx, marketPriceUpdates)
 	} else {
 		r0 = ret.Error(0)
 	}

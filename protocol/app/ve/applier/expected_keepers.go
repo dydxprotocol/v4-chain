@@ -9,7 +9,6 @@ type PriceApplierPricesKeeper interface {
 	PerformStatefulPriceUpdateValidation(
 		ctx sdk.Context,
 		marketPriceUpdates *pricestypes.MarketPriceUpdates,
-		performNonDeterministicValidation bool,
 	) error
 
 	GetAllMarketParams(ctx sdk.Context) []pricestypes.MarketParam

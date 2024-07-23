@@ -27,19 +27,13 @@ const (
 func (k Keeper) PerformStatefulPriceUpdateValidation(
 	ctx sdk.Context,
 	marketPriceUpdates *types.MarketPriceUpdates,
-	performNonDeterministicValidation bool,
 ) error {
-	var determinismMetricKeyValue string
-	if performNonDeterministicValidation {
-		determinismMetricKeyValue = metrics.NonDeterministic
-	} else {
-		determinismMetricKeyValue = metrics.Deterministic
-	}
+
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
 		time.Now(),
 		metrics.StatefulPriceUpdateValidation,
-		determinismMetricKeyValue,
+		metrics.Deterministic,
 		metrics.Latency,
 	)
 
@@ -66,20 +60,6 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 			metrics.Error,
 		)
 		return errorlib.WrapErrorWithSourceModuleContext(err, types.ModuleName)
-	}
-
-	if performNonDeterministicValidation {
-		err := k.performNonDeterministicStatefulValidation(ctx, marketPriceUpdates, marketParamPrices)
-		if err != nil {
-			telemetry.IncrCounter(
-				1,
-				types.ModuleName,
-				metrics.StatefulPriceUpdateValidation,
-				metrics.NonDeterministic,
-				metrics.Error,
-			)
-			return errorlib.WrapErrorWithSourceModuleContext(err, types.ModuleName)
-		}
 	}
 
 	return nil
