@@ -558,11 +558,6 @@ describe('candleHelper', () => {
     );
     await verifyCandlesInPostgres(expectedCandles);
 
-    // Verify publisher contains candles
-
-    // TODO: Get kafka message test to pass
-    // verifyAllCandlesEqualsKafkaMessages(publisher, expectedCandles);
-
     await validateCandlesCache();
     expectTimingStats();
   });
