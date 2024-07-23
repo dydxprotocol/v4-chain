@@ -216,7 +216,6 @@ func ValidateVEConsensusInfo(
 	// Start checking vote extensions only **after** the vote extensions enable
 	// height, because when `currentHeight == VoteExtensionsEnableHeight`
 	// PrepareProposal doesn't get any vote extensions in its request.
-	extensionsEnabled := veutils.AreVEEnabled(ctx)
 
 	var (
 		// Total voting power of all vote extensions.
@@ -227,15 +226,9 @@ func ValidateVEConsensusInfo(
 
 	for _, vote := range extCommit.Votes {
 		totalVP += vote.Validator.Power
-		if extensionsEnabled {
-			if err := validateVoteSignatureExistence(vote); err != nil {
-				return err
-			}
-		} else { // vote extensions disabled
-			if err := checkVoteExtensionsDisabled(vote); err != nil {
-				return err
-			}
-			continue
+
+		if err := validateVoteSignatureExistence(vote); err != nil {
+			return err
 		}
 
 		// Only check + include power if the vote is a commit vote. There must be super-majority, otherwise the
@@ -281,14 +274,12 @@ func ValidateVEConsensusInfo(
 		return fmt.Errorf("total voting power must be positive, got: %d", totalVP)
 	}
 
-	if extensionsEnabled {
-		// If the sum of the voting power has not reached (2/3 + 1) we need to error.
-		if requiredVP := getRequiredVotingPower(totalVP); sumVP < requiredVP {
-			return fmt.Errorf(
-				"insufficient cumulative voting power received to verify vote extensions; got: %d, expected: >=%d",
-				sumVP, requiredVP,
-			)
-		}
+	// If the sum of the voting power has not reached (2/3 + 1) we need to error.
+	if requiredVP := getRequiredVotingPower(totalVP); sumVP < requiredVP {
+		return fmt.Errorf(
+			"insufficient cumulative voting power received to verify vote extensions; got: %d, expected: >=%d",
+			sumVP, requiredVP,
+		)
 	}
 
 	return nil
@@ -325,20 +316,6 @@ func validateExtCommitRound(extCommitInfo cometabci.ExtendedCommitInfo, lc comet
 	}
 	return nil
 
-}
-
-func checkVoteExtensionsDisabled(vote cometabci.ExtendedVoteInfo) error {
-	if len(vote.VoteExtension) != 0 {
-		return fmt.Errorf("vote extension present but extensions disabled; validator addr %s",
-			vote.Validator.String(),
-		)
-	}
-	if len(vote.ExtensionSignature) != 0 {
-		return fmt.Errorf("vote extension signature present but extensions disabled; validator addr %s",
-			vote.Validator.String(),
-		)
-	}
-	return nil
 }
 
 func getRequiredVotingPower(totalVP int64) int64 {
