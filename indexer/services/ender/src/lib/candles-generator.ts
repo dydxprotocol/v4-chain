@@ -257,7 +257,6 @@ export class CandlesGenerator {
       // - Candle exists & !sameStartTime & there is a block update - create candle
       //   update previous candle orderbookMidPriceClose
 
-      // TODO: Maybe change this to return the candle instead of creating it
       const previousCandleUpdate = this.updateCandleWithOrderbookMidPriceInPostgres(
         existingCandle,
         orderbookMidPrice,

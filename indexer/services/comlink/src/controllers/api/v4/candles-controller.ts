@@ -51,6 +51,7 @@ class CandleController extends Controller {
 
 function useOrderbookForHLOC(candles: CandleFromDatabase[]): CandleFromDatabase[] {
   return candles.map((candle) => {
+    // If there are trades, use the candle as is regardless of orderbook data
     if (candle.trades > 0) {
       return candle;
     }
