@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/log"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	pricewriter "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
@@ -65,6 +64,7 @@ func TestPriceWriter(t *testing.T) {
 	})
 
 	t.Run("if vote aggregation fails, fail", func(t *testing.T) {
+		ctx = ctx.WithBlockHeight(2)
 		prices := map[uint32][]byte{
 			1: []byte("price1"),
 		}
@@ -74,8 +74,6 @@ func TestPriceWriter(t *testing.T) {
 			prices,
 		)
 		require.NoError(t, err)
-
-		ctx := sdk.Context{}
 
 		// fail vote aggregation
 		voteAggregator.On("AggregateDaemonVEIntoFinalPrices", ctx, []aggregator.Vote{
@@ -108,7 +106,7 @@ func TestPriceWriter(t *testing.T) {
 	})
 
 	t.Run("ignore negative prices", func(t *testing.T) {
-		ctx = ctx.WithBlockHeight(2)
+		ctx = ctx.WithBlockHeight(3)
 
 		priceBz := big.NewInt(-100).Bytes()
 
@@ -158,7 +156,7 @@ func TestPriceWriter(t *testing.T) {
 	})
 
 	t.Run("update prices in state", func(t *testing.T) {
-		ctx = ctx.WithBlockHeight(3)
+		ctx = ctx.WithBlockHeight(4)
 
 		price1Bz := big.NewInt(100).Bytes()
 		price2Bz := big.NewInt(200).Bytes()
@@ -255,7 +253,7 @@ func TestPriceWriter(t *testing.T) {
 	})
 
 	t.Run("doesn't update prices for same round and height", func(t *testing.T) {
-		ctx = ctx.WithBlockHeight(4)
+		ctx = ctx.WithBlockHeight(5)
 
 		price1Bz := big.NewInt(100).Bytes()
 		price2Bz := big.NewInt(200).Bytes()

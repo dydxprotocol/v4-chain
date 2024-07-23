@@ -52,6 +52,39 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
 ) error {
+	prices, isCached, err := pa.writePricesToStore(ctx, request)
+	if err != nil {
+		return err
+	}
+
+	if !isCached && prices != nil {
+		pa.writePricesToCache(ctx, request.DecidedLastCommit.Round, prices)
+	}
+
+	return nil
+}
+
+func (pa *PriceApplier) writePricesToStore(
+	ctx sdk.Context,
+	request *abci.RequestFinalizeBlock,
+) (prices map[string]*big.Int, isCached bool, err error) {
+	if pa.finalPriceCache.HasValidPrices(ctx.BlockHeight(), request.DecidedLastCommit.Round) {
+		err := pa.writePricesToStoreFromCache(ctx)
+		return nil, true, err
+	} else {
+		prices, err := pa.getPricesAndAggregateFromVE(ctx, request)
+		if err != nil {
+			return nil, false, err
+		}
+		pa.fallbackWritePricesToStore(ctx, prices)
+		return prices, false, nil
+	}
+}
+
+func (pa *PriceApplier) getPricesAndAggregateFromVE(
+	ctx sdk.Context,
+	request *abci.RequestFinalizeBlock,
+) (map[string]*big.Int, error) {
 	votes, err := aggregator.GetDaemonVotesFromBlock(request.Txs, pa.voteExtensionCodec, pa.extendedCommitCodec)
 	if err != nil {
 		pa.logger.Error(
@@ -61,7 +94,7 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 			"err", err,
 		)
 
-		return err
+		return nil, err
 	}
 	prices, err := pa.voteAggregator.AggregateDaemonVEIntoFinalPrices(ctx, votes)
 	if err != nil {
@@ -71,20 +104,10 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 			"err", err,
 		)
 
-		return err
+		return nil, err
 	}
 
-	isCached, err := pa.writePricesToStore(ctx, request.DecidedLastCommit.Round, prices)
-
-	if err != nil {
-		return err
-	}
-
-	if !isCached {
-		pa.writePricesToCache(ctx, request.DecidedLastCommit.Round, prices)
-	}
-
-	return nil
+	return prices, nil
 }
 
 func (pa *PriceApplier) GetCachedPrices() pricestypes.MarketPriceUpdates {
@@ -168,20 +191,6 @@ func (pa *PriceApplier) fallbackWritePricesToStore(ctx sdk.Context, prices map[s
 		)
 	}
 	return nil
-}
-
-func (pa *PriceApplier) writePricesToStore(
-	ctx sdk.Context,
-	round int32,
-	prices map[string]*big.Int,
-) (isCached bool, err error) {
-	if pa.finalPriceCache.HasValidPrices(ctx.BlockHeight(), round) {
-		err := pa.writePricesToStoreFromCache(ctx)
-		return true, err
-	} else {
-		pa.fallbackWritePricesToStore(ctx, prices)
-	}
-	return false, nil
 }
 
 func (pa *PriceApplier) shouldWritePriceToStore(

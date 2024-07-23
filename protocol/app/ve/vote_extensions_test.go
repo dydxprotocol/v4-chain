@@ -115,10 +115,11 @@ func TestExtendVoteHandler(t *testing.T) {
 			expectedError: true,
 		},
 	}
+	var round int64 = 3
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
-			ctx = vetestutils.GetVeEnabledCtx(ctx, 3)
+			ctx = vetestutils.GetVeEnabledCtx(ctx, round)
 			votecodec := vecodec.NewDefaultVoteExtensionCodec()
 
 			mPriceApplier := &mocks.VEPriceApplier{}
@@ -155,6 +156,7 @@ func TestExtendVoteHandler(t *testing.T) {
 				require.Error(t, err)
 			}
 		})
+		round++
 	}
 }
 

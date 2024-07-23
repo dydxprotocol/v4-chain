@@ -125,7 +125,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 	})
 
 	s.Run("ignore vote-extensions w/ prices for non-existent pairs", func() {
-		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 3)
+		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 4)
 
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
@@ -159,7 +159,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 	})
 
 	s.Run("multiple markets to write prices for", func() {
-		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 3)
+		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 5)
 
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
@@ -206,8 +206,8 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		)
 	})
 
-	s.Run("test throws error if can't get extCommitInfo", func() {
-		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 3)
+	s.Run("throws error if can't get extCommitInfo", func() {
+		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 6)
 
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
