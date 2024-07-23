@@ -10,10 +10,10 @@ on: # yamllint disable-line rule:truthy
     # TODO(DEC-837): Customize github build and push to ECR by service with paths
 
 jobs:
-  # Build and push to dev5
-  call-build-and-push-ecs-services-dev5:
-    name: (Dev5) Build and Push ECS Services
+  # Build and push to dev2
+  call-build-and-push-ecs-services-dev2:
+    name: (Dev2) Build and Push ECS Services
     uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
-      ENVIRONMENT: dev5
+      ENVIRONMENT: dev2
     secrets: inherit
