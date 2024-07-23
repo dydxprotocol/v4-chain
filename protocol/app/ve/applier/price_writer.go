@@ -63,7 +63,6 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 
 		return err
 	}
-
 	prices, err := pa.voteAggregator.AggregateDaemonVEIntoFinalPrices(ctx, votes)
 	if err != nil {
 		pa.logger.Error(
@@ -75,14 +74,14 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 		return err
 	}
 
-	isCached, err := pa.WritePricesToStore(ctx, request.DecidedLastCommit.Round, prices)
+	isCached, err := pa.writePricesToStore(ctx, request.DecidedLastCommit.Round, prices)
 
 	if err != nil {
 		return err
 	}
 
 	if !isCached {
-		pa.WritePricesToCache(ctx, request.DecidedLastCommit.Round, prices)
+		pa.writePricesToCache(ctx, request.DecidedLastCommit.Round, prices)
 	}
 
 	return nil
@@ -92,7 +91,7 @@ func (pa *PriceApplier) GetCachedPrices() pricestypes.MarketPriceUpdates {
 	return pa.finalPriceCache.GetPriceUpdates()
 }
 
-func (pa *PriceApplier) WritePricesToCache(
+func (pa *PriceApplier) writePricesToCache(
 	ctx sdk.Context,
 	round int32,
 	prices map[string]*big.Int,
@@ -100,7 +99,7 @@ func (pa *PriceApplier) WritePricesToCache(
 	marketParams := pa.pricesKeeper.GetAllMarketParams(ctx)
 	var pricesToCache pricestypes.MarketPriceUpdates
 	for _, market := range marketParams {
-		shouldWritePrice, price := pa.ShouldWritePriceToStore(ctx, prices, market)
+		shouldWritePrice, price := pa.shouldWritePriceToStore(ctx, prices, market)
 		if !shouldWritePrice {
 			continue
 		}
@@ -115,7 +114,7 @@ func (pa *PriceApplier) WritePricesToCache(
 	pa.finalPriceCache.SetPriceUpdates(ctx, pricesToCache, round)
 }
 
-func (pa *PriceApplier) WritePricesToStoreFromCache(ctx sdk.Context, round int32) error {
+func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context, round int32) error {
 	pricesFromCache := pa.finalPriceCache.GetPriceUpdates()
 	for _, price := range pricesFromCache.MarketPriceUpdates {
 		if err := pa.pricesKeeper.UpdateMarketPrice(ctx, price); err != nil {
@@ -126,7 +125,6 @@ func (pa *PriceApplier) WritePricesToStoreFromCache(ctx sdk.Context, round int32
 			)
 
 			return err
-
 		}
 
 		pa.logger.Info(
@@ -138,12 +136,12 @@ func (pa *PriceApplier) WritePricesToStoreFromCache(ctx sdk.Context, round int32
 	return nil
 }
 
-func (pa *PriceApplier) FallbackWritePricesToStore(ctx sdk.Context, prices map[string]*big.Int) error {
+func (pa *PriceApplier) fallbackWritePricesToStore(ctx sdk.Context, prices map[string]*big.Int) error {
 	marketParams := pa.pricesKeeper.GetAllMarketParams(ctx)
 
 	for _, market := range marketParams {
 		pair := market.Pair
-		shouldWritePrice, price := pa.ShouldWritePriceToStore(ctx, prices, market)
+		shouldWritePrice, price := pa.shouldWritePriceToStore(ctx, prices, market)
 		if !shouldWritePrice {
 			continue
 		}
@@ -172,21 +170,21 @@ func (pa *PriceApplier) FallbackWritePricesToStore(ctx sdk.Context, prices map[s
 	return nil
 }
 
-func (pa *PriceApplier) WritePricesToStore(
+func (pa *PriceApplier) writePricesToStore(
 	ctx sdk.Context,
 	round int32,
 	prices map[string]*big.Int,
 ) (isCached bool, err error) {
 	if pa.finalPriceCache.HasValidPrices(ctx.BlockHeight(), round) {
-		err := pa.WritePricesToStoreFromCache(ctx, round)
+		err := pa.writePricesToStoreFromCache(ctx, round)
 		return true, err
 	} else {
-		pa.FallbackWritePricesToStore(ctx, prices)
+		pa.fallbackWritePricesToStore(ctx, prices)
 	}
 	return false, nil
 }
 
-func (pa *PriceApplier) ShouldWritePriceToStore(
+func (pa *PriceApplier) shouldWritePriceToStore(
 	ctx sdk.Context,
 	prices map[string]*big.Int,
 	marketToUpdate pricestypes.MarketParam,
