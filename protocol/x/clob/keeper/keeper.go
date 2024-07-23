@@ -300,5 +300,6 @@ func (k Keeper) SendOrderbookFillUpdates(
 		orderbookFills,
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
+		k.PerpetualIdToClobPairId,
 	)
 }

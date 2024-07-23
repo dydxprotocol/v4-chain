@@ -323,6 +323,7 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdates(
 	orderbookFills []clobtypes.StreamOrderbookFill,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
+	perpetualIdToClobPairId map[uint32][]clobtypes.ClobPairId,
 ) {
 	defer metrics.ModuleMeasureSince(
 		metrics.FullNodeGrpc,
@@ -336,7 +337,13 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdates(
 		// Fetch the clob pair id from the first order in `OrderBookMatchFill`.
 		// We can assume there must be an order, and that all orders share the same
 		// clob pair id.
-		clobPairId := orderbookFill.Orders[0].OrderId.ClobPairId
+		clobPairId := uint32(0)
+		if orderbookFill.GetClobMatch().GetMatchPerpetualDeleveraging() != nil {
+			perpetualId := orderbookFill.GetClobMatch().GetMatchPerpetualDeleveraging().PerpetualId
+			clobPairId = uint32(perpetualIdToClobPairId[perpetualId][0])
+		} else {
+			clobPairId = orderbookFill.Orders[0].OrderId.ClobPairId
+		}
 		if _, ok := updatesByClobPairId[clobPairId]; !ok {
 			updatesByClobPairId[clobPairId] = []clobtypes.StreamUpdate{}
 		}
