@@ -291,12 +291,10 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -707,12 +705,10 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -950,12 +946,10 @@ func TestOrderRemoval(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -1069,12 +1063,10 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 	ctx := tApp.InitChain()
 
 	rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-	blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-		Sender:              constants.Alice_Num0.Owner,
-		ConversionRate:      rate,
-		EthereumBlockNumber: blockNumber,
+		Sender:         constants.Alice_Num0.Owner,
+		ConversionRate: rate,
 	}
 
 	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(

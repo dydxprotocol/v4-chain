@@ -24,9 +24,8 @@ func TestMsgUpdateSDAIConversionRateInitial(t *testing.T) {
 		{
 			name: "Valid input",
 			input: &types.MsgUpdateSDAIConversionRate{
-				Sender:              "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-				ConversionRate:      "1",
-				EthereumBlockNumber: "1",
+				Sender:         "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+				ConversionRate: "1",
 			},
 			expectedSDAIRate: "1",
 			expErr:           false,
@@ -34,19 +33,8 @@ func TestMsgUpdateSDAIConversionRateInitial(t *testing.T) {
 		{
 			name: "Invalid conversion rate doesn't match local server",
 			input: &types.MsgUpdateSDAIConversionRate{
-				Sender:              "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-				ConversionRate:      "2",
-				EthereumBlockNumber: "1",
-			},
-			expectedSDAIRate: "1",
-			expErr:           true,
-		},
-		{
-			name: "Invalid ethereum block number doesn't match local server",
-			input: &types.MsgUpdateSDAIConversionRate{
-				Sender:              "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-				ConversionRate:      "1",
-				EthereumBlockNumber: "2",
+				Sender:         "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+				ConversionRate: "2",
 			},
 			expectedSDAIRate: "1",
 			expErr:           true,
@@ -54,19 +42,8 @@ func TestMsgUpdateSDAIConversionRateInitial(t *testing.T) {
 		{
 			name: "Invalid conversion rate (empty)",
 			input: &types.MsgUpdateSDAIConversionRate{
-				Sender:              "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-				ConversionRate:      "",
-				EthereumBlockNumber: "1",
-			},
-			expectedSDAIRate: "",
-			expErr:           true,
-		},
-		{
-			name: "Invalid ethereum block number (empty)",
-			input: &types.MsgUpdateSDAIConversionRate{
-				Sender:              "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-				ConversionRate:      "1",
-				EthereumBlockNumber: "",
+				Sender:         "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+				ConversionRate: "",
 			},
 			expectedSDAIRate: "",
 			expErr:           true,
@@ -85,8 +62,7 @@ func TestMsgUpdateSDAIConversionRateInitial(t *testing.T) {
 			sDAIEventManager := k.GetSDAIEventManagerForTestingOnly()
 
 			sDAIEventManager.AddsDAIEvent(&api.AddsDAIEventsRequest{
-				ConversionRate:      "1",
-				EthereumBlockNumber: "1",
+				ConversionRate: "1",
 			})
 
 			_, err := ms.UpdateSDAIConversionRate(ctx, tc.input)
@@ -118,9 +94,8 @@ func TestMsgUpdateSDAIConversionRatePostFirstEpoch(t *testing.T) {
 		{
 			name: "Valid input",
 			input: &types.MsgUpdateSDAIConversionRate{
-				Sender:              "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-				ConversionRate:      "1",
-				EthereumBlockNumber: "1",
+				Sender:         "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+				ConversionRate: "1",
 			},
 			expectedSDAIRate: "1",
 			epoch:            uint64(1),
@@ -142,8 +117,7 @@ func TestMsgUpdateSDAIConversionRatePostFirstEpoch(t *testing.T) {
 			sDAIEventManager := k.GetSDAIEventManagerForTestingOnly()
 
 			sDAIEventManager.AddsDAIEvent(&api.AddsDAIEventsRequest{
-				ConversionRate:      "1",
-				EthereumBlockNumber: "1",
+				ConversionRate: "1",
 			})
 
 			_, err := ms.UpdateSDAIConversionRate(ctx, tc.input)
