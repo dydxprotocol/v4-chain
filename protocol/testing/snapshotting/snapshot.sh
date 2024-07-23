@@ -35,6 +35,7 @@ LOG_PATH="/dydxprotocol/chain/local_node/snapshots/dydxprotocol/dydxprotocol_log
 # data directory to snapshot. this contains the blockchain state.
 DATA_PATH="/dydxprotocol/chain/local_node/data/"
 RPC_ADDRESS="http://127.0.0.1:26657"
+PREUPGRADE_BINARY_PATH="/bin/dydxprotocold_preupgrade"
 
 while [ $# -gt 0 ]; do
 
@@ -62,12 +63,23 @@ install_prerequisites() {
     && rm -rf /var/cache/apk/*
 }
 
+setup_preupgrade_binary() {
+	tar_url='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv5.1.0/dydxprotocold-v5.1.0-linux-amd64.tar.gz'
+	tar_path='/tmp/dydxprotocold/dydxprotocold.tar.gz'
+	mkdir -p /tmp/dydxprotocold
+	curl -vL $tar_url -o $tar_path
+	dydxprotocold_path=$(tar -xvf $tar_path --directory /tmp/dydxprotocold)
+	mv /tmp/dydxprotocold/$dydxprotocold_path $PREUPGRADE_BINARY_PATH
+}
+
 setup_cosmovisor() {
     VAL_HOME_DIR="$HOME/chain/local_node"
     export DAEMON_NAME=dydxprotocold
     export DAEMON_HOME="$HOME/chain/local_node"
 
-    cosmovisor init /bin/dydxprotocold
+    cosmovisor init $PREUPGRADE_BINARY_PATH
+    mkdir -p "$VAL_HOME_DIR/cosmovisor/upgrades/v5.2.0/bin/"
+    ln -s /bin/dydxprotocold "$VAL_HOME_DIR/cosmovisor/upgrades/v5.2.0/bin/dydxprotocold"
 }
 
 install_prerequisites
@@ -96,6 +108,7 @@ sed -i 's/min-retain-blocks = 0/min-retain-blocks = 2/' /dydxprotocol/chain/loca
 # Do not index tx_index.db
 sed -i 's/indexer = "kv"/indexer = "null"/' /dydxprotocol/chain/local_node/config/config.toml
 
+setup_preupgrade_binary
 setup_cosmovisor
 
 # TODO: add metrics around snapshot upload latency/frequency/success rate

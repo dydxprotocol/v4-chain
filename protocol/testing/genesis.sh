@@ -1494,26 +1494,6 @@ function edit_genesis() {
 	update_ica_host_params
 	# ICA Controller Params
 	update_ica_controller_params
-
-	# Vaults
-	# Set total shares and owner shares of each vault.
-	vault_idx=0
-	if [ -z "${INPUT_TEST_ACCOUNTS[0]}" ]; then
-		vault_owner_address='dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4' # alice as default vault owner
-	else
-		vault_owner_address="${INPUT_TEST_ACCOUNTS[0]}"
-	fi
-	for number in "${INPUT_VAULT_NUMBERS[@]}"; do
-		dasel put -t json -f "$GENESIS" '.app_state.vault.vaults.[]' -v '{}'
-		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_id.type" -v 'VAULT_TYPE_CLOB'
-		dasel put -t int -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_id.number" -v "${number}"
-		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].total_shares.num_shares" -v "${DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT}"
-
-		dasel put -t json -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[]" -v '{}'
-		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[0].owner" -v "${vault_owner_address}"
-		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[0].shares.num_shares" -v "${DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT}"
-		vault_idx=$(($vault_idx + 1))
-	done
 }
 
 function add_subaccount() {

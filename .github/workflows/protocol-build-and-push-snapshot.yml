@@ -6,6 +6,7 @@ on:  # yamllint disable-line rule:truthy
       - main
       - 'release/protocol/v[0-9]+.[0-9]+.x'  # e.g. release/protocol/v0.1.x
       - 'release/protocol/v[0-9]+.x'  # e.g. release/protocol/v1.x
+      - 'tq/upgrade-v5.1-to-v5.2'
 
 jobs:
   build-and-push-snapshot-dev:
