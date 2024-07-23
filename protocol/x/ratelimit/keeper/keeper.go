@@ -30,7 +30,6 @@ type (
 		sDAIEventManager *sdaiserver.SDAIEventManager
 		bankKeeper       types.BankKeeper
 		blockTimeKeeper  types.BlockTimeKeeper
-		pricesKeeper     types.PricesKeeper
 		perpetualsKeeper types.PerpetualsKeeper
 		ics4Wrapper      types.ICS4Wrapper
 
@@ -45,7 +44,6 @@ func NewKeeper(
 	sDAIEventManager *sdaiserver.SDAIEventManager,
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
-	pricesKeeper types.PricesKeeper,
 	perpetualsKeeper types.PerpetualsKeeper,
 	ics4Wrapper types.ICS4Wrapper,
 	authorities []string,
@@ -56,7 +54,6 @@ func NewKeeper(
 		sDAIEventManager: sDAIEventManager,
 		bankKeeper:       bankKeeper,
 		blockTimeKeeper:  blockTimeKeeper,
-		pricesKeeper:     pricesKeeper,
 		perpetualsKeeper: perpetualsKeeper,
 		ics4Wrapper:      ics4Wrapper,
 		authorities:      lib.UniqueSliceToSet(authorities),
