@@ -73,6 +73,8 @@ func (k Keeper) SetGenesisState(ctx sdk.Context, data types.GenesisState) error 
 	return nil
 }
 
+// TODO: refactor this function -> InitializeWithTimestampNonceDetails
+// Writing to store is expensive so directly write with ts-nonce instead of initializing an empty account then setting.
 func (k Keeper) InitializeAccount(ctx sdk.Context, address sdk.AccAddress) error {
 	if _, found := k.GetAccountState(ctx, address); found {
 		return errors.New(
