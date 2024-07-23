@@ -3,7 +3,6 @@ package ve
 import (
 	"bytes"
 	"fmt"
-	"slices"
 
 	"cosmossdk.io/core/comet"
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
@@ -299,10 +298,6 @@ func ValidateExtendedCommitAgainstLastCommit(extCommitInfo cometabci.ExtendedCom
 		return err
 	}
 
-	if err := checkSortOrderOfExtendedCommitVotes(extCommitInfo.Votes); err != nil {
-		return err
-	}
-
 	if err := validateVotesSignerInfo(extCommitInfo, lc); err != nil {
 		return err
 	}
@@ -344,19 +339,6 @@ func validateVoteSignatureExistence(vote cometabci.ExtendedVoteInfo) error {
 func validateExtCommitVoteCount(extCommitInfo cometabci.ExtendedCommitInfo, lc comet.CommitInfo) error {
 	if len(extCommitInfo.Votes) != lc.Votes().Len() {
 		return fmt.Errorf("extended commit votes length %d does not match last commit votes length %d", len(extCommitInfo.Votes), lc.Votes().Len())
-	}
-	return nil
-}
-
-func checkSortOrderOfExtendedCommitVotes(votes []cometabci.ExtendedVoteInfo) error {
-	// check sort order of extended commit votes
-	if !slices.IsSortedFunc(votes, func(vote1, vote2 cometabci.ExtendedVoteInfo) int {
-		if vote1.Validator.Power == vote2.Validator.Power {
-			return bytes.Compare(vote1.Validator.Address, vote2.Validator.Address) // addresses sorted in ascending order (used to break vp conflicts)
-		}
-		return -int(vote1.Validator.Power - vote2.Validator.Power) // vp sorted in descending order
-	}) {
-		return fmt.Errorf("extended commit votes are not sorted by voting power")
 	}
 	return nil
 }
