@@ -109,6 +109,7 @@ func validateIndividualVoteExtension(
 	vote cometabci.ExtendedVoteInfo,
 	voteCodec codec.VoteExtensionCodec,
 	pricesKeeper PreBlockExecPricesKeeper,
+
 ) error {
 	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
 		return nil
@@ -250,7 +251,12 @@ func ValidateVEConsensusInfo(
 		sumVP += vote.Validator.Power
 		cmtPubKey, err := veutils.GetValCmtPubKeyFromVote(ctx, vote, valStore)
 		if err != nil {
-			return fmt.Errorf("failed to convert validator: %w", err)
+			if _, ok := err.(*veutils.ValidatorNotFoundError); ok {
+				continue
+			} else {
+				return fmt.Errorf("failed to convert validator: %w", err)
+			}
+
 		}
 
 		cve := cmtproto.CanonicalVoteExtension{

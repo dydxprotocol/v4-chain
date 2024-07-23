@@ -18,6 +18,14 @@ import (
 	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 )
 
+type ValidatorNotFoundError struct {
+	Address []byte
+}
+
+func (e *ValidatorNotFoundError) Error() string {
+	return fmt.Sprintf("validator %X not found", e.Address)
+}
+
 type ValidatorStore interface {
 	GetCCValidator(ctx sdk.Context, addr []byte) (ccvtypes.CrossChainValidator, bool)
 }
@@ -91,17 +99,16 @@ func GetValCmtPubKeyFromVote(
 	ctx sdk.Context,
 	vote cometabci.ExtendedVoteInfo,
 	validatorStore ValidatorStore,
-
 ) (crypto.PubKey, error) {
 	valConsAddr := sdk.ConsAddress(vote.Validator.Address)
 	v, exists := validatorStore.GetCCValidator(ctx, vote.Validator.Address)
 	if !exists {
-		return nil, fmt.Errorf("validator %X not found", valConsAddr)
+		return nil, &ValidatorNotFoundError{Address: vote.Validator.Address}
 	}
 
 	pubKey, err := GetPubKeyByConsAddr(v)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get public key for validator %X: %w", valConsAddr, err)
+		return nil, &ValidatorNotFoundError{Address: vote.Validator.Address}
 	}
 
 	cmtPubKey, err := cryptoenc.PubKeyFromProto(pubKey)
