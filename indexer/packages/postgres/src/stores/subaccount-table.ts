@@ -59,7 +59,6 @@ export async function findAll(
     SubaccountModel,
     options,
   );
-
   if (id) {
     baseQuery = baseQuery.whereIn(SubaccountColumns.id, id);
   }
@@ -68,7 +67,7 @@ export async function findAll(
     baseQuery = baseQuery.where(SubaccountColumns.address, address);
   }
 
-  if (subaccountNumber) {
+  if (subaccountNumber !== undefined) {
     baseQuery = baseQuery.where(SubaccountColumns.subaccountNumber, subaccountNumber);
   }
 

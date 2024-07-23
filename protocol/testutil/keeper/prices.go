@@ -53,7 +53,6 @@ func PricesKeepers(t testing.TB) (
 		// Necessary keeper for testing
 		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc)
 		marketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
-
 		// Define necessary keepers here for unit tests
 		keeper, storeKey, indexPriceCache, mockTimeProvider =
 			createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper, marketMapKeeper)
@@ -110,7 +109,7 @@ func createPricesKeeper(
 }
 
 // Convert MarketParams into MarketMap markets and create them in the MarketMap keeper.
-func CreateMarketInMarketMapFromParams(
+func CreateMarketsInMarketMapFromParams(
 	t testing.TB,
 	ctx sdk.Context,
 	mmk *marketmapkeeper.Keeper,
@@ -168,7 +167,7 @@ func CreateTestMarket(
 	marketParam types.MarketParam,
 	marketPrice types.MarketPrice,
 ) (types.MarketParam, error) {
-	CreateMarketInMarketMapFromParams(
+	CreateMarketsInMarketMapFromParams(
 		t,
 		ctx,
 		k.MarketMapKeeper.(*marketmapkeeper.Keeper),
@@ -186,12 +185,11 @@ func CreateTestMarket(
 // This function assumes no markets exist and will create markets as id `0`, `1`, and `2`, ... using markets
 // defined in constants.TestMarkets.
 func CreateTestMarkets(t testing.TB, ctx sdk.Context, k *keeper.Keeper) {
-	// create markets in market map
-	CreateMarketInMarketMapFromParams(t, ctx, k.MarketMapKeeper.(*marketmapkeeper.Keeper), constants.TestMarketParams)
-
 	for i, marketParam := range constants.TestMarketParams {
-		_, err := k.CreateMarket(
+		_, err := CreateTestMarket(
+			t,
 			ctx,
+			k,
 			marketParam,
 			constants.TestMarketPrices[i],
 		)

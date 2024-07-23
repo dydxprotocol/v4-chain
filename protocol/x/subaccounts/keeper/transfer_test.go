@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 	"testing"
@@ -1670,6 +1671,8 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx, keeper, pricesKeeper, perpsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _, _ :=
 				keepertest.SubaccountsKeepers(t, true)
+			markets, _ := pricesKeeper.MarketMapKeeper.GetAllMarkets(ctx)
+			fmt.Println("markets", markets)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			// Create liquidity tiers.

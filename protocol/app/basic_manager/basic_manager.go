@@ -23,6 +23,7 @@ import (
 	listingmodule "github.com/dydxprotocol/v4-chain/protocol/x/listing"
 
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
+	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
 	blocktimemodule "github.com/dydxprotocol/v4-chain/protocol/x/blocktime"
 	bridgemodule "github.com/dydxprotocol/v4-chain/protocol/x/bridge"
@@ -99,5 +100,6 @@ var (
 		revsharemodule.AppModuleBasic{},
 		listingmodule.AppModuleBasic{},
 		marketmapmodule.AppModuleBasic{},
+		accountplusmodule.AppModuleBasic{},
 	)
 )

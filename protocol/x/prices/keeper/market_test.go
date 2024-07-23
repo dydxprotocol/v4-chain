@@ -28,8 +28,8 @@ func TestCreateMarket(t *testing.T) {
 		MinPriceChangePpm:  uint32(9_999),
 	}
 
-	// Validate that market in Market Map is not enabled before we create a new Oracle Market
-	keepertest.CreateMarketInMarketMapFromParams(
+	// Create the test market in the market map and verify it is not enabled
+	keepertest.CreateMarketsInMarketMapFromParams(
 		t,
 		ctx,
 		keeper.MarketMapKeeper.(*marketmapkeeper.Keeper),

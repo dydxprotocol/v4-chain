@@ -255,7 +255,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	// Create the market in market map
 	var genState pricestypes.GenesisState
 	cdc.MustUnmarshalJSON(gs, &genState)
-	keepertest.CreateMarketInMarketMapFromParams(
+	keepertest.CreateMarketsInMarketMapFromParams(
 		t,
 		ctx,
 		keeper.MarketMapKeeper.(*marketmapkeeper.Keeper),

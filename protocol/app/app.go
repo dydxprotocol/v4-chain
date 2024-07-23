@@ -130,6 +130,9 @@ import (
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
 	// Modules
+	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
+	accountplusmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
+	accountplusmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
 	assetsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	assetsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -294,6 +297,7 @@ type App struct {
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	GovPlusKeeper         govplusmodulekeeper.Keeper
+	AccountPlusKeeper     accountplusmodulekeeper.Keeper
 
 	MarketMapKeeper marketmapmodulekeeper.Keeper
 
@@ -386,6 +390,10 @@ func New(
 	if err := appFlags.Validate(); err != nil {
 		panic(err)
 	}
+	if appFlags.OptimisticExecutionEnabled {
+		// TODO(OTE-573): Remove warning once OE is fully supported.
+		logger.Warn("Optimistic execution is enabled. This is a test feature not intended for production use!")
+	}
 
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 
@@ -396,6 +404,11 @@ func New(
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
+
+	// Enable optimistic block execution.
+	if appFlags.OptimisticExecutionEnabled {
+		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
+	}
 
 	bApp := baseapp.NewBaseApp(appconstants.AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -441,6 +454,7 @@ func New(
 		govplusmoduletypes.StoreKey,
 		vaultmoduletypes.StoreKey,
 		revsharemoduletypes.StoreKey,
+		accountplusmoduletypes.StoreKey,
 		marketmapmoduletypes.StoreKey,
 	)
 	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
@@ -1149,8 +1163,18 @@ func New(
 		[]string{
 			lib.GovModuleAddress.String(),
 		},
+		app.PricesKeeper,
+		app.ClobKeeper,
+		&app.MarketMapKeeper,
+		app.PerpetualsKeeper,
 	)
 	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
+
+	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
+		appCodec,
+		keys[govplusmoduletypes.StoreKey],
+	)
+	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
 
 	/****  Module Options ****/
 
@@ -1222,6 +1246,7 @@ func New(
 		vaultModule,
 		listingModule,
 		revShareModule,
+		accountplusModule,
 		marketmapModule,
 	)
 
@@ -1272,6 +1297,7 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		accountplusmoduletypes.ModuleName,
 		marketmapmoduletypes.ModuleName,
 	)
 
@@ -1318,6 +1344,7 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		accountplusmoduletypes.ModuleName,
 		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
@@ -1366,6 +1393,7 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		accountplusmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
 
@@ -1409,6 +1437,7 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		accountplusmoduletypes.ModuleName,
 		authz.ModuleName,
 
 		// Auth must be migrated after staking.

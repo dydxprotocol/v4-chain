@@ -9,6 +9,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 func TestGetCurrencyPairFromID(t *testing.T) {
@@ -75,6 +76,33 @@ func TestGetPriceForCurrencyPair(t *testing.T) {
 	})
 	require.Error(t, err)
 }
+
+func TestBadMarketData(t *testing.T) {
+	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
+
+	_, err := keeper.CreateMarket(
+		ctx,
+		types.MarketParam{
+			Id:                 uint32(0),
+			Pair:               "00",
+			MinExchanges:       1,
+			MinPriceChangePpm:  1,
+			ExchangeConfigJson: "{}",
+		},
+		types.MarketPrice{})
+	require.Error(t, err)
+
+	_, found := keeper.GetCurrencyPairFromID(ctx, uint64(0))
+	require.False(t, found)
+
+	_, found = keeper.GetIDForCurrencyPair(ctx, oracletypes.CurrencyPair{})
+	require.False(t, found)
+
+	_, err = keeper.GetPriceForCurrencyPair(ctx, oracletypes.CurrencyPair{})
+	require.Error(t, err)
+}
+
 func TestGetNumCurrencyPairs(t *testing.T) {
 	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
