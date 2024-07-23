@@ -1496,6 +1496,8 @@ function edit_genesis() {
 	update_ica_controller_params
 
 	# Vaults
+	# Set vault params.
+	dasel put -t int -f "$GENESIS" ".app_state.vault.params.spread_min_ppm" -v '3000'
 	# Set total shares and owner shares of each vault.
 	vault_idx=0
 	if [ -z "${INPUT_TEST_ACCOUNTS[0]}" ]; then
