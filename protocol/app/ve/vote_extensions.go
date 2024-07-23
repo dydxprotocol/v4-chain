@@ -102,7 +102,20 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 	return func(
 		ctx sdk.Context,
 		req *abci.RequestVerifyVoteExtension,
-	) (_ *abci.ResponseVerifyVoteExtension, err error) {
+	) (resp *abci.ResponseVerifyVoteExtension, err error) {
+
+		defer func() {
+			if recovery := recover(); recovery != nil {
+				h.logger.Error(
+					"recovered from panic in VerifyVoteExtensionHandler",
+					"err", recovery,
+				)
+				resp = rejectResponse
+				err = ErrPanic{fmt.Errorf("%v", recovery)}
+
+			}
+		}()
+
 		if req == nil {
 			err = fmt.Errorf("nil request for verify vote")
 			return nil, err
