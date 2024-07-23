@@ -2863,7 +2863,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, bankKeeper, assetsKeeper, ratelimitKeeper, _, _ := testutil.SubaccountsKeepers(
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, bankKeeper, assetsKeeper, _, _, _ := testutil.SubaccountsKeepers(
 				t,
 				tc.msgSenderEnabled,
 			)
@@ -2871,7 +2871,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			testutil.CreateTestMarkets(t, ctx, pricesKeeper)
 			testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
-			ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
+			// ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
 
 			for _, m := range tc.marketParamPrices {
 				_, err := pricesKeeper.CreateMarket(
@@ -4322,7 +4322,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, ratelimitKeeper, _, _ := testutil.SubaccountsKeepers(
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _, _ := testutil.SubaccountsKeepers(
 				t,
 				tc.msgSenderEnabled,
 			)
@@ -4330,7 +4330,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			testutil.CreateTestMarkets(t, ctx, pricesKeeper)
 			testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
-			ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
+			// ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
 			for _, m := range tc.marketParamPrices {
 				_, err := pricesKeeper.CreateMarket(
 					ctx,
@@ -5445,11 +5445,11 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, ratelimitKeeper, _, _ := testutil.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _, _ := testutil.SubaccountsKeepers(t, true)
 			testutil.CreateTestMarkets(t, ctx, pricesKeeper)
 			testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
-			ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
+			// ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
 
 			require.NoError(t, testutil.CreateUsdcAsset(ctx, assetsKeeper))
 			for _, a := range tc.assets {
@@ -5903,11 +5903,11 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, ratelimitKeeper, _, _ := testutil.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _, _ := testutil.SubaccountsKeepers(t, true)
 			testutil.CreateTestMarkets(t, ctx, pricesKeeper)
 			testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
-			ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
+			// ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
 
 			require.NoError(t, testutil.CreateUsdcAsset(ctx, assetsKeeper))
 			for _, a := range tc.assets {

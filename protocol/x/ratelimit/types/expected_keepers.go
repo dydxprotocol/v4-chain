@@ -45,7 +45,7 @@ type PerpetualsKeeper interface {
 	GetAllPerpetuals(ctx sdk.Context) []perptypes.Perpetual
 	GetInsuranceFundModuleAddress(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error)
 	IsIsolatedPerpetual(ctx sdk.Context, perpetualId uint32) (bool, error)
-	ProcessNewYieldEpoch(ctx sdk.Context, totalTDaiPreMint *big.Int, totalTDaiMinted *big.Int)
+	UpdateYieldIndexToNewMint(ctx sdk.Context, totalTDaiPreMint *big.Int, totalTDaiMinted *big.Int)
 }
 
 // ICS4Wrapper defines the expected ICS4Wrapper for middleware

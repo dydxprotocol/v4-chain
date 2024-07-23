@@ -34,6 +34,10 @@ func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
 	key := subaccount.Id.ToStateKey()
 
+	if subaccount.AssetYieldIndex == "" {
+		subaccount.AssetYieldIndex = new(big.Rat).SetInt64(0).String()
+	}
+
 	if len(subaccount.PerpetualPositions) == 0 && len(subaccount.AssetPositions) == 0 {
 		if store.Has(key) {
 			store.Delete(key)
@@ -570,6 +574,7 @@ func calculateTotalYieldWithPerpYieldAdded(
 	if err != nil {
 		return nil, nil, err
 	}
+
 	perpYield, err := calculatePerpetualYieldInQuoteQuantums(perpetualPosition, perpYieldIndex)
 	if err != nil {
 		return nil, nil, err
@@ -649,6 +654,12 @@ func calculatePerpetualYieldInQuoteQuantums(
 
 	if generalYieldIndex == nil {
 		return nil, errors.New("could not calculate perpetual yield: perp yield index is nil")
+	}
+
+	// TODO [YBCP-20]: Ensure cleaner initialization
+	// if the yield index hasn't been initialized, treat it as 0
+	if perpPosition.YieldIndex == "" {
+		perpPosition.YieldIndex = new(big.Rat).SetInt64(0).String()
 	}
 
 	currentYieldIndex, success := new(big.Rat).SetString(perpPosition.YieldIndex)

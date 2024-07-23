@@ -17,17 +17,6 @@ func (k msgServer) UpdateSDAIConversionRate(
 ) (*types.MsgUpdateSDAIConversionRateResponse, error) {
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
-	elapsed, err := k.CheckCurrentDAIYieldEpochElapsed(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if !elapsed {
-		return nil, errorsmod.Wrap(
-			types.ErrInvalidSDAIConversionRate,
-			"The current DAI yield epoch has not yet elapsed",
-		)
-	}
-
 	bigConversionRate, err := ConvertStringToBigInt(msg.ConversionRate)
 	if err != nil {
 		return nil, err
@@ -76,7 +65,7 @@ func (k msgServer) UpdateSDAIConversionRate(
 
 				k.SetSDAIPrice(ctx, conversionRate)
 
-				k.CreateAndStoreNewDaiYieldEpochParams(ctx)
+				k.MintNewTDaiAndSetNewYieldIndex(ctx)
 
 				return &types.MsgUpdateSDAIConversionRateResponse{}, nil
 			}

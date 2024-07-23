@@ -101,6 +101,7 @@ func (k Keeper) CreatePerpetual(
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   new(big.Rat).SetInt64(0).String(),
 	}
 
 	// Store the new perpetual.
@@ -642,7 +643,7 @@ func (k Keeper) GetRemoveSampleTailsFunc(
 	}
 }
 
-func (k Keeper) ProcessNewYieldEpoch(
+func (k Keeper) UpdateYieldIndexToNewMint(
 	ctx sdk.Context,
 	totalTDaiPreMint *big.Int,
 	totalTDaiMinted *big.Int,
