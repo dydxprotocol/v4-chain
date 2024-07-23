@@ -2438,6 +2438,87 @@ fetch(`${baseURL}/perpetualPositions/parentSubaccountNumber?address=string&paren
 This operation does not require authentication
 </aside>
 
+## SearchTrader
+
+<a id="opIdSearchTrader"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.get(f'{baseURL}/trader/search', params={
+  'searchParam': 'string'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/trader/search?searchParam=string`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /trader/search`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|searchParam|query|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "result": {
+    "address": "string",
+    "subaccountNumber": 0.1,
+    "subaccountId": "string",
+    "username": "string"
+  }
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[TraderSearchResponse](#schematradersearchresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## Get
 
 <a id="opIdGet"></a>
@@ -4682,6 +4763,57 @@ or
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |positions|[[PerpetualPositionResponseObject](#schemaperpetualpositionresponseobject)]|true|none|none|
+
+## TraderSearchResponseObject
+
+<a id="schematradersearchresponseobject"></a>
+<a id="schema_TraderSearchResponseObject"></a>
+<a id="tocStradersearchresponseobject"></a>
+<a id="tocstradersearchresponseobject"></a>
+
+```json
+{
+  "address": "string",
+  "subaccountNumber": 0.1,
+  "subaccountId": "string",
+  "username": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|address|string|true|none|none|
+|subaccountNumber|number(double)|true|none|none|
+|subaccountId|string|true|none|none|
+|username|string|true|none|none|
+
+## TraderSearchResponse
+
+<a id="schematradersearchresponse"></a>
+<a id="schema_TraderSearchResponse"></a>
+<a id="tocStradersearchresponse"></a>
+<a id="tocstradersearchresponse"></a>
+
+```json
+{
+  "result": {
+    "address": "string",
+    "subaccountNumber": 0.1,
+    "subaccountId": "string",
+    "username": "string"
+  }
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|result|[TraderSearchResponseObject](#schematradersearchresponseobject)|false|none|none|
 
 ## SparklineResponseObject
 

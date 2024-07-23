@@ -13,8 +13,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, data types.GenesisState) {
 	}
 }
 
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
-	return types.GenesisState{
-		Accounts: k.GetAllAccountStates(ctx),
+func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
+	accounts, err := k.GetAllAccountStates(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return &types.GenesisState{
+		Accounts: accounts,
 	}
 }

@@ -637,7 +637,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 				pc.Ctx,
 				pricestypes.MarketParam{
 					Id:                 marketId,
-					Pair:               "marketName",
+					Pair:               "base-quote",
 					Exponent:           tc.exponent,
 					MinExchanges:       uint32(1),
 					MinPriceChangePpm:  uint32(50),

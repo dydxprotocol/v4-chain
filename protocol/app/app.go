@@ -130,6 +130,9 @@ import (
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
 	// Modules
+	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
+	accountplusmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
+	accountplusmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
 	assetsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	assetsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -294,6 +297,7 @@ type App struct {
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	GovPlusKeeper         govplusmodulekeeper.Keeper
+	AccountPlusKeeper     accountplusmodulekeeper.Keeper
 
 	MarketMapKeeper marketmapmodulekeeper.Keeper
 
@@ -450,6 +454,7 @@ func New(
 		govplusmoduletypes.StoreKey,
 		vaultmoduletypes.StoreKey,
 		revsharemoduletypes.StoreKey,
+		accountplusmoduletypes.StoreKey,
 		marketmapmoduletypes.StoreKey,
 	)
 	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
@@ -933,6 +938,7 @@ func New(
 			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 		app.RevShareKeeper,
+		&app.MarketMapKeeper,
 	)
 	pricesModule := pricesmodule.NewAppModule(
 		appCodec,
@@ -940,6 +946,7 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.RevShareKeeper,
+		&app.MarketMapKeeper,
 	)
 
 	app.AssetsKeeper = *assetsmodulekeeper.NewKeeper(
@@ -1163,6 +1170,12 @@ func New(
 	)
 	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
 
+	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
+		appCodec,
+		keys[govplusmoduletypes.StoreKey],
+	)
+	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -1233,6 +1246,7 @@ func New(
 		vaultModule,
 		listingModule,
 		revShareModule,
+		accountplusModule,
 		marketmapModule,
 	)
 
@@ -1283,6 +1297,7 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		accountplusmoduletypes.ModuleName,
 		marketmapmoduletypes.ModuleName,
 	)
 
@@ -1329,6 +1344,7 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		accountplusmoduletypes.ModuleName,
 		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
@@ -1376,6 +1392,7 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		accountplusmoduletypes.ModuleName,
 		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
@@ -1419,6 +1436,7 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		accountplusmoduletypes.ModuleName,
 		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,
 

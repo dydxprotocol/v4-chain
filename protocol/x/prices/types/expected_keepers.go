@@ -3,6 +3,8 @@ package types
 import (
 	"context"
 
+	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
+
 	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,4 +28,10 @@ type RevShareKeeper interface {
 		marketId uint32,
 		params types.MarketMapperRevShareDetails,
 	)
+}
+
+// MarketMapKeeper defines the expected marketmap keeper used for simulations.
+type MarketMapKeeper interface {
+	GetMarket(ctx sdk.Context, tickerStr string) (marketmaptypes.Market, error)
+	EnableMarket(ctx sdk.Context, tickerStr string) error
 }

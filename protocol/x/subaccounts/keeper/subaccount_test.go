@@ -2131,11 +2131,11 @@ func TestUpdateSubaccounts(t *testing.T) {
 				),
 			},
 			marketParamPrices: []pricestypes.MarketParamPrice{
-				*pricestest.GenerateMarketParamPrice(pricestest.WithId(100), pricestest.WithPair("0")),
+				*pricestest.GenerateMarketParamPrice(pricestest.WithId(100), pricestest.WithPair("0-0")),
 				*pricestest.GenerateMarketParamPrice(
 					pricestest.WithId(101),
 					pricestest.WithPriceValue(0),
-					pricestest.WithPair("1"),
+					pricestest.WithPair("1-1"),
 				),
 			},
 			perpetualPositions: []*types.PerpetualPosition{
@@ -5318,11 +5318,11 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				),
 			},
 			marketParamPrices: []pricestypes.MarketParamPrice{
-				*pricestest.GenerateMarketParamPrice(pricestest.WithId(100), pricestest.WithPair("0")),
+				*pricestest.GenerateMarketParamPrice(pricestest.WithId(100), pricestest.WithPair("0-0")),
 				*pricestest.GenerateMarketParamPrice(
 					pricestest.WithId(101),
 					pricestest.WithPriceValue(0),
-					pricestest.WithPair("1"),
+					pricestest.WithPair("1-1"),
 				),
 			},
 			perpetualPositions: []*types.PerpetualPosition{
