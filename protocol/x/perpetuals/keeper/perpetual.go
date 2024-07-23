@@ -648,6 +648,15 @@ func (k Keeper) UpdateYieldIndexToNewMint(
 	totalTDaiPreMint *big.Int,
 	totalTDaiMinted *big.Int,
 ) {
+
+	if totalTDaiMinted.Cmp(big.NewInt(0)) == 0 {
+		return
+	}
+
+	if totalTDaiPreMint.Cmp(big.NewInt(0)) == 0 {
+		panic("Total tDAI pre mint was 0, but total tDAI minted was not 0.")
+	}
+
 	allPerps := k.GetAllPerpetuals(ctx)
 
 	for _, perp := range allPerps {

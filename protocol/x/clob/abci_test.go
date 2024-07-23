@@ -122,7 +122,7 @@ func TestEndBlocker_Failure(t *testing.T) {
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 			require.NoError(t, conversionErr)
 			ks.RatelimitKeeper.SetSDAIPrice(ctx, rate)
-			ks.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(ctx)
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 
 			for _, orderId := range tc.expiredStatefulOrderIds {
 				mockIndexerEventManager.On("AddBlockEvent",
@@ -1362,7 +1362,7 @@ func TestPrepareCheckState(t *testing.T) {
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 			require.NoError(t, conversionErr)
 			ks.RatelimitKeeper.SetSDAIPrice(ctx, rate)
-			ks.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(ctx)
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)

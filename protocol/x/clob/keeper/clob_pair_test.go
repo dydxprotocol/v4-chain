@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"math/big"
 	"strconv"
 	"testing"
 
@@ -47,7 +48,7 @@ func TestCreatePerpetualClobPair_MultiplePerpetual(t *testing.T) {
 	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 	require.NoError(t, conversionErr)
 	ks.RatelimitKeeper.SetSDAIPrice(ks.Ctx, rate)
-	ks.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(ks.Ctx)
+	ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
