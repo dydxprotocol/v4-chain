@@ -43,12 +43,24 @@ func TestPriceWriter(t *testing.T) {
 	)
 
 	t.Run("if extracting oracle votes fails, fail", func(t *testing.T) {
-		prices, err := pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
+		err := pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{[]byte("garbage"), {1, 2, 3, 4}, {1, 2, 3, 4}},
 		})
 
+		priceUpdates := pricesApplier.GetCachedPrices()
+
+		cachedPrices := make(map[string]*big.Int)
+		for _, priceUpdate := range priceUpdates {
+			marketId := priceUpdate.GetMarketId()
+			pair, exists := pricesKeeper.GetMarketParam(ctx, marketId)
+			if !exists {
+				continue
+			}
+			cachedPrices[pair.Pair] = big.NewInt(int64(priceUpdate.GetPrice()))
+		}
+
 		require.Error(t, err)
-		require.Nil(t, prices)
+		require.Equal(t, cachedPrices, make(map[string]*big.Int))
 	})
 
 	t.Run("if vote aggregation fails, fail", func(t *testing.T) {
@@ -74,12 +86,24 @@ func TestPriceWriter(t *testing.T) {
 			},
 		}).Return(nil, fmt.Errorf("fail")).Once()
 
-		returnedPrices, err := pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
+		err = pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
 		})
 
+		priceUpdates := pricesApplier.GetCachedPrices()
+
+		cachedPrices := make(map[string]*big.Int)
+		for _, priceUpdate := range priceUpdates {
+			marketId := priceUpdate.GetMarketId()
+			pair, exists := pricesKeeper.GetMarketParam(ctx, marketId)
+			if !exists {
+				continue
+			}
+			cachedPrices[pair.Pair] = big.NewInt(int64(priceUpdate.GetPrice()))
+		}
+
 		require.Error(t, err)
-		require.Nil(t, returnedPrices)
+		require.Equal(t, cachedPrices, make(map[string]*big.Int))
 	})
 
 	t.Run("ignore negative prices", func(t *testing.T) {
@@ -115,7 +139,15 @@ func TestPriceWriter(t *testing.T) {
 			},
 		)
 
-		_, err = pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
+		pricesKeeper.On("GetMarketParam", ctx, uint32(1)).Return(
+			pricestypes.MarketParam{
+				Id:   1,
+				Pair: constants.BtcUsdPair,
+			},
+			true,
+		)
+
+		err = pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
 		})
 
@@ -181,15 +213,39 @@ func TestPriceWriter(t *testing.T) {
 			},
 		)
 
+		pricesKeeper.On("GetMarketParam", ctx, uint32(1)).Return(
+			pricestypes.MarketParam{
+				Id:   1,
+				Pair: constants.BtcUsdPair,
+			},
+			true,
+		)
+
 		pricesKeeper.On("UpdateMarketPrice", ctx, mock.Anything).Return(nil)
 
-		prices, err := pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
+		err = pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
+			DecidedLastCommit: cometabci.CommitInfo{
+				Round: 1,
+				Votes: []cometabci.VoteInfo{},
+			},
 		})
+
+		priceUpdates := pricesApplier.GetCachedPrices()
+
+		cachedPrices := make(map[string]*big.Int)
+		for _, priceUpdate := range priceUpdates {
+			marketId := priceUpdate.GetMarketId()
+			pair, exists := pricesKeeper.GetMarketParam(ctx, marketId)
+			if !exists {
+				continue
+			}
+			cachedPrices[pair.Pair] = big.NewInt(int64(priceUpdate.GetPrice()))
+		}
 
 		require.NoError(t, err)
 		require.Equal(t, map[string]*big.Int{
 			constants.BtcUsdPair: big.NewInt(150),
-		}, prices)
+		}, cachedPrices)
 	})
 }

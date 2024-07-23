@@ -1247,6 +1247,7 @@ func New(
 				app.PricesKeeper,
 				app.extCodec,
 				app.voteCodec,
+				priceApplier,
 				veValidationFn,
 			),
 		)

@@ -43,6 +43,7 @@ func ProcessProposalHandler(
 	pricesKeeper ve.PreBlockExecPricesKeeper,
 	extCodec codec.ExtendedCommitCodec,
 	veCodec codec.VoteExtensionCodec,
+	pricesApplier ProcessProposalPriceApplier,
 	validateVoteExtensionFn ve.ValidateVEConsensusInfoFn,
 ) sdk.ProcessProposalHandler {
 	return func(ctx sdk.Context, request *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
@@ -90,6 +91,20 @@ func ProcessProposalHandler(
 				ctx.Logger().Error("failed to decode and validate ve", "err", err)
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
+
+			reqFinalizeBlock := &abci.RequestFinalizeBlock{
+				Txs:    request.Txs,
+				Height: request.Height,
+				DecidedLastCommit: abci.CommitInfo{
+					Round: ctx.CometInfo().GetLastCommit().Round(),
+					Votes: []abci.VoteInfo{},
+				},
+			}
+
+			if err := pricesApplier.ApplyPricesFromVE(ctx, reqFinalizeBlock); err != nil {
+				ctx.Logger().Error("failed to cache VE prices", "err", err)
+			}
+
 		}
 
 		txs, err := DecodeProcessProposalTxs(txConfig.TxDecoder(), request, pricesKeeper)

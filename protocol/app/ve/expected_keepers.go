@@ -36,5 +36,5 @@ type ExtendVoteIndexPriceCache interface {
 }
 
 type VEPriceApplier interface {
-	ApplyPricesFromVE(ctx sdk.Context, req *abci.RequestFinalizeBlock) (map[string]*big.Int, error)
+	ApplyPricesFromVE(ctx sdk.Context, req *abci.RequestFinalizeBlock) error
 }

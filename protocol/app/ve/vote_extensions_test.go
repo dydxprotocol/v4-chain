@@ -139,7 +139,7 @@ func TestExtendVoteHandler(t *testing.T) {
 					Txs:    req.Txs,
 					Height: req.Height,
 				}
-				mPriceApplier.On("ApplyPricesFromVE", ctx, finalizeBlockReq).Return(nil, nil)
+				mPriceApplier.On("ApplyPricesFromVE", ctx, finalizeBlockReq).Return(nil)
 			}
 			resp, err := h.ExtendVoteHandler()(ctx, req)
 			if !tc.expectedError {

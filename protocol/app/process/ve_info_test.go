@@ -43,6 +43,17 @@ func TestVEInjectionHandling(t *testing.T) {
 			// Setup.
 			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			ctx = vetesting.GetVeEnabledCtx(ctx, 3)
+			ctx = ctx.WithCometInfo(
+				vetesting.NewBlockInfo(
+					nil,
+					nil,
+					nil,
+					abci.CommitInfo{
+						Round: 3,
+						Votes: []abci.VoteInfo{},
+					},
+				),
+			)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
@@ -51,6 +62,9 @@ func TestVEInjectionHandling(t *testing.T) {
 			mockClobKeeper.On("RecordMevMetricsIsEnabled").Return(true)
 			mockClobKeeper.On("RecordMevMetrics", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
+			mockPriceApplier := &mocks.ProcessProposalPriceApplier{}
+			mockPriceApplier.On("ApplyPricesFromVE", mock.Anything, mock.Anything).Return(nil)
+
 			handler := process.ProcessProposalHandler(
 				constants.TestEncodingCfg.TxConfig,
 				mockClobKeeper,
@@ -58,6 +72,7 @@ func TestVEInjectionHandling(t *testing.T) {
 				pricesKeeper,
 				vecodec.NewDefaultExtendedCommitCodec(),
 				vecodec.NewDefaultVoteExtensionCodec(),
+				mockPriceApplier,
 				prepareutils.NoOpValidateVoteExtensionsFn,
 			)
 

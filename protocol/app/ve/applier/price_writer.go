@@ -7,6 +7,7 @@ import (
 
 	aggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/pricecache"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,6 +20,9 @@ type PriceApplier struct {
 
 	// pk is the prices keeper that is used to write prices to state.
 	pricesKeeper PriceApplierPricesKeeper
+
+	// finalPriceCache is the cache that stores the final prices
+	finalPriceCache pricecache.PriceCache
 
 	// logger
 	logger log.Logger
@@ -47,7 +51,7 @@ func NewPriceApplier(
 func (pa *PriceApplier) ApplyPricesFromVE(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
-) (map[string]*big.Int, error) {
+) error {
 	votes, err := aggregator.GetDaemonVotesFromBlock(request.Txs, pa.voteExtensionCodec, pa.extendedCommitCodec)
 	if err != nil {
 		pa.logger.Error(
@@ -57,7 +61,7 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 			"err", err,
 		)
 
-		return nil, err
+		return err
 	}
 
 	prices, err := pa.voteAggregator.AggregateDaemonVEIntoFinalPrices(ctx, votes)
@@ -68,12 +72,74 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 			"err", err,
 		)
 
-		return nil, err
+		return err
 	}
 
-	marketParams := pa.pricesKeeper.GetAllMarketParams(ctx)
+	isCached, err := pa.WritePricesToStore(ctx, request.DecidedLastCommit.Round, prices)
 
-	pricesWrittenToState := make(map[string]*big.Int)
+	if err != nil {
+		return err
+	}
+
+	if !isCached {
+		pa.WritePricesToCache(ctx, request.DecidedLastCommit.Round, prices)
+	}
+
+	return nil
+}
+
+func (pa *PriceApplier) GetCachedPrices() []pricestypes.MarketPriceUpdates_MarketPriceUpdate {
+	return pa.finalPriceCache.GetPriceUpdates()
+}
+
+func (pa *PriceApplier) WritePricesToCache(
+	ctx sdk.Context,
+	round int32,
+	prices map[string]*big.Int,
+) {
+	marketParams := pa.pricesKeeper.GetAllMarketParams(ctx)
+	var pricesToCache []pricestypes.MarketPriceUpdates_MarketPriceUpdate
+	for _, market := range marketParams {
+		shouldWritePrice, price := pa.ShouldWritePriceToStore(ctx, prices, market)
+		if !shouldWritePrice {
+			continue
+		}
+
+		newPrice := pricestypes.MarketPriceUpdates_MarketPriceUpdate{
+			MarketId: market.Id,
+			Price:    price.Uint64(),
+		}
+
+		pricesToCache = append(pricesToCache, newPrice)
+	}
+	pa.finalPriceCache.SetPriceUpdates(ctx, pricesToCache, round)
+}
+
+func (pa *PriceApplier) WritePricesToStoreFromCache(ctx sdk.Context, round int32) error {
+	pricesFromCache := pa.finalPriceCache.GetPriceUpdates()
+	for _, price := range pricesFromCache {
+		if err := pa.pricesKeeper.UpdateMarketPrice(ctx, &price); err != nil {
+			pa.logger.Error(
+				"failed to set price for currency pair",
+				"market_id", price.MarketId,
+				"err", err,
+			)
+
+			return err
+
+		}
+
+		pa.logger.Info(
+			"set price for currency pair",
+			"market_id", price.MarketId,
+			"quote_price", price.Price,
+		)
+	}
+	return nil
+}
+
+func (pa *PriceApplier) FallbackWritePricesToStore(ctx sdk.Context, prices map[string]*big.Int) error {
+	marketParams := pa.pricesKeeper.GetAllMarketParams(ctx)
 
 	for _, market := range marketParams {
 		pair := market.Pair
@@ -94,7 +160,7 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 				"err", err,
 			)
 
-			return nil, err
+			return err
 		}
 
 		pa.logger.Info(
@@ -102,10 +168,22 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 			"currency_pair", pair,
 			"quote_price", newPrice.Price,
 		)
-
-		pricesWrittenToState[pair] = price
 	}
-	return pricesWrittenToState, nil
+	return nil
+}
+
+func (pa *PriceApplier) WritePricesToStore(
+	ctx sdk.Context,
+	round int32,
+	prices map[string]*big.Int,
+) (isCached bool, err error) {
+	if pa.finalPriceCache.HasValidPrices(ctx.BlockHeight(), round) {
+		err := pa.WritePricesToStoreFromCache(ctx, round)
+		return true, err
+	} else {
+		pa.FallbackWritePricesToStore(ctx, prices)
+	}
+	return false, nil
 }
 
 func (pa *PriceApplier) ShouldWritePriceToStore(

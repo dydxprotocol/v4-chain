@@ -3,10 +3,7 @@
 package mocks
 
 import (
-	big "math/big"
-
 	abcitypes "github.com/cometbft/cometbft/abci/types"
-
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -18,29 +15,17 @@ type VEPriceApplier struct {
 }
 
 // ApplyPricesFromVE provides a mock function with given fields: ctx, req
-func (_m *VEPriceApplier) ApplyPricesFromVE(ctx types.Context, req *abcitypes.RequestFinalizeBlock) (map[string]*big.Int, error) {
+func (_m *VEPriceApplier) ApplyPricesFromVE(ctx types.Context, req *abcitypes.RequestFinalizeBlock) error {
 	ret := _m.Called(ctx, req)
 
-	var r0 map[string]*big.Int
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, *abcitypes.RequestFinalizeBlock) (map[string]*big.Int, error)); ok {
-		return rf(ctx, req)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, *abcitypes.RequestFinalizeBlock) map[string]*big.Int); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *abcitypes.RequestFinalizeBlock) error); ok {
 		r0 = rf(ctx, req)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]*big.Int)
-		}
+		r0 = ret.Error(0)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, *abcitypes.RequestFinalizeBlock) error); ok {
-		r1 = rf(ctx, req)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 type mockConstructorTestingTNewVEPriceApplier interface {
