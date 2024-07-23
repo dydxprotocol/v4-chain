@@ -85,4 +85,9 @@ var (
 		16,
 		"TotalShares does not match sum of OwnerShares",
 	)
+	ErrZeroMarketPrice = errorsmod.Register(
+		ModuleName,
+		17,
+		"MarketPrice is zero",
+	)
 )
