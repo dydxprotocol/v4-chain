@@ -19,8 +19,8 @@ const RAW_TABLE_COLUMNS: string = `
   \`usdVolume\` string,
   \`trades\` int,
   \`startingOpenInterest\` string
-  \`midBookPriceOpen\` string
-  \`midBookPriceClose\` string
+  \`orderbookMidPriceOpen\` string
+  \`orderbookMidPriceClose\` string
 `;
 const TABLE_COLUMNS: string = `
   "id",
@@ -35,8 +35,8 @@ const TABLE_COLUMNS: string = `
   ${castToDouble('usdVolume')},
   "trades",
   ${castToDouble('startingOpenInterest')}
-  ${castToDouble('midBookPriceOpen')}
-  ${castToDouble('midBookPriceClose')}
+  ${castToDouble('orderbookMidPriceOpen')}
+  ${castToDouble('orderbookMidPriceClose')}
 `;
 
 export function generateRawTable(tablePrefix: string, rdsExportIdentifier: string): string {
