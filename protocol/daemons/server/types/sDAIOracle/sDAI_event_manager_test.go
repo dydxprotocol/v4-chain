@@ -1,8 +1,7 @@
 package types_test
 
 import (
-	"sort"
-	"strconv"
+	"fmt"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/api"
@@ -77,8 +76,7 @@ func TestSDAIEventManager_AddsDAIEvent(t *testing.T) {
 
 	// Create a new event
 	event := &api.AddsDAIEventsRequest{
-		ConversionRate:      sdaitypes.TestSDAIEventRequests[0].ConversionRate,
-		EthereumBlockNumber: sdaitypes.TestSDAIEventRequests[0].EthereumBlockNumber,
+		ConversionRate: sdaitypes.TestSDAIEventRequests[0].ConversionRate,
 	}
 
 	// Add the event
@@ -95,22 +93,25 @@ func TestSDAIEventManager_AddsDAIEvent(t *testing.T) {
 	// // Add more events to test the circular buffer
 	for i := 0; i < 10; i++ {
 		event := &api.AddsDAIEventsRequest{
-			ConversionRate:      sdaitypes.TestSDAIEventRequests[i].ConversionRate,
-			EthereumBlockNumber: sdaitypes.TestSDAIEventRequests[i].EthereumBlockNumber,
+			ConversionRate: sdaitypes.TestSDAIEventRequests[i].ConversionRate,
 		}
 		require.NoError(t, sdaiEventManager.AddsDAIEvent(event))
 	}
 
 	// Check if the events were added correctly
 	lastEvents = sdaiEventManager.GetLastTensDAIEventsUnordered()
-	sort.Slice(lastEvents[:], func(i, j int) bool {
-		blockNumberI, _ := strconv.ParseInt(lastEvents[i].EthereumBlockNumber, 10, 64)
-		blockNumberJ, _ := strconv.ParseInt(lastEvents[j].EthereumBlockNumber, 10, 64)
-		return blockNumberI < blockNumberJ
-	})
+	// Check if the lastEvents array is a rotated version of TestSDAIEventRequests
+	offset := -1
+	for i := 0; i < 10; i++ {
+		if lastEvents[0] == sdaitypes.TestSDAIEventRequests[i] {
+			offset = i
+			break
+		}
+	}
+	require.NotEqual(t, -1, offset, "lastEvents is not a rotated version of TestSDAIEventRequests")
 
 	for i := 0; i < 10; i++ {
-		require.EqualValues(t, sdaitypes.TestSDAIEventRequests[i], lastEvents[i])
+		require.EqualValues(t, sdaitypes.TestSDAIEventRequests[(i+offset)%10], lastEvents[i])
 	}
 
 	expectedLatestEvent := sdaitypes.TestSDAIEventRequests[len(sdaitypes.TestSDAIEventRequests)-1]
@@ -120,8 +121,7 @@ func TestSDAIEventManager_AddsDAIEvent(t *testing.T) {
 
 	// Add one more event to test the circular buffer wrap-around
 	event = &api.AddsDAIEventsRequest{
-		ConversionRate:      "1106681181716810314385961731",
-		EthereumBlockNumber: "12360",
+		ConversionRate: "1106681181716810314385961731",
 	}
 	require.NoError(t, sdaiEventManager.AddsDAIEvent(event))
 
@@ -131,20 +131,25 @@ func TestSDAIEventManager_AddsDAIEvent(t *testing.T) {
 	require.EqualValues(t, *event, latest)
 
 	lastEvents = sdaiEventManager.GetLastTensDAIEventsUnordered()
-	sort.Slice(lastEvents[:], func(i, j int) bool {
-		blockNumberI, _ := strconv.ParseInt(lastEvents[i].EthereumBlockNumber, 10, 64)
-		blockNumberJ, _ := strconv.ParseInt(lastEvents[j].EthereumBlockNumber, 10, 64)
-		return blockNumberI < blockNumberJ
-	})
+
+	fmt.Println(lastEvents)
+	fmt.Println(sdaitypes.TestSDAIEventRequests)
+	// Check if the lastEvents array is a rotated version of TestSDAIEventRequests
+	offset = -1
+	for i := 0; i < 10; i++ {
+		if lastEvents[0] == sdaitypes.TestSDAIEventRequests[i] {
+			offset = i
+			break
+		}
+	}
+	require.NotEqual(t, -1, offset, "lastEvents is not a rotated version of TestSDAIEventRequests")
 
 	for i := 0; i < 10; i++ {
-		var expectedEvent api.AddsDAIEventsRequest
-		if i < 9 {
-			expectedEvent = sdaitypes.TestSDAIEventRequests[i+1]
+		if i != (offset+10-2)%10 {
+			require.EqualValues(t, sdaitypes.TestSDAIEventRequests[(i+offset)%10], lastEvents[i])
 		} else {
-			expectedEvent = *event
+			require.EqualValues(t, *event, lastEvents[i])
 		}
-		require.EqualValues(t, expectedEvent, lastEvents[i])
 	}
 
 	require.EqualValues(t, 5, sdaiEventManager.GetNextIndexInArray())

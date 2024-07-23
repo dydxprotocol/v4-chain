@@ -10,16 +10,14 @@ import (
 
 var _ sdk.Msg = &MsgUpdateSDAIConversionRate{}
 
-// NewMsgUpdateSDAIConversionRate constructs a `MsgUpdateSDAIConversionRate` from a sender, conversion rate, and ethereum block number.
+// NewMsgUpdateSDAIConversionRate constructs a `MsgUpdateSDAIConversionRate` from a sender, conversion rate.
 func NewMsgUpdateSDAIConversionRate(
 	sender sdk.AccAddress,
 	conversionRate string,
-	ethereumBlockNumber string,
 ) *MsgUpdateSDAIConversionRate {
 	return &MsgUpdateSDAIConversionRate{
-		Sender:              sender.String(),
-		ConversionRate:      conversionRate,
-		EthereumBlockNumber: ethereumBlockNumber,
+		Sender:         sender.String(),
+		ConversionRate: conversionRate,
 	}
 }
 
@@ -42,9 +40,7 @@ func (msg *MsgUpdateSDAIConversionRate) ValidateBasic() error {
 	if !ok {
 		return errorsmod.Wrap(
 			ErrUnableToDecodeBigInt,
-			fmt.Sprintf(
-				"Unable to convert the sDAI conversion rate to a big int",
-			),
+			"Unable to convert the sDAI conversion rate to a big int",
 		)
 	}
 
@@ -52,29 +48,7 @@ func (msg *MsgUpdateSDAIConversionRate) ValidateBasic() error {
 	if bigConversionRate.Sign() <= 0 {
 		return errorsmod.Wrap(
 			ErrValueIsNegative,
-			fmt.Sprintf(
-				"Invalid sDAI conversion rate",
-			),
-		)
-	}
-
-	bigEthereumBlockNumber, ok := new(big.Int).SetString(msg.ConversionRate, 10)
-	if !ok {
-		return errorsmod.Wrap(
-			ErrUnableToDecodeBigInt,
-			fmt.Sprintf(
-				"Unable to convert the ethereum block number to a big int",
-			),
-		)
-	}
-
-	// Validate that eth ethereum block height is positive
-	if bigEthereumBlockNumber.Sign() <= 0 {
-		return errorsmod.Wrap(
-			ErrValueIsNegative,
-			fmt.Sprintf(
-				"Invalid ethereum block number",
-			),
+			"Invalid sDAI conversion rate",
 		)
 	}
 
