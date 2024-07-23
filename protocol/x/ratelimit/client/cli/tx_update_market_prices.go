@@ -8,17 +8,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// CmdUpdateMarketPrices updates the conversion rate and ethereum block number for sDAI.
+// CmdUpdateMarketPrices updates the conversion rate for sDAI.
 func CmdUpdateMarketPrices() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-market-prices [sender_key_or_address] [conversion_rate] [ethereum_block_number]",
-		Short: "Update the conversion rate and ethereum block number for sDAI.",
-		Long: `Update the conversion rate and ethereum block number for sDAI.
+		Use:   "update-market-prices [sender_key_or_address] [conversion_rate]",
+		Short: "Update the conversion rate for sDAI.",
+		Long: `Update the conversion rate for sDAI.
 Note, the '--from' flag is ignored as it is implied from [sender_key_or_address].
 [conversion_rate] is the conversion rate of sDAI to USD.
-[ethereum_block_number] is the block number on Ethereum.
 `,
-		Args: cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argSenderOwner := args[0]
 			err = cmd.Flags().Set(flags.FlagFrom, argSenderOwner)
@@ -30,12 +29,10 @@ Note, the '--from' flag is ignored as it is implied from [sender_key_or_address]
 				return err
 			}
 			conversionRate := args[1]
-			ethereumBlockNumber := args[2]
 
 			msg := types.NewMsgUpdateSDAIConversionRate(
 				clientCtx.GetFromAddress(),
 				conversionRate,
-				ethereumBlockNumber,
 			)
 
 			if err := msg.ValidateBasic(); err != nil {

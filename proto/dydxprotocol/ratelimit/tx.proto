@@ -40,9 +40,6 @@ message MsgUpdateSDAIConversionRate {
 
   // The sDAI conversion rate
   string conversion_rate = 2;
-
-  // The ethereum block number for that rate
-  string ethereum_block_number = 3;
 }
 
 // MsgUpdateSDAIConversionRateResponse is the Msg/UpdateSDAIConversionRate response type.

@@ -11,7 +11,7 @@ import (
 // SDAIEthClient is an interface that encapsulates querying an Ethereum JSON-RPC endpoint.
 type EthQueryClient interface {
 	ChainID(ctx context.Context, client *ethclient.Client) (*big.Int, error)
-	QueryDaiConversionRate(client *ethclient.Client) (string, string, error)
+	QueryDaiConversionRate(client *ethclient.Client) (string, error)
 }
 
 // EthQueryClientImpl is a concrete implementation of the EthQueryClient interface.
@@ -23,6 +23,6 @@ func (e *EthQueryClientImpl) ChainID(ctx context.Context, client *ethclient.Clie
 }
 
 // QueryDaiConversionRate wraps the existing QueryDaiConversionRate function.
-func (e *EthQueryClientImpl) QueryDaiConversionRate(client *ethclient.Client) (string, string, error) {
+func (e *EthQueryClientImpl) QueryDaiConversionRate(client *ethclient.Client) (string, error) {
 	return store.QueryDaiConversionRate(client)
 }
