@@ -88,7 +88,7 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 	return nil
 }
 
-func (pa *PriceApplier) GetCachedPrices() []pricestypes.MarketPriceUpdates_MarketPriceUpdate {
+func (pa *PriceApplier) GetCachedPrices() pricestypes.MarketPriceUpdates {
 	return pa.finalPriceCache.GetPriceUpdates()
 }
 
@@ -98,7 +98,7 @@ func (pa *PriceApplier) WritePricesToCache(
 	prices map[string]*big.Int,
 ) {
 	marketParams := pa.pricesKeeper.GetAllMarketParams(ctx)
-	var pricesToCache []pricestypes.MarketPriceUpdates_MarketPriceUpdate
+	var pricesToCache pricestypes.MarketPriceUpdates
 	for _, market := range marketParams {
 		shouldWritePrice, price := pa.ShouldWritePriceToStore(ctx, prices, market)
 		if !shouldWritePrice {
@@ -110,15 +110,15 @@ func (pa *PriceApplier) WritePricesToCache(
 			Price:    price.Uint64(),
 		}
 
-		pricesToCache = append(pricesToCache, newPrice)
+		pricesToCache.MarketPriceUpdates = append(pricesToCache.MarketPriceUpdates, &newPrice)
 	}
 	pa.finalPriceCache.SetPriceUpdates(ctx, pricesToCache, round)
 }
 
 func (pa *PriceApplier) WritePricesToStoreFromCache(ctx sdk.Context, round int32) error {
 	pricesFromCache := pa.finalPriceCache.GetPriceUpdates()
-	for _, price := range pricesFromCache {
-		if err := pa.pricesKeeper.UpdateMarketPrice(ctx, &price); err != nil {
+	for _, price := range pricesFromCache.MarketPriceUpdates {
+		if err := pa.pricesKeeper.UpdateMarketPrice(ctx, price); err != nil {
 			pa.logger.Error(
 				"failed to set price for currency pair",
 				"market_id", price.MarketId,

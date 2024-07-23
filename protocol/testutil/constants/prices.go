@@ -270,6 +270,9 @@ var (
 		},
 	}
 
+	ValidSingleMarketPriceUpdateObj = &types.MarketPriceUpdates{
+		MarketPriceUpdates: ValidSingleMarketPriceUpdate,
+	}
 	ValidSingleMarketPriceUpdate = []*types.MarketPriceUpdates_MarketPriceUpdate{
 		{
 			MarketId: MarketId0,

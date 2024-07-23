@@ -50,7 +50,7 @@ func TestPriceWriter(t *testing.T) {
 		priceUpdates := pricesApplier.GetCachedPrices()
 
 		cachedPrices := make(map[string]*big.Int)
-		for _, priceUpdate := range priceUpdates {
+		for _, priceUpdate := range priceUpdates.MarketPriceUpdates {
 			marketId := priceUpdate.GetMarketId()
 			pair, exists := pricesKeeper.GetMarketParam(ctx, marketId)
 			if !exists {
@@ -93,7 +93,7 @@ func TestPriceWriter(t *testing.T) {
 		priceUpdates := pricesApplier.GetCachedPrices()
 
 		cachedPrices := make(map[string]*big.Int)
-		for _, priceUpdate := range priceUpdates {
+		for _, priceUpdate := range priceUpdates.MarketPriceUpdates {
 			marketId := priceUpdate.GetMarketId()
 			pair, exists := pricesKeeper.GetMarketParam(ctx, marketId)
 			if !exists {
@@ -234,7 +234,7 @@ func TestPriceWriter(t *testing.T) {
 		priceUpdates := pricesApplier.GetCachedPrices()
 
 		cachedPrices := make(map[string]*big.Int)
-		for _, priceUpdate := range priceUpdates {
+		for _, priceUpdate := range priceUpdates.MarketPriceUpdates {
 			marketId := priceUpdate.GetMarketId()
 			pair, exists := pricesKeeper.GetMarketParam(ctx, marketId)
 			if !exists {
