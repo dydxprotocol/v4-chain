@@ -1,12 +1,15 @@
 syntax = "proto3";
 package dydxprotocol.accountplus;
 
+import "gogoproto/gogo.proto";
+
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types";
 
 // Account State
 message AccountState {
   string address = 1;
-  TimestampNonceDetails timestamp_nonce_details = 2;
+  TimestampNonceDetails timestamp_nonce_details = 2
+      [ (gogoproto.nullable) = false ];
 }
 
 // Timestamp nonce details

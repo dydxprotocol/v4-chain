@@ -6,9 +6,11 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,16 +19,30 @@ func TestCreateMarket(t *testing.T) {
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 
+	testMarketParams := types.MarketParam{
+		Id:                 0,
+		Pair:               constants.BtcUsdPair,
+		Exponent:           int32(-6),
+		ExchangeConfigJson: `{"test_config_placeholder":{}}`,
+		MinExchanges:       2,
+		MinPriceChangePpm:  uint32(9_999),
+	}
+
+	// Create the test market in the market map and verify it is not enabled
+	keepertest.CreateMarketsInMarketMapFromParams(
+		t,
+		ctx,
+		keeper.MarketMapKeeper.(*marketmapkeeper.Keeper),
+		[]types.MarketParam{testMarketParams},
+	)
+	currencyPair, _ := slinky.MarketPairToCurrencyPair(constants.BtcUsdPair)
+	mmMarket, _ := keeper.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+	require.False(t, mmMarket.Ticker.Enabled)
+
+	// Create the test oracle market
 	marketParam, err := keeper.CreateMarket(
 		ctx,
-		types.MarketParam{
-			Id:                 0,
-			Pair:               constants.BtcUsdPair,
-			Exponent:           int32(-6),
-			ExchangeConfigJson: `{"test_config_placeholder":{}}`,
-			MinExchanges:       2,
-			MinPriceChangePpm:  uint32(9_999),
-		},
+		testMarketParams,
 		types.MarketPrice{
 			Id:       0,
 			Exponent: int32(-6),
@@ -61,6 +77,10 @@ func TestCreateMarket(t *testing.T) {
 	revShareParams := revShareKeeper.GetMarketMapperRevenueShareParams(ctx)
 	revShareDetails, err := revShareKeeper.GetMarketMapperRevShareDetails(ctx, marketParam.Id)
 	require.NoError(t, err)
+
+	// Verify market is enabled in market map
+	mmMarket, _ = keeper.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+	require.True(t, mmMarket.Ticker.Enabled)
 
 	expirationTs := uint64(ctx.BlockTime().Unix() + int64(revShareParams.ValidDays*24*3600))
 	require.Equal(t, revShareDetails.ExpirationTs, expirationTs)

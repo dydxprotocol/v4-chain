@@ -1,5 +1,6 @@
 package keeper
 
+<<<<<<< HEAD
 import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
@@ -30,3 +31,6 @@ func DeepCopyTimestampNonceDetails(details *types.TimestampNonceDetails) *types.
 func IsTimestampNonce(sequence uint64) bool {
 	return sequence >= TimestampNonceSequenceCutoff
 }
+=======
+func Placeholder() {}
+>>>>>>> main

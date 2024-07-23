@@ -428,7 +428,7 @@ func TestHasPerpetual(t *testing.T) {
 		pc.Ctx,
 		pricestypes.MarketParam{
 			Id:                 0,
-			Pair:               "marketName",
+			Pair:               "base-quote",
 			Exponent:           -10,
 			MinExchanges:       uint32(1),
 			MinPriceChangePpm:  uint32(50),
@@ -506,7 +506,7 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 		pc.Ctx,
 		pricestypes.MarketParam{
 			Id:                 0,
-			Pair:               "marketName",
+			Pair:               "base-quote",
 			Exponent:           -10,
 			MinExchanges:       uint32(1),
 			MinPriceChangePpm:  uint32(50),
@@ -817,7 +817,7 @@ func TestGetNetNotional_Success(t *testing.T) {
 				pc.Ctx,
 				pricestypes.MarketParam{
 					Id:                 marketId,
-					Pair:               "marketName",
+					Pair:               "base-quote",
 					Exponent:           tc.exponent,
 					MinExchanges:       uint32(1),
 					MinPriceChangePpm:  uint32(50),
@@ -972,7 +972,7 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 				pc.Ctx,
 				pricestypes.MarketParam{
 					Id:                 marketId,
-					Pair:               "marketName",
+					Pair:               "base-quote",
 					Exponent:           tc.exponent,
 					MinExchanges:       uint32(1),
 					MinPriceChangePpm:  uint32(50),
@@ -1128,7 +1128,7 @@ func TestGetNetCollateral_Success(t *testing.T) {
 				pc.Ctx,
 				pricestypes.MarketParam{
 					Id:                 marketId,
-					Pair:               "marketName",
+					Pair:               "base-quote",
 					Exponent:           tc.exponent,
 					MinExchanges:       uint32(1),
 					MinPriceChangePpm:  uint32(50),

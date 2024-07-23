@@ -6,6 +6,7 @@ import (
 	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
+	accountplustypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	listingtypes "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 )
@@ -22,6 +23,7 @@ var (
 				listingtypes.StoreKey,
 				revsharetypes.StoreKey,
 				marketmapmoduletypes.StoreKey,
+				accountplustypes.StoreKey,
 			},
 		},
 	}

@@ -82,6 +82,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
 		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
+		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
 
 		ks.PricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
@@ -89,6 +90,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			cdc,
 			indexerEventsTransientStoreKey,
 			revShareKeeper,
+			marketMapKeeper,
 		)
 		// Mock time provider response for market creation.
 		mockTimeProvider.On("Now").Return(constants.TimeT)
