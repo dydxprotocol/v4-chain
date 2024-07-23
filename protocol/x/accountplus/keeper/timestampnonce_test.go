@@ -11,8 +11,11 @@ func TestIsTimestampNonce(t *testing.T) {
 	require.True(t, keeper.IsTimestampNonce(keeper.TimestampNonceSequenceCutoff))
 	require.True(t, keeper.IsTimestampNonce(keeper.TimestampNonceSequenceCutoff+uint64(1)))
 	require.False(t, keeper.IsTimestampNonce(keeper.TimestampNonceSequenceCutoff-uint64(1)))
+<<<<<<< HEAD
 
 	require.False(t, keeper.IsTimestampNonce(0))
 	require.True(t, keeper.IsTimestampNonce(keeper.TimestampNonceSequenceCutoff+uint64(100000)))
 	require.False(t, keeper.IsTimestampNonce(keeper.TimestampNonceSequenceCutoff-uint64(100000)))
+=======
+>>>>>>> main
 }
