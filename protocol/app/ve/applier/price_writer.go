@@ -114,7 +114,7 @@ func (pa *PriceApplier) writePricesToCache(
 	pa.finalPriceCache.SetPriceUpdates(ctx, pricesToCache, round)
 }
 
-func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context, round int32) error {
+func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 	pricesFromCache := pa.finalPriceCache.GetPriceUpdates()
 	for _, price := range pricesFromCache.MarketPriceUpdates {
 		if err := pa.pricesKeeper.UpdateMarketPrice(ctx, price); err != nil {
@@ -176,7 +176,7 @@ func (pa *PriceApplier) writePricesToStore(
 	prices map[string]*big.Int,
 ) (isCached bool, err error) {
 	if pa.finalPriceCache.HasValidPrices(ctx.BlockHeight(), round) {
-		err := pa.writePricesToStoreFromCache(ctx, round)
+		err := pa.writePricesToStoreFromCache(ctx)
 		return true, err
 	} else {
 		pa.fallbackWritePricesToStore(ctx, prices)
