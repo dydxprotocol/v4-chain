@@ -278,26 +278,30 @@ func ValidateVEConsensusInfo(
 // it checks that the ExtendedCommit + LastCommit (for the same height), are consistent with each other + that
 // they are ordered correctly (by voting power) in accordance with
 // [comet](https://github.com/cometbft/cometbft/blob/4ce0277b35f31985bbf2c25d3806a184a4510010/types/validator_set.go#L784).
-func ValidateExtendedCommitAgainstLastCommit(extCommitInfo cometabci.ExtendedCommitInfo, lc comet.CommitInfo) error {
+func ValidateExtendedCommitAgainstLastCommit(extCommitInfo cometabci.ExtendedCommitInfo, cmtLastCommit comet.CommitInfo) error {
 	// check that the rounds are the same
-	if err := validateExtCommitRound(extCommitInfo, lc); err != nil {
+	if err := validateExtCommitRound(extCommitInfo, cmtLastCommit); err != nil {
 		return err
 	}
 
-	if err := validateExtCommitVoteCount(extCommitInfo, lc); err != nil {
+	if err := validateExtCommitVoteCount(extCommitInfo, cmtLastCommit); err != nil {
 		return err
 	}
 
-	if err := validateVotesSignerInfo(extCommitInfo, lc); err != nil {
+	if err := validateVotesSignerInfo(extCommitInfo, cmtLastCommit); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func validateExtCommitRound(extCommitInfo cometabci.ExtendedCommitInfo, lc comet.CommitInfo) error {
-	if extCommitInfo.Round != lc.Round() {
-		return fmt.Errorf("extended commit round %d does not match last commit round %d", extCommitInfo.Round, lc.Round())
+func validateExtCommitRound(valExtCommitInfo cometabci.ExtendedCommitInfo, cmtLastCommit comet.CommitInfo) error {
+	if valExtCommitInfo.Round != cmtLastCommit.Round() {
+		return fmt.Errorf(
+			"extended commit round %d does not match last commit round %d",
+			valExtCommitInfo.Round,
+			cmtLastCommit.Round(),
+		)
 	}
 	return nil
 
@@ -326,9 +330,16 @@ func validateVoteSignatureExistence(vote cometabci.ExtendedVoteInfo) error {
 	return nil
 }
 
-func validateExtCommitVoteCount(extCommitInfo cometabci.ExtendedCommitInfo, lc comet.CommitInfo) error {
-	if len(extCommitInfo.Votes) != lc.Votes().Len() {
-		return fmt.Errorf("extended commit votes length %d does not match last commit votes length %d", len(extCommitInfo.Votes), lc.Votes().Len())
+func validateExtCommitVoteCount(
+	valExtCommitInfo cometabci.ExtendedCommitInfo,
+	cmtLastCommit comet.CommitInfo,
+) error {
+	if len(valExtCommitInfo.Votes) != cmtLastCommit.Votes().Len() {
+		return fmt.Errorf(
+			"extended commit votes length %d does not match last commit votes length %d",
+			len(valExtCommitInfo.Votes),
+			cmtLastCommit.Votes().Len(),
+		)
 	}
 	return nil
 }
@@ -347,13 +358,17 @@ func GetPubKeyByConsAddr(ccvalidator ccvtypes.CrossChainValidator) (cmtprotocryp
 	return tmPubKey, nil
 }
 
-func validateVotesSignerInfo(extCommitInfo cometabci.ExtendedCommitInfo, lc comet.CommitInfo) error {
-	addressCache := make(map[string]struct{}, len(extCommitInfo.Votes))
-	for i, vote := range extCommitInfo.Votes {
-		if err := validateVoteAddress(vote, lc.Votes().Get(i), addressCache); err != nil {
+func validateVotesSignerInfo(valExtCommitInfo cometabci.ExtendedCommitInfo, cmtLastCommit comet.CommitInfo) error {
+	addressCache := make(map[string]struct{}, len(valExtCommitInfo.Votes))
+	for i, vote := range valExtCommitInfo.Votes {
+		if err := validateVoteAddress(
+			vote,
+			cmtLastCommit.Votes().Get(i),
+			addressCache,
+		); err != nil {
 			return err
 		}
-		if err := validateVoteBlockIdFlag(vote, lc.Votes().Get(i)); err != nil {
+		if err := validateVoteBlockIdFlag(vote, cmtLastCommit.Votes().Get(i)); err != nil {
 			return err
 		}
 
@@ -361,26 +376,42 @@ func validateVotesSignerInfo(extCommitInfo cometabci.ExtendedCommitInfo, lc come
 	return nil
 }
 
-func validateVoteBlockIdFlag(vote cometabci.ExtendedVoteInfo, lcVote comet.VoteInfo) error {
+func validateVoteBlockIdFlag(vote cometabci.ExtendedVoteInfo, cmtLastCommitVote comet.VoteInfo) error {
 	if !(vote.BlockIdFlag == cmtproto.BlockIDFlagAbsent && len(vote.VoteExtension) == 0 && len(vote.ExtensionSignature) == 0) {
-		if int32(vote.BlockIdFlag) != int32(lcVote.GetBlockIDFlag()) {
-			return fmt.Errorf("mismatched block ID flag between extended commit vote %d and last proposed commit %d", int32(vote.BlockIdFlag), int32(lcVote.GetBlockIDFlag()))
+		if int32(vote.BlockIdFlag) != int32(cmtLastCommitVote.GetBlockIDFlag()) {
+			return fmt.Errorf(
+				"mismatched block ID flag between extended commit vote %d and last proposed commit %d",
+				int32(vote.BlockIdFlag),
+				int32(cmtLastCommitVote.GetBlockIDFlag()),
+			)
 		}
 	}
 	return nil
 }
 
-func validateVoteAddress(vote cometabci.ExtendedVoteInfo, lcVote comet.VoteInfo, addressCache map[string]struct{}) error {
+func validateVoteAddress(
+	vote cometabci.ExtendedVoteInfo,
+	cmtLastCommitVote comet.VoteInfo,
+	addressCache map[string]struct{},
+) error {
 	if _, ok := addressCache[string(vote.Validator.Address)]; ok {
 		return fmt.Errorf("extended commit vote address %X is duplicated", vote.Validator.Address)
 	}
 	addressCache[string(vote.Validator.Address)] = struct{}{}
 
-	if !bytes.Equal(vote.Validator.Address, lcVote.Validator().Address()) {
-		return fmt.Errorf("extended commit vote address %X does not match last commit vote address %X", vote.Validator.Address, lcVote.Validator().Address())
+	if !bytes.Equal(vote.Validator.Address, cmtLastCommitVote.Validator().Address()) {
+		return fmt.Errorf(
+			"extended commit vote address %X does not match last commit vote address %X",
+			vote.Validator.Address,
+			cmtLastCommitVote.Validator().Address(),
+		)
 	}
-	if vote.Validator.Power != lcVote.Validator().Power() {
-		return fmt.Errorf("extended commit vote power %d does not match last commit vote power %d", vote.Validator.Power, lcVote.Validator().Power())
+	if vote.Validator.Power != cmtLastCommitVote.Validator().Power() {
+		return fmt.Errorf(
+			"extended commit vote power %d does not match last commit vote power %d",
+			vote.Validator.Power,
+			cmtLastCommitVote.Validator().Power(),
+		)
 	}
 	return nil
 }
