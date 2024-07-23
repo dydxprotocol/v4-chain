@@ -4,13 +4,11 @@ import { DeepPartial } from "../../helpers";
 /** Module genesis state */
 
 export interface GenesisState {
-  /** Module genesis state */
   accounts: AccountState[];
 }
 /** Module genesis state */
 
 export interface GenesisStateSDKType {
-  /** Module genesis state */
   accounts: AccountStateSDKType[];
 }
 
