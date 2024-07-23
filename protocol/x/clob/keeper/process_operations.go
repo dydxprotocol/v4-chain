@@ -550,22 +550,48 @@ func (k Keeper) PersistMatchOrdersToState(
 
 	// if GRPC streaming is on, emit a generated clob match to stream.
 	if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
-		streamOrderbookFill := k.MemClob.GenerateStreamOrderbookFill(
-			ctx,
-			types.ClobMatch{
-				Match: &types.ClobMatch_MatchOrders{
-					MatchOrders: matchOrders,
+		if len(makerOrders) == 0 {
+			return nil
+		}
+		streamOrderbookFill := types.StreamOrderbookFill{
+			ClobMatch: &types.ClobMatch{
+				Match: &types.ClobMatch_MatchPerpetualDeleveraging{
+					MatchPerpetualDeleveraging: &types.MatchPerpetualDeleveraging{
+						Liquidated:  takerOrder.GetSubaccountId(),
+						PerpetualId: takerOrder.OrderId.GetClobPairId(),
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: makerOrders[0].GetSubaccountId(),
+								FillAmount:             100_000_000,
+							},
+						},
+						IsFinalSettlement: true,
+					},
 				},
 			},
-			&takerOrder,
-			makerOrders,
-		)
+		}
 		k.SendOrderbookFillUpdates(
 			ctx,
 			[]types.StreamOrderbookFill{
 				streamOrderbookFill,
 			},
 		)
+		//streamOrderbookFill := k.MemClob.GenerateStreamOrderbookFill(
+		//	ctx,
+		//	types.ClobMatch{
+		//		Match: &types.ClobMatch_MatchOrders{
+		//			MatchOrders: matchOrders,
+		//		},
+		//	},
+		//	&takerOrder,
+		//	makerOrders,
+		//)
+		//k.SendOrderbookFillUpdates(
+		//	ctx,
+		//	[]types.StreamOrderbookFill{
+		//		streamOrderbookFill,
+		//	},
+		//)
 	}
 
 	return nil
