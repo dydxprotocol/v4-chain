@@ -14,6 +14,6 @@ export async function down(knex: Knex): Promise<void> {
     .schema
     .alterTable('wallets', (table) => {
       table.dropColumn('orderbookMidPriceOpen');
-      table.dropColumn('orderBookMidPriceClose');
+      table.dropColumn('orderbookMidPriceClose');
     });
 }
