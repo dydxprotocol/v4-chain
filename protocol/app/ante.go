@@ -21,7 +21,6 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	appante "github.com/dydxprotocol/v4-chain/protocol/app/ante"
 )
 
 // HandlerOptions are the options required for constructing an SDK AnteHandler.
@@ -35,7 +34,7 @@ type HandlerOptions struct {
 	ClobKeeper       clobtypes.ClobKeeper
 	PerpetualsKeeper perpetualstypes.PerpetualsKeeper
 	PricesKeeper     pricestypes.PricesKeeper
-	MarketMapKeeper  appante.MarketMapKeeper
+	MarketMapKeeper  customante.MarketMapKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence

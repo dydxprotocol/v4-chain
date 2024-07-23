@@ -11,9 +11,9 @@ import (
 	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
 
+	slinkylibs "github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	slinkylibs "github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 )
 
 var ErrNoCrossMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUpsertMarkets " +
@@ -24,8 +24,8 @@ type MarketMapKeeper interface {
 }
 
 type ValidateMarketUpdateDecorator struct {
-	perpKeeper  perpetualstypes.PerpetualsKeeper
-	priceKeeper pricestypes.PricesKeeper
+	perpKeeper      perpetualstypes.PerpetualsKeeper
+	priceKeeper     pricestypes.PricesKeeper
 	marketMapKeeper MarketMapKeeper
 	// write only cache for mapping slinky ticker strings to market types
 	// only evicted on node restart
@@ -43,10 +43,10 @@ func NewValidateMarketUpdateDecorator(
 	marketMapKeeper MarketMapKeeper,
 ) ValidateMarketUpdateDecorator {
 	return ValidateMarketUpdateDecorator{
-		perpKeeper:  perpKeeper,
-		priceKeeper: priceKeeper,
+		perpKeeper:      perpKeeper,
+		priceKeeper:     priceKeeper,
 		marketMapKeeper: marketMapKeeper,
-		cache:       make(map[string]perpetualstypes.PerpetualMarketType),
+		cache:           make(map[string]perpetualstypes.PerpetualMarketType),
 	}
 }
 
@@ -73,7 +73,7 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 
 	msgs := tx.GetMsgs()
 	var (
-		msg = msgs[0]
+		msg     = msgs[0]
 		markets []mmtypes.Market
 	)
 
@@ -91,7 +91,7 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 	}
 
 	// check if the market updates are safe
-	if err := d.doMarketsUpdateEnabledValues(ctx, markets); err != nil{
+	if err := d.doMarketsUpdateEnabledValues(ctx, markets); err != nil {
 		return ctx, errorsmod.Wrap(err, "market update is not safe")
 	}
 

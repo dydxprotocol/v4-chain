@@ -223,9 +223,9 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 	}
 
 	type args struct {
-		msgs        []sdk.Msg
-		simulate    bool
-		marketPerps []marketPerpPair
+		msgs             []sdk.Msg
+		simulate         bool
+		marketPerps      []marketPerpPair
 		marketMapMarkets []mmtypes.Market
 	}
 	tests := []struct {
@@ -384,7 +384,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 						Authority: constants.BobAccAddress.String(),
 						Markets: []mmtypes.Market{
 							testMarketWithEnabled,
-						},	
+						},
 					},
 				},
 				simulate: false,
@@ -453,7 +453,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 						},
 					},
 				},
-				simulate: false,
+				simulate:         false,
 				marketMapMarkets: []mmtypes.Market{testMarket},
 			},
 			wantErr: true,
@@ -469,7 +469,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 						},
 					},
 				},
-				simulate: true,
+				simulate:         true,
 				marketMapMarkets: []mmtypes.Market{testMarket},
 			},
 			wantErr: true,
@@ -485,7 +485,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 						},
 					},
 				},
-				simulate: false,
+				simulate:         false,
 				marketMapMarkets: []mmtypes.Market{testMarket},
 			},
 			wantErr: true,
@@ -501,7 +501,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 						},
 					},
 				},
-				simulate: true,
+				simulate:         true,
 				marketMapMarkets: []mmtypes.Market{testMarket},
 			},
 			wantErr: true,
@@ -527,13 +527,13 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 
 				// create the market in x/marketmap
 				require.NoError(
-					t, 
+					t,
 					tApp.App.MarketMapKeeper.CreateMarket(
 						ctx,
 						mmtypes.Market{
 							Ticker: mmtypes.Ticker{
-								Decimals: uint64(pair.market.Exponent),
-								Enabled: false, // will be enabled later
+								Decimals:     uint64(pair.market.Exponent),
+								Enabled:      false, // will be enabled later
 								CurrencyPair: cp,
 							},
 						},
@@ -565,7 +565,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 			}
 
 			wrappedHandler := ante.NewValidateMarketUpdateDecorator(
-				tApp.App.PerpetualsKeeper, 
+				tApp.App.PerpetualsKeeper,
 				tApp.App.PricesKeeper,
 				&tApp.App.MarketMapKeeper,
 			)
