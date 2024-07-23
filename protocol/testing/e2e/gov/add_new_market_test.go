@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
+	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +16,7 @@ import (
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -51,6 +54,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 	testMarketParam := pricestest.GenerateMarketParamPrice(
 		pricestest.WithId(TestMarketId),
 	)
+
 	testClobPair := clobtest.GenerateClobPair(
 		clobtest.WithId(TestMarketId),
 		clobtest.WithPerpetualId(TestMarketId),
@@ -298,10 +302,25 @@ func TestAddNewMarketProposal(t *testing.T) {
 						genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
 					},
 				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *marketmaptypes.GenesisState) {
+						// Add test market to market map genesis
+						marketMap := keepertest.ConstructMarketMapFromParams(t, []pricestypes.MarketParam{testMarketParam.Param})
+						for ticker, market := range marketMap.Markets {
+							market.Ticker.Enabled = false
+							genesisState.MarketMap.Markets[ticker] = market
+						}
+					},
+				)
 				genesis.GenesisTime = GenesisTime
 				return genesis
 			}).Build()
 			ctx := tApp.InitChain()
+
+			currencyPair, _ := slinky.MarketPairToCurrencyPair(testMarketParam.Param.Pair)
+			market, _ := tApp.App.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+			require.False(t, market.Ticker.Enabled)
 
 			initMarketParams := tApp.App.PricesKeeper.GetAllMarketParams(ctx)
 			initPerpetuals := tApp.App.PerpetualsKeeper.GetAllPerpetuals(ctx)
@@ -335,6 +354,9 @@ func TestAddNewMarketProposal(t *testing.T) {
 				require.Equal(t, initMarketParams, tApp.App.PricesKeeper.GetAllMarketParams(ctx))
 				require.Equal(t, initPerpetuals, tApp.App.PerpetualsKeeper.GetAllPerpetuals(ctx))
 				require.Equal(t, initClobPairs, tApp.App.ClobKeeper.GetAllClobPairs(ctx))
+				// Check that market is still disabled in market map.
+				market, _ := tApp.App.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+				require.False(t, market.Ticker.Enabled)
 			case govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED:
 				// Proposal passed and successfully executed, check states are updated.
 				// Check market
@@ -374,6 +396,10 @@ func TestAddNewMarketProposal(t *testing.T) {
 
 				// Check that clob pair is updated.
 				require.Equal(t, msgUpdateClobPairToActive.ClobPair, clobPair)
+
+				// Check that market is enabled in market map.
+				market, _ := tApp.App.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+				require.True(t, market.Ticker.Enabled)
 
 				// Advance to some blocks after, and place an order on the market.
 				ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight())+NumBlocksAfterTradingEnabled, testapp.AdvanceToBlockOptions{})

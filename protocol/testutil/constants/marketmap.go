@@ -3,18 +3,25 @@ package constants
 import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 )
 
 var GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
+var (
+	BtcUsdCurrencyPair, _ = slinky.MarketPairToCurrencyPair(BtcUsdPair)
+	EthUsdCurrencyPair, _ = slinky.MarketPairToCurrencyPair(EthUsdPair)
+	UsdtUsdCurrencyPair   = slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}
+)
+
 var MarketMap_DefaultGenesisState = marketmapmoduletypes.GenesisState{
 	MarketMap: marketmapmoduletypes.MarketMap{
 		Markets: map[string]marketmapmoduletypes.Market{
-			"BTC/USD": {
+			BtcUsdCurrencyPair.String(): {
 				Ticker: marketmapmoduletypes.Ticker{
-					CurrencyPair:     slinkytypes.CurrencyPair{Base: "BTC", Quote: "USD"},
+					CurrencyPair:     BtcUsdCurrencyPair,
 					Decimals:         uint64(5),
 					MinProviderCount: uint64(2),
 					Enabled:          true,
@@ -39,9 +46,9 @@ var MarketMap_DefaultGenesisState = marketmapmoduletypes.GenesisState{
 						NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
 				},
 			},
-			"ETH/USD": {
+			EthUsdCurrencyPair.String(): {
 				Ticker: marketmapmoduletypes.Ticker{
-					CurrencyPair:     slinkytypes.CurrencyPair{Base: "ETH", Quote: "USD"},
+					CurrencyPair:     EthUsdCurrencyPair,
 					Decimals:         uint64(6),
 					MinProviderCount: uint64(1),
 					Enabled:          true,
@@ -66,11 +73,11 @@ var MarketMap_DefaultGenesisState = marketmapmoduletypes.GenesisState{
 						NormalizeByPair: &slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"}, Invert: false, Metadata_JSON: ""},
 				},
 			},
-			"USDT/USD": {
+			UsdtUsdCurrencyPair.String(): {
 				Ticker: marketmapmoduletypes.Ticker{
-					CurrencyPair:     slinkytypes.CurrencyPair{Base: "USDT", Quote: "USD"},
-					Decimals:         0x9,
-					MinProviderCount: 0x3,
+					CurrencyPair:     UsdtUsdCurrencyPair,
+					Decimals:         uint64(9),
+					MinProviderCount: uint64(3),
 					Enabled:          true,
 					Metadata_JSON:    "",
 				},

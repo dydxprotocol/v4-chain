@@ -61,7 +61,7 @@ func (k Keeper) CreateMarket(
 	if err != nil {
 		return types.MarketParam{}, errorsmod.Wrapf(
 			types.ErrTickerNotFoundInMarketMap,
-			marketParam.Pair,
+			currencyPairStr,
 		)
 	}
 

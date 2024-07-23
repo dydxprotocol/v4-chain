@@ -504,11 +504,13 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 		*perptest.GeneratePerpetual(perptest.WithId(1)),
 	}
 
-	_, err := pc.PricesKeeper.CreateMarket(
+	_, err := keepertest.CreateTestMarket(
+		t,
 		pc.Ctx,
+		pc.PricesKeeper,
 		pricestypes.MarketParam{
 			Id:                 0,
-			Pair:               "marketName",
+			Pair:               "base-quote",
 			Exponent:           -10,
 			MinExchanges:       uint32(1),
 			MinPriceChangePpm:  uint32(50),

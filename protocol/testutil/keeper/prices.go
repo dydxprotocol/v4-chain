@@ -29,6 +29,7 @@ import (
 	"github.com/skip-mev/slinky/providers/apis/dydx"
 	dydxtypes "github.com/skip-mev/slinky/providers/apis/dydx/types"
 	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -115,6 +116,17 @@ func CreateMarketInMarketMapFromParams(
 	mmk *marketmapkeeper.Keeper,
 	allMarketParams []types.MarketParam,
 ) {
+	marketMap := ConstructMarketMapFromParams(t, allMarketParams)
+	for _, market := range marketMap.Markets {
+		market.Ticker.Enabled = false
+		require.NoError(t, mmk.CreateMarket(ctx, market))
+	}
+}
+
+func ConstructMarketMapFromParams(
+	t testing.TB,
+	allMarketParams []types.MarketParam,
+) marketmapmoduletypes.MarketMap {
 	// fill out config with dummy variables to pass validation.  This handler is only used to run the
 	// ConvertMarketParamsToMarketMap member function.
 	h, err := dydx.NewAPIHandler(zap.NewNop(), config.APIConfig{
@@ -144,10 +156,7 @@ func CreateMarketInMarketMapFromParams(
 	mm, err := h.ConvertMarketParamsToMarketMap(mpr)
 	require.NoError(t, err)
 
-	for _, market := range mm.MarketMap.Markets {
-		market.Ticker.Enabled = false
-		require.NoError(t, mmk.CreateMarket(ctx, market))
-	}
+	return mm.MarketMap
 }
 
 // CreateTestMarket creates a market with the given MarketParam and MarketPrice. It creates this market

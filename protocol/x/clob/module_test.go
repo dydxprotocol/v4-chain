@@ -286,7 +286,7 @@ func TestAppModule_RegisterServices(t *testing.T) {
 }
 
 func TestAppModule_InitExportGenesis(t *testing.T) {
-	am, keeper, pricesKeeper, perpetualsKeeper, ctx, mockIndexerEventManager := createAppModuleWithKeeper(t)
+	am, keeper, pricesKeeper, perpetualsKeeper, marketMapKeeper, ctx, mockIndexerEventManager := createAppModuleWithKeeper(t)
 	ctx = ctx.WithBlockTime(constants.TimeT)
 	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	gs := json.RawMessage(getValidGenesisStr())
@@ -314,6 +314,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 		),
 	).Once().Return()
 
+	marketMapKeeper.InitGenesis(ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ctx, *pricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ctx, *perpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -446,7 +447,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 }
 
 func TestAppModule_InitGenesisPanic(t *testing.T) {
-	am, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
+	am, _, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
 	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	gs := json.RawMessage(`invalid json`)
 
@@ -459,13 +460,13 @@ func TestAppModule_ConsensusVersion(t *testing.T) {
 }
 
 func TestAppModule_BeginBlock(t *testing.T) {
-	am, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
+	am, _, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
 
 	require.NoError(t, am.BeginBlock(ctx)) // should not panic
 }
 
 func TestAppModule_EndBlock(t *testing.T) {
-	am, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
+	am, _, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
 	ctx = ctx.WithBlockTime(constants.TimeT)
 
 	require.NoError(t, am.EndBlock(ctx))

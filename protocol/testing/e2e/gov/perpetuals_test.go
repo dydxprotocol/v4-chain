@@ -15,6 +15,8 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
+	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -272,6 +274,34 @@ func TestUpdatePerpetualsParams(t *testing.T) {
 					&genesis,
 					func(genesisState *govtypesv1.GenesisState) {
 						genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
+					},
+				)
+				// Initialize marketmap module with genesis markets.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *marketmaptypes.GenesisState) {
+						markets := make(map[string]marketmaptypes.Market)
+						for i, _ := range append(tc.genesisMarketIds, TEST_PERPETUAL_PARAMS.MarketId) {
+							ticker := marketmaptypes.Ticker{
+								CurrencyPair:     slinkytypes.CurrencyPair{Base: fmt.Sprintf("%d", i), Quote: fmt.Sprintf("%d", i)},
+								Decimals:         8,
+								MinProviderCount: 3,
+								Enabled:          true,
+								Metadata_JSON:    "",
+							}
+							markets[fmt.Sprintf("%d/%d", i, i)] = marketmaptypes.Market{
+								Ticker: ticker,
+								ProviderConfigs: []marketmaptypes.ProviderConfig{
+									{Name: "binance_ws", OffChainTicker: "test"},
+									{Name: "bybit_ws", OffChainTicker: "test"},
+									{Name: "coinbase_ws", OffChainTicker: "test"},
+								},
+							}
+						}
+						marketMap := marketmaptypes.MarketMap{
+							Markets: markets,
+						}
+						genesisState.MarketMap = marketMap
 					},
 				)
 				// Initialize prices module with genesis markets.
