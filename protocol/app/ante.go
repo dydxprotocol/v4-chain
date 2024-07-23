@@ -21,6 +21,7 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	appante "github.com/dydxprotocol/v4-chain/protocol/app/ante"
 )
 
 // HandlerOptions are the options required for constructing an SDK AnteHandler.
@@ -28,12 +29,13 @@ import (
 // struct embedding to include the normal cosmos-sdk `HandlerOptions`.
 type HandlerOptions struct {
 	ante.HandlerOptions
-	Codec             codec.Codec
-	AuthStoreKey      storetypes.StoreKey
+	Codec            codec.Codec
+	AuthStoreKey     storetypes.StoreKey
 	AccountplusKeeper *accountpluskeeper.Keeper
-	ClobKeeper        clobtypes.ClobKeeper
-	PerpetualsKeeper  perpetualstypes.PerpetualsKeeper
-	PricesKeeper      pricestypes.PricesKeeper
+	ClobKeeper       clobtypes.ClobKeeper
+	PerpetualsKeeper perpetualstypes.PerpetualsKeeper
+	PricesKeeper     pricestypes.PricesKeeper
+	MarketMapKeeper  appante.MarketMapKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -128,7 +130,9 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		sigGasConsume: ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		clobRateLimit: clobante.NewRateLimitDecorator(options.ClobKeeper),
 		clob:          clobante.NewClobDecorator(options.ClobKeeper),
-		marketUpdates: customante.NewValidateMarketUpdateDecorator(options.PerpetualsKeeper, options.PricesKeeper),
+		marketUpdates: customante.NewValidateMarketUpdateDecorator(
+			options.PerpetualsKeeper, options.PricesKeeper, options.MarketMapKeeper,
+		),
 	}
 	return h.AnteHandle, nil
 }
