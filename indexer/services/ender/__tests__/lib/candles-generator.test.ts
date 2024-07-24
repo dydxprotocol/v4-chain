@@ -562,7 +562,7 @@ describe('candleHelper', () => {
     expectTimingStats();
   });
 
-  it('creates an empty candle and updates previous candle orderBookMidPriceClose if startTime is past candle resolution', async () => {
+  it('creates an empty candle and updates the previous candle orderBookMidPriceClose if startTime is past candle resolution', async () => {
     // Create existing candles
     const existingPrice: string = '7000';
     const startingOpenInterest: string = '200';
