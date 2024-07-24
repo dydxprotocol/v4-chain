@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"cosmossdk.io/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
@@ -46,6 +47,8 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 				constants.MarketId0: constants.FiveBillion,  // no change
 				constants.MarketId1: constants.ThreeBillion, // no change
 				constants.MarketId2: constants.FiveBillion,  // no change
+				constants.MarketId3: constants.FiveBillion,  // no change
+				constants.MarketId4: constants.ThreeBillion, // no change
 			},
 		},
 		"Multiple updates": {
@@ -55,6 +58,8 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 				constants.MarketId0: constants.Price5,
 				constants.MarketId1: constants.Price6,
 				constants.MarketId2: constants.Price7,
+				constants.MarketId3: constants.Price4,
+				constants.MarketId4: constants.Price3,
 			},
 		},
 		"Towards index price = true (current < update < index price)": {
@@ -77,6 +82,8 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 				constants.MarketId0: price_5_005_000_000,
 				constants.MarketId1: constants.ThreeBillion, // no change
 				constants.MarketId2: constants.FiveBillion,  // no change
+				constants.MarketId3: constants.FiveBillion,  // no change
+				constants.MarketId4: constants.ThreeBillion, // no change
 			},
 		},
 		"Index price crossing = true (price increase), old_ticks > 1, new_ticks <= sqrt(old_ticks) = true": {
@@ -99,6 +106,8 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 				constants.MarketId0: price_5_005_000_000,
 				constants.MarketId1: constants.ThreeBillion, // no change
 				constants.MarketId2: constants.FiveBillion,  // no change
+				constants.MarketId3: constants.FiveBillion,  // no change
+				constants.MarketId4: constants.ThreeBillion, // no change
 			},
 		},
 		"Index price crossing = true (price decrease), old_ticks > 1, new_ticks <= sqrt(old_ticks) = true": {
@@ -121,6 +130,8 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 				constants.MarketId0: price_4_995_000_000,
 				constants.MarketId1: constants.ThreeBillion, // no change
 				constants.MarketId2: constants.FiveBillion,  // no change
+				constants.MarketId3: constants.FiveBillion,  // no change
+				constants.MarketId4: constants.ThreeBillion, // no change
 			},
 		},
 		"Index price crossing = true (price increase), old_ticks <= 1, new_ticks <= old_ticks = true": {
@@ -143,6 +154,8 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 				constants.MarketId0: price_5_000_500_000,
 				constants.MarketId1: constants.ThreeBillion, // no change
 				constants.MarketId2: constants.FiveBillion,  // no change
+				constants.MarketId3: constants.FiveBillion,  // no change
+				constants.MarketId4: constants.ThreeBillion, // no change
 			},
 		},
 		"Index price crossing = true (price decrease), old_ticks <= 1, new_ticks <= old_ticks = true": {
@@ -165,6 +178,8 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 				constants.MarketId0: price_4_999_500_000,
 				constants.MarketId1: constants.ThreeBillion, // no change
 				constants.MarketId2: constants.FiveBillion,  // no change
+				constants.MarketId3: constants.FiveBillion,  // no change
+				constants.MarketId4: constants.ThreeBillion, // no change
 			},
 		},
 	}
@@ -217,6 +232,8 @@ func TestUpdateMarketPrices_SkipNonDeterministicCheck_Valid(t *testing.T) {
 				constants.MarketId0: 11,
 				constants.MarketId1: constants.ThreeBillion, // no change
 				constants.MarketId2: constants.FiveBillion,  // no change
+				constants.MarketId3: constants.FiveBillion,  // no change
+				constants.MarketId4: constants.ThreeBillion, // no change
 			},
 		},
 		"Index price trends in the opposite direction of update price from current price, but still updates state": {
@@ -239,6 +256,8 @@ func TestUpdateMarketPrices_SkipNonDeterministicCheck_Valid(t *testing.T) {
 				constants.MarketId0: price_4_995_000_001,
 				constants.MarketId1: constants.ThreeBillion, // no change
 				constants.MarketId2: constants.FiveBillion,  // no change
+				constants.MarketId3: constants.FiveBillion,  // no change
+				constants.MarketId4: constants.ThreeBillion, // no change
 			},
 		},
 		"Index price crossing = true, old_ticks > 1, new_ticks <= sqrt(old_ticks) = false": {
@@ -261,6 +280,8 @@ func TestUpdateMarketPrices_SkipNonDeterministicCheck_Valid(t *testing.T) {
 				constants.MarketId0: price_5_015_000_000,
 				constants.MarketId1: constants.ThreeBillion, // no change
 				constants.MarketId2: constants.FiveBillion,  // no change
+				constants.MarketId3: constants.FiveBillion,  // no change
+				constants.MarketId4: constants.ThreeBillion, // no change
 			},
 		},
 		"Index price crossing = true, old_ticks <= 1, new_ticks <= old_ticks = false": {
@@ -283,6 +304,8 @@ func TestUpdateMarketPrices_SkipNonDeterministicCheck_Valid(t *testing.T) {
 				constants.MarketId0: price_5_015_000_000,
 				constants.MarketId1: constants.ThreeBillion, // no change
 				constants.MarketId2: constants.FiveBillion,  // no change
+				constants.MarketId3: constants.FiveBillion,  // no change
+				constants.MarketId4: constants.ThreeBillion, // no change
 			},
 		},
 	}

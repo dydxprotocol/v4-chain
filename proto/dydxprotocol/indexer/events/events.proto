@@ -5,6 +5,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "dydxprotocol/indexer/shared/removal_reason.proto";
 import "dydxprotocol/indexer/protocol/v1/clob.proto";
+import "dydxprotocol/indexer/protocol/v1/perpetual.proto";
 import "dydxprotocol/indexer/protocol/v1/subaccount.proto";
 
 option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events";
@@ -180,8 +181,8 @@ message DeleveragingEventV1 {
   // The amount filled between the liquidated and offsetting position, in
   // base quantums.
   uint64 fill_amount = 4;
-  // Fill price of deleveraging event, in USDC quote quantums.
-  uint64 price = 5;
+  // Total quote quantums filled.
+  uint64 total_quote_quantums = 5;
   // `true` if liquidating a short position, `false` otherwise.
   bool is_buy = 6;
   // `true` if the deleveraging event is for final settlement, indicating
@@ -304,9 +305,10 @@ message AssetCreateEventV1 {
   sint32 atomic_resolution = 5;
 }
 
-// PerpetualMarketCreateEventV1 message contains all the information about a
-// new Perpetual Market on the dYdX chain.
+// Deprecated. See PerpetualMarketCreateEventV2 for the most up to date message
+// for the event to create a new Perpetual Market.
 message PerpetualMarketCreateEventV1 {
+    option deprecated = true;
   // Unique Perpetual id.
   // Defined in perpetuals.perpetual
   uint32 id = 1;
@@ -354,6 +356,59 @@ message PerpetualMarketCreateEventV1 {
   uint32 liquidity_tier = 10;
 }
 
+// PerpetualMarketCreateEventV2 message contains all the information about a
+// new Perpetual Market on the dYdX chain.
+message PerpetualMarketCreateEventV2 {
+  // Unique Perpetual id.
+  // Defined in perpetuals.perpetual
+  uint32 id = 1;
+
+  // Unique clob pair Id associated with this perpetual market
+  // Defined in clob.clob_pair
+  uint32 clob_pair_id = 2;
+
+  // The name of the `Perpetual` (e.g. `BTC-USD`).
+  // Defined in perpetuals.perpetual
+  string ticker = 3;
+
+  // Unique id of market param associated with this perpetual market.
+  // Defined in perpetuals.perpetual
+  uint32 market_id = 4;
+
+  // Status of the CLOB
+  dydxprotocol.indexer.protocol.v1.ClobPairStatus status = 5;
+
+  // `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
+  // per Subtick.
+  // Defined in clob.clob_pair
+  sint32 quantum_conversion_exponent = 6;
+
+  // The exponent for converting an atomic amount (`size = 1`)
+  // to a full coin. For example, if `AtomicResolution = -8`
+  // then a `PerpetualPosition` with `size = 1e8` is equivalent to
+  // a position size of one full coin.
+  // Defined in perpetuals.perpetual
+  sint32 atomic_resolution = 7;
+
+  // Defines the tick size of the orderbook by defining how many subticks
+  // are in one tick. That is, the subticks of any valid order must be a
+  // multiple of this value. Generally this value should start `>= 100`to
+  // allow room for decreasing it.
+  // Defined in clob.clob_pair
+  uint32 subticks_per_tick = 8;
+
+  // Minimum increment in the size of orders on the CLOB, in base quantums.
+  // Defined in clob.clob_pair
+  uint64 step_base_quantums = 9;
+
+  // The liquidity_tier that this perpetual is associated with.
+  // Defined in perpetuals.perpetual
+  uint32 liquidity_tier = 10;
+
+  // Market type of the perpetual.
+  dydxprotocol.indexer.protocol.v1.PerpetualMarketType market_type = 11;
+}
+
 // LiquidityTierUpsertEventV1 message contains all the information to
 // create/update a Liquidity Tier on the dYdX chain.
 message LiquidityTierUpsertEventV1 {
@@ -377,6 +432,64 @@ message LiquidityTierUpsertEventV1 {
   //
   // Deprecated since v3.x.
   uint64 base_position_notional = 5 [ deprecated = true ];
+
+  // Previously existed in v1 for open interest caps. Removed and
+  // now in v2.
+  reserved 6, 7;
+
+  // reserved fields for open interest caps. Removed and now in v2.
+  reserved "open_interest_lower_cap", "open_interest_upper_cap";
+}
+
+// OpenInterestUpdateEventV1 is used for open interest update events
+message OpenInterestUpdateEventV1 {
+  // The list of all open interest updates in the block.
+  repeated OpenInterestUpdate open_interest_updates = 1;
+}
+
+// OpenInterestUpdate contains a single open interest update for a perpetual
+message OpenInterestUpdate {
+  // The ID of the perpetual market.
+  uint32 perpetual_id = 1;
+
+  // The new open interest value for the perpetual market.
+  bytes open_interest = 2 [
+    (gogoproto.customtype) =
+        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// LiquidationEventV2 message contains all the information needed to update
+// the liquidity tiers. It contains all the fields from V1 along with the
+// open interest caps.
+message LiquidityTierUpsertEventV2 {
+  // Unique id.
+  uint32 id = 1;
+
+  // The name of the tier purely for mnemonic purposes, e.g. "Gold".
+  string name = 2;
+
+  // The margin fraction needed to open a position.
+  // In parts-per-million.
+  uint32 initial_margin_ppm = 3;
+
+  // The fraction of the initial-margin that the maintenance-margin is,
+  // e.g. 50%. In parts-per-million.
+  uint32 maintenance_fraction_ppm = 4;
+
+  // The maximum position size at which the margin requirements are
+  // not increased over the default values. Above this position size,
+  // the margin requirements increase at a rate of sqrt(size).
+  //
+  // Deprecated since v3.x.
+  uint64 base_position_notional = 5 [ deprecated = true ];
+
+  // Lower cap of open interest in quote quantums. optional
+  uint64 open_interest_lower_cap = 6;
+
+  // Upper cap of open interest in quote quantums.
+  uint64 open_interest_upper_cap = 7;
 }
 
 // UpdateClobPairEventV1 message contains all the information about an update to

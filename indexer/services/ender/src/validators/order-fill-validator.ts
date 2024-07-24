@@ -93,6 +93,7 @@ export class OrderFillValidator extends Validator<OrderFillEventV1> {
   public createHandlers(
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
+    __: string,
   ): Handler<OrderFillWithLiquidity>[] {
     const orderFillEventsWithLiquidity: OrderFillEventWithLiquidity[] = [
       {

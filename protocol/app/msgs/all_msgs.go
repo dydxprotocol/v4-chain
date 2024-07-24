@@ -94,6 +94,8 @@ var (
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": {},
 
 		// clob
+		"/dydxprotocol.clob.MsgBatchCancel":                                {},
+		"/dydxprotocol.clob.MsgBatchCancelResponse":                        {},
 		"/dydxprotocol.clob.MsgCancelOrder":                                {},
 		"/dydxprotocol.clob.MsgCancelOrderResponse":                        {},
 		"/dydxprotocol.clob.MsgCreateClobPair":                             {},

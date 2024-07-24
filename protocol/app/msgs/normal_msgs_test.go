@@ -76,6 +76,8 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal",
 
 		// clob
+		"/dydxprotocol.clob.MsgBatchCancel",
+		"/dydxprotocol.clob.MsgBatchCancelResponse",
 		"/dydxprotocol.clob.MsgCancelOrder",
 		"/dydxprotocol.clob.MsgCancelOrderResponse",
 		"/dydxprotocol.clob.MsgPlaceOrder",

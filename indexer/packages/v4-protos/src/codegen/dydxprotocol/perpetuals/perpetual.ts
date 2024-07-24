@@ -1,5 +1,50 @@
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
+export enum PerpetualMarketType {
+  /** PERPETUAL_MARKET_TYPE_CROSS - Market type for cross margin perpetual markets. */
+  PERPETUAL_MARKET_TYPE_CROSS = 0,
+
+  /** PERPETUAL_MARKET_TYPE_ISOLATED - Market type for isolated margin perpetual markets. */
+  PERPETUAL_MARKET_TYPE_ISOLATED = 1,
+  UNRECOGNIZED = -1,
+}
+export enum PerpetualMarketTypeSDKType {
+  /** PERPETUAL_MARKET_TYPE_CROSS - Market type for cross margin perpetual markets. */
+  PERPETUAL_MARKET_TYPE_CROSS = 0,
+
+  /** PERPETUAL_MARKET_TYPE_ISOLATED - Market type for isolated margin perpetual markets. */
+  PERPETUAL_MARKET_TYPE_ISOLATED = 1,
+  UNRECOGNIZED = -1,
+}
+export function perpetualMarketTypeFromJSON(object: any): PerpetualMarketType {
+  switch (object) {
+    case 0:
+    case "PERPETUAL_MARKET_TYPE_CROSS":
+      return PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS;
+
+    case 1:
+    case "PERPETUAL_MARKET_TYPE_ISOLATED":
+      return PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED;
+
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return PerpetualMarketType.UNRECOGNIZED;
+  }
+}
+export function perpetualMarketTypeToJSON(object: PerpetualMarketType): string {
+  switch (object) {
+    case PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS:
+      return "PERPETUAL_MARKET_TYPE_CROSS";
+
+    case PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED:
+      return "PERPETUAL_MARKET_TYPE_ISOLATED";
+
+    case PerpetualMarketType.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
 /** Perpetual represents a perpetual on the dYdX exchange. */
 
 export interface Perpetual {
@@ -11,6 +56,9 @@ export interface Perpetual {
    */
 
   fundingIndex: Uint8Array;
+  /** Total size of open long contracts, measured in base_quantums. */
+
+  openInterest: Uint8Array;
 }
 /** Perpetual represents a perpetual on the dYdX exchange. */
 
@@ -23,6 +71,9 @@ export interface PerpetualSDKType {
    */
 
   funding_index: Uint8Array;
+  /** Total size of open long contracts, measured in base_quantums. */
+
+  open_interest: Uint8Array;
 }
 /**
  * PerpetualParams represents the parameters of a perpetual on the dYdX
@@ -59,6 +110,9 @@ export interface PerpetualParams {
   /** The liquidity_tier that this perpetual is associated with. */
 
   liquidityTier: number;
+  /** The market type specifying if this perpetual is cross or isolated */
+
+  marketType: PerpetualMarketType;
 }
 /**
  * PerpetualParams represents the parameters of a perpetual on the dYdX
@@ -95,6 +149,9 @@ export interface PerpetualParamsSDKType {
   /** The liquidity_tier that this perpetual is associated with. */
 
   liquidity_tier: number;
+  /** The market type specifying if this perpetual is cross or isolated */
+
+  market_type: PerpetualMarketTypeSDKType;
 }
 /** MarketPremiums stores a list of premiums for a single perpetual market. */
 
@@ -216,6 +273,19 @@ export interface LiquidityTier {
    */
 
   impactNotional: Long;
+  /**
+   * Lower cap for Open Interest Margin Fracton (OIMF), in quote quantums.
+   * IMF is not affected when OI <= open_interest_lower_cap.
+   */
+
+  openInterestLowerCap: Long;
+  /**
+   * Upper cap for Open Interest Margin Fracton (OIMF), in quote quantums.
+   * IMF scales linearly to 100% as OI approaches open_interest_upper_cap.
+   * If zero, then the IMF does not scale with OI.
+   */
+
+  openInterestUpperCap: Long;
 }
 /** LiquidityTier stores margin information. */
 
@@ -259,12 +329,26 @@ export interface LiquidityTierSDKType {
    */
 
   impact_notional: Long;
+  /**
+   * Lower cap for Open Interest Margin Fracton (OIMF), in quote quantums.
+   * IMF is not affected when OI <= open_interest_lower_cap.
+   */
+
+  open_interest_lower_cap: Long;
+  /**
+   * Upper cap for Open Interest Margin Fracton (OIMF), in quote quantums.
+   * IMF scales linearly to 100% as OI approaches open_interest_upper_cap.
+   * If zero, then the IMF does not scale with OI.
+   */
+
+  open_interest_upper_cap: Long;
 }
 
 function createBasePerpetual(): Perpetual {
   return {
     params: undefined,
-    fundingIndex: new Uint8Array()
+    fundingIndex: new Uint8Array(),
+    openInterest: new Uint8Array()
   };
 }
 
@@ -276,6 +360,10 @@ export const Perpetual = {
 
     if (message.fundingIndex.length !== 0) {
       writer.uint32(18).bytes(message.fundingIndex);
+    }
+
+    if (message.openInterest.length !== 0) {
+      writer.uint32(26).bytes(message.openInterest);
     }
 
     return writer;
@@ -298,6 +386,10 @@ export const Perpetual = {
           message.fundingIndex = reader.bytes();
           break;
 
+        case 3:
+          message.openInterest = reader.bytes();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -311,6 +403,7 @@ export const Perpetual = {
     const message = createBasePerpetual();
     message.params = object.params !== undefined && object.params !== null ? PerpetualParams.fromPartial(object.params) : undefined;
     message.fundingIndex = object.fundingIndex ?? new Uint8Array();
+    message.openInterest = object.openInterest ?? new Uint8Array();
     return message;
   }
 
@@ -323,7 +416,8 @@ function createBasePerpetualParams(): PerpetualParams {
     marketId: 0,
     atomicResolution: 0,
     defaultFundingPpm: 0,
-    liquidityTier: 0
+    liquidityTier: 0,
+    marketType: 0
   };
 }
 
@@ -351,6 +445,10 @@ export const PerpetualParams = {
 
     if (message.liquidityTier !== 0) {
       writer.uint32(48).uint32(message.liquidityTier);
+    }
+
+    if (message.marketType !== 0) {
+      writer.uint32(56).int32(message.marketType);
     }
 
     return writer;
@@ -389,6 +487,10 @@ export const PerpetualParams = {
           message.liquidityTier = reader.uint32();
           break;
 
+        case 7:
+          message.marketType = (reader.int32() as any);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -406,6 +508,7 @@ export const PerpetualParams = {
     message.atomicResolution = object.atomicResolution ?? 0;
     message.defaultFundingPpm = object.defaultFundingPpm ?? 0;
     message.liquidityTier = object.liquidityTier ?? 0;
+    message.marketType = object.marketType ?? 0;
     return message;
   }
 
@@ -540,7 +643,9 @@ function createBaseLiquidityTier(): LiquidityTier {
     initialMarginPpm: 0,
     maintenanceFractionPpm: 0,
     basePositionNotional: Long.UZERO,
-    impactNotional: Long.UZERO
+    impactNotional: Long.UZERO,
+    openInterestLowerCap: Long.UZERO,
+    openInterestUpperCap: Long.UZERO
   };
 }
 
@@ -568,6 +673,14 @@ export const LiquidityTier = {
 
     if (!message.impactNotional.isZero()) {
       writer.uint32(48).uint64(message.impactNotional);
+    }
+
+    if (!message.openInterestLowerCap.isZero()) {
+      writer.uint32(56).uint64(message.openInterestLowerCap);
+    }
+
+    if (!message.openInterestUpperCap.isZero()) {
+      writer.uint32(64).uint64(message.openInterestUpperCap);
     }
 
     return writer;
@@ -606,6 +719,14 @@ export const LiquidityTier = {
           message.impactNotional = (reader.uint64() as Long);
           break;
 
+        case 7:
+          message.openInterestLowerCap = (reader.uint64() as Long);
+          break;
+
+        case 8:
+          message.openInterestUpperCap = (reader.uint64() as Long);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -623,6 +744,8 @@ export const LiquidityTier = {
     message.maintenanceFractionPpm = object.maintenanceFractionPpm ?? 0;
     message.basePositionNotional = object.basePositionNotional !== undefined && object.basePositionNotional !== null ? Long.fromValue(object.basePositionNotional) : Long.UZERO;
     message.impactNotional = object.impactNotional !== undefined && object.impactNotional !== null ? Long.fromValue(object.impactNotional) : Long.UZERO;
+    message.openInterestLowerCap = object.openInterestLowerCap !== undefined && object.openInterestLowerCap !== null ? Long.fromValue(object.openInterestLowerCap) : Long.UZERO;
+    message.openInterestUpperCap = object.openInterestUpperCap !== undefined && object.openInterestUpperCap !== null ? Long.fromValue(object.openInterestUpperCap) : Long.UZERO;
     return message;
   }
 

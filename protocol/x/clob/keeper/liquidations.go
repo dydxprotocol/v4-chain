@@ -148,6 +148,12 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		metrics.Latency,
 	)
 
+	// Stat the number of subaccounts that require deleveraging.
+	metrics.SetGaugeWithLabels(
+		metrics.ClobSubaccountsRequiringDeleveragingCount,
+		float32(len(subaccountsToDeleverage)),
+	)
+
 	return subaccountsToDeleverage, nil
 }
 
@@ -1127,7 +1133,7 @@ func (k Keeper) validateMatchedLiquidation(
 
 	// Validate that processing the liquidation fill does not leave insufficient funds
 	// in the insurance fund (such that the liquidation couldn't have possibly continued).
-	if !k.IsValidInsuranceFundDelta(ctx, insuranceFundDelta) {
+	if !k.IsValidInsuranceFundDelta(ctx, insuranceFundDelta, perpetualId) {
 		log.DebugLog(ctx, "ProcessMatches: insurance fund has insufficient balance to process the liquidation.")
 		return nil, errorsmod.Wrapf(
 			types.ErrInsuranceFundHasInsufficientFunds,

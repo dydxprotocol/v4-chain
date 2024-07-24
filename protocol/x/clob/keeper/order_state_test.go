@@ -1,11 +1,8 @@
 package keeper_test
 
 import (
-	"sort"
 	"testing"
 
-	"cosmossdk.io/store/prefix"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
@@ -262,99 +259,6 @@ func TestOrderFillAmountInitMemStore_Success(t *testing.T) {
 	require.False(t, exists)
 }
 
-func TestAddOrdersForPruning_Determinism(t *testing.T) {
-	memClob := &mocks.MemClob{}
-	memClob.On("SetClobKeeper", mock.Anything).Return()
-
-	ks := keepertest.NewClobKeepersTestContext(
-		t,
-		memClob,
-		&mocks.BankKeeper{},
-		&mocks.IndexerEventManager{},
-	)
-
-	blockHeight := uint32(10)
-
-	store := prefix.NewStore(
-		ks.Ctx.KVStore(ks.StoreKey),
-		[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
-	)
-
-	orders := []types.OrderId{
-		constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-		constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId,
-		constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price15_GTB20.OrderId,
-		constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15.OrderId,
-	}
-
-	expectedOrders := []types.OrderId{
-		constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-		constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15.OrderId,
-		constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price15_GTB20.OrderId,
-		constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId,
-	}
-
-	for i := 0; i < 100; i++ {
-		ks.ClobKeeper.AddOrdersForPruning(
-			ks.Ctx,
-			orders,
-			blockHeight,
-		)
-
-		potentiallyPrunableOrdersBytes := store.Get(
-			lib.Uint32ToKey(blockHeight),
-		)
-
-		var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}
-		err := potentiallyPrunableOrders.Unmarshal(potentiallyPrunableOrdersBytes)
-		require.NoError(t, err)
-
-		sort.Sort(types.SortedOrders(expectedOrders))
-		for i, o := range potentiallyPrunableOrders.OrderIds {
-			require.Equal(t, o, expectedOrders[i])
-		}
-	}
-}
-
-func TestAddOrdersForPruning_DuplicateOrderIds(t *testing.T) {
-	memClob := &mocks.MemClob{}
-	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ks := keepertest.NewClobKeepersTestContext(
-		t,
-		memClob,
-		&mocks.BankKeeper{},
-		&mocks.IndexerEventManager{},
-	)
-
-	blockHeight := uint32(10)
-
-	ks.ClobKeeper.AddOrdersForPruning(
-		ks.Ctx,
-		[]types.OrderId{
-			constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15.OrderId,
-			constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15.OrderId,
-			constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15.OrderId,
-			constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15.OrderId,
-		},
-		blockHeight,
-	)
-
-	store := prefix.NewStore(
-		ks.Ctx.KVStore(ks.StoreKey),
-		[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
-	)
-
-	potentiallyPrunableOrdersBytes := store.Get(
-		lib.Uint32ToKey(blockHeight),
-	)
-
-	var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}
-	err := potentiallyPrunableOrders.Unmarshal(potentiallyPrunableOrdersBytes)
-	require.NoError(t, err)
-
-	require.Len(t, potentiallyPrunableOrders.OrderIds, 2)
-}
-
 func TestPruning(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
@@ -571,17 +475,13 @@ func TestPruning(t *testing.T) {
 				require.Equal(t, prunableBlockHeight, tc.expectedPrunableBlockHeight)
 			}
 
-			// Verify that expected `blockHeightToPotentiallyPrunableOrdersStore` were deleted.
-			blockHeightToPotentiallyPrunableOrdersStore := prefix.NewStore(
-				ks.Ctx.KVStore(ks.StoreKey),
-				[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
-			)
+			// Verify all prune order keys were deleted for specified heights
 
 			for _, blockHeight := range tc.expectedEmptyPotentiallyPrunableOrderBlockHeights {
-				has := blockHeightToPotentiallyPrunableOrdersStore.Has(
-					lib.Uint32ToKey(blockHeight),
-				)
-				require.False(t, has)
+				potentiallyPrunableOrdersStore := ks.ClobKeeper.GetPruneableOrdersStore(ks.Ctx, blockHeight)
+				it := potentiallyPrunableOrdersStore.Iterator(nil, nil)
+				defer it.Close()
+				require.False(t, it.Valid())
 			}
 		})
 	}

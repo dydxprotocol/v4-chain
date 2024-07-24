@@ -9,6 +9,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
@@ -132,11 +135,11 @@ func TestAppModuleBasic_ValidateGenesisErrBadState_Number(t *testing.T) {
 
 	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 
-	msg := fmt.Sprintf(`{"subaccounts": [{ "id": {"owner": "%s", "number": 128 } }]}`, sample.AccAddress())
+	msg := fmt.Sprintf(`{"subaccounts": [{ "id": {"owner": "%s", "number": 128001 } }]}`, sample.AccAddress())
 	h := json.RawMessage(msg)
 
 	err := am.ValidateGenesis(cdc, nil, h)
-	require.EqualError(t, err, "subaccount id number cannot exceed 127")
+	require.EqualError(t, err, "subaccount id number cannot exceed "+lib.IntToString(types.MaxSubaccountIdNumber))
 }
 
 func TestAppModuleBasic_ValidateGenesis(t *testing.T) {

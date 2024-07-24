@@ -114,6 +114,21 @@ func TestSetLiquidityTier(t *testing.T) {
 			},
 			expectedErr: "invalid authority",
 		},
+		"Failure: invalid open interest caps": {
+			msg: &types.MsgSetLiquidityTier{
+				Authority: lib.GovModuleAddress.String(),
+				LiquidityTier: types.LiquidityTier{
+					Id:                     testLt.Id,
+					Name:                   "medium-cap",
+					InitialMarginPpm:       567_123,
+					MaintenanceFractionPpm: 500_001,
+					ImpactNotional:         1_300_303,
+					OpenInterestLowerCap:   100,
+					OpenInterestUpperCap:   50,
+				},
+			},
+			expectedErr: "open interest lower cap is larger than upper cap",
+		},
 	}
 
 	for name, tc := range tests {
@@ -126,6 +141,8 @@ func TestSetLiquidityTier(t *testing.T) {
 				testLt.InitialMarginPpm,
 				testLt.MaintenanceFractionPpm,
 				testLt.ImpactNotional,
+				testLt.OpenInterestLowerCap,
+				testLt.OpenInterestUpperCap,
 			)
 			require.NoError(t, err)
 

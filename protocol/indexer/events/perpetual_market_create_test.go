@@ -5,6 +5,7 @@ import (
 
 	v1types "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 
 	"github.com/stretchr/testify/require"
 )
@@ -21,8 +22,9 @@ func TestNewPerpetualMarketCreateEvent_Success(t *testing.T) {
 		5,
 		5,
 		0,
+		perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 	)
-	expectedPerpetualMarketCreateEventProto := &PerpetualMarketCreateEventV1{
+	expectedPerpetualMarketCreateEventProto := &PerpetualMarketCreateEventV2{
 		Id:                        0,
 		ClobPairId:                0,
 		Ticker:                    "BTC",
@@ -33,6 +35,7 @@ func TestNewPerpetualMarketCreateEvent_Success(t *testing.T) {
 		SubticksPerTick:           5,
 		StepBaseQuantums:          5,
 		LiquidityTier:             0,
+		MarketType:                v1types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 	}
 	require.Equal(t, expectedPerpetualMarketCreateEventProto, perpetualMarketCreateEvent)
 }

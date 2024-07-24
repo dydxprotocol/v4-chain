@@ -107,6 +107,21 @@ var (
 		22,
 		"MinNumVotesPerSample is zero",
 	)
+	ErrInvalidMarketType = errorsmod.Register(
+		ModuleName,
+		23,
+		"Market type is invalid",
+	)
+	ErrOpenInterestLowerCapLargerThanUpperCap = errorsmod.Register(
+		ModuleName,
+		24,
+		"open interest lower cap is larger than upper cap",
+	)
+	ErrOpenInterestWouldBecomeNegative = errorsmod.Register(
+		ModuleName,
+		25,
+		"open interest would become negative after update",
+	)
 
 	// Errors for Not Implemented
 	ErrNotImplementedFunding = errorsmod.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")

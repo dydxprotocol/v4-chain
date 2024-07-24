@@ -66,6 +66,7 @@ func TestCreatePerpetualClobPair_MultiplePerpetual(t *testing.T) {
 					clobPair.SubticksPerTick,
 					clobPair.StepBaseQuantums,
 					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.LiquidityTier,
+					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.MarketType,
 				),
 			),
 		).Once().Return()
@@ -187,6 +188,7 @@ func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 				clobPair.SubticksPerTick,
 				clobPair.StepBaseQuantums,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 			),
 		),
 	).Once().Return()
@@ -278,6 +280,7 @@ func TestCreatePerpetualClobPair(t *testing.T) {
 							tc.clobPair.SubticksPerTick,
 							tc.clobPair.StepBaseQuantums,
 							perpetual.Params.LiquidityTier,
+							perpetual.Params.MarketType,
 						),
 					),
 				).Return()
@@ -430,6 +433,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 								make.clobPair.SubticksPerTick,
 								make.clobPair.StepBaseQuantums,
 								perpetual.Params.LiquidityTier,
+								perpetual.Params.MarketType,
 							),
 						),
 					).Return()
@@ -621,6 +625,7 @@ func TestUpdateClobPair_FinalSettlement(t *testing.T) {
 				clobPair.SubticksPerTick,
 				clobPair.StepBaseQuantums,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 			),
 		),
 	).Once().Return()
@@ -737,6 +742,7 @@ func TestUpdateClobPair(t *testing.T) {
 							clobPair.SubticksPerTick,
 							clobPair.StepBaseQuantums,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 						),
 					),
 				).Once().Return()
@@ -794,6 +800,7 @@ func TestUpdateClobPair(t *testing.T) {
 							clobPair.SubticksPerTick,
 							clobPair.StepBaseQuantums,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 						),
 					),
 				).Once().Return()
@@ -831,6 +838,7 @@ func TestUpdateClobPair(t *testing.T) {
 							clobPair.SubticksPerTick,
 							clobPair.StepBaseQuantums,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 						),
 					),
 				).Once().Return()

@@ -3,6 +3,9 @@ package app_test
 import (
 	"testing"
 
+	"cosmossdk.io/store/rootmulti"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
 	testApp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -20,7 +23,9 @@ func newHandlerOptions() app.HandlerOptions {
 			FeegrantKeeper:  dydxApp.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
-		ClobKeeper: dydxApp.ClobKeeper,
+		ClobKeeper:   dydxApp.ClobKeeper,
+		Codec:        encodingConfig.Codec,
+		AuthStoreKey: dydxApp.CommitMultiStore().(*rootmulti.Store).StoreKeysByName()[authtypes.StoreKey],
 	}
 }
 
@@ -51,6 +56,14 @@ func TestNewAnteHandler_Error(t *testing.T) {
 		"nil ClobKeeper": {
 			handlerMutation: func(options *app.HandlerOptions) { options.ClobKeeper = nil },
 			errorMsg:        "clob keeper is required for ante builder",
+		},
+		"nil Codec": {
+			handlerMutation: func(options *app.HandlerOptions) { options.Codec = nil },
+			errorMsg:        "codec is required for ante builder",
+		},
+		"nil AuthStoreKey": {
+			handlerMutation: func(options *app.HandlerOptions) { options.AuthStoreKey = nil },
+			errorMsg:        "auth store key is required for ante builder",
 		},
 	}
 	for name, tc := range tests {

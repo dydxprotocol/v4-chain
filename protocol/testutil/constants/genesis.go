@@ -315,10 +315,10 @@ const GenesisState = `{
     },
     "clob": {
       "block_rate_limit_config": {
-        "max_short_term_orders_per_n_blocks": [
+        "max_short_term_orders_and_cancels_per_n_blocks": [
           {
             "num_blocks": 1,
-            "limit": 200
+            "limit": 400
           }
         ],
         "max_stateful_orders_per_n_blocks": [
@@ -329,12 +329,6 @@ const GenesisState = `{
           {
             "num_blocks": 100,
             "limit": 20
-          }
-        ],
-        "max_short_term_order_cancellations_per_n_blocks": [
-          {
-            "num_blocks": 1,
-            "limit": 200
           }
         ]
       },
@@ -701,7 +695,8 @@ const GenesisState = `{
             "id": 0,
             "liquidity_tier": 0,
             "market_id": 0,
-            "ticker": "BTC-USD"
+            "ticker": "BTC-USD",
+            "market_type": 0
           }
         },
         {
@@ -711,7 +706,8 @@ const GenesisState = `{
             "id": 1,
             "liquidity_tier": 0,
             "market_id": 1,
-            "ticker": "ETH-USD"
+            "ticker": "ETH-USD",
+            "market_type": 0
           }
         }
       ]

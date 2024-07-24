@@ -7,6 +7,10 @@ import (
 	"math/rand"
 	"time"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	"github.com/cosmos/gogoproto/proto"
+
 	storetypes "cosmossdk.io/store/types"
 
 	errorsmod "cosmossdk.io/errors"
@@ -35,6 +39,16 @@ func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
 			store.Delete(key)
 		}
 	} else {
+		if !store.Has(key) {
+			metrics.IncrCounterWithLabels(
+				metrics.SubaccountCreatedCount,
+				1,
+				metrics.GetLabelForStringValue(
+					metrics.Callback,
+					metrics.GetCallbackMetricFromCtx(ctx),
+				),
+			)
+		}
 		b := k.cdc.MustMarshal(&subaccount)
 		store.Set(key, b)
 	}
@@ -93,6 +107,45 @@ func (k Keeper) GetAllSubaccount(ctx sdk.Context) (list []types.Subaccount) {
 	}
 
 	return
+}
+
+// GetCollateralPoolForSubaccount returns the collateral pool address for a subaccount
+// based on the subaccount's perpetual positions. If the subaccount holds a position in an isolated
+// market, the collateral pool address will be the isolated market's pool address. Otherwise, the
+// collateral pool address will be the module's pool address.
+func (k Keeper) GetCollateralPoolForSubaccount(ctx sdk.Context, subaccountId types.SubaccountId) (
+	sdk.AccAddress,
+	error,
+) {
+	subaccount := k.GetSubaccount(ctx, subaccountId)
+	return k.getCollateralPoolForSubaccount(ctx, subaccount)
+}
+
+func (k Keeper) getCollateralPoolForSubaccount(ctx sdk.Context, subaccount types.Subaccount) (
+	sdk.AccAddress,
+	error,
+) {
+	// Use the default collateral pool if the subaccount has no perpetual positions.
+	if len(subaccount.PerpetualPositions) == 0 {
+		return types.ModuleAddress, nil
+	}
+
+	return k.GetCollateralPoolFromPerpetualId(ctx, subaccount.PerpetualPositions[0].PerpetualId)
+}
+
+// GetCollateralPoolForSubaccountWithPerpetuals returns the collateral pool address based on the
+// perpetual passed in as an argument.
+func (k Keeper) GetCollateralPoolFromPerpetualId(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error) {
+	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return nil, err
+	}
+
+	if perpetual.Params.MarketType == perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
+		return authtypes.NewModuleAddress(types.ModuleName + ":" + lib.UintToString(perpetual.GetId())), nil
+	}
+
+	return authtypes.NewModuleAddress(types.ModuleName), nil
 }
 
 // ForEachSubaccount performs a callback across all subaccounts.
@@ -160,12 +213,12 @@ func (k Keeper) getSettledUpdates(
 	updates []types.Update,
 	requireUniqueSubaccount bool,
 ) (
-	settledUpdates []settledUpdate,
+	settledUpdates []SettledUpdate,
 	subaccountIdToFundingPayments map[types.SubaccountId]map[uint32]dtypes.SerializableInt,
 	err error,
 ) {
 	var idToSettledSubaccount = make(map[types.SubaccountId]types.Subaccount)
-	settledUpdates = make([]settledUpdate, len(updates))
+	settledUpdates = make([]SettledUpdate, len(updates))
 	subaccountIdToFundingPayments = make(map[types.SubaccountId]map[uint32]dtypes.SerializableInt)
 
 	// Iterate over all updates and query the relevant `Subaccounts`.
@@ -190,7 +243,7 @@ func (k Keeper) getSettledUpdates(
 			subaccountIdToFundingPayments[u.SubaccountId] = fundingPayments
 		}
 
-		settledUpdate := settledUpdate{
+		settledUpdate := SettledUpdate{
 			SettledSubaccount: settledSubaccount,
 			AssetUpdates:      u.AssetUpdates,
 			PerpetualUpdates:  u.PerpetualUpdates,
@@ -209,6 +262,9 @@ func (k Keeper) getSettledUpdates(
 // Returns a boolean indicating whether the update was successfully applied or not. If `false`, then no
 // updates to any subaccount were made. A second return value returns an array of `UpdateResult` which map
 // to the `updates` to indicate which of the updates caused a failure, if any.
+// This function also transfers collateral between the cross-perpetual collateral pool and isolated
+// perpetual collateral pools if any of the updates led to an isolated perpetual posititon to be opened
+// or closed. This is done using the `x/bank` keeper and updates `x/bank` state.
 //
 // Each `SubaccountId` in the `updates` must be unique or an error is returned.
 func (k Keeper) UpdateSubaccounts(
@@ -234,16 +290,36 @@ func (k Keeper) UpdateSubaccounts(
 		return false, nil, err
 	}
 
-	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType)
+	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
+
+	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType, allPerps)
 	if !success || err != nil {
 		return success, successPerUpdate, err
 	}
 
 	// Get a mapping from perpetual Id to current perpetual funding index.
-	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
 	perpIdToFundingIndex := make(map[uint32]dtypes.SerializableInt)
 	for _, perp := range allPerps {
 		perpIdToFundingIndex[perp.Params.Id] = perp.FundingIndex
+	}
+
+	// Get OpenInterestDelta from the updates, and persist the OI change if any.
+	perpOpenInterestDelta := GetDeltaOpenInterestFromUpdates(settledUpdates, updateType)
+	if perpOpenInterestDelta != nil {
+		if err := k.perpetualsKeeper.ModifyOpenInterest(
+			ctx,
+			perpOpenInterestDelta.PerpetualId,
+			perpOpenInterestDelta.BaseQuantums,
+		); err != nil {
+			return false, nil, errorsmod.Wrapf(
+				types.ErrCannotModifyPerpOpenInterestForOIMF,
+				"perpId = %v, delta = %v, settledUpdates = %+v, err = %v",
+				perpOpenInterestDelta.PerpetualId,
+				perpOpenInterestDelta.BaseQuantums,
+				settledUpdates,
+				err,
+			)
+		}
 	}
 
 	// Apply the updates to perpetual positions.
@@ -254,6 +330,20 @@ func (k Keeper) UpdateSubaccounts(
 
 	// Apply the updates to asset positions.
 	UpdateAssetPositions(settledUpdates)
+
+	// Transfer collateral between collateral pools for any isolated perpetual positions that changed
+	// state due to an update.
+	for _, settledUpdateWithUpdatedSubaccount := range settledUpdates {
+		if err := k.computeAndExecuteCollateralTransfer(
+			ctx,
+			// The subaccount in `settledUpdateWithUpdatedSubaccount` already has the perpetual updates
+			// and asset updates applied to it.
+			settledUpdateWithUpdatedSubaccount,
+			allPerps,
+		); err != nil {
+			return false, nil, err
+		}
+	}
 
 	// Apply all updates, including a subaccount update event in the Indexer block message
 	// per update and emit a cometbft event for each settled funding payment.
@@ -332,7 +422,9 @@ func (k Keeper) CanUpdateSubaccounts(
 		return false, nil, err
 	}
 
-	return k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType)
+	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
+	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType, allPerps)
+	return success, successPerUpdate, err
 }
 
 // getSettledSubaccount returns 1. a new settled subaccount given an unsettled subaccount,
@@ -411,11 +503,13 @@ func GetSettledSubaccountWithPerpetuals(
 		totalNetSettlementPpm.Add(totalNetSettlementPpm, bigNetSettlementPpm)
 
 		// Update cached funding index of the perpetual position.
-		newPerpetualPositions = append(newPerpetualPositions, &types.PerpetualPosition{
-			PerpetualId:  p.PerpetualId,
-			Quantums:     p.Quantums,
-			FundingIndex: dtypes.NewIntFromBigInt(newFundingIndex),
-		})
+		newPerpetualPositions = append(
+			newPerpetualPositions, &types.PerpetualPosition{
+				PerpetualId:  p.PerpetualId,
+				Quantums:     p.Quantums,
+				FundingIndex: dtypes.NewIntFromBigInt(newFundingIndex),
+			},
+		)
 	}
 
 	newSubaccount := types.Subaccount{
@@ -461,7 +555,8 @@ func checkPositionUpdatable(
 	return nil
 }
 
-// internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts.
+// internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts and compute
+// if any of the updates led to an isolated perpetual position being opened or closed.
 // The `updates` do not have to contain `Subaccounts` with unique `SubaccountIds`.
 // Each update is considered in isolation. Thus if two updates are provided
 // with the same `Subaccount`, they are validated without respect to each
@@ -474,22 +569,41 @@ func checkPositionUpdatable(
 // caused a failure, if any.
 func (k Keeper) internalCanUpdateSubaccounts(
 	ctx sdk.Context,
-	settledUpdates []settledUpdate,
+	settledUpdates []SettledUpdate,
 	updateType types.UpdateType,
+	perpetuals []perptypes.Perpetual,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
 	err error,
 ) {
-	success = true
-	successPerUpdate = make([]types.UpdateResult, len(settledUpdates))
+	// TODO(TRA-99): Add integration / E2E tests on order placement / matching with this new
+	// constraint.
+	// Check if the updates satisfy the isolated perpetual constraints.
+	success, successPerUpdate, err = k.checkIsolatedSubaccountConstraints(
+		ctx,
+		settledUpdates,
+		perpetuals,
+	)
+	if err != nil {
+		return false, nil, err
+	}
+	if !success {
+		return success, successPerUpdate, nil
+	}
 
 	// Block all withdrawals and transfers if either of the following is true within the last
 	// `WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`:
-	// - There was a negative TNC subaccount seen.
+	// - There was a negative TNC subaccount seen for any of the collateral pools of subaccounts being updated
 	// - There was a chain outage that lasted at least five minutes.
 	if updateType == types.Withdrawal || updateType == types.Transfer {
-		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists, err := k.getLastBlockNegativeSubaccountSeen(
+			ctx,
+			settledUpdates,
+		)
+		if err != nil {
+			return false, nil, err
+		}
 		currentBlock := uint32(ctx.BlockHeight())
 
 		// Panic if the current block is less than the last block a negative TNC subaccount was seen.
@@ -542,6 +656,15 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		}
 	}
 
+	// Get delta open interest from the updates.
+	// `perpOpenInterestDelta` is nil if the update type is not `Match` or if the updates
+	// do not result in OI changes.
+	perpOpenInterestDelta := GetDeltaOpenInterestFromUpdates(settledUpdates, updateType)
+
+	bigCurNetCollateral := make(map[string]*big.Int)
+	bigCurInitialMargin := make(map[string]*big.Int)
+	bigCurMaintenanceMargin := make(map[string]*big.Int)
+
 	// Iterate over all updates.
 	for i, u := range settledUpdates {
 		// Check all updated perps are updatable.
@@ -560,11 +683,34 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			}
 		}
 
+		// Branch the state to calculate the new OIMF after OI increase.
+		// The branched state is only needed for this purpose and is always discarded.
+		branchedContext, _ := ctx.CacheContext()
+
+		// Temporily apply open interest delta to perpetuals, so IMF is calculated based on open interest after the update.
+		// `perpOpenInterestDeltas` is only present for `Match` update type.
+		if perpOpenInterestDelta != nil {
+			if err := k.perpetualsKeeper.ModifyOpenInterest(
+				branchedContext,
+				perpOpenInterestDelta.PerpetualId,
+				perpOpenInterestDelta.BaseQuantums,
+			); err != nil {
+				return false, nil, errorsmod.Wrapf(
+					types.ErrCannotModifyPerpOpenInterestForOIMF,
+					"perpId = %v, delta = %v, settledUpdates = %+v, err = %v",
+					perpOpenInterestDelta.PerpetualId,
+					perpOpenInterestDelta.BaseQuantums,
+					settledUpdates,
+					err,
+				)
+			}
+		}
+
 		// Get the new collateralization and margin requirements with the update applied.
 		bigNewNetCollateral,
 			bigNewInitialMargin,
 			bigNewMaintenanceMargin,
-			err := k.internalGetNetCollateralAndMarginRequirements(ctx, u)
+			err := k.internalGetNetCollateralAndMarginRequirements(branchedContext, u)
 		if err != nil {
 			return false, nil, err
 		}
@@ -575,26 +721,36 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		// We must now check if the state transition is valid.
 		if bigNewInitialMargin.Cmp(bigNewNetCollateral) > 0 {
 			// Get the current collateralization and margin requirements without the update applied.
-			emptyUpdate := settledUpdate{
+			emptyUpdate := SettledUpdate{
 				SettledSubaccount: u.SettledSubaccount,
 			}
 
-			bigCurNetCollateral,
-				bigCurInitialMargin,
-				bigCurMaintenanceMargin,
-				err := k.internalGetNetCollateralAndMarginRequirements(
-				ctx,
-				emptyUpdate,
-			)
+			bytes, err := proto.Marshal(u.SettledSubaccount.Id)
 			if err != nil {
 				return false, nil, err
 			}
 
+			saKey := string(bytes)
+
+			// Cache the current collateralization and margin requirements for the subaccount.
+			if _, ok := bigCurNetCollateral[saKey]; !ok {
+				bigCurNetCollateral[saKey],
+					bigCurInitialMargin[saKey],
+					bigCurMaintenanceMargin[saKey],
+					err = k.internalGetNetCollateralAndMarginRequirements(
+					ctx,
+					emptyUpdate,
+				)
+				if err != nil {
+					return false, nil, err
+				}
+			}
+
 			// Determine whether the state transition is valid.
 			result = IsValidStateTransitionForUndercollateralizedSubaccount(
-				bigCurNetCollateral,
-				bigCurInitialMargin,
-				bigCurMaintenanceMargin,
+				bigCurNetCollateral[saKey],
+				bigCurInitialMargin[saKey],
+				bigCurMaintenanceMargin[saKey],
 				bigNewNetCollateral,
 				bigNewMaintenanceMargin,
 			)
@@ -705,7 +861,7 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 		return nil, nil, nil, err
 	}
 
-	settledUpdate := settledUpdate{
+	settledUpdate := SettledUpdate{
 		SettledSubaccount: settledSubaccount,
 		AssetUpdates:      update.AssetUpdates,
 		PerpetualUpdates:  update.PerpetualUpdates,
@@ -730,7 +886,7 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 // If two position updates reference the same position, an error is returned.
 func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	ctx sdk.Context,
-	settledUpdate settledUpdate,
+	settledUpdate SettledUpdate,
 ) (
 	bigNetCollateral *big.Int,
 	bigInitialMargin *big.Int,

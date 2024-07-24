@@ -24,8 +24,8 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 	blockHeight := uint32(5)
 	tests := map[string]processProposerOperationsTestCase{
 		"Succeeds with new maker Long-Term order": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -37,10 +37,10 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
 						testutil_bank.MatchUsdcOfAmount(
 							25_000_000+10_000_000,
@@ -97,8 +97,8 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with new taker Long-Term order": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -106,10 +106,10 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
 						testutil_bank.MatchUsdcOfAmount(
 							25_000_000+10_000_000,
@@ -170,8 +170,8 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with existing maker Long-Term order": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -186,10 +186,10 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
 						testutil_bank.MatchUsdcOfAmount(
 							25_000_000+10_000_000,
@@ -243,8 +243,8 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with existing taker Long-Term order": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -259,10 +259,10 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
 						testutil_bank.MatchUsdcOfAmount(
 							25_000_000+10_000_000,
@@ -316,8 +316,8 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with new maker and taker Long-Term orders completely filled": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -333,10 +333,10 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
 						testutil_bank.MatchUsdcOfAmount(
 							25_000_000+10_000_000,
@@ -389,8 +389,8 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with new maker and taker Long-Term orders partially filled": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -406,10 +406,10 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
 						testutil_bank.MatchUsdcOfAmount(
 							12_500_000+5_000_000,
@@ -468,8 +468,8 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with Long-Term order and multiple fills": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -484,10 +484,10 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
 						testutil_bank.MatchUsdcOfAmount(
 							12_500_000+5_000_000,
@@ -555,8 +555,8 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with new maker Long-Term order in liquidation match": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -571,17 +571,17 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(10_000_000)),
 				).Return(nil)
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					types.InsuranceFundName,
+					satypes.ModuleAddress,
+					perptypes.InsuranceFundModuleAddress,
 					// Subaccount pays $250 to insurance fund for liquidating 1 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000_000)),
 				).Return(nil).Once()
@@ -641,8 +641,8 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with existing maker Long-Term order in liquidation match": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -657,17 +657,17 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(10_000_000)),
 				).Return(nil)
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					types.InsuranceFundName,
+					satypes.ModuleAddress,
+					perptypes.InsuranceFundModuleAddress,
 					// Subaccount pays $250 to insurance fund for liquidating 1 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000_000)),
 				).Return(nil).Once()
@@ -727,8 +727,8 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with maker Long-Term order when considering state fill amount": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -743,10 +743,10 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
 						testutil_bank.MatchUsdcOfAmount(
 							12_500_000+5_000_000,
@@ -818,8 +818,8 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with taker Long-Term order when considering state fill amount": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -834,10 +834,10 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
 						testutil_bank.MatchUsdcOfAmount(
 							12_500_000+5_000_000,

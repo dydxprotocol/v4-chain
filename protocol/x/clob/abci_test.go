@@ -22,8 +22,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 
-	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
@@ -51,9 +49,7 @@ func assertFillAmountAndPruneState(
 	t *testing.T,
 	k *keeper.Keeper,
 	ctx sdk.Context,
-	storeKey storetypes.StoreKey,
 	expectedFillAmounts map[types.OrderId]satypes.BaseQuantums,
-	expectedPruneableBlockHeights map[uint32][]types.OrderId,
 	expectedPrunedOrders map[types.OrderId]bool,
 ) {
 	for orderId, expectedFillAmount := range expectedFillAmounts {
@@ -65,28 +61,6 @@ func assertFillAmountAndPruneState(
 	for orderId := range expectedPrunedOrders {
 		exists, _, _ := k.GetOrderFillAmount(ctx, orderId)
 		require.False(t, exists)
-	}
-
-	for blockHeight, orderIds := range expectedPruneableBlockHeights {
-		// Verify that expected `blockHeightToPotentiallyPrunableOrders` were deleted.
-		blockHeightToPotentiallyPrunableOrdersStore := prefix.NewStore(
-			ctx.KVStore(storeKey),
-			[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
-		)
-
-		potentiallyPrunableOrdersBytes := blockHeightToPotentiallyPrunableOrdersStore.Get(
-			lib.Uint32ToKey(blockHeight),
-		)
-
-		var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}
-		err := potentiallyPrunableOrders.Unmarshal(potentiallyPrunableOrdersBytes)
-		require.NoError(t, err)
-
-		require.ElementsMatch(
-			t,
-			potentiallyPrunableOrders.OrderIds,
-			orderIds,
-		)
 	}
 }
 
@@ -142,9 +116,10 @@ func TestEndBlocker_Failure(t *testing.T) {
 			ctx := ks.Ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(tc.blockTime)
 
 			for _, orderId := range tc.expiredStatefulOrderIds {
-				mockIndexerEventManager.On("AddTxnEvent",
+				mockIndexerEventManager.On("AddBlockEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
+					indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewStatefulOrderRemovalEvent(
@@ -184,7 +159,6 @@ func TestEndBlocker_Success(t *testing.T) {
 
 		// Expectations.
 		expectedFillAmounts                  map[types.OrderId]satypes.BaseQuantums
-		expectedPruneableBlockHeights        map[uint32][]types.OrderId
 		expectedPrunedOrders                 map[types.OrderId]bool
 		expectedStatefulPlacementInState     map[types.OrderId]bool
 		expectedStatefulOrderTimeSlice       map[time.Time][]types.OrderId
@@ -657,7 +631,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				types.InsuranceFundModuleAddress,
+				perptypes.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
@@ -685,6 +659,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
@@ -711,6 +686,7 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -743,6 +719,7 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.ClobPair_Eth.SubticksPerTick,
 						constants.ClobPair_Eth.StepBaseQuantums,
 						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -763,9 +740,10 @@ func TestEndBlocker_Success(t *testing.T) {
 
 			// Assert that the indexer events for Expired Stateful Orders were emitted.
 			for _, orderId := range tc.expectedProcessProposerMatchesEvents.ExpiredStatefulOrderIds {
-				mockIndexerEventManager.On("AddTxnEvent",
+				mockIndexerEventManager.On("AddBlockEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
+					indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewStatefulOrderRemovalEvent(
@@ -799,9 +777,7 @@ func TestEndBlocker_Success(t *testing.T) {
 				t,
 				ks.ClobKeeper,
 				ctx,
-				ks.StoreKey,
 				tc.expectedFillAmounts,
-				tc.expectedPruneableBlockHeights,
 				tc.expectedPrunedOrders,
 			)
 
@@ -1333,11 +1309,11 @@ func TestPrepareCheckState(t *testing.T) {
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				types.InsuranceFundModuleAddress,
+				perptypes.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
 			mockBankKeeper.On(
-				"SendCoinsFromModuleToModule",
+				"SendCoins",
 				mock.Anything,
 				mock.Anything,
 				mock.Anything,
@@ -1366,6 +1342,7 @@ func TestPrepareCheckState(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}

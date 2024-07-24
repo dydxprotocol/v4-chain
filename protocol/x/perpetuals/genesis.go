@@ -26,6 +26,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			elem.InitialMarginPpm,
 			elem.MaintenanceFractionPpm,
 			elem.ImpactNotional,
+			elem.OpenInterestLowerCap,
+			elem.OpenInterestUpperCap,
 		)
 
 		if err != nil {
@@ -35,17 +37,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// Create all the perpetuals.
 	for _, elem := range genState.Perpetuals {
-		_, err := k.CreatePerpetual(
+		if err := k.ValidateAndSetPerpetual(
 			ctx,
-			elem.Params.Id,
-			elem.Params.Ticker,
-			elem.Params.MarketId,
-			elem.Params.AtomicResolution,
-			elem.Params.DefaultFundingPpm,
-			elem.Params.LiquidityTier,
-		)
-
-		if err != nil {
+			elem,
+		); err != nil {
 			panic(err)
 		}
 	}

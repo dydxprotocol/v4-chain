@@ -133,8 +133,8 @@ export async function create(
   return SubaccountModel.query(
     Transaction.get(options.txId),
   ).insert({
-    id: uuid(subaccountToCreate.address, subaccountToCreate.subaccountNumber),
     ...subaccountToCreate,
+    id: uuid(subaccountToCreate.address, subaccountToCreate.subaccountNumber),
   }).returning('*');
 }
 

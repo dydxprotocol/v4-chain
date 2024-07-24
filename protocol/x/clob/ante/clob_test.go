@@ -50,6 +50,7 @@ func runTestCase(t *testing.T, tc TestCase) {
 	// Setup AnteHandler.
 	mockClobKeeper := &mocks.ClobKeeper{}
 	mockClobKeeper.On("Logger", mock.Anything).Return(log.NewNopLogger()).Maybe()
+	mockClobKeeper.On("IsInitialized").Return(true).Maybe()
 	cd := ante.NewClobDecorator(mockClobKeeper)
 	antehandler := sdk.ChainAnteDecorators(cd)
 	if tc.setupMocks != nil {
@@ -283,10 +284,9 @@ func TestIsClobTransaction(t *testing.T) {
 			err := builder.SetMsgs(tc.msgs...)
 			require.NoError(t, err)
 			tx := builder.GetTx()
-			ctx, _, _ := sdktest.NewSdkContextWithMultistore()
 
 			// Invoke the function under test.
-			result, err := ante.IsSingleClobMsgTx(ctx, tx)
+			result, err := ante.IsSingleClobMsgTx(tx)
 
 			// Assert the results.
 			require.Equal(t, tc.expectedResult, result)

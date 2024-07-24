@@ -49,50 +49,50 @@ describe('funding-validator', () => {
       expectDidntLogError();
     });
 
-    it.each([
-      // Base Validation Errors
-      [
-        'does not specify valid type',
-        {
-          type: FundingEventV1_Type.TYPE_UNSPECIFIED,
-          updates: [
-            {
-              perpetualId: 0,
-              fundingValuePpm: 10,
-              fundingIndex: bigIntToBytes(BigInt(0)),
-            },
-          ],
-        } as FundingEventV1,
-        'Invalid FundingEvent, type must be TYPE_PREMIUM_SAMPLE or TYPE_FUNDING_RATE_AND_INDEX',
-      ],
-      // Perpetual market doesn't exist
-      [
-        'perpetual market does not exist',
-        {
-          type: FundingEventV1_Type.TYPE_FUNDING_RATE_AND_INDEX,
-          updates: [
-            {
-              perpetualId: 10,
-              fundingValuePpm: 10,
-              fundingIndex: bigIntToBytes(BigInt(0)),
-            },
-          ],
-        } as FundingEventV1,
-        'Invalid FundingEvent, perpetualId does not exist',
-      ],
-    ])('throws error if event %s', (_message: string, event: FundingEventV1, message: string) => {
+    it('does not throw error if perpetualId does not exist', () => {
+      const event: FundingEventV1 = {
+        type: FundingEventV1_Type.TYPE_FUNDING_RATE_AND_INDEX,
+        updates: [
+          {
+            perpetualId: 10,
+            fundingValuePpm: 10,
+            fundingIndex: bigIntToBytes(BigInt(0)),
+          },
+        ],
+      } as FundingEventV1;
       const validator: FundingValidator = new FundingValidator(
         event,
         createBlock(event),
         0,
       );
 
+      const errMsg: string = 'Invalid FundingEvent, perpetualId does not exist';
+      expect(() => validator.validate()).not.toThrow(new ParseMessageError(errMsg));
+      expect(logger.error).toHaveBeenCalledWith({
+        at: `${FundingValidator.name}#validate`,
+        message: errMsg,
+        blockHeight: defaultHeight,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        event,
+      });
+    });
+
+    it('throws error if event does not specify valid type', () => {
+      const event = {
+        type: FundingEventV1_Type.TYPE_UNSPECIFIED,
+        updates: [
+          {
+            perpetualId: 0,
+            fundingValuePpm: 10,
+            fundingIndex: bigIntToBytes(BigInt(0)),
+          },
+        ],
+      } as FundingEventV1;
+      const message = 'Invalid FundingEvent, type must be TYPE_PREMIUM_SAMPLE or TYPE_FUNDING_RATE_AND_INDEX';
+      const validator = new FundingValidator(event, createBlock(event), 0);
+
       expect(() => validator.validate()).toThrow(new ParseMessageError(message));
-      expectLoggedParseMessageError(
-        FundingValidator.name,
-        message,
-        { event },
-      );
+      expectLoggedParseMessageError(FundingValidator.name, message, { event });
     });
   });
 });

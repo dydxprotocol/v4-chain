@@ -35,6 +35,15 @@ var (
 		PerpetualId: 0,
 		Quantums:    dtypes.NewInt(-10_000_000), // 0.1 BTC, -$5,000 notional.
 	}
+	PerpetualPosition_OneHundredthBTCLong = satypes.PerpetualPosition{
+		PerpetualId: 0,
+		Quantums:    dtypes.NewInt(1_000_000), // 0.01 BTC, $500 notional.
+	}
+	PerpetualPosition_OneAndHalfBTCLong = satypes.PerpetualPosition{
+		PerpetualId:  0,
+		Quantums:     dtypes.NewInt(150_000_000), // 1.5 BTC, $75,000 notional.
+		FundingIndex: dtypes.NewInt(0),
+	}
 	PerpetualPosition_FourThousandthsBTCLong = satypes.PerpetualPosition{
 		PerpetualId: 0,
 		Quantums:    dtypes.NewInt(400_000), // 0.004 BTC, $200 notional.
@@ -58,6 +67,28 @@ var (
 	PerpetualPosition_MaxUint64EthShort = satypes.PerpetualPosition{
 		PerpetualId: 1,
 		Quantums:    dtypes.NewIntFromBigInt(BigNegMaxUint64()), // 18,446,744,070 ETH, -$55,340,232,210,000 notional.
+	}
+	// Long position for arbitrary isolated market
+	PerpetualPosition_OneISOLong = satypes.PerpetualPosition{
+		PerpetualId:  3,
+		Quantums:     dtypes.NewInt(1_000_000_000),
+		FundingIndex: dtypes.NewInt(0),
+	}
+	PerpetualPosition_OneISO2Long = satypes.PerpetualPosition{
+		PerpetualId:  4,
+		Quantums:     dtypes.NewInt(10_000_000),
+		FundingIndex: dtypes.NewInt(0),
+	}
+	// Short position for arbitrary isolated market
+	PerpetualPosition_OneISOShort = satypes.PerpetualPosition{
+		PerpetualId:  3,
+		Quantums:     dtypes.NewInt(-100_000_000),
+		FundingIndex: dtypes.NewInt(0),
+	}
+	PerpetualPosition_OneISO2Short = satypes.PerpetualPosition{
+		PerpetualId:  4,
+		Quantums:     dtypes.NewInt(-10_000_000),
+		FundingIndex: dtypes.NewInt(0),
 	}
 	// Asset Positions
 	Usdc_Asset_0 = satypes.AssetPosition{

@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	MaxSubaccountIdNumber = 127 // 0 ... 127 are valid numbers.
+	MaxSubaccountIdNumber = 128_000 // 0 ... 128,000 are valid numbers.
 )
 
 // BaseQuantums is used to represent an amount in base quantums.

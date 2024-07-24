@@ -38,11 +38,11 @@ func TestReduceOnlyOrders(t *testing.T) {
 				constants.Alice_Num1_1BTC_Long_500_000USD,
 			},
 			ordersForFirstBlock: []clobtypes.Order{
-				MustScaleOrder(
+				testapp.MustScaleOrder(
 					constants.Order_Carl_Num0_Id0_Clob0_Buy10_Price500000_GTB20,
 					testapp.DefaultGenesis(),
 				),
-				MustScaleOrder(
+				testapp.MustScaleOrder(
 					constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_IOC_RO,
 					testapp.DefaultGenesis(),
 				),
@@ -98,13 +98,13 @@ func TestReduceOnlyOrders(t *testing.T) {
 				constants.Alice_Num1_1BTC_Long_500_000USD,
 			},
 			ordersForFirstBlock: []clobtypes.Order{
-				MustScaleOrder(
+				testapp.MustScaleOrder(
 					constants.Order_Carl_Num0_Id0_Clob0_Buy10_Price500000_GTB20,
 					testapp.DefaultGenesis(),
 				),
 			},
 			ordersForSecondBlock: []clobtypes.Order{
-				MustScaleOrder(
+				testapp.MustScaleOrder(
 					constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_IOC_RO,
 					testapp.DefaultGenesis(),
 				),
@@ -159,13 +159,13 @@ func TestReduceOnlyOrders(t *testing.T) {
 				constants.Alice_Num1_1BTC_Long_500_000USD,
 			},
 			ordersForFirstBlock: []clobtypes.Order{
-				MustScaleOrder(
+				testapp.MustScaleOrder(
 					constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20,
 					testapp.DefaultGenesis(),
 				),
 			},
 			ordersForSecondBlock: []clobtypes.Order{
-				MustScaleOrder(
+				testapp.MustScaleOrder(
 					constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_IOC_RO,
 					testapp.DefaultGenesis(),
 				),
@@ -220,13 +220,13 @@ func TestReduceOnlyOrders(t *testing.T) {
 				constants.Alice_Num1_1BTC_Long_500_000USD,
 			},
 			ordersForFirstBlock: []clobtypes.Order{
-				MustScaleOrder(
+				testapp.MustScaleOrder(
 					constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20,
 					testapp.DefaultGenesis(),
 				),
 			},
 			ordersForSecondBlock: []clobtypes.Order{
-				MustScaleOrder(
+				testapp.MustScaleOrder(
 					constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_FOK_RO,
 					testapp.DefaultGenesis(),
 				),
@@ -284,11 +284,11 @@ func TestReduceOnlyOrders(t *testing.T) {
 				constants.Alice_Num1_1BTC_Long_500_000USD,
 			},
 			ordersForFirstBlock: []clobtypes.Order{
-				MustScaleOrder(
+				testapp.MustScaleOrder(
 					constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20,
 					testapp.DefaultGenesis(),
 				),
-				MustScaleOrder(
+				testapp.MustScaleOrder(
 					constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_FOK_RO,
 					testapp.DefaultGenesis(),
 				),
@@ -626,7 +626,7 @@ func TestReduceOnlyOrderFailure(t *testing.T) {
 	}{
 		"Zero perpetual position subaccount position cannot place sell RO order": {
 			orders: []clobtypes.Order{
-				MustScaleOrder(
+				testapp.MustScaleOrder(
 					constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK_RO,
 					testapp.DefaultGenesis(),
 				),
@@ -637,7 +637,7 @@ func TestReduceOnlyOrderFailure(t *testing.T) {
 		},
 		"Zero perpetual position subaccount position cannot place buy RO order": {
 			orders: []clobtypes.Order{
-				MustScaleOrder(
+				testapp.MustScaleOrder(
 					constants.Order_Alice_Num1_Id1_Clob1_Buy10_Price15_GTB20_FOK_RO,
 					testapp.DefaultGenesis(),
 				),
@@ -651,7 +651,7 @@ func TestReduceOnlyOrderFailure(t *testing.T) {
 				constants.Alice_Num1_1BTC_Short_100_000USD,
 			},
 			orders: []clobtypes.Order{
-				MustScaleOrder(
+				testapp.MustScaleOrder(
 					constants.Order_Alice_Num1_Id1_Clob0_Buy10_Price15_GTB20_FOK_RO,
 					testapp.DefaultGenesis(),
 				),
@@ -665,7 +665,7 @@ func TestReduceOnlyOrderFailure(t *testing.T) {
 				constants.Alice_Num1_1BTC_Short_100_000USD,
 			},
 			orders: []clobtypes.Order{
-				MustScaleOrder(
+				testapp.MustScaleOrder(
 					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO,
 					testapp.DefaultGenesis(),
 				),
