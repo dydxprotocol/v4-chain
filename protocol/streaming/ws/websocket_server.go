@@ -2,10 +2,10 @@ package ws
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"cosmossdk.io/log"
@@ -66,14 +66,14 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ws.logger.Info(
-		fmt.Sprintf("Recieved websocket streaming request for clob pair ids: %+v", clobPairIds),
-	)
-
 	websocketMessageSender := &WebsocketMessageSender{
 		cdc:  ws.cdc,
 		conn: conn,
 	}
+
+	ws.logger.Info(
+		fmt.Sprintf("Recieved websocket streaming request for clob pair ids: %+v", clobPairIds),
+	)
 
 	err = ws.streamingManager.Subscribe(
 		clobPairIds,
@@ -81,34 +81,31 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		ws.logger.Error(
-			"Ending handler for websocket connection",
-			"err", err,
+			"Error subscribing to stream",
+			"error", err,
 		)
 		return
 	}
 }
 
-type WebsocketRequestBody struct {
-	ClobPairIds []uint32 `json:"clobPairIds"`
-}
-
-// parseClobPairIds is a helper function to parse the clobPairIds from the query request body.
+// parseClobPairIds is a helper function to parse the clobPairIds from the query parameters.
 func parseClobPairIds(r *http.Request) ([]uint32, error) {
-	// Read the body
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return nil, err
-	}
-	defer r.Body.Close() // Ensure the body is closed after reading
-
-	// Unmarshal the JSON into a struct
-	reqBody := WebsocketRequestBody{}
-	err = json.Unmarshal(body, &reqBody)
-	if err != nil {
-		return nil, err
+	clobPairIdsParam := r.URL.Query().Get("clobPairIds")
+	if clobPairIdsParam == "" {
+		return nil, fmt.Errorf("missing clobPairIds parameter")
 	}
 
-	return reqBody.ClobPairIds, nil
+	idStrs := strings.Split(clobPairIdsParam, ",")
+	clobPairIds := make([]uint32, len(idStrs))
+	for i, idStr := range idStrs {
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid clobPairId: %s", idStr)
+		}
+		clobPairIds[i] = uint32(id)
+	}
+
+	return clobPairIds, nil
 }
 
 // Start the websocket server in a separate goroutine.
