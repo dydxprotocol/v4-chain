@@ -49,4 +49,27 @@ var (
 		500,
 		"Authority is invalid",
 	)
+	ErrUnsafeMarketUpdate = errorsmod.Register(
+		ModuleName,
+		501,
+		"Market update is unsafe",
+	)
+
+	ErrMarketUpdateChangesMarketMapEnabledValue = errorsmod.Register(
+		ModuleName,
+		502,
+		"Market update changes market map enabled value",
+	)
+
+	ErrMarketDoesNotExistInMarketMap = errorsmod.Register(
+		ModuleName,
+		503,
+		"Market does not exist in market map",
+	)
+
+	ErrAdditionOfEnabledMarket = errorsmod.Register(
+		ModuleName,
+		504,
+		"Newly added markets must be disabled",
+	)
 )

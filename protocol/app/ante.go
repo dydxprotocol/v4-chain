@@ -28,13 +28,13 @@ import (
 // struct embedding to include the normal cosmos-sdk `HandlerOptions`.
 type HandlerOptions struct {
 	ante.HandlerOptions
-	Codec            codec.Codec
-	AuthStoreKey     storetypes.StoreKey
+	Codec             codec.Codec
+	AuthStoreKey      storetypes.StoreKey
 	AccountplusKeeper *accountpluskeeper.Keeper
-	ClobKeeper       clobtypes.ClobKeeper
-	PerpetualsKeeper perpetualstypes.PerpetualsKeeper
-	PricesKeeper     pricestypes.PricesKeeper
-	MarketMapKeeper  customante.MarketMapKeeper
+	ClobKeeper        clobtypes.ClobKeeper
+	PerpetualsKeeper  perpetualstypes.PerpetualsKeeper
+	PricesKeeper      pricestypes.PricesKeeper
+	MarketMapKeeper   customante.MarketMapKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence

@@ -92,7 +92,7 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 
 	// check if the market updates are safe
 	if err := d.doMarketsUpdateEnabledValues(ctx, markets); err != nil {
-		return ctx, errorsmod.Wrap(err, "market update is not safe")
+		return ctx, pricestypes.ErrUnsafeMarketUpdate.Wrap(err.Error())
 	}
 
 	return next(ctx, tx, simulate)
@@ -151,20 +151,19 @@ func (d ValidateMarketUpdateDecorator) doMarketsUpdateEnabledValues(ctx sdk.Cont
 		if !exists {
 			// if market does not exist in x/prices, it should be disabled
 			if market.Ticker.Enabled {
-				return errors.New("newly added market should be disabled")
+				return pricestypes.ErrAdditionOfEnabledMarket
 			}
 		} else {
 			// find the market in the market-map
 			mmMarket, exists := mm[market.Ticker.CurrencyPair.String()]
 			if !exists {
-				return errors.New("market does not exist in market-map")
+				return pricestypes.ErrMarketDoesNotExistInMarketMap
 			}
 
 			// if market exists, it should not change the enabled value
 			if mmMarket.Ticker.Enabled != market.Ticker.Enabled {
-				return fmt.Errorf(
-					"market should not change enabled value from %t to %t",
-					mmMarket.Ticker.Enabled, market.Ticker.Enabled,
+				return pricestypes.ErrMarketUpdateChangesMarketMapEnabledValue.Wrapf(
+					"market-map market: %t, incoming market update: %t", mmMarket.Ticker.Enabled, market.Ticker.Enabled,
 				)
 			}
 		}
