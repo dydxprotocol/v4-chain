@@ -37,6 +37,14 @@ func (k Keeper) SetNewYieldIndex(
 		return errors.New("could not retrieve asset yield index")
 	}
 
+	if totalTDaiMinted.Cmp(big.NewInt(0)) == 0 {
+		return nil
+	}
+
+	if totalTDaiPreMint.Cmp(big.NewInt(0)) == 0 {
+		return errors.New("total t-dai minted is non-zero, while total t-dai before mint is 0")
+	}
+
 	ratio := new(big.Rat).SetFrac(totalTDaiMinted, totalTDaiPreMint)
 	assetYieldIndex = assetYieldIndex.Add(assetYieldIndex, ratio)
 

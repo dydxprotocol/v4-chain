@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/big"
 	"testing"
 	"time"
 
@@ -219,6 +220,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(1_000_000_000 - 100_000_000),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 				constants.Alice_Num0: {
@@ -226,6 +228,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(1_000_000_000 + 100_000_000),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 			},
@@ -343,6 +346,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(1_000_000_000 - 100_000_000),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 				constants.Alice_Num0: {
@@ -350,6 +354,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(1_000_000_000 + 100_000_000),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 			},
@@ -454,6 +459,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(1_000_000_000 - 5),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 				constants.Alice_Num0: {
@@ -461,6 +467,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(1_000_000_000 + 5),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 			},
@@ -546,6 +553,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(1_000_000_000 - 5),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 				constants.Alice_Num0: {
@@ -553,6 +561,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(1_000_000_000 + 5),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 			},
@@ -709,6 +718,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(1_000_000_000 - 10),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 				constants.Alice_Num0: {
@@ -716,6 +726,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(1_000_000_000 + 10 + 15),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 				constants.Carl_Num0: {
@@ -723,6 +734,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(1_000_000_000 - 15),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 			},
@@ -1100,6 +1112,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(-100_000_000 + 50_000_000),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 				constants.Dave_Num0: {
@@ -1107,6 +1120,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(100_000_000 - 50_000_000),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 			},
@@ -1526,6 +1540,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(1_000_000_000 - 5),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 				constants.Alice_Num0: {
@@ -1533,6 +1548,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						PerpetualId:  0,
 						Quantums:     dtypes.NewInt(1_000_000_000 + 5),
 						FundingIndex: dtypes.ZeroInt(),
+						YieldIndex:   big.NewRat(0, 1).String(),
 					},
 				},
 			},
@@ -2337,7 +2353,7 @@ func setupProcessProposerOperationsTestCase(
 		mockIndexerEventManager,
 	)
 
-	ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
+	ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 
 	// set DeliverTx mode.
 	ctx = ks.Ctx.WithIsCheckTx(false)

@@ -20,6 +20,7 @@ import (
 	indexer_manager "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
@@ -483,9 +484,15 @@ func GetSettledSubaccountWithPerpetuals(
 	fundingPayments = make(map[uint32]dtypes.SerializableInt)
 	totalNewYield := big.NewInt(0)
 
-	totalNewYield, err = calculateTotalYieldWithAssetYieldAdded(subaccount, assetYieldIndex, totalNewYield)
-	if err != nil {
-		return types.Subaccount{}, nil, err
+	for _, assetPosition := range subaccount.AssetPositions {
+		// TODO [YBCP-16]: Adapt quote currency to be DAI
+		if assetPosition.AssetId != assettypes.AssetUsdc.Id {
+			continue
+		}
+		totalNewYield, err = calculateTotalYieldWithAssetYieldAdded(subaccount, assetYieldIndex, totalNewYield, assetPosition)
+		if err != nil {
+			return types.Subaccount{}, nil, err
+		}
 	}
 
 	// Iterate through and settle all perpetual positions.
@@ -549,11 +556,12 @@ func calculateTotalYieldWithAssetYieldAdded(
 	subaccount types.Subaccount,
 	assetYieldIndex *big.Rat,
 	totalYield *big.Int,
+	assetPosition *types.AssetPosition,
 ) (
 	newTotalYield *big.Int,
 	err error,
 ) {
-	assetYield, err := calculateAssetYieldInQuoteQuantums(subaccount, assetYieldIndex)
+	assetYield, err := calculateAssetYieldInQuoteQuantums(subaccount, assetYieldIndex, assetPosition)
 	if err != nil {
 		return nil, err
 	}
@@ -624,10 +632,28 @@ func getFundingPaymentAsSerializableInt(
 func calculateAssetYieldInQuoteQuantums(
 	subaccount types.Subaccount,
 	generalYieldIndex *big.Rat,
+	assetPosition *types.AssetPosition,
 ) (
 	newYield *big.Int,
 	err error,
 ) {
+
+	if generalYieldIndex == nil {
+		return nil, errors.New("general yield index is nil")
+	}
+
+	if generalYieldIndex.Cmp(big.NewRat(0, 1)) < 0 {
+		return nil, errors.New("general yield index is negative")
+	}
+
+	if generalYieldIndex.Cmp(big.NewRat(0, 1)) == 0 {
+		return big.NewInt(0), nil
+	}
+
+	if subaccount.AssetYieldIndex == "" {
+		return big.NewInt(0), nil
+	}
+
 	currentYieldIndex, success := new(big.Rat).SetString(subaccount.AssetYieldIndex)
 	if !success {
 		return nil, errors.New("could not convert the subaccount yield index to big.Rat")
@@ -638,7 +664,7 @@ func calculateAssetYieldInQuoteQuantums(
 	}
 
 	yieldIndexDifference := new(big.Rat).Sub(generalYieldIndex, currentYieldIndex)
-	assetAmount := new(big.Rat).SetInt(subaccount.AssetPositions[0].GetBigQuantums())
+	assetAmount := new(big.Rat).SetInt(assetPosition.GetBigQuantums())
 	newYieldRat := new(big.Rat).Mul(assetAmount, yieldIndexDifference)
 	newYield = lib.BigRatRound(newYieldRat, false)
 
@@ -660,6 +686,14 @@ func calculatePerpetualYieldInQuoteQuantums(
 		return nil, errors.New("could not calculate perpetual yield: perp yield index is nil")
 	}
 
+	if generalYieldIndex.Cmp(big.NewRat(0, 1)) < 0 {
+		return nil, errors.New("general yield index is negative")
+	}
+
+	if generalYieldIndex.Cmp(big.NewRat(0, 1)) == 0 {
+		return big.NewInt(0), nil
+	}
+
 	// TODO [YBCP-20]: Ensure cleaner initialization
 	// if the yield index hasn't been initialized, treat it as 0
 	if perpPosition.YieldIndex == "" {
@@ -676,7 +710,6 @@ func calculatePerpetualYieldInQuoteQuantums(
 	}
 
 	yieldIndexDifference := new(big.Rat).Sub(generalYieldIndex, currentYieldIndex)
-
 	perpAmount := new(big.Rat).SetInt(perpPosition.GetBigQuantums())
 	newYieldRat := new(big.Rat).Mul(perpAmount, yieldIndexDifference)
 	newYield = lib.BigRatRound(newYieldRat, false)
@@ -690,6 +723,10 @@ func getCurrentYieldIndexForPerp(
 	yieldIndex *big.Rat,
 	err error,
 ) {
+	if perp.YieldIndex == "" {
+		return big.NewRat(0, 1), nil
+	}
+
 	generalYieldIndex, success := new(big.Rat).SetString(perp.YieldIndex)
 	if !success {
 		return nil, errors.New("could not convert yield index of perp to big.Rat")
