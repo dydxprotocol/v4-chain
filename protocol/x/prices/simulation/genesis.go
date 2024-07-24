@@ -11,13 +11,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/marketmap"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sim_helpers"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/providers/apis/dydx"
-	dydxtypes "github.com/skip-mev/slinky/providers/apis/dydx/types"
 	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
-	"go.uber.org/zap"
 )
 
 // genNumMarkets returns randomized num markets.
@@ -116,7 +113,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	}
 
 	var GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
-	marketMap := ConstructMarketMapFromParams(marketParams)
+	marketMap, _ := marketmap.ConstructMarketMapFromParams(marketParams)
 	marketmapGenesis := marketmaptypes.GenesisState{
 		MarketMap: marketMap,
 		Params: marketmaptypes.Params{
@@ -131,43 +128,4 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	simState.GenState[marketmaptypes.ModuleName] = simState.Cdc.MustMarshalJSON(&marketmapGenesis)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&pricesGenesis)
-}
-
-func ConstructMarketMapFromParams(
-	allMarketParams []types.MarketParam,
-) marketmaptypes.MarketMap {
-	// fill out config with dummy variables to pass validation.  This handler is only used to run the
-	// ConvertMarketParamsToMarketMap member function.
-	h, err := dydx.NewAPIHandler(zap.NewNop(), config.APIConfig{
-		Enabled:          true,
-		Timeout:          1,
-		Interval:         1,
-		ReconnectTimeout: 1,
-		MaxQueries:       1,
-		Atomic:           false,
-		Endpoints:        []config.Endpoint{{URL: "upgrade"}},
-		BatchSize:        0,
-		Name:             dydx.Name,
-	})
-	if err != nil {
-		panic(err) // panic to halt/fail simulation.
-	}
-
-	var mpr dydxtypes.QueryAllMarketParamsResponse
-	for _, mp := range allMarketParams {
-		mpr.MarketParams = append(mpr.MarketParams, dydxtypes.MarketParam{
-			Id:                 mp.Id,
-			Pair:               mp.Pair,
-			Exponent:           mp.Exponent,
-			MinExchanges:       mp.MinExchanges,
-			MinPriceChangePpm:  mp.MinPriceChangePpm,
-			ExchangeConfigJson: mp.ExchangeConfigJson,
-		})
-	}
-	mm, err := h.ConvertMarketParamsToMarketMap(mpr)
-	if err != nil {
-		panic(err) // panic to halt/fail simulation.
-	}
-
-	return mm.MarketMap
 }

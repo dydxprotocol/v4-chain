@@ -12,11 +12,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/marketmap"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -306,7 +306,8 @@ func TestAddNewMarketProposal(t *testing.T) {
 					&genesis,
 					func(genesisState *marketmaptypes.GenesisState) {
 						// Add test market to market map genesis
-						marketMap := keepertest.ConstructMarketMapFromParams(t, []pricestypes.MarketParam{testMarketParam.Param})
+						marketMap, err := marketmap.ConstructMarketMapFromParams([]pricestypes.MarketParam{testMarketParam.Param})
+						require.NoError(t, err)
 						for ticker, market := range marketMap.Markets {
 							market.Ticker.Enabled = false
 							genesisState.MarketMap.Markets[ticker] = market

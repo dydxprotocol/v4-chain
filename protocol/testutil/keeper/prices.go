@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
-	"go.uber.org/zap"
 
 	"github.com/cosmos/gogoproto/proto"
 
@@ -19,17 +18,14 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/marketmap"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	revsharekeeper "github.com/dydxprotocol/v4-chain/protocol/x/revshare/keeper"
-	"github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/providers/apis/dydx"
-	dydxtypes "github.com/skip-mev/slinky/providers/apis/dydx/types"
 	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
-	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -115,47 +111,12 @@ func CreateMarketsInMarketMapFromParams(
 	mmk *marketmapkeeper.Keeper,
 	allMarketParams []types.MarketParam,
 ) {
-	marketMap := ConstructMarketMapFromParams(t, allMarketParams)
+	marketMap, err := marketmap.ConstructMarketMapFromParams(allMarketParams)
+	require.NoError(t, err)
 	for _, market := range marketMap.Markets {
 		market.Ticker.Enabled = false
 		require.NoError(t, mmk.CreateMarket(ctx, market))
 	}
-}
-
-func ConstructMarketMapFromParams(
-	t testing.TB,
-	allMarketParams []types.MarketParam,
-) marketmapmoduletypes.MarketMap {
-	// fill out config with dummy variables to pass validation.  This handler is only used to run the
-	// ConvertMarketParamsToMarketMap member function.
-	h, err := dydx.NewAPIHandler(zap.NewNop(), config.APIConfig{
-		Enabled:          true,
-		Timeout:          1,
-		Interval:         1,
-		ReconnectTimeout: 1,
-		MaxQueries:       1,
-		Atomic:           false,
-		Endpoints:        []config.Endpoint{{URL: "upgrade"}},
-		BatchSize:        0,
-		Name:             dydx.Name,
-	})
-	require.NoError(t, err)
-
-	var mpr dydxtypes.QueryAllMarketParamsResponse
-	for _, mp := range allMarketParams {
-		mpr.MarketParams = append(mpr.MarketParams, dydxtypes.MarketParam{
-			Id:                 mp.Id,
-			Pair:               mp.Pair,
-			Exponent:           mp.Exponent,
-			MinExchanges:       mp.MinExchanges,
-			MinPriceChangePpm:  mp.MinPriceChangePpm,
-			ExchangeConfigJson: mp.ExchangeConfigJson,
-		})
-	}
-	mm, err := h.ConvertMarketParamsToMarketMap(mpr)
-	require.NoError(t, err)
-
-	return mm.MarketMap
 }
 
 // CreateTestMarket creates a market with the given MarketParam and MarketPrice. It creates this market
