@@ -47,20 +47,20 @@ func (k msgServer) UpdateSDAIConversionRate(
 				)
 			}
 
-			if bigConversionRate.Cmp(conversionRate) == 0 {
-
-				if !initialized {
-					k.SetAssetYieldIndex(ctx, new(big.Rat).SetInt64(0))
-				}
-
-				k.SetSDAIPrice(ctx, conversionRate)
-
-				err = k.MintNewTDaiAndSetNewYieldIndex(ctx)
-				if err != nil {
-					return &types.MsgUpdateSDAIConversionRateResponse{}, err
-				}
+			if !initialized {
+				k.SetAssetYieldIndex(ctx, new(big.Rat).SetInt64(0))
 			}
+
+			k.SetSDAIPrice(ctx, conversionRate)
+
+			err = k.MintNewTDaiAndSetNewYieldIndex(ctx)
+			if err != nil {
+				return &types.MsgUpdateSDAIConversionRateResponse{}, nil
+			}
+
+			return &types.MsgUpdateSDAIConversionRateResponse{}, nil
 		}
+
 	}
 
 	return nil, errorsmod.Wrap(

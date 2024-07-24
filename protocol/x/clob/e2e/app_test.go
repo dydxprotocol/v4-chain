@@ -2,6 +2,7 @@ package clob_test
 
 import (
 	"fmt"
+	"math/big"
 	"sync"
 	"testing"
 	"time"
@@ -364,7 +365,7 @@ func TestHydrationInPreBlocker(t *testing.T) {
 	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 	require.NoError(t, conversionErr)
 	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
-	tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 	// Let's add some pre-existing orders to state.
 	// Note that the order is not added to memclob.
@@ -448,7 +449,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 	require.NoError(t, conversionErr)
 	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
-	tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 	// 1. Let's add some pre-existing orders to state before clob is initialized.
 	tApp.App.ClobKeeper.SetLongTermOrderPlacement(
@@ -556,6 +557,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 				FundingIndex: dtypes.NewInt(0),
 			},
 		},
+		AssetYieldIndex: big.NewRat(0, 1).String(),
 	}, carl)
 
 	dave := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Dave_Num0)
@@ -574,6 +576,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 				FundingIndex: dtypes.NewInt(0),
 			},
 		},
+		AssetYieldIndex: big.NewRat(0, 1).String(),
 	}, dave)
 
 	require.Empty(t, tApp.App.ClobKeeper.MemClob.GetOperationsRaw(ctx))

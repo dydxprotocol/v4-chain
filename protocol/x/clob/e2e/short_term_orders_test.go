@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -632,16 +633,16 @@ func TestPlaceOrder(t *testing.T) {
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 			require.NoError(t, conversionErr)
 			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.ParallelApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}))
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.NoCheckTxApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}))
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.CrashingApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}))
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 			ctx = tApp.InitChain()
 
