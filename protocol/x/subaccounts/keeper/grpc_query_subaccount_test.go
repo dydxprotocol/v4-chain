@@ -19,7 +19,8 @@ import (
 var _ = strconv.IntSize
 
 func TestSubaccountQuerySingle(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, rateLimitKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+	rateLimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
 	msgs := createNSubaccount(keeper, ctx, 2, big.NewInt(1_000))
 	for _, tc := range []struct {
 		desc     string

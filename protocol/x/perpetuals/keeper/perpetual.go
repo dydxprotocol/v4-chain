@@ -1371,6 +1371,9 @@ func (k Keeper) SetPerpetualForTest(
 	ctx sdk.Context,
 	perpetual types.Perpetual,
 ) {
+	if perpetual.YieldIndex == "" {
+		perpetual.YieldIndex = "0/1"
+	}
 	k.setPerpetual(ctx, perpetual)
 }
 
@@ -1393,6 +1396,10 @@ func (k Keeper) ValidateAndSetPerpetual(
 		&perpetual,
 	); err != nil {
 		return err
+	}
+
+	if perpetual.YieldIndex == "" {
+		perpetual.YieldIndex = "0/1"
 	}
 
 	k.setPerpetual(ctx, perpetual)

@@ -155,13 +155,15 @@ func TestGetCollateralPool(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(
 			name, func(t *testing.T) {
-				ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _, _ := testutil.SubaccountsKeepers(
+				ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, rateLimitKeeper, _, _ := testutil.SubaccountsKeepers(
 					t,
 					true,
 				)
 
 				testutil.CreateTestMarkets(t, ctx, pricesKeeper)
 				testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+
+				rateLimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
 
 				require.NoError(t, testutil.CreateUsdcAsset(ctx, assetsKeeper))
 				for _, p := range tc.perpetuals {

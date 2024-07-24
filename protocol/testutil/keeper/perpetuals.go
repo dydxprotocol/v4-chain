@@ -266,6 +266,8 @@ func CreateNPerpetuals(
 			return items, err
 		}
 
+		perpetual.YieldIndex = "0/1"
+
 		items[i] = perpetual
 	}
 	return items, nil

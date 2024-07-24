@@ -493,6 +493,8 @@ func TestPlaceLongTermOrder(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
+
 	// subaccounts for indexer expectation assertions
 	aliceSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
 	bobSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0)
@@ -1572,6 +1574,8 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 		WithNonDeterminismChecksEnabled(false).
 		Build()
 	ctx := tApp.InitChain()
+
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
 
 	// subaccounts for indexer expectation assertions
 	aliceSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)

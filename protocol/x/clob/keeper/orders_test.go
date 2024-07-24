@@ -1930,7 +1930,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			indexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
-
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 			// Create subaccount if it's specified.
 			if tc.subaccount != nil {
 				ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, *tc.subaccount)

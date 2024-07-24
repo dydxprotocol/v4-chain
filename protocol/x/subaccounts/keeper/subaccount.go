@@ -82,10 +82,15 @@ func (k Keeper) GetSubaccount(
 	b := store.Get(id.ToStateKey())
 
 	// If subaccount does not exist in state, return a default value.
+	assetYieldIndex, found := k.ratelimitKeeper.GetAssetYieldIndex(ctx)
+	// TODO SOLAL not good error handling
+	if !found {
+		panic("asset yield index not found")
+	}
 	if b == nil {
 		return types.Subaccount{
 			Id:              &id,
-			AssetYieldIndex: "0/1",
+			AssetYieldIndex: assetYieldIndex.String(),
 		}
 	}
 
@@ -324,11 +329,18 @@ func (k Keeper) UpdateSubaccounts(
 			)
 		}
 	}
+	// get perp id to yield index
+
+	perpIdToYieldIndex := make(map[uint32]string)
+	for _, perp := range allPerps {
+		perpIdToYieldIndex[perp.Params.Id] = perp.YieldIndex
+	}
 
 	// Apply the updates to perpetual positions.
 	UpdatePerpetualPositions(
 		settledUpdates,
 		perpIdToFundingIndex,
+		perpIdToYieldIndex,
 	)
 
 	// Apply the updates to asset positions.
@@ -656,8 +668,11 @@ func calculateAssetYieldInQuoteQuantums(
 		return big.NewInt(0), nil
 	}
 
-	// we have a new subaccount with not set AssetYieldIndex therefore there is no yield to claim
-	if subaccount.AssetYieldIndex == "0/1" || subaccount.AssetYieldIndex == "" {
+	if subaccount.AssetYieldIndex == "" {
+		return nil, errors.New("asset yield for subaccount is badly initialised 0/1")
+	}
+
+	if subaccount.AssetYieldIndex == "0/1" {
 		return big.NewInt(0), nil
 	}
 
@@ -701,8 +716,11 @@ func calculatePerpetualYieldInQuoteQuantums(
 		return big.NewInt(0), nil
 	}
 
-	// we have a new perp with not set YieldIndex therefore there is no yield to claim
 	if perpPosition.YieldIndex == "" {
+		return nil, errors.New("perp yield index for perp is badly initialised 0/1")
+	}
+
+	if perpPosition.YieldIndex == "0/1" {
 		return big.NewInt(0), nil
 	}
 
@@ -730,7 +748,8 @@ func getCurrentYieldIndexForPerp(
 	err error,
 ) {
 	if perp.YieldIndex == "" {
-		return big.NewRat(0, 1), nil
+		//return big.NewRat(0, 1), nil
+		return nil, errors.New("perp yield index for perp is not initialised")
 	}
 
 	generalYieldIndex, success := new(big.Rat).SetString(perp.YieldIndex)
