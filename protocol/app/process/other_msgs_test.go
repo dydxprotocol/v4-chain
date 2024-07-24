@@ -61,6 +61,13 @@ func TestDecodeOtherMsgsTx(t *testing.T) {
 				"Msg type *types.MsgCancelOrder is not allowed in OtherTxs",
 			),
 		},
+		"Error: batch cancel order is not allowed": {
+			txBytes: constants.Msg_BatchCancel_TxBtyes,
+			expectedErr: errorsmod.Wrap(
+				process.ErrUnexpectedMsgType,
+				"Msg type *types.MsgBatchCancel is not allowed in OtherTxs",
+			),
+		},
 		"Valid: single msg": {
 			txBytes:      constants.Msg_Send_TxBytes,
 			expectedMsgs: []sdk.Msg{constants.Msg_Send},

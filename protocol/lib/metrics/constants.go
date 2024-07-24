@@ -55,6 +55,7 @@ const (
 	OriginalNumTxs     = "original_num_txs"
 	OtherTxs           = "other_txs"
 	RemoveDisallowMsgs = "remove_disallow_msgs"
+	PreBlocker         = "pre_blocker"
 	PrepareProposalTxs = "prepare_proposal_txs"
 	PrepareCheckState  = "prepare_check_state"
 	PricesTx           = "prices_tx"
@@ -65,6 +66,7 @@ const (
 	// CLOB.
 	AddPerpetualFillAmount                                  = "add_perpetual_fill_amount"
 	BaseQuantums                                            = "base_quantums"
+	BatchCancel                                             = "batch_cancel"
 	BestAsk                                                 = "best_ask"
 	BestAskClobPair                                         = "best_ask_clob_pair"
 	BestBid                                                 = "best_bid"

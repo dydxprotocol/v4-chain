@@ -142,7 +142,9 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
 			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,
 			// The returned market ids must be sorted.
-			expectedMarketIds: []uint32{constants.MarketId0, constants.MarketId1, constants.MarketId2},
+			expectedMarketIds: []uint32{
+				constants.MarketId0, constants.MarketId1, constants.MarketId2, constants.MarketId3, constants.MarketId4,
+			},
 		},
 		"Non-empty proposed updates, Empty local updates": {
 			updateMarketPrices: constants.ValidMarketPriceUpdates,
@@ -156,14 +158,10 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 		},
 		"Non-empty proposed updates, Non-empty local updates, single missing market": {
 			updateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
-				{
-					MarketId: constants.MarketId0,
-					Price:    constants.Price5,
-				},
-				{
-					MarketId: constants.MarketId1,
-					Price:    constants.Price6,
-				},
+				types.NewMarketPriceUpdate(constants.MarketId0, constants.Price5),
+				types.NewMarketPriceUpdate(constants.MarketId1, constants.Price6),
+				types.NewMarketPriceUpdate(constants.MarketId3, constants.Price7),
+				types.NewMarketPriceUpdate(constants.MarketId4, constants.Price4),
 			},
 			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
 			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,
@@ -179,7 +177,7 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
 			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,
 			// The returned market ids must be sorted.
-			expectedMarketIds: []uint32{constants.MarketId0, constants.MarketId2},
+			expectedMarketIds: []uint32{constants.MarketId0, constants.MarketId2, constants.MarketId3, constants.MarketId4},
 		},
 	}
 	for name, tc := range tests {

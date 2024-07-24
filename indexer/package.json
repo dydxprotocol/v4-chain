@@ -7,7 +7,7 @@
     "services/*"
   ],
   "scripts": {
-    "build:all": "pnpm recursive run build --workspace-concurrency=Infinity",
+    "build:all": "pnpm recursive run build",
     "build:prod:all": "pnpm recursive run build:prod",
     "build:watch:all": "pnpm run --parallel build:watch",
     "lint:all": "pnpm run --parallel lint",
@@ -16,5 +16,14 @@
     "test:all": "pnpm recursive run --workspace-concurrency=1 test"
   },
   "author": "",
-  "license": "AGPL-3.0"
+  "license": "AGPL-3.0",
+  "devDependencies": {
+    "@types/big.js": "^6.1.5",
+    "@types/jest": "^29.5.12",
+    "@types/lodash": "^4.14.182",
+    "@types/node": "^20.14.9",
+    "@types/pg": "^8.11.6",
+    "@types/redis": "2.8.27",
+    "@types/uuid": "^8.3.4"
+  }
 }

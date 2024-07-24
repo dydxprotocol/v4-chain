@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	storetypes "cosmossdk.io/store/types"
 	"fmt"
 	"sort"
+
+	storetypes "cosmossdk.io/store/types"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -104,6 +105,7 @@ func (k Keeper) CreatePerpetualClobPair(
 				subticksPerTick,
 				stepSizeBaseQuantums.ToUint64(),
 				perpetual.Params.LiquidityTier,
+				perpetual.Params.MarketType,
 			),
 		),
 	)
@@ -153,6 +155,12 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 	return nil
 }
 
+// maybeCreateOrderbook creates a new orderbook in the memclob.
+func (k Keeper) maybeCreateOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
+	// Create the corresponding orderbook in the memclob.
+	k.MemClob.MaybeCreateOrderbook(ctx, clobPair)
+}
+
 // createOrderbook creates a new orderbook in the memclob.
 func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
 	// Create the corresponding orderbook in the memclob.
@@ -190,12 +198,11 @@ func (k Keeper) setClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 }
 
 // InitMemClobOrderbooks initializes the memclob with `ClobPair`s from state.
-// This is called during app initialization in `app.go`, before any ABCI calls are received.
 func (k Keeper) InitMemClobOrderbooks(ctx sdk.Context) {
 	clobPairs := k.GetAllClobPairs(ctx)
 	for _, clobPair := range clobPairs {
 		// Create the corresponding orderbook in the memclob.
-		k.createOrderbook(
+		k.maybeCreateOrderbook(
 			ctx,
 			clobPair,
 		)
@@ -224,6 +231,14 @@ func (k Keeper) SetClobPairIdForPerpetual(ctx sdk.Context, clobPair types.ClobPa
 		if !exists {
 			clobPairIds = make([]types.ClobPairId, 0)
 		}
+
+		for _, clobPairId := range clobPairIds {
+			if clobPairId == clobPair.GetClobPairId() {
+				// The mapping already exists, so return.
+				return
+			}
+		}
+
 		k.PerpetualIdToClobPairId[perpetualId] = append(
 			clobPairIds,
 			clobPair.GetClobPairId(),

@@ -51,8 +51,9 @@ type LiquidationsKeeper interface {
 		fillablePrice *big.Rat,
 		err error,
 	)
-	GetInsuranceFundBalance(
+	GetInsuranceFundBalanceInQuoteQuantums(
 		ctx sdk.Context,
+		perpetualId uint32,
 	) (
 		balance *big.Int,
 	)

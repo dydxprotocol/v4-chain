@@ -16,6 +16,7 @@ export const SYNCHRONOUS_SUBTYPES: DydxIndexerSubtypes[] = [
   DydxIndexerSubtypes.PERPETUAL_MARKET,
   DydxIndexerSubtypes.UPDATE_PERPETUAL,
   DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
+  DydxIndexerSubtypes.FUNDING,
 ];
 
 /**

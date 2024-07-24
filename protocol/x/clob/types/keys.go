@@ -26,6 +26,9 @@ const (
 	// conditional orders. It represents all stateful orders that should be placed upon the memclob
 	// during app start up.
 	PlacedStatefulOrderKeyPrefix = StatefulOrderKeyPrefix + "P/"
+
+	// PrunableOrdersKeyPrefix is the prefix key for orders prunable at a certain height.
+	PrunableOrdersKeyPrefix = "PO/"
 )
 
 // State
@@ -45,9 +48,10 @@ const (
 	// OrderAmountFilledKeyPrefix is the prefix to retrieve the fill amount for an order.
 	OrderAmountFilledKeyPrefix = "Fill:"
 
-	// BlockHeightToPotentiallyPrunableOrdersPrefix is the prefix to retrieve a list of potentially prunable
-	// short term orders by block height.
-	BlockHeightToPotentiallyPrunableOrdersPrefix = "ExpHt:"
+	// Deprecated: LegacyBlockHeightToPotentiallyPrunableOrdersPrefix is the prefix to retrieve a list of
+	// potentially prunable short term orders by block height. Should not be used after migrating to
+	// key-per-order format.
+	LegacyBlockHeightToPotentiallyPrunableOrdersPrefix = "ExpHt:"
 
 	// StatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful orders that
 	// expire at a given timestamp, sorted by order ID.
@@ -113,10 +117,4 @@ const (
 	// MaxTradePricePrefix is the key prefix to retrieve the max trade price for a perpetual.
 	// This is meant to be used for improved conditional order triggering.
 	MaxTradePricePrefix = "MaxTrade:"
-)
-
-// Module Accounts
-const (
-	// InsuranceFundName defines the root string for the insurance fund account address
-	InsuranceFundName = "insurance_fund"
 )

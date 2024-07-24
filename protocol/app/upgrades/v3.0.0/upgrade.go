@@ -6,7 +6,7 @@ import (
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
-	clobmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	perpetualsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -32,7 +32,7 @@ var (
 	// These include all dYdX custom module accounts.
 	ModuleAccsToInitialize = []string{
 		satypes.ModuleName,
-		clobmoduletypes.InsuranceFundName,
+		perpetualsmoduletypes.InsuranceFundName,
 	}
 )
 

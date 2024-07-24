@@ -7,7 +7,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	pricefeed_types "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/types"
 	pricefeedserver_types "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -20,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -184,9 +184,8 @@ func getMarketEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeMarket {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var marketEvent indexerevents.MarketEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &marketEvent)
+		err := proto.Unmarshal(event.DataBytes, &marketEvent)
 		if err != nil {
 			panic(err)
 		}

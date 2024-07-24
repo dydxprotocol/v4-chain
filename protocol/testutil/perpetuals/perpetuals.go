@@ -2,8 +2,13 @@ package perpetuals
 
 import (
 	"math/big"
+	"testing"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 )
 
@@ -39,6 +44,12 @@ func WithLiquidityTier(liquidityTier uint32) PerpetualModifierOption {
 	}
 }
 
+func WithMarketType(marketType perptypes.PerpetualMarketType) PerpetualModifierOption {
+	return func(cp *perptypes.Perpetual) {
+		cp.Params.MarketType = marketType
+	}
+}
+
 // GeneratePerpetual returns a `Perpetual` object set to default values.
 // Passing in `PerpetualModifierOption` methods alters the value of the `Perpetual` returned.
 // It will start with the default, valid `Perpetual` value defined within the method
@@ -58,8 +69,10 @@ func GeneratePerpetual(optionalModifications ...PerpetualModifierOption) *perpty
 			AtomicResolution:  -8,
 			DefaultFundingPpm: 0,
 			LiquidityTier:     0,
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 
 	for _, opt := range optionalModifications {
@@ -105,4 +118,28 @@ func abs(n int64) int64 {
 		return -n
 	}
 	return n
+}
+
+// Helper function to set up default open interest for input perpetuals.
+func SetUpDefaultPerpOIsForTest(
+	t *testing.T,
+	ctx sdk.Context,
+	k perptypes.PerpetualsKeeper,
+	perps []perptypes.Perpetual,
+) {
+	for _, perpOI := range constants.DefaultTestPerpOIs {
+		for _, perp := range perps {
+			if perp.Params.Id != perpOI.PerpetualId {
+				continue
+			}
+			// If the perpetual exists in input, set up the open interest.
+			require.NoError(t,
+				k.ModifyOpenInterest(
+					ctx,
+					perp.Params.Id,
+					perpOI.BaseQuantums,
+				),
+			)
+		}
+	}
 }

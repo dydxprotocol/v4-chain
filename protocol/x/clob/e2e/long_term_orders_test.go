@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 	"time"
@@ -371,7 +372,7 @@ func TestLongTermOrderExpires(t *testing.T) {
 		ctx,
 		tApp.App,
 		*clobtypes.NewMsgPlaceOrder(
-			MustScaleOrder(order, testapp.DefaultGenesis()),
+			testapp.MustScaleOrder(order, testapp.DefaultGenesis()),
 		),
 	) {
 		resp := tApp.CheckTx(checkTx)
@@ -808,6 +809,22 @@ func TestPlaceLongTermOrder(t *testing.T) {
 									EventIndex:          2,
 									Version:             indexerevents.OrderFillEventVersion,
 								},
+								{
+									Subtype: indexerevents.SubtypeOpenInterestUpdate,
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
+										BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+									},
+									Version: indexerevents.OpenInterestUpdateVersion,
+									DataBytes: indexer_manager.GetBytes(
+										&indexerevents.OpenInterestUpdateEventV1{
+											OpenInterestUpdates: []*indexerevents.OpenInterestUpdate{
+												{
+													PerpetualId:  Clob_0.MustGetPerpetualId(),
+													OpenInterest: dtypes.NewInt(10_000_000_000),
+												},
+											},
+										}),
+								},
 							},
 							TxHashes: []string{
 								string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
@@ -1139,6 +1156,22 @@ func TestPlaceLongTermOrder(t *testing.T) {
 									EventIndex:          2,
 									Version:             indexerevents.OrderFillEventVersion,
 								},
+								{
+									Subtype: indexerevents.SubtypeOpenInterestUpdate,
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
+										BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+									},
+									Version: indexerevents.OpenInterestUpdateVersion,
+									DataBytes: indexer_manager.GetBytes(
+										&indexerevents.OpenInterestUpdateEventV1{
+											OpenInterestUpdates: []*indexerevents.OpenInterestUpdate{
+												{
+													PerpetualId:  Clob_0.MustGetPerpetualId(),
+													OpenInterest: dtypes.NewInt(10_000_000_000),
+												},
+											},
+										}),
+								},
 							},
 							TxHashes: []string{
 								string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
@@ -1295,6 +1328,22 @@ func TestPlaceLongTermOrder(t *testing.T) {
 									EventIndex:          2,
 									Version:             indexerevents.OrderFillEventVersion,
 								},
+								{
+									Subtype: indexerevents.SubtypeOpenInterestUpdate,
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
+										BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+									},
+									Version: indexerevents.OpenInterestUpdateVersion,
+									DataBytes: indexer_manager.GetBytes(
+										&indexerevents.OpenInterestUpdateEventV1{
+											OpenInterestUpdates: []*indexerevents.OpenInterestUpdate{
+												{
+													PerpetualId:  Clob_0.MustGetPerpetualId(),
+													OpenInterest: dtypes.NewInt(20_000_000_000),
+												},
+											},
+										}),
+								},
 							},
 							TxHashes: []string{
 								string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
@@ -1359,6 +1408,8 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					ordersAndExpectations.blockHeight,
 				)
 				msgSender.Clear()
+				messages := msgSender.GetOnchainMessages()
+				fmt.Println("Onchain messages", messages)
 
 				// Block Processing
 				ctx = tApp.AdvanceToBlock(ordersAndExpectations.blockHeight, testapp.AdvanceToBlockOptions{})
@@ -1678,6 +1729,22 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 									EventIndex:          2,
 									Version:             indexerevents.OrderFillEventVersion,
+								},
+								{
+									Subtype: indexerevents.SubtypeOpenInterestUpdate,
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
+										BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+									},
+									Version: indexerevents.OpenInterestUpdateVersion,
+									DataBytes: indexer_manager.GetBytes(
+										&indexerevents.OpenInterestUpdateEventV1{
+											OpenInterestUpdates: []*indexerevents.OpenInterestUpdate{
+												{
+													PerpetualId:  Clob_0.MustGetPerpetualId(),
+													OpenInterest: dtypes.NewInt(10_000_000_000),
+												},
+											},
+										}),
 								},
 							},
 							TxHashes: []string{

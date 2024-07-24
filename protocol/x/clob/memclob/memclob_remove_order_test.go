@@ -327,7 +327,7 @@ func TestRemoveOrderIfFilled(t *testing.T) {
 			memclob := NewMemClobPriceTimePriority(false)
 			memclob.SetClobKeeper(&memClobKeeper)
 
-			memClobKeeper.On("AddOrderToOrderbookCollatCheck", mock.Anything, mock.Anything, mock.Anything).
+			memClobKeeper.On("AddOrderToOrderbookSubaccountUpdatesCheck", mock.Anything, mock.Anything, mock.Anything).
 				Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult))
 			memClobKeeper.On("ValidateSubaccountEquityTierLimitForNewOrder", mock.Anything, mock.Anything).Return(nil)
 			memClobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return().Maybe()

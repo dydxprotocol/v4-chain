@@ -199,18 +199,11 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 			},
 			expectedMsg: &types.MarketPriceUpdates{
 				MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
-					{
-						MarketId: constants.MarketId0,
-						Price:    constants.Price4,
-					},
-					{
-						MarketId: constants.MarketId1,
-						Price:    constants.Price1 + 1,
-					},
-					{
-						MarketId: constants.MarketId2,
-						Price:    constants.Price2,
-					},
+					types.NewMarketPriceUpdate(constants.MarketId0, constants.Price4),
+					types.NewMarketPriceUpdate(constants.MarketId1, constants.Price1+1),
+					types.NewMarketPriceUpdate(constants.MarketId2, constants.Price2),
+					types.NewMarketPriceUpdate(constants.MarketId3, constants.Price3),
+					types.NewMarketPriceUpdate(constants.MarketId4, constants.Price3),
 				},
 			},
 		},
@@ -238,18 +231,11 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 			},
 			expectedMsg: &types.MarketPriceUpdates{
 				MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
-					{
-						MarketId: constants.MarketId0,
-						Price:    constants.Price4,
-					},
-					{
-						MarketId: constants.MarketId1,
-						Price:    constants.Price1,
-					},
-					{
-						MarketId: constants.MarketId2,
-						Price:    constants.Price2,
-					},
+					types.NewMarketPriceUpdate(constants.MarketId0, constants.Price4),
+					types.NewMarketPriceUpdate(constants.MarketId1, constants.Price1),
+					types.NewMarketPriceUpdate(constants.MarketId2, constants.Price2),
+					types.NewMarketPriceUpdate(constants.MarketId3, constants.Price3),
+					types.NewMarketPriceUpdate(constants.MarketId4, constants.Price3),
 				},
 			},
 		},
@@ -265,14 +251,10 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 			},
 			expectedMsg: &types.MarketPriceUpdates{
 				MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
-					{
-						MarketId: constants.MarketId1,
-						Price:    constants.Price1,
-					},
-					{
-						MarketId: constants.MarketId2,
-						Price:    constants.Price2,
-					},
+					types.NewMarketPriceUpdate(constants.MarketId1, constants.Price1),
+					types.NewMarketPriceUpdate(constants.MarketId2, constants.Price2),
+					types.NewMarketPriceUpdate(constants.MarketId3, constants.Price3),
+					types.NewMarketPriceUpdate(constants.MarketId4, constants.Price3),
 				},
 			},
 		},

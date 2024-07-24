@@ -6,7 +6,7 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
-	clobmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	perpetualsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	ibcconsumertypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 	"golang.org/x/exp/maps"
@@ -29,8 +29,8 @@ var (
 		// -------- dYdX custom module accounts --------
 		// subaccounts module account holds tokens for all subaccounts.
 		satypes.ModuleName: nil,
-		// clob insurance fund account manages insurance fund for liquidations.
-		clobmoduletypes.InsuranceFundName: nil,
+		// insurance fund account manages insurance fund for liquidations.
+		perpetualsmoduletypes.InsuranceFundName: nil,
 	}
 	// Blocked module accounts which cannot receive external funds.
 	// By default, all non-custom modules (except for gov) are blocked. This prevents

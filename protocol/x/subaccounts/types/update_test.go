@@ -88,8 +88,12 @@ func TestUpdateResultString(t *testing.T) {
 			value:          types.UpdateCausedError,
 			expectedResult: "UpdateCausedError",
 		},
+		"ViolatesIsolatedSubaccountConstraints": {
+			value:          types.ViolatesIsolatedSubaccountConstraints,
+			expectedResult: "ViolatesIsolatedSubaccountConstraints",
+		},
 		"UnexpectedError": {
-			value:          types.UpdateResult(5),
+			value:          types.UpdateResult(6),
 			expectedResult: "UnexpectedError",
 		},
 	}

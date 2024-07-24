@@ -73,7 +73,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs:                    []clobtypes.ClobPair{constants.ClobPair_Btc},
 			transferOrWithdrawSubaccount: constants.Dave_Num1,
@@ -112,7 +112,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs:                    []clobtypes.ClobPair{constants.ClobPair_Btc},
 			transferOrWithdrawSubaccount: constants.Dave_Num1,
@@ -252,7 +252,11 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 					tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *expectedSubaccount.Id),
 				)
 			}
-			negativeTncSubaccountSeenAtBlock, exists := tApp.App.SubaccountsKeeper.GetNegativeTncSubaccountSeenAtBlock(ctx)
+			negativeTncSubaccountSeenAtBlock, exists, err := tApp.App.SubaccountsKeeper.GetNegativeTncSubaccountSeenAtBlock(
+				ctx,
+				constants.BtcUsd_NoMarginRequirement.Params.Id,
+			)
+			require.NoError(t, err)
 			require.Equal(t, tc.expectedWithdrawalsGated, exists)
 			require.Equal(t, tc.expectedNegativeTncSubaccountSeenAtBlock, negativeTncSubaccountSeenAtBlock)
 

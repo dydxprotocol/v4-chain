@@ -284,9 +284,9 @@ func (k Keeper) PersistOrderRemovalToState(
 		// 	},
 		// }
 
-		// // TODO(DEC-1896): AddOrderToOrderbookCollatCheck should accept a single PendingOpenOrder as a
+		// // TODO(DEC-1896): AddOrderToOrderbookSubaccountUpdatesCheck should accept a single PendingOpenOrder as a
 		// // parameter rather than the subaccountOpenOrders map.
-		// _, successPerSubaccountUpdate := k.AddOrderToOrderbookCollatCheck(
+		// _, successPerSubaccountUpdate := k.AddOrderToOrderbookSubaccountUpdatesCheck(
 		// 	ctx,
 		// 	orderToRemove.GetClobPairId(),
 		// 	subaccountOpenOrders,
@@ -389,6 +389,9 @@ func (k Keeper) PersistOrderRemovalToState(
 	// 			orderRemoval,
 	// 		)
 	// 	}
+	case types.OrderRemoval_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS:
+		// TODO (CLOB-877)
+		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
 	default:
 		return errorsmod.Wrapf(
 			types.ErrInvalidOrderRemovalReason,
@@ -694,7 +697,13 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			metrics.GetLabelForBoolValue(metrics.IsLong, position.GetIsLong()),
 			metrics.GetLabelForBoolValue(metrics.DeliverTx, true),
 		)
-		k.subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(ctx, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
+		if err = k.subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(
+			ctx,
+			perpetualId,
+			lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+		); err != nil {
+			return err
+		}
 		return nil
 	}
 

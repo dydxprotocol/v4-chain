@@ -110,23 +110,19 @@ import * as _120 from "./lcd";
 import * as _121 from "./rpc.query";
 import * as _122 from "./rpc.tx";
 export namespace dydxprotocol {
-  export const assets = { ..._5,
-    ..._6,
-    ..._7,
-    ..._8,
-    ..._88,
-    ..._99
-  };
-  export const blocktime = { ..._9,
+  export const assets = { ..._5, ..._6, ..._7, ..._8, ..._88, ..._99 };
+  export const blocktime = {
+    ..._9,
     ..._10,
     ..._11,
     ..._12,
     ..._13,
     ..._89,
     ..._100,
-    ..._111
+    ..._111,
   };
-  export const clob = { ..._14,
+  export const clob = {
+    ..._14,
     ..._15,
     ..._16,
     ..._17,
@@ -142,75 +138,64 @@ export namespace dydxprotocol {
     ..._27,
     ..._90,
     ..._101,
-    ..._112
+    ..._112,
   };
   export namespace daemons {
-    export const liquidation = { ..._28
-    };
-    export const pricefeed = { ..._29
-    };
+    export const liquidation = { ..._28 };
+    export const pricefeed = { ..._29 };
   }
-  export const delaymsg = { ..._30,
+  export const delaymsg = {
+    ..._30,
     ..._31,
     ..._32,
     ..._33,
     ..._34,
     ..._91,
     ..._102,
-    ..._113
+    ..._113,
   };
-  export const epochs = { ..._35,
-    ..._36,
-    ..._37,
-    ..._92,
-    ..._103
-  };
-  export const feetiers = { ..._38,
+  export const epochs = { ..._35, ..._36, ..._37, ..._92, ..._103 };
+  export const feetiers = {
+    ..._38,
     ..._39,
     ..._40,
     ..._41,
     ..._93,
     ..._104,
-    ..._114
+    ..._114,
   };
   export namespace indexer {
-    export const events = { ..._42
-    };
-    export const indexer_manager = { ..._43
-    };
-    export const off_chain_updates = { ..._44
-    };
+    export const events = { ..._42 };
+    export const indexer_manager = { ..._43 };
+    export const off_chain_updates = { ..._44 };
     export namespace protocol {
-      export const v1 = { ..._45,
-        ..._46
-      };
+      export const v1 = { ..._45, ..._46, ..._47 };
     }
-    export const redis = { ..._47
-    };
-    export const shared = { ..._48
-    };
-    export const socks = { ..._49
-    };
+    export const redis = { ..._48 };
+    export const shared = { ..._49 };
+    export const socks = { ..._50 };
   }
-  export const perpetuals = { ..._50,
+  export const perpetuals = {
     ..._51,
     ..._52,
     ..._53,
     ..._54,
     ..._94,
     ..._105,
-    ..._115
+    ..._115,
   };
-  export const prices = { ..._55,
+  export const prices = {
+    ..._55,
     ..._56,
     ..._57,
     ..._58,
     ..._59,
     ..._95,
     ..._106,
-    ..._116
+    ..._116,
   };
-  export const ratelimit = { ..._60,
+
+  export const ratelimit = {
     ..._61,
     ..._62,
     ..._63,
@@ -218,36 +203,26 @@ export namespace dydxprotocol {
     ..._65,
     ..._96,
     ..._107,
-    ..._117
+    ..._117,
   };
-  export const sending = { ..._66,
-    ..._67,
-    ..._68,
-    ..._69,
-    ..._108,
-    ..._118
-  };
-  export const stats = { ..._70,
+  export const sending = { ..._67, ..._68, ..._69, ..._108, ..._118 };
+  export const stats = {
     ..._71,
     ..._72,
     ..._73,
     ..._74,
     ..._97,
     ..._109,
-    ..._119
+    ..._119,
   };
-  export const subaccounts = { ..._75,
+  export const subaccounts = {
     ..._76,
     ..._77,
     ..._78,
     ..._79,
     ..._98,
-    ..._110
+    ..._110,
   };
-  export const ve = { ..._80
-  };
-  export const ClientFactory = { ..._120,
-    ..._121,
-    ..._122
-  };
+  export const ve = { ..._80 };
+  export const ClientFactory = { ..._120, ..._121, ..._122 };
 }

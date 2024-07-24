@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	dbm "github.com/cosmos/cosmos-db"
 	"testing"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
+
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
@@ -109,9 +110,8 @@ func GetAssetCreateEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeAsset {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var assetEvent indexerevents.AssetCreateEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &assetEvent)
+		err := proto.Unmarshal(event.DataBytes, &assetEvent)
 		if err != nil {
 			panic(err)
 		}

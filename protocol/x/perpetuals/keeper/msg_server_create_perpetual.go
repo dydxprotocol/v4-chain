@@ -32,6 +32,7 @@ func (k msgServer) CreatePerpetual(
 		msg.Params.AtomicResolution,
 		msg.Params.DefaultFundingPpm,
 		msg.Params.LiquidityTier,
+		msg.Params.MarketType,
 	)
 	if err != nil {
 		return &types.MsgCreatePerpetualResponse{}, err

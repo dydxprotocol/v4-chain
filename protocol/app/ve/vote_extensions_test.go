@@ -250,7 +250,7 @@ func TestVerifyVoteHandler(t *testing.T) {
 			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
 				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mPricesKeeper.On("GetAllMarketParams", mock.Anything).Return(
-					constants.TestMarketParams[1:], // two prices
+					constants.TestMarketParams[1:3], // two prices
 				)
 				return mPricesKeeper
 			},

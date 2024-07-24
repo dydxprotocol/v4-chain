@@ -35,10 +35,6 @@ ifeq ($(LEDGER_ENABLED),true)
   endif
 endif
 
-# libsecp256k1_sdk is disabled by default as both ethereum/go-ethereum and cosmos/cosmos-sdk will define duplicate symbols
-ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += libsecp256k1_sdk # Requires CGO_ENABLED=1
-endif
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += gcc
 endif
@@ -275,6 +271,10 @@ test-unit-and-integration: e2e-setup delete-anvil
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 80m ./...
 	$(MAKE) remove-container
 
+specific-test: 
+	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 80m -run "TestDelayMessageByBlocks" ./x/delaymsg/keeper/...
+
+
 test-unit-and-integration-linux: e2e-setup-linux 
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...
 
@@ -464,9 +464,9 @@ update-swagger-docs: statik
 
 # Run at `./protocol` directory.
 update-sample-pregenesis:
-	make build
-	./scripts/genesis/prod_pregenesis.sh build/dydxprotocold
-	cp /tmp/prod-chain/.dydxprotocol/config/sorted_genesis.json ./scripts/genesis/sample_pregenesis.json
+	$(MAKE) localnet-build
+	@docker build . -t check-sample-pregenesis -f scripts/genesis/Dockerfile --no-cache
+	@docker run --entrypoint ./scripts/genesis/copy_sample_pregenesis.sh  -v $(CURDIR):/workspace check-sample-pregenesis
 	@echo "Updated ./scripts/genesis/sample_pregenesis.json"
 
 check-sample-pregenesis-up-to-date:

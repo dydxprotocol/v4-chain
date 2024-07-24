@@ -432,7 +432,7 @@ func (k Keeper) persistMatchedOrders(
 		)
 	}
 
-	if err := k.subaccountsKeeper.TransferInsuranceFundPayments(ctx, insuranceFundDelta); err != nil {
+	if err := k.subaccountsKeeper.TransferInsuranceFundPayments(ctx, insuranceFundDelta, perpetualId); err != nil {
 		return takerUpdateResult, makerUpdateResult, err
 	}
 
@@ -442,6 +442,7 @@ func (k Keeper) persistMatchedOrders(
 		ctx,
 		assettypes.AssetUsdc.Id,
 		bigTotalFeeQuoteQuantums,
+		perpetualId,
 	); err != nil {
 		return takerUpdateResult, makerUpdateResult, errorsmod.Wrapf(
 			types.ErrSubaccountFeeTransferFailed,

@@ -59,6 +59,7 @@ func GetTestEncodingCfg() testutil.TestEncodingConfig {
 		&clobtypes.MsgProposedOperations{},
 		&clobtypes.MsgPlaceOrder{},
 		&clobtypes.MsgCancelOrder{},
+		&clobtypes.MsgBatchCancel{},
 
 		// Perpetuals.
 		&perpetualtypes.MsgAddPremiumVotes{},

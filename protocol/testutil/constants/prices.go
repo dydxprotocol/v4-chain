@@ -12,6 +12,8 @@ const (
 	MaticUsdPair = "MATIC-USD"
 	SolUsdPair   = "SOL-USD"
 	LtcUsdPair   = "LTC-USD"
+	IsoUsdPair   = "ISO-USD"
+	Iso2UsdPair  = "ISO2-USD"
 
 	BtcUsdExponent   = -5
 	EthUsdExponent   = -6
@@ -20,6 +22,8 @@ const (
 	CrvUsdExponent   = -10
 	SolUsdExponent   = -8
 	LtcUsdExponent   = -7
+	IsoUsdExponent   = -8
+	Iso2UsdExponent  = -7
 
 	CoinbaseExchangeName  = "Coinbase"
 	BinanceExchangeName   = "Binance"
@@ -187,6 +191,24 @@ var TestMarketExchangeConfigs = map[pricefeedclient.MarketId]string{
 		  }
 		]
 	  }`,
+	exchange_config.MARKET_ISO_USD: `{
+		"exchanges": [
+		  {
+			"exchangeName": "Binance",
+			"ticker": "ISOUSDT",
+			"adjustByMarket": "USDT-USD"
+		  }
+		]
+	  }`,
+	exchange_config.MARKET_ISO2_USD: `{
+		"exchanges": [
+			{
+			"exchangeName": "Binance",
+			"ticker": "ISO2USDT",
+			"adjustByMarket": "USDT-USD"
+			}
+		]
+	  }`,
 }
 
 var TestMarketParams = []types.MarketParam{
@@ -213,6 +235,22 @@ var TestMarketParams = []types.MarketParam{
 		MinExchanges:       1,
 		MinPriceChangePpm:  50,
 		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_SOL_USD],
+	},
+	{
+		Id:                 3,
+		Pair:               IsoUsdPair,
+		Exponent:           IsoUsdExponent,
+		MinExchanges:       1,
+		MinPriceChangePpm:  50,
+		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_ISO_USD],
+	},
+	{
+		Id:                 4,
+		Pair:               Iso2UsdPair,
+		Exponent:           Iso2UsdExponent,
+		MinExchanges:       1,
+		MinPriceChangePpm:  50,
+		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_ISO2_USD],
 	},
 }
 
@@ -241,12 +279,24 @@ var TestMarketPrices = []types.MarketPrice{
 		Exponent: SolUsdExponent,
 		Price:    FiveBillion, // 50$ == 1 SOL
 	},
+	{
+		Id:       3,
+		Exponent: IsoUsdExponent,
+		Price:    FiveBillion, // 50$ == 1 ISO
+	},
+	{
+		Id:       4,
+		Exponent: Iso2UsdExponent,
+		Price:    ThreeBillion, // 300$ == 1 ISO2
+	},
 }
 
 var TestMarketIdsToExponents = map[uint32]int32{
 	0: BtcUsdExponent,
 	1: EthUsdExponent,
 	2: SolUsdExponent,
+	3: IsoUsdExponent,
+	4: Iso2UsdExponent,
 }
 
 var TestPricesGenesisState = types.GenesisState{
@@ -267,6 +317,14 @@ var (
 		{
 			MarketId: MarketId2,
 			Price:    Price7,
+		},
+		{
+			MarketId: MarketId3,
+			Price:    Price4,
+		},
+		{
+			MarketId: MarketId4,
+			Price:    Price3,
 		},
 	}
 

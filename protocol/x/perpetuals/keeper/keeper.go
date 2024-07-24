@@ -21,6 +21,7 @@ type (
 		clobKeeper          types.PerpetualsClobKeeper
 		indexerEventManager indexer_manager.IndexerEventManager
 		authorities         map[string]struct{}
+		transientStoreKey   storetypes.StoreKey
 	}
 )
 
@@ -31,6 +32,7 @@ func NewKeeper(
 	epochsKeeper types.EpochsKeeper,
 	indexerEventsManager indexer_manager.IndexerEventManager,
 	authorities []string,
+	transientStoreKey storetypes.StoreKey,
 ) *Keeper {
 	return &Keeper{
 		cdc:                 cdc,
@@ -39,6 +41,7 @@ func NewKeeper(
 		epochsKeeper:        epochsKeeper,
 		indexerEventManager: indexerEventsManager,
 		authorities:         lib.UniqueSliceToSet(authorities),
+		transientStoreKey:   transientStoreKey,
 	}
 }
 

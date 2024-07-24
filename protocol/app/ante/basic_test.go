@@ -6,7 +6,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
-	libante "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
 	testante "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -36,9 +35,9 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 
 			expectedErr: sdkerrors.ErrNoSignatures,
 		},
-		"skip ValidateBasic: single msg, AppInjected msg": {
-			msgOne:         &perptypes.MsgAddPremiumVotes{},
-			txHasSignature: false, // this should cause ValidateBasic to fail, but this is skipped.
+		"skip ValidateBasic: single msg": {
+			msgOne:         &testdata.TestMsg{Signers: []string{constants.AliceAccAddress.String()}},
+			txHasSignature: true, // this should allow ValidateBasic to pass.
 
 			expectedErr: nil,
 		},
@@ -78,8 +77,7 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 			suite.TxBuilder = suite.ClientCtx.TxConfig.NewTxBuilder()
 
 			vbd := ante.NewValidateBasicDecorator()
-			wrappedVbd := libante.NewAppInjectedMsgAnteWrapper(vbd)
-			antehandler := sdk.ChainAnteDecorators(wrappedVbd)
+			antehandler := sdk.ChainAnteDecorators(vbd)
 
 			msgs := make([]sdk.Msg, 0)
 			if tc.msgOne != nil {

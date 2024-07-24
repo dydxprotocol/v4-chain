@@ -2,7 +2,8 @@ package events
 
 import (
 	v1 "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 )
 
 // NewPerpetualMarketCreateEvent creates a PerpetualMarketCreateEvent
@@ -12,14 +13,15 @@ func NewPerpetualMarketCreateEvent(
 	clobPairId uint32,
 	ticker string,
 	marketId uint32,
-	status types.ClobPair_Status,
+	status clobtypes.ClobPair_Status,
 	quantumConversionExponent int32,
 	atomicResolution int32,
 	subticksPerTick uint32,
 	stepBaseQuantums uint64,
 	liquidityTier uint32,
-) *PerpetualMarketCreateEventV1 {
-	return &PerpetualMarketCreateEventV1{
+	marketType perptypes.PerpetualMarketType,
+) *PerpetualMarketCreateEventV2 {
+	return &PerpetualMarketCreateEventV2{
 		Id:                        id,
 		ClobPairId:                clobPairId,
 		Ticker:                    ticker,
@@ -30,5 +32,6 @@ func NewPerpetualMarketCreateEvent(
 		SubticksPerTick:           subticksPerTick,
 		StepBaseQuantums:          stepBaseQuantums,
 		LiquidityTier:             liquidityTier,
+		MarketType:                v1.ConvertToPerpetualMarketType(marketType),
 	}
 }

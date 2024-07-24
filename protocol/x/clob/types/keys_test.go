@@ -24,7 +24,7 @@ func TestStateKeys(t *testing.T) {
 
 	require.Equal(t, "Clob:", types.ClobPairKeyPrefix)
 	require.Equal(t, "Fill:", types.OrderAmountFilledKeyPrefix)
-	require.Equal(t, "ExpHt:", types.BlockHeightToPotentiallyPrunableOrdersPrefix)
+	require.Equal(t, "ExpHt:", types.LegacyBlockHeightToPotentiallyPrunableOrdersPrefix)
 	require.Equal(t, "ExpTm:", types.StatefulOrdersTimeSlicePrefix)
 }
 
@@ -43,8 +43,4 @@ func TestTransientStoreKeys(t *testing.T) {
 	require.Equal(t, "UncmtSO:", types.UncommittedStatefulOrderPlacementKeyPrefix)
 	require.Equal(t, "UncmtSOCxl:", types.UncommittedStatefulOrderCancellationKeyPrefix)
 	require.Equal(t, "NumUncmtSO:", types.UncommittedStatefulOrderCountPrefix)
-}
-
-func TestModuleAccountKeys(t *testing.T) {
-	require.Equal(t, "insurance_fund", types.InsuranceFundName)
 }

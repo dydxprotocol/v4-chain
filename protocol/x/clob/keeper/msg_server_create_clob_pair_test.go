@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"testing"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
@@ -62,6 +63,7 @@ func TestCreateClobPair(t *testing.T) {
 							testClobPair1.SubticksPerTick,
 							testClobPair1.StepBaseQuantums,
 							testPerp1.Params.LiquidityTier,
+							testPerp1.Params.MarketType,
 						),
 					),
 				).Return()

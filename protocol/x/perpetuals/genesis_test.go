@@ -146,6 +146,7 @@ func TestGenesis_Failure(t *testing.T) {
 							MarketId:      tc.marketId,
 							Ticker:        tc.ticker,
 							LiquidityTier: 0,
+							MarketType:    types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 						},
 						FundingIndex: dtypes.ZeroInt(),
 					},

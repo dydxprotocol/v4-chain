@@ -23,6 +23,9 @@ export const configSchema = {
   SEND_WEBSOCKET_MESSAGES: parseBoolean({
     default: true,
   }),
+  SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS: parseBoolean({
+    default: false,
+  }),
 };
 
 export default parseSchema(configSchema);

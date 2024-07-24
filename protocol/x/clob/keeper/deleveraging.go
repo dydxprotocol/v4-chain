@@ -9,6 +9,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -128,20 +130,41 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	return quantumsDeleveraged, err
 }
 
-// GetInsuranceFundBalance returns the current balance of the insurance fund (in quote quantums).
+// GetInsuranceFundBalanceInQuoteQuantums returns the current balance of the specific insurance fund (in quote quantums).
+// perpetual (in quote quantums).
 // This calls the Bank Keeper’s GetBalance() function for the Module Address of the insurance fund.
-func (k Keeper) GetInsuranceFundBalance(
+func (k Keeper) GetInsuranceFundBalanceInQuoteQuantums(
 	ctx sdk.Context,
+	perpetualId uint32,
 ) (
 	balance *big.Int,
 ) {
 	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
 	if !exists {
-		panic("GetInsuranceFundBalance: Usdc asset not found in state")
+		panic("GetInsuranceFundBalanceInQuoteQuantums: Usdc asset not found in state")
+	}
+	insuranceFundAddr, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
+	if err != nil {
+		return nil
 	}
 	insuranceFundBalance := k.bankKeeper.GetBalance(
 		ctx,
-		types.InsuranceFundModuleAddress,
+		insuranceFundAddr,
+		usdcAsset.Denom,
+	)
+
+	// Return as big.Int.
+	return insuranceFundBalance.Amount.BigInt()
+}
+
+func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int) {
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	if !exists {
+		panic("GetCrossInsuranceFundBalance: Usdc asset not found in state")
+	}
+	insuranceFundBalance := k.bankKeeper.GetBalance(
+		ctx,
+		perptypes.InsuranceFundModuleAddress,
 		usdcAsset.Denom,
 	)
 
@@ -262,6 +285,7 @@ func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 func (k Keeper) IsValidInsuranceFundDelta(
 	ctx sdk.Context,
 	insuranceFundDelta *big.Int,
+	perpetualId uint32,
 ) bool {
 	// Non-negative insurance fund deltas are valid.
 	if insuranceFundDelta.Sign() >= 0 {
@@ -270,7 +294,7 @@ func (k Keeper) IsValidInsuranceFundDelta(
 
 	// The insurance fund delta is valid if the insurance fund balance is non-negative after adding
 	// the delta.
-	currentInsuranceFundBalance := k.GetInsuranceFundBalance(ctx)
+	currentInsuranceFundBalance := k.GetInsuranceFundBalanceInQuoteQuantums(ctx, perpetualId)
 	return new(big.Int).Add(currentInsuranceFundBalance, insuranceFundDelta).Sign() >= 0
 }
 
@@ -397,7 +421,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 						liquidatedSubaccountId,
 						*offsettingSubaccount.Id,
 						perpetualId,
-						satypes.BaseQuantums(new(big.Int).Abs(deltaBaseQuantums).Uint64()),
+						satypes.BaseQuantums(new(big.Int).Abs(deltaBaseQuantums).Uint64()), // TODO(CT-641): Use the actual unit price rather than the total quote quantums.
 						satypes.BaseQuantums(deltaQuoteQuantums.Uint64()),
 						deltaBaseQuantums.Sign() > 0,
 						isFinalSettlement,

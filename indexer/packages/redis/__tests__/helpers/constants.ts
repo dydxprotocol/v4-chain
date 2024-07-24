@@ -168,3 +168,44 @@ export const orderUpdate: OffChainUpdateOrderUpdateUpdateMessage = {
     totalFilledQuantums: Long.fromValue(250_500, true),
   },
 };
+
+export const isolatedSubaccountId: IndexerSubaccountId = {
+  owner: testConstants.isolatedSubaccount.address,
+  number: testConstants.isolatedSubaccount.subaccountNumber,
+};
+export const isolatedMarketOrderId: IndexerOrderId = {
+  subaccountId: isolatedSubaccountId,
+  clientId: 1,
+  clobPairId: parseInt(testConstants.isolatedPerpetualMarket.clobPairId, 10),
+  orderFlags: ORDER_FLAG_SHORT_TERM,
+};
+export const isolatedMarketOrder: IndexerOrder = {
+  orderId: isolatedMarketOrderId,
+  side: IndexerOrder_Side.SIDE_BUY,
+  quantums: Long.fromValue(1_000_000, true),
+  subticks: Long.fromValue(2_000_000, true),
+  goodTilBlock: 1150,
+  goodTilBlockTime: undefined,
+  timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
+  reduceOnly: false,
+  clientMetadata: 0,
+  conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
+  conditionalOrderTriggerSubticks: Long.fromValue(0, true),
+};
+
+export const isolatedMarketOrderUuid: string = OrderTable.orderIdToUuid(isolatedMarketOrderId);
+
+export const isolatedMarketRedisOrder: RedisOrder = {
+  id: isolatedMarketOrderUuid,
+  order: isolatedMarketOrder,
+  ticker: testConstants.isolatedPerpetualMarket.ticker,
+  tickerType: RedisOrder_TickerType.TICKER_TYPE_PERPETUAL,
+  price: protocolTranslations.subticksToPrice(
+    isolatedMarketOrder.subticks.toString(),
+    testConstants.isolatedPerpetualMarket,
+  ),
+  size: protocolTranslations.quantumsToHumanFixedString(
+    isolatedMarketOrder.quantums.toString(),
+    testConstants.isolatedPerpetualMarket.atomicResolution,
+  ),
+};

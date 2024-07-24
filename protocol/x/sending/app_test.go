@@ -196,7 +196,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
 					AccAddressForSigning: msgCreateTransfer.Transfer.Sender.Owner,
-					Gas:                  100_000,
+					Gas:                  120_000,
 					FeeAmt:               constants.TestFeeCoins_5Cents,
 				},
 				&msgCreateTransfer,
@@ -907,7 +907,7 @@ func TestWithdrawalGating_ChainOutage(t *testing.T) {
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
 					AccAddressForSigning: tc.subaccount.Id.Owner,
-					Gas:                  1000000,
+					Gas:                  1200000,
 					FeeAmt:               constants.TestFeeCoins_5Cents,
 				},
 				msg,
@@ -966,7 +966,7 @@ func TestWithdrawalGating_ChainOutage(t *testing.T) {
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
 					AccAddressForSigning: tc.subaccount.Id.Owner,
-					Gas:                  1000000,
+					Gas:                  1200000,
 					FeeAmt:               constants.TestFeeCoins_5Cents,
 				},
 				msg,
