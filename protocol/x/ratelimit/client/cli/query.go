@@ -24,6 +24,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdQueryCapacityByDenom())
 	cmd.AddCommand(CmdPendingSendPackets())
 	cmd.AddCommand(CmdGetSDAIPriceQuery())
+	cmd.AddCommand(CmdGetAssetYieldIndexQuery())
 
 	return cmd
 }
