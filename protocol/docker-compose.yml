@@ -34,7 +34,7 @@ services:
       - "26657:26657"
       - "9090:9090"
       - "1317:1317"
-      - "4321:4321"
+      - "4322:4322"
 
   dydxprotocold1:
     image: local:dydxprotocol
