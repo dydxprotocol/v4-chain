@@ -750,26 +750,26 @@ describe('orderbookLevelsCache', () => {
   });
 
   it('returns undefined if there are no bids or asks', async () => {
-    await Promise.all([updatePriceLevel({
+    await updatePriceLevel({
       ticker,
       side: OrderSide.SELL,
       humanPrice: '45400',
       sizeDeltaInQuantums: '2000',
       client,
-    })]);
+    });
 
     const midPrice = await getOrderBookMidPrice(ticker, client);
     expect(midPrice).toBeUndefined();
   });
 
   it('returns undefined if humanPrice is NaN', async () => {
-    await Promise.all([updatePriceLevel({
+    await updatePriceLevel({
       ticker,
       side: OrderSide.SELL,
       humanPrice: 'nan',
       sizeDeltaInQuantums: '2000',
       client,
-    })]);
+    });
 
     const midPrice = await getOrderBookMidPrice(ticker, client);
 
