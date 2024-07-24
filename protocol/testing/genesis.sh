@@ -514,6 +514,38 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[32].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[32].params.market_type' -v '1'
 
+	# Update MarketMap module.
+	dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map' -v "{}"
+	dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets' -v "{}"
+
+    # Marketmap: BTC-USD 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.ticker' -v "{}" 
+
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.ticker.currency_pair' -v "{}" 
+    dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.ticker.currency_pair.Base' -v 'BTC' 
+    dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.ticker.currency_pair.Quote' -v 'USD' 
+
+    dasel put -t int -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.ticker.decimals' -v '5' 
+    dasel put -t int -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.ticker.min_provider_count' -v '3' 
+    dasel put -t bool -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.ticker.enabled' -v 'true' 
+
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.provider_configs.[]' -v '{"name": "Binance", "off_chain_ticker": "BTCUSDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}' 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.provider_configs.[]' -v '{"name": "Bybit", "off_chain_ticker": "BTCUSDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}' 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.provider_configs.[]' -v '{"name": "CoinbasePro", "off_chain_ticker": "BTC-USD"}' 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.provider_configs.[]' -v '{"name": "Huobi", "off_chain_ticker": "btcusdt", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}' 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.provider_configs.[]' -v '{"name": "Kraken", "off_chain_ticker": "XXBTZUSD"}' 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.provider_configs.[]' -v '{"name": "Kucoin", "off_chain_ticker": "BTC-USDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}' 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.provider_configs.[]' -v '{"name": "Okx", "off_chain_ticker": "BTC-USDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}' 
+	# MarketMap: USDT-USD
+	dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.USDT/USD' -v "{}"
+	# dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.USDT/USD.ticker' -v "{}"
+	dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.USDT/USD.ticker' -v '{"currency_pair": {"Base": "USDT", "Quote": "USD"}, "decimals": 9, "min_provider_count": 3, "enabled": true}'
+	dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.USDT/USD.provider_configs.[]' -v '{"name": "binance_ws", "off_chain_ticker": "USDCUSDT", "invert": true}'
+	dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.USDT/USD.provider_configs.[]' -v '{"name": "bybit_ws", "off_chain_ticker": "USDCUSDT", "invert": true}'
+	dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.USDT/USD.provider_configs.[]' -v '{"name": "coinbase_ws", "off_chain_ticker": "USDT-USD"}'
+
+
 	# Update prices module.
 	# Market: BTC-USD
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_params' -v "[]"

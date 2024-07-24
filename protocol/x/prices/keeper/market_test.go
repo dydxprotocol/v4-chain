@@ -28,6 +28,18 @@ func TestCreateMarket(t *testing.T) {
 		MinPriceChangePpm:  uint32(9_999),
 	}
 
+	// Test that creating market fails if it does not exist in marketmap
+	_, err := keeper.CreateMarket(
+		ctx,
+		testMarketParams,
+		types.MarketPrice{
+			Id:       0,
+			Exponent: int32(-6),
+			Price:    constants.FiveBillion,
+		},
+	)
+	require.Error(t, err)
+
 	// Create the test market in the market map and verify it is not enabled
 	keepertest.CreateMarketsInMarketMapFromParams(
 		t,

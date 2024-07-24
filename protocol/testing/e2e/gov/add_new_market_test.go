@@ -318,8 +318,10 @@ func TestAddNewMarketProposal(t *testing.T) {
 			}).Build()
 			ctx := tApp.InitChain()
 
-			currencyPair, _ := slinky.MarketPairToCurrencyPair(testMarketParam.Param.Pair)
-			market, _ := tApp.App.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+			currencyPair, err := slinky.MarketPairToCurrencyPair(testMarketParam.Param.Pair)
+			require.NoError(t, err)
+			market, err := tApp.App.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+			require.NoError(t, err)
 			require.False(t, market.Ticker.Enabled)
 
 			initMarketParams := tApp.App.PricesKeeper.GetAllMarketParams(ctx)

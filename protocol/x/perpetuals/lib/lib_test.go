@@ -421,6 +421,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		bigExpectedInitialMargin     *big.Int
 		bigExpectedMaintenanceMargin *big.Int
 	}{
+		// TODO: Add back tests for positive and zero exponent once x/marketmap supports them
 		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, atomic resolution 4": {
 			price:                        55_550,
 			exponent:                     -1,

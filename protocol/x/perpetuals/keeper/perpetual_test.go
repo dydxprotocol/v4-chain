@@ -755,6 +755,7 @@ func TestGetNetNotional_Success(t *testing.T) {
 		bigBaseQuantums                     *big.Int
 		bigExpectedNetNotionalQuoteQuantums *big.Int
 	}{
+		// TODO: Add back tests for positive and zero exponent once x/marketmap supports them
 		"Negative exponent, atomic resolution 6, long position": {
 			price:                               5_555,
 			exponent:                            -2,
@@ -899,6 +900,7 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 		bigQuoteQuantums                   *big.Int
 		bigExpectedNetNotionalBaseQuantums *big.Int
 	}{
+		// TODO: Add back tests for positive and zero exponent once x/marketmap supports them
 		"Negative exponent, atomic resolution 6, long position": {
 			price:                              5_555,
 			exponent:                           -2,
@@ -1042,6 +1044,7 @@ func TestGetNetCollateral_Success(t *testing.T) {
 		bigBaseQuantums                       *big.Int
 		bigExpectedNetCollateralQuoteQuantums *big.Int
 	}{
+		// TODO: Add back tests for positive and zero exponent once x/marketmap supports them
 		"Negative exponent, atomic resolution 6, short position": {
 			price:                                 5_555,
 			exponent:                              -2,
