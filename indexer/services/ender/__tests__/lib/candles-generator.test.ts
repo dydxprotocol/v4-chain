@@ -32,7 +32,9 @@ import { KafkaPublisher } from '../../src/lib/kafka-publisher';
 import { ConsolidatedKafkaEvent } from '../../src/lib/types';
 import { defaultTradeContent, defaultTradeKafkaEvent } from '../helpers/constants';
 import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from '../helpers/kafka-publisher-helpers';
-import { clearOrderbookLevelsCacheForTests, updatePriceLevel } from '../helpers/redis-helpers';
+import { updatePriceLevel } from '../helpers/redis-helpers';
+import { redisClient } from '../../src/helpers/redis/redis-controller';
+import { redis } from '@dydxprotocol-indexer/redis';
 
 describe('candleHelper', () => {
   beforeAll(async () => {
@@ -50,7 +52,7 @@ describe('candleHelper', () => {
     await dbHelpers.clearData();
     clearCandlesMap();
     jest.clearAllMocks();
-    clearOrderbookLevelsCacheForTests();
+    await redis.deleteAllAsync(redisClient);
   });
 
   afterAll(async () => {
