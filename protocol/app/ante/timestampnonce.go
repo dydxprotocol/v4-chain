@@ -11,6 +11,8 @@ import (
 
 // TODO: combine increment sequence and sequence verification into one decorator
 // https://github.com/cosmos/cosmos-sdk/pull/18817
+
+// Forked from "github.com/cosmos/cosmos-sdk/x/auth/ante/sigverify.go"
 type IncrementSequenceDecorator struct {
 	ak ante.AccountKeeper
 }

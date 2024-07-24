@@ -12,6 +12,7 @@ import (
 	sdkante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	gometrics "github.com/hashicorp/go-metrics"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -23,15 +24,18 @@ import (
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
 	ak              sdkante.AccountKeeper
+	akp             accountpluskeeper.Keeper
 	signModeHandler *txsigning.HandlerMap
 }
 
 func NewSigVerificationDecorator(
 	ak sdkante.AccountKeeper,
+	akp accountpluskeeper.Keeper,
 	signModeHandler *txsigning.HandlerMap,
 ) SigVerificationDecorator {
 	return SigVerificationDecorator{
 		ak:              ak,
+		akp:             akp,
 		signModeHandler: signModeHandler,
 	}
 }
@@ -89,23 +93,58 @@ func (svd SigVerificationDecorator) AnteHandle(
 		// Check account sequence number.
 		// Skip individual sequence number validation since this transaction use
 		// `GoodTilBlock` for replay protection.
-		if !skipSequenceValidation && sig.Sequence != acc.GetSequence() {
-			labels := make([]gometrics.Label, 0)
-			if len(tx.GetMsgs()) > 0 {
-				labels = append(
-					labels,
-					metrics.GetLabelForStringValue(metrics.MessageType, fmt.Sprintf("%T", tx.GetMsgs()[0])),
-				)
+		if !skipSequenceValidation {
+			if accountpluskeeper.IsTimestampNonce(sig.Sequence) {
+				tsNonce := sig.Sequence
+				blockTs := uint64(ctx.BlockTime().UnixMilli())
+				address := acc.GetAddress()
+
+				if !accountpluskeeper.IsValidTimestampNonce(tsNonce, blockTs) {
+					return ctx, errorsmod.Wrapf(
+						sdkerrors.ErrWrongSequence,
+						"timestamp nonce %d not within valid time window", tsNonce,
+					)
+				}
+				accountState, found := svd.akp.GetAccountState(ctx, address)
+				if !found {
+					err := svd.akp.InitializeAccountWithTimestampNonceDetails(ctx, address, tsNonce)
+					if err != nil {
+						return ctx, errorsmod.Wrapf(
+							sdkerrors.ErrLogic,
+							fmt.Sprintf("failed to initialize AccountState for address %d", address),
+						)
+					}
+				} else {
+					accountpluskeeper.EjectStaleTimestampNonces(&accountState, blockTs)
+					tsNonceAccepted := accountpluskeeper.AttemptTimestampNonceUpdate(tsNonce, &accountState)
+					if !tsNonceAccepted {
+						return ctx, errorsmod.Wrapf(
+							sdkerrors.ErrWrongSequence,
+							"timestamp nonce %d rejected", tsNonce,
+						)
+					}
+					svd.akp.SetAccountState(ctx, address, accountState)
+				}
+			} else {
+				if sig.Sequence != acc.GetSequence() {
+					labels := make([]gometrics.Label, 0)
+					if len(tx.GetMsgs()) > 0 {
+						labels = append(
+							labels,
+							metrics.GetLabelForStringValue(metrics.MessageType, fmt.Sprintf("%T", tx.GetMsgs()[0])),
+						)
+					}
+					telemetry.IncrCounterWithLabels(
+						[]string{metrics.SequenceNumber, metrics.Invalid, metrics.Count},
+						1,
+						labels,
+					)
+					return ctx, errorsmod.Wrapf(
+						sdkerrors.ErrWrongSequence,
+						"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
+					)
+				}
 			}
-			telemetry.IncrCounterWithLabels(
-				[]string{metrics.SequenceNumber, metrics.Invalid, metrics.Count},
-				1,
-				labels,
-			)
-			return ctx, errorsmod.Wrapf(
-				sdkerrors.ErrWrongSequence,
-				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
-			)
 		}
 
 		// retrieve signer data

@@ -11,16 +11,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
-func DefaultAccountState(address sdk.AccAddress) types.AccountState {
-	return types.AccountState{
-		Address: address.String(),
-		TimestampNonceDetails: types.TimestampNonceDetails{
-			MaxEjectedNonce: 0,
-			TimestampNonces: []uint64{},
-		},
-	}
-}
-
 type Keeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
@@ -67,22 +57,32 @@ func (k Keeper) SetGenesisState(ctx sdk.Context, data types.GenesisState) error 
 		if err != nil {
 			return err
 		}
-		k.setAccountState(ctx, address, account)
+		k.SetAccountState(ctx, address, account)
 	}
 
 	return nil
 }
 
-// TODO: refactor this function -> InitializeWithTimestampNonceDetails
-// Writing to store is expensive so directly write with ts-nonce instead of initializing an empty account then setting.
-func (k Keeper) InitializeAccount(ctx sdk.Context, address sdk.AccAddress) error {
+func (k Keeper) InitializeAccountWithTimestampNonceDetails(
+	ctx sdk.Context,
+	address sdk.AccAddress,
+	tsNonce uint64,
+) error {
 	if _, found := k.GetAccountState(ctx, address); found {
-		return errors.New(
-			"Cannot initialize AccountState for address with existing AccountState, address: " + address.String(),
-		)
+		msg := "Cannot initialize AccountState for address with existing AccountState, address: " + address.String()
+		k.Logger(ctx).Error(msg)
+		return errors.New(msg)
 	}
 
-	k.setAccountState(ctx, address, DefaultAccountState(address))
+	accountState := types.AccountState{
+		Address: address.String(),
+		TimestampNonceDetails: types.TimestampNonceDetails{
+			MaxEjectedNonce: TimestampNonceSequenceCutoff,
+			TimestampNonces: []uint64{tsNonce},
+		},
+	}
+
+	k.SetAccountState(ctx, address, accountState)
 
 	return nil
 }
@@ -110,7 +110,7 @@ func (k Keeper) GetAccountState(
 }
 
 // Set the AccountState into KVStore for a given account address
-func (k Keeper) setAccountState(
+func (k Keeper) SetAccountState(
 	ctx sdk.Context,
 	address sdk.AccAddress,
 	accountState types.AccountState,

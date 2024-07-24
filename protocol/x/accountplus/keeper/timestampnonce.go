@@ -14,11 +14,11 @@ func IsTimestampNonce(ts uint64) bool {
 }
 
 func IsValidTimestampNonce(tsNonce uint64, referenceTs uint64) bool {
-	return tsNonce >= referenceTs-MaxTimeInPastMs && tsNonce <= referenceTs-MaxTimeInFutureMs
+	return tsNonce >= referenceTs-MaxTimeInPastMs && tsNonce <= referenceTs+MaxTimeInFutureMs
 }
 
 // Inplace eject all stale timestamps.
-func EjectStaleTsNonces(accountState *types.AccountState, referenceTs uint64) {
+func EjectStaleTimestampNonces(accountState *types.AccountState, referenceTs uint64) {
 	tsNonceDetails := &accountState.TimestampNonceDetails
 	var newTsNonces []uint64
 	for _, tsNonce := range tsNonceDetails.TimestampNonces {
@@ -33,15 +33,18 @@ func EjectStaleTsNonces(accountState *types.AccountState, referenceTs uint64) {
 	tsNonceDetails.TimestampNonces = newTsNonces
 }
 
-// Check if the new tsNonce should be accepted.
-// Inplace update TimestampNonceDetails with the new ts nonce if necessary.
+// Check if the new tsNonce should be accepted. If satisfies conditions, inplace update AccountState.
 // Returns bool indicating if new tsNonce was accepted (update was made).
-func ValidateAndUpdateTimestampNonceDetails(
+func AttemptTimestampNonceUpdate(
 	tsNonce uint64,
-	referenceTs uint64,
-	accountState types.AccountState,
+	accountState *types.AccountState,
 ) bool {
 	tsNonceDetails := &accountState.TimestampNonceDetails
+
+	if tsNonce <= tsNonceDetails.MaxEjectedNonce {
+		return false
+	}
+
 	if len(tsNonceDetails.TimestampNonces) < MaxTimestampNonceArrSize {
 		tsNonceDetails.TimestampNonces = append(tsNonceDetails.TimestampNonces, tsNonce)
 		return true
@@ -57,14 +60,14 @@ func ValidateAndUpdateTimestampNonceDetails(
 	return false
 }
 
-// Check if input value is larger than smallest value in arr and return index. index = -1 if false.
+// Check if input value is larger than smallest value in arr and return index of the min value. If minimum value has
+// duplicates, will return smallest index. index = -1 empty slice.
 func isLargerThanSmallestValue(value uint64, values []uint64) (bool, int) {
-	minIndex := -1
-
 	if len(values) == 0 {
-		return false, minIndex
+		return false, -1
 	}
 
+	minIndex := 0
 	for i, ts := range values {
 		if ts < values[minIndex] {
 			minIndex = i
