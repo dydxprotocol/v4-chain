@@ -45,7 +45,7 @@ func networkWithSubaccountObjects(t *testing.T, n int) []types.Subaccount {
 }
 
 func getSubaccountGenesisShort() string {
-	return "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"1\\\"}, \\\"margin_enabled\\\": false}]\" \"\""
+	return "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"0/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"1\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"0/1\\\"}]\" \"\""
 }
 
 func TestShowSubaccount(t *testing.T) {
@@ -102,7 +102,7 @@ func TestShowSubaccount(t *testing.T) {
 }
 
 func getSubaccountGenesisList() string {
-	return "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"0\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"1\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"2\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"3\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"4\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}]\" \"\""
+	return "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"0\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"0/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"1\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"0/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"2\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"0/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"3\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"0/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"4\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"0/1\\\"}]\" \"\""
 }
 
 func removeNewlines(data []byte) []byte {

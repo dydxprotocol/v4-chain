@@ -202,6 +202,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	BtcUsd_0_001Percent_DefaultFunding_10AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
