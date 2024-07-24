@@ -99,6 +99,7 @@ func (c *Client) Start(
 	c.PricesQueryClient = pricestypes.NewQueryClient(queryConn)
 	c.ClobQueryClient = clobtypes.NewQueryClient(queryConn)
 	c.LiquidationServiceClient = api.NewLiquidationServiceClient(daemonConn)
+	c.RatelimitQueryClient = ratelimit.NewQueryClient(queryConn)
 
 	ticker := time.NewTicker(time.Duration(flags.Liquidation.LoopDelayMs) * time.Millisecond)
 	stop := make(chan bool)

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math/big"
 	"sort"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
@@ -141,6 +142,7 @@ func UpdatePerpetualPositions(
 					PerpetualId:  pu.PerpetualId,
 					Quantums:     dtypes.NewIntFromBigInt(pu.GetBigQuantums()),
 					FundingIndex: fundingIndex,
+					YieldIndex:   big.NewRat(0, 1).String(),
 				}
 
 				// Add the new position to the map.

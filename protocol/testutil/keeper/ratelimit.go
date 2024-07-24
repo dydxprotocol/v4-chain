@@ -7,7 +7,6 @@ import (
 	blocktimekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/keeper"
 	delaymsgtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	perpskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
-	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -21,7 +20,6 @@ func createRatelimitKeeper(
 	stateStore storetypes.CommitMultiStore,
 	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
-	pk *priceskeeper.Keeper,
 	btk *blocktimekeeper.Keeper,
 	bk bankkeeper.Keeper,
 	perpk *perpskeeper.Keeper,
@@ -48,7 +46,6 @@ func createRatelimitKeeper(
 		sDAIEventManager,
 		bk,
 		*btk,
-		*pk,
 		*perpk,
 		&ics4wrapper, // this is a pointer, since the mock has pointer receiver
 		authorities,

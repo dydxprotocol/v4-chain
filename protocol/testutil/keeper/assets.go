@@ -33,6 +33,7 @@ func CreateUsdcAsset(ctx sdk.Context, assetsKeeper *keeper.Keeper) error {
 		constants.Usdc.HasMarket,
 		constants.Usdc.MarketId,
 		constants.Usdc.AtomicResolution,
+		constants.Usdc.AssetYieldIndex,
 	)
 	return err
 }

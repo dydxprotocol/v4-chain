@@ -542,6 +542,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 
 	// Carl and Dave's state should get updated accordingly.
 	carl := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Carl_Num0)
+
 	require.Equal(t, satypes.Subaccount{
 		Id: &constants.Carl_Num0,
 		AssetPositions: []*satypes.AssetPosition{
@@ -555,6 +556,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 				PerpetualId:  0,
 				Quantums:     dtypes.NewInt(100_000_000),
 				FundingIndex: dtypes.NewInt(0),
+				YieldIndex:   big.NewRat(0, 1).String(),
 			},
 		},
 		AssetYieldIndex: big.NewRat(0, 1).String(),
@@ -574,6 +576,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 				PerpetualId:  0,
 				Quantums:     dtypes.NewInt(-100_000_000),
 				FundingIndex: dtypes.NewInt(0),
+				YieldIndex:   big.NewRat(0, 1).String(),
 			},
 		},
 		AssetYieldIndex: big.NewRat(0, 1).String(),

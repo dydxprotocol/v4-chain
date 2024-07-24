@@ -121,6 +121,7 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 					a.HasMarket,
 					a.MarketId,
 					a.AtomicResolution,
+					a.AssetYieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -488,7 +489,8 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			deltaQuantums:          big.NewInt(100_000_000),
 			expectedSubaccounts: []satypes.Subaccount{
 				{
-					Id: &constants.Carl_Num0,
+					Id:              &constants.Carl_Num0,
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num0,
@@ -519,7 +521,8 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			deltaQuantums:          big.NewInt(-100_000_000),
 			expectedSubaccounts: []satypes.Subaccount{
 				{
-					Id: &constants.Carl_Num0,
+					Id:              &constants.Carl_Num0,
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num0,
@@ -552,6 +555,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 							Quantums:    dtypes.NewInt(50_000_000), // 0.5 BTC
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num1,
@@ -564,6 +568,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 							Quantums:    dtypes.NewInt(50_000_000), // 0.5 BTC
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 			liquidatedSubaccountId: constants.Carl_Num0,
@@ -571,7 +576,8 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			deltaQuantums:          big.NewInt(100_000_000),
 			expectedSubaccounts: []satypes.Subaccount{
 				{
-					Id: &constants.Carl_Num0,
+					Id:              &constants.Carl_Num0,
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num0,
@@ -616,7 +622,8 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			deltaQuantums:          big.NewInt(100_000_000),
 			expectedSubaccounts: []satypes.Subaccount{
 				{
-					Id: &constants.Carl_Num0,
+					Id:              &constants.Carl_Num0,
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id:                 constants.Carl_Num1_1BTC_Short.Id,
@@ -655,7 +662,8 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			deltaQuantums:          big.NewInt(100_000_000),
 			expectedSubaccounts: []satypes.Subaccount{
 				{
-					Id: &constants.Carl_Num0,
+					Id:              &constants.Carl_Num0,
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id:                 constants.Dave_Num1_1ETH_Long_50000USD.Id,
@@ -694,7 +702,8 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			deltaQuantums:          big.NewInt(100_000_000),
 			expectedSubaccounts: []satypes.Subaccount{
 				{
-					Id: &constants.Carl_Num0,
+					Id:              &constants.Carl_Num0,
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id:                 constants.Dave_Num0_1BTC_Long_50001USD_Short.Id,
@@ -953,7 +962,8 @@ func TestProcessDeleveraging(t *testing.T) {
 			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
+				Id:              &constants.Carl_Num0,
+				AssetYieldIndex: big.NewRat(0, 1).String(),
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
@@ -971,7 +981,8 @@ func TestProcessDeleveraging(t *testing.T) {
 			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
+				Id:              &constants.Carl_Num0,
+				AssetYieldIndex: big.NewRat(0, 1).String(),
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
@@ -989,7 +1000,8 @@ func TestProcessDeleveraging(t *testing.T) {
 			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
+				Id:              &constants.Carl_Num0,
+				AssetYieldIndex: big.NewRat(0, 1).String(),
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
@@ -1007,7 +1019,8 @@ func TestProcessDeleveraging(t *testing.T) {
 			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
+				Id:              &constants.Carl_Num0,
+				AssetYieldIndex: big.NewRat(0, 1).String(),
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
@@ -1025,7 +1038,8 @@ func TestProcessDeleveraging(t *testing.T) {
 			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
+				Id:              &constants.Carl_Num0,
+				AssetYieldIndex: big.NewRat(0, 1).String(),
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
@@ -1043,7 +1057,8 @@ func TestProcessDeleveraging(t *testing.T) {
 			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
+				Id:              &constants.Carl_Num0,
+				AssetYieldIndex: big.NewRat(0, 1).String(),
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
@@ -1061,13 +1076,15 @@ func TestProcessDeleveraging(t *testing.T) {
 			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
+				Id:              &constants.Carl_Num0,
+				AssetYieldIndex: big.NewRat(0, 1).String(),
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
 				// TNC of liquidated subaccount is $0, which means the bankruptcy price
 				// to close 1 BTC short is $50,000 and we close both positions at this price.
 				// USDC of this suabccount is -$50,000 + $50,000 = $0.
+				AssetYieldIndex: big.NewRat(0, 1).String(),
 			},
 		},
 		"Liquidated: under-collateralized, TNC == 0, offsetting: under-collateralized, TNC < 0": {
@@ -1090,7 +1107,8 @@ func TestProcessDeleveraging(t *testing.T) {
 			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
+				Id:              &constants.Carl_Num0,
+				AssetYieldIndex: big.NewRat(0, 1).String(),
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
@@ -1108,7 +1126,8 @@ func TestProcessDeleveraging(t *testing.T) {
 			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
 
 			expectedLiquidatedSubaccount: satypes.Subaccount{
-				Id: &constants.Carl_Num0,
+				Id:              &constants.Carl_Num0,
+				AssetYieldIndex: big.NewRat(0, 1).String(),
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
 				Id: &constants.Dave_Num0,
@@ -1221,6 +1240,7 @@ func TestProcessDeleveraging(t *testing.T) {
 						Quantums:    dtypes.NewInt(-10_000_000_000), // -10 ETH
 					},
 				},
+				AssetYieldIndex: big.NewRat(0, 1).String(),
 			},
 			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
 			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
@@ -1451,7 +1471,8 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 				AssetYieldIndex: big.NewRat(0, 1).String(),
 			},
 			expectedOffsettingSubaccount: satypes.Subaccount{
-				Id: &constants.Dave_Num0,
+				Id:              &constants.Dave_Num0,
+				AssetYieldIndex: big.NewRat(0, 1).String(),
 			},
 		},
 		"Liquidated: well-collateralized, offsetting: under-collateralized, TNC < 0": {

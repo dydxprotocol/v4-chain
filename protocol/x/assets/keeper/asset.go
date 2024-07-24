@@ -24,6 +24,7 @@ func (k Keeper) CreateAsset(
 	hasMarket bool,
 	marketId uint32,
 	atomicResolution int32,
+	assetYieldIndex string,
 ) (types.Asset, error) {
 	if prevAsset, exists := k.GetAsset(ctx, assetId); exists {
 		return types.Asset{}, errorsmod.Wrapf(
@@ -74,6 +75,7 @@ func (k Keeper) CreateAsset(
 		HasMarket:        hasMarket,
 		MarketId:         marketId,
 		AtomicResolution: atomicResolution,
+		AssetYieldIndex:  assetYieldIndex,
 	}
 
 	// Validate market

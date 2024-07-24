@@ -16,6 +16,7 @@ var (
 		Denom:            UusdcDenom,
 		HasMarket:        false,
 		AtomicResolution: lib.QuoteCurrencyAtomicResolution,
+		AssetYieldIndex:  "0/1",
 	}
 )
 

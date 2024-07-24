@@ -84,7 +84,8 @@ func (k Keeper) GetSubaccount(
 	// If subaccount does not exist in state, return a default value.
 	if b == nil {
 		return types.Subaccount{
-			Id: &id,
+			Id:              &id,
+			AssetYieldIndex: "0/1",
 		}
 	}
 
@@ -656,7 +657,7 @@ func calculateAssetYieldInQuoteQuantums(
 	}
 
 	// we have a new subaccount with not set AssetYieldIndex therefore there is no yield to claim
-	if subaccount.AssetYieldIndex == "" {
+	if subaccount.AssetYieldIndex == "0/1" || subaccount.AssetYieldIndex == "" {
 		return big.NewInt(0), nil
 	}
 

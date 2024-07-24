@@ -1515,7 +1515,8 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
-					Id: &constants.Carl_Num0,
+					Id:              &constants.Carl_Num0,
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num0,
@@ -1954,7 +1955,8 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
-					Id: &constants.Carl_Num0,
+					Id:              &constants.Carl_Num0,
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num0,

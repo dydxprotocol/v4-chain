@@ -54,6 +54,7 @@ func TestSubaccountQuerySingle(t *testing.T) {
 					Owner:  "100000",
 					Number: msgs[1].Id.Number,
 				},
+				AssetYieldIndex: big.NewRat(0, 1).String(),
 			}},
 		},
 		{
@@ -67,6 +68,7 @@ func TestSubaccountQuerySingle(t *testing.T) {
 					Owner:  msgs[1].Id.Owner,
 					Number: uint32(100),
 				},
+				AssetYieldIndex: big.NewRat(0, 1).String(),
 			}},
 		},
 		{

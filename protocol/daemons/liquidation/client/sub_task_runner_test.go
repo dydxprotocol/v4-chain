@@ -2,8 +2,9 @@ package client_test
 
 import (
 	"context"
-	"cosmossdk.io/log"
 	"testing"
+
+	"cosmossdk.io/log"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
@@ -16,6 +17,7 @@ import (
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimit "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -88,6 +90,12 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+
+				// Asset yield index.
+				assetYieldIndex := &ratelimit.GetAssetYieldIndexQueryResponse{
+					AssetYieldIndex: "0/1",
+				}
+				mck.On("GetAssetYieldIndexQuery", mock.Anything, mock.Anything).Return(assetYieldIndex, nil)
 			},
 		},
 		"Can get liquidatable subaccount with long position": {
@@ -148,6 +156,12 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+
+				// Asset yield index.
+				assetYieldIndex := &ratelimit.GetAssetYieldIndexQueryResponse{
+					AssetYieldIndex: "0/1",
+				}
+				mck.On("GetAssetYieldIndexQuery", mock.Anything, mock.Anything).Return(assetYieldIndex, nil)
 			},
 		},
 		"Skip well collateralized subaccounts": {
@@ -209,6 +223,12 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+
+				// Asset yield index.
+				assetYieldIndex := &ratelimit.GetAssetYieldIndexQueryResponse{
+					AssetYieldIndex: "0/1",
+				}
+				mck.On("GetAssetYieldIndexQuery", mock.Anything, mock.Anything).Return(assetYieldIndex, nil)
 			},
 		},
 		"Skip subaccounts with no open positions": {
@@ -259,6 +279,12 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+
+				// Asset yield index.
+				assetYieldIndex := &ratelimit.GetAssetYieldIndexQueryResponse{
+					AssetYieldIndex: "0/1",
+				}
+				mck.On("GetAssetYieldIndexQuery", mock.Anything, mock.Anything).Return(assetYieldIndex, nil)
 			},
 		},
 		"Can get subaccount that become undercollateralized with funding payments (short)": {
@@ -339,6 +365,12 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+
+				// Asset yield index.
+				assetYieldIndex := &ratelimit.GetAssetYieldIndexQueryResponse{
+					AssetYieldIndex: "0/1",
+				}
+				mck.On("GetAssetYieldIndexQuery", mock.Anything, mock.Anything).Return(assetYieldIndex, nil)
 			},
 		},
 		"Can get subaccount that become liquidatable with funding payments (long)": {
@@ -419,6 +451,12 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+
+				// Asset yield index.
+				assetYieldIndex := &ratelimit.GetAssetYieldIndexQueryResponse{
+					AssetYieldIndex: "0/1",
+				}
+				mck.On("GetAssetYieldIndexQuery", mock.Anything, mock.Anything).Return(assetYieldIndex, nil)
 			},
 		},
 		"Skips subaccount that become well-collateralized with funding payments (short)": {
@@ -497,6 +535,12 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+
+				// Asset yield index.
+				assetYieldIndex := &ratelimit.GetAssetYieldIndexQueryResponse{
+					AssetYieldIndex: "0/1",
+				}
+				mck.On("GetAssetYieldIndexQuery", mock.Anything, mock.Anything).Return(assetYieldIndex, nil)
 			},
 		},
 		"Skips subaccount that become well-collateralized with funding payments (long)": {
@@ -575,6 +619,12 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+
+				// Asset yield index.
+				assetYieldIndex := &ratelimit.GetAssetYieldIndexQueryResponse{
+					AssetYieldIndex: "0/1",
+				}
+				mck.On("GetAssetYieldIndexQuery", mock.Anything, mock.Anything).Return(assetYieldIndex, nil)
 			},
 		},
 		"Can get negative tnc subaccount with short position": {
@@ -638,6 +688,12 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+
+				// Asset yield index.
+				assetYieldIndex := &ratelimit.GetAssetYieldIndexQueryResponse{
+					AssetYieldIndex: "0/1",
+				}
+				mck.On("GetAssetYieldIndexQuery", mock.Anything, mock.Anything).Return(assetYieldIndex, nil)
 			},
 		},
 		"Can get negative tnc subaccount with long position": {
@@ -701,6 +757,12 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+
+				// Asset yield index.
+				assetYieldIndex := &ratelimit.GetAssetYieldIndexQueryResponse{
+					AssetYieldIndex: "0/1",
+				}
+				mck.On("GetAssetYieldIndexQuery", mock.Anything, mock.Anything).Return(assetYieldIndex, nil)
 			},
 		},
 	}
@@ -718,6 +780,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 			c.PerpetualsQueryClient = queryClientMock
 			c.PricesQueryClient = queryClientMock
 			c.BlocktimeQueryClient = queryClientMock
+			c.RatelimitQueryClient = queryClientMock
 
 			err := s.RunLiquidationDaemonTaskLoop(
 				grpc.Ctx,

@@ -234,6 +234,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				tc.asset.HasMarket,
 				tc.asset.MarketId,
 				tc.asset.AtomicResolution,
+				tc.asset.AssetYieldIndex,
 			)
 			require.NoError(t, err)
 
@@ -502,6 +503,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 					tc.asset.HasMarket,
 					tc.asset.MarketId,
 					tc.asset.AtomicResolution,
+					tc.asset.AssetYieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -756,6 +758,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 				tc.asset.HasMarket,
 				tc.asset.MarketId,
 				tc.asset.AtomicResolution,
+				tc.asset.AssetYieldIndex,
 			)
 			require.NoError(t, err)
 
@@ -1090,6 +1093,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 					tc.asset.HasMarket,
 					tc.asset.MarketId,
 					tc.asset.AtomicResolution,
+					tc.asset.AssetYieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -1344,6 +1348,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 					tc.asset.HasMarket,
 					tc.asset.MarketId,
 					tc.asset.AtomicResolution,
+					tc.asset.AssetYieldIndex,
 				)
 				require.NoError(t, err)
 			}

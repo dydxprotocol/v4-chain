@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	"math/big"
 	"testing"
 	"time"
 
@@ -570,8 +571,10 @@ func TestConditionalOrder(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(25_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -602,6 +605,7 @@ func TestConditionalOrder(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -642,8 +646,10 @@ func TestConditionalOrder(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(-50_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -684,8 +690,10 @@ func TestConditionalOrder(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(50_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -718,6 +726,7 @@ func TestConditionalOrder(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -764,8 +773,10 @@ func TestConditionalOrder(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(25_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -798,6 +809,7 @@ func TestConditionalOrder(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -850,6 +862,7 @@ func TestConditionalOrder(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_1,
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -1848,8 +1861,10 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(25_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -1880,6 +1895,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -1920,8 +1936,10 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(-50_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -1962,8 +1980,10 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(50_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -1996,6 +2016,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -2042,8 +2063,10 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(25_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -2076,6 +2099,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
