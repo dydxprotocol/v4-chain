@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS, ZERO_TIME_ISO_8601 } from '../constants';
+import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS, ZERO_TIME_ISO_8601, LEADERBOARD_TIMESPAN } from '../constants';
 import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllInjectableVariables, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
@@ -17,6 +17,7 @@ import {
   QueryableField,
   QueryConfig,
   PaginationFromDatabase,
+  LeaderboardPnlCreateObject,
 } from '../types';
 
 export function uuid(
@@ -245,6 +246,22 @@ export async function findLatestProcessedBlocktimeAndCount(): Promise<{
   };
 }
 
+function convertTimespanToSQL(timeSpan: string): string {
+  const timeSpanEnum: LEADERBOARD_TIMESPAN = LEADERBOARD_TIMESPAN[timeSpan as keyof typeof LEADERBOARD_TIMESPAN];
+  switch (timeSpan) {
+    case 'ONE_DAY':
+      return '1 days';
+    case 'SEVEN_DAYS':
+      return '7 days';
+    case 'THIRTY_DAYS':
+      return '30 days';
+    case 'ONE_YEAR':
+      return '365 days';
+    default:
+      throw new Error(`Invalid time span: ${timeSpan}`);
+  }
+}
+
 export async function findMostRecentPnlTickForEachAccount(
   createdOnOrAfterHeight: string,
 ): Promise<{
@@ -267,4 +284,155 @@ export async function findMostRecentPnlTickForEachAccount(
     result.rows.map(convertPnlTicksFromDatabaseToPnlTicksCreateObject),
     'subaccountId',
   );
+}
+
+export async function getRankedPnlTicks(
+  timeSpan: string,
+): Promise<LeaderboardPnlCreateObject[]> {
+  if (timeSpan === 'ALL_TIME') {
+    return getLatestRankedPnlTicks();
+  }
+  return getRankedPnlTicksForTimeSpan(timeSpan);
+}
+
+async function getRankedPnlTicksForTimeSpan(
+  timeSpan: string,
+): Promise<LeaderboardPnlCreateObject[]> {
+
+  const interval_sql_string: string = convertTimespanToSQL(timeSpan);
+  const result: {
+    rows: LeaderboardPnlCreateObject[]
+  } = await knexReadReplica.getConnection().raw(
+    `
+    WITH latest_subaccount_pnl_x_days_ago_ranked AS (
+      SELECT
+          a."subaccountId",
+          a."totalPnl",
+          b."address",
+          ROW_NUMBER() OVER (PARTITION BY a."subaccountId" ORDER BY a."blockHeight" DESC) AS "rn"
+      FROM
+          pnl_ticks a
+      LEFT JOIN
+          subaccounts b ON a."subaccountId" = b."id"
+      WHERE
+          a."createdAt"::date <= (CURRENT_DATE - INTERVAL '${interval_sql_string}')
+          AND (b."subaccountNumber" % 128) = 0
+    ),
+    latest_subaccount_pnl_x_days_ago AS (
+      SELECT
+          "subaccountId",
+          "totalPnl",
+          "address"
+      FROM 
+          latest_subaccount_pnl_x_days_ago_ranked   
+      WHERE
+          "rn" = 1
+    ), latest_pnl_ranked as (
+      SELECT
+          "subaccountId",
+          "totalPnl",
+          "netTransfers",
+          "equity" as "currentEquity",
+          "address",
+          ROW_NUMBER() OVER (PARTITION BY "subaccountId" ORDER BY "blockHeight" DESC) AS "rn"
+      FROM
+          pnl_ticks a left join subaccounts b ON a."subaccountId"=b."id"
+      WHERE
+          "createdAt"::date = CURRENT_DATE
+          AND (b."subaccountNumber" % 128) = 0
+    ), latest_pnl as(
+      SELECT
+          "subaccountId",
+          "totalPnl",
+          "netTransfers",
+          "currentEquity" ,
+          "address"
+      FROM 
+          latest_pnl_ranked
+      WHERE
+          "rn" = 1
+    ), subaccount_pnl_difference as(
+      SELECT
+        a."address",
+        a."totalPnl" - COALESCE(b."totalPnl", 0) as "pnlDifference",
+        a."netTransfers" as "netTransfers",
+        a."currentEquity" as "currentEquity"
+      FROM latest_pnl a left join latest_subaccount_pnl_x_days_ago b
+      ON a."subaccountId"=b."subaccountId"
+    ), aggregated_results as(
+    SELECT
+      "address",
+      sum(subaccount_pnl_difference."pnlDifference") as "totalPnl",
+      sum(subaccount_pnl_difference."netTransfers") as "netTransfers",
+      sum(subaccount_pnl_difference."currentEquity") as "currentEquity"
+    FROM
+      subaccount_pnl_difference
+    GROUP BY address
+    )
+    SELECT
+      "address",
+      "totalPnl" as "pnl",
+      '${timeSpan}' as "timeSpan",
+      "currentEquity",
+      ROW_NUMBER() over (order by aggregated_results."totalPnl" desc) as rank
+    FROM
+      aggregated_results;
+    `,
+  ) as { rows: LeaderboardPnlCreateObject[] };
+
+  return result.rows;
+}
+
+
+async function getLatestRankedPnlTicks(): Promise<LeaderboardPnlCreateObject[]> {
+  const result: {
+    rows: LeaderboardPnlCreateObject[]
+  } = await knexReadReplica.getConnection().raw(
+    `
+    WITH latest_pnl_ranked as (
+      SELECT
+          "subaccountId",
+          "totalPnl",
+          "netTransfers",
+          "equity" as "currentEquity",
+          "address",
+          ROW_NUMBER() OVER (PARTITION BY "subaccountId" ORDER BY "blockHeight" DESC) AS "rn"
+      FROM
+          pnl_ticks a left join subaccounts b ON a."subaccountId"=b."id"
+      WHERE
+          "createdAt"::date = CURRENT_DATE
+          AND (b."subaccountNumber" % 128) = 0
+    ), latest_pnl as(
+      SELECT
+          "subaccountId",
+          "totalPnl",
+          "netTransfers",
+          "currentEquity" ,
+          "address"
+      FROM 
+          latest_pnl_ranked
+      WHERE
+          "rn" = 1
+    ), aggregated_results as(
+    SELECT
+      "address",
+      sum(latest_pnl."totalPnl") as "totalPnl",
+      sum(latest_pnl."netTransfers") as "netTransfers",
+      sum(latest_pnl."currentEquity") as "currentEquity"
+    FROM
+      latest_pnl
+    GROUP BY address
+    )
+    SELECT
+      "address",
+      "totalPnl" as "pnl",
+      'ALL_TIME' as "timeSpan",
+      "currentEquity",
+      ROW_NUMBER() over (order by aggregated_results."totalPnl" desc) as rank
+    FROM
+      aggregated_results;
+    `,
+  ) as { rows: LeaderboardPnlCreateObject[] };
+
+  return result.rows;
 }

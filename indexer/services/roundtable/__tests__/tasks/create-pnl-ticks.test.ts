@@ -8,6 +8,8 @@ import {
   testMocks,
   TransferTable,
   FundingIndexUpdatesTable,
+  LeaderboardPnlTable,
+  LeaderboardPnlFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 
 import createPnlTicksTask from '../../src/tasks/create-pnl-ticks';
@@ -91,6 +93,29 @@ describe('create-pnl-ticks', () => {
     await dbHelpers.clearData();
     await redis.deleteAllAsync(redisClient);
     jest.resetAllMocks();
+  });
+
+  it('Succeeds in populating the leaderboard with ranked pnl ticks', async () => {
+    await Promise.all([
+      PerpetualPositionTable.create(testConstants.defaultPerpetualPosition),
+      PerpetualPositionTable.create({
+        ...testConstants.defaultPerpetualPosition,
+        perpetualId: testConstants.defaultPerpetualMarket2.id,
+        openEventId: testConstants.defaultTendermintEventId2,
+      }),
+    ]);
+    await createPnlTicksTask();
+    const { results: pnlTicks } = await PnlTicksTable.findAll(
+      {},
+      [],
+      {},
+    );
+    expect(pnlTicks.length).toEqual(2);
+    const leaderboardResults: LeaderboardPnlFromDatabase[] = await LeaderboardPnlTable.findAll(
+      {},
+      [],
+    );
+    expect(leaderboardResults.length).toEqual(5);
   });
 
   it('succeeds with no prior pnl ticks and no open perpetual positions', async () => {

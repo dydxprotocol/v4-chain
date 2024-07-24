@@ -91,6 +91,13 @@ export const defaultSubaccount3: SubaccountCreateObject = {
   updatedAtHeight: createdHeight,
 };
 
+export const defaultSubaccountWithAlternateAddress: SubaccountCreateObject = {
+  address: defaultAddress2,
+  subaccountNumber: 0,
+  updatedAt: createdDateTime.toISO(),
+  updatedAtHeight: createdHeight,
+}
+
 export const isolatedSubaccount: SubaccountCreateObject = {
   address: defaultAddress,
   subaccountNumber: 128,
@@ -118,6 +125,10 @@ export const defaultSubaccountId2: string = SubaccountTable.uuid(
 export const defaultSubaccountId3: string = SubaccountTable.uuid(
   defaultAddress,
   defaultSubaccount3.subaccountNumber,
+);
+export const defaultSubaccountIdWithAlternateAddress: string = SubaccountTable.uuid(
+  defaultAddress2,
+  defaultSubaccountWithAlternateAddress.subaccountNumber,
 );
 export const isolatedSubaccountId: string = SubaccountTable.uuid(
   defaultAddress,
