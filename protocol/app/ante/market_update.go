@@ -163,7 +163,7 @@ func (d ValidateMarketUpdateDecorator) doMarketsUpdateEnabledValues(ctx sdk.Cont
 			// if market exists, it should not change the enabled value
 			if mmMarket.Ticker.Enabled != market.Ticker.Enabled {
 				return fmt.Errorf(
-					"market should not change enabled value from %t to %t", 
+					"market should not change enabled value from %t to %t",
 					mmMarket.Ticker.Enabled, market.Ticker.Enabled,
 				)
 			}

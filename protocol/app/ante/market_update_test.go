@@ -460,6 +460,22 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "reject a single update-markets message with a new market that's enabled",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpdateMarkets{
+						Authority: constants.BobAccAddress.String(),
+						UpdateMarkets: []mmtypes.Market{
+							testMarketWithEnabled,
+						},
+					},
+				},
+				simulate:         false,
+				marketMapMarkets: []mmtypes.Market{testMarket}, // existing mm market is disabled
+			},
+			wantErr: true,
+		},
+		{
 			name: "reject a single message with a new market that's enabled - simulate",
 			args: args{
 				msgs: []sdk.Msg{
@@ -470,12 +486,76 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 						},
 					},
 				},
-				simulate: true,
+				simulate:         true,
+				marketMapMarkets: []mmtypes.Market{testMarket}, // existing mm market is disabled
+			},
+			wantErr: true,
+		},
+		{
+			name: "reject a single message with a new market that's enabled, but doesn't exist in x/marketmap",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpsertMarkets{
+						Authority: constants.BobAccAddress.String(),
+						Markets: []mmtypes.Market{
+							testMarketWithEnabled,
+						},
+					},
+				},
+				simulate: false,
+			},
+			wantErr: true,
+		},
+		{
+			name: "reject a single update-markets message with a new market that's enabled, but doesn't exist in x/marketmap",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpdateMarkets{
+						Authority: constants.BobAccAddress.String(),
+						UpdateMarkets: []mmtypes.Market{
+							testMarketWithEnabled,
+						},
+					},
+				},
+				simulate: false,
+			},
+			wantErr: true,
+		},
+		{
+			name: "reject a single message with a new market that's enabled, but doesn't exist in x/marketmap - simulate",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpsertMarkets{
+						Authority: constants.BobAccAddress.String(),
+						Markets: []mmtypes.Market{
+							testMarketWithEnabled,
+						},
+					},
+				},
+				simulate:         true,
+				marketMapMarkets: []mmtypes.Market{testMarket}, // existing mm market is disabled
 			},
 			wantErr: true,
 		},
 		{
 			name: "reject single message disabling a market",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpsertMarkets{
+						Authority: constants.BobAccAddress.String(),
+						Markets: []mmtypes.Market{
+							testMarket,
+						},
+					},
+				},
+				simulate:         false,
+				marketMapMarkets: []mmtypes.Market{testMarketWithEnabled},
+				marketParams:     []prices_types.MarketParam{testMarketParams},
+			},
+			wantErr: true,
+		},
+		{
+			name: "reject single update markets message disabling a market",
 			args: args{
 				msgs: []sdk.Msg{
 					&mmtypes.MsgUpsertMarkets{
@@ -514,6 +594,11 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 
+			// setup initial market-map markets
+			for _, market := range tt.args.marketMapMarkets {
+				require.NoError(t, tApp.App.MarketMapKeeper.CreateMarket(ctx, market))
+			}
+
 			for _, mp := range tt.args.marketParams {
 				marketID := rand.Uint32()
 				mp.Id = marketID
@@ -523,11 +608,6 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 					Price:    10,
 				})
 				require.NoError(t, err)
-			}
-
-			// setup initial market-map markets
-			for _, market := range tt.args.marketMapMarkets {
-				require.NoError(t, tApp.App.MarketMapKeeper.CreateMarket(ctx, market))
 			}
 
 			// setup initial perps based on test
