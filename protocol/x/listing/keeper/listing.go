@@ -1,14 +1,16 @@
 package keeper
 
 import (
+	"math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
+	"github.com/skip-mev/slinky/x/marketmap/types/tickermetadata"
 )
 
 // Function to set hard cap on listed markets in module store
@@ -94,7 +96,7 @@ func (k Keeper) CreateClobPair(
 
 // Function to wrap the creation of a new perpetual
 // Note: This will only list long-tail/isolated markets
-// TODO: Complete implementation and add tests pending marketmap decoding functions and testutils
+// TODO: Add tests pending marketmap testutils
 func (k Keeper) CreatePerpetual(
 	ctx sdk.Context,
 	marketId uint32,
@@ -102,13 +104,25 @@ func (k Keeper) CreatePerpetual(
 ) (perpetualId uint32, err error) {
 	perpetualId = k.PerpetualsKeeper.AcquireNextPerpetualID(ctx)
 
-	// TODO: Calculate atomic resolution from market map reference price
-	// TODO: get reference price once market map decoding functions are available
-	var atomicResolution int32
-	//marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, ticker)
-	//if err != nil {
-	//	return 0, err
-	//}
+	// Get reference price from market map
+	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, ticker)
+	if err != nil {
+		return 0, err
+	}
+	metadata, err := tickermetadata.DyDxFromJSONString(marketMapDetails.Ticker.Metadata_JSON)
+	if err != nil {
+		return 0, err
+	}
+	if metadata.ReferencePrice == 0 {
+		return 0, types.ErrReferencePriceZero
+	}
+
+	// calculate atomic resolution from reference price
+	p := math.Floor(math.Log10(float64(metadata.ReferencePrice)))
+	if p > math.MaxInt32-6 || p < math.MinInt32+6 {
+		return 0, types.ErrReferencePriceOutOfRange
+	}
+	atomicResolution := -6 - int32(p)
 
 	// Create a new perpetual
 	perpetual, err := k.PerpetualsKeeper.CreatePerpetual(
