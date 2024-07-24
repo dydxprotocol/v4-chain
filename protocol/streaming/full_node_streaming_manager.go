@@ -334,7 +334,9 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdates(
 	// Group fills by clob pair id.
 	updatesByClobPairId := make(map[uint32][]clobtypes.StreamUpdate)
 	for _, orderbookFill := range orderbookFills {
-		// Fetch the clob pair id from the first order in `OrderBookMatchFill`.
+		// If this is a deleveraging fill, fetch the clob pair id from the deleveraged
+		// perpetual id.
+		// Otherwise, fetch the clob pair id from the first order in `OrderBookMatchFill`.
 		// We can assume there must be an order, and that all orders share the same
 		// clob pair id.
 		clobPairId := uint32(0)
