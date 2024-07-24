@@ -9,7 +9,6 @@ import {
   FundingIndexUpdatesTable,
   BlockTable,
   liquidityTierRefresher,
-  SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
 import { RequestMethod } from '../../../../src/types';
 import request from 'supertest';

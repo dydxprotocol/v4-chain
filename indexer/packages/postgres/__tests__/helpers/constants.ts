@@ -46,7 +46,6 @@ import {
   TransactionCreateObject,
   TransferCreateObject,
 } from '../../src/types';
-import { denomToHumanReadableConversion } from './conversion-helpers';
 
 export const createdDateTime: DateTime = DateTime.utc();
 export const createdHeight: string = '2';
