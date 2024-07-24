@@ -338,9 +338,8 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdates(
 		// We can assume there must be an order, and that all orders share the same
 		// clob pair id.
 		clobPairId := uint32(0)
-		if orderbookFill.GetClobMatch().GetMatchPerpetualDeleveraging() != nil {
-			perpetualId := orderbookFill.GetClobMatch().GetMatchPerpetualDeleveraging().PerpetualId
-			clobPairId = uint32(perpetualIdToClobPairId[perpetualId][0])
+		if match := orderbookFill.GetClobMatch().GetMatchPerpetualDeleveraging(); match != nil {
+			clobPairId = uint32(perpetualIdToClobPairId[match.PerpetualId][0])
 		} else {
 			clobPairId = orderbookFill.Orders[0].OrderId.ClobPairId
 		}
