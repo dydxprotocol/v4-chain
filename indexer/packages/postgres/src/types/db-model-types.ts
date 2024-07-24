@@ -198,8 +198,8 @@ export interface CandleFromDatabase extends IdBasedModelFromDatabase {
   usdVolume: string;
   trades: number;
   startingOpenInterest: string;
-  orderbookMidPriceOpen: string | undefined | null;
-  orderbookMidPriceClose: string | undefined | null;
+  orderbookMidPriceOpen?: string | null;
+  orderbookMidPriceClose?: string | null;
 }
 
 export interface PnlTicksFromDatabase extends IdBasedModelFromDatabase {

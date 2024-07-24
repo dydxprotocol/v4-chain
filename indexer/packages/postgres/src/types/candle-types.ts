@@ -26,8 +26,8 @@ export interface CandleUpdateObject {
   usdVolume?: string;
   trades?: number;
   startingOpenInterest?: string;
-  orderbookMidPriceOpen: string | undefined;
-  orderbookMidPriceClose: string | undefined;
+  orderbookMidPriceOpen?: string;
+  orderbookMidPriceClose?: string;
 }
 
 export enum CandleResolution {
