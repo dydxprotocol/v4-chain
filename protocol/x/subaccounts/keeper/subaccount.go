@@ -35,10 +35,6 @@ func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
 	key := subaccount.Id.ToStateKey()
 
-	if subaccount.AssetYieldIndex == "" {
-		subaccount.AssetYieldIndex = new(big.Rat).SetInt64(0).String()
-	}
-
 	if len(subaccount.PerpetualPositions) == 0 && len(subaccount.AssetPositions) == 0 {
 		if store.Has(key) {
 			store.Delete(key)
@@ -354,6 +350,15 @@ func (k Keeper) UpdateSubaccounts(
 	// Apply all updates, including a subaccount update event in the Indexer block message
 	// per update and emit a cometbft event for each settled funding payment.
 	for _, u := range settledUpdates {
+		// TODO this should never hit but we add as a sanity check and to help catch a potential bug in testing
+		if u.SettledSubaccount.AssetYieldIndex == "" {
+			return false, nil, errors.New("asset yield index is not set")
+		}
+		for _, perp := range u.SettledSubaccount.PerpetualPositions {
+			if perp.YieldIndex == "" {
+				return false, nil, errors.New("perp yield index is not set")
+			}
+		}
 		k.SetSubaccount(ctx, u.SettledSubaccount)
 		// Below access is safe because for all updated subaccounts' IDs, this map
 		// is populated as getSettledSubaccount() is called in getSettledUpdates().
@@ -650,6 +655,7 @@ func calculateAssetYieldInQuoteQuantums(
 		return big.NewInt(0), nil
 	}
 
+	// we have a new subaccount with not set AssetYieldIndex therefore there is no yield to claim
 	if subaccount.AssetYieldIndex == "" {
 		return big.NewInt(0), nil
 	}
@@ -694,10 +700,9 @@ func calculatePerpetualYieldInQuoteQuantums(
 		return big.NewInt(0), nil
 	}
 
-	// TODO [YBCP-20]: Ensure cleaner initialization
-	// if the yield index hasn't been initialized, treat it as 0
+	// we have a new perp with not set YieldIndex therefore there is no yield to claim
 	if perpPosition.YieldIndex == "" {
-		perpPosition.YieldIndex = new(big.Rat).SetInt64(0).String()
+		return big.NewInt(0), nil
 	}
 
 	currentYieldIndex, success := new(big.Rat).SetString(perpPosition.YieldIndex)
