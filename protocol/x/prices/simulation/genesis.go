@@ -3,13 +3,21 @@ package simulation
 // DONTCOVER
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sim_helpers"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/skip-mev/slinky/oracle/config"
+	"github.com/skip-mev/slinky/providers/apis/dydx"
+	dydxtypes "github.com/skip-mev/slinky/providers/apis/dydx/types"
+	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
+	"go.uber.org/zap"
 )
 
 // genNumMarkets returns randomized num markets.
@@ -80,6 +88,17 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 		marketExponent := genMarketExponent(r, isReasonableGenesis)
 
+		exchangeJsonTemplate := `{"exchanges":[
+			{"exchangeName":"Binance","ticker":"\"%[1]s\""},
+			{"exchangeName":"Bitfinex","ticker":"%[1]s"},
+			{"exchangeName":"CoinbasePro","ticker":"%[1]s"},
+			{"exchangeName":"Gate","ticker":"%[1]s"},
+			{"exchangeName":"Huobi","ticker":"%[1]s"},
+			{"exchangeName":"Kraken","ticker":"%[1]s"},
+			{"exchangeName":"Okx","ticker":"%[1]s"}
+		]}`
+		exchangeJson := fmt.Sprintf(exchangeJsonTemplate, marketName)
+
 		marketParams[i] = types.MarketParam{
 			Id:                uint32(i),
 			Pair:              marketName,
@@ -87,7 +106,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			MinExchanges:      uint32(minExchanges),
 			MinPriceChangePpm: uint32(simtypes.RandIntBetween(r, 1, int(lib.MaxPriceChangePpm))),
 			// The simulation tests don't run the daemon currently so we pass in empty exchange config.
-			ExchangeConfigJson: "{}",
+			ExchangeConfigJson: exchangeJson,
 		}
 		marketPrices[i] = types.MarketPrice{
 			Id:       uint32(i),
@@ -96,10 +115,59 @@ func RandomizedGenState(simState *module.SimulationState) {
 		}
 	}
 
+	var GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	marketMap := ConstructMarketMapFromParams(marketParams)
+	marketmapGenesis := marketmaptypes.GenesisState{
+		MarketMap: marketMap,
+		Params: marketmaptypes.Params{
+			MarketAuthorities: []string{GovAuthority},
+			Admin:             GovAuthority,
+		},
+	}
 	pricesGenesis := types.GenesisState{
 		MarketParams: marketParams,
 		MarketPrices: marketPrices,
 	}
 
+	simState.GenState[marketmaptypes.ModuleName] = simState.Cdc.MustMarshalJSON(&marketmapGenesis)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&pricesGenesis)
+}
+
+func ConstructMarketMapFromParams(
+	allMarketParams []types.MarketParam,
+) marketmaptypes.MarketMap {
+	// fill out config with dummy variables to pass validation.  This handler is only used to run the
+	// ConvertMarketParamsToMarketMap member function.
+	h, err := dydx.NewAPIHandler(zap.NewNop(), config.APIConfig{
+		Enabled:          true,
+		Timeout:          1,
+		Interval:         1,
+		ReconnectTimeout: 1,
+		MaxQueries:       1,
+		Atomic:           false,
+		Endpoints:        []config.Endpoint{{URL: "upgrade"}},
+		BatchSize:        0,
+		Name:             dydx.Name,
+	})
+	if err != nil {
+		panic(err) // panic to halt/fail simulation.
+	}
+
+	var mpr dydxtypes.QueryAllMarketParamsResponse
+	for _, mp := range allMarketParams {
+		mpr.MarketParams = append(mpr.MarketParams, dydxtypes.MarketParam{
+			Id:                 mp.Id,
+			Pair:               mp.Pair,
+			Exponent:           mp.Exponent,
+			MinExchanges:       mp.MinExchanges,
+			MinPriceChangePpm:  mp.MinPriceChangePpm,
+			ExchangeConfigJson: mp.ExchangeConfigJson,
+		})
+	}
+	mm, err := h.ConvertMarketParamsToMarketMap(mpr)
+	if err != nil {
+		panic(err) // panic to halt/fail simulation.
+	}
+
+	return mm.MarketMap
 }
