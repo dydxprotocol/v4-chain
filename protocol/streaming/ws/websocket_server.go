@@ -81,8 +81,8 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		ws.logger.Error(
-			"Error subscribing to stream",
-			"error", err,
+			"Ending handler for websocket connection",
+			"err", err,
 		)
 		return
 	}

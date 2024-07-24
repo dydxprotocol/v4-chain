@@ -71,7 +71,7 @@ const (
 	DefaultGrpcStreamingMaxBatchSize         = 2000
 	DefaultGrpcStreamingMaxChannelBufferSize = 2000
 	DefaultWebsocketStreamingEnabled         = false
-	DefaultWebsocketStreamingPort            = 4321
+	DefaultWebsocketStreamingPort            = 9091
 
 	DefaultVEOracleEnabled            = true
 	DefaultOptimisticExecutionEnabled = false

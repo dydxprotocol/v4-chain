@@ -33,8 +33,8 @@ services:
     ports:
       - "26657:26657"
       - "9090:9090"
+      - "9091:9091"
       - "1317:1317"
-      - "4322:4322"
 
   dydxprotocold1:
     image: local:dydxprotocol

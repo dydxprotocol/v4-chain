@@ -226,12 +226,9 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 		expectedGrpcStreamingFlushMs              uint32
 		expectedGrpcStreamingBatchSize            uint32
 		expectedGrpcStreamingMaxChannelBufferSize uint32
-<<<<<<< HEAD
-		expectedOptimisticExecutionEnabled        bool
-=======
 		expectedWebsocketEnabled                  bool
 		expectedWebsocketPort                     uint16
->>>>>>> ec319ab56 (appflags, graceful shutdown)
+		expectedOptimisticExecutionEnabled        bool
 	}{
 		"Sets to default if unset": {
 			expectedNonValidatingFullNodeFlag:         false,
@@ -241,16 +238,11 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcEnable:                        true,
 			expectedGrpcStreamingEnable:               false,
 			expectedGrpcStreamingFlushMs:              50,
-<<<<<<< HEAD
-			expectedGrpcStreamingBatchSize:            10000,
-			expectedGrpcStreamingMaxChannelBufferSize: 10000,
-			expectedOptimisticExecutionEnabled:        false,
-=======
 			expectedGrpcStreamingBatchSize:            2000,
 			expectedGrpcStreamingMaxChannelBufferSize: 2000,
 			expectedWebsocketEnabled:                  false,
-			expectedWebsocketPort:                     4321,
->>>>>>> ec319ab56 (appflags, graceful shutdown)
+			expectedWebsocketPort:                     9091,
+			expectedOptimisticExecutionEnabled:        false,
 		},
 		"Sets values from options": {
 			optsMap: map[string]any{
@@ -258,33 +250,27 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 				flags.DdAgentHost:                       "agentHostTest",
 				flags.DdTraceAgentPort:                  uint16(777),
 				flags.GrpcEnable:                        false,
-				flags.GrpcAddress:                       "localhost:9091",
+				flags.GrpcAddress:                       "localhost:1234",
 				flags.GrpcStreamingEnabled:              "true",
 				flags.GrpcStreamingFlushIntervalMs:      uint32(408),
 				flags.GrpcStreamingMaxBatchSize:         uint32(650),
 				flags.GrpcStreamingMaxChannelBufferSize: uint32(972),
-<<<<<<< HEAD
-				flags.OptimisticExecutionEnabled:        "true",
-=======
 				flags.WebsocketStreamingEnabled:         "true",
 				flags.WebsocketStreamingPort:            8989,
->>>>>>> ec319ab56 (appflags, graceful shutdown)
+				flags.OptimisticExecutionEnabled:        "true",
 			},
 			expectedNonValidatingFullNodeFlag:         true,
 			expectedDdAgentHost:                       "agentHostTest",
 			expectedDdTraceAgentPort:                  777,
 			expectedGrpcEnable:                        false,
-			expectedGrpcAddress:                       "localhost:9091",
+			expectedGrpcAddress:                       "localhost:1234",
 			expectedGrpcStreamingEnable:               true,
 			expectedGrpcStreamingFlushMs:              408,
 			expectedGrpcStreamingBatchSize:            650,
 			expectedGrpcStreamingMaxChannelBufferSize: 972,
-<<<<<<< HEAD
-			expectedOptimisticExecutionEnabled:        true,
-=======
 			expectedWebsocketEnabled:                  true,
 			expectedWebsocketPort:                     8989,
->>>>>>> ec319ab56 (appflags, graceful shutdown)
+			expectedOptimisticExecutionEnabled:        true,
 		},
 	}
 
