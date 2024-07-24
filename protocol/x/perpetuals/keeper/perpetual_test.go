@@ -23,7 +23,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+
 
 	"cosmossdk.io/store/prefix"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
@@ -3451,15 +3451,16 @@ func TestIsIsolatedPerpetual(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(
 			name, func(t *testing.T) {
-				ctx, _, pricesKeeper, perpetualsKeeper, _, _, _, _, _ := testutil.SubaccountsKeepers(
+				ctx, _, pricesKeeper, perpetualsKeeper, _, _, _, _, _ := keepertest.SubaccountsKeepers(
 					t,
 					false,
 				)
 				ctx = ctx.WithTxBytes(constants.TestTxBytes)
-				testutil.CreateTestMarkets(t, ctx, pricesKeeper)
-				testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+				keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+				keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
-				perpetualsKeeper.ValidateAndSetPerpetual(ctx, tc.perp)
+				err := perpetualsKeeper.ValidateAndSetPerpetual(ctx, tc.perp)
+				require.NoError(t,err)
 				isIsolated, err := perpetualsKeeper.IsIsolatedPerpetual(ctx, tc.perp.Params.Id)
 				require.NoError(t, err)
 				require.Equal(t, tc.expected, isIsolated)

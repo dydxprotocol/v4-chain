@@ -2897,10 +2897,11 @@ func TestUpdateSubaccounts(t *testing.T) {
 			}
 
 			for i, p := range tc.perpetuals {
-				perpetualsKeeper.ValidateAndSetPerpetual(
+				err := perpetualsKeeper.ValidateAndSetPerpetual(
 					ctx,
 					p,
 				)
+				require.NoError(t, err)
 
 				// Update FundingIndex for testing settlements.
 				if i < len(tc.newFundingIndices) {

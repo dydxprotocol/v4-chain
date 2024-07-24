@@ -146,7 +146,6 @@ func (k Keeper) GetCollateralPoolFromPerpetualId(ctx sdk.Context, perpetualId ui
 	}
 
 	return authtypes.NewModuleAddress(types.ModuleName), nil
-
 }
 
 // ForEachSubaccount performs a callback across all subaccounts.

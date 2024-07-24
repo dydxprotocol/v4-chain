@@ -154,7 +154,6 @@ func (k Keeper) AddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, p
 // Note: An order is only deemed prunable if the `prunableBlockHeight` on the `OrderFillState` is less than or equal
 // to the provided `blockHeight` passed this method. Returns a slice of unique `OrderIds` which were pruned from state.
 func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (prunedOrderIds []types.OrderId) {
-
 	potentiallyPrunableOrdersStore := k.GetPruneableOrdersStore(ctx, blockHeight)
 	it := potentiallyPrunableOrdersStore.Iterator(nil, nil)
 	defer it.Close()

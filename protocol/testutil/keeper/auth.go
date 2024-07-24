@@ -35,9 +35,9 @@ func createAccountKeeper(
 
 	// Create default module account permissions for test.
 	maccPerms := map[string][]string{
-		minttypes.ModuleName:        {types.Minter},
-		types.FeeCollectorName:      nil,
-		satypes.ModuleName:          nil,
+		minttypes.ModuleName:              {types.Minter},
+		types.FeeCollectorName:            nil,
+		satypes.ModuleName:                nil,
 		perpetualstypes.InsuranceFundName: nil,
 	}
 

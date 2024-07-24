@@ -1200,7 +1200,6 @@ func (k Keeper) ModifyOpenInterest(
 ) (
 	err error,
 ) {
-
 	// No-op if delta is zero.
 	if openInterestDeltaBaseQuantums.Sign() == 0 {
 		return nil
