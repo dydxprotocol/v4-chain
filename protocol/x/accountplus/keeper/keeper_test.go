@@ -37,17 +37,28 @@ func TestInitializeAccount(t *testing.T) {
 	t.Run("Cannot initialize existing account", func(t *testing.T) {
 		ctx, k, _, _ := keepertest.TimestampNonceKeepers(t)
 		accountplus.InitGenesis(ctx, *k, *genesisState)
-		err := k.InitializeAccount(ctx, constants.AliceAccAddress)
+		err := k.InitializeAccountWithTimestampNonceDetails(
+			ctx,
+			constants.AliceAccAddress,
+			keeper.TimestampNonceSequenceCutoff+100)
 		require.NotNil(t, err, "Account should not be able to be initialized if already exists")
 	})
 
 	t.Run("Can initialize new account", func(t *testing.T) {
+		address := constants.CarlAccAddress
+		tsNonce := keeper.TimestampNonceSequenceCutoff + 100
 		ctx, k, _, _ := keepertest.TimestampNonceKeepers(t)
 		accountplus.InitGenesis(ctx, *k, *genesisState)
 
-		expectedAccount := keeper.DefaultAccountState(constants.CarlAccAddress)
+		expectedAccount := types.AccountState{
+			Address: address.String(),
+			TimestampNonceDetails: types.TimestampNonceDetails{
+				MaxEjectedNonce: keeper.TimestampNonceSequenceCutoff,
+				TimestampNonces: []uint64{tsNonce},
+			},
+		}
 
-		err := k.InitializeAccount(ctx, constants.CarlAccAddress)
+		err := k.InitializeAccountWithTimestampNonceDetails(ctx, address, tsNonce)
 		require.Nil(t, err, "Should be able to initialize account if it did not exist")
 
 		actualAccount, found := k.GetAccountState(ctx, constants.CarlAccAddress)

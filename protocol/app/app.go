@@ -1172,7 +1172,7 @@ func New(
 
 	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
 		appCodec,
-		keys[govplusmoduletypes.StoreKey],
+		keys[accountplusmoduletypes.StoreKey],
 	)
 	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
 
@@ -1903,11 +1903,12 @@ func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 				FeegrantKeeper:  app.FeeGrantKeeper,
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
-			ClobKeeper:       app.ClobKeeper,
-			Codec:            app.appCodec,
-			AuthStoreKey:     app.keys[authtypes.StoreKey],
-			PerpetualsKeeper: app.PerpetualsKeeper,
-			PricesKeeper:     app.PricesKeeper,
+			AccountplusKeeper: &app.AccountPlusKeeper,
+			ClobKeeper:        app.ClobKeeper,
+			Codec:             app.appCodec,
+			AuthStoreKey:      app.keys[authtypes.StoreKey],
+			PerpetualsKeeper:  app.PerpetualsKeeper,
+			PricesKeeper:      app.PricesKeeper,
 		},
 	)
 	if err != nil {
