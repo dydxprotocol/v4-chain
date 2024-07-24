@@ -633,6 +633,10 @@ func calculateAssetYieldInQuoteQuantums(
 		return nil, errors.New("could not convert the subaccount yield index to big.Rat")
 	}
 
+	if generalYieldIndex.Cmp(currentYieldIndex) < 0 {
+		return nil, errors.New("general yield index is less than the current yield index")
+	}
+
 	yieldIndexDifference := new(big.Rat).Sub(generalYieldIndex, currentYieldIndex)
 	assetAmount := new(big.Rat).SetInt(subaccount.AssetPositions[0].GetBigQuantums())
 	newYieldRat := new(big.Rat).Mul(assetAmount, yieldIndexDifference)
@@ -665,6 +669,10 @@ func calculatePerpetualYieldInQuoteQuantums(
 	currentYieldIndex, success := new(big.Rat).SetString(perpPosition.YieldIndex)
 	if !success {
 		return nil, errors.New("could not convert yield index of perp position to big.Rat")
+	}
+
+	if generalYieldIndex.Cmp(currentYieldIndex) < 0 {
+		return nil, errors.New("general yield index is less than the current yield index")
 	}
 
 	yieldIndexDifference := new(big.Rat).Sub(generalYieldIndex, currentYieldIndex)

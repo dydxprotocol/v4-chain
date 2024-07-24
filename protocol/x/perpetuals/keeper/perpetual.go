@@ -652,7 +652,6 @@ func (k Keeper) UpdateYieldIndexToNewMint(
 
 	for _, perp := range allPerps {
 
-		// TODO: This makes price fetching in CrateNewDaiYieldEpochParams obsolete
 		marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.Params.MarketId)
 		if err != nil {
 			panic(err)
