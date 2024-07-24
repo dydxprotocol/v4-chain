@@ -234,6 +234,7 @@ import (
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
 	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/ws"
+	websocketstreaming "github.com/dydxprotocol/v4-chain/protocol/streaming/ws"
 )
 
 var (
@@ -345,7 +346,9 @@ type App struct {
 
 	IndexerEventManager      indexer_manager.IndexerEventManager
 	FullNodeStreamingManager streamingtypes.FullNodeStreamingManager
-	Server                   *daemonserver.Server
+	WebsocketStreamingServer *websocketstreaming.WebsocketServer
+
+	Server *daemonserver.Server
 
 	// startDaemons encapsulates the logic that starts all daemons and daemon services. This function contains a
 	// closure of all relevant data structures that are shared with various keepers. Daemon services startup is
@@ -492,6 +495,9 @@ func New(
 			}
 			if app.FullNodeStreamingManager != nil {
 				app.FullNodeStreamingManager.Stop()
+			}
+			if app.WebsocketStreamingServer != nil {
+				app.WebsocketStreamingServer.Shutdown()
 			}
 			return nil
 		},
@@ -753,7 +759,7 @@ func New(
 		indexerFlags.SendOffchainData,
 	)
 
-	app.FullNodeStreamingManager = getFullNodeStreamingManagerFromOptions(
+	app.FullNodeStreamingManager, app.WebsocketStreamingServer = getFullNodeStreamingManagerFromOptions(
 		appFlags,
 		appCodec,
 		logger,
@@ -2022,7 +2028,7 @@ func getFullNodeStreamingManagerFromOptions(
 	appFlags flags.Flags,
 	cdc codec.Codec,
 	logger log.Logger,
-) (manager streamingtypes.FullNodeStreamingManager) {
+) (manager streamingtypes.FullNodeStreamingManager, wsServer *websocketstreaming.WebsocketServer) {
 	if appFlags.GrpcStreamingEnabled {
 		logger.Info("Full node streaming is enabled")
 		manager := streaming.NewFullNodeStreamingManager(
@@ -2036,17 +2042,16 @@ func getFullNodeStreamingManagerFromOptions(
 		if appFlags.WebsocketStreamingEnabled {
 			port := appFlags.WebsocketStreamingPort
 			logger.Info("Websocket full node streaming is enabled")
-			wsServer := ws.NewWebsocketServer(
+			wsServer = ws.NewWebsocketServer(
 				manager,
 				cdc,
 				logger,
 				port,
 			)
-			manager.SetWebsocketServer(wsServer)
 			wsServer.Start()
 		}
 
-		return manager
+		return manager, wsServer
 	}
-	return streaming.NewNoopGrpcStreamingManager()
+	return streaming.NewNoopGrpcStreamingManager(), wsServer
 }
