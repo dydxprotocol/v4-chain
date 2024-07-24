@@ -227,6 +227,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 		simulate         bool
 		marketPerps      []marketPerpPair
 		marketMapMarkets []mmtypes.Market
+		marketParams    []prices_types.MarketParam
 	}
 	tests := []struct {
 		name    string
@@ -454,7 +455,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 					},
 				},
 				simulate:         false,
-				marketMapMarkets: []mmtypes.Market{testMarket},
+				marketMapMarkets: []mmtypes.Market{testMarket}, // existing mm market is disabled
 			},
 			wantErr: true,
 		},
@@ -470,7 +471,6 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 					},
 				},
 				simulate:         true,
-				marketMapMarkets: []mmtypes.Market{testMarket},
 			},
 			wantErr: true,
 		},
@@ -481,12 +481,13 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 					&mmtypes.MsgUpsertMarkets{
 						Authority: constants.BobAccAddress.String(),
 						Markets: []mmtypes.Market{
-							testMarketWithEnabled,
+							testMarket,
 						},
 					},
 				},
 				simulate:         false,
-				marketMapMarkets: []mmtypes.Market{testMarket},
+				marketMapMarkets: []mmtypes.Market{testMarketWithEnabled},
+				marketParams:    []prices_types.MarketParam{testMarketParams},
 			},
 			wantErr: true,
 		},
@@ -497,12 +498,13 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 					&mmtypes.MsgUpsertMarkets{
 						Authority: constants.BobAccAddress.String(),
 						Markets: []mmtypes.Market{
-							testMarketWithEnabled,
+							testMarket,
 						},
 					},
 				},
 				simulate:         true,
-				marketMapMarkets: []mmtypes.Market{testMarket},
+				marketMapMarkets: []mmtypes.Market{testMarketWithEnabled},
+				marketParams:    []prices_types.MarketParam{testMarketParams},		
 			},
 			wantErr: true,
 		},
@@ -511,6 +513,17 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
+
+			for _, mp := range tt.args.marketParams {
+				marketID := rand.Uint32()
+				mp.Id = marketID
+				_, err := tApp.App.PricesKeeper.CreateMarket(ctx, mp, prices_types.MarketPrice{
+					Id:       marketID,
+					Exponent: -8,
+					Price:    10,
+				})
+				require.NoError(t, err)
+			}
 
 			// setup initial market-map markets
 			for _, market := range tt.args.marketMapMarkets {
