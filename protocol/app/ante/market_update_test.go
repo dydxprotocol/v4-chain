@@ -227,7 +227,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 		simulate         bool
 		marketPerps      []marketPerpPair
 		marketMapMarkets []mmtypes.Market
-		marketParams    []prices_types.MarketParam
+		marketParams     []prices_types.MarketParam
 	}
 	tests := []struct {
 		name    string
@@ -470,7 +470,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 						},
 					},
 				},
-				simulate:         true,
+				simulate: true,
 			},
 			wantErr: true,
 		},
@@ -487,7 +487,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 				},
 				simulate:         false,
 				marketMapMarkets: []mmtypes.Market{testMarketWithEnabled},
-				marketParams:    []prices_types.MarketParam{testMarketParams},
+				marketParams:     []prices_types.MarketParam{testMarketParams},
 			},
 			wantErr: true,
 		},
@@ -504,7 +504,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 				},
 				simulate:         true,
 				marketMapMarkets: []mmtypes.Market{testMarketWithEnabled},
-				marketParams:    []prices_types.MarketParam{testMarketParams},		
+				marketParams:     []prices_types.MarketParam{testMarketParams},
 			},
 			wantErr: true,
 		},
