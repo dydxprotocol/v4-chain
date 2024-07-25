@@ -24,6 +24,7 @@ pub struct AssetPosition {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PerpetualPosition {
+    #[serde(default)]
     pub perpetual_id: u32,
     pub quantums: SerializableInt,
     pub funding_index: SerializableInt,
@@ -49,6 +50,7 @@ pub struct Subaccount {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct ClobPair {
+    #[serde(default)]
     pub id: u32,
     // metadata first letter is capitalized to match JSON
     #[serde(rename = "Metadata")]
@@ -68,6 +70,7 @@ pub enum Metadata {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PerpetualClobMetadata {
+    #[serde(default)]
     pub perpetual_id: u32,
 }
 
@@ -98,8 +101,10 @@ pub struct Perpetual {
 }
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PerpetualParams {
+    #[serde(default)]
     pub id: u32,
     pub ticker: String,
+    #[serde(default)]
     pub market_id: u32,
     pub atomic_resolution: i32,
     #[serde(default)]
