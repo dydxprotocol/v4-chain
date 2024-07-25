@@ -52,13 +52,8 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
 ) error {
-	prices, isCached, err := pa.writePricesToStore(ctx, request)
-	if err != nil {
+	if err := pa.writePricesToStore(ctx, request); err != nil {
 		return err
-	}
-
-	if !isCached && prices != nil {
-		pa.writePricesToCache(ctx, request.DecidedLastCommit.Round, prices)
 	}
 
 	return nil
@@ -67,17 +62,17 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 func (pa *PriceApplier) writePricesToStore(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
-) (prices map[string]*big.Int, isCached bool, err error) {
+) error {
 	if pa.finalPriceCache.HasValidPrices(ctx.BlockHeight(), request.DecidedLastCommit.Round) {
 		err := pa.writePricesToStoreFromCache(ctx)
-		return nil, true, err
+		return err
 	} else {
 		prices, err := pa.getPricesAndAggregateFromVE(ctx, request)
 		if err != nil {
-			return nil, false, err
+			return err
 		}
-		pa.fallbackWritePricesToStore(ctx, prices)
-		return prices, false, nil
+		pa.writePricesToStoreAndCache(ctx, prices, request.DecidedLastCommit.Round)
+		return nil
 	}
 }
 
@@ -114,29 +109,6 @@ func (pa *PriceApplier) GetCachedPrices() pricestypes.MarketPriceUpdates {
 	return pa.finalPriceCache.GetPriceUpdates()
 }
 
-func (pa *PriceApplier) writePricesToCache(
-	ctx sdk.Context,
-	round int32,
-	prices map[string]*big.Int,
-) {
-	marketParams := pa.pricesKeeper.GetAllMarketParams(ctx)
-	var pricesToCache pricestypes.MarketPriceUpdates
-	for _, market := range marketParams {
-		shouldWritePrice, price := pa.shouldWritePriceToStore(ctx, prices, market)
-		if !shouldWritePrice {
-			continue
-		}
-
-		newPrice := pricestypes.MarketPriceUpdates_MarketPriceUpdate{
-			MarketId: market.Id,
-			Price:    price.Uint64(),
-		}
-
-		pricesToCache.MarketPriceUpdates = append(pricesToCache.MarketPriceUpdates, &newPrice)
-	}
-	pa.finalPriceCache.SetPriceUpdates(ctx, pricesToCache, round)
-}
-
 func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 	pricesFromCache := pa.finalPriceCache.GetPriceUpdates()
 	for _, price := range pricesFromCache.MarketPriceUpdates {
@@ -159,12 +131,20 @@ func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 	return nil
 }
 
-func (pa *PriceApplier) fallbackWritePricesToStore(ctx sdk.Context, prices map[string]*big.Int) error {
+func (pa *PriceApplier) writePricesToStoreAndCache(
+	ctx sdk.Context,
+	prices map[string]*big.Int,
+	round int32,
+) error {
 	marketParams := pa.pricesKeeper.GetAllMarketParams(ctx)
-
+	var finalPriceUpdates pricestypes.MarketPriceUpdates
 	for _, market := range marketParams {
 		pair := market.Pair
-		shouldWritePrice, price := pa.shouldWritePriceToStore(ctx, prices, market)
+		price, ok := prices[pair]
+		if !ok {
+			continue
+		}
+		shouldWritePrice, price := pa.shouldWritePriceToStore(ctx, price, market.Id)
 		if !shouldWritePrice {
 			continue
 		}
@@ -184,34 +164,30 @@ func (pa *PriceApplier) fallbackWritePricesToStore(ctx sdk.Context, prices map[s
 			return err
 		}
 
+		finalPriceUpdates.MarketPriceUpdates = append(finalPriceUpdates.MarketPriceUpdates, &newPrice)
+
 		pa.logger.Info(
 			"set price for currency pair",
 			"currency_pair", pair,
 			"quote_price", newPrice.Price,
 		)
 	}
+
+	pa.finalPriceCache.SetPriceUpdates(ctx, finalPriceUpdates, round)
+
 	return nil
 }
 
 func (pa *PriceApplier) shouldWritePriceToStore(
 	ctx sdk.Context,
-	prices map[string]*big.Int,
-	marketToUpdate pricestypes.MarketParam,
+	price *big.Int,
+	marketId uint32,
 ) (bool, *big.Int) {
-	marketPairToUpdate := marketToUpdate.Pair
-	price, ok := prices[marketPairToUpdate]
-	if !ok || price == nil {
-		pa.logger.Debug(
-			"no price for currency pair",
-			"currency_pair", marketPairToUpdate,
-		)
-		return false, nil
-	}
 
 	if price.Sign() == -1 {
 		pa.logger.Error(
 			"price is negative",
-			"currency_pair", marketPairToUpdate,
+			"market_id", marketId,
 			"price", price.String(),
 		)
 
@@ -220,7 +196,7 @@ func (pa *PriceApplier) shouldWritePriceToStore(
 	priceUpdate := pricestypes.MarketPriceUpdates{
 		MarketPriceUpdates: []*pricestypes.MarketPriceUpdates_MarketPriceUpdate{
 			{
-				MarketId: marketToUpdate.Id,
+				MarketId: marketId,
 				Price:    price.Uint64(),
 			},
 		},
@@ -229,7 +205,7 @@ func (pa *PriceApplier) shouldWritePriceToStore(
 	if pa.pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, &priceUpdate) != nil {
 		pa.logger.Error(
 			"price update validation failed",
-			"currency_pair", marketPairToUpdate,
+			"market_id", marketId,
 			"price", price.String(),
 		)
 
