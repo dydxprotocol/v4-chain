@@ -152,5 +152,10 @@ type MemClob interface {
 	GetOrderbook(
 		ctx sdk.Context,
 		clobPairId ClobPairId,
-	) Orderbook
+	) OrderbookInterface
+}
+
+type OrderbookInterface interface {
+	GetAsks() map[Subticks]*Level
+	GetBids() map[Subticks]*Level
 }

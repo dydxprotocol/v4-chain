@@ -146,6 +146,9 @@ func PrepareCheckState(
 	// Prune any rate limiting information that is no longer relevant.
 	keeper.PruneRateLimits(ctx)
 
+	// Initialize new streams with orderbook snapshots, if any.
+	keeper.InitializeNewStreams(ctx)
+
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
 	if ctx.BlockHeight() != int64(processProposerMatchesEvents.BlockHeight) {
@@ -257,9 +260,6 @@ func PrepareCheckState(
 		log.NewLocalValidatorOperationsQueue,
 		types.GetInternalOperationsQueueTextString(newLocalValidatorOperationsQueue),
 	)
-
-	// Initialize new streams with orderbook snapshots, if any.
-	keeper.InitializeNewStreams(ctx)
 
 	// Set per-orderbook gauges.
 	keeper.MemClob.SetMemclobGauges(ctx)

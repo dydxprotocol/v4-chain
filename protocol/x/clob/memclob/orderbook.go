@@ -52,6 +52,16 @@ type Orderbook struct {
 	cancelExpiryToOrderIds map[uint32]map[types.OrderId]bool
 }
 
+// GetAsks gets the asks
+func (ob *Orderbook) GetAsks() map[types.Subticks]*types.Level {
+	return ob.Asks
+}
+
+// GetBids gets the asks
+func (ob *Orderbook) GetBids() map[types.Subticks]*types.Level {
+	return ob.Bids
+}
+
 // GetSide returns the Bid-side levels if `isBuy == true` otherwise, returns the Ask-side levels.
 func (ob *Orderbook) GetSide(isBuy bool) map[types.Subticks]*types.Level {
 	if isBuy {

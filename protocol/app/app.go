@@ -1518,6 +1518,7 @@ func New(
 
 	if app.FullNodeStreamingManager.Enabled() {
 		app.GrpcStreamingTestClient = streamingclient.NewGrpcClient(appFlags, app.Logger())
+		app.FullNodeStreamingManager.SubscribeTestClient(app.GrpcStreamingTestClient)
 	}
 
 	// Report out app version and git commit. This will be run when validators restart.

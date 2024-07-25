@@ -320,18 +320,20 @@ func (_m *MemClob) GetOrderRemainingAmount(ctx types.Context, order clobtypes.Or
 }
 
 // GetOrderbook provides a mock function with given fields: ctx, clobPairId
-func (_m *MemClob) GetOrderbook(ctx types.Context, clobPairId clobtypes.ClobPairId) clobtypes.Orderbook {
+func (_m *MemClob) GetOrderbook(ctx types.Context, clobPairId clobtypes.ClobPairId) clobtypes.OrderbookInterface {
 	ret := _m.Called(ctx, clobPairId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetOrderbook")
 	}
 
-	var r0 clobtypes.Orderbook
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId) clobtypes.Orderbook); ok {
+	var r0 clobtypes.OrderbookInterface
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId) clobtypes.OrderbookInterface); ok {
 		r0 = rf(ctx, clobPairId)
 	} else {
-		r0 = ret.Get(0).(clobtypes.Orderbook)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(clobtypes.OrderbookInterface)
+		}
 	}
 
 	return r0
