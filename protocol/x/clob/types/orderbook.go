@@ -85,6 +85,16 @@ type Orderbook struct {
 	TotalOpenOrders uint
 }
 
+// GetAsks gets the asks
+func (ob *Orderbook) GetAsks() map[Subticks]*Level {
+	return ob.Asks
+}
+
+// GetBids gets the asks
+func (ob *Orderbook) GetBids() map[Subticks]*Level {
+	return ob.Bids
+}
+
 // GetSide returns the Bid-side levels if `isBuy == true` otherwise, returns the Ask-side levels.
 func (ob *Orderbook) GetSide(isBuy bool) map[Subticks]*Level {
 	if isBuy {

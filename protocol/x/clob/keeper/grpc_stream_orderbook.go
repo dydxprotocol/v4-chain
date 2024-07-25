@@ -41,9 +41,10 @@ func (k Keeper) CompareMemclobOrderbookWithLocalOrderbook(
 	logger.Info("Comparing grpc orderbook with actual memclob orderbook!")
 
 	orderbook := k.MemClob.GetOrderbook(ctx, id)
+	orderbookBids := orderbook.GetBids()
 
 	// Compare bids.
-	bids := lib.GetSortedKeys[lib.Sortable[types.Subticks]](orderbook.Bids)
+	bids := lib.GetSortedKeys[lib.Sortable[types.Subticks]](orderbookBids)
 
 	logger.Info("Comparing bids", "bids", bids)
 	if len(bids) != len(localOrderbook.Bids) {
@@ -55,7 +56,7 @@ func (k Keeper) CompareMemclobOrderbookWithLocalOrderbook(
 	}
 
 	for _, bid := range bids {
-		level := orderbook.Bids[bid]
+		level := orderbookBids[bid]
 
 		expectedAggregatedQuantity := uint64(0)
 		expectedOrders := make([]types.Order, 0)
@@ -91,10 +92,40 @@ func (k Keeper) CompareMemclobOrderbookWithLocalOrderbook(
 				"actual_remaining_amounts", actualRemainingAmounts,
 			)
 		}
+
+		if len(expectedOrders) != len(actualOrders) {
+			logger.Error(
+				"Different number of orders at bid level",
+				"price", bid,
+				"expected", expectedOrders,
+				"actual", actualOrders,
+			)
+		} else {
+			for i, expected := range expectedOrders {
+				if expected.OrderId.ClientId != actualOrders[i].OrderId.ClientId {
+					logger.Error(
+						"Different order at bid level",
+						"price", bid,
+						"expected", expected,
+						"actual", actualOrders[i],
+					)
+				}
+				if expectedRemainingAmounts[i] != actualRemainingAmounts[i] {
+					logger.Error(
+						"Different remaining amount at bid level",
+						"price", bid,
+						"expected", expectedRemainingAmounts[i],
+						"actual", actualRemainingAmounts[i],
+					)
+				}
+			}
+		}
 	}
 
+	orderbookAsks := orderbook.GetAsks()
+
 	// Compare asks.
-	asks := lib.GetSortedKeys[lib.Sortable[types.Subticks]](orderbook.Asks)
+	asks := lib.GetSortedKeys[lib.Sortable[types.Subticks]](orderbookAsks)
 
 	logger.Info("Comparing asks", "asks", asks)
 	if len(asks) != len(localOrderbook.Asks) {
@@ -106,7 +137,7 @@ func (k Keeper) CompareMemclobOrderbookWithLocalOrderbook(
 	}
 
 	for _, ask := range asks {
-		level := orderbook.Asks[ask]
+		level := orderbookAsks[ask]
 
 		expectedAggregatedQuantity := uint64(0)
 		expectedOrders := make([]types.Order, 0)
@@ -141,6 +172,34 @@ func (k Keeper) CompareMemclobOrderbookWithLocalOrderbook(
 				"expected_remaining_amounts", expectedRemainingAmounts,
 				"actual_remaining_amounts", actualRemainingAmounts,
 			)
+		}
+
+		if len(expectedOrders) != len(actualOrders) {
+			logger.Error(
+				"Different number of orders at ask level",
+				"price", ask,
+				"expected", expectedOrders,
+				"actual", actualOrders,
+			)
+		} else {
+			for i, expected := range expectedOrders {
+				if expected.OrderId.ClientId != actualOrders[i].OrderId.ClientId {
+					logger.Error(
+						"Different order at ask level",
+						"price", ask,
+						"expected", expected,
+						"actual", actualOrders[i],
+					)
+				}
+				if expectedRemainingAmounts[i] != actualRemainingAmounts[i] {
+					logger.Error(
+						"Different remaining amount at ask level",
+						"price", ask,
+						"expected", expectedRemainingAmounts[i],
+						"actual", actualRemainingAmounts[i],
+					)
+				}
+			}
 		}
 	}
 

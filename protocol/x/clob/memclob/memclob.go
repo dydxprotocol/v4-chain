@@ -2442,6 +2442,6 @@ func (m *MemClobPriceTimePriority) resizeReduceOnlyMatchIfNecessary(
 	return satypes.BaseQuantums(maxMatchSize.Uint64())
 }
 
-func (m *MemClobPriceTimePriority) GetOrderbook(ctx sdk.Context, clobPairId types.ClobPairId) types.Orderbook {
-	return *m.openOrders.mustGetOrderbook(ctx, clobPairId)
+func (m *MemClobPriceTimePriority) GetOrderbook(ctx sdk.Context, clobPairId types.ClobPairId) types.OrderbookInterface {
+	return m.openOrders.orderbooksMap[clobPairId]
 }
