@@ -181,7 +181,7 @@ var (
 	testMarket = mmtypes.Market{
 		Ticker: mmtypes.Ticker{
 			CurrencyPair: types.CurrencyPair{
-				Base:  "TEST",
+				Base:  "TESTING",
 				Quote: "USD",
 			},
 			Decimals:         1,
@@ -195,7 +195,7 @@ var (
 	testMarketWithProviderConfig = mmtypes.Market{
 		Ticker: mmtypes.Ticker{
 			CurrencyPair: types.CurrencyPair{
-				Base:  "TEST",
+				Base:  "TESTING",
 				Quote: "USD",
 			},
 			Decimals:         1,
@@ -214,7 +214,7 @@ var (
 	enabledTestMarketWithProviderConfig = mmtypes.Market{
 		Ticker: mmtypes.Ticker{
 			CurrencyPair: types.CurrencyPair{
-				Base:  "TEST",
+				Base:  "TESTING",
 				Quote: "USD",
 			},
 			Decimals:         1,
@@ -233,7 +233,7 @@ var (
 	testMarketWithEnabled = mmtypes.Market{
 		Ticker: mmtypes.Ticker{
 			CurrencyPair: types.CurrencyPair{
-				Base:  "TEST",
+				Base:  "TESTING",
 				Quote: "USD",
 			},
 			Decimals:         1,
@@ -246,7 +246,7 @@ var (
 
 	testMarketParams = prices_types.MarketParam{
 		Id:                 0,
-		Pair:               "TEST-USD",
+		Pair:               "TESTING-USD",
 		Exponent:           -8,
 		MinExchanges:       1,
 		MinPriceChangePpm:  10,
