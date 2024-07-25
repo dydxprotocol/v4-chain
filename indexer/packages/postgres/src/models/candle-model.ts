@@ -36,8 +36,6 @@ export default class CandleModel extends Model {
         'trades',
         'usdVolume',
         'startingOpenInterest',
-        'orderbookMidPriceOpen',
-        'orderbookMidPriceClose',
       ],
       properties: {
         id: { type: 'string', format: 'uuid' },

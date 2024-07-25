@@ -559,7 +559,6 @@ describe('candleHelper', () => {
       },
     );
     await verifyCandlesInPostgres(expectedCandles);
-
     await validateCandlesCache();
     expectTimingStats();
   });
