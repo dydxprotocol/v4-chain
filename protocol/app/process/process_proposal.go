@@ -79,9 +79,10 @@ func ProcessProposalHandler(
 				request.Txs = append([][]byte{extCommitBz}, request.Txs...)
 			}()
 
-			if err := DecodeAndValidateVE(
+			if err := DecodeValidateAndCacheVE(
 				ctx,
 				request,
+				pricesApplier,
 				extCommitBz,
 				validateVoteExtensionFn,
 				pricesKeeper,
@@ -90,19 +91,6 @@ func ProcessProposalHandler(
 			); err != nil {
 				ctx.Logger().Error("failed to decode and validate ve", "err", err)
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-			}
-
-			reqFinalizeBlock := &abci.RequestFinalizeBlock{
-				Txs:    request.Txs,
-				Height: request.Height,
-				DecidedLastCommit: abci.CommitInfo{
-					Round: ctx.CometInfo().GetLastCommit().Round(),
-					Votes: []abci.VoteInfo{},
-				},
-			}
-
-			if err := pricesApplier.ApplyPricesFromVE(ctx, reqFinalizeBlock); err != nil {
-				ctx.Logger().Error("failed to cache VE prices", "err", err)
 			}
 
 		}
@@ -134,9 +122,10 @@ func ProcessProposalHandler(
 	}
 }
 
-func DecodeAndValidateVE(
+func DecodeValidateAndCacheVE(
 	ctx sdk.Context,
-	req *abci.RequestProcessProposal,
+	request *abci.RequestProcessProposal,
+	pricesApplier ProcessProposalPriceApplier,
 	extCommitBz []byte,
 	validateVoteExtensionFn ve.ValidateVEConsensusInfoFn,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
@@ -151,7 +140,7 @@ func DecodeAndValidateVE(
 	}
 	if err := ve.ValidateExtendedCommitInfo(
 		ctx,
-		req.Height,
+		request.Height,
 		extInfo,
 		voteCodec,
 		pricesKeeper,
@@ -159,6 +148,19 @@ func DecodeAndValidateVE(
 	); err != nil {
 		return err
 	}
-	req.Txs = req.Txs[1:]
+
+	reqFinalizeBlock := &abci.RequestFinalizeBlock{
+		Txs:    request.Txs,
+		Height: request.Height,
+		DecidedLastCommit: abci.CommitInfo{
+			Round: ctx.CometInfo().GetLastCommit().Round(),
+			Votes: []abci.VoteInfo{},
+		},
+	}
+
+	if err := pricesApplier.ApplyPricesFromVE(ctx, reqFinalizeBlock); err != nil {
+		ctx.Logger().Error("failed to cache VE prices", "err", err)
+	}
+	request.Txs = request.Txs[1:]
 	return nil
 }
