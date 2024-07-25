@@ -1,0 +1,24 @@
+syntax = "proto3";
+package dydxprotocol.subaccounts;
+
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types";
+
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
+import "gogoproto/gogo.proto";
+import "dydxprotocol/subaccounts/subaccount.proto";
+
+// Msg defines the Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+  // ClaimYieldForSubaccount claims the yield for the provided subaccount and persists it to state.
+  rpc ClaimYieldForSubaccount(MsgClaimYieldForSubaccount) returns (MsgClaimYieldForSubaccountResponse);
+}
+
+// MsgClaimYieldForSubaccount is the Msg/ClaimYieldForSubaccount request type.
+message MsgClaimYieldForSubaccount {
+  SubaccountId id = 1;
+}
+
+// MsgClaimYieldForSubaccountResponse is the Msg/ClaimYieldForSubaccount response type.
+message MsgClaimYieldForSubaccountResponse {}
