@@ -83,7 +83,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	// due to it using an unexported method on the interface thus we use reflection to access the field
 	// directly that contains the registrations.
 	fv := reflect.ValueOf(registry).Elem().FieldByName("implInterfaces")
-	require.Len(t, fv.MapKeys(), 0)
+	require.Len(t, fv.MapKeys(), 2)
 }
 
 func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
@@ -212,9 +212,9 @@ func TestAppModule_RegisterServices(t *testing.T) {
 	mockMsgServer := new(mocks.Server)
 
 	mockConfigurator.On("QueryServer").Return(mockQueryServer)
-	// Since there's no MsgServer for Subaccounts module, configurator does not call `MsgServer`.
+	mockConfigurator.On("MsgServer").Return(mockMsgServer)
 	mockQueryServer.On("RegisterService", mock.Anything, mock.Anything).Return()
-	// Since there's no MsgServer for Subaccounts module, MsgServer does not call `RegisterServer`.
+	mockMsgServer.On("RegisterService", mock.Anything, mock.Anything).Return()
 
 	am := createAppModule(t)
 	am.RegisterServices(mockConfigurator)

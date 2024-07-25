@@ -409,7 +409,7 @@ func getYieldFromAssetPositions(
 		}
 		return newAssetYield, err
 	}
-	return nil, errors.New("could not find quote asset when calculating yield")
+	return big.NewInt(0), nil
 }
 
 func getYieldFromPerpPositions(
