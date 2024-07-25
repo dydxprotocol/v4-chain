@@ -315,6 +315,7 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -435,6 +436,7 @@ func TestPlacePerpetualLiquidation_validateLiquidationAgainstClobPairStatus(t *t
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -1195,6 +1197,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					perpetual.Params.DefaultFundingPpm,
 					perpetual.Params.LiquidityTier,
 					perpetual.Params.MarketType,
+					perpetual.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -2146,6 +2149,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 					perpetual.Params.DefaultFundingPpm,
 					perpetual.Params.LiquidityTier,
 					perpetual.Params.MarketType,
+					perpetual.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -2449,6 +2453,7 @@ func TestIsLiquidatable(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -2870,6 +2875,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -3410,6 +3416,7 @@ func TestGetFillablePrice(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -3836,6 +3843,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -4564,6 +4572,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -4822,6 +4831,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -5153,6 +5163,7 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 				constants.BtcUsd_100PercentMarginRequirement.Params.DefaultFundingPpm,
 				constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
 				constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
+				constants.BtcUsd_100PercentMarginRequirement.YieldIndex,
 			)
 			require.NoError(t, err)
 
@@ -5308,6 +5319,7 @@ func TestSortLiquidationOrders(t *testing.T) {
 				constants.BtcUsd_100PercentMarginRequirement.Params.DefaultFundingPpm,
 				constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
 				constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
+				constants.BtcUsd_100PercentMarginRequirement.YieldIndex,
 			)
 			require.NoError(t, err)
 

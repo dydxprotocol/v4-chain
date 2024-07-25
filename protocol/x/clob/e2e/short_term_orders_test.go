@@ -33,6 +33,8 @@ func TestPlaceOrder(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
+
 	aliceSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
 	bobSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0)
 

@@ -39,7 +39,8 @@ const GenesisState = `{
           "has_market": false,
           "id": 0,
           "market_id": 0,
-          "symbol": "USDC"
+          "symbol": "USDC",
+          "asset_yield_index": "0/1"
         }
       ]
     },
@@ -697,7 +698,8 @@ const GenesisState = `{
             "market_id": 0,
             "ticker": "BTC-USD",
             "market_type": 1
-          }
+          },
+          "yield_index": "0/1"
         },
         {
           "params": {
@@ -708,7 +710,8 @@ const GenesisState = `{
             "market_id": 1,
             "ticker": "ETH-USD",
             "market_type": 1
-          }
+          },
+          "yield_index": "0/1"
         }
       ]
     },
@@ -1197,7 +1200,8 @@ const GenesisState = `{
             "number": 0,
             "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4"
           },
-          "margin_enabled": true
+          "margin_enabled": true,
+          "asset_yield_index": "0/1"
         },
         {
           "asset_positions": [
@@ -1211,7 +1215,8 @@ const GenesisState = `{
             "number": 0,
             "owner": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs"
           },
-          "margin_enabled": true
+          "margin_enabled": true,
+          "asset_yield_index": "0/1"
         },
         {
           "asset_positions": [
@@ -1225,7 +1230,8 @@ const GenesisState = `{
             "number": 0,
             "owner": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70"
           },
-          "margin_enabled": true
+          "margin_enabled": true,
+          "asset_yield_index": "0/1"
         },
         {
           "asset_positions": [
@@ -1239,7 +1245,8 @@ const GenesisState = `{
             "number": 0,
             "owner": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn"
           },
-          "margin_enabled": true
+          "margin_enabled": true,
+          "asset_yield_index": "0/1"
         },
         {
           "asset_positions": [
@@ -1253,7 +1260,8 @@ const GenesisState = `{
             "number": 0,
             "owner": "dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m"
           },
-          "margin_enabled": true
+          "margin_enabled": true,
+          "asset_yield_index": "0/1"
         }
       ]
     },

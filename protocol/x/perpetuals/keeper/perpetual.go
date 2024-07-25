@@ -79,6 +79,7 @@ func (k Keeper) CreatePerpetual(
 	defaultFundingPpm int32,
 	liquidityTier uint32,
 	marketType types.PerpetualMarketType,
+	yieldIndex string,
 ) (types.Perpetual, error) {
 	// Check if perpetual exists.
 	if k.HasPerpetual(ctx, id) {
@@ -101,7 +102,7 @@ func (k Keeper) CreatePerpetual(
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
-		YieldIndex:   new(big.Rat).SetInt64(0).String(),
+		YieldIndex:   yieldIndex,
 	}
 
 	// Store the new perpetual.
@@ -1371,9 +1372,6 @@ func (k Keeper) SetPerpetualForTest(
 	ctx sdk.Context,
 	perpetual types.Perpetual,
 ) {
-	if perpetual.YieldIndex == "" {
-		perpetual.YieldIndex = "0/1"
-	}
 	k.setPerpetual(ctx, perpetual)
 }
 
@@ -1396,10 +1394,6 @@ func (k Keeper) ValidateAndSetPerpetual(
 		&perpetual,
 	); err != nil {
 		return err
-	}
-
-	if perpetual.YieldIndex == "" {
-		perpetual.YieldIndex = "0/1"
 	}
 
 	k.setPerpetual(ctx, perpetual)
@@ -1475,6 +1469,10 @@ func (k Keeper) validatePerpetual(
 	// Validate `liquidityTier` exists.
 	if !k.HasLiquidityTier(ctx, perpetual.Params.LiquidityTier) {
 		return errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, lib.UintToString(perpetual.Params.LiquidityTier))
+	}
+
+	if perpetual.YieldIndex == "" {
+		return errorsmod.Wrap(types.ErrYieldIndexDoesNotExist, lib.UintToString(perpetual.Params.LiquidityTier))
 	}
 
 	return nil

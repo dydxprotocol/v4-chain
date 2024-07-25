@@ -364,7 +364,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
 						AccAddressForSigning: tc.withdrawal.Sender.Owner,
-						Gas:                  100_000,
+						Gas:                  120_000,
 						FeeAmt:               constants.TestFeeCoins_5Cents,
 					},
 					tc.withdrawal,
@@ -993,7 +993,7 @@ func TestOrderRemoval(t *testing.T) {
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
 						AccAddressForSigning: tc.withdrawal.Sender.Owner,
-						Gas:                  100_000,
+						Gas:                  120_000,
 						FeeAmt:               constants.TestFeeCoins_5Cents,
 					},
 					tc.withdrawal,

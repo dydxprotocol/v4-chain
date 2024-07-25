@@ -176,6 +176,7 @@ func TestGetCollateralPool(t *testing.T) {
 						p.Params.DefaultFundingPpm,
 						p.Params.LiquidityTier,
 						p.Params.MarketType,
+						p.YieldIndex,
 					)
 					require.NoError(t, err)
 				}
@@ -192,8 +193,10 @@ func TestGetCollateralPool(t *testing.T) {
 }
 
 func TestSubaccountGet(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, rateLimitKeeper, _, _ := testutil.SubaccountsKeepers(t, true)
+	rateLimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
 	items := createNSubaccount(keeper, ctx, 10, big.NewInt(1_000))
+
 	for _, item := range items {
 		rst := keeper.GetSubaccount(ctx,
 			*item.Id,
@@ -224,7 +227,8 @@ func TestSubaccountSet_Empty(t *testing.T) {
 }
 
 func TestSubaccountGetNonExistent(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _, _ := testutil.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, rateLimitKeeper, _, _ := testutil.SubaccountsKeepers(t, true)
+	rateLimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
 	id := types.SubaccountId{
 		Owner:  "non-existent",
 		Number: uint32(123),
@@ -4474,6 +4478,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 
@@ -5620,6 +5625,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -6090,6 +6096,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
