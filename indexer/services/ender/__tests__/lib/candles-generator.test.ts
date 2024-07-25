@@ -505,31 +505,32 @@ describe('candleHelper', () => {
     ]);
 
     // Create new candles, with trades
-    await runUpdateCandles(publisher);
+    await runUpdateCandles(publisher).then(async () => {
 
-    // Verify previous candles have orderbookMidPriceClose updated
-    const previousExpectedCandles: CandleFromDatabase[] = _.map(
-      Object.values(CandleResolution),
-      (resolution: CandleResolution) => {
-        return {
-          id: CandleTable.uuid(previousStartedAt, defaultCandle.ticker, resolution),
-          startedAt: previousStartedAt,
-          ticker: defaultCandle.ticker,
-          resolution,
-          low: existingPrice,
-          high: existingPrice,
-          open: existingPrice,
-          close: existingPrice,
-          baseTokenVolume,
-          usdVolume,
-          trades: existingTrades,
-          startingOpenInterest,
-          orderbookMidPriceClose: '10005',
-          orderbookMidPriceOpen,
-        };
-      },
-    );
-    await verifyCandlesInPostgres(previousExpectedCandles);
+      // Verify previous candles have orderbookMidPriceClose updated
+      const previousExpectedCandles: CandleFromDatabase[] = _.map(
+        Object.values(CandleResolution),
+        (resolution: CandleResolution) => {
+          return {
+            id: CandleTable.uuid(previousStartedAt, defaultCandle.ticker, resolution),
+            startedAt: previousStartedAt,
+            ticker: defaultCandle.ticker,
+            resolution,
+            low: existingPrice,
+            high: existingPrice,
+            open: existingPrice,
+            close: existingPrice,
+            baseTokenVolume,
+            usdVolume,
+            trades: existingTrades,
+            startingOpenInterest,
+            orderbookMidPriceClose: '10005',
+            orderbookMidPriceOpen,
+          };
+        },
+      );
+      await verifyCandlesInPostgres(previousExpectedCandles);
+    });
 
     // Verify new candles were created
     const expectedCandles: CandleFromDatabase[] = _.map(
