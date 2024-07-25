@@ -215,6 +215,8 @@ export const defaultTime: Timestamp = {
 };
 export const defaultTxHash: string = '0x32343534306431622d306461302d343831322d613730372d3965613162336162';
 
+export const defaultZeroAssetYieldIndex: string = "0/1"
+
 export const defaultSubaccountId: IndexerSubaccountId = {
   owner: testConstants.defaultAddress,
   number: 0,
@@ -319,6 +321,7 @@ export const defaultEmptySubaccountUpdateEvent: SubaccountUpdateEventV1 = {
   subaccountId: defaultSubaccountId,
   updatedPerpetualPositions: [],
   updatedAssetPositions: [],
+  yieldIndex: defaultZeroAssetYieldIndex,
 };
 
 export const defaultWalletAddress: string = 'defaultWalletAddress';
