@@ -11,6 +11,7 @@ export enum QueryableField {
   LIMIT = 'limit',
   ID = 'id',
   ADDRESS = 'address',
+  ASSET_YIELD_INDEX = 'assetYieldIndex',
   SUBACCOUNT_NUMBER = 'subaccountNumber',
   SUBACCOUNT_ID = 'subaccountId',
   SENDER_SUBACCOUNT_ID = 'senderSubaccountId',
@@ -94,6 +95,7 @@ export interface SubaccountQueryConfig extends QueryConfig {
   [QueryableField.SUBACCOUNT_NUMBER]?: number;
   [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
   [QueryableField.UPDATED_ON_OR_AFTER]?: string;
+  [QueryableField.ASSET_YIELD_INDEX]?: string;
 }
 
 export interface WalletQueryConfig extends QueryConfig {

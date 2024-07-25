@@ -18,6 +18,7 @@ export interface IdBasedModelFromDatabase {
 
 export interface SubaccountFromDatabase extends IdBasedModelFromDatabase {
   address: string,
+  assetYieldIndex: string,
   subaccountNumber: number,
   updatedAt: IsoString,
   updatedAtHeight: string,
