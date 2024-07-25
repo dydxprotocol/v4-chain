@@ -19,7 +19,8 @@
   "author": "",
   "license": "AGPL-3.0",
   "dependencies": {
-    "@milahu/patch-package": "6.4.14"
+    "@milahu/patch-package": "6.4.14",
+    "firebase-admin": "^10.3.0"
   },
   "devDependencies": {
     "@types/ws": "8.5.10"
