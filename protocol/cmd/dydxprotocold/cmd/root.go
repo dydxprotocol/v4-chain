@@ -58,7 +58,7 @@ const (
 	flagIAVLCacheSize = "iavl-cache-size"
 
 	// TimeoutProposeOverride is the software override for the `timeout_propose` consensus parameter.
-	TimeoutProposeOverride = 1500 * time.Millisecond
+	TimeoutProposeOverride = 1 * time.Second
 )
 
 // NewRootCmd creates a new root command for `dydxprotocold`. It is called once in the main function.
