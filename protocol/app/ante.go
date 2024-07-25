@@ -16,6 +16,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
+	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -27,11 +28,12 @@ import (
 // struct embedding to include the normal cosmos-sdk `HandlerOptions`.
 type HandlerOptions struct {
 	ante.HandlerOptions
-	Codec            codec.Codec
-	AuthStoreKey     storetypes.StoreKey
-	ClobKeeper       clobtypes.ClobKeeper
-	PerpetualsKeeper perpetualstypes.PerpetualsKeeper
-	PricesKeeper     pricestypes.PricesKeeper
+	Codec             codec.Codec
+	AuthStoreKey      storetypes.StoreKey
+	AccountplusKeeper *accountpluskeeper.Keeper
+	ClobKeeper        clobtypes.ClobKeeper
+	PerpetualsKeeper  perpetualstypes.PerpetualsKeeper
+	PricesKeeper      pricestypes.PricesKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -65,6 +67,10 @@ type HandlerOptions struct {
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	if options.AccountKeeper == nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "account keeper is required for ante builder")
+	}
+
+	if options.AccountplusKeeper == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "accountplus keeper is required for ante builder")
 	}
 
 	if options.BankKeeper == nil {
@@ -105,9 +111,13 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		validateMemo:             ante.NewValidateMemoDecorator(options.AccountKeeper),
 		validateBasic:            ante.NewValidateBasicDecorator(),
 		validateSigCount:         ante.NewValidateSigCountDecorator(options.AccountKeeper),
-		incrementSequence:        ante.NewIncrementSequenceDecorator(options.AccountKeeper),
-		sigVerification:          customante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
-		consumeTxSizeGas:         ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
+		incrementSequence:        customante.NewIncrementSequenceDecorator(options.AccountKeeper),
+		sigVerification: customante.NewSigVerificationDecorator(
+			options.AccountKeeper,
+			*options.AccountplusKeeper,
+			options.SignModeHandler,
+		),
+		consumeTxSizeGas: ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		deductFee: ante.NewDeductFeeDecorator(
 			options.AccountKeeper,
 			options.BankKeeper,
@@ -140,7 +150,7 @@ type lockingAnteHandler struct {
 	validateMemo             ante.ValidateMemoDecorator
 	validateBasic            ante.ValidateBasicDecorator
 	validateSigCount         ante.ValidateSigCountDecorator
-	incrementSequence        ante.IncrementSequenceDecorator
+	incrementSequence        customante.IncrementSequenceDecorator
 	sigVerification          customante.SigVerificationDecorator
 	consumeTxSizeGas         ante.ConsumeTxSizeGasDecorator
 	deductFee                ante.DeductFeeDecorator

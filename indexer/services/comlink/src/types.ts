@@ -43,8 +43,17 @@ export enum RequestMethod {
 
 /* ------- Pagination ------- */
 export interface PaginationResponse {
+  /**
+   * @isInt
+   */
   pageSize?: number,
+  /**
+   * @isInt
+   */
   totalResults?: number,
+  /**
+   * @isInt
+   */
   offset?: number,
 }
 
@@ -57,6 +66,9 @@ export interface AddressResponse {
 
 export interface SubaccountResponseObject {
   address: string,
+  /**
+   * @isInt
+   */
   subaccountNumber: number,
   equity: string,
   freeCollateral: string,
@@ -69,6 +81,9 @@ export interface SubaccountResponseObject {
 
 export interface ParentSubaccountResponse {
   address: string;
+  /**
+   * @isInt
+   */
   parentSubaccountNumber: number;
   equity: string; // aggregated over all child subaccounts
   freeCollateral: string; // aggregated over all child subaccounts
@@ -110,6 +125,9 @@ export interface PerpetualPositionResponseObject {
   unrealizedPnl: string;
   closedAt?: IsoString | null;
   exitPrice?: string | null;
+  /**
+   * @isInt
+   */
   subaccountNumber: number;
 }
 
@@ -124,6 +142,9 @@ export interface AssetPositionResponseObject {
   side: PositionSide;
   size: string;
   assetId: string;
+  /**
+   * @isInt
+   */
   subaccountNumber: number;
 }
 
@@ -149,6 +170,9 @@ export interface FillResponseObject {
   createdAtHeight: string,
   orderId?: string,
   clientMetadata?: string,
+  /**
+   * @isInt
+   */
   subaccountNumber: number,
 }
 
@@ -162,10 +186,16 @@ export interface TransferResponseObject {
   id: string,
   sender: {
     address: string,
+    /**
+     * @isInt
+     */
     subaccountNumber?: number,
   },
   recipient: {
     address: string,
+    /**
+     * @isInt
+     */
     subaccountNumber?: number,
   },
   size: string,
@@ -184,10 +214,16 @@ export interface ParentSubaccountTransferResponseObject {
   id: string,
   sender: {
     address: string,
+    /**
+     * @isInt
+     */
     parentSubaccountNumber?: number,
   },
   recipient: {
     address: string,
+    /**
+     * @isInt
+     */
     parentSubaccountNumber?: number,
   },
   size: string,
@@ -278,16 +314,31 @@ export interface PerpetualMarketResponseObject {
   oraclePrice: string;
   priceChange24H: string;
   volume24H: string;
+  /**
+   * @isInt
+   */
   trades24H: number;
   nextFundingRate: string;
   initialMarginFraction: string;
   maintenanceMarginFraction: string;
   openInterest: string;
+  /**
+   * @isInt
+   */
   atomicResolution: number;
+  /**
+   * @isInt
+   */
   quantumConversionExponent: number;
   tickSize: string;
   stepSize: string;
+  /**
+   * @isInt
+   */
   stepBaseQuantums: number;
+  /**
+   * @isInt
+   */
   subticksPerTick: number;
   marketType: PerpetualMarketType;
   openInterestLowerCap?: string;
@@ -317,6 +368,9 @@ export interface OrderResponseObject extends Omit<OrderFromDatabase, 'timeInForc
   ticker: string;
   updatedAt?: IsoString;
   updatedAtHeight?: string
+  /**
+   * @isInt
+   */
   subaccountNumber: number;
 }
 
@@ -568,4 +622,21 @@ export interface HistoricalBlockTradingReward {
   tradingReward: string, // i.e. '100.1' for 100.1 token earned through trading rewards
   createdAt: IsoString,
   createdAtHeight: string,
+}
+
+/* ------- Social Trading Types ------- */
+
+export interface TraderSearchResponse {
+  result?: TraderSearchResponseObject
+}
+
+export interface TraderSearchRequest {
+  searchParam: string,
+}
+
+export interface TraderSearchResponseObject {
+  address: string,
+  subaccountNumber: number,
+  subaccountId: string,
+  username: string,
 }

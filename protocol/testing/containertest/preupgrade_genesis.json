@@ -774,6 +774,9 @@
       "delegator_starting_infos": [],
       "validator_slash_events": []
     },
+    "dydxaccountplus": {
+      "accounts": []
+    },    
     "epochs": {
       "epoch_info_list": [
         {
@@ -2178,7 +2181,6 @@
         }
       ]
     },
-    "revshare": {},
     "rewards": {
       "params": {
         "treasury_account": "rewards_treasury",

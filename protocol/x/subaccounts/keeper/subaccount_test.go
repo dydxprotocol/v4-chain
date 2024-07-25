@@ -2131,11 +2131,11 @@ func TestUpdateSubaccounts(t *testing.T) {
 				),
 			},
 			marketParamPrices: []pricestypes.MarketParamPrice{
-				*pricestest.GenerateMarketParamPrice(pricestest.WithId(100), pricestest.WithPair("0")),
+				*pricestest.GenerateMarketParamPrice(pricestest.WithId(100), pricestest.WithPair("0-0")),
 				*pricestest.GenerateMarketParamPrice(
 					pricestest.WithId(101),
 					pricestest.WithPriceValue(0),
-					pricestest.WithPair("1"),
+					pricestest.WithPair("1-1"),
 				),
 			},
 			perpetualPositions: []*types.PerpetualPosition{
@@ -2923,8 +2923,10 @@ func TestUpdateSubaccounts(t *testing.T) {
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 			for _, m := range tc.marketParamPrices {
-				_, err := pricesKeeper.CreateMarket(
+				_, err := keepertest.CreateTestMarket(
+					t,
 					ctx,
+					pricesKeeper,
 					m.Param,
 					m.Price,
 				)
@@ -5318,11 +5320,11 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				),
 			},
 			marketParamPrices: []pricestypes.MarketParamPrice{
-				*pricestest.GenerateMarketParamPrice(pricestest.WithId(100), pricestest.WithPair("0")),
+				*pricestest.GenerateMarketParamPrice(pricestest.WithId(100), pricestest.WithPair("0-0")),
 				*pricestest.GenerateMarketParamPrice(
 					pricestest.WithId(101),
 					pricestest.WithPriceValue(0),
-					pricestest.WithPair("1"),
+					pricestest.WithPair("1-1"),
 				),
 			},
 			perpetualPositions: []*types.PerpetualPosition{
@@ -5508,8 +5510,10 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			}
 
 			for _, m := range tc.marketParamPrices {
-				_, err := pricesKeeper.CreateMarket(
+				_, err := keepertest.CreateTestMarket(
+					t,
 					ctx,
+					pricesKeeper,
 					m.Param,
 					m.Price,
 				)

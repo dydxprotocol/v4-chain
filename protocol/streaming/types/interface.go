@@ -32,6 +32,7 @@ type FullNodeStreamingManager interface {
 		orderbookFills []clobtypes.StreamOrderbookFill,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
+		perpetualIdToClobPairId map[uint32][]clobtypes.ClobPairId,
 	)
 }
 

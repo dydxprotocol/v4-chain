@@ -6,13 +6,14 @@ import {
   ComplianceDataFromDatabase,
   ComplianceReason,
   ComplianceStatus,
-  ComplianceTable,
+  ComplianceStatusFromDatabase,
   ComplianceStatusTable,
+  ComplianceStatusUpsertObject,
+  ComplianceTable,
   IsoString,
   SubaccountColumns,
   SubaccountFromDatabase,
   SubaccountTable,
-  ComplianceStatusUpsertObject,
 } from '@dydxprotocol-indexer/postgres';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
@@ -165,6 +166,21 @@ export default async function runTask(
       { provider: complianceProvider.provider },
     );
 
+    const closeOnlyAndBlockedStatuses: ComplianceStatusFromDatabase[] = await
+    ComplianceStatusTable.findAll(
+      {
+        address: addressesToQuery,
+        status: [ComplianceStatus.CLOSE_ONLY, ComplianceStatus.BLOCKED],
+      },
+      [],
+    );
+    const closeOnlyAndBlockedAddresses: string[] = _.chain(closeOnlyAndBlockedStatuses)
+      .map(ComplianceDataColumns.address)
+      .uniq()
+      .value();
+
+    addressesToQuery = _.without(addressesToQuery, ...closeOnlyAndBlockedAddresses);
+
     // Get compliance data for addresses
     const startQueryProvider: number = Date.now();
     const complianceResponses: ComplianceClientResponse[] = await getComplianceData(
@@ -266,13 +282,13 @@ async function getComplianceData(
     );
     const successResponses: PromiseFulfilledResult<ComplianceClientResponse>[] = responses.filter(
       (result: PromiseSettledResult<ComplianceClientResponse>):
-        result is PromiseFulfilledResult<ComplianceClientResponse> => {
+      result is PromiseFulfilledResult<ComplianceClientResponse> => {
         return result.status === 'fulfilled';
       },
     );
     const failedResponses: PromiseRejectedResult[] = responses.filter(
       (result: PromiseSettledResult<ComplianceClientResponse>):
-        result is PromiseRejectedResult => {
+      result is PromiseRejectedResult => {
         return result.status === 'rejected';
       },
     );

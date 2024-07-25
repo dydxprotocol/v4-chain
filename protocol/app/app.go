@@ -130,6 +130,9 @@ import (
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
 	// Modules
+	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
+	accountplusmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
+	accountplusmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
 	assetsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	assetsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -189,6 +192,9 @@ import (
 	vestmodule "github.com/dydxprotocol/v4-chain/protocol/x/vest"
 	vestmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/vest/keeper"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
+	marketmapmodule "github.com/skip-mev/slinky/x/marketmap"
+	marketmapmodulekeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 
 	// IBC
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
@@ -291,6 +297,9 @@ type App struct {
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	GovPlusKeeper         govplusmodulekeeper.Keeper
+	AccountPlusKeeper     accountplusmodulekeeper.Keeper
+
+	MarketMapKeeper marketmapmodulekeeper.Keeper
 
 	PricesKeeper pricesmodulekeeper.Keeper
 
@@ -381,6 +390,10 @@ func New(
 	if err := appFlags.Validate(); err != nil {
 		panic(err)
 	}
+	if appFlags.OptimisticExecutionEnabled {
+		// TODO(OTE-573): Remove warning once OE is fully supported.
+		logger.Warn("Optimistic execution is enabled. This is a test feature not intended for production use!")
+	}
 
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 
@@ -391,6 +404,11 @@ func New(
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
+
+	// Enable optimistic block execution.
+	if appFlags.OptimisticExecutionEnabled {
+		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
+	}
 
 	bApp := baseapp.NewBaseApp(appconstants.AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -436,6 +454,8 @@ func New(
 		govplusmoduletypes.StoreKey,
 		vaultmoduletypes.StoreKey,
 		revsharemoduletypes.StoreKey,
+		accountplusmoduletypes.StoreKey,
+		marketmapmoduletypes.StoreKey,
 	)
 	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
 	tkeys := storetypes.NewTransientStoreKeys(
@@ -898,6 +918,14 @@ func New(
 	)
 	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
 
+	app.MarketMapKeeper = *marketmapmodulekeeper.NewKeeper(
+		runtime.NewKVStoreService(keys[marketmapmoduletypes.StoreKey]),
+		appCodec,
+		authtypes.NewModuleAddress(govtypes.ModuleName),
+	)
+
+	marketmapModule := marketmapmodule.NewAppModule(appCodec, &app.MarketMapKeeper)
+
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
 		appCodec,
 		keys[pricesmoduletypes.StoreKey],
@@ -910,6 +938,7 @@ func New(
 			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 		app.RevShareKeeper,
+		&app.MarketMapKeeper,
 	)
 	pricesModule := pricesmodule.NewAppModule(
 		appCodec,
@@ -917,6 +946,7 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.RevShareKeeper,
+		&app.MarketMapKeeper,
 	)
 
 	app.AssetsKeeper = *assetsmodulekeeper.NewKeeper(
@@ -1133,8 +1163,18 @@ func New(
 		[]string{
 			lib.GovModuleAddress.String(),
 		},
+		app.PricesKeeper,
+		app.ClobKeeper,
+		&app.MarketMapKeeper,
+		app.PerpetualsKeeper,
 	)
 	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
+
+	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
+		appCodec,
+		keys[accountplusmoduletypes.StoreKey],
+	)
+	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
 
 	/****  Module Options ****/
 
@@ -1206,6 +1246,8 @@ func New(
 		vaultModule,
 		listingModule,
 		revShareModule,
+		accountplusModule,
+		marketmapModule,
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
@@ -1255,6 +1297,8 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		accountplusmoduletypes.ModuleName,
+		marketmapmoduletypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
@@ -1300,6 +1344,8 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		accountplusmoduletypes.ModuleName,
+		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
@@ -1329,6 +1375,7 @@ func New(
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
 		icatypes.ModuleName,
+		marketmapmoduletypes.ModuleName, // must be before prices
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
 		blocktimemoduletypes.ModuleName,
@@ -1346,6 +1393,7 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		accountplusmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
 
@@ -1371,6 +1419,7 @@ func New(
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
 		icatypes.ModuleName,
+		marketmapmoduletypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
 		blocktimemoduletypes.ModuleName,
@@ -1388,6 +1437,7 @@ func New(
 		vaultmoduletypes.ModuleName,
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
+		accountplusmoduletypes.ModuleName,
 		authz.ModuleName,
 
 		// Auth must be migrated after staking.
@@ -1853,11 +1903,12 @@ func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 				FeegrantKeeper:  app.FeeGrantKeeper,
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
-			ClobKeeper:       app.ClobKeeper,
-			Codec:            app.appCodec,
-			AuthStoreKey:     app.keys[authtypes.StoreKey],
-			PerpetualsKeeper: app.PerpetualsKeeper,
-			PricesKeeper:     app.PricesKeeper,
+			AccountplusKeeper: &app.AccountPlusKeeper,
+			ClobKeeper:        app.ClobKeeper,
+			Codec:             app.appCodec,
+			AuthStoreKey:      app.keys[authtypes.StoreKey],
+			PerpetualsKeeper:  app.PerpetualsKeeper,
+			PricesKeeper:      app.PricesKeeper,
 		},
 	)
 	if err != nil {

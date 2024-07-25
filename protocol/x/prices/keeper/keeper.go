@@ -26,6 +26,7 @@ type (
 		currencyPairIDCache            *CurrencyPairIDCache
 		currencyPairIdCacheInitialized *atomic.Bool
 		RevShareKeeper                 types.RevShareKeeper
+		MarketMapKeeper                types.MarketMapKeeper
 	}
 )
 
@@ -39,6 +40,7 @@ func NewKeeper(
 	indexerEventManager indexer_manager.IndexerEventManager,
 	authorities []string,
 	revShareKeeper types.RevShareKeeper,
+	marketMapKeeper types.MarketMapKeeper,
 ) *Keeper {
 	return &Keeper{
 		cdc:                            cdc,
@@ -50,6 +52,7 @@ func NewKeeper(
 		currencyPairIDCache:            NewCurrencyPairIDCache(),
 		currencyPairIdCacheInitialized: &atomic.Bool{}, // Initialized to false
 		RevShareKeeper:                 revShareKeeper,
+		MarketMapKeeper:                marketMapKeeper,
 	}
 }
 
