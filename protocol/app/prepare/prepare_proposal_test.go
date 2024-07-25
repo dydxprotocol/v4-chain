@@ -6,14 +6,19 @@ import (
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/prepare"
+	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	prepareutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perpetualtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-	abci "github.com/cometbft/cometbft/abci/types"
+
+	cometabci "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -31,106 +36,113 @@ var (
 	passingTxEncoderOne = func(tx sdktypes.Tx) ([]byte, error) {
 		return []byte{1}, nil
 	}
-	passingTxEncoderTwo = func(tx sdktypes.Tx) ([]byte, error) {
-		return []byte{1, 2}, nil
-	}
 	passingTxEncoderFour = func(tx sdktypes.Tx) ([]byte, error) {
 		return []byte{1, 2, 3, 4}, nil
 	}
 )
 
+type PerpareProposalHandlerTC struct {
+	request   func() *cometabci.RequestPrepareProposal
+	veEnabled bool
+
+	fundingResp    *perpetualtypes.MsgAddPremiumVotes
+	fundingEncoder sdktypes.TxEncoder
+
+	clobResp    *clobtypes.MsgProposedOperations
+	clobEncoder sdktypes.TxEncoder
+
+	pricesParamsResp              []pricestypes.MarketParam
+	pricesMarketPriceFromByesResp *pricestypes.MarketPriceUpdates_MarketPriceUpdate
+
+	expectedPrices map[uint32][]byte
+	expectedTxs    [][]byte
+
+	height int64
+}
+
 func TestPrepareProposalHandler(t *testing.T) {
 	msgSendTxBytesLen := int64(len(constants.Msg_Send_TxBytes))
 	msgSendAndTransferTxBytesLen := int64(len(constants.Msg_SendAndTransfer_TxBytes))
+	votecodec, extcodec := vecodec.NewDefaultVoteExtensionCodec(), vecodec.NewDefaultExtendedCommitCodec()
 
-	tests := map[string]struct {
-		txs      [][]byte
-		maxBytes int64
+	tests := map[string]PerpareProposalHandlerTC{
+		"Error: Empty proposal request returns error": {
 
-		pricesResp    *pricestypes.MsgUpdateMarketPrices
-		pricesEncoder sdktypes.TxEncoder
-
-		fundingResp    *perpetualtypes.MsgAddPremiumVotes
-		fundingEncoder sdktypes.TxEncoder
-
-		clobResp    *clobtypes.MsgProposedOperations
-		clobEncoder sdktypes.TxEncoder
-
-		expectedTxs [][]byte
-	}{
-		"Error: newPrepareProposalTransactions fails": {
-			maxBytes:    0,          // <= 0 value throws error.
-			expectedTxs: [][]byte{}, // error returns empty result.
+			expectedTxs: [][]byte{},
+			veEnabled:   false,
+			request: func() *cometabci.RequestPrepareProposal {
+				return createRequestPrepareProposal(
+					cometabci.ExtendedCommitInfo{},
+					[][]byte{},
+					1,
+					0,
+				)
+			},
 		},
-
-		// Prices related.
-		"Error: GetPricesTx returns err": {
-			maxBytes: 1,
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: failingTxEncoder, // encoder fails and returns err.
-
-			expectedTxs: [][]byte{}, // error returns empty result.
-		},
-		"Error: GetPricesTx returns empty": {
-			maxBytes: 1,
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: emptyTxEncoder, // encoder returns empty.
-
-			expectedTxs: [][]byte{}, // error returns empty result.
-		},
-		"Error: SetPricesTx returns err": {
-			maxBytes: 1,
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderTwo, // encoder returns two bytes, which exceeds max.
-
-			expectedTxs: [][]byte{}, // error returns empty result.
+		"Error: Nil request returns error": {
+			expectedTxs: [][]byte{},
+			veEnabled:   false,
+			request: func() *cometabci.RequestPrepareProposal {
+				return nil
+			},
 		},
 
 		// Funding related.
 		"Error: GetFundingTx returns err": {
-			maxBytes: 2,
 
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderOne,
-
+			veEnabled:      false,
 			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
 			fundingEncoder: failingTxEncoder, // encoder fails and returns err.
 
 			expectedTxs: [][]byte{}, // error returns empty result.
+
+			height: 1,
+
+			request: func() *cometabci.RequestPrepareProposal {
+				return createRequestPrepareProposal(
+					cometabci.ExtendedCommitInfo{},
+					[][]byte{},
+					1,
+					1,
+				)
+			},
 		},
 		"Error: GetFundingTx returns empty": {
-			maxBytes: 2,
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderOne,
 
 			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
 			fundingEncoder: emptyTxEncoder, // encoder returns empty.
+			veEnabled:      false,
+			expectedTxs:    [][]byte{}, // error returns empty result.
+			height:         1,
 
-			expectedTxs: [][]byte{}, // error returns empty result.
+			request: func() *cometabci.RequestPrepareProposal {
+				return createRequestPrepareProposal(
+					cometabci.ExtendedCommitInfo{},
+					[][]byte{},
+					1,
+					1,
+				)
+			},
 		},
 		"Error: SetFundingTx returns err": {
-			maxBytes: 1, // only upto 1 byte, not enough space for funding tx bytes.
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderOne, // takes up 1 byte.
 
 			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
 			fundingEncoder: passingTxEncoderOne, // takes up another 1 byte, so exceeds max.
+			veEnabled:      false,
+			expectedTxs:    [][]byte{}, // error returns empty result.
+			height:         1,
 
-			expectedTxs: [][]byte{}, // error returns empty result.
+			request: func() *cometabci.RequestPrepareProposal {
+				return createRequestPrepareProposal(
+					cometabci.ExtendedCommitInfo{},
+					[][]byte{},
+					1, // only upto 1 byte, not enough space for funding tx bytes.
+					0,
+				)
+			},
 		},
-
 		// "Others" related.
 		"Error: AddOtherTxs return error": {
-			maxBytes: 17,
-			txs:      [][]byte{{}},
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderFour,
 
 			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
 			fundingEncoder: passingTxEncoderFour,
@@ -138,57 +150,141 @@ func TestPrepareProposalHandler(t *testing.T) {
 			clobResp:    &clobtypes.MsgProposedOperations{},
 			clobEncoder: passingTxEncoderFour,
 
+			veEnabled: false,
+
+			height: 1,
+
 			expectedTxs: [][]byte{}, // error returns empty result.
+			request: func() *cometabci.RequestPrepareProposal {
+				return createRequestPrepareProposal(
+					cometabci.ExtendedCommitInfo{},
+					[][]byte{{}},
+					3,
+					13,
+				)
+			},
 		},
 		"Error: AddOtherTxs (additional) return error": {
-			maxBytes: 19,
-			txs:      [][]byte{{9, 8}, {9}, {}, {}},
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderFour,
 
 			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
 			fundingEncoder: passingTxEncoderFour,
 
 			clobResp:    &clobtypes.MsgProposedOperations{},
 			clobEncoder: passingTxEncoderFour,
+
+			veEnabled: false,
+
+			height: 1,
 
 			expectedTxs: [][]byte{}, // error returns empty result.
+			request: func() *cometabci.RequestPrepareProposal {
+				return createRequestPrepareProposal(
+					cometabci.ExtendedCommitInfo{},
+					[][]byte{{9, 8}, {9}, {}, {}},
+					1,
+					15,
+				)
+			},
 		},
 		"Valid: Not all Others than can fit": {
-			maxBytes: int64(16) + msgSendTxBytesLen + 1,
-			txs: [][]byte{
-				constants.Msg_Send_TxBytes,
-				constants.Msg_Send_TxBytes, // not included due to maxBytes.
-				constants.Msg_Send_TxBytes, // not included due to maxBytes.
-			},
-
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderFour,
 
 			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
 			fundingEncoder: passingTxEncoderFour,
 
 			clobResp:    &clobtypes.MsgProposedOperations{},
 			clobEncoder: passingTxEncoderFour,
+
+			veEnabled: true,
+
+			pricesParamsResp:              constants.TestMarketParams,
+			pricesMarketPriceFromByesResp: constants.ValidMarketPriceUpdates[0],
+
+			expectedPrices: constants.ValidVEPrice,
 
 			expectedTxs: [][]byte{
 				{1, 2, 3, 4},               // order.
 				constants.Msg_Send_TxBytes, // others.
 				{1, 2, 3, 4},               // funding.
-				{1, 2, 3, 4},               // prices.
+			},
+
+			height: 3,
+
+			request: func() *cometabci.RequestPrepareProposal {
+				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.AliceConsAddress,
+						constants.ValidVEPrice,
+					),
+				)
+
+				require.NoError(t, err)
+
+				commitInfo, bz, err := vetesting.CreateExtendedCommitInfo(
+					[]cometabci.ExtendedVoteInfo{valVoteInfo},
+				)
+				require.NoError(t, err)
+
+				return createRequestPrepareProposal(
+					commitInfo,
+					[][]byte{
+						constants.Msg_Send_TxBytes,
+						constants.Msg_Send_TxBytes, // not included due to maxBytes.
+						constants.Msg_Send_TxBytes, // not included due to maxBytes.
+					},
+					3,
+					int64(8)+msgSendTxBytesLen+1+int64(len(bz)),
+				)
 			},
 		},
 		"Valid: Additional Others fit": {
-			maxBytes: int64(16) + msgSendTxBytesLen + msgSendAndTransferTxBytesLen,
-			txs: [][]byte{
-				constants.Msg_Send_TxBytes,
-				constants.Msg_SendAndTransfer_TxBytes,
-				constants.Msg_Send_TxBytes, // not included due to maxBytes.
-			},
+			veEnabled: true,
 
-			pricesResp:    &pricestypes.MsgUpdateMarketPrices{},
-			pricesEncoder: passingTxEncoderFour,
+			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
+			fundingEncoder: passingTxEncoderFour,
+
+			pricesParamsResp:              constants.TestMarketParams,
+			pricesMarketPriceFromByesResp: constants.ValidMarketPriceUpdates[0],
+
+			expectedPrices: constants.ValidVEPrice,
+
+			clobResp:    &clobtypes.MsgProposedOperations{},
+			clobEncoder: passingTxEncoderFour,
+			expectedTxs: [][]byte{
+				{1, 2, 3, 4},                          // order.
+				constants.Msg_Send_TxBytes,            // others.
+				constants.Msg_SendAndTransfer_TxBytes, // additional others.
+				{1, 2, 3, 4},                          // funding.
+			},
+			height: 3,
+
+			request: func() *cometabci.RequestPrepareProposal {
+				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.AliceConsAddress,
+						constants.ValidVEPrice,
+					),
+				)
+
+				require.NoError(t, err)
+
+				commitInfo, bz, err := vetesting.CreateExtendedCommitInfo(
+					[]cometabci.ExtendedVoteInfo{valVoteInfo},
+				)
+				require.NoError(t, err)
+
+				return createRequestPrepareProposal(
+					commitInfo,
+					[][]byte{
+						constants.Msg_Send_TxBytes,
+						constants.Msg_SendAndTransfer_TxBytes,
+						constants.Msg_Send_TxBytes, // not included due t.
+					},
+					3,
+					int64(8)+msgSendTxBytesLen+msgSendAndTransferTxBytesLen+int64(len(bz)),
+				)
+			},
+		},
+		"Valid: empty VE's returns no error with no other tx": {
 
 			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
 			fundingEncoder: passingTxEncoderFour,
@@ -196,56 +292,293 @@ func TestPrepareProposalHandler(t *testing.T) {
 			clobResp:    &clobtypes.MsgProposedOperations{},
 			clobEncoder: passingTxEncoderFour,
 
+			pricesParamsResp:              constants.TestMarketParams,
+			pricesMarketPriceFromByesResp: constants.ValidMarketPriceUpdates[0],
+
+			veEnabled: true,
+			height:    3,
+
+			expectedTxs: [][]byte{
+				{1, 2, 3, 4}, // order.
+				{1, 2, 3, 4}, // funding.
+			},
+
+			request: func() *cometabci.RequestPrepareProposal {
+				return createRequestPrepareProposal(
+					cometabci.ExtendedCommitInfo{},
+					[][]byte{},
+					3,
+					int64(8),
+				)
+			},
+		},
+		"Valid: single VE with no other txs": {
+			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
+			fundingEncoder: passingTxEncoderFour,
+
+			clobResp:    &clobtypes.MsgProposedOperations{},
+			clobEncoder: passingTxEncoderFour,
+
+			pricesParamsResp:              constants.TestMarketParams,
+			pricesMarketPriceFromByesResp: constants.ValidMarketPriceUpdates[0],
+
+			veEnabled: true,
+			height:    3,
+
+			expectedPrices: constants.ValidVEPrice,
+
+			request: func() *cometabci.RequestPrepareProposal {
+				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.AliceConsAddress,
+						constants.ValidVEPrice,
+					),
+				)
+
+				require.NoError(t, err)
+
+				commitInfo, bz, err := vetesting.CreateExtendedCommitInfo(
+					[]cometabci.ExtendedVoteInfo{valVoteInfo},
+				)
+
+				require.NoError(t, err)
+
+				prop := createRequestPrepareProposal(
+					commitInfo,
+					[][]byte{},
+					3,
+					int64(8)+int64(len(bz)),
+				)
+
+				return prop
+			},
+
+			expectedTxs: [][]byte{
+				{1, 2, 3, 4}, // order.
+				{1, 2, 3, 4}, // funding.
+			},
+		},
+		"Valid: single VE with other txs": {
+			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
+			fundingEncoder: passingTxEncoderFour,
+
+			clobResp:    &clobtypes.MsgProposedOperations{},
+			clobEncoder: passingTxEncoderFour,
+
+			pricesParamsResp:              constants.TestMarketParams,
+			pricesMarketPriceFromByesResp: constants.ValidMarketPriceUpdates[0],
+
+			veEnabled: true,
+			height:    3,
+
+			expectedPrices: constants.ValidVEPrice,
+
+			request: func() *cometabci.RequestPrepareProposal {
+				proposal := [][]byte{
+					constants.Msg_SendAndTransfer_TxBytes, // others.
+					constants.Msg_Send_TxBytes,            // others.
+				}
+
+				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.AliceConsAddress,
+						constants.ValidVEPrice,
+					),
+				)
+
+				require.NoError(t, err)
+
+				commitInfo, bz, err := vetesting.CreateExtendedCommitInfo(
+					[]cometabci.ExtendedVoteInfo{valVoteInfo},
+				)
+
+				require.NoError(t, err)
+
+				prop := createRequestPrepareProposal(
+					commitInfo,
+					proposal,
+					3,
+					int64(8)+msgSendTxBytesLen+msgSendAndTransferTxBytesLen+int64(len(bz)),
+				)
+
+				return prop
+			},
+
 			expectedTxs: [][]byte{
 				{1, 2, 3, 4},                          // order.
+				constants.Msg_SendAndTransfer_TxBytes, // others.
 				constants.Msg_Send_TxBytes,            // others.
-				constants.Msg_SendAndTransfer_TxBytes, // additional others.
 				{1, 2, 3, 4},                          // funding.
-				{1, 2, 3, 4},                          // prices.
+			},
+		},
+		"Valid: Multiple VE's with other tx": {
+			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
+			fundingEncoder: passingTxEncoderFour,
+
+			clobResp:    &clobtypes.MsgProposedOperations{},
+			clobEncoder: passingTxEncoderFour,
+
+			pricesParamsResp:              constants.TestMarketParams,
+			pricesMarketPriceFromByesResp: constants.ValidMarketPriceUpdates[0],
+
+			veEnabled: true,
+			height:    3,
+
+			expectedPrices: constants.ValidVEPrice,
+
+			request: func() *cometabci.RequestPrepareProposal {
+				proposal := [][]byte{
+					constants.Msg_SendAndTransfer_TxBytes, // others.
+					constants.Msg_Send_TxBytes,            // others.
+				}
+
+				valVoteInfoAlice, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.AliceConsAddress,
+						constants.ValidVEPrice,
+					),
+				)
+				require.NoError(t, err)
+
+				valVoteInfoBob, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.BobConsAddress,
+						constants.ValidVEPrice,
+					),
+				)
+
+				require.NoError(t, err)
+
+				commitInfo, bz, err := vetesting.CreateExtendedCommitInfo(
+					[]cometabci.ExtendedVoteInfo{valVoteInfoAlice, valVoteInfoBob},
+				)
+
+				require.NoError(t, err)
+
+				prop := createRequestPrepareProposal(
+					commitInfo,
+					proposal,
+					3,
+					int64(8)+msgSendTxBytesLen+msgSendAndTransferTxBytesLen+int64(len(bz)),
+				)
+
+				return prop
+			},
+
+			expectedTxs: [][]byte{
+				{1, 2, 3, 4},                          // order.
+				constants.Msg_SendAndTransfer_TxBytes, // others.
+				constants.Msg_Send_TxBytes,            // others.
+				{1, 2, 3, 4},                          // funding.
+			},
+		},
+		"Valid: Multiple VE's with other tx, but not all fit": {
+			fundingResp:    &perpetualtypes.MsgAddPremiumVotes{},
+			fundingEncoder: passingTxEncoderFour,
+
+			clobResp:    &clobtypes.MsgProposedOperations{},
+			clobEncoder: passingTxEncoderFour,
+
+			pricesParamsResp:              constants.TestMarketParams,
+			pricesMarketPriceFromByesResp: constants.ValidMarketPriceUpdates[0],
+
+			veEnabled: true,
+			height:    3,
+
+			expectedPrices: constants.ValidVEPrice,
+
+			request: func() *cometabci.RequestPrepareProposal {
+				proposal := [][]byte{
+					constants.Msg_SendAndTransfer_TxBytes, // others.
+					constants.Msg_Send_TxBytes,            // others.
+				}
+
+				valVoteInfoAlice, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.AliceConsAddress,
+						constants.ValidVEPrice,
+					),
+				)
+				require.NoError(t, err)
+
+				valVoteInfoBob, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.BobConsAddress,
+						constants.ValidVEPrice,
+					),
+				)
+
+				require.NoError(t, err)
+
+				commitInfo, bz, err := vetesting.CreateExtendedCommitInfo(
+					[]cometabci.ExtendedVoteInfo{valVoteInfoAlice, valVoteInfoBob},
+				)
+
+				require.NoError(t, err)
+
+				prop := createRequestPrepareProposal(
+					commitInfo,
+					proposal,
+					3,
+					int64(8)+int64(len(bz)),
+				)
+
+				return prop
+			},
+
+			expectedTxs: [][]byte{
+				{1, 2, 3, 4}, // order.
+				{1, 2, 3, 4}, // funding.
 			},
 		},
 	}
-
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			mockTxConfig := createMockTxConfig(
 				nil,
 				[]sdktypes.TxEncoder{
-					tc.pricesEncoder,
 					tc.fundingEncoder,
 					tc.clobEncoder,
 				},
 			)
 
-			mockPricesKeeper := mocks.PreparePricesKeeper{}
-			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
-				Return(tc.pricesResp)
+			// necessary mock keepers
+			mPricesKeeper, mClobKeeper, mPerpKeeper := buildMockKeepers()
 
-			mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
-			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
-				Return(tc.fundingResp)
-
-			mockClobKeeper := mocks.PrepareClobKeeper{}
-			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
-				Return(tc.clobResp)
+			setMockResponses(mPricesKeeper, mClobKeeper, mPerpKeeper, tc)
 
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
-			handler := prepare.PrepareProposalHandler(
-				mockTxConfig,
-				&mockClobKeeper,
-				&mockPricesKeeper,
-				&mockPerpKeeper,
-			)
-
-			req := abci.RequestPrepareProposal{
-				Txs:        tc.txs,
-				MaxTxBytes: tc.maxBytes,
+			if tc.veEnabled {
+				ctx = vetesting.GetVeEnabledCtx(ctx, tc.height)
 			}
 
-			response, err := handler(ctx, &req)
+			handler := prepare.PrepareProposalHandler(
+				mockTxConfig,
+				mClobKeeper,
+				mPerpKeeper,
+				mPricesKeeper,
+				votecodec,
+				extcodec,
+				prepareutils.NoOpValidateVoteExtensionsFn,
+			)
+
+			req := tc.request()
+			response, err := handler(ctx, req)
 			require.NoError(t, err)
-			require.Equal(t, tc.expectedTxs, response.Txs)
+			require.Equal(t, tc.expectedTxs, getResponseTransactionsWithoutExtInfo(response.Txs))
+
+			if tc.veEnabled {
+				bz, err := extcodec.Encode(req.LocalLastCommit)
+				require.NoError(t, err)
+				if len(response.Txs) > 0 {
+					if int64(len(bz)) <= req.MaxTxBytes {
+						require.Equal(t, bz, response.Txs[0])
+					}
+
+					validateVotesAgainstExpectedPrices(t, tc.expectedPrices, response.Txs[0], extcodec, votecodec)
+				}
+			}
 		})
 	}
 }
@@ -257,6 +590,8 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 		txs [][]byte
 
 		expectedTxs [][]byte
+
+		veEnabled bool
 	}{
 		"Valid: all others txs contain disallow msgs": {
 			txs: [][]byte{
@@ -266,9 +601,11 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 			expectedTxs: [][]byte{
 				constants.ValidEmptyMsgProposedOperationsTxBytes, // order.
 				// no other txs.
-				constants.ValidMsgAddPremiumVotesTxBytes,    // funding.
-				constants.ValidMsgUpdateMarketPricesTxBytes, // prices.
+				constants.ValidMsgAddPremiumVotesTxBytes, // funding.
+
 			},
+
+			veEnabled: false,
 		},
 		"Valid: some others txs contain disallow msgs": {
 			txs: [][]byte{
@@ -283,16 +620,17 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				constants.Msg_SendAndTransfer_TxBytes,            // others.
 				constants.Msg_Send_TxBytes,                       // others.
 				constants.ValidMsgAddPremiumVotesTxBytes,         // funding.
-				constants.ValidMsgUpdateMarketPricesTxBytes,      // prices.
+
 			},
+			veEnabled: false,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mockPricesKeeper := mocks.PreparePricesKeeper{}
-			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
-				Return(constants.ValidMsgUpdateMarketPrices)
+			mockPricesKeeper := mocks.PreBlockExecPricesKeeper{}
+			mockPricesKeeper.On("GetAllMarketParams", mock.Anything).
+				Return(constants.ValidEmptyMarketParams)
 
 			mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
 			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
@@ -302,16 +640,27 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
 				Return(constants.ValidEmptyMsgProposedOperations)
 
+			mockConsumerKeeper := mocks.PrepareConsumerKeeper{}
+			mockConsumerKeeper.On("GetCCValidator", mock.Anything, mock.Anything).
+				Return(constants.ValidEmptyCrossChainValidator, true)
+
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
+
+			if tc.veEnabled {
+				ctx = vetesting.GetVeEnabledCtx(ctx, 3)
+			}
 
 			handler := prepare.PrepareProposalHandler(
 				encodingCfg.TxConfig,
 				&mockClobKeeper,
-				&mockPricesKeeper,
 				&mockPerpKeeper,
+				&mockPricesKeeper,
+				vecodec.NewDefaultVoteExtensionCodec(),
+				vecodec.NewDefaultExtendedCommitCodec(),
+				ve.NewValidateVEConsensusInfo(&mockConsumerKeeper),
 			)
 
-			req := abci.RequestPrepareProposal{
+			req := cometabci.RequestPrepareProposal{
 				Txs:        tc.txs,
 				MaxTxBytes: 100_000, // something large.
 			}
@@ -319,68 +668,6 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 			response, err := handler(ctx, &req)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedTxs, response.Txs)
-		})
-	}
-}
-
-func TestGetUpdateMarketPricesTx(t *testing.T) {
-	tests := map[string]struct {
-		keeperResp *pricestypes.MsgUpdateMarketPrices
-		txEncoder  sdktypes.TxEncoder
-
-		expectedTx         []byte
-		expectedNumMarkets int
-		expectedErr        error
-	}{
-		"nil message fails": {
-			keeperResp: nil,
-
-			expectedErr: fmt.Errorf("MsgUpdateMarketPrices cannot be nil"),
-		},
-		"empty message": {
-			keeperResp: &pricestypes.MsgUpdateMarketPrices{}, // empty
-			txEncoder:  passingTxEncoderOne,
-
-			expectedTx:         []byte{1},
-			expectedNumMarkets: 0,
-		},
-		"empty tx": {
-			keeperResp: &pricestypes.MsgUpdateMarketPrices{},
-			txEncoder:  emptyTxEncoder, // returns empty tx.
-
-			expectedErr: fmt.Errorf("Invalid tx: []"),
-		},
-		"valid message, but encoding fails": {
-			keeperResp: &pricestypes.MsgUpdateMarketPrices{}, // empty
-			txEncoder:  failingTxEncoder,
-
-			expectedErr: fmt.Errorf("encoder failed"),
-		},
-		"valid message": {
-			keeperResp: &pricestypes.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{{}, {}, {}},
-			},
-			txEncoder: passingTxEncoderOne,
-
-			expectedTx:         []byte{1},
-			expectedNumMarkets: 3,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			mockTxConfig := createMockTxConfig(nil, []sdktypes.TxEncoder{tc.txEncoder})
-			mockPricesKeeper := mocks.PreparePricesKeeper{}
-			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
-				Return(tc.keeperResp)
-
-			resp, err := prepare.GetUpdateMarketPricesTx(ctx, mockTxConfig, &mockPricesKeeper)
-			if tc.expectedErr != nil {
-				require.Equal(t, err, tc.expectedErr)
-			} else {
-				require.NoError(t, err)
-			}
-			require.Equal(t, tc.expectedTx, resp.Tx)
-			require.Equal(t, tc.expectedNumMarkets, resp.NumMarkets)
 		})
 	}
 }
@@ -410,7 +697,7 @@ func TestGetAddPremiumVotesTx(t *testing.T) {
 			keeperResp: &perpetualtypes.MsgAddPremiumVotes{},
 			txEncoder:  emptyTxEncoder, // returns empty tx.
 
-			expectedErr: fmt.Errorf("Invalid tx: []"),
+			expectedErr: fmt.Errorf("invalid tx: []"),
 		},
 		"valid message, but encoding fails": {
 			keeperResp: &perpetualtypes.MsgAddPremiumVotes{}, // empty
@@ -434,8 +721,11 @@ func TestGetAddPremiumVotesTx(t *testing.T) {
 			mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
 			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
 				Return(tc.keeperResp)
-
-			resp, err := prepare.GetAddPremiumVotesTx(ctx, mockTxConfig, &mockPerpKeeper)
+			txSetterParams := prepare.TxSetterUtils{
+				Ctx:      ctx,
+				TxConfig: mockTxConfig,
+			}
+			resp, err := prepare.GetAddPremiumVotesTx(txSetterParams, &mockPerpKeeper)
 			if tc.expectedErr != nil {
 				require.Equal(t, err, tc.expectedErr)
 			} else {
@@ -474,7 +764,7 @@ func TestGetProposedOperationsTx(t *testing.T) {
 			keeperResp: &clobtypes.MsgProposedOperations{},
 			txEncoder:  emptyTxEncoder, // returns empty tx.
 
-			expectedErr: fmt.Errorf("Invalid tx: []"),
+			expectedErr: fmt.Errorf("invalid tx: []"),
 		},
 		"valid message, but encoding fails": {
 			keeperResp: &clobtypes.MsgProposedOperations{}, // empty
@@ -498,8 +788,11 @@ func TestGetProposedOperationsTx(t *testing.T) {
 			mockTxConfig := createMockTxConfig(nil, []sdktypes.TxEncoder{tc.txEncoder})
 			mockClobKeeper := mocks.PrepareClobKeeper{}
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).Return(tc.keeperResp)
-
-			resp, err := prepare.GetProposedOperationsTx(ctx, mockTxConfig, &mockClobKeeper)
+			txSetterParams := prepare.TxSetterUtils{
+				Ctx:      ctx,
+				TxConfig: mockTxConfig,
+			}
+			resp, err := prepare.GetProposedOperationsTx(txSetterParams, &mockClobKeeper)
 			if tc.expectedErr != nil {
 				require.Equal(t, err, tc.expectedErr)
 			} else {
@@ -564,4 +857,61 @@ func createMockTxConfig(setMsgsError error, allTxEncoders []sdktypes.TxEncoder) 
 	mockTxConfig.On("TxDecoder").Return(encoding.GetTestEncodingCfg().TxConfig.TxDecoder())
 
 	return &mockTxConfig
+}
+
+func createRequestPrepareProposal(
+	extendedCommitInfo cometabci.ExtendedCommitInfo,
+	txs [][]byte,
+	height int64,
+	maxBytes int64,
+) *cometabci.RequestPrepareProposal {
+	return &cometabci.RequestPrepareProposal{
+		Txs:             txs,
+		LocalLastCommit: extendedCommitInfo,
+		Height:          height,
+		MaxTxBytes:      maxBytes,
+	}
+}
+
+func buildMockKeepers() (*mocks.PreBlockExecPricesKeeper, *mocks.PrepareClobKeeper, *mocks.PreparePerpetualsKeeper) {
+	mPricesk := &mocks.PreBlockExecPricesKeeper{}
+	mClobk := &mocks.PrepareClobKeeper{}
+	mPerpk2 := &mocks.PreparePerpetualsKeeper{}
+
+	return mPricesk, mClobk, mPerpk2
+}
+
+func setMockResponses(
+	mPricesKeeper *mocks.PreBlockExecPricesKeeper,
+	mClobKeeper *mocks.PrepareClobKeeper,
+	mPerpKeeper *mocks.PreparePerpetualsKeeper,
+	tc PerpareProposalHandlerTC,
+) {
+	mPricesKeeper.On("GetAllMarketParams", mock.Anything).
+		Return(tc.pricesParamsResp)
+	mPricesKeeper.On("PerformStatefulPriceUpdateValidation", mock.Anything, mock.Anything).
+		Return(nil)
+	mPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
+		Return(tc.fundingResp)
+	mClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
+		Return(tc.clobResp)
+}
+
+func getResponseTransactionsWithoutExtInfo(txs [][]byte) [][]byte {
+	if len(txs) == 0 {
+		return txs
+	}
+	return txs[1:]
+}
+
+func validateVotesAgainstExpectedPrices(t *testing.T, expectedPrices map[uint32][]byte, extCommitInfoBz []byte, extcodec vecodec.ExtendedCommitCodec, votecodec vecodec.VoteExtensionCodec) {
+	extCommitInfo, err := extcodec.Decode(extCommitInfoBz)
+	require.NoError(t, err)
+	for _, vote := range extCommitInfo.Votes {
+		if vote.VoteExtension != nil {
+			voteExt, err := votecodec.Decode(vote.VoteExtension)
+			require.NoError(t, err)
+			require.Equal(t, expectedPrices, voteExt.Prices)
+		}
+	}
 }

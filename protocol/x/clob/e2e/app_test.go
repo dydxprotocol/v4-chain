@@ -8,6 +8,7 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -810,12 +811,19 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 
 			proposal, err := tApp.PrepareProposal()
 			require.NoError(t, err)
-			proposal.Txs[0] = testtx.MustGetTxBytes(
+			proposal.Txs[1] = testtx.MustGetTxBytes(
 				&clobtypes.MsgProposedOperations{
 					OperationsQueue: operationsQueue,
 				},
 			)
-
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]uint64{},
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+			proposal.Txs[0] = extCommitBz
 			tApp.AdvanceToBlock(3,
 				testapp.AdvanceToBlockOptions{
 					RequestProcessProposalTxsOverride: proposal.Txs,
@@ -824,7 +832,7 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 						request abcitypes.RequestFinalizeBlock,
 						response abcitypes.ResponseFinalizeBlock,
 					) (haltchain bool) {
-						txResult := response.TxResults[0]
+						txResult := response.TxResults[1]
 						require.Condition(t, txResult.IsErr, "Expected DeliverTx to fail but passed %+v", response)
 						require.Contains(t, txResult.Log, "invalid pubkey: MsgProposedOperations is invalid")
 						return true
@@ -858,12 +866,20 @@ func TestFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
 			}
 			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			tApp.InitChain()
-			tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			proposal, err := tApp.PrepareProposal()
 			require.NoError(t, err)
-			proposal.Txs[0] = tc.proposedOperationsTx
+			proposal.Txs[1] = tc.proposedOperationsTx
 
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]uint64{},
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+			proposal.Txs[0] = extCommitBz
 			tApp.AdvanceToBlock(
 				3,
 				testapp.AdvanceToBlockOptions{
@@ -873,7 +889,7 @@ func TestFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
 						request abcitypes.RequestFinalizeBlock,
 						response abcitypes.ResponseFinalizeBlock,
 					) (haltchain bool) {
-						txResult := response.TxResults[0]
+						txResult := response.TxResults[1]
 						require.Condition(t, txResult.IsErr, "Expected DeliverTx to fail but passed %+v", response)
 						require.Contains(t, txResult.Log, "Error: no signatures supplied: MsgProposedOperations is invalid")
 						return true

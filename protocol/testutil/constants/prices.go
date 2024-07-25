@@ -6,20 +6,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
 
-func init() {
-	_ = TestTxBuilder.SetMsgs(EmptyMsgUpdateMarketPrices)
-	EmptyMsgUpdateMarketPricesTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
-
-	_ = TestTxBuilder.SetMsgs(ValidMsgUpdateMarketPrices)
-	ValidMsgUpdateMarketPricesTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
-
-	_ = TestTxBuilder.SetMsgs(InvalidMsgUpdateMarketPricesStateless)
-	InvalidMsgUpdateMarketPricesStatelessTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
-
-	_ = TestTxBuilder.SetMsgs(InvalidMsgUpdateMarketPricesStateful)
-	InvalidMsgUpdateMarketPricesStatefulTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
-}
-
 const (
 	BtcUsdPair   = "BTC-USD"
 	EthUsdPair   = "ETH-USD"
@@ -268,6 +254,15 @@ var TestMarketParams = []types.MarketParam{
 	},
 }
 
+var TestSingleMarketParam = types.MarketParam{
+	Id:                 0,
+	Pair:               BtcUsdPair,
+	Exponent:           BtcUsdExponent,
+	MinExchanges:       1,
+	MinPriceChangePpm:  50,
+	ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
+}
+
 var TestMarketPrices = []types.MarketPrice{
 	{
 		Id:       0,
@@ -310,38 +305,103 @@ var TestPricesGenesisState = types.GenesisState{
 }
 
 var (
-	ValidMarketPriceUpdates = []*types.MsgUpdateMarketPrices_MarketPrice{
-		types.NewMarketPriceUpdate(MarketId0, Price5),
-		types.NewMarketPriceUpdate(MarketId1, Price6),
-		types.NewMarketPriceUpdate(MarketId2, Price7),
-		types.NewMarketPriceUpdate(MarketId3, Price4),
-		types.NewMarketPriceUpdate(MarketId4, Price3),
+	ValidMarketPriceUpdates = []*types.MarketPriceUpdates_MarketPriceUpdate{
+		{
+			MarketId: MarketId0,
+			Price:    Price5,
+		},
+		{
+			MarketId: MarketId1,
+			Price:    Price6,
+		},
+		{
+			MarketId: MarketId2,
+			Price:    Price7,
+		},
+		{
+			MarketId: MarketId3,
+			Price:    Price4,
+		},
+		{
+			MarketId: MarketId4,
+			Price:    Price3,
+		},
 	}
 
-	// `MsgUpdateMarketPrices`.
-	EmptyMsgUpdateMarketPrices        = &types.MsgUpdateMarketPrices{}
-	EmptyMsgUpdateMarketPricesTxBytes []byte
+	ValidSingleMarketPriceUpdateObj = &types.MarketPriceUpdates{
+		MarketPriceUpdates: ValidSingleMarketPriceUpdate,
+	}
+	ValidSingleMarketPriceUpdate = []*types.MarketPriceUpdates_MarketPriceUpdate{
+		{
+			MarketId: MarketId0,
+			Price:    Price5,
+		},
+	}
 
-	ValidMsgUpdateMarketPrices = &types.MsgUpdateMarketPrices{
+	ValidSingleVEPrice = map[uint32][]byte{
+		MarketId0: Price5Bytes,
+	}
+
+	ValidVEPricesWithOneInvalid = map[uint32][]byte{
+		MarketId0: Price5Bytes,
+		MarketId1: Price6Bytes,
+		MarketId2: []byte("invalid"),
+	}
+
+	ValidVEPrice = map[uint32][]byte{
+		MarketId0: Price5Bytes,
+		MarketId1: Price6Bytes,
+		MarketId2: Price7Bytes,
+	}
+
+	InvalidVEPriceBytes = map[uint32][]byte{
+		MarketId0: Price5NegativeBytes,
+		MarketId1: Price6NegativeBytes,
+		MarketId2: Price7NegativeBytes,
+	}
+
+	InvalidVePricesMarketIds = map[uint32][]byte{
+		99:  Price5Bytes,
+		101: Price6Bytes,
+		102: Price7Bytes,
+	}
+
+	ValidEmptyMarketParams         = []types.MarketParam{}
+	EmptyUpdateMarketPrices        = &types.MarketPriceUpdates{}
+	EmptyUpdateMarketPricesTxBytes []byte
+
+	ValidUpdateMarketPrices = &types.MarketPriceUpdates{
 		MarketPriceUpdates: ValidMarketPriceUpdates,
 	}
-	ValidMsgUpdateMarketPricesTxBytes []byte
+	ValidUpdateMarketPricesTxBytes []byte
 
-	InvalidMsgUpdateMarketPricesStateless = &types.MsgUpdateMarketPrices{
-		MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{
-			types.NewMarketPriceUpdate(MarketId0, 0), // 0 price value is invalid.
+	InvalidUpdateMarketPricesStateless = &types.MarketPriceUpdates{
+		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
+			{
+				MarketId: MarketId0,
+				Price:    0, // 0 price value is invalid.
+			},
 		},
 	}
-	InvalidMsgUpdateMarketPricesStatelessTxBytes []byte
+	InvalidUpdateMarketPricesStatelessTxBytes []byte
 
-	InvalidMsgUpdateMarketPricesStateful = &types.MsgUpdateMarketPrices{
-		MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{
-			types.NewMarketPriceUpdate(MarketId0, Price5),
-			types.NewMarketPriceUpdate(MarketId1, Price6),
-			types.NewMarketPriceUpdate(99, Price3), // Market with id 99 does not exist.
+	InvalidUpdateMarketPricesStateful = &types.MarketPriceUpdates{
+		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
+			{
+				MarketId: MarketId0,
+				Price:    Price5,
+			},
+			{
+				MarketId: MarketId1,
+				Price:    Price6,
+			},
+			{
+				MarketId: 99,
+				Price:    Price3, // Market with id 99 does not exist.
+			},
 		},
 	}
-	InvalidMsgUpdateMarketPricesStatefulTxBytes []byte
+	InvalidUpdateMarketPricesStatefulTxBytes []byte
 
 	Prices_DefaultGenesisState = types.GenesisState{
 		MarketParams: []types.MarketParam{

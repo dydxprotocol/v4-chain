@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -12,15 +13,14 @@ import (
 
 func createNMarketPriceUpdates(
 	n int,
-) []*types.MsgUpdateMarketPrices_MarketPrice {
-	items := make([]*types.MsgUpdateMarketPrices_MarketPrice, n)
+) []*types.MarketPriceUpdates_MarketPriceUpdate {
+	items := make([]*types.MarketPriceUpdates_MarketPriceUpdate, n)
 	for i := range items {
-		items[i] = &types.MsgUpdateMarketPrices_MarketPrice{
+		items[i] = &types.MarketPriceUpdates_MarketPriceUpdate{
 			MarketId: uint32(i),
 			Price:    uint64(i),
 		}
 	}
-
 	return items
 }
 
@@ -39,11 +39,13 @@ func TestUpdateMarketPrices(t *testing.T) {
 	}
 
 	priceUpdates := append(firstPriceUpdates, secondPriceUpdates...)
-	err := keeper.UpdateMarketPrices(
-		ctx,
-		priceUpdates,
-	)
-	require.NoError(t, err)
+	for _, update := range priceUpdates {
+		err := keeper.UpdateMarketPrice(
+			ctx,
+			update,
+		)
+		require.NoError(t, err)
+	}
 
 	marketPrices := make([]types.MarketPrice, 10)
 	for i, item := range items {
@@ -64,19 +66,23 @@ func TestUpdateMarketPrices_NotFound(t *testing.T) {
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	priceUpdates := createNMarketPriceUpdates(10)
-	err := keeper.UpdateMarketPrices(
-		ctx,
-		priceUpdates,
-	)
-	require.EqualError(t, err, "0: Market price does not exist")
+	for i, update := range priceUpdates {
+		err := keeper.UpdateMarketPrice(
+			ctx,
+			update,
+		)
+		require.EqualError(t, err, fmt.Sprintf(`%d: Market price does not exist`, i))
+	}
 	keepertest.AssertMarketEventsNotInIndexerBlock(t, keeper, ctx)
 
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
-	err = keeper.UpdateMarketPrices(
-		ctx,
-		priceUpdates,
-	)
-	require.NoError(t, err)
+	for _, update := range priceUpdates {
+		err := keeper.UpdateMarketPrice(
+			ctx,
+			update,
+		)
+		require.NoError(t, err)
+	}
 
 	for i, item := range items {
 		price, err := keeper.GetMarketPrice(ctx, item.Param.Id)

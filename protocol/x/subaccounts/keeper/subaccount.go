@@ -795,6 +795,7 @@ func IsValidStateTransitionForUndercollateralizedSubaccount(
 ) types.UpdateResult {
 	// Determine whether the subaccount was previously undercollateralized before the update.
 	var underCollateralizationResult = types.StillUndercollateralized
+
 	if bigCurInitialMargin.Cmp(bigCurNetCollateral) <= 0 {
 		underCollateralizationResult = types.NewlyUndercollateralized
 	}
@@ -928,7 +929,6 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	calculate := func(pk types.ProductKeeper, size types.PositionSize) error {
 		id := size.GetId()
 		bigQuantums := size.GetBigQuantums()
-
 		bigNetCollateralQuoteQuantums, err := pk.GetNetCollateral(ctx, id, bigQuantums)
 		if err != nil {
 			return err
@@ -945,7 +945,6 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 
 		bigInitialMargin.Add(bigInitialMargin, bigInitialMarginRequirements)
 		bigMaintenanceMargin.Add(bigMaintenanceMargin, bigMaintenanceMarginRequirements)
-
 		return nil
 	}
 

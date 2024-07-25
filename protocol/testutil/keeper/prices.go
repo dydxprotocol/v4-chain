@@ -107,11 +107,9 @@ func CreateTestMarkets(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 			constants.TestMarketPrices[i],
 		)
 		require.NoError(t, err)
-		err = k.UpdateMarketPrices(ctx, []*types.MsgUpdateMarketPrices_MarketPrice{
-			{
-				MarketId: uint32(i),
-				Price:    constants.TestMarketPrices[i].Price,
-			},
+		err = k.UpdateMarketPrice(ctx, &types.MarketPriceUpdates_MarketPriceUpdate{
+			MarketId: uint32(i),
+			Price:    constants.TestMarketPrices[i].Price,
 		})
 		require.NoError(t, err)
 	}
@@ -155,7 +153,11 @@ func AssertPriceUpdateEventsInIndexerBlock(
 	updatedMarketPrices []types.MarketPrice,
 ) {
 	marketEvents := getMarketEventsFromIndexerBlock(ctx, k)
-	expectedEvents := keeper.GenerateMarketPriceUpdateIndexerEvents(updatedMarketPrices)
+	var expectedEvents []*indexerevents.MarketEventV1
+	for _, updatedMarketPrice := range updatedMarketPrices {
+		expectedEvent := keeper.GenerateMarketPriceUpdateIndexerEvent(updatedMarketPrice)
+		expectedEvents = append(expectedEvents, expectedEvent)
+	}
 	for _, expectedEvent := range expectedEvents {
 		require.Contains(t, marketEvents, expectedEvent)
 	}

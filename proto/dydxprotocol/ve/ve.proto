@@ -1,0 +1,12 @@
+syntax = "proto3";
+package dydxprotocol.ve;
+
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types";
+
+// Daemon VoteExtension defines the vote extension structure for daemon prices.
+message DaemonVoteExtension {
+  // Prices defines a map of marketId -> price.Bytes() . i.e. 1 ->
+  // 0x123.. (bytes). Notice the `id` function is determined by the
+  // `marketParams` used in the VoteExtensionHandler.
+  map<uint32, bytes> prices = 1;
+}

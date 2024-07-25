@@ -226,6 +226,10 @@ func TestMsgCreateTransfer(t *testing.T) {
 						response abcitypes.ResponseFinalizeBlock,
 					) (haltChain bool) {
 						for i, tx := range request.Txs {
+							if i == 0 {
+								// tx is empty extInfoBz
+								continue
+							}
 							if bytes.Equal(tx, CheckTx_MsgCreateTransfer.Tx) {
 								require.True(t, response.TxResults[i].IsErr())
 							} else {
@@ -936,8 +940,8 @@ func TestWithdrawalGating_ChainOutage(t *testing.T) {
 						request abcitypes.RequestFinalizeBlock,
 						response abcitypes.ResponseFinalizeBlock,
 					) (haltchain bool) {
-						// Note the first TX is MsgProposedOperations, the second is all other TXs.
-						execResult := response.TxResults[1]
+						// Note the first TX is ExtInfoBz and second is MsgProposedOperations, the second is all other TXs.
+						execResult := response.TxResults[2]
 						require.True(t, execResult.IsErr())
 						require.Equal(t, satypes.ErrFailedToUpdateSubaccounts.ABCICode(), execResult.Code)
 						require.Contains(t, execResult.Log, "WithdrawalsAndTransfersBlocked: failed to apply subaccount updates")

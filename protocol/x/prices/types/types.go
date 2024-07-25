@@ -18,9 +18,9 @@ type PricesKeeper interface {
 		param MarketParam,
 	) (updatedMarketParam MarketParam, err error)
 
-	UpdateMarketPrices(
+	UpdateMarketPrice(
 		ctx sdk.Context,
-		updates []*MsgUpdateMarketPrices_MarketPrice,
+		updates *MarketPriceUpdates_MarketPriceUpdate,
 	) (err error)
 
 	GetAllMarketParamPrices(ctx sdk.Context) (marketPramPrices []MarketParamPrice, err error)
@@ -34,8 +34,7 @@ type PricesKeeper interface {
 	// Validation related.
 	PerformStatefulPriceUpdateValidation(
 		ctx sdk.Context,
-		marketPriceUpdates *MsgUpdateMarketPrices,
-		performNonDeterministicValidation bool,
+		marketPriceUpdates *MarketPriceUpdates,
 	) error
 
 	// Proposal related.

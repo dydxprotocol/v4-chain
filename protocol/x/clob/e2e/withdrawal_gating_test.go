@@ -303,7 +303,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 						response abcitypes.ResponseFinalizeBlock,
 					) (haltchain bool) {
 						// Note the first TX is MsgProposedOperations, the second is all other TXs.
-						execResult := response.TxResults[1]
+						execResult := response.TxResults[2]
 						require.True(t, execResult.IsErr())
 						require.Equal(t, satypes.ErrFailedToUpdateSubaccounts.ABCICode(), execResult.Code)
 						require.Contains(t, execResult.Log, tc.expectedErr)

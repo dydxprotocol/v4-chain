@@ -255,17 +255,17 @@ func (_m *PricesKeeper) ModifyMarketParam(ctx types.Context, param pricestypes.M
 	return r0, r1
 }
 
-// PerformStatefulPriceUpdateValidation provides a mock function with given fields: ctx, marketPriceUpdates, performNonDeterministicValidation
-func (_m *PricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, marketPriceUpdates *pricestypes.MsgUpdateMarketPrices, performNonDeterministicValidation bool) error {
-	ret := _m.Called(ctx, marketPriceUpdates, performNonDeterministicValidation)
+// PerformStatefulPriceUpdateValidation provides a mock function with given fields: ctx, marketPriceUpdates
+func (_m *PricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, marketPriceUpdates *pricestypes.MarketPriceUpdates) error {
+	ret := _m.Called(ctx, marketPriceUpdates)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PerformStatefulPriceUpdateValidation")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MsgUpdateMarketPrices, bool) error); ok {
-		r0 = rf(ctx, marketPriceUpdates, performNonDeterministicValidation)
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdates) error); ok {
+		r0 = rf(ctx, marketPriceUpdates)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -273,16 +273,16 @@ func (_m *PricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, 
 	return r0
 }
 
-// UpdateMarketPrices provides a mock function with given fields: ctx, updates
-func (_m *PricesKeeper) UpdateMarketPrices(ctx types.Context, updates []*pricestypes.MsgUpdateMarketPrices_MarketPrice) error {
+// UpdateMarketPrice provides a mock function with given fields: ctx, updates
+func (_m *PricesKeeper) UpdateMarketPrice(ctx types.Context, updates *pricestypes.MarketPriceUpdates_MarketPriceUpdate) error {
 	ret := _m.Called(ctx, updates)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateMarketPrices")
+		panic("no return value specified for UpdateMarketPrice")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, []*pricestypes.MsgUpdateMarketPrices_MarketPrice) error); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdates_MarketPriceUpdate) error); ok {
 		r0 = rf(ctx, updates)
 	} else {
 		r0 = ret.Error(0)

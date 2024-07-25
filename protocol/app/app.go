@@ -13,6 +13,7 @@ import (
 	"time"
 
 	custommodule "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -31,6 +32,7 @@ import (
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	antetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ante/types"
+	daemonpreblocker "github.com/StreamFinance-Protocol/stream-chain/protocol/app/preblocker"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/configs"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -99,6 +101,12 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	timelib "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/time"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/rate_limit"
+
+	// VE
+	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
+	priceapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
+	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 
 	// Mempool
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mempool"
@@ -220,6 +228,8 @@ type App struct {
 
 	cdc               *codec.LegacyAmino
 	appCodec          codec.Codec
+	voteCodec         vecodec.VoteExtensionCodec
+	extCodec          vecodec.ExtendedCommitCodec
 	txConfig          client.TxConfig
 	interfaceRegistry types.InterfaceRegistry
 	event             runtime.EventService
@@ -298,6 +308,8 @@ type App struct {
 	LiquidationsClient *liquidationclient.Client
 
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
+
+	pricePreBlocker daemonpreblocker.PreBlockHandler
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -734,7 +746,7 @@ func New(
 		}
 
 		// Non-validating full-nodes have no need to run the price daemon.
-		if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
+		if !appFlags.NonValidatingFullNode {
 			exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
@@ -930,6 +942,40 @@ func New(
 		app.BankKeeper,
 		app.SubaccountsKeeper,
 	)
+
+	/****  ve daemon initializer ****/
+	app.voteCodec = vecodec.NewDefaultVoteExtensionCodec()
+	app.extCodec = vecodec.NewDefaultExtendedCommitCodec()
+
+	aggregatorFn := voteweighted.Median(
+		logger,
+		app.ConsumerKeeper,
+		voteweighted.DefaultPowerThreshold,
+	)
+
+	aggregator := veaggregator.NewVeAggregator(
+		logger,
+		indexPriceCache,
+		app.PricesKeeper,
+		aggregatorFn,
+	)
+
+	priceApplier := priceapplier.NewPriceApplier(
+		logger,
+		aggregator,
+		app.PricesKeeper,
+		app.voteCodec,
+		app.extCodec,
+	)
+
+	app.pricePreBlocker = *daemonpreblocker.NewDaemonPreBlockHandler(
+		logger,
+		priceApplier,
+	)
+
+	if !appFlags.NonValidatingFullNode {
+		app.InitVoteExtensions(logger, app.voteCodec, app.PricesKeeper, priceApplier)
+	}
 
 	/****  Module Options ****/
 
@@ -1164,6 +1210,8 @@ func New(
 	app.SetPrecommiter(app.Precommitter)
 	app.SetPrepareCheckStater(app.PrepareCheckStater)
 
+	veValidationFn := ve.NewValidateVEConsensusInfo(app.ConsumerKeeper)
+
 	// PrepareProposal setup.
 	if appFlags.NonValidatingFullNode {
 		app.SetPrepareProposal(prepare.FullNodePrepareProposalHandler())
@@ -1172,8 +1220,11 @@ func New(
 			prepare.PrepareProposalHandler(
 				txConfig,
 				app.ClobKeeper,
-				app.PricesKeeper,
 				app.PerpetualsKeeper,
+				app.PricesKeeper,
+				app.voteCodec,
+				app.extCodec,
+				veValidationFn,
 			),
 		)
 	}
@@ -1198,6 +1249,10 @@ func New(
 				app.ClobKeeper,
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
+				app.extCodec,
+				app.voteCodec,
+				priceApplier,
+				veValidationFn,
 			),
 		)
 	}
@@ -1282,7 +1337,11 @@ func (app *App) initializeRateLimiters() {
 func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
 
 // PreBlocker application updates before each begin block.
-func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+func (app *App) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	resp, err := app.pricePreBlocker.PreBlocker(ctx, req)
+	if err != nil {
+		return resp, err
+	}
 	// Set gas meter to the free gas meter.
 	// This is because there is currently non-deterministic gas usage in the
 	// pre-blocker, e.g. due to hydration of in-memory data structures.
@@ -1291,6 +1350,17 @@ func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.
 	// because Go is pass by value.
 	ctx = ctx.WithGasMeter(antetypes.NewFreeInfiniteGasMeter())
 	return app.ModuleManager.PreBlock(ctx)
+}
+
+func (app *App) InitVoteExtensions(
+	logger log.Logger,
+	veCodec vecodec.VoteExtensionCodec,
+	pricesKeeper pricesmodulekeeper.Keeper,
+	priceApplier *priceapplier.PriceApplier,
+) {
+	veHandler := ve.NewVoteExtensionHandler(logger, veCodec, pricesKeeper, priceApplier)
+	app.SetExtendVoteHandler(veHandler.ExtendVoteHandler())
+	app.SetVerifyVoteExtensionHandler(veHandler.VerifyVoteExtensionHandler())
 }
 
 // BeginBlocker application updates every begin block

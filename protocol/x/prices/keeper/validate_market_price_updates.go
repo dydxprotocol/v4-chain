@@ -22,24 +22,18 @@ const (
 	CrossingPriceUpdateCutoffPpm = uint32(500_000) // 50%
 )
 
-// PerformStatefulPriceUpdateValidation performs stateful validations on `MsgUpdateMarketPrices`.
+// PerformStatefulPriceUpdateValidation performs stateful validations on `UpdateMarketPrices`.
 // Depending on the input, this func performs non-deterministic stateful validation.
 func (k Keeper) PerformStatefulPriceUpdateValidation(
 	ctx sdk.Context,
-	marketPriceUpdates *types.MsgUpdateMarketPrices,
-	performNonDeterministicValidation bool,
+	marketPriceUpdates *types.MarketPriceUpdates,
 ) error {
-	var determinismMetricKeyValue string
-	if performNonDeterministicValidation {
-		determinismMetricKeyValue = metrics.NonDeterministic
-	} else {
-		determinismMetricKeyValue = metrics.Deterministic
-	}
+
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
 		time.Now(),
 		metrics.StatefulPriceUpdateValidation,
-		determinismMetricKeyValue,
+		metrics.Deterministic,
 		metrics.Latency,
 	)
 
@@ -68,20 +62,6 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 		return errorlib.WrapErrorWithSourceModuleContext(err, types.ModuleName)
 	}
 
-	if performNonDeterministicValidation {
-		err := k.performNonDeterministicStatefulValidation(ctx, marketPriceUpdates, marketParamPrices)
-		if err != nil {
-			telemetry.IncrCounter(
-				1,
-				types.ModuleName,
-				metrics.StatefulPriceUpdateValidation,
-				metrics.NonDeterministic,
-				metrics.Error,
-			)
-			return errorlib.WrapErrorWithSourceModuleContext(err, types.ModuleName)
-		}
-	}
-
 	return nil
 }
 
@@ -94,7 +74,7 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 // Note: this is NOT determistic, because it relies on "index price" that is subject to each validator.
 func (k Keeper) performNonDeterministicStatefulValidation(
 	ctx sdk.Context,
-	marketPriceUpdates *types.MsgUpdateMarketPrices,
+	marketPriceUpdates *types.MarketPriceUpdates,
 	allMarketParamPrices []types.MarketParamPrice,
 ) error {
 	idToMarket := getIdToMarketParamPrice(allMarketParamPrices)
@@ -168,7 +148,7 @@ func (k Keeper) performNonDeterministicStatefulValidation(
 //   - The price update is greater than the min price change.
 func (k Keeper) performDeterministicStatefulValidation(
 	ctx sdk.Context,
-	marketPriceUpdates *types.MsgUpdateMarketPrices,
+	marketPriceUpdates *types.MarketPriceUpdates,
 	allMarketParamPrices []types.MarketParamPrice,
 ) error {
 	idToMarketParamPrice := getIdToMarketParamPrice(allMarketParamPrices)
@@ -212,7 +192,7 @@ func (k Keeper) performDeterministicStatefulValidation(
 //     Note that ticks are defined as the minimum price change of the currency at the current price
 func (k Keeper) validatePriceAccuracy(
 	currMarketParamPrice types.MarketParamPrice,
-	priceUpdate *types.MsgUpdateMarketPrices_MarketPrice,
+	priceUpdate *types.MarketPriceUpdates_MarketPriceUpdate,
 	indexPrice uint64,
 ) error {
 	if isTowardsIndexPrice(PriceTuple{
@@ -282,12 +262,12 @@ func (k Keeper) validatePriceAccuracy(
 }
 
 // GetMarketsMissingFromPriceUpdates returns a list of market ids that should have been included but
-// not present in the `MsgUpdateMarketPrices`.
+// not present in the VE prices.
 //
 // Note: this is NOT determistic, because it relies on "index price" that is subject to each validator.
 func (k Keeper) GetMarketsMissingFromPriceUpdates(
 	ctx sdk.Context,
-	marketPriceUpdates []*types.MsgUpdateMarketPrices_MarketPrice,
+	marketPriceUpdates []*types.MarketPriceUpdates_MarketPriceUpdate,
 ) []uint32 {
 	// Gather all markets that are part of the proposed updates.
 	proposedUpdatesMap := make(map[uint32]struct{}, len(marketPriceUpdates))

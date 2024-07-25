@@ -7,17 +7,17 @@ import (
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 	pricefeed_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/pricefeed"
 	pricestest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/prices"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cometbft/cometbft/types"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -438,20 +438,19 @@ func TestFunding(t *testing.T) {
 				BlockTime: SecondFundingTick.Add(-BlockTimeDuration),
 			})
 
-			// Build a DeliverTx override with MsgUpdateMarketPrices to update oracle price for funding index.
-			msgPriceUpdate := &pricestypes.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
-					pricestypes.NewMarketPriceUpdate(0, pricestest.MustHumanPriceToMarketPrice(tc.oracelPriceForFundingIndex[0], -5)),
-				},
-			}
-			txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
-			require.NoError(t, txBuilder.SetMsgs(msgPriceUpdate))
-			priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]uint64{0: pricestest.MustHumanPriceToMarketPrice(
+					tc.oracelPriceForFundingIndex[0],
+					-5,
+				)},
+				tApp.GetHeader().Height,
+			)
 			require.NoError(t, err)
 
-			// Update oracle price for funding index, using the DeliverTx override.
 			ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight())+1, testapp.AdvanceToBlockOptions{
-				DeliverTxsOverride: [][]byte{priceUpdateTxBytes},
+				DeliverTxsOverride: [][]byte{extCommitBz},
 				BlockTime:          SecondFundingTick,
 			})
 
@@ -461,6 +460,7 @@ func TestFunding(t *testing.T) {
 
 			// Check that the funding index is correctly updated.
 			btcPerp, err := tApp.App.PerpetualsKeeper.GetPerpetual(ctx, 0)
+
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedFundingIndex, btcPerp.FundingIndex.BigInt().Int64())
 

@@ -1,8 +1,9 @@
 package prices_test
 
 import (
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	"testing"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
@@ -66,11 +67,9 @@ func TestExportGenesis_WithMutation(t *testing.T) {
 	require.NoError(t, err)
 
 	// Update a market price.
-	err = k.UpdateMarketPrices(ctx, []*types.MsgUpdateMarketPrices_MarketPrice{
-		{
-			MarketId: 1,
-			Price:    modifiedPrice,
-		},
+	err = k.UpdateMarketPrice(ctx, &types.MarketPriceUpdates_MarketPriceUpdate{
+		MarketId: 1,
+		Price:    modifiedPrice,
 	})
 	require.NoError(t, err)
 

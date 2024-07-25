@@ -23,9 +23,6 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 	// Valid add funding tx.
 	validAddFundingTx := constants.ValidMsgAddPremiumVotesTxBytes
 
-	// Valid update price tx.
-	validUpdatePriceTx := constants.ValidMsgUpdateMarketPricesTxBytes
-
 	// Valid "other" tx.
 	validSendTx := constants.Msg_Send_TxBytes
 
@@ -34,28 +31,21 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 		expectedErr error
 	}{
 		"Less than min num txs": {
-			txsBytes: [][]byte{validOperationsTx, validUpdatePriceTx}, // need at least 4.
+			txsBytes: [][]byte{validOperationsTx}, // need at least 2.
 			expectedErr: errorsmod.Wrapf(
 				process.ErrUnexpectedNumMsgs,
-				"Expected the proposal to contain at least 3 txs, but got 2",
+				"Expected the proposal to contain at least 2 txs, but got 1",
 			),
 		},
 		"Order tx decoding fails": {
-			txsBytes: [][]byte{invalidTxBytes, validAddFundingTx, validUpdatePriceTx},
+			txsBytes: [][]byte{invalidTxBytes, validAddFundingTx},
 			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
 		"Add funding tx decoding fails": {
-			txsBytes: [][]byte{validOperationsTx, invalidTxBytes, validUpdatePriceTx},
-			expectedErr: errorsmod.Wrapf(
-				process.ErrDecodingTxBytes,
-				"invalid field number: tx parse error",
-			),
-		},
-		"Update prices tx decoding fails": {
-			txsBytes: [][]byte{validOperationsTx, validAddFundingTx, invalidTxBytes},
+			txsBytes: [][]byte{validOperationsTx, invalidTxBytes},
 			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
@@ -67,7 +57,6 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 				validSendTx,    // other tx: valid.
 				invalidTxBytes, // other tx: invalid.
 				validAddFundingTx,
-				validUpdatePriceTx,
 			},
 			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
@@ -77,14 +66,25 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 		"Other txs fails: app-injected msg": {
 			txsBytes: [][]byte{
 				validOperationsTx,
-				validSendTx,        // other tx: valid.
-				validUpdatePriceTx, // other tx: invalid due to app-injected msg.
+				validSendTx,       // other tx: valid.
+				validAddFundingTx, // other tx: invalid due to app-injected msg.
 				validAddFundingTx,
-				validUpdatePriceTx,
 			},
 			expectedErr: errorsmod.Wrapf(
 				process.ErrUnexpectedMsgType,
-				"Invalid msg type or content in OtherTxs *types.MsgUpdateMarketPrices",
+				"Invalid msg type or content in OtherTxs *types.MsgAddPremiumVotes",
+			),
+		},
+		"VE injection fails due to invalid bytes": {
+			txsBytes: [][]byte{
+				{}, // empty ve.
+				validOperationsTx,
+				validSendTx,
+				validAddFundingTx,
+			},
+			expectedErr: errorsmod.Wrapf(
+				process.ErrUnexpectedNumMsgs,
+				"Expected 1 num of msgs, but got 0",
 			),
 		},
 	}
@@ -92,11 +92,10 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
+			_, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			// Run.
 			_, err := process.DecodeProcessProposalTxs(
-				ctx,
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				pricesKeeper,
@@ -115,9 +114,6 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 	// Valid add funding tx.
 	validAddFundingTx := constants.ValidMsgAddPremiumVotesTxBytes
 
-	// Valid update price tx.
-	validUpdatePriceTx := constants.ValidMsgUpdateMarketPricesTxBytes
-
 	// Valid "other" tx.
 	validSingleMsgOtherTx := constants.Msg_Send_TxBytes
 
@@ -135,7 +131,6 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 			txsBytes: [][]byte{
 				validOperationsTx,
 				validAddFundingTx,
-				validUpdatePriceTx,
 			},
 		},
 		"Valid: single other tx": {
@@ -143,7 +138,6 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 				validOperationsTx,
 				validSingleMsgOtherTx,
 				validAddFundingTx,
-				validUpdatePriceTx,
 			},
 			expectedOtherTxsNum:    1,
 			expectedOtherTxOneMsgs: []sdk.Msg{constants.Msg_Send},
@@ -154,7 +148,6 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 				validSingleMsgOtherTx,
 				validMultiMsgOtherTx,
 				validAddFundingTx,
-				validUpdatePriceTx,
 			},
 			expectedOtherTxsNum:    2,
 			expectedOtherTxOneMsgs: []sdk.Msg{constants.Msg_Send},
@@ -165,11 +158,10 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
+			_, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			// Run.
 			ppt, err := process.DecodeProcessProposalTxs(
-				ctx,
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				pricesKeeper,
@@ -181,7 +173,6 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 
 			require.Equal(t, constants.ValidEmptyMsgProposedOperations, ppt.ProposedOperationsTx.GetMsg())
 			require.Equal(t, constants.ValidMsgAddPremiumVotes, ppt.AddPremiumVotesTx.GetMsg())
-			require.Equal(t, constants.ValidMsgUpdateMarketPrices, ppt.UpdateMarketPricesTx.GetMsg())
 
 			require.Len(t, ppt.OtherTxs, tc.expectedOtherTxsNum)
 
@@ -208,10 +199,6 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 	validAddFundingTx := constants.ValidMsgAddPremiumVotesTxBytes
 	invalidAddFundingTx := constants.InvalidMsgAddPremiumVotesTxBytes
 
-	// Update price tx.
-	validUpdatePriceTx := constants.ValidMsgUpdateMarketPricesTxBytes
-	invalidUpdatePriceTx := constants.InvalidMsgUpdateMarketPricesStatelessTxBytes
-
 	// "Other" tx.
 	validSingleMsgOtherTx := constants.Msg_Send_TxBytes
 	invalidSingleMsgOtherTx := constants.Msg_Transfer_Invalid_SameSenderAndRecipient_TxBytes
@@ -223,18 +210,11 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 		expectedErr error
 	}{
 		"AddFunding tx validation fails": {
-			txsBytes: [][]byte{validOperationsTx, invalidAddFundingTx, validUpdatePriceTx},
+			txsBytes: [][]byte{validOperationsTx, invalidAddFundingTx},
 			expectedErr: errorsmod.Wrap(
 				process.ErrMsgValidateBasic,
 				"premium votes must be sorted by perpetual id in ascending order and "+
 					"cannot contain duplicates: MsgAddPremiumVotes is invalid"),
-		},
-		"UpdatePrices tx validation fails": {
-			txsBytes: [][]byte{validOperationsTx, validAddFundingTx, invalidUpdatePriceTx},
-			expectedErr: errorsmod.Wrap(
-				process.ErrMsgValidateBasic,
-				"price cannot be 0 for market id (0): Market price update is invalid: stateless.",
-			),
 		},
 		"Other txs validation fails: single tx": {
 			txsBytes: [][]byte{
@@ -242,7 +222,6 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				validSingleMsgOtherTx,
 				invalidSingleMsgOtherTx,
 				validAddFundingTx,
-				validUpdatePriceTx,
 			},
 			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "Sender is the same as recipient"),
 		},
@@ -252,7 +231,6 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				validSingleMsgOtherTx,
 				invalidMultiMsgOtherTx,
 				validAddFundingTx,
-				validUpdatePriceTx,
 			},
 			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "Sender is the same as recipient"),
 		},
@@ -267,7 +245,6 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
 
 			ppt, err := process.DecodeProcessProposalTxs(
-				ctx,
 				encodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				pricesKeeper,
@@ -290,9 +267,6 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 	// Valid add funding tx.
 	validAddFundingTx := constants.ValidMsgAddPremiumVotesTxBytes
 
-	// Valid update price tx.
-	validUpdatePriceTx := constants.ValidMsgUpdateMarketPricesTxBytes
-
 	// Valid "other" tx.
 	validSingleMsgOtherTx := constants.Msg_Send_TxBytes
 
@@ -306,7 +280,6 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 			txsBytes: [][]byte{
 				validOperationsTx,
 				validAddFundingTx,
-				validUpdatePriceTx,
 			},
 		},
 		"Single other txs": {
@@ -314,7 +287,6 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 				validOperationsTx,
 				validSingleMsgOtherTx,
 				validAddFundingTx,
-				validUpdatePriceTx,
 			},
 		},
 		"Multi other txs": {
@@ -323,7 +295,6 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 				validSingleMsgOtherTx,
 				validMultiMsgOtherTx,
 				validAddFundingTx,
-				validUpdatePriceTx,
 			},
 		},
 	}
@@ -337,7 +308,6 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
 
 			ppt, err := process.DecodeProcessProposalTxs(
-				ctx,
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				pricesKeeper,
