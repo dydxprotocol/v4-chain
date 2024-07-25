@@ -17,6 +17,7 @@ COPY ./packages/kafka/ ./packages/kafka/
 COPY ./packages/redis/ ./packages/redis/
 COPY ./services/bazooka/ ./services/bazooka/
 COPY ./packages/v4-proto-parser/ ./packages/v4-proto-parser/
+COPY ./packages/notifications/ ./packages/notifications/
 
 # Copy tsconfig in order to build typescript into javascript
 COPY tsconfig.json ./
