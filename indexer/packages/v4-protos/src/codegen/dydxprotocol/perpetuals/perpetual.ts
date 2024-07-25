@@ -72,6 +72,13 @@ export interface Perpetual {
   /** Total size of open long contracts, measured in base_quantums. */
 
   openInterest: Uint8Array;
+  /**
+   * The current yield index is determined by the cumulative
+   * all-time history of the yield mechanism. Starts at 0.
+   * This string should always be converted big.Rat.
+   */
+
+  yieldIndex: string;
 }
 /** Perpetual represents a perpetual on the dYdX exchange. */
 
@@ -87,6 +94,13 @@ export interface PerpetualSDKType {
   /** Total size of open long contracts, measured in base_quantums. */
 
   open_interest: Uint8Array;
+  /**
+   * The current yield index is determined by the cumulative
+   * all-time history of the yield mechanism. Starts at 0.
+   * This string should always be converted big.Rat.
+   */
+
+  yield_index: string;
 }
 /**
  * PerpetualParams represents the parameters of a perpetual on the dYdX
@@ -361,7 +375,8 @@ function createBasePerpetual(): Perpetual {
   return {
     params: undefined,
     fundingIndex: new Uint8Array(),
-    openInterest: new Uint8Array()
+    openInterest: new Uint8Array(),
+    yieldIndex: ""
   };
 }
 
@@ -377,6 +392,10 @@ export const Perpetual = {
 
     if (message.openInterest.length !== 0) {
       writer.uint32(26).bytes(message.openInterest);
+    }
+
+    if (message.yieldIndex !== "") {
+      writer.uint32(34).string(message.yieldIndex);
     }
 
     return writer;
@@ -403,6 +422,10 @@ export const Perpetual = {
           message.openInterest = reader.bytes();
           break;
 
+        case 4:
+          message.yieldIndex = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -417,6 +440,7 @@ export const Perpetual = {
     message.params = object.params !== undefined && object.params !== null ? PerpetualParams.fromPartial(object.params) : undefined;
     message.fundingIndex = object.fundingIndex ?? new Uint8Array();
     message.openInterest = object.openInterest ?? new Uint8Array();
+    message.yieldIndex = object.yieldIndex ?? "";
     return message;
   }
 

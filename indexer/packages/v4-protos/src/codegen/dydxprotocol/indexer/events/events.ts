@@ -596,6 +596,7 @@ export interface SubaccountUpdateEventV1 {
   subaccountId?: IndexerSubaccountId;
   updatedPerpetualPositions: IndexerPerpetualPosition[];
   updatedAssetPositions: IndexerAssetPosition[];
+  yieldIndex: string;
 }
 /**
  * SubaccountUpdateEvent message contains information about an update to a
@@ -610,6 +611,7 @@ export interface SubaccountUpdateEventV1SDKType {
   subaccount_id?: IndexerSubaccountIdSDKType;
   updated_perpetual_positions: IndexerPerpetualPositionSDKType[];
   updated_asset_positions: IndexerAssetPositionSDKType[];
+  yield_index: string;
 }
 /**
  * StatefulOrderEvent message contains information about a change to a stateful
@@ -2268,7 +2270,8 @@ function createBaseSubaccountUpdateEventV1(): SubaccountUpdateEventV1 {
   return {
     subaccountId: undefined,
     updatedPerpetualPositions: [],
-    updatedAssetPositions: []
+    updatedAssetPositions: [],
+    yieldIndex: ""
   };
 }
 
@@ -2284,6 +2287,10 @@ export const SubaccountUpdateEventV1 = {
 
     for (const v of message.updatedAssetPositions) {
       IndexerAssetPosition.encode(v!, writer.uint32(34).fork()).ldelim();
+    }
+
+    if (message.yieldIndex !== "") {
+      writer.uint32(42).string(message.yieldIndex);
     }
 
     return writer;
@@ -2310,6 +2317,10 @@ export const SubaccountUpdateEventV1 = {
           message.updatedAssetPositions.push(IndexerAssetPosition.decode(reader, reader.uint32()));
           break;
 
+        case 5:
+          message.yieldIndex = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -2324,6 +2335,7 @@ export const SubaccountUpdateEventV1 = {
     message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? IndexerSubaccountId.fromPartial(object.subaccountId) : undefined;
     message.updatedPerpetualPositions = object.updatedPerpetualPositions?.map(e => IndexerPerpetualPosition.fromPartial(e)) || [];
     message.updatedAssetPositions = object.updatedAssetPositions?.map(e => IndexerAssetPosition.fromPartial(e)) || [];
+    message.yieldIndex = object.yieldIndex ?? "";
     return message;
   }
 
