@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
@@ -15,6 +18,28 @@ func IsTimestampNonce(ts uint64) bool {
 
 func IsValidTimestampNonce(tsNonce uint64, referenceTs uint64) bool {
 	return tsNonce >= referenceTs-MaxTimeInPastMs && tsNonce <= referenceTs+MaxTimeInFutureMs
+}
+
+func (k Keeper) ProcessTimestampNonce(ctx sdk.Context, acc sdk.AccountI, tsNonce uint64) error {
+	blockTs := uint64(ctx.BlockTime().UnixMilli())
+	address := acc.GetAddress()
+
+	if !IsValidTimestampNonce(tsNonce, blockTs) {
+		return fmt.Errorf("timestamp nonce %d not within valid time window", tsNonce)
+	}
+	accountState, found := k.GetAccountState(ctx, address)
+	if !found {
+		// initialize accountplus state with ts nonce details
+		k.SetAccountState(ctx, address, GetAccountPlusStateWithTimestampNonceDetails(address, tsNonce))
+	} else {
+		EjectStaleTimestampNonces(&accountState, blockTs)
+		tsNonceAccepted := AttemptTimestampNonceUpdate(tsNonce, &accountState)
+		if !tsNonceAccepted {
+			return fmt.Errorf("timestamp nonce %d rejected", tsNonce)
+		}
+		k.SetAccountState(ctx, address, accountState)
+	}
+	return nil
 }
 
 // Inplace eject all stale timestamps.

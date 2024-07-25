@@ -9,6 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Unit tests for ProcessTimestampNonce are not explicitly defined. sigverify_test.go contains test cases that cover
+// ProcessTimestampNonce. TODO (low priority): move unit tests from sigverify_test.go to here.
+
 func TestIsTimestampNonce(t *testing.T) {
 	tests := map[string]struct {
 		tsNonce      uint64

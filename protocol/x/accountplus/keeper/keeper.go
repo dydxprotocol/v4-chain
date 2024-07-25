@@ -8,6 +8,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
@@ -63,28 +64,17 @@ func (k Keeper) SetGenesisState(ctx sdk.Context, data types.GenesisState) error 
 	return nil
 }
 
-func (k Keeper) InitializeAccountWithTimestampNonceDetails(
-	ctx sdk.Context,
+func GetAccountPlusStateWithTimestampNonceDetails(
 	address sdk.AccAddress,
 	tsNonce uint64,
-) error {
-	if _, found := k.GetAccountState(ctx, address); found {
-		msg := "Cannot initialize AccountState for address with existing AccountState, address: " + address.String()
-		k.Logger(ctx).Error(msg)
-		return errors.New(msg)
-	}
-
-	accountState := types.AccountState{
+) types.AccountState {
+	return types.AccountState{
 		Address: address.String(),
 		TimestampNonceDetails: types.TimestampNonceDetails{
 			MaxEjectedNonce: TimestampNonceSequenceCutoff,
 			TimestampNonces: []uint64{tsNonce},
 		},
 	}
-
-	k.SetAccountState(ctx, address, accountState)
-
-	return nil
 }
 
 // Get the AccountState from KVStore for a given account address
