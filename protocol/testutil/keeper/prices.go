@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
-	"go.uber.org/zap"
 
 	"github.com/cosmos/gogoproto/proto"
 
@@ -19,15 +18,13 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/marketmap"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	revsharekeeper "github.com/dydxprotocol/v4-chain/protocol/x/revshare/keeper"
-	"github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/providers/apis/dydx"
-	dydxtypes "github.com/skip-mev/slinky/providers/apis/dydx/types"
 	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -40,6 +37,7 @@ func PricesKeepers(t testing.TB) (
 	indexPriceCache *pricefeedserver_types.MarketToExchangePrices,
 	mockTimeProvider *mocks.TimeProvider,
 	revShareKeeper *revsharekeeper.Keeper,
+	marketMapKeeper *marketmapkeeper.Keeper,
 ) {
 	ctx = initKeepers(t, func(
 		db *dbm.MemDB,
@@ -50,7 +48,7 @@ func PricesKeepers(t testing.TB) (
 	) []GenesisInitializer {
 		// Necessary keeper for testing
 		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc)
-		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
+		marketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 		// Define necessary keepers here for unit tests
 		keeper, storeKey, indexPriceCache, mockTimeProvider =
 			createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper, marketMapKeeper)
@@ -58,7 +56,7 @@ func PricesKeepers(t testing.TB) (
 		return []GenesisInitializer{keeper}
 	})
 
-	return ctx, keeper, storeKey, indexPriceCache, mockTimeProvider, revShareKeeper
+	return ctx, keeper, storeKey, indexPriceCache, mockTimeProvider, revShareKeeper, marketMapKeeper
 }
 
 func createPricesKeeper(
@@ -113,36 +111,9 @@ func CreateMarketsInMarketMapFromParams(
 	mmk *marketmapkeeper.Keeper,
 	allMarketParams []types.MarketParam,
 ) {
-	// fill out config with dummy variables to pass validation.  This handler is only used to run the
-	// ConvertMarketParamsToMarketMap member function.
-	h, err := dydx.NewAPIHandler(zap.NewNop(), config.APIConfig{
-		Enabled:          true,
-		Timeout:          1,
-		Interval:         1,
-		ReconnectTimeout: 1,
-		MaxQueries:       1,
-		Atomic:           false,
-		Endpoints:        []config.Endpoint{{URL: "upgrade"}},
-		BatchSize:        0,
-		Name:             dydx.Name,
-	})
+	marketMap, err := marketmap.ConstructMarketMapFromParams(allMarketParams)
 	require.NoError(t, err)
-
-	var mpr dydxtypes.QueryAllMarketParamsResponse
-	for _, mp := range allMarketParams {
-		mpr.MarketParams = append(mpr.MarketParams, dydxtypes.MarketParam{
-			Id:                 mp.Id,
-			Pair:               mp.Pair,
-			Exponent:           mp.Exponent,
-			MinExchanges:       mp.MinExchanges,
-			MinPriceChangePpm:  mp.MinPriceChangePpm,
-			ExchangeConfigJson: mp.ExchangeConfigJson,
-		})
-	}
-	mm, err := h.ConvertMarketParamsToMarketMap(mpr)
-	require.NoError(t, err)
-
-	for _, market := range mm.MarketMap.Markets {
+	for _, market := range marketMap.Markets {
 		market.Ticker.Enabled = false
 		require.NoError(t, mmk.CreateMarket(ctx, market))
 	}
@@ -208,20 +179,16 @@ func CreateNMarkets(t testing.TB, ctx sdk.Context, keeper *keeper.Keeper, n int)
 	for i := range items {
 		items[i].Param.Id = uint32(i) + numExistingMarkets
 		items[i].Param.Pair = fmt.Sprintf("%v-%v", i, i)
-		items[i].Param.Exponent = int32(i)
+		items[i].Param.Exponent = -int32(i%36 + 1) // must be between -1 and -36
 		items[i].Param.ExchangeConfigJson = ""
 		items[i].Param.MinExchanges = uint32(1)
 		items[i].Param.MinPriceChangePpm = uint32(i + 1)
 		items[i].Price.Id = uint32(i) + numExistingMarkets
-		items[i].Price.Exponent = int32(i)
+		items[i].Price.Exponent = -int32(i%36 + 1) // must be between -1 and -36
 		items[i].Price.Price = uint64(1_000 + i)
 		items[i].Param.ExchangeConfigJson = "{}" // Use empty, valid JSON for testing.
 
-		_, err := keeper.CreateMarket(
-			ctx,
-			items[i].Param,
-			items[i].Price,
-		)
+		_, err := CreateTestMarket(t, ctx, keeper, items[i].Param, items[i].Price)
 		require.NoError(t, err)
 		items[i].Price, err = keeper.GetMarketPrice(ctx, items[i].Param.Id)
 		require.NoError(t, err)

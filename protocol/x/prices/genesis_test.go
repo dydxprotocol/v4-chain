@@ -34,9 +34,10 @@ func TestExportGenesis(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, k, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+			ctx, k, _, _, mockTimeProvider, _, marketMapKeeper := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 
+			marketMapKeeper.InitGenesis(ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ctx, *k, *tc.genesisState)
 
 			// Verify expected keeper state after InitGenesis.
@@ -51,15 +52,17 @@ func TestExportGenesis(t *testing.T) {
 }
 
 func TestExportGenesis_WithMutation(t *testing.T) {
-	ctx, k, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	ctx, k, _, _, mockTimeProvider, _, marketMapKeeper := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
+
+	marketMapKeeper.InitGenesis(ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ctx, *k, *types.DefaultGenesis())
 
 	modifiedMarketParam := types.DefaultGenesis().MarketParams[0]
 	modifiedMarketParam.MinExchanges = modifiedMinExchanges
 
 	// Add a new market.
-	_, err := k.CreateMarket(ctx, addedMarketParam, addedMarketPrice)
+	_, err := keepertest.CreateTestMarket(t, ctx, k, addedMarketParam, addedMarketPrice)
 	require.NoError(t, err)
 
 	// Modify a param.
@@ -95,7 +98,7 @@ func invalidGenesis() types.GenesisState {
 }
 
 func TestInitGenesis_Panics(t *testing.T) {
-	ctx, k, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	ctx, k, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	// Verify InitGenesis panics when given an invalid genesis state.
@@ -105,9 +108,10 @@ func TestInitGenesis_Panics(t *testing.T) {
 }
 
 func TestInitGenesisEmitsMarketUpdates(t *testing.T) {
-	ctx, k, _, _, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+	ctx, k, _, _, mockTimeProvider, _, marketMapKeeper := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
+	marketMapKeeper.InitGenesis(ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ctx, *k, constants.Prices_DefaultGenesisState)
 
 	// Verify expected market update events.

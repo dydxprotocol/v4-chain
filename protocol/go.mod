@@ -8,10 +8,10 @@ require (
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/math v1.3.0
 	github.com/Shopify/sarama v1.37.2
-	github.com/cometbft/cometbft v0.38.9
+	github.com/cometbft/cometbft v0.38.10
 	github.com/cometbft/cometbft-db v0.10.0 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.50.7
+	github.com/cosmos/cosmos-sdk v0.50.8
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.5.0
 	github.com/go-playground/validator/v10 v10.14.0
@@ -67,7 +67,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rs/zerolog v1.32.0
 	github.com/shopspring/decimal v1.3.1
-	github.com/skip-mev/slinky v1.0.4-0.20240715165738-8218f83b6eb1
+	github.com/skip-mev/slinky v1.0.5-0.20240724193421-2d84d381bba4
 	github.com/spf13/viper v1.19.0
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d
 	go.uber.org/zap v1.27.0
@@ -84,7 +84,7 @@ require (
 	cloud.google.com/go/iam v1.1.6 // indirect
 	cloud.google.com/go/storage v1.38.0 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
-	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
+	cosmossdk.io/depinject v1.0.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/4meepo/tagalign v1.3.4 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -423,7 +423,7 @@ require (
 	go.uber.org/ratelimit v0.2.0 // indirect
 	golang.org/x/crypto v0.25.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20240314144324-c7f7c6466f7f // indirect
-	golang.org/x/mod v0.18.0 // indirect
+	golang.org/x/mod v0.19.0 // indirect
 	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/oauth2 v0.20.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
@@ -431,9 +431,9 @@ require (
 	golang.org/x/term v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.22.0 // indirect
+	golang.org/x/tools v0.23.0 // indirect
 	google.golang.org/api v0.171.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240709173604-40e1e62336c5 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

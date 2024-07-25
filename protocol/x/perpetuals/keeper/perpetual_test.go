@@ -424,8 +424,10 @@ func TestHasPerpetual(t *testing.T) {
 		*perptest.GeneratePerpetual(perptest.WithId(999)),
 	}
 
-	_, err := pc.PricesKeeper.CreateMarket(
+	_, err := keepertest.CreateTestMarket(
+		t,
 		pc.Ctx,
+		pc.PricesKeeper,
 		pricestypes.MarketParam{
 			Id:                 0,
 			Pair:               "base-quote",
@@ -502,8 +504,10 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 		*perptest.GeneratePerpetual(perptest.WithId(1)),
 	}
 
-	_, err := pc.PricesKeeper.CreateMarket(
+	_, err := keepertest.CreateTestMarket(
+		t,
 		pc.Ctx,
+		pc.PricesKeeper,
 		pricestypes.MarketParam{
 			Id:                 0,
 			Pair:               "base-quote",
@@ -751,19 +755,13 @@ func TestGetNetNotional_Success(t *testing.T) {
 		bigBaseQuantums                     *big.Int
 		bigExpectedNetNotionalQuoteQuantums *big.Int
 	}{
-		"Positive exponent, atomic resolution 6, long position": {
+		// TODO: Add back tests for positive and zero exponent once x/marketmap supports them
+		"Negative exponent, atomic resolution 6, long position": {
 			price:                               5_555,
-			exponent:                            2,
+			exponent:                            -2,
 			baseCurrencyAtomicResolution:        -6,
 			bigBaseQuantums:                     big.NewInt(7_000),
-			bigExpectedNetNotionalQuoteQuantums: big.NewInt(3_888_500_000),
-		},
-		"Positive exponent, atomic resolution 6, short position": {
-			price:                               5_555,
-			exponent:                            2,
-			baseCurrencyAtomicResolution:        -6,
-			bigBaseQuantums:                     big.NewInt(-7_000),
-			bigExpectedNetNotionalQuoteQuantums: big.NewInt(-3_888_500_000),
+			bigExpectedNetNotionalQuoteQuantums: big.NewInt(388_850),
 		},
 		"Negative exponent, atomic resolution 6, short position": {
 			price:                               5_555,
@@ -772,31 +770,24 @@ func TestGetNetNotional_Success(t *testing.T) {
 			bigBaseQuantums:                     big.NewInt(-7_000),
 			bigExpectedNetNotionalQuoteQuantums: big.NewInt(-388_850),
 		},
-		"Zero exponent, atomic resolution 6, short position": {
+		"Negative exponent, atomic resolution 4, long position": {
 			price:                               5_555,
-			exponent:                            0,
-			baseCurrencyAtomicResolution:        -6,
-			bigBaseQuantums:                     big.NewInt(-7_000),
-			bigExpectedNetNotionalQuoteQuantums: big.NewInt(-38_885_000),
-		},
-		"Positive exponent, atomic resolution 4, long position": {
-			price:                               5_555,
-			exponent:                            4,
+			exponent:                            -2,
 			baseCurrencyAtomicResolution:        -4,
 			bigBaseQuantums:                     big.NewInt(7_000),
-			bigExpectedNetNotionalQuoteQuantums: big.NewInt(38_885_000_000_000),
+			bigExpectedNetNotionalQuoteQuantums: big.NewInt(38_885_000),
 		},
-		"Positive exponent, atomic resolution 0, long position": {
+		"Negative exponent, atomic resolution 0, long position": {
 			price:                               5_555,
-			exponent:                            4,
+			exponent:                            -2,
 			baseCurrencyAtomicResolution:        -0,
 			bigBaseQuantums:                     big.NewInt(7_000),
-			bigExpectedNetNotionalQuoteQuantums: big.NewInt(388_850_000_000_000_000),
+			bigExpectedNetNotionalQuoteQuantums: big.NewInt(38_8850_000_000),
 		},
 		"Price and quantums are max uints": {
 			price:                        math.MaxUint64,
-			exponent:                     1,
-			baseCurrencyAtomicResolution: -6,
+			exponent:                     -1,
+			baseCurrencyAtomicResolution: -4,
 			bigBaseQuantums:              new(big.Int).SetUint64(math.MaxUint64),
 			bigExpectedNetNotionalQuoteQuantums: big_testutil.MustFirst(
 				new(big.Int).SetString("3402823669209384634264811192843491082250", 10),
@@ -813,8 +804,10 @@ func TestGetNetNotional_Success(t *testing.T) {
 			keepertest.CreateTestLiquidityTiers(t, pc.Ctx, pc.PerpetualsKeeper)
 			// Create a new market param and price.
 			marketId := uint32(0)
-			_, err := pc.PricesKeeper.CreateMarket(
+			_, err := keepertest.CreateTestMarket(
+				t,
 				pc.Ctx,
+				pc.PricesKeeper,
 				pricestypes.MarketParam{
 					Id:                 marketId,
 					Pair:               "base-quote",
@@ -907,19 +900,13 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 		bigQuoteQuantums                   *big.Int
 		bigExpectedNetNotionalBaseQuantums *big.Int
 	}{
-		"Positive exponent, atomic resolution 6, long position": {
+		// TODO: Add back tests for positive and zero exponent once x/marketmap supports them
+		"Negative exponent, atomic resolution 6, long position": {
 			price:                              5_555,
-			exponent:                           2,
+			exponent:                           -2,
 			baseCurrencyAtomicResolution:       -6,
-			bigQuoteQuantums:                   big.NewInt(3_888_500_000),
+			bigQuoteQuantums:                   big.NewInt(388_850),
 			bigExpectedNetNotionalBaseQuantums: big.NewInt(7_000),
-		},
-		"Positive exponent, atomic resolution 6, short position": {
-			price:                              5_555,
-			exponent:                           2,
-			baseCurrencyAtomicResolution:       -6,
-			bigQuoteQuantums:                   big.NewInt(-3_888_500_000),
-			bigExpectedNetNotionalBaseQuantums: big.NewInt(-7_000),
 		},
 		"Negative exponent, atomic resolution 6, short position": {
 			price:                              5_555,
@@ -928,31 +915,24 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 			bigQuoteQuantums:                   big.NewInt(-388_850),
 			bigExpectedNetNotionalBaseQuantums: big.NewInt(-7_000),
 		},
-		"Zero exponent, atomic resolution 6, short position": {
+		"Negative exponent, atomic resolution 4, long position": {
 			price:                              5_555,
-			exponent:                           0,
-			baseCurrencyAtomicResolution:       -6,
-			bigQuoteQuantums:                   big.NewInt(-38_885_000),
-			bigExpectedNetNotionalBaseQuantums: big.NewInt(-7_000),
-		},
-		"Positive exponent, atomic resolution 4, long position": {
-			price:                              5_555,
-			exponent:                           4,
+			exponent:                           -2,
 			baseCurrencyAtomicResolution:       -4,
-			bigQuoteQuantums:                   big.NewInt(38_885_000_000_000),
+			bigQuoteQuantums:                   big.NewInt(38_885_000),
 			bigExpectedNetNotionalBaseQuantums: big.NewInt(7_000),
 		},
-		"Positive exponent, atomic resolution 0, long position": {
+		"Negative exponent, atomic resolution 0, long position": {
 			price:                              5_555,
-			exponent:                           4,
+			exponent:                           -2,
 			baseCurrencyAtomicResolution:       -0,
-			bigQuoteQuantums:                   big.NewInt(388_850_000_000_000_000),
+			bigQuoteQuantums:                   big.NewInt(388_850_000_000),
 			bigExpectedNetNotionalBaseQuantums: big.NewInt(7_000),
 		},
 		"Price and quantums are max uints": {
 			price:                        math.MaxUint64,
-			exponent:                     1,
-			baseCurrencyAtomicResolution: -6,
+			exponent:                     -1,
+			baseCurrencyAtomicResolution: -4,
 			bigQuoteQuantums: big_testutil.MustFirst(
 				new(big.Int).SetString("3402823669209384634264811192843491082250", 10),
 			),
@@ -968,8 +948,10 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, pc.Ctx, pc.PerpetualsKeeper) // Create a new market param and price.
 			marketId := keepertest.GetNumMarkets(t, pc.Ctx, pc.PricesKeeper)
-			_, err := pc.PricesKeeper.CreateMarket(
+			_, err := keepertest.CreateTestMarket(
+				t,
 				pc.Ctx,
+				pc.PricesKeeper,
 				pricestypes.MarketParam{
 					Id:                 marketId,
 					Pair:               "base-quote",
@@ -1062,20 +1044,7 @@ func TestGetNetCollateral_Success(t *testing.T) {
 		bigBaseQuantums                       *big.Int
 		bigExpectedNetCollateralQuoteQuantums *big.Int
 	}{
-		"Positive exponent, atomic resolution 6, long position": {
-			price:                                 5_555,
-			exponent:                              2,
-			baseCurrencyAtomicResolution:          -6,
-			bigBaseQuantums:                       big.NewInt(7_000),
-			bigExpectedNetCollateralQuoteQuantums: big.NewInt(3_888_500_000),
-		},
-		"Positive exponent, atomic resolution 6, short position": {
-			price:                                 5_555,
-			exponent:                              2,
-			baseCurrencyAtomicResolution:          -6,
-			bigBaseQuantums:                       big.NewInt(-7_000),
-			bigExpectedNetCollateralQuoteQuantums: big.NewInt(-3_888_500_000),
-		},
+		// TODO: Add back tests for positive and zero exponent once x/marketmap supports them
 		"Negative exponent, atomic resolution 6, short position": {
 			price:                                 5_555,
 			exponent:                              -2,
@@ -1083,34 +1052,13 @@ func TestGetNetCollateral_Success(t *testing.T) {
 			bigBaseQuantums:                       big.NewInt(-7_000),
 			bigExpectedNetCollateralQuoteQuantums: big.NewInt(-388_850),
 		},
-		"Zero exponent, atomic resolution 6, short position": {
-			price:                                 5_555,
-			exponent:                              0,
-			baseCurrencyAtomicResolution:          -6,
-			bigBaseQuantums:                       big.NewInt(-7_000),
-			bigExpectedNetCollateralQuoteQuantums: big.NewInt(-38_885_000),
-		},
-		"Positive exponent, atomic resolution 4, long position": {
-			price:                                 5_555,
-			exponent:                              4,
-			baseCurrencyAtomicResolution:          -4,
-			bigBaseQuantums:                       big.NewInt(7_000),
-			bigExpectedNetCollateralQuoteQuantums: big.NewInt(38_885_000_000_000),
-		},
-		"Positive exponent, atomic resolution 0, long position": {
-			price:                                 5_555,
-			exponent:                              4,
-			baseCurrencyAtomicResolution:          -0,
-			bigBaseQuantums:                       big.NewInt(7_000),
-			bigExpectedNetCollateralQuoteQuantums: big.NewInt(388_850_000_000_000_000),
-		},
 		"Price and quantums are max uints": {
 			price:                        math.MaxUint64,
-			exponent:                     1,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              new(big.Int).SetUint64(math.MaxUint64),
 			bigExpectedNetCollateralQuoteQuantums: big_testutil.MustFirst(
-				new(big.Int).SetString("3402823669209384634264811192843491082250", 10),
+				new(big.Int).SetString("34028236692093846342648111928434910822", 10),
 			),
 		},
 	}
@@ -1124,8 +1072,10 @@ func TestGetNetCollateral_Success(t *testing.T) {
 			keepertest.CreateTestLiquidityTiers(t, pc.Ctx, pc.PerpetualsKeeper) // Test setup.
 			// Create a new market.
 			marketId := keepertest.GetNumMarkets(t, pc.Ctx, pc.PricesKeeper)
-			_, err := pc.PricesKeeper.CreateMarket(
+			_, err := keepertest.CreateTestMarket(
+				t,
 				pc.Ctx,
+				pc.PricesKeeper,
 				pricestypes.MarketParam{
 					Id:                 marketId,
 					Pair:               "base-quote",

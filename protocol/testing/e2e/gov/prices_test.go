@@ -7,12 +7,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -140,6 +142,34 @@ func TestUpdateMarketParam(t *testing.T) {
 						genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
 					},
 				)
+				// Initialize marketmap module with genesis market.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *marketmaptypes.GenesisState) {
+						markets := make(map[string]marketmaptypes.Market)
+						cp, _ := slinky.MarketPairToCurrencyPair(GENESIS_MARKET_PARAM.Pair)
+						ticker := marketmaptypes.Ticker{
+							CurrencyPair:     cp,
+							Decimals:         8,
+							MinProviderCount: 3,
+							Enabled:          true,
+							Metadata_JSON:    "",
+						}
+						markets[cp.String()] = marketmaptypes.Market{
+							Ticker: ticker,
+							ProviderConfigs: []marketmaptypes.ProviderConfig{
+								{Name: "binance_ws", OffChainTicker: "test"},
+								{Name: "bybit_ws", OffChainTicker: "test"},
+								{Name: "coinbase_ws", OffChainTicker: "test"},
+							},
+						}
+						marketMap := marketmaptypes.MarketMap{
+							Markets: markets,
+						}
+						genesisState.MarketMap = marketMap
+					},
+				)
+
 				// Initialize prices module with genesis market param.
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,

@@ -935,6 +935,8 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 	memClob.On("SetClobKeeper", mock.Anything).Return()
 
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+
+	ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 	ctx := ks.Ctx.WithTxBytes(constants.TestTxBytes)
@@ -992,6 +994,8 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 	memClob.On("SetClobKeeper", mock.Anything).Return()
 	indexerEventManager := &mocks.IndexerEventManager{}
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+
+	ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -1746,6 +1750,8 @@ func TestGetStatePosition_Success(t *testing.T) {
 			if tc.subaccount != nil {
 				ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, *tc.subaccount)
 			}
+
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -1797,6 +1803,8 @@ func TestGetStatePosition_PanicsOnInvalidClob(t *testing.T) {
 	// Setup keeper state.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+
+	ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -1962,6 +1970,8 @@ func TestInitStatefulOrders(t *testing.T) {
 			indexerEventManager := &mocks.IndexerEventManager{}
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -2094,6 +2104,8 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 			indexerEventManager := &mocks.IndexerEventManager{}
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -2262,6 +2274,8 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 				&mocks.BankKeeper{},
 				indexer_manager.NewIndexerEventManagerNoop(),
 			)
+
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -2391,6 +2405,7 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 				&mocks.BankKeeper{},
 				indexer_manager.NewIndexerEventManagerNoop(),
 			)
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
