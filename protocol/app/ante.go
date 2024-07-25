@@ -34,6 +34,7 @@ type HandlerOptions struct {
 	ClobKeeper        clobtypes.ClobKeeper
 	PerpetualsKeeper  perpetualstypes.PerpetualsKeeper
 	PricesKeeper      pricestypes.PricesKeeper
+	MarketMapKeeper   customante.MarketMapKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -128,7 +129,9 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		sigGasConsume: ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		clobRateLimit: clobante.NewRateLimitDecorator(options.ClobKeeper),
 		clob:          clobante.NewClobDecorator(options.ClobKeeper),
-		marketUpdates: customante.NewValidateMarketUpdateDecorator(options.PerpetualsKeeper, options.PricesKeeper),
+		marketUpdates: customante.NewValidateMarketUpdateDecorator(
+			options.PerpetualsKeeper, options.PricesKeeper, options.MarketMapKeeper,
+		),
 	}
 	return h.AnteHandle, nil
 }
