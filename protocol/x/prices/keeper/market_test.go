@@ -38,7 +38,7 @@ func TestCreateMarket(t *testing.T) {
 			Price:    constants.FiveBillion,
 		},
 	)
-	require.Error(t, err)
+	require.Error(t, err, types.ErrTickerNotFoundInMarketMap)
 
 	// Create the test market in the market map and verify it is not enabled
 	keepertest.CreateMarketsInMarketMapFromParams(

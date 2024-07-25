@@ -370,7 +370,7 @@ localnet-compose-up:
 localnet-compose-upd:
 	@echo "Launching localnet at commit ${GIT_COMMIT_HASH}"
 	@docker build . -t local:dydxprotocol -f testing/testnet-local/Dockerfile --no-cache
-	@docker-compose -f docker-compose.yml up --force-recreate -d $(ARGS)
+	@docker compose -f docker-compose.yml up --force-recreate -d $(ARGS)
 
 build-e2etest-image:
 	@echo "Build e2e test image at commit ${GIT_COMMIT_HASH}"
@@ -386,7 +386,7 @@ localnet-continue:
 	@docker-compose -f docker-compose.yml up $(ARGS)
 
 localnet-stop:
-	@docker-compose -f docker-compose.yml down
+	@docker compose -f docker-compose.yml down
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
