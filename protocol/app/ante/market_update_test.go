@@ -192,6 +192,44 @@ var (
 		ProviderConfigs: nil,
 	}
 
+	testMarketWithProviderConfig = mmtypes.Market{
+		Ticker: mmtypes.Ticker{
+			CurrencyPair: types.CurrencyPair{
+				Base:  "TEST",
+				Quote: "USD",
+			},
+			Decimals:         1,
+			MinProviderCount: 1,
+			Enabled:          false,
+			Metadata_JSON:    "",
+		},
+		ProviderConfigs: []mmtypes.ProviderConfig{
+			{
+				Name:           "test_provider",
+				OffChainTicker: "TEST/USD",
+			},
+		},
+	}
+
+	enabledTestMarketWithProviderConfig = mmtypes.Market{
+		Ticker: mmtypes.Ticker{
+			CurrencyPair: types.CurrencyPair{
+				Base:  "TEST",
+				Quote: "USD",
+			},
+			Decimals:         1,
+			MinProviderCount: 1,
+			Enabled:          true,
+			Metadata_JSON:    "",
+		},
+		ProviderConfigs: []mmtypes.ProviderConfig{
+			{
+				Name:           "test_provider",
+				OffChainTicker: "TEST/USD",
+			},
+		},
+	}
+
 	testMarketWithEnabled = mmtypes.Market{
 		Ticker: mmtypes.Ticker{
 			CurrencyPair: types.CurrencyPair{
@@ -587,6 +625,105 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 				marketParams:     []prices_types.MarketParam{testMarketParams},
 			},
 			wantErr: true,
+		},
+		{
+			name: "adding an additional provider, while market is enabled",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpsertMarkets{
+						Authority: constants.BobAccAddress.String(),
+						Markets: []mmtypes.Market{
+							enabledTestMarketWithProviderConfig,
+						},
+					},
+				},
+				simulate:         false,
+				marketMapMarkets: []mmtypes.Market{testMarketWithEnabled},
+				marketParams:     []prices_types.MarketParam{testMarketParams},
+			},
+			wantErr: false,
+		},
+		{
+			name: "adding an additional provider, market is enabled - simulate",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpsertMarkets{
+						Authority: constants.BobAccAddress.String(),
+						Markets: []mmtypes.Market{
+							enabledTestMarketWithProviderConfig,
+						},
+					},
+				},
+				simulate:         true,
+				marketMapMarkets: []mmtypes.Market{testMarketWithEnabled},
+				marketParams:     []prices_types.MarketParam{testMarketParams},
+			},
+			wantErr: false,
+		},
+		{
+			name: "adding an additional provider via update-markets, while market is enabled",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpdateMarkets{
+						Authority: constants.BobAccAddress.String(),
+						UpdateMarkets: []mmtypes.Market{
+							enabledTestMarketWithProviderConfig,
+						},
+					},
+				},
+				simulate:         false,
+				marketMapMarkets: []mmtypes.Market{testMarketWithEnabled},
+				marketParams:     []prices_types.MarketParam{testMarketParams},
+			},
+			wantErr: false,
+		},
+		{
+			name: "adding an additional provider, while market is disabled",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpsertMarkets{
+						Authority: constants.BobAccAddress.String(),
+						Markets: []mmtypes.Market{
+							testMarketWithProviderConfig,
+						},
+					},
+				},
+				simulate:         false,
+				marketMapMarkets: []mmtypes.Market{testMarket},
+			},
+			wantErr: false,
+		},
+		{
+			name: "adding an additional provider, while market is disabled - simulate",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpsertMarkets{
+						Authority: constants.BobAccAddress.String(),
+						Markets: []mmtypes.Market{
+							testMarketWithProviderConfig,
+						},
+					},
+				},
+				simulate:         true,
+				marketMapMarkets: []mmtypes.Market{testMarket},
+			},
+			wantErr: false,
+		},
+		{
+			name: "adding an additional provider via update-markets, while market is disabled",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpdateMarkets{
+						Authority: constants.BobAccAddress.String(),
+						UpdateMarkets: []mmtypes.Market{
+							testMarketWithProviderConfig,
+						},
+					},
+				},
+				simulate:         false,
+				marketMapMarkets: []mmtypes.Market{testMarket},
+			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
