@@ -74,6 +74,7 @@ func assertSubaccountUpdateEventsInIndexerBlock(
 	expectedUpdatedPerpetualPositions map[types.SubaccountId][]*types.PerpetualPosition,
 	expectedSubaccoundIdToFundingPayments map[types.SubaccountId]map[uint32]dtypes.SerializableInt,
 	expectedUpdatedAssetPositions map[types.SubaccountId][]*types.AssetPosition,
+	expectedAssetYieldIndex string,
 ) {
 	subaccountUpdates := testutil.GetSubaccountUpdateEventsFromIndexerBlock(ctx, k)
 
@@ -103,6 +104,7 @@ func assertSubaccountUpdateEventsInIndexerBlock(
 			expectedUpdatedPerpetualPositions[update.SubaccountId],
 			expectedUpdatedAssetPositions[update.SubaccountId],
 			expectedSubaccoundIdToFundingPayments[update.SubaccountId],
+			expectedAssetYieldIndex,
 		)
 		for _, gotUpdate := range subaccountUpdates {
 			if gotUpdate.SubaccountId.Owner == expectedSubaccountUpdateEvent.SubaccountId.Owner &&
@@ -344,6 +346,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		expectedUpdatedPerpetualPositions     map[types.SubaccountId][]*types.PerpetualPosition
 		expectedSubaccoundIdToFundingPayments map[types.SubaccountId]map[uint32]dtypes.SerializableInt
 		expectedUpdatedAssetPositions         map[types.SubaccountId][]*types.AssetPosition
+		expectedAssetYieldIndex               string
 		msgSenderEnabled                      bool
 	}{
 		"one update to USDC asset position": {
@@ -369,7 +372,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"one negative update to USDC asset position": {
 			expectedQuoteBalance:     big.NewInt(-100),
@@ -413,7 +417,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"one negative update to USDC asset position + persist unsettled negative funding": {
 			expectedQuoteBalance:     big.NewInt(-2100),
@@ -472,7 +477,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"one negative update to USDC asset position + persist unsettled positive funding": {
 			expectedQuoteBalance:     big.NewInt(-92),
@@ -532,7 +538,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"multiple updates for same position not allowed": {
 			expectedQuoteBalance:     big.NewInt(0),
@@ -572,7 +579,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"multiple updates to same account not allowed": {
 			expectedQuoteBalance:     big.NewInt(0),
@@ -587,7 +595,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"update increases position size": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
@@ -756,7 +765,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"update closes short position": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
@@ -810,7 +820,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"update closes 2nd position and updates 1st": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
@@ -877,7 +888,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"update closes first asset position and updates 2nd": {
 			assets: []*asstypes.Asset{
@@ -926,7 +938,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"update closes first 1 positions and updates 2nd": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
@@ -1003,7 +1016,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"update opens new long position, uses current perpetual funding index": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
@@ -1168,7 +1182,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		// TODO(DEC-581): add similar test case for multi-collateral asset support.
 		"update eth position from long to short with existing btc position": {
@@ -1233,7 +1248,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"update opens new long eth position with existing btc and sol position": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
@@ -1304,7 +1320,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"update opens new long btc position with existing eth and sol position": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
@@ -1375,7 +1392,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"update opens new long eth position with existing unsettled sol position": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
@@ -1449,7 +1467,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"provides out-of-order updates (not ordered by PerpetualId)": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
@@ -1544,7 +1563,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"updates multiple subaccounts with new perpetual and asset positions": {
 			expectedQuoteBalance:     big.NewInt(100_000_000), // $100
@@ -1630,7 +1650,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"update would make account undercollateralized": {
 			expectedQuoteBalance:     big.NewInt(0),
@@ -1666,7 +1687,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"updates new USDC asset position which exceeds max uint64": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(new(big.Int).SetUint64(math.MaxUint64)),
@@ -1702,7 +1724,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"new USDC asset position (including unsettled funding) size exceeds max uint64": {
 			assetPositions: testutil.CreateUsdcAssetPosition(new(big.Int).SetUint64(math.MaxUint64 - 5)),
@@ -1771,7 +1794,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"new position size exceeds max uint64": {
 			expectedQuoteBalance:     big.NewInt(0),
@@ -1811,7 +1835,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"existing position size + update exceeds max uint64": {
 			expectedQuoteBalance:     big.NewInt(0),
@@ -1895,7 +1920,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"update ETH position; start with BTC and ETH positions; both BTC and ETH positions have unsettled funding": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
@@ -1977,7 +2003,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"update ETH position; start with BTC and ETH positions; only ETH position has unsettled funding": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
@@ -2053,7 +2080,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"update closes ETH position; start with BTC and ETH positions; both BTC and ETH positions have unsettled funding": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
@@ -2130,7 +2158,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"update closes ETH position; start with ETH position; ETH position has no unsettled funding": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(100_000_000_000)), // $100,000
@@ -2177,7 +2206,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"2 updates, 1 update involves not-updatable perp": {
 			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
@@ -2248,7 +2278,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"Isolated subaccounts - has update for both an isolated perpetual and non-isolated perpetual": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
@@ -2278,7 +2309,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"Isolated subaccounts - has update for both 2 isolated perpetuals": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
@@ -2308,7 +2340,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"Isolated subaccounts - subaccount with isolated perpetual position has update for non-isolated perpetual": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
@@ -2350,7 +2383,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"Isolated subaccounts - subaccount with isolated perpetual position has update for another isolated perpetual": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
@@ -2392,7 +2426,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"Isolated subaccounts - subaccount with non-isolated perpetual position has update for isolated perpetual": {
 			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
@@ -2434,7 +2469,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		`Isolated - subaccounts - empty subaccount has update to open position for isolated perpetual,
 		collateral is moved from cross-perpetual collateral pool to isolated perpetual collateral pool`: {
@@ -2497,7 +2533,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		`Isolated - subaccounts - subaccount has update to close position for isolated perpetual,
 		collateral is moved from isolated perpetual collateral pool to cross perpetual collateral pool`: {
@@ -2563,7 +2600,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		`Isolated subaccounts - empty subaccount has update to open position for isolated perpetual, 
 		errors out when collateral pool for cross perpetuals has no funds`: {
@@ -2593,8 +2631,9 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			expectedErr:      sdkerrors.ErrInsufficientFunds,
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			expectedErr:             sdkerrors.ErrInsufficientFunds,
+			msgSenderEnabled:        true,
 		},
 		`Isolated subaccounts - isolated subaccount has update to close position for isolated perpetual, 
 		errors out when collateral pool for isolated perpetual has no funds`: {
@@ -2638,8 +2677,9 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
-			expectedErr:      sdkerrors.ErrInsufficientFunds,
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			expectedErr:             sdkerrors.ErrInsufficientFunds,
+			msgSenderEnabled:        true,
 		},
 		"Match updates increase OI: 0 -> 0.9, 0 -> -0.9": {
 			perpetuals: []perptypes.Perpetual{
@@ -2730,6 +2770,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
+			expectedAssetYieldIndex:  constants.AssetYieldIndex_Zero,
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.Success},
 			expectedOpenInterest: map[uint32]*big.Int{
@@ -2844,7 +2885,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 			expectedOpenInterest: map[uint32]*big.Int{
 				0: big.NewInt(110_000_000), // 2 - 0.9 = 1.1 BTC
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 		"Match updates does not change OI: 1 -> 0.1, 0.1 -> 1": {
 			perpetuals: []perptypes.Perpetual{
@@ -2951,7 +2993,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 			expectedOpenInterest: map[uint32]*big.Int{
 				0: big.NewInt(100_000_000), // 1 BTC
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 		},
 	}
 
@@ -2972,8 +3015,6 @@ func TestUpdateSubaccounts(t *testing.T) {
 
 			rateLimitKeeper.SetSDAIPrice(ctx, rate)
 			rateLimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
-
-			// ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
 
 			for _, m := range tc.marketParamPrices {
 				_, err := pricesKeeper.CreateMarket(
@@ -3072,6 +3113,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					tc.expectedUpdatedPerpetualPositions,
 					tc.expectedSubaccoundIdToFundingPayments,
 					tc.expectedUpdatedAssetPositions,
+					tc.expectedAssetYieldIndex,
 				)
 			} else {
 				assertSubaccountUpdateEventsNotInIndexerBlock(
@@ -3157,6 +3199,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 		expectedUpdatedPerpetualPositions     map[types.SubaccountId][]*types.PerpetualPosition
 		expectedSubaccoundIdToFundingPayments map[types.SubaccountId]map[uint32]dtypes.SerializableInt
 		expectedUpdatedAssetPositions         map[types.SubaccountId][]*types.AssetPosition
+		expectedAssetYieldIndex               string
 		msgSenderEnabled                      bool
 
 		// Negative TNC subaccount state
@@ -3194,7 +3237,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -3232,7 +3276,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -3270,7 +3315,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -3301,7 +3347,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -3333,7 +3380,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -3378,7 +3426,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -3422,7 +3471,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -3431,7 +3481,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Withdrawal,
 		},
-		`withdrawals are not blocked if negative TNC subaccount was seen within 
+		`withdrawals are not blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for a different
 		collateral pool`: {
 			expectedQuoteBalance:     big.NewInt(-100),
@@ -3468,7 +3518,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -3478,7 +3529,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Withdrawal,
 		},
-		`withdrawals are blocked if negative TNC subaccount was seen within 
+		`withdrawals are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for an isolated
 		perpetual collateral pool`: {
 			expectedQuoteBalance:     big.NewInt(-100),
@@ -3503,7 +3554,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -3513,7 +3565,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Withdrawal,
 		},
-		`withdrawals are blocked if negative TNC subaccount was seen within 
+		`withdrawals are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was never seen for the cross-perpetual
 		collateral pool, both of which are associated with subaccounts being updated`: {
@@ -3547,7 +3599,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -3558,7 +3611,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Withdrawal,
 		},
-		`withdrawals are blocked if negative TNC subaccount was seen within 
+		`withdrawals are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was seen for the cross-perpetual
 		collateral pool after WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
@@ -3593,7 +3646,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -3605,7 +3659,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Withdrawal,
 		},
-		`withdrawals are blocked if negative TNC subaccount was seen within 
+		`withdrawals are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was never seen for another isolated
 		collateral pool, both of which are associated with subaccounts being updated`: {
@@ -3642,7 +3696,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -3653,7 +3708,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Withdrawal,
 		},
-		`withdrawals are blocked if negative TNC subaccount was seen within 
+		`withdrawals are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was seen for another isolated perpetual
 		collateral pool after WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
@@ -3691,7 +3746,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -3934,7 +3990,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -3981,7 +4038,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -4028,7 +4086,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					},
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -4064,7 +4123,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -4101,7 +4161,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -4139,7 +4200,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -4176,7 +4238,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -4185,7 +4248,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Transfer,
 		},
-		`transfers are not blocked if negative TNC subaccount was seen within 
+		`transfers are not blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for a different
 		collateral pool from the ones associated with the subaccounts being updated`: {
 			expectedQuoteBalance: big.NewInt(-100),
@@ -4219,7 +4282,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -4229,7 +4293,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Transfer,
 		},
-		`transfers are blocked if negative TNC subaccount was seen within 
+		`transfers are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was never seen for the cross-perpetual
 		collateral pool, both of which are associated with subaccounts being updated`: {
@@ -4264,7 +4328,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -4275,7 +4340,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Transfer,
 		},
-		`transferss are blocked if negative TNC subaccount was seen within 
+		`transferss are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was seen for the cross-perpetual
 		collateral pool after WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
@@ -4311,7 +4376,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -4323,7 +4389,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Transfer,
 		},
-		`transfers are blocked if negative TNC subaccount was seen within 
+		`transfers are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was never seen for another isolated perpetual
 		collateral pool, both of which are associated with subaccounts being updated`: {
@@ -4360,7 +4426,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -4371,7 +4438,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Transfer,
 		},
-		`transferss are blocked if negative TNC subaccount was seen within 
+		`transferss are blocked if negative TNC subaccount was seen within
 		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
 		perpetual collateral pool and negative TNC subaccount was seen for another the cross-perpetual
 		collateral pool after WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
@@ -4409,7 +4476,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
 				},
 			},
-			msgSenderEnabled: true,
+			expectedAssetYieldIndex: constants.AssetYieldIndex_Zero,
+			msgSenderEnabled:        true,
 
 			currentBlock: 100,
 			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
@@ -4552,6 +4620,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					tc.expectedUpdatedPerpetualPositions,
 					tc.expectedSubaccoundIdToFundingPayments,
 					tc.expectedUpdatedAssetPositions,
+					tc.expectedAssetYieldIndex,
 				)
 			} else {
 				assertSubaccountUpdateEventsNotInIndexerBlock(

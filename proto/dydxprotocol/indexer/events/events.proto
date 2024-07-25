@@ -231,6 +231,7 @@ message SubaccountUpdateEventV1 {
   // updated_asset_positions will each be for unique assets.
   repeated dydxprotocol.indexer.protocol.v1.IndexerAssetPosition
       updated_asset_positions = 4;
+  string yield_index = 5;
 }
 
 // StatefulOrderEvent message contains information about a change to a stateful

@@ -848,6 +848,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -882,6 +883,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1199,6 +1201,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1233,6 +1236,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1369,6 +1373,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1405,6 +1410,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1793,6 +1799,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1827,6 +1834,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},

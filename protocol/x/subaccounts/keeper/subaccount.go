@@ -594,6 +594,7 @@ func (k Keeper) UpdateSubaccounts(
 					),
 					getUpdatedAssetPositions(u),
 					fundingPayments,
+					u.SettledSubaccount.AssetYieldIndex,
 				),
 			),
 		)

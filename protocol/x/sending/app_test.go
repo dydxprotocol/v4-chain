@@ -313,6 +313,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 										},
 									},
 									nil, // no funding payment should have occurred
+									constants.AssetYieldIndex_Zero,
 								),
 							),
 						},
@@ -332,6 +333,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 										},
 									},
 									nil, // no funding payment should have occurred
+									constants.AssetYieldIndex_Zero,
 								),
 							),
 						},
@@ -535,6 +537,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 										},
 									},
 									nil, // no funding payment should have occurred
+									constants.AssetYieldIndex_Zero,
 								),
 							),
 						},
@@ -752,6 +755,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 										},
 									},
 									nil, // no funding payment should have occurred
+									constants.AssetYieldIndex_Zero,
 								),
 							),
 						},

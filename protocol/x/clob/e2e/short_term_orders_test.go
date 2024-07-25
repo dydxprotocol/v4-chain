@@ -174,6 +174,7 @@ func TestPlaceOrder(t *testing.T) {
 										},
 									},
 									nil, // no funding payments
+									constants.AssetYieldIndex_Zero,
 								),
 							),
 						},
@@ -201,6 +202,7 @@ func TestPlaceOrder(t *testing.T) {
 										},
 									},
 									nil, // no funding payments
+									constants.AssetYieldIndex_Zero,
 								),
 							),
 						},
@@ -351,6 +353,7 @@ func TestPlaceOrder(t *testing.T) {
 										},
 									},
 									nil, // no funding payments
+									constants.AssetYieldIndex_Zero,
 								),
 							),
 						},
@@ -378,6 +381,7 @@ func TestPlaceOrder(t *testing.T) {
 										},
 									},
 									nil, // no funding payments
+									constants.AssetYieldIndex_Zero,
 								),
 							),
 						},
@@ -528,6 +532,7 @@ func TestPlaceOrder(t *testing.T) {
 										},
 									},
 									nil, // no funding payments
+									constants.AssetYieldIndex_Zero,
 								),
 							),
 						},
@@ -555,6 +560,7 @@ func TestPlaceOrder(t *testing.T) {
 										},
 									},
 									nil, // no funding payments
+									constants.AssetYieldIndex_Zero,
 								),
 							),
 						},

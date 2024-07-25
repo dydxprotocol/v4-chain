@@ -742,6 +742,9 @@ var (
 	// Quote balances.
 	QuoteBalance_OneDollar = int64(1_000_000) // $1.
 
+	// Asset Yield Index
+	AssetYieldIndex_Zero = big.NewRat(0, 1).String()
+
 	InvalidSubaccountIdNumber = satypes.SubaccountId{
 		Owner:  Alice_Num0.Owner,
 		Number: satypes.MaxSubaccountIdNumber + 1, // one over the limit
