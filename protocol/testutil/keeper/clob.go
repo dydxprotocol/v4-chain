@@ -32,12 +32,14 @@ import (
 	subkeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
+	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	"github.com/stretchr/testify/require"
 )
 
 type ClobKeepersTestContext struct {
 	Ctx               sdk.Context
 	ClobKeeper        *keeper.Keeper
+	MarketMapKeeper   *marketmapkeeper.Keeper
 	PricesKeeper      *priceskeeper.Keeper
 	AssetsKeeper      *asskeeper.Keeper
 	BlockTimeKeeper   *blocktimekeeper.Keeper
@@ -82,15 +84,14 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
 		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
-		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
-
+		ks.MarketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 		ks.PricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
 			db,
 			cdc,
 			indexerEventsTransientStoreKey,
 			revShareKeeper,
-			marketMapKeeper,
+			ks.MarketMapKeeper,
 		)
 		// Mock time provider response for market creation.
 		mockTimeProvider.On("Now").Return(constants.TimeT)
@@ -173,6 +174,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 		ks.Cdc = cdc
 
 		return []GenesisInitializer{
+			ks.MarketMapKeeper,
 			ks.PricesKeeper,
 			ks.PerpetualsKeeper,
 			ks.AssetsKeeper,

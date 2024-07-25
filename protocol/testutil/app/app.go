@@ -204,7 +204,8 @@ type GenesisStates interface {
 		ratelimittypes.GenesisState |
 		govplus.GenesisState |
 		vaulttypes.GenesisState |
-		revsharetypes.GenesisState
+		revsharetypes.GenesisState |
+		marketmapmoduletypes.GenesisState
 }
 
 // UpdateGenesisDocWithAppStateForModule updates the supplied genesis doc using the provided function. The function

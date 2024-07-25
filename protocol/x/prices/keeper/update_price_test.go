@@ -123,7 +123,7 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+			ctx, k, _, indexPriceCache, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			if !tc.skipCreateMarketsAndExchanges {

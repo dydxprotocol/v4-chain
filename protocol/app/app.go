@@ -1375,6 +1375,7 @@ func New(
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
 		icatypes.ModuleName,
+		marketmapmoduletypes.ModuleName, // must be before prices
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
 		blocktimemoduletypes.ModuleName,
@@ -1393,7 +1394,6 @@ func New(
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
-		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
 
@@ -1419,6 +1419,7 @@ func New(
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
 		icatypes.ModuleName,
+		marketmapmoduletypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
 		blocktimemoduletypes.ModuleName,
@@ -1437,7 +1438,6 @@ func New(
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
-		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,
 
 		// Auth must be migrated after staking.
