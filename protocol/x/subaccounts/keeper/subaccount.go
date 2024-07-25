@@ -299,12 +299,33 @@ func (k Keeper) settleSubaccountYield(
 		return types.Subaccount{}, nil, err
 	}
 
+	isYieldAlreadyClaimed, err := IsYieldAlreadyClaimed(ctx, assetYieldIndex, subaccount.AssetYieldIndex)
+	if err != nil {
+		return types.Subaccount{}, nil, err
+	}
+	if isYieldAlreadyClaimed {
+		return subaccount, big.NewInt(0), nil
+	}
+
 	settledSubaccount, totalYield, err = k.addYieldToSubaccount(subaccount, perpIdToPerp, assetYieldIndex)
 	if err != nil {
 		return types.Subaccount{}, nil, err
 	}
 
 	return settledSubaccount, totalYield, nil
+}
+
+func IsYieldAlreadyClaimed(ctx sdk.Context, assetYieldIndex *big.Rat, subaccountAssetYieldIndex string) (bool, error) {
+
+	currentYieldIndex, success := new(big.Rat).SetString(subaccountAssetYieldIndex)
+	if !success {
+		return false, errors.New("could not convert the subaccount yield index to big.Rat")
+	}
+
+	if assetYieldIndex.Cmp(currentYieldIndex) <= 0 {
+		return true, nil
+	}
+	return false, nil
 }
 
 func (k Keeper) fetchParamsToSettleSubaccount(
@@ -315,14 +336,15 @@ func (k Keeper) fetchParamsToSettleSubaccount(
 	assetYieldIndex *big.Rat,
 	err error,
 ) {
-	perpIdToPerp, err = k.getPerpIdToPerpMapForSubaccount(ctx, subaccount)
-	if err != nil {
-		return nil, nil, err
-	}
 
 	assetYieldIndex, found := k.ratelimitKeeper.GetAssetYieldIndex(ctx)
 	if !found {
 		return nil, nil, errors.New("could not find asset yield index")
+	}
+
+	perpIdToPerp, err = k.getPerpIdToPerpMapForSubaccount(ctx, subaccount)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	return perpIdToPerp, assetYieldIndex, nil
@@ -357,20 +379,16 @@ func (k Keeper) addYieldToSubaccount(
 	err error,
 ) {
 
-	newPerpetualPositions := []*types.PerpetualPosition{}
-	totalNewYield = big.NewInt(0)
-
 	assetYield, err := getYieldFromAssetPositions(subaccount, assetYieldIndex)
 	if err != nil {
 		return types.Subaccount{}, nil, err
 	}
-	totalNewYield = new(big.Int).Add(totalNewYield, assetYield)
 
 	totalNewPerpYield, newPerpetualPositions, err := getYieldFromPerpPositions(subaccount, perpIdToPerp)
 	if err != nil {
 		return types.Subaccount{}, nil, err
 	}
-	totalNewYield = new(big.Int).Add(totalNewYield, totalNewPerpYield)
+	totalNewYield = new(big.Int).Add(assetYield, totalNewPerpYield)
 
 	newSubaccount := types.Subaccount{
 		Id:                 subaccount.Id,
