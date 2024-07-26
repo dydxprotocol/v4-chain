@@ -16,6 +16,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
+	accountplusante "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/ante"
 	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -112,7 +113,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		validateMemo:             ante.NewValidateMemoDecorator(options.AccountKeeper),
 		validateBasic:            ante.NewValidateBasicDecorator(),
 		validateSigCount:         ante.NewValidateSigCountDecorator(options.AccountKeeper),
-		incrementSequence:        customante.NewIncrementSequenceDecorator(options.AccountKeeper),
+		incrementSequence:        ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		sigVerification: customante.NewSigVerificationDecorator(
 			options.AccountKeeper,
 			*options.AccountplusKeeper,
@@ -153,7 +154,7 @@ type lockingAnteHandler struct {
 	validateMemo             ante.ValidateMemoDecorator
 	validateBasic            ante.ValidateBasicDecorator
 	validateSigCount         ante.ValidateSigCountDecorator
-	incrementSequence        customante.IncrementSequenceDecorator
+	incrementSequence        ante.IncrementSequenceDecorator
 	sigVerification          customante.SigVerificationDecorator
 	consumeTxSizeGas         ante.ConsumeTxSizeGasDecorator
 	deductFee                ante.DeductFeeDecorator
@@ -251,7 +252,13 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	if isShortTerm, err = clobante.IsShortTermClobMsgTx(ctx, tx); err != nil {
 		return ctx, err
 	}
-	if !isShortTerm {
+
+	var isTimestampNonce bool
+	if isTimestampNonce, err = accountplusante.IsTimestampNonceTx(ctx, tx); err != nil {
+		return ctx, err
+	}
+
+	if !isShortTerm && !isTimestampNonce {
 		if ctx, err = h.incrementSequence.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 			return ctx, err
 		}
