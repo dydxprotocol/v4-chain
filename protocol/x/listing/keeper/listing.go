@@ -40,7 +40,7 @@ func (k Keeper) CreateMarket(
 	// Get market details from marketmap
 	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, ticker)
 	if err != nil {
-		return 0, err
+		return 0, types.ErrMarketNotFound
 	}
 
 	// Create a new market

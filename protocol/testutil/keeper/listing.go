@@ -47,7 +47,7 @@ func ListingKeepers(
 			// Define necessary keepers here for unit tests
 			memClob := &mocks.MemClob{}
 			memClob.On("SetClobKeeper", mock.Anything).Return()
-			ck := NewClobKeepersTestContext(t, nil, bankKeeper, indexerEventManager)
+			ck := NewClobKeepersTestContext(t, memClob, bankKeeper, indexerEventManager)
 
 			keeper, storeKey, mockTimeProvider =
 				createListingKeeper(

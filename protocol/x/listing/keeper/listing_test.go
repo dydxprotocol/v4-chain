@@ -1,7 +1,9 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -21,7 +23,7 @@ func TestCreateMarket(t *testing.T) {
 		},
 		"invalid market": {
 			ticker:      "INVALID-USD",
-			expectedErr: nil, // TODO: Add expected error
+			expectedErr: types.ErrMarketNotFound,
 		},
 	}
 
