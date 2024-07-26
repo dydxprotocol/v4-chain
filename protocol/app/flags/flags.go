@@ -68,7 +68,7 @@ const (
 	DefaultGrpcStreamingMaxChannelBufferSize = 2000
 
 	DefaultVEOracleEnabled            = true
-	DefaultOptimisticExecutionEnabled = false
+	DefaultOptimisticExecutionEnabled = true
 )
 
 // AddFlagsToCmd adds flags to app initialization.
