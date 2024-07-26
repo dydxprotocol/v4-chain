@@ -18,10 +18,12 @@ import (
 )
 
 func TestGenesis(t *testing.T) {
+	marketMapGenesisState := constants.MarketMap_DefaultGenesisState
 	pricesGenesisState := constants.Prices_DefaultGenesisState
 	genesisState := constants.Perpetuals_DefaultGenesisState
 
 	pc := keepertest.PerpetualsKeepers(t)
+	pc.MarketMapKeeper.InitGenesis(pc.Ctx, marketMapGenesisState)
 	prices.InitGenesis(pc.Ctx, *pc.PricesKeeper, pricesGenesisState)
 	perpetuals.InitGenesis(pc.Ctx, *pc.PerpetualsKeeper, genesisState)
 	assertLiquidityTierUpsertEventsInIndexerBlock(t, pc.PerpetualsKeeper, pc.Ctx, genesisState.LiquidityTiers)
@@ -120,6 +122,9 @@ func TestGenesis_Failure(t *testing.T) {
 
 	// Test setup.
 	pc := keepertest.PerpetualsKeepers(t)
+
+	marketMapGenesisState := constants.MarketMap_DefaultGenesisState
+	pc.MarketMapKeeper.InitGenesis(pc.Ctx, marketMapGenesisState)
 
 	pricesGenesisState := constants.Prices_DefaultGenesisState
 	prices.InitGenesis(pc.Ctx, *pc.PricesKeeper, pricesGenesisState)

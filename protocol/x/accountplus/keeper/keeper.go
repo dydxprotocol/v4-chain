@@ -8,18 +8,9 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
-
-func DefaultAccountState(address sdk.AccAddress) types.AccountState {
-	return types.AccountState{
-		Address: address.String(),
-		TimestampNonceDetails: types.TimestampNonceDetails{
-			MaxEjectedNonce: 0,
-			TimestampNonces: []uint64{},
-		},
-	}
-}
 
 type Keeper struct {
 	cdc      codec.BinaryCodec
@@ -67,24 +58,23 @@ func (k Keeper) SetGenesisState(ctx sdk.Context, data types.GenesisState) error 
 		if err != nil {
 			return err
 		}
-		k.setAccountState(ctx, address, account)
+		k.SetAccountState(ctx, address, account)
 	}
 
 	return nil
 }
 
-// TODO: refactor this function -> InitializeWithTimestampNonceDetails
-// Writing to store is expensive so directly write with ts-nonce instead of initializing an empty account then setting.
-func (k Keeper) InitializeAccount(ctx sdk.Context, address sdk.AccAddress) error {
-	if _, found := k.GetAccountState(ctx, address); found {
-		return errors.New(
-			"Cannot initialize AccountState for address with existing AccountState, address: " + address.String(),
-		)
+func GetAccountPlusStateWithTimestampNonceDetails(
+	address sdk.AccAddress,
+	tsNonce uint64,
+) types.AccountState {
+	return types.AccountState{
+		Address: address.String(),
+		TimestampNonceDetails: types.TimestampNonceDetails{
+			MaxEjectedNonce: TimestampNonceSequenceCutoff,
+			TimestampNonces: []uint64{tsNonce},
+		},
 	}
-
-	k.setAccountState(ctx, address, DefaultAccountState(address))
-
-	return nil
 }
 
 // Get the AccountState from KVStore for a given account address
@@ -110,7 +100,7 @@ func (k Keeper) GetAccountState(
 }
 
 // Set the AccountState into KVStore for a given account address
-func (k Keeper) setAccountState(
+func (k Keeper) SetAccountState(
 	ctx sdk.Context,
 	address sdk.AccAddress,
 	accountState types.AccountState,

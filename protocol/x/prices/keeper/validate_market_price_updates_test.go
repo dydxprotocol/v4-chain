@@ -122,7 +122,7 @@ func TestPerformStatefulPriceUpdateValidation_Valid(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+			ctx, k, _, indexPriceCache, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			keepertest.CreateTestMarkets(t, ctx, k)
@@ -207,7 +207,7 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+			ctx, k, _, indexPriceCache, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			keepertest.CreateTestMarkets(t, ctx, k)
@@ -340,7 +340,7 @@ func TestPerformStatefulPriceUpdateValidation_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+			ctx, k, _, indexPriceCache, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			keepertest.CreateTestMarkets(t, ctx, k)
@@ -411,7 +411,7 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, mockTimeProvider, _ := keepertest.PricesKeepers(t)
+			ctx, k, _, indexPriceCache, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			keepertest.CreateTestMarkets(t, ctx, k)

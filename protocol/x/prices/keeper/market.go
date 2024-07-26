@@ -48,7 +48,7 @@ func (k Keeper) CreateMarket(
 			)
 		}
 	}
-	// Validate that market pair is formatted as a valid currency pair
+	// check that the market exists in market map
 	currencyPair, err := slinky.MarketPairToCurrencyPair(marketParam.Pair)
 	if err != nil {
 		return types.MarketParam{}, errorsmod.Wrapf(
@@ -57,6 +57,13 @@ func (k Keeper) CreateMarket(
 		)
 	}
 	currencyPairStr := currencyPair.String()
+	_, err = k.MarketMapKeeper.GetMarket(ctx, currencyPairStr)
+	if err != nil {
+		return types.MarketParam{}, errorsmod.Wrapf(
+			types.ErrTickerNotFoundInMarketMap,
+			currencyPairStr,
+		)
+	}
 
 	paramBytes := k.cdc.MustMarshal(&marketParam)
 	priceBytes := k.cdc.MustMarshal(&marketPrice)

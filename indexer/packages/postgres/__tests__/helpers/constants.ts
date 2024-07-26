@@ -725,6 +725,8 @@ export const defaultCandle: CandleCreateObject = {
   usdVolume: '2200000',
   trades: 300,
   startingOpenInterest: '200000',
+  orderbookMidPriceOpen: '11500',
+  orderbookMidPriceClose: '12500',
 };
 
 export const defaultCandleId: string = CandleTable.uuid(

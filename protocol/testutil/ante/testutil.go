@@ -1,6 +1,9 @@
 package ante
 
 import (
+	"testing"
+	"time"
+
 	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,8 +16,10 @@ import (
 	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
+	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
+	accountplustypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
+
 	perpetualskeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
-	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -37,6 +42,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+// Use nice number to make debugging easier
+const TestBlockTime = uint64(1600000000000) // sep 13 2020 12:26:40
+
 // TestAccount represents an account used in the tests in x/auth/ante.
 type TestAccount struct {
 	acc  sdk.AccountI
@@ -45,16 +53,17 @@ type TestAccount struct {
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
 type AnteTestSuite struct {
-	AnteHandler      sdk.AnteHandler
-	Ctx              sdk.Context
-	ClientCtx        client.Context
-	TxBuilder        client.TxBuilder
-	AccountKeeper    keeper.AccountKeeper
-	BankKeeper       *authtestutil.MockBankKeeper
-	TxBankKeeper     *txtestutil.MockBankKeeper
-	FeeGrantKeeper   *antetestutil.MockFeegrantKeeper
-	PerpetualsKeeper perpetualskeeper.Keeper
-	EncCfg           moduletestutil.TestEncodingConfig
+	AnteHandler       sdk.AnteHandler
+	Ctx               sdk.Context
+	ClientCtx         client.Context
+	TxBuilder         client.TxBuilder
+	AccountKeeper     keeper.AccountKeeper
+	AccountplusKeeper accountpluskeeper.Keeper
+	BankKeeper        *authtestutil.MockBankKeeper
+	TxBankKeeper      *txtestutil.MockBankKeeper
+	FeeGrantKeeper    *antetestutil.MockFeegrantKeeper
+	PerpetualsKeeper  perpetualskeeper.Keeper
+	EncCfg            moduletestutil.TestEncodingConfig
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
@@ -65,9 +74,18 @@ func SetupTestSuite(t testing.TB, isCheckTx bool) *AnteTestSuite {
 	suite.TxBankKeeper = txtestutil.NewMockBankKeeper(ctrl)
 	suite.FeeGrantKeeper = antetestutil.NewMockFeegrantKeeper(ctrl)
 
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.Ctx = testCtx.Ctx.WithIsCheckTx(isCheckTx).WithBlockHeight(1)
+	keys := map[string]*storetypes.KVStoreKey{
+		types.StoreKey:            storetypes.NewKVStoreKey(types.StoreKey),
+		accountplustypes.StoreKey: storetypes.NewKVStoreKey(accountplustypes.StoreKey),
+	}
+	transKeys := map[string]*storetypes.TransientStoreKey{
+		"transient_test": storetypes.NewTransientStoreKey("transient_test"),
+	}
+	memKeys := map[string]*storetypes.MemoryStoreKey{}
+
+	testCtx := testutil.DefaultContextWithKeys(keys, transKeys, memKeys)
+	suite.Ctx = testCtx.WithIsCheckTx(isCheckTx).WithBlockHeight(1).WithBlockTime(time.UnixMilli(int64(TestBlockTime)))
+
 	suite.EncCfg = MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
 
 	maccPerms := map[string][]string{
@@ -81,7 +99,7 @@ func SetupTestSuite(t testing.TB, isCheckTx bool) *AnteTestSuite {
 
 	suite.AccountKeeper = keeper.NewAccountKeeper(
 		suite.EncCfg.Codec,
-		runtime.NewKVStoreService(key),
+		runtime.NewKVStoreService(keys[types.StoreKey]),
 		types.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
@@ -91,6 +109,9 @@ func SetupTestSuite(t testing.TB, isCheckTx bool) *AnteTestSuite {
 	suite.AccountKeeper.GetModuleAccount(suite.Ctx, types.FeeCollectorName)
 	err := suite.AccountKeeper.Params.Set(suite.Ctx, types.DefaultParams())
 	require.NoError(t, err)
+
+	// Initialize accountplus keeper
+	suite.AccountplusKeeper = *accountpluskeeper.NewKeeper(suite.EncCfg.Codec, keys[accountplustypes.StoreKey])
 
 	// We're using TestMsg encoding in some tests, so register it here.
 	suite.EncCfg.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
