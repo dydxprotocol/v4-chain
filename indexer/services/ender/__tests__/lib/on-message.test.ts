@@ -98,6 +98,7 @@ describe('on-message', () => {
         owner: '',
         number: 0,
       },
+      yieldIndex: "0/1",
     });
   const defaultSubaccountUpdateEventBinary: Uint8Array = Uint8Array.from(
     SubaccountUpdateEventV1.encode(
@@ -160,20 +161,26 @@ describe('on-message', () => {
     );
     const binaryBlock: Uint8Array = Uint8Array.from(IndexerTendermintBlock.encode(block).finish());
     const kafkaMessage: KafkaMessage = createKafkaMessage(Buffer.from(binaryBlock));
-
+    console.log("BEFORE ON MESSAGE")
     await onMessage(kafkaMessage);
+    console.log("AFTER ON MESSAGE");
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
       expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
     ]);
+    console.log("AFTER PROMISE ALL");
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
+    console.log("AFTER EXPECT 1");
     expect(stats.timing).toHaveBeenCalledWith(
       'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
+    console.log("AFTER EXPECT 2");
     expect(stats.gauge).toHaveBeenCalledWith('ender.processing_block_height', expect.any(Number));
+    console.log("AFTER EXPECT 3");
     expect(stats.timing).toHaveBeenCalledWith('ender.processed_block.timing',
       expect.any(Number), 1, { success: 'true' });
+    console.log("AFTER EXPECT 4");
   });
 
   it('successfully processes block with transaction event with unset version', async () => {

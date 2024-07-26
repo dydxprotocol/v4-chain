@@ -63,6 +63,7 @@ describe('block-processor', () => {
         owner: '',
         number: 0,
       },
+      yieldIndex: "0/1",
       // updatedPerpetualPositions: [],
       // updatedAssetPositions: [],
     });

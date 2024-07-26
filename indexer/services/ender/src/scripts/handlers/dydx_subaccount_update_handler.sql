@@ -36,10 +36,12 @@ BEGIN
     subaccount_record."subaccountNumber" = jsonb_extract_path(event_data, 'subaccountId', 'number')::int;
     subaccount_record."updatedAtHeight" = block_height;
     subaccount_record."updatedAt" = block_time;
+    subaccount_record."assetYieldIndex" = jsonb_extract_path_text(event_data, 'yieldIndex');
     INSERT INTO subaccounts
     VALUES (subaccount_record.*)
     ON CONFLICT ("id") DO UPDATE
-        SET "updatedAtHeight" = subaccount_record."updatedAtHeight", "updatedAt" = subaccount_record."updatedAt";
+        SET "updatedAtHeight" = subaccount_record."updatedAtHeight", "updatedAt" = subaccount_record."updatedAt",
+            "assetYieldIndex" = subaccount_record."assetYieldIndex";
 
     -- Process all the perpetual position updates that are part of the update.
     FOR perpetual_position_update IN SELECT * FROM jsonb_array_elements(event_data->'updatedPerpetualPositions') LOOP
