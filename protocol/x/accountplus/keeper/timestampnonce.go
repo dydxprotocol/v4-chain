@@ -2,8 +2,11 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
@@ -21,6 +24,13 @@ func IsValidTimestampNonce(tsNonce uint64, referenceTs uint64) bool {
 }
 
 func (k Keeper) ProcessTimestampNonce(ctx sdk.Context, acc sdk.AccountI, tsNonce uint64) error {
+	defer telemetry.ModuleMeasureSince(
+		types.ModuleName,
+		time.Now(),
+		metrics.TimestampNonce,
+		metrics.Latency,
+	)
+
 	blockTs := uint64(ctx.BlockTime().UnixMilli())
 	address := acc.GetAddress()
 

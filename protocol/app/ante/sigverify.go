@@ -2,7 +2,6 @@ package ante
 
 import (
 	"fmt"
-	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -14,7 +13,6 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
-	accountplustypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	gometrics "github.com/hashicorp/go-metrics"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -99,12 +97,6 @@ func (svd SigVerificationDecorator) AnteHandle(
 		// `GoodTilBlock` for replay protection.
 		if !skipSequenceValidation {
 			if accountpluskeeper.IsTimestampNonce(sig.Sequence) {
-				defer telemetry.ModuleMeasureSince(
-					accountplustypes.ModuleName,
-					time.Now(),
-					metrics.TimestampNonce,
-					metrics.Latency,
-				)
 				err = svd.akp.ProcessTimestampNonce(ctx, acc, sig.Sequence)
 
 				if err == nil {
