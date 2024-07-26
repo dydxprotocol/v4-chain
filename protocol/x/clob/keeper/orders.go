@@ -1177,38 +1177,6 @@ func (k Keeper) InitStatefulOrders(
 	}
 }
 
-// HydrateUntriggeredConditionalOrders inserts all untriggered conditional orders in state into the
-// `UntriggeredConditionalOrders` data structure. Note that all untriggered conditional orders will
-// be ordered by time priority. This function should only be called on application startup.
-func (k Keeper) HydrateUntriggeredConditionalOrders(
-	ctx sdk.Context,
-) {
-	defer telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		time.Now(),
-		metrics.ConditionalOrderUntriggered,
-		metrics.Hydrate,
-		metrics.Latency,
-	)
-
-	// Get all untriggered conditional orders in state, ordered by time priority ascending order,
-	// and add them to the `UntriggeredConditionalOrders` data structure.
-	untriggeredConditionalOrders := k.GetAllUntriggeredConditionalOrders(ctx)
-	k.AddUntriggeredConditionalOrders(
-		ctx,
-		lib.MapSlice(
-			untriggeredConditionalOrders,
-			func(o types.Order) types.OrderId {
-				return o.OrderId
-			},
-		),
-		// Note both of these arguments are empty slices since the untriggered conditional orders
-		// shouldn't be expired or canceled.
-		map[types.OrderId]struct{}{},
-		map[types.OrderId]struct{}{},
-	)
-}
-
 // sendOffchainMessagesWithTxHash sends all the `Message` in the offchainUpdates passed in along with
 // an additional header for the transaction hash passed in.
 func (k Keeper) sendOffchainMessagesWithTxHash(
