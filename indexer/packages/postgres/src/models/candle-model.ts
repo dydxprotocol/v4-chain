@@ -50,6 +50,8 @@ export default class CandleModel extends Model {
         usdVolume: { type: 'string', pattern: NonNegativeNumericPattern },
         trades: { type: 'integer' },
         startingOpenInterest: { type: 'string', pattern: NonNegativeNumericPattern },
+        orderbookMidPriceOpen: { type: ['string', 'null'], pattern: NonNegativeNumericPattern },
+        orderbookMidPriceClose: { type: ['string', 'null'], pattern: NonNegativeNumericPattern },
       },
     };
   }
@@ -77,4 +79,8 @@ export default class CandleModel extends Model {
   trades!: number;
 
   startingOpenInterest!: string;
+
+  orderbookMidPriceOpen?: string;
+
+  orderbookMidPriceClose?: string;
 }

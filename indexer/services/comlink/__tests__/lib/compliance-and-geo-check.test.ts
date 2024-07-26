@@ -18,6 +18,7 @@ import {
   INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
   INDEXER_GEOBLOCKED_PAYLOAD,
   isRestrictedCountryHeaders,
+  isWhitelistedAddress,
 } from '@dydxprotocol-indexer/compliance';
 import config from '../../src/config';
 
@@ -69,6 +70,7 @@ export const complianceCheckApp = Server(router);
 
 describe('compliance-check', () => {
   let isRestrictedCountrySpy: jest.SpyInstance;
+  let isWhitelistedAddressSpy: jest.SpyInstance;
 
   beforeAll(async () => {
     config.INDEXER_LEVEL_GEOBLOCKING_ENABLED = true;
@@ -77,6 +79,8 @@ describe('compliance-check', () => {
 
   beforeEach(async () => {
     isRestrictedCountrySpy = isRestrictedCountryHeaders as unknown as jest.Mock;
+    isWhitelistedAddressSpy = isWhitelistedAddress as jest.Mock;
+    isWhitelistedAddressSpy.mockReturnValue(false);
     await testMocks.seedData();
   });
 
@@ -86,6 +90,7 @@ describe('compliance-check', () => {
 
   afterEach(async () => {
     jest.restoreAllMocks();
+    config.WHITELISTED_ADDRESSES = '';
     await dbHelpers.clearData();
   });
 
@@ -231,6 +236,23 @@ describe('compliance-check', () => {
         code: BlockedCode.GEOBLOCKED,
       }]),
     }));
+  });
+
+  it.each([
+    ['query', `/v4/check-compliance-query?address=${testConstants.defaultAddress}`],
+    ['param', `/v4/check-compliance-param/${testConstants.defaultAddress}`],
+  ])('does not return 403 if address is whitelisted and request is from restricted country (%s)', async (
+    _name: string,
+    path: string,
+  ) => {
+    isWhitelistedAddressSpy.mockReturnValue(true);
+    isRestrictedCountrySpy.mockReturnValueOnce(true);
+    await sendRequestToApp({
+      type: RequestMethod.GET,
+      path,
+      expressApp: complianceCheckApp,
+      expectedStatus: 200,
+    });
   });
 
   it.each([
