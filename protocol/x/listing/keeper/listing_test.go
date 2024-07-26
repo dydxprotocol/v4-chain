@@ -3,10 +3,12 @@ package keeper_test
 import (
 	"testing"
 
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,10 +33,27 @@ func TestCreateMarket(t *testing.T) {
 		t.Run(
 			name, func(t *testing.T) {
 				mockIndexerEventManager := &mocks.IndexerEventManager{}
-				ctx, keeper, _, _, _, _, _, _ := keeper.ListingKeepers(
+				ctx, keeper, _, _, _, _, _, marketMapperKeeper := keepertest.ListingKeepers(
 					t,
 					&mocks.BankKeeper{},
 					mockIndexerEventManager,
+				)
+
+				testMarketParams := pricestypes.MarketParam{
+					Pair:               "TEST-USD",
+					Exponent:           int32(-6),
+					ExchangeConfigJson: `{"test_config_placeholder":{}}`,
+					MinExchanges:       2,
+					MinPriceChangePpm:  uint32(800),
+				}
+
+				keepertest.CreateMarketsInMarketMapFromParams(
+					t,
+					ctx,
+					marketMapperKeeper,
+					[]pricestypes.MarketParam{
+						testMarketParams,
+					},
 				)
 
 				_, err := keeper.CreateMarket(ctx, tc.ticker)

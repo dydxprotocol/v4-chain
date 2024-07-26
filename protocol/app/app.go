@@ -1168,7 +1168,14 @@ func New(
 		&app.MarketMapKeeper,
 		app.PerpetualsKeeper,
 	)
-	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
+	listingModule := listingmodule.NewAppModule(
+		appCodec,
+		app.ListingKeeper,
+		app.PricesKeeper,
+		app.ClobKeeper,
+		&app.MarketMapKeeper,
+		app.PerpetualsKeeper,
+	)
 
 	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
 		appCodec,

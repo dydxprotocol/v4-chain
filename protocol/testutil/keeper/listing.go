@@ -59,6 +59,10 @@ func ListingKeepers(
 					ck.ClobKeeper,
 					ck.MarketMapKeeper,
 				)
+			pricesKeeper = ck.PricesKeeper
+			perpetualsKeeper = ck.PerpetualsKeeper
+			clobKeeper = ck.ClobKeeper
+			marketMapKeeper = ck.MarketMapKeeper
 
 			return []GenesisInitializer{keeper}
 		},
