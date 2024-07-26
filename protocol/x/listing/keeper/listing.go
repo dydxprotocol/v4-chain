@@ -118,7 +118,7 @@ func (k Keeper) CreatePerpetual(
 	}
 
 	// calculate atomic resolution from reference price
-	atomicResolution := -6 - int32(math.Floor(math.Log10(float64(metadata.ReferencePrice))))
+	atomicResolution := types.ResolutionOffset - int32(math.Floor(math.Log10(float64(metadata.ReferencePrice))))
 
 	// Create a new perpetual
 	perpetual, err := k.PerpetualsKeeper.CreatePerpetual(
