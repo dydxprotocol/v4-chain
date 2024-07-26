@@ -305,6 +305,7 @@ describe('update-compliance-data', () => {
       subaccountNumber: 0,
       updatedAtHeight: '1',
       updatedAt: DateTime.utc().toISO(),
+      assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex,
     });
 
     const riskScores: string[] = ['75.00', '50.00'];
@@ -365,6 +366,7 @@ describe('update-compliance-data', () => {
       subaccountNumber: 0,
       updatedAtHeight: '1',
       updatedAt: DateTime.utc().toISO(),
+      assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex,
     });
 
     const addressWithComplianceError: string = 'dydx1gem4xs643fjhaqvphrvv0adpg4435j7xx9pp4z';
@@ -374,6 +376,7 @@ describe('update-compliance-data', () => {
       subaccountNumber: 0,
       updatedAtHeight: '1',
       updatedAt: DateTime.utc().toISO(),
+      assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex,
     });
 
     const riskScores: string[] = ['75.00', '50.00'];
@@ -452,6 +455,7 @@ describe('update-compliance-data', () => {
       subaccountNumber: 0,
       updatedAtHeight: '1',
       updatedAt: DateTime.utc().toISO(),
+      assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex,
     });
 
     const riskScores: string[] = ['75.00', '50.00'];
@@ -560,7 +564,11 @@ async function setupSubaccounts(
   await Promise.all(subaccountIds.map(
     (subaccountId: string) => {
       return SubaccountTable.update(
-        { id: subaccountId, updatedAtHeight: '1', updatedAt: newUpdatedAt },
+        { id: subaccountId, 
+          updatedAtHeight: '1', 
+          updatedAt: newUpdatedAt, 
+          assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex, 
+        },
       );
     },
   ));

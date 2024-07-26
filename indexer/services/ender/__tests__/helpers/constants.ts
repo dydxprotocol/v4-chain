@@ -40,7 +40,7 @@ import {
 import Long from 'long';
 import { DateTime } from 'luxon';
 
-import { MILLIS_IN_NANOS, SECONDS_IN_MILLIS } from '../../src/constants';
+import { MILLIS_IN_NANOS, SECONDS_IN_MILLIS, ZERO_ASSET_YIELD_INDEX } from '../../src/constants';
 import { SubaccountUpdate } from '../../src/lib/translated-types';
 import {
   ConsolidatedKafkaEvent,
@@ -315,6 +315,7 @@ export const defaultEmptySubaccountUpdate: SubaccountUpdate = {
   subaccountId: defaultSubaccountId,
   updatedPerpetualPositions: [],
   updatedAssetPositions: [],
+  assetYieldIndex: ZERO_ASSET_YIELD_INDEX,
 };
 
 export const defaultEmptySubaccountUpdateEvent: SubaccountUpdateEventV1 = {

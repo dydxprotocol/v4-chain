@@ -55,6 +55,7 @@ export const invalidTicker: string = 'INVALID-INVALID';
 export const dydxChain: string = 'dydx';
 export const defaultAddress: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf';
 export const blockedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
+export const zeroAssetYieldIndex: string = "0/1";
 
 // ============== Subaccounts ==============
 
@@ -63,6 +64,7 @@ export const defaultSubaccount: SubaccountCreateObject = {
   subaccountNumber: 0,
   updatedAt: createdDateTime.toISO(),
   updatedAtHeight: createdHeight,
+  assetYieldIndex: zeroAssetYieldIndex,
 };
 
 export const defaultSubaccount2: SubaccountCreateObject = {
@@ -70,6 +72,7 @@ export const defaultSubaccount2: SubaccountCreateObject = {
   subaccountNumber: 1,
   updatedAt: createdDateTime.toISO(),
   updatedAtHeight: createdHeight,
+  assetYieldIndex: zeroAssetYieldIndex,
 };
 
 export const defaultSubaccount3: SubaccountCreateObject = {
@@ -77,6 +80,7 @@ export const defaultSubaccount3: SubaccountCreateObject = {
   subaccountNumber: 2,
   updatedAt: createdDateTime.toISO(),
   updatedAtHeight: createdHeight,
+  assetYieldIndex: zeroAssetYieldIndex,
 };
 
 export const defaultWalletAddress: string = 'defaultWalletAddress';
@@ -99,6 +103,7 @@ export const isolatedSubaccount: SubaccountCreateObject = {
   subaccountNumber: 128,
   updatedAt: createdDateTime.toISO(),
   updatedAtHeight: createdHeight,
+  assetYieldIndex: zeroAssetYieldIndex,
 };
 
 export const isolatedSubaccount2: SubaccountCreateObject = {
@@ -106,6 +111,7 @@ export const isolatedSubaccount2: SubaccountCreateObject = {
   subaccountNumber: 256,
   updatedAt: createdDateTime.toISO(),
   updatedAtHeight: createdHeight,
+  assetYieldIndex: zeroAssetYieldIndex,
 };
 
 export const isolatedSubaccountId: string = SubaccountTable.uuid(

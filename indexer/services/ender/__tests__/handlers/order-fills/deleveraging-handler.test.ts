@@ -44,6 +44,7 @@ import {
   MILLIS_IN_NANOS,
   SECONDS_IN_MILLIS,
   SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
+  ZERO_ASSET_YIELD_INDEX,
 } from '../../../src/constants';
 import { DateTime } from 'luxon';
 import Long from 'long';
@@ -55,12 +56,14 @@ import { createdDateTime, createdHeight } from '@dydxprotocol-indexer/postgres/b
 import Big from 'big.js';
 import { getWeightedAverage } from '../../../src/lib/helper';
 
+
 describe('DeleveragingHandler', () => {
   const offsettingSubaccount: SubaccountCreateObject = {
     address: defaultDeleveragingEvent.offsetting!.owner,
     subaccountNumber: defaultDeleveragingEvent.offsetting!.number,
     updatedAt: createdDateTime.toISO(),
     updatedAtHeight: createdHeight,
+    assetYieldIndex: ZERO_ASSET_YIELD_INDEX,
   };
 
   const deleveragedSubaccount: SubaccountCreateObject = {
@@ -68,6 +71,7 @@ describe('DeleveragingHandler', () => {
     subaccountNumber: defaultDeleveragingEvent.liquidated!.number,
     updatedAt: createdDateTime.toISO(),
     updatedAtHeight: createdHeight,
+    assetYieldIndex: ZERO_ASSET_YIELD_INDEX,
   };
 
   beforeAll(async () => {

@@ -113,11 +113,13 @@ describe('pnl-ticks-helper', () => {
         id: testConstants.defaultSubaccountId,
         updatedAtHeight: '1',
         updatedAt: testConstants.defaultSubaccount.updatedAt,
+        assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex,
       }),
       SubaccountTable.update({
         id: testConstants.defaultSubaccountId2,
         updatedAtHeight: '2',
         updatedAt: testConstants.defaultSubaccount.updatedAt,
+        assetYieldIndex: testConstants.defaultSubaccount2.assetYieldIndex,
       }),
     ]);
 
