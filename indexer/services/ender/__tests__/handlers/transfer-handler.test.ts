@@ -302,7 +302,7 @@ describe('transferHandler', () => {
     );
   });
 
-  it('creates new deposit for previously non-existent subaccount', async () => {
+  it('throws error when creating new deposit for previously non-existent subaccount', async () => {
     const transactionIndex: number = 0;
 
     const depositEvent: TransferEventV1 = defaultDepositEvent;
@@ -323,21 +323,8 @@ describe('transferHandler', () => {
     // Confirm there is no existing transfer to or from the recipient subaccount
     await expectNoExistingTransfers([defaultRecipientSubaccountId]);
 
-    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-    await onMessage(kafkaMessage);
-
-    const newTransfer: TransferFromDatabase = await expectAndReturnNewTransfer(
-      {
-        recipientSubaccountId: defaultRecipientSubaccountId,
-      },
-    );
-
-    expectTransferMatchesEvent(depositEvent, newTransfer, asset);
-    await expectTransfersSubaccountKafkaMessage(
-      producerSendMock,
-      depositEvent,
-      newTransfer,
-      asset,
+    await expect(onMessage(kafkaMessage)).rejects.toThrowError(
+      new Error('SELECT dydx_block_processor($1) AS result; - Unable to find subaccount with database id (database id differs from subaccount id found in protocol): 5b047d98-6751-5669-82cf-993a72f5763b'),
     );
   });
 
@@ -386,7 +373,7 @@ describe('transferHandler', () => {
     );
   });
 
-  it('creates new transfer and the recipient subaccount', async () => {
+  it('throws error when creating new transfer for non-existent subaccount', async () => {
     const transactionIndex: number = 0;
 
     const transferEvent: TransferEventV1 = defaultTransferEvent;
@@ -415,27 +402,8 @@ describe('transferHandler', () => {
     // Confirm there is no existing transfers
     await expectNoExistingTransfers([defaultRecipientSubaccountId, defaultSenderSubaccountId]);
 
-    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-    await onMessage(kafkaMessage);
-
-    const newTransfer: TransferFromDatabase = await expectAndReturnNewTransfer(
-      {
-        recipientSubaccountId: defaultRecipientSubaccountId,
-        senderSubaccountId: defaultSenderSubaccountId,
-      });
-
-    expectTransferMatchesEvent(transferEvent, newTransfer, asset);
-    const newRecipientSubaccount: SubaccountFromDatabase | undefined = await
-    SubaccountTable.findById(
-      defaultRecipientSubaccountId,
-    );
-    expect(newRecipientSubaccount).toBeDefined();
-
-    await expectTransfersSubaccountKafkaMessage(
-      producerSendMock,
-      transferEvent,
-      newTransfer,
-      asset,
+    await expect(onMessage(kafkaMessage)).rejects.toThrowError(
+      new Error('SELECT dydx_block_processor($1) AS result; - Unable to find subaccount with database id (database id differs from subaccount id found in protocol): 5b047d98-6751-5669-82cf-993a72f5763b'),
     );
   });
 });
