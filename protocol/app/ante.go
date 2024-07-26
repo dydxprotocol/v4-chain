@@ -29,10 +29,8 @@ import (
 // struct embedding to include the normal cosmos-sdk `HandlerOptions`.
 type HandlerOptions struct {
 	ante.HandlerOptions
-	Codec        codec.Codec
-	AuthStoreKey storetypes.StoreKey
-	// TODO: create interface for accountplus keeper when mocking need arises
-	// https://github.com/dydxprotocol/v4-chain/pull/1963#discussion_r1691904072
+	Codec             codec.Codec
+	AuthStoreKey      storetypes.StoreKey
 	AccountplusKeeper *accountpluskeeper.Keeper
 	ClobKeeper        clobtypes.ClobKeeper
 	PerpetualsKeeper  perpetualstypes.PerpetualsKeeper

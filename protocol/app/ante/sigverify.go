@@ -14,6 +14,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
+	accountplustypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	gometrics "github.com/hashicorp/go-metrics"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -65,9 +66,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 	}
 
 	// Check that signer length and signature length are the same.
-	// If the lengths are the same, then sigs and signers are ordered correctly. This means that each expected signer
-	// provided a signature. In cosmos original sigverify, the ordering is explicitly checked.
-	//https://github.com/cosmos/cosmos-sdk/blob/502450cd1ef0b6bd77807922091893611c370c5d/x/auth/ante/sigverify.go#L189
+	// The ordering of the sigs and signers have matching ordering (sigs[i] belongs to signers[i]).
 	if len(sigs) != len(signers) {
 		err := errorsmod.Wrapf(
 			sdkerrors.ErrUnauthorized,
@@ -100,10 +99,14 @@ func (svd SigVerificationDecorator) AnteHandle(
 		// `GoodTilBlock` for replay protection.
 		if !skipSequenceValidation {
 			if accountpluskeeper.IsTimestampNonce(sig.Sequence) {
-				start := time.Now()
+				defer telemetry.ModuleMeasureSince(
+					accountplustypes.ModuleName,
+					time.Now(),
+					metrics.TimestampNonce,
+					metrics.Latency,
+				)
 				err = svd.akp.ProcessTimestampNonce(ctx, acc, sig.Sequence)
 
-				telemetry.MeasureSince(start, []string{metrics.TimestampNonce, metrics.Latency}...)
 				if err == nil {
 					telemetry.IncrCounterWithLabels(
 						[]string{metrics.TimestampNonce, metrics.Valid, metrics.Count},

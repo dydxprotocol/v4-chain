@@ -24,9 +24,5 @@ func IsTimestampNonceTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 		return false, errorsmod.Wrap(sdkerrors.ErrTxDecode, "more than one signature")
 	}
 
-	if accountpluskeeper.IsTimestampNonce(signatures[0].Sequence) {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	return accountpluskeeper.IsTimestampNonce(signatures[0].Sequence), nil
 }
