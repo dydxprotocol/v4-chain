@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/server/config"
-
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/spf13/cobra"
@@ -40,6 +39,12 @@ func TestAddFlagsToCommand(t *testing.T) {
 		},
 		fmt.Sprintf("Has %s flag", flags.GrpcStreamingMaxChannelBufferSize): {
 			flagName: flags.GrpcStreamingMaxChannelBufferSize,
+		},
+		fmt.Sprintf("Has %s flag", flags.WebsocketStreamingEnabled): {
+			flagName: flags.WebsocketStreamingEnabled,
+		},
+		fmt.Sprintf("Has %s flag", flags.WebsocketStreamingPort): {
+			flagName: flags.WebsocketStreamingPort,
 		},
 		fmt.Sprintf("Has %s flag", flags.OptimisticExecutionEnabled): {
 			flagName: flags.OptimisticExecutionEnabled,
@@ -82,6 +87,19 @@ func TestValidate(t *testing.T) {
 				GrpcStreamingFlushIntervalMs:      100,
 				GrpcStreamingMaxBatchSize:         10000,
 				GrpcStreamingMaxChannelBufferSize: 10000,
+				WebsocketStreamingEnabled:         false,
+			},
+		},
+		"success - both grpc and websocket streaming enabled for validating nodes": {
+			flags: flags.Flags{
+				NonValidatingFullNode:             false,
+				GrpcEnable:                        true,
+				GrpcStreamingEnabled:              true,
+				GrpcStreamingFlushIntervalMs:      100,
+				GrpcStreamingMaxBatchSize:         10000,
+				GrpcStreamingMaxChannelBufferSize: 10000,
+				WebsocketStreamingEnabled:         true,
+				WebsocketStreamingPort:            8989,
 			},
 		},
 		"success - optimistic execution": {
@@ -114,6 +132,30 @@ func TestValidate(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("grpc.enable must be set to true - grpc streaming requires gRPC server"),
 		},
+		"failure - websocket streaming enabled with gRPC streaming disabled": {
+			flags: flags.Flags{
+				NonValidatingFullNode:             true,
+				GrpcEnable:                        true,
+				GrpcStreamingEnabled:              false,
+				WebsocketStreamingEnabled:         true,
+				GrpcStreamingFlushIntervalMs:      100,
+				GrpcStreamingMaxBatchSize:         10000,
+				GrpcStreamingMaxChannelBufferSize: 10000,
+			},
+			expectedErr: fmt.Errorf("websocket full node streaming requires grpc streaming to be enabled"),
+		},
+		"success - websocket streaming enabled with gRPC enabled for validating node": {
+			flags: flags.Flags{
+				NonValidatingFullNode:             true,
+				GrpcEnable:                        true,
+				WebsocketStreamingEnabled:         true,
+				GrpcStreamingEnabled:              true,
+				GrpcStreamingFlushIntervalMs:      100,
+				GrpcStreamingMaxBatchSize:         10000,
+				GrpcStreamingMaxChannelBufferSize: 10000,
+				WebsocketStreamingPort:            8989,
+			},
+		},
 		"failure - gRPC streaming enabled with zero batch size": {
 			flags: flags.Flags{
 				NonValidatingFullNode:        true,
@@ -122,7 +164,7 @@ func TestValidate(t *testing.T) {
 				GrpcStreamingFlushIntervalMs: 100,
 				GrpcStreamingMaxBatchSize:    0,
 			},
-			expectedErr: fmt.Errorf("grpc streaming batch size must be positive number"),
+			expectedErr: fmt.Errorf("full node streaming batch size must be positive number"),
 		},
 		"failure - gRPC streaming enabled with zero flush interval ms": {
 			flags: flags.Flags{
@@ -132,7 +174,7 @@ func TestValidate(t *testing.T) {
 				GrpcStreamingFlushIntervalMs: 0,
 				GrpcStreamingMaxBatchSize:    10000,
 			},
-			expectedErr: fmt.Errorf("grpc streaming flush interval must be positive number"),
+			expectedErr: fmt.Errorf("full node streaming flush interval must be positive number"),
 		},
 		"failure - gRPC streaming enabled with zero channel size ms": {
 			flags: flags.Flags{
@@ -143,7 +185,18 @@ func TestValidate(t *testing.T) {
 				GrpcStreamingMaxBatchSize:         10000,
 				GrpcStreamingMaxChannelBufferSize: 0,
 			},
-			expectedErr: fmt.Errorf("grpc streaming channel size must be positive number"),
+			expectedErr: fmt.Errorf("full node streaming channel size must be positive number"),
+		},
+		"failure - websocket streaming enabled with zero batch size": {
+			flags: flags.Flags{
+				NonValidatingFullNode:        true,
+				GrpcEnable:                   true,
+				GrpcStreamingEnabled:         true,
+				GrpcStreamingFlushIntervalMs: 100,
+				GrpcStreamingMaxBatchSize:    0,
+				WebsocketStreamingEnabled:    true,
+			},
+			expectedErr: fmt.Errorf("full node streaming batch size must be positive number"),
 		},
 	}
 	for name, tc := range tests {
@@ -173,6 +226,8 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 		expectedGrpcStreamingFlushMs              uint32
 		expectedGrpcStreamingBatchSize            uint32
 		expectedGrpcStreamingMaxChannelBufferSize uint32
+		expectedWebsocketEnabled                  bool
+		expectedWebsocketPort                     uint16
 		expectedOptimisticExecutionEnabled        bool
 	}{
 		"Sets to default if unset": {
@@ -183,8 +238,10 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcEnable:                        true,
 			expectedGrpcStreamingEnable:               false,
 			expectedGrpcStreamingFlushMs:              50,
-			expectedGrpcStreamingBatchSize:            10000,
-			expectedGrpcStreamingMaxChannelBufferSize: 10000,
+			expectedGrpcStreamingBatchSize:            2000,
+			expectedGrpcStreamingMaxChannelBufferSize: 2000,
+			expectedWebsocketEnabled:                  false,
+			expectedWebsocketPort:                     9091,
 			expectedOptimisticExecutionEnabled:        false,
 		},
 		"Sets values from options": {
@@ -193,22 +250,26 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 				flags.DdAgentHost:                       "agentHostTest",
 				flags.DdTraceAgentPort:                  uint16(777),
 				flags.GrpcEnable:                        false,
-				flags.GrpcAddress:                       "localhost:9091",
+				flags.GrpcAddress:                       "localhost:1234",
 				flags.GrpcStreamingEnabled:              "true",
 				flags.GrpcStreamingFlushIntervalMs:      uint32(408),
 				flags.GrpcStreamingMaxBatchSize:         uint32(650),
 				flags.GrpcStreamingMaxChannelBufferSize: uint32(972),
+				flags.WebsocketStreamingEnabled:         "true",
+				flags.WebsocketStreamingPort:            8989,
 				flags.OptimisticExecutionEnabled:        "true",
 			},
 			expectedNonValidatingFullNodeFlag:         true,
 			expectedDdAgentHost:                       "agentHostTest",
 			expectedDdTraceAgentPort:                  777,
 			expectedGrpcEnable:                        false,
-			expectedGrpcAddress:                       "localhost:9091",
+			expectedGrpcAddress:                       "localhost:1234",
 			expectedGrpcStreamingEnable:               true,
 			expectedGrpcStreamingFlushMs:              408,
 			expectedGrpcStreamingBatchSize:            650,
 			expectedGrpcStreamingMaxChannelBufferSize: 972,
+			expectedWebsocketEnabled:                  true,
+			expectedWebsocketPort:                     8989,
 			expectedOptimisticExecutionEnabled:        true,
 		},
 	}
@@ -266,6 +327,16 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 				t,
 				tc.expectedGrpcStreamingMaxChannelBufferSize,
 				flags.GrpcStreamingMaxChannelBufferSize,
+			)
+			require.Equal(
+				t,
+				tc.expectedWebsocketEnabled,
+				flags.WebsocketStreamingEnabled,
+			)
+			require.Equal(
+				t,
+				tc.expectedWebsocketPort,
+				flags.WebsocketStreamingPort,
 			)
 		})
 	}

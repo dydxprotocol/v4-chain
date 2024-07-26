@@ -233,6 +233,8 @@ import (
 	// Full Node Streaming
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
 	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/ws"
+	websocketstreaming "github.com/dydxprotocol/v4-chain/protocol/streaming/ws"
 )
 
 var (
@@ -344,7 +346,9 @@ type App struct {
 
 	IndexerEventManager      indexer_manager.IndexerEventManager
 	FullNodeStreamingManager streamingtypes.FullNodeStreamingManager
-	Server                   *daemonserver.Server
+	WebsocketStreamingServer *websocketstreaming.WebsocketServer
+
+	Server *daemonserver.Server
 
 	// startDaemons encapsulates the logic that starts all daemons and daemon services. This function contains a
 	// closure of all relevant data structures that are shared with various keepers. Daemon services startup is
@@ -491,6 +495,9 @@ func New(
 			}
 			if app.FullNodeStreamingManager != nil {
 				app.FullNodeStreamingManager.Stop()
+			}
+			if app.WebsocketStreamingServer != nil {
+				app.WebsocketStreamingServer.Shutdown()
 			}
 			return nil
 		},
@@ -752,7 +759,11 @@ func New(
 		indexerFlags.SendOffchainData,
 	)
 
-	app.FullNodeStreamingManager = getFullNodeStreamingManagerFromOptions(appFlags, logger)
+	app.FullNodeStreamingManager, app.WebsocketStreamingServer = getFullNodeStreamingManagerFromOptions(
+		appFlags,
+		appCodec,
+		logger,
+	)
 
 	timeProvider := &timelib.TimeProviderImpl{}
 
@@ -2016,16 +2027,32 @@ func getIndexerFromOptions(
 // from the specified options. This function will default to returning a no-op instance.
 func getFullNodeStreamingManagerFromOptions(
 	appFlags flags.Flags,
+	cdc codec.Codec,
 	logger log.Logger,
-) (manager streamingtypes.FullNodeStreamingManager) {
+) (manager streamingtypes.FullNodeStreamingManager, wsServer *websocketstreaming.WebsocketServer) {
 	if appFlags.GrpcStreamingEnabled {
-		logger.Info("GRPC streaming is enabled")
-		return streaming.NewFullNodeStreamingManager(
+		logger.Info("Full node streaming is enabled")
+		manager := streaming.NewFullNodeStreamingManager(
 			logger,
 			appFlags.GrpcStreamingFlushIntervalMs,
 			appFlags.GrpcStreamingMaxBatchSize,
 			appFlags.GrpcStreamingMaxChannelBufferSize,
 		)
+
+		// Start websocket server.
+		if appFlags.WebsocketStreamingEnabled {
+			port := appFlags.WebsocketStreamingPort
+			logger.Info("Websocket full node streaming is enabled")
+			wsServer = ws.NewWebsocketServer(
+				manager,
+				cdc,
+				logger,
+				port,
+			)
+			wsServer.Start()
+		}
+
+		return manager, wsServer
 	}
-	return streaming.NewNoopGrpcStreamingManager()
+	return streaming.NewNoopGrpcStreamingManager(), wsServer
 }

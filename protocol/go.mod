@@ -62,6 +62,7 @@ require (
 	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/ethereum/go-ethereum v1.14.7
 	github.com/go-kit/log v0.2.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/pelletier/go-toml v1.9.5
@@ -240,7 +241,6 @@ require (
 	github.com/gordonklaus/ineffassign v0.1.0 // indirect
 	github.com/gorilla/handlers v1.5.2 // indirect
 	github.com/gorilla/rpc v1.2.0 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gostaticanalysis/analysisutil v0.7.1 // indirect
 	github.com/gostaticanalysis/comment v1.4.2 // indirect
 	github.com/gostaticanalysis/forcetypeassert v0.1.0 // indirect
