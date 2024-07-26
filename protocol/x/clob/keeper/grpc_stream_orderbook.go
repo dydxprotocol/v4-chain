@@ -257,12 +257,18 @@ func (k Keeper) CompareMemclobOrderbookWithLocalOrderbook(
 	}
 
 	ratio := float32(numFailed) * 100 / float32(numPassed+numFailed)
-	logger.Error(
-		fmt.Sprintf("Fill amount comparison results: %.2f failed", ratio),
-		"failed", numFailed,
-		"passed", numPassed,
-		"in_orderbook_not_state", numInOrderbookButNotState,
-	)
-
-	logger.Info("Orderbook comparison done!")
+	if numFailed+numPassed > 0 {
+		if numFailed > 0 {
+			logger.Error(
+				fmt.Sprintf("Fill amount comparison results: %.2f failed", ratio),
+				"failed", numFailed,
+				"passed", numPassed,
+				"in_orderbook_not_state", numInOrderbookButNotState,
+			)
+		} else {
+			logger.Info("Orderbook comparison done successfully!")
+		}
+	} else {
+		logger.Info("No checks done on fill amounts.")
+	}
 }
