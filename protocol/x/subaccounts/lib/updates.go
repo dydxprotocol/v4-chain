@@ -58,6 +58,7 @@ func GetSettledSubaccountWithPerpetuals(
 			newPerpetualPositions, &types.PerpetualPosition{
 				PerpetualId:  p.PerpetualId,
 				Quantums:     p.Quantums,
+				QuoteBalance: p.QuoteBalance,
 				FundingIndex: dtypes.NewIntFromBigInt(newFundingIndex),
 			},
 		)
