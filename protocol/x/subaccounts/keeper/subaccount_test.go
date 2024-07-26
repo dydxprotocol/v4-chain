@@ -2923,8 +2923,10 @@ func TestUpdateSubaccounts(t *testing.T) {
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 			for _, m := range tc.marketParamPrices {
-				_, err := pricesKeeper.CreateMarket(
+				_, err := keepertest.CreateTestMarket(
+					t,
 					ctx,
+					pricesKeeper,
 					m.Param,
 					m.Price,
 				)
@@ -5508,8 +5510,10 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			}
 
 			for _, m := range tc.marketParamPrices {
-				_, err := pricesKeeper.CreateMarket(
+				_, err := keepertest.CreateTestMarket(
+					t,
 					ctx,
+					pricesKeeper,
 					m.Param,
 					m.Price,
 				)

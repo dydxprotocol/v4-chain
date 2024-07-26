@@ -1172,7 +1172,7 @@ func New(
 
 	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
 		appCodec,
-		keys[govplusmoduletypes.StoreKey],
+		keys[accountplusmoduletypes.StoreKey],
 	)
 	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
 
@@ -1375,6 +1375,7 @@ func New(
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
 		icatypes.ModuleName,
+		marketmapmoduletypes.ModuleName, // must be before prices
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
 		blocktimemoduletypes.ModuleName,
@@ -1393,7 +1394,6 @@ func New(
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
-		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
 
@@ -1419,6 +1419,7 @@ func New(
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
 		icatypes.ModuleName,
+		marketmapmoduletypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
 		blocktimemoduletypes.ModuleName,
@@ -1437,7 +1438,6 @@ func New(
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
-		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,
 
 		// Auth must be migrated after staking.
@@ -1903,11 +1903,13 @@ func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 				FeegrantKeeper:  app.FeeGrantKeeper,
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
-			ClobKeeper:       app.ClobKeeper,
-			Codec:            app.appCodec,
-			AuthStoreKey:     app.keys[authtypes.StoreKey],
-			PerpetualsKeeper: app.PerpetualsKeeper,
-			PricesKeeper:     app.PricesKeeper,
+			AccountplusKeeper: &app.AccountPlusKeeper,
+			ClobKeeper:        app.ClobKeeper,
+			Codec:             app.appCodec,
+			AuthStoreKey:      app.keys[authtypes.StoreKey],
+			PerpetualsKeeper:  app.PerpetualsKeeper,
+			PricesKeeper:      app.PricesKeeper,
+			MarketMapKeeper:   &app.MarketMapKeeper,
 		},
 	)
 	if err != nil {

@@ -426,6 +426,7 @@ func TestGenesis(t *testing.T) {
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 			ctx := ks.Ctx.WithBlockTime(constants.TimeT)
 
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 

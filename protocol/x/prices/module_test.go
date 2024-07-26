@@ -20,11 +20,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	prices_keeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -33,9 +34,9 @@ const (
 	// Exchange config json is left empty as it is not validated by the server.
 	// This genesis state is formatted to export back to itself. It explicitly defines all fields using valid defaults.
 	validGenesisState = `{` +
-		`"market_params":[{"id":0,"pair":"DENT-USD","exponent":0,"min_exchanges":1,"min_price_change_ppm":1,` +
+		`"market_params":[{"id":0,"pair":"DENT-USD","exponent":-1,"min_exchanges":1,"min_price_change_ppm":1,` +
 		`"exchange_config_json":"{}"}],` +
-		`"market_prices":[{"id":0,"exponent":0,"price":"1"}]` +
+		`"market_prices":[{"id":0,"exponent":-1,"price":"1"}]` +
 		`}`
 )
 
@@ -50,7 +51,7 @@ func createAppModule(t *testing.T) prices.AppModule {
 func createAppModuleWithKeeper(t *testing.T) (prices.AppModule, *prices_keeper.Keeper, sdk.Context) {
 	appCodec := codec.NewProtoCodec(module.InterfaceRegistry)
 
-	ctx, keeper, _, _, mockTimeProvider, _ := keeper.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 	// Mock the time provider response for market creation.
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
@@ -249,6 +250,16 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	am, keeper, ctx := createAppModuleWithKeeper(t)
 	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	gs := json.RawMessage(validGenesisState)
+
+	// Create the market in market map
+	var genState pricestypes.GenesisState
+	cdc.MustUnmarshalJSON(gs, &genState)
+	keepertest.CreateMarketsInMarketMapFromParams(
+		t,
+		ctx,
+		keeper.MarketMapKeeper.(*marketmapkeeper.Keeper),
+		genState.MarketParams,
+	)
 
 	am.InitGenesis(ctx, cdc, gs)
 

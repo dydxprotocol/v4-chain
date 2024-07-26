@@ -32,6 +32,7 @@ type RevShareKeeper interface {
 
 // MarketMapKeeper defines the expected marketmap keeper used for simulations.
 type MarketMapKeeper interface {
+	GetAllMarkets(ctx sdk.Context) (map[string]marketmaptypes.Market, error)
 	GetMarket(ctx sdk.Context, tickerStr string) (marketmaptypes.Market, error)
 	EnableMarket(ctx sdk.Context, tickerStr string) error
 }

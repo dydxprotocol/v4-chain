@@ -21,7 +21,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
@@ -41,6 +40,7 @@ func TestCreatePerpetualClobPair_MultiplePerpetual(t *testing.T) {
 	mockIndexerEventManager := &mocks.IndexerEventManager{}
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 
+	ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -155,6 +155,7 @@ func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 		&mocks.BankKeeper{},
 		mockIndexerEventManager,
 	)
+	ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -257,6 +258,7 @@ func TestCreatePerpetualClobPair(t *testing.T) {
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
@@ -409,6 +411,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -605,6 +608,8 @@ func TestUpdateClobPair_FinalSettlement(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	mockIndexerEventManager := &mocks.IndexerEventManager{}
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+
+	ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -684,10 +689,6 @@ func TestUpdateClobPair_FinalSettlement(t *testing.T) {
 		}
 	}
 
-	ks.ClobKeeper.UntriggeredConditionalOrders = map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
-		0: {}, // leaving blank, orders here don't matter in particular since we clear the whole key
-	}
-
 	clobPair.Status = types.ClobPair_STATUS_FINAL_SETTLEMENT
 	err = ks.ClobKeeper.UpdateClobPair(ks.Ctx, clobPair)
 	require.NoError(t, err)
@@ -711,10 +712,6 @@ func TestUpdateClobPair_FinalSettlement(t *testing.T) {
 		},
 		ppme.RemovedStatefulOrderIds,
 	)
-
-	// Verify UntriggeredConditionalOrders is cleared.
-	_, found := ks.ClobKeeper.UntriggeredConditionalOrders[0]
-	require.False(t, found)
 }
 
 func TestUpdateClobPair(t *testing.T) {
@@ -864,6 +861,8 @@ func TestUpdateClobPair(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -1043,6 +1042,8 @@ func TestIsPerpetualClobPairActive(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 

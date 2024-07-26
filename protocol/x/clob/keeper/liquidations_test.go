@@ -2266,6 +2266,8 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 	ctx := ks.Ctx.WithTxBytes(constants.TestTxBytes)
 	// CheckTx mode set correctly
 	ctx = ctx.WithIsCheckTx(true)
+
+	ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 

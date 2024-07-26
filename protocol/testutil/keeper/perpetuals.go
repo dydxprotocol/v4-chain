@@ -25,6 +25,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,6 +36,7 @@ type PerpKeepersTestContext struct {
 	AssetsKeeper      *assetskeeper.Keeper
 	EpochsKeeper      *epochskeeper.Keeper
 	PerpetualsKeeper  *keeper.Keeper
+	MarketMapKeeper   *marketmapkeeper.Keeper
 	StoreKey          storetypes.StoreKey
 	MemKey            storetypes.StoreKey
 	Cdc               *codec.ProtoCodec
@@ -65,14 +67,14 @@ func PerpetualsKeepersWithClobHelpers(
 		) []GenesisInitializer {
 			// Define necessary keepers here for unit tests
 			revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
-			marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
+			pc.MarketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 			pc.PricesKeeper, _, pc.IndexPriceCache, pc.MockTimeProvider = createPricesKeeper(
 				stateStore,
 				db,
 				cdc,
 				transientStoreKey,
 				revShareKeeper,
-				marketMapKeeper,
+				pc.MarketMapKeeper,
 			)
 			pc.EpochsKeeper, _ = createEpochsKeeper(stateStore, db, cdc)
 			pc.PerpetualsKeeper, pc.StoreKey = createPerpetualsKeeperWithClobHelpers(
@@ -85,7 +87,7 @@ func PerpetualsKeepersWithClobHelpers(
 				transientStoreKey,
 			)
 			pc.TransientStoreKey = transientStoreKey
-			return []GenesisInitializer{pc.PricesKeeper, pc.PerpetualsKeeper}
+			return []GenesisInitializer{pc.PricesKeeper, pc.PerpetualsKeeper, pc.MarketMapKeeper}
 		},
 	)
 

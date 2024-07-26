@@ -19,7 +19,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testutil_json "github.com/dydxprotocol/v4-chain/protocol/testutil/json"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	epochs_keeper "github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
 	epoch_types "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
@@ -47,7 +47,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 ) {
 	appCodec := codec.NewProtoCodec(module.InterfaceRegistry)
 
-	pc := keeper.PerpetualsKeepers(t)
+	pc := keepertest.PerpetualsKeepers(t)
 
 	return perpetuals.NewAppModule(
 		appCodec,
@@ -248,8 +248,10 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 
 	// The corresponding `Market` must exist, so create it.
 	am, keeper, pricesKeeper, _, ctx := createAppModuleWithKeeper(t)
-	if _, err := pricesKeeper.CreateMarket(
+	if _, err := keepertest.CreateTestMarket(
+		t,
 		ctx,
+		pricesKeeper,
 		pricetypes.MarketParam{
 			Id:                 0,
 			Pair:               constants.EthUsdPair,

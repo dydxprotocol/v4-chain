@@ -11,6 +11,7 @@ import (
 	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
 
+	slinkylibs "github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
@@ -18,9 +19,14 @@ import (
 var ErrNoCrossMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUpsertMarkets " +
 	"on a market listed as cross margin")
 
+type MarketMapKeeper interface {
+	GetAllMarkets(ctx sdk.Context) (map[string]mmtypes.Market, error)
+}
+
 type ValidateMarketUpdateDecorator struct {
-	perpKeeper  perpetualstypes.PerpetualsKeeper
-	priceKeeper pricestypes.PricesKeeper
+	perpKeeper      perpetualstypes.PerpetualsKeeper
+	priceKeeper     pricestypes.PricesKeeper
+	marketMapKeeper MarketMapKeeper
 	// write only cache for mapping slinky ticker strings to market types
 	// only evicted on node restart
 	cache map[string]perpetualstypes.PerpetualMarketType
@@ -34,11 +40,13 @@ type ValidateMarketUpdateDecorator struct {
 func NewValidateMarketUpdateDecorator(
 	perpKeeper perpetualstypes.PerpetualsKeeper,
 	priceKeeper pricestypes.PricesKeeper,
+	marketMapKeeper MarketMapKeeper,
 ) ValidateMarketUpdateDecorator {
 	return ValidateMarketUpdateDecorator{
-		perpKeeper:  perpKeeper,
-		priceKeeper: priceKeeper,
-		cache:       make(map[string]perpetualstypes.PerpetualMarketType),
+		perpKeeper:      perpKeeper,
+		priceKeeper:     priceKeeper,
+		marketMapKeeper: marketMapKeeper,
+		cache:           make(map[string]perpetualstypes.PerpetualMarketType),
 	}
 }
 
@@ -64,20 +72,27 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 	}
 
 	msgs := tx.GetMsgs()
-	var msg = msgs[0]
+	var (
+		msg     = msgs[0]
+		markets []mmtypes.Market
+	)
 
 	switch msg := msg.(type) {
 	case *mmtypes.MsgUpdateMarkets:
-		if contains := d.doMarketsContainCrossMarket(ctx, msg.UpdateMarkets); contains {
-			return ctx, ErrNoCrossMarketUpdates
-		}
-
+		markets = msg.UpdateMarkets
 	case *mmtypes.MsgUpsertMarkets:
-		if contains := d.doMarketsContainCrossMarket(ctx, msg.Markets); contains {
-			return ctx, ErrNoCrossMarketUpdates
-		}
+		markets = msg.Markets
 	default:
 		return ctx, fmt.Errorf("unrecognized message type: %T", msg)
+	}
+
+	if contains := d.doMarketsContainCrossMarket(ctx, markets); contains {
+		return ctx, ErrNoCrossMarketUpdates
+	}
+
+	// check if the market updates are safe
+	if err := d.doMarketsUpdateEnabledValues(ctx, markets); err != nil {
+		return ctx, pricestypes.ErrUnsafeMarketUpdate.Wrap(err.Error())
 	}
 
 	return next(ctx, tx, simulate)
@@ -111,6 +126,72 @@ func (d ValidateMarketUpdateDecorator) doMarketsContainCrossMarket(ctx sdk.Conte
 	}
 
 	return false
+}
+
+// doMarketsUpdateEnabledValues checks if the given markets updates are safe, specifically:
+// 1. If a newly added market (market does not exist in x/prices) is added, it should be disabled in the market-map
+// 2. If an existing market is updated, the market-update should not change the enabled value
+func (d ValidateMarketUpdateDecorator) doMarketsUpdateEnabledValues(ctx sdk.Context, markets []mmtypes.Market) error {
+	// get all market-params
+	mps := d.priceKeeper.GetAllMarketParams(ctx)
+	mm, err := d.marketMapKeeper.GetAllMarkets(ctx)
+	if err != nil {
+		return err
+	}
+
+	// convert to map for easy lookup
+	mpMap, err := marketParamsSliceToMap(mps)
+	if err != nil {
+		return err
+	}
+
+	// check validity of incoming market-updates
+	for _, market := range markets {
+		_, exists := mpMap[market.Ticker.CurrencyPair.String()]
+		if !exists {
+			// if market does not exist in x/prices, it should be disabled
+			if market.Ticker.Enabled {
+				return pricestypes.ErrAdditionOfEnabledMarket
+			}
+		} else {
+			// find the market in the market-map
+			mmMarket, exists := mm[market.Ticker.CurrencyPair.String()]
+			if !exists {
+				return pricestypes.ErrMarketDoesNotExistInMarketMap
+			}
+
+			// if market exists, it should not change the enabled value
+			if mmMarket.Ticker.Enabled != market.Ticker.Enabled {
+				return pricestypes.ErrMarketUpdateChangesMarketMapEnabledValue.Wrapf(
+					"market-map market: %t, incoming market update: %t", mmMarket.Ticker.Enabled, market.Ticker.Enabled,
+				)
+			}
+		}
+	}
+
+	return nil
+}
+
+func marketParamsSliceToMap(mps []pricestypes.MarketParam) (map[string]pricestypes.MarketParam, error) {
+	mpMap := make(map[string]pricestypes.MarketParam)
+
+	// create entry for each market-param
+	for _, mp := range mps {
+		// index will be the slinky-style ticker
+		idx, err := slinkylibs.MarketPairToCurrencyPair(mp.Pair)
+		if err != nil {
+			return nil, err
+		}
+
+		// check for duplicate entries
+		if _, exists := mpMap[idx.String()]; exists {
+			return nil, errors.New("duplicate market-param entry")
+		}
+
+		mpMap[idx.String()] = mp
+	}
+
+	return mpMap, nil
 }
 
 // IsMarketUpdateTx returns `true` if the supplied `tx` consists of a single
