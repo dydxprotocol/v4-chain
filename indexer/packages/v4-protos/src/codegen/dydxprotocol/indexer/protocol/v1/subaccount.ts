@@ -49,6 +49,12 @@ export interface IndexerPerpetualPosition {
    */
 
   fundingPayment: Uint8Array;
+  /**
+   * The current yield index last time this position was settled.
+   * Should be converted from string to big.Rat.
+   */
+
+  perpYieldIndex: string;
 }
 /**
  * IndexerPerpetualPosition are an account’s positions of a `Perpetual`.
@@ -75,6 +81,12 @@ export interface IndexerPerpetualPositionSDKType {
    */
 
   funding_payment: Uint8Array;
+  /**
+   * The current yield index last time this position was settled.
+   * Should be converted from string to big.Rat.
+   */
+
+  perp_yield_index: string;
 }
 /**
  * IndexerAssetPosition define an account’s positions of an `Asset`.
@@ -94,12 +106,6 @@ export interface IndexerAssetPosition {
    */
 
   index: Long;
-  /**
-   * The current yield index last time this position was settled.
-   * Should be converted from string to big.Rat.
-   */
-
-  yieldIndex: string;
 }
 /**
  * IndexerAssetPosition define an account’s positions of an `Asset`.
@@ -119,12 +125,6 @@ export interface IndexerAssetPositionSDKType {
    */
 
   index: Long;
-  /**
-   * The current yield index last time this position was settled.
-   * Should be converted from string to big.Rat.
-   */
-
-  yield_index: string;
 }
 
 function createBaseIndexerSubaccountId(): IndexerSubaccountId {
@@ -187,7 +187,8 @@ function createBaseIndexerPerpetualPosition(): IndexerPerpetualPosition {
     perpetualId: 0,
     quantums: new Uint8Array(),
     fundingIndex: new Uint8Array(),
-    fundingPayment: new Uint8Array()
+    fundingPayment: new Uint8Array(),
+    perpYieldIndex: ""
   };
 }
 
@@ -207,6 +208,10 @@ export const IndexerPerpetualPosition = {
 
     if (message.fundingPayment.length !== 0) {
       writer.uint32(34).bytes(message.fundingPayment);
+    }
+
+    if (message.perpYieldIndex !== "") {
+      writer.uint32(42).string(message.perpYieldIndex);
     }
 
     return writer;
@@ -237,6 +242,10 @@ export const IndexerPerpetualPosition = {
           message.fundingPayment = reader.bytes();
           break;
 
+        case 5:
+          message.perpYieldIndex = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -252,6 +261,7 @@ export const IndexerPerpetualPosition = {
     message.quantums = object.quantums ?? new Uint8Array();
     message.fundingIndex = object.fundingIndex ?? new Uint8Array();
     message.fundingPayment = object.fundingPayment ?? new Uint8Array();
+    message.perpYieldIndex = object.perpYieldIndex ?? "";
     return message;
   }
 
@@ -261,8 +271,7 @@ function createBaseIndexerAssetPosition(): IndexerAssetPosition {
   return {
     assetId: 0,
     quantums: new Uint8Array(),
-    index: Long.UZERO,
-    yieldIndex: ""
+    index: Long.UZERO
   };
 }
 
@@ -278,10 +287,6 @@ export const IndexerAssetPosition = {
 
     if (!message.index.isZero()) {
       writer.uint32(24).uint64(message.index);
-    }
-
-    if (message.yieldIndex !== "") {
-      writer.uint32(34).string(message.yieldIndex);
     }
 
     return writer;
@@ -308,10 +313,6 @@ export const IndexerAssetPosition = {
           message.index = (reader.uint64() as Long);
           break;
 
-        case 4:
-          message.yieldIndex = reader.string();
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -326,7 +327,6 @@ export const IndexerAssetPosition = {
     message.assetId = object.assetId ?? 0;
     message.quantums = object.quantums ?? new Uint8Array();
     message.index = object.index !== undefined && object.index !== null ? Long.fromValue(object.index) : Long.UZERO;
-    message.yieldIndex = object.yieldIndex ?? "";
     return message;
   }
 
