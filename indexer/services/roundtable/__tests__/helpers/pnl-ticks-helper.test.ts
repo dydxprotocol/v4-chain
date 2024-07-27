@@ -28,7 +28,7 @@ import {
   getAccountsToUpdate,
   normalizeStartTime,
 } from '../../src/helpers/pnl-ticks-helper';
-import { defaultPnlTickForSubaccounts } from '../../src/helpers/constants';
+import { defaultPnlTickForSubaccounts, defaultZeroPerpYieldIndex } from '../../src/helpers/constants';
 import Big from 'big.js';
 import { DateTime } from 'luxon';
 import { LatestAccountPnlTicksCache, PnlTickForSubaccounts, redis } from '@dydxprotocol-indexer/redis';
@@ -47,6 +47,7 @@ describe('pnl-ticks-helper', () => {
       sumOpen: '10',
       sumClose: '0',
       id: testConstants.defaultPerpetualPositionId,
+      perpYieldIndex: defaultZeroPerpYieldIndex,
     },
   ];
   const lastUpdatedFundingIndexMap: FundingIndexMap = {
@@ -280,6 +281,7 @@ describe('pnl-ticks-helper', () => {
         testConstants.defaultPerpetualPosition.subaccountId,
         testConstants.defaultTendermintEventId2,
       ),
+      perpYieldIndex: defaultZeroPerpYieldIndex,
     };
     const usdcPosition: Big = new Big('10000');
     const equity: Big = calculateEquity(
@@ -306,6 +308,7 @@ describe('pnl-ticks-helper', () => {
         testConstants.defaultPerpetualPosition.subaccountId,
         testConstants.defaultTendermintEventId2,
       ),
+      perpYieldIndex: defaultZeroPerpYieldIndex,
     };
     const usdcPosition: Big = new Big('10000');
     const equity: Big = calculateEquity(
@@ -334,6 +337,7 @@ describe('pnl-ticks-helper', () => {
           testConstants.defaultPerpetualPosition.subaccountId,
           testConstants.defaultTendermintEventId2,
         ),
+        perpYieldIndex: defaultZeroPerpYieldIndex,
       },
     ];
     const usdcPosition: Big = new Big('10000');

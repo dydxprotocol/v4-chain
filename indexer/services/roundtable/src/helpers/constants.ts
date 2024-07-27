@@ -9,3 +9,5 @@ export const defaultPnlTickForSubaccounts: PnlTickForSubaccounts = {
     equity: '9000',
   },
 };
+
+export const defaultZeroPerpYieldIndex: string = "0/1";

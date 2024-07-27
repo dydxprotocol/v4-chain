@@ -34,6 +34,7 @@ import {
 import { stats } from '@dydxprotocol-indexer/base';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { defaultPreviousHeight, defaultWalletAddress } from './constants';
+import { defaultZeroPerpYieldIndex } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('kafka-helper', () => {
   describe('addPositionsToContents', () => {
@@ -53,6 +54,7 @@ describe('kafka-helper', () => {
       openEventId: testConstants.defaultTendermintEventId,
       lastEventId: testConstants.defaultTendermintEventId,
       settledFunding: '200000',
+      perpYieldIndex: defaultZeroPerpYieldIndex,
     };
 
     const defaultPerpetualMarket: PerpetualMarketFromDatabase = {
@@ -496,6 +498,7 @@ describe('kafka-helper', () => {
       status: PerpetualPositionStatus.OPEN,
       size: '0.0001',
       lastEventId: Buffer.from('0'),
+      perpYieldIndex: defaultZeroPerpYieldIndex,
     };
 
     beforeAll(async () => {

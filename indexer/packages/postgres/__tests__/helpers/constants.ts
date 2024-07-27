@@ -56,6 +56,7 @@ export const dydxChain: string = 'dydx';
 export const defaultAddress: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf';
 export const blockedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
 export const zeroAssetYieldIndex: string = "0/1";
+export const defaultZeroPerpYieldIndex: string = "0/1";
 
 // ============== Subaccounts ==============
 
@@ -447,6 +448,7 @@ export const defaultPerpetualPosition: PerpetualPositionCreateObject = {
   openEventId: defaultTendermintEventId,
   lastEventId: defaultTendermintEventId2,
   settledFunding: '200000',
+  perpYieldIndex: defaultZeroPerpYieldIndex,
 };
 
 export const defaultPerpetualPositionId: string = PerpetualPositionTable.uuid(
@@ -469,6 +471,7 @@ export const isolatedPerpetualPosition: PerpetualPositionCreateObject = {
   openEventId: defaultTendermintEventId,
   lastEventId: defaultTendermintEventId2,
   settledFunding: '200000',
+  perpYieldIndex: defaultZeroPerpYieldIndex,
 };
 
 export const isolatedPerpetualPositionId: string = PerpetualPositionTable.uuid(
