@@ -59,7 +59,7 @@ BEGIN
             perp_yield_index text;
         BEGIN
             perpetual_id = (perpetual_position_update->'perpetualId')::bigint;
-            perp_yield_index = perpetual_position_update->'perpYieldIndex';
+            perp_yield_index = jsonb_extract_path_text(perpetual_position_update, 'perpYieldIndex');
             SELECT * INTO perpetual_market FROM perpetual_markets WHERE id = perpetual_id;
             SELECT * INTO perpetual_position_record FROM perpetual_positions
                                                     WHERE "subaccountId" = subaccount_record."id"

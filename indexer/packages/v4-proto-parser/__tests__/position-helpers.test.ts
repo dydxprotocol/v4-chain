@@ -36,6 +36,7 @@ describe('getPositionIsLong', () => {
         fundingIndex: bigIntToBytes(BigInt(0)),
         quantums: bigIntToBytes(i),
         fundingPayment: bigIntToBytes(BigInt(0)),
+        perpYieldIndex: "0/1",
       };
       expect(getPositionIsLong(perpetualPosition)).toEqual(isLong);
     });

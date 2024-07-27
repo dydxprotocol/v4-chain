@@ -33,8 +33,7 @@ import {
 } from '../../src/helpers/kafka-helper';
 import { stats } from '@dydxprotocol-indexer/base';
 import { updateBlockCache } from '../../src/caches/block-cache';
-import { defaultPreviousHeight, defaultWalletAddress } from './constants';
-import { defaultZeroPerpYieldIndex } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import { defaultPreviousHeight, defaultWalletAddress, defaultZeroPerpYieldIndex, } from './constants';
 
 describe('kafka-helper', () => {
   describe('addPositionsToContents', () => {
@@ -585,6 +584,7 @@ describe('kafka-helper', () => {
         settledFunding: '200000',
         status: PerpetualPositionStatus.OPEN,
         size: '10',
+        perpYieldIndex: defaultZeroPerpYieldIndex,
       });
     });
 

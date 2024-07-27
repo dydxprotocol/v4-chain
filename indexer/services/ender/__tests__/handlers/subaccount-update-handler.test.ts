@@ -194,7 +194,6 @@ describe('subaccountUpdateHandler', () => {
     const eventIndex: number = 0;
     const sizeInQuantums: number = 1_000_000;
     const fundingIndex: number = 200;
-    console.log("THe perpYieldIndex is ", defaultZeroPerpYieldIndex)
     const subaccountUpdateEvent: SubaccountUpdateEventV1 = SubaccountUpdateEventV1.fromPartial({
       // eslint-disable-next-line  @typescript-eslint/no-explicit-any
       ...defaultEmptySubaccountUpdateEvent as any,
@@ -217,12 +216,7 @@ describe('subaccountUpdateHandler', () => {
 
     const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
 
-    console.log("BEFORE ON MESSAGE")
-    console.log("PERP YIELD INDEX OF EVNET IS ", subaccountUpdateEvent.updatedPerpetualPositions[0].perpYieldIndex)
-
     await onMessage(kafkaMessage);
-
-    console.log("AFTER ON MESSAGE")
 
     const tendermintEventId: Buffer = TendermintEventTable.createEventId(
       defaultHeight.toString(),
@@ -256,8 +250,6 @@ describe('subaccountUpdateHandler', () => {
       settledFunding,
       perpYieldIndex: defaultZeroPerpYieldIndex,
     }));
-
-    console.log("BEFORE UPDATE")
 
     const updatedPerpetualPositionSubaccountKafkaObject:
     UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
