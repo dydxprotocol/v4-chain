@@ -51,6 +51,9 @@ import {
 } from '../../src/lib/types';
 import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
 
+
+export const defaultZeroPerpYieldIndex: string = "0/1";
+export const onePerpYieldIndex: string = "1/1";
 export const defaultMarketPriceUpdate: MarketEventV1 = {
   marketId: 0,
   priceUpdate: {

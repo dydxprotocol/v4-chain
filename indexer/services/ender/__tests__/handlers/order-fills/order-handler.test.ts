@@ -66,7 +66,7 @@ import { getWeightedAverage } from '../../../src/lib/helper';
 import { ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
-  defaultOrder, defaultOrderEvent, defaultPreviousHeight, defaultTakerOrder,
+  defaultOrder, defaultOrderEvent, defaultPreviousHeight, defaultTakerOrder, defaultZeroPerpYieldIndex
 } from '../../helpers/constants';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import { OrderHandler } from '../../../src/handlers/order-fills/order-handler';
@@ -142,6 +142,7 @@ describe('OrderHandler', () => {
     openEventId: testConstants.defaultTendermintEventId4,
     lastEventId: testConstants.defaultTendermintEventId4,
     settledFunding: '200000',
+    perpYieldIndex: defaultZeroPerpYieldIndex,
   };
 
   describe('getParallelizationIds', () => {

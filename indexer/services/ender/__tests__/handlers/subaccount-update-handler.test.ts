@@ -55,6 +55,8 @@ import {
   defaultPreviousHeight,
   defaultTime,
   defaultTxHash,
+  defaultZeroPerpYieldIndex,
+  onePerpYieldIndex,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
@@ -94,6 +96,7 @@ describe('subaccountUpdateHandler', () => {
     openEventId: testConstants.defaultTendermintEventId,
     lastEventId: testConstants.defaultTendermintEventId,
     settledFunding: '-200000',
+    perpYieldIndex: defaultZeroPerpYieldIndex,
   };
 
   const defaultAssetPosition: AssetPositionCreateObject = {
@@ -191,6 +194,7 @@ describe('subaccountUpdateHandler', () => {
     const eventIndex: number = 0;
     const sizeInQuantums: number = 1_000_000;
     const fundingIndex: number = 200;
+    console.log("THe perpYieldIndex is ", defaultZeroPerpYieldIndex)
     const subaccountUpdateEvent: SubaccountUpdateEventV1 = SubaccountUpdateEventV1.fromPartial({
       // eslint-disable-next-line  @typescript-eslint/no-explicit-any
       ...defaultEmptySubaccountUpdateEvent as any,
@@ -199,6 +203,7 @@ describe('subaccountUpdateHandler', () => {
         quantums: bytesToBase64(bigIntToBytes(BigInt(sizeInQuantums))),
         fundingIndex: bytesToBase64(bigIntToBytes(BigInt(fundingIndex))),
         fundingPayment: bytesToBase64(bigIntToBytes(BigInt(fundingPayment))),
+        perpYieldIndex: defaultZeroPerpYieldIndex,
       }],
     });
 
@@ -211,7 +216,13 @@ describe('subaccountUpdateHandler', () => {
     });
 
     const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+
+    console.log("BEFORE ON MESSAGE")
+    console.log("PERP YIELD INDEX OF EVNET IS ", subaccountUpdateEvent.updatedPerpetualPositions[0].perpYieldIndex)
+
     await onMessage(kafkaMessage);
+
+    console.log("AFTER ON MESSAGE")
 
     const tendermintEventId: Buffer = TendermintEventTable.createEventId(
       defaultHeight.toString(),
@@ -243,7 +254,11 @@ describe('subaccountUpdateHandler', () => {
       openEventId: tendermintEventId,
       lastEventId: tendermintEventId,
       settledFunding,
+      perpYieldIndex: defaultZeroPerpYieldIndex,
     }));
+
+    console.log("BEFORE UPDATE")
+
     const updatedPerpetualPositionSubaccountKafkaObject:
     UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
       convertPerpetualPosition(perpetualPosition!),
@@ -277,6 +292,7 @@ describe('subaccountUpdateHandler', () => {
         quantums: bytesToBase64(bigIntToBytes(BigInt(sizeInQuantums))),
         fundingIndex: bytesToBase64(bigIntToBytes(BigInt(fundingIndex))),
         fundingPayment: bytesToBase64(bigIntToBytes(BigInt(fundingPayment))),
+        perpYieldIndex: defaultZeroPerpYieldIndex,
       }],
     });
 
@@ -306,6 +322,7 @@ describe('subaccountUpdateHandler', () => {
       side: PositionSide.LONG,
       status: PerpetualPositionStatus.OPEN,
       settledFunding,
+      perpYieldIndex: defaultZeroPerpYieldIndex,
     }));
     const updatedPerpetualPositionSubaccountKafkaObject:
     UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
@@ -334,6 +351,7 @@ describe('subaccountUpdateHandler', () => {
         quantums: bytesToBase64(bigIntToBytes(BigInt(sizeInQuantums))),
         fundingIndex: bytesToBase64(bigIntToBytes(BigInt(fundingIndex))),
         fundingPayment: bytesToBase64(bigIntToBytes(BigInt(fundingPayment))),
+        perpYieldIndex: defaultZeroPerpYieldIndex,
       }],
     });
 
@@ -529,6 +547,7 @@ describe('subaccountUpdateHandler', () => {
         perpetualId: testConstants.defaultPerpetualMarket.id,
         quantums: bytesToBase64(bigIntToBytes(BigInt('0'))),
         fundingIndex: bytesToBase64(bigIntToBytes(BigInt(fundingIndex))),
+        perpYieldIndex: defaultZeroPerpYieldIndex,
       }],
     });
 
@@ -603,6 +622,7 @@ describe('subaccountUpdateHandler', () => {
         quantums: bytesToBase64(bigIntToBytes(BigInt(sizeInQuantums))),
         fundingIndex: bytesToBase64(bigIntToBytes(BigInt(fundingIndex))),
         fundingPayment: bytesToBase64(bigIntToBytes(BigInt(fundingInQuantums))),
+        perpYieldIndex: defaultZeroPerpYieldIndex,
       }],
       updatedAssetPositions: [{
         assetId: testConstants.defaultAsset3.id,
@@ -647,6 +667,7 @@ describe('subaccountUpdateHandler', () => {
       openEventId: tendermintEventId,
       lastEventId: tendermintEventId,
       settledFunding: fundingPayment,
+      perpYieldIndex: defaultZeroPerpYieldIndex,
     }));
     const perpetualPositionSubaccountKafkaObject:
     UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(

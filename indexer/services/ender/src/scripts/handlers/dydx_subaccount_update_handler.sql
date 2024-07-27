@@ -56,8 +56,10 @@ BEGIN
             perpetual_position_found boolean;
             existing_funding numeric;
             new_settled_funding numeric;
+            perp_yield_index text;
         BEGIN
             perpetual_id = (perpetual_position_update->'perpetualId')::bigint;
+            perp_yield_index = perpetual_position_update->'perpYieldIndex';
             SELECT * INTO perpetual_market FROM perpetual_markets WHERE id = perpetual_id;
             SELECT * INTO perpetual_position_record FROM perpetual_positions
                                                     WHERE "subaccountId" = subaccount_record."id"
@@ -86,7 +88,8 @@ BEGIN
                                               "lastEventId" = event_id,
                                               "settledFunding" = settled_funding,
                                               "status" = 'CLOSED',
-                                              "size" = 0
+                                              "size" = 0,
+                                              "perpYieldIndex" = perp_yield_index
                                           WHERE "id" = perpetual_position_record."id"
                                           RETURNING * INTO perpetual_position_record;
                 perpetual_position_record_updates = array_append(
@@ -101,7 +104,8 @@ BEGIN
                 UPDATE perpetual_positions SET "size" = _size,
                                                "lastEventId" = event_id,
                                                "settledFunding" = settled_funding,
-                                               "maxSize" = max_size
+                                               "maxSize" = max_size,
+                                               "perpYieldIndex" = perp_yield_index
                                             WHERE "id" = perpetual_position_record."id" RETURNING * INTO perpetual_position_record;
                 perpetual_position_record_updates = array_append(
                     perpetual_position_record_updates, dydx_to_jsonb(perpetual_position_record));
@@ -131,6 +135,7 @@ BEGIN
                 perpetual_position_record."closeEventId" = NULL;
                 perpetual_position_record."lastEventId" = event_id;
                 perpetual_position_record."settledFunding" = new_settled_funding;
+                perpetual_position_record."perpYieldIndex" = perp_yield_index;
                 INSERT INTO perpetual_positions VALUES (perpetual_position_record.*);
                 perpetual_position_record_updates = array_append(
                     perpetual_position_record_updates, dydx_to_jsonb(perpetual_position_record));
