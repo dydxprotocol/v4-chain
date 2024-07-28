@@ -330,6 +330,209 @@ describe('subaccountUpdateHandler', () => {
     );
   });
 
+  it('successfully inserts perp yield index on subaccount creation', async () => {
+    const transactionIndex: number = 0;
+    const sizeInQuantums: number = 1_000_000;
+    const fundingIndex: number = 200;
+    const fundingPayment: number = 200000;
+    const settledFunding: string = '-0.2';
+    const subaccountUpdateEvent: SubaccountUpdateEventV1 = SubaccountUpdateEventV1.fromPartial({
+      // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+      ...defaultEmptySubaccountUpdateEvent as any,
+      updatedPerpetualPositions: [{
+        perpetualId: parseInt(testConstants.defaultPerpetualMarket.id, 10),
+        quantums: bytesToBase64(bigIntToBytes(BigInt(sizeInQuantums))),
+        fundingIndex: bytesToBase64(bigIntToBytes(BigInt(fundingIndex))),
+        fundingPayment: bytesToBase64(bigIntToBytes(BigInt(fundingPayment))),
+        perpYieldIndex: onePerpYieldIndex,
+      }],
+    });
+
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromSubaccountUpdateEvent({
+      subaccountUpdateEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+    await onMessage(kafkaMessage);
+
+    const perpetualPosition: PerpetualPositionFromDatabase | undefined = await
+    PerpetualPositionTable.findOpenPositionForSubaccountPerpetual(
+      testConstants.defaultSubaccountId,
+      testConstants.defaultPerpetualMarket.id,
+    );
+
+    expect(perpetualPosition).not.toEqual(undefined);
+    expect(perpetualPosition!).toEqual(expect.objectContaining({
+      subaccountId: testConstants.defaultSubaccountId,
+      perpetualId: testConstants.defaultPerpetualMarket.id,
+      side: PositionSide.LONG,
+      status: PerpetualPositionStatus.OPEN,
+      settledFunding,
+      perpYieldIndex: onePerpYieldIndex,
+    }));
+    const updatedPerpetualPositionSubaccountKafkaObject:
+    UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
+      convertPerpetualPosition(perpetualPosition!),
+      perpetualMarketRefresher.getPerpetualMarketsMap(),
+      defaultMarketMap,
+    );
+    await expectUpdatedPositionsSubaccountKafkaMessage(
+      producerSendMock,
+      subaccountUpdateEvent,
+      [updatedPerpetualPositionSubaccountKafkaObject],
+      [],
+    );
+  });
+
+  it('successfully updates perp yield index', async () => {
+    const transactionIndex: number = 0;
+    const sizeInQuantums: number = 1_000_000;
+    const fundingIndex: number = 200;
+    const fundingPayment: number = 200000;
+    const settledFunding: string = '-200000.2';
+    const subaccountUpdateEvent: SubaccountUpdateEventV1 = SubaccountUpdateEventV1.fromPartial({
+      // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+      ...defaultEmptySubaccountUpdateEvent as any,
+      updatedPerpetualPositions: [{
+        perpetualId: parseInt(testConstants.defaultPerpetualMarket.id, 10),
+        quantums: bytesToBase64(bigIntToBytes(BigInt(sizeInQuantums))),
+        fundingIndex: bytesToBase64(bigIntToBytes(BigInt(fundingIndex))),
+        fundingPayment: bytesToBase64(bigIntToBytes(BigInt(fundingPayment))),
+        perpYieldIndex: onePerpYieldIndex,
+      }],
+    });
+
+    await PerpetualPositionTable.create(defaultPerpetualPosition);
+
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromSubaccountUpdateEvent({
+      subaccountUpdateEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+    await onMessage(kafkaMessage);
+
+    const perpetualPosition: PerpetualPositionFromDatabase | undefined = await
+    PerpetualPositionTable.findOpenPositionForSubaccountPerpetual(
+      testConstants.defaultSubaccountId,
+      testConstants.defaultPerpetualMarket.id,
+    );
+
+    expect(perpetualPosition).not.toEqual(undefined);
+    expect(perpetualPosition!).toEqual(expect.objectContaining({
+      subaccountId: testConstants.defaultSubaccountId,
+      perpetualId: testConstants.defaultPerpetualMarket.id,
+      side: PositionSide.LONG,
+      status: PerpetualPositionStatus.OPEN,
+      settledFunding,
+      perpYieldIndex: onePerpYieldIndex,
+    }));
+    const updatedPerpetualPositionSubaccountKafkaObject:
+    UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
+      convertPerpetualPosition(perpetualPosition!),
+      perpetualMarketRefresher.getPerpetualMarketsMap(),
+      defaultMarketMap,
+    );
+    await expectUpdatedPositionsSubaccountKafkaMessage(
+      producerSendMock,
+      subaccountUpdateEvent,
+      [updatedPerpetualPositionSubaccountKafkaObject],
+      [],
+    );
+  });
+
+  it('successfully updates perp yield index when closing position and opening new position', async () => {
+    const transactionIndex: number = 0;
+    const sizeInQuantums: number = 1_000_000;
+    const fundingIndex: number = 200;
+    const fundingPayment: number = 1_000_000_000;
+    const subaccountUpdateEvent: SubaccountUpdateEventV1 = SubaccountUpdateEventV1.fromPartial({
+      // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+      ...defaultEmptySubaccountUpdateEvent as any,
+      updatedPerpetualPositions: [{
+        perpetualId: testConstants.defaultPerpetualMarket.id,
+        quantums: bytesToBase64(bigIntToBytes(BigInt(sizeInQuantums))),
+        fundingIndex: bytesToBase64(bigIntToBytes(BigInt(fundingIndex))),
+        fundingPayment: bytesToBase64(bigIntToBytes(BigInt(fundingPayment))),
+        perpYieldIndex: onePerpYieldIndex,
+      }],
+    });
+
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromSubaccountUpdateEvent({
+      subaccountUpdateEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    // Initialize existing perpetual position
+    const perpetualSize: string = protocolTranslations.quantumsToHumanFixedString(
+      sizeInQuantums.toString(),
+      testConstants.defaultPerpetualMarket!.atomicResolution,
+    );
+    const createdPerpetualPosition: PerpetualPositionFromDatabase = await
+    PerpetualPositionTable.create({
+      ...defaultPerpetualPosition,
+      side: PositionSide.SHORT,
+      size: perpetualSize,
+      sumOpen: perpetualSize,
+    });
+
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+    await onMessage(kafkaMessage);
+
+    const closedPosition: PerpetualPositionFromDatabase | undefined = await
+    PerpetualPositionTable.findById(createdPerpetualPosition.id);
+
+    expect(closedPosition).not.toEqual(undefined);
+    expect(closedPosition).toEqual(expect.objectContaining({
+      size: '0',
+      status: PerpetualPositionStatus.CLOSED,
+      settledFunding: '-201000',  // existing settledFunding = -200000, new position funding payment = -1000.
+      perpYieldIndex: onePerpYieldIndex,
+    }));
+
+    const newPosition: PerpetualPositionFromDatabase | undefined = await
+    PerpetualPositionTable.findOpenPositionForSubaccountPerpetual(
+      testConstants.defaultSubaccountId,
+      testConstants.defaultPerpetualMarket.id,
+    );
+    expect(newPosition).not.toBeUndefined();
+    expect(newPosition).toEqual(expect.objectContaining({
+      size: perpetualSize,
+      maxSize: perpetualSize,
+      settledFunding: '0',  // settledFunding of new opened position is 0.
+      perpYieldIndex: onePerpYieldIndex, // perpYieldIndex of new opened position should be latest perp yield index
+    }));
+    const closedPositionSubaccountKafkaObject:
+    UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
+      convertPerpetualPosition(closedPosition!),
+      perpetualMarketRefresher.getPerpetualMarketsMap(),
+      defaultMarketMap,
+    );
+    const newPositionSubaccountKafkaObject:
+    UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(
+      convertPerpetualPosition(newPosition!),
+      perpetualMarketRefresher.getPerpetualMarketsMap(),
+      defaultMarketMap,
+    );
+
+    await expectUpdatedPositionsSubaccountKafkaMessage(
+      producerSendMock,
+      subaccountUpdateEvent,
+      [closedPositionSubaccountKafkaObject, newPositionSubaccountKafkaObject!],
+      [],
+    );
+  });
+
   it('closes and creates new position when when side is opposing', async () => {
     const transactionIndex: number = 0;
     const sizeInQuantums: number = 1_000_000;
