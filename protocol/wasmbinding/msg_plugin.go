@@ -34,9 +34,11 @@ func EncodeDydxCustomWasmMessage(contractAddr sdk.AccAddress, msg json.RawMessag
 	}
 }
 
-func EncodeDepositToSubaccountV1(contractAddr sdk.AccAddress, depositToSubaccount *bindings.DepositToSubaccountV1) ([]sdk.Msg, error) {
+func EncodeDepositToSubaccountV1(contractAddr sdk.AccAddress,
+	depositToSubaccount *bindings.DepositToSubaccountV1) ([]sdk.Msg, error) {
 	if depositToSubaccount == nil {
-		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid deposit to subaccount request: No deposit data provided"}
+		return nil, wasmvmtypes.InvalidRequest{
+			Err: "Invalid deposit to subaccount request: No deposit data provided"}
 	}
 
 	depositToSubaccountMsg := &sendingtypes.MsgDepositToSubaccount{
@@ -48,9 +50,11 @@ func EncodeDepositToSubaccountV1(contractAddr sdk.AccAddress, depositToSubaccoun
 	return []sdk.Msg{depositToSubaccountMsg}, nil
 }
 
-func EncodeWithdrawFromSubaccountV1(contractAddr sdk.AccAddress, withdrawFromSubaccount *bindings.WithdrawFromSubaccountV1) ([]sdk.Msg, error) {
+func EncodeWithdrawFromSubaccountV1(contractAddr sdk.AccAddress,
+	withdrawFromSubaccount *bindings.WithdrawFromSubaccountV1) ([]sdk.Msg, error) {
 	if withdrawFromSubaccount == nil {
-		return nil, wasmvmtypes.InvalidRequest{Err: "Invalid withdraw from subaccount request: No withdraw data provided"}
+		return nil, wasmvmtypes.InvalidRequest{
+			Err: "Invalid withdraw from subaccount request: No withdraw data provided"}
 	}
 
 	withdrawFromSubaccountMsg := &sendingtypes.MsgWithdrawFromSubaccount{
