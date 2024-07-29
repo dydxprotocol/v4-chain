@@ -11,6 +11,7 @@ import (
 const (
 	SubaccountRoute      = "subaccount"
 	MarketPriceRoute     = "market_price"
+	LiquidityTiersRoute  = "liquidity_tiers"
 	perpetualClobDetails = "perpetual_clob_details"
 )
 
@@ -32,6 +33,8 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 			return qp.HandleMarketPriceQuery(ctx, contractQuery.QueryData)
 		case SubaccountRoute:
 			return qp.HandleSubaccountsQuery(ctx, contractQuery.QueryData)
+		case LiquidityTiersRoute:
+			return qp.HandleLiquidityTiersQuery(ctx)
 		case perpetualClobDetails:
 			return qp.HandlePerpetualClobDetailsQuery(ctx, contractQuery.QueryData)
 		default:

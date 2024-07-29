@@ -2,7 +2,7 @@ use cosmwasm_std::CustomQuery;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::proto_structs::{MarketPrice, PerpetualClobDetails, Subaccount};
+use crate::proto_structs::{MarketPrice, PerpetualClobDetails, Subaccount, LiquidityTier};
 use crate::route::DydxRoute;
 
 /// SeiQueryWrapper is an override of QueryRequest::Custom to access Sei-specific modules
@@ -27,6 +27,7 @@ pub enum DydxQuery {
         owner: String,
         number: u32,
     },
+    LiquidityTiers,
     PerpetualClobDetails {
         id: u32,
     }
@@ -45,4 +46,9 @@ pub struct MarketPriceResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PerpetualClobDetailsResponse {
     pub perpetual_clob_details: PerpetualClobDetails,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct LiquidityTiersResponse {
+    pub liquidity_tiers: Vec<LiquidityTier>,
 }

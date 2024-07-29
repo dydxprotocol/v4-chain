@@ -9,7 +9,7 @@ mod serializable_int;
 pub use msg::{DydxMsg, OrderSide, OrderTimeInForce, OrderConditionType};
 pub use querier::DydxQuerier;
 pub use query::{
-    MarketPriceResponse, PerpetualClobDetailsResponse, SubaccountResponse, DydxQuery, DydxQueryWrapper};
+    MarketPriceResponse, PerpetualClobDetailsResponse, LiquidityTiersResponse, SubaccountResponse, DydxQuery, DydxQueryWrapper};
 pub use proto_structs::{
     AssetPosition, ClobPair, MarketPrice, Metadata, PerpetualClobMetadata, PerpetualPosition, SpotClobMetadata, Status, Subaccount, SubaccountId
 };

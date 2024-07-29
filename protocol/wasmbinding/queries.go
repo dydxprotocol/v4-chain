@@ -10,6 +10,7 @@ import (
 	bindings "github.com/dydxprotocol/v4-chain/protocol/wasmbinding/bindings"
 	clobKeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perpKeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	subaccountskeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -19,14 +20,16 @@ type QueryPlugin struct {
 	pricesKeeper      *priceskeeper.Keeper
 	subaccountsKeeper *subaccountskeeper.Keeper
 	clobKeeper        *clobKeeper.Keeper
+	perpKeeper        *perpKeeper.Keeper
 }
 
 // NewQueryPlugin returns a reference to a new PriceQueryPlugin.
-func NewQueryPlugin(pk *priceskeeper.Keeper, sk *subaccountskeeper.Keeper, ck *clobKeeper.Keeper) *QueryPlugin {
+func NewQueryPlugin(pk *priceskeeper.Keeper, sk *subaccountskeeper.Keeper, ck *clobKeeper.Keeper, pek *perpKeeper.Keeper) *QueryPlugin {
 	return &QueryPlugin{
 		pricesKeeper:      pk,
 		subaccountsKeeper: sk,
 		clobKeeper:        ck,
+		perpKeeper:        pek,
 	}
 }
 
@@ -53,7 +56,7 @@ func (qp QueryPlugin) HandleMarketPriceQuery(ctx sdk.Context, queryData json.Raw
 func (qp QueryPlugin) HandleSubaccountsQuery(ctx sdk.Context, queryData json.RawMessage) ([]byte, error) {
 	var parsedQuery bindings.SubaccountRequestWrapper
 	if err := json.Unmarshal(queryData, &parsedQuery); err != nil {
-		return nil, errorsmod.Wrap(err, "Error parsing DydxGetClobQuery")
+		return nil, errorsmod.Wrap(err, "Error parsing DydxSubaccountQuery")
 	}
 
 	parsedSubaccountId := satypes.SubaccountId{
@@ -86,6 +89,18 @@ func (qp QueryPlugin) HandlePerpetualClobDetailsQuery(ctx sdk.Context, queryData
 	bz, err := json.Marshal(perpetualClobDetails)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "Error encoding Clob as JSON")
+	}
+
+	return bz, nil
+}
+
+func (qp QueryPlugin) HandleLiquidityTiersQuery(ctx sdk.Context) ([]byte, error) {
+
+	liquidityTiers := qp.perpKeeper.GetAllLiquidityTiers(ctx)
+
+	bz, err := json.Marshal(liquidityTiers)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "Error encoding liquidityTiers as JSON")
 	}
 
 	return bz, nil
