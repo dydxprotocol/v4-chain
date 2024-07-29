@@ -1365,6 +1365,9 @@ export interface UpdatePerpetualEventV1 {
    */
 
   liquidityTier: number;
+  /** The perp yield index of this perpetual market */
+
+  perpYieldIndex: string;
 }
 /**
  * UpdatePerpetualEventV1 message contains all the information about an update
@@ -1404,6 +1407,9 @@ export interface UpdatePerpetualEventV1SDKType {
    */
 
   liquidity_tier: number;
+  /** The perp yield index of this perpetual market */
+
+  perp_yield_index: string;
 }
 
 function createBaseFundingUpdateV1(): FundingUpdateV1 {
@@ -3407,7 +3413,8 @@ function createBaseUpdatePerpetualEventV1(): UpdatePerpetualEventV1 {
     ticker: "",
     marketId: 0,
     atomicResolution: 0,
-    liquidityTier: 0
+    liquidityTier: 0,
+    perpYieldIndex: ""
   };
 }
 
@@ -3431,6 +3438,10 @@ export const UpdatePerpetualEventV1 = {
 
     if (message.liquidityTier !== 0) {
       writer.uint32(40).uint32(message.liquidityTier);
+    }
+
+    if (message.perpYieldIndex !== "") {
+      writer.uint32(50).string(message.perpYieldIndex);
     }
 
     return writer;
@@ -3465,6 +3476,10 @@ export const UpdatePerpetualEventV1 = {
           message.liquidityTier = reader.uint32();
           break;
 
+        case 6:
+          message.perpYieldIndex = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -3481,6 +3496,7 @@ export const UpdatePerpetualEventV1 = {
     message.marketId = object.marketId ?? 0;
     message.atomicResolution = object.atomicResolution ?? 0;
     message.liquidityTier = object.liquidityTier ?? 0;
+    message.perpYieldIndex = object.perpYieldIndex ?? "";
     return message;
   }
 
