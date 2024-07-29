@@ -64,12 +64,14 @@ func TestModifyPerpetual_Success(t *testing.T) {
 		require.NoError(t, err)
 
 		// Record the indexer event expected to emit from above `ModifyPerpetual`.
+		defaultPerpYieldIndex := "0/1"
 		expectedIndexerEvents[i] = &indexerevents.UpdatePerpetualEventV1{
 			Id:               item.Params.Id,
 			Ticker:           ticker,
 			MarketId:         marketId,
 			AtomicResolution: item.Params.AtomicResolution,
 			LiquidityTier:    liquidityTier,
+			PerpYieldIndex:   defaultPerpYieldIndex,
 		}
 
 		// Verify updatedp perpetual in store.

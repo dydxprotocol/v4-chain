@@ -170,6 +170,7 @@ func (k Keeper) ModifyPerpetual(
 				perpetual.Params.MarketId,
 				perpetual.Params.AtomicResolution,
 				perpetual.Params.LiquidityTier,
+				perpetual.YieldIndex,
 			),
 		),
 	)
@@ -679,7 +680,29 @@ func (k Keeper) UpdateYieldIndexToNewMint(
 
 		// TODO: Decide on how many decimal places this should be and convert to constant
 		perp.YieldIndex = newYieldIndex.FloatString(10)
-		k.setPerpetual(ctx, perp)
+
+		// Store the modified perpetual.
+		err = k.ValidateAndSetPerpetual(ctx, perp)
+		if err != nil {
+			panic("could not set new perp yield index")
+		}
+
+		// Emit indexer event.
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeUpdatePerpetual,
+			indexerevents.UpdatePerpetualEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewUpdatePerpetualEventV1(
+					perp.Params.Id,
+					perp.Params.Ticker,
+					perp.Params.MarketId,
+					perp.Params.AtomicResolution,
+					perp.Params.LiquidityTier,
+					perp.YieldIndex,
+				),
+			),
+		)
 	}
 }
 
