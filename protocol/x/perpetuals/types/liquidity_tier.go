@@ -102,39 +102,39 @@ func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantums(
 func (liquidityTier LiquidityTier) GetAdjustedInitialMarginPpm(
 	oiQuoteQuantums *big.Int,
 ) *big.Int {
-	oiCapUpper := lib.BigU(liquidityTier.OpenInterestUpperCap)
-	oiCapLower := lib.BigU(liquidityTier.OpenInterestLowerCap)
-
 	// If `open_interest_upper_cap` is 0, OIMF is disabled.
+	if liquidityTier.OpenInterestUpperCap == 0 {
+		return lib.BigU(liquidityTier.InitialMarginPpm)
+	}
+
 	// Or if `current_interest` <= `open_interest_lower_cap`, IMF is not scaled.
-	if oiCapUpper.Sign() == 0 || oiQuoteQuantums.Cmp(oiCapLower) <= 0 {
+	oiCapLower := lib.BigU(liquidityTier.OpenInterestLowerCap)
+	if oiQuoteQuantums.Cmp(oiCapLower) <= 0 {
 		return lib.BigU(liquidityTier.InitialMarginPpm)
 	}
 
 	// If `open_interest` >= `open_interest_upper_cap` where `upper_cap` is non-zero, OIMF is 1.
-	if oiCapUpper.Sign() > 0 && oiQuoteQuantums.Cmp(oiCapUpper) >= 0 {
+	oiCapUpper := lib.BigU(liquidityTier.OpenInterestUpperCap)
+	if oiQuoteQuantums.Cmp(oiCapUpper) >= 0 {
 		return lib.BigU(lib.OneMillion)
 	}
 
+	// At this point, we have the strict ordering oiCapLower < oiQuoteQuantums < oiCapUpper.
 	// Get the ratio of where the current OI is between the lower and upper caps.
-	// The ratio should be between 0 and 1.
+	// The ratio should be between 0 and 1 (exclusive).
 	capNum := new(big.Int).Sub(oiQuoteQuantums, oiCapLower)
 	capDen := new(big.Int).Sub(oiCapUpper, oiCapLower)
 
-	// Invariant checks.
-	if capNum.Sign() < 0 || capDen.Sign() <= 0 || capDen.Cmp(capNum) < 0 {
+	if capNum.Sign() <= 0 || capDen.Sign() <= 0 || capDen.Cmp(capNum) <= 0 {
 		panic(fmt.Sprintf("invalid open interest values for liquidity tier %d", liquidityTier.Id))
-	}
-	if oiCapLower.Cmp(oiCapUpper) > 0 {
-		panic(errorsmod.Wrap(ErrOpenInterestLowerCapLargerThanUpperCap, lib.UintToString(liquidityTier.Id)))
 	}
 	if liquidityTier.InitialMarginPpm > lib.OneMillion {
 		panic(errorsmod.Wrap(ErrInitialMarginPpmExceedsMax, lib.UintToString(liquidityTier.Id)))
 	}
 
 	// Total IMF.
-	capScalePpm := lib.BigU(lib.OneMillion - liquidityTier.InitialMarginPpm)
-	result := new(big.Int).Mul(capScalePpm, capNum)
+	result := lib.BigU(lib.OneMillion - liquidityTier.InitialMarginPpm)
+	result.Mul(result, capNum)
 	result.Div(result, capDen)
 	result.Add(result, lib.BigU(liquidityTier.InitialMarginPpm))
 	return result
