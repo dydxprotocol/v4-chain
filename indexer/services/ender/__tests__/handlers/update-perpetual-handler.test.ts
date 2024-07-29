@@ -109,6 +109,7 @@ describe('update-perpetual-handler', () => {
       marketId: defaultUpdatePerpetualEvent.marketId,
       atomicResolution: defaultUpdatePerpetualEvent.atomicResolution,
       liquidityTierId: defaultUpdatePerpetualEvent.liquidityTier,
+      perpYieldIndex: defaultUpdatePerpetualEvent.perpYieldIndex,
     }));
     expect(perpetualMarket).toEqual(
       perpetualMarketRefresher.getPerpetualMarketFromId(

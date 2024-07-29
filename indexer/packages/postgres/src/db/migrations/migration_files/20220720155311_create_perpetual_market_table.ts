@@ -36,6 +36,7 @@ export async function up(knex: Knex): Promise<void> {
       table.integer('subticksPerTick').notNullable();
       table.integer('minOrderBaseQuantums').notNullable();
       table.integer('stepBaseQuantums').notNullable();
+      table.string('perpYieldIndex').notNullable();
     });
 }
 

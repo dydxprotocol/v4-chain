@@ -199,6 +199,7 @@ export const defaultUpdatePerpetualEvent: UpdatePerpetualEventV1 = {
   marketId: 1,
   atomicResolution: -8,
   liquidityTier: 1,
+  perpYieldIndex: '0/1',
 };
 
 export const defaultUpdateClobPairEvent: UpdateClobPairEventV1 = {
