@@ -382,6 +382,15 @@ func New(
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
 
+<<<<<<< HEAD
+=======
+	// Enable optimistic block execution.
+	if appFlags.OptimisticExecutionEnabled {
+		logger.Info("optimistic execution is enabled.")
+		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
+	}
+
+>>>>>>> ac1e4f79 ([OTE-573] Remove experimental warning log for OE (#1971))
 	bApp := baseapp.NewBaseApp(appconstants.AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
