@@ -13,6 +13,9 @@ impl SerializableInt {
     pub fn new(i: BigInt) -> Self {
         Self { i }
     }
+    pub fn to_big_int(&self) -> &BigInt {
+        &self.i
+    }
 }
 
 impl Serialize for SerializableInt {
