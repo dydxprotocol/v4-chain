@@ -28,6 +28,7 @@ BEGIN
     perpetual_market_record."liquidityTierId" = (event_data->'liquidityTier')::integer;
     perpetual_market_record."marketType" = 'CROSS';
     perpetual_market_record."baseOpenInterest" = 0;
+    perpetual_market_record."perpYieldIndex" = '0/1';
 
     INSERT INTO perpetual_markets VALUES (perpetual_market_record.*) RETURNING * INTO perpetual_market_record;
 
