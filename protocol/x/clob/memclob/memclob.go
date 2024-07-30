@@ -2208,10 +2208,7 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 	// Impact order was fully matched. Calculate average impact price.
 	return types.GetAveragePriceSubticks(
 		impactNotionalQuoteQuantums,
-		new(big.Int).Div(
-			accumulatedBaseQuantums.Num(),
-			accumulatedBaseQuantums.Denom(),
-		),
+		lib.BigRatRound(accumulatedBaseQuantums, true),
 		clobPair.QuantumConversionExponent,
 	), true
 }
