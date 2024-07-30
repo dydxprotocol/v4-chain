@@ -414,8 +414,16 @@ func (h *lockingAnteHandler) otherMsgAnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	if ctx, err = h.sigVerification.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
 	}
-	if ctx, err = h.incrementSequence.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
+
+	var isTimestampNonce bool
+	if isTimestampNonce, err = accountplusante.IsTimestampNonceTx(ctx, tx); err != nil {
 		return ctx, err
+	}
+
+	if !isTimestampNonce {
+		if ctx, err = h.incrementSequence.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
+			return ctx, err
+		}
 	}
 
 	// During non-simulated `checkTx` we must write the store since we own branching and writing.
