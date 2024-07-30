@@ -2,6 +2,7 @@ package streaming
 
 import (
 	"fmt"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"sync"
 	"time"
 
@@ -48,7 +49,7 @@ type OrderbookSubscription struct {
 	clobPairIds []uint32
 
 	// Stream
-	messageSender types.OutgoingMessageSender
+	messageSender types.OutgoingOrderbookMessageSender
 
 	// Channel to buffer writes before the stream
 	updatesChannel chan []clobtypes.StreamUpdate
@@ -116,9 +117,9 @@ func (sm *FullNodeStreamingManagerImpl) EmitMetrics() {
 }
 
 // Subscribe subscribes to the orderbook updates stream.
-func (sm *FullNodeStreamingManagerImpl) Subscribe(
+func (sm *FullNodeStreamingManagerImpl) SubscribeToOrderbookStream(
 	clobPairIds []uint32,
-	messageSender types.OutgoingMessageSender,
+	messageSender types.OutgoingOrderbookMessageSender,
 ) (
 	err error,
 ) {
@@ -180,6 +181,16 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 		),
 	)
 	return err
+}
+
+// Subscribe subscribes to the subaccount updates stream.
+func (sm *FullNodeStreamingManagerImpl) SubscribeToSubaccountStream(
+	subaccountIds []*satypes.SubaccountId,
+	messageSender types.OutgoingSubaccountMessageSender,
+) (
+	err error,
+) {
+	return types.ErrNotImplemented
 }
 
 // removeSubscription removes a subscription from the streaming manager.

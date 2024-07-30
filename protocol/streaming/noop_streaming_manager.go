@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 var _ types.FullNodeStreamingManager = (*NoopGrpcStreamingManager)(nil)
@@ -18,9 +19,19 @@ func (sm *NoopGrpcStreamingManager) Enabled() bool {
 	return false
 }
 
-func (sm *NoopGrpcStreamingManager) Subscribe(
+func (sm *NoopGrpcStreamingManager) SubscribeToOrderbookStream(
 	_ []uint32,
-	_ types.OutgoingMessageSender,
+	_ types.OutgoingOrderbookMessageSender,
+) (
+	err error,
+) {
+	return types.ErrNotImplemented
+}
+
+// Subscribe subscribes to the subaccount updates stream.
+func (sm *NoopGrpcStreamingManager) SubscribeToSubaccountStream(
+	_ []*satypes.SubaccountId,
+	_ types.OutgoingSubaccountMessageSender,
 ) (
 	err error,
 ) {

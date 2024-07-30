@@ -3,16 +3,25 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 type FullNodeStreamingManager interface {
 	Enabled() bool
 	Stop()
 
-	// Subscribe to streams
-	Subscribe(
+	// Subscribe to orderbook streams
+	SubscribeToOrderbookStream(
 		clobPairIds []uint32,
-		srv OutgoingMessageSender,
+		srv OutgoingOrderbookMessageSender,
+	) (
+		err error,
+	)
+
+	// Subscribe to subaccount streams
+	SubscribeToSubaccountStream(
+		subaccountIds []*satypes.SubaccountId,
+		srv OutgoingSubaccountMessageSender,
 	) (
 		err error,
 	)
@@ -36,6 +45,10 @@ type FullNodeStreamingManager interface {
 	)
 }
 
-type OutgoingMessageSender interface {
+type OutgoingOrderbookMessageSender interface {
 	Send(*clobtypes.StreamOrderbookUpdatesResponse) error
+}
+
+type OutgoingSubaccountMessageSender interface {
+	Send(*satypes.StreamSubaccountUpdatesResponse) error
 }

@@ -39,6 +39,11 @@ service Query {
     option (google.api.http).get =
         "/dydxprotocol/subaccounts/collateral_pool_address/{perpetual_id}";
   }
+
+  // Streams subaccount updates. Updates contain subaccount data
+  // such as perpetual and asset positions.
+  rpc StreamSubaccountUpdates(StreamSubaccountUpdatesRequest)
+      returns (stream StreamSubaccountUpdatesResponse);
 }
 
 // QueryGetSubaccountRequest is request type for the Query RPC method.
@@ -89,4 +94,75 @@ message QueryCollateralPoolAddressRequest { uint32 perpetual_id = 1; }
 message QueryCollateralPoolAddressResponse {
   string collateral_pool_address = 1
       [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+// StreamSubaccountUpdatesRequest is a request message for the
+// StreamSubaccountUpdates method.
+message StreamSubaccountUpdatesRequest {
+  // Subaccount ids to stream subaccount updates for.
+  repeated SubaccountId subaccount_ids = 1;
+}
+
+// StreamSubaccountUpdatesResponse is a response message for the
+// StreamSubaccountUpdates method.
+message StreamSubaccountUpdatesResponse {
+  // Batch of updates for the clob pair.
+  repeated StreamUpdate updates = 1 [ (gogoproto.nullable) = false ];
+}
+
+// StreamUpdate is an update that will be pushed through the
+// GRPC stream.
+message StreamUpdate {
+  // Subaccount update.
+  StreamSubaccountUpdate subaccount_update = 1;
+
+  // Snapshot indicates if the subaccount update contains all
+  // perpetual and asset positions for the subaccount, or just
+  // the updates.
+  bool snapshot = 2;
+
+  // Block height of the update.
+  uint32 block_height = 3;
+
+  // Exec mode of the update.
+  uint32 exec_mode = 4;
+}
+
+// StreamSubaccountId provides information on a subaccount.
+message StreamSubaccountId {
+  // The address of the wallet that owns this subaccount.
+  string owner = 1;
+  // < 128 Since 128 should be enough to start and it fits within
+  // 1 Byte (1 Bit needed to indicate that the first byte is the last).
+  uint32 number = 2;
+}
+
+// StreamSubaccountPerpetualPosition provides information on a subaccount's updated
+// perpetual positions.
+message StreamSubaccountPerpetualPosition {
+  // The `Id` of the `Perpetual`.
+  uint32 perpetual_id = 1;
+  // The size of the position in base quantums.
+  uint64 quantums = 2;
+}
+
+// StreamSubaccountAssetPosition provides information on a subaccount's updated asset
+// positions.
+message StreamSubaccountAssetPosition {
+  // The `Id` of the `Asset`.
+  uint32 asset_id = 1;
+  // The absolute size of the position in base quantums.
+  uint64 quantums = 2;
+}
+
+// StreamSubaccountUpdate provides information on a subaccount update. Used in
+// the full node GRPC stream.
+message StreamSubaccountUpdate {
+  StreamSubaccountId subaccount_id = 1;
+  // perpetual_positions will each be for unique perpetuals.
+  repeated StreamSubaccountPerpetualPosition
+      perpetual_positions = 2;
+  // asset_positions will each be for unique assets.
+  repeated StreamSubaccountAssetPosition
+      asset_positions = 3;
 }

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -21,6 +22,7 @@ type (
 		blocktimeKeeper     types.BlocktimeKeeper
 		revShareKeeper      types.RevShareKeeper
 		indexerEventManager indexer_manager.IndexerEventManager
+		streamingManager    streamingtypes.FullNodeStreamingManager
 	}
 )
 
@@ -33,6 +35,7 @@ func NewKeeper(
 	blocktimeKeeper types.BlocktimeKeeper,
 	revShareKeeper types.RevShareKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
+	streamingManager streamingtypes.FullNodeStreamingManager,
 ) *Keeper {
 	return &Keeper{
 		cdc:                 cdc,
@@ -43,11 +46,16 @@ func NewKeeper(
 		blocktimeKeeper:     blocktimeKeeper,
 		revShareKeeper:      revShareKeeper,
 		indexerEventManager: indexerEventManager,
+		streamingManager:    streamingManager,
 	}
 }
 
 func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
+}
+
+func (k Keeper) GetFullNodeStreamingManager() streamingtypes.FullNodeStreamingManager {
+	return k.streamingManager
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
