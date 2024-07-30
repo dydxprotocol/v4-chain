@@ -10,6 +10,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobkeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	perpetualskeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
@@ -47,22 +48,104 @@ func ListingKeepers(
 			// Define necessary keepers here for unit tests
 			memClob := &mocks.MemClob{}
 			memClob.On("SetClobKeeper", mock.Anything).Return()
-			ck := NewClobKeepersTestContext(t, memClob, bankKeeper, indexerEventManager)
-
-			keeper, storeKey, mockTimeProvider =
-				createListingKeeper(
-					stateStore,
-					db,
-					cdc,
-					ck.PricesKeeper,
-					ck.PerpetualsKeeper,
-					ck.ClobKeeper,
-					ck.MarketMapKeeper,
-				)
-			pricesKeeper = ck.PricesKeeper
-			perpetualsKeeper = ck.PerpetualsKeeper
-			clobKeeper = ck.ClobKeeper
-			marketMapKeeper = ck.MarketMapKeeper
+			revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
+			marketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
+			pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
+				stateStore,
+				db,
+				cdc,
+				transientStoreKey,
+				revShareKeeper,
+				marketMapKeeper,
+			)
+			// Mock time provider response for market creation.
+			mockTimeProvider.On("Now").Return(constants.TimeT)
+			epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
+			perpetualsKeeper, _ = createPerpetualsKeeper(
+				stateStore,
+				db,
+				cdc,
+				pricesKeeper,
+				epochsKeeper,
+				transientStoreKey,
+			)
+			assetsKeeper, _ := createAssetsKeeper(
+				stateStore,
+				db,
+				cdc,
+				pricesKeeper,
+				transientStoreKey,
+				true,
+			)
+			blockTimeKeeper, _ := createBlockTimeKeeper(stateStore, db, cdc)
+			statsKeeper, _ := createStatsKeeper(
+				stateStore,
+				epochsKeeper,
+				db,
+				cdc,
+			)
+			vaultKeeper, _ := createVaultKeeper(
+				stateStore,
+				db,
+				cdc,
+				transientStoreKey,
+			)
+			feeTiersKeeper, _ := createFeeTiersKeeper(
+				stateStore,
+				statsKeeper,
+				vaultKeeper,
+				db,
+				cdc,
+			)
+			rewardsKeeper, _ := createRewardsKeeper(
+				stateStore,
+				assetsKeeper,
+				bankKeeper,
+				feeTiersKeeper,
+				pricesKeeper,
+				indexerEventManager,
+				db,
+				cdc,
+			)
+			subaccountsKeeper, _ := createSubaccountsKeeper(
+				stateStore,
+				db,
+				cdc,
+				assetsKeeper,
+				bankKeeper,
+				perpetualsKeeper,
+				blockTimeKeeper,
+				revShareKeeper,
+				transientStoreKey,
+				true,
+			)
+			clobKeeper, _, _ = createClobKeeper(
+				stateStore,
+				db,
+				cdc,
+				memClob,
+				assetsKeeper,
+				blockTimeKeeper,
+				bankKeeper,
+				feeTiersKeeper,
+				perpetualsKeeper,
+				pricesKeeper,
+				statsKeeper,
+				rewardsKeeper,
+				subaccountsKeeper,
+				indexerEventManager,
+				transientStoreKey,
+			)
+			// Create the listing keeper
+			keeper, storeKey, _ = createListingKeeper(
+				stateStore,
+				db,
+				cdc,
+				pricesKeeper,
+				perpetualsKeeper,
+				clobKeeper,
+				marketMapKeeper,
+			)
 
 			return []GenesisInitializer{keeper}
 		},
