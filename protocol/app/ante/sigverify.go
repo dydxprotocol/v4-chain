@@ -97,16 +97,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 		// `GoodTilBlock` for replay protection.
 		if !skipSequenceValidation {
 			if accountpluskeeper.IsTimestampNonce(sig.Sequence) {
-				err = svd.akp.ProcessTimestampNonce(ctx, acc, sig.Sequence)
-
-				if err == nil {
-					telemetry.IncrCounterWithLabels(
-						[]string{metrics.TimestampNonce, metrics.Valid, metrics.Count},
-						1,
-						[]gometrics.Label{metrics.GetLabelForIntValue(metrics.ExecMode, int(ctx.ExecMode()))},
-					)
-					return ctx, nil
-				} else {
+				if err := svd.akp.ProcessTimestampNonce(ctx, acc, sig.Sequence); err != nil {
 					telemetry.IncrCounterWithLabels(
 						[]string{metrics.TimestampNonce, metrics.Invalid, metrics.Count},
 						1,
@@ -114,6 +105,11 @@ func (svd SigVerificationDecorator) AnteHandle(
 					)
 					return ctx, errorsmod.Wrapf(sdkerrors.ErrWrongSequence, err.Error())
 				}
+				telemetry.IncrCounterWithLabels(
+					[]string{metrics.TimestampNonce, metrics.Valid, metrics.Count},
+					1,
+					[]gometrics.Label{metrics.GetLabelForIntValue(metrics.ExecMode, int(ctx.ExecMode()))},
+				)
 			} else {
 				if sig.Sequence != acc.GetSequence() {
 					labels := make([]gometrics.Label, 0)
