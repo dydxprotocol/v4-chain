@@ -145,7 +145,6 @@ export const defaultPerpetualMarketCreateEventV1: PerpetualMarketCreateEventV1 =
   subticksPerTick: 100,
   stepBaseQuantums: Long.fromValue(10, true),
   liquidityTier: 0,
-  // perpYieldIndex: '0/1',
 };
 
 export const defaultPerpetualMarketCreateEventV2: PerpetualMarketCreateEventV2 = {
@@ -160,7 +159,6 @@ export const defaultPerpetualMarketCreateEventV2: PerpetualMarketCreateEventV2 =
   stepBaseQuantums: Long.fromValue(10, true),
   liquidityTier: 0,
   marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED,
-  // perpYieldIndex: '0/1',
 };
 
 export const defaultLiquidityTierUpsertEventV2: LiquidityTierUpsertEventV2 = {
