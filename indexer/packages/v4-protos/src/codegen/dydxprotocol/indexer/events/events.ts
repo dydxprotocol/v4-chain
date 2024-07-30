@@ -1411,6 +1411,30 @@ export interface UpdatePerpetualEventV1SDKType {
 
   perp_yield_index: string;
 }
+/**
+ * UpdateYieldParamsV1 message contains all the information about an update
+ * to the yield params on the Stream Chain.
+ */
+
+export interface UpdateYieldParamsEventV1 {
+  /** The current price of sDAI in tDAI as seen by the protocol */
+  sdaiPrice: string;
+  /** The current generalized asset yield index in the protocol. */
+
+  assetYieldIndex: string;
+}
+/**
+ * UpdateYieldParamsV1 message contains all the information about an update
+ * to the yield params on the Stream Chain.
+ */
+
+export interface UpdateYieldParamsEventV1SDKType {
+  /** The current price of sDAI in tDAI as seen by the protocol */
+  sdai_price: string;
+  /** The current generalized asset yield index in the protocol. */
+
+  asset_yield_index: string;
+}
 
 function createBaseFundingUpdateV1(): FundingUpdateV1 {
   return {
@@ -3497,6 +3521,61 @@ export const UpdatePerpetualEventV1 = {
     message.atomicResolution = object.atomicResolution ?? 0;
     message.liquidityTier = object.liquidityTier ?? 0;
     message.perpYieldIndex = object.perpYieldIndex ?? "";
+    return message;
+  }
+
+};
+
+function createBaseUpdateYieldParamsEventV1(): UpdateYieldParamsEventV1 {
+  return {
+    sdaiPrice: "",
+    assetYieldIndex: ""
+  };
+}
+
+export const UpdateYieldParamsEventV1 = {
+  encode(message: UpdateYieldParamsEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.sdaiPrice !== "") {
+      writer.uint32(10).string(message.sdaiPrice);
+    }
+
+    if (message.assetYieldIndex !== "") {
+      writer.uint32(18).string(message.assetYieldIndex);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): UpdateYieldParamsEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdateYieldParamsEventV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.sdaiPrice = reader.string();
+          break;
+
+        case 2:
+          message.assetYieldIndex = reader.string();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<UpdateYieldParamsEventV1>): UpdateYieldParamsEventV1 {
+    const message = createBaseUpdateYieldParamsEventV1();
+    message.sdaiPrice = object.sdaiPrice ?? "";
+    message.assetYieldIndex = object.assetYieldIndex ?? "";
     return message;
   }
 
