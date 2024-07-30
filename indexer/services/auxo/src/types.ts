@@ -13,11 +13,8 @@ export interface AuxoEventJson {
   region: string;
   // In our naming we often times use the appreviated region name
   regionAbbrev: string;
-<<<<<<< HEAD
   onlyRunDbMigrationAndCreateKafkaTopics: boolean;
-=======
   addNewKafkaTopics: boolean;
->>>>>>> d36863c7 (Adam/ct 861 websocket topic for blockheight (#1705))
 }
 
 // EcsServiceName to task definition arn mapping
