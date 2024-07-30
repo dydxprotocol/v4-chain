@@ -182,6 +182,7 @@ message StreamUpdate {
   oneof update_message {
     StreamOrderbookUpdate orderbook_update = 1;
     StreamOrderbookFill order_fill = 2;
+    StreamSubaccountUpdate subaccount_update = 5;
   }
 
   // Block height of the update.
@@ -189,6 +190,45 @@ message StreamUpdate {
 
   // Exec mode of the update.
   uint32 exec_mode = 4;
+}
+
+// SubaccountId provides information on a subaccount.
+message SubaccountId {
+  // The address of the wallet that owns this subaccount.
+  string owner = 1;
+  // < 128 Since 128 should be enough to start and it fits within
+  // 1 Byte (1 Bit needed to indicate that the first byte is the last).
+  uint32 number = 2;
+}
+
+// SubaccountPerpetualPosition provides information on a subaccount's updated
+// perpetual positions.
+message SubaccountPerpetualPosition {
+  // The `Id` of the `Perpetual`.
+  uint32 perpetual_id = 1;
+  // The size of the position in base quantums.
+  uint64 quantums = 2;
+}
+
+// SubaccountAssetPosition provides information on a subaccount's updated asset
+// positions.
+message SubaccountAssetPosition {
+  // The `Id` of the `Asset`.
+  uint32 asset_id = 1;
+  // The absolute size of the position in base quantums.
+  uint64 quantums = 2;
+}
+
+// StreamSubaccountUpdate provides information on a subaccount update. Used in
+// the full node GRPC stream.
+message StreamSubaccountUpdate {
+  SubaccountId subaccount_id = 1;
+  // updated_perpetual_positions will each be for unique perpetuals.
+  repeated SubaccountPerpetualPosition
+      updated_perpetual_positions = 2;
+  // updated_asset_positions will each be for unique assets.
+  repeated SubaccountAssetPosition
+      updated_asset_positions = 3;
 }
 
 // StreamOrderbookUpdate provides information on an orderbook update. Used in
