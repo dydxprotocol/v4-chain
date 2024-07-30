@@ -50,4 +50,5 @@ type PerpetualsKeeper interface {
 		marketType perpetualtypes.PerpetualMarketType,
 	) (perpetualtypes.Perpetual, error)
 	AcquireNextPerpetualID(ctx sdk.Context) uint32
+	GetAllPerpetuals(ctx sdk.Context) (list []perpetualtypes.Perpetual)
 }

@@ -3,6 +3,9 @@ package dydxprotocol.listing;
 
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
+import "gogoproto/gogo.proto";
+import "dydxprotocol/subaccounts/subaccount.proto";
+
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/listing/types";
 
@@ -27,3 +30,24 @@ message MsgSetMarketsHardCap {
 
 // MsgSetMarketsHardCapResponse defines the MsgSetMarketsHardCap response
 message MsgSetMarketsHardCapResponse {}
+
+// MsgCreateMarketPermissionless is a message used to create new markets without // going through x/gov
+message MsgCreateMarketPermissionless {
+  option (cosmos.msg.v1.signer) = "subaccount_id";
+
+  // The name of the `Perpetual` (e.g. `BTC-USD`).
+  string ticker = 1;
+
+  // The subaccount to deposit from.
+  dydxprotocol.subaccounts.SubaccountId subaccount_id = 2;
+
+  // Number of quote quantums to deposit.
+  bytes quote_quantums = 3 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// MsgCreateMarketPermissionlessResponse defines the MsgCreateMarketPermissionless response
+message MsgCreateMarketPermissionlessResponse {}
