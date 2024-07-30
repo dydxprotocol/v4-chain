@@ -104,8 +104,6 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// listing
 		"/dydxprotocol.listing.MsgSetMarketsHardCap",
 		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse",
-		"/dydxprotocol.listing.MsgCreateMarketPermissionless",
-		"/dydxprotocol.listing.MsgCreateMarketPermissionlessResponse",
 
 		// perpeutals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual",

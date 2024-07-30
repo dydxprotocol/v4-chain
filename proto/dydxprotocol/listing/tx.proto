@@ -6,7 +6,6 @@ import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 
-
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/listing/types";
 
 // Msg defines the Msg service.
@@ -31,7 +30,8 @@ message MsgSetMarketsHardCap {
 // MsgSetMarketsHardCapResponse defines the MsgSetMarketsHardCap response
 message MsgSetMarketsHardCapResponse {}
 
-// MsgCreateMarketPermissionless is a message used to create new markets without // going through x/gov
+// MsgCreateMarketPermissionless is a message used to create new markets without
+// // going through x/gov
 message MsgCreateMarketPermissionless {
   option (cosmos.msg.v1.signer) = "subaccount_id";
 
@@ -49,5 +49,6 @@ message MsgCreateMarketPermissionless {
   ];
 }
 
-// MsgCreateMarketPermissionlessResponse defines the MsgCreateMarketPermissionless response
+// MsgCreateMarketPermissionlessResponse defines the
+// MsgCreateMarketPermissionless response
 message MsgCreateMarketPermissionlessResponse {}
