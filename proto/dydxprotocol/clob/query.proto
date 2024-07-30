@@ -64,6 +64,11 @@ service Query {
   // such as order placements, updates, and fills.
   rpc StreamOrderbookUpdates(StreamOrderbookUpdatesRequest)
       returns (stream StreamOrderbookUpdatesResponse);
+
+  // Streams subaccount updates. Updates contain subaccount data
+  // such as perpetual and asset positions.
+  rpc StreamSubaccountUpdates(StreamSubaccountUpdatesRequest)
+      returns (stream StreamSubaccountUpdatesResponse);
 }
 
 // QueryGetClobPairRequest is request type for the ClobPair method.
@@ -170,6 +175,20 @@ message StreamOrderbookUpdatesRequest {
 // StreamOrderbookUpdatesResponse is a response message for the
 // StreamOrderbookUpdates method.
 message StreamOrderbookUpdatesResponse {
+  // Batch of updates for the clob pair.
+  repeated StreamUpdate updates = 1 [ (gogoproto.nullable) = false ];
+}
+
+// StreamSubaccountUpdatesRequest is a request message for the
+// StreamSubaccountUpdates method.
+message StreamSubaccountUpdatesRequest {
+  // Subaccount ids to stream subaccount updates for.
+  repeated SubaccountId subaccount_ids = 1;
+}
+
+// StreamSubaccountUpdatesResponse is a response message for the
+// StreamSubaccountUpdates method.
+message StreamSubaccountUpdatesResponse {
   // Batch of updates for the clob pair.
   repeated StreamUpdate updates = 1 [ (gogoproto.nullable) = false ];
 }

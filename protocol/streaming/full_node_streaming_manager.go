@@ -22,8 +22,8 @@ type FullNodeStreamingManagerImpl struct {
 	logger log.Logger
 
 	// orderbookSubscriptions maps subscription IDs to their respective orderbook subscriptions.
-	orderbookSubscriptions map[uint32]*OrderbookSubscription
-	nextSubscriptionId     uint32
+	orderbookSubscriptions      map[uint32]*OrderbookSubscription
+	nextOrderbookSubscriptionId uint32
 
 	// stream will batch and flush out messages every 10 ms.
 	ticker *time.Ticker
@@ -62,9 +62,9 @@ func NewFullNodeStreamingManager(
 ) *FullNodeStreamingManagerImpl {
 	logger = logger.With(log.ModuleKey, "full-node-streaming")
 	fullNodeStreamingManager := &FullNodeStreamingManagerImpl{
-		logger:                 logger,
-		orderbookSubscriptions: make(map[uint32]*OrderbookSubscription),
-		nextSubscriptionId:     0,
+		logger:                      logger,
+		orderbookSubscriptions:      make(map[uint32]*OrderbookSubscription),
+		nextOrderbookSubscriptionId: 0,
 
 		ticker:            time.NewTicker(time.Duration(flushIntervalMs) * time.Millisecond),
 		done:              make(chan bool),
@@ -129,7 +129,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 
 	sm.Lock()
 	subscription := &OrderbookSubscription{
-		subscriptionId: sm.nextSubscriptionId,
+		subscriptionId: sm.nextOrderbookSubscriptionId,
 		clobPairIds:    clobPairIds,
 		messageSender:  messageSender,
 		updatesChannel: make(chan []clobtypes.StreamUpdate, sm.maxSubscriptionChannelSize),
@@ -143,7 +143,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 		),
 	)
 	sm.orderbookSubscriptions[subscription.subscriptionId] = subscription
-	sm.nextSubscriptionId++
+	sm.nextOrderbookSubscriptionId++
 	sm.EmitMetrics()
 	sm.Unlock()
 
