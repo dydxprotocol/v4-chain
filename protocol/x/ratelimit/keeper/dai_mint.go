@@ -6,6 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -24,6 +25,21 @@ func (k Keeper) MintNewTDaiAndSetNewYieldIndex(ctx sdk.Context) error {
 
 	k.perpetualsKeeper.UpdateYieldIndexToNewMint(ctx, tradingDaiSupplyBeforeNewEpoch, tradingDaiMinted)
 
+	// Emit indexer event
+	sDAIPrice, found := k.GetSDAIPrice(ctx)
+	if !found {
+		return errors.New("could not find sDAI price when emitting indexer event for new yield index")
+	}
+
+	assetYieldIndex, found := k.GetAssetYieldIndex(ctx)
+	if !found {
+		return errors.New("could not find asset yield index when emitting indexer event for new yield index")
+	}
+
+	indexerevents.NewUpdateYieldParamsEventV1(
+		sDAIPrice.String(),
+		assetYieldIndex.String(),
+	)
 	return nil
 }
 
