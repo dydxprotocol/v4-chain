@@ -224,6 +224,13 @@ export interface ComplianceDataFromDatabase {
   updatedAt: string;
 }
 
+export interface YieldParamsFromDatabase extends IdBasedModelFromDatabase {
+  sDAIPrice: string;
+  assetYieldIndex: string;
+  createdAt: IsoString;
+  createdAtHeight: string;
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string } };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:

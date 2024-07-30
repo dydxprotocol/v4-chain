@@ -21,4 +21,5 @@ export * from './pnl-ticks-types';
 export * from './funding-index-updates-types';
 export * from './liquidity-tiers-types';
 export * from './compliance-data-types';
+export * from './yield-params-types';
 export { PositionSide } from './position-types';

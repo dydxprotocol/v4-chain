@@ -84,6 +84,7 @@ export enum QueryableField {
   BLOCK_HEIGHT_BEFORE_OR_AT = 'blockHeightBeforeOrAt',
   STARTED_AT_BEFORE_OR_AT = 'startedAtBeforeOrAt',
   STARTED_AT_HEIGHT_BEFORE_OR_AT = 'startedAtHeightBeforeOrAt',
+  S_DAI_PRICE = 'sDAIPrice',
 }
 
 export interface QueryConfig {
@@ -97,6 +98,14 @@ export interface SubaccountQueryConfig extends QueryConfig {
   [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
   [QueryableField.UPDATED_ON_OR_AFTER]?: string;
   [QueryableField.ASSET_YIELD_INDEX]?: string;
+}
+
+export interface YieldParamsQueryConfig extends QueryConfig {
+  [QueryableField.ID]?: string[];
+  [QueryableField.CREATED_BEFORE_OR_AT]?: string;
+  [QueryableField.CREATED_ON_OR_AFTER]?: string;
+  [QueryableField.ASSET_YIELD_INDEX]?: string;
+  [QueryableField.S_DAI_PRICE]?: string;
 }
 
 export interface WalletQueryConfig extends QueryConfig {
