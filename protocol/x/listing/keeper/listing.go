@@ -3,6 +3,8 @@ package keeper
 import (
 	"math"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -40,7 +42,11 @@ func (k Keeper) CreateMarket(
 	marketId = k.PricesKeeper.AcquireNextMarketID(ctx)
 
 	// Get market details from marketmap
-	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, ticker)
+	marketMapPair, err := slinky.MarketPairToCurrencyPair(ticker)
+	if err != nil {
+		return 0, err
+	}
+	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, marketMapPair.String())
 	if err != nil {
 		return 0, types.ErrMarketNotFound
 	}
