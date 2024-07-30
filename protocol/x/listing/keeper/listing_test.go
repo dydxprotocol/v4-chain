@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"testing"
 
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -155,8 +156,8 @@ func TestCreatePerpetual(t *testing.T) {
 				require.NoError(t, err)
 
 				marketId, err := keeper.CreateMarket(ctx, tc.ticker)
-				if tc.expectedErr == types.ErrMarketNotFound {
-					require.Error(t, err)
+				if errors.Is(tc.expectedErr, types.ErrMarketNotFound) {
+					require.ErrorContains(t, err, tc.expectedErr.Error())
 					return
 				}
 
