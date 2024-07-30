@@ -124,7 +124,8 @@ func (m *MsgSetMarketsHardCapResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSetMarketsHardCapResponse proto.InternalMessageInfo
 
-// MsgCreateMarketPermissionless is a message used to create new markets without // going through x/gov
+// MsgCreateMarketPermissionless is a message used to create new markets without
+// // going through x/gov
 type MsgCreateMarketPermissionless struct {
 	// The name of the `Perpetual` (e.g. `BTC-USD`).
 	Ticker string `protobuf:"bytes,1,opt,name=ticker,proto3" json:"ticker,omitempty"`
@@ -181,7 +182,8 @@ func (m *MsgCreateMarketPermissionless) GetSubaccountId() *types.SubaccountId {
 	return nil
 }
 
-// MsgCreateMarketPermissionlessResponse defines the MsgCreateMarketPermissionless response
+// MsgCreateMarketPermissionlessResponse defines the
+// MsgCreateMarketPermissionless response
 type MsgCreateMarketPermissionlessResponse struct {
 }
 

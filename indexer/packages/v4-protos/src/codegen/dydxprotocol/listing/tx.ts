@@ -29,7 +29,10 @@ export interface MsgSetMarketsHardCapResponse {}
 /** MsgSetMarketsHardCapResponse defines the MsgSetMarketsHardCap response */
 
 export interface MsgSetMarketsHardCapResponseSDKType {}
-/** MsgCreateMarketPermissionless is a message used to create new markets without // going through x/gov */
+/**
+ * MsgCreateMarketPermissionless is a message used to create new markets without
+ * // going through x/gov
+ */
 
 export interface MsgCreateMarketPermissionless {
   /** The name of the `Perpetual` (e.g. `BTC-USD`). */
@@ -41,7 +44,10 @@ export interface MsgCreateMarketPermissionless {
 
   quoteQuantums: Uint8Array;
 }
-/** MsgCreateMarketPermissionless is a message used to create new markets without // going through x/gov */
+/**
+ * MsgCreateMarketPermissionless is a message used to create new markets without
+ * // going through x/gov
+ */
 
 export interface MsgCreateMarketPermissionlessSDKType {
   /** The name of the `Perpetual` (e.g. `BTC-USD`). */
@@ -53,10 +59,16 @@ export interface MsgCreateMarketPermissionlessSDKType {
 
   quote_quantums: Uint8Array;
 }
-/** MsgCreateMarketPermissionlessResponse defines the MsgCreateMarketPermissionless response */
+/**
+ * MsgCreateMarketPermissionlessResponse defines the
+ * MsgCreateMarketPermissionless response
+ */
 
 export interface MsgCreateMarketPermissionlessResponse {}
-/** MsgCreateMarketPermissionlessResponse defines the MsgCreateMarketPermissionless response */
+/**
+ * MsgCreateMarketPermissionlessResponse defines the
+ * MsgCreateMarketPermissionless response
+ */
 
 export interface MsgCreateMarketPermissionlessResponseSDKType {}
 
