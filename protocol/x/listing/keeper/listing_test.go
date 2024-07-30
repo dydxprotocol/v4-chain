@@ -18,19 +18,26 @@ import (
 )
 
 func TestCreateMarket(t *testing.T) {
-
 	tests := map[string]struct {
-		ticker string
+		ticker          string
+		duplicateMarket bool
 
 		expectedErr error
 	}{
 		"success": {
-			ticker:      "TEST-USD",
-			expectedErr: nil,
+			ticker:          "TEST-USD",
+			duplicateMarket: false,
+			expectedErr:     nil,
 		},
-		"invalid market": {
-			ticker:      "INVALID-USD",
-			expectedErr: types.ErrMarketNotFound,
+		"failure - invalid market": {
+			ticker:          "INVALID-USD",
+			duplicateMarket: false,
+			expectedErr:     types.ErrMarketNotFound,
+		},
+		"failure - duplicate market": {
+			ticker:          "TEST-USD",
+			duplicateMarket: true,
+			expectedErr:     nil,
 		},
 	}
 
@@ -75,13 +82,17 @@ func TestCreateMarket(t *testing.T) {
 					require.Equal(t, testMarketParams.MinExchanges, market.MinExchanges)
 					require.Equal(t, testMarketParams.MinPriceChangePpm, types.MinPriceChangePpm_LongTail)
 				}
+
+				if tc.duplicateMarket {
+					_, err = keeper.CreateMarket(ctx, tc.ticker)
+					require.ErrorContains(t, err, pricestypes.ErrMarketParamPairAlreadyExists.Error())
+				}
 			},
 		)
 	}
 }
 
 func TestCreatePerpetual(t *testing.T) {
-
 	tests := map[string]struct {
 		ticker         string
 		referencePrice uint64
@@ -144,7 +155,10 @@ func TestCreatePerpetual(t *testing.T) {
 				require.NoError(t, err)
 
 				marketId, err := keeper.CreateMarket(ctx, tc.ticker)
-				require.NoError(t, err)
+				if tc.expectedErr == types.ErrMarketNotFound {
+					require.Error(t, err)
+					return
+				}
 
 				perpetualId, err := keeper.CreatePerpetual(ctx, marketId, tc.ticker)
 				if tc.expectedErr != nil {
@@ -159,15 +173,14 @@ func TestCreatePerpetual(t *testing.T) {
 					require.Equal(t, marketId, perpetual.Params.MarketId)
 					require.Equal(t, tc.ticker, perpetual.Params.Ticker)
 					// Expected resolution = -6 - Floor(log10(1000000000)) = -15
-					require.Equal(t, -15, perpetual.Params.AtomicResolution)
-					require.Equal(t, types.DefaultFundingPpm, perpetual.Params.DefaultFundingPpm)
-					require.Equal(t, types.LiquidityTier_LongTail, perpetual.Params.LiquidityTier)
+					require.Equal(t, int32(-15), perpetual.Params.AtomicResolution)
+					require.Equal(t, int32(types.DefaultFundingPpm), perpetual.Params.DefaultFundingPpm)
+					require.Equal(t, uint32(types.LiquidityTier_LongTail), perpetual.Params.LiquidityTier)
 					require.Equal(
 						t, perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
 						perpetual.Params.MarketType,
 					)
 				}
-
 			},
 		)
 	}
