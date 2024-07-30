@@ -9,12 +9,9 @@ readme = "README.md"
 backtraces = ["cosmwasm-std/backtraces"]
 
 [dependencies]
-cosmwasm-std = "1.5.0"
+cosmwasm-std = "1.5.5"
 schemars = "0.8.3"
 serde = { version = "1.0.127", default-features = false, features = ["derive"] }
 serde_repr = "0.1.19"
 protobuf = { version = "=3.2.0", features = ["with-bytes"] }
 num-bigint = "0.4"
-
-[dev-dependencies]
-cosmwasm-schema = "1.0.0"

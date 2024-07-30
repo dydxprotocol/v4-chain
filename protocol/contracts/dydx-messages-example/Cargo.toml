@@ -33,10 +33,9 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 """
 
 [dependencies]
-# TODO(cosmwasm feature branch) Check versions below
-cosmwasm-schema = "1.5.0"
-cosmwasm-std = "1.5.0"
-cw-storage-plus = "1.1.0"
+cosmwasm-schema = "1.5.5"
+cosmwasm-std = "1.5.5"
+cw-storage-plus = "1.2.0"
 cw-utils = "0.13.4"
 cw2 = "1.1.1"
 schemars = "0.8.15"
