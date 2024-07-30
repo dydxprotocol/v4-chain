@@ -105,7 +105,6 @@ func (svd SigVerificationDecorator) AnteHandle(
 						1,
 						[]gometrics.Label{metrics.GetLabelForIntValue(metrics.ExecMode, int(ctx.ExecMode()))},
 					)
-					return ctx, nil
 				} else {
 					telemetry.IncrCounterWithLabels(
 						[]string{metrics.TimestampNonce, metrics.Invalid, metrics.Count},
