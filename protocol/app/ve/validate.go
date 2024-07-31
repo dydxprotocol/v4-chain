@@ -154,12 +154,16 @@ func ValidatePricesBytesSizeInVE(
 	ctx sdk.Context,
 	ve vetypes.DaemonVoteExtension,
 ) error {
-	for _, priceBytes := range ve.Prices {
+	for _, pricePair := range ve.Prices {
 
-		// Ensure that the price bytes are not too long.
-		if len(priceBytes) > constants.MaximumPriceSizeInBytes {
-			return fmt.Errorf("price bytes are too long: %d", len(priceBytes))
+		if len(pricePair.SpotPrice) > constants.MaximumPriceSizeInBytes {
+			return fmt.Errorf("spot price bytes are too long: %d", len(pricePair.SpotPrice))
 		}
+
+		if len(pricePair.PnlPrice) > constants.MaximumPriceSizeInBytes {
+			return fmt.Errorf("pnl price bytes are too long: %d", len(pricePair.PnlPrice))
+		}
+
 	}
 	return nil
 }
