@@ -245,7 +245,7 @@ message StreamTakerOrderStatus {
   uint32 order_status = 1;
 
   // The amount of remaining (non-matched) base quantums of this taker order.
-  uint64 remainingQuantums = 2;
+  uint64 remaining_quantums = 2;
 
 	// The amount of base quantums that were optimistically filled (from this current
   // matching cycle) of this taker order. Note that if any quantums of this order
