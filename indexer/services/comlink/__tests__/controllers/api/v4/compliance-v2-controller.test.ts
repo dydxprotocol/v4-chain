@@ -414,6 +414,11 @@ describe('ComplianceV2Controller', () => {
         reason: ComplianceReason.US_GEO,
       }));
 
+      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+        {
+          newStatus: ComplianceStatus.BLOCKED,
+        });
+
       expect(response.body.status).toEqual(ComplianceStatus.BLOCKED);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
       expect(response.body.updatedAt).toBeDefined();
@@ -441,6 +446,10 @@ describe('ComplianceV2Controller', () => {
         status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
         reason: ComplianceReason.US_GEO,
       }));
+      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+        {
+          newStatus: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
+        });
 
       expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
@@ -520,6 +529,11 @@ describe('ComplianceV2Controller', () => {
         expectedStatus: 200,
       });
 
+      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+        {
+          newStatus: ComplianceStatus.CLOSE_ONLY,
+        });
+
       const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
       expect(data).toHaveLength(1);
       expect(data[0]).toEqual(expect.objectContaining({
@@ -554,7 +568,6 @@ describe('ComplianceV2Controller', () => {
         },
         expectedStatus: 200,
       });
-
       const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
       expect(data).toHaveLength(1);
       expect(data[0]).toEqual(expect.objectContaining({
@@ -588,6 +601,10 @@ describe('ComplianceV2Controller', () => {
         },
         expectedStatus: 200,
       });
+      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+        {
+          newStatus: ComplianceStatus.CLOSE_ONLY,
+        });
 
       const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
       expect(data).toHaveLength(1);
@@ -621,6 +638,10 @@ describe('ComplianceV2Controller', () => {
         },
         expectedStatus: 200,
       });
+      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+        {
+          newStatus: ComplianceStatus.FIRST_STRIKE,
+        });
 
       const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
       expect(data).toHaveLength(1);
@@ -633,31 +654,6 @@ describe('ComplianceV2Controller', () => {
       expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
       expect(response.body.updatedAt).toBeDefined();
-    });
-
-    it('Stats being sent for the geoblock compliance', async () => {
-      await ComplianceStatusTable.create({
-        address: testConstants.defaultAddress,
-        status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
-        reason: ComplianceReason.US_GEO,
-      });
-      (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
-      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
-      isRestrictedCountryHeadersSpy.mockReturnValue(true);
-
-      await sendRequest({
-        type: RequestMethod.POST,
-        path: '/v4/compliance/geoblock',
-        body: {
-          ...body,
-          action: ComplianceAction.VALID_SURVEY,
-        },
-        expectedStatus: 200,
-      });
-      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
-        {
-          newStatus: ComplianceStatus.FIRST_STRIKE,
-        });
     });
   });
 });
