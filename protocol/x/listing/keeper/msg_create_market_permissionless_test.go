@@ -6,7 +6,11 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	subaccounttypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	oracletypes "github.com/skip-mev/slinky/pkg/types"
+	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
+	"github.com/skip-mev/slinky/x/marketmap/types/tickermetadata"
 	"github.com/stretchr/testify/require"
 
 	"testing"
@@ -20,14 +24,24 @@ func TestMsgCreateMarketPermissionless(t *testing.T) {
 		expectedErr error
 	}{
 		"success": {
-			ticker:      "TEST-USD",
+			ticker:      "TEST2-USD",
 			hardCap:     300,
 			expectedErr: nil,
 		},
-		"failure - hard cap set to 0": {
-			ticker:      "TEST-USD",
+		"failure - hard cap reached": {
+			ticker:      "TEST2-USD",
 			hardCap:     0,
 			expectedErr: types.ErrMarketsHardCapReached,
+		},
+		"failure - ticker not found": {
+			ticker:      "INVALID-USD",
+			hardCap:     300,
+			expectedErr: types.ErrMarketNotFound,
+		},
+		"failure - market already listed": {
+			ticker:      "BTC-USD",
+			hardCap:     300,
+			expectedErr: pricestypes.ErrMarketParamPairAlreadyExists,
 		},
 	}
 
@@ -39,7 +53,36 @@ func TestMsgCreateMarketPermissionless(t *testing.T) {
 				k := tApp.App.ListingKeeper
 				ms := keeper.NewMsgServerImpl(k)
 
+				// Set hard cap
 				err := k.SetMarketsHardCap(ctx, tc.hardCap)
+				require.NoError(t, err)
+
+				// Add TEST2-USD market to market map
+				dydxMetadata, err := tickermetadata.MarshalDyDx(
+					tickermetadata.DyDx{
+						ReferencePrice: 10000000,
+						Liquidity:      0,
+						AggregateIDs:   nil,
+					},
+				)
+
+				require.NoError(t, err)
+				market := marketmaptypes.Market{
+					Ticker: marketmaptypes.Ticker{
+						CurrencyPair:     oracletypes.CurrencyPair{Base: "TEST2", Quote: "USD"},
+						Decimals:         6,
+						MinProviderCount: 2,
+						Enabled:          false,
+						Metadata_JSON:    string(dydxMetadata),
+					},
+					ProviderConfigs: []marketmaptypes.ProviderConfig{
+						{
+							Name:           "binance_ws",
+							OffChainTicker: "TEST2USDT",
+						},
+					},
+				}
+				err = k.MarketMapKeeper.CreateMarket(ctx, market)
 				require.NoError(t, err)
 
 				msg := types.MsgCreateMarketPermissionless{

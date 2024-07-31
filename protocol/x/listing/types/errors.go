@@ -18,7 +18,7 @@ var (
 
 	ErrMarketsHardCapReached = errorsmod.Register(
 		ModuleName,
-		2,
+		3,
 		"listed markets hard cap reached",
 	)
 )

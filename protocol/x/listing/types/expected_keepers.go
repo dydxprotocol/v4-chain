@@ -36,6 +36,11 @@ type MarketMapKeeper interface {
 		ctx sdk.Context,
 		ticker string,
 	) (marketmaptypes.Market, error)
+	// Only used for testing purposes
+	CreateMarket(
+		ctx sdk.Context,
+		market marketmaptypes.Market,
+	) error
 }
 
 type PerpetualsKeeper interface {
