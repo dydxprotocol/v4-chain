@@ -276,7 +276,7 @@ router.post(
         complianceStatus,
         updatedAt,
       );
-      if ( complianceStatus.length === 0 ||
+      if (complianceStatus.length === 0 ||
         complianceStatus[0] !== complianceStatusFromDatabase) {
         if (complianceStatusFromDatabase !== undefined &&
           complianceStatusFromDatabase.status !== ComplianceStatus.COMPLIANT
