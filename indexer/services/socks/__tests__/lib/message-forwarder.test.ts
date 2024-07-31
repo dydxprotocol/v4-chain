@@ -281,6 +281,7 @@ describe('message-forwarder', () => {
         }
       }
 
+
       if (msg.message_id >= 2) {
         const batchMsg: ChannelBatchDataMessage = JSON.parse(
           message.toString(),
