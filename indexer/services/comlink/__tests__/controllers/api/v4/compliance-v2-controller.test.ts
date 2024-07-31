@@ -323,6 +323,7 @@ describe('ComplianceV2Controller', () => {
       }));
       toBech32Mock.mockReturnValue(testConstants.defaultAddress);
       jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(1620000000)); // Mock current time
+      jest.spyOn(stats, 'increment');
     });
 
     afterEach(async () => {
@@ -632,6 +633,31 @@ describe('ComplianceV2Controller', () => {
       expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
       expect(response.body.updatedAt).toBeDefined();
+    });
+
+    it('Stats being sent for the geoblock compliance', async () => {
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
+        reason: ComplianceReason.US_GEO,
+      });
+      (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
+      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
+      isRestrictedCountryHeadersSpy.mockReturnValue(true);
+
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/geoblock',
+        body: {
+          ...body,
+          action: ComplianceAction.VALID_SURVEY,
+        },
+        expectedStatus: 200,
+      });
+      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+        {
+          newStatus: ComplianceStatus.FIRST_STRIKE,
+        });
     });
   });
 });
