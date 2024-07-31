@@ -7,7 +7,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	subaccounttypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	oracletypes "github.com/skip-mev/slinky/pkg/types"
 	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/skip-mev/slinky/x/marketmap/types/tickermetadata"
@@ -87,7 +87,7 @@ func TestMsgCreateMarketPermissionless(t *testing.T) {
 
 				msg := types.MsgCreateMarketPermissionless{
 					Ticker: tc.ticker,
-					SubaccountId: &subaccounttypes.SubaccountId{
+					SubaccountId: &satypes.SubaccountId{
 						Owner:  constants.AliceAccAddress.String(),
 						Number: 0,
 					},
