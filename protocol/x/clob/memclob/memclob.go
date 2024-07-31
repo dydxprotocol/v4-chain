@@ -810,12 +810,9 @@ func (m *MemClobPriceTimePriority) matchOrder(
 
 	var matchingErr error
 
-	// If the order is post only and it's not the rewind step, then it cannot be filled.
+	// If the order is post only and crosses the book,
 	// Set the matching error so that the order is canceled.
-	// TODO(DEC-998): Determine if allowing post-only orders to match in rewind step is valid.
-	if len(newMakerFills) > 0 &&
-		!order.IsLiquidation() &&
-		order.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_POST_ONLY {
+	if !order.IsLiquidation() && takerOrderStatus.OrderStatus == types.PostOnlyWouldCrossMakerOrder {
 		matchingErr = types.ErrPostOnlyWouldCrossMakerOrder
 	}
 
@@ -1585,6 +1582,13 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			takerOrderCrossesMakerOrder = newTakerOrder.GetOrderSubticks() >= makerOrder.Order.GetOrderSubticks()
 		} else {
 			takerOrderCrossesMakerOrder = newTakerOrder.GetOrderSubticks() <= makerOrder.Order.GetOrderSubticks()
+		}
+
+		if takerOrderCrossesMakerOrder &&
+			!newTakerOrder.IsLiquidation() &&
+			newTakerOrder.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_POST_ONLY {
+			takerOrderStatus.OrderStatus = types.PostOnlyWouldCrossMakerOrder
+			break
 		}
 
 		// If the taker order no longer crosses the maker order, stop matching.
