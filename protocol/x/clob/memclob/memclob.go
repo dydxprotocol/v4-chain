@@ -1755,8 +1755,8 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		}
 
 		// If a valid match has been generated but the taker order is a post only order,
-		// end the matching loop. Because of this, post-only orders can cause at most 1
-		// undercollateralized maker orders to be removed from the book.
+		// end the matching loop. Because of this, post-only orders can cause
+		// undercollateralized maker orders to be removed from the book up to the first valid match.
 		if takerOrderCrossesMakerOrder &&
 			!newTakerOrder.IsLiquidation() &&
 			newTakerOrder.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_POST_ONLY {
