@@ -17,7 +17,12 @@ type CCValidatorStore interface {
 	GetCCValidator(ctx sdk.Context, addr []byte) (types.CrossChainValidator, bool)
 }
 
-type AggregateFn func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error)
+type AggregatorPricePair struct {
+	SpotPrice *big.Int
+	PnlPrice  *big.Int
+}
+
+type AggregateFn func(ctx sdk.Context, vePrices map[string]map[string]AggregatorPricePair) (map[string]AggregatorPricePair, error)
 
 // DefaultPowerThreshold defines the total voting power % that must be
 // submitted in order for a currency pair to be considered for the
