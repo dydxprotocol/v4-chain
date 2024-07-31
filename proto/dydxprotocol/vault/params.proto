@@ -5,8 +5,8 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
-// Params stores `x/vault` parameters.
-message Params {
+// QuotingParams stores vault quoting parameters.
+message QuotingParams {
   // The number of layers of orders a vault places. For example if
   // `layers=2`, a vault places 2 asks and 2 bids.
   uint32 layers = 1;
@@ -37,4 +37,10 @@ message Params {
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
+}
+
+// VaultParams stores individual parameters of a vault.
+message VaultParams {
+  // The quoting parameters specific to this vault.
+  QuotingParams quoting_params = 1 [ (gogoproto.nullable) = false ];
 }

@@ -3,14 +3,15 @@ package dydxprotocol.vault;
 
 import "gogoproto/gogo.proto";
 import "dydxprotocol/vault/params.proto";
+import "dydxprotocol/vault/share.proto";
 import "dydxprotocol/vault/vault.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
 // GenesisState defines `x/vault`'s genesis state.
 message GenesisState {
-  // The parameters of the module.
-  Params params = 1 [ (gogoproto.nullable) = false ];
+  // The default quoting parameters for all vaults.
+  QuotingParams default_quoting_params = 1 [ (gogoproto.nullable) = false ];
   // The vaults.
   repeated Vault vaults = 2;
 }
