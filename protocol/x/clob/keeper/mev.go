@@ -19,20 +19,6 @@ import (
 
 var MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE = new(big.Rat).SetFrac64(1, 100)
 
-type MevTelemetryConfig struct {
-	Enabled    bool
-	Hosts      []string
-	Identifier string
-}
-
-type ClobMetadata struct {
-	ClobPair    types.ClobPair
-	MidPrice    types.Subticks
-	OraclePrice types.Subticks
-	BestBid     types.Order
-	BestAsk     types.Order
-}
-
 // CumulativePnL keeps track of the cumulative PnL for each subaccount per market.
 type CumulativePnL struct {
 	// PnL calculations.
@@ -45,7 +31,7 @@ type CumulativePnL struct {
 
 	// Cached fields used in the calculation of PnL.
 	// These should not be modified after initialization.
-	Metadata              ClobMetadata
+	Metadata              types.ClobMetadata
 	PerpetualFundingIndex *big.Int
 }
 
@@ -371,9 +357,9 @@ func (k Keeper) RecordMevMetrics(
 func (k Keeper) GetClobMetadata(
 	ctx sdk.Context,
 ) (
-	clobMetadata map[types.ClobPairId]ClobMetadata,
+	clobMetadata map[types.ClobPairId]types.ClobMetadata,
 ) {
-	clobMetadata = make(map[types.ClobPairId]ClobMetadata)
+	clobMetadata = make(map[types.ClobPairId]types.ClobMetadata)
 
 	for _, clobPair := range k.GetAllClobPairs(ctx) {
 		clobPairId := clobPair.GetClobPairId()
@@ -408,7 +394,7 @@ func (k Keeper) GetClobMetadata(
 		}
 
 		// Set the CLOB metadata.
-		clobMetadata[clobPairId] = ClobMetadata{
+		clobMetadata[clobPairId] = types.ClobMetadata{
 			ClobPair:    clobPair,
 			MidPrice:    midPriceSubticks,
 			OraclePrice: oraclePriceSubticks,
@@ -468,7 +454,7 @@ func (k Keeper) GetSingleMarketClobMetadata(
 func (k Keeper) InitializeCumulativePnLs(
 	ctx sdk.Context,
 	perpetualKeeper process.ProcessPerpetualKeeper,
-	clobMetadata map[types.ClobPairId]ClobMetadata,
+	clobMetadata map[types.ClobPairId]types.ClobMetadata,
 ) (
 	blockProposerPnL map[types.ClobPairId]*CumulativePnL,
 	validatorPnL map[types.ClobPairId]*CumulativePnL,
