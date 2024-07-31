@@ -1584,13 +1584,6 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			takerOrderCrossesMakerOrder = newTakerOrder.GetOrderSubticks() <= makerOrder.Order.GetOrderSubticks()
 		}
 
-		if takerOrderCrossesMakerOrder &&
-			!newTakerOrder.IsLiquidation() &&
-			newTakerOrder.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_POST_ONLY {
-			takerOrderStatus.OrderStatus = types.PostOnlyWouldCrossMakerOrder
-			break
-		}
-
 		// If the taker order no longer crosses the maker order, stop matching.
 		if !takerOrderCrossesMakerOrder {
 			break
@@ -1759,6 +1752,16 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			// The taker order is a liquidation or it passed collateralization checks, therefore we
 			// can continue matching by attempting to find a new overlapping maker order.
 			continue
+		}
+
+		// If a valid match has been generated but the taker order is a post only order,
+		// end the matching loop. Because of this, post-only orders can cause at most 1
+		// undercollateralized maker orders to be removed from the book.
+		if takerOrderCrossesMakerOrder &&
+			!newTakerOrder.IsLiquidation() &&
+			newTakerOrder.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_POST_ONLY {
+			takerOrderStatus.OrderStatus = types.PostOnlyWouldCrossMakerOrder
+			break
 		}
 
 		// The orders have matched successfully, and the state has been updated.
