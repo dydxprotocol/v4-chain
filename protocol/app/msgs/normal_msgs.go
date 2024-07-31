@@ -18,6 +18,7 @@ import (
 	ibccore "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	listing "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	vault "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
@@ -223,6 +224,10 @@ var (
 		"/dydxprotocol.clob.MsgCancelOrderResponse": nil,
 		"/dydxprotocol.clob.MsgPlaceOrder":          &clob.MsgPlaceOrder{},
 		"/dydxprotocol.clob.MsgPlaceOrderResponse":  nil,
+
+		// listing
+		"/dydxprotocol.listing.MsgCreateMarketPermissionless":         &listing.MsgCreateMarketPermissionless{},
+		"/dydxprotocol.listing.MsgCreateMarketPermissionlessResponse": nil,
 
 		// perpetuals
 

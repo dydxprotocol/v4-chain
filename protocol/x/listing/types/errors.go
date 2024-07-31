@@ -15,4 +15,10 @@ var (
 		2,
 		"reference price is zero",
 	)
+
+	ErrMarketsHardCapReached = errorsmod.Register(
+		ModuleName,
+		3,
+		"listed markets hard cap reached",
+	)
 )
