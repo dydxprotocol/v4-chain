@@ -52,3 +52,9 @@ func (k Keeper) UpdateSmoothedPrices(
 
 	return errors.Join(updateErrors...)
 }
+
+func (k Keeper) GetSmoothedPrice(
+	markedId uint32,
+) (uint64, bool) {
+	return k.marketToSmoothedPrices.GetSmoothedPrice(markedId)
+}
