@@ -102,8 +102,12 @@ export interface SubaccountQueryConfig extends QueryConfig {
 
 export interface YieldParamsQueryConfig extends QueryConfig {
   [QueryableField.ID]?: string[];
+  [QueryableField.CREATED_AT_HEIGHT]?: string[];
+  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string;
+  [QueryableField.CREATED_AFTER_HEIGHT]?: string;
+  [QueryableField.CREATED_AT]?: string;
   [QueryableField.CREATED_BEFORE_OR_AT]?: string;
-  [QueryableField.CREATED_ON_OR_AFTER]?: string;
+  [QueryableField.CREATED_AFTER]?: string;
   [QueryableField.ASSET_YIELD_INDEX]?: string;
   [QueryableField.S_DAI_PRICE]?: string;
 }

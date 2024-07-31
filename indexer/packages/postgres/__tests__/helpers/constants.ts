@@ -46,17 +46,20 @@ import {
   TimeInForce,
   TransactionCreateObject,
   TransferCreateObject,
+  YieldParamsCreateObject,
 } from '../../src/types';
 import { denomToHumanReadableConversion } from './conversion-helpers';
 
 export const createdDateTime: DateTime = DateTime.utc();
 export const createdHeight: string = '2';
+export const createdHeightPlusOne: string = '3';
 export const invalidTicker: string = 'INVALID-INVALID';
 export const dydxChain: string = 'dydx';
 export const defaultAddress: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf';
 export const blockedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
-export const zeroAssetYieldIndex: string = "0/1";
-export const defaultZeroPerpYieldIndex: string = "0/1";
+export const zeroAssetYieldIndex: string = '0/1';
+export const oneAssetYieldIndex: string = '1/1';
+export const defaultZeroPerpYieldIndex: string = '0/1';
 
 // ============== Subaccounts ==============
 
@@ -786,3 +789,19 @@ export const nonBlockedComplianceData: ComplianceDataCreateObject = {
   riskScore: '10.00',
   updatedAt: createdDateTime.plus(1).toISO(),
 };
+
+// ========= Yield Params ==========
+
+export const defaultYieldParams1: YieldParamsCreateObject = {
+  sDAIPrice: '10000000',
+  assetYieldIndex: zeroAssetYieldIndex,
+  createdAtHeight: createdHeight,
+  createdAt: createdDateTime.toISO(),
+}
+
+export const defaultYieldParams2: YieldParamsCreateObject = {
+  sDAIPrice: '11000000',
+  assetYieldIndex: oneAssetYieldIndex,
+  createdAtHeight: createdHeightPlusOne,
+  createdAt:  createdDateTime.plus(1).toISO(),
+}

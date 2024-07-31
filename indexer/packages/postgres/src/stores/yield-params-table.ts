@@ -29,8 +29,12 @@ export function uuid(createdAtHeight: string): string {
 export async function findAll(
   {
     id,
+    createdAtHeight,
+    createdBeforeOrAtHeight,
+    createdAfterHeight,
+    createdAt,
     createdBeforeOrAt,
-    createdOnOrAfter,
+    createdAfter,
     assetYieldIndex,
     sDAIPrice,
     limit,
@@ -41,8 +45,12 @@ export async function findAll(
   verifyAllRequiredFields(
     {
       id,
+      createdAtHeight,
+      createdBeforeOrAtHeight,
+      createdAfterHeight,
+      createdAt,
       createdBeforeOrAt,
-      createdOnOrAfter,
+      createdAfter,
       assetYieldIndex,
       sDAIPrice,
       limit,
@@ -60,19 +68,35 @@ export async function findAll(
   }
 
   if (assetYieldIndex) {
-    baseQuery = baseQuery.whereIn(YieldParamsColumns.assetYieldIndex, assetYieldIndex)
+    baseQuery = baseQuery.where(YieldParamsColumns.assetYieldIndex, assetYieldIndex)
   }
 
   if (sDAIPrice) {
-    baseQuery = baseQuery.whereIn(YieldParamsColumns.sDAIPrice, sDAIPrice)
+    baseQuery = baseQuery.where(YieldParamsColumns.sDAIPrice, sDAIPrice)
+  }
+
+  if (createdAt) {
+    baseQuery = baseQuery.where(YieldParamsColumns.createdAt, createdAt);
+  }
+
+  if (createdAtHeight) {
+    baseQuery = baseQuery.whereIn(YieldParamsColumns.createdAtHeight, createdAtHeight);
   }
 
   if (createdBeforeOrAt) {
-    baseQuery = baseQuery.where(YieldParamsColumns.createdAtHeight, '<=', createdBeforeOrAt);
+    baseQuery = baseQuery.where(YieldParamsColumns.createdAt, '<=', createdBeforeOrAt);
   }
 
-  if (createdOnOrAfter) {
-    baseQuery = baseQuery.where(YieldParamsColumns.createdAtHeight, '>=', createdOnOrAfter);
+  if (createdBeforeOrAtHeight) {
+    baseQuery = baseQuery.where(YieldParamsColumns.createdAtHeight, '<=', createdBeforeOrAtHeight);
+  }
+
+  if (createdAfter) {
+    baseQuery = baseQuery.where(YieldParamsColumns.createdAt, '>', createdAfter);
+  }
+
+  if (createdAfterHeight) {
+    baseQuery = baseQuery.where(YieldParamsColumns.createdAtHeight, '>', createdAfterHeight);
   }
 
   if (options.orderBy !== undefined) {
@@ -119,19 +143,6 @@ export async function findById(
     return baseQuery
       .findById(id)
       .returning('*');
-}
-
-export async function findByYieldIndex(
-  assetYieldIndex: string,
-  options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<YieldParamsFromDatabase | undefined> {
-  const baseQuery: QueryBuilder<YieldParamsModel> = setupBaseQuery<YieldParamsModel>(
-    YieldParamsModel,
-    options,
-  );
-  return baseQuery
-    .findById(assetYieldIndex)
-    .returning('*');
 }
 
 export async function getLatest(
