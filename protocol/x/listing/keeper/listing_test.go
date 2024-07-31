@@ -26,19 +26,16 @@ func TestCreateMarket(t *testing.T) {
 		expectedErr error
 	}{
 		"success": {
-			ticker:          "TEST-USD",
-			duplicateMarket: false,
-			expectedErr:     nil,
+			ticker:      "TEST-USD",
+			expectedErr: nil,
 		},
 		"failure - invalid market": {
-			ticker:          "INVALID-USD",
-			duplicateMarket: false,
-			expectedErr:     types.ErrMarketNotFound,
+			ticker:      "INVALID-USD",
+			expectedErr: types.ErrMarketNotFound,
 		},
 		"failure - duplicate market": {
-			ticker:          "TEST-USD",
-			duplicateMarket: true,
-			expectedErr:     nil,
+			ticker:      "BTC-USD",
+			expectedErr: pricestypes.ErrMarketParamPairAlreadyExists,
 		},
 	}
 
@@ -51,6 +48,8 @@ func TestCreateMarket(t *testing.T) {
 					&mocks.BankKeeper{},
 					mockIndexerEventManager,
 				)
+
+				keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 				testMarketParams := pricestypes.MarketParam{
 					Pair:               "TEST-USD",
@@ -71,7 +70,7 @@ func TestCreateMarket(t *testing.T) {
 
 				marketId, err := keeper.CreateMarket(ctx, tc.ticker)
 				if tc.expectedErr != nil {
-					require.Error(t, err)
+					require.ErrorContains(t, err, tc.expectedErr.Error())
 				} else {
 					require.NoError(t, err)
 
@@ -82,11 +81,6 @@ func TestCreateMarket(t *testing.T) {
 					require.Equal(t, testMarketParams.Exponent, market.Exponent)
 					require.Equal(t, testMarketParams.MinExchanges, market.MinExchanges)
 					require.Equal(t, testMarketParams.MinPriceChangePpm, types.MinPriceChangePpm_LongTail)
-				}
-
-				if tc.duplicateMarket {
-					_, err = keeper.CreateMarket(ctx, tc.ticker)
-					require.ErrorContains(t, err, pricestypes.ErrMarketParamPairAlreadyExists.Error())
 				}
 			},
 		)
@@ -102,7 +96,7 @@ func TestCreatePerpetual(t *testing.T) {
 	}{
 		"success": {
 			ticker:         "TEST-USD",
-			referencePrice: 1000000000,
+			referencePrice: 1000000000, // $1000
 			expectedErr:    nil,
 		},
 		"failure - reference price 0": {
