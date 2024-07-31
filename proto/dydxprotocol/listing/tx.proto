@@ -13,6 +13,10 @@ service Msg {
   // SetMarketsHardCap sets a hard cap on the number of markets listed
   rpc SetMarketsHardCap(MsgSetMarketsHardCap)
       returns (MsgSetMarketsHardCapResponse);
+
+  // CreateMarketPermissionless creates a new market without going through x/gov
+  rpc CreateMarketPermissionless(MsgCreateMarketPermissionless)
+      returns (MsgCreateMarketPermissionlessResponse);
 }
 
 // MsgSetMarketsHardCap is used to set a hard cap on the number of markets
