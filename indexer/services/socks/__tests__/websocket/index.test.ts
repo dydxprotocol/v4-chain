@@ -177,7 +177,9 @@ describe('Index', () => {
         ALL_CHANNELS.map((channel: Channel) => { return [channel]; }),
       )('handles valid subscription message for channel: %s', (channel: Channel) => {
         // Test that markets work with a missing id.
-        const id: string | undefined = channel === Channel.V4_MARKETS ? undefined : subId;
+        const id: string | undefined = (
+          channel === Channel.V4_MARKETS || channel === Channel.V4_BLOCK_HEIGHT
+        ) ? undefined : subId;
         const isBatched: boolean = false;
         const subMessage: IncomingMessage = createIncomingMessage({
           type: IncomingMessageType.SUBSCRIBE,
@@ -203,7 +205,9 @@ describe('Index', () => {
         ALL_CHANNELS.map((channel: Channel) => { return [channel]; }),
       )('handles valid unsubscribe message for channel: %s', (channel: Channel) => {
         // Test that markets work with a missing id.
-        const id: string | undefined = channel === Channel.V4_MARKETS ? undefined : subId;
+        const id: string | undefined = (
+          channel === Channel.V4_MARKETS || channel === Channel.V4_BLOCK_HEIGHT
+        ) ? undefined : subId;
         const unSubMessage: IncomingMessage = createIncomingMessage({
           type: IncomingMessageType.UNSUBSCRIBE,
           channel,

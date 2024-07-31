@@ -22,6 +22,7 @@ export enum Channel {
   V4_MARKETS = 'v4_markets',
   V4_CANDLES = 'v4_candles',
   V4_PARENT_ACCOUNTS = 'v4_parent_subaccounts',
+  V4_BLOCK_HEIGHT = 'v4_block_height',
 }
 
 export const ALL_CHANNELS = Object.values(Channel);
@@ -144,6 +145,7 @@ export enum WebsocketTopics {
   TO_WEBSOCKETS_TRADES = 'to-websockets-trades',
   TO_WEBSOCKETS_MARKETS = 'to-websockets-markets',
   TO_WEBSOCKETS_CANDLES = 'to-websockets-candles',
+  TO_WEBSOCKETS_BLOCK_HEIGHT = 'to-websockets-block-height',
 }
 
 export enum WebsocketEvents {

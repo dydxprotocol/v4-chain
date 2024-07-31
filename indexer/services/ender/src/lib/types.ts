@@ -35,6 +35,7 @@ import {
   DeleveragingEventV1,
   TradingRewardsEventV1,
   OpenInterestUpdateEventV1,
+  BlockHeightMessage,
 } from '@dydxprotocol-indexer/v4-protos';
 import { IHeaders } from 'kafkajs';
 import Long from 'long';
@@ -258,6 +259,9 @@ export type ConsolidatedKafkaEvent = {
 } | {
   topic: KafkaTopics.TO_VULCAN,
   message: VulcanMessage,
+} | {
+  topic: KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
+  message: BlockHeightMessage
 };
 
 export enum TransferEventType {

@@ -217,4 +217,5 @@ Other example subscription events:
 { "type": "subscribe", "channel": "v4_markets" }
 { "type": "subscribe", "channel": "v4_orderbook", "id": "BTC-USD" }
 { "type": "subscribe", "channel": "v4_subaccounts", "id": "address/0" }
+{ "type": "subscribe", "channel": "v4_block_height" }
 ```

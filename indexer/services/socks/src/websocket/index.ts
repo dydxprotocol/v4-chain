@@ -463,7 +463,7 @@ export class Index {
   private validateSubscriptionForChannel(
     message: SubscribeMessage | UnsubscribeMessage,
   ): boolean {
-    if (message.channel === Channel.V4_MARKETS) {
+    if (message.channel === Channel.V4_MARKETS || message.channel === Channel.V4_BLOCK_HEIGHT) {
       return true;
     }
     return message.id !== undefined && typeof message.id === 'string';
