@@ -29,7 +29,7 @@ func TestCreateMarket(t *testing.T) {
 			ticker:      "TEST-USD",
 			expectedErr: nil,
 		},
-		"failure - invalid market": {
+		"failure - market not found": {
 			ticker:      "INVALID-USD",
 			expectedErr: types.ErrMarketNotFound,
 		},
@@ -104,7 +104,7 @@ func TestCreatePerpetual(t *testing.T) {
 			referencePrice: 0,
 			expectedErr:    types.ErrReferencePriceZero,
 		},
-		"failure - invalid market": {
+		"failure - market not found": {
 			ticker:      "INVALID-USD",
 			expectedErr: types.ErrMarketNotFound,
 		},
