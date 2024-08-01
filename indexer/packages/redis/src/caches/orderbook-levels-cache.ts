@@ -533,7 +533,7 @@ function convertToPriceLevels(
 export async function getOrderBookMidPrice(
   ticker: string,
   client: RedisClient,
-): Promise<number | undefined> {
+): Promise<string | undefined> {
   const levels = await getOrderBookLevels(ticker, client, {
     removeZeros: true,
     sortSides: true,
@@ -545,12 +545,11 @@ export async function getOrderBookMidPrice(
     return undefined;
   }
 
-  const bestAsk = Number(levels.asks[0].humanPrice);
-  const bestBid = Number(levels.bids[0].humanPrice);
+  const bestAsk = Big(levels.asks[0].humanPrice);
+  const bestBid = Big(levels.bids[0].humanPrice);
 
   if (bestAsk === undefined || bestBid === undefined) {
     return undefined;
   }
-
-  return bestBid + (bestAsk - bestBid) / 2;
+  return bestBid.plus(bestAsk).div(2).toFixed();
 }
