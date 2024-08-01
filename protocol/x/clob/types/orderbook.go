@@ -136,6 +136,9 @@ const (
 	// with either multiple positions in isolated perpetuals or both an isolated and a cross perpetual
 	// position.
 	ViolatesIsolatedSubaccountConstraints
+	// PostOnlyWouldCrossMakerOrder indicates that matching the post only taker order would cross the
+	// orderbook, and was therefore canceled.
+	PostOnlyWouldCrossMakerOrder
 )
 
 // String returns a string representation of this `OrderStatus` enum.
