@@ -127,7 +127,8 @@ func (m *MsgDepositToVaultResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDepositToVaultResponse proto.InternalMessageInfo
 
-// MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request type.
+// MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request
+// type.
 type MsgUpdateDefaultQuotingParams struct {
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// The quoting parameters to update to. Every field must be set.
@@ -181,7 +182,8 @@ func (m *MsgUpdateDefaultQuotingParams) GetDefaultQuotingParams() QuotingParams 
 	return QuotingParams{}
 }
 
-// MsgUpdateDefaultQuotingParamsResponse is the Msg/UpdateDefaultQuotingParams response type.
+// MsgUpdateDefaultQuotingParamsResponse is the Msg/UpdateDefaultQuotingParams
+// response type.
 type MsgUpdateDefaultQuotingParamsResponse struct {
 }
 

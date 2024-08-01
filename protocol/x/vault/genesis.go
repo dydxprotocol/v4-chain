@@ -10,15 +10,16 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.InitializeForGenesis(ctx)
 
-	// Set params.
-	if err := k.SetParams(ctx, genState.Params); err != nil {
+	// Set default quoting params.
+	if err := k.SetDefaultQuotingParams(ctx, &genState.DefaultQuotingParams); err != nil {
 		panic(err)
 	}
 	// For each vault:
 	// 1. Set total shares
 	// 2. Set owner shares
 	// 3. Set vault params
-	// 4. Add to address store
+	// 4. Set most recent client ids
+	// 5. Add to address store
 	for _, vault := range genState.Vaults {
 		if err := k.SetTotalShares(ctx, *vault.VaultId, *vault.TotalShares); err != nil {
 			panic(err)
@@ -28,8 +29,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 				panic(err)
 			}
 		}
-		if vault.VaultParams != nil {
-			if err := k.SetVaultParams(ctx, *vault.VaultId, *vault.VaultParams); err != nil {
+		if vault.QuotingParams != nil {
+			if err := k.SetVaultQuotingParams(ctx, *vault.VaultId, vault.QuotingParams); err != nil {
 				panic(err)
 			}
 		}
@@ -43,7 +44,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
 	// Export params.
-	genesis.Params = k.GetParams(ctx)
+	genesis.DefaultQuotingParams = k.GetDefaultQuotingParams(ctx)
 
 	// Export vaults.
 	genesis.Vaults = k.GetAllVaults(ctx)

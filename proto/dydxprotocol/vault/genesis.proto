@@ -24,8 +24,8 @@ message Vault {
   NumShares total_shares = 2;
   // The shares of each owner in the vault.
   repeated OwnerShare owner_shares = 3;
-  // The individual parameters of the vault.
-  VaultParams vault_params = 4;
+  // The quoting parameters of the vault.
+  QuotingParams quoting_params = 4;
   // The client IDs of the most recently placed orders of the vault.
   repeated uint32 most_recent_client_ids = 5;
 }

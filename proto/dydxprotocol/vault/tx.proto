@@ -16,7 +16,8 @@ service Msg {
   rpc DepositToVault(MsgDepositToVault) returns (MsgDepositToVaultResponse);
 
   // UpdateDefaultQuotingParams updates the default quoting params in state.
-  rpc UpdateDefaultQuotingParams(MsgUpdateDefaultQuotingParams) returns (MsgUpdateDefaultQuotingParamsResponse);
+  rpc UpdateDefaultQuotingParams(MsgUpdateDefaultQuotingParams)
+      returns (MsgUpdateDefaultQuotingParamsResponse);
 }
 
 // MsgDepositToVault deposits the specified asset from the subaccount to the
@@ -44,7 +45,8 @@ message MsgDepositToVault {
 // MsgDepositToVaultResponse is the Msg/DepositToVault response type.
 message MsgDepositToVaultResponse {}
 
-// MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request type.
+// MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request
+// type.
 message MsgUpdateDefaultQuotingParams {
   // Authority is the address that controls the module.
   option (cosmos.msg.v1.signer) = "authority";
@@ -54,5 +56,6 @@ message MsgUpdateDefaultQuotingParams {
   QuotingParams default_quoting_params = 2 [ (gogoproto.nullable) = false ];
 }
 
-// MsgUpdateDefaultQuotingParamsResponse is the Msg/UpdateDefaultQuotingParams response type.
+// MsgUpdateDefaultQuotingParamsResponse is the Msg/UpdateDefaultQuotingParams
+// response type.
 message MsgUpdateDefaultQuotingParamsResponse {}

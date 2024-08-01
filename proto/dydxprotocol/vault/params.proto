@@ -38,9 +38,3 @@ message QuotingParams {
     (gogoproto.nullable) = false
   ];
 }
-
-// VaultParams stores individual parameters of a vault.
-message VaultParams {
-  // The quoting parameters specific to this vault.
-  QuotingParams quoting_params = 1 [ (gogoproto.nullable) = false ];
-}

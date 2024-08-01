@@ -1,6 +1,6 @@
 import { VaultId, VaultIdSDKType } from "./vault";
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
-import { Params, ParamsSDKType } from "./params";
+import { QuotingParams, QuotingParamsSDKType } from "./params";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
@@ -39,28 +39,40 @@ export interface MsgDepositToVaultResponse {}
 /** MsgDepositToVaultResponse is the Msg/DepositToVault response type. */
 
 export interface MsgDepositToVaultResponseSDKType {}
-/** MsgUpdateParams is the Msg/UpdateParams request type. */
+/**
+ * MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request
+ * type.
+ */
 
-export interface MsgUpdateParams {
+export interface MsgUpdateDefaultQuotingParams {
   authority: string;
-  /** The parameters to update. Each field must be set. */
+  /** The quoting parameters to update to. Every field must be set. */
 
-  params?: Params;
+  defaultQuotingParams?: QuotingParams;
 }
-/** MsgUpdateParams is the Msg/UpdateParams request type. */
+/**
+ * MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request
+ * type.
+ */
 
-export interface MsgUpdateParamsSDKType {
+export interface MsgUpdateDefaultQuotingParamsSDKType {
   authority: string;
-  /** The parameters to update. Each field must be set. */
+  /** The quoting parameters to update to. Every field must be set. */
 
-  params?: ParamsSDKType;
+  default_quoting_params?: QuotingParamsSDKType;
 }
-/** MsgUpdateParamsResponse is the Msg/UpdateParams response type. */
+/**
+ * MsgUpdateDefaultQuotingParamsResponse is the Msg/UpdateDefaultQuotingParams
+ * response type.
+ */
 
-export interface MsgUpdateParamsResponse {}
-/** MsgUpdateParamsResponse is the Msg/UpdateParams response type. */
+export interface MsgUpdateDefaultQuotingParamsResponse {}
+/**
+ * MsgUpdateDefaultQuotingParamsResponse is the Msg/UpdateDefaultQuotingParams
+ * response type.
+ */
 
-export interface MsgUpdateParamsResponseSDKType {}
+export interface MsgUpdateDefaultQuotingParamsResponseSDKType {}
 
 function createBaseMsgDepositToVault(): MsgDepositToVault {
   return {
@@ -161,30 +173,30 @@ export const MsgDepositToVaultResponse = {
 
 };
 
-function createBaseMsgUpdateParams(): MsgUpdateParams {
+function createBaseMsgUpdateDefaultQuotingParams(): MsgUpdateDefaultQuotingParams {
   return {
     authority: "",
-    params: undefined
+    defaultQuotingParams: undefined
   };
 }
 
-export const MsgUpdateParams = {
-  encode(message: MsgUpdateParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const MsgUpdateDefaultQuotingParams = {
+  encode(message: MsgUpdateDefaultQuotingParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.authority !== "") {
       writer.uint32(10).string(message.authority);
     }
 
-    if (message.params !== undefined) {
-      Params.encode(message.params, writer.uint32(18).fork()).ldelim();
+    if (message.defaultQuotingParams !== undefined) {
+      QuotingParams.encode(message.defaultQuotingParams, writer.uint32(18).fork()).ldelim();
     }
 
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateParams {
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateDefaultQuotingParams {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgUpdateParams();
+    const message = createBaseMsgUpdateDefaultQuotingParams();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -195,7 +207,7 @@ export const MsgUpdateParams = {
           break;
 
         case 2:
-          message.params = Params.decode(reader, reader.uint32());
+          message.defaultQuotingParams = QuotingParams.decode(reader, reader.uint32());
           break;
 
         default:
@@ -207,28 +219,28 @@ export const MsgUpdateParams = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<MsgUpdateParams>): MsgUpdateParams {
-    const message = createBaseMsgUpdateParams();
+  fromPartial(object: DeepPartial<MsgUpdateDefaultQuotingParams>): MsgUpdateDefaultQuotingParams {
+    const message = createBaseMsgUpdateDefaultQuotingParams();
     message.authority = object.authority ?? "";
-    message.params = object.params !== undefined && object.params !== null ? Params.fromPartial(object.params) : undefined;
+    message.defaultQuotingParams = object.defaultQuotingParams !== undefined && object.defaultQuotingParams !== null ? QuotingParams.fromPartial(object.defaultQuotingParams) : undefined;
     return message;
   }
 
 };
 
-function createBaseMsgUpdateParamsResponse(): MsgUpdateParamsResponse {
+function createBaseMsgUpdateDefaultQuotingParamsResponse(): MsgUpdateDefaultQuotingParamsResponse {
   return {};
 }
 
-export const MsgUpdateParamsResponse = {
-  encode(_: MsgUpdateParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const MsgUpdateDefaultQuotingParamsResponse = {
+  encode(_: MsgUpdateDefaultQuotingParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateParamsResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateDefaultQuotingParamsResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgUpdateParamsResponse();
+    const message = createBaseMsgUpdateDefaultQuotingParamsResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -243,8 +255,8 @@ export const MsgUpdateParamsResponse = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<MsgUpdateParamsResponse>): MsgUpdateParamsResponse {
-    const message = createBaseMsgUpdateParamsResponse();
+  fromPartial(_: DeepPartial<MsgUpdateDefaultQuotingParamsResponse>): MsgUpdateDefaultQuotingParamsResponse {
+    const message = createBaseMsgUpdateDefaultQuotingParamsResponse();
     return message;
   }
 

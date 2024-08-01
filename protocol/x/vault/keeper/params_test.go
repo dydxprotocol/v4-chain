@@ -6,22 +6,21 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetSetParams(t *testing.T) {
+func TestGetSetDefaultQuotingParams(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.VaultKeeper
 
 	// Params should have default values at genesis.
-	params := k.GetParams(ctx)
-	require.Equal(t, types.DefaultParams(), params)
+	params := k.GetDefaultQuotingParams(ctx)
+	require.Equal(t, types.DefaultQuotingParams(), params)
 
 	// Set new params and get.
-	newParams := types.Params{
+	newParams := &types.QuotingParams{
 		Layers:                           3,
 		SpreadMinPpm:                     4_000,
 		SpreadBufferPpm:                  2_000,
@@ -30,12 +29,12 @@ func TestGetSetParams(t *testing.T) {
 		OrderExpirationSeconds:           10,
 		ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 	}
-	err := k.SetParams(ctx, newParams)
+	err := k.SetDefaultQuotingParams(ctx, newParams)
 	require.NoError(t, err)
-	require.Equal(t, newParams, k.GetParams(ctx))
+	require.Equal(t, newParams, k.GetDefaultQuotingParams(ctx))
 
 	// Set invalid params and get.
-	invalidParams := types.Params{
+	invalidParams := &types.QuotingParams{
 		Layers:                           3,
 		SpreadMinPpm:                     4_000,
 		SpreadBufferPpm:                  2_000,
@@ -44,37 +43,51 @@ func TestGetSetParams(t *testing.T) {
 		OrderExpirationSeconds:           0, // invalid
 		ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 	}
-	err = k.SetParams(ctx, invalidParams)
+	err = k.SetDefaultQuotingParams(ctx, invalidParams)
 	require.Error(t, err)
-	require.Equal(t, newParams, k.GetParams(ctx))
+	require.Equal(t, newParams, k.GetDefaultQuotingParams(ctx))
 }
 
-func TestGetSetVaultParams(t *testing.T) {
+func TestGetSetVaultQuotingParams(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.VaultKeeper
 
-	// Get non-existent vault params.
-	_, exists := k.GetVaultParams(ctx, constants.Vault_Clob0)
-	require.False(t, exists)
+	// Should get default quoting params.
+	quotingParams := k.GetVaultQuotingParams(ctx, constants.Vault_Clob0)
+	require.Equal(t, types.DefaultQuotingParams(), quotingParams)
 
-	// Set vault params of vault clob 0.
-	vaultClob0Params := types.VaultParams{
-		LaggedPrice: &pricestypes.MarketPrice{
-			Id:       uint32(0),
-			Exponent: -5,
-			Price:    123_456_789,
-		},
+	// Set quoting params of vault clob 0.
+	vaultClob0QuotingParams := &types.QuotingParams{
+		Layers:                           3,
+		SpreadMinPpm:                     12_345,
+		SpreadBufferPpm:                  5_678,
+		SkewFactorPpm:                    4_121_787,
+		OrderSizePctPpm:                  232_121,
+		OrderExpirationSeconds:           120,
+		ActivationThresholdQuoteQuantums: dtypes.NewInt(2_123_456_789),
 	}
-	err := k.SetVaultParams(ctx, constants.Vault_Clob0, vaultClob0Params)
+	err := k.SetVaultQuotingParams(ctx, constants.Vault_Clob0, vaultClob0QuotingParams)
 	require.NoError(t, err)
 
-	// Get vault params of vault clob 0.
-	params, exists := k.GetVaultParams(ctx, constants.Vault_Clob0)
-	require.True(t, exists)
-	require.Equal(t, vaultClob0Params, params)
+	// Get quoting params of vault clob 0.
+	quotingParams = k.GetVaultQuotingParams(ctx, constants.Vault_Clob0)
+	require.Equal(t, vaultClob0QuotingParams, quotingParams)
 
-	// Get vault params of vault clob 1.
-	_, exists = k.GetVaultParams(ctx, constants.Vault_Clob1)
-	require.False(t, exists)
+	// Set quoting params of vault clob 1.
+	vaultClob1QuotingParams := &types.QuotingParams{
+		Layers:                           4,
+		SpreadMinPpm:                     123_456,
+		SpreadBufferPpm:                  87_654,
+		SkewFactorPpm:                    5_432_111,
+		OrderSizePctPpm:                  444_333,
+		OrderExpirationSeconds:           90,
+		ActivationThresholdQuoteQuantums: dtypes.NewInt(1_111_111_111),
+	}
+	err = k.SetVaultQuotingParams(ctx, constants.Vault_Clob1, vaultClob1QuotingParams)
+	require.NoError(t, err)
+
+	// Get quoting params of vault clob 1.
+	quotingParams = k.GetVaultQuotingParams(ctx, constants.Vault_Clob1)
+	require.Equal(t, vaultClob1QuotingParams, quotingParams)
 }

@@ -292,9 +292,9 @@ func initializeVaultModuleParams(
 	ctx sdk.Context,
 	vaultKeeper vaulttypes.VaultKeeper,
 ) {
-	// Set vault module parameters to default values.
-	vaultParams := vaulttypes.DefaultParams()
-	if err := vaultKeeper.SetParams(ctx, vaultParams); err != nil {
+	// Set vault module quoting parameters to default values.
+	defaultQuotingParams := vaulttypes.DefaultQuotingParams()
+	if err := vaultKeeper.SetDefaultQuotingParams(ctx, defaultQuotingParams); err != nil {
 		panic(fmt.Sprintf("failed to set vault module parameters: %s", err))
 	}
 	ctx.Logger().Info("Successfully set vault module parameters")

@@ -17,5 +17,7 @@ func (k Keeper) Params(goCtx context.Context, req *types.QueryParamsRequest) (*t
 	}
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
-	return &types.QueryParamsResponse{Params: k.GetParams(ctx)}, nil
+	return &types.QueryParamsResponse{
+		DefaultQuotingParams: k.GetDefaultQuotingParams(ctx),
+	}, nil
 }

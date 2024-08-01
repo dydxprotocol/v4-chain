@@ -1,8 +1,8 @@
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
-/** Params stores `x/vault` parameters. */
+/** QuotingParams stores vault quoting parameters. */
 
-export interface Params {
+export interface QuotingParams {
   /**
    * The number of layers of orders a vault places. For example if
    * `layers=2`, a vault places 2 asks and 2 bids.
@@ -36,9 +36,9 @@ export interface Params {
 
   activationThresholdQuoteQuantums: Uint8Array;
 }
-/** Params stores `x/vault` parameters. */
+/** QuotingParams stores vault quoting parameters. */
 
-export interface ParamsSDKType {
+export interface QuotingParamsSDKType {
   /**
    * The number of layers of orders a vault places. For example if
    * `layers=2`, a vault places 2 asks and 2 bids.
@@ -73,7 +73,7 @@ export interface ParamsSDKType {
   activation_threshold_quote_quantums: Uint8Array;
 }
 
-function createBaseParams(): Params {
+function createBaseQuotingParams(): QuotingParams {
   return {
     layers: 0,
     spreadMinPpm: 0,
@@ -85,8 +85,8 @@ function createBaseParams(): Params {
   };
 }
 
-export const Params = {
-  encode(message: Params, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const QuotingParams = {
+  encode(message: QuotingParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.layers !== 0) {
       writer.uint32(8).uint32(message.layers);
     }
@@ -118,10 +118,10 @@ export const Params = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): Params {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QuotingParams {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseParams();
+    const message = createBaseQuotingParams();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -164,8 +164,8 @@ export const Params = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<Params>): Params {
-    const message = createBaseParams();
+  fromPartial(object: DeepPartial<QuotingParams>): QuotingParams {
+    const message = createBaseQuotingParams();
     message.layers = object.layers ?? 0;
     message.spreadMinPpm = object.spreadMinPpm ?? 0;
     message.spreadBufferPpm = object.spreadBufferPpm ?? 0;
