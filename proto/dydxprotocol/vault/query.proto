@@ -37,7 +37,9 @@ message QueryParamsRequest {}
 
 // QueryParamsResponse is a response type for the Params RPC method.
 message QueryParamsResponse {
-  QuotingParams default_quoting_params = 1 [ (gogoproto.nullable) = false ];
+  // Deprecated since v6.x in favor of default_quoting_params.
+  Params params = 1 [ (gogoproto.nullable) = false, deprecated = true ];
+  QuotingParams default_quoting_params = 2 [ (gogoproto.nullable) = false ];
 }
 
 // QueryVaultRequest is a request type for the Vault RPC method.

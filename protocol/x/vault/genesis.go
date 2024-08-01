@@ -30,7 +30,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			}
 		}
 		if vault.QuotingParams != nil {
-			if err := k.SetVaultQuotingParams(ctx, *vault.VaultId, vault.QuotingParams); err != nil {
+			if err := k.SetVaultQuotingParams(ctx, *vault.VaultId, *vault.QuotingParams); err != nil {
 				panic(err)
 			}
 		}

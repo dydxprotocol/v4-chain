@@ -1,4 +1,4 @@
-import { QuotingParams, QuotingParamsSDKType } from "./params";
+import { Params, ParamsSDKType, QuotingParams, QuotingParamsSDKType } from "./params";
 import { VaultId, VaultIdSDKType } from "./vault";
 import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType } from "./share";
 import * as _m0 from "protobufjs/minimal";
@@ -6,20 +6,36 @@ import { DeepPartial } from "../../helpers";
 /** GenesisState defines `x/vault`'s genesis state. */
 
 export interface GenesisState {
-  /** The default quoting parameters for all vaults. */
-  defaultQuotingParams?: QuotingParams;
+  /**
+   * The parameters of the module.
+   * Deprecated since v6.x in favor of default_quoting_params.
+   */
+
+  /** @deprecated */
+  params?: Params;
   /** The vaults. */
 
   vaults: Vault[];
+  /** The default quoting parameters for all vaults. */
+
+  defaultQuotingParams?: QuotingParams;
 }
 /** GenesisState defines `x/vault`'s genesis state. */
 
 export interface GenesisStateSDKType {
-  /** The default quoting parameters for all vaults. */
-  default_quoting_params?: QuotingParamsSDKType;
+  /**
+   * The parameters of the module.
+   * Deprecated since v6.x in favor of default_quoting_params.
+   */
+
+  /** @deprecated */
+  params?: ParamsSDKType;
   /** The vaults. */
 
   vaults: VaultSDKType[];
+  /** The default quoting parameters for all vaults. */
+
+  default_quoting_params?: QuotingParamsSDKType;
 }
 /** Vault defines the total shares and owner shares of a vault. */
 
@@ -60,19 +76,24 @@ export interface VaultSDKType {
 
 function createBaseGenesisState(): GenesisState {
   return {
-    defaultQuotingParams: undefined,
-    vaults: []
+    params: undefined,
+    vaults: [],
+    defaultQuotingParams: undefined
   };
 }
 
 export const GenesisState = {
   encode(message: GenesisState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.defaultQuotingParams !== undefined) {
-      QuotingParams.encode(message.defaultQuotingParams, writer.uint32(10).fork()).ldelim();
+    if (message.params !== undefined) {
+      Params.encode(message.params, writer.uint32(10).fork()).ldelim();
     }
 
     for (const v of message.vaults) {
       Vault.encode(v!, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.defaultQuotingParams !== undefined) {
+      QuotingParams.encode(message.defaultQuotingParams, writer.uint32(26).fork()).ldelim();
     }
 
     return writer;
@@ -88,11 +109,15 @@ export const GenesisState = {
 
       switch (tag >>> 3) {
         case 1:
-          message.defaultQuotingParams = QuotingParams.decode(reader, reader.uint32());
+          message.params = Params.decode(reader, reader.uint32());
           break;
 
         case 2:
           message.vaults.push(Vault.decode(reader, reader.uint32()));
+          break;
+
+        case 3:
+          message.defaultQuotingParams = QuotingParams.decode(reader, reader.uint32());
           break;
 
         default:
@@ -106,8 +131,9 @@ export const GenesisState = {
 
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = createBaseGenesisState();
-    message.defaultQuotingParams = object.defaultQuotingParams !== undefined && object.defaultQuotingParams !== null ? QuotingParams.fromPartial(object.defaultQuotingParams) : undefined;
+    message.params = object.params !== undefined && object.params !== null ? Params.fromPartial(object.params) : undefined;
     message.vaults = object.vaults?.map(e => Vault.fromPartial(e)) || [];
+    message.defaultQuotingParams = object.defaultQuotingParams !== undefined && object.defaultQuotingParams !== null ? QuotingParams.fromPartial(object.defaultQuotingParams) : undefined;
     return message;
   }
 

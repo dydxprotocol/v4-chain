@@ -1,6 +1,6 @@
 import { VaultType, VaultTypeSDKType, VaultId, VaultIdSDKType } from "./vault";
 import { PageRequest, PageRequestSDKType, PageResponse, PageResponseSDKType } from "../../cosmos/base/query/v1beta1/pagination";
-import { QuotingParams, QuotingParamsSDKType } from "./params";
+import { Params, ParamsSDKType, QuotingParams, QuotingParamsSDKType } from "./params";
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
 import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType } from "./share";
 import * as _m0 from "protobufjs/minimal";
@@ -14,11 +14,19 @@ export interface QueryParamsRequestSDKType {}
 /** QueryParamsResponse is a response type for the Params RPC method. */
 
 export interface QueryParamsResponse {
+  /** Deprecated since v6.x in favor of default_quoting_params. */
+
+  /** @deprecated */
+  params?: Params;
   defaultQuotingParams?: QuotingParams;
 }
 /** QueryParamsResponse is a response type for the Params RPC method. */
 
 export interface QueryParamsResponseSDKType {
+  /** Deprecated since v6.x in favor of default_quoting_params. */
+
+  /** @deprecated */
+  params?: ParamsSDKType;
   default_quoting_params?: QuotingParamsSDKType;
 }
 /** QueryVaultRequest is a request type for the Vault RPC method. */
@@ -136,14 +144,19 @@ export const QueryParamsRequest = {
 
 function createBaseQueryParamsResponse(): QueryParamsResponse {
   return {
+    params: undefined,
     defaultQuotingParams: undefined
   };
 }
 
 export const QueryParamsResponse = {
   encode(message: QueryParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.params !== undefined) {
+      Params.encode(message.params, writer.uint32(10).fork()).ldelim();
+    }
+
     if (message.defaultQuotingParams !== undefined) {
-      QuotingParams.encode(message.defaultQuotingParams, writer.uint32(10).fork()).ldelim();
+      QuotingParams.encode(message.defaultQuotingParams, writer.uint32(18).fork()).ldelim();
     }
 
     return writer;
@@ -159,6 +172,10 @@ export const QueryParamsResponse = {
 
       switch (tag >>> 3) {
         case 1:
+          message.params = Params.decode(reader, reader.uint32());
+          break;
+
+        case 2:
           message.defaultQuotingParams = QuotingParams.decode(reader, reader.uint32());
           break;
 
@@ -173,6 +190,7 @@ export const QueryParamsResponse = {
 
   fromPartial(object: DeepPartial<QueryParamsResponse>): QueryParamsResponse {
     const message = createBaseQueryParamsResponse();
+    message.params = object.params !== undefined && object.params !== null ? Params.fromPartial(object.params) : undefined;
     message.defaultQuotingParams = object.defaultQuotingParams !== undefined && object.defaultQuotingParams !== null ? QuotingParams.fromPartial(object.defaultQuotingParams) : undefined;
     return message;
   }

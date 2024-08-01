@@ -904,7 +904,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			// Set vault quoting parameters.
-			err := tApp.App.VaultKeeper.SetVaultQuotingParams(ctx, tc.vaultId, &tc.vaultQuotingParams)
+			err := tApp.App.VaultKeeper.SetVaultQuotingParams(ctx, tc.vaultId, tc.vaultQuotingParams)
 			require.NoError(t, err)
 
 			// Get vault orders.
@@ -1012,7 +1012,7 @@ func TestGetVaultClobOrderIds(t *testing.T) {
 			// Set number of layers.
 			quotingParams := k.GetVaultQuotingParams(ctx, tc.vaultId)
 			quotingParams.Layers = tc.layers
-			err := k.SetVaultQuotingParams(ctx, tc.vaultId, &quotingParams)
+			err := k.SetVaultQuotingParams(ctx, tc.vaultId, quotingParams)
 			require.NoError(t, err)
 
 			// Construct expected order IDs.

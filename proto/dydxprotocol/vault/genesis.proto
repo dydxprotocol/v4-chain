@@ -10,10 +10,13 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
 // GenesisState defines `x/vault`'s genesis state.
 message GenesisState {
-  // The default quoting parameters for all vaults.
-  QuotingParams default_quoting_params = 1 [ (gogoproto.nullable) = false ];
+  // The parameters of the module.
+  // Deprecated since v6.x in favor of default_quoting_params.
+  Params params = 1 [ (gogoproto.nullable) = false, deprecated = true ];
   // The vaults.
   repeated Vault vaults = 2;
+  // The default quoting parameters for all vaults.
+  QuotingParams default_quoting_params = 3 [ (gogoproto.nullable) = false ];
 }
 
 // Vault defines the total shares and owner shares of a vault.

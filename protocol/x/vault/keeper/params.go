@@ -59,13 +59,13 @@ func (k Keeper) GetVaultQuotingParams(
 func (k Keeper) SetVaultQuotingParams(
 	ctx sdk.Context,
 	vaultId types.VaultId,
-	qoutingParams *types.QuotingParams,
+	qoutingParams types.QuotingParams,
 ) error {
 	if err := qoutingParams.Validate(); err != nil {
 		return err
 	}
 
-	b := k.cdc.MustMarshal(qoutingParams)
+	b := k.cdc.MustMarshal(&qoutingParams)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.QuotingParamsKeyPrefix))
 	store.Set(vaultId.ToStateKey(), b)
 
