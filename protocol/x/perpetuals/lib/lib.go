@@ -36,9 +36,9 @@ func GetSettlementPpmWithPerpetual(
 	return result, fundingIndex
 }
 
-// GetNetCollateralAndMarginRequirements returns the net collateral, initial margin requirement,
+// GetPositionNetNotionalValueAndMarginRequirements returns the net collateral, initial margin requirement,
 // and maintenance margin requirement in quote quantums, given the position size in base quantums.
-func GetNetCollateralAndMarginRequirements(
+func GetPositionNetNotionalValueAndMarginRequirements(
 	perpetual types.Perpetual,
 	marketPrice pricestypes.MarketPrice,
 	liquidityTier types.LiquidityTier,
@@ -62,6 +62,27 @@ func GetNetCollateralAndMarginRequirements(
 		IMR: imr,
 		MMR: mmr,
 	}
+}
+
+// GetNetCollateralAndMarginRequirements returns the net collateral, initial margin requirement,
+// and maintenance margin requirement in quote quantums, given the position size in base quantums.
+func GetNetCollateralAndMarginRequirements(
+	perpetual types.Perpetual,
+	marketPrice pricestypes.MarketPrice,
+	liquidityTier types.LiquidityTier,
+	quantums *big.Int,
+	quoteBalance *big.Int,
+) (
+	risk margin.Risk,
+) {
+	risk = GetPositionNetNotionalValueAndMarginRequirements(
+		perpetual,
+		marketPrice,
+		liquidityTier,
+		quantums,
+	)
+	risk.NC.Add(risk.NC, quoteBalance)
+	return risk
 }
 
 // GetNetNotionalInQuoteQuantums returns the net notional in quote quantums, which can be

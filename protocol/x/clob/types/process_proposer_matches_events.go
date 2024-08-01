@@ -23,9 +23,9 @@ func (ppme *ProcessProposerMatchesEvents) ValidateProcessProposerMatchesEvents(
 		)
 	}
 
-	if lib.ContainsDuplicates(ppme.PlacedLongTermOrderIds) {
+	if ppme.PlacedLongTermOrderIds != nil {
 		return fmt.Errorf(
-			"ProcessProposerMatchesEvents contains duplicate PlacedLongTermOrderIds: %+v",
+			"ProcessProposerMatchesEvents has set deprecated field PlacedLongTermOrderIds: %+v",
 			ppme.PlacedLongTermOrderIds,
 		)
 	}
@@ -41,9 +41,9 @@ func (ppme *ProcessProposerMatchesEvents) ValidateProcessProposerMatchesEvents(
 			ppme.OrderIdsFilledInLastBlock,
 		)
 	}
-	if lib.ContainsDuplicates(ppme.PlacedStatefulCancellationOrderIds) {
+	if ppme.PlacedStatefulCancellationOrderIds != nil {
 		return fmt.Errorf(
-			"ProcessProposerMatchesEvents contains duplicate PlacedStatefulCancellationOrderIds: %+v",
+			"ProcessProposerMatchesEvents has set deprecated field PlacedStatefulCancellationOrderIds: %+v",
 			ppme.PlacedStatefulCancellationOrderIds,
 		)
 	}
@@ -59,9 +59,9 @@ func (ppme *ProcessProposerMatchesEvents) ValidateProcessProposerMatchesEvents(
 			ppme.ConditionalOrderIdsTriggeredInLastBlock,
 		)
 	}
-	if lib.ContainsDuplicates(ppme.PlacedConditionalOrderIds) {
+	if ppme.PlacedConditionalOrderIds != nil {
 		return fmt.Errorf(
-			"ProcessProposerMatchesEvents contains duplicate PlacedConditionalOrderIds: %+v",
+			"ProcessProposerMatchesEvents has set deprecated field PlacedConditionalOrderIds: %+v",
 			ppme.PlacedConditionalOrderIds,
 		)
 	}

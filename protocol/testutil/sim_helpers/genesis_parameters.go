@@ -85,12 +85,12 @@ var (
 	}
 
 	MinMinExchangesPerMarket = GenesisParameters[int]{
-		Reasonable: 3,
+		Reasonable: 2,
 		Valid:      1,
 	}
 	MaxMinExchangesPerMarket = GenesisParameters[int]{
-		Reasonable: 5,
-		Valid:      100,
+		Reasonable: 3,
+		Valid:      6,
 	}
 
 	MinMarketExponent = GenesisParameters[int]{
@@ -98,8 +98,8 @@ var (
 		Valid:      -10,
 	}
 	MaxMarketExponent = GenesisParameters[int]{
-		Reasonable: 0,
-		Valid:      10,
+		Reasonable: -5,
+		Valid:      -1,
 	}
 	MinMarketPrice = GenesisParameters[int]{
 		Reasonable: 10_000,

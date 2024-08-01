@@ -11,11 +11,13 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	statskeeper "github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
+	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 )
 
 func createFeeTiersKeeper(
 	stateStore storetypes.CommitMultiStore,
 	statsKeeper *statskeeper.Keeper,
+	vaultKeeper *vaultkeeper.Keeper,
 	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 ) (*keeper.Keeper, storetypes.StoreKey) {
@@ -35,6 +37,7 @@ func createFeeTiersKeeper(
 		storeKey,
 		authorities,
 	)
+	k.SetVaultKeeper(vaultKeeper)
 
 	return k, storeKey
 }

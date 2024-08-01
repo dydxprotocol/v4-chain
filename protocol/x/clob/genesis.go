@@ -47,6 +47,7 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	}
 
 	k.InitializeProcessProposerMatchesEvents(ctx)
+	k.ResetAllDeliveredOrderIds(ctx)
 }
 
 // ExportGenesis returns the capability module's exported genesis.

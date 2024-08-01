@@ -1,6 +1,7 @@
 import {
   isRestrictedCountryHeaders,
   CountryHeaders,
+  isWhitelistedAddress,
 } from '../../src/geoblocking/restrict-countries';
 import * as util from '../../src/geoblocking/util';
 import config from '../../src/config';
@@ -45,5 +46,19 @@ describe('isRestrictedCountryHeaders', () => {
 
   it('does reject empty headers', () => {
     expect(isRestrictedCountryHeaders({})).toEqual(true);
+  });
+});
+
+describe('isWhitelistedAddress', () => {
+  it('returns true if address is whitelisted', () => {
+    config.WHITELISTED_ADDRESSES = '0x123,0x456';
+
+    expect(isWhitelistedAddress('0x123')).toEqual(true);
+  });
+
+  it('returns false if address is not whitelisted', () => {
+    config.WHITELISTED_ADDRESSES = '0x123,0x456';
+
+    expect(isWhitelistedAddress('0x789')).toEqual(false);
   });
 });

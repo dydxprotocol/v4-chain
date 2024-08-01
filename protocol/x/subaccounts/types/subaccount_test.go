@@ -129,10 +129,12 @@ func TestSubaccount_GetPerpetualPositionForId(t *testing.T) {
 			0,
 			big.NewInt(100),
 			big.NewInt(0),
+			big.NewInt(0),
 		),
 		testutil.CreateSinglePerpetualPosition(
 			1,
 			big.NewInt(100),
+			big.NewInt(0),
 			big.NewInt(0),
 		),
 	}

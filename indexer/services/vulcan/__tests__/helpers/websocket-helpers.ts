@@ -4,22 +4,19 @@ import { IHeaders, ProducerRecord } from 'kafkajs';
 
 export function expectWebsocketSubaccountMessage(
   subaccountProducerRecord: ProducerRecord,
-  expectedSubaccountMessages: Array<SubaccountMessage>,
+  expectedSubaccountMessage: SubaccountMessage,
   expectedHeaders: IHeaders,
 ): void {
   expect(subaccountProducerRecord.topic).toEqual(KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
-  for (let i = 0; i < subaccountProducerRecord.messages.length; i++) {
-    const subaccountProducerMessage = subaccountProducerRecord.messages[i];
-    const subaccountMessageValueBinary: Uint8Array = new Uint8Array(
-      subaccountProducerMessage.value as Buffer,
-    );
-    const headers: IHeaders | undefined = subaccountProducerMessage.headers;
-    const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(
-      subaccountMessageValueBinary,
-    );
-    expect(headers).toEqual(expectedHeaders);
-    expect(subaccountMessage).toEqual(expectedSubaccountMessages[i]);
-  }
+  const subaccountMessageValueBinary: Uint8Array = new Uint8Array(
+    subaccountProducerRecord.messages[0].value as Buffer,
+  );
+  const headers: IHeaders | undefined = subaccountProducerRecord.messages[0].headers;
+  const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(
+    subaccountMessageValueBinary,
+  );
+  expect(headers).toEqual(expectedHeaders);
+  expect(subaccountMessage).toEqual(expectedSubaccountMessage);
 }
 
 export function expectWebsocketOrderbookMessage(

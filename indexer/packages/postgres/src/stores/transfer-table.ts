@@ -431,6 +431,44 @@ export async function getNetTransfersPerSubaccount(
   return convertToSubaccountAssetMap(assetsPerSubaccount);
 }
 
+export async function getNetTransfersBetweenSubaccountIds(
+  sourceSubaccountId: string,
+  recipientSubaccountId: string,
+  assetId: string,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<string> {
+  const queryString: string = `
+  SELECT 
+    COALESCE(SUM(sub."size"), '0') AS "totalSize"
+  FROM (
+    SELECT DISTINCT 
+      "size" AS "size",
+      "id"
+    FROM 
+      "transfers"
+    WHERE "transfers"."assetId" = '${assetId}'
+    AND "transfers"."senderSubaccountId" = '${sourceSubaccountId}'
+    AND "transfers"."recipientSubaccountId" = '${recipientSubaccountId}'
+    UNION 
+    SELECT DISTINCT 
+      -"size" AS "size",
+      "id"
+    FROM 
+      "transfers"
+    WHERE "transfers"."assetId" = '${assetId}'
+    AND "transfers"."senderSubaccountId" = '${recipientSubaccountId}'
+    AND "transfers"."recipientSubaccountId" = '${sourceSubaccountId}'
+  ) AS sub
+  `;
+
+  const result: {
+    rows: { totalSize: string }[],
+  } = await rawQuery(queryString, options);
+
+  // Should only ever return a single row
+  return result.rows[0].totalSize;
+}
+
 export async function create(
   transferToCreate: TransferCreateObject,
   options: Options = { txId: undefined },

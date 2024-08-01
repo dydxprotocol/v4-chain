@@ -98,7 +98,7 @@ describe('Compliance status store', () => {
 
     const complianceStatus: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll(
       {
-        status: ComplianceStatus.COMPLIANT,
+        status: [ComplianceStatus.COMPLIANT],
       },
       [],
       { readReplica: true },

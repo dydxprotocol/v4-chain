@@ -457,12 +457,14 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 						0,
 						big.NewInt(-50_000_000), // .5 BTC
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Dave_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(50_000_000), // .5 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -811,12 +813,14 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 						0,
 						big.NewInt(-50_000_000), // .5 BTC
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Dave_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(50_000_000), // .5 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -903,12 +907,14 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 						0,
 						big.NewInt(-50_000_000), // .5 BTC
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Dave_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(50_000_000), // .5 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},

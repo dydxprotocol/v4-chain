@@ -16,12 +16,17 @@ import { DeepPartial } from "../../helpers";
  */
 
 export interface ProcessProposerMatchesEvents {
+  /** @deprecated */
   placedLongTermOrderIds: OrderId[];
   expiredStatefulOrderIds: OrderId[];
   orderIdsFilledInLastBlock: OrderId[];
+  /** @deprecated */
+
   placedStatefulCancellationOrderIds: OrderId[];
   removedStatefulOrderIds: OrderId[];
   conditionalOrderIdsTriggeredInLastBlock: OrderId[];
+  /** @deprecated */
+
   placedConditionalOrderIds: OrderId[];
   blockHeight: number;
 }
@@ -40,12 +45,17 @@ export interface ProcessProposerMatchesEvents {
  */
 
 export interface ProcessProposerMatchesEventsSDKType {
+  /** @deprecated */
   placed_long_term_order_ids: OrderIdSDKType[];
   expired_stateful_order_ids: OrderIdSDKType[];
   order_ids_filled_in_last_block: OrderIdSDKType[];
+  /** @deprecated */
+
   placed_stateful_cancellation_order_ids: OrderIdSDKType[];
   removed_stateful_order_ids: OrderIdSDKType[];
   conditional_order_ids_triggered_in_last_block: OrderIdSDKType[];
+  /** @deprecated */
+
   placed_conditional_order_ids: OrderIdSDKType[];
   block_height: number;
 }

@@ -1,9 +1,10 @@
 package app_test
 
 import (
+	"testing"
+
 	"cosmossdk.io/store/rootmulti"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
@@ -22,9 +23,12 @@ func newHandlerOptions() app.HandlerOptions {
 			FeegrantKeeper:  dydxApp.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
-		ClobKeeper:   dydxApp.ClobKeeper,
-		Codec:        encodingConfig.Codec,
-		AuthStoreKey: dydxApp.CommitMultiStore().(*rootmulti.Store).StoreKeysByName()[authtypes.StoreKey],
+		AccountplusKeeper: &dydxApp.AccountPlusKeeper,
+		ClobKeeper:        dydxApp.ClobKeeper,
+		Codec:             encodingConfig.Codec,
+		AuthStoreKey:      dydxApp.CommitMultiStore().(*rootmulti.Store).StoreKeysByName()[authtypes.StoreKey],
+		PerpetualsKeeper:  dydxApp.PerpetualsKeeper,
+		PricesKeeper:      dydxApp.PricesKeeper,
 	}
 }
 
@@ -47,6 +51,14 @@ func TestNewAnteHandler_Error(t *testing.T) {
 		"nil handlerOptions.BankKeeper": {
 			handlerMutation: func(options *app.HandlerOptions) { options.BankKeeper = nil },
 			errorMsg:        "bank keeper is required for ante builder",
+		},
+		"nil PerpetualsKeeper": {
+			handlerMutation: func(options *app.HandlerOptions) { options.PerpetualsKeeper = nil },
+			errorMsg:        "perpetuals keeper is required for ante builder",
+		},
+		"nil PricesKeeper": {
+			handlerMutation: func(options *app.HandlerOptions) { options.PricesKeeper = nil },
+			errorMsg:        "prices keeper is required for ante builder",
 		},
 		"nil handlerOptions.SignModeHandler": {
 			handlerMutation: func(options *app.HandlerOptions) { options.SignModeHandler = nil },

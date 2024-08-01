@@ -271,6 +271,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 							0,
 							big.NewInt(-75_000_000), // -0.75 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},

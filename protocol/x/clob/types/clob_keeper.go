@@ -2,7 +2,6 @@ package types
 
 import (
 	"math/big"
-	"time"
 
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,7 +42,6 @@ type ClobKeeper interface {
 	HandleMsgCancelOrder(
 		ctx sdk.Context,
 		msg *MsgCancelOrder,
-		isInternalOrder bool,
 	) (err error)
 	HandleMsgPlaceOrder(
 		ctx sdk.Context,
@@ -103,20 +101,9 @@ type ClobKeeper interface {
 		orderId OrderId,
 	)
 	RemoveOrderFillAmount(ctx sdk.Context, orderId OrderId)
-	MustAddOrderToStatefulOrdersTimeSlice(
-		ctx sdk.Context,
-		goodTilBlockTime time.Time,
-		orderId OrderId,
-	)
-	GetStatefulOrdersTimeSlice(ctx sdk.Context, goodTilBlockTime time.Time) (
-		orderIds []OrderId,
-	)
 	MustRemoveStatefulOrder(
 		ctx sdk.Context,
 		orderId OrderId,
-	)
-	RemoveExpiredStatefulOrdersTimeSlices(ctx sdk.Context, blockTime time.Time) (
-		expiredOrderIds []OrderId,
 	)
 	GetProcessProposerMatchesEvents(ctx sdk.Context) ProcessProposerMatchesEvents
 	MustSetProcessProposerMatchesEvents(
@@ -149,12 +136,15 @@ type ClobKeeper interface {
 		clobPair ClobPair,
 	) error
 	UpdateLiquidationsConfig(ctx sdk.Context, config LiquidationsConfig) error
-	// Gprc streaming
-	InitializeNewGrpcStreams(ctx sdk.Context)
+	// full node streaming
+	InitializeNewStreams(ctx sdk.Context)
 	SendOrderbookUpdates(
 		ctx sdk.Context,
 		offchainUpdates *OffchainUpdates,
 	)
 	MigratePruneableOrders(ctx sdk.Context)
 	GetAllStatefulOrders(ctx sdk.Context) []Order
+	ResetAllDeliveredOrderIds(ctx sdk.Context)
+	// Migrate order expiration state (for upgrading to 5.2 only)
+	UnsafeMigrateOrderExpirationState(ctx sdk.Context)
 }

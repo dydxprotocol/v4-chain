@@ -34,6 +34,9 @@ export interface Vault {
   /** The individual parameters of the vault. */
 
   vaultParams?: VaultParams;
+  /** The client IDs of the most recently placed orders of the vault. */
+
+  mostRecentClientIds: number[];
 }
 /** Vault defines the total shares and owner shares of a vault. */
 
@@ -49,6 +52,9 @@ export interface VaultSDKType {
   /** The individual parameters of the vault. */
 
   vault_params?: VaultParamsSDKType;
+  /** The client IDs of the most recently placed orders of the vault. */
+
+  most_recent_client_ids: number[];
 }
 
 function createBaseGenesisState(): GenesisState {
@@ -111,7 +117,8 @@ function createBaseVault(): Vault {
     vaultId: undefined,
     totalShares: undefined,
     ownerShares: [],
-    vaultParams: undefined
+    vaultParams: undefined,
+    mostRecentClientIds: []
   };
 }
 
@@ -133,6 +140,13 @@ export const Vault = {
       VaultParams.encode(message.vaultParams, writer.uint32(34).fork()).ldelim();
     }
 
+    writer.uint32(42).fork();
+
+    for (const v of message.mostRecentClientIds) {
+      writer.uint32(v);
+    }
+
+    writer.ldelim();
     return writer;
   },
 
@@ -161,6 +175,19 @@ export const Vault = {
           message.vaultParams = VaultParams.decode(reader, reader.uint32());
           break;
 
+        case 5:
+          if ((tag & 7) === 2) {
+            const end2 = reader.uint32() + reader.pos;
+
+            while (reader.pos < end2) {
+              message.mostRecentClientIds.push(reader.uint32());
+            }
+          } else {
+            message.mostRecentClientIds.push(reader.uint32());
+          }
+
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -176,6 +203,7 @@ export const Vault = {
     message.totalShares = object.totalShares !== undefined && object.totalShares !== null ? NumShares.fromPartial(object.totalShares) : undefined;
     message.ownerShares = object.ownerShares?.map(e => OwnerShare.fromPartial(e)) || [];
     message.vaultParams = object.vaultParams !== undefined && object.vaultParams !== null ? VaultParams.fromPartial(object.vaultParams) : undefined;
+    message.mostRecentClientIds = object.mostRecentClientIds?.map(e => e) || [];
     return message;
   }
 

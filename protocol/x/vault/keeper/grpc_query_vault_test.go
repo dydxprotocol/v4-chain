@@ -103,6 +103,7 @@ func TestVault(t *testing.T) {
 										tc.perpId,
 										tc.inventory,
 										big.NewInt(0),
+										big.NewInt(0),
 									),
 								},
 							},
@@ -129,7 +130,7 @@ func TestVault(t *testing.T) {
 					SubaccountId: *tc.vaultId.ToSubaccountId(),
 					Equity:       dtypes.NewIntFromBigInt(tc.expectedEquity),
 					Inventory:    dtypes.NewIntFromBigInt(tc.inventory),
-					TotalShares:  tc.totalShares.Uint64(),
+					TotalShares:  vaulttypes.BigIntToNumShares(tc.totalShares),
 				}
 				require.Equal(t, expectedResponse, *response)
 			}
@@ -220,6 +221,7 @@ func TestAllVaults(t *testing.T) {
 									testutil.CreateSinglePerpetualPosition(
 										tc.perpIds[i],
 										tc.inventories[i],
+										big.NewInt(0),
 										big.NewInt(0),
 									),
 								},

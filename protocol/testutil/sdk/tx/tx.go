@@ -2,6 +2,7 @@ package tx
 
 import (
 	"context"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -18,10 +19,12 @@ func CreateTestTx(
 	accSeqs []uint64,
 	chainID string,
 	msgs []sdk.Msg,
+	timeoutHeight uint64,
 ) (xauthsigning.Tx, error) {
 	encodingConfig := app.GetEncodingConfig()
 	clientCtx := client.Context{}.WithTxConfig(encodingConfig.TxConfig)
 	txBuilder := clientCtx.TxConfig.NewTxBuilder()
+	txBuilder.SetTimeoutHeight(timeoutHeight)
 	err := txBuilder.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err

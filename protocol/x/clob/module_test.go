@@ -33,6 +33,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	prices_keeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	marketmap_keeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -59,7 +60,7 @@ func getValidGenesisStr() string {
 }
 
 func createAppModule(t *testing.T) clob.AppModule {
-	am, _, _, _, _, _ := createAppModuleWithKeeper(t)
+	am, _, _, _, _, _, _ := createAppModuleWithKeeper(t)
 	return am
 }
 
@@ -71,6 +72,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 	*clob_keeper.Keeper,
 	*prices_keeper.Keeper,
 	*perp_keeper.Keeper,
+	*marketmap_keeper.Keeper,
 	sdk.Context,
 	*mocks.IndexerEventManager,
 ) {
@@ -99,7 +101,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 		nil,
 		nil,
 		nil,
-	), ks.ClobKeeper, ks.PricesKeeper, ks.PerpetualsKeeper, ks.Ctx, mockIndexerEventManager
+	), ks.ClobKeeper, ks.PricesKeeper, ks.PerpetualsKeeper, ks.MarketMapKeeper, ks.Ctx, mockIndexerEventManager
 }
 
 func createAppModuleBasic(t *testing.T) clob.AppModuleBasic {
@@ -284,7 +286,7 @@ func TestAppModule_RegisterServices(t *testing.T) {
 }
 
 func TestAppModule_InitExportGenesis(t *testing.T) {
-	am, keeper, pricesKeeper, perpetualsKeeper, ctx, mockIndexerEventManager := createAppModuleWithKeeper(t)
+	am, keeper, pricesKeeper, perpetualsKeeper, marketMapKeeper, ctx, mockIndexerEventManager := createAppModuleWithKeeper(t) //nolint:lll
 	ctx = ctx.WithBlockTime(constants.TimeT)
 	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	gs := json.RawMessage(getValidGenesisStr())
@@ -312,6 +314,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 		),
 	).Once().Return()
 
+	marketMapKeeper.InitGenesis(ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ctx, *pricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ctx, *perpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -444,7 +447,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 }
 
 func TestAppModule_InitGenesisPanic(t *testing.T) {
-	am, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
+	am, _, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
 	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	gs := json.RawMessage(`invalid json`)
 
@@ -457,13 +460,13 @@ func TestAppModule_ConsensusVersion(t *testing.T) {
 }
 
 func TestAppModule_BeginBlock(t *testing.T) {
-	am, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
+	am, _, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
 
 	require.NoError(t, am.BeginBlock(ctx)) // should not panic
 }
 
 func TestAppModule_EndBlock(t *testing.T) {
-	am, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
+	am, _, _, _, _, ctx, _ := createAppModuleWithKeeper(t)
 	ctx = ctx.WithBlockTime(constants.TimeT)
 
 	require.NoError(t, am.EndBlock(ctx))

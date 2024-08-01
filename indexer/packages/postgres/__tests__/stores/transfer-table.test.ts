@@ -33,6 +33,7 @@ import {
 import Big from 'big.js';
 import { CheckViolationError } from 'objection';
 import { DateTime } from 'luxon';
+import { USDC_ASSET_ID } from '../../src';
 
 describe('Transfer store', () => {
   beforeEach(async () => {
@@ -607,5 +608,55 @@ describe('Transfer store', () => {
 
     expect(transferTimes[defaultSubaccountId]).toEqual(defaultTransfer.createdAt);
     expect(transferTimes[defaultSubaccountId2]).toEqual(defaultTransfer.createdAt);
+  });
+
+  describe('getNetTransfersBetweenSubaccountIds', () => {
+    it('Successfully gets total net Transfers between two subaccounts', async () => {
+      await Promise.all([
+        TransferTable.create({
+          ...defaultTransfer,
+          size: '20',
+        }),
+        TransferTable.create({
+          ...defaultTransfer,
+          size: '30',
+          eventId: defaultTendermintEventId2,
+        }),
+        TransferTable.create({
+          ...defaultTransfer,
+          senderSubaccountId: defaultSubaccountId2,
+          recipientSubaccountId: defaultSubaccountId,
+          size: '10',
+          eventId: defaultTendermintEventId3,
+        }),
+      ]);
+
+      const netTransfers: string = await TransferTable.getNetTransfersBetweenSubaccountIds(
+        defaultSubaccountId,
+        defaultSubaccountId2,
+        USDC_ASSET_ID,
+      );
+
+      expect(netTransfers).toEqual('40'); // 20 + 30 - 10
+
+      // Test the other way around
+      const negativeNetTransfers: string = await TransferTable.getNetTransfersBetweenSubaccountIds(
+        defaultSubaccountId2,
+        defaultSubaccountId,
+        USDC_ASSET_ID,
+      );
+
+      expect(negativeNetTransfers).toEqual('-40'); // 10 - 20 - 30
+    });
+
+    it('Successfully gets total net Transfers between two subaccounts with no transfers', async () => {
+      const netTransfers: string = await TransferTable.getNetTransfersBetweenSubaccountIds(
+        defaultSubaccountId,
+        defaultSubaccountId2,
+        USDC_ASSET_ID,
+      );
+
+      expect(netTransfers).toEqual('0');
+    });
   });
 });

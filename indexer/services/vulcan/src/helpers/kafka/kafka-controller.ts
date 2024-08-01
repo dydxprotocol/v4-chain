@@ -19,7 +19,7 @@ export async function connect(): Promise<void> {
     // https://kafka.js.org/docs/consuming#a-name-from-beginning-a-frombeginning
     // Need to set fromBeginning to true, so when vulcan restarts, it will consume all messages
     // rather than ignoring the messages in queue that were produced before ender was started.
-    fromBeginning: true,
+    fromBeginning: config.PROCESS_FROM_BEGINNING,
   });
 
   if (config.BATCH_PROCESSING_ENABLED) {

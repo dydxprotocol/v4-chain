@@ -53,9 +53,13 @@ const (
 	// key-per-order format.
 	LegacyBlockHeightToPotentiallyPrunableOrdersPrefix = "ExpHt:"
 
-	// StatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful orders that
-	// expire at a given timestamp, sorted by order ID.
-	StatefulOrdersTimeSlicePrefix = "ExpTm:"
+	// Deprecated: LegacyStatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful
+	// orders that expire at a given timestamp, sorted by order ID. Do not use.
+	LegacyStatefulOrdersTimeSlicePrefix = "ExpTm:"
+
+	// StatefulOrdersTimeSliceKeyPrefix is used to store orders that expire at a certain time.
+	// The specifier should be replaced with the time.
+	StatefulOrdersExpirationsKeyPrefix = "Exp/%s:"
 
 	// TriggeredConditionalOrderKeyPrefix is the key to retrieve an triggered conditional order and
 	// information about when it was triggered.
@@ -68,6 +72,9 @@ const (
 	// UntriggeredConditionalOrderKeyPrefix is the key to retrieve an untriggered conditional order and
 	// information about when it was placed.
 	UntriggeredConditionalOrderKeyPrefix = StatefulOrderKeyPrefix + "U:"
+
+	// NextClobPairIDKey is the key to retrieve the next ClobPair ID to be used.
+	NextClobPairIDKey = "NextClobPairID"
 )
 
 // Memstore
@@ -75,6 +82,23 @@ const (
 	// ProcessProposerMatchesEventsKey is the key to retrieve information about how to update
 	// memclob state based on the latest block.
 	ProcessProposerMatchesEventsKey = "ProposerEvents"
+
+	// The following Delivered keys used to be a part of ProcessProposerMatchesEvents but were taken out to unnecessary
+	// serde of a big monolithic value.
+
+	// OrderedDeliveredLongTermOrderIndexKey stores the next index to be used for OrderedDeliveredLongTermOrderKeyPrefix
+	OrderedDeliveredLongTermOrderIndexKey = "DLTOIdx"
+	// OrderedDeliveredLongTermOrderKeyPrefix is used to store placed orders for memclob placement in PrepareCheckState.
+	OrderedDeliveredLongTermOrderKeyPrefix = "DLTO:"
+
+	// OrderedDeliveredConditionalOrdexIndexKey stores the next index to be used for
+	// OrderedDeliveredConditionalOrderKeyPrefix
+	OrderedDeliveredConditionalOrderIndexKey = "DCOIdx"
+	// OrderedDeliveredConditionalOrderKeyPrefix is used to store placed orders for memclob placement in PrepareCheckState.
+	OrderedDeliveredConditionalOrderKeyPrefix = "DCIdx:"
+
+	// DeliveredCancelKeyPrefix is used to store placed orders for memclob placement in PrepareCheckState.
+	DeliveredCancelKeyPrefix = "DCancel:"
 
 	// StatefulOrderCountPrefix is the key to retrieve the stateful order count. The stateful order count
 	// represents the number of stateful orders stored in state.

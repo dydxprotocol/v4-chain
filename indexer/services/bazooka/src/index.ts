@@ -76,8 +76,7 @@ export async function handler(
 
   if (config.PREVENT_BREAKING_CHANGES_WITHOUT_FORCE && event.force !== true) {
     if (event.clear_db === true || event.reset_db === true ||
-      event.create_kafka_topics === true || event.clear_kafka_topics === true ||
-      event.clear_redis === true) {
+       event.clear_kafka_topics === true || event.clear_redis === true) {
       logger.error({
         at: 'index#handler',
         message: 'Cannot run bazooka without force flag set to "true" because' +

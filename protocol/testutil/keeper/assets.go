@@ -58,12 +58,14 @@ func AssetsKeepers(
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
 		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
+		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
 		pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
 			db,
 			cdc,
 			transientStoreKey,
 			revShareKeeper,
+			marketMapKeeper,
 		)
 		accountKeeper, _ = createAccountKeeper(stateStore, db, cdc, registry)
 		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)

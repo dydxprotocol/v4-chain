@@ -31,3 +31,7 @@ export function isRestrictedCountryHeaders(headers: CountryHeaders): boolean {
 
   return false;
 }
+
+export function isWhitelistedAddress(address: string): boolean {
+  return config.WHITELISTED_ADDRESSES.split(',').includes(address);
+}

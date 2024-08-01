@@ -4,8 +4,9 @@ package cli_test
 
 import (
 	"fmt"
-	cli_util "github.com/dydxprotocol/v4-chain/protocol/testutil/prices/cli"
 	"testing"
+
+	cli_util "github.com/dydxprotocol/v4-chain/protocol/testutil/prices/cli"
 
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client/flags"

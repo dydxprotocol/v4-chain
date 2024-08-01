@@ -14,6 +14,7 @@ import {
   TransferColumns,
   TransferFromDatabase,
   TransferTable,
+  USDC_ASSET_ID,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
@@ -33,6 +34,7 @@ import {
   CheckPaginationSchema,
   CheckParentSubaccountSchema,
   CheckSubaccountSchema,
+  CheckTransferBetweenSchema,
 } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -48,6 +50,8 @@ import {
   ParentSubaccountTransferRequest,
   ParentSubaccountTransferResponse,
   ParentSubaccountTransferResponseObject,
+  TransferBetweenRequest,
+  TransferBetweenResponse,
 } from '../../../types';
 
 const router: express.Router = express.Router();
@@ -69,7 +73,11 @@ class TransfersController extends Controller {
     // TODO(DEC-656): Change to a cache in Redis similar to Librarian instead of querying DB.
     const [subaccount, {
       results: transfers, limit: pageSize, offset, total,
-    }, assets] = await Promise.all([
+    }, idToAsset]: [
+      SubaccountFromDatabase | undefined,
+      PaginationFromDatabase<TransferFromDatabase>,
+      AssetById,
+    ] = await Promise.all([
       SubaccountTable.findById(
         subaccountId,
       ),
@@ -94,10 +102,7 @@ class TransfersController extends Controller {
             ],
         },
       ),
-      AssetTable.findAll(
-        {},
-        [],
-      ),
+      getAssetById(),
     ]);
     if (subaccount === undefined) {
       throw new NotFoundError(
@@ -119,21 +124,7 @@ class TransfersController extends Controller {
       ...recipientSubaccountIds,
       ...senderSubaccountIds,
     ]);
-    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll(
-      {
-        id: subaccountIds,
-      },
-      [],
-    );
-    const idToSubaccount: SubaccountById = _.keyBy(
-      subaccounts,
-      SubaccountColumns.id,
-    );
-
-    const idToAsset: AssetById = _.keyBy(
-      assets,
-      AssetColumns.id,
-    );
+    const idToSubaccount: SubaccountById = await idToSubaccountFromSubaccountIds(subaccountIds);
 
     return {
       transfers: transfers.map((transfer: TransferFromDatabase) => {
@@ -166,10 +157,10 @@ class TransfersController extends Controller {
       limit: pageSize,
       offset,
       total,
-    }, assets]: [
+    }, idToAsset]: [
       SubaccountFromDatabase[] | undefined,
       PaginationFromDatabase<TransferFromDatabase>,
-      AssetFromDatabase[]
+      AssetById,
     ] = await
     Promise.all([
       SubaccountTable.findAll(
@@ -197,10 +188,7 @@ class TransfersController extends Controller {
             ],
         },
       ),
-      AssetTable.findAll(
-        {},
-        [],
-      ),
+      getAssetById(),
     ]);
     if (subaccounts === undefined || subaccounts.length === 0) {
       throw new NotFoundError(
@@ -222,21 +210,7 @@ class TransfersController extends Controller {
       ...recipientSubaccountIds,
       ...senderSubaccountIds,
     ]);
-    const allSubaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll(
-      {
-        id: allSubaccountIds,
-      },
-      [],
-    );
-    const idToSubaccount: SubaccountById = _.keyBy(
-      allSubaccounts,
-      SubaccountColumns.id,
-    );
-
-    const idToAsset: AssetById = _.keyBy(
-      assets,
-      AssetColumns.id,
-    );
+    const idToSubaccount: SubaccountById = await idToSubaccountFromSubaccountIds(allSubaccountIds);
 
     const transfersWithParentSubaccount: ParentSubaccountTransferResponseObject[] = transfers.map(
       (transfer: TransferFromDatabase) => {
@@ -259,6 +233,59 @@ class TransfersController extends Controller {
       pageSize,
       totalResults: total,
       offset,
+    };
+  }
+
+  @Get('/between')
+  async getTransferBetween(
+    @Query() sourceAddress: string,
+      @Query() sourceSubaccountNumber: number,
+      @Query() recipientAddress: string,
+      @Query() recipientSubaccountNumber: number,
+      @Query() createdBeforeOrAtHeight?: number,
+      @Query() createdBeforeOrAt?: IsoString,
+  ): Promise<TransferBetweenResponse> {
+    const sourceSubaccountId: string = SubaccountTable.uuid(sourceAddress, sourceSubaccountNumber);
+    const recipientSubaccountId: string = SubaccountTable.uuid(
+      recipientAddress,
+      recipientSubaccountNumber,
+    );
+
+    const [
+      transfers,
+      idToSubaccount,
+      idToAsset,
+      totalNetTransfers,
+    ]: [
+      TransferFromDatabase[],
+      SubaccountById,
+      AssetById,
+      string,
+    ] = await Promise.all([
+      TransferTable.findAll({
+        limit: config.API_LIMIT_V4,
+        senderSubaccountId: [sourceSubaccountId, recipientSubaccountId],
+        recipientSubaccountId: [sourceSubaccountId, recipientSubaccountId],
+        assetId: [USDC_ASSET_ID],
+        createdBeforeOrAt,
+        createdBeforeOrAtHeight: createdBeforeOrAtHeight
+          ? createdBeforeOrAtHeight.toString()
+          : undefined,
+      }, [], { orderBy: [[TransferColumns.createdAtHeight, Ordering.DESC]] }),
+      idToSubaccountFromSubaccountIds([sourceSubaccountId, recipientSubaccountId]),
+      getAssetById(),
+      TransferTable.getNetTransfersBetweenSubaccountIds(
+        sourceSubaccountId,
+        recipientSubaccountId,
+        USDC_ASSET_ID,
+      ),
+    ]);
+
+    return {
+      transfersSubset: transfers.map((transfer: TransferFromDatabase) => {
+        return transferToResponseObject(transfer, idToAsset, idToSubaccount, sourceSubaccountId);
+      }),
+      totalNetTransfers,
     };
   }
 }
@@ -363,5 +390,74 @@ router.get(
     }
   },
 );
+
+router.get(
+  '/between',
+  rateLimiterMiddleware(getReqRateLimiter),
+  ...CheckTransferBetweenSchema,
+  handleValidationErrors,
+  complianceAndGeoCheck,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+    const {
+      sourceAddress,
+      sourceSubaccountNumber,
+      recipientAddress,
+      recipientSubaccountNumber,
+      createdBeforeOrAtHeight,
+      createdBeforeOrAt,
+    }: TransferBetweenRequest = matchedData(req) as TransferBetweenRequest;
+
+    try {
+      const controllers: TransfersController = new TransfersController();
+      const response: TransferBetweenResponse = await controllers.getTransferBetween(
+        sourceAddress,
+        sourceSubaccountNumber,
+        recipientAddress,
+        recipientSubaccountNumber,
+        createdBeforeOrAtHeight,
+        createdBeforeOrAt,
+      );
+
+      return res.send(response);
+    } catch (error) {
+      return handleControllerError(
+        'TransfersController GET /between',
+        'Transfers error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_transfers_between.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+async function getAssetById(): Promise<AssetById> {
+  const assets: AssetFromDatabase[] = await AssetTable.findAll({}, []);
+  return _.keyBy(assets, AssetColumns.id);
+}
+
+async function idToSubaccountFromSubaccountIds(
+  subaccountIds: string[],
+): Promise<SubaccountById> {
+  const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll(
+    {
+      id: subaccountIds,
+    },
+    [],
+  );
+
+  const idToSubaccount: SubaccountById = _.keyBy(
+    subaccounts,
+    SubaccountColumns.id,
+  );
+  return idToSubaccount;
+}
 
 export default router;

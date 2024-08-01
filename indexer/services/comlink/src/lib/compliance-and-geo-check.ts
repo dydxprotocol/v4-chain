@@ -3,6 +3,7 @@ import {
   isRestrictedCountryHeaders,
   INDEXER_GEOBLOCKED_PAYLOAD,
   INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
+  isWhitelistedAddress,
 } from '@dydxprotocol-indexer/compliance';
 import {
   ComplianceStatus,
@@ -40,6 +41,10 @@ export async function complianceAndGeoCheck(
   }
 
   const { address }: AddressRequest = matchedData(req) as AddressRequest;
+  if (isWhitelistedAddress(address)) {
+    return next();
+  }
+
   if (address !== undefined) {
     const updatedStatus: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll(
       { address: [address] },

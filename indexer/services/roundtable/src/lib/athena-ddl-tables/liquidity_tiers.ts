@@ -8,13 +8,17 @@ const RAW_TABLE_COLUMNS: string = `
   \`id\` int,
   \`name\` string,
   \`initialMarginPpm\` bigint,
-  \`maintenanceFractionPpm\` bigint
+  \`maintenanceFractionPpm\` bigint,
+  \`openInterestLowerCap\` string,
+  \`openInterestUpperCap\` string
 `;
 const TABLE_COLUMNS: string = `
   "id",
   "name",
   "initialMarginPpm",
-  "maintenanceFractionPpm"
+  "maintenanceFractionPpm",
+  "openInterestLowerCap",
+  "openInterestUpperCap"
 `;
 
 export function generateRawTable(tablePrefix: string, rdsExportIdentifier: string): string {

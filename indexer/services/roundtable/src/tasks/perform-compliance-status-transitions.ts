@@ -21,7 +21,7 @@ export default async function runTask(): Promise<void> {
   const staleCloseOnlyAddresses: ComplianceStatusFromDatabase[] = await
   ComplianceStatusTable.findAll(
     {
-      status: ComplianceStatus.CLOSE_ONLY,
+      status: [ComplianceStatus.CLOSE_ONLY],
       updatedBeforeOrAt: new Date(
         queryStart - CLOSE_ONLY_TO_BLOCKED_DAYS_IN_MS,
       ).toISOString(),

@@ -25,7 +25,6 @@ func TestStateKeys(t *testing.T) {
 	require.Equal(t, "Clob:", types.ClobPairKeyPrefix)
 	require.Equal(t, "Fill:", types.OrderAmountFilledKeyPrefix)
 	require.Equal(t, "ExpHt:", types.LegacyBlockHeightToPotentiallyPrunableOrdersPrefix)
-	require.Equal(t, "ExpTm:", types.StatefulOrdersTimeSlicePrefix)
 }
 
 func TestStoreAndMemstoreKeys(t *testing.T) {

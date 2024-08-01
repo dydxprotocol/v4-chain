@@ -2,11 +2,12 @@ package app_test
 
 import (
 	"encoding/json"
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 )
 
 func TestDefaultGenesisState(t *testing.T) {

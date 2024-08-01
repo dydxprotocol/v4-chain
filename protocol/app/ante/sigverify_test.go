@@ -19,6 +19,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	customante "github.com/dydxprotocol/v4-chain/protocol/app/ante"
 	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
+	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
+	accountplustypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/golang/mock/gomock"
@@ -59,10 +61,19 @@ func TestSigVerification(t *testing.T) {
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
 	priv3, _, addr3 := testdata.KeyTestPubAddr()
 
+	// initial accountplus AccountState
+	maxEjectedNonce := uint64(testante.TestBlockTime - 1000)
+	var timestampNonces []uint64
+	for i := range accountpluskeeper.MaxTimestampNonceArrSize {
+		timestampNonces = append(timestampNonces, testante.TestBlockTime+uint64(i)+1000)
+	}
+
 	addrs := []sdk.AccAddress{addr1, addr2, addr3}
 
 	msgs := make([]sdk.Msg, len(addrs))
 	accs := make([]sdk.AccountI, len(addrs))
+	accStates := make([]accountplustypes.AccountState, len(addrs))
+
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
 		acc := suite.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr)
@@ -70,6 +81,14 @@ func TestSigVerification(t *testing.T) {
 		suite.AccountKeeper.SetAccount(suite.Ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 		accs[i] = acc
+
+		accStates[i] = accountplustypes.AccountState{
+			Address: addr.String(),
+			TimestampNonceDetails: accountplustypes.TimestampNonceDetails{
+				MaxEjectedNonce: maxEjectedNonce,
+				TimestampNonces: timestampNonces,
+			},
+		}
 	}
 
 	feeAmount := testdata.NewTestFeeAmount()
@@ -85,20 +104,26 @@ func TestSigVerification(t *testing.T) {
 		txConfigOpts,
 	)
 	require.NoError(t, err)
-	svd := customante.NewSigVerificationDecorator(suite.AccountKeeper, anteTxConfig.SignModeHandler())
+	svd := customante.NewSigVerificationDecorator(
+		suite.AccountKeeper,
+		suite.AccountplusKeeper,
+		anteTxConfig.SignModeHandler(),
+	)
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 	defaultSignMode, err := authsign.APISignModeToInternal(anteTxConfig.SignModeHandler().DefaultMode())
 	require.NoError(t, err)
 
 	type testCase struct {
-		name        string
-		msgs        []sdk.Msg
-		privs       []cryptotypes.PrivKey
-		accNums     []uint64
-		accSeqs     []uint64
-		invalidSigs bool // used for testing sigverify on RecheckTx
-		recheck     bool
-		shouldErr   bool
+		name           string
+		msgs           []sdk.Msg
+		privs          []cryptotypes.PrivKey
+		accNums        []uint64
+		accSeqs        []uint64
+		invalidSigs    bool // used for testing sigverify on RecheckTx
+		recheck        bool
+		shouldErr      bool
+		expectedErrMsg string // supply empty string to ignore this check
+		setAccState    bool   // used for ts nonce tests determine whether to use initial accountplus AccountState
 	}
 
 	testMsgs := make([]sdk.Msg, len(addrs))
@@ -116,6 +141,8 @@ func TestSigVerification(t *testing.T) {
 			validSigs,
 			false,
 			true,
+			"",
+			false,
 		},
 		{
 			"not enough signers",
@@ -126,6 +153,8 @@ func TestSigVerification(t *testing.T) {
 			validSigs,
 			false,
 			true,
+			"",
+			false,
 		},
 		{
 			"wrong order signers",
@@ -136,6 +165,8 @@ func TestSigVerification(t *testing.T) {
 			validSigs,
 			false,
 			true,
+			"",
+			false,
 		},
 		{
 			"wrong accnums",
@@ -146,6 +177,8 @@ func TestSigVerification(t *testing.T) {
 			validSigs,
 			false,
 			true,
+			"",
+			false,
 		},
 		{
 			"wrong sequences",
@@ -156,6 +189,8 @@ func TestSigVerification(t *testing.T) {
 			validSigs,
 			false,
 			true,
+			"",
+			false,
 		},
 		{
 			"wrong sequences but skip validation - place order",
@@ -165,6 +200,8 @@ func TestSigVerification(t *testing.T) {
 			[]uint64{3},
 			validSigs,
 			false,
+			false,
+			"",
 			false,
 		},
 		{
@@ -176,6 +213,8 @@ func TestSigVerification(t *testing.T) {
 			validSigs,
 			false,
 			false,
+			"",
+			false,
 		},
 		{
 			"wrong sequences but skip validation - transfer",
@@ -185,6 +224,8 @@ func TestSigVerification(t *testing.T) {
 			[]uint64{5},
 			validSigs,
 			false,
+			false,
+			"",
 			false,
 		},
 		{
@@ -196,6 +237,8 @@ func TestSigVerification(t *testing.T) {
 			validSigs,
 			false,
 			true,
+			"",
+			false,
 		},
 		{
 			"valid tx",
@@ -205,6 +248,8 @@ func TestSigVerification(t *testing.T) {
 			[]uint64{0, 0, 0},
 			validSigs,
 			false,
+			false,
+			"",
 			false,
 		},
 		{
@@ -216,6 +261,90 @@ func TestSigVerification(t *testing.T) {
 			!validSigs,
 			true,
 			false,
+			"",
+			false,
+		},
+		{
+			"invalid timestamp nonce",
+			testMsgs,
+			[]cryptotypes.PrivKey{priv1, priv2, priv3},
+			[]uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber(), accs[2].GetAccountNumber()},
+			[]uint64{
+				testante.TestBlockTime - accountpluskeeper.MaxTimeInPastMs - 1,
+				testante.TestBlockTime,
+				testante.TestBlockTime,
+			},
+			validSigs,
+			false,
+			true,
+			fmt.Sprintf(
+				"timestamp nonce %d not within valid time window: incorrect account sequence",
+				testante.TestBlockTime-accountpluskeeper.MaxTimeInPastMs-1),
+			false,
+		},
+		{
+			"can initialize AccountState",
+			testMsgs,
+			[]cryptotypes.PrivKey{priv1, priv2, priv3},
+			[]uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber(), accs[2].GetAccountNumber()},
+			[]uint64{
+				testante.TestBlockTime, // any value within the window will work since no existing AccountState
+				testante.TestBlockTime,
+				testante.TestBlockTime,
+			},
+			validSigs,
+			false,
+			false,
+			"",
+			false,
+		},
+		{
+			"reject timestamp nonce",
+			testMsgs,
+			[]cryptotypes.PrivKey{priv1, priv2, priv3},
+			[]uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber(), accs[2].GetAccountNumber()},
+			[]uint64{
+				testante.TestBlockTime, // ts <= min(tsNonces)
+				testante.TestBlockTime,
+				testante.TestBlockTime,
+			},
+			validSigs,
+			false,
+			true,
+			fmt.Sprintf("timestamp nonce %d rejected: incorrect account sequence", testante.TestBlockTime),
+			true,
+		},
+		{
+			"accept timestamp nonce",
+			testMsgs,
+			[]cryptotypes.PrivKey{priv1, priv2, priv3},
+			[]uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber(), accs[2].GetAccountNumber()},
+			[]uint64{
+				testante.TestBlockTime + 5000, // ts > min(tsNonces)
+				testante.TestBlockTime + 5000,
+				testante.TestBlockTime + 5000,
+			},
+			validSigs,
+			false,
+			false,
+			"",
+			true,
+		},
+		{
+			"timestamp nonce invalid sigs",
+			testMsgs,
+			[]cryptotypes.PrivKey{priv1, priv2, priv3},
+			[]uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber(), accs[2].GetAccountNumber()},
+			[]uint64{
+				testante.TestBlockTime + 5000, // ts > min(tsNonces)
+				testante.TestBlockTime + 5000,
+				testante.TestBlockTime + 5000,
+			},
+			!validSigs,
+			false,
+			true,
+			"",
+			true,
 		},
 	}
 
@@ -228,6 +357,20 @@ func TestSigVerification(t *testing.T) {
 				require.NoError(t, suite.TxBuilder.SetMsgs(tc.msgs...))
 				suite.TxBuilder.SetFeeAmount(feeAmount)
 				suite.TxBuilder.SetGasLimit(gasLimit)
+
+				// Set accountplus AccountStates
+				if tc.setAccState {
+					for _, acc := range accs {
+						accState := accountplustypes.AccountState{
+							Address: acc.GetAddress().String(),
+							TimestampNonceDetails: accountplustypes.TimestampNonceDetails{
+								MaxEjectedNonce: maxEjectedNonce,
+								TimestampNonces: timestampNonces,
+							},
+						}
+						suite.AccountplusKeeper.SetAccountState(suite.Ctx, acc.GetAddress(), accState)
+					}
+				}
 
 				tx, err := suite.CreateTestTx(suite.Ctx, tc.privs, tc.accNums, tc.accSeqs, suite.Ctx.ChainID(), signMode)
 				require.NoError(t, err)
@@ -252,6 +395,9 @@ func TestSigVerification(t *testing.T) {
 				_, err = antehandler(byteCtx, tx, false)
 				if tc.shouldErr {
 					require.NotNil(t, err, "TestCase %d: %s did not error as expected", i, tc.name)
+					if tc.expectedErrMsg != "" {
+						require.Equal(t, tc.expectedErrMsg, err.Error())
+					}
 				} else {
 					require.Nil(t, err, "TestCase %d: %s errored unexpectedly. Err: %v", i, tc.name, err)
 				}
@@ -293,6 +439,7 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 	accNums := make([]uint64, len(privs))
 	accSeqs := make([]uint64, len(privs))
 	// set accounts and create msg for each address
+	// set initial accountplus AccountState
 	for i, priv := range privs {
 		addr := sdk.AccAddress(priv.PubKey().Address())
 		acc := suite.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr)
@@ -321,7 +468,11 @@ func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...crypto
 
 	spkd := sdkante.NewSetPubKeyDecorator(suite.AccountKeeper)
 	svgc := sdkante.NewSigGasConsumeDecorator(suite.AccountKeeper, sdkante.DefaultSigVerificationGasConsumer)
-	svd := customante.NewSigVerificationDecorator(suite.AccountKeeper, suite.ClientCtx.TxConfig.SignModeHandler())
+	svd := customante.NewSigVerificationDecorator(
+		suite.AccountKeeper,
+		suite.AccountplusKeeper,
+		suite.ClientCtx.TxConfig.SignModeHandler(),
+	)
 	antehandler := sdk.ChainAnteDecorators(spkd, svgc, svd)
 
 	txBytes, err := suite.ClientCtx.TxConfig.TxEncoder()(tx)

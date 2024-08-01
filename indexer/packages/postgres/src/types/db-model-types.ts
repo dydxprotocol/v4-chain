@@ -198,6 +198,8 @@ export interface CandleFromDatabase extends IdBasedModelFromDatabase {
   usdVolume: string;
   trades: number;
   startingOpenInterest: string;
+  orderbookMidPriceOpen?: string | null;
+  orderbookMidPriceClose?: string | null;
 }
 
 export interface PnlTicksFromDatabase extends IdBasedModelFromDatabase {
@@ -253,6 +255,19 @@ export interface TradingRewardAggregationFromDatabase {
   endedAtHeight?: string;
   period: TradingRewardAggregationPeriod;
   amount: string;
+}
+
+export interface SubaccountUsernamesFromDatabase {
+  username: string;
+  subaccountId: string;
+}
+
+export interface LeaderboardPnlFromDatabase {
+  address: string;
+  timeSpan: string;
+  pnl: string;
+  currentEquity: string;
+  rank: number;
 }
 
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:

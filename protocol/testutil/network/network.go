@@ -13,6 +13,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -22,9 +23,13 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
+	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/marketmap"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/ci"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/gofrs/flock"
+	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -131,6 +136,23 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 	}
 
 	encoding := app.GetEncodingConfig()
+
+	// Inject default market map genesis based off of prices genesis
+	cdc := codec.NewProtoCodec(v4module.InterfaceRegistry)
+	genesisState := basic_manager.ModuleBasics.DefaultGenesis(encoding.Codec)
+
+	var pricesGenesisState pricestypes.GenesisState
+	cdc.MustUnmarshalJSON(genesisState[pricestypes.ModuleName], &pricesGenesisState)
+	marketMap, err := marketmap.ConstructMarketMapFromParams(pricesGenesisState.MarketParams)
+	if err != nil {
+		panic(err)
+	}
+	marketmapGenesis := marketmaptypes.GenesisState{
+		MarketMap: marketMap,
+		Params:    marketmaptypes.DefaultParams(),
+	}
+	genesisState[marketmaptypes.ModuleName] = cdc.MustMarshalJSON(&marketmapGenesis)
+
 	return network.Config{
 		Codec:             encoding.Codec,
 		TxConfig:          encoding.TxConfig,
@@ -154,7 +176,7 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 				baseapp.SetChainID("dydxprotocol"),
 			)
 		},
-		GenesisState:    basic_manager.ModuleBasics.DefaultGenesis(encoding.Codec),
+		GenesisState:    genesisState,
 		TimeoutCommit:   2 * time.Second,
 		ChainID:         "dydxprotocol",
 		NumValidators:   1,

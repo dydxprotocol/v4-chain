@@ -67,12 +67,14 @@ func WithExchangeConfigJson(configJson string) MarketParamPriceModifierOption {
 func GenerateMarketParamPrice(optionalModifications ...MarketParamPriceModifierOption) *pricestypes.MarketParamPrice {
 	marketParamPrice := &pricestypes.MarketParamPrice{
 		Param: pricestypes.MarketParam{
-			Id:                 0,
-			Pair:               "BTC-USDC",
-			MinExchanges:       3,
-			MinPriceChangePpm:  100,
-			Exponent:           -8,
-			ExchangeConfigJson: "{}",
+			Id:                0,
+			Pair:              "BTC-USDC",
+			MinExchanges:      3,
+			MinPriceChangePpm: 100,
+			Exponent:          -8,
+			ExchangeConfigJson: `{"exchanges":[` +
+				`{"exchangeName":"Bitfinex","ticker":"tBTCUSDC"},` +
+				`{"exchangeName":"CoinbasePro","ticker":"BTC-USDC"}, {"exchangeName":"Binance","ticker":"BTCUSDC"}]}`,
 		},
 		Price: pricestypes.MarketPrice{
 			Id:       0,

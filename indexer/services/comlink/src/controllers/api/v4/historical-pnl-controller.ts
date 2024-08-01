@@ -101,7 +101,7 @@ class HistoricalPnlController extends Controller {
     };
   }
 
-  @Get('/parentSubaccount')
+  @Get('/parentSubaccountNumber')
   async getHistoricalPnlForParentSubaccount(
     @Query() address: string,
       @Query() parentSubaccountNumber: number,
@@ -110,7 +110,6 @@ class HistoricalPnlController extends Controller {
       @Query() createdBeforeOrAt?: IsoString,
       @Query() createdOnOrAfterHeight?: number,
       @Query() createdOnOrAfter?: IsoString,
-      @Query() page?: number,
   ): Promise<HistoricalPnlResponse> {
 
     const childSubaccountIds: string[] = getChildSubaccountIds(address, parentSubaccountNumber);
@@ -118,9 +117,6 @@ class HistoricalPnlController extends Controller {
     const [subaccounts,
       {
         results: pnlTicks,
-        limit: pageSize,
-        offset,
-        total,
       },
     ]: [
       SubaccountFromDatabase[],
@@ -144,7 +140,6 @@ class HistoricalPnlController extends Controller {
             ? createdOnOrAfterHeight.toString()
             : undefined,
           createdOnOrAfter,
-          page,
         },
         [QueryableField.LIMIT],
         {
@@ -185,9 +180,6 @@ class HistoricalPnlController extends Controller {
         (pnlTick: PnlTicksFromDatabase) => {
           return pnlTicksToResponseObject(pnlTick);
         }),
-      pageSize,
-      totalResults: total,
-      offset,
     };
   }
 }

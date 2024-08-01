@@ -34,6 +34,9 @@ const (
 
 	// UpdatedOIKeyPrefix is the key to retrieve the updated OI for the module.
 	UpdatedOIKeyPrefix = "UpdatedOI"
+
+	// NextPerpetualIDKey is the key to retrieve the next perpetual id to be used
+	NextPerpetualIDKey = "NextPerpetualID"
 )
 
 // Module Accounts

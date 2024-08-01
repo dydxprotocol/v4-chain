@@ -159,24 +159,42 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 		marketPrice   pricestypes.MarketPrice
 		liquidityTier types.LiquidityTier
 		quantums      *big.Int
+		quoteBalance  *big.Int
 	}{
 		"zero quantums": {
 			perpetual:     testPerpetual,
 			marketPrice:   testMarketPrice,
 			liquidityTier: testLiquidityTier,
 			quantums:      big.NewInt(0),
+			quoteBalance:  big.NewInt(0),
 		},
 		"positive quantums": {
 			perpetual:     testPerpetual,
 			marketPrice:   testMarketPrice,
 			liquidityTier: testLiquidityTier,
 			quantums:      big.NewInt(1_000_000_000_000),
+			quoteBalance:  big.NewInt(0),
 		},
 		"negative quantums": {
 			perpetual:     testPerpetual,
 			marketPrice:   testMarketPrice,
 			liquidityTier: testLiquidityTier,
 			quantums:      big.NewInt(-1_000_000_000_000),
+			quoteBalance:  big.NewInt(0),
+		},
+		"positive quote balance": {
+			perpetual:     testPerpetual,
+			marketPrice:   testMarketPrice,
+			liquidityTier: testLiquidityTier,
+			quantums:      big.NewInt(-1_000_000_000_000),
+			quoteBalance:  big.NewInt(1_000_000_000_000),
+		},
+		"negative quote balance": {
+			perpetual:     testPerpetual,
+			marketPrice:   testMarketPrice,
+			liquidityTier: testLiquidityTier,
+			quantums:      big.NewInt(1_000_000_000_000),
+			quoteBalance:  big.NewInt(-1_000_000_000_000),
 		},
 	}
 	for name, test := range tests {
@@ -197,8 +215,9 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 				test.marketPrice,
 				test.liquidityTier,
 				test.quantums,
+				test.quoteBalance,
 			)
-			require.Equal(t, enc, risk.NC)
+			require.Equal(t, 0, new(big.Int).Add(enc, test.quoteBalance).Cmp(risk.NC))
 			require.Equal(t, eimr, risk.IMR)
 			require.Equal(t, emmr, risk.MMR)
 		})
@@ -402,35 +421,16 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		bigExpectedInitialMargin     *big.Int
 		bigExpectedMaintenanceMargin *big.Int
 	}{
-		"InitialMargin 2 BIPs, MaintenanceMargin 1 BIP, positive exponent, atomic resolution 8": {
-			price:                        5_555,
-			exponent:                     2,
-			baseCurrencyAtomicResolution: -8,
-			bigBaseQuantums:              big.NewInt(7_000),
-			initialMarginPpm:             uint32(oneBip * 2),
-			maintenanceFractionPpm:       uint32(500_000), // 50% of IM
-			bigExpectedInitialMargin:     big.NewInt(7_777),
-			bigExpectedMaintenanceMargin: big.NewInt(3_889),
-		},
+		// TODO: Add back tests for positive and zero exponent once x/marketmap supports them
 		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, atomic resolution 4": {
-			price:                        5_555,
-			exponent:                     0,
+			price:                        55_550,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -4,
 			bigBaseQuantums:              big.NewInt(7_000),
 			initialMarginPpm:             uint32(oneBip * 100),
 			maintenanceFractionPpm:       uint32(500_000), // 50% of IM
 			bigExpectedInitialMargin:     big.NewInt(38_885_000),
 			bigExpectedMaintenanceMargin: big.NewInt(19_442_500),
-		},
-		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, positive exponent, atomic resolution 0": {
-			price:                        42,
-			exponent:                     5,
-			baseCurrencyAtomicResolution: -0,
-			bigBaseQuantums:              big.NewInt(88),
-			initialMarginPpm:             uint32(oneBip * 100),
-			maintenanceFractionPpm:       uint32(500_000), // 50% of IM
-			bigExpectedInitialMargin:     big.NewInt(3_696_000_000_000),
-			bigExpectedMaintenanceMargin: big.NewInt(1_848_000_000_000),
 		},
 		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, negative exponent, atomic resolution 6": {
 			price:                        42_000_000,
@@ -443,8 +443,8 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 			bigExpectedMaintenanceMargin: big.NewInt(10_500_000),
 		},
 		"InitialMargin 10_000 BIPs (max), MaintenanceMargin 10_000 BIPs (max), atomic resolution 6": {
-			price:                        5_555,
-			exponent:                     0,
+			price:                        55_550,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(7_000),
 			initialMarginPpm:             uint32(oneBip * 10_000),
@@ -453,8 +453,8 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 			bigExpectedMaintenanceMargin: big.NewInt(38_885_000),
 		},
 		"InitialMargin 100 BIPs, MaintenanceMargin 100 BIPs, atomic resolution 6": {
-			price:                        5_555,
-			exponent:                     0,
+			price:                        55_550,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(7_000),
 			initialMarginPpm:             uint32(oneBip * 100),
@@ -462,19 +462,9 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 			bigExpectedInitialMargin:     big.NewInt(388_850),
 			bigExpectedMaintenanceMargin: big.NewInt(388_850),
 		},
-		"InitialMargin 0.02 BIPs, MaintenanceMargin 0.01 BIPs, positive exponent, atomic resolution 6": {
-			price:                        5_555,
-			exponent:                     3,
-			baseCurrencyAtomicResolution: -6,
-			bigBaseQuantums:              big.NewInt(-7_000),
-			initialMarginPpm:             uint32(oneBip * 0.02),
-			maintenanceFractionPpm:       uint32(500_000), // 50% of IM
-			bigExpectedInitialMargin:     big.NewInt(77_770),
-			bigExpectedMaintenanceMargin: big.NewInt(38_885),
-		},
 		"InitialMargin 0 BIPs (min), MaintenanceMargin 0 BIPs (min), atomic resolution 6": {
-			price:                        5_555,
-			exponent:                     0,
+			price:                        55_550,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(7_000),
 			initialMarginPpm:             uint32(oneBip * 0),
@@ -484,7 +474,7 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"Price is zero, atomic resolution 6": {
 			price:                        0,
-			exponent:                     1,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(-7_000),
 			initialMarginPpm:             uint32(oneBip * 1),
@@ -494,21 +484,21 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 		},
 		"Price and quantums are max uints": {
 			price:                        math.MaxUint64,
-			exponent:                     1,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              new(big.Int).SetUint64(math.MaxUint64),
 			initialMarginPpm:             uint32(oneBip * 1),
 			maintenanceFractionPpm:       uint32(1_000_000), // 100% of IM,
 			bigExpectedInitialMargin: big_testutil.MustFirst(
-				new(big.Int).SetString("340282366920938463426481119284349109", 10),
+				new(big.Int).SetString("3402823669209384634264811192843492", 10),
 			),
 			bigExpectedMaintenanceMargin: big_testutil.MustFirst(
-				new(big.Int).SetString("340282366920938463426481119284349109", 10),
+				new(big.Int).SetString("3402823669209384634264811192843492", 10),
 			),
 		},
 		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, atomic resolution 6": {
-			price:                        5_555,
-			exponent:                     0,
+			price:                        55_550,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(7_000),
 			initialMarginPpm:             uint32(oneBip * 100),
@@ -519,8 +509,8 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 			bigExpectedMaintenanceMargin: big.NewInt(388_850 / 2),
 		},
 		"InitialMargin 20%, MaintenanceMargin 10%, atomic resolution 6": {
-			price:                        36_750,
-			exponent:                     0,
+			price:                        367_500,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(12_000),
 			initialMarginPpm:             uint32(200_000),
@@ -532,8 +522,8 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 			bigExpectedMaintenanceMargin: big.NewInt(88_200_000 / 2),
 		},
 		"InitialMargin 5%, MaintenanceMargin 3%, atomic resolution 6": {
-			price:                        123_456,
-			exponent:                     0,
+			price:                        1_234_560,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(74_523),
 			initialMarginPpm:             uint32(50_000),
@@ -545,8 +535,8 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 			bigExpectedMaintenanceMargin: big.NewInt(276_009_345),
 		},
 		"InitialMargin 25%, MaintenanceMargin 15%, atomic resolution 6": {
-			price:                        123_456,
-			exponent:                     0,
+			price:                        1_234_560,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(74_523),
 			initialMarginPpm:             uint32(250_000),
@@ -556,8 +546,8 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 			bigExpectedMaintenanceMargin: big.NewInt(1_380_046_724), // Rounded up
 		},
 		"OIMF: IM 20%, scaled to 60%, MaintenanceMargin 10%, atomic resolution 6": {
-			price:                        36_750,
-			exponent:                     0,
+			price:                        367_500,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(12_000),
 			initialMarginPpm:             uint32(200_000),
@@ -573,8 +563,8 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 			bigExpectedMaintenanceMargin: big.NewInt(88_200_000 / 2),
 		},
 		"OIMF: IM 20%, scaled to 100%, MaintenanceMargin 10%, atomic resolution 6": {
-			price:                        36_750,
-			exponent:                     0,
+			price:                        367_500,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(12_000),
 			initialMarginPpm:             uint32(200_000),
@@ -589,8 +579,8 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 			bigExpectedMaintenanceMargin: big.NewInt(88_200_000 / 2),
 		},
 		"OIMF: IM 20%, lower_cap < realistic open interest < upper_cap, MaintenanceMargin 10%, atomic resolution 6": {
-			price:                        36_750,
-			exponent:                     0,
+			price:                        367_500,
+			exponent:                     -1,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(12_000),
 			initialMarginPpm:             uint32(200_000),
@@ -614,11 +604,13 @@ func TestGetMarginRequirementsInQuoteQuantums_2(t *testing.T) {
 			pc := keepertest.PerpetualsKeepers(t)
 			// Create a new market param and price.
 			marketId := keepertest.GetNumMarkets(t, pc.Ctx, pc.PricesKeeper)
-			_, err := pc.PricesKeeper.CreateMarket(
+			_, err := keepertest.CreateTestMarket(
+				t,
 				pc.Ctx,
+				pc.PricesKeeper,
 				pricestypes.MarketParam{
 					Id:                 marketId,
-					Pair:               "marketName",
+					Pair:               "base-quote",
 					Exponent:           tc.exponent,
 					MinExchanges:       uint32(1),
 					MinPriceChangePpm:  uint32(50),

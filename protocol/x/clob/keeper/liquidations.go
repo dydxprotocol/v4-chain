@@ -451,13 +451,13 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// with a position size of `PS + deltaQuantums`.
 	// Note that we are intentionally not calculating `DNNV` from `deltaQuantums`
 	// directly to avoid rounding errors.
-	riskPosOld := perplib.GetNetCollateralAndMarginRequirements(
+	riskPosOld := perplib.GetPositionNetNotionalValueAndMarginRequirements(
 		perpetual,
 		marketPrice,
 		liquidityTier,
 		psBig,
 	)
-	riskPosNew := perplib.GetNetCollateralAndMarginRequirements(
+	riskPosNew := perplib.GetPositionNetNotionalValueAndMarginRequirements(
 		perpetual,
 		marketPrice,
 		liquidityTier,
@@ -541,7 +541,7 @@ func (k Keeper) GetFillablePrice(
 		return nil, err
 	}
 
-	riskPos := perplib.GetNetCollateralAndMarginRequirements(
+	riskPos := perplib.GetPositionNetNotionalValueAndMarginRequirements(
 		perpetual,
 		marketPrice,
 		liquidityTier,

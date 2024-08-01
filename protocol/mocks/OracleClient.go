@@ -127,6 +127,43 @@ func (_m *OracleClient) Stop() error {
 	return r0
 }
 
+// Version provides a mock function with given fields: ctx, in, opts
+func (_m *OracleClient) Version(ctx context.Context, in *types.QueryVersionRequest, opts ...grpc.CallOption) (*types.QueryVersionResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Version")
+	}
+
+	var r0 *types.QueryVersionResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *types.QueryVersionRequest, ...grpc.CallOption) (*types.QueryVersionResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *types.QueryVersionRequest, ...grpc.CallOption) *types.QueryVersionResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.QueryVersionResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *types.QueryVersionRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // NewOracleClient creates a new instance of OracleClient. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewOracleClient(t interface {

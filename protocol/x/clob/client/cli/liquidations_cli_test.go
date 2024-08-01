@@ -158,6 +158,7 @@ func (s *LiquidationsIntegrationTestSuite) SetupSuite() {
 					0,
 					big.NewInt(100_000_000), // 1 BTC
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 		},

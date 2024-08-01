@@ -805,3 +805,71 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 		})
 	}
 }
+
+func TestRateLimitingOrders_StatefulOrdersNotCountedDuringRecheck(t *testing.T) {
+	blockRateLimitConfig := clobtypes.BlockRateLimitConfiguration{
+		MaxStatefulOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+			{
+				NumBlocks: 2,
+				Limit:     2,
+			},
+		},
+	}
+	firstMsg := &LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5
+	secondMsg := &LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5
+
+	tApp := testapp.NewTestAppBuilder(t).
+		// Disable non-determinism checks since we mutate keeper state directly.
+		WithNonDeterminismChecksEnabled(false).
+		WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			genesis = testapp.DefaultGenesis()
+			testapp.UpdateGenesisDocWithAppStateForModule(
+				&genesis,
+				func(genesisState *clobtypes.GenesisState) {
+					genesisState.BlockRateLimitConfig = blockRateLimitConfig
+				},
+			)
+			testapp.UpdateGenesisDocWithAppStateForModule(
+				&genesis,
+				func(genesisState *satypes.GenesisState) {
+					genesisState.Subaccounts = []satypes.Subaccount{
+						constants.Alice_Num0_10_000USD,
+						constants.Alice_Num1_10_000USD,
+					}
+				})
+			return genesis
+		}).Build()
+	ctx := tApp.InitChain()
+
+	firstCheckTx := testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), firstMsg),
+		},
+		firstMsg,
+	)
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+	// First transaction should be allowed.
+	resp := tApp.CheckTx(firstCheckTx)
+	require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+
+	tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+		// First transaction did not get proposed in a block.
+		// Txn remains in the mempool and will get rechecked.
+		DeliverTxsOverride: [][]byte{},
+	})
+
+	// Rate limit is 2 over two block, second attempt should be allowed.
+	secondCheckTx := testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), secondMsg),
+		},
+		secondMsg,
+	)
+	resp = tApp.CheckTx(secondCheckTx)
+	require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+}

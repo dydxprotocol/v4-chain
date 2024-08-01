@@ -51,10 +51,12 @@ func TestProcessProposerMatches_Liquidation_Undercollateralized_Determinism(t *t
 						0,
 						big.NewInt(100_000_000), // 1 BTC
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 					testutil.CreateSinglePerpetualPosition(
 						1,
 						big.NewInt(1000),
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -418,12 +420,14 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 						0,
 						big.NewInt(-50_000_000), // .5 BTC
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Dave_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(50_000_000), // .5 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -523,12 +527,14 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 						0,
 						big.NewInt(-50_000_000), // .5 BTC
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Dave_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(50_000_000), // .5 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -840,12 +846,14 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 						0,
 						big.NewInt(-50_000_000), // .5 BTC
 						big.NewInt(0),
+						big.NewInt(0),
 					),
 				},
 				constants.Dave_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
 						big.NewInt(50_000_000), // .5 BTC
+						big.NewInt(0),
 						big.NewInt(0),
 					),
 				},
@@ -886,6 +894,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(-10), // Liquidatable position is smaller than StepBaseQuantums
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},

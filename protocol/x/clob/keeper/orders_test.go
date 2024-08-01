@@ -860,7 +860,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			for _, order := range tc.existingOrders {
 				if order.IsStatefulOrder() {
 					ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, blockHeight)
-					ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+					ks.ClobKeeper.AddStatefulOrderIdExpiration(
 						ctx,
 						order.MustGetUnixGoodTilBlockTime(),
 						order.GetOrderId(),
@@ -881,7 +881,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			// by the time PlaceOrder was called, as PlaceOrder is called in PrepareCheckState for stateful orders.
 			if tc.order.IsStatefulOrder() {
 				ks.ClobKeeper.SetLongTermOrderPlacement(ctx, tc.order, blockHeight)
-				ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+				ks.ClobKeeper.AddStatefulOrderIdExpiration(
 					ctx,
 					tc.order.MustGetUnixGoodTilBlockTime(),
 					tc.order.GetOrderId(),
@@ -903,7 +903,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			// Verify test expectations.
 			require.ErrorIs(t, err, tc.expectedErr)
 			statefulOrderPlacement, _ := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, tc.order.OrderId)
-			statefulOrderIds := ks.ClobKeeper.GetStatefulOrdersTimeSlice(ctx, tc.order.MustGetUnixGoodTilBlockTime())
+			statefulOrderIds := ks.ClobKeeper.GetStatefulOrderIdExpirations(ctx, tc.order.MustGetUnixGoodTilBlockTime())
 			if err == nil {
 				require.Equal(t, tc.expectedOrderStatus, orderStatus)
 				require.Equal(t, tc.expectedFilledSize, orderSizeOptimisticallyFilledFromMatching)
@@ -935,6 +935,8 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 	memClob.On("SetClobKeeper", mock.Anything).Return()
 
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+
+	ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 	ctx := ks.Ctx.WithTxBytes(constants.TestTxBytes)
@@ -992,6 +994,8 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 	memClob.On("SetClobKeeper", mock.Anything).Return()
 	indexerEventManager := &mocks.IndexerEventManager{}
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+
+	ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -1746,6 +1750,8 @@ func TestGetStatePosition_Success(t *testing.T) {
 			if tc.subaccount != nil {
 				ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, *tc.subaccount)
 			}
+
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -1797,6 +1803,8 @@ func TestGetStatePosition_PanicsOnInvalidClob(t *testing.T) {
 	// Setup keeper state.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+
+	ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -1962,6 +1970,8 @@ func TestInitStatefulOrders(t *testing.T) {
 			indexerEventManager := &mocks.IndexerEventManager{}
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -2044,125 +2054,6 @@ func TestInitStatefulOrders(t *testing.T) {
 				len(constants.TestOffchainMessages)*len(expectedPlacedOrders),
 			)
 			memClob.AssertExpectations(t)
-		})
-	}
-}
-
-func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
-	tests := map[string]struct {
-		// CLOB module state.
-		statefulOrdersInState       []types.Order
-		isConditionalOrderTriggered map[types.OrderId]bool
-	}{
-		`Can initialize untriggered conditional orders with 0 stateful orders in state`: {
-			statefulOrdersInState:       []types.Order{},
-			isConditionalOrderTriggered: map[types.OrderId]bool{},
-		},
-		`Can initialize untriggered conditional orders with both Long-Term and triggered
-			conditional orders in state`: {
-			statefulOrdersInState: []types.Order{
-				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50005,
-				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
-			},
-			isConditionalOrderTriggered: map[types.OrderId]bool{
-				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50005.
-					OrderId: true,
-			},
-		},
-		`Can initialize untriggered conditional orders with both Long-Term, untriggered conditional
-			orders, and triggered conditional orders in state`: {
-			statefulOrdersInState: []types.Order{
-				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50005,
-				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
-				constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price10_GTBT15_TakeProfit20,
-				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-			},
-			isConditionalOrderTriggered: map[types.OrderId]bool{
-				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50005.
-					OrderId: true,
-			},
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			// Setup state.
-			memClob := &mocks.MemClob{}
-			memClob.On("SetClobKeeper", mock.Anything).Return()
-
-			indexerEventManager := &mocks.IndexerEventManager{}
-
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
-			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
-			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
-
-			// Create CLOB pair.
-			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
-			indexerEventManager.On("AddTxnEvent",
-				ks.Ctx,
-				indexerevents.SubtypePerpetualMarket,
-				indexerevents.PerpetualMarketEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						0,
-						0,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-						constants.ClobPair_Btc.Status,
-						constants.ClobPair_Btc.QuantumConversionExponent,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-						constants.ClobPair_Btc.SubticksPerTick,
-						constants.ClobPair_Btc.StepBaseQuantums,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
-					),
-				),
-			).Once().Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
-				ks.Ctx,
-				constants.ClobPair_Btc.Id,
-				clobtest.MustPerpetualId(constants.ClobPair_Btc),
-				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-				constants.ClobPair_Btc.QuantumConversionExponent,
-				constants.ClobPair_Btc.SubticksPerTick,
-				constants.ClobPair_Btc.Status,
-			)
-			require.NoError(t, err)
-
-			// Create each stateful order placement in state.
-			expectedUntriggeredConditionalOrders := make(map[types.ClobPairId]*keeper.UntriggeredConditionalOrders)
-			for i, order := range tc.statefulOrdersInState {
-				require.True(t, order.IsStatefulOrder())
-
-				// Write the stateful order placement to state.
-				ks.ClobKeeper.SetLongTermOrderPlacement(ks.Ctx, order, uint32(i))
-
-				// No further state updates are required if this isn't a conditional order.
-				if !order.IsConditionalOrder() {
-					continue
-				}
-
-				// If it's a triggered conditional order, ensure it's triggered in state and skip
-				// updating the expected untriggered conditional orders.
-				if tc.isConditionalOrderTriggered[order.OrderId] {
-					ks.ClobKeeper.MustTriggerConditionalOrder(ks.Ctx, order.OrderId)
-					continue
-				}
-
-				// This is an untriggered conditional order and we expect it to be returned.
-				untriggeredConditionalOrders, exists := expectedUntriggeredConditionalOrders[order.GetClobPairId()]
-				if !exists {
-					untriggeredConditionalOrders = ks.ClobKeeper.NewUntriggeredConditionalOrders()
-					expectedUntriggeredConditionalOrders[order.GetClobPairId()] = untriggeredConditionalOrders
-				}
-				untriggeredConditionalOrders.AddUntriggeredConditionalOrder(order)
-			}
-
-			// Run the test and verify expectations.
-			ks.ClobKeeper.HydrateUntriggeredConditionalOrders(ks.Ctx)
-
-			require.Equal(t, expectedUntriggeredConditionalOrders, ks.ClobKeeper.UntriggeredConditionalOrders)
 		})
 	}
 }
@@ -2262,6 +2153,8 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 				&mocks.BankKeeper{},
 				indexer_manager.NewIndexerEventManagerNoop(),
 			)
+
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -2391,6 +2284,7 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 				&mocks.BankKeeper{},
 				indexer_manager.NewIndexerEventManagerNoop(),
 			)
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 

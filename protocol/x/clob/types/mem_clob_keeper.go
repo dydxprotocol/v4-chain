@@ -2,7 +2,6 @@ package types
 
 import (
 	"math/big"
-	"time"
 
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,11 +71,6 @@ type MemClobKeeper interface {
 		order Order,
 		blockHeight uint32,
 	)
-	MustAddOrderToStatefulOrdersTimeSlice(
-		ctx sdk.Context,
-		goodTilBlockTime time.Time,
-		orderId OrderId,
-	)
 	OffsetSubaccountPerpetualPosition(
 		ctx sdk.Context,
 		liquidatedSubaccountId satypes.SubaccountId,
@@ -110,4 +104,9 @@ type MemClobKeeper interface {
 		ctx sdk.Context,
 		orderbookFills []StreamOrderbookFill,
 	)
+	AddOrderToOrderbookSubaccountUpdatesCheck(
+		ctx sdk.Context,
+		subaccountId satypes.SubaccountId,
+		order PendingOpenOrder,
+	) satypes.UpdateResult
 }

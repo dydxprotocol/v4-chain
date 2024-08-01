@@ -125,6 +125,32 @@ const createdOnOrAfterSchemaRecord: Record<string, ParamSchema> = {
   },
 };
 
+const transferBetweenSchemaRecord: Record<string, ParamSchema> = {
+  ...createdBeforeOrAtSchemaRecord,
+  sourceAddress: {
+    in: ['params', 'query'],
+    isString: true,
+  },
+  sourceSubaccountNumber: {
+    in: ['params', 'query'],
+    isInt: {
+      options: { gt: -1, lt: MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER + 1 },
+    },
+    errorMessage: 'subaccountNumber must be a non-negative integer less than 128001',
+  },
+  recipientAddress: {
+    in: ['params', 'query'],
+    isString: true,
+  },
+  recipientSubaccountNumber: {
+    in: ['params', 'query'],
+    isInt: {
+      options: { gt: -1, lt: MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER + 1 },
+    },
+    errorMessage: 'subaccountNumber must be a non-negative integer less than 128001',
+  },
+};
+
 export const CheckLimitSchema = checkSchema(limitSchemaRecord);
 
 export const CheckPaginationSchema = checkSchema(paginationSchemaRecord);
@@ -184,3 +210,5 @@ export const CheckHistoricalBlockTradingRewardsSchema = checkSchema({
     errorMessage: 'startingBeforeOrAtHeight must be a non-negative integer',
   },
 });
+
+export const CheckTransferBetweenSchema = checkSchema(transferBetweenSchemaRecord);

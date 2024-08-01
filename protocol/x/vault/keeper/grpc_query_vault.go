@@ -54,7 +54,7 @@ func (k Keeper) Vault(
 		SubaccountId: *vaultId.ToSubaccountId(),
 		Equity:       dtypes.NewIntFromBigInt(equity),
 		Inventory:    dtypes.NewIntFromBigInt(inventory),
-		TotalShares:  totalShares.NumShares.BigInt().Uint64(),
+		TotalShares:  totalShares,
 	}, nil
 }
 

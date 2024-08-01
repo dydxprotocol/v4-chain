@@ -12,6 +12,7 @@ import (
 	sdkante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	gometrics "github.com/hashicorp/go-metrics"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -23,15 +24,18 @@ import (
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
 	ak              sdkante.AccountKeeper
+	akp             accountpluskeeper.Keeper
 	signModeHandler *txsigning.HandlerMap
 }
 
 func NewSigVerificationDecorator(
 	ak sdkante.AccountKeeper,
+	akp accountpluskeeper.Keeper,
 	signModeHandler *txsigning.HandlerMap,
 ) SigVerificationDecorator {
 	return SigVerificationDecorator{
 		ak:              ak,
+		akp:             akp,
 		signModeHandler: signModeHandler,
 	}
 }
@@ -59,7 +63,8 @@ func (svd SigVerificationDecorator) AnteHandle(
 		return ctx, err
 	}
 
-	// check that signer length and signature length are the same
+	// Check that signer length and signature length are the same.
+	// The ordering of the sigs and signers have matching ordering (sigs[i] belongs to signers[i]).
 	if len(sigs) != len(signers) {
 		err := errorsmod.Wrapf(
 			sdkerrors.ErrUnauthorized,
@@ -74,6 +79,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 	// only messages that use `GoodTilBlock` for replay protection.
 	skipSequenceValidation := ShouldSkipSequenceValidation(tx.GetMsgs())
 
+	// Iterate on sig and signer pairs.
 	for i, sig := range sigs {
 		acc, err := sdkante.GetSignerAcc(ctx, svd.ak, signers[i])
 		if err != nil {
@@ -89,23 +95,41 @@ func (svd SigVerificationDecorator) AnteHandle(
 		// Check account sequence number.
 		// Skip individual sequence number validation since this transaction use
 		// `GoodTilBlock` for replay protection.
-		if !skipSequenceValidation && sig.Sequence != acc.GetSequence() {
-			labels := make([]gometrics.Label, 0)
-			if len(tx.GetMsgs()) > 0 {
-				labels = append(
-					labels,
-					metrics.GetLabelForStringValue(metrics.MessageType, fmt.Sprintf("%T", tx.GetMsgs()[0])),
+		if !skipSequenceValidation {
+			if accountpluskeeper.IsTimestampNonce(sig.Sequence) {
+				if err := svd.akp.ProcessTimestampNonce(ctx, acc, sig.Sequence); err != nil {
+					telemetry.IncrCounterWithLabels(
+						[]string{metrics.TimestampNonce, metrics.Invalid, metrics.Count},
+						1,
+						[]gometrics.Label{metrics.GetLabelForIntValue(metrics.ExecMode, int(ctx.ExecMode()))},
+					)
+					return ctx, errorsmod.Wrapf(sdkerrors.ErrWrongSequence, err.Error())
+				}
+				telemetry.IncrCounterWithLabels(
+					[]string{metrics.TimestampNonce, metrics.Valid, metrics.Count},
+					1,
+					[]gometrics.Label{metrics.GetLabelForIntValue(metrics.ExecMode, int(ctx.ExecMode()))},
 				)
+			} else {
+				if sig.Sequence != acc.GetSequence() {
+					labels := make([]gometrics.Label, 0)
+					if len(tx.GetMsgs()) > 0 {
+						labels = append(
+							labels,
+							metrics.GetLabelForStringValue(metrics.MessageType, fmt.Sprintf("%T", tx.GetMsgs()[0])),
+						)
+					}
+					telemetry.IncrCounterWithLabels(
+						[]string{metrics.SequenceNumber, metrics.Invalid, metrics.Count},
+						1,
+						labels,
+					)
+					return ctx, errorsmod.Wrapf(
+						sdkerrors.ErrWrongSequence,
+						"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
+					)
+				}
 			}
-			telemetry.IncrCounterWithLabels(
-				[]string{metrics.SequenceNumber, metrics.Invalid, metrics.Count},
-				1,
-				labels,
-			)
-			return ctx, errorsmod.Wrapf(
-				sdkerrors.ErrWrongSequence,
-				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
-			)
 		}
 
 		// retrieve signer data

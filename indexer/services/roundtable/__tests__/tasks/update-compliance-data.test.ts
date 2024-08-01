@@ -249,6 +249,42 @@ describe('update-compliance-data', () => {
     expectTimingStats(mockProvider.provider);
   });
 
+  it('succeeds with an active address to update but doesnt update existing CLOSE_ONLY position', async () => {
+    // Seed database with compliance data older than the age threshold for active addresses
+    await setupComplianceData(config.MAX_ACTIVE_COMPLIANCE_DATA_AGE_SECONDS * 2);
+    const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO();
+    await ComplianceStatusTable.create({
+      address: testConstants.defaultAddress,
+      status: ComplianceStatus.CLOSE_ONLY,
+      reason: ComplianceReason.US_GEO,
+      updatedAt: createdAt,
+    });
+
+    await updateComplianceDataTask(mockProvider);
+
+    const complianceStatusData: ComplianceStatusFromDatabase[] = await
+    ComplianceStatusTable.findAll({}, [], {});
+    expect(complianceStatusData).toHaveLength(1);
+    expect(complianceStatusData[0]).toEqual(expect.objectContaining({
+      address: testConstants.defaultAddress,
+      status: ComplianceStatus.CLOSE_ONLY,
+      reason: ComplianceReason.US_GEO,
+      updatedAt: createdAt,
+    }));
+
+    expectGaugeStats({
+      activeAddresses: 1,
+      newAddresses: 0,
+      oldAddresses: 0,
+      addressesScreened: 0,
+      upserted: 0,
+      statusUpserted: 0,
+    },
+    mockProvider.provider,
+    );
+    expectTimingStats(mockProvider.provider);
+  });
+
   it('succeeds with an active address to update, undefined risk-score', async () => {
     // Seed database with compliance data older than the age threshold for active addresses
     await setupComplianceData(config.MAX_ACTIVE_COMPLIANCE_DATA_AGE_SECONDS * 2);
@@ -641,7 +677,6 @@ async function setupInitialSubaccounts(
 ): Promise<void> {
   const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll({
     address: testConstants.defaultAddress,
-    subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
   }, [], {});
   await setupSubaccounts(deltaSeconds, _.map(subaccounts, 'id'));
 }

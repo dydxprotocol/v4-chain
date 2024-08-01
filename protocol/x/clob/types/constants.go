@@ -25,4 +25,4 @@ const StatefulOrderTimeWindow time.Duration = 95 * 24 * time.Hour // 95 days.
 // The lower bound is calculated as:
 //
 //	lower_bound = (1 - min_price_change_ppm / 1_000_000 * conditional_order_trigger_multiplier) * oracle_price
-const ConditionalOrderTriggerMultiplier uint64 = 25
+const ConditionalOrderTriggerMultiplier uint64 = 5

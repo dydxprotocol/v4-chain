@@ -15,6 +15,7 @@ import OrderbooksController from './v4/orderbook-controller';
 import OrdersController from './v4/orders-controller';
 import PerpetualMarketController from './v4/perpetual-markets-controller';
 import PerpetualPositionsController from './v4/perpetual-positions-controller';
+import SocialTradingController from './v4/social-trading-controller';
 import SparklinesController from './v4/sparklines-controller';
 import TimeController from './v4/time-controller';
 import TradesController from './v4/trades-controller';
@@ -42,5 +43,6 @@ router.use('/trades', TradesController);
 router.use('/transfers', TransfersController);
 router.use('/screen', ComplianceController);
 router.use('/compliance', ComplianceV2Controller);
+router.use('/trader', SocialTradingController);
 
 export default router;

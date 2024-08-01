@@ -495,10 +495,12 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 							0,
 							big.NewInt(-100_000_000), // -1 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 						testutil.CreateSinglePerpetualPosition(
 							1,
 							big.NewInt(-1_000_000_000), // -1 ETH
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -580,10 +582,12 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 							0,
 							big.NewInt(-100_000_000), // -1 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 						testutil.CreateSinglePerpetualPosition(
 							1,
 							big.NewInt(-1_000_000_000), // -1 ETH
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -710,10 +714,12 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 							0,
 							big.NewInt(-100_000_000), // -1 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 						testutil.CreateSinglePerpetualPosition(
 							1,
 							big.NewInt(-1_000_000_000), // -1 ETH
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -1110,10 +1116,12 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 							0,
 							big.NewInt(-100_000_000), // -1 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 						testutil.CreateSinglePerpetualPosition(
 							1,
 							big.NewInt(-2_000_000_000), // -2 ETH
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -1449,6 +1457,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							0,
 							big.NewInt(-75_000_000), // -0.75 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -1464,6 +1473,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(75_000_000), // 0.75 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -1585,6 +1595,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							0,
 							big.NewInt(-75_000_000), // -0.75 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -1600,6 +1611,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(75_000_000), // 0.75 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -1698,6 +1710,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							0,
 							big.NewInt(-75_000_000), // -0.75 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -1771,6 +1784,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							0,
 							// Deleveraging fails for remaining amount.
 							big.NewInt(-50_000_000), // -0.5 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -1847,6 +1861,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							0,
 							big.NewInt(-75_000_000), // -0.75 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -1862,6 +1877,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(75_000_000), // 0.75 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -2003,6 +2019,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							0,
 							big.NewInt(-75_000_000), // -0.75 BTC
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -2018,6 +2035,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(75_000_000), // 0.75 BTC
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -2248,6 +2266,8 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 	ctx := ks.Ctx.WithTxBytes(constants.TestTxBytes)
 	// CheckTx mode set correctly
 	ctx = ctx.WithIsCheckTx(true)
+
+	ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 	prices.InitGenesis(ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -2335,6 +2355,7 @@ func TestIsLiquidatable(t *testing.T) {
 					uint32(0),
 					big.NewInt(10_000_000), // 0.1 BTC, $5,000 notional.
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			assetPositions: testutil.CreateUsdcAssetPositions(
@@ -2352,6 +2373,7 @@ func TestIsLiquidatable(t *testing.T) {
 					uint32(0),
 					big.NewInt(10_000_000), // 0.1 BTC, $5,000 notional.
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			assetPositions: testutil.CreateUsdcAssetPositions(
@@ -2368,6 +2390,7 @@ func TestIsLiquidatable(t *testing.T) {
 				testutil.CreateSinglePerpetualPosition(
 					uint32(0),
 					big.NewInt(10_000_000), // 0.1 BTC, $5,000 notional.
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -4093,6 +4116,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 					0,
 					big.NewInt(5),
 					big.NewInt(0),
+					big.NewInt(0),
 				),
 			},
 			perpetuals: []perptypes.Perpetual{
@@ -4121,6 +4145,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				testutil.CreateSinglePerpetualPosition(
 					0,
 					big.NewInt(140),
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -4151,6 +4176,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				testutil.CreateSinglePerpetualPosition(
 					0,
 					big.NewInt(20),
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -4286,6 +4312,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				testutil.CreateSinglePerpetualPosition(
 					0,
 					big.NewInt(21),
+					big.NewInt(0),
 					big.NewInt(0),
 				),
 			},
@@ -5033,6 +5060,7 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 				uint32(0),
 				big.NewInt(100_000_000), // 1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 			expectedMinPosNotionalLiquidatable: big.NewInt(100),
 			expectedMaxPosNotionalLiquidatable: big.NewInt(50_000_000_000), // $50,000
@@ -5050,6 +5078,7 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 			positionToLiquidate: testutil.CreateSinglePerpetualPosition(
 				uint32(0),
 				big.NewInt(100_000_000), // 1 BTC
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 			expectedMinPosNotionalLiquidatable: big.NewInt(100),
@@ -5069,6 +5098,7 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 				uint32(0),
 				big.NewInt(10_000), // $5 notional
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 			expectedMinPosNotionalLiquidatable: big.NewInt(5_000_000), // $5
 			expectedMaxPosNotionalLiquidatable: big.NewInt(5_000_000), // $5
@@ -5078,6 +5108,7 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 			positionToLiquidate: testutil.CreateSinglePerpetualPosition(
 				uint32(999), // non-existent
 				big.NewInt(1),
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 			expectedErr: perptypes.ErrPerpetualDoesNotExist,

@@ -100,6 +100,18 @@ export function getMessageToForward(
         version: subaccountMessage.version,
       };
     }
+    case Channel.V4_BLOCK_HEIGHT: {
+      const blockHeightMessage: BlockHeightMessage = BlockHeightMessage.decode(messageBinary);
+      return {
+        channel: Channel.V4_BLOCK_HEIGHT,
+        id: V4_BLOCK_HEIGHT_ID,
+        version: blockHeightMessage.version,
+        contents: {
+          blockHeight: blockHeightMessage.blockHeight,
+          time: blockHeightMessage.time,
+        },
+      };
+    }
     default:
       throw new InvalidForwardMessageError(`Unknown channel: ${channel}`);
   }

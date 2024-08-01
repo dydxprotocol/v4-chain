@@ -49,6 +49,7 @@ const (
 	LiquidationsPercentFilledDistribution                          = "liquidations_percent_filled_distribution"
 	LiquidationsPlacePerpetualLiquidationQuoteQuantumsDistribution = "liquidations_place_perpetual_liquidation_quote_quantums_distribution"
 	RateLimitWithdrawalAmount                                      = "rate_limit_withdrawal_amount"
+	BlockTimeDistribution                                          = "block_time_dist"
 
 	// Measure Since
 	ClobOffsettingSubaccountPerpetualPosition         = "clob_offsetting_subaccount_perpetual_position"

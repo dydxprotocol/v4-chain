@@ -85,6 +85,9 @@ export enum QueryableField {
   STARTED_AT_BEFORE_OR_AT = 'startedAtBeforeOrAt',
   STARTED_AT_HEIGHT_BEFORE_OR_AT = 'startedAtHeightBeforeOrAt',
   REASON = 'reason',
+  USERNAME = 'username',
+  TIMESPAN = 'timeSpan',
+  RANK = 'rank',
 }
 
 export interface QueryConfig {
@@ -98,6 +101,11 @@ export interface SubaccountQueryConfig extends QueryConfig {
   [QueryableField.SUBACCOUNT_NUMBER]?: number;
   [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
   [QueryableField.UPDATED_ON_OR_AFTER]?: string;
+}
+
+export interface SubaccountUsernamesQueryConfig extends QueryConfig {
+  [QueryableField.USERNAME]?: string[];
+  [QueryableField.SUBACCOUNT_ID]?: string[];
 }
 
 export interface WalletQueryConfig extends QueryConfig {
@@ -283,7 +291,7 @@ export interface ComplianceDataQueryConfig extends QueryConfig {
 
 export interface ComplianceStatusQueryConfig extends QueryConfig {
   [QueryableField.ADDRESS]?: string[];
-  [QueryableField.STATUS]?: string;
+  [QueryableField.STATUS]?: string[];
   [QueryableField.CREATED_BEFORE_OR_AT]?: string;
   [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
   [QueryableField.REASON]?: string;
@@ -306,4 +314,10 @@ export interface TradingRewardAggregationQueryConfig extends QueryConfig {
   [QueryableField.PERIOD]?: TradingRewardAggregationPeriod;
   [QueryableField.STARTED_AT_BEFORE_OR_AT]?: IsoString;
   [QueryableField.STARTED_AT_HEIGHT_BEFORE_OR_AT]?: string;
+}
+
+export interface LeaderboardPnlQueryConfig extends QueryConfig {
+  [QueryableField.ADDRESS]?: string[];
+  [QueryableField.TIMESPAN]?: string[];
+  [QueryableField.RANK]?: number[];
 }

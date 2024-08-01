@@ -10,3 +10,8 @@ type StatsKeeper interface {
 	GetUserStats(ctx sdk.Context, address string) *types.UserStats
 	GetGlobalStats(ctx sdk.Context) *types.GlobalStats
 }
+
+// VaultKeeper defines the expected vault keeper.
+type VaultKeeper interface {
+	IsVault(ctx sdk.Context, address string) bool
+}
