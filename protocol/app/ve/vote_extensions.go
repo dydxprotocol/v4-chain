@@ -237,44 +237,44 @@ func (h *VoteExtensionHandler) getCurrentPrices(
 ) map[uint32]VEPricePair {
 	vePrices := make(map[uint32]VEPricePair)
 
-	indexPrices := h.pricesKeeper.GetValidMarketPriceUpdates(ctx)
+	indexPrices := h.pricesKeeper.GetValidMarketSpotPriceUpdates(ctx)
 
-	for _, market := range indexPrices.MarketPriceUpdates {
+	for _, market := range indexPrices {
 
 		clobMidPrice := h.getClobMidPrice(ctx, market.MarketId)
 		if clobMidPrice == nil {
 			vePrices[market.MarketId] = VEPricePair{
-				SpotPrice: market.Price,
-				PnlPrice:  market.Price,
+				SpotPrice: market.SpotPrice,
+				PnlPrice:  market.SpotPrice,
 			}
 			continue
 		}
 		smoothedPrice := h.getSmoothedPrice(market.MarketId)
 		if smoothedPrice == nil {
 			vePrices[market.MarketId] = VEPricePair{
-				SpotPrice: market.Price,
-				PnlPrice:  market.Price,
+				SpotPrice: market.SpotPrice,
+				PnlPrice:  market.SpotPrice,
 			}
 			continue
 		}
 		lastFundingRate := h.getLastFundingRate(ctx, market.MarketId)
 		if lastFundingRate == nil {
 			vePrices[market.MarketId] = VEPricePair{
-				SpotPrice: market.Price,
-				PnlPrice:  market.Price,
+				SpotPrice: market.SpotPrice,
+				PnlPrice:  market.SpotPrice,
 			}
 			continue
 		}
 
 		medianPrice := h.getMedianPrice(
-			new(big.Int).SetUint64(market.Price),
+			new(big.Int).SetUint64(market.SpotPrice),
 			clobMidPrice,
 			smoothedPrice,
 			lastFundingRate,
 		)
 
 		vePrices[market.MarketId] = VEPricePair{
-			SpotPrice: market.Price,
+			SpotPrice: market.SpotPrice,
 			PnlPrice:  medianPrice.Uint64(),
 		}
 	}
@@ -333,7 +333,7 @@ func (h *VoteExtensionHandler) getClobMidPrice(
 func (h *VoteExtensionHandler) getSmoothedPrice(
 	marketId uint32,
 ) *big.Int {
-	smoothedPrice, exists := h.pricesKeeper.GetSmoothedPrice(marketId)
+	smoothedPrice, exists := h.pricesKeeper.GetSmoothedSpotPrice(marketId)
 	if !exists || smoothedPrice == 0 {
 		return nil
 	}

@@ -18,18 +18,18 @@ type PreBlockExecPricesKeeper interface {
 		marketPriceUpdates *pricestypes.MarketPriceUpdates,
 	) error
 
-	UpdateSmoothedPrices(
+	UpdateSmoothedSpotPrices(
 		ctx sdk.Context,
 		linearInterpolateFunc func(v0 uint64, v1 uint64, ppm uint32) (uint64, error),
 	) error
 
-	GetValidMarketPriceUpdates(ctx sdk.Context) *pricestypes.MarketPriceUpdates
+	GetValidMarketSpotPriceUpdates(ctx sdk.Context) []*pricestypes.MarketSpotPriceUpdate
 
 	GetAllMarketParams(ctx sdk.Context) []pricestypes.MarketParam
 
 	GetMarketParam(ctx sdk.Context, id uint32) (market pricestypes.MarketParam, exists bool)
 
-	GetSmoothedPrice(markedId uint32) (uint64, bool)
+	GetSmoothedSpotPrice(markedId uint32) (uint64, bool)
 }
 
 type ExtendVoteClobKeeper interface {
