@@ -26,6 +26,7 @@ import { SubaccountUpdateValidator } from '../validators/subaccount-update-valid
 import { TransferValidator } from '../validators/transfer-validator';
 import { UpdateClobPairValidator } from '../validators/update-clob-pair-validator';
 import { UpdatePerpetualValidator } from '../validators/update-perpetual-validator';
+import { YieldParamsValidator } from '../validators/yield-params-validator';
 import { Validator, ValidatorInitializer } from '../validators/validator';
 import { BatchedHandlers } from './batched-handlers';
 import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTransactionIndex } from './helper';
@@ -49,6 +50,7 @@ const TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorIn
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString(), 1)]: UpdateClobPairValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.DELEVERAGING.toString(), 1)]: DeleveragingValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.LIQUIDITY_TIER.toString(), 2)]: LiquidityTierValidatorV2,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.YIELD_PARAMS.toString(), 1)]: YieldParamsValidator,
 };
 
 const BLOCK_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {

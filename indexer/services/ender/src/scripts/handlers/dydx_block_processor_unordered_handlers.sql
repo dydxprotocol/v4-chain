@@ -58,6 +58,8 @@ BEGIN
                 rval[i] = dydx_stateful_order_handler(block_height, block_time, event_data);
             WHEN '"deleveraging"'::jsonb THEN
                 rval[i] = dydx_deleveraging_handler(block_height, block_time, event_data, event_index, transaction_index, jsonb_array_element_text(block->'txHashes', transaction_index));
+            WHEN '"yield_params"'::jsonb THEN
+                rval[i] = dydx_yield_params_handler(block_height, block_time, event_data);
             ELSE
                 NULL;
             END CASE;
