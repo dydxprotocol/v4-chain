@@ -30,7 +30,7 @@ func (k Keeper) UpdateSmoothedPrices(
 			continue
 		}
 
-		smoothedPrice, ok := k.marketToSmoothedPrices.GetSmoothedPrice(marketParam.Id)
+		smoothedPrice, ok := k.marketToSmoothedPrices.GetSmoothedSpotPrice(marketParam.Id)
 		if !ok {
 			smoothedPrice = indexPrice
 		}
@@ -47,14 +47,14 @@ func (k Keeper) UpdateSmoothedPrices(
 			continue
 		}
 
-		k.marketToSmoothedPrices.PushSmoothedPrice(marketParam.Id, update)
+		k.marketToSmoothedPrices.PushSmoothedSpotPrice(marketParam.Id, update)
 	}
 
 	return errors.Join(updateErrors...)
 }
 
-func (k Keeper) GetSmoothedPrice(
+func (k Keeper) GetSmoothedSpotPrice(
 	markedId uint32,
 ) (uint64, bool) {
-	return k.marketToSmoothedPrices.GetSmoothedPrice(markedId)
+	return k.marketToSmoothedPrices.GetSmoothedSpotPrice(markedId)
 }

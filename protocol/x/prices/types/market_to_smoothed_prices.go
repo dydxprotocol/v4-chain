@@ -13,10 +13,10 @@ const (
 
 // MarketToSmoothedPrices tracks current and historical exponentially smoothed prices for each market.
 type MarketToSmoothedPrices interface {
-	GetSmoothedPrice(marketId uint32) (price uint64, ok bool)
-	GetSmoothedPricesForTest() map[uint32]uint64
-	GetHistoricalSmoothedPrices(marketId uint32) []uint64
-	PushSmoothedPrice(marketId uint32, price uint64)
+	GetSmoothedSpotPrice(marketId uint32) (price uint64, ok bool)
+	GetSmoothedSpotPricesForTest() map[uint32]uint64
+	GetHistoricalSmoothedSpotPrices(marketId uint32) []uint64
+	PushSmoothedSpotPrice(marketId uint32, price uint64)
 }
 
 type MarketToSmoothedPricesImpl struct {
@@ -25,7 +25,7 @@ type MarketToSmoothedPricesImpl struct {
 }
 
 // GetSmoothedPrice returns the smoothed price for the given market.
-func (m *MarketToSmoothedPricesImpl) GetSmoothedPrice(marketId uint32) (
+func (m *MarketToSmoothedPricesImpl) GetSmoothedSpotPrice(marketId uint32) (
 	price uint64,
 	ok bool,
 ) {
@@ -44,10 +44,10 @@ func (m *MarketToSmoothedPricesImpl) GetSmoothedPrice(marketId uint32) (
 }
 
 // GetSmoothedPricesForTest returns a map of market ids to smoothed prices. This is primarily here for testing.
-func (m *MarketToSmoothedPricesImpl) GetSmoothedPricesForTest() map[uint32]uint64 {
+func (m *MarketToSmoothedPricesImpl) GetSmoothedSpotPricesForTest() map[uint32]uint64 {
 	smoothedPrices := make(map[uint32]uint64)
 	for marketId := range m.marketToSmoothedPrices {
-		smoothedPrice, exists := m.GetSmoothedPrice(marketId)
+		smoothedPrice, exists := m.GetSmoothedSpotPrice(marketId)
 		if exists {
 			smoothedPrices[marketId] = smoothedPrice
 		}
@@ -58,7 +58,7 @@ func (m *MarketToSmoothedPricesImpl) GetSmoothedPricesForTest() map[uint32]uint6
 // GetHistoricalSmoothedPrices returns up to the last `SmoothedPriceTrackingBlockHistoryLength` smoothed prices for the
 // given market. The returned slice is ordered from newest to oldest, and the first entry in the slice will be the
 // most recent valid smoothed price.
-func (m *MarketToSmoothedPricesImpl) GetHistoricalSmoothedPrices(marketId uint32) []uint64 {
+func (m *MarketToSmoothedPricesImpl) GetHistoricalSmoothedSpotPrices(marketId uint32) []uint64 {
 	smoothedPrices, ok := m.marketToSmoothedPrices[marketId]
 	if !ok {
 		return []uint64{}
@@ -77,7 +77,7 @@ func (m *MarketToSmoothedPricesImpl) GetHistoricalSmoothedPrices(marketId uint32
 }
 
 // PushSmoothedPrice sets the smoothed price for the given market.
-func (m *MarketToSmoothedPricesImpl) PushSmoothedPrice(id uint32, price uint64) {
+func (m *MarketToSmoothedPricesImpl) PushSmoothedSpotPrice(id uint32, price uint64) {
 	smoothedPrices, ok := m.marketToSmoothedPrices[id]
 	if !ok {
 		smoothedPrices = lists.NewRing[uint64](int(m.historyLength))
@@ -89,7 +89,7 @@ func (m *MarketToSmoothedPricesImpl) PushSmoothedPrice(id uint32, price uint64) 
 
 // NewMarketToSmoothedPrices returns a new `MarketToSmoothedPrices` that tracks the previous `historyLength` prices per
 // market. The default value to use for the protocol is `SmoothedPriceTrackingBlockHistoryLength`.
-func NewMarketToSmoothedPrices(historyLength uint32) MarketToSmoothedPrices {
+func NewMarketToSmoothedSpotPrices(historyLength uint32) MarketToSmoothedPrices {
 	return &MarketToSmoothedPricesImpl{
 		historyLength:          historyLength,
 		marketToSmoothedPrices: make(map[uint32]*lists.Ring[uint64]),
