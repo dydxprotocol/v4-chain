@@ -36,6 +36,7 @@ import {
   TransferEventV1,
   UpdateClobPairEventV1,
   UpdatePerpetualEventV1,
+  UpdateYieldParamsEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -454,3 +455,13 @@ export const defaultLongTermOrderPlacementEvent: StatefulOrderEventV1 = {
     },
   },
 };
+
+export const defaultUpdateYieldParamsEvent1: UpdateYieldParamsEventV1 = {
+  sdaiPrice: '100000000',
+  assetYieldIndex: '0/1',
+}
+
+export const defaultUpdateYieldParamsEvent2: UpdateYieldParamsEventV1 = {
+  sdaiPrice: '110000000',
+  assetYieldIndex: '1/1',
+}

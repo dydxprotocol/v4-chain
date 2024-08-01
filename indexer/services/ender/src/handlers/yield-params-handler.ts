@@ -1,18 +1,4 @@
 import {
-    AssetPositionFromDatabase,
-    AssetPositionModel,
-    assetRefresher,
-    AssetsMap,
-    MarketColumns,
-    MarketFromDatabase,
-    MarketsMap,
-    MarketTable,
-    perpetualMarketRefresher,
-    PerpetualMarketsMap,
-    PerpetualPositionModel,
-    SubaccountMessageContents,
-    SubaccountTable,
-    UpdatedPerpetualPositionSubaccountKafkaObject,
     YieldParamsFromDatabase,
     YieldParamsModel,
   } from '@dydxprotocol-indexer/postgres';
@@ -22,9 +8,6 @@ import {
   import _ from 'lodash';
   import * as pg from 'pg';
   
-  import { SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../constants';
-  import { addPositionsToContents, annotateWithPnl } from '../helpers/kafka-helper';
-  import { SubaccountUpdate } from '../lib/translated-types';
   import { ConsolidatedKafkaEvent } from '../lib/types';
   import { Handler } from './handler';
   

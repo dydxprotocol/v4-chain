@@ -31,6 +31,7 @@ import {
   SubaccountUpdateEventV1,
   Timestamp,
   TransferEventV1,
+  UpdateYieldParamsEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { onMessage } from '../../src/lib/on-message';
@@ -49,6 +50,7 @@ import {
   defaultPreviousHeight,
   defaultSubaccountMessage,
   defaultPerpetualMarketCreateEventV1,
+  defaultUpdateYieldParamsEvent1,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import Long from 'long';
@@ -150,6 +152,12 @@ describe('on-message', () => {
   const defaultPerpetualMarketEventBinary: Uint8Array = Uint8Array.from(
     PerpetualMarketCreateEventV1.encode(
       defaultPerpetualMarketCreateEventV1,
+    ).finish(),
+  );
+
+  const defaultUpdateYieldParamsEventBinary: Uint8Array = Uint8Array.from(
+    UpdateYieldParamsEventV1.encode(
+      defaultUpdateYieldParamsEvent1,
     ).finish(),
   );
 
@@ -484,6 +492,42 @@ describe('on-message', () => {
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.MARKET,
         defaultMarketEventBinary,
+        transactionIndex,
+        eventIndex,
+      ),
+    ];
+
+    const block: IndexerTendermintBlock = createIndexerTendermintBlock(
+      defaultHeight,
+      defaultTime,
+      events,
+      [defaultTxHash],
+    );
+    const binaryBlock: Uint8Array = Uint8Array.from(IndexerTendermintBlock.encode(block).finish());
+    const kafkaMessage: KafkaMessage = createKafkaMessage(Buffer.from(binaryBlock));
+
+    await onMessage(kafkaMessage);
+    await Promise.all([
+      expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
+      expectTransactionWithHash([defaultTxHash]),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+    ]);
+
+    expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
+    expect(stats.timing).toHaveBeenCalledWith(
+      'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
+    expect(stats.gauge).toHaveBeenCalledWith('ender.processing_block_height', expect.any(Number));
+    expect(stats.timing).toHaveBeenCalledWith('ender.processed_block.timing',
+      expect.any(Number), 1, { success: 'true' });
+  });
+
+  it('successfully processes block with yield params event', async () => {
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
+    const events: IndexerTendermintEvent[] = [
+      createIndexerTendermintEvent(
+        DydxIndexerSubtypes.YIELD_PARAMS,
+        defaultUpdateYieldParamsEventBinary,
         transactionIndex,
         eventIndex,
       ),

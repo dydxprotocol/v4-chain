@@ -13,7 +13,7 @@ DECLARE
     yield_params_record yield_params%ROWTYPE;
 BEGIN
     yield_params_record."id" = dydx_uuid_from_yield_params_parts(block_height);
-    yield_params_record."sDAIPrice" = jsonb_extract_path_text(event_data, 'sDAIPrice');
+    yield_params_record."sDAIPrice" = jsonb_extract_path_text(event_data, 'sdaiPrice');
     yield_params_record."assetYieldIndex" = jsonb_extract_path_text(event_data, 'assetYieldIndex');
     yield_params_record."createdAtHeight" = block_height;
     yield_params_record."createdAt" = block_time;

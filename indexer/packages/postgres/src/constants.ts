@@ -20,6 +20,7 @@ import {
   PerpetualMarketStatus,
   TimeInForce,
 } from './types';
+import YieldParamsModel from './models/yield-params-model';
 
 export const BUFFER_ENCODING_UTF_8: BufferEncoding = 'utf-8';
 
@@ -99,6 +100,7 @@ export const SQL_TO_JSON_DEFINED_MODELS = [
   PerpetualPositionModel,
   SubaccountModel,
   TransferModel,
+  YieldParamsModel,
 ];
 
 export type SpecifiedClobPairStatus =
