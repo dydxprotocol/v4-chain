@@ -354,6 +354,7 @@ describe('ComplianceV2Controller', () => {
       }));
       toBech32Mock.mockReturnValue(testConstants.defaultAddress);
       jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(1620000000)); // Mock current time
+      jest.spyOn(stats, 'increment');
     });
 
     afterEach(async () => {
@@ -468,6 +469,11 @@ describe('ComplianceV2Controller', () => {
         reason: ComplianceReason.US_GEO,
       }));
 
+      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+        {
+          newStatus: ComplianceStatus.BLOCKED,
+        });
+
       expect(response.body.status).toEqual(ComplianceStatus.BLOCKED);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
       expect(response.body.updatedAt).toBeDefined();
@@ -495,6 +501,10 @@ describe('ComplianceV2Controller', () => {
         status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
         reason: ComplianceReason.US_GEO,
       }));
+      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+        {
+          newStatus: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
+        });
 
       expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
@@ -574,6 +584,11 @@ describe('ComplianceV2Controller', () => {
         expectedStatus: 200,
       });
 
+      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+        {
+          newStatus: ComplianceStatus.CLOSE_ONLY,
+        });
+
       const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
       expect(data).toHaveLength(1);
       expect(data[0]).toEqual(expect.objectContaining({
@@ -608,7 +623,6 @@ describe('ComplianceV2Controller', () => {
         },
         expectedStatus: 200,
       });
-
       const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
       expect(data).toHaveLength(1);
       expect(data[0]).toEqual(expect.objectContaining({
@@ -642,6 +656,10 @@ describe('ComplianceV2Controller', () => {
         },
         expectedStatus: 200,
       });
+      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+        {
+          newStatus: ComplianceStatus.CLOSE_ONLY,
+        });
 
       const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
       expect(data).toHaveLength(1);
@@ -675,6 +693,10 @@ describe('ComplianceV2Controller', () => {
         },
         expectedStatus: 200,
       });
+      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+        {
+          newStatus: ComplianceStatus.FIRST_STRIKE,
+        });
 
       const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
       expect(data).toHaveLength(1);
