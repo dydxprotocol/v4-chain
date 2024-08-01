@@ -18,14 +18,24 @@ type PricesKeeper interface {
 		param MarketParam,
 	) (updatedMarketParam MarketParam, err error)
 
-	UpdateMarketPrice(
+	UpdateSpotAndPnlMarketPrices(
 		ctx sdk.Context,
-		updates *MarketPriceUpdates_MarketPriceUpdate,
+		updates *MarketPriceUpdate,
+	) (err error)
+
+	UpdatePnlPrice(
+		ctx sdk.Context,
+		update *MarketPnlPriceUpdate,
+	) (err error)
+
+	UpdateSpotPrice(
+		ctx sdk.Context,
+		update *MarketSpotPriceUpdate,
 	) (err error)
 
 	GetAllMarketParamPrices(ctx sdk.Context) (marketPramPrices []MarketParamPrice, err error)
 	GetMarketParam(ctx sdk.Context, id uint32) (marketParam MarketParam, exists bool)
-	GetMarketIdToValidIndexPrice(ctx sdk.Context) (marketIdToIndexPrice map[uint32]MarketPrice)
+	GetMarketIdToValidIndexPrice(ctx sdk.Context) (marketIdToIndexPrice map[uint32]MarketSpotPrice)
 	GetAllMarketParams(ctx sdk.Context) (marketParams []MarketParam)
 	GetMarketPrice(ctx sdk.Context, id uint32) (marketPrice MarketPrice, err error)
 	GetAllMarketPrices(ctx sdk.Context) (marketPrices []MarketPrice)
