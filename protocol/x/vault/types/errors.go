@@ -10,84 +10,90 @@ var (
 		1,
 		"Shares are negative",
 	)
-	ErrMarketParamNotFound = errorsmod.Register(
+	// Deprecated since v6.x
+	ErrClobPairNotFound = errorsmod.Register(
 		ModuleName,
 		2,
+		"ClobPair not found",
+	)
+	ErrMarketParamNotFound = errorsmod.Register(
+		ModuleName,
+		3,
 		"MarketParam not found",
 	)
 	ErrInvalidDepositAmount = errorsmod.Register(
 		ModuleName,
-		3,
+		4,
 		"Deposit amount is invalid",
 	)
 	ErrNonPositiveEquity = errorsmod.Register(
 		ModuleName,
-		4,
+		5,
 		"Equity is non-positive",
 	)
 	ErrZeroDenominator = errorsmod.Register(
 		ModuleName,
-		5,
+		6,
 		"Denominator is zero",
 	)
 	ErrNilFraction = errorsmod.Register(
 		ModuleName,
-		6,
+		7,
 		"Fraction is nil",
 	)
 	ErrInvalidOrderSizePctPpm = errorsmod.Register(
 		ModuleName,
-		7,
+		8,
 		"OrderSizePctPpm must be strictly greater than 0",
 	)
 	ErrInvalidOrderExpirationSeconds = errorsmod.Register(
 		ModuleName,
-		8,
+		9,
 		"OrderExpirationSeconds must be strictly greater than 0",
 	)
 	ErrInvalidSpreadMinPpm = errorsmod.Register(
 		ModuleName,
-		9,
+		10,
 		"SpreadMinPpm must be strictly greater than 0",
 	)
 	ErrInvalidLayers = errorsmod.Register(
 		ModuleName,
-		10,
+		11,
 		"Layers must be less than or equal to MaxUint8",
 	)
 	ErrZeroSharesToMint = errorsmod.Register(
 		ModuleName,
-		11,
+		12,
 		"Cannot mint zero shares",
 	)
 	ErrInvalidActivationThresholdQuoteQuantums = errorsmod.Register(
 		ModuleName,
-		12,
+		13,
 		"ActivationThresholdQuoteQuantums must be non-negative",
 	)
 	ErrInvalidOrderSize = errorsmod.Register(
 		ModuleName,
-		13,
+		14,
 		"OrderSize is invalid",
 	)
 	ErrInvalidOwner = errorsmod.Register(
 		ModuleName,
-		14,
+		15,
 		"Owner is invalid",
 	)
 	ErrMismatchedTotalAndOwnerShares = errorsmod.Register(
 		ModuleName,
-		15,
+		16,
 		"TotalShares does not match sum of OwnerShares",
 	)
 	ErrZeroMarketPrice = errorsmod.Register(
 		ModuleName,
-		16,
+		17,
 		"MarketPrice is zero",
 	)
 	ErrOrdersAndOrderIdsDiffLen = errorsmod.Register(
 		ModuleName,
-		17,
+		18,
 		"Orders and OrderIds must have the same length",
 	)
 )

@@ -404,9 +404,13 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				flippedClientIds[i] = orderId.ClientId ^ 1
 			}
 
+			// If corresponding clob pair doesn't exist, the vault should not place any orders.
+			_, found := tApp.App.ClobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(tc.vaultId.Number))
+			if !found {
+				require.Zero(t, len(tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)))
+				return
+			}
 			// Vault should place its initial orders (client IDs should be canonical).
-			initialOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
-			require.Len(t, initialOrders, int(defaultQuotingParams.Layers*2))
 			verifyVaultOrders(
 				uint32(ctx.BlockTime().Unix())+defaultQuotingParams.OrderExpirationSeconds,
 				canonicalClientIds,
@@ -998,27 +1002,30 @@ func TestGetVaultClobOrderIds(t *testing.T) {
 		layers uint32
 
 		/* --- Expectations --- */
-		// Expected error, if any.
-		expectedErr error
+		expectedNumOrders uint32
 	}{
 		"Vault Clob 0, 2 layers": {
-			vaultId: constants.Vault_Clob0,
-			layers:  2,
+			vaultId:           constants.Vault_Clob0,
+			layers:            2,
+			expectedNumOrders: 4,
 		},
 		"Vault Clob 1, 7 layers": {
-			vaultId: constants.Vault_Clob1,
-			layers:  7,
+			vaultId:           constants.Vault_Clob1,
+			layers:            7,
+			expectedNumOrders: 14,
 		},
 		"Vault Clob 0, 0 layers": {
-			vaultId: constants.Vault_Clob0,
-			layers:  0,
+			vaultId:           constants.Vault_Clob0,
+			layers:            0,
+			expectedNumOrders: 0,
 		},
 		"Vault Clob 797, 2 layers": {
 			vaultId: vaulttypes.VaultId{
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
 				Number: 797,
 			},
-			layers: 2,
+			layers:            2,
+			expectedNumOrders: 4,
 		},
 	}
 
@@ -1052,6 +1059,7 @@ func TestGetVaultClobOrderIds(t *testing.T) {
 			}
 
 			// Verify order IDs.
+			require.Equal(t, tc.expectedNumOrders, uint32(len(expectedOrderIds)))
 			require.Equal(t, expectedOrderIds, k.GetVaultClobOrderIds(ctx, tc.vaultId))
 		})
 	}
