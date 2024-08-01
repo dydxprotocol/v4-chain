@@ -5,6 +5,9 @@ import (
 	"fmt"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/skip-mev/slinky/oracle/config"
+	"github.com/skip-mev/slinky/providers/apis/dydx"
+	"go.uber.org/zap"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -12,13 +15,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+	dydxtypes "github.com/skip-mev/slinky/providers/apis/dydx/types"
+	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 )
+
+// GovAuthority is the module account address of x/gov.
+var GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
 var ModuleAccsToInitialize = []string{
 	wasmtypes.ModuleName,
@@ -114,10 +124,64 @@ func removeStatefulFOKOrders(ctx sdk.Context, k clobtypes.ClobKeeper) {
 }
 
 // TODO(OTE-535): remove duplicated code from v6 upgrade
+func setMarketMapParams(ctx sdk.Context, mmk marketmapkeeper.Keeper) {
+	err := mmk.SetParams(ctx, marketmaptypes.Params{
+		// init so that gov is the admin and a market authority
+		MarketAuthorities: []string{GovAuthority},
+		Admin:             GovAuthority,
+	})
+	if err != nil {
+		panic(fmt.Sprintf("failed to set x/mm params %v", err))
+	}
+}
+
+// TODO(OTE-535): remove duplicated code from v6 upgrade
+func migratePricesToMarketMap(ctx sdk.Context, pk pricestypes.PricesKeeper, mmk marketmapkeeper.Keeper) {
+	// fill out config with dummy variables to pass validation.  This handler is only used to run the
+	// ConvertMarketParamsToMarketMap member function.
+	h, err := dydx.NewAPIHandler(zap.NewNop(), config.APIConfig{
+		Enabled:          true,
+		Timeout:          1,
+		Interval:         1,
+		ReconnectTimeout: 1,
+		MaxQueries:       1,
+		Atomic:           false,
+		Endpoints:        []config.Endpoint{{URL: "upgrade"}},
+		BatchSize:        0,
+		Name:             dydx.Name,
+	})
+	if err != nil {
+		panic(fmt.Sprintf("Failed to construct dydx handler %v", err))
+	}
+	allMarketParams := pk.GetAllMarketParams(ctx)
+	var mpr dydxtypes.QueryAllMarketParamsResponse
+	for _, mp := range allMarketParams {
+		mpr.MarketParams = append(mpr.MarketParams, dydxtypes.MarketParam{
+			Id:                 mp.Id,
+			Pair:               mp.Pair,
+			Exponent:           mp.Exponent,
+			MinExchanges:       mp.MinExchanges,
+			MinPriceChangePpm:  mp.MinPriceChangePpm,
+			ExchangeConfigJson: mp.ExchangeConfigJson,
+		})
+	}
+	mm, err := h.ConvertMarketParamsToMarketMap(mpr)
+	if err != nil {
+		panic(fmt.Sprintf("Couldn't convert markets %v", err))
+	}
+	for _, market := range mm.MarketMap.Markets {
+		err = mmk.CreateMarket(ctx, market)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to create market %s", market.Ticker.String()))
+		}
+	}
+}
+
+// TODO(OTE-535): remove duplicated code from v6 upgrade
 func initRevShareModuleState(
 	ctx sdk.Context,
 	revShareKeeper revsharetypes.RevShareKeeper,
-	priceKeeper pricetypes.PricesKeeper,
+	priceKeeper pricestypes.PricesKeeper,
 ) {
 	// Initialize the rev share module state.
 	params := revsharetypes.MarketMapperRevenueShareParams{
@@ -144,8 +208,9 @@ func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
 	clobKeeper clobtypes.ClobKeeper,
+	pricesKeeper pricestypes.PricesKeeper,
+	mmKeeper marketmapkeeper.Keeper,
 	revShareKeeper revsharetypes.RevShareKeeper,
-	priceKeeper pricetypes.PricesKeeper,
 	ak authkeeper.AccountKeeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -157,7 +222,7 @@ func CreateUpgradeHandler(
 		removeStatefulFOKOrders(sdkCtx, clobKeeper)
 
 		// Initialize the rev share module state.
-		initRevShareModuleState(sdkCtx, revShareKeeper, priceKeeper)
+		initRevShareModuleState(sdkCtx, revShareKeeper, pricesKeeper)
 
 		sdkCtx.Logger().Info("Successfully removed stateful orders from state")
 

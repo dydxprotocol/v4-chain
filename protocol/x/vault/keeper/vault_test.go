@@ -5,10 +5,12 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	feetierstypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
@@ -190,6 +192,7 @@ func TestDecommissionVault(t *testing.T) {
 				big.NewInt(7),
 			)
 
+			k.AddVaultToAddressStore(ctx, tc.vaultId)
 			if tc.totalSharesExists {
 				err := k.SetTotalShares(
 					ctx,
@@ -211,13 +214,178 @@ func TestDecommissionVault(t *testing.T) {
 			// Decommission vault.
 			k.DecommissionVault(ctx, tc.vaultId)
 
-			// Check that total shares and owner shares are deleted.
+			// Check that total shares, owner shares, vault params, and vault address are deleted.
 			_, exists := k.GetTotalShares(ctx, tc.vaultId)
 			require.Equal(t, false, exists)
 			for _, owner := range tc.owners {
 				_, exists = k.GetOwnerShares(ctx, tc.vaultId, owner)
 				require.Equal(t, false, exists)
 			}
+			_, exists = k.GetVaultParams(ctx, tc.vaultId)
+			require.False(t, exists)
+			require.False(t, k.IsVault(ctx, tc.vaultId.ToModuleAccountAddress()))
 		})
 	}
+}
+
+func TestAddVaultToAddressStore(t *testing.T) {
+	tests := map[string]struct {
+		/* --- Setup --- */
+		// Vault ID.
+		vaultIds []vaulttypes.VaultId
+	}{
+		"Add 1 vault to vault address store": {
+			vaultIds: []vaulttypes.VaultId{
+				constants.Vault_Clob0,
+			},
+		},
+		"Add 2 vaults to vault address store": {
+			vaultIds: []vaulttypes.VaultId{
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.VaultKeeper
+
+			// Add vaults to vault address store.
+			for _, vaultId := range tc.vaultIds {
+				k.AddVaultToAddressStore(ctx, vaultId)
+			}
+
+			// Verify that vault is added to address store.
+			for _, vaultId := range tc.vaultIds {
+				require.True(t, k.IsVault(ctx, vaultId.ToModuleAccountAddress()))
+			}
+		})
+	}
+}
+
+func TestVaultIsBestFeeTier(t *testing.T) {
+	// Initialize genesis with a positive-equity vault and fee tiers.
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+		genesis = testapp.DefaultGenesis()
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *vaulttypes.GenesisState) {
+				genesisState.Vaults = []*vaulttypes.Vault{
+					{
+						VaultId: &constants.Vault_Clob0,
+						TotalShares: &vaulttypes.NumShares{
+							NumShares: dtypes.NewInt(10),
+						},
+						OwnerShares: []*vaulttypes.OwnerShare{
+							{
+								Owner: constants.AliceAccAddress.String(),
+								Shares: &vaulttypes.NumShares{
+									NumShares: dtypes.NewInt(10),
+								},
+							},
+						},
+					},
+				}
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *satypes.GenesisState) {
+				genesisState.Subaccounts = []satypes.Subaccount{
+					{
+						Id: constants.Vault_Clob0.ToSubaccountId(),
+						AssetPositions: []*satypes.AssetPosition{
+							{
+								AssetId:  assettypes.AssetUsdc.Id,
+								Quantums: dtypes.NewInt(1),
+							},
+						},
+					},
+					{
+						Id: &constants.Alice_Num0,
+						AssetPositions: []*satypes.AssetPosition{
+							{
+								AssetId:  assettypes.AssetUsdc.Id,
+								Quantums: dtypes.NewInt(1),
+							},
+						},
+					},
+				}
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *feetierstypes.GenesisState) {
+				genesisState.Params = feetierstypes.PerpetualFeeParams{
+					Tiers: []*feetierstypes.PerpetualFeeTier{
+						{
+							Name:        "1",
+							TakerFeePpm: 33,
+							MakerFeePpm: 3,
+						},
+						{
+							Name:                      "2",
+							AbsoluteVolumeRequirement: 1_000,
+							TakerFeePpm:               22,
+							MakerFeePpm:               2,
+						},
+						{
+							Name:                           "3",
+							AbsoluteVolumeRequirement:      1_000_000_000,
+							MakerVolumeShareRequirementPpm: 500_000,
+							TakerFeePpm:                    11,
+							MakerFeePpm:                    1,
+						},
+					},
+				}
+			},
+		)
+		return genesis
+	}).Build()
+	ctx := tApp.InitChain()
+
+	vaultClob0Address := constants.Vault_Clob0.ToModuleAccountAddress()
+	vaultClob1Address := constants.Vault_Clob1.ToModuleAccountAddress()
+	aliceAddress := constants.AliceAccAddress.String()
+
+	// Vault in genesis state should be in best fee tier.
+	takerFee := tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob0Address, true)
+	require.Equal(t, int32(11), takerFee)
+	makerFee := tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob0Address, false)
+	require.Equal(t, int32(1), makerFee)
+
+	// A regular user Alice should be in worst fee tier.
+	takerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, aliceAddress, true)
+	require.Equal(t, int32(33), takerFee)
+	makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, aliceAddress, false)
+	require.Equal(t, int32(3), makerFee)
+
+	// A newly created vault should be in best fee tier.
+	checkTx_DepositToVault := testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: constants.Alice_Num0.Owner,
+			Gas:                  constants.TestGasLimit,
+			FeeAmt:               constants.TestFeeCoins_5Cents,
+		},
+		&vaulttypes.MsgDepositToVault{
+			VaultId:       &constants.Vault_Clob1,
+			SubaccountId:  &constants.Alice_Num0,
+			QuoteQuantums: dtypes.NewInt(1),
+		},
+	)
+	checkTxResp := tApp.CheckTx(checkTx_DepositToVault)
+	require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+	ctx = tApp.AdvanceToBlock(
+		uint32(ctx.BlockHeight())+1,
+		testapp.AdvanceToBlockOptions{},
+	)
+	takerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, true)
+	require.Equal(t, int32(11), takerFee)
+	makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, false)
+	require.Equal(t, int32(1), makerFee)
 }

@@ -364,7 +364,7 @@ func TestHydrationInPreBlocker(t *testing.T) {
 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 		1,
 	)
-	tApp.App.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+	tApp.App.ClobKeeper.AddStatefulOrderIdExpiration(
 		tApp.App.NewUncachedContext(false, tmproto.Header{}),
 		time.Unix(50, 0),
 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
@@ -440,7 +440,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 		1,
 	)
-	tApp.App.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+	tApp.App.ClobKeeper.AddStatefulOrderIdExpiration(
 		tApp.App.NewUncachedContext(false, tmproto.Header{}),
 		time.Unix(10, 0),
 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
@@ -452,7 +452,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
 		1,
 	)
-	tApp.App.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+	tApp.App.ClobKeeper.AddStatefulOrderIdExpiration(
 		tApp.App.NewUncachedContext(false, tmproto.Header{}),
 		time.Unix(10, 0),
 		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
@@ -536,6 +536,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 				0,
 				big.NewInt(100_000_000),
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}, carl)
@@ -553,6 +554,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 			testutil.CreateSinglePerpetualPosition(
 				0,
 				big.NewInt(-100_000_000),
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},

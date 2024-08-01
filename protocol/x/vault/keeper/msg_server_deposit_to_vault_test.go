@@ -362,6 +362,8 @@ func TestMsgDepositToVault(t *testing.T) {
 				vaultEquity, err := tApp.App.VaultKeeper.GetVaultEquity(ctx, tc.vaultId)
 				require.NoError(t, err)
 				require.Equal(t, tc.vaultEquityHistory[i], vaultEquity)
+				// Check that vault exists in address store.
+				require.True(t, tApp.App.VaultKeeper.IsVault(ctx, tc.vaultId.ToModuleAccountAddress()))
 			}
 		})
 	}

@@ -59,7 +59,7 @@ func (k Keeper) ProcessProposerOperations(
 
 	// If grpc streams are on, send absolute fill amounts from local + proposed opqueue to the grpc stream.
 	// This must be sent out to account for checkState being discarded and deliverState being used.
-	if streamingManager := k.GetGrpcStreamingManager(); streamingManager.Enabled() {
+	if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
 		localValidatorOperationsQueue, _ := k.MemClob.GetOperationsToReplay(ctx)
 		orderIdsFromProposed := fetchOrdersInvolvedInOpQueue(
 			operations,
@@ -549,7 +549,7 @@ func (k Keeper) PersistMatchOrdersToState(
 	}
 
 	// if GRPC streaming is on, emit a generated clob match to stream.
-	if streamingManager := k.GetGrpcStreamingManager(); streamingManager.Enabled() {
+	if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
 		streamOrderbookFill := k.MemClob.GenerateStreamOrderbookFill(
 			ctx,
 			types.ClobMatch{
@@ -658,7 +658,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 	)
 
 	// if GRPC streaming is on, emit a generated clob match to stream.
-	if streamingManager := k.GetGrpcStreamingManager(); streamingManager.Enabled() {
+	if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
 		streamOrderbookFill := k.MemClob.GenerateStreamOrderbookFill(
 			ctx,
 			types.ClobMatch{
@@ -835,6 +835,22 @@ func (k Keeper) PersistMatchDeleveragingToState(
 				),
 			),
 		)
+		// if GRPC streaming is on, emit a generated clob match to stream.
+		if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
+			streamOrderbookFill := types.StreamOrderbookFill{
+				ClobMatch: &types.ClobMatch{
+					Match: &types.ClobMatch_MatchPerpetualDeleveraging{
+						MatchPerpetualDeleveraging: matchDeleveraging,
+					},
+				},
+			}
+			k.SendOrderbookFillUpdates(
+				ctx,
+				[]types.StreamOrderbookFill{
+					streamOrderbookFill,
+				},
+			)
+		}
 	}
 
 	return nil
@@ -884,18 +900,12 @@ func (k Keeper) GenerateProcessProposerMatchesEvents(
 	filledOrderIds := lib.GetSortedKeys[types.SortedOrders](seenOrderIdsFilledInLastBlock)
 	removedOrderIds := lib.GetSortedKeys[types.SortedOrders](seenOrderIdsRemovedInLastBlock)
 
-	// PlacedLongTermOrderIds to be populated in MsgHandler for MsgPlaceOrder.
-	// PlacedConditionalOrderIds to be populated in MsgHandler for MsgPlaceOrder.
 	// ConditionalOrderIdsTriggeredInLastBlock to be populated in EndBlocker.
 	// ExpiredOrderId to be populated in the EndBlocker.
-	// PlacedStatefulCancellation to be populated in MsgHandler for MsgCancelOrder.
 	return types.ProcessProposerMatchesEvents{
-		PlacedLongTermOrderIds:                  []types.OrderId{},
 		ExpiredStatefulOrderIds:                 []types.OrderId{},
 		OrderIdsFilledInLastBlock:               filledOrderIds,
-		PlacedStatefulCancellationOrderIds:      []types.OrderId{},
 		RemovedStatefulOrderIds:                 removedOrderIds,
-		PlacedConditionalOrderIds:               []types.OrderId{},
 		ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
 		BlockHeight:                             lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 	}

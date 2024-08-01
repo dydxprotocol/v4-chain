@@ -30,6 +30,9 @@ func (k msgServer) DepositToVault(
 		return nil, err
 	}
 
+	// Add vault to address store.
+	k.AddVaultToAddressStore(ctx, *msg.VaultId)
+
 	// Transfer from sender subaccount to vault.
 	// Note: Transfer should take place after minting shares for
 	// shares calculation to be correct.

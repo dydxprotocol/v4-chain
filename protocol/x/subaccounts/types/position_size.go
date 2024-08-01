@@ -3,8 +3,6 @@ package types
 import (
 	"math/big"
 
-	errorsmod "cosmossdk.io/errors"
-
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 )
 
@@ -43,18 +41,10 @@ func (m *AssetPosition) GetId() uint32 {
 	return m.GetAssetId()
 }
 
-// Get the asset position quantum size in big.Int. Panics if the size is zero.
+// Get the asset position quantum size in big.Int.
 func (m *AssetPosition) GetBigQuantums() *big.Int {
-	if m == nil {
+	if m == nil || m.Quantums.IsNil() {
 		return new(big.Int)
-	}
-
-	if m.Quantums.Sign() == 0 {
-		panic(errorsmod.Wrapf(
-			ErrAssetPositionZeroQuantum,
-			"asset position (asset Id: %v) has zero quantum",
-			m.AssetId,
-		))
 	}
 
 	return m.Quantums.BigInt()
@@ -75,21 +65,22 @@ func (m *PerpetualPosition) SetQuantums(sizeQuantums int64) {
 	m.Quantums = dtypes.NewInt(sizeQuantums)
 }
 
-// Get the perpetual position quantum size in big.Int. Panics if the size is zero.
+// Get the perpetual position quantum size in big.Int.
 func (m *PerpetualPosition) GetBigQuantums() *big.Int {
-	if m == nil {
+	if m == nil || m.Quantums.IsNil() {
 		return new(big.Int)
 	}
 
-	if m.Quantums.Sign() == 0 {
-		panic(errorsmod.Wrapf(
-			ErrPerpPositionZeroQuantum,
-			"perpetual position (perpetual Id: %v) has zero quantum",
-			m.PerpetualId,
-		))
+	return m.Quantums.BigInt()
+}
+
+// Get the perpetual position quote balance in big.Int.
+func (m *PerpetualPosition) GetQuoteBalance() *big.Int {
+	if m == nil || m.QuoteBalance.IsNil() {
+		return new(big.Int)
 	}
 
-	return m.Quantums.BigInt()
+	return m.QuoteBalance.BigInt()
 }
 
 func (m *PerpetualPosition) GetIsLong() bool {
@@ -113,6 +104,13 @@ func (au AssetUpdate) GetId() uint32 {
 
 func (pu PerpetualUpdate) GetBigQuantums() *big.Int {
 	return pu.BigQuantumsDelta
+}
+
+func (pu PerpetualUpdate) GetBigQuoteBalance() *big.Int {
+	if pu.BigQuoteBalanceDelta == nil {
+		return new(big.Int)
+	}
+	return pu.BigQuoteBalanceDelta
 }
 
 func (pu PerpetualUpdate) GetId() uint32 {

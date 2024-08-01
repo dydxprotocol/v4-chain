@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+	listingtypes "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/rootmulti"
@@ -23,21 +23,18 @@ import (
 	cmtlog "github.com/cometbft/cometbft/libs/log"
 	dbm "github.com/cosmos/cosmos-db"
 
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	"github.com/dydxprotocol/v4-chain/protocol/cmd/dydxprotocold/cmd"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer"
-
-	abcitypes "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/mempool"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/server"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -47,6 +44,8 @@ import (
 	sdkproto "github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	appconstants "github.com/dydxprotocol/v4-chain/protocol/app/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/cmd/dydxprotocold/cmd"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testlog "github.com/dydxprotocol/v4-chain/protocol/testutil/logger"
@@ -61,12 +60,14 @@ import (
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	ratelimittypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	rewardstypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	vesttypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
+	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
@@ -205,7 +206,8 @@ type GenesisStates interface {
 		ratelimittypes.GenesisState |
 		govplus.GenesisState |
 		vaulttypes.GenesisState |
-		revsharetypes.GenesisState
+		revsharetypes.GenesisState |
+		marketmapmoduletypes.GenesisState
 }
 
 // UpdateGenesisDocWithAppStateForModule updates the supplied genesis doc using the provided function. The function
@@ -263,6 +265,10 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = vaulttypes.ModuleName
 	case revsharetypes.GenesisState:
 		moduleName = revsharetypes.ModuleName
+	case marketmapmoduletypes.GenesisState:
+		moduleName = marketmapmoduletypes.ModuleName
+	case listingtypes.GenesisState:
+		moduleName = listingtypes.ModuleName
 	default:
 		panic(fmt.Errorf("Unsupported type %T", t))
 	}

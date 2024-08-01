@@ -72,6 +72,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 							0,
 							big.NewInt(100),
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -87,6 +88,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(99_999_900),
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -133,6 +135,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 							0,
 							big.NewInt(100),
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -148,6 +151,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(99_999_900),
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -194,6 +198,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 							0,
 							big.NewInt(150),
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -209,6 +214,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(99_999_850),
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},
@@ -264,6 +270,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 							0,
 							big.NewInt(25_000_000),
 							big.NewInt(0),
+							big.NewInt(0),
 						),
 					},
 				},
@@ -279,6 +286,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 						testutil.CreateSinglePerpetualPosition(
 							0,
 							big.NewInt(75_000_000),
+							big.NewInt(0),
 							big.NewInt(0),
 						),
 					},

@@ -3,6 +3,8 @@ package app_test
 import (
 	"testing"
 
+	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
+
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -36,9 +38,11 @@ func TestModuleAccountsToAddresses(t *testing.T) {
 		vestmoduletypes.CommunityVesterAccountName:   "dydx1wxje320an3karyc6mjw4zghs300dmrjkwn7xtk",
 		icatypes.ModuleName:                          "dydx1vlthgax23ca9syk7xgaz347xmf4nunefw3cnv8",
 		wasmtypes.ModuleName:                         "dydx1xds4f0m87ajl3a6az6s2enhxrd0wta48eljwng",
+		marketmapmoduletypes.ModuleName:              "dydx16j3d86dww8p2rzdlqsv7wle98cxzjxw6gjjyzn",
 	}
 
-	require.True(t, len(expectedModuleAccToAddresses) == len(app.GetMaccPerms()))
+	require.True(t, len(expectedModuleAccToAddresses) == len(app.GetMaccPerms()),
+		"expected %d, got %d", len(expectedModuleAccToAddresses), len(app.GetMaccPerms()))
 	for acc, address := range expectedModuleAccToAddresses {
 		expectedAddr := authtypes.NewModuleAddress(acc).String()
 		require.Equal(t, address, expectedAddr, "module (%v) should have address (%s)", acc, expectedAddr)
@@ -75,6 +79,7 @@ func TestMaccPerms(t *testing.T) {
 		"community_treasury":     nil,
 		"community_vester":       nil,
 		"wasm":                   {"burner"},
+		"marketmap":              nil,
 	}
 	require.Equal(t, expectedMaccPerms, maccPerms, "default macc perms list does not match expected")
 }
@@ -96,6 +101,7 @@ func TestModuleAccountAddrs(t *testing.T) {
 		"dydx15ztc7xy42tn2ukkc0qjthkucw9ac63pgp70urn": true, // x/vest.communityTreasury
 		"dydx1wxje320an3karyc6mjw4zghs300dmrjkwn7xtk": true, // x/vest.communityVester
 		"dydx1xds4f0m87ajl3a6az6s2enhxrd0wta48eljwng": true, // wasm
+		"dydx16j3d86dww8p2rzdlqsv7wle98cxzjxw6gjjyzn": true, // x/marketmap
 	}
 
 	require.Equal(t, expectedModuleAccAddresses, app.ModuleAccountAddrs())
