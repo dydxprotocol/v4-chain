@@ -2,6 +2,7 @@ package aggregator
 
 import (
 	"fmt"
+	"math/big"
 
 	"cosmossdk.io/log"
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
@@ -100,28 +101,29 @@ func (ma *MedianAggregator) addVoteToAggregator(
 	}
 
 	prices := make(map[string]veaggregator.AggregatorPricePair, len(ve.Prices))
-
 	for marketId, pricePair := range ve.Prices {
-		if len(pricePair.SpotPrice) > constants.MaximumPriceSizeInBytes {
-			continue
-		}
-
-		if len(pricePair.PnlPrice) > constants.MaximumPriceSizeInBytes {
-			continue
-		}
+		var spotPrice, pnlPrice *big.Int
 
 		market, exists := ma.pricesKeeper.GetMarketParam(ctx, marketId)
 		if !exists {
 			continue
 		}
 
-		spotPrice, err := veutils.GetPriceFromBytes(marketId, pricePair.SpotPrice)
-		if err != nil {
-			continue
+		if len(pricePair.SpotPrice) <= constants.MaximumPriceSizeInBytes {
+			price, err := veutils.GetPriceFromBytes(marketId, pricePair.SpotPrice)
+			if err == nil {
+				spotPrice = price
+			}
 		}
 
-		pnlPrice, err := veutils.GetPriceFromBytes(marketId, pricePair.PnlPrice)
-		if err != nil {
+		if len(pricePair.PnlPrice) <= constants.MaximumPriceSizeInBytes {
+			price, err := veutils.GetPriceFromBytes(marketId, pricePair.PnlPrice)
+			if err == nil {
+				pnlPrice = price
+			}
+		}
+
+		if spotPrice == nil && pnlPrice == nil {
 			continue
 		}
 
@@ -130,9 +132,7 @@ func (ma *MedianAggregator) addVoteToAggregator(
 			PnlPrice:  pnlPrice,
 		}
 	}
-
 	ma.perValidatorPrices[address] = prices
-
 }
 
 func (ma *MedianAggregator) GetPriceForValidator(validator sdk.ConsAddress) map[string]veaggregator.AggregatorPricePair {
