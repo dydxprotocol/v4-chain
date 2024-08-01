@@ -3,6 +3,7 @@ import path from 'path';
 import { Model } from 'objection';
 
 import { IsoString } from '../types';
+import { IntegerPattern } from '../lib/validators';
 import BaseModel from './base-model';
 
 export default class YieldParamsModel extends BaseModel {
@@ -40,7 +41,7 @@ export default class YieldParamsModel extends BaseModel {
         sDAIPrice: { type: 'string' },
         assetYieldIndex: { type: 'string' },
         createdAt: { type: 'string', format: 'date-time' },
-        createdAtHeight: { type: 'string' },
+        createdAtHeight: { type: 'string', pattern: IntegerPattern },
       },
     };
   }
