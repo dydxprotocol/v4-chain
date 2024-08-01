@@ -237,19 +237,21 @@ message StreamTakerOrder {
   StreamTakerOrderStatus taker_order_status = 3;
 }
 
-// StreamTakerOrderStatus is a representation of match information for a  taker order
+// StreamTakerOrderStatus is a representation of a taker order
 // after it is attempted to be matched on the orderbook.
 // It is intended to be used only in full node streaming.
 message StreamTakerOrderStatus {
   // The state of the taker order after attempting to match it against the orderbook.
+  // Possible enum values can be found here:
+  // https://github.com/dydxprotocol/v4-chain/blob/main/protocol/x/clob/types/orderbook.go#L105
   uint32 order_status = 1;
 
   // The amount of remaining (non-matched) base quantums of this taker order.
   uint64 remaining_quantums = 2;
 
-	// The amount of base quantums that were optimistically filled (from this current
-  // matching cycle) of this taker order. Note that if any quantums of this order
-	// were optimistically filled or filled in state before the current matching cycle,
+  // The amount of base quantums that were *optimistically* filled for this taker order
+  // when the order is matched against the orderbook. Note that if any quantums of this order
+  // were optimistically filled or filled in state before this invocation of the matching loop,
   // this value will not include them.
   uint64 optimistically_filled_quantums = 3;
 }
