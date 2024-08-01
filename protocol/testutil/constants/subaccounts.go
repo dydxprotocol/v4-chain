@@ -41,6 +41,7 @@ var (
 				1,
 				big.NewInt(100_000_000), // 1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -53,6 +54,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				3,
 				big.NewInt(1_000_000_000), // 1 ISO
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -81,6 +83,7 @@ var (
 				0,
 				big.NewInt(-100_000_000), // -1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -94,13 +97,28 @@ var (
 				0,
 				big.NewInt(100_000_000), // +1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
+	}
+	Bob_Num0_1USD = satypes.Subaccount{
+		Id: &Bob_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			&Usdc_Asset_1,
+		},
+		PerpetualPositions: nil,
 	}
 	Bob_Num0_10_000USD = satypes.Subaccount{
 		Id: &Bob_Num0,
 		AssetPositions: []*satypes.AssetPosition{
 			&Usdc_Asset_10_000,
+		},
+		PerpetualPositions: nil,
+	}
+	Bob_Num0_50_000USD = satypes.Subaccount{
+		Id: &Bob_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			&Usdc_Asset_50_000,
 		},
 		PerpetualPositions: nil,
 	}
@@ -121,6 +139,7 @@ var (
 				3,
 				big.NewInt(1_000_000_000), // 1 ISO
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -133,6 +152,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				4,
 				big.NewInt(10_000_000), // 1 ISO2
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -147,6 +167,7 @@ var (
 				0,
 				big.NewInt(-10_000_000_000), // -100 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -159,6 +180,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				0,
 				big.NewInt(-100_000_000), // -1 BTC
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -173,6 +195,7 @@ var (
 				0,
 				big.NewInt(-100_000_000), // -1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -184,6 +207,7 @@ var (
 				0,
 				big.NewInt(-100_000_000), // -1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -194,6 +218,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				0,
 				big.NewInt(-100_000_000), // -1 BTC
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -211,6 +236,7 @@ var (
 				0,
 				big.NewInt(-100_000_000), // -1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -221,6 +247,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				0,
 				big.NewInt(-100_000_000), // -1 BTC
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -233,6 +260,7 @@ var (
 				0,
 				big.NewInt(100_000_000), // 1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -243,6 +271,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				0,
 				big.NewInt(-100_000_000), // -1 BTC
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -255,6 +284,7 @@ var (
 				0,
 				big.NewInt(-100_000_000), // -1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -266,10 +296,12 @@ var (
 				0,
 				big.NewInt(-100_000_000), // -1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 			testutil.CreateSinglePerpetualPosition(
 				1,
 				big.NewInt(1_000_000_000), // 1 ETH
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -281,6 +313,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				3,
 				big.NewInt(-1_000_000_000), // -1 ISO
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -363,6 +396,7 @@ var (
 				0,
 				big.NewInt(10_000_000), // 0.1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -373,6 +407,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				0,
 				big.NewInt(-100_000_000), // -1 BTC
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -387,6 +422,7 @@ var (
 				0,
 				big.NewInt(10_000_000), // 0.1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -400,6 +436,7 @@ var (
 				0,
 				big.NewInt(100_000_000), // 1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -410,6 +447,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				0,
 				big.NewInt(100_000_000), // 1 BTC
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -424,6 +462,7 @@ var (
 				0,
 				big.NewInt(-100_000_000), // -1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -434,6 +473,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				0,
 				big.NewInt(100_000_000), // 1 BTC
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -446,6 +486,7 @@ var (
 				0,
 				big.NewInt(100_000_000), // 1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -456,6 +497,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				0,
 				big.NewInt(100_000_000), // 1 BTC
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -468,6 +510,7 @@ var (
 				0,
 				big.NewInt(100_000_000), // 1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -478,6 +521,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				0,
 				big.NewInt(100_000_000), // 1 BTC
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -490,6 +534,7 @@ var (
 				3,
 				big.NewInt(1_000_000_000), // 1 ISO
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -500,6 +545,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				4,
 				big.NewInt(-10_000_000), // -1 ISO2
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -535,6 +581,7 @@ var (
 				0,
 				big.NewInt(-10_000_000_000), // -100 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -547,6 +594,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				0,
 				big.NewInt(10_000_000_000), // 100 BTC
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -561,6 +609,7 @@ var (
 				0,
 				big.NewInt(100_000_000), // 1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -574,10 +623,12 @@ var (
 				0,
 				big.NewInt(100_000_000), // 1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 			testutil.CreateSinglePerpetualPosition(
 				1,
 				big.NewInt(1_000_000_000), // 1 ETH
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -606,6 +657,7 @@ var (
 				0,
 				big.NewInt(25_000_000), // 0.25 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -618,6 +670,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				0,
 				big.NewInt(50_000_000), // 0.5 BTC
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -632,6 +685,7 @@ var (
 				0,
 				big.NewInt(100_000_000), // 1 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -645,6 +699,7 @@ var (
 				0,
 				big.NewInt(-10_000_000_000), // -100 BTC
 				big.NewInt(0),
+				big.NewInt(0),
 			),
 		},
 	}
@@ -655,6 +710,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				0,
 				big.NewInt(100_000_000), // 1 BTC
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},
@@ -668,6 +724,7 @@ var (
 			testutil.CreateSinglePerpetualPosition(
 				1,
 				big.NewInt(1_000_000_000), // 1 ETH
+				big.NewInt(0),
 				big.NewInt(0),
 			),
 		},

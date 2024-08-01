@@ -24,6 +24,7 @@ import (
 	listingmodule "github.com/dydxprotocol/v4-chain/protocol/x/listing"
 
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
+	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
 	blocktimemodule "github.com/dydxprotocol/v4-chain/protocol/x/blocktime"
 	bridgemodule "github.com/dydxprotocol/v4-chain/protocol/x/bridge"
@@ -41,6 +42,7 @@ import (
 	subaccountsmodule "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts"
 	vaultmodule "github.com/dydxprotocol/v4-chain/protocol/x/vault"
 	vestmodule "github.com/dydxprotocol/v4-chain/protocol/x/vest"
+	marketmapmodule "github.com/skip-mev/slinky/x/marketmap"
 
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
@@ -99,5 +101,7 @@ var (
 		wasm.AppModuleBasic{},
 		revsharemodule.AppModuleBasic{},
 		listingmodule.AppModuleBasic{},
+		marketmapmodule.AppModuleBasic{},
+		accountplusmodule.AppModuleBasic{},
 	)
 )

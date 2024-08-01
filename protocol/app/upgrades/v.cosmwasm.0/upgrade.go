@@ -18,6 +18,7 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 )
 
 var ModuleAccsToInitialize = []string{
@@ -144,8 +145,9 @@ func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
 	clobKeeper clobtypes.ClobKeeper,
+	pricesKeeper pricetypes.PricesKeeper,
+	mmKeeper marketmapkeeper.Keeper,
 	revShareKeeper revsharetypes.RevShareKeeper,
-	priceKeeper pricetypes.PricesKeeper,
 	ak authkeeper.AccountKeeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -157,7 +159,7 @@ func CreateUpgradeHandler(
 		removeStatefulFOKOrders(sdkCtx, clobKeeper)
 
 		// Initialize the rev share module state.
-		initRevShareModuleState(sdkCtx, revShareKeeper, priceKeeper)
+		initRevShareModuleState(sdkCtx, revShareKeeper, pricesKeeper)
 
 		sdkCtx.Logger().Info("Successfully removed stateful orders from state")
 

@@ -28,11 +28,6 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 				k.MustSetProcessProposerMatchesEvents(
 					ctx,
 					types.ProcessProposerMatchesEvents{
-						PlacedLongTermOrderIds: []types.OrderId{
-							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-							constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
-							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
-						},
 						ExpiredStatefulOrderIds: []types.OrderId{
 							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
@@ -47,11 +42,6 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 			},
 
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				PlacedLongTermOrderIds: []types.OrderId{
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-					constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
-					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
-				},
 				ExpiredStatefulOrderIds: []types.OrderId{
 					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
@@ -76,7 +66,6 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 				k.MustSetProcessProposerMatchesEvents(
 					ctx,
 					types.ProcessProposerMatchesEvents{
-						PlacedLongTermOrderIds:    []types.OrderId{},
 						ExpiredStatefulOrderIds:   []types.OrderId{},
 						OrderIdsFilledInLastBlock: []types.OrderId{},
 					},
@@ -91,11 +80,6 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 				k.MustSetProcessProposerMatchesEvents(
 					ctx,
 					types.ProcessProposerMatchesEvents{
-						PlacedLongTermOrderIds: []types.OrderId{
-							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-							constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
-							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
-						},
 						ExpiredStatefulOrderIds: []types.OrderId{
 							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
@@ -111,10 +95,6 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 				k.MustSetProcessProposerMatchesEvents(
 					ctx,
 					types.ProcessProposerMatchesEvents{
-						PlacedLongTermOrderIds: []types.OrderId{
-							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
-							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-						},
 						ExpiredStatefulOrderIds: []types.OrderId{
 							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
@@ -127,10 +107,6 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 			},
 
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
-				PlacedLongTermOrderIds: []types.OrderId{
-					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-				},
 				ExpiredStatefulOrderIds: []types.OrderId{
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
@@ -192,4 +168,86 @@ func TestSetProcessProposerMatchesEvents_BadBlockHeight(t *testing.T) {
 			BlockHeight: 5,
 		})
 	})
+}
+
+func TestOrderedOrderIdList(t *testing.T) {
+	memClob := &mocks.MemClob{}
+	memClob.On("SetClobKeeper", mock.Anything).Return()
+	ks := keepertest.NewClobKeepersTestContext(
+		t,
+		memClob,
+		&mocks.BankKeeper{},
+		&mocks.IndexerEventManager{},
+	)
+
+	prefixKey := "p"
+	indexKey := "i"
+	orderIds := []types.OrderId{
+		{
+			ClientId: 0,
+		},
+		{
+			ClientId: 1,
+		},
+		{
+			ClientId: 2,
+		},
+		{
+			ClientId: 3,
+		},
+	}
+
+	memStore := ks.Ctx.KVStore(ks.MemKey)
+
+	for _, orderId := range orderIds {
+		ks.ClobKeeper.AppendOrderedOrderId(ks.Ctx, memStore, prefixKey, indexKey, orderId)
+	}
+	require.Equal(t, orderIds, ks.ClobKeeper.GetOrderIds(ks.Ctx, memStore, prefixKey))
+
+	ks.ClobKeeper.ResetOrderedOrderIds(ks.Ctx, memStore, prefixKey, indexKey)
+	for _, orderId := range orderIds {
+		ks.ClobKeeper.AppendOrderedOrderId(ks.Ctx, memStore, prefixKey, indexKey, orderId)
+	}
+	require.Equal(t, orderIds, ks.ClobKeeper.GetOrderIds(ks.Ctx, memStore, prefixKey))
+}
+
+func TestUnorderedOrderIdList(t *testing.T) {
+	memClob := &mocks.MemClob{}
+	memClob.On("SetClobKeeper", mock.Anything).Return()
+	ks := keepertest.NewClobKeepersTestContext(
+		t,
+		memClob,
+		&mocks.BankKeeper{},
+		&mocks.IndexerEventManager{},
+	)
+
+	prefixKey := "p"
+	indexKey := "i"
+	orderIds := []types.OrderId{
+		{
+			ClientId: 0,
+		},
+		{
+			ClientId: 1,
+		},
+		{
+			ClientId: 2,
+		},
+		{
+			ClientId: 3,
+		},
+	}
+
+	memStore := ks.Ctx.KVStore(ks.MemKey)
+
+	for _, orderId := range orderIds {
+		ks.ClobKeeper.SetUnorderedOrderId(ks.Ctx, memStore, prefixKey, orderId)
+	}
+	require.Equal(t, orderIds, ks.ClobKeeper.GetOrderIds(ks.Ctx, memStore, prefixKey))
+
+	ks.ClobKeeper.ResetOrderedOrderIds(ks.Ctx, memStore, prefixKey, indexKey)
+	for _, orderId := range orderIds {
+		ks.ClobKeeper.SetUnorderedOrderId(ks.Ctx, memStore, prefixKey, orderId)
+	}
+	require.Equal(t, orderIds, ks.ClobKeeper.GetOrderIds(ks.Ctx, memStore, prefixKey))
 }

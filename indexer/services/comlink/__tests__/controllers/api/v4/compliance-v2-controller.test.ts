@@ -19,7 +19,7 @@ import { DateTime } from 'luxon';
 import { ComplianceAction } from '../../../../src/controllers/api/v4/compliance-v2-controller';
 import { ExtendedSecp256k1Signature, Secp256k1 } from '@cosmjs/crypto';
 import { getGeoComplianceReason } from '../../../../src/helpers/compliance/compliance-utils';
-import { isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
+import { isRestrictedCountryHeaders, isWhitelistedAddress } from '@dydxprotocol-indexer/compliance';
 import { toBech32 } from '@cosmjs/encoding';
 
 jest.mock('@dydxprotocol-indexer/compliance');
@@ -60,8 +60,11 @@ describe('ComplianceV2Controller', () => {
   });
 
   describe('GET', () => {
+    let isWhitelistedAddressSpy: jest.SpyInstance;
+
     beforeEach(async () => {
       ipAddrMock.mockReturnValue(ipAddr);
+      isWhitelistedAddressSpy = isWhitelistedAddress as unknown as jest.Mock;
       await testMocks.seedData();
     });
 
@@ -158,6 +161,31 @@ describe('ComplianceV2Controller', () => {
         }));
       });
 
+    it('should return COMPLIANT for a restricted, dydx address with existing CLOSE_ONLY compliance status', async () => {
+      jest.spyOn(ComplianceControllerHelper.prototype, 'screen').mockImplementation(() => {
+        return Promise.resolve({
+          restricted: true,
+        });
+      });
+
+      const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO();
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.CLOSE_ONLY,
+        createdAt,
+        updatedAt: createdAt,
+      });
+      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
+      expect(data).toHaveLength(1);
+
+      isWhitelistedAddressSpy.mockReturnValue(true);
+      const response: any = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/compliance/screen/${testConstants.defaultAddress}`,
+      });
+      expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
+    });
+
     it('should return CLOSE_ONLY & not update for a restricted, dydx address with existing CLOSE_ONLY compliance status',
       async () => {
         jest.spyOn(ComplianceControllerHelper.prototype, 'screen').mockImplementation(() => {
@@ -190,7 +218,8 @@ describe('ComplianceV2Controller', () => {
           createdAt,
           updatedAt: createdAt,
         }));
-      });
+      },
+    );
 
     it('should return COMPLIANT for a non-restricted, dydx address', async () => {
       jest.spyOn(ComplianceControllerHelper.prototype, 'screen').mockImplementation(() => {
@@ -298,6 +327,7 @@ describe('ComplianceV2Controller', () => {
   describe('POST /geoblock', () => {
     let getGeoComplianceReasonSpy: jest.SpyInstance;
     let isRestrictedCountryHeadersSpy: jest.SpyInstance;
+    let isWhitelistedAddressSpy: jest.SpyInstance;
 
     const body: any = {
       address: testConstants.defaultAddress,
@@ -311,6 +341,7 @@ describe('ComplianceV2Controller', () => {
     beforeEach(async () => {
       getGeoComplianceReasonSpy = getGeoComplianceReason as unknown as jest.Mock;
       isRestrictedCountryHeadersSpy = isRestrictedCountryHeaders as unknown as jest.Mock;
+      isWhitelistedAddressSpy = isWhitelistedAddress as unknown as jest.Mock;
       ipAddrMock.mockReturnValue(ipAddr);
       await testMocks.seedData();
       jest.mock('@cosmjs/crypto', () => ({
@@ -390,6 +421,30 @@ describe('ComplianceV2Controller', () => {
 
       expect(response.status).toEqual(200);
       expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
+    });
+
+    it('should return COMPLIANT from a restricted country when whitelisted', async () => {
+      (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
+      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
+      isRestrictedCountryHeadersSpy.mockReturnValue(true);
+      await dbHelpers.clearData();
+
+      const data2: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
+      expect(data2).toHaveLength(0);
+
+      isWhitelistedAddressSpy.mockReturnValue(true);
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/geoblock',
+        body,
+        expectedStatus: 200,
+      });
+
+      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
+      expect(data).toHaveLength(0);
+
+      expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
+      expect(response.body.updatedAt).toBeDefined();
     });
 
     it('should set status to BLOCKED for CONNECT action from a restricted country with no existing compliance status and no wallet', async () => {
@@ -530,6 +585,42 @@ describe('ComplianceV2Controller', () => {
       expect(response.body.status).toEqual(ComplianceStatus.CLOSE_ONLY);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
       expect(response.body.updatedAt).toBeDefined();
+    });
+
+    it('should return CLOSE_ONLY for CONNECT action from a restricted country with existing CLOSE_ONLY status', async () => {
+      const createdAt: string = DateTime.utc().minus({ days: 1 }).toISO();
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.CLOSE_ONLY,
+        reason: ComplianceReason.US_GEO,
+        updatedAt: createdAt,
+      });
+      (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
+      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
+      isRestrictedCountryHeadersSpy.mockReturnValue(true);
+
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/geoblock',
+        body: {
+          ...body,
+          action: ComplianceAction.CONNECT,
+        },
+        expectedStatus: 200,
+      });
+
+      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
+      expect(data).toHaveLength(1);
+      expect(data[0]).toEqual(expect.objectContaining({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.CLOSE_ONLY,
+        reason: ComplianceReason.US_GEO,
+        updatedAt: createdAt,
+      }));
+
+      expect(response.body.status).toEqual(ComplianceStatus.CLOSE_ONLY);
+      expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
+      expect(response.body.updatedAt).toEqual(createdAt);
     });
 
     it('should update status to CLOSE_ONLY for INVALID_SURVEY action with existing FIRST_STRIKE_CLOSE_ONLY status', async () => {

@@ -42,6 +42,7 @@ func BeginBlocker(
 			BlockHeight: lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		},
 	)
+	keeper.ResetAllDeliveredOrderIds(ctx)
 }
 
 // EndBlocker executes all ABCI EndBlock logic respective to the clob module.
@@ -60,7 +61,7 @@ func EndBlocker(
 	keeper.PruneStateFillAmountsForShortTermOrders(ctx)
 
 	// Prune expired stateful orders completely from state.
-	expiredStatefulOrderIds := keeper.RemoveExpiredStatefulOrdersTimeSlices(ctx, ctx.BlockTime())
+	expiredStatefulOrderIds := keeper.RemoveExpiredStatefulOrders(ctx, ctx.BlockTime())
 	for _, orderId := range expiredStatefulOrderIds {
 		// Remove the order fill amount from state.
 		keeper.RemoveOrderFillAmount(ctx, orderId)
@@ -88,27 +89,9 @@ func EndBlocker(
 		)
 	}
 
-	// Prune expired untriggered conditional orders from the in-memory UntriggeredConditionalOrders struct.
-	keeper.PruneUntriggeredConditionalOrders(
-		expiredStatefulOrderIds,
-		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
-	)
-
 	// Update the memstore with expired order ids.
 	// These expired stateful order ids will be purged from the memclob in `Commit`.
 	processProposerMatchesEvents.ExpiredStatefulOrderIds = expiredStatefulOrderIds
-
-	// Before triggering conditional orders, add newly-placed conditional orders to the clob keeper's
-	// in-memory UntriggeredConditionalOrders data structure to allow conditional orders to
-	// trigger in the same block they are placed. Skip triggering orders which have been cancelled
-	// or expired.
-	// TODO(CLOB-773) Support conditional order replacements. Ensure replacements are de-duplicated.
-	keeper.AddUntriggeredConditionalOrders(
-		ctx,
-		processProposerMatchesEvents.PlacedConditionalOrderIds,
-		lib.UniqueSliceToSet(processProposerMatchesEvents.GetPlacedStatefulCancellationOrderIds()),
-		lib.UniqueSliceToSet(expiredStatefulOrderIds),
-	)
 
 	// Poll out all triggered conditional orders from `UntriggeredConditionalOrders` and update state.
 	triggeredConditionalOrderIds := keeper.MaybeTriggerConditionalOrders(ctx)
@@ -121,9 +104,6 @@ func EndBlocker(
 		ctx,
 		processProposerMatchesEvents,
 	)
-
-	// Prune any rate limiting information that is no longer relevant.
-	keeper.PruneRateLimits(ctx)
 
 	// Emit relevant metrics at the end of every block.
 	metrics.SetGauge(
@@ -142,6 +122,9 @@ func PrepareCheckState(
 		// Prepare check state is for the next block.
 		log.BlockHeight, ctx.BlockHeight()+1,
 	)
+
+	// Prune any rate limiting information that is no longer relevant.
+	keeper.PruneRateLimits(ctx)
 
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
@@ -170,7 +153,7 @@ func PrepareCheckState(
 		ctx,
 		processProposerMatchesEvents.OrderIdsFilledInLastBlock,
 		processProposerMatchesEvents.ExpiredStatefulOrderIds,
-		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
+		keeper.GetDeliveredCancelledOrderIds(ctx),
 		processProposerMatchesEvents.RemovedStatefulOrderIds,
 		offchainUpdates,
 	)
@@ -179,9 +162,10 @@ func PrepareCheckState(
 	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`
 	// is called within `PlaceConditionalOrdersTriggeredInLastBlock`.
 	startPlaceLongTermOrders := time.Now()
+	longTermOrderIds := keeper.GetDeliveredLongTermOrderIds(ctx)
 	offchainUpdates = keeper.PlaceStatefulOrdersFromLastBlock(
 		ctx,
-		processProposerMatchesEvents.PlacedLongTermOrderIds,
+		longTermOrderIds,
 		offchainUpdates,
 	)
 	telemetry.MeasureSince(
@@ -191,7 +175,7 @@ func PrepareCheckState(
 		metrics.Latency,
 	)
 	telemetry.SetGauge(
-		float32(len(processProposerMatchesEvents.PlacedLongTermOrderIds)),
+		float32(len(longTermOrderIds)),
 		types.ModuleName,
 		metrics.PlaceLongTermOrdersFromLastBlock,
 		metrics.Count,
@@ -254,8 +238,8 @@ func PrepareCheckState(
 		types.GetInternalOperationsQueueTextString(newLocalValidatorOperationsQueue),
 	)
 
-	// Initialize new GRPC streams with orderbook snapshots, if any.
-	keeper.InitializeNewGrpcStreams(ctx)
+	// Initialize new streams with orderbook snapshots, if any.
+	keeper.InitializeNewStreams(ctx)
 
 	// Set per-orderbook gauges.
 	keeper.MemClob.SetMemclobGauges(ctx)

@@ -295,6 +295,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 									0,
 									big.NewInt(-100_000_000), // -1 BTC
 									big.NewInt(10_000),
+									big.NewInt(0),
 								),
 							},
 						},
@@ -375,6 +376,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 									0,
 									big.NewInt(100_000_000), // 1 BTC
 									big.NewInt(-10_000),
+									big.NewInt(0),
 								),
 							},
 						},
@@ -455,6 +457,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 									0,
 									big.NewInt(-100_000_000), // -1 BTC
 									big.NewInt(-10_000),
+									big.NewInt(0),
 								),
 							},
 						},
@@ -533,6 +536,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 									0,
 									big.NewInt(100_000_000), // 1 BTC
 									big.NewInt(10_000),
+									big.NewInt(0),
 								),
 							},
 						},

@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"math/big"
 	"testing"
 
@@ -43,14 +42,8 @@ func TestPerpetualPosition_GetIsLong(t *testing.T) {
 	require.True(t,
 		longPosition.GetIsLong(),
 	)
-	require.PanicsWithError(t,
-		errorsmod.Wrapf(
-			types.ErrPerpPositionZeroQuantum,
-			"perpetual position (perpetual Id: 0) has zero quantum",
-		).Error(),
-		func() {
-			zeroPosition.GetIsLong()
-		},
+	require.False(t,
+		zeroPosition.GetIsLong(),
 	)
 	require.False(t,
 		shortPosition.GetIsLong(),
@@ -75,14 +68,8 @@ func TestAssetPosition_GetIsLong(t *testing.T) {
 	require.True(t,
 		longPosition.GetIsLong(),
 	)
-	require.PanicsWithError(t,
-		errorsmod.Wrapf(
-			types.ErrAssetPositionZeroQuantum,
-			"asset position (asset Id: 0) has zero quantum",
-		).Error(),
-		func() {
-			zeroPosition.GetIsLong()
-		},
+	require.False(t,
+		zeroPosition.GetIsLong(),
 	)
 	require.False(t,
 		shortPosition.GetIsLong(),

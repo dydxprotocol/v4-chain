@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -54,6 +55,8 @@ func TestUpdateLiquidationsConfig(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 

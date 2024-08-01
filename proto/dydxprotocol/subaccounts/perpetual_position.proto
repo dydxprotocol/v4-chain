@@ -23,4 +23,11 @@ message PerpetualPosition {
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
+
+  // The quote_balance of the `Perpetual`.
+  bytes quote_balance = 4 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
 }

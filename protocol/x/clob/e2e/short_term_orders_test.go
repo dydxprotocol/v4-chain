@@ -159,6 +159,7 @@ func TestPlaceOrder(t *testing.T) {
 											big.NewInt(-int64(
 												PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.GetQuantums())),
 											big.NewInt(0),
+											big.NewInt(0),
 										),
 									},
 									// Maker fees calculate to 0 so asset position doesn't change.
@@ -185,6 +186,7 @@ func TestPlaceOrder(t *testing.T) {
 											Clob_0.MustGetPerpetualId(),
 											big.NewInt(int64(
 												PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.GetQuantums())),
+											big.NewInt(0),
 											big.NewInt(0),
 										),
 									},
@@ -336,6 +338,7 @@ func TestPlaceOrder(t *testing.T) {
 											big.NewInt(-int64(
 												PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetQuantums())),
 											big.NewInt(0),
+											big.NewInt(0),
 										),
 									},
 									// Maker fees calculate to 0 so asset position doesn't change.
@@ -362,6 +365,7 @@ func TestPlaceOrder(t *testing.T) {
 											Clob_0.MustGetPerpetualId(),
 											big.NewInt(int64(
 												PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetQuantums())),
+											big.NewInt(0),
 											big.NewInt(0),
 										),
 									},
@@ -513,6 +517,7 @@ func TestPlaceOrder(t *testing.T) {
 											big.NewInt(int64(
 												PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetQuantums())),
 											big.NewInt(0),
+											big.NewInt(0),
 										),
 									},
 									// Taker fees calculate to 0 so asset position doesn't change.
@@ -539,6 +544,7 @@ func TestPlaceOrder(t *testing.T) {
 											Clob_0.MustGetPerpetualId(),
 											big.NewInt(-int64(
 												PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetQuantums())),
+											big.NewInt(0),
 											big.NewInt(0),
 										),
 									},

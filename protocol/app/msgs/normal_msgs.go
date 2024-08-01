@@ -19,13 +19,15 @@ import (
 	ibccore "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	listing "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	vault "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
+	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 )
 
 var (
 	// NormalMsgs are messages that can be submitted by external users.
-	NormalMsgs = lib.MergeAllMapsMustHaveDistinctKeys(NormalMsgsDefault, NormalMsgsDydxCustom)
+	NormalMsgs = lib.MergeAllMapsMustHaveDistinctKeys(NormalMsgsDefault, NormalMsgsDydxCustom, NormalMsgsSlinky)
 
 	// Default modules
 	NormalMsgsDefault = map[string]sdk.Msg{
@@ -284,6 +286,10 @@ var (
 		"/dydxprotocol.clob.MsgPlaceOrder":          &clob.MsgPlaceOrder{},
 		"/dydxprotocol.clob.MsgPlaceOrderResponse":  nil,
 
+		// listing
+		"/dydxprotocol.listing.MsgCreateMarketPermissionless":         &listing.MsgCreateMarketPermissionless{},
+		"/dydxprotocol.listing.MsgCreateMarketPermissionlessResponse": nil,
+
 		// perpetuals
 
 		// prices
@@ -297,9 +303,21 @@ var (
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
 
 		// vault
-		"/dydxprotocol.vault.MsgDepositToVault":            &vault.MsgDepositToVault{},
-		"/dydxprotocol.vault.MsgDepositToVaultResponse":    nil,
-		"/dydxprotocol.vault.MsgWithdrawFromVault":         &vault.MsgWithdrawFromVault{},
-		"/dydxprotocol.vault.MsgWithdrawFromVaultResponse": nil,
+		"/dydxprotocol.vault.MsgDepositToVault":         &vault.MsgDepositToVault{},
+		"/dydxprotocol.vault.MsgDepositToVaultResponse": nil,
+	}
+
+	NormalMsgsSlinky = map[string]sdk.Msg{
+		// slinky marketmap messages
+		"/slinky.marketmap.v1.MsgCreateMarkets":                   &marketmapmoduletypes.MsgCreateMarkets{},
+		"/slinky.marketmap.v1.MsgCreateMarketsResponse":           nil,
+		"/slinky.marketmap.v1.MsgParams":                          &marketmapmoduletypes.MsgParams{},
+		"/slinky.marketmap.v1.MsgParamsResponse":                  nil,
+		"/slinky.marketmap.v1.MsgRemoveMarketAuthorities":         &marketmapmoduletypes.MsgRemoveMarketAuthorities{},
+		"/slinky.marketmap.v1.MsgRemoveMarketAuthoritiesResponse": nil,
+		"/slinky.marketmap.v1.MsgUpdateMarkets":                   &marketmapmoduletypes.MsgUpdateMarkets{},
+		"/slinky.marketmap.v1.MsgUpdateMarketsResponse":           nil,
+		"/slinky.marketmap.v1.MsgUpsertMarkets":                   &marketmapmoduletypes.MsgUpsertMarkets{},
+		"/slinky.marketmap.v1.MsgUpsertMarketsResponse":           nil,
 	}
 )

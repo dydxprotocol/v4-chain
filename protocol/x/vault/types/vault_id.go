@@ -7,6 +7,7 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -67,6 +68,16 @@ func (id *VaultId) ToSubaccountId() *satypes.SubaccountId {
 	return &satypes.SubaccountId{
 		Owner:  id.ToModuleAccountAddress(),
 		Number: 0,
+	}
+}
+
+// GetClobOrderId returns a vault CLOB order ID given a client ID.
+func (id *VaultId) GetClobOrderId(clientId uint32) *clobtypes.OrderId {
+	return &clobtypes.OrderId{
+		SubaccountId: *id.ToSubaccountId(),
+		ClientId:     clientId,
+		OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+		ClobPairId:   uint32(id.Number),
 	}
 }
 

@@ -58,6 +58,7 @@ func GetSettledSubaccountWithPerpetuals(
 			newPerpetualPositions, &types.PerpetualPosition{
 				PerpetualId:  p.PerpetualId,
 				Quantums:     p.Quantums,
+				QuoteBalance: p.QuoteBalance,
 				FundingIndex: dtypes.NewIntFromBigInt(newFundingIndex),
 			},
 		)
@@ -287,11 +288,16 @@ func CalculateUpdatedPerpetualPositions(
 			// Update existing position.
 			quantums := pos.GetBigQuantums()
 			quantums.Add(quantums, update.GetBigQuantums())
-			if quantums.BitLen() == 0 {
+
+			quoteBalance := pos.GetQuoteBalance()
+			quoteBalance.Add(quoteBalance, update.GetBigQuoteBalance())
+
+			if quantums.BitLen() == 0 && quoteBalance.BitLen() == 0 {
 				// The position is now closed.
 				delete(positionsMap, update.PerpetualId)
 			} else {
 				pos.Quantums = dtypes.NewIntFromBigInt(quantums)
+				pos.QuoteBalance = dtypes.NewIntFromBigInt(quoteBalance)
 			}
 		} else {
 			// Create a new position.
@@ -299,6 +305,7 @@ func CalculateUpdatedPerpetualPositions(
 			positionsMap[update.PerpetualId] = &types.PerpetualPosition{
 				PerpetualId:  update.PerpetualId,
 				Quantums:     dtypes.NewIntFromBigInt(update.GetBigQuantums()),
+				QuoteBalance: dtypes.NewIntFromBigInt(update.GetBigQuoteBalance()),
 				FundingIndex: perpInfo.Perpetual.FundingIndex,
 			}
 		}
@@ -363,6 +370,7 @@ func GetRiskForSubaccount(
 			perpInfo.Price,
 			perpInfo.LiquidityTier,
 			pos.GetBigQuantums(),
+			pos.GetQuoteBalance(),
 		)
 		risk.AddInPlace(r)
 	}

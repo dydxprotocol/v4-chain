@@ -14,7 +14,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err := k.SetParams(ctx, genState.Params); err != nil {
 		panic(err)
 	}
-	// Set total shares, owner shares, and vault params of each vault.
+	// For each vault:
+	// 1. Set total shares
+	// 2. Set owner shares
+	// 3. Set vault params
+	// 4. Add to address store
 	for _, vault := range genState.Vaults {
 		if err := k.SetTotalShares(ctx, *vault.VaultId, *vault.TotalShares); err != nil {
 			panic(err)
@@ -29,6 +33,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 				panic(err)
 			}
 		}
+		k.SetMostRecentClientIds(ctx, *vault.VaultId, vault.MostRecentClientIds)
+		k.AddVaultToAddressStore(ctx, *vault.VaultId)
 	}
 }
 

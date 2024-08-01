@@ -159,6 +159,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, nil, mockIndexerEventManager)
 
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 

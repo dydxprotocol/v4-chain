@@ -25,6 +25,12 @@ var (
 	ErrMarketPricesAndParamsDontMatch = errorsmod.Register(ModuleName, 203, "Market prices and params don't match")
 	ErrMarketParamAlreadyExists       = errorsmod.Register(ModuleName, 204, "Market params already exists")
 	ErrMarketParamPairAlreadyExists   = errorsmod.Register(ModuleName, 205, "Market params pair already exists")
+	ErrMarketPairConversionFailed     = errorsmod.Register(
+		ModuleName,
+		206,
+		"Market pair conversion to currency pair failed",
+	)
+	ErrTickerNotFoundInMarketMap = errorsmod.Register(ModuleName, 207, "Ticker not found in market map")
 
 	// 300 - 399: Price related errors.
 	ErrIndexPriceNotAvailable = errorsmod.Register(ModuleName, 300, "Index price is not available")
@@ -42,5 +48,28 @@ var (
 		ModuleName,
 		500,
 		"Authority is invalid",
+	)
+	ErrUnsafeMarketUpdate = errorsmod.Register(
+		ModuleName,
+		501,
+		"Market update is unsafe",
+	)
+
+	ErrMarketUpdateChangesMarketMapEnabledValue = errorsmod.Register(
+		ModuleName,
+		502,
+		"Market update changes market map enabled value",
+	)
+
+	ErrMarketDoesNotExistInMarketMap = errorsmod.Register(
+		ModuleName,
+		503,
+		"Market does not exist in market map",
+	)
+
+	ErrAdditionOfEnabledMarket = errorsmod.Register(
+		ModuleName,
+		504,
+		"Newly added markets must be disabled",
 	)
 )
