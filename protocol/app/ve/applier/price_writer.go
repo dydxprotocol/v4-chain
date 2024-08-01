@@ -3,10 +3,9 @@ package price_writer
 import (
 	"cosmossdk.io/log"
 
-	"math/big"
-
 	aggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/pricecache"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -79,7 +78,7 @@ func (pa *PriceApplier) writePricesToStore(
 func (pa *PriceApplier) getPricesAndAggregateFromVE(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
-) (map[string]*big.Int, error) {
+) (map[string]voteweighted.AggregatorPricePair, error) {
 	votes, err := aggregator.GetDaemonVotesFromBlock(request.Txs, pa.voteExtensionCodec, pa.extendedCommitCodec)
 	if err != nil {
 		pa.logger.Error(
@@ -133,84 +132,123 @@ func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 
 func (pa *PriceApplier) writePricesToStoreAndCache(
 	ctx sdk.Context,
-	prices map[string]*big.Int,
+	prices map[string]voteweighted.AggregatorPricePair,
 	round int32,
 ) error {
+
 	marketParams := pa.pricesKeeper.GetAllMarketParams(ctx)
-	var finalPriceUpdates pricestypes.MarketPriceUpdates
+	// TODO: HANDLE WRITES TO CACHE
+	// var finalPriceUpdates pricestypes.MarketPriceUpdates
 	for _, market := range marketParams {
 		pair := market.Pair
 		price, ok := prices[pair]
 		if !ok {
 			continue
 		}
-		shouldWritePrice, price := pa.shouldWritePriceToStore(ctx, price, market.Id)
-		if !shouldWritePrice {
+		shouldWriteSpotPrice, shouldWritePnlPrice, price := pa.shouldWritePriceToStore(ctx, price, market.Id)
+		if !shouldWriteSpotPrice && !shouldWritePnlPrice {
 			continue
 		}
 
-		newPrice := pricestypes.MarketPriceUpdates_MarketPriceUpdate{
-			MarketId: market.Id,
-			Price:    price.Uint64(),
-		}
+		if !shouldWriteSpotPrice {
+			if err := pa.pricesKeeper.UpdatePnlPrice(ctx, &pricestypes.MarketPnlPriceUpdate{
+				MarketId: market.Id,
+				PnlPrice: price.PnlPrice.Uint64(),
+			}); err != nil {
+				return err
+			}
 
-		if err := pa.pricesKeeper.UpdateMarketPrice(ctx, &newPrice); err != nil {
-			pa.logger.Error(
-				"failed to set price for currency pair",
+			pa.logger.Info(
+				"set price for currency pair",
 				"currency_pair", pair,
-				"err", err,
+				"pnl_price", price.PnlPrice.Uint64(),
 			)
 
-			return err
+		} else if !shouldWritePnlPrice {
+			if err := pa.pricesKeeper.UpdateSpotPrice(ctx, &pricestypes.MarketSpotPriceUpdate{
+				MarketId:  market.Id,
+				SpotPrice: price.SpotPrice.Uint64(),
+			}); err != nil {
+				return err
+			}
+
+			pa.logger.Info(
+				"set price for currency pair",
+				"currency_pair", pair,
+				"spot_price", price.SpotPrice.Uint64(),
+			)
+		} else {
+			newPrice := pricestypes.MarketPriceUpdate{
+				MarketId:  market.Id,
+				SpotPrice: price.SpotPrice.Uint64(),
+				PnlPrice:  price.PnlPrice.Uint64(),
+			}
+
+			if err := pa.pricesKeeper.UpdateSpotAndPnlMarketPrices(ctx, &newPrice); err != nil {
+				pa.logger.Error(
+					"failed to set price for currency pair",
+					"currency_pair", pair,
+					"err", err,
+				)
+
+				return err
+			}
+
+			pa.logger.Info(
+				"set price for currency pair",
+				"currency_pair", pair,
+				"spot_price", newPrice.SpotPrice,
+				"pnl_price", newPrice.PnlPrice,
+			)
 		}
 
-		finalPriceUpdates.MarketPriceUpdates = append(finalPriceUpdates.MarketPriceUpdates, &newPrice)
+		// finalPriceUpdates.MarketPriceUpdates = append(finalPriceUpdates.MarketPriceUpdates, &newPrice)
 
-		pa.logger.Info(
-			"set price for currency pair",
-			"currency_pair", pair,
-			"quote_price", newPrice.Price,
-		)
 	}
 
-	pa.finalPriceCache.SetPriceUpdates(ctx, finalPriceUpdates, round)
+	// pa.finalPriceCache.SetPriceUpdates(ctx, finalPriceUpdates, round)
 
 	return nil
 }
 
 func (pa *PriceApplier) shouldWritePriceToStore(
 	ctx sdk.Context,
-	price *big.Int,
+	prices voteweighted.AggregatorPricePair,
 	marketId uint32,
-) (bool, *big.Int) {
+) (shouldWriteSpot bool, shouldWritePnl bool, finalPrices voteweighted.AggregatorPricePair) {
 
-	if price.Sign() == -1 {
+	if prices.SpotPrice.Sign() == -1 {
 		pa.logger.Error(
 			"price is negative",
 			"market_id", marketId,
-			"price", price.String(),
+			"spot_price", prices.SpotPrice.String(),
+			"pnl_price", prices.PnlPrice.String(),
 		)
 
-		return false, nil
+		return false, false, prices
 	}
-	priceUpdate := pricestypes.MarketPriceUpdates{
-		MarketPriceUpdates: []*pricestypes.MarketPriceUpdates_MarketPriceUpdate{
-			{
-				MarketId: marketId,
-				Price:    price.Uint64(),
-			},
-		},
+	priceUpdate := pricestypes.MarketPriceUpdate{
+		MarketId:  marketId,
+		SpotPrice: prices.SpotPrice.Uint64(),
+		PnlPrice:  prices.PnlPrice.Uint64(),
 	}
 
-	if pa.pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, &priceUpdate) != nil {
+	isValidSpot, isValidPnl := pa.pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, &priceUpdate)
+
+	if !isValidSpot && !isValidPnl {
 		pa.logger.Error(
 			"price update validation failed",
 			"market_id", marketId,
-			"price", price.String(),
+			"spot_price", prices.SpotPrice.String(),
+			"pnl_price", prices.PnlPrice.String(),
 		)
 
-		return false, nil
+		return false, false, prices
+	} else if !isValidSpot {
+		return false, true, prices
+	} else if !isValidPnl {
+		return true, false, prices
 	}
 
-	return true, price
+	return isValidSpot, isValidPnl, prices
 }
