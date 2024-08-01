@@ -12,7 +12,7 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 message GenesisState {
   // The parameters of the module.
   // Deprecated since v6.x in favor of default_quoting_params.
-  Params params = 1 [ (gogoproto.nullable) = false, deprecated = true ];
+  Params params = 1 [ deprecated = true ];
   // The vaults.
   repeated Vault vaults = 2;
   // The default quoting parameters for all vaults.
