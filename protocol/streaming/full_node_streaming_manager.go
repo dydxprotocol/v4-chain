@@ -21,9 +21,9 @@ type FullNodeStreamingManagerImpl struct {
 
 	logger log.Logger
 
-	// orderbookSubscriptions maps subscription IDs to their respective orderbook subscriptions.
-	orderbookSubscriptions map[uint32]*OrderbookSubscription
-	nextSubscriptionId     uint32
+	// streamSubscriptions maps subscription IDs to their respective stream subscriptions.
+	streamSubscriptions map[uint32]*StreamSubscription
+	nextSubscriptionId  uint32
 
 	// stream will batch and flush out messages every 10 ms.
 	ticker *time.Ticker
@@ -37,8 +37,8 @@ type FullNodeStreamingManagerImpl struct {
 	maxSubscriptionChannelSize uint32
 }
 
-// OrderbookSubscription represents a active subscription to the orderbook updates stream.
-type OrderbookSubscription struct {
+// StreamSubscription represents an active subscription to the orderbook/subacocunt updates stream.
+type StreamSubscription struct {
 	subscriptionId uint32
 
 	// Initialize the subscription with orderbook snapshots.
@@ -47,6 +47,8 @@ type OrderbookSubscription struct {
 	// Clob pair ids to subscribe to.
 	clobPairIds []uint32
 
+	// Subaccount ids to subscribe to.
+	
 	// Stream
 	messageSender types.OutgoingMessageSender
 
@@ -62,9 +64,9 @@ func NewFullNodeStreamingManager(
 ) *FullNodeStreamingManagerImpl {
 	logger = logger.With(log.ModuleKey, "full-node-streaming")
 	fullNodeStreamingManager := &FullNodeStreamingManagerImpl{
-		logger:                 logger,
-		orderbookSubscriptions: make(map[uint32]*OrderbookSubscription),
-		nextSubscriptionId:     0,
+		logger:              logger,
+		streamSubscriptions: make(map[uint32]*StreamSubscription),
+		nextSubscriptionId:  0,
 
 		ticker:            time.NewTicker(time.Duration(flushIntervalMs) * time.Millisecond),
 		done:              make(chan bool),
@@ -105,9 +107,9 @@ func (sm *FullNodeStreamingManagerImpl) EmitMetrics() {
 	)
 	metrics.SetGauge(
 		metrics.GrpcStreamSubscriberCount,
-		float32(len(sm.orderbookSubscriptions)),
+		float32(len(sm.streamSubscriptions)),
 	)
-	for _, subscription := range sm.orderbookSubscriptions {
+	for _, subscription := range sm.streamSubscriptions {
 		metrics.AddSample(
 			metrics.GrpcSubscriptionChannelLength,
 			float32(len(subscription.updatesChannel)),
@@ -128,7 +130,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	}
 
 	sm.Lock()
-	subscription := &OrderbookSubscription{
+	subscription := &StreamSubscription{
 		subscriptionId: sm.nextSubscriptionId,
 		clobPairIds:    clobPairIds,
 		messageSender:  messageSender,
@@ -142,7 +144,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 			clobPairIds,
 		),
 	)
-	sm.orderbookSubscriptions[subscription.subscriptionId] = subscription
+	sm.streamSubscriptions[subscription.subscriptionId] = subscription
 	sm.nextSubscriptionId++
 	sm.EmitMetrics()
 	sm.Unlock()
@@ -188,12 +190,12 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 func (sm *FullNodeStreamingManagerImpl) removeSubscription(
 	subscriptionIdToRemove uint32,
 ) {
-	subscription := sm.orderbookSubscriptions[subscriptionIdToRemove]
+	subscription := sm.streamSubscriptions[subscriptionIdToRemove]
 	if subscription == nil {
 		return
 	}
 	close(subscription.updatesChannel)
-	delete(sm.orderbookSubscriptions, subscriptionIdToRemove)
+	delete(sm.streamSubscriptions, subscriptionIdToRemove)
 	sm.logger.Info(
 		fmt.Sprintf("Removed streaming subscription id %+v", subscriptionIdToRemove),
 	)
@@ -225,7 +227,7 @@ func (sm *FullNodeStreamingManagerImpl) SendSnapshot(
 
 	removeSubscription := false
 	if len(v1updates) > 0 {
-		subscription, ok := sm.orderbookSubscriptions[subscriptionId]
+		subscription, ok := sm.streamSubscriptions[subscriptionId]
 		if !ok {
 			sm.logger.Error(
 				fmt.Sprintf(
@@ -383,7 +385,7 @@ func (sm *FullNodeStreamingManagerImpl) AddUpdatesToCache(
 	if sm.numUpdatesInCache > sm.maxUpdatesInCache {
 		sm.logger.Error("Streaming buffer full capacity. Dropping messages and all subscriptions. " +
 			"Disconnect all clients and increase buffer size via the grpc-stream-buffer-size flag.")
-		for id := range sm.orderbookSubscriptions {
+		for id := range sm.streamSubscriptions {
 			sm.removeSubscription(id)
 		}
 		clear(sm.streamUpdateCache)
@@ -411,7 +413,7 @@ func (sm *FullNodeStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 	// Non-blocking send updates through subscriber's buffered channel.
 	// If the buffer is full, drop the subscription.
 	idsToRemove := make([]uint32, 0)
-	for id, subscription := range sm.orderbookSubscriptions {
+	for id, subscription := range sm.streamSubscriptions {
 		streamUpdatesForSubscription := make([]clobtypes.StreamUpdate, 0)
 		for _, clobPairId := range subscription.clobPairIds {
 			if update, ok := sm.streamUpdateCache[clobPairId]; ok {
@@ -461,7 +463,7 @@ func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 	sm.FlushStreamUpdatesWithLock()
 
 	updatesByClobPairId := make(map[uint32]*clobtypes.OffchainUpdates)
-	for subscriptionId, subscription := range sm.orderbookSubscriptions {
+	for subscriptionId, subscription := range sm.streamSubscriptions {
 		subscription.initialize.Do(
 			func() {
 				allUpdates := clobtypes.NewOffchainUpdates()
