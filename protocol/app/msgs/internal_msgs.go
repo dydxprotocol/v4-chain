@@ -188,6 +188,8 @@ var (
 		// vault
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         &vault.MsgUpdateDefaultQuotingParams{},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": nil,
+		"/dydxprotocol.vault.MsgSetVaultQuotingParams":              &vault.MsgSetVaultQuotingParams{},
+		"/dydxprotocol.vault.MsgSetVaultQuotingParamsResponse":      nil,
 
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            &vest.MsgSetVestEntry{},
