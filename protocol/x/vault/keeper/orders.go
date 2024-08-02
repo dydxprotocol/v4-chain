@@ -151,11 +151,8 @@ func (k Keeper) GetVaultClobOrders(
 ) (orders []*clobtypes.Order, err error) {
 	// Get clob pair, perpetual, market parameter, and market price that correspond to this vault.
 	clobPair, exists := k.clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(vaultId.Number))
-	if !exists {
-		return orders, errorsmod.Wrap(
-			types.ErrClobPairNotFound,
-			fmt.Sprintf("VaultId: %v", vaultId),
-		)
+	if !exists || clobPair.Status == clobtypes.ClobPair_STATUS_FINAL_SETTLEMENT {
+		return []*clobtypes.Order{}, nil
 	}
 	perpId := clobPair.Metadata.(*clobtypes.ClobPair_PerpetualClobMetadata).PerpetualClobMetadata.PerpetualId
 	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpId)
@@ -349,12 +346,29 @@ func (k Keeper) GetVaultClobOrders(
 		}
 	}
 
+<<<<<<< HEAD
 	orderIds, err := k.GetVaultClobOrderIds(ctx, vaultId)
 	if err != nil {
 		return orders, err
 	}
 	orders = make([]*clobtypes.Order, 2*params.Layers)
 	for i := uint32(0); i < params.Layers; i++ {
+=======
+	orderIds := k.GetVaultClobOrderIds(ctx, vaultId)
+	orders = make([]*clobtypes.Order, 2*quotingParams.Layers)
+	if len(orders) != len(orderIds) { // sanity check
+		return orders, errorsmod.Wrap(
+			types.ErrOrdersAndOrderIdsDiffLen,
+			fmt.Sprintf(
+				"VaultId: %v, len(Orders):%d, len(OrderIds):%d",
+				vaultId,
+				len(orders),
+				len(orderIds),
+			),
+		)
+	}
+	for i := uint32(0); i < quotingParams.Layers; i++ {
+>>>>>>> 7b9c6a9c (return empty vault orders if clob pair does not exist or is in final settlement (#2011))
 		// Construct ask at this layer.
 		orders[2*i] = constructOrder(clobtypes.Order_SIDE_SELL, i, orderIds[2*i])
 
@@ -372,14 +386,7 @@ func (k Keeper) GetVaultClobOrders(
 func (k Keeper) GetVaultClobOrderIds(
 	ctx sdk.Context,
 	vaultId types.VaultId,
-) (orderIds []*clobtypes.OrderId, err error) {
-	clobPair, exists := k.clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(vaultId.Number))
-	if !exists {
-		return orderIds, errorsmod.Wrap(
-			types.ErrClobPairNotFound,
-			fmt.Sprintf("VaultId: %v", vaultId),
-		)
-	}
+) (orderIds []*clobtypes.OrderId) {
 	vault := vaultId.ToSubaccountId()
 	constructOrderId := func(
 		side clobtypes.Order_Side,
@@ -389,7 +396,7 @@ func (k Keeper) GetVaultClobOrderIds(
 			SubaccountId: *vault,
 			ClientId:     types.GetVaultClobOrderClientId(side, uint8(layer)),
 			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
-			ClobPairId:   clobPair.Id,
+			ClobPairId:   clobtypes.ClobPairId(vaultId.Number).ToUint32(),
 		}
 	}
 
@@ -403,7 +410,7 @@ func (k Keeper) GetVaultClobOrderIds(
 		orderIds[2*i+1] = constructOrderId(clobtypes.Order_SIDE_BUY, i)
 	}
 
-	return orderIds, nil
+	return orderIds
 }
 
 // PlaceVaultClobOrder places a vault CLOB order internal to the protocol, skipping various
