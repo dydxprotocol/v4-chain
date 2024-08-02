@@ -4514,7 +4514,7 @@ const GenesisState = `{
     },
     "upgrade": {},
     "vault": {
-      "params": {
+      "default_quoting_params": {
         "layers": 2,
         "spread_min_ppm": 10000,
         "spread_buffer_ppm": 1500,

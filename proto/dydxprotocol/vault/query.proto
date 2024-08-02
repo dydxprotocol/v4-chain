@@ -6,6 +6,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 import "dydxprotocol/vault/params.proto";
+import "dydxprotocol/vault/share.proto";
 import "dydxprotocol/vault/vault.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
@@ -36,7 +37,9 @@ message QueryParamsRequest {}
 
 // QueryParamsResponse is a response type for the Params RPC method.
 message QueryParamsResponse {
-  Params params = 1 [ (gogoproto.nullable) = false ];
+  // Deprecated since v6.x in favor of default_quoting_params.
+  Params params = 1 [ (gogoproto.nullable) = false, deprecated = true ];
+  QuotingParams default_quoting_params = 2 [ (gogoproto.nullable) = false ];
 }
 
 // QueryVaultRequest is a request type for the Vault RPC method.

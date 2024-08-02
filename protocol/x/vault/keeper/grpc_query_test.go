@@ -23,7 +23,7 @@ func TestQueryParams(t *testing.T) {
 		"Success": {
 			req: &types.QueryParamsRequest{},
 			res: &types.QueryParamsResponse{
-				Params: types.DefaultGenesis().Params,
+				DefaultQuotingParams: types.DefaultQuotingParams(),
 			},
 			err: nil,
 		},

@@ -214,15 +214,13 @@ func TestDecommissionVault(t *testing.T) {
 			// Decommission vault.
 			k.DecommissionVault(ctx, tc.vaultId)
 
-			// Check that total shares, owner shares, vault params, and vault address are deleted.
+			// Check that total shares, owner shares, and vault address are deleted.
 			_, exists := k.GetTotalShares(ctx, tc.vaultId)
 			require.Equal(t, false, exists)
 			for _, owner := range tc.owners {
 				_, exists = k.GetOwnerShares(ctx, tc.vaultId, owner)
 				require.Equal(t, false, exists)
 			}
-			_, exists = k.GetVaultParams(ctx, tc.vaultId)
-			require.False(t, exists)
 			require.False(t, k.IsVault(ctx, tc.vaultId.ToModuleAccountAddress()))
 		})
 	}

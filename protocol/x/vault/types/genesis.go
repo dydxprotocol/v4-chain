@@ -3,7 +3,7 @@ package types
 // DefaultGenesis returns the default stats genesis state.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Params: DefaultParams(),
+		DefaultQuotingParams: DefaultQuotingParams(),
 	}
 }
 
@@ -11,7 +11,7 @@ func DefaultGenesis() *GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	// Validate params.
-	if err := gs.Params.Validate(); err != nil {
+	if err := gs.DefaultQuotingParams.Validate(); err != nil {
 		return err
 	}
 
@@ -35,6 +35,11 @@ func (gs GenesisState) Validate() error {
 		}
 		if totalShares.Sign() != 0 {
 			return ErrMismatchedTotalAndOwnerShares
+		}
+		if vault.QuotingParams != nil {
+			if err := vault.QuotingParams.Validate(); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
