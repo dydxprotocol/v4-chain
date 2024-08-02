@@ -243,10 +243,10 @@ var (
 		// vault
 		"/dydxprotocol.vault.MsgDepositToVault":                     {},
 		"/dydxprotocol.vault.MsgDepositToVaultResponse":             {},
-		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         {},
-		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": {},
 		"/dydxprotocol.vault.MsgSetVaultQuotingParams":              {},
 		"/dydxprotocol.vault.MsgSetVaultQuotingParamsResponse":      {},
+		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         {},
+		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": {},
 
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            {},
