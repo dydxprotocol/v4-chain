@@ -1134,7 +1134,7 @@ func (k Keeper) GetOraclePriceSubticksRat(ctx sdk.Context, clobPair types.ClobPa
 	}
 
 	// Get the oracle price for the market.
-	oraclePriceSubticksRat := types.PriceToSubticks(
+	oraclePriceSubticksRat := types.PnlPriceToSubticks(
 		marketPrice,
 		clobPair,
 		perpetual.Params.AtomicResolution,

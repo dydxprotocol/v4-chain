@@ -27,9 +27,10 @@ func (mp *MarketPrice) ValidateFromParam(marketParam MarketParam) error {
 	return nil
 }
 
-func NewMarketPriceUpdate(id uint32, price uint64) *MarketPriceUpdates_MarketPriceUpdate {
-	return &MarketPriceUpdates_MarketPriceUpdate{
-		MarketId: id,
-		Price:    price,
+func NewMarketPriceUpdate(id uint32, spotPrice uint64, pnlPrice uint64) *MarketPriceUpdate {
+	return &MarketPriceUpdate{
+		MarketId:  id,
+		SpotPrice: spotPrice,
+		PnlPrice:  pnlPrice,
 	}
 }

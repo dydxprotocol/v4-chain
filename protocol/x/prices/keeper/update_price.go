@@ -96,7 +96,7 @@ func (k Keeper) GetValidMarketSpotPriceUpdates(
 			continue
 		}
 
-		historicalSmoothedPrices := k.marketToSmoothedPrices.GetHistoricalSmoothedPrices(marketId)
+		historicalSmoothedPrices := k.marketToSmoothedPrices.GetHistoricalSmoothedSpotPrices(marketId)
 		// We generally expect to have a smoothed price history for each market, except during the first few blocks
 		// after network genesis or a network restart. In this scenario, we use the index price as the smoothed price.
 		if len(historicalSmoothedPrices) == 0 {
@@ -127,7 +127,7 @@ func (k Keeper) GetValidMarketSpotPriceUpdates(
 
 		// If the index price would have updated, track how the proposal price changes the update
 		// decision / amount.
-		if isAboveRequiredMinPriceChange(marketParamPrice, indexPrice) {
+		if isAboveRequiredMinSpotPriceChange(marketParamPrice, indexPrice) {
 			logPriceUpdateBehavior(
 				ctx,
 				marketParamPrice,
@@ -193,7 +193,7 @@ func logPriceUpdateBehavior(
 			marketParamPrice.Param.Id,
 			indexPrice,
 			marketParamPrice.Price.SpotPrice,
-			getMinPriceChangeAmountForMarket(marketParamPrice),
+			getMinPriceChangeAmountForSpotMarket(marketParamPrice),
 		),
 	)
 }
@@ -264,7 +264,7 @@ func shouldProposePrice(
 		},
 	)
 	for _, smoothedPrice := range historicalSmoothedPrices {
-		if !isAboveRequiredMinPriceChange(marketParamPrice, smoothedPrice) {
+		if !isAboveRequiredMinSpotPriceChange(marketParamPrice, smoothedPrice) {
 			shouldPropose = false
 			reasons[len(reasons)-1].Value = true
 			break
@@ -278,7 +278,7 @@ func shouldProposePrice(
 			Reason: metrics.ProposedPriceDoesNotMeetMinPriceChange,
 		},
 	)
-	if !isAboveRequiredMinPriceChange(marketParamPrice, proposalPrice) {
+	if !isAboveRequiredMinSpotPriceChange(marketParamPrice, proposalPrice) {
 		shouldPropose = false
 		reasons[len(reasons)-1].Value = true
 	}

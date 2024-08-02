@@ -44,11 +44,11 @@ type PricesKeeper interface {
 	// Validation related.
 	PerformStatefulPriceUpdateValidation(
 		ctx sdk.Context,
-		marketPriceUpdates *MarketPriceUpdates,
-	) error
+		marketPriceUpdates *MarketPriceUpdate,
+	) (isSpotValid bool, isPnlValid bool)
 
 	// Proposal related.
-	UpdateSmoothedPrices(
+	UpdateSmoothedSpotPrices(
 		ctx sdk.Context,
 		linearInterpolateFunc func(v0 uint64, v1 uint64, ppm uint32) (uint64, error),
 	) error
