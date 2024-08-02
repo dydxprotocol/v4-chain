@@ -24,6 +24,7 @@ import {
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import express from 'express';
+import { UUIDVersion } from 'express-validator/src/options';
 
 /* ------- GENERAL/UNCATEGORIZED TYPES ------- */
 
@@ -332,6 +333,20 @@ export interface HistoricalFundingResponseObject {
   effectiveAtHeight: string,
 }
 
+/* ------- YIELD PARAMS TYPES ------- */
+
+export interface YieldParamsResponse {
+  allYieldParams: YieldParamsResponseObject[],
+}
+
+export interface YieldParamsResponseObject {
+  id: string,
+  sDAIPrice: string,
+  assetYieldIndex: string, 
+  createdAt: IsoString,
+  createdAtHeight: string,
+}
+
 /* ------- GET REQUEST TYPES ------- */
 
 export interface AddressRequest {
@@ -352,6 +367,10 @@ export interface LimitRequest {
 
 export interface TickerRequest {
   ticker?: string,
+}
+
+export interface YieldParamsRequest {
+  createdBeforeOrAtHeight?: number,
 }
 
 export interface LimitAndCreatedBeforeRequest extends LimitRequest {

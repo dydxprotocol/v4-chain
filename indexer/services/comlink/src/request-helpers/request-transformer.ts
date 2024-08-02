@@ -25,6 +25,7 @@ import {
   TransferFromDatabase,
   TransferType,
   parentSubaccountHelpers,
+  YieldParamsFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, PriceLevel } from '@dydxprotocol-indexer/redis';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
@@ -55,7 +56,9 @@ import {
   SubaccountResponseObject,
   TradeResponseObject,
   TransferResponseObject,
+  YieldParamsResponseObject,
 } from '../types';
+import { oneAssetYieldIndex } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 /**
  * @description Converts perpetual position objects from the database into response objects.
@@ -525,4 +528,16 @@ export function candlesToSparklineResponseObject(
       return accumulator;
     }, response,
   );
+}
+
+export function yieldParamsToResponseObject(
+  yieldParams: YieldParamsFromDatabase,
+): YieldParamsResponseObject {
+  return {
+    id: yieldParams.id,
+    sDAIPrice: yieldParams.sDAIPrice,
+    assetYieldIndex: yieldParams.assetYieldIndex,
+    createdAt: yieldParams.createdAt,
+    createdAtHeight: yieldParams.createdAtHeight,
+  }
 }

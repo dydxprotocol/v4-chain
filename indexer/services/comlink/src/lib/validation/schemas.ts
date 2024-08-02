@@ -154,3 +154,14 @@ export const CheckTickerParamSchema = checkSchema({
 export const CheckTickerOptionalQuerySchema = checkSchema({
   ticker: checkTickerOptionalQuerySchema,
 });
+
+export const CheckYieldParamsSchema = checkSchema({
+  createdBeforeOrAtHeight: {
+    in: ['query'],
+    optional: true,
+    isInt: {
+      options: { gt: -1 },
+    },
+    errorMessage: 'createdBeforeOrAtHeight must be a non-negative integer',
+  },
+})
