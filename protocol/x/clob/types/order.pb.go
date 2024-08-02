@@ -807,14 +807,16 @@ func (m *TransactionOrdering) GetTransactionIndex() uint32 {
 	return 0
 }
 
-// StreamLiquidationOrder represents an protocol-generated IOC liquidation order.
-// Used in full node streaming.
+// StreamLiquidationOrder represents an protocol-generated IOC liquidation
+// order. Used in full node streaming.
 type StreamLiquidationOrder struct {
 	// Information about this liquidation order.
 	LiquidationInfo *PerpetualLiquidationInfo `protobuf:"bytes,1,opt,name=liquidation_info,json=liquidationInfo,proto3" json:"liquidation_info,omitempty"`
-	// CLOB pair ID of the CLOB pair the liquidation order will be matched against.
+	// CLOB pair ID of the CLOB pair the liquidation order will be matched
+	// against.
 	ClobPairId uint32 `protobuf:"varint,2,opt,name=clob_pair_id,json=clobPairId,proto3" json:"clob_pair_id,omitempty"`
-	// True if this is a buy order liquidating a short position, false if vice versa.
+	// True if this is a buy order liquidating a short position, false if vice
+	// versa.
 	IsBuy bool `protobuf:"varint,3,opt,name=is_buy,json=isBuy,proto3" json:"is_buy,omitempty"`
 	// The number of base quantums for this liquidation order.
 	Quantums uint64 `protobuf:"varint,4,opt,name=quantums,proto3" json:"quantums,omitempty"`
