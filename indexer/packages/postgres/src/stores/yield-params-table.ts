@@ -153,7 +153,7 @@ export async function getLatest(
         options,
     );
 
-    const results: YieldParamsModel[] = await baseQuery
+    const results: YieldParamsFromDatabase[] = await baseQuery
         .orderBy(YieldParamsColumns.createdAtHeight, Ordering.DESC)
         .limit(1)
         .returning('*');

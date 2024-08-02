@@ -155,13 +155,12 @@ export const CheckTickerOptionalQuerySchema = checkSchema({
   ticker: checkTickerOptionalQuerySchema,
 });
 
-export const CheckYieldParamsSchema = checkSchema({
-  createdBeforeOrAtHeight: {
+export const CheckLimitAndYieldParamsSchema = checkSchema({
+  ...limitSchemaRecord,
+  createdAtOrBeforeHeight: {
     in: ['query'],
     optional: true,
-    isInt: {
-      options: { gt: -1 },
-    },
-    errorMessage: 'createdBeforeOrAtHeight must be a non-negative integer',
+    isString: true,
+    errorMessage: 'createdOnOrAfterHeight must be a string',
   },
-})
+});

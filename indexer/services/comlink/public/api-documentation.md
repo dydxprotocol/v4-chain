@@ -2423,7 +2423,7 @@ fetch('https://dydx-testnet.imperator.co/v4/yieldParams',
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
-|createdBeforeOrAtHeight|query|number(double)|false|none|
+|createdBeforeOrAtHeight|query|string|false|none|
 
 > Example responses
 

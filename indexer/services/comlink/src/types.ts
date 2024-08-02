@@ -370,7 +370,7 @@ export interface TickerRequest {
 }
 
 export interface YieldParamsRequest {
-  createdBeforeOrAtHeight?: number,
+  createdBeforeOrAtHeight?: string,
 }
 
 export interface LimitAndCreatedBeforeRequest extends LimitRequest {

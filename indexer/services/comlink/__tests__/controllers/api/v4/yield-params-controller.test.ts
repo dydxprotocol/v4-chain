@@ -2,23 +2,13 @@ import {
     dbHelpers,
     testConstants,
     testMocks,
-    TransferCreateObject,
-    TransferTable,
-    TransferType,
     YieldParamsTable,
   } from '@dydxprotocol-indexer/postgres';
-  import { ParentSubaccountTransferResponseObject, RequestMethod, TransferResponseObject, YieldParamsResponseObject } from '../../../../src/types';
+  import { RequestMethod, YieldParamsResponseObject } from '../../../../src/types';
   import request from 'supertest';
   import { sendRequest } from '../../../helpers/helpers';
-  import {
-    createdDateTime, createdHeight,
-    defaultAsset,
-    defaultTendermintEventId4,
-    defaultWalletAddress,
-    isolatedSubaccountId,
-  } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
   
-  describe('transfers-controller#V4', () => {
+  describe('yield-params-controller#V4', () => {
     beforeAll(async () => {
       await dbHelpers.migrate();
     });
@@ -42,10 +32,10 @@ import {
             path: `/v4/yieldParams?createdAtOrBeforeHeight=${height}`,
           });
 
-        expect(response.body.yield_params).toHaveLength(0);
+        expect(response.body.allYieldParams).toHaveLength(0);
       });
 
-      it('Get /yieldParams returns yieldParams at or before height with no rows found below height', async () => {
+      it('Get /yieldParams returns all yieldParams when no height specified', async () => {
         await testMocks.seedData();
 
         await Promise.all([
@@ -58,7 +48,33 @@ import {
           path: `/v4/yieldParams?createdAtOrBeforeHeight`,
         });
 
-        expect(response.body.yield_params).toHaveLength(0);
+        const expectedYieldParamsResponse1: YieldParamsResponseObject = {
+          id: YieldParamsTable.uuid(testConstants.defaultYieldParams1.createdAtHeight),
+          sDAIPrice: testConstants.defaultYieldParams1.sDAIPrice,
+          assetYieldIndex: testConstants.defaultYieldParams1.assetYieldIndex,
+          createdAt: testConstants.defaultYieldParams1.createdAt,
+          createdAtHeight: testConstants.defaultYieldParams1.createdAtHeight,
+      }
+
+      const expectedYieldParamsResponse2: YieldParamsResponseObject = {
+          id: YieldParamsTable.uuid(testConstants.defaultYieldParams2.createdAtHeight),
+          sDAIPrice: testConstants.defaultYieldParams2.sDAIPrice,
+          assetYieldIndex: testConstants.defaultYieldParams2.assetYieldIndex,
+          createdAt: testConstants.defaultYieldParams2.createdAt,
+          createdAtHeight: testConstants.defaultYieldParams2.createdAtHeight,
+      }
+
+      expect(response.body.allYieldParams).toHaveLength(2);
+      expect(response.body.allYieldParams).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+              ...expectedYieldParamsResponse1,
+          }),
+          expect.objectContaining({
+              ...expectedYieldParamsResponse2,
+          }),
+        ]),
+      );
       });
 
       it('Get /yieldParams returns yieldParams at or before height for one row', async () => {
@@ -81,8 +97,9 @@ import {
             createdAt: testConstants.defaultYieldParams1.createdAt,
             createdAtHeight: testConstants.defaultYieldParams1.createdAtHeight,
         }
-  
-        expect(response.body.yield_params).toEqual(
+        
+        expect(response.body.allYieldParams).toHaveLength(1);
+        expect(response.body.allYieldParams).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
                 ...expectedYieldParamsResponse,
@@ -119,8 +136,9 @@ import {
             createdAt: testConstants.defaultYieldParams2.createdAt,
             createdAtHeight: testConstants.defaultYieldParams2.createdAtHeight,
         }
-  
-        expect(response.body.yield_params).toEqual(
+        
+        expect(response.body.allYieldParams).toHaveLength(2);
+        expect(response.body.allYieldParams).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
                 ...expectedYieldParamsResponse1,
@@ -132,14 +150,23 @@ import {
         );
       });
 
-      it('Get /yieldParams/latestYieldParams empty when no rows found', async () => {
+      it('Get /yieldParams/latestYieldParams throws error when no rows found', async () => {
         await testMocks.seedData();
         const response: request.Response = await sendRequest({
           type: RequestMethod.GET,
           path: `/v4/yieldParams/latestYieldParams`,
+          expectedStatus: 500,
         });
-  
-        expect(response.body.yield_params).toHaveLength(0);
+
+        const expectedErrorMsg: string = 'Internal Server Error';
+
+        expect(response.body).toEqual(expect.objectContaining({
+          errors: expect.arrayContaining([
+            expect.objectContaining({
+              msg: expectedErrorMsg,
+            }),
+          ]),
+        }));
       });
 
       it('Get /yieldParams/latestYieldParams returns yieldParams succesfully gets latest yield params when one row is in DB', async () => {
@@ -162,7 +189,8 @@ import {
             createdAtHeight: testConstants.defaultYieldParams1.createdAtHeight,
         }
 
-        expect(response.body.yield_params).toEqual(
+        expect(response.body.allYieldParams).toHaveLength(1);
+        expect(response.body.allYieldParams).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
                 ...expectedYieldParamsResponse1,
@@ -191,8 +219,9 @@ import {
             createdAt: testConstants.defaultYieldParams2.createdAt,
             createdAtHeight: testConstants.defaultYieldParams2.createdAtHeight,
         }
-  
-        expect(response.body.yield_params).toEqual(
+        
+        expect(response.body.allYieldParams).toHaveLength(1);
+        expect(response.body.allYieldParams).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
                 ...expectedYieldParamsResponse2,
