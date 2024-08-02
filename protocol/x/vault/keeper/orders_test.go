@@ -304,12 +304,11 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 			},
 			ordersShouldRefresh: true,
 		},
-		"Error - Vault for non-existent Clob Pair 4321": {
+		"Success - Vault for non-existent Clob Pair 4321": {
 			vaultId: vaulttypes.VaultId{
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
 				Number: 4321,
 			},
-			expectedErr: vaulttypes.ErrClobPairNotFound,
 		},
 	}
 
@@ -397,8 +396,7 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				require.Equal(t, expectedClientIds, mostRecentClientIds)
 			}
 			// Get canonical and flipped client IDs of this vault's orders.
-			orderIds, err := tApp.App.VaultKeeper.GetVaultClobOrderIds(ctx, tc.vaultId)
-			require.NoError(t, err)
+			orderIds := tApp.App.VaultKeeper.GetVaultClobOrderIds(ctx, tc.vaultId)
 			canonicalClientIds := make([]uint32, len(orderIds))
 			flippedClientIds := make([]uint32, len(orderIds))
 			for i, orderId := range orderIds {
@@ -406,9 +404,13 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				flippedClientIds[i] = orderId.ClientId ^ 1
 			}
 
+			// If corresponding clob pair doesn't exist, the vault should not place any orders.
+			_, found := tApp.App.ClobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(tc.vaultId.Number))
+			if !found {
+				require.Zero(t, len(tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)))
+				return
+			}
 			// Vault should place its initial orders (client IDs should be canonical).
-			initialOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
-			require.Len(t, initialOrders, int(defaultQuotingParams.Layers*2))
 			verifyVaultOrders(
 				uint32(ctx.BlockTime().Unix())+defaultQuotingParams.OrderExpirationSeconds,
 				canonicalClientIds,
@@ -788,14 +790,36 @@ func TestGetVaultClobOrders(t *testing.T) {
 			// order size is 0.
 			expectedOrderQuantums: []uint64{},
 		},
-		"Error - Clob Pair doesn't exist": {
+		"Success - Clob Pair doesn't exist, Empty orders": {
+			vaultQuotingParams:    vaulttypes.DefaultQuotingParams(),
+			vaultId:               constants.Vault_Clob0,
+			clobPair:              constants.ClobPair_Eth,
+			marketParam:           constants.TestMarketParams[1],
+			marketPrice:           constants.TestMarketPrices[1],
+			perpetual:             constants.EthUsd_NoMarginRequirement,
+			expectedOrderSubticks: []uint64{},
+			expectedOrderQuantums: []uint64{},
+		},
+		"Success - Clob Pair in status final settlement, Empty orders": {
 			vaultQuotingParams: vaulttypes.DefaultQuotingParams(),
-			vaultId:            constants.Vault_Clob0,
-			clobPair:           constants.ClobPair_Eth,
-			marketParam:        constants.TestMarketParams[1],
-			marketPrice:        constants.TestMarketPrices[1],
-			perpetual:          constants.EthUsd_NoMarginRequirement,
-			expectedErr:        vaulttypes.ErrClobPairNotFound,
+			vaultId:            constants.Vault_Clob1,
+			clobPair: clobtypes.ClobPair{
+				Id: 1,
+				Metadata: &clobtypes.ClobPair_PerpetualClobMetadata{
+					PerpetualClobMetadata: &clobtypes.PerpetualClobMetadata{
+						PerpetualId: 1,
+					},
+				},
+				StepBaseQuantums:          1000,
+				SubticksPerTick:           1000,
+				QuantumConversionExponent: -9,
+				Status:                    clobtypes.ClobPair_STATUS_FINAL_SETTLEMENT,
+			},
+			marketParam:           constants.TestMarketParams[1],
+			marketPrice:           constants.TestMarketPrices[1],
+			perpetual:             constants.EthUsd_NoMarginRequirement,
+			expectedOrderSubticks: []uint64{},
+			expectedOrderQuantums: []uint64{},
 		},
 		"Error - Vault equity is zero": {
 			vaultQuotingParams:         vaulttypes.DefaultQuotingParams(),
@@ -978,28 +1002,30 @@ func TestGetVaultClobOrderIds(t *testing.T) {
 		layers uint32
 
 		/* --- Expectations --- */
-		// Expected error, if any.
-		expectedErr error
+		expectedNumOrders uint32
 	}{
 		"Vault Clob 0, 2 layers": {
-			vaultId: constants.Vault_Clob0,
-			layers:  2,
+			vaultId:           constants.Vault_Clob0,
+			layers:            2,
+			expectedNumOrders: 4,
 		},
 		"Vault Clob 1, 7 layers": {
-			vaultId: constants.Vault_Clob1,
-			layers:  7,
+			vaultId:           constants.Vault_Clob1,
+			layers:            7,
+			expectedNumOrders: 14,
 		},
 		"Vault Clob 0, 0 layers": {
-			vaultId: constants.Vault_Clob0,
-			layers:  0,
+			vaultId:           constants.Vault_Clob0,
+			layers:            0,
+			expectedNumOrders: 0,
 		},
-		"Vault Clob 797 (non-existent clob pair), 2 layers": {
+		"Vault Clob 797, 2 layers": {
 			vaultId: vaulttypes.VaultId{
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
 				Number: 797,
 			},
-			layers:      2,
-			expectedErr: vaulttypes.ErrClobPairNotFound,
+			layers:            2,
+			expectedNumOrders: 4,
 		},
 	}
 
@@ -1033,14 +1059,8 @@ func TestGetVaultClobOrderIds(t *testing.T) {
 			}
 
 			// Verify order IDs.
-			orderIds, err := k.GetVaultClobOrderIds(ctx, tc.vaultId)
-			if tc.expectedErr != nil {
-				require.ErrorContains(t, err, tc.expectedErr.Error())
-				require.Empty(t, orderIds)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, expectedOrderIds, orderIds)
-			}
+			require.Equal(t, tc.expectedNumOrders, uint32(len(expectedOrderIds)))
+			require.Equal(t, expectedOrderIds, k.GetVaultClobOrderIds(ctx, tc.vaultId))
 		})
 	}
 }
