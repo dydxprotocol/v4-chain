@@ -139,7 +139,7 @@ func (k Keeper) GetAllVaults(ctx sdk.Context) []*types.Vault {
 
 		allOwnerShares := k.GetAllOwnerShares(ctx, *vaultId)
 
-		vaultParams, _ := k.GetVaultParams(ctx, *vaultId)
+		quotingParams := k.GetVaultQuotingParams(ctx, *vaultId)
 
 		mostRecentClientIds := k.GetMostRecentClientIds(ctx, *vaultId)
 
@@ -147,7 +147,7 @@ func (k Keeper) GetAllVaults(ctx sdk.Context) []*types.Vault {
 			VaultId:             vaultId,
 			TotalShares:         &totalShares,
 			OwnerShares:         allOwnerShares,
-			VaultParams:         &vaultParams,
+			QuotingParams:       &quotingParams,
 			MostRecentClientIds: mostRecentClientIds,
 		})
 	}

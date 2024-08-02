@@ -6,9 +6,9 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 )
 
-// DefaultParams returns a default set of `x/vault` parameters.
-func DefaultParams() Params {
-	return Params{
+// DefaultQuotingParams returns a default set of `x/vault` parameters.
+func DefaultQuotingParams() QuotingParams {
+	return QuotingParams{
 		Layers:                           2,                            // 2 layers
 		SpreadMinPpm:                     10_000,                       // 100 bps
 		SpreadBufferPpm:                  1_500,                        // 15 bps
@@ -20,7 +20,7 @@ func DefaultParams() Params {
 }
 
 // Validate validates `x/vault` parameters.
-func (p Params) Validate() error {
+func (p QuotingParams) Validate() error {
 	// Layers must be less than or equal to MaxUint8.
 	if p.Layers > math.MaxUint8 {
 		return ErrInvalidLayers
@@ -42,10 +42,5 @@ func (p Params) Validate() error {
 		return ErrInvalidActivationThresholdQuoteQuantums
 	}
 
-	return nil
-}
-
-// Validate validates individual vault parameters.
-func (v VaultParams) Validate() error {
 	return nil
 }

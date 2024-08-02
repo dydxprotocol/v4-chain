@@ -15,6 +15,8 @@ import (
 	"testing"
 	"time"
 
+	listingtypes "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
@@ -265,6 +267,8 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = revsharetypes.ModuleName
 	case marketmapmoduletypes.GenesisState:
 		moduleName = marketmapmoduletypes.ModuleName
+	case listingtypes.GenesisState:
+		moduleName = listingtypes.ModuleName
 	default:
 		panic(fmt.Errorf("Unsupported type %T", t))
 	}

@@ -3,6 +3,8 @@ package keeper
 import (
 	"math"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -32,7 +34,6 @@ func (k Keeper) GetMarketsHardCap(ctx sdk.Context) (hardCap uint32) {
 
 // Function to wrap the creation of a new market
 // Note: This will only list long-tail/isolated markets
-// TODO (TRA-505): Add tests once market mapper testutils become available
 func (k Keeper) CreateMarket(
 	ctx sdk.Context,
 	ticker string,
@@ -40,9 +41,14 @@ func (k Keeper) CreateMarket(
 	marketId = k.PricesKeeper.AcquireNextMarketID(ctx)
 
 	// Get market details from marketmap
-	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, ticker)
+	// TODO: change to use util from marketmap when available
+	marketMapPair, err := slinky.MarketPairToCurrencyPair(ticker)
 	if err != nil {
 		return 0, err
+	}
+	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, marketMapPair.String())
+	if err != nil {
+		return 0, types.ErrMarketNotFound
 	}
 
 	// Create a new market
@@ -52,9 +58,10 @@ func (k Keeper) CreateMarket(
 			Id:   marketId,
 			Pair: ticker,
 			// Set the price exponent to the negative of the number of decimals
-			Exponent:          int32(marketMapDetails.Ticker.Decimals) * -1,
-			MinExchanges:      uint32(marketMapDetails.Ticker.MinProviderCount),
-			MinPriceChangePpm: types.MinPriceChangePpm_LongTail,
+			Exponent:           int32(marketMapDetails.Ticker.Decimals) * -1,
+			MinExchanges:       uint32(marketMapDetails.Ticker.MinProviderCount),
+			MinPriceChangePpm:  types.MinPriceChangePpm_LongTail,
+			ExchangeConfigJson: "{}", // Placeholder. TODO (TRA-513): Deprecate this field
 		},
 		pricestypes.MarketPrice{
 			Id:       marketId,
@@ -96,7 +103,6 @@ func (k Keeper) CreateClobPair(
 
 // Function to wrap the creation of a new perpetual
 // Note: This will only list long-tail/isolated markets
-// TODO: Add tests pending marketmap testutils
 func (k Keeper) CreatePerpetual(
 	ctx sdk.Context,
 	marketId uint32,
@@ -105,7 +111,12 @@ func (k Keeper) CreatePerpetual(
 	perpetualId = k.PerpetualsKeeper.AcquireNextPerpetualID(ctx)
 
 	// Get reference price from market map
-	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, ticker)
+	// TODO: change to use util from marketmap when available
+	marketMapPair, err := slinky.MarketPairToCurrencyPair(ticker)
+	if err != nil {
+		return 0, err
+	}
+	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, marketMapPair.String())
 	if err != nil {
 		return 0, err
 	}

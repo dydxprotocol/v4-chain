@@ -126,6 +126,10 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/dydxprotocol.clob.MsgPlaceOrder",
 		"/dydxprotocol.clob.MsgPlaceOrderResponse",
 
+		// listing
+		"/dydxprotocol.listing.MsgCreateMarketPermissionless",
+		"/dydxprotocol.listing.MsgCreateMarketPermissionlessResponse",
+
 		// perpetuals
 
 		// prices

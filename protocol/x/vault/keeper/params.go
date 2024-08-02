@@ -6,67 +6,67 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
-// GetParams returns `Params` in state.
-func (k Keeper) GetParams(
+// GetDefaultQuotingParams returns `DefaultQuotingParams` in state.
+func (k Keeper) GetDefaultQuotingParams(
 	ctx sdk.Context,
 ) (
-	params types.Params,
+	params types.QuotingParams,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get([]byte(types.ParamsKey))
+	b := store.Get([]byte(types.DefaultQuotingParamsKey))
 	k.cdc.MustUnmarshal(b, &params)
 	return params
 }
 
-// SetParams updates `Params` in state.
+// SetDefaultQuotingParams updates `DefaultQuotingParams` in state.
 // Returns an error if validation fails.
-func (k Keeper) SetParams(
+func (k Keeper) SetDefaultQuotingParams(
 	ctx sdk.Context,
-	params types.Params,
+	params *types.QuotingParams,
 ) error {
 	if err := params.Validate(); err != nil {
 		return err
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshal(&params)
-	store.Set([]byte(types.ParamsKey), b)
+	b := k.cdc.MustMarshal(params)
+	store.Set([]byte(types.DefaultQuotingParamsKey), b)
 
 	return nil
 }
 
-// GetVaultParams returns `VaultParams` in state for a given vault.
-func (k Keeper) GetVaultParams(
+// GetVaultQuotingParams returns `QuotingParams` in state for a given vault, if it exists,
+// and otherwise, returns module-wide `DefaultQuotingParams`.
+func (k Keeper) GetVaultQuotingParams(
 	ctx sdk.Context,
 	vaultId types.VaultId,
 ) (
-	vaultParams types.VaultParams,
-	exists bool,
+	quotingParams types.QuotingParams,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.QuotingParamsKeyPrefix))
 
 	b := store.Get(vaultId.ToStateKey())
 	if b == nil {
-		return vaultParams, false
+		return k.GetDefaultQuotingParams(ctx)
 	}
 
-	k.cdc.MustUnmarshal(b, &vaultParams)
-	return vaultParams, true
+	k.cdc.MustUnmarshal(b, &quotingParams)
+	return quotingParams
 }
 
-// SetVaultParams sets `VaultParams` in state for a given vault.
+// SetVaultQuotingParams sets `QuotingParams` in state for a given vault.
 // Returns an error if validation fails.
-func (k Keeper) SetVaultParams(
+func (k Keeper) SetVaultQuotingParams(
 	ctx sdk.Context,
 	vaultId types.VaultId,
-	vaultParams types.VaultParams,
+	qoutingParams types.QuotingParams,
 ) error {
-	if err := vaultParams.Validate(); err != nil {
+	if err := qoutingParams.Validate(); err != nil {
 		return err
 	}
 
-	b := k.cdc.MustMarshal(&vaultParams)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))
+	b := k.cdc.MustMarshal(&qoutingParams)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.QuotingParamsKeyPrefix))
 	store.Set(vaultId.ToStateKey(), b)
 
 	return nil

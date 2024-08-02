@@ -883,6 +883,26 @@ const GenesisState = `{
           "initial_margin_ppm": 50000,
           "maintenance_fraction_ppm": 600000,
           "name": "Large-Cap"
+        },
+        {
+          "id": 1,
+          "name": "Mid-Cap",
+          "initial_margin_ppm": 100000,
+          "maintenance_fraction_ppm": 500000,
+          "base_position_notional": 250000000000,
+          "impact_notional": 5000000000,
+          "open_interest_lower_cap": 20000000000000,
+          "open_interest_upper_cap": 50000000000000
+        },
+        {
+          "id": 2,
+          "name": "Long-Tail",
+          "initial_margin_ppm": 200000,
+          "maintenance_fraction_ppm": 500000,
+          "base_position_notional": 100000000000,
+          "impact_notional": 2500000000,
+          "open_interest_lower_cap": 5000000000000,
+          "open_interest_upper_cap": 10000000000000
         }
       ],
       "params": {
@@ -4514,7 +4534,7 @@ const GenesisState = `{
     },
     "upgrade": {},
     "vault": {
-      "params": {
+      "default_quoting_params": {
         "layers": 2,
         "spread_min_ppm": 10000,
         "spread_buffer_ppm": 1500,

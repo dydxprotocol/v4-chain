@@ -288,6 +288,19 @@ router.post(
         complianceStatus,
         updatedAt,
       );
+      if (complianceStatus.length === 0 ||
+        complianceStatus[0] !== complianceStatusFromDatabase) {
+        if (complianceStatusFromDatabase !== undefined &&
+          complianceStatusFromDatabase.status !== ComplianceStatus.COMPLIANT
+        ) {
+          stats.increment(
+            `${config.SERVICE_NAME}.${controllerName}.geo_block.compliance_status_changed.count`,
+            {
+              newStatus: complianceStatusFromDatabase!.status,
+            },
+          );
+        }
+      }
 
       const response = {
         status: complianceStatusFromDatabase!.status,

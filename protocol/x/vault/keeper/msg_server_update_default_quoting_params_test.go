@@ -14,30 +14,44 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMsgUpdateParams(t *testing.T) {
+func TestMsgUpdateDefaultQuotingParams(t *testing.T) {
 	tests := map[string]struct {
 		// Msg.
-		msg *types.MsgUpdateParams
+		msg *types.MsgUpdateDefaultQuotingParams
 		// Expected error
 		expectedErr string
 	}{
-		"Success": {
-			msg: &types.MsgUpdateParams{
+		"Success. Update to default": {
+			msg: &types.MsgUpdateDefaultQuotingParams{
+				Authority:            lib.GovModuleAddress.String(),
+				DefaultQuotingParams: types.DefaultQuotingParams(),
+			},
+		},
+		"Success. Update to non-default": {
+			msg: &types.MsgUpdateDefaultQuotingParams{
 				Authority: lib.GovModuleAddress.String(),
-				Params:    types.DefaultParams(),
+				DefaultQuotingParams: types.QuotingParams{
+					Layers:                           3,
+					SpreadMinPpm:                     234_567,
+					SpreadBufferPpm:                  6_789,
+					SkewFactorPpm:                    321_123,
+					OrderSizePctPpm:                  255_678,
+					OrderExpirationSeconds:           120,
+					ActivationThresholdQuoteQuantums: dtypes.NewInt(2_121_343_787),
+				},
 			},
 		},
 		"Failure - Invalid Authority": {
-			msg: &types.MsgUpdateParams{
-				Authority: constants.AliceAccAddress.String(),
-				Params:    types.DefaultParams(),
+			msg: &types.MsgUpdateDefaultQuotingParams{
+				Authority:            constants.AliceAccAddress.String(),
+				DefaultQuotingParams: types.DefaultQuotingParams(),
 			},
 			expectedErr: "invalid authority",
 		},
 		"Failure - Invalid Params": {
-			msg: &types.MsgUpdateParams{
+			msg: &types.MsgUpdateDefaultQuotingParams{
 				Authority: lib.GovModuleAddress.String(),
-				Params: types.Params{
+				DefaultQuotingParams: types.QuotingParams{
 					Layers:                           3,
 					SpreadMinPpm:                     4_000,
 					SpreadBufferPpm:                  2_000,
@@ -58,13 +72,13 @@ func TestMsgUpdateParams(t *testing.T) {
 			k := tApp.App.VaultKeeper
 			ms := keeper.NewMsgServerImpl(k)
 
-			_, err := ms.UpdateParams(ctx, tc.msg)
+			_, err := ms.UpdateDefaultQuotingParams(ctx, tc.msg)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
-				require.Equal(t, types.DefaultParams(), k.GetParams(ctx))
+				require.Equal(t, types.DefaultQuotingParams(), k.GetDefaultQuotingParams(ctx))
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Params, k.GetParams(ctx))
+				require.Equal(t, tc.msg.DefaultQuotingParams, k.GetDefaultQuotingParams(ctx))
 			}
 		})
 	}
