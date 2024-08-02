@@ -2,6 +2,7 @@ package streaming
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/client"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -32,6 +33,9 @@ func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
+}
+
+func (sm *NoopGrpcStreamingManager) SubscribeTestClient(client *client.GrpcClient) {
 }
 
 func (sm *NoopGrpcStreamingManager) SendOrderbookFillUpdates(

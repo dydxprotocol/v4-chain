@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/client"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	streaming_util "github.com/dydxprotocol/v4-chain/protocol/streaming/util"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -52,6 +53,9 @@ type OrderbookSubscription struct {
 
 	// Channel to buffer writes before the stream
 	updatesChannel chan []clobtypes.StreamUpdate
+
+	// Testing
+	client *client.GrpcClient
 }
 
 func NewFullNodeStreamingManager(
@@ -183,6 +187,19 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	return err
 }
 
+func (sm *FullNodeStreamingManagerImpl) SubscribeTestClient(client *client.GrpcClient) {
+	subscription := &OrderbookSubscription{
+		clobPairIds: []uint32{0, 1},
+		client:      client,
+	}
+
+	sm.Lock()
+	defer sm.Unlock()
+
+	sm.orderbookSubscriptions[sm.nextSubscriptionId] = subscription
+	sm.nextSubscriptionId++
+}
+
 // removeSubscription removes a subscription from the streaming manager.
 // The streaming manager's lock should already be acquired before calling this.
 func (sm *FullNodeStreamingManagerImpl) removeSubscription(
@@ -251,17 +268,11 @@ func (sm *FullNodeStreamingManagerImpl) SendSnapshot(
 			metrics.GrpcAddToSubscriptionChannelCount,
 			1,
 		)
-		select {
-		case subscription.updatesChannel <- streamUpdates:
-		default:
-			sm.logger.Error(
-				fmt.Sprintf(
-					"Streaming subscription id %+v channel full capacity. Dropping subscription connection.",
-					subscriptionId,
-				),
-			)
-			removeSubscription = true
-		}
+		subscription.client.Update(
+			&clobtypes.StreamOrderbookUpdatesResponse{
+				Updates: streamUpdates,
+			},
+		)
 	}
 
 	// Clean up subscriptions that have been closed.
@@ -315,7 +326,25 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookUpdates(
 		}
 	}
 
-	sm.AddUpdatesToCache(updatesByClobPairId, uint32(len(updates)))
+	sm.Lock()
+	defer sm.Unlock()
+
+	for _, subscription := range sm.orderbookSubscriptions {
+		updatesToSend := make([]clobtypes.StreamUpdate, 0)
+		for _, clobPairId := range subscription.clobPairIds {
+			if updates, ok := updatesByClobPairId[clobPairId]; ok {
+				updatesToSend = append(updatesToSend, updates...)
+			}
+		}
+
+		if len(updatesToSend) > 0 {
+			subscription.client.Update(
+				&clobtypes.StreamOrderbookUpdatesResponse{
+					Updates: updatesToSend,
+				},
+			)
+		}
+	}
 }
 
 // SendOrderbookFillUpdates groups fills by their clob pair ids and
@@ -359,7 +388,25 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdates(
 		updatesByClobPairId[clobPairId] = append(updatesByClobPairId[clobPairId], streamUpdate)
 	}
 
-	sm.AddUpdatesToCache(updatesByClobPairId, uint32(len(orderbookFills)))
+	sm.Lock()
+	defer sm.Unlock()
+
+	for _, subscription := range sm.orderbookSubscriptions {
+		updatesToSend := make([]clobtypes.StreamUpdate, 0)
+		for _, clobPairId := range subscription.clobPairIds {
+			if updates, ok := updatesByClobPairId[clobPairId]; ok {
+				updatesToSend = append(updatesToSend, updates...)
+			}
+		}
+
+		if len(updatesToSend) > 0 {
+			subscription.client.Update(
+				&clobtypes.StreamOrderbookUpdatesResponse{
+					Updates: updatesToSend,
+				},
+			)
+		}
+	}
 }
 
 func (sm *FullNodeStreamingManagerImpl) AddUpdatesToCache(
