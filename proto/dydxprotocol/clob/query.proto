@@ -165,6 +165,9 @@ message QueryLiquidationsConfigurationResponse {
 message StreamOrderbookUpdatesRequest {
   // Clob pair ids to stream orderbook updates for.
   repeated uint32 clob_pair_id = 1;
+
+  // Subaccount ids to stream subaccount updates for.
+  repeated SubaccountId subaccount_ids = 2;
 }
 
 // StreamOrderbookUpdatesResponse is a response message for the
@@ -172,9 +175,6 @@ message StreamOrderbookUpdatesRequest {
 message StreamOrderbookUpdatesResponse {
   // Batch of updates for the clob pair.
   repeated StreamUpdate updates = 1 [ (gogoproto.nullable) = false ];
-
-  // Subaccount ids to stream subaccount updates for.
-  repeated SubaccountId subaccount_ids = 2 [ (gogoproto.nullable) = true ];
 }
 
 // StreamUpdate is an update that will be pushed through the
@@ -232,6 +232,11 @@ message StreamSubaccountUpdate {
   // updated_asset_positions will each be for unique assets.
   repeated SubaccountAssetPosition
       updated_asset_positions = 3;
+  // Snapshot indicates if the response is from a snapshot of the subaccount.
+  // All updates should be ignored until snapshot is received.
+  // If the snapshot is true, then all previous entries should be
+  // discarded and the subaccount should be resynced.
+  bool snapshot = 4;
 }
 
 // StreamOrderbookUpdate provides information on an orderbook update. Used in
