@@ -287,17 +287,18 @@ func voteExtensionsUpgrade(
 	)
 }
 
-// Initialize vault module parameters.
+// Deprecated: Initialize vault module parameters.
+// This function is deprecated because `Params` in `x/vault` is replaced with `DefaultQuotingParams` in v6.x.
 func initializeVaultModuleParams(
 	ctx sdk.Context,
 	vaultKeeper vaulttypes.VaultKeeper,
 ) {
-	// Set vault module parameters to default values.
-	vaultParams := vaulttypes.DefaultParams()
-	if err := vaultKeeper.SetParams(ctx, vaultParams); err != nil {
-		panic(fmt.Sprintf("failed to set vault module parameters: %s", err))
-	}
-	ctx.Logger().Info("Successfully set vault module parameters")
+	// // Set vault module parameters to default values.
+	// vaultParams := vaulttypes.DefaultParams()
+	// if err := vaultKeeper.SetParams(ctx, vaultParams); err != nil {
+	// 	panic(fmt.Sprintf("failed to set vault module parameters: %s", err))
+	// }
+	// ctx.Logger().Info("Successfully set vault module parameters")
 }
 
 func CreateUpgradeHandler(

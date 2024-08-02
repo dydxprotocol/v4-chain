@@ -10,11 +10,11 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
-// UpdateParams updates the parameters of the vault module.
-func (k msgServer) UpdateParams(
+// UpdateDefaultQuotingParams updates the default quoting parameters of the vault module.
+func (k msgServer) UpdateDefaultQuotingParams(
 	goCtx context.Context,
-	msg *types.MsgUpdateParams,
-) (*types.MsgUpdateParamsResponse, error) {
+	msg *types.MsgUpdateDefaultQuotingParams,
+) (*types.MsgUpdateDefaultQuotingParamsResponse, error) {
 	if !k.HasAuthority(msg.Authority) {
 		return nil, errorsmod.Wrapf(
 			govtypes.ErrInvalidSigner,
@@ -24,9 +24,9 @@ func (k msgServer) UpdateParams(
 	}
 
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
-	if err := k.SetParams(ctx, msg.Params); err != nil {
+	if err := k.SetDefaultQuotingParams(ctx, &msg.DefaultQuotingParams); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgUpdateParamsResponse{}, nil
+	return &types.MsgUpdateDefaultQuotingParamsResponse{}, nil
 }
