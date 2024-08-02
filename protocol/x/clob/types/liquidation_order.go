@@ -51,6 +51,18 @@ func NewLiquidationOrder(
 	}
 }
 
+// ToStreamLiquidationOrder converts the LiquidationOrder to a StreamLiquidationOrder
+// to be emitted by full node streaming.
+func (lo *LiquidationOrder) ToStreamLiquidationOrder() *StreamLiquidationOrder {
+	return &StreamLiquidationOrder{
+		LiquidationInfo: &lo.perpetualLiquidationInfo,
+		ClobPairId:      uint32(lo.clobPairId),
+		IsBuy:           lo.isBuy,
+		Quantums:        lo.quantums.ToUint64(),
+		Subticks:        lo.subticks.ToUint64(),
+	}
+}
+
 // IsBuy returns true if this is a buy order, false if not.
 // This function is necessary for the `LiquidationOrder` type to implement the `MatchableOrder` interface.
 func (lo *LiquidationOrder) IsBuy() bool {
