@@ -168,7 +168,8 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 				),
 				"err", err,
 			)
-			delete(sm.orderbookSubscriptions, subscription.subscriptionId)
+			// Break out of the loop, stopping this goroutine.
+			// The channel will fill up and the main thread will prune the subscription.
 			break
 		}
 	}
@@ -370,7 +371,7 @@ func (sm *FullNodeStreamingManagerImpl) AddUpdatesToCache(
 
 	metrics.IncrCounter(
 		metrics.GrpcAddUpdateToBufferCount,
-		1,
+		float32(numUpdatesToAdd),
 	)
 
 	for clobPairId, streamUpdates := range updatesByClobPairId {
