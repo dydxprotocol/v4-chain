@@ -1,4 +1,5 @@
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
+import { PerpetualLiquidationInfo, PerpetualLiquidationInfoSDKType } from "./liquidations";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
 /**
@@ -702,6 +703,60 @@ export interface TransactionOrderingSDKType {
 
   transaction_index: number;
 }
+/**
+ * StreamLiquidationOrder represents an protocol-generated IOC liquidation
+ * order. Used in full node streaming.
+ */
+
+export interface StreamLiquidationOrder {
+  /** Information about this liquidation order. */
+  liquidationInfo?: PerpetualLiquidationInfo;
+  /**
+   * CLOB pair ID of the CLOB pair the liquidation order will be matched
+   * against.
+   */
+
+  clobPairId: number;
+  /**
+   * True if this is a buy order liquidating a short position, false if vice
+   * versa.
+   */
+
+  isBuy: boolean;
+  /** The number of base quantums for this liquidation order. */
+
+  quantums: Long;
+  /** The subticks this liquidation order will be submitted at. */
+
+  subticks: Long;
+}
+/**
+ * StreamLiquidationOrder represents an protocol-generated IOC liquidation
+ * order. Used in full node streaming.
+ */
+
+export interface StreamLiquidationOrderSDKType {
+  /** Information about this liquidation order. */
+  liquidation_info?: PerpetualLiquidationInfoSDKType;
+  /**
+   * CLOB pair ID of the CLOB pair the liquidation order will be matched
+   * against.
+   */
+
+  clob_pair_id: number;
+  /**
+   * True if this is a buy order liquidating a short position, false if vice
+   * versa.
+   */
+
+  is_buy: boolean;
+  /** The number of base quantums for this liquidation order. */
+
+  quantums: Long;
+  /** The subticks this liquidation order will be submitted at. */
+
+  subticks: Long;
+}
 
 function createBaseOrderId(): OrderId {
   return {
@@ -1283,6 +1338,91 @@ export const TransactionOrdering = {
     const message = createBaseTransactionOrdering();
     message.blockHeight = object.blockHeight ?? 0;
     message.transactionIndex = object.transactionIndex ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseStreamLiquidationOrder(): StreamLiquidationOrder {
+  return {
+    liquidationInfo: undefined,
+    clobPairId: 0,
+    isBuy: false,
+    quantums: Long.UZERO,
+    subticks: Long.UZERO
+  };
+}
+
+export const StreamLiquidationOrder = {
+  encode(message: StreamLiquidationOrder, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.liquidationInfo !== undefined) {
+      PerpetualLiquidationInfo.encode(message.liquidationInfo, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.clobPairId !== 0) {
+      writer.uint32(16).uint32(message.clobPairId);
+    }
+
+    if (message.isBuy === true) {
+      writer.uint32(24).bool(message.isBuy);
+    }
+
+    if (!message.quantums.isZero()) {
+      writer.uint32(32).uint64(message.quantums);
+    }
+
+    if (!message.subticks.isZero()) {
+      writer.uint32(40).uint64(message.subticks);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): StreamLiquidationOrder {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseStreamLiquidationOrder();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.liquidationInfo = PerpetualLiquidationInfo.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.clobPairId = reader.uint32();
+          break;
+
+        case 3:
+          message.isBuy = reader.bool();
+          break;
+
+        case 4:
+          message.quantums = (reader.uint64() as Long);
+          break;
+
+        case 5:
+          message.subticks = (reader.uint64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<StreamLiquidationOrder>): StreamLiquidationOrder {
+    const message = createBaseStreamLiquidationOrder();
+    message.liquidationInfo = object.liquidationInfo !== undefined && object.liquidationInfo !== null ? PerpetualLiquidationInfo.fromPartial(object.liquidationInfo) : undefined;
+    message.clobPairId = object.clobPairId ?? 0;
+    message.isBuy = object.isBuy ?? false;
+    message.quantums = object.quantums !== undefined && object.quantums !== null ? Long.fromValue(object.quantums) : Long.UZERO;
+    message.subticks = object.subticks !== undefined && object.subticks !== null ? Long.fromValue(object.subticks) : Long.UZERO;
     return message;
   }
 

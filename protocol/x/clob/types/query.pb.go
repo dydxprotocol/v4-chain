@@ -1201,16 +1201,17 @@ func (*StreamTakerOrder) XXX_OneofWrappers() []interface{} {
 // after it is attempted to be matched on the orderbook.
 // It is intended to be used only in full node streaming.
 type StreamTakerOrderStatus struct {
-	// The state of the taker order after attempting to match it against the orderbook.
-	// Possible enum values can be found here:
+	// The state of the taker order after attempting to match it against the
+	// orderbook. Possible enum values can be found here:
 	// https://github.com/dydxprotocol/v4-chain/blob/main/protocol/x/clob/types/orderbook.go#L105
 	OrderStatus uint32 `protobuf:"varint,1,opt,name=order_status,json=orderStatus,proto3" json:"order_status,omitempty"`
 	// The amount of remaining (non-matched) base quantums of this taker order.
 	RemainingQuantums uint64 `protobuf:"varint,2,opt,name=remaining_quantums,json=remainingQuantums,proto3" json:"remaining_quantums,omitempty"`
-	// The amount of base quantums that were *optimistically* filled for this taker order
-	// when the order is matched against the orderbook. Note that if any quantums of this order
-	// were optimistically filled or filled in state before this invocation of the matching loop,
-	// this value will not include them.
+	// The amount of base quantums that were *optimistically* filled for this
+	// taker order when the order is matched against the orderbook. Note that if
+	// any quantums of this order were optimistically filled or filled in state
+	// before this invocation of the matching loop, this value will not include
+	// them.
 	OptimisticallyFilledQuantums uint64 `protobuf:"varint,3,opt,name=optimistically_filled_quantums,json=optimisticallyFilledQuantums,proto3" json:"optimistically_filled_quantums,omitempty"`
 }
 

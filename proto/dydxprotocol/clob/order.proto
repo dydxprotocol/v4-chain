@@ -230,16 +230,18 @@ message TransactionOrdering {
   uint32 transaction_index = 2;
 }
 
-// StreamLiquidationOrder represents an protocol-generated IOC liquidation order.
-// Used in full node streaming.
+// StreamLiquidationOrder represents an protocol-generated IOC liquidation
+// order. Used in full node streaming.
 message StreamLiquidationOrder {
   // Information about this liquidation order.
   PerpetualLiquidationInfo liquidation_info = 1;
 
-  // CLOB pair ID of the CLOB pair the liquidation order will be matched against.
+  // CLOB pair ID of the CLOB pair the liquidation order will be matched
+  // against.
   uint32 clob_pair_id = 2;
 
-  // True if this is a buy order liquidating a short position, false if vice versa.
+  // True if this is a buy order liquidating a short position, false if vice
+  // versa.
   bool is_buy = 3;
 
   // The number of base quantums for this liquidation order.
