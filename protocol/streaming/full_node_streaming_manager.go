@@ -363,7 +363,7 @@ func (sm *FullNodeStreamingManagerImpl) AddUpdatesToCache(
 
 	metrics.IncrCounter(
 		metrics.GrpcAddUpdateToBufferCount,
-		1,
+		float32(numUpdatesToAdd),
 	)
 
 	for clobPairId, streamUpdates := range updatesByClobPairId {
