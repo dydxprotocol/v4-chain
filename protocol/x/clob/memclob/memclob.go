@@ -2440,5 +2440,5 @@ func (m *MemClobPriceTimePriority) resizeReduceOnlyMatchIfNecessary(
 }
 
 func (m *MemClobPriceTimePriority) GetOrderbook(ctx sdk.Context, clobPairId types.ClobPairId) types.OrderbookInterface {
-	return m.orderbooks[clobPairId]
+	return m.openOrders.orderbooksMap[clobPairId]
 }
