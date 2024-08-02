@@ -22,8 +22,8 @@ type FullNodeStreamingManagerImpl struct {
 	logger log.Logger
 
 	// orderbookSubscriptions maps subscription IDs to their respective orderbook subscriptions.
-	orderbookSubscriptions      map[uint32]*OrderbookSubscription
-	nextOrderbookSubscriptionId uint32
+	orderbookSubscriptions map[uint32]*OrderbookSubscription
+	nextSubscriptionId     uint32
 
 	// stream will batch and flush out messages every 10 ms.
 	ticker *time.Ticker
@@ -62,9 +62,9 @@ func NewFullNodeStreamingManager(
 ) *FullNodeStreamingManagerImpl {
 	logger = logger.With(log.ModuleKey, "full-node-streaming")
 	fullNodeStreamingManager := &FullNodeStreamingManagerImpl{
-		logger:                      logger,
-		orderbookSubscriptions:      make(map[uint32]*OrderbookSubscription),
-		nextOrderbookSubscriptionId: 0,
+		logger:                 logger,
+		orderbookSubscriptions: make(map[uint32]*OrderbookSubscription),
+		nextSubscriptionId:     0,
 
 		ticker:            time.NewTicker(time.Duration(flushIntervalMs) * time.Millisecond),
 		done:              make(chan bool),
@@ -129,7 +129,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 
 	sm.Lock()
 	subscription := &OrderbookSubscription{
-		subscriptionId: sm.nextOrderbookSubscriptionId,
+		subscriptionId: sm.nextSubscriptionId,
 		clobPairIds:    clobPairIds,
 		messageSender:  messageSender,
 		updatesChannel: make(chan []clobtypes.StreamUpdate, sm.maxSubscriptionChannelSize),
@@ -143,7 +143,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 		),
 	)
 	sm.orderbookSubscriptions[subscription.subscriptionId] = subscription
-	sm.nextOrderbookSubscriptionId++
+	sm.nextSubscriptionId++
 	sm.EmitMetrics()
 	sm.Unlock()
 
@@ -168,7 +168,8 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 				),
 				"err", err,
 			)
-			delete(sm.orderbookSubscriptions, subscription.subscriptionId)
+			// Break out of the loop, stopping this goroutine.
+			// The channel will fill up and the main thread will prune the subscription.
 			break
 		}
 	}
@@ -370,7 +371,7 @@ func (sm *FullNodeStreamingManagerImpl) AddUpdatesToCache(
 
 	metrics.IncrCounter(
 		metrics.GrpcAddUpdateToBufferCount,
-		1,
+		float32(numUpdatesToAdd),
 	)
 
 	for clobPairId, streamUpdates := range updatesByClobPairId {
