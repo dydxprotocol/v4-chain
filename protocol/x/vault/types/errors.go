@@ -10,6 +10,7 @@ var (
 		1,
 		"Shares are negative",
 	)
+	// Deprecated since v6.x
 	ErrClobPairNotFound = errorsmod.Register(
 		ModuleName,
 		2,
@@ -89,5 +90,10 @@ var (
 		ModuleName,
 		17,
 		"MarketPrice is zero",
+	)
+	ErrOrdersAndOrderIdsDiffLen = errorsmod.Register(
+		ModuleName,
+		18,
+		"Orders and OrderIds must have the same length",
 	)
 )
