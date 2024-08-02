@@ -197,8 +197,10 @@ var (
 		"/dydxprotocol.govplus.MsgSlashValidatorResponse": {},
 
 		// listing
-		"/dydxprotocol.listing.MsgSetMarketsHardCap":         {},
-		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse": {},
+		"/dydxprotocol.listing.MsgSetMarketsHardCap":                  {},
+		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse":          {},
+		"/dydxprotocol.listing.MsgCreateMarketPermissionless":         {},
+		"/dydxprotocol.listing.MsgCreateMarketPermissionlessResponse": {},
 
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":               {},
@@ -251,8 +253,10 @@ var (
 		"/dydxprotocol.vest.MsgDeleteVestEntryResponse": {},
 
 		// revshare
-		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShare":         {},
-		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse": {},
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShare":                     {},
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse":             {},
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarket":         {},
+		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarketResponse": {},
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         {},
@@ -350,6 +354,18 @@ var (
 		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParamsResponse":              {},
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":                            {},
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse":                    {},
+
+		// slinky marketmap messages
+		"/slinky.marketmap.v1.MsgCreateMarkets":                   {},
+		"/slinky.marketmap.v1.MsgCreateMarketsResponse":           {},
+		"/slinky.marketmap.v1.MsgParams":                          {},
+		"/slinky.marketmap.v1.MsgParamsResponse":                  {},
+		"/slinky.marketmap.v1.MsgRemoveMarketAuthorities":         {},
+		"/slinky.marketmap.v1.MsgRemoveMarketAuthoritiesResponse": {},
+		"/slinky.marketmap.v1.MsgUpdateMarkets":                   {},
+		"/slinky.marketmap.v1.MsgUpdateMarketsResponse":           {},
+		"/slinky.marketmap.v1.MsgUpsertMarkets":                   {},
+		"/slinky.marketmap.v1.MsgUpsertMarketsResponse":           {},
 	}
 
 	// DisallowMsgs are messages that cannot be externally submitted.

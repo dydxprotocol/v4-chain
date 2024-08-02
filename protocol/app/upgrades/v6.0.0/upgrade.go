@@ -5,14 +5,28 @@ import (
 	"fmt"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+	"github.com/skip-mev/slinky/oracle/config"
+	"github.com/skip-mev/slinky/providers/apis/dydx"
+	dydxtypes "github.com/skip-mev/slinky/providers/apis/dydx/types"
+	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
+	"go.uber.org/zap"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
+
+// GovAuthority is the module account address of x/gov.
+var GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
 func removeStatefulFOKOrders(ctx sdk.Context, k clobtypes.ClobKeeper) {
 	allStatefulOrders := k.GetAllStatefulOrders(ctx)
@@ -39,10 +53,91 @@ func removeStatefulFOKOrders(ctx sdk.Context, k clobtypes.ClobKeeper) {
 	}
 }
 
+func setMarketMapParams(ctx sdk.Context, mmk marketmapkeeper.Keeper) {
+	err := mmk.SetParams(ctx, marketmaptypes.Params{
+		// init so that gov is the admin and a market authority
+		MarketAuthorities: []string{GovAuthority},
+		Admin:             GovAuthority,
+	})
+	if err != nil {
+		panic(fmt.Sprintf("failed to set x/mm params %v", err))
+	}
+}
+
+func migratePricesToMarketMap(ctx sdk.Context, pk pricestypes.PricesKeeper, mmk marketmapkeeper.Keeper) {
+	// fill out config with dummy variables to pass validation.  This handler is only used to run the
+	// ConvertMarketParamsToMarketMap member function.
+	h, err := dydx.NewAPIHandler(zap.NewNop(), config.APIConfig{
+		Enabled:          true,
+		Timeout:          1,
+		Interval:         1,
+		ReconnectTimeout: 1,
+		MaxQueries:       1,
+		Atomic:           false,
+		Endpoints:        []config.Endpoint{{URL: "upgrade"}},
+		BatchSize:        0,
+		Name:             dydx.Name,
+	})
+	if err != nil {
+		panic(fmt.Sprintf("Failed to construct dydx handler %v", err))
+	}
+	allMarketParams := pk.GetAllMarketParams(ctx)
+	var mpr dydxtypes.QueryAllMarketParamsResponse
+	for _, mp := range allMarketParams {
+		mpr.MarketParams = append(mpr.MarketParams, dydxtypes.MarketParam{
+			Id:                 mp.Id,
+			Pair:               mp.Pair,
+			Exponent:           mp.Exponent,
+			MinExchanges:       mp.MinExchanges,
+			MinPriceChangePpm:  mp.MinPriceChangePpm,
+			ExchangeConfigJson: mp.ExchangeConfigJson,
+		})
+	}
+	mm, err := h.ConvertMarketParamsToMarketMap(mpr)
+	if err != nil {
+		panic(fmt.Sprintf("Couldn't convert markets %v", err))
+	}
+	for _, market := range mm.MarketMap.Markets {
+		err = mmk.CreateMarket(ctx, market)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to create market %s", market.Ticker.String()))
+		}
+	}
+}
+
+func initRevShareModuleState(
+	ctx sdk.Context,
+	revShareKeeper revsharetypes.RevShareKeeper,
+	priceKeeper pricestypes.PricesKeeper,
+) {
+	// Initialize the rev share module state.
+	params := revsharetypes.MarketMapperRevenueShareParams{
+		Address:         authtypes.NewModuleAddress(authtypes.FeeCollectorName).String(),
+		RevenueSharePpm: 0,
+		ValidDays:       0,
+	}
+	err := revShareKeeper.SetMarketMapperRevenueShareParams(ctx, params)
+	if err != nil {
+		panic(fmt.Sprintf("failed to set market mapper revenue share params: %s", err))
+	}
+
+	// Initialize the rev share details for all existing markets.
+	markets := priceKeeper.GetAllMarketParams(ctx)
+	for _, market := range markets {
+		revShareDetails := revsharetypes.MarketMapperRevShareDetails{
+			ExpirationTs: 0,
+		}
+		revShareKeeper.SetMarketMapperRevShareDetails(ctx, market.Id, revShareDetails)
+	}
+}
+
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
 	clobKeeper clobtypes.ClobKeeper,
+	pricesKeeper pricestypes.PricesKeeper,
+	mmKeeper marketmapkeeper.Keeper,
+	revShareKeeper revsharetypes.RevShareKeeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
@@ -50,6 +145,14 @@ func CreateUpgradeHandler(
 
 		// Remove all stateful FOK orders from state.
 		removeStatefulFOKOrders(sdkCtx, clobKeeper)
+
+		// Migrate x/prices params to x/marketmap Markets
+		migratePricesToMarketMap(sdkCtx, pricesKeeper, mmKeeper)
+		// Set x/marketmap Params
+		setMarketMapParams(sdkCtx, mmKeeper)
+
+		// Initialize the rev share module state.
+		initRevShareModuleState(sdkCtx, revShareKeeper, pricesKeeper)
 
 		sdkCtx.Logger().Info("Successfully removed stateful orders from state")
 

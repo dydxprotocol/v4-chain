@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -19,6 +20,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -152,19 +154,20 @@ func TestPlaceOrder(t *testing.T) {
 								indexerevents.NewSubaccountUpdateEvent(
 									&constants.Bob_Num0,
 									[]*satypes.PerpetualPosition{
-										{
-											PerpetualId: Clob_0.MustGetPerpetualId(),
-											Quantums: dtypes.NewInt(-int64(
+										testutil.CreateSinglePerpetualPosition(
+											Clob_0.MustGetPerpetualId(),
+											big.NewInt(-int64(
 												PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.GetQuantums())),
-											FundingIndex: dtypes.NewInt(0),
-										},
+											big.NewInt(0),
+											big.NewInt(0),
+										),
 									},
 									// Maker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
-										{
-											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
-										},
+										testutil.CreateSingleAssetPosition(
+											assettypes.AssetUsdc.Id,
+											bobSubaccount.GetUsdcPosition(),
+										),
 									},
 									nil, // no funding payments
 								),
@@ -179,19 +182,20 @@ func TestPlaceOrder(t *testing.T) {
 								indexerevents.NewSubaccountUpdateEvent(
 									&constants.Alice_Num0,
 									[]*satypes.PerpetualPosition{
-										{
-											PerpetualId: Clob_0.MustGetPerpetualId(),
-											Quantums: dtypes.NewInt(int64(
+										testutil.CreateSinglePerpetualPosition(
+											Clob_0.MustGetPerpetualId(),
+											big.NewInt(int64(
 												PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.GetQuantums())),
-											FundingIndex: dtypes.NewInt(0),
-										},
+											big.NewInt(0),
+											big.NewInt(0),
+										),
 									},
 									// Taker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
-										{
-											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
-										},
+										testutil.CreateSingleAssetPosition(
+											assettypes.AssetUsdc.Id,
+											aliceSubaccount.GetUsdcPosition(),
+										),
 									},
 									nil, // no funding payments
 								),
@@ -329,19 +333,20 @@ func TestPlaceOrder(t *testing.T) {
 								indexerevents.NewSubaccountUpdateEvent(
 									&constants.Bob_Num0,
 									[]*satypes.PerpetualPosition{
-										{
-											PerpetualId: Clob_0.MustGetPerpetualId(),
-											Quantums: dtypes.NewInt(-int64(
+										testutil.CreateSinglePerpetualPosition(
+											Clob_0.MustGetPerpetualId(),
+											big.NewInt(-int64(
 												PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetQuantums())),
-											FundingIndex: dtypes.NewInt(0),
-										},
+											big.NewInt(0),
+											big.NewInt(0),
+										),
 									},
 									// Maker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
-										{
-											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
-										},
+										testutil.CreateSingleAssetPosition(
+											assettypes.AssetUsdc.Id,
+											bobSubaccount.GetUsdcPosition(),
+										),
 									},
 									nil, // no funding payments
 								),
@@ -356,19 +361,20 @@ func TestPlaceOrder(t *testing.T) {
 								indexerevents.NewSubaccountUpdateEvent(
 									&constants.Alice_Num0,
 									[]*satypes.PerpetualPosition{
-										{
-											PerpetualId: Clob_0.MustGetPerpetualId(),
-											Quantums: dtypes.NewInt(int64(
+										testutil.CreateSinglePerpetualPosition(
+											Clob_0.MustGetPerpetualId(),
+											big.NewInt(int64(
 												PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetQuantums())),
-											FundingIndex: dtypes.NewInt(0),
-										},
+											big.NewInt(0),
+											big.NewInt(0),
+										),
 									},
 									// Taker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
-										{
-											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
-										},
+										testutil.CreateSingleAssetPosition(
+											assettypes.AssetUsdc.Id,
+											aliceSubaccount.GetUsdcPosition(),
+										),
 									},
 									nil, // no funding payments
 								),
@@ -506,19 +512,20 @@ func TestPlaceOrder(t *testing.T) {
 								indexerevents.NewSubaccountUpdateEvent(
 									&constants.Alice_Num0,
 									[]*satypes.PerpetualPosition{
-										{
-											PerpetualId: Clob_0.MustGetPerpetualId(),
-											Quantums: dtypes.NewInt(int64(
+										testutil.CreateSinglePerpetualPosition(
+											Clob_0.MustGetPerpetualId(),
+											big.NewInt(int64(
 												PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetQuantums())),
-											FundingIndex: dtypes.NewInt(0),
-										},
+											big.NewInt(0),
+											big.NewInt(0),
+										),
 									},
 									// Taker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
-										{
-											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
-										},
+										testutil.CreateSingleAssetPosition(
+											assettypes.AssetUsdc.Id,
+											aliceSubaccount.GetUsdcPosition(),
+										),
 									},
 									nil, // no funding payments
 								),
@@ -533,19 +540,20 @@ func TestPlaceOrder(t *testing.T) {
 								indexerevents.NewSubaccountUpdateEvent(
 									&constants.Bob_Num0,
 									[]*satypes.PerpetualPosition{
-										{
-											PerpetualId: Clob_0.MustGetPerpetualId(),
-											Quantums: dtypes.NewInt(-int64(
+										testutil.CreateSinglePerpetualPosition(
+											Clob_0.MustGetPerpetualId(),
+											big.NewInt(-int64(
 												PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetQuantums())),
-											FundingIndex: dtypes.NewInt(0),
-										},
+											big.NewInt(0),
+											big.NewInt(0),
+										),
 									},
 									// Maker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
-										{
-											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
-										},
+										testutil.CreateSingleAssetPosition(
+											assettypes.AssetUsdc.Id,
+											bobSubaccount.GetUsdcPosition(),
+										),
 									},
 									nil, // no funding payments
 								),

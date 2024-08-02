@@ -14,7 +14,7 @@ func DefaultParams() Params {
 		SpreadBufferPpm:                  1_500,                        // 15 bps
 		SkewFactorPpm:                    2_000_000,                    // 2
 		OrderSizePctPpm:                  100_000,                      // 10%
-		OrderExpirationSeconds:           2,                            // 2 seconds
+		OrderExpirationSeconds:           60,                           // 60 seconds
 		ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000), // 1_000 USDC
 	}
 }
@@ -42,5 +42,10 @@ func (p Params) Validate() error {
 		return ErrInvalidActivationThresholdQuoteQuantums
 	}
 
+	return nil
+}
+
+// Validate validates individual vault parameters.
+func (v VaultParams) Validate() error {
 	return nil
 }

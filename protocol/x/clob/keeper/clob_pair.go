@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	storetypes "cosmossdk.io/store/types"
 
 	errorsmod "cosmossdk.io/errors"
@@ -692,4 +694,44 @@ func (k Keeper) IsPerpetualClobPairActive(
 	}
 
 	return clobPair.Status == types.ClobPair_STATUS_ACTIVE, nil
+}
+
+// GetNextClobPairID returns the next clob pair id to be used from the module store
+func (k Keeper) GetNextClobPairID(ctx sdk.Context) uint32 {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get([]byte(types.NextClobPairIDKey))
+	var result gogotypes.UInt32Value
+	k.cdc.MustUnmarshal(b, &result)
+	return result.Value
+}
+
+// SetNextClobPairID sets the next clob pair id to be used
+func (k Keeper) SetNextClobPairID(ctx sdk.Context, nextID uint32) {
+	store := ctx.KVStore(k.storeKey)
+	value := gogotypes.UInt32Value{Value: nextID}
+	store.Set([]byte(types.NextClobPairIDKey), k.cdc.MustMarshal(&value))
+}
+
+// AcquireNextClobPairID returns the next clob pair id to be used and increments
+// the next clob pair id
+func (k Keeper) AcquireNextClobPairID(ctx sdk.Context) uint32 {
+	nextID := k.GetNextClobPairID(ctx)
+	// if clob pair id already exists, increment until we find one that doesn't
+	maxAttempts, attempts := 1000, 0
+	for {
+		_, found := k.GetClobPair(ctx, types.ClobPairId(nextID))
+		if !found {
+			break
+		}
+		nextID++
+
+		// panic if we've tried too many times and are stuck in a loop
+		attempts++
+		if attempts >= maxAttempts {
+			panic("Exceeded maximum attempts to find a unique clob pair id")
+		}
+	}
+
+	k.SetNextClobPairID(ctx, nextID+1)
+	return nextID
 }

@@ -44,7 +44,8 @@ func RewardsKeepers(
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
 		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
-		pricesKeeper, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper)
+		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
+		pricesKeeper, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper, marketMapKeeper)
 		// Mock time provider response for market creation.
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 		assetsKeeper, _ = createAssetsKeeper(
@@ -61,9 +62,16 @@ func RewardsKeepers(
 			db,
 			cdc,
 		)
+		vaultKeeper, _ := createVaultKeeper(
+			stateStore,
+			db,
+			cdc,
+			transientStoreKey,
+		)
 		feetiersKeeper, _ = createFeeTiersKeeper(
 			stateStore,
 			statsKeeper,
+			vaultKeeper,
 			db,
 			cdc,
 		)

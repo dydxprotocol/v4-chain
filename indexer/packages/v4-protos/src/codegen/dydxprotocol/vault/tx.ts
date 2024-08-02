@@ -3,7 +3,10 @@ import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
 import { Params, ParamsSDKType } from "./params";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
-/** MsgDepositToVault is the Msg/DepositToVault request type. */
+/**
+ * MsgDepositToVault deposits the specified asset from the subaccount to the
+ * vault.
+ */
 
 export interface MsgDepositToVault {
   /** The vault to deposit into. */
@@ -15,7 +18,10 @@ export interface MsgDepositToVault {
 
   quoteQuantums: Uint8Array;
 }
-/** MsgDepositToVault is the Msg/DepositToVault request type. */
+/**
+ * MsgDepositToVault deposits the specified asset from the subaccount to the
+ * vault.
+ */
 
 export interface MsgDepositToVaultSDKType {
   /** The vault to deposit into. */

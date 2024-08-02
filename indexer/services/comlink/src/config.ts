@@ -19,7 +19,7 @@ export const configSchema = {
 
   CHAIN_ID: parseString({ default: 'dydxprotocol' }),
   API_LIMIT_V4: parseInteger({
-    default: 100,
+    default: 1000,
   }),
   API_ORDERBOOK_LEVELS_PER_SIDE_LIMIT: parseInteger({ default: 100 }),
 

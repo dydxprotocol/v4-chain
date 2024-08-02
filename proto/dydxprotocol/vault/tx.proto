@@ -14,12 +14,17 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 service Msg {
   // DepositToVault deposits funds into a vault.
   rpc DepositToVault(MsgDepositToVault) returns (MsgDepositToVaultResponse);
+
   // UpdateParams updates the Params in state.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
-// MsgDepositToVault is the Msg/DepositToVault request type.
+// MsgDepositToVault deposits the specified asset from the subaccount to the
+// vault.
 message MsgDepositToVault {
+  // This annotation enforces that the tx signer is the owner specified in
+  // subaccount_id. Therefore, this enforces that only the owner of the
+  // subaccount can deposit into the vault using that subaccount.
   option (cosmos.msg.v1.signer) = "subaccount_id";
 
   // The vault to deposit into.

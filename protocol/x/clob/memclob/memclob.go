@@ -810,12 +810,9 @@ func (m *MemClobPriceTimePriority) matchOrder(
 
 	var matchingErr error
 
-	// If the order is post only and it's not the rewind step, then it cannot be filled.
+	// If the order is post only and crosses the book,
 	// Set the matching error so that the order is canceled.
-	// TODO(DEC-998): Determine if allowing post-only orders to match in rewind step is valid.
-	if len(newMakerFills) > 0 &&
-		!order.IsLiquidation() &&
-		order.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_POST_ONLY {
+	if !order.IsLiquidation() && takerOrderStatus.OrderStatus == types.PostOnlyWouldCrossMakerOrder {
 		matchingErr = types.ErrPostOnlyWouldCrossMakerOrder
 	}
 
@@ -1757,6 +1754,16 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			continue
 		}
 
+		// If a valid match has been generated but the taker order is a post only order,
+		// end the matching loop. Because of this, post-only orders can cause
+		// undercollateralized maker orders to be removed from the book up to the first valid match.
+		if takerOrderCrossesMakerOrder &&
+			!newTakerOrder.IsLiquidation() &&
+			newTakerOrder.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_POST_ONLY {
+			takerOrderStatus.OrderStatus = types.PostOnlyWouldCrossMakerOrder
+			break
+		}
+
 		// The orders have matched successfully, and the state has been updated.
 		// To mark the orders as matched, perform the following actions:
 		// 1. Deduct `matchedAmount` from the taker order's remaining quantums, and add the matched
@@ -2141,6 +2148,8 @@ func (m *MemClobPriceTimePriority) GetMidPrice(
 // would receive if they sold (or bought) from the order book using `impactNotionalAmount`.
 // Returns `hasEnoughLiquidity = false` if the orderbook doesn't have
 // enough orders on the side to absorb the impact notional amount.
+// Note that isBid refers to the side of the maker, not the taker. eg. for a Buy order that
+// matches with maker asks, isBid = false.
 func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 	ctx sdk.Context,
 	clobPair types.ClobPair,
@@ -2151,10 +2160,53 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 	impactPriceSubticks *big.Rat,
 	hasEnoughLiquidity bool,
 ) {
+	hasSufficientCollat := func(
+		makerOrder types.Order,
+		makerOrderRemainingSize satypes.BaseQuantums,
+	) bool {
+		// Collat check during impact price calculation is not precise, we aim for "good enough"
+		// Assumptions causing imprecision:
+		// 1. Each order is considered in isolation without taking into account NC/margin effects
+		// of prior hypothetical fills for the subaccount. Eg. if a maker has 2 bids in the
+		// orderbook, when we process the 2nd bid, the account's NC and margin requirements will
+		// affected by the fulfillment of the first bid.
+		// 2. We perform collat check using the makerOrderRemainingSize instead of the
+		// matchSize = min(remainingImpact, makerOrderRemainingSize). In real matching, the collat
+		// check would use the matchSize, but given assumption 1 and our goal of "good enough", we
+		// sacrifice some precision for simplicity.
+
+		// Instead of directly checking margin, we leverage AddOrderToOrderbookSubaccountUpdatesCheck
+		// by creating an order that would have the same collat requirements. An equivalent order is
+		// simply a new order at the same price/side and size = makerOrderRemainingSize.
+		equivalentOrder := types.PendingOpenOrder{
+			RemainingQuantums: makerOrderRemainingSize,
+			IsBuy:             makerOrder.IsBuy(),
+			Subticks:          makerOrder.GetOrderSubticks(),
+			ClobPairId:        clobPair.GetClobPairId(),
+		}
+
+		updateCheckResult := m.clobKeeper.AddOrderToOrderbookSubaccountUpdatesCheck(
+			ctx,
+			makerOrder.GetSubaccountId(),
+			equivalentOrder,
+		)
+
+		if updateCheckResult == satypes.Success {
+			return true
+		} else if updateCheckResult == satypes.NewlyUndercollateralized ||
+			updateCheckResult == satypes.StillUndercollateralized {
+			return false
+		} else {
+			log.InfoLog(ctx, "AddOrderCheck returned unexpected result during collateralization check")
+			return false
+		}
+	}
+
 	remainingImpactQuoteQuantums := new(big.Int).Set(impactNotionalQuoteQuantums)
 	accumulatedBaseQuantums := new(big.Rat).SetInt64(0)
 
 	makerLevelOrder, foundMakerOrder := orderbook.getBestOrderOnSide(isBid)
+
 	if impactNotionalQuoteQuantums.Sign() == 0 && foundMakerOrder {
 		// Impact notional is zero, returns the price of the best order as impact price.
 		return makerLevelOrder.Value.Order.GetOrderSubticks().ToBigRat(), true
@@ -2162,9 +2214,15 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 
 	for remainingImpactQuoteQuantums.Sign() > 0 && foundMakerOrder {
 		makerOrder := makerLevelOrder.Value.Order
+
 		makerRemainingSize, makerHasRemainingSize := m.GetOrderRemainingAmount(ctx, makerOrder)
 		if !makerHasRemainingSize {
 			panic(fmt.Sprintf("getImpactPriceSubticks: maker order has no remaining amount (%+v)", makerOrder))
+		}
+
+		if !hasSufficientCollat(makerOrder, makerRemainingSize) {
+			makerLevelOrder, foundMakerOrder = orderbook.findNextBestLevelOrder(makerLevelOrder)
+			continue
 		}
 
 		quoteQuantumsIfFullyMatched := types.FillAmountToQuoteQuantums(
@@ -2212,10 +2270,7 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 	// Impact order was fully matched. Calculate average impact price.
 	return types.GetAveragePriceSubticks(
 		impactNotionalQuoteQuantums,
-		new(big.Int).Div(
-			accumulatedBaseQuantums.Num(),
-			accumulatedBaseQuantums.Denom(),
-		),
+		lib.BigRatRound(accumulatedBaseQuantums, true),
 		clobPair.QuantumConversionExponent,
 	), true
 }

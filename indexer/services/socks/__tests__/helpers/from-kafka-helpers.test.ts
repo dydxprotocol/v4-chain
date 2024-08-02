@@ -1,4 +1,4 @@
-import { getChannels, getMessageToForward } from '../../src/helpers/from-kafka-helpers';
+import { getChannels, getMessageToForward, getMessagesToForward } from '../../src/helpers/from-kafka-helpers';
 import { InvalidForwardMessageError, InvalidTopicError } from '../../src/lib/errors';
 import {
   Channel,
@@ -21,10 +21,12 @@ import {
   tradesMessage,
   defaultChildAccNumber,
   defaultTransferContents,
+  defaultBlockHeightMessage,
 } from '../constants';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage } from './kafka';
 import {
+  BlockHeightMessage,
   CandleMessage,
   MarketMessage,
   OrderbookMessage,
@@ -52,6 +54,7 @@ describe('from-kafka-helpers', () => {
         [Channel.V4_ACCOUNTS, Channel.V4_PARENT_ACCOUNTS],
       ],
       [WebsocketTopics.TO_WEBSOCKETS_TRADES, [Channel.V4_TRADES]],
+      [WebsocketTopics.TO_WEBSOCKETS_BLOCK_HEIGHT, [Channel.V4_BLOCK_HEIGHT]],
     ])('gets correct channel for topic %s', (topic: WebsocketTopics, channels: Channel[]) => {
       expect(getChannels(topic)).toEqual(channels);
     });
@@ -154,6 +157,24 @@ describe('from-kafka-helpers', () => {
       expect(messageToForward.contents).toEqual(defaultContents);
       expect(messageToForward.subaccountNumber).toBeDefined();
       expect(messageToForward.subaccountNumber).toEqual(defaultChildAccNumber);
+    });
+
+    it('gets correct MessageToForward for BlockHeight message', () => {
+      const message: KafkaMessage = createKafkaMessage(
+        Buffer.from(Uint8Array.from(BlockHeightMessage.encode(defaultBlockHeightMessage).finish())),
+      );
+      const messageToForward: MessageToForward = getMessagesToForward(
+        WebsocketTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
+        message,
+      ).pop()!;
+      expect(messageToForward.channel).toEqual(Channel.V4_BLOCK_HEIGHT);
+      expect(messageToForward.version).toEqual(defaultBlockHeightMessage.version);
+      expect(messageToForward.contents).toEqual(
+        {
+          blockHeight: defaultBlockHeightMessage.blockHeight,
+          time: defaultBlockHeightMessage.time,
+        },
+      );
     });
 
     it('filters out transfers between child subaccounts for parent subaccount channel', () => {

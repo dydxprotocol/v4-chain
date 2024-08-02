@@ -1,6 +1,7 @@
 import { IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
+import config from '../config';
 import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import {
   verifyAllRequiredFields,
@@ -58,7 +59,6 @@ export async function findAll(
     SubaccountModel,
     options,
   );
-
   if (id) {
     baseQuery = baseQuery.whereIn(SubaccountColumns.id, id);
   }
@@ -67,7 +67,7 @@ export async function findAll(
     baseQuery = baseQuery.where(SubaccountColumns.address, address);
   }
 
-  if (subaccountNumber) {
+  if (subaccountNumber !== undefined) {
     baseQuery = baseQuery.where(SubaccountColumns.subaccountNumber, subaccountNumber);
   }
 
@@ -187,4 +187,17 @@ export async function update(
   const updatedSubaccount = await subaccount.$query().patch(fields as PartialModelObject<SubaccountModel>).returning('*');
   // The objection types mistakenly think the query returns an array of Subaccounts.
   return updatedSubaccount as unknown as (SubaccountFromDatabase | undefined);
+}
+
+export async function deleteById(
+  id: string,
+  options: Options = { txId: undefined },
+): Promise<void> {
+  if (config.NODE_ENV !== 'test') {
+    throw new Error('Subaccount deletion is not allowed in non-test environments');
+  }
+
+  await SubaccountModel.query(
+    Transaction.get(options.txId),
+  ).deleteById(id);
 }

@@ -16,7 +16,7 @@ func setupMsgServer(t *testing.T) (keeper.Keeper, types.MsgServer, context.Conte
 	ctx := tApp.InitChain()
 	k := tApp.App.FeeTiersKeeper
 
-	return k, keeper.NewMsgServerImpl(k), ctx
+	return *k, keeper.NewMsgServerImpl(k), ctx
 }
 
 func TestMsgServer(t *testing.T) {

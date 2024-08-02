@@ -1,12 +1,11 @@
 package types_test
 
 import (
+	"math/big"
 	"testing"
 
-	errorsmod "cosmossdk.io/errors"
-
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
@@ -127,12 +126,8 @@ func TestGenesisState_Validate(t *testing.T) {
 							Number: uint32(127),
 						},
 						AssetPositions: []*types.AssetPosition{ // multiple asset positions.
-							{
-								AssetId: 0,
-							},
-							{
-								AssetId: 1,
-							},
+							testutil.CreateSingleAssetPosition(0, new(big.Int)),
+							testutil.CreateSingleAssetPosition(1, new(big.Int)),
 						},
 					},
 				},
@@ -149,10 +144,10 @@ func TestGenesisState_Validate(t *testing.T) {
 							Number: uint32(127),
 						},
 						AssetPositions: []*types.AssetPosition{
-							{
-								AssetId:  1, // asset id must be zero (0 = USDC).
-								Quantums: dtypes.NewInt(1_000),
-							},
+							testutil.CreateSingleAssetPosition(
+								1, // asset id must be zero (0 = USDC).
+								big.NewInt(1_000),
+							),
 						},
 					},
 				},
@@ -168,19 +163,16 @@ func TestGenesisState_Validate(t *testing.T) {
 							Number: uint32(127),
 						},
 						AssetPositions: []*types.AssetPosition{
-							{
-								AssetId:  0,
-								Quantums: dtypes.NewInt(0), // quantum cannot be zero.
-							},
+							testutil.CreateSingleAssetPosition(
+								0,
+								big.NewInt(0), // quantum cannot be zero.
+							),
 						},
 					},
 				},
 			},
-			shouldPanic: true,
-			expectedError: errorsmod.Wrapf(
-				types.ErrAssetPositionZeroQuantum,
-				"asset position (asset Id: 0) has zero quantum",
-			),
+			shouldPanic:   false,
+			expectedError: types.ErrAssetPositionZeroQuantum,
 		},
 		"invalid: perpetual positions out of order": {
 			genState: &types.GenesisState{
@@ -191,14 +183,18 @@ func TestGenesisState_Validate(t *testing.T) {
 							Number: uint32(127),
 						},
 						PerpetualPositions: []*types.PerpetualPosition{
-							{
-								PerpetualId: 2, // out of order.
-								Quantums:    dtypes.NewInt(1_000),
-							},
-							{
-								PerpetualId: 1,
-								Quantums:    dtypes.NewInt(1_000),
-							},
+							testutil.CreateSinglePerpetualPosition(
+								2, // out of order.
+								big.NewInt(1_000),
+								big.NewInt(0),
+								big.NewInt(0),
+							),
+							testutil.CreateSinglePerpetualPosition(
+								1,
+								big.NewInt(1_000),
+								big.NewInt(0),
+								big.NewInt(0),
+							),
 						},
 					},
 				},
@@ -214,19 +210,18 @@ func TestGenesisState_Validate(t *testing.T) {
 							Number: uint32(127),
 						},
 						PerpetualPositions: []*types.PerpetualPosition{
-							{
-								PerpetualId: 0,
-								Quantums:    dtypes.ZeroInt(), // quantum cannot be zero.
-							},
+							testutil.CreateSinglePerpetualPosition(
+								0,
+								big.NewInt(0), // quantum cannot be zero.
+								big.NewInt(0),
+								big.NewInt(0),
+							),
 						},
 					},
 				},
 			},
-			shouldPanic: true,
-			expectedError: errorsmod.Wrapf(
-				types.ErrPerpPositionZeroQuantum,
-				"perpetual position (perpetual Id: 0) has zero quantum",
-			),
+			shouldPanic:   false,
+			expectedError: types.ErrPerpPositionZeroQuantum,
 		},
 	}
 

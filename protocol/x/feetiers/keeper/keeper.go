@@ -17,6 +17,7 @@ type (
 	Keeper struct {
 		cdc         codec.BinaryCodec
 		statsKeeper types.StatsKeeper
+		vaultKeeper types.VaultKeeper
 		storeKey    storetypes.StoreKey
 		authorities map[string]struct{}
 	}
@@ -47,12 +48,27 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {}
 
+// SetVaultKeeper sets the `VaultKeeper` reference in `FeeTiersKeeper`.
+// The reference is set with an explicit method call rather than during `NewKeeper`
+// due to the circular dependency `Clob` -> `Vault` -> `FeeTiers` -> `Clob`.
+func (k *Keeper) SetVaultKeeper(vk types.VaultKeeper) {
+	k.vaultKeeper = vk
+}
+
 func (k Keeper) getUserFeeTier(ctx sdk.Context, address string) (uint32, *types.PerpetualFeeTier) {
+	tiers := k.GetPerpetualFeeParams(ctx).Tiers
+
+	// A vault is always in the highest tier.
+	// Invariant: there's at least one tier.
+	if k.vaultKeeper.IsVault(ctx, address) {
+		highestTierIdx := uint32(len(tiers) - 1)
+		return highestTierIdx, tiers[highestTierIdx]
+	}
+
 	userStats := k.statsKeeper.GetUserStats(ctx, address)
 	globalStats := k.statsKeeper.GetGlobalStats(ctx)
 
 	// Invariant: we know there is at least one tier and that the first tier has no requirements
-	tiers := k.GetPerpetualFeeParams(ctx).Tiers
 	idx := uint32(0)
 
 	// Find the last tier we meet all requirements for

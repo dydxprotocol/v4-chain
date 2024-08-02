@@ -3,7 +3,7 @@ import {
 } from '@cosmjs/crypto';
 import { toBech32 } from '@cosmjs/encoding';
 import { logger, stats, TooManyRequestsError } from '@dydxprotocol-indexer/base';
-import { CountryHeaders, isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
+import { CountryHeaders, isRestrictedCountryHeaders, isWhitelistedAddress } from '@dydxprotocol-indexer/compliance';
 import {
   ComplianceReason,
   ComplianceStatus,
@@ -81,12 +81,12 @@ class ComplianceV2Controller extends Controller {
         };
       }
     } else {
+      const complianceStatus: ComplianceStatusFromDatabase[] = await
+      ComplianceStatusTable.findAll(
+        { address: [address] },
+        [],
+      );
       if (restricted) {
-        const complianceStatus: ComplianceStatusFromDatabase[] = await
-        ComplianceStatusTable.findAll(
-          { address: [address] },
-          [],
-        );
         let complianceStatusFromDatabase: ComplianceStatusFromDatabase | undefined;
         const updatedAt: string = DateTime.utc().toISO();
         if (complianceStatus.length === 0) {
@@ -96,23 +96,36 @@ class ComplianceV2Controller extends Controller {
             reason: ComplianceReason.COMPLIANCE_PROVIDER,
             updatedAt,
           });
-        } else {
+        } else if (
+          complianceStatus[0].status !== ComplianceStatus.CLOSE_ONLY &&
+          complianceStatus[0].status !== ComplianceStatus.BLOCKED
+        ) {
           complianceStatusFromDatabase = await ComplianceStatusTable.update({
             address,
             status: ComplianceStatus.CLOSE_ONLY,
             reason: ComplianceReason.COMPLIANCE_PROVIDER,
             updatedAt,
           });
+        } else {
+          complianceStatusFromDatabase = complianceStatus[0];
         }
         return {
           status: complianceStatusFromDatabase!.status,
           reason: complianceStatusFromDatabase!.reason,
-          updatedAt,
+          updatedAt: complianceStatusFromDatabase!.updatedAt,
         };
       } else {
-        return {
-          status: ComplianceStatus.COMPLIANT,
-        };
+        if (complianceStatus.length === 0) {
+          return {
+            status: ComplianceStatus.COMPLIANT,
+          };
+        } else {
+          return {
+            status: complianceStatus[0].status,
+            reason: complianceStatus[0].reason,
+            updatedAt: complianceStatus[0].updatedAt,
+          };
+        }
       }
     }
   }
@@ -132,6 +145,11 @@ router.get(
     }: {
       address: string,
     } = matchedData(req) as ComplianceRequest;
+    if (isWhitelistedAddress(address)) {
+      return res.send({
+        status: ComplianceStatus.COMPLIANT,
+      });
+    }
 
     try {
       // Rate limiter middleware ensures the ip address can be found from the request
@@ -239,6 +257,13 @@ router.post(
         );
       }
 
+      if (isWhitelistedAddress(address)) {
+        return res.send({
+          status: ComplianceStatus.COMPLIANT,
+          updatedAt: DateTime.utc().toISO(),
+        });
+      }
+
       const [
         complianceStatus,
         wallet,
@@ -263,11 +288,24 @@ router.post(
         complianceStatus,
         updatedAt,
       );
+      if (complianceStatus.length === 0 ||
+        complianceStatus[0] !== complianceStatusFromDatabase) {
+        if (complianceStatusFromDatabase !== undefined &&
+          complianceStatusFromDatabase.status !== ComplianceStatus.COMPLIANT
+        ) {
+          stats.increment(
+            `${config.SERVICE_NAME}.${controllerName}.geo_block.compliance_status_changed.count`,
+            {
+              newStatus: complianceStatusFromDatabase!.status,
+            },
+          );
+        }
+      }
 
       const response = {
         status: complianceStatusFromDatabase!.status,
         reason: complianceStatusFromDatabase!.reason,
-        updatedAt,
+        updatedAt: complianceStatusFromDatabase!.updatedAt,
       };
 
       return res.send(response);

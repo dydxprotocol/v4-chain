@@ -18,6 +18,7 @@ const KAFKA_TOPICS: KafkaTopics[] = [
   KafkaTopics.TO_WEBSOCKETS_TRADES,
   KafkaTopics.TO_WEBSOCKETS_MARKETS,
   KafkaTopics.TO_WEBSOCKETS_CANDLES,
+  KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
 ];
 
 const DEFAULT_NUM_REPLICAS: number = 3;
@@ -30,6 +31,7 @@ const KAFKA_TOPICS_TO_PARTITIONS: { [key in KafkaTopics]: number } = {
   [KafkaTopics.TO_WEBSOCKETS_TRADES]: 1,
   [KafkaTopics.TO_WEBSOCKETS_MARKETS]: 1,
   [KafkaTopics.TO_WEBSOCKETS_CANDLES]: 1,
+  [KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT]: 1,
 };
 
 export interface BazookaEventJson {
@@ -74,8 +76,7 @@ export async function handler(
 
   if (config.PREVENT_BREAKING_CHANGES_WITHOUT_FORCE && event.force !== true) {
     if (event.clear_db === true || event.reset_db === true ||
-      event.create_kafka_topics === true || event.clear_kafka_topics === true ||
-      event.clear_redis === true) {
+       event.clear_kafka_topics === true || event.clear_redis === true) {
       logger.error({
         at: 'index#handler',
         message: 'Cannot run bazooka without force flag set to "true" because' +
@@ -196,7 +197,7 @@ async function createKafkaTopics(
   _.forEach(KAFKA_TOPICS, (kafkaTopic: KafkaTopics) => {
     if (_.includes(existingKafkaTopics, kafkaTopic)) {
       logger.info({
-        at: 'index#clearKafkaTopics',
+        at: 'index#createKafkaTopics',
         message: `Cannot create kafka topic that does exist: ${kafkaTopic}`,
       });
       return;

@@ -12,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 type PerpetualModifierOption func(cp *perptypes.Perpetual)
@@ -130,5 +131,38 @@ func SetUpDefaultPerpOIsForTest(
 				),
 			)
 		}
+	}
+}
+
+func CreatePerpInfo(
+	id uint32,
+	atomicResolution int32,
+	price uint64,
+	priceExponent int32,
+) perptypes.PerpInfo {
+	return perptypes.PerpInfo{
+		Perpetual: perptypes.Perpetual{
+			Params: perptypes.PerpetualParams{
+				Id:               id,
+				Ticker:           "test ticker",
+				MarketId:         id,
+				AtomicResolution: atomicResolution,
+				LiquidityTier:    id,
+			},
+			FundingIndex: dtypes.NewInt(0),
+			OpenInterest: dtypes.NewInt(0),
+		},
+		Price: pricetypes.MarketPrice{
+			Id:       id,
+			Exponent: priceExponent,
+			Price:    price,
+		},
+		LiquidityTier: perptypes.LiquidityTier{
+			Id:                     id,
+			InitialMarginPpm:       100_000,
+			MaintenanceFractionPpm: 500_000,
+			OpenInterestLowerCap:   0,
+			OpenInterestUpperCap:   0,
+		},
 	}
 }

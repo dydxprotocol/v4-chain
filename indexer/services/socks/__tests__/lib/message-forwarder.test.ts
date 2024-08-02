@@ -13,6 +13,7 @@ import {
   startConsumer,
   TRADES_WEBSOCKET_MESSAGE_VERSION,
   SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+  BLOCK_HEIGHT_WEBSOCKET_MESSAGE_VERSION,
 } from '@dydxprotocol-indexer/kafka';
 import { MessageForwarder } from '../../src/lib/message-forwarder';
 import WebSocket from 'ws';
@@ -27,7 +28,7 @@ import {
   WebsocketEvents,
 } from '../../src/types';
 import { Admin } from 'kafkajs';
-import { SubaccountMessage, TradeMessage } from '@dydxprotocol-indexer/v4-protos';
+import { BlockHeightMessage, SubaccountMessage, TradeMessage } from '@dydxprotocol-indexer/v4-protos';
 import {
   dbHelpers,
   testMocks,
@@ -44,6 +45,7 @@ import {
   defaultSubaccountId,
   ethClobPairId,
   ethTicker,
+  defaultBlockHeightMessage,
 } from '../constants';
 import _ from 'lodash';
 import { axiosRequest } from '../../src/lib/axios';
@@ -180,6 +182,8 @@ describe('message-forwarder', () => {
   };
 
   beforeAll(async () => {
+    config.BATCH_PROCESSING_ENABLED = false;
+    await dbHelpers.clearData();
     await dbHelpers.migrate();
     await testMocks.seedData();
     await Promise.all([
@@ -532,6 +536,97 @@ describe('message-forwarder', () => {
         if (msg.message_id === 3) {
           done();
         }
+      }
+    });
+
+    ws.on('open', () => {
+      ws.send(JSON.stringify({
+        type: IncomingMessageType.SUBSCRIBE,
+        channel,
+        id,
+        batched: false,
+      }));
+    });
+  });
+
+  it('forwards block height messages', (done: jest.DoneCallback) => {
+    const channel: Channel = Channel.V4_BLOCK_HEIGHT;
+    const id: string = 'v4_block_height';
+
+    const blockHeightMessage2 = {
+      ...defaultBlockHeightMessage,
+      blockHeight: '1',
+    };
+
+    const messageForwarder: MessageForwarder = new MessageForwarder(subscriptions, index);
+    subscriptions.start(messageForwarder.forwardToClient);
+    messageForwarder.start();
+
+    const ws = new WebSocket(WS_HOST);
+    let connectionId: string;
+
+    ws.on(WebsocketEvents.MESSAGE, async (message) => {
+      const msg: OutgoingMessage = JSON.parse(message.toString()) as OutgoingMessage;
+      if (msg.message_id === 0) {
+        connectionId = msg.connection_id;
+      }
+      if (msg.message_id === 1) {
+        // Check that the initial message is a Subscribe Message
+        checkInitialMessage(
+          msg as SubscribedMessage,
+          connectionId,
+          channel,
+          id,
+          mockAxiosResponse,
+        );
+
+        // Send a couple of block height messages
+        for (const blockHeightMessage of _.concat(
+          defaultBlockHeightMessage,
+          blockHeightMessage2,
+        )) {
+          await producer.send({
+            topic: WebsocketTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
+            messages: [{
+              value: Buffer.from(
+                Uint8Array.from(BlockHeightMessage.encode(blockHeightMessage).finish()),
+              ),
+              partition: 0,
+              timestamp: `${Date.now()}`,
+            }],
+          });
+        }
+      }
+
+      const forwardedMsg: ChannelDataMessage = JSON.parse(
+        message.toString(),
+      ) as ChannelDataMessage;
+
+      if (msg.message_id >= 2) {
+        expect(forwardedMsg.connection_id).toBe(connectionId);
+        expect(forwardedMsg.type).toBe(OutgoingMessageType.CHANNEL_DATA);
+        expect(forwardedMsg.channel).toBe(channel);
+        expect(forwardedMsg.id).toBe(id);
+        expect(forwardedMsg.version).toEqual(BLOCK_HEIGHT_WEBSOCKET_MESSAGE_VERSION);
+      }
+
+      if (msg.message_id === 2) {
+        expect(forwardedMsg.contents)
+          .toEqual(
+            {
+              blockHeight: defaultBlockHeightMessage.blockHeight,
+              time: defaultBlockHeightMessage.time,
+            });
+      }
+
+      if (msg.message_id === 3) {
+        expect(forwardedMsg.contents)
+          .toEqual(
+            {
+              blockHeight: blockHeightMessage2.blockHeight,
+              time: blockHeightMessage2.time,
+            });
+        done();
       }
     });
 

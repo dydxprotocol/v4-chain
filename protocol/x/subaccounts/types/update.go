@@ -92,12 +92,34 @@ type AssetUpdate struct {
 	BigQuantumsDelta *big.Int
 }
 
+func (u *AssetUpdate) DeepCopy() AssetUpdate {
+	return AssetUpdate{
+		AssetId:          u.AssetId,
+		BigQuantumsDelta: new(big.Int).Set(u.BigQuantumsDelta),
+	}
+}
+
 type PerpetualUpdate struct {
 	// The `Id` of the `Perpetual` for which the `PerpetualPosition` is for.
 	PerpetualId uint32
 	// The signed change in the `Quantums` of the `PerpetualPosition`
 	// represented in base quantums.
 	BigQuantumsDelta *big.Int
+	// The signed change in the `QuoteBalance` of the `PerpetualPosition`.
+	BigQuoteBalanceDelta *big.Int
+}
+
+func (u *PerpetualUpdate) DeepCopy() PerpetualUpdate {
+	r := PerpetualUpdate{
+		PerpetualId:          u.PerpetualId,
+		BigQuantumsDelta:     new(big.Int).Set(u.BigQuantumsDelta),
+		BigQuoteBalanceDelta: new(big.Int),
+	}
+
+	if u.BigQuoteBalanceDelta != nil {
+		r.BigQuoteBalanceDelta.Set(u.BigQuoteBalanceDelta)
+	}
+	return r
 }
 
 type UpdateType uint

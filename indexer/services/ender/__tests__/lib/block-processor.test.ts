@@ -24,6 +24,7 @@ import { BatchedHandlers } from '../../src/lib/batched-handlers';
 import { SyncHandlers } from '../../src/lib/sync-handlers';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
+import { BLOCK_HEIGHT_WEBSOCKET_MESSAGE_VERSION, KafkaTopics } from '@dydxprotocol-indexer/kafka';
 
 describe('block-processor', () => {
   let batchedHandlers: MockProxy<BatchedHandlers>;
@@ -161,5 +162,61 @@ describe('block-processor', () => {
     expect(syncHandlers.process.mock.invocationCallOrder[0]).toBeLessThan(
       batchedHandlers.process.mock.invocationCallOrder[0],
     );
+  });
+
+  it('Adds a block height message to the Kafka publisher', async () => {
+    const block: IndexerTendermintBlock = createIndexerTendermintBlock(
+      defaultHeight,
+      defaultTime,
+      events,
+      [
+        defaultTxHash,
+        defaultTxHash2,
+      ],
+    );
+
+    const txId: number = await Transaction.start();
+    const blockProcessor: BlockProcessor = new BlockProcessor(
+      block,
+      txId,
+      defaultDateTime.toString(),
+    );
+    const processor = await blockProcessor.process();
+    await Transaction.commit(txId);
+    expect(processor.blockHeightMessages).toHaveLength(1);
+    expect(processor.blockHeightMessages[0].blockHeight).toEqual(String(defaultHeight));
+    expect(processor.blockHeightMessages[0].version)
+      .toEqual(BLOCK_HEIGHT_WEBSOCKET_MESSAGE_VERSION);
+    expect(processor.blockHeightMessages[0].time).toEqual(defaultDateTime.toString());
+  });
+
+  it('createBlockHeightMsg creates a BlockHeightMessage', async () => {
+    const block: IndexerTendermintBlock = createIndexerTendermintBlock(
+      defaultHeight,
+      defaultTime,
+      events,
+      [
+        defaultTxHash,
+        defaultTxHash2,
+      ],
+    );
+
+    const txId: number = await Transaction.start();
+    const blockProcessor: BlockProcessor = new BlockProcessor(
+      block,
+      txId,
+      defaultDateTime.toString(),
+    );
+    await Transaction.commit(txId);
+
+    const msg = blockProcessor.createBlockHeightMsg();
+    expect(msg).toEqual({
+      topic: KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
+      message: {
+        blockHeight: String(defaultHeight),
+        time: defaultDateTime.toString(),
+        version: BLOCK_HEIGHT_WEBSOCKET_MESSAGE_VERSION,
+      },
+    });
   });
 });

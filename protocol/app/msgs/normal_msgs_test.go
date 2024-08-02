@@ -126,6 +126,10 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/dydxprotocol.clob.MsgPlaceOrder",
 		"/dydxprotocol.clob.MsgPlaceOrderResponse",
 
+		// listing
+		"/dydxprotocol.listing.MsgCreateMarketPermissionless",
+		"/dydxprotocol.listing.MsgCreateMarketPermissionlessResponse",
+
 		// perpetuals
 
 		// prices
@@ -216,6 +220,18 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/ibc.lightclients.tendermint.v1.ConsensusState",
 		"/ibc.lightclients.tendermint.v1.Header",
 		"/ibc.lightclients.tendermint.v1.Misbehaviour",
+
+		// slinky marketmap messages
+		"/slinky.marketmap.v1.MsgCreateMarkets",
+		"/slinky.marketmap.v1.MsgCreateMarketsResponse",
+		"/slinky.marketmap.v1.MsgParams",
+		"/slinky.marketmap.v1.MsgParamsResponse",
+		"/slinky.marketmap.v1.MsgRemoveMarketAuthorities",
+		"/slinky.marketmap.v1.MsgRemoveMarketAuthoritiesResponse",
+		"/slinky.marketmap.v1.MsgUpdateMarkets",
+		"/slinky.marketmap.v1.MsgUpdateMarketsResponse",
+		"/slinky.marketmap.v1.MsgUpsertMarkets",
+		"/slinky.marketmap.v1.MsgUpsertMarketsResponse",
 	}
 
 	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.NormalMsgs))

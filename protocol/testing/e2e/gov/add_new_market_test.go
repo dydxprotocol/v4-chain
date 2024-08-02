@@ -5,11 +5,14 @@ import (
 	"time"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
+	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/marketmap"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -20,15 +23,13 @@ import (
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 
 const (
 	NumBlocksAfterTradingEnabled = 50
 	TestMarketId                 = 1001
-	// Expected response log when a order is submitted but oracle price is zero.
-	// https://github.com/dydxprotocol/v4-chain/blob/5ee11ed/protocol/x/perpetuals/keeper/perpetual.go#L1514-L1517
-	ExpectedPlaceOrderCheckTxResponseLog = "recovered: type: perpetual, id: 1001: product position is not updatable"
 )
 
 var (
@@ -53,6 +54,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 	testMarketParam := pricestest.GenerateMarketParamPrice(
 		pricestest.WithId(TestMarketId),
 	)
+
 	testClobPair := clobtest.GenerateClobPair(
 		clobtest.WithId(TestMarketId),
 		clobtest.WithPerpetualId(TestMarketId),
@@ -300,10 +302,28 @@ func TestAddNewMarketProposal(t *testing.T) {
 						genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
 					},
 				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *marketmaptypes.GenesisState) {
+						// Add test market to market map genesis
+						marketMap, err := marketmap.ConstructMarketMapFromParams([]pricestypes.MarketParam{testMarketParam.Param})
+						require.NoError(t, err)
+						for ticker, market := range marketMap.Markets {
+							market.Ticker.Enabled = false
+							genesisState.MarketMap.Markets[ticker] = market
+						}
+					},
+				)
 				genesis.GenesisTime = GenesisTime
 				return genesis
 			}).Build()
 			ctx := tApp.InitChain()
+
+			currencyPair, err := slinky.MarketPairToCurrencyPair(testMarketParam.Param.Pair)
+			require.NoError(t, err)
+			market, err := tApp.App.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+			require.NoError(t, err)
+			require.False(t, market.Ticker.Enabled)
 
 			initMarketParams := tApp.App.PricesKeeper.GetAllMarketParams(ctx)
 			initPerpetuals := tApp.App.PerpetualsKeeper.GetAllPerpetuals(ctx)
@@ -337,6 +357,9 @@ func TestAddNewMarketProposal(t *testing.T) {
 				require.Equal(t, initMarketParams, tApp.App.PricesKeeper.GetAllMarketParams(ctx))
 				require.Equal(t, initPerpetuals, tApp.App.PerpetualsKeeper.GetAllPerpetuals(ctx))
 				require.Equal(t, initClobPairs, tApp.App.ClobKeeper.GetAllClobPairs(ctx))
+				// Check that market is still disabled in market map.
+				market, _ := tApp.App.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+				require.False(t, market.Ticker.Enabled)
 			case govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED:
 				// Proposal passed and successfully executed, check states are updated.
 				// Check market
@@ -377,6 +400,10 @@ func TestAddNewMarketProposal(t *testing.T) {
 				// Check that clob pair is updated.
 				require.Equal(t, msgUpdateClobPairToActive.ClobPair, clobPair)
 
+				// Check that market is enabled in market map.
+				market, _ := tApp.App.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+				require.True(t, market.Ticker.Enabled)
+
 				// Advance to some blocks after, and place an order on the market.
 				ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight())+NumBlocksAfterTradingEnabled, testapp.AdvanceToBlockOptions{})
 				price, err := tApp.App.PricesKeeper.GetMarketPrice(ctx, testMarketParam.Param.Id)
@@ -392,9 +419,10 @@ func TestAddNewMarketProposal(t *testing.T) {
 				require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
 				require.Contains(t,
 					resp.Log,
-					ExpectedPlaceOrderCheckTxResponseLog,
+					satypes.ErrProductPositionNotUpdatable.Error(),
 					"expected CheckTx response log to contain: %s, got: %s",
-					ExpectedPlaceOrderCheckTxResponseLog, resp.Log,
+					satypes.ErrProductPositionNotUpdatable,
+					resp.Log,
 				)
 
 				// Advance to the next block and check chain is not halted.

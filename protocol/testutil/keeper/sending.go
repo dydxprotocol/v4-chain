@@ -58,12 +58,14 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 		blockTimeKeeper, _ := createBlockTimeKeeper(stateStore, db, cdc)
 		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
+		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
 		ks.PricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
 			db,
 			cdc,
 			transientStoreKey,
 			revShareKeeper,
+			marketMapKeeper,
 		)
 		ks.PerpetualsKeeper, _ = createPerpetualsKeeper(
 			stateStore,
@@ -92,6 +94,7 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 				ks.BankKeeper,
 				ks.PerpetualsKeeper,
 				blockTimeKeeper,
+				revShareKeeper,
 				transientStoreKey,
 				true,
 			)

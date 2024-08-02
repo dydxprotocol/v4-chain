@@ -78,15 +78,6 @@ func (k Keeper) GetTriggeredConditionalOrderPlacementStore(ctx sdk.Context) pref
 	)
 }
 
-// getStatefulOrdersTimeSliceStore fetches a state store used for creating,
-// reading, updating, and deleting a stateful order time slice from state.
-func (k Keeper) getStatefulOrdersTimeSliceStore(ctx sdk.Context) prefix.Store {
-	return prefix.NewStore(
-		ctx.KVStore(k.storeKey),
-		[]byte(types.StatefulOrdersTimeSlicePrefix),
-	)
-}
-
 // getTransientStore fetches a transient store used for reading and
 // updating the transient store.
 func (k Keeper) getTransientStore(ctx sdk.Context) storetypes.KVStore {

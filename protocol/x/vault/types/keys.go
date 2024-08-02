@@ -20,4 +20,14 @@ const (
 
 	// ParamsKey is the key to retrieve Params.
 	ParamsKey = "Params"
+
+	// VaultParamsKeyPrefix is the prefix to retrieve all VaultParams.
+	VaultParamsKeyPrefix = "VaultParams:"
+
+	// VaultAddressKeyPrefix is the prefix to retrieve all vault addresses.
+	VaultAddressKeyPrefix = "VaultAddress:"
+
+	// MostRecentClientIdsKeyPrefix is the prefix to retrieve all most recent client IDs.
+	// MostRecentClientIdsStore: vaultId VaultId -> clientIds []uint32
+	MostRecentClientIdsKeyPrefix = "MostRecentClientIds:"
 )

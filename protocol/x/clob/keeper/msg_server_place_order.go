@@ -87,7 +87,7 @@ func (k Keeper) HandleMsgPlaceOrder(
 
 	// 2. Return an error if an associated cancellation or removal already exists in the current block.
 	processProposerMatchesEvents := k.GetProcessProposerMatchesEvents(ctx)
-	cancelledOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
+	cancelledOrderIds := lib.UniqueSliceToSet(k.GetDeliveredCancelledOrderIds(ctx))
 	if _, found := cancelledOrderIds[order.GetOrderId()]; found {
 		return errorsmod.Wrapf(
 			types.ErrStatefulOrderPreviouslyCancelled,
@@ -114,45 +114,36 @@ func (k Keeper) HandleMsgPlaceOrder(
 
 	// 4. Emit the new order placement indexer event.
 	if order.IsConditionalOrder() {
-		if !isInternalOrder { // vault order indexer event logic is handled elsewhere
-			k.GetIndexerEventManager().AddTxnEvent(
-				ctx,
-				indexerevents.SubtypeStatefulOrder,
-				indexerevents.StatefulOrderEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewConditionalOrderPlacementEvent(
-						order,
-					),
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeStatefulOrder,
+			indexerevents.StatefulOrderEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewConditionalOrderPlacementEvent(
+					order,
 				),
-			)
-		}
-		processProposerMatchesEvents.PlacedConditionalOrderIds = append(
-			processProposerMatchesEvents.PlacedConditionalOrderIds,
+			),
+		)
+		k.AddDeliveredConditionalOrderId(
+			ctx,
 			order.OrderId,
 		)
 	} else {
-		if !isInternalOrder { // vault order indexer event logic is handled elsewhere
-			k.GetIndexerEventManager().AddTxnEvent(
-				ctx,
-				indexerevents.SubtypeStatefulOrder,
-				indexerevents.StatefulOrderEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewLongTermOrderPlacementEvent(
-						order,
-					),
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeStatefulOrder,
+			indexerevents.StatefulOrderEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewLongTermOrderPlacementEvent(
+					order,
 				),
-			)
-		}
-		processProposerMatchesEvents.PlacedLongTermOrderIds = append(
-			processProposerMatchesEvents.PlacedLongTermOrderIds,
+			),
+		)
+		k.AddDeliveredLongTermOrderId(
+			ctx,
 			order.OrderId,
 		)
 	}
-	// 5. Add the newly-placed stateful order to `ProcessProposerMatchesEvents` for use in `PrepareCheckState`.
-	k.MustSetProcessProposerMatchesEvents(
-		ctx,
-		processProposerMatchesEvents,
-	)
 
 	return nil
 }

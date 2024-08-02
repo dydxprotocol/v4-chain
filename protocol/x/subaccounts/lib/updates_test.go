@@ -4,11 +4,10 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	perp_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -109,31 +108,27 @@ func TestIsValidStateTransitionForUndercollateralizedSubaccount_ZeroMarginRequir
 func TestGetRiskForSubaccount(t *testing.T) {
 	subaccountId := types.SubaccountId{Owner: "test", Number: 1}
 	tests := map[string]struct {
-		settledUpdate types.SettledUpdate
-		perpInfos     perptypes.PerpInfos
-		expectedRisk  margin.Risk
-		expectedErr   error
+		subaccount   types.Subaccount
+		perpInfos    perptypes.PerpInfos
+		expectedRisk margin.Risk
+		expectedErr  error
 	}{
 		"no account": {
-			settledUpdate: types.SettledUpdate{},
-			perpInfos:     perptypes.PerpInfos{},
-			expectedRisk:  margin.ZeroRisk(),
-			expectedErr:   nil,
+			subaccount:   types.Subaccount{},
+			perpInfos:    perptypes.PerpInfos{},
+			expectedRisk: margin.ZeroRisk(),
+			expectedErr:  nil,
 		},
 		"no updates": {
-			settledUpdate: types.SettledUpdate{
-				SettledSubaccount: types.Subaccount{
-					Id: &subaccountId,
-					PerpetualPositions: []*types.PerpetualPosition{
-						createPerpPosition(1, big.NewInt(100), big.NewInt(0)),
-					},
-					AssetPositions: createUsdcAmount(big.NewInt(100)),
+			subaccount: types.Subaccount{
+				Id: &subaccountId,
+				PerpetualPositions: []*types.PerpetualPosition{
+					testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0), big.NewInt(0)),
 				},
-				PerpetualUpdates: []types.PerpetualUpdate{},
-				AssetUpdates:     []types.AssetUpdate{},
+				AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(100)),
 			},
 			perpInfos: perptypes.PerpInfos{
-				1: createPerpInfo(1, -6, 100, 0),
+				1: perp_testutil.CreatePerpInfo(1, -6, 100, 0),
 			},
 			expectedRisk: margin.Risk{
 				NC:  big.NewInt(100*100 + 100),
@@ -143,30 +138,17 @@ func TestGetRiskForSubaccount(t *testing.T) {
 			expectedErr: nil,
 		},
 		"one update": {
-			settledUpdate: types.SettledUpdate{
-				SettledSubaccount: types.Subaccount{
-					Id: &subaccountId,
-					PerpetualPositions: []*types.PerpetualPosition{
-						createPerpPosition(1, big.NewInt(100), big.NewInt(0)),
-					},
-					AssetPositions: createUsdcAmount(big.NewInt(100)),
+			subaccount: types.Subaccount{
+				Id: &subaccountId,
+				PerpetualPositions: []*types.PerpetualPosition{
+					testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0), big.NewInt(0)),
+					testutil.CreateSinglePerpetualPosition(2, big.NewInt(-25), big.NewInt(0), big.NewInt(0)),
 				},
-				PerpetualUpdates: []types.PerpetualUpdate{
-					{
-						PerpetualId:      2,
-						BigQuantumsDelta: big.NewInt(-25),
-					},
-				},
-				AssetUpdates: []types.AssetUpdate{
-					{
-						AssetId:          assettypes.AssetUsdc.Id,
-						BigQuantumsDelta: big.NewInt(10),
-					},
-				},
+				AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(110)),
 			},
 			perpInfos: perptypes.PerpInfos{
-				1: createPerpInfo(1, -6, 100, 0),
-				2: createPerpInfo(2, -6, 200, 0),
+				1: perp_testutil.CreatePerpInfo(1, -6, 100, 0),
+				2: perp_testutil.CreatePerpInfo(2, -6, 200, 0),
 			},
 			expectedRisk: margin.Risk{
 				NC:  big.NewInt((100*100 + 100) + (-25*200 + 10)),
@@ -178,7 +160,7 @@ func TestGetRiskForSubaccount(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			risk, err := lib.GetRiskForSubaccount(tc.settledUpdate, tc.perpInfos)
+			risk, err := lib.GetRiskForSubaccount(tc.subaccount, tc.perpInfos)
 			require.Equal(t, tc.expectedRisk, risk)
 			if tc.expectedErr != nil {
 				require.Equal(t, tc.expectedErr, err)
@@ -190,75 +172,17 @@ func TestGetRiskForSubaccount(t *testing.T) {
 }
 
 func TestGetRiskForSubaccount_Panic(t *testing.T) {
-	sa := types.SettledUpdate{
-		SettledSubaccount: types.Subaccount{
-			Id: &types.SubaccountId{Owner: "test", Number: 1},
-			PerpetualPositions: []*types.PerpetualPosition{
-				createPerpPosition(1, big.NewInt(100), big.NewInt(0)),
-			},
-			AssetPositions: createUsdcAmount(big.NewInt(100)),
+	subaccount := types.Subaccount{
+		Id: &types.SubaccountId{Owner: "test", Number: 1},
+		PerpetualPositions: []*types.PerpetualPosition{
+			testutil.CreateSinglePerpetualPosition(1, big.NewInt(100), big.NewInt(0), big.NewInt(0)),
 		},
-		PerpetualUpdates: []types.PerpetualUpdate{},
-		AssetUpdates:     []types.AssetUpdate{},
+		AssetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(100)),
 	}
 	emptyPerpInfos := perptypes.PerpInfos{}
 
 	// Panics since relevant perpetual information cannot be found.
 	require.Panics(t, func() {
-		_, _ = lib.GetRiskForSubaccount(sa, emptyPerpInfos)
+		_, _ = lib.GetRiskForSubaccount(subaccount, emptyPerpInfos)
 	})
-}
-
-func createPerpPosition(
-	id uint32,
-	quantums *big.Int,
-	fundingIndex *big.Int,
-) *types.PerpetualPosition {
-	return &types.PerpetualPosition{
-		PerpetualId:  id,
-		Quantums:     dtypes.NewIntFromBigInt(quantums),
-		FundingIndex: dtypes.NewIntFromBigInt(fundingIndex),
-	}
-}
-
-func createUsdcAmount(amount *big.Int) []*types.AssetPosition {
-	return []*types.AssetPosition{
-		{
-			AssetId:  assettypes.AssetUsdc.Id,
-			Quantums: dtypes.NewIntFromBigInt(amount),
-		},
-	}
-}
-
-func createPerpInfo(
-	id uint32,
-	atomicResolution int32,
-	price uint64,
-	priceExponent int32,
-) perptypes.PerpInfo {
-	return perptypes.PerpInfo{
-		Perpetual: perptypes.Perpetual{
-			Params: perptypes.PerpetualParams{
-				Id:               id,
-				Ticker:           "test ticker",
-				MarketId:         id,
-				AtomicResolution: atomicResolution,
-				LiquidityTier:    id,
-			},
-			FundingIndex: dtypes.NewInt(0),
-			OpenInterest: dtypes.NewInt(0),
-		},
-		Price: pricetypes.MarketPrice{
-			Id:       id,
-			Exponent: priceExponent,
-			Price:    price,
-		},
-		LiquidityTier: perptypes.LiquidityTier{
-			Id:                     id,
-			InitialMarginPpm:       100_000,
-			MaintenanceFractionPpm: 500_000,
-			OpenInterestLowerCap:   0,
-			OpenInterestUpperCap:   0,
-		},
-	}
 }
