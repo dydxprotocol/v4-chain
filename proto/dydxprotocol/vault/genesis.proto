@@ -10,9 +10,8 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
 // GenesisState defines `x/vault`'s genesis state.
 message GenesisState {
-  // The parameters of the module.
-  // Deprecated since v6.x in favor of default_quoting_params.
-  Params params = 1 [ deprecated = true ];
+  // `params` field replaced since v6.x by default_quoting_params.
+  reserved 1;
   // The vaults.
   repeated Vault vaults = 2;
   // The default quoting parameters for all vaults.

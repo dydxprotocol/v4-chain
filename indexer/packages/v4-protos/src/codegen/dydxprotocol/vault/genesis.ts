@@ -1,4 +1,4 @@
-import { Params, ParamsSDKType, QuotingParams, QuotingParamsSDKType } from "./params";
+import { QuotingParams, QuotingParamsSDKType } from "./params";
 import { VaultId, VaultIdSDKType } from "./vault";
 import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType } from "./share";
 import * as _m0 from "protobufjs/minimal";
@@ -6,15 +6,7 @@ import { DeepPartial } from "../../helpers";
 /** GenesisState defines `x/vault`'s genesis state. */
 
 export interface GenesisState {
-  /**
-   * The parameters of the module.
-   * Deprecated since v6.x in favor of default_quoting_params.
-   */
-
-  /** @deprecated */
-  params?: Params;
   /** The vaults. */
-
   vaults: Vault[];
   /** The default quoting parameters for all vaults. */
 
@@ -23,15 +15,7 @@ export interface GenesisState {
 /** GenesisState defines `x/vault`'s genesis state. */
 
 export interface GenesisStateSDKType {
-  /**
-   * The parameters of the module.
-   * Deprecated since v6.x in favor of default_quoting_params.
-   */
-
-  /** @deprecated */
-  params?: ParamsSDKType;
   /** The vaults. */
-
   vaults: VaultSDKType[];
   /** The default quoting parameters for all vaults. */
 
@@ -76,7 +60,6 @@ export interface VaultSDKType {
 
 function createBaseGenesisState(): GenesisState {
   return {
-    params: undefined,
     vaults: [],
     defaultQuotingParams: undefined
   };
@@ -84,10 +67,6 @@ function createBaseGenesisState(): GenesisState {
 
 export const GenesisState = {
   encode(message: GenesisState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.params !== undefined) {
-      Params.encode(message.params, writer.uint32(10).fork()).ldelim();
-    }
-
     for (const v of message.vaults) {
       Vault.encode(v!, writer.uint32(18).fork()).ldelim();
     }
@@ -108,10 +87,6 @@ export const GenesisState = {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
-        case 1:
-          message.params = Params.decode(reader, reader.uint32());
-          break;
-
         case 2:
           message.vaults.push(Vault.decode(reader, reader.uint32()));
           break;
@@ -131,7 +106,6 @@ export const GenesisState = {
 
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = createBaseGenesisState();
-    message.params = object.params !== undefined && object.params !== null ? Params.fromPartial(object.params) : undefined;
     message.vaults = object.vaults?.map(e => Vault.fromPartial(e)) || [];
     message.defaultQuotingParams = object.defaultQuotingParams !== undefined && object.defaultQuotingParams !== null ? QuotingParams.fromPartial(object.defaultQuotingParams) : undefined;
     return message;

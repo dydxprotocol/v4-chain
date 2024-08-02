@@ -4523,7 +4523,6 @@ const GenesisState = `{
         "order_expiration_seconds": 60,
         "activation_threshold_quote_quantums": "1000000000"
       },
-      "params": null,
       "vaults": []
     },
     "vest": {
