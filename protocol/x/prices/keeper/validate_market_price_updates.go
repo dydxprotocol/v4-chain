@@ -54,6 +54,7 @@ func (k Keeper) performDeterministicStatefulValidation(
 	marketPriceUpdate *types.MarketPriceUpdate,
 	allMarketParamPrices []types.MarketParamPrice,
 ) (isSpotValid bool, isPnlValid bool) {
+	// TODO: clean up, we don't need to loop to get ID - change this
 	idToMarketParamPrice := getIdToMarketParamPrice(allMarketParamPrices)
 
 	// Check market exists.
