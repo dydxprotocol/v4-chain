@@ -15,8 +15,8 @@ import (
 type PreBlockExecPricesKeeper interface {
 	PerformStatefulPriceUpdateValidation(
 		ctx sdk.Context,
-		marketPriceUpdates *pricestypes.MarketPriceUpdates,
-	) error
+		marketPriceUpdate *pricestypes.MarketPriceUpdate,
+	) (isSpotValid bool, isPnlValid bool)
 
 	UpdateSmoothedSpotPrices(
 		ctx sdk.Context,
