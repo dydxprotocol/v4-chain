@@ -1085,6 +1085,49 @@
         ],
         "type": "object",
         "additionalProperties": false
+      },
+      "YieldParamsResponseObject": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sDAIPrice": {
+            "type": "string"
+          },
+          "assetYieldIndex": {
+            "type": "string"
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "createdAtHeight": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sDAIPrice",
+          "assetYieldIndex",
+          "createdAt",
+          "createdAtHeight"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "YieldParamsResponse": {
+        "properties": {
+          "allYieldParams": {
+            "items": {
+              "$ref": "#/components/schemas/YieldParamsResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "allYieldParams"
+        ],
+        "type": "object",
+        "additionalProperties": false
       }
     },
     "securitySchemes": {}
@@ -2361,6 +2404,54 @@
             }
           }
         ]
+      }
+    },
+    "/yieldParams": {
+      "get": {
+        "operationId": "GetYieldParams",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/YieldParamsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          }
+        ]
+      }
+    },
+    "/yieldParams/latestYieldParams": {
+      "get": {
+        "operationId": "GetLatestYieldParams",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/YieldParamsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": []
       }
     }
   },
