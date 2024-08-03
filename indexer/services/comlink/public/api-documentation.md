@@ -123,7 +123,8 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
           "subaccountNumber": 0
         }
       },
-      "marginEnabled": true
+      "marginEnabled": true,
+      "assetYieldIndex": "string"
     }
   ]
 }
@@ -250,7 +251,8 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber
       "subaccountNumber": 0
     }
   },
-  "marginEnabled": true
+  "marginEnabled": true,
+  "assetYieldIndex": "string"
 }
 ```
 
@@ -381,7 +383,8 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccount
           "subaccountNumber": 0
         }
       },
-      "marginEnabled": true
+      "marginEnabled": true,
+      "assetYieldIndex": "string"
     }
   ]
 }
@@ -2834,7 +2837,8 @@ This operation does not require authentication
       "subaccountNumber": 0
     }
   },
-  "marginEnabled": true
+  "marginEnabled": true,
+  "assetYieldIndex": "string"
 }
 
 ```
@@ -2850,6 +2854,7 @@ This operation does not require authentication
 |openPerpetualPositions|[PerpetualPositionsMap](#schemaperpetualpositionsmap)|true|none|none|
 |assetPositions|[AssetPositionsMap](#schemaassetpositionsmap)|true|none|none|
 |marginEnabled|boolean|true|none|none|
+|assetYieldIndex|string|true|none|none|
 
 ## AddressResponse
 
@@ -2920,7 +2925,8 @@ This operation does not require authentication
           "subaccountNumber": 0
         }
       },
-      "marginEnabled": true
+      "marginEnabled": true,
+      "assetYieldIndex": "string"
     }
   ]
 }
@@ -3006,7 +3012,8 @@ This operation does not require authentication
           "subaccountNumber": 0
         }
       },
-      "marginEnabled": true
+      "marginEnabled": true,
+      "assetYieldIndex": "string"
     }
   ]
 }

@@ -327,6 +327,7 @@ export function subaccountToResponseObject({
     assetPositions,
     // TODO(DEC-687): Track `marginEnabled` for subaccounts.
     marginEnabled: true,
+    assetYieldIndex: subaccount.assetYieldIndex,
   };
 }
 

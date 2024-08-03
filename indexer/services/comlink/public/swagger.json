@@ -166,6 +166,9 @@
           },
           "marginEnabled": {
             "type": "boolean"
+          },
+          "assetYieldIndex": {
+            "type": "string"
           }
         },
         "required": [
@@ -175,7 +178,8 @@
           "freeCollateral",
           "openPerpetualPositions",
           "assetPositions",
-          "marginEnabled"
+          "marginEnabled",
+          "assetYieldIndex"
         ],
         "type": "object",
         "additionalProperties": false

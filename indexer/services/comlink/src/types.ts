@@ -53,6 +53,7 @@ export interface SubaccountResponseObject {
   openPerpetualPositions: PerpetualPositionsMap,
   assetPositions: AssetPositionsMap,
   marginEnabled: boolean,
+  assetYieldIndex: string,
 }
 
 export interface ParentSubaccountResponse {
