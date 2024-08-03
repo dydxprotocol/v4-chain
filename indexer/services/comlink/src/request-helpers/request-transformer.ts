@@ -104,6 +104,7 @@ export function perpetualPositionToResponseObject(
     sumOpen: position.sumOpen,
     sumClose: position.sumClose,
     netFunding: netFunding.toFixed(),
+    perpYieldIndex: position.perpYieldIndex,
   };
 }
 

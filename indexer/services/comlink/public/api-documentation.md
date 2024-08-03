@@ -84,6 +84,7 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         },
@@ -101,6 +102,7 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         }
@@ -209,6 +211,7 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber
       "sumClose": "string",
       "netFunding": "string",
       "unrealizedPnl": "string",
+      "perpYieldIndex": "string",
       "closedAt": "string",
       "exitPrice": "string"
     },
@@ -226,6 +229,7 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber
       "sumClose": "string",
       "netFunding": "string",
       "unrealizedPnl": "string",
+      "perpYieldIndex": "string",
       "closedAt": "string",
       "exitPrice": "string"
     }
@@ -338,6 +342,7 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccount
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         },
@@ -355,6 +360,7 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccount
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         }
@@ -1962,6 +1968,7 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualPositions?address=string&su
       "sumClose": "string",
       "netFunding": "string",
       "unrealizedPnl": "string",
+      "perpYieldIndex": "string",
       "closedAt": "string",
       "exitPrice": "string"
     }
@@ -2614,6 +2621,7 @@ This operation does not require authentication
   "sumClose": "string",
   "netFunding": "string",
   "unrealizedPnl": "string",
+  "perpYieldIndex": "string",
   "closedAt": "string",
   "exitPrice": "string"
 }
@@ -2637,6 +2645,7 @@ This operation does not require authentication
 |sumClose|string|true|none|none|
 |netFunding|string|true|none|none|
 |unrealizedPnl|string|true|none|none|
+|perpYieldIndex|string|true|none|none|
 |closedAt|[IsoString](#schemaisostring)¦null|false|none|none|
 |exitPrice|string¦null|false|none|none|
 
@@ -2663,6 +2672,7 @@ This operation does not require authentication
     "sumClose": "string",
     "netFunding": "string",
     "unrealizedPnl": "string",
+    "perpYieldIndex": "string",
     "closedAt": "string",
     "exitPrice": "string"
   },
@@ -2680,6 +2690,7 @@ This operation does not require authentication
     "sumClose": "string",
     "netFunding": "string",
     "unrealizedPnl": "string",
+    "perpYieldIndex": "string",
     "closedAt": "string",
     "exitPrice": "string"
   }
@@ -2782,6 +2793,7 @@ This operation does not require authentication
       "sumClose": "string",
       "netFunding": "string",
       "unrealizedPnl": "string",
+      "perpYieldIndex": "string",
       "closedAt": "string",
       "exitPrice": "string"
     },
@@ -2799,6 +2811,7 @@ This operation does not require authentication
       "sumClose": "string",
       "netFunding": "string",
       "unrealizedPnl": "string",
+      "perpYieldIndex": "string",
       "closedAt": "string",
       "exitPrice": "string"
     }
@@ -2866,6 +2879,7 @@ This operation does not require authentication
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         },
@@ -2883,6 +2897,7 @@ This operation does not require authentication
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         }
@@ -2950,6 +2965,7 @@ This operation does not require authentication
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         },
@@ -2967,6 +2983,7 @@ This operation does not require authentication
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         }
@@ -3951,6 +3968,7 @@ or
       "sumClose": "string",
       "netFunding": "string",
       "unrealizedPnl": "string",
+      "perpYieldIndex": "string",
       "closedAt": "string",
       "exitPrice": "string"
     }

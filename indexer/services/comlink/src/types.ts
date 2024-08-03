@@ -96,6 +96,7 @@ export interface PerpetualPositionResponseObject {
   sumClose: string;
   netFunding: string;
   unrealizedPnl: string;
+  perpYieldIndex: string;
   closedAt?: IsoString | null;
   exitPrice?: string | null;
 }

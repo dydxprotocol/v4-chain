@@ -65,6 +65,9 @@
           "unrealizedPnl": {
             "type": "string"
           },
+          "perpYieldIndex": {
+            "type": "string"
+          },
           "closedAt": {
             "allOf": [
               {
@@ -91,7 +94,8 @@
           "sumOpen",
           "sumClose",
           "netFunding",
-          "unrealizedPnl"
+          "unrealizedPnl",
+          "perpYieldIndex"
         ],
         "type": "object",
         "additionalProperties": false
