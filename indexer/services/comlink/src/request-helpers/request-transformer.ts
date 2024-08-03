@@ -362,6 +362,7 @@ export function perpetualMarketToResponseObject(
     openInterestLowerCap: liquidityTier.openInterestLowerCap,
     openInterestUpperCap: liquidityTier.openInterestUpperCap,
     baseOpenInterest: perpetualMarket.baseOpenInterest,
+    perpYieldIndex: perpetualMarket.perpYieldIndex,
   };
 }
 

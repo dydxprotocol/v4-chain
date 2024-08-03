@@ -270,6 +270,7 @@ export interface PerpetualMarketResponseObject {
   openInterestLowerCap?: string;
   openInterestUpperCap?: string;
   baseOpenInterest: string;
+  perpYieldIndex: string;
 }
 
 /* ------- ORDERBOOK TYPES ------- */

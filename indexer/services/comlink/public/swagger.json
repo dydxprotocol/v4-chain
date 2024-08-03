@@ -833,6 +833,9 @@
           },
           "baseOpenInterest": {
             "type": "string"
+          },
+          "perpYieldIndex": {
+            "type": "string"
           }
         },
         "required": [
@@ -854,7 +857,8 @@
           "stepBaseQuantums",
           "subticksPerTick",
           "marketType",
-          "baseOpenInterest"
+          "baseOpenInterest",
+          "perpYieldIndex"
         ],
         "type": "object",
         "additionalProperties": false
