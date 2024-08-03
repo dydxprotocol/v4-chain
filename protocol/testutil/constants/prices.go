@@ -265,29 +265,34 @@ var TestSingleMarketParam = types.MarketParam{
 
 var TestMarketPrices = []types.MarketPrice{
 	{
-		Id:       0,
-		Exponent: BtcUsdExponent,
-		Price:    FiveBillion, // $50,000 == 1 BTC
+		Id:        0,
+		Exponent:  BtcUsdExponent,
+		SpotPrice: FiveBillion, // $50,000 == 1 BTC
+		PnlPrice:  FiveBillion, // $50,000 == 1 BTC
 	},
 	{
-		Id:       1,
-		Exponent: EthUsdExponent,
-		Price:    ThreeBillion, // $3,000 == 1 ETH
+		Id:        1,
+		Exponent:  EthUsdExponent,
+		SpotPrice: ThreeBillion, // $3,000 == 1 ETH
+		PnlPrice:  ThreeBillion, // $3,000 == 1 ETH
 	},
 	{
-		Id:       2,
-		Exponent: SolUsdExponent,
-		Price:    FiveBillion, // 50$ == 1 SOL
+		Id:        2,
+		Exponent:  SolUsdExponent,
+		SpotPrice: FiveBillion, // 50$ == 1 SOL
+		PnlPrice:  FiveBillion, // 50$ == 1 SOL
 	},
 	{
-		Id:       3,
-		Exponent: IsoUsdExponent,
-		Price:    FiveBillion, // 50$ == 1 ISO
+		Id:        3,
+		Exponent:  IsoUsdExponent,
+		SpotPrice: FiveBillion, // 50$ == 1 ISO
+		PnlPrice:  FiveBillion, // 50$ == 1 ISO
 	},
 	{
-		Id:       4,
-		Exponent: Iso2UsdExponent,
-		Price:    ThreeBillion, // 300$ == 1 ISO2
+		Id:        4,
+		Exponent:  Iso2UsdExponent,
+		SpotPrice: ThreeBillion, // 300$ == 1 ISO2
+		PnlPrice:  ThreeBillion, // 300$ == 1 ISO2
 	},
 }
 
@@ -305,36 +310,42 @@ var TestPricesGenesisState = types.GenesisState{
 }
 
 var (
-	ValidMarketPriceUpdates = []*types.MarketPriceUpdates_MarketPriceUpdate{
+	ValidMarketPriceUpdates = []*types.MarketPriceUpdate{
 		{
-			MarketId: MarketId0,
-			Price:    Price5,
+			MarketId:  MarketId0,
+			SpotPrice: Price5,
+			PnlPrice:  Price5,
 		},
 		{
-			MarketId: MarketId1,
-			Price:    Price6,
+			MarketId:  MarketId1,
+			SpotPrice: Price6,
+			PnlPrice:  Price6,
 		},
 		{
-			MarketId: MarketId2,
-			Price:    Price7,
+			MarketId:  MarketId2,
+			SpotPrice: Price7,
+			PnlPrice:  Price7,
 		},
 		{
-			MarketId: MarketId3,
-			Price:    Price4,
+			MarketId:  MarketId3,
+			SpotPrice: Price4,
+			PnlPrice:  Price4,
 		},
 		{
-			MarketId: MarketId4,
-			Price:    Price3,
+			MarketId:  MarketId4,
+			SpotPrice: Price3,
+			PnlPrice:  Price3,
 		},
 	}
 
 	ValidSingleMarketPriceUpdateObj = &types.MarketPriceUpdates{
 		MarketPriceUpdates: ValidSingleMarketPriceUpdate,
 	}
-	ValidSingleMarketPriceUpdate = []*types.MarketPriceUpdates_MarketPriceUpdate{
+	ValidSingleMarketPriceUpdate = []*types.MarketPriceUpdate{
 		{
-			MarketId: MarketId0,
-			Price:    Price5,
+			MarketId:  MarketId0,
+			SpotPrice: Price5,
+			PnlPrice:  Price5,
 		},
 	}
 
@@ -376,28 +387,32 @@ var (
 	ValidUpdateMarketPricesTxBytes []byte
 
 	InvalidUpdateMarketPricesStateless = &types.MarketPriceUpdates{
-		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
+		MarketPriceUpdates: []*types.MarketPriceUpdate{
 			{
-				MarketId: MarketId0,
-				Price:    0, // 0 price value is invalid.
+				MarketId:  MarketId0,
+				SpotPrice: 0, // 0 price value is invalid.
+				PnlPrice:  0, // 0 price value is invalid.
 			},
 		},
 	}
 	InvalidUpdateMarketPricesStatelessTxBytes []byte
 
 	InvalidUpdateMarketPricesStateful = &types.MarketPriceUpdates{
-		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
+		MarketPriceUpdates: []*types.MarketPriceUpdate{
 			{
-				MarketId: MarketId0,
-				Price:    Price5,
+				MarketId:  MarketId0,
+				SpotPrice: Price5,
+				PnlPrice:  Price5,
 			},
 			{
-				MarketId: MarketId1,
-				Price:    Price6,
+				MarketId:  MarketId1,
+				SpotPrice: Price6,
+				PnlPrice:  Price6,
 			},
 			{
-				MarketId: 99,
-				Price:    Price3, // Market with id 99 does not exist.
+				MarketId:  99,
+				SpotPrice: Price3, // Market with id 99 does not exist.
+				PnlPrice:  Price3, // Market with id 99 does not exist.
 			},
 		},
 	}
@@ -424,14 +439,16 @@ var (
 		},
 		MarketPrices: []types.MarketPrice{
 			{
-				Id:       uint32(0),
-				Exponent: BtcUsdExponent,
-				Price:    FiveBillion, // $50,000 == 1 BTC
+				Id:        uint32(0),
+				Exponent:  BtcUsdExponent,
+				SpotPrice: FiveBillion, // $50,000 == 1 BTC
+				PnlPrice:  FiveBillion, // $50,000 == 1 BTC
 			},
 			{
-				Id:       uint32(1),
-				Exponent: EthUsdExponent,
-				Price:    ThreeBillion, // $3,000 == 1 ETH
+				Id:        uint32(1),
+				Exponent:  EthUsdExponent,
+				SpotPrice: ThreeBillion, // $3,000 == 1 ETH
+				PnlPrice:  ThreeBillion, // $3,000 == 1 ETH
 			},
 		},
 	}
@@ -457,14 +474,16 @@ var (
 		},
 		MarketPrices: []types.MarketPrice{
 			{ // BTC-USD
-				Id:       uint32(0),
-				Exponent: BtcUsdExponent,
-				Price:    FiveBillion, // $50,000 == 1 BTC
+				Id:        uint32(0),
+				Exponent:  BtcUsdExponent,
+				SpotPrice: FiveBillion, // $50,000 == 1 BTC
+				PnlPrice:  FiveBillion, // $50,000 == 1 BTC
 			},
 			{ // ETH-USD
-				Id:       uint32(1),
-				Exponent: EthUsdExponent,
-				Price:    ThreeBillion, // $3,000 == 1 ETH
+				Id:        uint32(1),
+				Exponent:  EthUsdExponent,
+				SpotPrice: ThreeBillion, // $3,000 == 1 ETH
+				PnlPrice:  ThreeBillion, // $3,000 == 1 ETH
 			},
 		},
 	}

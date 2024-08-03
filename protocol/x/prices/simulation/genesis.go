@@ -81,9 +81,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 			ExchangeConfigJson: "{}",
 		}
 		marketPrices[i] = types.MarketPrice{
-			Id:       uint32(i),
-			Exponent: int32(marketExponent),
-			Price:    genMarketPrice(r, isReasonableGenesis),
+			Id:        uint32(i),
+			Exponent:  int32(marketExponent),
+			SpotPrice: genMarketPrice(r, isReasonableGenesis),
+			PnlPrice:  genMarketPrice(r, isReasonableGenesis),
 		}
 	}
 

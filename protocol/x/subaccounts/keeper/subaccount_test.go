@@ -2121,7 +2121,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 				*pricestest.GenerateMarketParamPrice(pricestest.WithId(100)),
 				*pricestest.GenerateMarketParamPrice(
 					pricestest.WithId(101),
-					pricestest.WithPriceValue(0),
+					pricestest.WithSpotPriceValue(0),
+					pricestest.WithPnlPriceValue(0),
 				),
 			},
 			perpetualPositions: []*types.PerpetualPosition{
@@ -5285,7 +5286,8 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				*pricestest.GenerateMarketParamPrice(pricestest.WithId(100)),
 				*pricestest.GenerateMarketParamPrice(
 					pricestest.WithId(101),
-					pricestest.WithPriceValue(0),
+					pricestest.WithSpotPriceValue(0),
+					pricestest.WithPnlPriceValue(0),
 				),
 			},
 			perpetualPositions: []*types.PerpetualPosition{

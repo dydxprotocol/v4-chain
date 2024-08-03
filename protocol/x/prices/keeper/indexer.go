@@ -12,6 +12,7 @@ func GenerateMarketPriceUpdateIndexerEvent(
 ) *indexerevents.MarketEventV1 {
 	return indexerevents.NewMarketPriceUpdateEvent(
 		market.Id,
-		market.Price,
+		market.SpotPrice,
+		market.PnlPrice,
 	)
 }

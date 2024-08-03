@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"cosmossdk.io/log"
-
 	preblocker "github.com/StreamFinance-Protocol/stream-chain/protocol/app/preblocker"
+	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	priceapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
+	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -137,8 +138,11 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		priceBz, err := big.NewInt(1).GobEncode()
 		s.Require().NoError(err)
 
-		prices := map[uint32][]byte{
-			10: priceBz, // 10 is a nonexistent market
+		prices := map[uint32]*vetypes.DaemonVoteExtension_PricePair{
+			10: {
+				SpotPrice: priceBz, // 10 is a nonexistent market
+				PnlPrice:  priceBz, // 10 is a nonexistent market
+			},
 		}
 
 		extCommitBz := s.getVoteExtensionsForValidatorsWithSamePrices(
@@ -179,10 +183,19 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		price3Bz, err := big.NewInt(int64(price3)).GobEncode()
 		s.Require().NoError(err)
 
-		prices := map[uint32][]byte{
-			6: price1Bz,
-			7: price2Bz,
-			8: price3Bz,
+		prices := map[uint32]*vetypes.DaemonVoteExtension_PricePair{
+			6: {
+				SpotPrice: price1Bz,
+				PnlPrice:  price1Bz,
+			},
+			7: {
+				SpotPrice: price2Bz,
+				PnlPrice:  price2Bz,
+			},
+			8: {
+				SpotPrice: price3Bz,
+				PnlPrice:  price3Bz,
+			},
 		}
 
 		extCommitBz := s.getVoteExtensionsForValidatorsWithSamePrices(
@@ -198,10 +211,19 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		s.Require().NoError(err)
 
 		s.arePriceUpdatesCorrect(
-			map[uint32]uint64{
-				6: price1,
-				7: price2,
-				8: price3,
+			map[uint32]ve.VEPricePair{
+				6: {
+					SpotPrice: price1,
+					PnlPrice:  price1,
+				},
+				7: {
+					SpotPrice: price2,
+					PnlPrice:  price2,
+				},
+				8: {
+					SpotPrice: price3,
+					PnlPrice:  price3,
+				},
 			},
 		)
 	})
@@ -229,7 +251,7 @@ func (s *PreBlockTestSuite) getAllMarketPrices() []pricestypes.MarketPrice {
 }
 
 func (s *PreBlockTestSuite) arePriceUpdatesCorrect(
-	correctPrices map[uint32]uint64,
+	correctPrices map[uint32]ve.VEPricePair,
 ) bool {
 	prices := s.getAllMarketPrices()
 	if len(prices) != len(correctPrices) {
@@ -242,7 +264,11 @@ func (s *PreBlockTestSuite) arePriceUpdatesCorrect(
 			return false
 		}
 
-		if price.Price != correctPrice {
+		if price.SpotPrice != correctPrice.SpotPrice {
+			return false
+		}
+
+		if price.PnlPrice != correctPrice.PnlPrice {
 			return false
 		}
 	}
@@ -262,7 +288,11 @@ func (s *PreBlockTestSuite) ensurePricesEqualToCurrent(before []pricestypes.Mark
 		if price.Exponent != currPrices[i].Exponent {
 			return false
 		}
-		if price.Price != currPrices[i].Price {
+		if price.SpotPrice != currPrices[i].SpotPrice {
+			return false
+		}
+
+		if price.PnlPrice != currPrices[i].PnlPrice {
 			return false
 		}
 	}
@@ -279,7 +309,7 @@ func (s *PreBlockTestSuite) createTestMarkets() {
 }
 
 func (s *PreBlockTestSuite) getVoteExtension(
-	prices map[uint32][]byte,
+	prices map[uint32]*vetypes.DaemonVoteExtension_PricePair,
 	val sdk.ConsAddress,
 ) cometabci.ExtendedVoteInfo {
 	ve, err := vetesting.CreateSignedExtendedVoteInfo(
@@ -346,7 +376,7 @@ func (s *PreBlockTestSuite) mockCCVStoreGetAllValidatorsCall(validators []string
 
 func (s *PreBlockTestSuite) getVoteExtensionsForValidatorsWithSamePrices(
 	validators []string,
-	prices map[uint32][]byte,
+	prices map[uint32]*vetypes.DaemonVoteExtension_PricePair,
 ) []byte {
 	var votes []cometabci.ExtendedVoteInfo
 	for _, valName := range validators {

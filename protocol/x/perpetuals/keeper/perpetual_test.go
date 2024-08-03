@@ -23,8 +23,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-
-
 	"cosmossdk.io/store/prefix"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	big_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/big"
@@ -3377,7 +3375,8 @@ func TestIsPositionUpdatable(t *testing.T) {
 			queryPerpId: 1,
 			marketParamPrice: *pricestest.GenerateMarketParamPrice(
 				pricestest.WithId(1),
-				pricestest.WithPriceValue(1000), // non-zero
+				pricestest.WithSpotPriceValue(1000), // non-zero
+				pricestest.WithPnlPriceValue(1000),  // non-zero
 			),
 			expectedUpdatable: true,
 		},
@@ -3389,7 +3388,8 @@ func TestIsPositionUpdatable(t *testing.T) {
 			queryPerpId: 1,
 			marketParamPrice: *pricestest.GenerateMarketParamPrice(
 				pricestest.WithId(1),
-				pricestest.WithPriceValue(0),
+				pricestest.WithSpotPriceValue(0),
+				pricestest.WithPnlPriceValue(0),
 			),
 			expectedUpdatable: false,
 		},
@@ -3460,7 +3460,7 @@ func TestIsIsolatedPerpetual(t *testing.T) {
 				keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 				err := perpetualsKeeper.ValidateAndSetPerpetual(ctx, tc.perp)
-				require.NoError(t,err)
+				require.NoError(t, err)
 				isIsolated, err := perpetualsKeeper.IsIsolatedPerpetual(ctx, tc.perp.Params.Id)
 				require.NoError(t, err)
 				require.Equal(t, tc.expected, isIsolated)

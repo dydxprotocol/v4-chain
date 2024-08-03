@@ -69,7 +69,7 @@ func createPricesKeeper(
 
 	indexPriceCache := pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 
-	marketToSmoothedPrices := types.NewMarketToSmoothedPrices(types.SmoothedPriceTrackingBlockHistoryLength)
+	marketToSmoothedPrices := types.NewMarketToSmoothedSpotPrices(types.SmoothedPriceTrackingBlockHistoryLength)
 
 	mockTimeProvider := &mocks.TimeProvider{}
 
@@ -107,9 +107,10 @@ func CreateTestMarkets(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 			constants.TestMarketPrices[i],
 		)
 		require.NoError(t, err)
-		err = k.UpdateMarketPrice(ctx, &types.MarketPriceUpdates_MarketPriceUpdate{
-			MarketId: uint32(i),
-			Price:    constants.TestMarketPrices[i].Price,
+		err = k.UpdateSpotAndPnlMarketPrices(ctx, &types.MarketPriceUpdate{
+			MarketId:  uint32(i),
+			SpotPrice: constants.TestMarketPrices[i].SpotPrice,
+			PnlPrice:  constants.TestMarketPrices[i].PnlPrice,
 		})
 		require.NoError(t, err)
 	}
@@ -128,7 +129,8 @@ func CreateNMarkets(t *testing.T, ctx sdk.Context, keeper *keeper.Keeper, n int)
 		items[i].Param.MinPriceChangePpm = uint32(i + 1)
 		items[i].Price.Id = uint32(i) + numExistingMarkets
 		items[i].Price.Exponent = int32(i)
-		items[i].Price.Price = uint64(1_000 + i)
+		items[i].Price.SpotPrice = uint64(1_000 + i)
+		items[i].Price.PnlPrice = uint64(1_000 + i)
 		items[i].Param.ExchangeConfigJson = "{}" // Use empty, valid JSON for testing.
 
 		_, err := keeper.CreateMarket(
@@ -238,7 +240,8 @@ func AssertMarketPriceUpdateEventInIndexerBlock(
 	marketEvents := getMarketEventsFromIndexerBlock(ctx, k)
 	expectedEvent := indexerevents.NewMarketPriceUpdateEvent(
 		updatedMarketPrice.Id,
-		updatedMarketPrice.Price,
+		updatedMarketPrice.SpotPrice,
+		updatedMarketPrice.PnlPrice,
 	)
 	require.Contains(t, marketEvents, expectedEvent)
 }

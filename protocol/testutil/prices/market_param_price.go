@@ -28,9 +28,15 @@ func WithExponent(exp int32) MarketParamPriceModifierOption {
 	}
 }
 
-func WithPriceValue(price uint64) MarketParamPriceModifierOption {
+func WithSpotPriceValue(price uint64) MarketParamPriceModifierOption {
 	return func(cp *pricestypes.MarketParamPrice) {
-		cp.Price.Price = price
+		cp.Price.SpotPrice = price
+	}
+}
+
+func WithPnlPriceValue(price uint64) MarketParamPriceModifierOption {
+	return func(cp *pricestypes.MarketParamPrice) {
+		cp.Price.PnlPrice = price
 	}
 }
 
@@ -73,9 +79,10 @@ func GenerateMarketParamPrice(optionalModifications ...MarketParamPriceModifierO
 			ExchangeConfigJson: "{}",
 		},
 		Price: pricestypes.MarketPrice{
-			Id:       0,
-			Exponent: -8,
-			Price:    100000,
+			Id:        0,
+			Exponent:  -8,
+			SpotPrice: 100000,
+			PnlPrice:  100000,
 		},
 	}
 
