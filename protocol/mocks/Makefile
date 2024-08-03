@@ -38,7 +38,6 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=ProcessConsumerKeeper --dir=./app/process --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ProcessProposalPriceApplier --dir=./app/process --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ProcessConsumerKeeper --dir=./app/process --recursive --output=./mocks
-	@go run github.com/vektra/mockery/v2 --name=ExtendVotePricesKeeper --dir=./app/ve --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ExtendVoteIndexPriceCache --dir=./app/ve --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=CCValidatorStore --dir=./app/ve/math --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=PriceApplierPricesKeeper --dir=./app/ve/applier --recursive --output=./mocks

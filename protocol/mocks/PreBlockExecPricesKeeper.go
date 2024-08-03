@@ -33,50 +33,116 @@ func (_m *PreBlockExecPricesKeeper) GetAllMarketParams(ctx types.Context) []pric
 	return r0
 }
 
-// GetValidMarketPriceUpdates provides a mock function with given fields: ctx
-func (_m *PreBlockExecPricesKeeper) GetValidMarketPriceUpdates(ctx types.Context) *pricestypes.MarketPriceUpdates {
+// GetMarketParam provides a mock function with given fields: ctx, id
+func (_m *PreBlockExecPricesKeeper) GetMarketParam(ctx types.Context, id uint32) (pricestypes.MarketParam, bool) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMarketParam")
+	}
+
+	var r0 pricestypes.MarketParam
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) (pricestypes.MarketParam, bool)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) pricestypes.MarketParam); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(pricestypes.MarketParam)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, uint32) bool); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
+// GetSmoothedSpotPrice provides a mock function with given fields: markedId
+func (_m *PreBlockExecPricesKeeper) GetSmoothedSpotPrice(markedId uint32) (uint64, bool) {
+	ret := _m.Called(markedId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSmoothedSpotPrice")
+	}
+
+	var r0 uint64
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(uint32) (uint64, bool)); ok {
+		return rf(markedId)
+	}
+	if rf, ok := ret.Get(0).(func(uint32) uint64); ok {
+		r0 = rf(markedId)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(uint32) bool); ok {
+		r1 = rf(markedId)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
+// GetValidMarketSpotPriceUpdates provides a mock function with given fields: ctx
+func (_m *PreBlockExecPricesKeeper) GetValidMarketSpotPriceUpdates(ctx types.Context) []*pricestypes.MarketSpotPriceUpdate {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetValidMarketPriceUpdates")
+		panic("no return value specified for GetValidMarketSpotPriceUpdates")
 	}
 
-	var r0 *pricestypes.MarketPriceUpdates
-	if rf, ok := ret.Get(0).(func(types.Context) *pricestypes.MarketPriceUpdates); ok {
+	var r0 []*pricestypes.MarketSpotPriceUpdate
+	if rf, ok := ret.Get(0).(func(types.Context) []*pricestypes.MarketSpotPriceUpdate); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*pricestypes.MarketPriceUpdates)
+			r0 = ret.Get(0).([]*pricestypes.MarketSpotPriceUpdate)
 		}
 	}
 
 	return r0
 }
 
-// PerformStatefulPriceUpdateValidation provides a mock function with given fields: ctx, marketPriceUpdates
-func (_m *PreBlockExecPricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, marketPriceUpdates *pricestypes.MarketPriceUpdates) error {
-	ret := _m.Called(ctx, marketPriceUpdates)
+// PerformStatefulPriceUpdateValidation provides a mock function with given fields: ctx, marketPriceUpdate
+func (_m *PreBlockExecPricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, marketPriceUpdate *pricestypes.MarketPriceUpdate) (bool, bool) {
+	ret := _m.Called(ctx, marketPriceUpdate)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PerformStatefulPriceUpdateValidation")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdates) error); ok {
-		r0 = rf(ctx, marketPriceUpdates)
+	var r0 bool
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdate) (bool, bool)); ok {
+		return rf(ctx, marketPriceUpdate)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdate) bool); ok {
+		r0 = rf(ctx, marketPriceUpdate)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(bool)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(types.Context, *pricestypes.MarketPriceUpdate) bool); ok {
+		r1 = rf(ctx, marketPriceUpdate)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
 }
 
-// UpdateSmoothedPrices provides a mock function with given fields: ctx, linearInterpolateFunc
-func (_m *PreBlockExecPricesKeeper) UpdateSmoothedPrices(ctx types.Context, linearInterpolateFunc func(uint64, uint64, uint32) (uint64, error)) error {
+// UpdateSmoothedSpotPrices provides a mock function with given fields: ctx, linearInterpolateFunc
+func (_m *PreBlockExecPricesKeeper) UpdateSmoothedSpotPrices(ctx types.Context, linearInterpolateFunc func(uint64, uint64, uint32) (uint64, error)) error {
 	ret := _m.Called(ctx, linearInterpolateFunc)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateSmoothedPrices")
+		panic("no return value specified for UpdateSmoothedSpotPrices")
 	}
 
 	var r0 error

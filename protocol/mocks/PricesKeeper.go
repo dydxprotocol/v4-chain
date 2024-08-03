@@ -114,19 +114,19 @@ func (_m *PricesKeeper) GetAllMarketPrices(ctx types.Context) []pricestypes.Mark
 }
 
 // GetMarketIdToValidIndexPrice provides a mock function with given fields: ctx
-func (_m *PricesKeeper) GetMarketIdToValidIndexPrice(ctx types.Context) map[uint32]pricestypes.MarketPrice {
+func (_m *PricesKeeper) GetMarketIdToValidIndexPrice(ctx types.Context) map[uint32]pricestypes.MarketSpotPrice {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetMarketIdToValidIndexPrice")
 	}
 
-	var r0 map[uint32]pricestypes.MarketPrice
-	if rf, ok := ret.Get(0).(func(types.Context) map[uint32]pricestypes.MarketPrice); ok {
+	var r0 map[uint32]pricestypes.MarketSpotPrice
+	if rf, ok := ret.Get(0).(func(types.Context) map[uint32]pricestypes.MarketSpotPrice); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[uint32]pricestypes.MarketPrice)
+			r0 = ret.Get(0).(map[uint32]pricestypes.MarketSpotPrice)
 		}
 	}
 
@@ -256,16 +256,44 @@ func (_m *PricesKeeper) ModifyMarketParam(ctx types.Context, param pricestypes.M
 }
 
 // PerformStatefulPriceUpdateValidation provides a mock function with given fields: ctx, marketPriceUpdates
-func (_m *PricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, marketPriceUpdates *pricestypes.MarketPriceUpdates) error {
+func (_m *PricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, marketPriceUpdates *pricestypes.MarketPriceUpdate) (bool, bool) {
 	ret := _m.Called(ctx, marketPriceUpdates)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PerformStatefulPriceUpdateValidation")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdates) error); ok {
+	var r0 bool
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdate) (bool, bool)); ok {
+		return rf(ctx, marketPriceUpdates)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdate) bool); ok {
 		r0 = rf(ctx, marketPriceUpdates)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, *pricestypes.MarketPriceUpdate) bool); ok {
+		r1 = rf(ctx, marketPriceUpdates)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
+// UpdatePnlPrice provides a mock function with given fields: ctx, update
+func (_m *PricesKeeper) UpdatePnlPrice(ctx types.Context, update *pricestypes.MarketPnlPriceUpdate) error {
+	ret := _m.Called(ctx, update)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdatePnlPrice")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPnlPriceUpdate) error); ok {
+		r0 = rf(ctx, update)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -273,16 +301,34 @@ func (_m *PricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, 
 	return r0
 }
 
-// UpdateMarketPrice provides a mock function with given fields: ctx, updates
-func (_m *PricesKeeper) UpdateMarketPrice(ctx types.Context, updates *pricestypes.MarketPriceUpdates_MarketPriceUpdate) error {
-	ret := _m.Called(ctx, updates)
+// UpdateSmoothedSpotPrices provides a mock function with given fields: ctx, linearInterpolateFunc
+func (_m *PricesKeeper) UpdateSmoothedSpotPrices(ctx types.Context, linearInterpolateFunc func(uint64, uint64, uint32) (uint64, error)) error {
+	ret := _m.Called(ctx, linearInterpolateFunc)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateMarketPrice")
+		panic("no return value specified for UpdateSmoothedSpotPrices")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdates_MarketPriceUpdate) error); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, func(uint64, uint64, uint32) (uint64, error)) error); ok {
+		r0 = rf(ctx, linearInterpolateFunc)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateSpotAndPnlMarketPrices provides a mock function with given fields: ctx, updates
+func (_m *PricesKeeper) UpdateSpotAndPnlMarketPrices(ctx types.Context, updates *pricestypes.MarketPriceUpdate) error {
+	ret := _m.Called(ctx, updates)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateSpotAndPnlMarketPrices")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdate) error); ok {
 		r0 = rf(ctx, updates)
 	} else {
 		r0 = ret.Error(0)
@@ -291,17 +337,17 @@ func (_m *PricesKeeper) UpdateMarketPrice(ctx types.Context, updates *pricestype
 	return r0
 }
 
-// UpdateSmoothedPrices provides a mock function with given fields: ctx, linearInterpolateFunc
-func (_m *PricesKeeper) UpdateSmoothedPrices(ctx types.Context, linearInterpolateFunc func(uint64, uint64, uint32) (uint64, error)) error {
-	ret := _m.Called(ctx, linearInterpolateFunc)
+// UpdateSpotPrice provides a mock function with given fields: ctx, update
+func (_m *PricesKeeper) UpdateSpotPrice(ctx types.Context, update *pricestypes.MarketSpotPriceUpdate) error {
+	ret := _m.Called(ctx, update)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateSmoothedPrices")
+		panic("no return value specified for UpdateSpotPrice")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, func(uint64, uint64, uint32) (uint64, error)) error); ok {
-		r0 = rf(ctx, linearInterpolateFunc)
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketSpotPriceUpdate) error); ok {
+		r0 = rf(ctx, update)
 	} else {
 		r0 = ret.Error(0)
 	}
