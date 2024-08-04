@@ -1,6 +1,7 @@
 package constants
 
 import (
+	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	pricefeedclient "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
@@ -359,22 +360,49 @@ var (
 		MarketId2: []byte("invalid"),
 	}
 
-	ValidVEPrice = map[uint32][]byte{
-		MarketId0: Price5Bytes,
-		MarketId1: Price6Bytes,
-		MarketId2: Price7Bytes,
+	ValidVEPrice = map[uint32]*vetypes.DaemonVoteExtension_PricePair{
+		MarketId0: {
+			SpotPrice: Price5Bytes,
+			PnlPrice:  Price5Bytes,
+		},
+		MarketId1: {
+			SpotPrice: Price6Bytes,
+			PnlPrice:  Price6Bytes,
+		},
+		MarketId2: {
+			SpotPrice: Price7Bytes,
+			PnlPrice:  Price7Bytes,
+		},
 	}
 
-	InvalidVEPriceBytes = map[uint32][]byte{
-		MarketId0: Price5NegativeBytes,
-		MarketId1: Price6NegativeBytes,
-		MarketId2: Price7NegativeBytes,
+	InvalidVEPriceBytes = map[uint32]*vetypes.DaemonVoteExtension_PricePair{
+		MarketId0: {
+			SpotPrice: Price5NegativeBytes,
+			PnlPrice:  Price5NegativeBytes,
+		},
+		MarketId1: {
+			SpotPrice: Price6NegativeBytes,
+			PnlPrice:  Price6NegativeBytes,
+		},
+		MarketId2: {
+			SpotPrice: Price7NegativeBytes,
+			PnlPrice:  Price7NegativeBytes,
+		},
 	}
 
-	InvalidVePricesMarketIds = map[uint32][]byte{
-		99:  Price5Bytes,
-		101: Price6Bytes,
-		102: Price7Bytes,
+	InvalidVePricesMarketIds = map[uint32]*vetypes.DaemonVoteExtension_PricePair{
+		99: {
+			SpotPrice: Price5Bytes,
+			PnlPrice:  Price5Bytes,
+		},
+		101: {
+			SpotPrice: Price6Bytes,
+			PnlPrice:  Price6Bytes,
+		},
+		102: {
+			SpotPrice: Price7Bytes,
+			PnlPrice:  Price7Bytes,
+		},
 	}
 
 	ValidEmptyMarketParams         = []types.MarketParam{}

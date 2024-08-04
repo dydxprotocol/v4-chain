@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
+	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	testtx "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/tx"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
@@ -69,7 +70,7 @@ func (b BlockAdvancementWithErrors) AdvanceToBlock(
 		_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 			&tApp.App.ConsumerKeeper,
 			ctx,
-			map[uint32]uint64{},
+			map[uint32]ve.VEPricePair{},
 			int64(blockHeight),
 		)
 		require.NoError(t, err)

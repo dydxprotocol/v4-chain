@@ -8,6 +8,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/prepare"
 	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	prepareutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -17,7 +18,6 @@ import (
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perpetualtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
@@ -52,9 +52,9 @@ type PerpareProposalHandlerTC struct {
 	clobEncoder sdktypes.TxEncoder
 
 	pricesParamsResp              []pricestypes.MarketParam
-	pricesMarketPriceFromByesResp *pricestypes.MarketPriceUpdates_MarketPriceUpdate
+	pricesMarketPriceFromByesResp *pricestypes.MarketPriceUpdate
 
-	expectedPrices map[uint32][]byte
+	expectedPrices map[uint32]*vetypes.DaemonVoteExtension_PricePair
 	expectedTxs    [][]byte
 
 	height int64
@@ -904,7 +904,13 @@ func getResponseTransactionsWithoutExtInfo(txs [][]byte) [][]byte {
 	return txs[1:]
 }
 
-func validateVotesAgainstExpectedPrices(t *testing.T, expectedPrices map[uint32][]byte, extCommitInfoBz []byte, extcodec vecodec.ExtendedCommitCodec, votecodec vecodec.VoteExtensionCodec) {
+func validateVotesAgainstExpectedPrices(
+	t *testing.T,
+	expectedPrices map[uint32]*vetypes.DaemonVoteExtension_PricePair,
+	extCommitInfoBz []byte,
+	extcodec vecodec.ExtendedCommitCodec,
+	votecodec vecodec.VoteExtensionCodec,
+) {
 	extCommitInfo, err := extcodec.Decode(extCommitInfoBz)
 	require.NoError(t, err)
 	for _, vote := range extCommitInfo.Votes {
