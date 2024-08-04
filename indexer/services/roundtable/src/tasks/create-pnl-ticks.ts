@@ -2,9 +2,6 @@ import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   BlockFromDatabase,
   BlockTable,
-  LEADERBOARD_TIMESPAN,
-  LeaderboardPnlCreateObject,
-  LeaderboardPnlTable,
   PnlTicksCreateObject,
   PnlTicksTable,
   Transaction,
@@ -94,46 +91,6 @@ export default async function runTask(): Promise<void> {
     `${config.SERVICE_NAME}_generate_ticks_timing`,
     new Date().getTime() - startNewTicksCreation,
   );
-
-  await updateLeaderboardPnlTable();
-}
-
-async function updateLeaderboardPnlTable() {
-  for (const timespan of Object.values(LEADERBOARD_TIMESPAN)) {
-    const leaderboardPnlObjects: LeaderboardPnlCreateObject[] = [];
-
-    const txId: number = await Transaction.start();
-    try {
-      leaderboardPnlObjects.push(...await PnlTicksTable.getRankedPnlTicks(timespan));
-    } catch (error) {
-      logger.error({
-        at: 'create-pnl-ticks#runTask',
-        message: 'Error when getting ranked pnl ticks',
-        error,
-        timespan,
-        txId,
-      });
-      return;
-    } finally {
-      await Transaction.rollback(txId);
-    }
-    await insertLeaderboardPnlObjects(leaderboardPnlObjects);
-  }
-}
-
-async function insertLeaderboardPnlObjects(leaderboardPnlObjects: LeaderboardPnlCreateObject[]) {
-  const chunkedLeaderboardPnlObjects = _.chunk(
-    leaderboardPnlObjects, config.LEADERBOARD_PNL_MAX_ROWS_PER_UPSERT);
-  for (const leaderboardPnlObjectsToUpsert of chunkedLeaderboardPnlObjects) {
-    const txId: number = await Transaction.start();
-    try {
-      await LeaderboardPnlTable.bulkUpsert(leaderboardPnlObjectsToUpsert, { txId });
-      await Transaction.commit(txId);
-    } catch (e) {
-      await Transaction.rollback(txId);
-      return;
-    }
-  }
 }
 
 async function batchCreateNewTicks(

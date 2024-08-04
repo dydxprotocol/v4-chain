@@ -1,11 +1,14 @@
 import _ from 'lodash';
 import { QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS, ZERO_TIME_ISO_8601, LEADERBOARD_TIMESPAN } from '../constants';
+import {
+  BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS, ZERO_TIME_ISO_8601,
+} from '../constants';
 import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllInjectableVariables, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
+import { getVaultAddresses } from '../lib/helpers';
 import PnlTicksModel from '../models/pnl-ticks-model';
 import {
   Options,
@@ -18,6 +21,7 @@ import {
   QueryConfig,
   PaginationFromDatabase,
   LeaderboardPnlCreateObject,
+  LeaderboardPnlTimeSpan,
 } from '../types';
 
 export function uuid(
@@ -246,22 +250,6 @@ export async function findLatestProcessedBlocktimeAndCount(): Promise<{
   };
 }
 
-function convertTimespanToSQL(timeSpan: string): string {
-  const timeSpanEnum: LEADERBOARD_TIMESPAN = LEADERBOARD_TIMESPAN[timeSpan as keyof typeof LEADERBOARD_TIMESPAN];
-  switch (timeSpan) {
-    case 'ONE_DAY':
-      return '1 days';
-    case 'SEVEN_DAYS':
-      return '7 days';
-    case 'THIRTY_DAYS':
-      return '30 days';
-    case 'ONE_YEAR':
-      return '365 days';
-    default:
-      throw new Error(`Invalid time span: ${timeSpan}`);
-  }
-}
-
 export async function findMostRecentPnlTickForEachAccount(
   createdOnOrAfterHeight: string,
 ): Promise<{
@@ -290,72 +278,95 @@ export async function getRankedPnlTicks(
   timeSpan: string,
 ): Promise<LeaderboardPnlCreateObject[]> {
   if (timeSpan === 'ALL_TIME') {
-    return getLatestRankedPnlTicks();
+    return getAllTimeRankedPnlTicks();
   }
   return getRankedPnlTicksForTimeSpan(timeSpan);
 }
 
+function convertTimespanToSQL(timeSpan: string): string {
+  const timeSpanEnum: LeaderboardPnlTimeSpan = LeaderboardPnlTimeSpan[
+    timeSpan as keyof typeof LeaderboardPnlTimeSpan];
+  switch (timeSpanEnum) {
+    case LeaderboardPnlTimeSpan.ONE_DAY:
+      return '1 days';
+    case LeaderboardPnlTimeSpan.SEVEN_DAYS:
+      return '7 days';
+    case LeaderboardPnlTimeSpan.THIRTY_DAYS:
+      return '30 days';
+    case LeaderboardPnlTimeSpan.ONE_YEAR:
+      return '365 days';
+    default:
+      throw new Error(`Invalid time span: ${timeSpan}`);
+  }
+}
+
+/**
+ * Constructs a complex SQL query to calculate the Pnl difference and current equity
+ * of subaccounts over a specified time span, ranking them by their PnL.
+ *
+ *  This has 5 main parts
+ * 1. latest_subaccount_pnl_x_days_ago: Identifies the most recent PnL tick for each subaccount
+ *    before the specified time span. It filters out subaccounts which are not parent
+ *    subaccounts or associated child subaccounts. It also excludes any addresses
+ *    that are vault addresses.
+ *
+ * 2. latest_pnl: Finds the latest PnL tick for each subaccount as of the current date,
+ *    applying the same filters as latest_subaccount_pnl_x_days_ago.
+ *
+ * 3. subaccount_pnl_difference: Calculates the difference in PnL between the
+ *    current date and the start of the specified time span for each subaccount.
+ *
+ * 4. aggregated_results: Aggregates the PnL differences and current equity for
+ *    all subaccounts, grouping by address.
+ *
+ * 5. The final SELECT statement then ranks the addresses based on their total PnL 
+ *    in descending order, providing a snapshot of subaccount performance over the 
+ *    specified time span.
+ *
+*/
 async function getRankedPnlTicksForTimeSpan(
   timeSpan: string,
 ): Promise<LeaderboardPnlCreateObject[]> {
-
-  const interval_sql_string: string = convertTimespanToSQL(timeSpan);
+  const vaultAddresses: string[] = getVaultAddresses();
+  const vaultAddressesString: string = vaultAddresses.map((address) => `'${address}'`).join(',');
+  const intervalSqlString: string = convertTimespanToSQL(timeSpan);
   const result: {
     rows: LeaderboardPnlCreateObject[]
   } = await knexReadReplica.getConnection().raw(
     `
-    WITH latest_subaccount_pnl_x_days_ago_ranked AS (
-      SELECT
+    WITH latest_subaccount_pnl_x_days_ago AS (
+      SELECT DISTINCT ON (a."subaccountId")
           a."subaccountId",
           a."totalPnl",
-          b."address",
-          ROW_NUMBER() OVER (PARTITION BY a."subaccountId" ORDER BY a."blockHeight" DESC) AS "rn"
+          b."address"
       FROM
           pnl_ticks a
       LEFT JOIN
           subaccounts b ON a."subaccountId" = b."id"
       WHERE
-          a."createdAt"::date <= (CURRENT_DATE - INTERVAL '${interval_sql_string}')
+          a."createdAt"::date <= (CURRENT_DATE - INTERVAL '${intervalSqlString}')
           AND (b."subaccountNumber" % 128) = 0
+          AND b."address" NOT IN (${vaultAddressesString})
+      ORDER BY a."subaccountId", a."blockHeight" DESC
     ),
-    latest_subaccount_pnl_x_days_ago AS (
-      SELECT
+    latest_pnl as (
+      SELECT DISTINCT ON (a."subaccountId")
           "subaccountId",
           "totalPnl",
-          "address"
-      FROM 
-          latest_subaccount_pnl_x_days_ago_ranked   
-      WHERE
-          "rn" = 1
-    ), latest_pnl_ranked as (
-      SELECT
-          "subaccountId",
-          "totalPnl",
-          "netTransfers",
           "equity" as "currentEquity",
-          "address",
-          ROW_NUMBER() OVER (PARTITION BY "subaccountId" ORDER BY "blockHeight" DESC) AS "rn"
+          "address"
       FROM
           pnl_ticks a left join subaccounts b ON a."subaccountId"=b."id"
       WHERE
           "createdAt"::date = CURRENT_DATE
           AND (b."subaccountNumber" % 128) = 0
-    ), latest_pnl as(
-      SELECT
-          "subaccountId",
-          "totalPnl",
-          "netTransfers",
-          "currentEquity" ,
-          "address"
-      FROM 
-          latest_pnl_ranked
-      WHERE
-          "rn" = 1
-    ), subaccount_pnl_difference as(
+          AND b."address" NOT IN (${vaultAddressesString})
+      ORDER BY a."subaccountId", "blockHeight" DESC
+    ), 
+    subaccount_pnl_difference as(
       SELECT
         a."address",
         a."totalPnl" - COALESCE(b."totalPnl", 0) as "pnlDifference",
-        a."netTransfers" as "netTransfers",
         a."currentEquity" as "currentEquity"
       FROM latest_pnl a left join latest_subaccount_pnl_x_days_ago b
       ON a."subaccountId"=b."subaccountId"
@@ -363,7 +374,6 @@ async function getRankedPnlTicksForTimeSpan(
     SELECT
       "address",
       sum(subaccount_pnl_difference."pnlDifference") as "totalPnl",
-      sum(subaccount_pnl_difference."netTransfers") as "netTransfers",
       sum(subaccount_pnl_difference."currentEquity") as "currentEquity"
     FROM
       subaccount_pnl_difference
@@ -383,41 +393,43 @@ async function getRankedPnlTicksForTimeSpan(
   return result.rows;
 }
 
-
-async function getLatestRankedPnlTicks(): Promise<LeaderboardPnlCreateObject[]> {
+/**
+ * Constructs a query to calculate and rank the Profit and Loss (PnL) and current equity of
+ * subaccounts for the current day. This query is divided into 3 main parts:
+ * 1. latest_pnl: This selects the most recent PnL tick for each Parent subaccount 
+ *    and associated child subaccounts. It filters subaccounts based on the current date.
+ *    Additionally, it excludes any addresses that are vault addresses.
+ *
+ * 2. aggregated_results: This CTE aggregates the results from latest_pnl by address.
+ *    It sums up the total PnL and current equity for each address.
+ *
+ * 3. The final SELECT statement calculates a rank for each address based on the total PnL in
+ *    descending order along with associated fields
+ */
+async function getAllTimeRankedPnlTicks(): Promise<LeaderboardPnlCreateObject[]> {
+  const vaultAddresses: string[] = getVaultAddresses();
+  const vaultAddressesString: string = vaultAddresses.map((address) => `'${address}'`).join(',');
   const result: {
     rows: LeaderboardPnlCreateObject[]
   } = await knexReadReplica.getConnection().raw(
     `
-    WITH latest_pnl_ranked as (
-      SELECT
+    WITH latest_pnl as (
+      SELECT DISTINCT ON (a."subaccountId")
           "subaccountId",
           "totalPnl",
-          "netTransfers",
           "equity" as "currentEquity",
-          "address",
-          ROW_NUMBER() OVER (PARTITION BY "subaccountId" ORDER BY "blockHeight" DESC) AS "rn"
+          "address"
       FROM
           pnl_ticks a left join subaccounts b ON a."subaccountId"=b."id"
       WHERE
           "createdAt"::date = CURRENT_DATE
           AND (b."subaccountNumber" % 128) = 0
-    ), latest_pnl as(
-      SELECT
-          "subaccountId",
-          "totalPnl",
-          "netTransfers",
-          "currentEquity" ,
-          "address"
-      FROM 
-          latest_pnl_ranked
-      WHERE
-          "rn" = 1
+          AND b."address" NOT IN (${vaultAddressesString})
+      ORDER BY a."subaccountId", "blockHeight" DESC
     ), aggregated_results as(
     SELECT
       "address",
       sum(latest_pnl."totalPnl") as "totalPnl",
-      sum(latest_pnl."netTransfers") as "netTransfers",
       sum(latest_pnl."currentEquity") as "currentEquity"
     FROM
       latest_pnl
