@@ -110,11 +110,11 @@ func TestUpdateSmoothedPrices(t *testing.T) {
 			keepertest.CreateTestMarkets(t, ctx, k)
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 			for market, smoothedPrice := range tc.smoothedPrices {
-				marketToSmoothedPrices.PushSmoothedPrice(market, smoothedPrice)
+				marketToSmoothedPrices.PushSmoothedSpotPrice(market, smoothedPrice)
 			}
 
 			// Run.
-			err := k.UpdateSmoothedPrices(ctx, tc.linearInterpolateFunc)
+			err := k.UpdateSmoothedSpotPrices(ctx, tc.linearInterpolateFunc)
 			if tc.expectedErr != "" {
 				require.EqualError(t, err, tc.expectedErr)
 			} else {
@@ -122,7 +122,7 @@ func TestUpdateSmoothedPrices(t *testing.T) {
 			}
 
 			// Validate.
-			require.Equal(t, tc.expectedResult, marketToSmoothedPrices.GetSmoothedPricesForTest())
+			require.Equal(t, tc.expectedResult, marketToSmoothedPrices.GetSmoothedSpotPricesForTest())
 		})
 	}
 }

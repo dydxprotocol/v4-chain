@@ -31,25 +31,24 @@ func TestCrossingPriceUpdateCutoffPpm(t *testing.T) {
 func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
-		updateMarketPrices []*types.MarketPriceUpdates_MarketPriceUpdate
-		indexPrices        []*api.MarketPriceUpdate
+		updateMarketPrice *types.MarketPriceUpdate
+		indexPrices       []*api.MarketPriceUpdate
 	}{
 		"Index price does not exist": {
-			updateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
-				{
-					MarketId: constants.MarketId0,
-					Price:    11,
-				},
+			updateMarketPrice: &types.MarketPriceUpdate{
+				MarketId:  constants.MarketId0,
+				SpotPrice: 11,
+				PnlPrice:  11,
 			},
 			// Skipping price cache update, so the index price does not exist.
 		},
 		"Index price crossing = true, old_ticks > 1, new_ticks <= sqrt(old_ticks) = false": {
-			updateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
-				{
-					MarketId: constants.MarketId0,
-					Price:    price_5_015_000_000,
-				},
+			updateMarketPrice: &types.MarketPriceUpdate{
+				MarketId:  constants.MarketId0,
+				SpotPrice: price_5_015_000_000,
+				PnlPrice:  price_5_015_000_000,
 			},
+
 			indexPrices: []*api.MarketPriceUpdate{
 				{
 					MarketId: constants.MarketId0,
@@ -64,11 +63,10 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 			},
 		},
 		"Index price crossing = true, old_ticks <= 1, new_ticks <= old_ticks = false": {
-			updateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
-				{
-					MarketId: constants.MarketId0,
-					Price:    price_5_015_000_000,
-				},
+			updateMarketPrice: &types.MarketPriceUpdate{
+				MarketId:  constants.MarketId0,
+				SpotPrice: price_5_015_000_000,
+				PnlPrice:  price_5_015_000_000,
 			},
 			indexPrices: []*api.MarketPriceUpdate{
 				{
@@ -84,11 +82,10 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 			},
 		},
 		"Index price trends in the opposite direction of update price from current price": {
-			updateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
-				{
-					MarketId: constants.MarketId0,
-					Price:    price_5_005_000_000,
-				},
+			updateMarketPrice: &types.MarketPriceUpdate{
+				MarketId:  constants.MarketId0,
+				SpotPrice: price_5_005_000_000,
+				PnlPrice:  price_5_005_000_000,
 			},
 			indexPrices: []*api.MarketPriceUpdate{
 				{
@@ -114,90 +111,11 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 
 			// Run.
-			msg := &types.MarketPriceUpdates{
-				MarketPriceUpdates: tc.updateMarketPrices,
-			}
-			err := k.PerformStatefulPriceUpdateValidation(ctx, msg) // skips non-deterministic checks.
+			isSpotValid, isPnlValid := k.PerformStatefulPriceUpdateValidation(ctx, tc.updateMarketPrice) // skips non-deterministic checks.
 
 			// Validate.
-			require.NoError(t, err)
-		})
-	}
-}
-
-func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
-	tests := map[string]struct {
-		// Setup.
-		updateMarketPrices  []*types.MarketPriceUpdates_MarketPriceUpdate
-		indexPrices         []*api.MarketPriceUpdate
-		smoothedIndexPrices map[uint32]uint64
-
-		// Expected.
-		expectedMarketIds []uint32
-	}{
-		"Empty proposed updates, Empty local updates": {
-			expectedMarketIds: nil,
-		},
-		"Empty proposed updates, Non-empty local updates": {
-			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
-			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,
-			// The returned market ids must be sorted.
-			expectedMarketIds: []uint32{
-				constants.MarketId0, constants.MarketId1, constants.MarketId2, constants.MarketId3, constants.MarketId4,
-			},
-		},
-		"Non-empty proposed updates, Empty local updates": {
-			updateMarketPrices: constants.ValidMarketPriceUpdates,
-			expectedMarketIds:  nil,
-		},
-		"Non-empty proposed updates, Non-empty local updates, no missing markets": {
-			updateMarketPrices:  constants.ValidMarketPriceUpdates,
-			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
-			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,
-			expectedMarketIds:   nil,
-		},
-		"Non-empty proposed updates, Non-empty local updates, single missing market": {
-			updateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
-				types.NewMarketPriceUpdate(constants.MarketId0, constants.Price5),
-				types.NewMarketPriceUpdate(constants.MarketId1, constants.Price6),
-				types.NewMarketPriceUpdate(constants.MarketId3, constants.Price7),
-				types.NewMarketPriceUpdate(constants.MarketId4, constants.Price4),
-			},
-			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
-			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,
-			expectedMarketIds:   []uint32{constants.MarketId2},
-		},
-		"Non-empty proposed updates, Non-empty local updates, multiple missing markets, sorted": {
-			updateMarketPrices: []*types.MarketPriceUpdates_MarketPriceUpdate{
-				{
-					MarketId: constants.MarketId1,
-					Price:    constants.Price6,
-				},
-			},
-			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
-			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,
-			// The returned market ids must be sorted.
-			expectedMarketIds: []uint32{constants.MarketId0, constants.MarketId2, constants.MarketId3, constants.MarketId4},
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			// Setup.
-			ctx, k, _, indexPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
-			mockTimeProvider.On("Now").Return(constants.TimeT)
-
-			keepertest.CreateTestMarkets(t, ctx, k)
-			for market, price := range tc.smoothedIndexPrices {
-				marketToSmoothedPrices.PushSmoothedPrice(market, price)
-			}
-			indexPriceCache.UpdatePrices(tc.indexPrices)
-
-			// Run.
-			missingMarketIds := k.GetMarketsMissingFromPriceUpdates(ctx, tc.updateMarketPrices)
-
-			// Validate.
-			// Using `Equal` here to test for slice ordering.
-			require.Equal(t, tc.expectedMarketIds, missingMarketIds)
+			require.True(t, isSpotValid)
+			require.True(t, isPnlValid)
 		})
 	}
 }

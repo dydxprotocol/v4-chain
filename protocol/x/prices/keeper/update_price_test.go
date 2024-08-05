@@ -16,16 +16,12 @@ const (
 )
 
 var (
-	emptyResult = &types.MarketPriceUpdates{
-		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{},
-	}
+	emptyResult = []*types.MarketSpotPriceUpdate{}
 
-	validMarket0UpdateResult = &types.MarketPriceUpdates{
-		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
-			{
-				MarketId: constants.MarketId0,
-				Price:    fiveBillionAndFiveMillion,
-			},
+	validMarket0UpdateResult = []*types.MarketSpotPriceUpdate{
+		{
+			MarketId:  constants.MarketId0,
+			SpotPrice: fiveBillionAndFiveMillion,
 		},
 	}
 
@@ -123,7 +119,7 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 		skipCreateMarketsAndExchanges bool
 
 		// Expected.
-		expectedMsg *types.MarketPriceUpdates
+		expectedMsg []*types.MarketSpotPriceUpdate
 	}{
 		"Empty result: no markets": {
 			skipCreateMarketsAndExchanges: true,
@@ -197,14 +193,12 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 				constants.MarketId1: {constants.Price1 + 1},
 				constants.MarketId2: {constants.Price2},
 			},
-			expectedMsg: &types.MarketPriceUpdates{
-				MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
-					types.NewMarketPriceUpdate(constants.MarketId0, constants.Price4),
-					types.NewMarketPriceUpdate(constants.MarketId1, constants.Price1+1),
-					types.NewMarketPriceUpdate(constants.MarketId2, constants.Price2),
-					types.NewMarketPriceUpdate(constants.MarketId3, constants.Price3),
-					types.NewMarketPriceUpdate(constants.MarketId4, constants.Price3),
-				},
+			expectedMsg: []*types.MarketSpotPriceUpdate{
+				types.NewMarketSpotPriceUpdate(constants.MarketId0, constants.Price4),
+				types.NewMarketSpotPriceUpdate(constants.MarketId1, constants.Price1+1),
+				types.NewMarketSpotPriceUpdate(constants.MarketId2, constants.Price2),
+				types.NewMarketSpotPriceUpdate(constants.MarketId3, constants.Price3),
+				types.NewMarketSpotPriceUpdate(constants.MarketId4, constants.Price3),
 			},
 		},
 		"Mix of valid and invalid index prices": {
@@ -229,14 +223,12 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 				constants.MarketId1: {0},                // Invalid price, so index price is used.
 				constants.MarketId9: {constants.Price1}, // Invalid market.
 			},
-			expectedMsg: &types.MarketPriceUpdates{
-				MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
-					types.NewMarketPriceUpdate(constants.MarketId0, constants.Price4),
-					types.NewMarketPriceUpdate(constants.MarketId1, constants.Price1),
-					types.NewMarketPriceUpdate(constants.MarketId2, constants.Price2),
-					types.NewMarketPriceUpdate(constants.MarketId3, constants.Price3),
-					types.NewMarketPriceUpdate(constants.MarketId4, constants.Price3),
-				},
+			expectedMsg: []*types.MarketSpotPriceUpdate{
+				types.NewMarketSpotPriceUpdate(constants.MarketId0, constants.Price4),
+				types.NewMarketSpotPriceUpdate(constants.MarketId1, constants.Price1),
+				types.NewMarketSpotPriceUpdate(constants.MarketId2, constants.Price2),
+				types.NewMarketSpotPriceUpdate(constants.MarketId3, constants.Price3),
+				types.NewMarketSpotPriceUpdate(constants.MarketId4, constants.Price3),
 			},
 		},
 		"Mix of valid, invalid, and invalid historical smoothed prices": {
@@ -249,13 +241,11 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 				constants.MarketId1: {constants.Price1}, // Valid: same as index price.
 				constants.MarketId9: {constants.Price1}, // Invalid market.
 			},
-			expectedMsg: &types.MarketPriceUpdates{
-				MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
-					types.NewMarketPriceUpdate(constants.MarketId1, constants.Price1),
-					types.NewMarketPriceUpdate(constants.MarketId2, constants.Price2),
-					types.NewMarketPriceUpdate(constants.MarketId3, constants.Price3),
-					types.NewMarketPriceUpdate(constants.MarketId4, constants.Price3),
-				},
+			expectedMsg: []*types.MarketSpotPriceUpdate{
+				types.NewMarketSpotPriceUpdate(constants.MarketId1, constants.Price1),
+				types.NewMarketSpotPriceUpdate(constants.MarketId2, constants.Price2),
+				types.NewMarketSpotPriceUpdate(constants.MarketId3, constants.Price3),
+				types.NewMarketSpotPriceUpdate(constants.MarketId4, constants.Price3),
 			},
 		},
 	}
@@ -274,12 +264,12 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 			// Therefore, add them in reverse order to the `marketSmoothedPrices` cache.
 			for market, historicalSmoothedPrices := range tc.historicalSmoothedIndexPrices {
 				for i := len(historicalSmoothedPrices) - 1; i >= 0; i-- {
-					marketSmoothedPrices.PushSmoothedPrice(market, historicalSmoothedPrices[i])
+					marketSmoothedPrices.PushSmoothedSpotPrice(market, historicalSmoothedPrices[i])
 				}
 			}
 
 			// Run.
-			result := k.GetValidMarketPriceUpdates(ctx)
+			result := k.GetValidMarketSpotPriceUpdates(ctx)
 
 			// Validate.
 			require.Equal(t, tc.expectedMsg, result)

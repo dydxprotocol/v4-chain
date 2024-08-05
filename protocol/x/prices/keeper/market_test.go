@@ -29,9 +29,10 @@ func TestCreateMarket(t *testing.T) {
 			MinPriceChangePpm:  uint32(9_999),
 		},
 		types.MarketPrice{
-			Id:       0,
-			Exponent: int32(-6),
-			Price:    constants.FiveBillion,
+			Id:        0,
+			Exponent:  int32(-6),
+			SpotPrice: constants.FiveBillion,
+			PnlPrice:  constants.FiveBillion,
 		},
 	)
 
@@ -51,7 +52,8 @@ func TestCreateMarket(t *testing.T) {
 	// Verify expected price of 0 created.
 	require.Equal(t, uint32(0), marketPrice.Id)
 	require.Equal(t, int32(-6), marketPrice.Exponent)
-	require.Equal(t, constants.FiveBillion, marketPrice.Price)
+	require.Equal(t, constants.FiveBillion, marketPrice.SpotPrice)
+	require.Equal(t, constants.FiveBillion, marketPrice.PnlPrice)
 
 	require.Equal(t, marketParam.Pair, metrics.GetMarketPairForTelemetry(marketParam.Id))
 
@@ -200,9 +202,10 @@ func TestCreateMarket_Errors(t *testing.T) {
 					ExchangeConfigJson: tc.exchangeConfigJson,
 				},
 				types.MarketPrice{
-					Id:       0 + marketPriceIdOffset,
-					Exponent: int32(-6) + marketPriceExponentOffset,
-					Price:    tc.price,
+					Id:        0 + marketPriceIdOffset,
+					Exponent:  int32(-6) + marketPriceExponentOffset,
+					SpotPrice: tc.price,
+					PnlPrice:  tc.price,
 				},
 			)
 			require.EqualError(t, err, tc.expectedErr)
