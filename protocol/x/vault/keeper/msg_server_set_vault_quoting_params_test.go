@@ -43,6 +43,14 @@ func TestMsgSetVaultQuotingParams(t *testing.T) {
 			},
 			expectedErr: "invalid authority",
 		},
+		"Failure - Empty Authority": {
+			msg: &types.MsgSetVaultQuotingParams{
+				Authority:     "",
+				VaultId:       constants.Vault_Clob0,
+				QuotingParams: constants.QuotingParams,
+			},
+			expectedErr: "invalid authority",
+		},
 		"Failure - Vault Clob 0. Invalid Quoting Params": {
 			msg: &types.MsgSetVaultQuotingParams{
 				Authority: lib.GovModuleAddress.String(),
