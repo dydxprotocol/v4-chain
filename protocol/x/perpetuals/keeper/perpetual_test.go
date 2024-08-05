@@ -349,9 +349,10 @@ func TestHasPerpetual(t *testing.T) {
 			ExchangeConfigJson: "{}",
 		},
 		pricestypes.MarketPrice{
-			Id:       0,
-			Exponent: -10,
-			Price:    1_000, // leave this as a placeholder b/c we cannot set the price to 0
+			Id:        0,
+			Exponent:  -10,
+			SpotPrice: 1_000, // leave this as a placeholder b/c we cannot set the price to 0
+			PnlPrice:  1_000, // leave this as a placeholder b/c we cannot set the price to 0
 		},
 	)
 	require.NoError(t, err)
@@ -427,9 +428,10 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 			ExchangeConfigJson: "{}",
 		},
 		pricestypes.MarketPrice{
-			Id:       0,
-			Exponent: -10,
-			Price:    1_000, // leave this as a placeholder b/c we cannot set the price to 0
+			Id:        0,
+			Exponent:  -10,
+			SpotPrice: 1_000, // leave this as a placeholder b/c we cannot set the price to 0
+			PnlPrice:  1_000, // leave this as a placeholder b/c we cannot set the price to 0
 		},
 	)
 	require.NoError(t, err)
@@ -825,20 +827,22 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
-					Id:       marketId,
-					Exponent: tc.exponent,
-					Price:    1_000, // leave this as a placeholder b/c we cannot set the price to 0
+					Id:        marketId,
+					Exponent:  tc.exponent,
+					SpotPrice: 1_000, // leave this as a placeholder b/c we cannot set the price to 0
+					PnlPrice:  1_000, // leave this as a placeholder b/c we cannot set the price to 0
 				},
 			)
 			require.NoError(t, err)
 
 			// Update `Market.price`. By updating prices this way, we can simulate conditions where the oracle
 			// price may become 0.
-			err = pc.PricesKeeper.UpdateMarketPrice(
+			err = pc.PricesKeeper.UpdateSpotAndPnlMarketPrices(
 				pc.Ctx,
-				&pricestypes.MarketPriceUpdates_MarketPriceUpdate{
-					MarketId: marketId,
-					Price:    tc.price,
+				&pricestypes.MarketPriceUpdate{
+					MarketId:  marketId,
+					SpotPrice: tc.price,
+					PnlPrice:  tc.price,
 				},
 			)
 			require.NoError(t, err)
@@ -1059,9 +1063,10 @@ func TestGetNetNotional_Success(t *testing.T) {
 					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
-					Id:       marketId,
-					Exponent: tc.exponent,
-					Price:    tc.price,
+					Id:        marketId,
+					Exponent:  tc.exponent,
+					SpotPrice: tc.price,
+					PnlPrice:  tc.price,
 				},
 			)
 			require.NoError(t, err)
@@ -1221,9 +1226,10 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
-					Id:       marketId,
-					Exponent: tc.exponent,
-					Price:    tc.price,
+					Id:        marketId,
+					Exponent:  tc.exponent,
+					SpotPrice: tc.price,
+					PnlPrice:  tc.price,
 				},
 			)
 			require.NoError(t, err)
@@ -1384,9 +1390,10 @@ func TestGetNetCollateral_Success(t *testing.T) {
 					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
-					Id:       marketId,
-					Exponent: tc.exponent,
-					Price:    tc.price,
+					Id:        marketId,
+					Exponent:  tc.exponent,
+					SpotPrice: tc.price,
+					PnlPrice:  tc.price,
 				},
 			)
 			require.NoError(t, err)

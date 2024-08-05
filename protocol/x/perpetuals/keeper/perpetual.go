@@ -99,8 +99,9 @@ func (k Keeper) CreatePerpetual(
 			LiquidityTier:     liquidityTier,
 			MarketType:        marketType,
 		},
-		FundingIndex: dtypes.ZeroInt(),
-		OpenInterest: dtypes.ZeroInt(),
+		FundingIndex:    dtypes.ZeroInt(),
+		OpenInterest:    dtypes.ZeroInt(),
+		LastFundingRate: dtypes.ZeroInt(),
 	}
 
 	// Store the new perpetual.
