@@ -31,8 +31,9 @@ func NetworkWithMarketObjects(t *testing.T, n int) (*network.Network, []types.Ma
 	// Market prices
 	for i := 0; i < n; i++ {
 		marketPrice := types.MarketPrice{
-			Id:    uint32(i),
-			Price: constants.FiveBillion,
+			Id:        uint32(i),
+			SpotPrice: constants.FiveBillion,
+			PnlPrice:  constants.FiveBillion,
 		}
 		state.MarketPrices = append(state.MarketPrices, marketPrice)
 	}
