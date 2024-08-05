@@ -38,6 +38,7 @@ func createRatelimitKeeper(
 
 	ics4wrapper := mocks.ICS4Wrapper{}
 
+	sdaidaemontypes.SDAIEventFetcher = &sdaidaemontypes.MockEventFetcher{}
 	sDAIEventManager := sdaidaemontypes.NewsDAIEventManager()
 
 	k := ratelimitkeeper.NewKeeper(

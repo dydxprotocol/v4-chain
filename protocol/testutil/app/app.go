@@ -150,6 +150,7 @@ func DefaultTestApp(customFlags map[string]interface{}, baseAppOptions ...func(*
 		logger, _ = testlog.TestLogger()
 	}
 	db := dbm.NewMemDB()
+	sdaitypes.SDAIEventFetcher = &sdaitypes.MockEventFetcher{}
 	dydxApp := app.New(
 		logger,
 		db,
