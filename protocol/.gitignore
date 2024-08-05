@@ -10,7 +10,6 @@
 *.code-workspace
 
 # Build
-bin
 build
 vendor
 .vendor-new
