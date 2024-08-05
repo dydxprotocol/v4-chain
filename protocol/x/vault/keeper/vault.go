@@ -82,7 +82,10 @@ func (k Keeper) DecommissionNonPositiveEquityVaults(
 	}
 }
 
-// DecommissionVault decommissions a vault by deleting its total shares and owner shares.
+// DecommissionVault decommissions a vault by
+// 1. deleting its total shares and owner shares
+// 2. deleting its address from vault address store
+// 3. deleting its quoting params if any
 func (k Keeper) DecommissionVault(
 	ctx sdk.Context,
 	vaultId types.VaultId,
@@ -102,6 +105,10 @@ func (k Keeper) DecommissionVault(
 	// Delete from vault address store.
 	vaultAddressStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultAddressKeyPrefix))
 	vaultAddressStore.Delete([]byte(vaultId.ToModuleAccountAddress()))
+
+	// Delete vault quoting params if any.
+	vaultQuotingParamsStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.QuotingParamsKeyPrefix))
+	vaultQuotingParamsStore.Delete(vaultId.ToStateKey())
 }
 
 // AddVaultToAddressStore adds a vault's address to the vault address store.

@@ -241,6 +241,8 @@ var (
 		// vault
 		"/dydxprotocol.vault.MsgDepositToVault":                     {},
 		"/dydxprotocol.vault.MsgDepositToVaultResponse":             {},
+		"/dydxprotocol.vault.MsgSetVaultQuotingParams":              {},
+		"/dydxprotocol.vault.MsgSetVaultQuotingParamsResponse":      {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": {},
 

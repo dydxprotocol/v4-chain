@@ -160,26 +160,30 @@ func TestDecommissionVault(t *testing.T) {
 		totalSharesExists bool
 		// Owners.
 		owners []string
+		// Vault quoting params.
+		quotingParams *vaulttypes.QuotingParams
 	}{
-		"Total shares doesn't exist, no owners": {
+		"Total shares doesn't exist, no owners, default quoting params": {
 			vaultId: constants.Vault_Clob0,
 		},
-		"Total shares exists, no owners": {
+		"Total shares exists, no owners, default quoting params": {
 			vaultId:           constants.Vault_Clob0,
 			totalSharesExists: true,
 		},
-		"Total shares exists, one owner": {
+		"Total shares exists, one owner, non-default quoting params": {
 			vaultId:           constants.Vault_Clob1,
 			totalSharesExists: true,
 			owners:            []string{constants.Alice_Num0.Owner},
+			quotingParams:     &constants.QuotingParams,
 		},
-		"Total shares exists, two owners": {
+		"Total shares exists, two owners, non-default quoting params": {
 			vaultId:           constants.Vault_Clob1,
 			totalSharesExists: true,
 			owners: []string{
 				constants.Alice_Num0.Owner,
 				constants.Bob_Num0.Owner,
 			},
+			quotingParams: &constants.QuotingParams,
 		},
 	}
 	for name, tc := range tests {
@@ -210,6 +214,10 @@ func TestDecommissionVault(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+			if tc.quotingParams != nil {
+				err := k.SetVaultQuotingParams(ctx, tc.vaultId, *tc.quotingParams)
+				require.NoError(t, err)
+			}
 
 			// Decommission vault.
 			k.DecommissionVault(ctx, tc.vaultId)
@@ -222,6 +230,12 @@ func TestDecommissionVault(t *testing.T) {
 				require.Equal(t, false, exists)
 			}
 			require.False(t, k.IsVault(ctx, tc.vaultId.ToModuleAccountAddress()))
+			// Check that vault quoting params are back to default.
+			require.Equal(
+				t,
+				k.GetDefaultQuotingParams(ctx),
+				k.GetVaultQuotingParams(ctx, tc.vaultId),
+			)
 		})
 	}
 }
