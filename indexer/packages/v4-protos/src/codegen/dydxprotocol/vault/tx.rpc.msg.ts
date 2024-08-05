@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgDepositToVault, MsgDepositToVaultResponse, MsgUpdateDefaultQuotingParams, MsgUpdateDefaultQuotingParamsResponse } from "./tx";
+import { MsgDepositToVault, MsgDepositToVaultResponse, MsgUpdateDefaultQuotingParams, MsgUpdateDefaultQuotingParamsResponse, MsgSetVaultQuotingParams, MsgSetVaultQuotingParamsResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -9,6 +9,9 @@ export interface Msg {
   /** UpdateDefaultQuotingParams updates the default quoting params in state. */
 
   updateDefaultQuotingParams(request: MsgUpdateDefaultQuotingParams): Promise<MsgUpdateDefaultQuotingParamsResponse>;
+  /** SetVaultQuotingParams sets the quoting parameters of a specific vault. */
+
+  setVaultQuotingParams(request: MsgSetVaultQuotingParams): Promise<MsgSetVaultQuotingParamsResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -17,6 +20,7 @@ export class MsgClientImpl implements Msg {
     this.rpc = rpc;
     this.depositToVault = this.depositToVault.bind(this);
     this.updateDefaultQuotingParams = this.updateDefaultQuotingParams.bind(this);
+    this.setVaultQuotingParams = this.setVaultQuotingParams.bind(this);
   }
 
   depositToVault(request: MsgDepositToVault): Promise<MsgDepositToVaultResponse> {
@@ -29,6 +33,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgUpdateDefaultQuotingParams.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.vault.Msg", "UpdateDefaultQuotingParams", data);
     return promise.then(data => MsgUpdateDefaultQuotingParamsResponse.decode(new _m0.Reader(data)));
+  }
+
+  setVaultQuotingParams(request: MsgSetVaultQuotingParams): Promise<MsgSetVaultQuotingParamsResponse> {
+    const data = MsgSetVaultQuotingParams.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.vault.Msg", "SetVaultQuotingParams", data);
+    return promise.then(data => MsgSetVaultQuotingParamsResponse.decode(new _m0.Reader(data)));
   }
 
 }
