@@ -61,6 +61,7 @@ message QueryVaultResponse {
     (gogoproto.nullable) = false
   ];
   NumShares total_shares = 5 [ (gogoproto.nullable) = false ];
+  QuotingParams quoting_params = 6 [ (gogoproto.nullable) = false ];
 }
 
 // QueryAllVaultsRequest is a request type for the AllVaults RPC method.
