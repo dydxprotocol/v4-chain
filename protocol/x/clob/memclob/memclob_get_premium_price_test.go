@@ -63,8 +63,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    1_000_000_000, // $10_000.
-				Exponent: -5,
+				SpotPrice: 1_000_000_000, // $10_000.
+				PnlPrice:  1_000_000_000, // $10_000.
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
@@ -110,8 +111,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    900_000_000, // $9_000.
-				Exponent: -5,
+				SpotPrice: 900_000_000, // $9_000.
+				PnlPrice:  900_000_000, // $9_000.
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
@@ -168,8 +170,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    1_000_300_000, // $10_003
-				Exponent: -5,
+				SpotPrice: 1_000_300_000, // $10_003
+				PnlPrice:  1_000_300_000, // $10_003
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
@@ -204,8 +207,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    1_000_190_000, // $10_001.9
-				Exponent: -5,
+				SpotPrice: 1_000_190_000, // $10_001.9
+				PnlPrice:  1_000_190_000, // $10_001.9
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
@@ -240,8 +244,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    999_750_000, // $9_997.5
-				Exponent: -5,
+				SpotPrice: 999_750_000, // $9_997.5
+				PnlPrice:  999_750_000, // $9_997.5
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
@@ -298,8 +303,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    999_982_000, // $9_999.5
-				Exponent: -5,
+				SpotPrice: 999_982_000, // $9_999.5
+				PnlPrice:  999_982_000, // $9_999.5
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
@@ -334,8 +340,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    1_000_100_000, // $10_001
-				Exponent: -5,
+				SpotPrice: 1_000_100_000, // $10_001
+				PnlPrice:  1_000_100_000, // $10_001
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
@@ -370,8 +377,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    999_950_000, // $9_999.5
-				Exponent: -5,
+				SpotPrice: 999_950_000, // $9_999.5
+				PnlPrice:  999_950_000, // $9_999.5
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
@@ -406,8 +414,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    1_000_000_000, // $10_000
-				Exponent: -5,
+				SpotPrice: 1_000_000_000, // $10_000
+				PnlPrice:  1_000_000_000, // $10_000
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
@@ -419,8 +428,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:              constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm:  big.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    1_000_000_000, // $10_000
-				Exponent: -5,
+				SpotPrice: 1_000_000_000, // $10_000
+				PnlPrice:  1_000_000_000, // $10_000
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
@@ -455,8 +465,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    600_000_000, // $6_000
-				Exponent: -5,
+				SpotPrice: 600_000_000, // $6_000
+				PnlPrice:  600_000_000, // $6_000
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
@@ -491,8 +502,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    1_500_000_000, // $6_000
-				Exponent: -5,
+				SpotPrice: 1_500_000_000, // $6_000
+				PnlPrice:  1_500_000_000, // $6_000
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
@@ -527,8 +539,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    999_900_000, // $9_999
-				Exponent: -5,
+				SpotPrice: 999_900_000, // $9_999
+				PnlPrice:  999_900_000, // $9_999
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
@@ -563,8 +576,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    1_000_100_000, // $10_001
-				Exponent: -5,
+				SpotPrice: 1_000_100_000, // $10_001
+				PnlPrice:  1_000_100_000, // $10_001
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
@@ -604,7 +618,8 @@ func TestGetPremiumPrice(t *testing.T) {
 			impactNotionalQuoteQuantums: big.NewInt(1000),
 
 			indexPrice: pricestypes.MarketPrice{
-				Price: 0,
+				SpotPrice: 0,
+				PnlPrice:  0,
 			},
 			expectedErr: types.ErrZeroIndexPriceForPremiumCalculation,
 		},
@@ -636,8 +651,9 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
 			indexPrice: pricestypes.MarketPrice{
-				Price:    999_750_000, // $9_997.5
-				Exponent: -5,
+				SpotPrice: 999_750_000, // $9_997.5
+				PnlPrice:  999_750_000, // $9_997.5
+				Exponent:  -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
