@@ -182,7 +182,7 @@ message StreamUpdate {
   oneof update_message {
     StreamOrderbookUpdate orderbook_update = 1;
     StreamOrderbookFill order_fill = 2;
-    StreamTakerOrderStatus taker_order_status = 3;
+    StreamTakerOrder taker_order = 3;
   }
 
   // Block height of the update.

@@ -287,7 +287,7 @@ export interface StreamOrderbookUpdatesResponseSDKType {
 export interface StreamUpdate {
   orderbookUpdate?: StreamOrderbookUpdate;
   orderFill?: StreamOrderbookFill;
-  takerOrderStatus?: StreamTakerOrderStatus;
+  takerOrder?: StreamTakerOrder;
   /** Block height of the update. */
 
   blockHeight: number;
@@ -303,7 +303,7 @@ export interface StreamUpdate {
 export interface StreamUpdateSDKType {
   orderbook_update?: StreamOrderbookUpdateSDKType;
   order_fill?: StreamOrderbookFillSDKType;
-  taker_order_status?: StreamTakerOrderStatusSDKType;
+  taker_order?: StreamTakerOrderSDKType;
   /** Block height of the update. */
 
   block_height: number;
@@ -1286,7 +1286,7 @@ function createBaseStreamUpdate(): StreamUpdate {
   return {
     orderbookUpdate: undefined,
     orderFill: undefined,
-    takerOrderStatus: undefined,
+    takerOrder: undefined,
     blockHeight: 0,
     execMode: 0
   };
@@ -1302,8 +1302,8 @@ export const StreamUpdate = {
       StreamOrderbookFill.encode(message.orderFill, writer.uint32(18).fork()).ldelim();
     }
 
-    if (message.takerOrderStatus !== undefined) {
-      StreamTakerOrderStatus.encode(message.takerOrderStatus, writer.uint32(26).fork()).ldelim();
+    if (message.takerOrder !== undefined) {
+      StreamTakerOrder.encode(message.takerOrder, writer.uint32(26).fork()).ldelim();
     }
 
     if (message.blockHeight !== 0) {
@@ -1335,7 +1335,7 @@ export const StreamUpdate = {
           break;
 
         case 3:
-          message.takerOrderStatus = StreamTakerOrderStatus.decode(reader, reader.uint32());
+          message.takerOrder = StreamTakerOrder.decode(reader, reader.uint32());
           break;
 
         case 4:
@@ -1359,7 +1359,7 @@ export const StreamUpdate = {
     const message = createBaseStreamUpdate();
     message.orderbookUpdate = object.orderbookUpdate !== undefined && object.orderbookUpdate !== null ? StreamOrderbookUpdate.fromPartial(object.orderbookUpdate) : undefined;
     message.orderFill = object.orderFill !== undefined && object.orderFill !== null ? StreamOrderbookFill.fromPartial(object.orderFill) : undefined;
-    message.takerOrderStatus = object.takerOrderStatus !== undefined && object.takerOrderStatus !== null ? StreamTakerOrderStatus.fromPartial(object.takerOrderStatus) : undefined;
+    message.takerOrder = object.takerOrder !== undefined && object.takerOrder !== null ? StreamTakerOrder.fromPartial(object.takerOrder) : undefined;
     message.blockHeight = object.blockHeight ?? 0;
     message.execMode = object.execMode ?? 0;
     return message;
