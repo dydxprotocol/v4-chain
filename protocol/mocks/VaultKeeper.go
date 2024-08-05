@@ -18,19 +18,19 @@ type VaultKeeper struct {
 	mock.Mock
 }
 
-// GetParams provides a mock function with given fields: ctx
-func (_m *VaultKeeper) GetParams(ctx types.Context) vaulttypes.Params {
+// GetDefaultQuotingParams provides a mock function with given fields: ctx
+func (_m *VaultKeeper) GetDefaultQuotingParams(ctx types.Context) vaulttypes.QuotingParams {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetParams")
+		panic("no return value specified for GetDefaultQuotingParams")
 	}
 
-	var r0 vaulttypes.Params
-	if rf, ok := ret.Get(0).(func(types.Context) vaulttypes.Params); ok {
+	var r0 vaulttypes.QuotingParams
+	if rf, ok := ret.Get(0).(func(types.Context) vaulttypes.QuotingParams); ok {
 		r0 = rf(ctx)
 	} else {
-		r0 = ret.Get(0).(vaulttypes.Params)
+		r0 = ret.Get(0).(vaulttypes.QuotingParams)
 	}
 
 	return r0
@@ -183,16 +183,16 @@ func (_m *VaultKeeper) RefreshVaultClobOrders(ctx types.Context, vaultId vaultty
 	return r0
 }
 
-// SetParams provides a mock function with given fields: ctx, params
-func (_m *VaultKeeper) SetParams(ctx types.Context, params vaulttypes.Params) error {
+// SetDefaultQuotingParams provides a mock function with given fields: ctx, params
+func (_m *VaultKeeper) SetDefaultQuotingParams(ctx types.Context, params vaulttypes.QuotingParams) error {
 	ret := _m.Called(ctx, params)
 
 	if len(ret) == 0 {
-		panic("no return value specified for SetParams")
+		panic("no return value specified for SetDefaultQuotingParams")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, vaulttypes.Params) error); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, vaulttypes.QuotingParams) error); ok {
 		r0 = rf(ctx, params)
 	} else {
 		r0 = ret.Error(0)

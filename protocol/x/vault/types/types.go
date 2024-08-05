@@ -25,12 +25,12 @@ type VaultKeeper interface {
 	) (err error)
 
 	// Params.
-	GetParams(
+	GetDefaultQuotingParams(
 		ctx sdk.Context,
-	) Params
-	SetParams(
+	) QuotingParams
+	SetDefaultQuotingParams(
 		ctx sdk.Context,
-		params Params,
+		params QuotingParams,
 	) error
 
 	// Shares.
