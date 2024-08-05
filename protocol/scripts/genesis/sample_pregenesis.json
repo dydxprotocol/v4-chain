@@ -3909,7 +3909,7 @@
         "order_size_pct_ppm": 100000,
         "skew_factor_ppm": 2000000,
         "spread_buffer_ppm": 1500,
-        "spread_min_ppm": 10000
+        "spread_min_ppm": 3000
       },
       "vaults": []
     },
