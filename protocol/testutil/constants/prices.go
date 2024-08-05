@@ -296,8 +296,15 @@ var TestMarketPrices = []types.MarketPrice{
 		PnlPrice:  ThreeBillion, // 300$ == 1 ISO2
 	},
 }
+var IdsToPairs = map[uint32]string{
+	0: BtcUsdPair,
+	1: EthUsdPair,
+	2: SolUsdPair,
+	3: IsoUsdPair,
+	4: Iso2UsdPair,
+}
 
-var TestMarketIdsToExponents = map[uint32]int32{
+var IdsToExponents = map[uint32]int32{
 	0: BtcUsdExponent,
 	1: EthUsdExponent,
 	2: SolUsdExponent,
@@ -348,6 +355,10 @@ var (
 			SpotPrice: Price5,
 			PnlPrice:  Price5,
 		},
+	}
+
+	ValidMarketPriceUpdateObj = &types.MarketPriceUpdates{
+		MarketPriceUpdates: ValidMarketPriceUpdates,
 	}
 
 	ValidSingleVEPrice = map[uint32]*vetypes.DaemonVoteExtension_PricePair{

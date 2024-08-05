@@ -34,3 +34,10 @@ func NewMarketPriceUpdate(id uint32, spotPrice uint64, pnlPrice uint64) *MarketP
 		PnlPrice:  pnlPrice,
 	}
 }
+
+func NewMarketSpotPriceUpdate(id uint32, spotPrice uint64) *MarketSpotPriceUpdate {
+	return &MarketSpotPriceUpdate{
+		MarketId:  id,
+		SpotPrice: spotPrice,
+	}
+}

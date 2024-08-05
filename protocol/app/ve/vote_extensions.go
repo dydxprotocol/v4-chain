@@ -170,7 +170,7 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 
 func (h *VoteExtensionHandler) GetVEBytesFromCurrPrices(ctx sdk.Context) ([]byte, error) {
 	priceUpdates := h.getCurrentPrices(ctx)
-
+	fmt.Println("priceUpdates", priceUpdates)
 	if len(priceUpdates) == 0 {
 		return nil, fmt.Errorf("no valid prices")
 	}
