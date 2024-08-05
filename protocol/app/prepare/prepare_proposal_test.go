@@ -222,6 +222,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 				commitInfo, bz, err := vetesting.CreateExtendedCommitInfo(
 					[]cometabci.ExtendedVoteInfo{valVoteInfo},
 				)
+
 				require.NoError(t, err)
 
 				return createRequestPrepareProposal(

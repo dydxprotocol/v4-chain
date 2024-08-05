@@ -166,7 +166,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			require.Equal(t, tc.expectedResponse, *resp)
 			require.Equal(
 				t,
-				marketToSmoothedPrices.GetSmoothedPricesForTest(),
+				marketToSmoothedPrices.GetSmoothedSpotPricesForTest(),
 				constants.AtTimeTSingleExchangeSmoothedPrices,
 			)
 		})
