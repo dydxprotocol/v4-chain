@@ -304,12 +304,10 @@ var IdsToPairs = map[uint32]string{
 	4: Iso2UsdPair,
 }
 
-var IdsToExponents = map[uint32]int32{
+var TestMarketIdsToExponents = map[uint32]int32{
 	0: BtcUsdExponent,
 	1: EthUsdExponent,
 	2: SolUsdExponent,
-	3: IsoUsdExponent,
-	4: Iso2UsdExponent,
 }
 
 var TestPricesGenesisState = types.GenesisState{

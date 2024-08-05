@@ -3,6 +3,7 @@ package clob_test
 import (
 	"testing"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
@@ -519,7 +520,7 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 				_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 					&tApp.App.ConsumerKeeper,
 					ctx,
-					map[uint32]uint64{},
+					map[uint32]ve.VEPricePair{},
 					tApp.GetHeader().Height,
 				)
 				require.NoError(t, err)
@@ -543,7 +544,7 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 				_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 					&tApp.App.ConsumerKeeper,
 					ctx,
-					map[uint32]uint64{},
+					map[uint32]ve.VEPricePair{},
 					tApp.GetHeader().Height,
 				)
 				require.NoError(t, err)
@@ -620,7 +621,7 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 				_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 					&tApp.App.ConsumerKeeper,
 					ctx,
-					map[uint32]uint64{},
+					map[uint32]ve.VEPricePair{},
 					tApp.GetHeader().Height,
 				)
 				require.NoError(t, err)
@@ -642,7 +643,7 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 				_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 					&tApp.App.ConsumerKeeper,
 					ctx,
-					map[uint32]uint64{},
+					map[uint32]ve.VEPricePair{},
 					tApp.GetHeader().Height,
 				)
 				require.NoError(t, err)
@@ -701,7 +702,7 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreNotRateLimited(t *te
 	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 		&tApp.App.ConsumerKeeper,
 		ctx,
-		map[uint32]uint64{},
+		map[uint32]ve.VEPricePair{},
 		tApp.GetHeader().Height,
 	)
 	require.NoError(t, err)

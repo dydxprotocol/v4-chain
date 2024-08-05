@@ -566,9 +566,10 @@ func TestLiquidationConfig(t *testing.T) {
 							require.True(t, exists)
 
 							marketPricesCopy[marketId] = prices.MarketPrice{
-								Id:       marketId,
-								Price:    oraclePrice,
-								Exponent: exponent,
+								Id:        marketId,
+								SpotPrice: oraclePrice,
+								PnlPrice:  oraclePrice,
+								Exponent:  exponent,
 							}
 						}
 
@@ -1139,9 +1140,10 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							require.True(t, exists)
 
 							marketPricesCopy[marketId] = prices.MarketPrice{
-								Id:       marketId,
-								Price:    oraclePrice,
-								Exponent: exponent,
+								Id:        marketId,
+								SpotPrice: oraclePrice,
+								PnlPrice:  oraclePrice,
+								Exponent:  exponent,
 							}
 						}
 

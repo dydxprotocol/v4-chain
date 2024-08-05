@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
@@ -27,8 +28,8 @@ func TestConditionalOrder(t *testing.T) {
 		orders               []clobtypes.Order
 		ordersForSecondBlock []clobtypes.Order
 
-		priceUpdateForFirstBlock  map[uint32]uint64
-		priceUpdateForSecondBlock map[uint32]uint64
+		priceUpdateForFirstBlock  map[uint32]ve.VEPricePair
+		priceUpdateForSecondBlock map[uint32]ve.VEPricePair
 
 		expectedInTriggeredStateAfterBlock map[uint32]map[clobtypes.OrderId]bool
 
@@ -44,8 +45,8 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 			},
-			priceUpdateForFirstBlock:  map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForFirstBlock:  map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: true,
@@ -63,8 +64,8 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001,
 			},
-			priceUpdateForFirstBlock:  map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForFirstBlock:  map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001.OrderId: true,
@@ -82,8 +83,8 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001,
 			},
-			priceUpdateForFirstBlock:  map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForFirstBlock:  map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001.OrderId: true,
@@ -101,8 +102,8 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49999,
 			},
-			priceUpdateForFirstBlock:  map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForFirstBlock:  map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49999.OrderId: true,
@@ -120,10 +121,13 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49995,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
 
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 4_999_700_000,
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -142,9 +146,12 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50005,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 5_000_300_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_300_000,
+					PnlPrice:  5_000_300_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -163,9 +170,12 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50005,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 5_000_300_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_300_000,
+					PnlPrice:  5_000_300_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -184,9 +194,12 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49995,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 4_999_700_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -205,10 +218,13 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{
-				0: 4_999_700_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: true,
@@ -226,9 +242,12 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 4_999_700_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -247,10 +266,13 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{
-				0: 5_000_300_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_300_000,
+					PnlPrice:  5_000_300_000,
+				},
 			},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001.OrderId: true,
@@ -268,9 +290,12 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 5_000_300_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_300_000,
+					PnlPrice:  5_000_300_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -289,10 +314,13 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{
-				0: 5_000_300_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_300_000,
+					PnlPrice:  5_000_300_000,
+				},
 			},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001.OrderId: true,
@@ -310,9 +338,12 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 5_000_300_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_300_000,
+					PnlPrice:  5_000_300_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -331,10 +362,13 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49999,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{
-				0: 4_999_700_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49999.OrderId: true,
@@ -352,9 +386,12 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49999,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 4_999_700_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -375,9 +412,12 @@ func TestConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 4_999_700_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -402,9 +442,12 @@ func TestConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001,
 				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 5_000_300_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_300_000,
+					PnlPrice:  5_000_300_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -429,9 +472,12 @@ func TestConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001,
 				constants.Order_Carl_Num0_Id3_Clob0_Buy025BTC_Price50000,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 5_000_300_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_300_000,
+					PnlPrice:  5_000_300_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -456,9 +502,12 @@ func TestConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49999,
 				constants.Order_Carl_Num0_Id3_Clob0_Buy025BTC_Price50000,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 4_999_700_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -481,11 +530,17 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{
-				0: 5_000_300_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_300_000,
+					PnlPrice:  5_000_300_000,
+				},
 			},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 5_000_000_000,
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_000_000,
+					PnlPrice:  5_000_000_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -506,10 +561,13 @@ func TestConditionalOrder(t *testing.T) {
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50000_GTBT10,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{
-				0: 5_000_400_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_400_000,
+					PnlPrice:  5_000_400_000,
+				},
 			},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: true},
 				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: false},
@@ -544,10 +602,13 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Sell05BTC_Price50000_GTBT10_TP_50003_FOK,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{
-				0: 5_000_400_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_400_000,
+					PnlPrice:  5_000_400_000,
+				},
 			},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Sell05BTC_Price50000_GTBT10_TP_50003_FOK.OrderId: true},
 				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Sell05BTC_Price50000_GTBT10_TP_50003_FOK.OrderId: false},
@@ -574,10 +635,13 @@ func TestConditionalOrder(t *testing.T) {
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_PO,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Sell05BTC_Price50000_GTBT10_TP_50003_FOK,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{
-				0: 5_000_400_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_400_000,
+					PnlPrice:  5_000_400_000,
+				},
 			},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Sell05BTC_Price50000_GTBT10_TP_50003_FOK.OrderId: true},
 				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Sell05BTC_Price50000_GTBT10_TP_50003_FOK.OrderId: false},
@@ -614,10 +678,13 @@ func TestConditionalOrder(t *testing.T) {
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{
-				0: 5_000_400_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_400_000,
+					PnlPrice:  5_000_400_000,
+				},
 			},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: true},
 				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: false},
@@ -654,10 +721,13 @@ func TestConditionalOrder(t *testing.T) {
 				constants.LongTermOrder_Dave_Num0_Id1_Clob0_Sell025BTC_Price50001_GTBT10,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{
-				0: 4_999_600_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_600_000,
+					PnlPrice:  4_999_600_000,
+				},
 			},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
 				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
@@ -687,10 +757,13 @@ func TestConditionalOrder(t *testing.T) {
 			ordersForSecondBlock: []clobtypes.Order{
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50000_GTBT10,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{
-				0: 4_999_600_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_600_000,
+					PnlPrice:  4_999_600_000,
+				},
 			},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
 				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
@@ -730,10 +803,13 @@ func TestConditionalOrder(t *testing.T) {
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50000_GTBT10,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{
-				0: 4_999_600_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_600_000,
+					PnlPrice:  4_999_600_000,
+				},
 			},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
 				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: false},
@@ -758,8 +834,8 @@ func TestConditionalOrder(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 			},
-			priceUpdateForFirstBlock:  map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{},
+			priceUpdateForFirstBlock:  map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: true,
@@ -779,9 +855,12 @@ func TestConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 4_999_700_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -811,9 +890,12 @@ func TestConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 4_999_700_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -838,9 +920,12 @@ func TestConditionalOrder(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999_FOK,
 				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
 			},
-			priceUpdateForFirstBlock: map[uint32]uint64{},
-			priceUpdateForSecondBlock: map[uint32]uint64{
-				0: 4_999_700_000,
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 
 			expectedExistInState: map[clobtypes.OrderId]bool{
@@ -2047,9 +2132,10 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 
 							MarketPrices: []prices.MarketPrice{
 								{
-									Id:       0,
-									Exponent: constants.BtcUsdExponent,
-									Price:    constants.FiveBillion, // $50,000 == 1 BTC
+									Id:        0,
+									Exponent:  constants.BtcUsdExponent,
+									SpotPrice: constants.FiveBillion, // $50,000 == 1 BTC
+									PnlPrice:  constants.FiveBillion, // $50,000 == 1 BTC
 								},
 							},
 						}
@@ -2176,7 +2262,7 @@ func TestConditionalOrderCancellation(t *testing.T) {
 		subaccounts []satypes.Subaccount
 		orders      []clobtypes.Order
 
-		priceUpdate                       map[uint32]uint64
+		priceUpdate                       map[uint32]ve.VEPricePair
 		expectedConditionalOrderTriggered bool
 	}{
 		"untriggered conditional order is cancelled": {
@@ -2187,8 +2273,11 @@ func TestConditionalOrderCancellation(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50005,
 			},
 
-			priceUpdate: map[uint32]uint64{
-				0: 5_000_300_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_300_000,
+					PnlPrice:  5_000_300_000,
+				},
 			},
 			expectedConditionalOrderTriggered: false,
 		},
@@ -2200,8 +2289,11 @@ func TestConditionalOrderCancellation(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 			},
 
-			priceUpdate: map[uint32]uint64{
-				0: 4_999_700_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 			expectedConditionalOrderTriggered: true,
 		},
@@ -2215,8 +2307,11 @@ func TestConditionalOrderCancellation(t *testing.T) {
 				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
 			},
 
-			priceUpdate: map[uint32]uint64{
-				0: 5_000_300_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_300_000,
+					PnlPrice:  5_000_300_000,
+				},
 			},
 			expectedConditionalOrderTriggered: true,
 		},
@@ -2361,7 +2456,7 @@ func TestConditionalOrderExpiration(t *testing.T) {
 		orders      []clobtypes.Order
 
 		firstBlockTime                time.Time
-		firstPriceUpdate              map[uint32]uint64
+		firstPriceUpdate              map[uint32]ve.VEPricePair
 		firstExistInStateExpectations map[clobtypes.OrderId]bool
 		firstExpectedTriggered        map[clobtypes.OrderId]bool
 
@@ -2380,8 +2475,11 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			},
 			firstBlockTime: time.Unix(5, 0).UTC(),
 			// Does not trigger above conditional order.
-			firstPriceUpdate: map[uint32]uint64{
-				0: 4_999_700_000,
+			firstPriceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 			firstExistInStateExpectations: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49995.OrderId: true,
@@ -2409,8 +2507,11 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			},
 			firstBlockTime: time.Unix(5, 0).UTC(),
 			// Does not trigger above conditional order.
-			firstPriceUpdate: map[uint32]uint64{
-				0: 4_999_700_000,
+			firstPriceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 			firstExistInStateExpectations: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49995.OrderId: true,
@@ -2438,8 +2539,11 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			},
 			firstBlockTime: time.Unix(5, 0).UTC(),
 			// Triggers above conditional order.
-			firstPriceUpdate: map[uint32]uint64{
-				0: 4_999_700_000,
+			firstPriceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 			firstExistInStateExpectations: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: true,
@@ -2467,8 +2571,11 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			},
 			firstBlockTime: time.Unix(5, 0).UTC(),
 			// Triggers above conditional order.
-			firstPriceUpdate: map[uint32]uint64{
-				0: 4_999_700_000,
+			firstPriceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 			firstExistInStateExpectations: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: true,
@@ -2498,8 +2605,11 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			},
 			firstBlockTime: time.Unix(5, 0).UTC(),
 			// Triggers above conditional order.
-			firstPriceUpdate: map[uint32]uint64{
-				0: 4_999_700_000,
+			firstPriceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 4_999_700_000,
+					PnlPrice:  4_999_700_000,
+				},
 			},
 			firstExistInStateExpectations: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49999.OrderId: true,
