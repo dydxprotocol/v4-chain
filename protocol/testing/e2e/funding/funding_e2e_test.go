@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -441,10 +442,18 @@ func TestFunding(t *testing.T) {
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 				&tApp.App.ConsumerKeeper,
 				ctx,
-				map[uint32]uint64{0: pricestest.MustHumanPriceToMarketPrice(
-					tc.oracelPriceForFundingIndex[0],
-					-5,
-				)},
+				map[uint32]ve.VEPricePair{
+					0: {
+						SpotPrice: pricestest.MustHumanPriceToMarketPrice(
+							tc.oracelPriceForFundingIndex[0],
+							-5,
+						),
+						PnlPrice: pricestest.MustHumanPriceToMarketPrice(
+							tc.oracelPriceForFundingIndex[0],
+							-5,
+						),
+					},
+				},
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
