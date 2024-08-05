@@ -178,17 +178,18 @@ message StreamOrderbookUpdatesResponse {
 // GRPC stream.
 message StreamUpdate {
   // Contains one of an StreamOrderbookUpdate,
-  // StreamOrderbookFill.
+  // StreamOrderbookFill, StreamTakerOrderStatus.
   oneof update_message {
     StreamOrderbookUpdate orderbook_update = 1;
     StreamOrderbookFill order_fill = 2;
+    StreamTakerOrderStatus taker_order_status = 3;
   }
 
   // Block height of the update.
-  uint32 block_height = 3;
+  uint32 block_height = 4;
 
   // Exec mode of the update.
-  uint32 exec_mode = 4;
+  uint32 exec_mode = 5;
 }
 
 // StreamOrderbookUpdate provides information on an orderbook update. Used in
