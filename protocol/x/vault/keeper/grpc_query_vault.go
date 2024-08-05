@@ -49,12 +49,16 @@ func (k Keeper) Vault(
 	perpId := clobPair.Metadata.(*clobtypes.ClobPair_PerpetualClobMetadata).PerpetualClobMetadata.PerpetualId
 	inventory := k.GetVaultInventoryInPerpetual(ctx, vaultId, perpId)
 
+	// Get vault quoting params.
+	quotingParams := k.GetVaultQuotingParams(ctx, vaultId)
+
 	return &types.QueryVaultResponse{
-		VaultId:      vaultId,
-		SubaccountId: *vaultId.ToSubaccountId(),
-		Equity:       dtypes.NewIntFromBigInt(equity),
-		Inventory:    dtypes.NewIntFromBigInt(inventory),
-		TotalShares:  totalShares,
+		VaultId:       vaultId,
+		SubaccountId:  *vaultId.ToSubaccountId(),
+		Equity:        dtypes.NewIntFromBigInt(equity),
+		Inventory:     dtypes.NewIntFromBigInt(inventory),
+		TotalShares:   totalShares,
+		QuotingParams: quotingParams,
 	}, nil
 }
 
