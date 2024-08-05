@@ -148,7 +148,9 @@ func TestGenesis_Failure(t *testing.T) {
 							LiquidityTier: 0,
 							MarketType:    types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 						},
-						FundingIndex: dtypes.ZeroInt(),
+						FundingIndex:    dtypes.ZeroInt(),
+						OpenInterest:    dtypes.ZeroInt(),
+						LastFundingRate: dtypes.ZeroInt(),
 					},
 				},
 			}
