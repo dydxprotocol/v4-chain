@@ -123,7 +123,8 @@ func TestVault(t *testing.T) {
 			require.NoError(t, err)
 
 			if tc.quotingParams != nil {
-				k.SetVaultQuotingParams(ctx, tc.vaultId, *tc.quotingParams)
+				err := k.SetVaultQuotingParams(ctx, tc.vaultId, *tc.quotingParams)
+				require.NoError(t, err)
 			}
 
 			// Check Vault query response is as expected.
