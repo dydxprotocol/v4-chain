@@ -142,14 +142,13 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	for _, clobPairId := range clobPairIds {
 		// if clobPairId exists in the map, append the subscription id to the slice
 		// otherwise, create a new slice with the subscription id
-		if _, ok := sm.clobPairIdToSubscriptionIdMapping[clobPairId]; ok {
-			sm.clobPairIdToSubscriptionIdMapping[clobPairId] = append(
-				sm.clobPairIdToSubscriptionIdMapping[clobPairId],
-				sm.nextSubscriptionId,
-			)
-		} else {
-			sm.clobPairIdToSubscriptionIdMapping[clobPairId] = []uint32{sm.nextSubscriptionId}
+		if _, ok := sm.clobPairIdToSubscriptionIdMapping[clobPairId]; !ok {
+			sm.clobPairIdToSubscriptionIdMapping[clobPairId] = []uint32{}
 		}
+		sm.clobPairIdToSubscriptionIdMapping[clobPairId] = append(
+			sm.clobPairIdToSubscriptionIdMapping[clobPairId],
+			sm.nextSubscriptionId,
+		)
 	}
 
 	sm.logger.Info(
@@ -394,7 +393,10 @@ func (sm *FullNodeStreamingManagerImpl) AddUpdatesToCache(
 
 	sm.streamUpdateCache = append(sm.streamUpdateCache, updates...)
 	for _, clobPairId := range clobPairIds {
-		sm.streamUpdateSubscriptionCache = append(sm.streamUpdateSubscriptionCache, sm.clobPairIdToSubscriptionIdMapping[clobPairId])
+		sm.streamUpdateSubscriptionCache = append(
+			sm.streamUpdateSubscriptionCache,
+			sm.clobPairIdToSubscriptionIdMapping[clobPairId],
+		)
 	}
 	sm.numUpdatesInCache += numUpdatesToAdd
 
