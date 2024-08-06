@@ -138,7 +138,7 @@ func initVaultDefaultQuotingParams(
 	vaultKeeper vaultkeeper.Keeper,
 ) {
 	// Initialize the default quoting params for the vault module.
-	oldParams := vaultKeeper.GetParams(ctx)
+	oldParams := vaultKeeper.UnsafeGetParams(ctx)
 	if err := vaultKeeper.SetDefaultQuotingParams(
 		ctx,
 		&vaulttypes.QuotingParams{
@@ -155,7 +155,7 @@ func initVaultDefaultQuotingParams(
 	}
 
 	// Delete deprecated `Params`.
-	vaultKeeper.DeleteParams(ctx)
+	vaultKeeper.UnsafeDeleteParams(ctx)
 }
 
 func CreateUpgradeHandler(
