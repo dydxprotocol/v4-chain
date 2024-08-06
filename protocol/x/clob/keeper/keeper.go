@@ -287,7 +287,7 @@ func (k Keeper) InitializeNewStreams(ctx sdk.Context) {
 				SubaccountId:              subaccountId,
 				UpdatedAssetPositions:     assetPositions,
 				UpdatedPerpetualPositions: perpetualPositions,
-				Snapshot:                  false,
+				Snapshot:                  true,
 			}
 		},
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
