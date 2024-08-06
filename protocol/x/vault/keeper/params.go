@@ -77,7 +77,7 @@ func (k Keeper) SetVaultQuotingParams(
 func (k Keeper) UnsafeGetParams(
 	ctx sdk.Context,
 ) (
-	params types.Params,
+	params types.QuotingParams,
 ) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get([]byte("Params"))
