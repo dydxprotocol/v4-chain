@@ -16,12 +16,13 @@ type IndexerFlags struct {
 
 // List of default values
 const (
-	DefaultMaxRetries = 3
+	DefaultMaxRetries = 20
 )
 
 // List of CLI flags
 const (
-	FlagKafkaConnStr         = "indexer-kafka-conn-str"
+	FlagKafkaConnStr = "indexer-kafka-conn-str"
+	// max retry should be set so that max retry * retry backoff > Zookeeper session.timeout + some buffer
 	FlagKafkaMaxRetry        = "indexer-kafka-max-retry"
 	FlagSendOffchainData     = "indexer-send-offchain-data"
 	MsgSenderInstanceForTest = "msgsender-instance-for-test"
