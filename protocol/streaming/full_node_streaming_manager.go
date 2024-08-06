@@ -610,6 +610,8 @@ func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 					allUpdates.Append(updatesByClobPairId[clobPairId])
 				}
 
+				// TODO(CT-1047): send subaccount snapshot
+
 				sm.SendSnapshot(allUpdates, subscriptionId, blockHeight, execMode)
 			},
 		)
