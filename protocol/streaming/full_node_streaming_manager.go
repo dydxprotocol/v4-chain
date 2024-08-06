@@ -35,6 +35,8 @@ type FullNodeStreamingManagerImpl struct {
 	streamUpdateSubscriptionCache [][]uint32
 	// map from clob pair id to subscription ids.
 	clobPairIdToSubscriptionIdMapping map[uint32][]uint32
+	// map from subaccount id to subscription ids.
+	subaccountIdToSubscriptionIdMapping map[uint32][]uint32
 
 	maxUpdatesInCache          uint32
 	maxSubscriptionChannelSize uint32
@@ -49,6 +51,9 @@ type OrderbookSubscription struct {
 
 	// Clob pair ids to subscribe to.
 	clobPairIds []uint32
+
+	// Subaccount ids to subscribe to.
+	subaccountIds[]
 
 	// Stream
 	messageSender types.OutgoingMessageSender
