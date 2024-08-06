@@ -1,5 +1,7 @@
+import { OrderSide } from '@dydxprotocol-indexer/postgres';
 import {
   NextFundingCache,
+  OrderbookLevelsCache,
   StateFilledQuantumsCache,
 } from '@dydxprotocol-indexer/redis';
 import Big from 'big.js';
@@ -28,4 +30,20 @@ export async function expectStateFilledQuantums(
     );
   expect(stateFilledQuantums).toBeDefined();
   expect(stateFilledQuantums).toEqual(quantums);
+}
+
+export async function updatePriceLevel(
+  ticker: string,
+  price: string,
+  side: OrderSide,
+): Promise<void> {
+  const quantums: string = '30';
+
+  await OrderbookLevelsCache.updatePriceLevel({
+    ticker,
+    side,
+    humanPrice: price,
+    sizeDeltaInQuantums: quantums,
+    client: redisClient,
+  });
 }
