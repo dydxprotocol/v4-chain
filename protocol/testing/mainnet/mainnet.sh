@@ -46,14 +46,14 @@ set_cosmovisor_binary_permissions() {
 
 create_full_nodes() {
 	# Create directories for full-nodes to use.
-	for i in $(seq 1 $LAST_FULL_NODE_INDEX); do
+	for i in $(seq 0 $LAST_FULL_NODE_INDEX); do
 		FULL_NODE_HOME_DIR="$HOME/chain/.full-node-$i"
 		FULL_NODE_CONFIG_DIR="$FULL_NODE_HOME_DIR/config"
 		dydxprotocold init "full-node" -o --chain-id=$CHAIN_ID --home "$FULL_NODE_HOME_DIR"
 	done
 
 	# Copy the genesis file to the full-node directories.
-	for i in $(seq 1 $LAST_FULL_NODE_INDEX); do
+	for i in $(seq 0 $LAST_FULL_NODE_INDEX); do
 		FULL_NODE_HOME_DIR="$HOME/chain/.full-node-$i"
 		FULL_NODE_CONFIG_DIR="$FULL_NODE_HOME_DIR/config"
 
@@ -61,7 +61,7 @@ create_full_nodes() {
 	done
 
 	# Set up CosmosVisor for full-nodes.
-	for i in $(seq 1 $LAST_FULL_NODE_INDEX); do
+	for i in $(seq 0 $LAST_FULL_NODE_INDEX); do
 		FULL_NODE_HOME_DIR="$HOME/chain/.full-node-$i"
 		# DAEMON_NAME is the name of the binary.
 		export DAEMON_NAME=dydxprotocold
