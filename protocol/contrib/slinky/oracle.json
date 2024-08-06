@@ -22,5 +22,28 @@
         },
         "type": "market_map_provider"
       }
+    },
+    "polymarket_api": {
+        "name": "polymarket_api",
+        "type": "price_provider",
+        "api": {
+          "name": "polymarket_api",
+          "enabled": true,
+          "timeout": 3000000000,
+          "interval": 500000000,
+          "reconnectTimeout": 2000000000,
+          "maxQueries": 1,
+          "atomic": false,
+          "endpoints": [
+            {
+              "url": "https://clob.polymarket.com/price?token_id=%s&side=BUY",
+              "authentication": {
+                "apiKey": "",
+                "apiKeyHeader": ""
+              }
+            }
+          ],
+          "batchSize": 0
+        }
     }
 }
