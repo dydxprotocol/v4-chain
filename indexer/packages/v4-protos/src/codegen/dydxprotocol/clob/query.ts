@@ -386,6 +386,9 @@ export interface StreamSubaccountUpdate {
    * All updates should be ignored until snapshot is received.
    * If the snapshot is true, then all previous entries should be
    * discarded and the subaccount should be resynced.
+   * For a snapshot subaccount update, the `updated_perpetual_positions` and
+   * `updated_asset_positions` fields will contain the full state of the
+   * subaccount.
    */
 
   snapshot: boolean;
@@ -408,6 +411,9 @@ export interface StreamSubaccountUpdateSDKType {
    * All updates should be ignored until snapshot is received.
    * If the snapshot is true, then all previous entries should be
    * discarded and the subaccount should be resynced.
+   * For a snapshot subaccount update, the `updated_perpetual_positions` and
+   * `updated_asset_positions` fields will contain the full state of the
+   * subaccount.
    */
 
   snapshot: boolean;
@@ -1420,15 +1426,15 @@ export const StreamUpdate = {
     }
 
     if (message.subaccountUpdate !== undefined) {
-      StreamSubaccountUpdate.encode(message.subaccountUpdate, writer.uint32(50).fork()).ldelim();
+      StreamSubaccountUpdate.encode(message.subaccountUpdate, writer.uint32(34).fork()).ldelim();
     }
 
     if (message.blockHeight !== 0) {
-      writer.uint32(32).uint32(message.blockHeight);
+      writer.uint32(40).uint32(message.blockHeight);
     }
 
     if (message.execMode !== 0) {
-      writer.uint32(40).uint32(message.execMode);
+      writer.uint32(48).uint32(message.execMode);
     }
 
     return writer;
@@ -1455,15 +1461,15 @@ export const StreamUpdate = {
           message.takerOrder = StreamTakerOrder.decode(reader, reader.uint32());
           break;
 
-        case 6:
+        case 4:
           message.subaccountUpdate = StreamSubaccountUpdate.decode(reader, reader.uint32());
           break;
 
-        case 4:
+        case 5:
           message.blockHeight = reader.uint32();
           break;
 
-        case 5:
+        case 6:
           message.execMode = reader.uint32();
           break;
 

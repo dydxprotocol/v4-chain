@@ -187,14 +187,14 @@ message StreamUpdate {
     StreamOrderbookUpdate orderbook_update = 1;
     StreamOrderbookFill order_fill = 2;
     StreamTakerOrder taker_order = 3;
-    StreamSubaccountUpdate subaccount_update = 6;
+    StreamSubaccountUpdate subaccount_update = 4;
   }
 
   // Block height of the update.
-  uint32 block_height = 4;
+  uint32 block_height = 5;
 
   // Exec mode of the update.
-  uint32 exec_mode = 5;
+  uint32 exec_mode = 6;
 }
 
 // SubaccountPerpetualPosition provides information on a subaccount's updated
@@ -227,6 +227,9 @@ message StreamSubaccountUpdate {
   // All updates should be ignored until snapshot is received.
   // If the snapshot is true, then all previous entries should be
   // discarded and the subaccount should be resynced.
+  // For a snapshot subaccount update, the `updated_perpetual_positions` and
+  // `updated_asset_positions` fields will contain the full state of the
+  // subaccount.
   bool snapshot = 4;
 }
 
