@@ -69,6 +69,7 @@ const (
 	FullNodeGrpc                      = "full_node_grpc"
 	GrpcSendOrderbookUpdatesLatency   = "grpc_send_orderbook_updates_latency"
 	GrpcSendOrderbookSnapshotLatency  = "grpc_send_orderbook_snapshot_latency"
+	GrpcSendSubaccountSnapshotLatency = "grpc_send_subaccount_snapshot_latency"
 	GrpcSendOrderbookFillsLatency     = "grpc_send_orderbook_fills_latency"
 	GrpcSendSubaccountUpdatesLatency  = "grpc_send_subaccount_updates_latency"
 	GrpcAddUpdateToBufferCount        = "grpc_add_update_to_buffer_count"
