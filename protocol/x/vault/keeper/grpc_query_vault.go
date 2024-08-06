@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-	"fmt"
+	"math/big"
 
 	"cosmossdk.io/store/prefix"
 	"google.golang.org/grpc/codes"
@@ -42,12 +42,12 @@ func (k Keeper) Vault(
 	}
 
 	// Get vault inventory.
+	inventory := big.NewInt(0)
 	clobPair, exists := k.clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(vaultId.Number))
-	if !exists {
-		return nil, status.Error(codes.Internal, fmt.Sprintf("clob pair %d doesn't exist", vaultId.Number))
+	if exists {
+		perpId := clobPair.Metadata.(*clobtypes.ClobPair_PerpetualClobMetadata).PerpetualClobMetadata.PerpetualId
+		inventory = k.GetVaultInventoryInPerpetual(ctx, vaultId, perpId)
 	}
-	perpId := clobPair.Metadata.(*clobtypes.ClobPair_PerpetualClobMetadata).PerpetualClobMetadata.PerpetualId
-	inventory := k.GetVaultInventoryInPerpetual(ctx, vaultId, perpId)
 
 	// Get vault quoting params.
 	quotingParams := k.GetVaultQuotingParams(ctx, vaultId)

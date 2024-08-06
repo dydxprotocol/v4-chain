@@ -62,6 +62,22 @@ func TestVault(t *testing.T) {
 			totalShares:    big.NewInt(300),
 			expectedEquity: big.NewInt(-300),
 		},
+		"Success: non-existent clob pair": {
+			req: &vaulttypes.QueryVaultRequest{
+				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+				Number: 7777,
+			},
+			vaultId: vaulttypes.VaultId{
+				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+				Number: 7777,
+			},
+			asset:          big.NewInt(100),
+			perpId:         0,
+			inventory:      big.NewInt(0),
+			totalShares:    big.NewInt(300),
+			quotingParams:  &constants.QuotingParams,
+			expectedEquity: big.NewInt(100),
+		},
 		"Error: query non-existent vault": {
 			req: &vaulttypes.QueryVaultRequest{
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
