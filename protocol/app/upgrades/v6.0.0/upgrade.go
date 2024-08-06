@@ -12,6 +12,8 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/skip-mev/slinky/oracle/config"
 	"github.com/skip-mev/slinky/providers/apis/dydx"
 	dydxtypes "github.com/skip-mev/slinky/providers/apis/dydx/types"
@@ -131,6 +133,31 @@ func initRevShareModuleState(
 	}
 }
 
+func initVaultDefaultQuotingParams(
+	ctx sdk.Context,
+	vaultKeeper vaultkeeper.Keeper,
+) {
+	// Initialize the default quoting params for the vault module.
+	oldParams := vaultKeeper.UnsafeGetParams(ctx)
+	if err := vaultKeeper.SetDefaultQuotingParams(
+		ctx,
+		&vaulttypes.QuotingParams{
+			Layers:                           oldParams.Layers,
+			SpreadMinPpm:                     oldParams.SpreadMinPpm,
+			SpreadBufferPpm:                  oldParams.SpreadBufferPpm,
+			SkewFactorPpm:                    oldParams.SkewFactorPpm,
+			OrderSizePctPpm:                  oldParams.OrderSizePctPpm,
+			OrderExpirationSeconds:           oldParams.OrderExpirationSeconds,
+			ActivationThresholdQuoteQuantums: oldParams.ActivationThresholdQuoteQuantums,
+		},
+	); err != nil {
+		panic(fmt.Sprintf("failed to set vault default quoting params: %s", err))
+	}
+
+	// Delete deprecated `Params`.
+	vaultKeeper.UnsafeDeleteParams(ctx)
+}
+
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -138,6 +165,7 @@ func CreateUpgradeHandler(
 	pricesKeeper pricestypes.PricesKeeper,
 	mmKeeper marketmapkeeper.Keeper,
 	revShareKeeper revsharetypes.RevShareKeeper,
+	vaultKeeper vaultkeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
@@ -153,6 +181,9 @@ func CreateUpgradeHandler(
 
 		// Initialize the rev share module state.
 		initRevShareModuleState(sdkCtx, revShareKeeper, pricesKeeper)
+
+		// Initialize x/vault default quoting params.
+		initVaultDefaultQuotingParams(sdkCtx, vaultKeeper)
 
 		sdkCtx.Logger().Info("Successfully removed stateful orders from state")
 
