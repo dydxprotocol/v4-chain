@@ -73,9 +73,17 @@ export class EllipticProviderClient extends ComplianceClient {
           message: 'Malformed response from Elliptic',
           response,
         });
+        stats.increment(
+          `${config.SERVICE_NAME}.get_elliptic_risk_score.status_code`,
+          { status: 'malformed' },
+        );
         throw new ComplianceClientError('Malformed response');
       }
 
+      stats.increment(
+        `${config.SERVICE_NAME}.get_elliptic_risk_score.status_code`,
+        { status: '200' },
+      );
       if (riskScore === null) {
         return NO_RULES_TRIGGERED_RISK_SCORE;
       }
@@ -86,14 +94,26 @@ export class EllipticProviderClient extends ComplianceClient {
         error?.response?.status === 404 &&
         error?.response?.data?.name === 'NotInBlockchain'
       ) {
+        stats.increment(
+          `${config.SERVICE_NAME}.get_elliptic_risk_score.status_code`,
+          { status: '404' },
+        );
         return NO_RULES_TRIGGERED_RISK_SCORE;
       }
 
       if (error?.response?.status === 429) {
+        stats.increment(
+          `${config.SERVICE_NAME}.get_elliptic_risk_score.status_code`,
+          { status: '429' },
+        );
         throw new TooManyRequestsError('Too many requests');
       }
 
       if (error?.response?.status === 500 && retries < config.ELLIPTIC_MAX_RETRIES) {
+        stats.increment(
+          `${config.SERVICE_NAME}.get_elliptic_risk_score.status_code`,
+          { status: '500' },
+        );
         return this.getRiskScore(address, retries + 1);
       }
 

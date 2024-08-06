@@ -1,0 +1,48 @@
+name: Protocol Build & Push Image to AWS ECR
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+      branches:
+        - 'release/protocol/v[0-9]+.[0-9]+.x'  # e.g. release/protocol/v0.1.x
+        - 'release/protocol/v[0-9]+.x'  # e.g. release/protocol/v1.x
+  push:
+    branches:
+      - 'release/protocol/v[0-9]+.[0-9]+.x'  # e.g. release/protocol/v0.1.x
+      - 'release/protocol/v[0-9]+.x'  # e.g. release/protocol/v1.x
+
+jobs:
+  build-and-push-mainnet:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'  # without this, ignite fails.
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_VALIDATOR_MAINNET }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_VALIDATOR_MAINNET }}
+          aws-region: ap-northeast-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, Tag, and Push the Image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: mainnet-full-node
+        run: |
+          make localnet-build-amd64
+          commit_hash=$(git rev-parse --short=7 HEAD)
+          docker build \
+            --platform amd64 \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
+            -f testing/mainnet/Dockerfile .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags

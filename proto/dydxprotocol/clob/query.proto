@@ -182,18 +182,19 @@ message StreamOrderbookUpdatesResponse {
 // GRPC stream.
 message StreamUpdate {
   // Contains one of an StreamOrderbookUpdate,
-  // StreamOrderbookFill.
+  // StreamOrderbookFill, StreamTakerOrderStatus.
   oneof update_message {
     StreamOrderbookUpdate orderbook_update = 1;
     StreamOrderbookFill order_fill = 2;
-    StreamSubaccountUpdate subaccount_update = 5;
+    StreamTakerOrder taker_order = 3;
+    StreamSubaccountUpdate subaccount_update = 6;
   }
 
   // Block height of the update.
-  uint32 block_height = 3;
+  uint32 block_height = 4;
 
   // Exec mode of the update.
-  uint32 exec_mode = 4;
+  uint32 exec_mode = 5;
 }
 
 // SubaccountPerpetualPosition provides information on a subaccount's updated
