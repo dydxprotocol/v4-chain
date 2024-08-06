@@ -12,6 +12,7 @@ import "dydxprotocol/clob/matches.proto";
 import "dydxprotocol/clob/liquidations_config.proto";
 import "dydxprotocol/clob/mev.proto";
 import "dydxprotocol/indexer/off_chain_updates/off_chain_updates.proto";
+import "dydxprotocol/subaccounts/subaccount.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
@@ -62,7 +63,7 @@ service Query {
 
   // Streams orderbook updates. Updates contain orderbook data
   // such as order placements, updates, and fills.
-  rpc StreamOrderbookUpdates(stream StreamOrderbookUpdatesRequest)
+  rpc StreamOrderbookUpdates(StreamOrderbookUpdatesRequest)
       returns (stream StreamOrderbookUpdatesResponse);
 }
 
@@ -167,7 +168,7 @@ message StreamOrderbookUpdatesRequest {
   repeated uint32 clob_pair_id = 1;
 
   // Subaccount ids to stream subaccount updates for.
-  repeated SubaccountId subaccount_ids = 2;
+  repeated dydxprotocol.subaccounts.SubaccountId subaccount_ids = 2;
 }
 
 // StreamOrderbookUpdatesResponse is a response message for the
@@ -195,15 +196,6 @@ message StreamUpdate {
   uint32 exec_mode = 4;
 }
 
-// SubaccountId provides information on a subaccount.
-message SubaccountId {
-  // The address of the wallet that owns this subaccount.
-  string owner = 1;
-  // < 128 Since 128 should be enough to start and it fits within
-  // 1 Byte (1 Bit needed to indicate that the first byte is the last).
-  uint32 number = 2;
-}
-
 // SubaccountPerpetualPosition provides information on a subaccount's updated
 // perpetual positions.
 message SubaccountPerpetualPosition {
@@ -225,7 +217,7 @@ message SubaccountAssetPosition {
 // StreamSubaccountUpdate provides information on a subaccount update. Used in
 // the full node GRPC stream.
 message StreamSubaccountUpdate {
-  SubaccountId subaccount_id = 1;
+  dydxprotocol.subaccounts.SubaccountId subaccount_id = 1;
   // updated_perpetual_positions will each be for unique perpetuals.
   repeated SubaccountPerpetualPosition updated_perpetual_positions = 2;
   // updated_asset_positions will each be for unique assets.
