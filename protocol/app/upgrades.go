@@ -34,6 +34,7 @@ func (app *App) setupUpgradeHandlers() {
 			app.PricesKeeper,
 			app.MarketMapKeeper,
 			app.RevShareKeeper,
+			app.VaultKeeper,
 		),
 	)
 }

@@ -71,3 +71,25 @@ func (k Keeper) SetVaultQuotingParams(
 
 	return nil
 }
+
+// Deprecated: GetParams returns `Params` in state.
+// Used for v6.x upgrade handler.
+func (k Keeper) GetParams(
+	ctx sdk.Context,
+) (
+	params types.Params,
+) {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get([]byte("Params"))
+	k.cdc.MustUnmarshal(b, &params)
+	return params
+}
+
+// Deprecated: DeleteParams deletes `Params` in state.
+// Used for v6.x upgrade handler.
+func (k Keeper) DeleteParams(
+	ctx sdk.Context,
+) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete([]byte("Params"))
+}
