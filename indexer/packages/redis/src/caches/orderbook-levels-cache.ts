@@ -533,7 +533,7 @@ function convertToPriceLevels(
 export async function getOrderBookMidPrice(
   ticker: string,
   client: RedisClient,
-): Promise<string | undefined> {
+): Promise<number | undefined> {
   const levels = await getOrderBookLevels(ticker, client, {
     removeZeros: true,
     sortSides: true,
@@ -542,14 +542,25 @@ export async function getOrderBookMidPrice(
   });
 
   if (levels.bids.length === 0 || levels.asks.length === 0) {
+    const message: string = `Orderbook bid length: ${levels.bids.length}, ask length: ${levels.asks.length}. Expected > 0`;
+    logger.error({
+      at: 'orderbook-levels-cache#getOrderBookMidPrice',
+      message,
+    });
     return undefined;
   }
 
-  const bestAsk = Big(levels.asks[0].humanPrice);
-  const bestBid = Big(levels.bids[0].humanPrice);
+  const bestAsk = Number(levels.asks[0].humanPrice);
+  const bestBid = Number(levels.bids[0].humanPrice);
 
   if (bestAsk === undefined || bestBid === undefined) {
+    const message: string = `Orderbook bid or ask failed to parse to Number, bid: ${levels.bids[0]}, ask: ${levels.asks[0]}`;
+    logger.error({
+      at: 'orderbook-levels-cache#getOrderBookMidPrice',
+      message,
+    });
     return undefined;
   }
-  return bestBid.plus(bestAsk).div(2).toFixed();
+
+  return bestBid + (bestAsk - bestBid) / 2;
 }
