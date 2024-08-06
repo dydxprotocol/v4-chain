@@ -20,4 +20,14 @@ var (
 		SubaccountId:  &Alice_Num0,
 		QuoteQuantums: dtypes.NewInt(100),
 	}
+
+	QuotingParams = types.QuotingParams{
+		Layers:                           3,
+		SpreadMinPpm:                     4_321,
+		SpreadBufferPpm:                  1_789,
+		SkewFactorPpm:                    767_323,
+		OrderSizePctPpm:                  234_567,
+		OrderExpirationSeconds:           111,
+		ActivationThresholdQuoteQuantums: dtypes.NewInt(9_876_543),
+	}
 )
