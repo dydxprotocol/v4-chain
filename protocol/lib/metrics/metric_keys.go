@@ -70,6 +70,7 @@ const (
 	GrpcSendOrderbookUpdatesLatency   = "grpc_send_orderbook_updates_latency"
 	GrpcSendOrderbookSnapshotLatency  = "grpc_send_orderbook_snapshot_latency"
 	GrpcSendOrderbookFillsLatency     = "grpc_send_orderbook_fills_latency"
+	GrpcSendSubaccountUpdatesLatency  = "grpc_send_subaccount_updates_latency"
 	GrpcAddUpdateToBufferCount        = "grpc_add_update_to_buffer_count"
 	GrpcAddToSubscriptionChannelCount = "grpc_add_to_subscription_channel_count"
 	GrpcSendResponseToSubscriberCount = "grpc_send_response_to_subscriber_count"

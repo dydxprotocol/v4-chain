@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	"math/big"
 	"math/rand"
 	"time"
@@ -734,4 +735,23 @@ func (k Keeper) GetAllRelevantPerpetuals(
 	}
 
 	return perpInfos, nil
+}
+
+func (k Keeper) GetFullNodeStreamingManager() streamingtypes.FullNodeStreamingManager {
+	return k.streamingManager
+}
+
+// SendSubaccountUpdates sends the subaccount updates to the gRPC streaming manager.
+func (k Keeper) SendSubaccountUpdates(
+	ctx sdk.Context,
+	subaccountUpdates []types.StreamSubaccountUpdate,
+) {
+	if len(subaccountUpdates) == 0 {
+		return
+	}
+	k.GetFullNodeStreamingManager().SendSubaccountUpdates(
+		subaccountUpdates,
+		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
+	)
 }

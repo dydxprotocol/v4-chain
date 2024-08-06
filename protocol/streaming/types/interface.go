@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 type FullNodeStreamingManager interface {
@@ -12,6 +13,7 @@ type FullNodeStreamingManager interface {
 	// Subscribe to streams
 	Subscribe(
 		clobPairIds []uint32,
+		subaccountIds []*satypes.SubaccountId,
 		srv OutgoingMessageSender,
 	) (
 		err error,
@@ -33,6 +35,11 @@ type FullNodeStreamingManager interface {
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 		perpetualIdToClobPairId map[uint32][]clobtypes.ClobPairId,
+	)
+	SendSubaccountUpdates(
+		subaccountUpdates []satypes.StreamSubaccountUpdate,
+		blockHeight uint32,
+		execMode sdk.ExecMode,
 	)
 }
 
