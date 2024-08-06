@@ -9,7 +9,7 @@ set -eo pipefail
 source "./vars.sh"
 
 # Set up CosmosVisor for full-nodes.
-for i in $(seq 1 $LAST_FULL_NODE_INDEX); do
+for i in $(seq 0 $LAST_FULL_NODE_INDEX); do
 	FULL_NODE_HOME_DIR="$HOME/chain/.full-node-$i"
 	# Copy binaries for `cosmovisor` from the docker image into the home directory.
 	# Work-around to ensure docker volume contains the same binaries as the git repo.
