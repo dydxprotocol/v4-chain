@@ -10,7 +10,7 @@ CHAIN_ID="dydx-testnet-1"
 
 # Define the mapping from version to URL
 declare -A version_to_url
-version_to_url["v5.1.0"]="https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv5.1.1/dydxprotocold-v5.1.1-linux-amd64.tar.gz"
+version_to_url["v5.2.0"]="https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv5.2.0/dydxprotocold-v5.2.0-linux-amd64.tar.gz"
 
 # Define dependencies for this script.
 # `jq` and `dasel` are used to manipulate json and yaml files respectively.
