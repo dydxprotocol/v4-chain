@@ -692,8 +692,6 @@ fetch(`${baseURL}/candles/perpetualMarkets/{ticker}?resolution=1MIN`,
       "usdVolume": "string",
       "trades": 0.1,
       "startingOpenInterest": "string",
-      "orderbookMidPriceOpen": "string",
-      "orderbookMidPriceClose": "string",
       "id": "string"
     }
   ]
@@ -3657,8 +3655,6 @@ This operation does not require authentication
   "usdVolume": "string",
   "trades": 0.1,
   "startingOpenInterest": "string",
-  "orderbookMidPriceOpen": "string",
-  "orderbookMidPriceClose": "string",
   "id": "string"
 }
 
@@ -3679,8 +3675,6 @@ This operation does not require authentication
 |usdVolume|string|true|none|none|
 |trades|number(double)|true|none|none|
 |startingOpenInterest|string|true|none|none|
-|orderbookMidPriceOpen|string¦null|false|none|none|
-|orderbookMidPriceClose|string¦null|false|none|none|
 |id|string|true|none|none|
 
 ## CandleResponse
@@ -3705,8 +3699,6 @@ This operation does not require authentication
       "usdVolume": "string",
       "trades": 0.1,
       "startingOpenInterest": "string",
-      "orderbookMidPriceOpen": "string",
-      "orderbookMidPriceClose": "string",
       "id": "string"
     }
   ]
