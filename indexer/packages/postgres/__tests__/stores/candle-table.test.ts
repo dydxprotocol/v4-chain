@@ -65,12 +65,11 @@ describe('CandleTable', () => {
     const updatedCandle: CandleUpdateObject = {
       id: defaultCandleId,
       open: '100',
+      orderbookMidPriceClose: '200',
+      orderbookMidPriceOpen: '300',
     };
 
-    await CandleTable.update({
-      id: defaultCandleId,
-      open: '100',
-    });
+    await CandleTable.update(updatedCandle);
 
     const candle: CandleFromDatabase | undefined = await CandleTable.findById(
       defaultCandleId,
