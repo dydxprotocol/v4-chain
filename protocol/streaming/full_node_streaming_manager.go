@@ -515,6 +515,13 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdates(
 			BlockHeight: blockHeight,
 			ExecMode:    uint32(execMode),
 		}
+		sm.logger.Info(
+			fmt.Sprintf(
+				"Sending subaccount update for subaccount id %+v with stream update %+v",
+				subaccountUpdate.SubaccountId,
+				streamUpdate,
+			),
+		)
 		streamUpdates = append(streamUpdates, streamUpdate)
 		subaccountIds = append(subaccountIds, subaccountUpdate.SubaccountId)
 	}

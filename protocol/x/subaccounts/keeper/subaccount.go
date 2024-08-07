@@ -21,6 +21,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -401,7 +402,9 @@ func (k Keeper) UpdateSubaccounts(
 
 		// if GRPC streaming is on, emit a generated subaccount update to stream.
 		if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
+			log.InfoLog(ctx, "Emitting subaccount update", "subaccountUpdate", u)
 			subaccountUpdate := GenerateStreamSubaccountUpdate(u)
+			log.InfoLog(ctx, "Emitting subaccount update", "GenerateStreamSubaccountUpdate", subaccountUpdate)
 			k.SendSubaccountUpdates(
 				ctx,
 				[]types.StreamSubaccountUpdate{
