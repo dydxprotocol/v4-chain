@@ -256,29 +256,41 @@ func (k Keeper) getSettledUpdates(
 
 func GenerateStreamSubaccountUpdate(
 	settledUpdate types.SettledUpdate,
+	fundingPayments map[uint32]dtypes.SerializableInt,
 ) types.StreamSubaccountUpdate {
-	// Convert AssetPositions from SettledSubaccount to SubaccountAssetPosition
-	updatedAssetPositions := make([]*types.SubaccountAssetPosition, len(settledUpdate.SettledSubaccount.AssetPositions))
-	for i, ap := range settledUpdate.SettledSubaccount.AssetPositions {
-		updatedAssetPositions[i] = &types.SubaccountAssetPosition{
-			AssetId:  ap.AssetId,
-			Quantums: ap.Quantums.BigInt().Uint64(),
-		}
-	}
-
-	// Convert PerpetualPositions from SettledSubaccount to SubaccountPerpetualPosition
-	updatedPerpetualPositions := make([]*types.SubaccountPerpetualPosition, len(settledUpdate.SettledSubaccount.PerpetualPositions))
-	for i, pp := range settledUpdate.SettledSubaccount.PerpetualPositions {
-		updatedPerpetualPositions[i] = &types.SubaccountPerpetualPosition{
+	// Get updated perpetual positions
+	updatedPerpetualPositions := salib.GetUpdatedPerpetualPositions(
+		settledUpdate,
+		fundingPayments,
+	)
+	// Convert updated perpetual positions to SubaccountPerpetualPosition type
+	perpetualPositions := make([]*types.SubaccountPerpetualPosition, len(updatedPerpetualPositions))
+	for i, pp := range updatedPerpetualPositions {
+		perpetualPositions[i] = &types.SubaccountPerpetualPosition{
 			PerpetualId: pp.PerpetualId,
 			Quantums:    pp.Quantums.BigInt().Uint64(),
 		}
 	}
 
+	updatedAssetPositions := salib.GetUpdatedAssetPositions(settledUpdate)
+	assetPositionsWithQuoteBalance := indexerevents.AddQuoteBalanceFromPerpetualPositions(
+		updatedPerpetualPositions,
+		updatedAssetPositions,
+	)
+
+	// Convert updated asset positions to SubaccountAssetPosition type
+	assetPositions := make([]*types.SubaccountAssetPosition, len(assetPositionsWithQuoteBalance))
+	for i, ap := range assetPositionsWithQuoteBalance {
+		assetPositions[i] = &types.SubaccountAssetPosition{
+			AssetId:  ap.AssetId,
+			Quantums: ap.Quantums.BigInt().Uint64(),
+		}
+	}
+
 	return types.StreamSubaccountUpdate{
 		SubaccountId:              settledUpdate.SettledSubaccount.Id,
-		UpdatedAssetPositions:     updatedAssetPositions,
-		UpdatedPerpetualPositions: updatedPerpetualPositions,
+		UpdatedAssetPositions:     assetPositions,
+		UpdatedPerpetualPositions: perpetualPositions,
 		Snapshot:                  false,
 	}
 }
@@ -401,7 +413,7 @@ func (k Keeper) UpdateSubaccounts(
 
 		// if GRPC streaming is on, emit a generated subaccount update to stream.
 		if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
-			subaccountUpdate := GenerateStreamSubaccountUpdate(u)
+			subaccountUpdate := GenerateStreamSubaccountUpdate(u, fundingPayments)
 			k.SendSubaccountUpdates(
 				ctx,
 				[]types.StreamSubaccountUpdate{
