@@ -1,0 +1,13 @@
+FROM dydxprotocol-base
+
+RUN apk add --no-cache bash jq aws-cli
+RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
+
+COPY ./testing/testnet/. /dydxprotocol/
+
+ENV HOME /dydxprotocol
+WORKDIR $HOME
+
+RUN /dydxprotocol/testnet.sh
+
+ENTRYPOINT ["/dydxprotocol/start.sh"]
