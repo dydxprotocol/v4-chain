@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	"math/big"
 	"math/rand"
 	"time"
@@ -20,6 +21,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -253,6 +255,35 @@ func (k Keeper) getSettledUpdates(
 	return settledUpdates, subaccountIdToFundingPayments, nil
 }
 
+func GenerateStreamSubaccountUpdate(
+	settledUpdate types.SettledUpdate,
+) types.StreamSubaccountUpdate {
+	// Convert AssetPositions from SettledSubaccount to SubaccountAssetPosition
+	updatedAssetPositions := make([]*types.SubaccountAssetPosition, len(settledUpdate.SettledSubaccount.AssetPositions))
+	for i, ap := range settledUpdate.SettledSubaccount.AssetPositions {
+		updatedAssetPositions[i] = &types.SubaccountAssetPosition{
+			AssetId:  ap.AssetId,
+			Quantums: ap.Quantums.BigInt().Uint64(),
+		}
+	}
+
+	// Convert PerpetualPositions from SettledSubaccount to SubaccountPerpetualPosition
+	updatedPerpetualPositions := make([]*types.SubaccountPerpetualPosition, len(settledUpdate.SettledSubaccount.PerpetualPositions))
+	for i, pp := range settledUpdate.SettledSubaccount.PerpetualPositions {
+		updatedPerpetualPositions[i] = &types.SubaccountPerpetualPosition{
+			PerpetualId: pp.PerpetualId,
+			Quantums:    pp.Quantums.BigInt().Uint64(),
+		}
+	}
+
+	return types.StreamSubaccountUpdate{
+		SubaccountId:              settledUpdate.SettledSubaccount.Id,
+		UpdatedAssetPositions:     updatedAssetPositions,
+		UpdatedPerpetualPositions: updatedPerpetualPositions,
+		Snapshot:                  false,
+	}
+}
+
 // UpdateSubaccounts validates and applies all `updates` to the relevant subaccounts as long as this is a
 // valid state-transition for all subaccounts involved. All `updates` are made atomically, meaning that
 // all state-changes will either succeed or all will fail.
@@ -368,6 +399,19 @@ func (k Keeper) UpdateSubaccounts(
 				),
 			),
 		)
+
+		// if GRPC streaming is on, emit a generated subaccount update to stream.
+		if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
+			log.InfoLog(ctx, "Emitting subaccount update", "subaccountUpdate", u)
+			subaccountUpdate := GenerateStreamSubaccountUpdate(u)
+			log.InfoLog(ctx, "Emitting subaccount update", "GenerateStreamSubaccountUpdate", subaccountUpdate)
+			k.SendSubaccountUpdates(
+				ctx,
+				[]types.StreamSubaccountUpdate{
+					subaccountUpdate,
+				},
+			)
+		}
 
 		// Emit an event indicating a funding payment was paid / received for each settled funding
 		// payment. Note that `fundingPaid` is positive if the subaccount paid funding,
@@ -734,4 +778,23 @@ func (k Keeper) GetAllRelevantPerpetuals(
 	}
 
 	return perpInfos, nil
+}
+
+func (k Keeper) GetFullNodeStreamingManager() streamingtypes.FullNodeStreamingManager {
+	return k.streamingManager
+}
+
+// SendSubaccountUpdates sends the subaccount updates to the gRPC streaming manager.
+func (k Keeper) SendSubaccountUpdates(
+	ctx sdk.Context,
+	subaccountUpdates []types.StreamSubaccountUpdate,
+) {
+	if len(subaccountUpdates) == 0 {
+		return
+	}
+	k.GetFullNodeStreamingManager().SendSubaccountUpdates(
+		subaccountUpdates,
+		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
+	)
 }

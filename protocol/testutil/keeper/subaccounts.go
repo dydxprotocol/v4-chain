@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/streaming"
 	"testing"
 
 	revsharekeeper "github.com/dydxprotocol/v4-chain/protocol/x/revshare/keeper"
@@ -128,6 +129,7 @@ func createSubaccountsKeeper(
 		btk,
 		rsk,
 		mockIndexerEventsManager,
+		streaming.NewNoopGrpcStreamingManager(),
 	)
 
 	return k, storeKey
