@@ -533,7 +533,11 @@ function convertToPriceLevels(
 export async function getOrderBookMidPrice(
   ticker: string,
   client: RedisClient,
+<<<<<<< HEAD
 ): Promise<number | undefined> {
+=======
+): Promise<string | undefined> {
+>>>>>>> 73b04dc3 (Adam/add candles hloc (#2047))
   const levels = await getOrderBookLevels(ticker, client, {
     removeZeros: true,
     sortSides: true,
@@ -542,6 +546,7 @@ export async function getOrderBookMidPrice(
   });
 
   if (levels.bids.length === 0 || levels.asks.length === 0) {
+<<<<<<< HEAD
     const message: string = `Orderbook bid length: ${levels.bids.length}, ask length: ${levels.asks.length}. Expected > 0`;
     logger.error({
       at: 'orderbook-levels-cache#getOrderBookMidPrice',
@@ -563,4 +568,16 @@ export async function getOrderBookMidPrice(
   }
 
   return bestBid + (bestAsk - bestBid) / 2;
+=======
+    return undefined;
+  }
+
+  const bestAsk = Big(levels.asks[0].humanPrice);
+  const bestBid = Big(levels.bids[0].humanPrice);
+
+  if (bestAsk === undefined || bestBid === undefined) {
+    return undefined;
+  }
+  return bestBid.plus(bestAsk).div(2).toFixed();
+>>>>>>> 73b04dc3 (Adam/add candles hloc (#2047))
 }

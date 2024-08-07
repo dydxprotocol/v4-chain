@@ -541,7 +541,11 @@ export async function getOrderbookMidPriceMap(): Promise<{ [ticker: string]: Ord
       perpetualMarket.ticker,
       redisClient,
     );
+<<<<<<< HEAD
     return { [perpetualMarket.ticker]: price === undefined ? undefined : String(price) };
+=======
+    return { [perpetualMarket.ticker]: price === undefined ? undefined : price };
+>>>>>>> 73b04dc3 (Adam/add candles hloc (#2047))
   });
 
   const pricesArray = await Promise.all(promises);
