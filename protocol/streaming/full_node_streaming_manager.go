@@ -519,13 +519,6 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdates(
 			BlockHeight: blockHeight,
 			ExecMode:    uint32(execMode),
 		}
-		sm.logger.Info(
-			fmt.Sprintf(
-				"Sending subaccount update for subaccount id %+v with stream update %+v",
-				subaccountUpdate.SubaccountId,
-				streamUpdate,
-			),
-		)
 		streamUpdates = append(streamUpdates, streamUpdate)
 		subaccountIds = append(subaccountIds, subaccountUpdate.SubaccountId)
 	}
@@ -581,13 +574,6 @@ func (sm *FullNodeStreamingManagerImpl) AddSubaccountUpdatesToCache(
 
 	sm.streamUpdateCache = append(sm.streamUpdateCache, updates...)
 	for _, subaccountId := range subaccountIds {
-		sm.logger.Info(
-			fmt.Sprintf(
-				"Adding subaccount update for subaccount id %+v with subscription ids %+v",
-				subaccountId,
-				sm.subaccountIdToSubscriptionIdMapping[*subaccountId],
-			),
-		)
 		sm.streamUpdateSubscriptionCache = append(
 			sm.streamUpdateSubscriptionCache,
 			sm.subaccountIdToSubscriptionIdMapping[*subaccountId],
