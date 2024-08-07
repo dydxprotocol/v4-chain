@@ -577,6 +577,13 @@ func (sm *FullNodeStreamingManagerImpl) AddSubaccountUpdatesToCache(
 
 	sm.streamUpdateCache = append(sm.streamUpdateCache, updates...)
 	for _, subaccountId := range subaccountIds {
+		sm.logger.Info(
+			fmt.Sprintf(
+				"Adding subaccount update for subaccount id %+v with subscription ids %+v",
+				subaccountId,
+				sm.subaccountIdToSubscriptionIdMapping[subaccountId],
+			),
+		)
 		sm.streamUpdateSubscriptionCache = append(
 			sm.streamUpdateSubscriptionCache,
 			sm.subaccountIdToSubscriptionIdMapping[subaccountId],
