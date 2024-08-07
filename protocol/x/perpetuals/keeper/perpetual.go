@@ -79,6 +79,7 @@ func (k Keeper) CreatePerpetual(
 	defaultFundingPpm int32,
 	liquidityTier uint32,
 	marketType types.PerpetualMarketType,
+	yieldIndex string,
 ) (types.Perpetual, error) {
 	// Check if perpetual exists.
 	if k.HasPerpetual(ctx, id) {
@@ -101,6 +102,7 @@ func (k Keeper) CreatePerpetual(
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   yieldIndex,
 	}
 
 	// Store the new perpetual.
@@ -168,6 +170,7 @@ func (k Keeper) ModifyPerpetual(
 				perpetual.Params.MarketId,
 				perpetual.Params.AtomicResolution,
 				perpetual.Params.LiquidityTier,
+				perpetual.YieldIndex,
 			),
 		),
 	)
@@ -640,6 +643,94 @@ func (k Keeper) GetRemoveSampleTailsFunc(
 
 		return premiums[bottomRemoval:end]
 	}
+}
+
+func (k Keeper) UpdateYieldIndexToNewMint(
+	ctx sdk.Context,
+	totalTDaiPreMint *big.Int,
+	totalTDaiMinted *big.Int,
+) {
+
+	if totalTDaiMinted.Cmp(big.NewInt(0)) == 0 {
+		return
+	}
+
+	if totalTDaiPreMint.Cmp(big.NewInt(0)) == 0 {
+		panic("Total tDAI pre mint was 0, but total tDAI minted was not 0.")
+	}
+
+	allPerps := k.GetAllPerpetuals(ctx)
+
+	for _, perp := range allPerps {
+
+		marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.Params.MarketId)
+		if err != nil {
+			panic(err)
+		}
+
+		// Calculate yield index for this epoch
+		currEpochYieldIndex, err := k.CalculateYieldIndexForEpoch(ctx, totalTDaiPreMint, totalTDaiMinted, marketPrice, perp)
+		if err != nil {
+			panic(err)
+		}
+
+		// Get current cumulative yield index
+		cumulativeYieldIndex, _ := new(big.Rat).SetString(perp.YieldIndex)
+		newYieldIndex := new(big.Rat).Add(cumulativeYieldIndex, currEpochYieldIndex)
+
+		// TODO: Decide on how many decimal places this should be and convert to constant
+		perp.YieldIndex = newYieldIndex.FloatString(10)
+
+		// Store the modified perpetual.
+		err = k.ValidateAndSetPerpetual(ctx, perp)
+		if err != nil {
+			panic("could not set new perp yield index")
+		}
+
+		// Emit indexer event.
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeUpdatePerpetual,
+			indexerevents.UpdatePerpetualEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewUpdatePerpetualEventV1(
+					perp.Params.Id,
+					perp.Params.Ticker,
+					perp.Params.MarketId,
+					perp.Params.AtomicResolution,
+					perp.Params.LiquidityTier,
+					perp.YieldIndex,
+				),
+			),
+		)
+	}
+}
+
+func (k Keeper) CalculateYieldIndexForEpoch(
+	ctx sdk.Context,
+	totalTDaiPreMint *big.Int,
+	totalTDaiMinted *big.Int,
+	marketPrice pricestypes.MarketPrice,
+	perpetual types.Perpetual,
+) (
+	yieldIndex *big.Rat,
+	err error,
+) {
+
+	oneBaseQuantum := big.NewInt(1)
+
+	priceForOneBaseQuantum := lib.BaseToQuoteQuantums(
+		oneBaseQuantum,
+		perpetual.Params.AtomicResolution,
+		marketPrice.Price,
+		marketPrice.Exponent,
+	)
+
+	totalDaiMintedTimesPrice := new(big.Int).Mul(totalTDaiMinted, priceForOneBaseQuantum)
+
+	yieldIndex = new(big.Rat).SetFrac(totalDaiMintedTimesPrice, totalTDaiPreMint)
+
+	return yieldIndex, nil
 }
 
 // MaybeProcessNewFundingTickEpoch processes funding ticks if the current block
@@ -1401,6 +1492,10 @@ func (k Keeper) validatePerpetual(
 	// Validate `liquidityTier` exists.
 	if !k.HasLiquidityTier(ctx, perpetual.Params.LiquidityTier) {
 		return errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, lib.UintToString(perpetual.Params.LiquidityTier))
+	}
+
+	if perpetual.YieldIndex == "" {
+		return errorsmod.Wrap(types.ErrYieldIndexDoesNotExist, lib.UintToString(perpetual.Params.LiquidityTier))
 	}
 
 	return nil

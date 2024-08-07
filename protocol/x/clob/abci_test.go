@@ -122,7 +122,7 @@ func TestEndBlocker_Failure(t *testing.T) {
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 			require.NoError(t, conversionErr)
 			ks.RatelimitKeeper.SetSDAIPrice(ctx, rate)
-			ks.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(ctx)
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 
 			for _, orderId := range tc.expiredStatefulOrderIds {
 				mockIndexerEventManager.On("AddBlockEvent",
@@ -669,6 +669,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -1037,12 +1038,10 @@ func TestLiquidateSubaccounts(t *testing.T) {
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -1362,7 +1361,7 @@ func TestPrepareCheckState(t *testing.T) {
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 			require.NoError(t, conversionErr)
 			ks.RatelimitKeeper.SetSDAIPrice(ctx, rate)
-			ks.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(ctx)
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
@@ -1386,6 +1385,7 @@ func TestPrepareCheckState(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}

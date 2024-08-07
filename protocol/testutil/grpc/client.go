@@ -7,6 +7,7 @@ import (
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimit "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
@@ -17,6 +18,7 @@ type QueryClient interface {
 	clobtypes.QueryClient
 	perptypes.QueryClient
 	pricetypes.QueryClient
+	ratelimit.QueryClient
 	liquidationtypes.LiquidationServiceClient
 	pricefeedtypes.PriceFeedServiceClient
 }

@@ -18,44 +18,34 @@ var (
 	FirstNextIndexInArray              = InitialNumEvents
 	TestSDAIEventRequests              = []api.AddsDAIEventsRequest{
 		{
-			EthereumBlockNumber: "12345",
-			ConversionRate:      "1006681181716810314385961731",
+			ConversionRate: "1006681181716810314385961731",
 		},
 		{
-			EthereumBlockNumber: "12346",
-			ConversionRate:      "1016681181716810314385961731",
+			ConversionRate: "1016681181716810314385961731",
 		},
 		{
-			EthereumBlockNumber: "12347",
-			ConversionRate:      "1026681181716810314385961731",
+			ConversionRate: "1026681181716810314385961731",
 		},
 		{
-			EthereumBlockNumber: "12348",
-			ConversionRate:      "1036681181716810314385961731",
+			ConversionRate: "1036681181716810314385961731",
 		},
 		{
-			EthereumBlockNumber: "12349",
-			ConversionRate:      "1046681181716810314385961731",
+			ConversionRate: "1046681181716810314385961731",
 		},
 		{
-			EthereumBlockNumber: "12350",
-			ConversionRate:      "1056681181716810314385961731",
+			ConversionRate: "1056681181716810314385961731",
 		},
 		{
-			EthereumBlockNumber: "12351",
-			ConversionRate:      "1066681181716810314385961731",
+			ConversionRate: "1066681181716810314385961731",
 		},
 		{
-			EthereumBlockNumber: "12352",
-			ConversionRate:      "1076681181716810314385961731",
+			ConversionRate: "1076681181716810314385961731",
 		},
 		{
-			EthereumBlockNumber: "12353",
-			ConversionRate:      "1086681181716810314385961731",
+			ConversionRate: "1086681181716810314385961731",
 		},
 		{
-			EthereumBlockNumber: "12354",
-			ConversionRate:      "1096681181716810314385961731",
+			ConversionRate: "1096681181716810314385961731",
 		},
 	}
 )
@@ -90,7 +80,7 @@ func (r *EthEventFetcher) GetInitialEvents(numOfEvents int) ([10]api.AddsDAIEven
 		return [10]api.AddsDAIEventsRequest{}, err
 	}
 
-	rates, blockNumbers, err := store.QueryDaiConversionRateForPastBlocks(ethClient, int64(numOfEvents), 3)
+	rates, err := store.QueryDaiConversionRateForPastBlocks(ethClient, int64(numOfEvents), 3)
 	if err != nil {
 		return [10]api.AddsDAIEventsRequest{}, err
 	}
@@ -99,8 +89,7 @@ func (r *EthEventFetcher) GetInitialEvents(numOfEvents int) ([10]api.AddsDAIEven
 
 	for i := 0; i < numOfEvents; i++ {
 		events[i] = api.AddsDAIEventsRequest{
-			EthereumBlockNumber: blockNumbers[i],
-			ConversionRate:      rates[i],
+			ConversionRate: rates[i],
 		}
 	}
 
@@ -165,7 +154,7 @@ func (s *SDAIEventManager) GetLatestsDAIEvent() (api.AddsDAIEventsRequest, bool)
 	defer s.Unlock()
 
 	latestIndex := (s.nextIndexInArray - 1 + 10) % 10
-	if s.lastTenEvents[latestIndex].EthereumBlockNumber != "" {
+	if s.lastTenEvents[latestIndex].ConversionRate != "" {
 		return s.lastTenEvents[latestIndex], true
 	}
 

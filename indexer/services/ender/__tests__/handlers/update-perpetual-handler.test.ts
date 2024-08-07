@@ -109,10 +109,45 @@ describe('update-perpetual-handler', () => {
       marketId: defaultUpdatePerpetualEvent.marketId,
       atomicResolution: defaultUpdatePerpetualEvent.atomicResolution,
       liquidityTierId: defaultUpdatePerpetualEvent.liquidityTier,
+      perpYieldIndex: defaultUpdatePerpetualEvent.perpYieldIndex,
     }));
     expect(perpetualMarket).toEqual(
       perpetualMarketRefresher.getPerpetualMarketFromId(
         defaultUpdatePerpetualEvent.id.toString()));
+    expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
+  });
+
+  it('updates an existing perpetual market with new perp yield index', async () => {
+    const transactionIndex: number = 0;
+    const updatedPerpetualEvent = {
+      ...defaultUpdatePerpetualEvent,
+      perpYieldIndex: '1/1',
+    };
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromUpdatePerpetualEvent({
+      updatePerpetualEvent: updatedPerpetualEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+    await onMessage(kafkaMessage);
+
+    const perpetualMarket:
+    PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
+      updatedPerpetualEvent.id.toString(),
+    );
+    expect(perpetualMarket).toEqual(expect.objectContaining({
+      id: updatedPerpetualEvent.id.toString(),
+      ticker: updatedPerpetualEvent.ticker,
+      marketId: updatedPerpetualEvent.marketId,
+      atomicResolution: updatedPerpetualEvent.atomicResolution,
+      liquidityTierId: updatedPerpetualEvent.liquidityTier,
+      perpYieldIndex: '1/1',
+    }));
+    expect(perpetualMarket).toEqual(
+      perpetualMarketRefresher.getPerpetualMarketFromId(
+        updatedPerpetualEvent.id.toString()));
     expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
   });
 });

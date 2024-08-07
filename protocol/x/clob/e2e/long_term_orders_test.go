@@ -34,12 +34,10 @@ func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *t
 	ctx := tApp.InitChain()
 
 	rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-	blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-		Sender:              constants.Alice_Num0.Owner,
-		ConversionRate:      rate,
-		EthereumBlockNumber: blockNumber,
+		Sender:         constants.Alice_Num0.Owner,
+		ConversionRate: rate,
 	}
 
 	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -106,12 +104,10 @@ func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
 	ctx := tApp.InitChain()
 
 	rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-	blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-		Sender:              constants.Alice_Num0.Owner,
-		ConversionRate:      rate,
-		EthereumBlockNumber: blockNumber,
+		Sender:         constants.Alice_Num0.Owner,
+		ConversionRate: rate,
 	}
 
 	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -336,12 +332,10 @@ func TestCancelStatefulOrder(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -441,12 +435,10 @@ func TestLongTermOrderExpires(t *testing.T) {
 	ctx := tApp.InitChain()
 
 	rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-	blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-		Sender:              constants.Alice_Num0.Owner,
-		ConversionRate:      rate,
-		EthereumBlockNumber: blockNumber,
+		Sender:         constants.Alice_Num0.Owner,
+		ConversionRate: rate,
 	}
 
 	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -500,6 +492,8 @@ func TestLongTermOrderExpires(t *testing.T) {
 func TestPlaceLongTermOrder(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
+
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
 
 	// subaccounts for indexer expectation assertions
 	aliceSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
@@ -705,6 +699,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							Quantums: dtypes.NewInt(int64(
 								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -720,7 +715,8 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							),
 						},
 					},
-					MarginEnabled: true,
+					MarginEnabled:   true,
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Bob_Num0,
@@ -730,6 +726,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							Quantums: dtypes.NewInt(-int64(
 								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -745,7 +742,8 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							),
 						},
 					},
-					MarginEnabled: true,
+					MarginEnabled:   true,
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 			ordersAndExpectationsPerBlock: []ordersAndExpectations{
@@ -850,6 +848,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -884,6 +883,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1038,6 +1038,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							Quantums: dtypes.NewInt(int64(
 								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.GetQuantums())),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -1054,7 +1055,8 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							),
 						},
 					},
-					MarginEnabled: true,
+					MarginEnabled:   true,
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Bob_Num0,
@@ -1066,6 +1068,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 									PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums(),
 							)),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -1082,7 +1085,8 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							),
 						},
 					},
-					MarginEnabled: true,
+					MarginEnabled:   true,
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 
@@ -1197,6 +1201,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1231,6 +1236,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1367,6 +1373,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1403,6 +1410,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1484,16 +1492,16 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 			require.NoError(t, conversionErr)
 			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.ParallelApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}))
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.NoCheckTxApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}))
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.CrashingApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}))
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 			ctx := tApp.InitChain()
 
@@ -1572,6 +1580,8 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 		WithNonDeterminismChecksEnabled(false).
 		Build()
 	ctx := tApp.InitChain()
+
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
 
 	// subaccounts for indexer expectation assertions
 	aliceSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
@@ -1657,6 +1667,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 							Quantums: dtypes.NewInt(int64(
 								Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -1672,7 +1683,8 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 							),
 						},
 					},
-					MarginEnabled: true,
+					MarginEnabled:   true,
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Bob_Num0,
@@ -1682,6 +1694,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 							Quantums: dtypes.NewInt(-int64(
 								Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -1697,7 +1710,8 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 							),
 						},
 					},
-					MarginEnabled: true,
+					MarginEnabled:   true,
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 			ordersAndExpectationsPerBlock: []ordersAndExpectations{
@@ -1785,6 +1799,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1819,6 +1834,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1897,7 +1913,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 			require.NoError(t, conversionErr)
 			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 			ctx := tApp.InitChain()
 
 			// Add the order with invalid time in force to state and orderbook.

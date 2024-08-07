@@ -51,6 +51,7 @@ func createNAssets(
 			hasMarket,                   // HasMarket
 			marketId,                    // MarketId
 			int32(i),                    // AtomicResolution
+			"0/1",                       // AssetYieldIndex
 		)
 		if err != nil {
 			return items, err
@@ -75,6 +76,7 @@ func TestCreateAsset_MarketNotFound(t *testing.T) {
 		true,
 		uint32(999),
 		int32(-1),
+		"0/1", // AssetYieldIndex
 	)
 	require.EqualError(t, err, errorsmod.Wrap(pricestypes.ErrMarketPriceDoesNotExist, "999").Error())
 
@@ -95,6 +97,7 @@ func TestCreateAsset_InvalidUsdcAsset(t *testing.T) {
 		true,
 		uint32(999),
 		int32(-1),
+		"0/1", // AssetYieldIndex
 	)
 	require.ErrorIs(t, err, types.ErrUsdcMustBeAssetZero)
 
@@ -111,6 +114,7 @@ func TestCreateAsset_InvalidUsdcAsset(t *testing.T) {
 		true,
 		uint32(999),
 		int32(-1),
+		"0/1", // AssetYieldIndex
 	)
 	require.ErrorIs(t, err, types.ErrUsdcMustBeAssetZero)
 
@@ -127,6 +131,7 @@ func TestCreateAsset_InvalidUsdcAsset(t *testing.T) {
 		true,
 		uint32(999),
 		int32(-1),
+		"0/1", // AssetYieldIndex
 	)
 	require.ErrorIs(t, err, types.ErrUnexpectedUsdcDenomExponent)
 
@@ -147,6 +152,7 @@ func TestCreateAsset_MarketIdInvalid(t *testing.T) {
 		false,
 		uint32(1),
 		int32(-1),
+		"0/1", // AssetYieldIndex
 	)
 	require.EqualError(t, err, errorsmod.Wrap(types.ErrInvalidMarketId, "Market ID: 1").Error())
 
@@ -168,6 +174,7 @@ func TestCreateAsset_AssetAlreadyExists(t *testing.T) {
 		false,       // hasMarket
 		0,           // marketId
 		10,          // atomicResolution
+		"0/1",       // AssetYieldIndex
 	)
 	require.NoError(t, err)
 
@@ -181,6 +188,7 @@ func TestCreateAsset_AssetAlreadyExists(t *testing.T) {
 		false,       // hasMarket
 		0,           // marketId
 		10,          // atomicResolution
+		"0/1",       // AssetYieldIndex
 	)
 	require.EqualError(t, err, errorsmod.Wrap(types.ErrAssetDenomAlreadyExists, "btc-denom").Error())
 
@@ -194,6 +202,7 @@ func TestCreateAsset_AssetAlreadyExists(t *testing.T) {
 		false,            // hasMarket
 		0,                // marketId
 		10,               // atomicResolution
+		"0/1",            // AssetYieldIndex
 	)
 	require.ErrorIs(t, err, types.ErrAssetIdAlreadyExists)
 }
@@ -467,6 +476,7 @@ func TestConvertAssetToCoin_Success(t *testing.T) {
 				false,
 				0,
 				tc.atomicResolution,
+				"0/1", // AssetYieldIndex
 			)
 			require.NoError(t, err)
 
@@ -522,6 +532,7 @@ func TestConvertAssetToCoin_Failure(t *testing.T) {
 		false,
 		0,
 		-6,
+		"0/1", // AssetYieldIndex
 	)
 	require.NoError(t, err)
 
@@ -541,7 +552,8 @@ func TestConvertAssetToCoin_Failure(t *testing.T) {
 		-6,
 		false,
 		0,
-		-50, /* invalid asset atomic resolution */
+		-50,   /* invalid asset atomic resolution */
+		"0/1", // AssetYieldIndex
 	)
 	require.NoError(t, err)
 	_, _, err = keeper.ConvertAssetToCoin(ctx, 2, big.NewInt(100))

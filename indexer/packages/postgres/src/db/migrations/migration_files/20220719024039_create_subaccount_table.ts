@@ -9,6 +9,7 @@ export async function up(knex: Knex): Promise<void> {
       table.integer('subaccountNumber').notNullable();
       table.timestamp('updatedAt').notNullable();
       table.bigInteger('updatedAtHeight').notNullable();
+      table.string('assetYieldIndex').notNullable();
 
       // Indices
       table.index(['address']);

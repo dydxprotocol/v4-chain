@@ -41,12 +41,9 @@ const (
 	// sDAIKeyPrefix is the prefix for the key-value store forthe sDAI price
 	SDAIKeyPrefix = "SDAIPrice:"
 
-	// storedDripRate is the prefix for the key-value store for historical drip rate
-	StoredDripRatePrefix = "StoredDripRatePrefix:"
-
-	// DaiYieldEpochPrefix is the prefix for the key-value store for DaiYieldEpoch
-	// The key vakue store is implemented as an array of size 100
-	DaiYieldEpochPrefix = "DaiYieldEpoch:"
+	// AssetYieldIndexPrefix is the prefix for the key value store that tracks
+	// the cumulative yield index across all yield epochs.
+	AssetYieldIndexPrefix = "AssetYieldIndex:"
 )
 
 // State
@@ -60,12 +57,6 @@ const (
 
 	// Maker RAY value which stores decimal points
 	SDAI_DECIMALS = 27
-
-	// The number of DaiYieldEpochParams we store
-	MAX_NUM_YIELD_EPOCHS_STORED = 1000
-
-	// The minimum number of blocks until we accept a new epoch
-	DAI_YIELD_MIN_EPOCH_BLOCKS = 100
 )
 
 func GetPendingSendPacketKey(channelId string, sequenceNumber uint64) []byte {

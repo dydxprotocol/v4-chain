@@ -20,7 +20,7 @@ import {
   testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import { updateBlockCache } from '../../../src/caches/block-cache';
-import { defaultDeleveragingEvent, defaultPreviousHeight } from '../../helpers/constants';
+import { defaultDeleveragingEvent, defaultPreviousHeight, defaultZeroPerpYieldIndex } from '../../helpers/constants';
 import { clearCandlesMap } from '../../../src/caches/candle-cache';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 import { redisClient } from '../../../src/helpers/redis/redis-controller';
@@ -44,6 +44,7 @@ import {
   MILLIS_IN_NANOS,
   SECONDS_IN_MILLIS,
   SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
+  ZERO_ASSET_YIELD_INDEX,
 } from '../../../src/constants';
 import { DateTime } from 'luxon';
 import Long from 'long';
@@ -55,12 +56,14 @@ import { createdDateTime, createdHeight } from '@dydxprotocol-indexer/postgres/b
 import Big from 'big.js';
 import { getWeightedAverage } from '../../../src/lib/helper';
 
+
 describe('DeleveragingHandler', () => {
   const offsettingSubaccount: SubaccountCreateObject = {
     address: defaultDeleveragingEvent.offsetting!.owner,
     subaccountNumber: defaultDeleveragingEvent.offsetting!.number,
     updatedAt: createdDateTime.toISO(),
     updatedAtHeight: createdHeight,
+    assetYieldIndex: ZERO_ASSET_YIELD_INDEX,
   };
 
   const deleveragedSubaccount: SubaccountCreateObject = {
@@ -68,6 +71,7 @@ describe('DeleveragingHandler', () => {
     subaccountNumber: defaultDeleveragingEvent.liquidated!.number,
     updatedAt: createdDateTime.toISO(),
     updatedAtHeight: createdHeight,
+    assetYieldIndex: ZERO_ASSET_YIELD_INDEX,
   };
 
   beforeAll(async () => {
@@ -121,6 +125,7 @@ describe('DeleveragingHandler', () => {
     openEventId: testConstants.defaultTendermintEventId,
     lastEventId: testConstants.defaultTendermintEventId,
     settledFunding: '200000',
+    perpYieldIndex: defaultZeroPerpYieldIndex,
   };
   const deleveragedPerpetualPosition: PerpetualPositionCreateObject = {
     ...offsettingPerpetualPosition,

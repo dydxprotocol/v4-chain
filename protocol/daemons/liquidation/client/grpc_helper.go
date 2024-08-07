@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
@@ -12,6 +13,7 @@ import (
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/grpc"
@@ -201,6 +203,27 @@ func (c *Client) GetAllSubaccounts(
 	)
 
 	return subaccounts, nil
+}
+
+func (c *Client) GetAssetYieldIndex(
+	ctx context.Context,
+) (
+	assetYieldIndex *big.Rat,
+	err error,
+) {
+
+	query := &ratelimittypes.GetAssetYieldIndexQueryRequest{}
+	client := c.RatelimitQueryClient
+
+	response, err := client.GetAssetYieldIndexQuery(ctx, query)
+
+	if err != nil {
+		return nil, err
+	}
+
+	assetYieldIndex = new(big.Rat)
+	assetYieldIndex.SetString(response.AssetYieldIndex)
+	return assetYieldIndex, nil
 }
 
 // SendLiquidatableSubaccountIds sends a list of unique and potentially liquidatable

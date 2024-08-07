@@ -18,23 +18,25 @@ const (
 	SubtypeUpdateClobPair     = "update_clob_pair"
 	SubtypeDeleveraging       = "deleveraging"
 	SubtypeOpenInterestUpdate = "open_interest_update"
+	SubtypeYieldParams        = "yield_params"
 )
 
 const (
 	// Indexer event versions.
-	OrderFillEventVersion        uint32 = 1
-	SubaccountUpdateEventVersion uint32 = 1
-	TransferEventVersion         uint32 = 1
-	MarketEventVersion           uint32 = 1
-	FundingValuesEventVersion    uint32 = 1
-	StatefulOrderEventVersion    uint32 = 1
-	AssetEventVersion            uint32 = 1
-	PerpetualMarketEventVersion  uint32 = 2
-	LiquidityTierEventVersion    uint32 = 2
-	UpdatePerpetualEventVersion  uint32 = 1
-	UpdateClobPairEventVersion   uint32 = 1
-	DeleveragingEventVersion     uint32 = 1
-	OpenInterestUpdateVersion    uint32 = 1
+	OrderFillEventVersion         uint32 = 1
+	SubaccountUpdateEventVersion  uint32 = 1
+	TransferEventVersion          uint32 = 1
+	MarketEventVersion            uint32 = 1
+	FundingValuesEventVersion     uint32 = 1
+	StatefulOrderEventVersion     uint32 = 1
+	AssetEventVersion             uint32 = 1
+	PerpetualMarketEventVersion   uint32 = 2
+	LiquidityTierEventVersion     uint32 = 2
+	UpdatePerpetualEventVersion   uint32 = 1
+	UpdateClobPairEventVersion    uint32 = 1
+	DeleveragingEventVersion      uint32 = 1
+	OpenInterestUpdateVersion     uint32 = 1
+	UpdateYieldParamsEventVersion uint32 = 1
 )
 
 var OnChainEventSubtypes = []string{
@@ -50,4 +52,5 @@ var OnChainEventSubtypes = []string{
 	SubtypeUpdatePerpetual,
 	SubtypeUpdateClobPair,
 	SubtypeDeleveraging,
+	SubtypeYieldParams,
 }

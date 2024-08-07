@@ -119,7 +119,7 @@ func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 	keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 	keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
 
-	ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
+	ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 
 	perpetuals := []perptypes.Perpetual{
 		constants.BtcUsd_100PercentMarginRequirement,
@@ -136,6 +136,7 @@ func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 			p.Params.DefaultFundingPpm,
 			p.Params.LiquidityTier,
 			p.Params.MarketType,
+			p.YieldIndex,
 		)
 		require.NoError(t, err)
 	}
@@ -249,7 +250,7 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 	keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 	keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
 
-	ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
+	ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 
 	perpetuals := []perptypes.Perpetual{
 		constants.BtcUsd_100PercentMarginRequirement,
@@ -266,6 +267,7 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 			p.Params.DefaultFundingPpm,
 			p.Params.LiquidityTier,
 			p.Params.MarketType,
+			p.YieldIndex,
 		)
 		require.NoError(t, err)
 	}

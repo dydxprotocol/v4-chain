@@ -17,23 +17,7 @@ func (k msgServer) UpdateSDAIConversionRate(
 ) (*types.MsgUpdateSDAIConversionRateResponse, error) {
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
-	elapsed, err := k.CheckCurrentDAIYieldEpochElapsed(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if !elapsed {
-		return nil, errorsmod.Wrap(
-			types.ErrInvalidSDAIConversionRate,
-			"The current DAI yield epoch has not yet elapsed",
-		)
-	}
-
 	bigConversionRate, err := ConvertStringToBigInt(msg.ConversionRate)
-	if err != nil {
-		return nil, err
-	}
-
-	bigEthereumBlockNumber, err := ConvertStringToBigInt(msg.EthereumBlockNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -42,40 +26,41 @@ func (k msgServer) UpdateSDAIConversionRate(
 
 	for _, event := range lastTenEvents {
 
-		if event.EthereumBlockNumber == "" || event.ConversionRate == "" {
+		if event.ConversionRate == "" {
 			continue
 		}
 
-		blockNumber, err := ConvertStringToBigInt(event.EthereumBlockNumber)
+		conversionRate, err := ConvertStringToBigInt(event.ConversionRate)
 		if err != nil {
 			return nil, err
 		}
 
-		if blockNumber.Cmp(bigEthereumBlockNumber) == 0 {
+		if bigConversionRate.Cmp(conversionRate) == 0 {
 
-			conversionRate, err := ConvertStringToBigInt(event.ConversionRate)
-			if err != nil {
-				return nil, err
+			// TODO [YBCP-20]: Handle initializations better
+			currentRate, initialized := k.GetSDAIPrice(ctx)
+
+			if initialized && conversionRate.Cmp(currentRate) <= 0 {
+				return nil, errorsmod.Wrap(
+					types.ErrInvalidSDAIConversionRate,
+					"The suggested sDAI conversion rate must be greater than the curret one",
+				)
 			}
 
-			if bigConversionRate.Cmp(conversionRate) == 0 {
+			if !initialized {
+				k.SetAssetYieldIndex(ctx, new(big.Rat).SetInt64(0))
+			}
 
-				currentRate, initialized := k.GetSDAIPrice(ctx)
+			k.SetSDAIPrice(ctx, conversionRate)
 
-				if initialized && conversionRate.Cmp(currentRate) <= 0 {
-					return nil, errorsmod.Wrap(
-						types.ErrInvalidSDAIConversionRate,
-						"The suggested sDAI conversion rate must be greater than the curret one",
-					)
-				}
-
-				k.SetSDAIPrice(ctx, conversionRate)
-
-				k.CreateAndStoreNewDaiYieldEpochParams(ctx)
-
+			err = k.MintNewTDaiAndSetNewYieldIndex(ctx)
+			if err != nil {
 				return &types.MsgUpdateSDAIConversionRateResponse{}, nil
 			}
+
+			return &types.MsgUpdateSDAIConversionRateResponse{}, nil
 		}
+
 	}
 
 	return nil, errorsmod.Wrap(

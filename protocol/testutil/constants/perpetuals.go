@@ -146,6 +146,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	BtcUsd_0DefaultFunding_0AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -159,6 +160,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	BtcUsd_NegativeDefaultFunding_10AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -172,6 +174,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	BtcUsd_0DefaultFunding_10AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -185,6 +188,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	BtcUsd_0DefaultFunding_10AtomicResolution_20IM_18MM = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -198,6 +202,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	BtcUsd_0_001Percent_DefaultFunding_10AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -211,6 +216,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 
 	BtcUsd_SmallMarginRequirement = perptypes.Perpetual{
@@ -225,6 +231,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	BtcUsd_100PercentMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -238,6 +245,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	BtcUsd_50PercentInitial_40PercentMaintenance = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -251,6 +259,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	BtcUsd_20PercentInitial_10PercentMaintenance = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -264,6 +273,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1 = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -277,6 +287,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.NewInt(100_000_000),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest2 = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -290,6 +301,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.NewInt(200_000_000),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	BtcUsd_20PercentInitial_10PercentMaintenance_25mmLowerCap_50mmUpperCap = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -303,6 +315,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	BtcUsd_NoMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -316,6 +329,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	EthUsd_0DefaultFunding_9AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -329,6 +343,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	EthUsd_NoMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -342,6 +357,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	EthUsd_20PercentInitial_10PercentMaintenance = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -355,6 +371,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	EthUsd_100PercentMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -368,6 +385,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	SolUsd_20PercentInitial_10PercentMaintenance = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -381,6 +399,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	IsoUsd_IsolatedMarket = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -394,6 +413,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	Iso2Usd_IsolatedMarket = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -407,6 +427,7 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 )
 
@@ -422,6 +443,7 @@ var TestMarketPerpetuals = []perptypes.Perpetual{
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	},
 	{
 		Params: perptypes.PerpetualParams{
@@ -434,6 +456,7 @@ var TestMarketPerpetuals = []perptypes.Perpetual{
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	},
 	{
 		Params: perptypes.PerpetualParams{
@@ -446,6 +469,7 @@ var TestMarketPerpetuals = []perptypes.Perpetual{
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
 	},
 	IsoUsd_IsolatedMarket,
 	Iso2Usd_IsolatedMarket,
@@ -522,6 +546,7 @@ var (
 				},
 				FundingIndex: dtypes.ZeroInt(),
 				OpenInterest: dtypes.ZeroInt(),
+				YieldIndex:   big.NewRat(0, 1).String(),
 			},
 			{
 				Params: perptypes.PerpetualParams{
@@ -532,6 +557,7 @@ var (
 				},
 				FundingIndex: dtypes.ZeroInt(),
 				OpenInterest: dtypes.ZeroInt(),
+				YieldIndex:   big.NewRat(0, 1).String(),
 			},
 		},
 	}

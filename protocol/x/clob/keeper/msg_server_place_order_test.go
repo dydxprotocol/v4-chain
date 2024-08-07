@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"context"
 	"errors"
+	"math/big"
 	"testing"
 	"time"
 
@@ -90,7 +91,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 			indexerEventManager := &mocks.IndexerEventManager{}
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
-			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
@@ -135,6 +136,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 				perpetual.Params.DefaultFundingPpm,
 				perpetual.Params.LiquidityTier,
 				perpetual.Params.MarketType,
+				perpetual.YieldIndex,
 			)
 			require.NoError(t, err)
 
@@ -269,7 +271,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 			indexerEventManager := &mocks.IndexerEventManager{}
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
-			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
@@ -306,6 +308,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 				perpetual.Params.DefaultFundingPpm,
 				perpetual.Params.LiquidityTier,
 				perpetual.Params.MarketType,
+				perpetual.YieldIndex,
 			)
 			require.NoError(t, err)
 

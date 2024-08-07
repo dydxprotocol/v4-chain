@@ -258,6 +258,7 @@ export function closePositionUpdateObject(
     settledFunding: perpetualPositionCloseObject.settledFunding,
     status: PerpetualPositionStatus.CLOSED,
     size: '0',
+    perpYieldIndex: perpetualPositionCloseObject.perpYieldIndex,
   };
 }
 

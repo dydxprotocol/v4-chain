@@ -7,7 +7,4 @@ var (
 
 	// sDAI conversion rate
 	SDAIRate = "123456"
-
-	// Ethereum block number
-	EthereumBlockNumber = "1000"
 )

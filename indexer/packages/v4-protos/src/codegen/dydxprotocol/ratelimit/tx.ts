@@ -23,6 +23,30 @@ export interface MsgSetLimitParamsResponse {}
 /** MsgSetLimitParamsResponse is the Msg/SetLimitParams response type. */
 
 export interface MsgSetLimitParamsResponseSDKType {}
+/** MsgUpdateSDAIConversionRate is the Msg/UpdateSDAIConversionRate request type. */
+
+export interface MsgUpdateSDAIConversionRate {
+  /** The sender wallet address. */
+  sender: string;
+  /** The sDAI conversion rate */
+
+  conversionRate: string;
+}
+/** MsgUpdateSDAIConversionRate is the Msg/UpdateSDAIConversionRate request type. */
+
+export interface MsgUpdateSDAIConversionRateSDKType {
+  /** The sender wallet address. */
+  sender: string;
+  /** The sDAI conversion rate */
+
+  conversion_rate: string;
+}
+/** MsgUpdateSDAIConversionRateResponse is the Msg/UpdateSDAIConversionRate response type. */
+
+export interface MsgUpdateSDAIConversionRateResponse {}
+/** MsgUpdateSDAIConversionRateResponse is the Msg/UpdateSDAIConversionRate response type. */
+
+export interface MsgUpdateSDAIConversionRateResponseSDKType {}
 
 function createBaseMsgSetLimitParams(): MsgSetLimitParams {
   return {
@@ -108,6 +132,95 @@ export const MsgSetLimitParamsResponse = {
 
   fromPartial(_: DeepPartial<MsgSetLimitParamsResponse>): MsgSetLimitParamsResponse {
     const message = createBaseMsgSetLimitParamsResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateSDAIConversionRate(): MsgUpdateSDAIConversionRate {
+  return {
+    sender: "",
+    conversionRate: ""
+  };
+}
+
+export const MsgUpdateSDAIConversionRate = {
+  encode(message: MsgUpdateSDAIConversionRate, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.sender !== "") {
+      writer.uint32(10).string(message.sender);
+    }
+
+    if (message.conversionRate !== "") {
+      writer.uint32(18).string(message.conversionRate);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateSDAIConversionRate {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateSDAIConversionRate();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.sender = reader.string();
+          break;
+
+        case 2:
+          message.conversionRate = reader.string();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateSDAIConversionRate>): MsgUpdateSDAIConversionRate {
+    const message = createBaseMsgUpdateSDAIConversionRate();
+    message.sender = object.sender ?? "";
+    message.conversionRate = object.conversionRate ?? "";
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateSDAIConversionRateResponse(): MsgUpdateSDAIConversionRateResponse {
+  return {};
+}
+
+export const MsgUpdateSDAIConversionRateResponse = {
+  encode(_: MsgUpdateSDAIConversionRateResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateSDAIConversionRateResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateSDAIConversionRateResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpdateSDAIConversionRateResponse>): MsgUpdateSDAIConversionRateResponse {
+    const message = createBaseMsgUpdateSDAIConversionRateResponse();
     return message;
   }
 

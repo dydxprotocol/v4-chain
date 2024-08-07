@@ -231,6 +231,7 @@ message SubaccountUpdateEventV1 {
   // updated_asset_positions will each be for unique assets.
   repeated dydxprotocol.indexer.protocol.v1.IndexerAssetPosition
       updated_asset_positions = 4;
+  string yield_index = 5;
 }
 
 // StatefulOrderEvent message contains information about a change to a stateful
@@ -544,4 +545,19 @@ message UpdatePerpetualEventV1 {
   // The liquidity_tier that this perpetual is associated with.
   // Defined in perpetuals.perpetual
   uint32 liquidity_tier = 5;
+
+  // The perp yield index of this perpetual market 
+  string perp_yield_index = 6;
+}
+
+// UpdateYieldParamsV1 message contains all the information about an update
+// to the yield params on the Stream Chain.
+message UpdateYieldParamsEventV1 {
+
+  // The current price of sDAI in tDAI as seen by the protocol
+  string sdai_price = 1;
+
+  // The current generalized asset yield index in the protocol.
+  string asset_yield_index = 2;
+
 }

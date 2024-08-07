@@ -97,3 +97,22 @@ func (k Keeper) GetSDAIPriceQuery(
 		Price: price.String(),
 	}, nil
 }
+
+func (k Keeper) GetAssetYieldIndexQuery(
+	ctx context.Context,
+	req *types.GetAssetYieldIndexQueryRequest,
+) (*types.GetAssetYieldIndexQueryResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	assetYieldIndex, found := k.GetAssetYieldIndex(sdkCtx)
+	if !found {
+		return nil, status.Error(codes.NotFound, "asset yield index not found")
+	}
+
+	return &types.GetAssetYieldIndexQueryResponse{
+		AssetYieldIndex: assetYieldIndex.String(),
+	}, nil
+}

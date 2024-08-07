@@ -59,7 +59,7 @@ func (s *SubTaskRunnerImpl) RunsDAIDaemonTaskLoop(
 	}
 
 	// Call the QueryDaiConversionRate function
-	sDAIConversionRate, blockNumber, err := queryClient.QueryDaiConversionRate(ethClient)
+	sDAIConversionRate, err := queryClient.QueryDaiConversionRate(ethClient)
 	if err != nil {
 		return fmt.Errorf("failed to query DAI conversion rate: %w", err)
 	}
@@ -72,8 +72,7 @@ func (s *SubTaskRunnerImpl) RunsDAIDaemonTaskLoop(
 
 	// Send sDAI events to sDAI server.
 	if _, err = serviceClient.AddsDAIEvents(ctx, &api.AddsDAIEventsRequest{
-		ConversionRate:      sDAIConversionRate,
-		EthereumBlockNumber: blockNumber,
+		ConversionRate: sDAIConversionRate,
 	}); err != nil {
 		return fmt.Errorf("failed to add sDAI events: %w", err)
 	}

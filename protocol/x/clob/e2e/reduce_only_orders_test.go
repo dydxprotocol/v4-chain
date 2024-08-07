@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	"math/big"
 	"testing"
 
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
@@ -73,8 +74,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(100),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Alice_Num1,
@@ -89,8 +92,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(99_999_900),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -134,8 +139,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(100),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Alice_Num1,
@@ -150,8 +157,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(99_999_900),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -195,8 +204,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(150),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Alice_Num1,
@@ -211,8 +222,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(99_999_850),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -259,8 +272,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(150),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Alice_Num1,
@@ -275,8 +290,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(99_999_850),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -321,8 +338,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(150),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Alice_Num1,
@@ -337,8 +356,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(99_999_850),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -391,8 +412,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(50_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Alice_Num1,
@@ -407,8 +430,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(50_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -461,8 +486,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(25_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 				{
 					Id: &constants.Alice_Num1,
@@ -477,8 +504,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(75_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -512,12 +541,10 @@ func TestReduceOnlyOrders(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -720,12 +747,10 @@ func TestReduceOnlyOrderFailure(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -1036,12 +1061,10 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(

@@ -80,6 +80,7 @@ export default class SubaccountModel extends BaseModel {
       required: [
         'id',
         'address',
+        'assetYieldIndex',
         'subaccountNumber',
         'updatedAt',
         'updatedAtHeight',
@@ -87,6 +88,7 @@ export default class SubaccountModel extends BaseModel {
       properties: {
         id: { type: 'string', format: 'uuid' },
         address: { type: 'string' },
+        assetYieldIndex: { type: 'string' },
         subaccountNumber: { type: 'integer' },
         updatedAt: { type: 'string', format: 'date-time' },
         updatedAtHeight: { type: 'string' },
@@ -104,6 +106,7 @@ export default class SubaccountModel extends BaseModel {
     return {
       id: 'string',
       address: 'string',
+      assetYieldIndex: 'string',
       subaccountNumber: 'integer',
       updatedAt: 'date-time',
       updatedAtHeight: 'string',
@@ -115,6 +118,8 @@ export default class SubaccountModel extends BaseModel {
   QueryBuilderType!: UpsertQueryBuilder<this>;
 
   address!: string;
+
+  assetYieldIndex!: string;
 
   subaccountNumber!: number;
 

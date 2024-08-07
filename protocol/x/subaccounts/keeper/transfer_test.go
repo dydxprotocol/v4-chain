@@ -199,7 +199,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
 
-			ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
+			ratelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
 
 			// Set up Subaccounts module account.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
@@ -234,6 +234,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				tc.asset.HasMarket,
 				tc.asset.MarketId,
 				tc.asset.AtomicResolution,
+				tc.asset.AssetYieldIndex,
 			)
 			require.NoError(t, err)
 
@@ -460,7 +461,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
 
-			ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
+			ratelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
 
 			// Set up Subaccounts module account.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
@@ -502,6 +503,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 					tc.asset.HasMarket,
 					tc.asset.MarketId,
 					tc.asset.AtomicResolution,
+					tc.asset.AssetYieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -728,14 +730,13 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, ratelimitKeeper, _, _ :=
-				keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, ratelimitKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
-			ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
+			ratelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
 
 			// Set up Subaccounts module account.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
@@ -757,6 +758,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 				tc.asset.HasMarket,
 				tc.asset.MarketId,
 				tc.asset.AtomicResolution,
+				tc.asset.AssetYieldIndex,
 			)
 			require.NoError(t, err)
 
@@ -1055,15 +1057,14 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, ratelimitKeeper, _, _ :=
-				keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, ratelimitKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
 
-			ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
+			ratelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
 
 			// Set up Subaccounts module account.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
@@ -1092,6 +1093,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 					tc.asset.HasMarket,
 					tc.asset.MarketId,
 					tc.asset.AtomicResolution,
+					tc.asset.AssetYieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -1346,6 +1348,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 					tc.asset.HasMarket,
 					tc.asset.MarketId,
 					tc.asset.AtomicResolution,
+					tc.asset.AssetYieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -1529,6 +1532,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 				tc.perpetual.Params.DefaultFundingPpm,
 				tc.perpetual.Params.LiquidityTier,
 				tc.perpetual.Params.MarketType,
+				tc.perpetual.YieldIndex,
 			)
 			require.NoError(t, err)
 

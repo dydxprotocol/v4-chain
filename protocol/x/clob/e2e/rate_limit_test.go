@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	"math/big"
 	"testing"
 
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
@@ -151,12 +152,10 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -308,12 +307,10 @@ func TestCombinedPlaceCancelBatchCancel_RateLimitsAreEnforced(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -430,16 +427,16 @@ func TestCancellationAndMatchInTheSameBlock_Regression(t *testing.T) {
 	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 	require.NoError(t, conversionErr)
 	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
-	tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 	tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
-	tApp.ParallelApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}))
+	tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 	tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
-	tApp.NoCheckTxApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}))
+	tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 	tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
-	tApp.CrashingApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}))
+	tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 	LPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20 := *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
@@ -567,12 +564,10 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 
 			ctx := tApp.InitChain()
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -690,12 +685,10 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 
 			ctx := tApp.InitChain()
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -776,16 +769,16 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreNotRateLimited(t *te
 	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 	require.NoError(t, conversionErr)
 	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
-	tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 	tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
-	tApp.ParallelApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}))
+	tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 	tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
-	tApp.NoCheckTxApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}))
+	tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 	tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
-	tApp.CrashingApp.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}))
+	tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 	ctx := tApp.InitChain()
 
 	firstMarketCheckTx := testapp.MustMakeCheckTx(
@@ -887,12 +880,10 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(

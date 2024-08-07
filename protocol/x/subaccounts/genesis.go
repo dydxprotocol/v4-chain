@@ -26,6 +26,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 					elem.PerpetualPositions,
 					elem.AssetPositions,
 					nil,
+					elem.AssetYieldIndex,
 				),
 			),
 		)

@@ -2,6 +2,7 @@ import { SubaccountUpdateEventV1 } from '@dydxprotocol-indexer/v4-protos';
 
 import { OrderFillWithLiquidity, SubaccountUpdate } from '../lib/translated-types';
 import { OrderFillEventWithLiquidation, OrderFillEventWithLiquidity, OrderFillEventWithOrder } from '../lib/types';
+import { ZERO_ASSET_YIELD_INDEX } from '../../src/constants';
 
 export function subaccountUpdateEventV1ToSubaccountUpdate(
   event: SubaccountUpdateEventV1,
@@ -10,6 +11,7 @@ export function subaccountUpdateEventV1ToSubaccountUpdate(
     subaccountId: event.subaccountId,
     updatedPerpetualPositions: event.updatedPerpetualPositions,
     updatedAssetPositions: event.updatedAssetPositions,
+    assetYieldIndex: ZERO_ASSET_YIELD_INDEX,
   };
 }
 

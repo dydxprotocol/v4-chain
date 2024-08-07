@@ -24,6 +24,7 @@ import {
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import express from 'express';
+import { UUIDVersion } from 'express-validator/src/options';
 
 /* ------- GENERAL/UNCATEGORIZED TYPES ------- */
 
@@ -52,6 +53,7 @@ export interface SubaccountResponseObject {
   openPerpetualPositions: PerpetualPositionsMap,
   assetPositions: AssetPositionsMap,
   marginEnabled: boolean,
+  assetYieldIndex: string,
 }
 
 export interface ParentSubaccountResponse {
@@ -95,6 +97,7 @@ export interface PerpetualPositionResponseObject {
   sumClose: string;
   netFunding: string;
   unrealizedPnl: string;
+  perpYieldIndex: string;
   closedAt?: IsoString | null;
   exitPrice?: string | null;
 }
@@ -268,6 +271,7 @@ export interface PerpetualMarketResponseObject {
   openInterestLowerCap?: string;
   openInterestUpperCap?: string;
   baseOpenInterest: string;
+  perpYieldIndex: string;
 }
 
 /* ------- ORDERBOOK TYPES ------- */
@@ -332,6 +336,20 @@ export interface HistoricalFundingResponseObject {
   effectiveAtHeight: string,
 }
 
+/* ------- YIELD PARAMS TYPES ------- */
+
+export interface YieldParamsResponse {
+  allYieldParams: YieldParamsResponseObject[],
+}
+
+export interface YieldParamsResponseObject {
+  id: string,
+  sDAIPrice: string,
+  assetYieldIndex: string, 
+  createdAt: IsoString,
+  createdAtHeight: string,
+}
+
 /* ------- GET REQUEST TYPES ------- */
 
 export interface AddressRequest {
@@ -352,6 +370,10 @@ export interface LimitRequest {
 
 export interface TickerRequest {
   ticker?: string,
+}
+
+export interface YieldParamsRequest {
+  createdBeforeOrAtHeight?: string,
 }
 
 export interface LimitAndCreatedBeforeRequest extends LimitRequest {

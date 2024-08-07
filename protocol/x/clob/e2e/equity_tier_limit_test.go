@@ -684,12 +684,10 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -901,12 +899,10 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -1239,12 +1235,10 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(

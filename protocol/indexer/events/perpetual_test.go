@@ -13,6 +13,7 @@ func TestNewUpdatePerpetualEventV1_Success(t *testing.T) {
 		5,
 		-8,
 		2,
+		"0/1",
 	)
 	expectedUpdatePerpetualEventV1Proto := &UpdatePerpetualEventV1{
 		Id:               5,
@@ -20,6 +21,7 @@ func TestNewUpdatePerpetualEventV1_Success(t *testing.T) {
 		MarketId:         5,
 		AtomicResolution: -8,
 		LiquidityTier:    2,
+		PerpYieldIndex: "0/1", 
 	}
 	require.Equal(t, expectedUpdatePerpetualEventV1Proto, updatePerpetualEventV1)
 }

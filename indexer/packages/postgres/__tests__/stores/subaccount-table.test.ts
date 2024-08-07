@@ -15,6 +15,7 @@ import {
   defaultSubaccountId2,
   defaultTendermintEvent,
   defaultTransfer,
+  zeroAssetYieldIndex,
 } from '../helpers/constants';
 import * as AssetTable from '../../src/stores/asset-table';
 import * as BlockTable from '../../src/stores/block-table';
@@ -145,6 +146,7 @@ describe('Subaccount store', () => {
       subaccountNumber: 3,
       updatedAt: createdDateTime.toISO(),
       updatedAtHeight: createdHeight,
+      assetYieldIndex: zeroAssetYieldIndex,
     };
     await Promise.all([
       SubaccountTable.create(defaultSubaccount),
@@ -171,6 +173,7 @@ describe('Subaccount store', () => {
       subaccountNumber: 3,
       updatedAt: createdDateTime.toISO(),
       updatedAtHeight: createdHeight,
+      assetYieldIndex: zeroAssetYieldIndex,
     };
     await Promise.all([
       SubaccountTable.create(defaultSubaccount),
@@ -196,6 +199,7 @@ describe('Subaccount store', () => {
       subaccountNumber: 3,
       updatedAt: createdDateTime.toISO(),
       updatedAtHeight: createdHeight,
+      assetYieldIndex: zeroAssetYieldIndex,
     };
     await Promise.all([
       SubaccountTable.create(defaultSubaccount),
@@ -265,6 +269,7 @@ describe('Subaccount store', () => {
       id: defaultSubaccountId,
       updatedAtHeight: defaultBlock2.blockHeight,
       updatedAt: defaultBlock2.time,
+      assetYieldIndex: zeroAssetYieldIndex,
     });
     const subaccount: SubaccountFromDatabase | undefined = await SubaccountTable.findById(
       SubaccountTable.uuid(defaultAddress, 0),

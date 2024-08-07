@@ -18,6 +18,7 @@ export interface IdBasedModelFromDatabase {
 
 export interface SubaccountFromDatabase extends IdBasedModelFromDatabase {
   address: string,
+  assetYieldIndex: string,
   subaccountNumber: number,
   updatedAt: IsoString,
   updatedAtHeight: string,
@@ -43,6 +44,7 @@ export interface PerpetualPositionFromDatabase extends IdBasedModelFromDatabase 
   closeEventId?: Buffer;
   lastEventId: Buffer;
   settledFunding: string;
+  perpYieldIndex: string;
 }
 
 export interface OrderFromDatabase extends IdBasedModelFromDatabase {
@@ -86,6 +88,7 @@ export interface PerpetualMarketFromDatabase {
   liquidityTierId: number;
   marketType: PerpetualMarketType;
   baseOpenInterest: string;
+  perpYieldIndex: string;
 }
 
 export interface FillFromDatabase {
@@ -219,6 +222,13 @@ export interface ComplianceDataFromDatabase {
   blocked: boolean;
   riskScore?: string;
   updatedAt: string;
+}
+
+export interface YieldParamsFromDatabase extends IdBasedModelFromDatabase {
+  sDAIPrice: string;
+  assetYieldIndex: string;
+  createdAt: IsoString;
+  createdAtHeight: string;
 }
 
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:

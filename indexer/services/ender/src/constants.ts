@@ -13,3 +13,5 @@ export const SUBACCOUNT_ORDER_FILL_EVENT_TYPE: string = 'subaccount_order_fill';
 
 // StatefulOrder and OrderFill events for the same order are processed chronologically.
 export const STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE: string = 'stateful_order_order_fill';
+
+export const ZERO_ASSET_YIELD_INDEX: string = "0/1";

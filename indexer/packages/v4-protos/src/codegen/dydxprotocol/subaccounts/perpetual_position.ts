@@ -17,6 +17,12 @@ export interface PerpetualPosition {
    */
 
   fundingIndex: Uint8Array;
+  /**
+   * The current yield index last time this position was settled.
+   * Should be converted from string to big.Rat.
+   */
+
+  yieldIndex: string;
 }
 /**
  * PerpetualPositions are an account’s positions of a `Perpetual`.
@@ -35,13 +41,20 @@ export interface PerpetualPositionSDKType {
    */
 
   funding_index: Uint8Array;
+  /**
+   * The current yield index last time this position was settled.
+   * Should be converted from string to big.Rat.
+   */
+
+  yield_index: string;
 }
 
 function createBasePerpetualPosition(): PerpetualPosition {
   return {
     perpetualId: 0,
     quantums: new Uint8Array(),
-    fundingIndex: new Uint8Array()
+    fundingIndex: new Uint8Array(),
+    yieldIndex: ""
   };
 }
 
@@ -57,6 +70,10 @@ export const PerpetualPosition = {
 
     if (message.fundingIndex.length !== 0) {
       writer.uint32(26).bytes(message.fundingIndex);
+    }
+
+    if (message.yieldIndex !== "") {
+      writer.uint32(34).string(message.yieldIndex);
     }
 
     return writer;
@@ -83,6 +100,10 @@ export const PerpetualPosition = {
           message.fundingIndex = reader.bytes();
           break;
 
+        case 4:
+          message.yieldIndex = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -97,6 +118,7 @@ export const PerpetualPosition = {
     message.perpetualId = object.perpetualId ?? 0;
     message.quantums = object.quantums ?? new Uint8Array();
     message.fundingIndex = object.fundingIndex ?? new Uint8Array();
+    message.yieldIndex = object.yieldIndex ?? "";
     return message;
   }
 

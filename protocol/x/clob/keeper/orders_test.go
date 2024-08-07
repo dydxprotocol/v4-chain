@@ -724,7 +724,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			).Return(nil)
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
-			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 			ctx := ks.Ctx.WithIsCheckTx(true)
 
 			// Create the default markets.
@@ -750,6 +750,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -973,7 +974,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			).Return(nil)
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
-			ks.RatelimitKeeper.SetCurrentDaiYieldEpochNumber(ks.Ctx, 0)
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 			ctx := ks.Ctx.WithIsCheckTx(true)
 
 			// Create the default markets.
@@ -999,6 +1000,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -1843,7 +1845,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 			require.NoError(t, conversionErr)
 			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
 
 			ctx := tApp.AdvanceToBlock(
 				// Stateful validation happens at blockHeight+1 for short term order placements.
@@ -1930,7 +1932,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			indexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
-
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 			// Create subaccount if it's specified.
 			if tc.subaccount != nil {
 				ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, *tc.subaccount)

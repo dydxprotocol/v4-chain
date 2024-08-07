@@ -22,6 +22,7 @@ const layer1Tables = [
   'candles',
   'liquidity_tiers',
   'compliance_data',
+  'yield_params'
 ];
 
 /**

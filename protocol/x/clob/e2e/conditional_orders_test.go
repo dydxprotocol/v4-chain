@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	"math/big"
 	"testing"
 	"time"
 
@@ -570,8 +571,10 @@ func TestConditionalOrder(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(25_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -602,6 +605,7 @@ func TestConditionalOrder(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -642,8 +646,10 @@ func TestConditionalOrder(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(-50_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -684,8 +690,10 @@ func TestConditionalOrder(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(50_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -718,6 +726,7 @@ func TestConditionalOrder(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -764,8 +773,10 @@ func TestConditionalOrder(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(25_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -798,6 +809,7 @@ func TestConditionalOrder(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -850,6 +862,7 @@ func TestConditionalOrder(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_1,
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -959,12 +972,10 @@ func TestConditionalOrder(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -1850,8 +1861,10 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(25_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -1882,6 +1895,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -1922,8 +1936,10 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(-50_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -1964,8 +1980,10 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(50_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -1998,6 +2016,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -2044,8 +2063,10 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(25_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -2078,6 +2099,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
 			},
 		},
@@ -2159,12 +2181,10 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -2362,12 +2382,10 @@ func TestConditionalOrderCancellation(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -2695,12 +2713,10 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              constants.Alice_Num0.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         constants.Alice_Num0.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(

@@ -191,6 +191,7 @@ export function convertPerpetualPosition(
     closeEventId,
     lastEventId,
     settledFunding,
+    perpYieldIndex,
   } = position;
 
   const updatedPosition: UpdatedPerpetualPositionSubaccountKafkaObject = {
@@ -209,6 +210,7 @@ export function convertPerpetualPosition(
     settledFunding,
     status,
     size,
+    perpYieldIndex,
   };
 
   return updatedPosition;

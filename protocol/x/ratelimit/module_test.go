@@ -134,9 +134,10 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 	cmd := am.GetQueryCmd()
 
 	require.Equal(t, "ratelimit", cmd.Use)
-	require.Equal(t, 4, len(cmd.Commands()))
+	require.Equal(t, 5, len(cmd.Commands()))
 	require.Equal(t, "capacity-by-denom", cmd.Commands()[0].Name())
-	require.Equal(t, "get-sdai-price", cmd.Commands()[1].Name())
-	require.Equal(t, "list-limit-params", cmd.Commands()[2].Name())
-	require.Equal(t, "pending-send-packets", cmd.Commands()[3].Name())
+	require.Equal(t, "get-asset-yield-index", cmd.Commands()[1].Name())
+	require.Equal(t, "get-sdai-price", cmd.Commands()[2].Name())
+	require.Equal(t, "list-limit-params", cmd.Commands()[3].Name())
+	require.Equal(t, "pending-send-packets", cmd.Commands()[4].Name())
 }

@@ -63,7 +63,7 @@ func SubaccountsKeepers(
 		blocktimeKeeper, _ = createBlockTimeKeeper(stateStore, db, cdc)
 
 		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
-		ratelimitKeeper, _ = createRatelimitKeeper(stateStore, db, cdc, pricesKeeper, blocktimeKeeper, bankKeeper, perpetualsKeeper)
+		ratelimitKeeper, _ = createRatelimitKeeper(stateStore, db, cdc, blocktimeKeeper, bankKeeper, perpetualsKeeper)
 		keeper, storeKey = createSubaccountsKeeper(
 			stateStore,
 			db,

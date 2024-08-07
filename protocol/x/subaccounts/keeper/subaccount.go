@@ -20,12 +20,9 @@ import (
 	indexer_manager "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
-	assetstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
-	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -85,9 +82,15 @@ func (k Keeper) GetSubaccount(
 	b := store.Get(id.ToStateKey())
 
 	// If subaccount does not exist in state, return a default value.
+	assetYieldIndex, found := k.ratelimitKeeper.GetAssetYieldIndex(ctx)
+	// TODO SOLAL not good error handling
+	if !found {
+		panic("asset yield index not found")
+	}
 	if b == nil {
 		return types.Subaccount{
-			Id: &id,
+			Id:              &id,
+			AssetYieldIndex: assetYieldIndex.String(),
 		}
 	}
 
@@ -260,6 +263,211 @@ func (k Keeper) getSettledUpdates(
 	return settledUpdates, subaccountIdToFundingPayments, nil
 }
 
+func (k Keeper) ClaimYieldForSubaccountFromId(
+	ctx sdk.Context,
+	subaccountId *types.SubaccountId,
+) (
+	err error,
+) {
+
+	subaccount := k.GetSubaccount(ctx, *subaccountId)
+	if len(subaccount.AssetPositions) == 0 && len(subaccount.PerpetualPositions) == 0 {
+		return errors.New("there is no yield to claim for subaccount")
+	}
+
+	settledSubaccount, _, err := k.settleSubaccountYield(ctx, subaccount)
+	if err != nil {
+		return err
+	}
+
+	k.SetSubaccount(ctx, settledSubaccount)
+
+	return nil
+}
+
+func (k Keeper) settleSubaccountYield(
+	ctx sdk.Context,
+	subaccount types.Subaccount,
+) (
+	settledSubaccount types.Subaccount,
+	totalYield *big.Int,
+	err error,
+) {
+
+	perpIdToPerp, assetYieldIndex, err := k.fetchParamsToSettleSubaccount(ctx, subaccount)
+	if err != nil {
+		return types.Subaccount{}, nil, err
+	}
+
+	isYieldAlreadyClaimed, err := IsYieldAlreadyClaimed(ctx, assetYieldIndex, subaccount.AssetYieldIndex)
+	if err != nil {
+		return types.Subaccount{}, nil, err
+	}
+	if isYieldAlreadyClaimed {
+		return subaccount, big.NewInt(0), nil
+	}
+
+	settledSubaccount, totalYield, err = k.addYieldToSubaccount(subaccount, perpIdToPerp, assetYieldIndex)
+	if err != nil {
+		return types.Subaccount{}, nil, err
+	}
+
+	return settledSubaccount, totalYield, nil
+}
+
+func IsYieldAlreadyClaimed(ctx sdk.Context, assetYieldIndex *big.Rat, subaccountAssetYieldIndex string) (bool, error) {
+
+	currentYieldIndex, success := new(big.Rat).SetString(subaccountAssetYieldIndex)
+	if !success {
+		return false, errors.New("could not convert the subaccount yield index to big.Rat")
+	}
+
+	if assetYieldIndex.Cmp(currentYieldIndex) <= 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (k Keeper) fetchParamsToSettleSubaccount(
+	ctx sdk.Context,
+	subaccount types.Subaccount,
+) (
+	perpIdToPerp map[uint32]perptypes.Perpetual,
+	assetYieldIndex *big.Rat,
+	err error,
+) {
+
+	assetYieldIndex, found := k.ratelimitKeeper.GetAssetYieldIndex(ctx)
+	if !found {
+		return nil, nil, errors.New("could not find asset yield index")
+	}
+
+	perpIdToPerp, err = k.getPerpIdToPerpMapForSubaccount(ctx, subaccount)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return perpIdToPerp, assetYieldIndex, nil
+}
+
+func (k Keeper) getPerpIdToPerpMapForSubaccount(
+	ctx sdk.Context,
+	subaccount types.Subaccount,
+) (
+	perpIdToPerp map[uint32]perptypes.Perpetual,
+	err error,
+) {
+	// Fetch all relevant perpetuals.
+	perpIdToPerp = make(map[uint32]perptypes.Perpetual)
+	for _, perpetualPosition := range subaccount.PerpetualPositions {
+		perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualPosition.PerpetualId)
+		if err != nil {
+			return nil, err
+		}
+		perpIdToPerp[perpetualPosition.PerpetualId] = perpetual
+	}
+	return perpIdToPerp, nil
+}
+
+func (k Keeper) addYieldToSubaccount(
+	subaccount types.Subaccount,
+	perpIdToPerp map[uint32]perptypes.Perpetual,
+	assetYieldIndex *big.Rat,
+) (
+	settledSubaccount types.Subaccount,
+	totalNewYield *big.Int,
+	err error,
+) {
+
+	assetYield, err := getYieldFromAssetPositions(subaccount, assetYieldIndex)
+	if err != nil {
+		return types.Subaccount{}, nil, err
+	}
+
+	totalNewPerpYield, newPerpetualPositions, err := getYieldFromPerpPositions(subaccount, perpIdToPerp)
+	if err != nil {
+		return types.Subaccount{}, nil, err
+	}
+	totalNewYield = new(big.Int).Add(assetYield, totalNewPerpYield)
+
+	newSubaccount := types.Subaccount{
+		Id:                 subaccount.Id,
+		AssetPositions:     subaccount.AssetPositions,
+		PerpetualPositions: newPerpetualPositions,
+		MarginEnabled:      subaccount.MarginEnabled,
+		AssetYieldIndex:    assetYieldIndex.String(),
+	}
+
+	// TODO [YBCP-21]: Handle negative yield more gracefully
+	if totalNewYield.Cmp(big.NewInt(0)) < 0 {
+		panic("Total yield is less than 0. This should not be the case")
+	}
+	newUsdcPosition := new(big.Int).Add(subaccount.GetUsdcPosition(), totalNewYield)
+
+	// TODO(CLOB-993): Remove this function and use `UpdateAssetPositions` instead.
+	newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
+	return newSubaccount, totalNewYield, nil
+}
+
+func getYieldFromAssetPositions(
+	subaccount types.Subaccount,
+	assetYieldIndex *big.Rat,
+) (
+	newAssetYield *big.Int,
+	err error,
+) {
+	for _, assetPosition := range subaccount.AssetPositions {
+		// TODO [YBCP-16]: Adapt quote currency to be DAI
+		if assetPosition.AssetId != assettypes.AssetUsdc.Id {
+			continue
+		}
+		newAssetYield, err := calculateAssetYieldInQuoteQuantums(subaccount, assetYieldIndex, assetPosition)
+		if err != nil {
+			return nil, err
+		}
+		return newAssetYield, err
+	}
+	return big.NewInt(0), nil
+}
+
+func getYieldFromPerpPositions(
+	subaccount types.Subaccount,
+	perpIdToPerp map[uint32]perptypes.Perpetual,
+) (
+	totalNewPerpYield *big.Int,
+	newPerpetualPositions []*types.PerpetualPosition,
+	err error,
+) {
+	totalNewPerpYield = big.NewInt(0)
+	newPerpetualPositions = []*types.PerpetualPosition{}
+
+	for _, perpetualPosition := range subaccount.PerpetualPositions {
+		perpetual, found := perpIdToPerp[perpetualPosition.PerpetualId]
+		if !found {
+			return nil,
+				nil,
+				errorsmod.Wrap(
+					perptypes.ErrPerpetualDoesNotExist, lib.UintToString(perpetualPosition.PerpetualId),
+				)
+		}
+
+		perpYield, perpYieldIndex, err := calculateTotalYieldWithPerpYieldAdded(perpetual, perpetualPosition)
+		if err != nil {
+			return nil, nil, err
+		}
+		totalNewPerpYield = new(big.Int).Add(totalNewPerpYield, perpYield)
+
+		newPerpetualPosition := types.PerpetualPosition{
+			PerpetualId:  perpetualPosition.PerpetualId,
+			Quantums:     perpetualPosition.Quantums,
+			FundingIndex: perpetualPosition.FundingIndex,
+			YieldIndex:   perpYieldIndex.String(),
+		}
+		newPerpetualPositions = append(newPerpetualPositions, &newPerpetualPosition)
+	}
+	return totalNewPerpYield, newPerpetualPositions, nil
+}
+
 // UpdateSubaccounts validates and applies all `updates` to the relevant subaccounts as long as this is a
 // valid state-transition for all subaccounts involved. All `updates` are made atomically, meaning that
 // all state-changes will either succeed or all will fail.
@@ -326,11 +534,18 @@ func (k Keeper) UpdateSubaccounts(
 			)
 		}
 	}
+	// get perp id to yield index
+
+	perpIdToYieldIndex := make(map[uint32]string)
+	for _, perp := range allPerps {
+		perpIdToYieldIndex[perp.Params.Id] = perp.YieldIndex
+	}
 
 	// Apply the updates to perpetual positions.
 	UpdatePerpetualPositions(
 		settledUpdates,
 		perpIdToFundingIndex,
+		perpIdToYieldIndex,
 	)
 
 	// Apply the updates to asset positions.
@@ -353,6 +568,15 @@ func (k Keeper) UpdateSubaccounts(
 	// Apply all updates, including a subaccount update event in the Indexer block message
 	// per update and emit a cometbft event for each settled funding payment.
 	for _, u := range settledUpdates {
+		// TODO this should never hit but we add as a sanity check and to help catch a potential bug in testing
+		if u.SettledSubaccount.AssetYieldIndex == "" {
+			return false, nil, errors.New("asset yield index is not set")
+		}
+		for _, perp := range u.SettledSubaccount.PerpetualPositions {
+			if perp.YieldIndex == "" {
+				return false, nil, errors.New("perp yield index is not set")
+			}
+		}
 		k.SetSubaccount(ctx, u.SettledSubaccount)
 		// Below access is safe because for all updated subaccounts' IDs, this map
 		// is populated as getSettledSubaccount() is called in getSettledUpdates().
@@ -370,6 +594,7 @@ func (k Keeper) UpdateSubaccounts(
 					),
 					getUpdatedAssetPositions(u),
 					fundingPayments,
+					u.SettledSubaccount.AssetYieldIndex,
 				),
 			),
 		)
@@ -433,9 +658,10 @@ func (k Keeper) CanUpdateSubaccounts(
 }
 
 // getSettledSubaccount returns 1. a new settled subaccount given an unsettled subaccount,
-// updating the USDC AssetPosition, FundingIndex, and LastFundingPayment fields accordingly
-// (does not persist any changes) and 2. a map with perpetual ID as key and last funding
-// payment as value (for emitting funding payments to indexer).
+// updating the USDC AssetPosition (including yield claims), FundingIndex, and L
+// astFundingPayment fields accordingly (does not persist any changes) and 2. a map with
+// perpetual ID as key and last funding payment as value (for emitting funding payments to
+// indexer).
 func (k Keeper) getSettledSubaccount(
 	ctx sdk.Context,
 	subaccount types.Subaccount,
@@ -444,312 +670,12 @@ func (k Keeper) getSettledSubaccount(
 	fundingPayments map[uint32]dtypes.SerializableInt,
 	err error,
 ) {
-	// Fetch all relevant perpetuals.
-	perpetuals := make(map[uint32]perptypes.Perpetual)
-	for _, p := range subaccount.PerpetualPositions {
-		perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, p.PerpetualId)
-		if err != nil {
-			return types.Subaccount{}, nil, err
-		}
-		perpetuals[p.PerpetualId] = perpetual
-	}
-
-	// We assume subaccount is passed as a pointer here.
-	_, err = k.ClaimYieldForSubaccount(ctx, subaccount)
+	perpIdToPerp, assetYieldIndex, err := k.fetchParamsToSettleSubaccount(ctx, subaccount)
 	if err != nil {
 		return types.Subaccount{}, nil, err
 	}
 
-	return GetSettledSubaccountWithPerpetuals(subaccount, perpetuals)
-}
-
-func (k Keeper) ClaimYieldForSubaccount(
-	ctx sdk.Context,
-	subaccount types.Subaccount,
-) (
-	yieldAmount *big.Int,
-	err error,
-) {
-	currEpoch, found := k.ratelimitKeeper.GetCurrentDaiYieldEpochNumber(ctx)
-	if !found {
-		return big.NewInt(0), errorsmod.Wrap(ratelimittypes.ErrEpochNotRetrieved, "could not retrive yield epoch number when claiming yield for subaccount")
-	}
-	lastEpochUnclaimed := k.getLastEpochClaimed(subaccount, currEpoch)
-	yieldAmount = big.NewInt(0)
-
-	for epoch := lastEpochUnclaimed; epoch <= currEpoch; epoch++ {
-		epochYield, err := k.calculateYieldInEpochForSubaccount(ctx, subaccount, epoch)
-		if err != nil {
-			return big.NewInt(0), err
-		}
-		// TODO: not perfectly atomic. Atomicity needed?
-		err = k.updateStateForSubaccountYieldClaimInEpoch(ctx, subaccount, epoch, epochYield)
-		if err != nil {
-			return big.NewInt(0), err
-		}
-	}
-	return yieldAmount, nil
-}
-
-func (k Keeper) getLastEpochClaimed(
-	subaccount types.Subaccount,
-	currEpoch uint64,
-) (
-	lastEpochUnclaimed uint64,
-) {
-	epochLastClaimed := subaccount.GetEpochYieldLastClaimed()
-	lastEpochUnclaimed = epochLastClaimed + 1
-	lastPossibleEpochUnclaimed := uint64(0)
-	if currEpoch >= ratelimittypes.MAX_NUM_YIELD_EPOCHS_STORED {
-		lastPossibleEpochUnclaimed = uint64(currEpoch - ratelimittypes.MAX_NUM_YIELD_EPOCHS_STORED + 1)
-	}
-
-	lastEpochUnclaimed = max(lastEpochUnclaimed, lastPossibleEpochUnclaimed)
-	return lastEpochUnclaimed
-}
-
-func (k Keeper) calculateYieldInEpochForSubaccount(
-	ctx sdk.Context,
-	subaccount types.Subaccount,
-	epoch uint64,
-) (
-	yieldAmount *big.Int,
-	err error,
-) {
-	marketPrices, err := k.getHistoricalPricesForEpoch(ctx, epoch)
-	if err != nil {
-		return big.NewInt(0), err
-	}
-
-	subaccountPositionValue, err := k.calculateSubaccountPositionValueFromMarketPrices(ctx, subaccount, marketPrices)
-	if err != nil {
-		return big.NewInt(0), err
-	}
-
-	yieldAmount, err = k.getSubaccountYieldAtEpochFromPosition(ctx, subaccountPositionValue, epoch)
-	if err != nil {
-		return big.NewInt(0), err
-	}
-
-	return yieldAmount, nil
-}
-
-func (k Keeper) getHistoricalPricesForEpoch(
-	ctx sdk.Context,
-	epoch uint64,
-) (
-	epochMarketPrices []*prices.MarketPrice,
-	err error,
-) {
-	params, err := k.ratelimitKeeper.GetDAIYieldEpochParamsForEpoch(ctx, epoch)
-	if err != nil {
-		return []*prices.MarketPrice{}, err
-	}
-
-	epochMarketPrices = params.EpochMarketPrices
-	return epochMarketPrices, nil
-}
-
-func (k Keeper) calculateSubaccountPositionValueFromMarketPrices(
-	ctx sdk.Context,
-	subaccount types.Subaccount,
-	marketPrices []*prices.MarketPrice,
-) (
-	positionValue *big.Int,
-	err error,
-) {
-	assetPositions := subaccount.AssetPositions
-	perpetualPositions := subaccount.PerpetualPositions
-	positionValue = big.NewInt(0)
-
-	assetPositionValue, err := k.getPositionValueFromAssets(ctx, assetPositions)
-	if err != nil {
-		return big.NewInt(0), err
-	}
-
-	perpetualPositionValue, err := k.getPositionValueFromPerpetuals(ctx, perpetualPositions, marketPrices)
-	if err != nil {
-		return big.NewInt(0), err
-	}
-
-	positionValue.Add(positionValue, assetPositionValue)
-	positionValue.Add(positionValue, perpetualPositionValue)
-
-	// Convert position value from quantums to full coin
-	// TODO: [YBCP-14] Handle conversions more appropriately
-	quoteAssetId := assetstypes.AssetUsdc.Id
-	_, positionValue, err = k.assetsKeeper.ConvertAssetToFullCoin(ctx, quoteAssetId, positionValue)
-	if err != nil {
-		return big.NewInt(0), err
-	}
-	return positionValue, nil
-}
-
-func (k Keeper) getPositionValueFromAssets(
-	ctx sdk.Context,
-	assetPositions []*types.AssetPosition,
-) (
-	positionValue *big.Int,
-	err error,
-) {
-	// NOTE: Assume quote unit is only existing asset unit
-	positionValue = big.NewInt(0)
-
-	for _, position := range assetPositions {
-		sizeInBigQuantums := position.GetBigQuantums()
-		assetId := position.GetId()
-		assetValue, err := k.assetsKeeper.GetNetCollateral(ctx, assetId, sizeInBigQuantums)
-		if err != nil {
-			return big.NewInt(0), err
-		}
-		positionValue.Add(positionValue, assetValue)
-	}
-	return positionValue, nil
-}
-
-func (k Keeper) getPositionValueFromPerpetuals(
-	ctx sdk.Context,
-	perpetualPositions []*types.PerpetualPosition,
-	perpetualPrices []*prices.MarketPrice,
-) (
-	positionValue *big.Int,
-	err error,
-) {
-	// TODO: Might be more useful to convert this to map in epoch store
-	marketPriceMap, err := k.createMarketPriceMapFromList(perpetualPrices)
-	if err != nil {
-		return nil, err
-	}
-
-	totalValue := big.NewInt(0)
-	for _, position := range perpetualPositions {
-		perpetualId := position.PerpetualId
-		perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
-		if err != nil {
-			return nil, err
-		}
-		sizeInBigQuantums := position.GetBigQuantums()
-		marketId := perpetual.Params.MarketId
-		marketPrice, exists := marketPriceMap[marketId]
-		if !exists {
-			return nil, errorsmod.Wrap(types.ErrPerpetualPositionPriceNotPresentForEpoch, "market price not found")
-		}
-
-		value := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, *marketPrice, sizeInBigQuantums)
-		totalValue.Add(totalValue, value)
-	}
-
-	return totalValue, nil
-}
-
-func (k Keeper) createMarketPriceMapFromList(
-	perpetualPrices []*prices.MarketPrice,
-) (
-	map[uint32]*prices.MarketPrice,
-	error,
-) {
-	marketPriceMap := make(map[uint32]*prices.MarketPrice)
-
-	for _, marketPrice := range perpetualPrices {
-		if marketPrice == nil {
-			return nil, errors.New("market price is nil")
-		}
-		marketPriceMap[marketPrice.Id] = marketPrice
-	}
-
-	return marketPriceMap, nil
-}
-
-func (k Keeper) getSubaccountYieldAtEpochFromPosition(
-	ctx sdk.Context,
-	subaccountPositionValueInDai *big.Int,
-	epoch uint64,
-) (
-	yieldAmount *big.Int,
-	err error,
-) {
-
-	params, err := k.ratelimitKeeper.GetDAIYieldEpochParamsForEpoch(ctx, epoch)
-	if err != nil {
-		return big.NewInt(0), err
-	}
-
-	tradingDaiMintedInEpoch, err := ratelimitkeeper.ConvertStringToBigInt(params.TradingDaiMinted)
-	if err != nil {
-		return big.NewInt(0), err
-	}
-
-	tradingDaiPreMint, err := ratelimitkeeper.ConvertStringToBigInt(params.TotalTradingDaiPreMint)
-	if err != nil {
-		return big.NewInt(0), err
-	}
-
-	tradingDaiClaimedForEpoch, err := ratelimitkeeper.ConvertStringToBigInt(params.TotalTradingDaiClaimedForEpoch)
-	if err != nil {
-		return big.NewInt(0), err
-	}
-
-	yieldAmount = new(big.Int).Mul(subaccountPositionValueInDai, tradingDaiMintedInEpoch)
-	yieldAmount = new(big.Int).Div(yieldAmount, tradingDaiPreMint)
-
-	// TODO: This needs to be added to the epoch data struct later
-	newClaimedAmount := new(big.Int).Add(tradingDaiClaimedForEpoch, yieldAmount)
-
-	if newClaimedAmount.Cmp(tradingDaiMintedInEpoch) > 0 {
-		return big.NewInt(0), errorsmod.Wrap(types.ErrYieldClaim, "cannot claim trading DAI to subaccount: Claiming more than permitted")
-	}
-
-	return yieldAmount, nil
-}
-
-func (k Keeper) updateStateForSubaccountYieldClaimInEpoch(
-	ctx sdk.Context,
-	subaccount types.Subaccount,
-	epoch uint64,
-	newYield *big.Int,
-) (
-	err error,
-) {
-	err = k.addNewYieldToStoredEpochParamsForEpoch(ctx, epoch, newYield)
-	if err != nil {
-		return err
-	}
-	subaccount.SetEpochYieldLastClaimed(epoch)
-	k.updateSubaccountAssetsWithNewYield(subaccount, newYield)
-	return nil
-}
-
-func (k Keeper) addNewYieldToStoredEpochParamsForEpoch(
-	ctx sdk.Context,
-	epoch uint64,
-	newYield *big.Int,
-) error {
-	params, err := k.ratelimitKeeper.GetDAIYieldEpochParamsForEpoch(ctx, epoch)
-	if err != nil {
-		return err
-	}
-	tradingDaiClaimedForEpoch, err := ratelimitkeeper.ConvertStringToBigInt(params.TotalTradingDaiClaimedForEpoch)
-	if err != nil {
-		return err
-	}
-
-	tradingDaiClaimedForEpoch.Add(tradingDaiClaimedForEpoch, newYield)
-	params.TotalTradingDaiClaimedForEpoch = tradingDaiClaimedForEpoch.String()
-
-	err = k.ratelimitKeeper.SetDAIYieldEpochParamsForEpoch(ctx, epoch, params)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (k Keeper) updateSubaccountAssetsWithNewYield(
-	subaccount types.Subaccount,
-	yieldAmount *big.Int,
-) {
-	currPositionSize := subaccount.GetUsdcPosition()
-	newUsdcPosition := new(big.Int).Add(currPositionSize, yieldAmount)
-	subaccount.SetUsdcAssetPosition(newUsdcPosition)
+	return GetSettledSubaccountWithPerpetuals(subaccount, perpIdToPerp, assetYieldIndex)
 }
 
 // GetSettledSubaccountWithPerpetuals returns 1. a new settled subaccount given an unsettled subaccount,
@@ -761,55 +687,56 @@ func (k Keeper) updateSubaccountAssetsWithNewYield(
 func GetSettledSubaccountWithPerpetuals(
 	subaccount types.Subaccount,
 	perpetuals map[uint32]perptypes.Perpetual,
+	assetYieldIndex *big.Rat,
 ) (
 	settledSubaccount types.Subaccount,
 	fundingPayments map[uint32]dtypes.SerializableInt,
 	err error,
 ) {
 	totalNetSettlementPpm := big.NewInt(0)
-
 	newPerpetualPositions := []*types.PerpetualPosition{}
 	fundingPayments = make(map[uint32]dtypes.SerializableInt)
+	totalNewYield := big.NewInt(0)
+
+	assetYield, err := getYieldFromAssetPositions(subaccount, assetYieldIndex)
+	if err != nil {
+		return types.Subaccount{}, nil, err
+	}
+	totalNewYield = new(big.Int).Add(totalNewYield, assetYield)
 
 	// Iterate through and settle all perpetual positions.
-	for _, p := range subaccount.PerpetualPositions {
-		perpetual, found := perpetuals[p.PerpetualId]
+	for _, perpetualPosition := range subaccount.PerpetualPositions {
+		perpetual, found := perpetuals[perpetualPosition.PerpetualId]
 		if !found {
 			return types.Subaccount{},
 				nil,
 				errorsmod.Wrap(
-					perptypes.ErrPerpetualDoesNotExist, lib.UintToString(p.PerpetualId),
+					perptypes.ErrPerpetualDoesNotExist, lib.UintToString(perpetualPosition.PerpetualId),
 				)
 		}
 
-		// Call the stateless utility function to get the net settlement and new funding index.
-		bigNetSettlementPpm, newFundingIndex := perpkeeper.GetSettlementPpmWithPerpetual(
-			perpetual,
-			p.GetBigQuantums(),
-			p.FundingIndex.BigInt(),
-		)
+		/* Calculate Perp Yield */
+		perpYield, perpYieldIndex, err := calculateTotalYieldWithPerpYieldAdded(perpetual, perpetualPosition)
+		if err != nil {
+			return types.Subaccount{}, nil, err
+		}
+		totalNewYield = new(big.Int).Add(totalNewYield, perpYield)
+
+		/* Calculate Funding Rates*/
+		bigNetSettlementPpm, newPerpetualPosition, err := getFundingRateUpdateForPerp(perpetual, perpetualPosition, perpYieldIndex)
+		if err != nil {
+			return types.Subaccount{}, nil, err
+		}
+
 		// Record non-zero funding payment (to be later emitted in SubaccountUpdateEvent to indexer).
 		// Note: Funding payment is the negative of settlement, i.e. positive settlement is equivalent
 		// to a negative funding payment (position received funding payment) and vice versa.
 		if bigNetSettlementPpm.Cmp(lib.BigInt0()) != 0 {
-			fundingPayments[p.PerpetualId] = dtypes.NewIntFromBigInt(
-				new(big.Int).Neg(
-					new(big.Int).Div(bigNetSettlementPpm, lib.BigIntOneMillion()),
-				),
-			)
+			fundingPayments[perpetualPosition.PerpetualId] = getFundingPaymentAsSerializableInt(bigNetSettlementPpm)
 		}
 
-		// Aggregate all net settlements.
 		totalNetSettlementPpm.Add(totalNetSettlementPpm, bigNetSettlementPpm)
-
-		// Update cached funding index of the perpetual position.
-		newPerpetualPositions = append(
-			newPerpetualPositions, &types.PerpetualPosition{
-				PerpetualId:  p.PerpetualId,
-				Quantums:     p.Quantums,
-				FundingIndex: dtypes.NewIntFromBigInt(newFundingIndex),
-			},
-		)
+		newPerpetualPositions = append(newPerpetualPositions, &newPerpetualPosition)
 	}
 
 	newSubaccount := types.Subaccount{
@@ -817,16 +744,190 @@ func GetSettledSubaccountWithPerpetuals(
 		AssetPositions:     subaccount.AssetPositions,
 		PerpetualPositions: newPerpetualPositions,
 		MarginEnabled:      subaccount.MarginEnabled,
+		AssetYieldIndex:    assetYieldIndex.String(),
 	}
-	newUsdcPosition := new(big.Int).Add(
-		subaccount.GetUsdcPosition(),
-		// `Div` implements Euclidean division (unlike Go). When the diviser is positive,
-		// division result always rounds towards negative infinity.
-		totalNetSettlementPpm.Div(totalNetSettlementPpm, lib.BigIntOneMillion()),
-	)
+
+	// TODO [YBCP-21]: Handle negative yield more gracefully
+	if totalNewYield.Cmp(big.NewInt(0)) < 0 {
+		panic("Total yield is less than 0. This should not be the case")
+	}
+
+	newUsdcPosition := new(big.Int).Add(subaccount.GetUsdcPosition(), totalNewYield)
+	totalNetSettlement := totalNetSettlementPpm.Div(totalNetSettlementPpm, lib.BigIntOneMillion())
+	newUsdcPosition.Add(newUsdcPosition, totalNetSettlement)
+
 	// TODO(CLOB-993): Remove this function and use `UpdateAssetPositions` instead.
 	newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
 	return newSubaccount, fundingPayments, nil
+}
+
+func calculateTotalYieldWithPerpYieldAdded(
+	perpetual perptypes.Perpetual,
+	perpetualPosition *types.PerpetualPosition,
+) (
+	newPerpYield *big.Int,
+	perpYieldIndex *big.Rat,
+	err error,
+) {
+	perpYieldIndex, err = getCurrentYieldIndexForPerp(perpetual)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	newPerpYield, err = calculatePerpetualYieldInQuoteQuantums(perpetualPosition, perpYieldIndex)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return newPerpYield, perpYieldIndex, nil
+}
+
+func getFundingRateUpdateForPerp(
+	perpetual perptypes.Perpetual,
+	perpetualPosition *types.PerpetualPosition,
+	perpYieldIndex *big.Rat,
+) (
+	bigNetSettlementPpm *big.Int,
+	newPerpetualPosition types.PerpetualPosition,
+	err error,
+) {
+
+	// Call the stateless utility function to get the net settlement and new funding index.
+	bigNetSettlementPpm, newFundingIndex := perpkeeper.GetSettlementPpmWithPerpetual(
+		perpetual,
+		perpetualPosition.GetBigQuantums(),
+		perpetualPosition.FundingIndex.BigInt(),
+	)
+
+	newPerpetualPosition = types.PerpetualPosition{
+		PerpetualId:  perpetualPosition.PerpetualId,
+		Quantums:     perpetualPosition.Quantums,
+		FundingIndex: dtypes.NewIntFromBigInt(newFundingIndex),
+		YieldIndex:   perpYieldIndex.String(),
+	}
+
+	return bigNetSettlementPpm, newPerpetualPosition, nil
+}
+
+func getFundingPaymentAsSerializableInt(
+	bigNetSettlementPpm *big.Int,
+) (
+	fundingPayment dtypes.SerializableInt,
+) {
+	dividedSettlement := new(big.Int).Div(bigNetSettlementPpm, lib.BigIntOneMillion())
+	negatedSettlement := new(big.Int).Neg(dividedSettlement)
+	return dtypes.NewIntFromBigInt(negatedSettlement)
+}
+
+func calculateAssetYieldInQuoteQuantums(
+	subaccount types.Subaccount,
+	generalYieldIndex *big.Rat,
+	assetPosition *types.AssetPosition,
+) (
+	newYield *big.Int,
+	err error,
+) {
+
+	if generalYieldIndex == nil {
+		return nil, errors.New("general yield index is nil")
+	}
+
+	if generalYieldIndex.Cmp(big.NewRat(0, 1)) < 0 {
+		return nil, errors.New("general yield index is negative")
+	}
+
+	if generalYieldIndex.Cmp(big.NewRat(0, 1)) == 0 {
+		return big.NewInt(0), nil
+	}
+
+	if subaccount.AssetYieldIndex == "" {
+		return nil, errors.New("asset yield for subaccount is badly initialised 0/1")
+	}
+
+	if subaccount.AssetYieldIndex == "0/1" {
+		return big.NewInt(0), nil
+	}
+
+	currentYieldIndex, success := new(big.Rat).SetString(subaccount.AssetYieldIndex)
+	if !success {
+		return nil, errors.New("could not convert the subaccount yield index to big.Rat")
+	}
+
+	if generalYieldIndex.Cmp(currentYieldIndex) < 0 {
+		return nil, errors.New("general yield index is less than the current yield index")
+	}
+
+	yieldIndexDifference := new(big.Rat).Sub(generalYieldIndex, currentYieldIndex)
+	assetAmount := new(big.Rat).SetInt(assetPosition.GetBigQuantums())
+	newYieldRat := new(big.Rat).Mul(assetAmount, yieldIndexDifference)
+	newYield = lib.BigRatRound(newYieldRat, false)
+
+	return newYield, nil
+}
+
+func calculatePerpetualYieldInQuoteQuantums(
+	perpPosition *types.PerpetualPosition,
+	generalYieldIndex *big.Rat,
+) (
+	newYield *big.Int,
+	err error,
+) {
+	if perpPosition == nil {
+		return nil, errors.New("could not calculate perpetual yield: perp position is nil")
+	}
+
+	if generalYieldIndex == nil {
+		return nil, errors.New("could not calculate perpetual yield: perp yield index is nil")
+	}
+
+	if generalYieldIndex.Cmp(big.NewRat(0, 1)) < 0 {
+		return nil, errors.New("general yield index is negative")
+	}
+
+	if generalYieldIndex.Cmp(big.NewRat(0, 1)) == 0 {
+		return big.NewInt(0), nil
+	}
+
+	if perpPosition.YieldIndex == "" {
+		return nil, errors.New("perp yield index for perp is badly initialised 0/1")
+	}
+
+	if perpPosition.YieldIndex == "0/1" {
+		return big.NewInt(0), nil
+	}
+
+	currentYieldIndex, success := new(big.Rat).SetString(perpPosition.YieldIndex)
+	if !success {
+		return nil, errors.New("could not convert yield index of perp position to big.Rat")
+	}
+
+	if generalYieldIndex.Cmp(currentYieldIndex) < 0 {
+		return nil, errors.New("general yield index is less than the current yield index")
+	}
+
+	yieldIndexDifference := new(big.Rat).Sub(generalYieldIndex, currentYieldIndex)
+	perpAmount := new(big.Rat).SetInt(perpPosition.GetBigQuantums())
+	newYieldRat := new(big.Rat).Mul(perpAmount, yieldIndexDifference)
+	newYield = lib.BigRatRound(newYieldRat, false)
+
+	return newYield, nil
+}
+
+func getCurrentYieldIndexForPerp(
+	perp perptypes.Perpetual,
+) (
+	yieldIndex *big.Rat,
+	err error,
+) {
+	if perp.YieldIndex == "" {
+		return nil, errors.New("perp yield index for perp is not initialised")
+	}
+
+	generalYieldIndex, success := new(big.Rat).SetString(perp.YieldIndex)
+	if !success {
+		return nil, errors.New("could not convert yield index of perp to big.Rat")
+	}
+	return generalYieldIndex, nil
 }
 
 func checkPositionUpdatable(

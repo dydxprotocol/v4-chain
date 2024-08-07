@@ -6,7 +6,6 @@ import {
 import { checkSchema, ParamSchema } from 'express-validator';
 
 import config from '../../config';
-import { MAX_SUBACCOUNT_NUMBER } from '../../constants';
 
 export const CheckSubaccountSchema = checkSchema({
   address: {
@@ -153,4 +152,14 @@ export const CheckTickerParamSchema = checkSchema({
 
 export const CheckTickerOptionalQuerySchema = checkSchema({
   ticker: checkTickerOptionalQuerySchema,
+});
+
+export const CheckLimitAndYieldParamsSchema = checkSchema({
+  ...limitSchemaRecord,
+  createdAtOrBeforeHeight: {
+    in: ['query'],
+    optional: true,
+    isString: true,
+    errorMessage: 'createdOnOrAfterHeight must be a string',
+  },
 });

@@ -176,12 +176,10 @@ func TestMsgCreateTransfer(t *testing.T) {
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              tc.senderSubaccountId.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         tc.senderSubaccountId.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -315,6 +313,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 										},
 									},
 									nil, // no funding payment should have occurred
+									constants.AssetYieldIndex_Zero,
 								),
 							),
 						},
@@ -334,6 +333,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 										},
 									},
 									nil, // no funding payment should have occurred
+									constants.AssetYieldIndex_Zero,
 								),
 							),
 						},
@@ -433,12 +433,10 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              tc.subaccountId.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         tc.subaccountId.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -539,6 +537,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 										},
 									},
 									nil, // no funding payment should have occurred
+									constants.AssetYieldIndex_Zero,
 								),
 							),
 						},
@@ -652,12 +651,10 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              tc.subaccountId.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         tc.subaccountId.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -758,6 +755,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 										},
 									},
 									nil, // no funding payment should have occurred
+									constants.AssetYieldIndex_Zero,
 								),
 							),
 						},
@@ -954,12 +952,10 @@ func TestWithdrawalGating_ChainOutage(t *testing.T) {
 			})
 
 			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-			blockNumber := sdaiservertypes.TestSDAIEventRequests[0].EthereumBlockNumber
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:              tc.subaccount.Id.Owner,
-				ConversionRate:      rate,
-				EthereumBlockNumber: blockNumber,
+				Sender:         tc.subaccount.Id.Owner,
+				ConversionRate: rate,
 			}
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(

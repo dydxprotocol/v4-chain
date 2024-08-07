@@ -2,10 +2,9 @@ package types
 
 import (
 	"context"
+	"math/big"
 	"time"
 
-	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
@@ -36,14 +35,8 @@ type BlockTimeKeeper interface {
 	GetTimeSinceLastBlock(ctx sdk.Context) time.Duration
 }
 
-type PricesKeeper interface {
-	GetAllMarketPrices(ctx sdk.Context) []prices.MarketPrice
-}
-
 type PerpetualsKeeper interface {
-	GetAllPerpetuals(ctx sdk.Context) []perptypes.Perpetual
-	GetInsuranceFundModuleAddress(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error)
-	IsIsolatedPerpetual(ctx sdk.Context, perpetualId uint32) (bool, error)
+	UpdateYieldIndexToNewMint(ctx sdk.Context, totalTDaiPreMint *big.Int, totalTDaiMinted *big.Int)
 }
 
 // ICS4Wrapper defines the expected ICS4Wrapper for middleware

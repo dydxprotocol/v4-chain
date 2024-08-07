@@ -14,6 +14,8 @@ import {
   BestEffortOpenedStatus,
   LiquidityTiersFromDatabase,
   helpers,
+  YieldParamsFromDatabase,
+  YieldParamsTable,
 } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, redisTestConstants } from '@dydxprotocol-indexer/redis';
 import {
@@ -27,8 +29,10 @@ import {
   postgresAndRedisOrderToResponseObject,
   postgresOrderToResponseObject,
   redisOrderToResponseObject,
+  yieldParamsToResponseObject,
 } from '../../../src/request-helpers/request-transformer';
-import { OrderResponseObject } from '../../../src/types';
+import { OrderResponseObject, YieldParamsResponseObject } from '../../../src/types';
+import { response } from 'express';
 
 describe('request-transformer', () => {
   const ticker: string = testConstants.defaultPerpetualMarket.ticker;
@@ -81,6 +85,7 @@ describe('request-transformer', () => {
           openInterestLowerCap: liquidityTier.openInterestLowerCap,
           openInterestUpperCap: liquidityTier.openInterestUpperCap,
           baseOpenInterest: perpetualMarket.baseOpenInterest,
+          perpYieldIndex: perpetualMarket.perpYieldIndex,
         },
       );
     });
@@ -250,6 +255,32 @@ describe('request-transformer', () => {
           postOnly: apiTranslations.isOrderTIFPostOnly(order.timeInForce),
           ticker,
           subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+        });
+      },
+    );
+  });
+
+  describe('yieldParamsToResponseObject', () => {
+    it(
+      'successfully converts yield params from DB to response object',
+      () => {
+
+        const yieldParamsFromDatabase: YieldParamsFromDatabase = {
+          id: YieldParamsTable.uuid(testConstants.defaultYieldParams1.createdAtHeight),
+          sDAIPrice: testConstants.defaultYieldParams1.sDAIPrice,
+          assetYieldIndex: testConstants.defaultYieldParams1.assetYieldIndex,
+          createdAt: testConstants.defaultYieldParams1.createdAt,
+          createdAtHeight: testConstants.defaultYieldParams1.createdAtHeight,
+        }
+
+        const responseObject: YieldParamsResponseObject = yieldParamsToResponseObject(yieldParamsFromDatabase)
+
+        expect(responseObject).toEqual({
+          id: yieldParamsFromDatabase.id,
+          sDAIPrice: yieldParamsFromDatabase.sDAIPrice,
+          assetYieldIndex: yieldParamsFromDatabase.assetYieldIndex,
+          createdAt: yieldParamsFromDatabase.createdAt,
+          createdAtHeight: yieldParamsFromDatabase.createdAtHeight,
         });
       },
     );

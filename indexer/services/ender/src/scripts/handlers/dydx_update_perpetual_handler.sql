@@ -17,13 +17,15 @@ BEGIN
     perpetual_market_record."marketId" = (event_data->'marketId')::integer;
     perpetual_market_record."atomicResolution" = (event_data->'atomicResolution')::integer;
     perpetual_market_record."liquidityTierId" = (event_data->'liquidityTier')::integer;
+    perpetual_market_record."perpYieldIndex" = jsonb_extract_path_text(event_data, 'perpYieldIndex');
 
     UPDATE perpetual_markets
     SET
         "ticker" = perpetual_market_record."ticker",
         "marketId" = perpetual_market_record."marketId",
         "atomicResolution" = perpetual_market_record."atomicResolution",
-        "liquidityTierId" = perpetual_market_record."liquidityTierId"
+        "liquidityTierId" = perpetual_market_record."liquidityTierId",
+        "perpYieldIndex" = perpetual_market_record."perpYieldIndex"
     WHERE "id" = perpetual_market_id
     RETURNING * INTO perpetual_market_record;
 

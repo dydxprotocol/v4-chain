@@ -84,6 +84,7 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         },
@@ -101,6 +102,7 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         }
@@ -121,7 +123,8 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
           "subaccountNumber": 0
         }
       },
-      "marginEnabled": true
+      "marginEnabled": true,
+      "assetYieldIndex": "string"
     }
   ]
 }
@@ -209,6 +212,7 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber
       "sumClose": "string",
       "netFunding": "string",
       "unrealizedPnl": "string",
+      "perpYieldIndex": "string",
       "closedAt": "string",
       "exitPrice": "string"
     },
@@ -226,6 +230,7 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber
       "sumClose": "string",
       "netFunding": "string",
       "unrealizedPnl": "string",
+      "perpYieldIndex": "string",
       "closedAt": "string",
       "exitPrice": "string"
     }
@@ -246,7 +251,8 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber
       "subaccountNumber": 0
     }
   },
-  "marginEnabled": true
+  "marginEnabled": true,
+  "assetYieldIndex": "string"
 }
 ```
 
@@ -338,6 +344,7 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccount
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         },
@@ -355,6 +362,7 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccount
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         }
@@ -375,7 +383,8 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccount
           "subaccountNumber": 0
         }
       },
-      "marginEnabled": true
+      "marginEnabled": true,
+      "assetYieldIndex": "string"
     }
   ]
 }
@@ -1841,7 +1850,8 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
       "openInterestUpperCap": "string",
-      "baseOpenInterest": "string"
+      "baseOpenInterest": "string",
+      "perpYieldIndex": "string"
     },
     "property2": {
       "clobPairId": "string",
@@ -1864,7 +1874,8 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
       "openInterestUpperCap": "string",
-      "baseOpenInterest": "string"
+      "baseOpenInterest": "string",
+      "perpYieldIndex": "string"
     }
   }
 }
@@ -1962,6 +1973,7 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualPositions?address=string&su
       "sumClose": "string",
       "netFunding": "string",
       "unrealizedPnl": "string",
+      "perpYieldIndex": "string",
       "closedAt": "string",
       "exitPrice": "string"
     }
@@ -2379,6 +2391,148 @@ fetch('https://dydx-testnet.imperator.co/v4/transfers/parentSubaccountNumber?add
 This operation does not require authentication
 </aside>
 
+## GetYieldParams
+
+<a id="opIdGetYieldParams"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://dydx-testnet.imperator.co/v4/yieldParams', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://dydx-testnet.imperator.co/v4/yieldParams',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /yieldParams`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|createdBeforeOrAtHeight|query|string|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "allYieldParams": [
+    {
+      "id": "string",
+      "sDAIPrice": "string",
+      "assetYieldIndex": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[YieldParamsResponse](#schemayieldparamsresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## GetLatestYieldParams
+
+<a id="opIdGetLatestYieldParams"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://dydx-testnet.imperator.co/v4/yieldParams/latestYieldParams', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://dydx-testnet.imperator.co/v4/yieldParams/latestYieldParams',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /yieldParams/latestYieldParams`
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "allYieldParams": [
+    {
+      "id": "string",
+      "sDAIPrice": "string",
+      "assetYieldIndex": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[YieldParamsResponse](#schemayieldparamsresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 # Schemas
 
 ## PerpetualPositionStatus
@@ -2472,6 +2626,7 @@ This operation does not require authentication
   "sumClose": "string",
   "netFunding": "string",
   "unrealizedPnl": "string",
+  "perpYieldIndex": "string",
   "closedAt": "string",
   "exitPrice": "string"
 }
@@ -2495,6 +2650,7 @@ This operation does not require authentication
 |sumClose|string|true|none|none|
 |netFunding|string|true|none|none|
 |unrealizedPnl|string|true|none|none|
+|perpYieldIndex|string|true|none|none|
 |closedAt|[IsoString](#schemaisostring)¦null|false|none|none|
 |exitPrice|string¦null|false|none|none|
 
@@ -2521,6 +2677,7 @@ This operation does not require authentication
     "sumClose": "string",
     "netFunding": "string",
     "unrealizedPnl": "string",
+    "perpYieldIndex": "string",
     "closedAt": "string",
     "exitPrice": "string"
   },
@@ -2538,6 +2695,7 @@ This operation does not require authentication
     "sumClose": "string",
     "netFunding": "string",
     "unrealizedPnl": "string",
+    "perpYieldIndex": "string",
     "closedAt": "string",
     "exitPrice": "string"
   }
@@ -2640,6 +2798,7 @@ This operation does not require authentication
       "sumClose": "string",
       "netFunding": "string",
       "unrealizedPnl": "string",
+      "perpYieldIndex": "string",
       "closedAt": "string",
       "exitPrice": "string"
     },
@@ -2657,6 +2816,7 @@ This operation does not require authentication
       "sumClose": "string",
       "netFunding": "string",
       "unrealizedPnl": "string",
+      "perpYieldIndex": "string",
       "closedAt": "string",
       "exitPrice": "string"
     }
@@ -2677,7 +2837,8 @@ This operation does not require authentication
       "subaccountNumber": 0
     }
   },
-  "marginEnabled": true
+  "marginEnabled": true,
+  "assetYieldIndex": "string"
 }
 
 ```
@@ -2693,6 +2854,7 @@ This operation does not require authentication
 |openPerpetualPositions|[PerpetualPositionsMap](#schemaperpetualpositionsmap)|true|none|none|
 |assetPositions|[AssetPositionsMap](#schemaassetpositionsmap)|true|none|none|
 |marginEnabled|boolean|true|none|none|
+|assetYieldIndex|string|true|none|none|
 
 ## AddressResponse
 
@@ -2724,6 +2886,7 @@ This operation does not require authentication
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         },
@@ -2741,6 +2904,7 @@ This operation does not require authentication
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         }
@@ -2761,7 +2925,8 @@ This operation does not require authentication
           "subaccountNumber": 0
         }
       },
-      "marginEnabled": true
+      "marginEnabled": true,
+      "assetYieldIndex": "string"
     }
   ]
 }
@@ -2808,6 +2973,7 @@ This operation does not require authentication
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         },
@@ -2825,6 +2991,7 @@ This operation does not require authentication
           "sumClose": "string",
           "netFunding": "string",
           "unrealizedPnl": "string",
+          "perpYieldIndex": "string",
           "closedAt": null,
           "exitPrice": "string"
         }
@@ -2845,7 +3012,8 @@ This operation does not require authentication
           "subaccountNumber": 0
         }
       },
-      "marginEnabled": true
+      "marginEnabled": true,
+      "assetYieldIndex": "string"
     }
   ]
 }
@@ -3686,7 +3854,8 @@ or
   "marketType": "CROSS",
   "openInterestLowerCap": "string",
   "openInterestUpperCap": "string",
-  "baseOpenInterest": "string"
+  "baseOpenInterest": "string",
+  "perpYieldIndex": "string"
 }
 
 ```
@@ -3716,6 +3885,7 @@ or
 |openInterestLowerCap|string|false|none|none|
 |openInterestUpperCap|string|false|none|none|
 |baseOpenInterest|string|true|none|none|
+|perpYieldIndex|string|true|none|none|
 
 ## PerpetualMarketResponse
 
@@ -3748,7 +3918,8 @@ or
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
       "openInterestUpperCap": "string",
-      "baseOpenInterest": "string"
+      "baseOpenInterest": "string",
+      "perpYieldIndex": "string"
     },
     "property2": {
       "clobPairId": "string",
@@ -3771,7 +3942,8 @@ or
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
       "openInterestUpperCap": "string",
-      "baseOpenInterest": "string"
+      "baseOpenInterest": "string",
+      "perpYieldIndex": "string"
     }
   }
 }
@@ -3809,6 +3981,7 @@ or
       "sumClose": "string",
       "netFunding": "string",
       "unrealizedPnl": "string",
+      "perpYieldIndex": "string",
       "closedAt": "string",
       "exitPrice": "string"
     }
@@ -4131,4 +4304,60 @@ or
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |transfers|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
+
+## YieldParamsResponseObject
+
+<a id="schemayieldparamsresponseobject"></a>
+<a id="schema_YieldParamsResponseObject"></a>
+<a id="tocSyieldparamsresponseobject"></a>
+<a id="tocsyieldparamsresponseobject"></a>
+
+```json
+{
+  "id": "string",
+  "sDAIPrice": "string",
+  "assetYieldIndex": "string",
+  "createdAt": "string",
+  "createdAtHeight": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|id|string|true|none|none|
+|sDAIPrice|string|true|none|none|
+|assetYieldIndex|string|true|none|none|
+|createdAt|[IsoString](#schemaisostring)|true|none|none|
+|createdAtHeight|string|true|none|none|
+
+## YieldParamsResponse
+
+<a id="schemayieldparamsresponse"></a>
+<a id="schema_YieldParamsResponse"></a>
+<a id="tocSyieldparamsresponse"></a>
+<a id="tocsyieldparamsresponse"></a>
+
+```json
+{
+  "allYieldParams": [
+    {
+      "id": "string",
+      "sDAIPrice": "string",
+      "assetYieldIndex": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|allYieldParams|[[YieldParamsResponseObject](#schemayieldparamsresponseobject)]|true|none|none|
 

@@ -7,6 +7,7 @@ import (
 	clob "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	ratelimit "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sending "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
+	subaccounts "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -209,5 +210,9 @@ var (
 		"/dydxprotocol.sending.MsgDepositToSubaccountResponse":    nil,
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccount":         &sending.MsgWithdrawFromSubaccount{},
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
+
+		// subaccounts
+		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccount":         &subaccounts.MsgClaimYieldForSubaccount{},
+		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccountResponse": nil,
 	}
 )

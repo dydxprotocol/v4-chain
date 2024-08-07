@@ -47,7 +47,7 @@ func (_m *EthQueryClient) ChainID(ctx context.Context, client *ethclient.Client)
 }
 
 // QueryDaiConversionRate provides a mock function with given fields: client
-func (_m *EthQueryClient) QueryDaiConversionRate(client *ethclient.Client) (string, string, error) {
+func (_m *EthQueryClient) QueryDaiConversionRate(client *ethclient.Client) (string, error) {
 	ret := _m.Called(client)
 
 	if len(ret) == 0 {
@@ -55,9 +55,8 @@ func (_m *EthQueryClient) QueryDaiConversionRate(client *ethclient.Client) (stri
 	}
 
 	var r0 string
-	var r1 string
-	var r2 error
-	if rf, ok := ret.Get(0).(func(*ethclient.Client) (string, string, error)); ok {
+	var r1 error
+	if rf, ok := ret.Get(0).(func(*ethclient.Client) (string, error)); ok {
 		return rf(client)
 	}
 	if rf, ok := ret.Get(0).(func(*ethclient.Client) string); ok {
@@ -66,19 +65,13 @@ func (_m *EthQueryClient) QueryDaiConversionRate(client *ethclient.Client) (stri
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(*ethclient.Client) string); ok {
+	if rf, ok := ret.Get(1).(func(*ethclient.Client) error); ok {
 		r1 = rf(client)
 	} else {
-		r1 = ret.Get(1).(string)
+		r1 = ret.Error(1)
 	}
 
-	if rf, ok := ret.Get(2).(func(*ethclient.Client) error); ok {
-		r2 = rf(client)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
+	return r0, r1
 }
 
 // NewEthQueryClient creates a new instance of EthQueryClient. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

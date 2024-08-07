@@ -104,6 +104,7 @@ func getUpdatedPerpetualPositions(
 func UpdatePerpetualPositions(
 	settledUpdates []SettledUpdate,
 	perpIdToFundingIndex map[uint32]dtypes.SerializableInt,
+	perpIdToYieldIndex map[uint32]string,
 ) {
 	// Apply the updates.
 	for i, u := range settledUpdates {
@@ -137,10 +138,17 @@ func UpdatePerpetualPositions(
 					// and perpetual position update must refer to an existing perpetual.
 					panic(fmt.Sprintf("perpetual id %d not found in perpIdToFundingIndex", pu.PerpetualId))
 				}
+
+				yieldIndex, exists := perpIdToYieldIndex[pu.PerpetualId]
+				if !exists {
+					panic(fmt.Sprintf("perpetual id %d not found in perpIdToYieldIndex", pu.PerpetualId))
+				}
+
 				perpetualPosition := &types.PerpetualPosition{
 					PerpetualId:  pu.PerpetualId,
 					Quantums:     dtypes.NewIntFromBigInt(pu.GetBigQuantums()),
 					FundingIndex: fundingIndex,
+					YieldIndex:   yieldIndex,
 				}
 
 				// Add the new position to the map.

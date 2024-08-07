@@ -204,6 +204,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			},
 			FundingIndex: dtypes.ZeroInt(),
 			OpenInterest: dtypes.ZeroInt(),
+			YieldIndex:   new(big.Rat).SetInt64(0).String(),
 		}
 	}
 

@@ -34,6 +34,7 @@ export interface PerpetualPositionCreateObject {
   closedAtHeight?: string;
   closeEventId?: Buffer;
   exitPrice?: string;
+  perpYieldIndex?: string;
 }
 
 export interface PerpetualPositionUpdateObject {
@@ -53,6 +54,7 @@ export interface PerpetualPositionUpdateObject {
   closeEventId?: Buffer | null;
   lastEventId?: Buffer;
   settledFunding?: string;
+  perpYieldIndex?: string;
 }
 
 // Object used to update a subaccount's perpetual position in the SubaccountUpdateHandler
@@ -65,6 +67,7 @@ export interface PerpetualPositionSubaccountUpdateObject {
   settledFunding: string;
   status: PerpetualPositionStatus,
   size: string,
+  perpYieldIndex: string,
 }
 
 /*
@@ -93,6 +96,7 @@ export interface UpdatedPerpetualPositionSubaccountKafkaObject {
   settledFunding: string;
   realizedPnl?: string,
   unrealizedPnl?: string,
+  perpYieldIndex: string,
 }
 
 export interface PerpetualPositionCloseObject {
@@ -101,6 +105,7 @@ export interface PerpetualPositionCloseObject {
   closedAtHeight: string,
   closeEventId: Buffer,
   settledFunding: string,
+  perpYieldIndex: string,
 }
 
 export enum PerpetualPositionColumns {
@@ -123,4 +128,5 @@ export enum PerpetualPositionColumns {
   closeEventId = 'closeEventId',
   lastEventId = 'lastEventId',
   settledFunding = 'settledFunding',
+  perpYieldIndex = 'perpYieldIndex',
 }

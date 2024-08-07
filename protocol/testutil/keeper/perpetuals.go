@@ -178,6 +178,7 @@ func CreateTestPerpetuals(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 			p.Params.DefaultFundingPpm,
 			p.Params.LiquidityTier,
 			p.Params.MarketType,
+			p.YieldIndex,
 		)
 		require.NoError(t, err)
 	}
@@ -261,6 +262,7 @@ func CreateNPerpetuals(
 			defaultFundingPpm,    // DefaultFundingPpm
 			allLiquidityTiers[i%len(allLiquidityTiers)].Id, // LiquidityTier
 			marketType,
+			"0/1",
 		)
 		if err != nil {
 			return items, err
@@ -311,6 +313,7 @@ func CreateTestPricesAndPerpetualMarkets(
 			perp.Params.DefaultFundingPpm,
 			perp.Params.LiquidityTier,
 			perp.Params.MarketType,
+			perp.YieldIndex,
 		)
 		require.NoError(t, err)
 	}

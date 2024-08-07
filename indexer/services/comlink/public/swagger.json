@@ -65,6 +65,9 @@
           "unrealizedPnl": {
             "type": "string"
           },
+          "perpYieldIndex": {
+            "type": "string"
+          },
           "closedAt": {
             "allOf": [
               {
@@ -91,7 +94,8 @@
           "sumOpen",
           "sumClose",
           "netFunding",
-          "unrealizedPnl"
+          "unrealizedPnl",
+          "perpYieldIndex"
         ],
         "type": "object",
         "additionalProperties": false
@@ -162,6 +166,9 @@
           },
           "marginEnabled": {
             "type": "boolean"
+          },
+          "assetYieldIndex": {
+            "type": "string"
           }
         },
         "required": [
@@ -171,7 +178,8 @@
           "freeCollateral",
           "openPerpetualPositions",
           "assetPositions",
-          "marginEnabled"
+          "marginEnabled",
+          "assetYieldIndex"
         ],
         "type": "object",
         "additionalProperties": false
@@ -829,6 +837,9 @@
           },
           "baseOpenInterest": {
             "type": "string"
+          },
+          "perpYieldIndex": {
+            "type": "string"
           }
         },
         "required": [
@@ -850,7 +861,8 @@
           "stepBaseQuantums",
           "subticksPerTick",
           "marketType",
-          "baseOpenInterest"
+          "baseOpenInterest",
+          "perpYieldIndex"
         ],
         "type": "object",
         "additionalProperties": false
@@ -1082,6 +1094,49 @@
         },
         "required": [
           "transfers"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "YieldParamsResponseObject": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sDAIPrice": {
+            "type": "string"
+          },
+          "assetYieldIndex": {
+            "type": "string"
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "createdAtHeight": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sDAIPrice",
+          "assetYieldIndex",
+          "createdAt",
+          "createdAtHeight"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "YieldParamsResponse": {
+        "properties": {
+          "allYieldParams": {
+            "items": {
+              "$ref": "#/components/schemas/YieldParamsResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "allYieldParams"
         ],
         "type": "object",
         "additionalProperties": false
@@ -2361,6 +2416,53 @@
             }
           }
         ]
+      }
+    },
+    "/yieldParams": {
+      "get": {
+        "operationId": "GetYieldParams",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/YieldParamsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/yieldParams/latestYieldParams": {
+      "get": {
+        "operationId": "GetLatestYieldParams",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/YieldParamsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": []
       }
     }
   },
