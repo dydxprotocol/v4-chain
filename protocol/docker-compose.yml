@@ -113,7 +113,7 @@ services:
     volumes:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
   slinky0:
-    image: ghcr.io/skip-mev/slinky-sidecar:v1.0.5
+    image: ghcr.io/skip-mev/slinky-sidecar:v1.0.6
     entrypoint: >
       sh -c "slinky --marketmap-provider dydx_migration_api --oracle-config /etc/slinky/oracle.json --log-std-out-level error"
     environment:
