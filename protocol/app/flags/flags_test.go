@@ -162,8 +162,8 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcEnable:                        true,
 			expectedGrpcStreamingEnable:               false,
 			expectedGrpcStreamingFlushMs:              50,
-			expectedGrpcStreamingBatchSize:            2000,
-			expectedGrpcStreamingMaxChannelBufferSize: 2000,
+			expectedGrpcStreamingBatchSize:            1000000,
+			expectedGrpcStreamingMaxChannelBufferSize: 1000000,
 		},
 		"Sets values from options": {
 			optsMap: map[string]any{
