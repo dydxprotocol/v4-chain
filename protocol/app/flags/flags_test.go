@@ -80,8 +80,8 @@ func TestValidate(t *testing.T) {
 				GrpcEnable:                        true,
 				GrpcStreamingEnabled:              true,
 				GrpcStreamingFlushIntervalMs:      100,
-				GrpcStreamingMaxBatchSize:         2000,
-				GrpcStreamingMaxChannelBufferSize: 2000,
+				GrpcStreamingMaxBatchSize:         1000000,
+				GrpcStreamingMaxChannelBufferSize: 1000000,
 			},
 		},
 		"success - optimistic execution": {
