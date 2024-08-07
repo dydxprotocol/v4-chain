@@ -29,6 +29,9 @@ type FullNodeStreamingManagerImpl struct {
 	ticker *time.Ticker
 	done   chan bool
 
+	// TODO: Consolidate the streamUpdateCache and streamUpdateSubscriptionCache into a single
+	// struct to avoid the need to maintain two separate slices for the same data.
+
 	// list of stream updates.
 	streamUpdateCache []clobtypes.StreamUpdate
 	// list of subscription ids for each stream update.
