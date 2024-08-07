@@ -263,10 +263,10 @@ func (k Keeper) InitializeNewStreams(ctx sdk.Context) {
 				clobPairId,
 			)
 		},
-		func(subaccountId *satypes.SubaccountId) *satypes.StreamSubaccountUpdate {
+		func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate {
 			subaccount := k.subaccountsKeeper.GetSubaccount(
 				ctx,
-				*subaccountId,
+				subaccountId,
 			)
 			assetPositions := make([]*satypes.SubaccountAssetPosition, len(subaccount.AssetPositions))
 			for i, ap := range subaccount.AssetPositions {
@@ -284,7 +284,7 @@ func (k Keeper) InitializeNewStreams(ctx sdk.Context) {
 			}
 
 			return &satypes.StreamSubaccountUpdate{
-				SubaccountId:              subaccountId,
+				SubaccountId:              &subaccountId,
 				UpdatedAssetPositions:     assetPositions,
 				UpdatedPerpetualPositions: perpetualPositions,
 				Snapshot:                  true,

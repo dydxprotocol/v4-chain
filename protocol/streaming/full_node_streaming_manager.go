@@ -40,7 +40,7 @@ type FullNodeStreamingManagerImpl struct {
 	// map from clob pair id to subscription ids.
 	clobPairIdToSubscriptionIdMapping map[uint32][]uint32
 	// map from subaccount id to subscription ids.
-	subaccountIdToSubscriptionIdMapping map[*satypes.SubaccountId][]uint32
+	subaccountIdToSubscriptionIdMapping map[satypes.SubaccountId][]uint32
 
 	maxUpdatesInCache          uint32
 	maxSubscriptionChannelSize uint32
@@ -57,7 +57,7 @@ type OrderbookSubscription struct {
 	clobPairIds []uint32
 
 	// Subaccount ids to subscribe to.
-	subaccountIds []*satypes.SubaccountId
+	subaccountIds []satypes.SubaccountId
 
 	// Stream
 	messageSender types.OutgoingMessageSender
@@ -83,7 +83,7 @@ func NewFullNodeStreamingManager(
 		streamUpdateCache:                   make([]clobtypes.StreamUpdate, 0),
 		streamUpdateSubscriptionCache:       make([][]uint32, 0),
 		clobPairIdToSubscriptionIdMapping:   make(map[uint32][]uint32),
-		subaccountIdToSubscriptionIdMapping: make(map[*satypes.SubaccountId][]uint32),
+		subaccountIdToSubscriptionIdMapping: make(map[satypes.SubaccountId][]uint32),
 
 		maxUpdatesInCache:          maxUpdatesInCache,
 		maxSubscriptionChannelSize: maxSubscriptionChannelSize,
@@ -143,10 +143,14 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	}
 
 	sm.Lock()
+	sIds := make([]satypes.SubaccountId, len(subaccountIds))
+	for i, subaccountId := range subaccountIds {
+		sIds[i] = *subaccountId
+	}
 	subscription := &OrderbookSubscription{
 		subscriptionId: sm.nextSubscriptionId,
 		clobPairIds:    clobPairIds,
-		subaccountIds:  subaccountIds,
+		subaccountIds:  sIds,
 		messageSender:  messageSender,
 		updatesChannel: make(chan []clobtypes.StreamUpdate, sm.maxSubscriptionChannelSize),
 	}
@@ -164,11 +168,11 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	for _, subaccountId := range subaccountIds {
 		// if subaccountId exists in the map, append the subscription id to the slice
 		// otherwise, create a new slice with the subscription id
-		if _, ok := sm.subaccountIdToSubscriptionIdMapping[subaccountId]; !ok {
-			sm.subaccountIdToSubscriptionIdMapping[subaccountId] = []uint32{}
+		if _, ok := sm.subaccountIdToSubscriptionIdMapping[*subaccountId]; !ok {
+			sm.subaccountIdToSubscriptionIdMapping[*subaccountId] = []uint32{}
 		}
-		sm.subaccountIdToSubscriptionIdMapping[subaccountId] = append(
-			sm.subaccountIdToSubscriptionIdMapping[subaccountId],
+		sm.subaccountIdToSubscriptionIdMapping[*subaccountId] = append(
+			sm.subaccountIdToSubscriptionIdMapping[*subaccountId],
 			sm.nextSubscriptionId,
 		)
 	}
@@ -581,12 +585,12 @@ func (sm *FullNodeStreamingManagerImpl) AddSubaccountUpdatesToCache(
 			fmt.Sprintf(
 				"Adding subaccount update for subaccount id %+v with subscription ids %+v",
 				subaccountId,
-				sm.subaccountIdToSubscriptionIdMapping[subaccountId],
+				sm.subaccountIdToSubscriptionIdMapping[*subaccountId],
 			),
 		)
 		sm.streamUpdateSubscriptionCache = append(
 			sm.streamUpdateSubscriptionCache,
-			sm.subaccountIdToSubscriptionIdMapping[subaccountId],
+			sm.subaccountIdToSubscriptionIdMapping[*subaccountId],
 		)
 	}
 
@@ -664,7 +668,7 @@ func (sm *FullNodeStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 
 func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 	getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
-	getSubaccountSnapshot func(subaccountId *satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
+	getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
