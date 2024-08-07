@@ -64,8 +64,8 @@ const (
 
 	DefaultGrpcStreamingEnabled              = false
 	DefaultGrpcStreamingFlushIntervalMs      = 50
-	DefaultGrpcStreamingMaxBatchSize         = 2000
-	DefaultGrpcStreamingMaxChannelBufferSize = 2000
+	DefaultGrpcStreamingMaxBatchSize         = 100000
+	DefaultGrpcStreamingMaxChannelBufferSize = 100000
 
 	DefaultVEOracleEnabled            = true
 	DefaultOptimisticExecutionEnabled = false
