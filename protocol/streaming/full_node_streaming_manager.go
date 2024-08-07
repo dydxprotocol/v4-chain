@@ -398,7 +398,7 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountSnapshot(
 	}
 
 	// Clean up subscriptions that have been closed.
-	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
+	// If a Send update has failed for any subaccount id, the whole subscription will be removed.
 	if removeSubscription {
 		sm.removeSubscription(subscriptionId)
 	}
