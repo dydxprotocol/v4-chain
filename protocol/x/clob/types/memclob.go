@@ -159,4 +159,13 @@ type MemClob interface {
 		takerOrder MatchableOrder,
 		makerOrders []Order,
 	) StreamOrderbookFill
+	GetOrderbook(
+		ctx sdk.Context,
+		clobPairId ClobPairId,
+	) OrderbookInterface
+}
+
+type OrderbookInterface interface {
+	GetAsks() map[Subticks]*Level
+	GetBids() map[Subticks]*Level
 }
