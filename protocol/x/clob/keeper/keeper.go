@@ -275,7 +275,7 @@ func (k Keeper) InitializeNewStreams(ctx sdk.Context) {
 	)
 }
 
-// SendOrderbookUpdates sends the offchain updates to the gRPC streaming manager.
+// SendOrderbookUpdates sends the offchain updates to the Full Node streaming manager.
 func (k Keeper) SendOrderbookUpdates(
 	ctx sdk.Context,
 	offchainUpdates *types.OffchainUpdates,
@@ -291,7 +291,7 @@ func (k Keeper) SendOrderbookUpdates(
 	)
 }
 
-// SendOrderbookFillUpdates sends the orderbook fills to the gRPC streaming manager.
+// SendOrderbookFillUpdates sends the orderbook fills to the Full Node streaming manager.
 func (k Keeper) SendOrderbookFillUpdates(
 	ctx sdk.Context,
 	orderbookFills []types.StreamOrderbookFill,
@@ -304,5 +304,17 @@ func (k Keeper) SendOrderbookFillUpdates(
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
 		k.PerpetualIdToClobPairId,
+	)
+}
+
+// SendTakerOrderStatus sends the taker order with its status to the Full Node streaming manager.
+func (k Keeper) SendTakerOrderStatus(
+	ctx sdk.Context,
+	takerOrder types.StreamTakerOrder,
+) {
+	k.GetFullNodeStreamingManager().SendTakerOrderStatus(
+		takerOrder,
+		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
 	)
 }

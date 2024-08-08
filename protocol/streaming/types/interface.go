@@ -42,6 +42,11 @@ type FullNodeStreamingManager interface {
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
+	SendTakerOrderStatus(
+		takerOrder clobtypes.StreamTakerOrder,
+		blockHeight uint32,
+		execMode sdk.ExecMode,
+	)
 }
 
 type OutgoingMessageSender interface {

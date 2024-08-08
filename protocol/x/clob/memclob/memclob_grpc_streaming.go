@@ -157,3 +157,28 @@ func (m *MemClobPriceTimePriority) GetOrderbookUpdatesForOrderUpdate(
 	}
 	return offchainUpdates
 }
+
+// GenerateStreamTakerOrder returns a `StreamTakerOrder` object used in full node
+// streaming from a matchableOrder and a taker order status.
+func (m *MemClobPriceTimePriority) GenerateStreamTakerOrder(
+	takerOrder types.MatchableOrder,
+	takerOrderStatus types.TakerOrderStatus,
+) types.StreamTakerOrder {
+	if takerOrder.IsLiquidation() {
+		liquidationOrder := takerOrder.MustGetLiquidationOrder()
+		streamLiquidationOrder := liquidationOrder.ToStreamLiquidationOrder()
+		return types.StreamTakerOrder{
+			TakerOrder: &types.StreamTakerOrder_LiquidationOrder{
+				LiquidationOrder: streamLiquidationOrder,
+			},
+			TakerOrderStatus: takerOrderStatus.ToStreamingTakerOrderStatus(),
+		}
+	}
+	order := takerOrder.MustGetOrder()
+	return types.StreamTakerOrder{
+		TakerOrder: &types.StreamTakerOrder_Order{
+			Order: &order,
+		},
+		TakerOrderStatus: takerOrderStatus.ToStreamingTakerOrderStatus(),
+	}
+}

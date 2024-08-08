@@ -51,6 +51,13 @@ func (sm *NoopGrpcStreamingManager) SendSubaccountUpdates(
 ) {
 }
 
+func (sm *NoopGrpcStreamingManager) SendTakerOrderStatus(
+	takerOrder clobtypes.StreamTakerOrder,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
+}
+
 func (sm *NoopGrpcStreamingManager) InitializeNewStreams(
 	getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
 	getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
