@@ -425,6 +425,11 @@ func (_m *MemClobKeeper) SendOrderbookUpdates(ctx types.Context, offchainUpdates
 	_m.Called(ctx, offchainUpdates)
 }
 
+// SendTakerOrderStatus provides a mock function with given fields: ctx, takerOrder
+func (_m *MemClobKeeper) SendTakerOrderStatus(ctx types.Context, takerOrder clobtypes.StreamTakerOrder) {
+	_m.Called(ctx, takerOrder)
+}
+
 // SetLongTermOrderPlacement provides a mock function with given fields: ctx, order, blockHeight
 func (_m *MemClobKeeper) SetLongTermOrderPlacement(ctx types.Context, order clobtypes.Order, blockHeight uint32) {
 	_m.Called(ctx, order, blockHeight)

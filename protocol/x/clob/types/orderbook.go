@@ -257,6 +257,9 @@ type MatchableOrder interface {
 	// MustGetOrder returns the underlying order if this is not a liquidation order. Panics if called
 	// for a liquidation order.
 	MustGetOrder() Order
+	// MustGetLiquidationOrder returns the underlying liquidation order if this is not a regular order.
+	// Panics if called for a regular order.
+	MustGetLiquidationOrder() LiquidationOrder
 	// MustGetLiquidatedPerpetualId returns the perpetual ID if this is a liquidation order. Panics
 	// if called for a non-liquidation order.
 	MustGetLiquidatedPerpetualId() uint32
