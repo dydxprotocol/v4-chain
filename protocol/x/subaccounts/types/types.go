@@ -62,6 +62,10 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		id SubaccountId,
 	) (val Subaccount)
+	GetStreamSubaccountUpdate(
+		ctx sdk.Context,
+		id SubaccountId,
+	) (val StreamSubaccountUpdate)
 	LegacyGetNegativeTncSubaccountSeenAtBlock(ctx sdk.Context) (uint32, bool)
 	GetNegativeTncSubaccountSeenAtBlock(
 		ctx sdk.Context,
