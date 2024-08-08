@@ -1203,7 +1203,7 @@ function edit_genesis() {
     dasel put -t int -f "$GENESIS" '.app_state.marketmap.market_map.markets.TEST/USD.ticker.min_provider_count' -v '1'
     dasel put -t bool -f "$GENESIS" '.app_state.marketmap.market_map.markets.TEST/USD.ticker.enabled' -v 'true'
 
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.TEST/USD.provider_configs.[]' -v '{"name": "TestVolatileExchange", "off_chain_ticker": "TEST-USD"}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.TEST/USD.provider_configs.[]' -v '{"name": "volatile-exchange-provider", "off_chain_ticker": "TEST-USD"}'
 
 
     # Marketmap: USDT-USD
