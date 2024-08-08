@@ -89,29 +89,9 @@ func EndBlocker(
 		)
 	}
 
-	deliveredCancels := keeper.GetDeliveredCancelledOrderIds(ctx)
-	// Prune expired untriggered conditional orders from the in-memory UntriggeredConditionalOrders struct.
-	keeper.PruneUntriggeredConditionalOrders(
-		expiredStatefulOrderIds,
-		deliveredCancels,
-	)
-
 	// Update the memstore with expired order ids.
 	// These expired stateful order ids will be purged from the memclob in `Commit`.
 	processProposerMatchesEvents.ExpiredStatefulOrderIds = expiredStatefulOrderIds
-
-	// Before triggering conditional orders, add newly-placed conditional orders to the clob keeper's
-	// in-memory UntriggeredConditionalOrders data structure to allow conditional orders to
-	// trigger in the same block they are placed. Skip triggering orders which have been cancelled
-	// or expired.
-	// TODO(CLOB-773) Support conditional order replacements. Ensure replacements are de-duplicated.
-	conditionalOrdersIds := keeper.GetDeliveredConditionalOrderIds(ctx)
-	keeper.AddUntriggeredConditionalOrders(
-		ctx,
-		conditionalOrdersIds,
-		lib.UniqueSliceToSet(deliveredCancels),
-		lib.UniqueSliceToSet(expiredStatefulOrderIds),
-	)
 
 	// Poll out all triggered conditional orders from `UntriggeredConditionalOrders` and update state.
 	triggeredConditionalOrderIds := keeper.MaybeTriggerConditionalOrders(ctx)
@@ -124,9 +104,6 @@ func EndBlocker(
 		ctx,
 		processProposerMatchesEvents,
 	)
-
-	// Prune any rate limiting information that is no longer relevant.
-	keeper.PruneRateLimits(ctx)
 
 	// Emit relevant metrics at the end of every block.
 	metrics.SetGauge(
@@ -145,6 +122,9 @@ func PrepareCheckState(
 		// Prepare check state is for the next block.
 		log.BlockHeight, ctx.BlockHeight()+1,
 	)
+
+	// Prune any rate limiting information that is no longer relevant.
+	keeper.PruneRateLimits(ctx)
 
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)

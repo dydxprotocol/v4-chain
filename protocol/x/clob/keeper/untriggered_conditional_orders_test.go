@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"math/big"
 	"testing"
 
@@ -88,10 +87,7 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testApp.NewTestAppBuilder(t).Build()
-			tApp.InitChain()
-			untriggeredConditionalOrders := tApp.App.ClobKeeper.NewUntriggeredConditionalOrders()
-			tApp.App.ClobKeeper.UntriggeredConditionalOrders[0] = untriggeredConditionalOrders
+			untriggeredConditionalOrders := keeper.NewUntriggeredConditionalOrders()
 
 			for _, order := range tc.conditionalOrdersToAdd {
 				untriggeredConditionalOrders.AddUntriggeredConditionalOrder(order)
@@ -125,6 +121,98 @@ func TestAddUntriggeredConditionalOrder_NonConditionalOrder(t *testing.T) {
 			)
 		},
 	)
+}
+
+func TestOrganizeUntriggeredConditionalOrdersFromState(t *testing.T) {
+	tests := map[string]struct {
+		// Setup.
+		conditionalOrdersFromState []types.Order
+
+		// Expectations.
+		expectedUntriggeredConditionalOrders map[types.ClobPairId]*keeper.UntriggeredConditionalOrders
+	}{
+		"Only GTE orders, one ClobPair": {
+			conditionalOrdersFromState: []types.Order{
+				// GTE orders
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+				constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price10_GTBT15_StopLoss20,
+				constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Buy20_Price10_GTBT15_StopLoss20,
+			},
+			expectedUntriggeredConditionalOrders: map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
+				0: {
+					OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{},
+					OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{
+						constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+						constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price10_GTBT15_StopLoss20,
+						constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Buy20_Price10_GTBT15_StopLoss20,
+					},
+				},
+			},
+		},
+		"Both GTE and LTE orders, one ClobPair": {
+			conditionalOrdersFromState: []types.Order{
+				// GTE
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+				// LTE
+				constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Buy25_Price10_GTBT15_TakeProfit20,
+			},
+			expectedUntriggeredConditionalOrders: map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
+				0: {
+					OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{
+						constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Buy25_Price10_GTBT15_TakeProfit20,
+					},
+					OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{
+						constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+					},
+				},
+			},
+		},
+		"Multiple ClobPair + both LTE and GTE orders": {
+			conditionalOrdersFromState: []types.Order{
+				// GTE, ClobPair 1
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT15_TakeProfit20,
+				// GTE, ClobPair 0
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+				// LTE, ClobPair 0
+				constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Buy25_Price10_GTBT15_TakeProfit20,
+				// GTE, ClobPair 0
+				constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Sell20_Price20_GTBT15_TakeProfit20,
+				// LTE, ClobPair 1
+				constants.ConditionalOrder_Alice_Num0_Id1_Clob1_Buy5_Price10_GTBT15_StopLoss20,
+			},
+			expectedUntriggeredConditionalOrders: map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
+				0: {
+					OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{
+						constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Buy25_Price10_GTBT15_TakeProfit20,
+					},
+					OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{
+						constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+						constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Sell20_Price20_GTBT15_TakeProfit20,
+					},
+				},
+				1: {
+					OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{
+						constants.ConditionalOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT15_TakeProfit20,
+					},
+					OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{
+						constants.ConditionalOrder_Alice_Num0_Id1_Clob1_Buy5_Price10_GTBT15_StopLoss20,
+					},
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := keeper.OrganizeUntriggeredConditionalOrdersFromState(tc.conditionalOrdersFromState)
+
+			require.Equal(
+				t,
+				tc.expectedUntriggeredConditionalOrders,
+				got,
+			)
+		})
+	}
 }
 
 func TestRemoveUntriggeredConditionalOrders(t *testing.T) {
@@ -194,10 +282,7 @@ func TestRemoveUntriggeredConditionalOrders(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testApp.NewTestAppBuilder(t).Build()
-			tApp.InitChain()
-			untriggeredConditionalOrders := tApp.App.ClobKeeper.NewUntriggeredConditionalOrders()
-			tApp.App.ClobKeeper.UntriggeredConditionalOrders[0] = untriggeredConditionalOrders
+			untriggeredConditionalOrders := keeper.NewUntriggeredConditionalOrders()
 
 			for _, order := range tc.conditionalOrdersToAdd {
 				untriggeredConditionalOrders.AddUntriggeredConditionalOrder(order)

@@ -506,7 +506,7 @@ func (k Keeper) PersistMatchOrdersToState(
 		}
 		makerOrders = append(makerOrders, makerOrder)
 
-		_, _, _, _, err = k.ProcessSingleMatch(ctx, &matchWithOrders)
+		_, _, _, err = k.ProcessSingleMatch(ctx, &matchWithOrders)
 		if err != nil {
 			return err
 		}
@@ -614,7 +614,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 
 		// Write the position updates and state fill amounts for this match.
 		// Note stateless validation on the constructed `matchWithOrders` is performed within this function.
-		_, _, _, _, err = k.ProcessSingleMatch(
+		_, _, _, err = k.ProcessSingleMatch(
 			ctx,
 			&matchWithOrders,
 		)

@@ -27,6 +27,8 @@ type Flags struct {
 	GrpcStreamingMaxChannelBufferSize uint32
 
 	VEOracleEnabled bool // Slinky Vote Extensions
+	// Optimistic block execution
+	OptimisticExecutionEnabled bool
 }
 
 // List of CLI flags.
@@ -48,6 +50,9 @@ const (
 
 	// Slinky VEs enabled
 	VEOracleEnabled = "slinky-vote-extension-oracle-enabled"
+
+	// Enable optimistic block execution.
+	OptimisticExecutionEnabled = "optimistic-execution-enabled"
 )
 
 // Default values.
@@ -62,7 +67,8 @@ const (
 	DefaultGrpcStreamingMaxBatchSize         = 2000
 	DefaultGrpcStreamingMaxChannelBufferSize = 2000
 
-	DefaultVEOracleEnabled = true
+	DefaultVEOracleEnabled            = true
+	DefaultOptimisticExecutionEnabled = false
 )
 
 // AddFlagsToCmd adds flags to app initialization.
@@ -116,6 +122,11 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		DefaultVEOracleEnabled,
 		"Whether to run on-chain oracle via slinky vote extensions",
 	)
+	cmd.Flags().Bool(
+		OptimisticExecutionEnabled,
+		DefaultOptimisticExecutionEnabled,
+		"Whether to enable optimistic block execution",
+	)
 }
 
 // Validate checks that the flags are valid.
@@ -127,6 +138,10 @@ func (f *Flags) Validate() error {
 
 	// Grpc streaming
 	if f.GrpcStreamingEnabled {
+		if f.OptimisticExecutionEnabled {
+			// TODO(OTE-456): Finish gRPC streaming x OE integration.
+			return fmt.Errorf("grpc streaming cannot be enabled together with optimistic execution")
+		}
 		if !f.GrpcEnable {
 			return fmt.Errorf("grpc.enable must be set to true - grpc streaming requires gRPC server")
 		}
@@ -164,7 +179,8 @@ func GetFlagValuesFromOptions(
 		GrpcStreamingMaxBatchSize:         DefaultGrpcStreamingMaxBatchSize,
 		GrpcStreamingMaxChannelBufferSize: DefaultGrpcStreamingMaxChannelBufferSize,
 
-		VEOracleEnabled: true,
+		VEOracleEnabled:            true,
+		OptimisticExecutionEnabled: DefaultOptimisticExecutionEnabled,
 	}
 
 	// Populate the flags if they exist.
@@ -234,5 +250,10 @@ func GetFlagValuesFromOptions(
 		}
 	}
 
+	if option := appOpts.Get(OptimisticExecutionEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.OptimisticExecutionEnabled = v
+		}
+	}
 	return result
 }
