@@ -64,7 +64,8 @@ async function updateLeaderboardPnlTable(timespan: LeaderboardPnlTimeSpan) {
   }
 
   try {
-    await LeaderboardPnlProcessedCache.setProcessedTime(timespan, lastProcessedPnlTime, redisClient);
+    await LeaderboardPnlProcessedCache.setProcessedTime(timespan, lastProcessedPnlTime,
+      redisClient);
   } catch (error) {
     logger.error({
       at: 'create-leaderboard#runTask',
