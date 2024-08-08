@@ -268,6 +268,12 @@ export interface LeaderboardPnlFromDatabase {
   rank: number;
 }
 
+export interface TokenFromDatabase {
+  address: WalletFromDatabase['address'],
+  token: string,
+  updatedAt: IsoString,
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string } };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:
