@@ -1668,6 +1668,7 @@
         ]
       }
     },
+<<<<<<< HEAD
     "/affiliates/referral_code": {
       "get": {
         "operationId": "GetReferralCode",
@@ -1681,18 +1682,31 @@
                 }
               }
             }
+=======
+    "/addresses/{address}/registerToken": {
+      "post": {
+        "operationId": "RegisterToken",
+        "responses": {
+          "204": {
+            "description": "No content"
+>>>>>>> 09440d31 (Add register token endpoint)
           }
         },
         "security": [],
         "parameters": [
           {
+<<<<<<< HEAD
             "in": "query",
+=======
+            "in": "path",
+>>>>>>> 09440d31 (Add register token endpoint)
             "name": "address",
             "required": true,
             "schema": {
               "type": "string"
             }
           }
+<<<<<<< HEAD
         ]
       }
     },
@@ -1796,6 +1810,27 @@
             }
           }
         ]
+=======
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        }
+>>>>>>> 09440d31 (Add register token endpoint)
       }
     },
     "/assetPositions": {

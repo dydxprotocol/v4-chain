@@ -368,44 +368,73 @@ fetch(`${baseURL}/addresses/{address}/parentSubaccountNumber/{parentSubaccountNu
 This operation does not require authentication
 </aside>
 
+<<<<<<< HEAD
 ## GetReferralCode
 
 <a id="opIdGetReferralCode"></a>
+=======
+## RegisterToken
+
+<a id="opIdRegisterToken"></a>
+>>>>>>> 09440d31 (Add register token endpoint)
 
 > Code samples
 
 ```python
 import requests
 headers = {
+<<<<<<< HEAD
   'Accept': 'application/json'
+=======
+  'Content-Type': 'application/json'
+>>>>>>> 09440d31 (Add register token endpoint)
 }
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
 baseURL = 'https://dydx-testnet.imperator.co/v4'
 
+<<<<<<< HEAD
 r = requests.get(f'{baseURL}/affiliates/referral_code', params={
   'address': 'string'
 }, headers = headers)
+=======
+r = requests.post(f'{baseURL}/addresses/{address}/registerToken', headers = headers)
+>>>>>>> 09440d31 (Add register token endpoint)
 
 print(r.json())
 
 ```
 
 ```javascript
+<<<<<<< HEAD
 
 const headers = {
   'Accept':'application/json'
+=======
+const inputBody = '{
+  "token": "string"
+}';
+const headers = {
+  'Content-Type':'application/json'
+>>>>>>> 09440d31 (Add register token endpoint)
 };
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://dydx-testnet.imperator.co/v4';
 
+<<<<<<< HEAD
 fetch(`${baseURL}/affiliates/referral_code?address=string`,
 {
   method: 'GET',
 
+=======
+fetch(`${baseURL}/addresses/{address}/registerToken`,
+{
+  method: 'POST',
+  body: inputBody,
+>>>>>>> 09440d31 (Add register token endpoint)
   headers: headers
 })
 .then(function(res) {
@@ -416,12 +445,25 @@ fetch(`${baseURL}/affiliates/referral_code?address=string`,
 
 ```
 
+<<<<<<< HEAD
 `GET /affiliates/referral_code`
+=======
+`POST /addresses/{address}/registerToken`
+
+> Body parameter
+
+```json
+{
+  "token": "string"
+}
+```
+>>>>>>> 09440d31 (Add register token endpoint)
 
 ### Parameters
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
+<<<<<<< HEAD
 |address|query|string|true|none|
 
 > Example responses
@@ -433,11 +475,17 @@ fetch(`${baseURL}/affiliates/referral_code?address=string`,
   "referralCode": "string"
 }
 ```
+=======
+|address|path|string|true|none|
+|body|body|object|true|none|
+|» token|body|string|true|none|
+>>>>>>> 09440d31 (Add register token endpoint)
 
 ### Responses
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
+<<<<<<< HEAD
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateReferralCodeResponse](#schemaaffiliatereferralcoderesponse)|
 
 <aside class="success">
@@ -603,6 +651,9 @@ fetch(`${baseURL}/affiliates/total_volume?address=string`,
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateTotalVolumeResponse](#schemaaffiliatetotalvolumeresponse)|
+=======
+|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|No content|None|
+>>>>>>> 09440d31 (Add register token endpoint)
 
 <aside class="success">
 This operation does not require authentication

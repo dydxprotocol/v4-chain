@@ -28,6 +28,8 @@ import {
 } from 'express-validator';
 import {
   Route, Get, Path, Controller,
+  Post,
+  Body,
 } from 'tsoa';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
@@ -41,7 +43,12 @@ import {
   getSubaccountResponse,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { CheckAddressSchema, CheckParentSubaccountSchema, CheckSubaccountSchema } from '../../../lib/validation/schemas';
+import {
+  CheckAddressSchema,
+  CheckParentSubaccountSchema,
+  CheckSubaccountSchema,
+  RegisterTokenValidationSchema,
+} from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
@@ -51,6 +58,7 @@ import {
   AddressResponse,
   ParentSubaccountResponse,
   ParentSubaccountRequest,
+  RegisterTokenRequest,
 } from '../../../types';
 
 const router: express.Router = express.Router();
@@ -294,6 +302,22 @@ class AddressesController extends Controller {
       childSubaccounts: subaccountResponses,
     };
   }
+
+  @Post('/:address/registerToken')
+  public async registerToken(
+    @Path() address: string,
+      @Body() body: { token: string },
+  ): Promise<void> {
+    const { token } = body;
+    if (!token) {
+      throw new Error('Invalid Token in request');
+    }
+
+    const foundAddress = await WalletTable.findById(address);
+    if (!foundAddress) {
+      throw new NotFoundError(`No address found with address: ${address}`);
+    }
+  }
 }
 
 router.get(
@@ -425,6 +449,132 @@ router.get(
     }
   },
 );
+
+router.post(
+  '/:address/registerToken',
+  CheckAddressSchema,
+  RegisterTokenValidationSchema,
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const { address, token } = matchedData(req) as RegisterTokenRequest;
+
+    try {
+      const controller: AddressesController = new AddressesController();
+      await controller.registerToken(address, { token });
+      return res.status(200).send({});
+    } catch (error) {
+      return handleControllerError(
+        'AddressesController POST /:address/registerToken',
+        'Addresses error',
+        error,
+        req,
+        res,
+      );
+    }
+  },
+);
+
+/**
+ * Gets subaccount response objects given the subaccount, perpetual positions and perpetual markets
+ * @param subaccount Subaccount to get response for, from the database
+ * @param positions List of perpetual positions held by the subaccount, from the database
+ * @param markets List of perpetual markets, from the database
+ * @param assetPositions List of asset positions held by the subaccount, from the database
+ * @param assets List of assets from the database
+ * @param unsettledFunding Total unsettled funding across all open perpetual positions for the
+ *                         subaccount
+ * @returns Response object for the subaccount
+ */
+async function getSubaccountResponse(
+  subaccount: SubaccountFromDatabase,
+  perpetualPositions: PerpetualPositionWithFunding[],
+  assetPositions: AssetPositionFromDatabase[],
+  assets: AssetFromDatabase[],
+  markets: MarketFromDatabase[],
+  unsettledFunding: Big,
+  latestBlockHeight: string,
+): Promise<SubaccountResponseObject> {
+  const perpetualMarketsMap: PerpetualMarketsMap = perpetualMarketRefresher
+    .getPerpetualMarketsMap();
+  const marketIdToMarket: MarketsMap = _.keyBy(
+    markets,
+    MarketColumns.id,
+  );
+
+  const filteredPerpetualPositions: PerpetualPositionWithFunding[
+  ] = await filterPositionsByLatestEventIdPerPerpetual(perpetualPositions);
+
+  const perpetualPositionResponses:
+  PerpetualPositionResponseObject[] = filteredPerpetualPositions.map(
+    (perpetualPosition: PerpetualPositionWithFunding): PerpetualPositionResponseObject => {
+      return perpetualPositionToResponseObject(
+        perpetualPosition,
+        perpetualMarketsMap,
+        marketIdToMarket,
+        subaccount.subaccountNumber,
+      );
+    },
+  );
+
+  const perpetualPositionsMap: PerpetualPositionsMap = _.keyBy(
+    perpetualPositionResponses,
+    'market',
+  );
+
+  const assetIdToAsset: AssetById = _.keyBy(
+    assets,
+    AssetColumns.id,
+  );
+
+  const sortedAssetPositions:
+  AssetPositionFromDatabase[] = filterAssetPositions(assetPositions);
+
+  const assetPositionResponses: AssetPositionResponseObject[] = sortedAssetPositions.map(
+    (assetPosition: AssetPositionFromDatabase): AssetPositionResponseObject => {
+      return assetPositionToResponseObject(
+        assetPosition,
+        assetIdToAsset,
+        subaccount.subaccountNumber,
+      );
+    },
+  );
+
+  const assetPositionsMap: AssetPositionsMap = _.keyBy(
+    assetPositionResponses,
+    'symbol',
+  );
+
+  const {
+    assetPositionsMap: adjustedAssetPositionsMap,
+    adjustedUSDCAssetPositionSize,
+  }: {
+    assetPositionsMap: AssetPositionsMap,
+    adjustedUSDCAssetPositionSize: string,
+  } = adjustUSDCAssetPosition(assetPositionsMap, unsettledFunding);
+
+  const {
+    equity,
+    freeCollateral,
+  }: {
+    equity: string,
+    freeCollateral: string,
+  } = calculateEquityAndFreeCollateral(
+    filteredPerpetualPositions,
+    perpetualMarketsMap,
+    marketIdToMarket,
+    adjustedUSDCAssetPositionSize,
+  );
+
+  return subaccountToResponseObject({
+    subaccount,
+    equity,
+    freeCollateral,
+    latestBlockHeight,
+    openPerpetualPositions: perpetualPositionsMap,
+    assetPositions: adjustedAssetPositionsMap,
+  });
+}
 
 // eslint-disable-next-line  @typescript-eslint/require-await
 async function getOpenPerpetualPositionsForSubaccount(

@@ -3,7 +3,7 @@ import {
   MAX_PARENT_SUBACCOUNTS,
   CHILD_SUBACCOUNT_MULTIPLIER,
 } from '@dydxprotocol-indexer/postgres';
-import { checkSchema, ParamSchema } from 'express-validator';
+import { body, checkSchema, ParamSchema } from 'express-validator';
 
 import config from '../../config';
 
@@ -212,3 +212,12 @@ export const CheckHistoricalBlockTradingRewardsSchema = checkSchema({
 });
 
 export const CheckTransferBetweenSchema = checkSchema(transferBetweenSchemaRecord);
+
+export const RegisterTokenValidationSchema = [
+  body('token')
+    .exists().withMessage('Token is required') // Check if the token exists
+    .isString()
+    .withMessage('Token must be a string') // Ensure the token is a string
+    .notEmpty()
+    .withMessage('Token cannot be empty'), // Ensure the token is not an empty string
+];
