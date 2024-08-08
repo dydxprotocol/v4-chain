@@ -11,7 +11,7 @@ import {
   LeaderboardPnlFromDatabase,
   LeaderboardPnlTimeSpan,
 } from '@dydxprotocol-indexer/postgres';
-import { LeadeboardPnlProcessedCache, redis } from '@dydxprotocol-indexer/redis';
+import { LeaderboardPnlProcessedCache, redis } from '@dydxprotocol-indexer/redis';
 
 import generateLeaderboardTaskFromTimespan from '../../src/tasks/create-leaderboard';
 import { DateTime } from 'luxon';
@@ -66,7 +66,7 @@ describe('create-leaderboard', () => {
   });
 
   it('leaderboard not updated if last processed pnl time < cached leaderboard time', async () => {
-    await LeadeboardPnlProcessedCache.setProcessedTime(
+    await LeaderboardPnlProcessedCache.setProcessedTime(
       LeaderboardPnlTimeSpan.ALL_TIME,
       DateTime.utc().toISO(),
       redisClient,
