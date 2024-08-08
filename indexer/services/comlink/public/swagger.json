@@ -1463,6 +1463,45 @@
         ]
       }
     },
+    "/addresses/{address}/registerToken": {
+      "post": {
+        "operationId": "RegisterToken",
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
     "/assetPositions": {
       "get": {
         "operationId": "GetAssetPositions",

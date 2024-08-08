@@ -431,6 +431,82 @@ fetch(`${baseURL}/addresses/{address}/parentSubaccountNumber/{parentSubaccountNu
 This operation does not require authentication
 </aside>
 
+## RegisterToken
+
+<a id="opIdRegisterToken"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.post(f'{baseURL}/addresses/{address}/registerToken', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+const inputBody = '{
+  "token": "string"
+}';
+const headers = {
+  'Content-Type':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/addresses/{address}/registerToken`,
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /addresses/{address}/registerToken`
+
+> Body parameter
+
+```json
+{
+  "token": "string"
+}
+```
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|path|string|true|none|
+|body|body|object|true|none|
+|» token|body|string|true|none|
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|No content|None|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetAssetPositions
 
 <a id="opIdGetAssetPositions"></a>

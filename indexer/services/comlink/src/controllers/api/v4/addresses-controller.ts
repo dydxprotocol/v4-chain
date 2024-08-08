@@ -33,6 +33,8 @@ import {
 import _ from 'lodash';
 import {
   Route, Get, Path, Controller,
+  Post,
+  Body,
 } from 'tsoa';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
@@ -52,7 +54,12 @@ import {
   getChildSubaccountIds,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { CheckAddressSchema, CheckParentSubaccountSchema, CheckSubaccountSchema } from '../../../lib/validation/schemas';
+import {
+  CheckAddressSchema,
+  CheckParentSubaccountSchema,
+  CheckSubaccountSchema,
+  RegisterTokenValidationSchema,
+} from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
@@ -73,6 +80,7 @@ import {
   AddressResponse,
   ParentSubaccountResponse,
   ParentSubaccountRequest,
+  RegisterTokenRequest,
 } from '../../../types';
 
 const router: express.Router = express.Router();
@@ -346,6 +354,22 @@ class AddressesController extends Controller {
       childSubaccounts: subaccountResponses,
     };
   }
+
+  @Post('/:address/registerToken')
+  public async registerToken(
+    @Path() address: string,
+      @Body() body: { token: string },
+  ): Promise<void> {
+    const { token } = body;
+    if (!token) {
+      throw new Error('Invalid Token in request');
+    }
+
+    const foundAddress = await WalletTable.findById(address);
+    if (!foundAddress) {
+      throw new NotFoundError(`No address found with address: ${address}`);
+    }
+  }
 }
 
 router.get(
@@ -473,6 +497,31 @@ router.get(
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.get_parentSubaccount.timing`,
         Date.now() - start,
+      );
+    }
+  },
+);
+
+router.post(
+  '/:address/registerToken',
+  CheckAddressSchema,
+  RegisterTokenValidationSchema,
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const { address, token } = matchedData(req) as RegisterTokenRequest;
+
+    try {
+      const controller: AddressesController = new AddressesController();
+      await controller.registerToken(address, { token });
+      return res.status(200).send({});
+    } catch (error) {
+      return handleControllerError(
+        'AddressesController POST /:address/registerToken',
+        'Addresses error',
+        error,
+        req,
+        res,
       );
     }
   },
