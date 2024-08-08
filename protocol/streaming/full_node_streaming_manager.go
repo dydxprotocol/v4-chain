@@ -396,6 +396,34 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdates(
 	sm.AddUpdatesToCache(streamUpdates, clobPairIds, uint32(len(orderbookFills)))
 }
 
+// SendTakerOrderStatus sends out a taker order and its status to the full node streaming service.
+func (sm *FullNodeStreamingManagerImpl) SendTakerOrderStatus(
+	streamTakerOrder clobtypes.StreamTakerOrder,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
+	clobPairId := uint32(0)
+	if liqOrder := streamTakerOrder.GetLiquidationOrder(); liqOrder != nil {
+		clobPairId = liqOrder.ClobPairId
+	}
+	if takerOrder := streamTakerOrder.GetOrder(); takerOrder != nil {
+		clobPairId = takerOrder.OrderId.ClobPairId
+	}
+
+	sm.AddUpdatesToCache(
+		map[uint32][]clobtypes.StreamUpdate{
+			clobPairId: {
+				{
+					UpdateMessage: &clobtypes.StreamUpdate_TakerOrder{
+						TakerOrder: &streamTakerOrder,
+					},
+				},
+			},
+		},
+		1,
+	)
+}
+
 func (sm *FullNodeStreamingManagerImpl) AddUpdatesToCache(
 	updates []clobtypes.StreamUpdate,
 	clobPairIds []uint32,

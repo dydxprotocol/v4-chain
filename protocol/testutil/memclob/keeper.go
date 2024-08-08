@@ -512,6 +512,12 @@ func (f *FakeMemClobKeeper) SendOrderbookFillUpdates(
 ) {
 }
 
+func (f *FakeMemClobKeeper) SendTakerOrderStatus(
+	ctx sdk.Context,
+	takerOrder types.StreamTakerOrder,
+) {
+}
+
 // Placeholder to satisfy interface implementation of types.MemClobKeeper
 func (f *FakeMemClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 	ctx sdk.Context,
