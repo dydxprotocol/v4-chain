@@ -767,6 +767,18 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		order,
 	)
 
+	// If full node streaming is on, emit the taker order and its resulting status.
+	if m.generateOrderbookUpdates {
+		streamTakerOrder := m.GenerateStreamTakerOrder(
+			order,
+			takerOrderStatus,
+		)
+		m.clobKeeper.SendTakerOrderStatus(
+			ctx,
+			streamTakerOrder,
+		)
+	}
+
 	// If this is a replacement order, then ensure we remove the existing order from the orderbook.
 	if !order.IsLiquidation() {
 		orderId := order.MustGetOrder().OrderId

@@ -42,6 +42,13 @@ func (sm *NoopGrpcStreamingManager) SendOrderbookFillUpdates(
 ) {
 }
 
+func (sm *NoopGrpcStreamingManager) SendTakerOrderStatus(
+	takerOrder clobtypes.StreamTakerOrder,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
+}
+
 func (sm *NoopGrpcStreamingManager) InitializeNewStreams(
 	getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
 	blockHeight uint32,
