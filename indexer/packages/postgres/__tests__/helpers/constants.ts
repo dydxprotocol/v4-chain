@@ -67,6 +67,9 @@ export const dydxChain: string = 'dydx';
 export const defaultAddress: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf';
 export const defaultAddress2: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc575lnf';
 export const blockedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
+// Vault address for vault id 0 was generated using
+// script protocol/scripts/vault/get_vault.go
+export const vaultAddress: string = 'dydx1c0m5x87llaunl5sgv3q5vd7j5uha26d2q2r2q0';
 
 // ============== Subaccounts ==============
 
@@ -87,6 +90,20 @@ export const defaultSubaccount2: SubaccountCreateObject = {
 export const defaultSubaccount3: SubaccountCreateObject = {
   address: defaultAddress,
   subaccountNumber: 2,
+  updatedAt: createdDateTime.toISO(),
+  updatedAtHeight: createdHeight,
+};
+
+export const defaultSubaccountWithAlternateAddress: SubaccountCreateObject = {
+  address: defaultAddress2,
+  subaccountNumber: 0,
+  updatedAt: createdDateTime.toISO(),
+  updatedAtHeight: createdHeight,
+};
+
+export const vaultSubaccount: SubaccountCreateObject = {
+  address: vaultAddress,
+  subaccountNumber: 0,
   updatedAt: createdDateTime.toISO(),
   updatedAtHeight: createdHeight,
 };
@@ -119,6 +136,10 @@ export const defaultSubaccountId3: string = SubaccountTable.uuid(
   defaultAddress,
   defaultSubaccount3.subaccountNumber,
 );
+export const defaultSubaccountIdWithAlternateAddress: string = SubaccountTable.uuid(
+  defaultAddress2,
+  defaultSubaccountWithAlternateAddress.subaccountNumber,
+);
 export const isolatedSubaccountId: string = SubaccountTable.uuid(
   defaultAddress,
   isolatedSubaccount.subaccountNumber,
@@ -126,6 +147,11 @@ export const isolatedSubaccountId: string = SubaccountTable.uuid(
 export const isolatedSubaccountId2: string = SubaccountTable.uuid(
   defaultAddress,
   isolatedSubaccount2.subaccountNumber,
+);
+
+export const vaultSubaccountId: string = SubaccountTable.uuid(
+  vaultAddress,
+  vaultSubaccount.subaccountNumber,
 );
 
 // ============== Wallets ==============
@@ -137,6 +163,11 @@ export const defaultWallet: WalletCreateObject = {
 export const defaultWallet2: WalletCreateObject = {
   address: defaultWalletAddress,
   totalTradingRewards: denomToHumanReadableConversion(1),
+};
+
+export const vaultWallet: WalletCreateObject = {
+  address: vaultAddress,
+  totalTradingRewards: denomToHumanReadableConversion(0),
 };
 
 export const defaultWallet3: WalletCreateObject = {

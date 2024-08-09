@@ -52,6 +52,11 @@ export const configSchema = {
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_WEEKLY: parseBoolean({ default: true }),
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_MONTHLY: parseBoolean({ default: true }),
   LOOPS_ENABLED_SUBACCOUNT_USERNAME_GENERATOR: parseBoolean({ default: true }),
+  LOOPS_ENABLED_LEADERBOARD_PNL_ALL_TIME: parseBoolean({ default: true }),
+  LOOPS_ENABLED_LEADERBOARD_PNL_DAILY: parseBoolean({ default: true }),
+  LOOPS_ENABLED_LEADERBOARD_PNL_WEEKLY: parseBoolean({ default: true }),
+  LOOPS_ENABLED_LEADERBOARD_PNL_MONTHLY: parseBoolean({ default: true }),
+  LOOPS_ENABLED_LEADERBOARD_PNL_YEARLY: parseBoolean({ default: true }),
 
   // Loop Timing
   LOOPS_INTERVAL_MS_MARKET_UPDATER: parseInteger({
@@ -105,6 +110,21 @@ export const configSchema = {
   LOOPS_INTERVAL_MS_SUBACCOUNT_USERNAME_GENERATOR: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
+  LOOPS_INTERVAL_MS_LEADERBOARD_PNL_ALL_TIME: parseInteger({
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_LEADERBOARD_PNL_DAILY: parseInteger({
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_LEADERBOARD_PNL_WEEKLY: parseInteger({
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_LEADERBOARD_PNL_MONTHLY: parseInteger({
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_LEADERBOARD_PNL_YEARLY: parseInteger({
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
+  }),
 
   // Start delay
   START_DELAY_ENABLED: parseBoolean({ default: true }),
@@ -126,6 +146,7 @@ export const configSchema = {
   PNL_TICK_UPDATE_INTERVAL_MS: parseInteger({ default: ONE_HOUR_IN_MILLISECONDS }),
   PNL_TICK_MAX_ROWS_PER_UPSERT: parseInteger({ default: 1000 }),
   PNL_TICK_MAX_ACCOUNTS_PER_RUN: parseInteger({ default: 65000 }),
+  LEADERBOARD_PNL_MAX_ROWS_PER_UPSERT: parseInteger({ default: 1000 }),
 
   // Remove expired orders
   BLOCKS_TO_DELAY_EXPIRY_BEFORE_SENDING_REMOVES: parseInteger({ default: 20 }),

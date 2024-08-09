@@ -15,3 +15,11 @@ export enum LeaderboardPnlColumns {
   currentEquity = 'currentEquity',
   rank = 'rank',
 }
+
+export enum LeaderboardPnlTimeSpan {
+  ONE_DAY = 'ONE_DAY',
+  SEVEN_DAYS = 'SEVEN_DAYS',
+  THIRTY_DAYS = 'THIRTY_DAYS',
+  ONE_YEAR = 'ONE_YEAR',
+  ALL_TIME = 'ALL_TIME',
+}
