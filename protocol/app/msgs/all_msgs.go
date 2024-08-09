@@ -197,8 +197,10 @@ var (
 		"/dydxprotocol.govplus.MsgSlashValidatorResponse": {},
 
 		// listing
-		"/dydxprotocol.listing.MsgSetMarketsHardCap":         {},
-		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse": {},
+		"/dydxprotocol.listing.MsgSetMarketsHardCap":                  {},
+		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse":          {},
+		"/dydxprotocol.listing.MsgCreateMarketPermissionless":         {},
+		"/dydxprotocol.listing.MsgCreateMarketPermissionlessResponse": {},
 
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":               {},
@@ -239,10 +241,12 @@ var (
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": {},
 
 		// vault
-		"/dydxprotocol.vault.MsgDepositToVault":         {},
-		"/dydxprotocol.vault.MsgDepositToVaultResponse": {},
-		"/dydxprotocol.vault.MsgUpdateParams":           {},
-		"/dydxprotocol.vault.MsgUpdateParamsResponse":   {},
+		"/dydxprotocol.vault.MsgDepositToVault":                     {},
+		"/dydxprotocol.vault.MsgDepositToVaultResponse":             {},
+		"/dydxprotocol.vault.MsgSetVaultQuotingParams":              {},
+		"/dydxprotocol.vault.MsgSetVaultQuotingParamsResponse":      {},
+		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         {},
+		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": {},
 
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            {},

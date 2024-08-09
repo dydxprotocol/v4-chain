@@ -127,25 +127,26 @@ func (m *MsgDepositToVaultResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDepositToVaultResponse proto.InternalMessageInfo
 
-// MsgUpdateParams is the Msg/UpdateParams request type.
-type MsgUpdateParams struct {
+// MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request
+// type.
+type MsgUpdateDefaultQuotingParams struct {
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	// The parameters to update. Each field must be set.
-	Params Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params"`
+	// The quoting parameters to update to. Every field must be set.
+	DefaultQuotingParams QuotingParams `protobuf:"bytes,2,opt,name=default_quoting_params,json=defaultQuotingParams,proto3" json:"default_quoting_params"`
 }
 
-func (m *MsgUpdateParams) Reset()         { *m = MsgUpdateParams{} }
-func (m *MsgUpdateParams) String() string { return proto.CompactTextString(m) }
-func (*MsgUpdateParams) ProtoMessage()    {}
-func (*MsgUpdateParams) Descriptor() ([]byte, []int) {
+func (m *MsgUpdateDefaultQuotingParams) Reset()         { *m = MsgUpdateDefaultQuotingParams{} }
+func (m *MsgUpdateDefaultQuotingParams) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateDefaultQuotingParams) ProtoMessage()    {}
+func (*MsgUpdateDefaultQuotingParams) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ced574c6017ce006, []int{2}
 }
-func (m *MsgUpdateParams) XXX_Unmarshal(b []byte) error {
+func (m *MsgUpdateDefaultQuotingParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgUpdateParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgUpdateDefaultQuotingParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgUpdateParams.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgUpdateDefaultQuotingParams.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -155,48 +156,49 @@ func (m *MsgUpdateParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
-func (m *MsgUpdateParams) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUpdateParams.Merge(m, src)
+func (m *MsgUpdateDefaultQuotingParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateDefaultQuotingParams.Merge(m, src)
 }
-func (m *MsgUpdateParams) XXX_Size() int {
+func (m *MsgUpdateDefaultQuotingParams) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgUpdateParams) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUpdateParams.DiscardUnknown(m)
+func (m *MsgUpdateDefaultQuotingParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateDefaultQuotingParams.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgUpdateParams proto.InternalMessageInfo
+var xxx_messageInfo_MsgUpdateDefaultQuotingParams proto.InternalMessageInfo
 
-func (m *MsgUpdateParams) GetAuthority() string {
+func (m *MsgUpdateDefaultQuotingParams) GetAuthority() string {
 	if m != nil {
 		return m.Authority
 	}
 	return ""
 }
 
-func (m *MsgUpdateParams) GetParams() Params {
+func (m *MsgUpdateDefaultQuotingParams) GetDefaultQuotingParams() QuotingParams {
 	if m != nil {
-		return m.Params
+		return m.DefaultQuotingParams
 	}
-	return Params{}
+	return QuotingParams{}
 }
 
-// MsgUpdateParamsResponse is the Msg/UpdateParams response type.
-type MsgUpdateParamsResponse struct {
+// MsgUpdateDefaultQuotingParamsResponse is the Msg/UpdateDefaultQuotingParams
+// response type.
+type MsgUpdateDefaultQuotingParamsResponse struct {
 }
 
-func (m *MsgUpdateParamsResponse) Reset()         { *m = MsgUpdateParamsResponse{} }
-func (m *MsgUpdateParamsResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgUpdateParamsResponse) ProtoMessage()    {}
-func (*MsgUpdateParamsResponse) Descriptor() ([]byte, []int) {
+func (m *MsgUpdateDefaultQuotingParamsResponse) Reset()         { *m = MsgUpdateDefaultQuotingParamsResponse{} }
+func (m *MsgUpdateDefaultQuotingParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateDefaultQuotingParamsResponse) ProtoMessage()    {}
+func (*MsgUpdateDefaultQuotingParamsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ced574c6017ce006, []int{3}
 }
-func (m *MsgUpdateParamsResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgUpdateDefaultQuotingParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgUpdateParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgUpdateDefaultQuotingParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgUpdateParamsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgUpdateDefaultQuotingParamsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -206,61 +208,169 @@ func (m *MsgUpdateParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *MsgUpdateParamsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUpdateParamsResponse.Merge(m, src)
+func (m *MsgUpdateDefaultQuotingParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateDefaultQuotingParamsResponse.Merge(m, src)
 }
-func (m *MsgUpdateParamsResponse) XXX_Size() int {
+func (m *MsgUpdateDefaultQuotingParamsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUpdateParamsResponse.DiscardUnknown(m)
+func (m *MsgUpdateDefaultQuotingParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateDefaultQuotingParamsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgUpdateDefaultQuotingParamsResponse proto.InternalMessageInfo
+
+// MsgSetVaultQuotingParams is the Msg/SetVaultQuotingParams request type.
+type MsgSetVaultQuotingParams struct {
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// The vault to set quoting params of.
+	VaultId VaultId `protobuf:"bytes,2,opt,name=vault_id,json=vaultId,proto3" json:"vault_id"`
+	// The quoting parameters to set. Each field must be set.
+	QuotingParams QuotingParams `protobuf:"bytes,3,opt,name=quoting_params,json=quotingParams,proto3" json:"quoting_params"`
+}
+
+func (m *MsgSetVaultQuotingParams) Reset()         { *m = MsgSetVaultQuotingParams{} }
+func (m *MsgSetVaultQuotingParams) String() string { return proto.CompactTextString(m) }
+func (*MsgSetVaultQuotingParams) ProtoMessage()    {}
+func (*MsgSetVaultQuotingParams) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ced574c6017ce006, []int{4}
+}
+func (m *MsgSetVaultQuotingParams) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetVaultQuotingParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetVaultQuotingParams.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetVaultQuotingParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetVaultQuotingParams.Merge(m, src)
+}
+func (m *MsgSetVaultQuotingParams) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetVaultQuotingParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetVaultQuotingParams.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetVaultQuotingParams proto.InternalMessageInfo
+
+func (m *MsgSetVaultQuotingParams) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgSetVaultQuotingParams) GetVaultId() VaultId {
+	if m != nil {
+		return m.VaultId
+	}
+	return VaultId{}
+}
+
+func (m *MsgSetVaultQuotingParams) GetQuotingParams() QuotingParams {
+	if m != nil {
+		return m.QuotingParams
+	}
+	return QuotingParams{}
+}
+
+// MsgSetVaultQuotingParamsResponse is the Msg/SetVaultQuotingParams response
+// type.
+type MsgSetVaultQuotingParamsResponse struct {
+}
+
+func (m *MsgSetVaultQuotingParamsResponse) Reset()         { *m = MsgSetVaultQuotingParamsResponse{} }
+func (m *MsgSetVaultQuotingParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetVaultQuotingParamsResponse) ProtoMessage()    {}
+func (*MsgSetVaultQuotingParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ced574c6017ce006, []int{5}
+}
+func (m *MsgSetVaultQuotingParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetVaultQuotingParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetVaultQuotingParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetVaultQuotingParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetVaultQuotingParamsResponse.Merge(m, src)
+}
+func (m *MsgSetVaultQuotingParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetVaultQuotingParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetVaultQuotingParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetVaultQuotingParamsResponse proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*MsgDepositToVault)(nil), "dydxprotocol.vault.MsgDepositToVault")
 	proto.RegisterType((*MsgDepositToVaultResponse)(nil), "dydxprotocol.vault.MsgDepositToVaultResponse")
-	proto.RegisterType((*MsgUpdateParams)(nil), "dydxprotocol.vault.MsgUpdateParams")
-	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "dydxprotocol.vault.MsgUpdateParamsResponse")
+	proto.RegisterType((*MsgUpdateDefaultQuotingParams)(nil), "dydxprotocol.vault.MsgUpdateDefaultQuotingParams")
+	proto.RegisterType((*MsgUpdateDefaultQuotingParamsResponse)(nil), "dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse")
+	proto.RegisterType((*MsgSetVaultQuotingParams)(nil), "dydxprotocol.vault.MsgSetVaultQuotingParams")
+	proto.RegisterType((*MsgSetVaultQuotingParamsResponse)(nil), "dydxprotocol.vault.MsgSetVaultQuotingParamsResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/vault/tx.proto", fileDescriptor_ced574c6017ce006) }
 
 var fileDescriptor_ced574c6017ce006 = []byte{
-	// 504 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x53, 0xc1, 0x6e, 0xd3, 0x40,
-	0x10, 0x8d, 0x5b, 0x54, 0xe8, 0x92, 0x06, 0xb1, 0xaa, 0xd4, 0xc4, 0x91, 0x9c, 0x2a, 0x08, 0x54,
-	0x40, 0xb1, 0x45, 0x41, 0x05, 0xf5, 0x04, 0x11, 0x07, 0x22, 0x14, 0x89, 0x3a, 0xc0, 0x81, 0x4b,
-	0xd8, 0x78, 0x17, 0xc7, 0x52, 0xec, 0x75, 0x3d, 0xeb, 0x28, 0xe1, 0xc8, 0x17, 0x20, 0x71, 0xe6,
-	0x1f, 0x38, 0xf0, 0x11, 0xbd, 0x51, 0x71, 0x42, 0x1c, 0x2a, 0x94, 0x1c, 0xf8, 0x0d, 0xe4, 0xb5,
-	0xdd, 0xd8, 0x89, 0x91, 0x72, 0x49, 0x66, 0x67, 0xde, 0xec, 0x7b, 0xf3, 0x76, 0x8c, 0xea, 0x74,
-	0x4a, 0x27, 0x7e, 0xc0, 0x05, 0xb7, 0xf8, 0xc8, 0x18, 0x93, 0x70, 0x24, 0x0c, 0x31, 0xd1, 0x65,
-	0x06, 0xe3, 0x6c, 0x51, 0x97, 0x45, 0xb5, 0x66, 0x71, 0x70, 0x39, 0xf4, 0x65, 0xda, 0x88, 0x0f,
-	0x31, 0x5c, 0xdd, 0x8b, 0x4f, 0x86, 0x0b, 0xb6, 0x31, 0x7e, 0x10, 0xfd, 0x25, 0x85, 0xbb, 0x39,
-	0x12, 0x08, 0x07, 0xc4, 0xb2, 0x78, 0xe8, 0x09, 0xc8, 0xc4, 0x09, 0xb4, 0x51, 0xa0, 0xc7, 0x27,
-	0x01, 0x71, 0x53, 0x12, 0xad, 0x00, 0x20, 0x7f, 0x93, 0xfa, 0xae, 0xcd, 0x6d, 0x1e, 0x8b, 0x8b,
-	0xa2, 0x38, 0xdb, 0xfc, 0xba, 0x81, 0x6e, 0x76, 0xc1, 0x7e, 0xce, 0x7c, 0x0e, 0x8e, 0x78, 0xcd,
-	0xdf, 0x46, 0x1d, 0xf8, 0x08, 0x5d, 0x93, 0xad, 0x7d, 0x87, 0x56, 0x95, 0x7d, 0xe5, 0xe0, 0xfa,
-	0x61, 0x5d, 0x5f, 0x1d, 0x59, 0x97, 0xe0, 0x0e, 0x35, 0xaf, 0x8e, 0xe3, 0x00, 0xbf, 0x44, 0x3b,
-	0x0b, 0xe1, 0x51, 0xf3, 0x86, 0x6c, 0xbe, 0x93, 0x6f, 0xce, 0xcc, 0xa9, 0xf7, 0x2e, 0xe3, 0x0e,
-	0x35, 0xcb, 0x90, 0x39, 0x61, 0x8e, 0x2a, 0xa7, 0x21, 0x17, 0xac, 0x7f, 0x1a, 0x12, 0x4f, 0x84,
-	0x2e, 0x54, 0x37, 0xf7, 0x95, 0x83, 0x72, 0xfb, 0xc5, 0xd9, 0x45, 0xa3, 0xf4, 0xfb, 0xa2, 0xf1,
-	0xd4, 0x76, 0xc4, 0x30, 0x1c, 0xe8, 0x16, 0x77, 0x8d, 0xfc, 0xec, 0x8f, 0x5a, 0xd6, 0x90, 0x38,
-	0x9e, 0x71, 0x99, 0xa1, 0x62, 0xea, 0x33, 0xd0, 0x7b, 0x2c, 0x70, 0xc8, 0xc8, 0xf9, 0x48, 0x06,
-	0x23, 0xd6, 0xf1, 0x84, 0xb9, 0x23, 0xef, 0x3f, 0x49, 0xae, 0x3f, 0xc6, 0x9f, 0xfe, 0x7e, 0xbb,
-	0x97, 0x1f, 0xa0, 0x59, 0x47, 0xb5, 0x15, 0x7b, 0x4c, 0x06, 0x3e, 0xf7, 0x80, 0x35, 0xbf, 0x28,
-	0xe8, 0x46, 0x17, 0xec, 0x37, 0x3e, 0x25, 0x82, 0xbd, 0x92, 0x8f, 0x81, 0x8f, 0xd0, 0x36, 0x09,
-	0xc5, 0x90, 0x07, 0x8e, 0x98, 0x4a, 0xef, 0xb6, 0xdb, 0xd5, 0x9f, 0xdf, 0x5b, 0xbb, 0xc9, 0x42,
-	0x3c, 0xa3, 0x34, 0x60, 0x00, 0x3d, 0x11, 0x38, 0x9e, 0x6d, 0x2e, 0xa0, 0xf8, 0x09, 0xda, 0x8a,
-	0x9f, 0x33, 0xf1, 0x4c, 0x2d, 0x32, 0x3c, 0xe6, 0x68, 0x5f, 0x89, 0x1c, 0x30, 0x13, 0xfc, 0x71,
-	0x25, 0x92, 0xbd, 0xb8, 0xa9, 0x59, 0x43, 0x7b, 0x4b, 0xa2, 0x52, 0xc1, 0x87, 0x3f, 0x14, 0xb4,
-	0xd9, 0x05, 0x1b, 0x7f, 0x40, 0x95, 0xa5, 0x17, 0xbf, 0x5d, 0x44, 0xb7, 0x32, 0xb9, 0xda, 0x5a,
-	0x0b, 0x96, 0xf2, 0xe1, 0xf7, 0xa8, 0x9c, 0x33, 0xe7, 0xd6, 0x7f, 0xda, 0xb3, 0x20, 0xf5, 0xfe,
-	0x1a, 0xa0, 0x94, 0xa1, 0x7d, 0x72, 0x36, 0xd3, 0x94, 0xf3, 0x99, 0xa6, 0xfc, 0x99, 0x69, 0xca,
-	0xe7, 0xb9, 0x56, 0x3a, 0x9f, 0x6b, 0xa5, 0x5f, 0x73, 0xad, 0xf4, 0xee, 0xf1, 0xfa, 0xeb, 0x31,
-	0x49, 0xbf, 0xef, 0x68, 0x4b, 0x06, 0x5b, 0x32, 0xff, 0xf0, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0x67, 0x36, 0x31, 0xb6, 0x02, 0x04, 0x00, 0x00,
+	// 590 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcf, 0x8e, 0xd2, 0x40,
+	0x1c, 0xa6, 0x60, 0xd4, 0x1d, 0x17, 0x12, 0x1b, 0x54, 0xb6, 0xc4, 0x82, 0x24, 0xab, 0xab, 0x91,
+	0x36, 0xbb, 0x6e, 0xd6, 0xb8, 0xf1, 0xa0, 0x64, 0x0f, 0x12, 0x83, 0x91, 0xa2, 0x7b, 0x30, 0x31,
+	0xa4, 0x74, 0x66, 0x4b, 0x13, 0xe8, 0x94, 0xce, 0x94, 0x80, 0xde, 0x3c, 0x7a, 0xf2, 0x05, 0x7c,
+	0x07, 0x0f, 0x3e, 0x83, 0xd9, 0xe3, 0xc6, 0x93, 0xf1, 0xb0, 0x31, 0x70, 0xf0, 0xea, 0xcd, 0xab,
+	0xe9, 0x4c, 0x81, 0x56, 0x0a, 0x2e, 0x89, 0x17, 0xf8, 0xcd, 0xef, 0xff, 0xf7, 0xcd, 0xd7, 0x01,
+	0x79, 0x38, 0x84, 0x03, 0xc7, 0xc5, 0x14, 0x1b, 0xb8, 0xa3, 0xf6, 0x75, 0xaf, 0x43, 0x55, 0x3a,
+	0x50, 0x98, 0x47, 0x14, 0xc3, 0x41, 0x85, 0x05, 0xa5, 0x0d, 0x03, 0x93, 0x2e, 0x26, 0x4d, 0xe6,
+	0x56, 0xf9, 0x81, 0xa7, 0x4b, 0xd7, 0xf8, 0x49, 0xed, 0x12, 0x53, 0xed, 0x6f, 0xfb, 0x7f, 0x41,
+	0xe0, 0x76, 0x64, 0x08, 0xf1, 0x5a, 0xba, 0x61, 0x60, 0xcf, 0xa6, 0x24, 0x64, 0x07, 0xa9, 0x85,
+	0x98, 0x7d, 0x1c, 0xdd, 0xd5, 0xbb, 0x93, 0x21, 0x72, 0x4c, 0x02, 0xfb, 0x0d, 0xe2, 0x59, 0x13,
+	0x9b, 0x98, 0x2f, 0xe7, 0x5b, 0xdc, 0x5b, 0xfa, 0x98, 0x04, 0x97, 0x6b, 0xc4, 0x3c, 0x40, 0x0e,
+	0x26, 0x16, 0x7d, 0x81, 0x0f, 0xfd, 0x0a, 0x71, 0x0f, 0x5c, 0x64, 0xa5, 0x4d, 0x0b, 0xe6, 0x84,
+	0xa2, 0xb0, 0x75, 0x69, 0x27, 0xaf, 0xcc, 0x43, 0x56, 0x58, 0x72, 0x15, 0x6a, 0x17, 0xfa, 0xdc,
+	0x10, 0x9f, 0x82, 0xf4, 0x6c, 0x71, 0xbf, 0x38, 0xc9, 0x8a, 0x6f, 0x46, 0x8b, 0x43, 0x38, 0x95,
+	0xc6, 0xd4, 0xae, 0x42, 0x6d, 0x9d, 0x84, 0x4e, 0x22, 0x06, 0x99, 0x9e, 0x87, 0x29, 0x6a, 0xf6,
+	0x3c, 0xdd, 0xa6, 0x5e, 0x97, 0xe4, 0x52, 0x45, 0x61, 0x6b, 0xbd, 0xf2, 0xe4, 0xf8, 0xb4, 0x90,
+	0xf8, 0x7e, 0x5a, 0x78, 0x64, 0x5a, 0xb4, 0xed, 0xb5, 0x14, 0x03, 0x77, 0xd5, 0x28, 0xf6, 0xdd,
+	0xb2, 0xd1, 0xd6, 0x2d, 0x5b, 0x9d, 0x7a, 0x20, 0x1d, 0x3a, 0x88, 0x28, 0x0d, 0xe4, 0x5a, 0x7a,
+	0xc7, 0x7a, 0xa3, 0xb7, 0x3a, 0xa8, 0x6a, 0x53, 0x2d, 0xcd, 0xfa, 0xd7, 0x83, 0xf6, 0xfb, 0xe2,
+	0xbb, 0x9f, 0x9f, 0xee, 0x44, 0x01, 0x94, 0xf2, 0x60, 0x63, 0x8e, 0x1e, 0x0d, 0x11, 0x07, 0xdb,
+	0x04, 0x95, 0xbe, 0x08, 0xe0, 0x7a, 0x8d, 0x98, 0x2f, 0x1d, 0xa8, 0x53, 0x74, 0x80, 0x8e, 0xfc,
+	0x60, 0xdd, 0xc3, 0xd4, 0xb2, 0xcd, 0xe7, 0xec, 0x6a, 0xc4, 0x3d, 0xb0, 0xa6, 0x7b, 0xb4, 0x8d,
+	0x5d, 0x8b, 0x0e, 0x19, 0x93, 0x6b, 0x95, 0xdc, 0xd7, 0xcf, 0xe5, 0x6c, 0x20, 0x8f, 0xc7, 0x10,
+	0xba, 0x88, 0x90, 0x06, 0x75, 0x2d, 0xdb, 0xd4, 0x66, 0xa9, 0xe2, 0x6b, 0x70, 0x15, 0xf2, 0x7e,
+	0xcd, 0x1e, 0x6f, 0xd8, 0xe4, 0x97, 0x1d, 0x30, 0x7a, 0x23, 0xee, 0x3a, 0x22, 0xa3, 0x2b, 0xe7,
+	0x7c, 0x9a, 0xb4, 0x2c, 0x8c, 0x59, 0x6b, 0x3f, 0xe3, 0x23, 0x9d, 0x8d, 0x2b, 0xdd, 0x02, 0x9b,
+	0x4b, 0x71, 0x4c, 0x11, 0xff, 0x12, 0x40, 0xae, 0x46, 0xcc, 0x06, 0xa2, 0x87, 0xff, 0x0f, 0xec,
+	0xc3, 0x90, 0xda, 0x92, 0xff, 0x54, 0x5b, 0x00, 0x6c, 0xaa, 0xb9, 0x67, 0x5c, 0x26, 0x21, 0x8a,
+	0x52, 0xab, 0x51, 0x94, 0xee, 0x2d, 0xe5, 0xa6, 0x04, 0x8a, 0x8b, 0x10, 0x4f, 0x68, 0xd9, 0xf9,
+	0x9d, 0x04, 0xa9, 0x1a, 0x31, 0xc5, 0x23, 0x90, 0xf9, 0xeb, 0x4b, 0xda, 0x8c, 0xdb, 0x62, 0x4e,
+	0x51, 0x52, 0xf9, 0x4c, 0x69, 0x93, 0x79, 0xe2, 0x7b, 0x01, 0x48, 0x4b, 0x54, 0xb7, 0xbd, 0xa0,
+	0xdb, 0xe2, 0x12, 0xe9, 0xc1, 0xca, 0x25, 0xd3, 0x65, 0xde, 0x82, 0x2b, 0xf1, 0x7a, 0xb8, 0xbb,
+	0xa0, 0x67, 0x6c, 0xb6, 0xb4, 0xbb, 0x4a, 0xf6, 0x64, 0x78, 0xa5, 0x7e, 0x3c, 0x92, 0x85, 0x93,
+	0x91, 0x2c, 0xfc, 0x18, 0xc9, 0xc2, 0x87, 0xb1, 0x9c, 0x38, 0x19, 0xcb, 0x89, 0x6f, 0x63, 0x39,
+	0xf1, 0xea, 0xfe, 0xd9, 0x9f, 0x87, 0xc1, 0xe4, 0x7d, 0xf7, 0x5f, 0x89, 0xd6, 0x79, 0xe6, 0xbf,
+	0xf7, 0x27, 0x00, 0x00, 0xff, 0xff, 0x94, 0xff, 0xce, 0x08, 0x02, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -277,8 +387,10 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// DepositToVault deposits funds into a vault.
 	DepositToVault(ctx context.Context, in *MsgDepositToVault, opts ...grpc.CallOption) (*MsgDepositToVaultResponse, error)
-	// UpdateParams updates the Params in state.
-	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// UpdateDefaultQuotingParams updates the default quoting params in state.
+	UpdateDefaultQuotingParams(ctx context.Context, in *MsgUpdateDefaultQuotingParams, opts ...grpc.CallOption) (*MsgUpdateDefaultQuotingParamsResponse, error)
+	// SetVaultQuotingParams sets the quoting parameters of a specific vault.
+	SetVaultQuotingParams(ctx context.Context, in *MsgSetVaultQuotingParams, opts ...grpc.CallOption) (*MsgSetVaultQuotingParamsResponse, error)
 }
 
 type msgClient struct {
@@ -298,9 +410,18 @@ func (c *msgClient) DepositToVault(ctx context.Context, in *MsgDepositToVault, o
 	return out, nil
 }
 
-func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error) {
-	out := new(MsgUpdateParamsResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.vault.Msg/UpdateParams", in, out, opts...)
+func (c *msgClient) UpdateDefaultQuotingParams(ctx context.Context, in *MsgUpdateDefaultQuotingParams, opts ...grpc.CallOption) (*MsgUpdateDefaultQuotingParamsResponse, error) {
+	out := new(MsgUpdateDefaultQuotingParamsResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.vault.Msg/UpdateDefaultQuotingParams", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) SetVaultQuotingParams(ctx context.Context, in *MsgSetVaultQuotingParams, opts ...grpc.CallOption) (*MsgSetVaultQuotingParamsResponse, error) {
+	out := new(MsgSetVaultQuotingParamsResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.vault.Msg/SetVaultQuotingParams", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -311,8 +432,10 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 type MsgServer interface {
 	// DepositToVault deposits funds into a vault.
 	DepositToVault(context.Context, *MsgDepositToVault) (*MsgDepositToVaultResponse, error)
-	// UpdateParams updates the Params in state.
-	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// UpdateDefaultQuotingParams updates the default quoting params in state.
+	UpdateDefaultQuotingParams(context.Context, *MsgUpdateDefaultQuotingParams) (*MsgUpdateDefaultQuotingParamsResponse, error)
+	// SetVaultQuotingParams sets the quoting parameters of a specific vault.
+	SetVaultQuotingParams(context.Context, *MsgSetVaultQuotingParams) (*MsgSetVaultQuotingParamsResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -322,8 +445,11 @@ type UnimplementedMsgServer struct {
 func (*UnimplementedMsgServer) DepositToVault(ctx context.Context, req *MsgDepositToVault) (*MsgDepositToVaultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DepositToVault not implemented")
 }
-func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+func (*UnimplementedMsgServer) UpdateDefaultQuotingParams(ctx context.Context, req *MsgUpdateDefaultQuotingParams) (*MsgUpdateDefaultQuotingParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDefaultQuotingParams not implemented")
+}
+func (*UnimplementedMsgServer) SetVaultQuotingParams(ctx context.Context, req *MsgSetVaultQuotingParams) (*MsgSetVaultQuotingParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetVaultQuotingParams not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -348,20 +474,38 @@ func _Msg_DepositToVault_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUpdateParams)
+func _Msg_UpdateDefaultQuotingParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateDefaultQuotingParams)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).UpdateParams(ctx, in)
+		return srv.(MsgServer).UpdateDefaultQuotingParams(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dydxprotocol.vault.Msg/UpdateParams",
+		FullMethod: "/dydxprotocol.vault.Msg/UpdateDefaultQuotingParams",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateParams(ctx, req.(*MsgUpdateParams))
+		return srv.(MsgServer).UpdateDefaultQuotingParams(ctx, req.(*MsgUpdateDefaultQuotingParams))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_SetVaultQuotingParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetVaultQuotingParams)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetVaultQuotingParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.vault.Msg/SetVaultQuotingParams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetVaultQuotingParams(ctx, req.(*MsgSetVaultQuotingParams))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -375,8 +519,12 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_DepositToVault_Handler,
 		},
 		{
-			MethodName: "UpdateParams",
-			Handler:    _Msg_UpdateParams_Handler,
+			MethodName: "UpdateDefaultQuotingParams",
+			Handler:    _Msg_UpdateDefaultQuotingParams_Handler,
+		},
+		{
+			MethodName: "SetVaultQuotingParams",
+			Handler:    _Msg_SetVaultQuotingParams_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -463,7 +611,7 @@ func (m *MsgDepositToVaultResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgUpdateParams) Marshal() (dAtA []byte, err error) {
+func (m *MsgUpdateDefaultQuotingParams) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -473,18 +621,18 @@ func (m *MsgUpdateParams) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgUpdateParams) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgUpdateDefaultQuotingParams) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgUpdateParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgUpdateDefaultQuotingParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	{
-		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.DefaultQuotingParams.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -503,7 +651,7 @@ func (m *MsgUpdateParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgUpdateParamsResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgUpdateDefaultQuotingParamsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -513,12 +661,85 @@ func (m *MsgUpdateParamsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgUpdateParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgUpdateDefaultQuotingParamsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgUpdateParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgUpdateDefaultQuotingParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetVaultQuotingParams) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetVaultQuotingParams) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetVaultQuotingParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.QuotingParams.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size, err := m.VaultId.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetVaultQuotingParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetVaultQuotingParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetVaultQuotingParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -565,7 +786,7 @@ func (m *MsgDepositToVaultResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgUpdateParams) Size() (n int) {
+func (m *MsgUpdateDefaultQuotingParams) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -575,12 +796,38 @@ func (m *MsgUpdateParams) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = m.Params.Size()
+	l = m.DefaultQuotingParams.Size()
 	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
-func (m *MsgUpdateParamsResponse) Size() (n int) {
+func (m *MsgUpdateDefaultQuotingParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSetVaultQuotingParams) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.VaultId.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.QuotingParams.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgSetVaultQuotingParamsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -800,7 +1047,7 @@ func (m *MsgDepositToVaultResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgUpdateParams) Unmarshal(dAtA []byte) error {
+func (m *MsgUpdateDefaultQuotingParams) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -823,10 +1070,10 @@ func (m *MsgUpdateParams) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUpdateParams: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgUpdateDefaultQuotingParams: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUpdateParams: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgUpdateDefaultQuotingParams: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -863,7 +1110,7 @@ func (m *MsgUpdateParams) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DefaultQuotingParams", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -890,7 +1137,7 @@ func (m *MsgUpdateParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.DefaultQuotingParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -915,7 +1162,7 @@ func (m *MsgUpdateParams) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgUpdateParamsResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgUpdateDefaultQuotingParamsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -938,10 +1185,208 @@ func (m *MsgUpdateParamsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUpdateParamsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgUpdateDefaultQuotingParamsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUpdateParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgUpdateDefaultQuotingParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetVaultQuotingParams) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetVaultQuotingParams: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetVaultQuotingParams: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.VaultId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QuotingParams", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.QuotingParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetVaultQuotingParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetVaultQuotingParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetVaultQuotingParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

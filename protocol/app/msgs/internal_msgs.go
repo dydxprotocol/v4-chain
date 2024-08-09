@@ -186,8 +186,10 @@ var (
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": nil,
 
 		// vault
-		"/dydxprotocol.vault.MsgUpdateParams":         &vault.MsgUpdateParams{},
-		"/dydxprotocol.vault.MsgUpdateParamsResponse": nil,
+		"/dydxprotocol.vault.MsgSetVaultQuotingParams":              &vault.MsgSetVaultQuotingParams{},
+		"/dydxprotocol.vault.MsgSetVaultQuotingParamsResponse":      nil,
+		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         &vault.MsgUpdateDefaultQuotingParams{},
+		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": nil,
 
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            &vest.MsgSetVestEntry{},

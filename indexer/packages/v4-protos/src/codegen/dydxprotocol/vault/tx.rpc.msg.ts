@@ -1,14 +1,17 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgDepositToVault, MsgDepositToVaultResponse, MsgUpdateParams, MsgUpdateParamsResponse } from "./tx";
+import { MsgDepositToVault, MsgDepositToVaultResponse, MsgUpdateDefaultQuotingParams, MsgUpdateDefaultQuotingParamsResponse, MsgSetVaultQuotingParams, MsgSetVaultQuotingParamsResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
   /** DepositToVault deposits funds into a vault. */
   depositToVault(request: MsgDepositToVault): Promise<MsgDepositToVaultResponse>;
-  /** UpdateParams updates the Params in state. */
+  /** UpdateDefaultQuotingParams updates the default quoting params in state. */
 
-  updateParams(request: MsgUpdateParams): Promise<MsgUpdateParamsResponse>;
+  updateDefaultQuotingParams(request: MsgUpdateDefaultQuotingParams): Promise<MsgUpdateDefaultQuotingParamsResponse>;
+  /** SetVaultQuotingParams sets the quoting parameters of a specific vault. */
+
+  setVaultQuotingParams(request: MsgSetVaultQuotingParams): Promise<MsgSetVaultQuotingParamsResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -16,7 +19,8 @@ export class MsgClientImpl implements Msg {
   constructor(rpc: Rpc) {
     this.rpc = rpc;
     this.depositToVault = this.depositToVault.bind(this);
-    this.updateParams = this.updateParams.bind(this);
+    this.updateDefaultQuotingParams = this.updateDefaultQuotingParams.bind(this);
+    this.setVaultQuotingParams = this.setVaultQuotingParams.bind(this);
   }
 
   depositToVault(request: MsgDepositToVault): Promise<MsgDepositToVaultResponse> {
@@ -25,10 +29,16 @@ export class MsgClientImpl implements Msg {
     return promise.then(data => MsgDepositToVaultResponse.decode(new _m0.Reader(data)));
   }
 
-  updateParams(request: MsgUpdateParams): Promise<MsgUpdateParamsResponse> {
-    const data = MsgUpdateParams.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.vault.Msg", "UpdateParams", data);
-    return promise.then(data => MsgUpdateParamsResponse.decode(new _m0.Reader(data)));
+  updateDefaultQuotingParams(request: MsgUpdateDefaultQuotingParams): Promise<MsgUpdateDefaultQuotingParamsResponse> {
+    const data = MsgUpdateDefaultQuotingParams.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.vault.Msg", "UpdateDefaultQuotingParams", data);
+    return promise.then(data => MsgUpdateDefaultQuotingParamsResponse.decode(new _m0.Reader(data)));
+  }
+
+  setVaultQuotingParams(request: MsgSetVaultQuotingParams): Promise<MsgSetVaultQuotingParamsResponse> {
+    const data = MsgSetVaultQuotingParams.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.vault.Msg", "SetVaultQuotingParams", data);
+    return promise.then(data => MsgSetVaultQuotingParamsResponse.decode(new _m0.Reader(data)));
   }
 
 }

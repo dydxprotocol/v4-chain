@@ -11,7 +11,8 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
-	types "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
+	types1 "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
+	types "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -770,6 +771,8 @@ func (m *QueryLiquidationsConfigurationResponse) GetLiquidationsConfig() Liquida
 type StreamOrderbookUpdatesRequest struct {
 	// Clob pair ids to stream orderbook updates for.
 	ClobPairId []uint32 `protobuf:"varint,1,rep,packed,name=clob_pair_id,json=clobPairId,proto3" json:"clob_pair_id,omitempty"`
+	// Subaccount ids to stream subaccount updates for.
+	SubaccountIds []*types.SubaccountId `protobuf:"bytes,2,rep,name=subaccount_ids,json=subaccountIds,proto3" json:"subaccount_ids,omitempty"`
 }
 
 func (m *StreamOrderbookUpdatesRequest) Reset()         { *m = StreamOrderbookUpdatesRequest{} }
@@ -808,6 +811,13 @@ var xxx_messageInfo_StreamOrderbookUpdatesRequest proto.InternalMessageInfo
 func (m *StreamOrderbookUpdatesRequest) GetClobPairId() []uint32 {
 	if m != nil {
 		return m.ClobPairId
+	}
+	return nil
+}
+
+func (m *StreamOrderbookUpdatesRequest) GetSubaccountIds() []*types.SubaccountId {
+	if m != nil {
+		return m.SubaccountIds
 	}
 	return nil
 }
@@ -863,17 +873,19 @@ func (m *StreamOrderbookUpdatesResponse) GetUpdates() []StreamUpdate {
 // GRPC stream.
 type StreamUpdate struct {
 	// Contains one of an StreamOrderbookUpdate,
-	// StreamOrderbookFill.
+	// StreamOrderbookFill, StreamTakerOrderStatus.
 	//
 	// Types that are valid to be assigned to UpdateMessage:
 	//
 	//	*StreamUpdate_OrderbookUpdate
 	//	*StreamUpdate_OrderFill
+	//	*StreamUpdate_TakerOrder
+	//	*StreamUpdate_SubaccountUpdate
 	UpdateMessage isStreamUpdate_UpdateMessage `protobuf_oneof:"update_message"`
 	// Block height of the update.
-	BlockHeight uint32 `protobuf:"varint,3,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
+	BlockHeight uint32 `protobuf:"varint,5,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
 	// Exec mode of the update.
-	ExecMode uint32 `protobuf:"varint,4,opt,name=exec_mode,json=execMode,proto3" json:"exec_mode,omitempty"`
+	ExecMode uint32 `protobuf:"varint,6,opt,name=exec_mode,json=execMode,proto3" json:"exec_mode,omitempty"`
 }
 
 func (m *StreamUpdate) Reset()         { *m = StreamUpdate{} }
@@ -921,9 +933,17 @@ type StreamUpdate_OrderbookUpdate struct {
 type StreamUpdate_OrderFill struct {
 	OrderFill *StreamOrderbookFill `protobuf:"bytes,2,opt,name=order_fill,json=orderFill,proto3,oneof" json:"order_fill,omitempty"`
 }
+type StreamUpdate_TakerOrder struct {
+	TakerOrder *StreamTakerOrder `protobuf:"bytes,3,opt,name=taker_order,json=takerOrder,proto3,oneof" json:"taker_order,omitempty"`
+}
+type StreamUpdate_SubaccountUpdate struct {
+	SubaccountUpdate *StreamSubaccountUpdate `protobuf:"bytes,4,opt,name=subaccount_update,json=subaccountUpdate,proto3,oneof" json:"subaccount_update,omitempty"`
+}
 
-func (*StreamUpdate_OrderbookUpdate) isStreamUpdate_UpdateMessage() {}
-func (*StreamUpdate_OrderFill) isStreamUpdate_UpdateMessage()       {}
+func (*StreamUpdate_OrderbookUpdate) isStreamUpdate_UpdateMessage()  {}
+func (*StreamUpdate_OrderFill) isStreamUpdate_UpdateMessage()        {}
+func (*StreamUpdate_TakerOrder) isStreamUpdate_UpdateMessage()       {}
+func (*StreamUpdate_SubaccountUpdate) isStreamUpdate_UpdateMessage() {}
 
 func (m *StreamUpdate) GetUpdateMessage() isStreamUpdate_UpdateMessage {
 	if m != nil {
@@ -942,6 +962,20 @@ func (m *StreamUpdate) GetOrderbookUpdate() *StreamOrderbookUpdate {
 func (m *StreamUpdate) GetOrderFill() *StreamOrderbookFill {
 	if x, ok := m.GetUpdateMessage().(*StreamUpdate_OrderFill); ok {
 		return x.OrderFill
+	}
+	return nil
+}
+
+func (m *StreamUpdate) GetTakerOrder() *StreamTakerOrder {
+	if x, ok := m.GetUpdateMessage().(*StreamUpdate_TakerOrder); ok {
+		return x.TakerOrder
+	}
+	return nil
+}
+
+func (m *StreamUpdate) GetSubaccountUpdate() *StreamSubaccountUpdate {
+	if x, ok := m.GetUpdateMessage().(*StreamUpdate_SubaccountUpdate); ok {
+		return x.SubaccountUpdate
 	}
 	return nil
 }
@@ -965,7 +999,200 @@ func (*StreamUpdate) XXX_OneofWrappers() []interface{} {
 	return []interface{}{
 		(*StreamUpdate_OrderbookUpdate)(nil),
 		(*StreamUpdate_OrderFill)(nil),
+		(*StreamUpdate_TakerOrder)(nil),
+		(*StreamUpdate_SubaccountUpdate)(nil),
 	}
+}
+
+// SubaccountPerpetualPosition provides information on a subaccount's updated
+// perpetual positions.
+type SubaccountPerpetualPosition struct {
+	// The `Id` of the `Perpetual`.
+	PerpetualId uint32 `protobuf:"varint,1,opt,name=perpetual_id,json=perpetualId,proto3" json:"perpetual_id,omitempty"`
+	// The size of the position in base quantums.
+	Quantums uint64 `protobuf:"varint,2,opt,name=quantums,proto3" json:"quantums,omitempty"`
+}
+
+func (m *SubaccountPerpetualPosition) Reset()         { *m = SubaccountPerpetualPosition{} }
+func (m *SubaccountPerpetualPosition) String() string { return proto.CompactTextString(m) }
+func (*SubaccountPerpetualPosition) ProtoMessage()    {}
+func (*SubaccountPerpetualPosition) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3365c195b25c5bc0, []int{17}
+}
+func (m *SubaccountPerpetualPosition) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SubaccountPerpetualPosition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SubaccountPerpetualPosition.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SubaccountPerpetualPosition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SubaccountPerpetualPosition.Merge(m, src)
+}
+func (m *SubaccountPerpetualPosition) XXX_Size() int {
+	return m.Size()
+}
+func (m *SubaccountPerpetualPosition) XXX_DiscardUnknown() {
+	xxx_messageInfo_SubaccountPerpetualPosition.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SubaccountPerpetualPosition proto.InternalMessageInfo
+
+func (m *SubaccountPerpetualPosition) GetPerpetualId() uint32 {
+	if m != nil {
+		return m.PerpetualId
+	}
+	return 0
+}
+
+func (m *SubaccountPerpetualPosition) GetQuantums() uint64 {
+	if m != nil {
+		return m.Quantums
+	}
+	return 0
+}
+
+// SubaccountAssetPosition provides information on a subaccount's updated asset
+// positions.
+type SubaccountAssetPosition struct {
+	// The `Id` of the `Asset`.
+	AssetId uint32 `protobuf:"varint,1,opt,name=asset_id,json=assetId,proto3" json:"asset_id,omitempty"`
+	// The absolute size of the position in base quantums.
+	Quantums uint64 `protobuf:"varint,2,opt,name=quantums,proto3" json:"quantums,omitempty"`
+}
+
+func (m *SubaccountAssetPosition) Reset()         { *m = SubaccountAssetPosition{} }
+func (m *SubaccountAssetPosition) String() string { return proto.CompactTextString(m) }
+func (*SubaccountAssetPosition) ProtoMessage()    {}
+func (*SubaccountAssetPosition) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3365c195b25c5bc0, []int{18}
+}
+func (m *SubaccountAssetPosition) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SubaccountAssetPosition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SubaccountAssetPosition.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SubaccountAssetPosition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SubaccountAssetPosition.Merge(m, src)
+}
+func (m *SubaccountAssetPosition) XXX_Size() int {
+	return m.Size()
+}
+func (m *SubaccountAssetPosition) XXX_DiscardUnknown() {
+	xxx_messageInfo_SubaccountAssetPosition.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SubaccountAssetPosition proto.InternalMessageInfo
+
+func (m *SubaccountAssetPosition) GetAssetId() uint32 {
+	if m != nil {
+		return m.AssetId
+	}
+	return 0
+}
+
+func (m *SubaccountAssetPosition) GetQuantums() uint64 {
+	if m != nil {
+		return m.Quantums
+	}
+	return 0
+}
+
+// StreamSubaccountUpdate provides information on a subaccount update. Used in
+// the full node GRPC stream.
+type StreamSubaccountUpdate struct {
+	SubaccountId *types.SubaccountId `protobuf:"bytes,1,opt,name=subaccount_id,json=subaccountId,proto3" json:"subaccount_id,omitempty"`
+	// updated_perpetual_positions will each be for unique perpetuals.
+	UpdatedPerpetualPositions []*SubaccountPerpetualPosition `protobuf:"bytes,2,rep,name=updated_perpetual_positions,json=updatedPerpetualPositions,proto3" json:"updated_perpetual_positions,omitempty"`
+	// updated_asset_positions will each be for unique assets.
+	UpdatedAssetPositions []*SubaccountAssetPosition `protobuf:"bytes,3,rep,name=updated_asset_positions,json=updatedAssetPositions,proto3" json:"updated_asset_positions,omitempty"`
+	// Snapshot indicates if the response is from a snapshot of the subaccount.
+	// All updates should be ignored until snapshot is received.
+	// If the snapshot is true, then all previous entries should be
+	// discarded and the subaccount should be resynced.
+	// For a snapshot subaccount update, the `updated_perpetual_positions` and
+	// `updated_asset_positions` fields will contain the full state of the
+	// subaccount.
+	Snapshot bool `protobuf:"varint,4,opt,name=snapshot,proto3" json:"snapshot,omitempty"`
+}
+
+func (m *StreamSubaccountUpdate) Reset()         { *m = StreamSubaccountUpdate{} }
+func (m *StreamSubaccountUpdate) String() string { return proto.CompactTextString(m) }
+func (*StreamSubaccountUpdate) ProtoMessage()    {}
+func (*StreamSubaccountUpdate) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3365c195b25c5bc0, []int{19}
+}
+func (m *StreamSubaccountUpdate) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *StreamSubaccountUpdate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_StreamSubaccountUpdate.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *StreamSubaccountUpdate) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StreamSubaccountUpdate.Merge(m, src)
+}
+func (m *StreamSubaccountUpdate) XXX_Size() int {
+	return m.Size()
+}
+func (m *StreamSubaccountUpdate) XXX_DiscardUnknown() {
+	xxx_messageInfo_StreamSubaccountUpdate.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_StreamSubaccountUpdate proto.InternalMessageInfo
+
+func (m *StreamSubaccountUpdate) GetSubaccountId() *types.SubaccountId {
+	if m != nil {
+		return m.SubaccountId
+	}
+	return nil
+}
+
+func (m *StreamSubaccountUpdate) GetUpdatedPerpetualPositions() []*SubaccountPerpetualPosition {
+	if m != nil {
+		return m.UpdatedPerpetualPositions
+	}
+	return nil
+}
+
+func (m *StreamSubaccountUpdate) GetUpdatedAssetPositions() []*SubaccountAssetPosition {
+	if m != nil {
+		return m.UpdatedAssetPositions
+	}
+	return nil
+}
+
+func (m *StreamSubaccountUpdate) GetSnapshot() bool {
+	if m != nil {
+		return m.Snapshot
+	}
+	return false
 }
 
 // StreamOrderbookUpdate provides information on an orderbook update. Used in
@@ -973,7 +1200,7 @@ func (*StreamUpdate) XXX_OneofWrappers() []interface{} {
 type StreamOrderbookUpdate struct {
 	// Orderbook updates for the clob pair. Can contain order place, removals,
 	// or updates.
-	Updates []types.OffChainUpdateV1 `protobuf:"bytes,1,rep,name=updates,proto3" json:"updates"`
+	Updates []types1.OffChainUpdateV1 `protobuf:"bytes,1,rep,name=updates,proto3" json:"updates"`
 	// Snapshot indicates if the response is from a snapshot of the orderbook.
 	// All updates should be ignored until snapshot is recieved.
 	// If the snapshot is true, then all previous entries should be
@@ -985,7 +1212,7 @@ func (m *StreamOrderbookUpdate) Reset()         { *m = StreamOrderbookUpdate{} }
 func (m *StreamOrderbookUpdate) String() string { return proto.CompactTextString(m) }
 func (*StreamOrderbookUpdate) ProtoMessage()    {}
 func (*StreamOrderbookUpdate) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3365c195b25c5bc0, []int{17}
+	return fileDescriptor_3365c195b25c5bc0, []int{20}
 }
 func (m *StreamOrderbookUpdate) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1014,7 +1241,7 @@ func (m *StreamOrderbookUpdate) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_StreamOrderbookUpdate proto.InternalMessageInfo
 
-func (m *StreamOrderbookUpdate) GetUpdates() []types.OffChainUpdateV1 {
+func (m *StreamOrderbookUpdate) GetUpdates() []types1.OffChainUpdateV1 {
 	if m != nil {
 		return m.Updates
 	}
@@ -1045,7 +1272,7 @@ func (m *StreamOrderbookFill) Reset()         { *m = StreamOrderbookFill{} }
 func (m *StreamOrderbookFill) String() string { return proto.CompactTextString(m) }
 func (*StreamOrderbookFill) ProtoMessage()    {}
 func (*StreamOrderbookFill) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3365c195b25c5bc0, []int{18}
+	return fileDescriptor_3365c195b25c5bc0, []int{21}
 }
 func (m *StreamOrderbookFill) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1095,6 +1322,180 @@ func (m *StreamOrderbookFill) GetFillAmounts() []uint64 {
 	return nil
 }
 
+// StreamTakerOrder provides information on a taker order that was attempted
+// to be matched on the orderbook.
+// It is intended to be used only in full node streaming.
+type StreamTakerOrder struct {
+	// The taker order that was matched on the orderbook. Can be a
+	// regular order or a liquidation order.
+	//
+	// Types that are valid to be assigned to TakerOrder:
+	//
+	//	*StreamTakerOrder_Order
+	//	*StreamTakerOrder_LiquidationOrder
+	TakerOrder isStreamTakerOrder_TakerOrder `protobuf_oneof:"taker_order"`
+	// Information on the taker order after it is matched on the book,
+	// either successfully or unsuccessfully.
+	TakerOrderStatus *StreamTakerOrderStatus `protobuf:"bytes,3,opt,name=taker_order_status,json=takerOrderStatus,proto3" json:"taker_order_status,omitempty"`
+}
+
+func (m *StreamTakerOrder) Reset()         { *m = StreamTakerOrder{} }
+func (m *StreamTakerOrder) String() string { return proto.CompactTextString(m) }
+func (*StreamTakerOrder) ProtoMessage()    {}
+func (*StreamTakerOrder) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3365c195b25c5bc0, []int{22}
+}
+func (m *StreamTakerOrder) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *StreamTakerOrder) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_StreamTakerOrder.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *StreamTakerOrder) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StreamTakerOrder.Merge(m, src)
+}
+func (m *StreamTakerOrder) XXX_Size() int {
+	return m.Size()
+}
+func (m *StreamTakerOrder) XXX_DiscardUnknown() {
+	xxx_messageInfo_StreamTakerOrder.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_StreamTakerOrder proto.InternalMessageInfo
+
+type isStreamTakerOrder_TakerOrder interface {
+	isStreamTakerOrder_TakerOrder()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type StreamTakerOrder_Order struct {
+	Order *Order `protobuf:"bytes,1,opt,name=order,proto3,oneof" json:"order,omitempty"`
+}
+type StreamTakerOrder_LiquidationOrder struct {
+	LiquidationOrder *StreamLiquidationOrder `protobuf:"bytes,2,opt,name=liquidation_order,json=liquidationOrder,proto3,oneof" json:"liquidation_order,omitempty"`
+}
+
+func (*StreamTakerOrder_Order) isStreamTakerOrder_TakerOrder()            {}
+func (*StreamTakerOrder_LiquidationOrder) isStreamTakerOrder_TakerOrder() {}
+
+func (m *StreamTakerOrder) GetTakerOrder() isStreamTakerOrder_TakerOrder {
+	if m != nil {
+		return m.TakerOrder
+	}
+	return nil
+}
+
+func (m *StreamTakerOrder) GetOrder() *Order {
+	if x, ok := m.GetTakerOrder().(*StreamTakerOrder_Order); ok {
+		return x.Order
+	}
+	return nil
+}
+
+func (m *StreamTakerOrder) GetLiquidationOrder() *StreamLiquidationOrder {
+	if x, ok := m.GetTakerOrder().(*StreamTakerOrder_LiquidationOrder); ok {
+		return x.LiquidationOrder
+	}
+	return nil
+}
+
+func (m *StreamTakerOrder) GetTakerOrderStatus() *StreamTakerOrderStatus {
+	if m != nil {
+		return m.TakerOrderStatus
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*StreamTakerOrder) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*StreamTakerOrder_Order)(nil),
+		(*StreamTakerOrder_LiquidationOrder)(nil),
+	}
+}
+
+// StreamTakerOrderStatus is a representation of a taker order
+// after it is attempted to be matched on the orderbook.
+// It is intended to be used only in full node streaming.
+type StreamTakerOrderStatus struct {
+	// The state of the taker order after attempting to match it against the
+	// orderbook. Possible enum values can be found here:
+	// https://github.com/dydxprotocol/v4-chain/blob/main/protocol/x/clob/types/orderbook.go#L105
+	OrderStatus uint32 `protobuf:"varint,1,opt,name=order_status,json=orderStatus,proto3" json:"order_status,omitempty"`
+	// The amount of remaining (non-matched) base quantums of this taker order.
+	RemainingQuantums uint64 `protobuf:"varint,2,opt,name=remaining_quantums,json=remainingQuantums,proto3" json:"remaining_quantums,omitempty"`
+	// The amount of base quantums that were *optimistically* filled for this
+	// taker order when the order is matched against the orderbook. Note that if
+	// any quantums of this order were optimistically filled or filled in state
+	// before this invocation of the matching loop, this value will not include
+	// them.
+	OptimisticallyFilledQuantums uint64 `protobuf:"varint,3,opt,name=optimistically_filled_quantums,json=optimisticallyFilledQuantums,proto3" json:"optimistically_filled_quantums,omitempty"`
+}
+
+func (m *StreamTakerOrderStatus) Reset()         { *m = StreamTakerOrderStatus{} }
+func (m *StreamTakerOrderStatus) String() string { return proto.CompactTextString(m) }
+func (*StreamTakerOrderStatus) ProtoMessage()    {}
+func (*StreamTakerOrderStatus) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3365c195b25c5bc0, []int{23}
+}
+func (m *StreamTakerOrderStatus) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *StreamTakerOrderStatus) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_StreamTakerOrderStatus.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *StreamTakerOrderStatus) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StreamTakerOrderStatus.Merge(m, src)
+}
+func (m *StreamTakerOrderStatus) XXX_Size() int {
+	return m.Size()
+}
+func (m *StreamTakerOrderStatus) XXX_DiscardUnknown() {
+	xxx_messageInfo_StreamTakerOrderStatus.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_StreamTakerOrderStatus proto.InternalMessageInfo
+
+func (m *StreamTakerOrderStatus) GetOrderStatus() uint32 {
+	if m != nil {
+		return m.OrderStatus
+	}
+	return 0
+}
+
+func (m *StreamTakerOrderStatus) GetRemainingQuantums() uint64 {
+	if m != nil {
+		return m.RemainingQuantums
+	}
+	return 0
+}
+
+func (m *StreamTakerOrderStatus) GetOptimisticallyFilledQuantums() uint64 {
+	if m != nil {
+		return m.OptimisticallyFilledQuantums
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*QueryGetClobPairRequest)(nil), "dydxprotocol.clob.QueryGetClobPairRequest")
 	proto.RegisterType((*QueryClobPairResponse)(nil), "dydxprotocol.clob.QueryClobPairResponse")
@@ -1114,102 +1515,131 @@ func init() {
 	proto.RegisterType((*StreamOrderbookUpdatesRequest)(nil), "dydxprotocol.clob.StreamOrderbookUpdatesRequest")
 	proto.RegisterType((*StreamOrderbookUpdatesResponse)(nil), "dydxprotocol.clob.StreamOrderbookUpdatesResponse")
 	proto.RegisterType((*StreamUpdate)(nil), "dydxprotocol.clob.StreamUpdate")
+	proto.RegisterType((*SubaccountPerpetualPosition)(nil), "dydxprotocol.clob.SubaccountPerpetualPosition")
+	proto.RegisterType((*SubaccountAssetPosition)(nil), "dydxprotocol.clob.SubaccountAssetPosition")
+	proto.RegisterType((*StreamSubaccountUpdate)(nil), "dydxprotocol.clob.StreamSubaccountUpdate")
 	proto.RegisterType((*StreamOrderbookUpdate)(nil), "dydxprotocol.clob.StreamOrderbookUpdate")
 	proto.RegisterType((*StreamOrderbookFill)(nil), "dydxprotocol.clob.StreamOrderbookFill")
+	proto.RegisterType((*StreamTakerOrder)(nil), "dydxprotocol.clob.StreamTakerOrder")
+	proto.RegisterType((*StreamTakerOrderStatus)(nil), "dydxprotocol.clob.StreamTakerOrderStatus")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/clob/query.proto", fileDescriptor_3365c195b25c5bc0) }
 
 var fileDescriptor_3365c195b25c5bc0 = []byte{
-	// 1407 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x57, 0xcf, 0x6f, 0xdc, 0xc4,
-	0x17, 0x5f, 0x27, 0xf9, 0xb6, 0x9b, 0x97, 0xfe, 0xfa, 0x4e, 0x9a, 0x76, 0xeb, 0xa4, 0x9b, 0xd4,
-	0xd0, 0x74, 0x93, 0xd2, 0x75, 0x93, 0x56, 0x55, 0x69, 0x50, 0x51, 0x12, 0xd1, 0x1f, 0x52, 0x43,
-	0x83, 0xfb, 0x83, 0x0a, 0x2a, 0x59, 0xb3, 0xf6, 0xac, 0x63, 0xd5, 0xf6, 0x6c, 0xec, 0xd9, 0x55,
-	0x22, 0x84, 0x40, 0x1c, 0xb8, 0x00, 0x12, 0x12, 0x07, 0x0e, 0x48, 0x5c, 0x38, 0x73, 0xe4, 0x88,
-	0x80, 0x5b, 0x8f, 0x95, 0xb8, 0x70, 0x40, 0x08, 0xb5, 0x9c, 0xf9, 0x1b, 0x90, 0x67, 0xc6, 0x9b,
-	0x75, 0x6c, 0xef, 0x26, 0xb9, 0xec, 0xda, 0x6f, 0xde, 0x7b, 0xf3, 0x79, 0xef, 0x7d, 0x66, 0xde,
-	0x33, 0x9c, 0xb5, 0xb7, 0xed, 0xad, 0x56, 0x48, 0x19, 0xb5, 0xa8, 0xa7, 0x5b, 0x1e, 0x6d, 0xe8,
-	0x9b, 0x6d, 0x12, 0x6e, 0xd7, 0xb9, 0x0c, 0xfd, 0xbf, 0x77, 0xb9, 0x1e, 0x2f, 0xab, 0x27, 0x1d,
-	0xea, 0x50, 0x2e, 0xd2, 0xe3, 0x27, 0xa1, 0xa8, 0x4e, 0x39, 0x94, 0x3a, 0x1e, 0xd1, 0x71, 0xcb,
-	0xd5, 0x71, 0x10, 0x50, 0x86, 0x99, 0x4b, 0x83, 0x48, 0xae, 0xce, 0x5b, 0x34, 0xf2, 0x69, 0xa4,
-	0x37, 0x70, 0x44, 0x84, 0x7f, 0xbd, 0xb3, 0xd0, 0x20, 0x0c, 0x2f, 0xe8, 0x2d, 0xec, 0xb8, 0x01,
-	0x57, 0x96, 0xba, 0x7a, 0x16, 0x51, 0xc3, 0xa3, 0xd6, 0x33, 0x33, 0xc4, 0x8c, 0x98, 0x9e, 0xeb,
-	0xbb, 0xcc, 0xb4, 0x68, 0xd0, 0x74, 0x1d, 0x69, 0x70, 0x2e, 0x6b, 0x10, 0xff, 0x98, 0x2d, 0xec,
-	0x86, 0x52, 0xe5, 0x72, 0x56, 0x85, 0x6c, 0xb6, 0x5d, 0xb6, 0x6d, 0x32, 0x97, 0x84, 0x79, 0x4e,
-	0x73, 0xf2, 0x42, 0x43, 0x9b, 0x24, 0x0e, 0xa7, 0xb3, 0xcb, 0x3e, 0x66, 0xd6, 0x06, 0x49, 0x22,
-	0xbe, 0x98, 0x55, 0xf0, 0xdc, 0xcd, 0xb6, 0x6b, 0x8b, 0xbc, 0xa4, 0x37, 0x9b, 0xcc, 0xf1, 0x46,
-	0x3a, 0x72, 0xf1, 0x66, 0x6a, 0xd1, 0x0d, 0x6c, 0xb2, 0x45, 0x42, 0x9d, 0x36, 0x9b, 0xa6, 0xb5,
-	0x81, 0xdd, 0xc0, 0x6c, 0xb7, 0x6c, 0xcc, 0x48, 0x94, 0x95, 0x08, 0x7b, 0x6d, 0x0e, 0x4e, 0xbf,
-	0x17, 0x67, 0xfc, 0x36, 0x61, 0xab, 0x1e, 0x6d, 0xac, 0x63, 0x37, 0x34, 0xc8, 0x66, 0x9b, 0x44,
-	0x0c, 0x1d, 0x83, 0x21, 0xd7, 0xae, 0x28, 0x33, 0x4a, 0xed, 0xa8, 0x31, 0xe4, 0xda, 0xda, 0xfb,
-	0x30, 0xc1, 0x55, 0x77, 0xf4, 0xa2, 0x16, 0x0d, 0x22, 0x82, 0x6e, 0xc2, 0x68, 0x37, 0xa5, 0x5c,
-	0x7f, 0x6c, 0x71, 0xb2, 0x9e, 0xa1, 0x46, 0x3d, 0xb1, 0x5b, 0x19, 0x79, 0xfe, 0xd7, 0x74, 0xc9,
-	0x28, 0x5b, 0xf2, 0x5d, 0xc3, 0x12, 0xc3, 0xb2, 0xe7, 0xed, 0xc6, 0x70, 0x0b, 0x60, 0x87, 0x02,
-	0xd2, 0xf7, 0x6c, 0x5d, 0xf0, 0xa5, 0x1e, 0xf3, 0xa5, 0x2e, 0xf8, 0x28, 0xf9, 0x52, 0x5f, 0xc7,
-	0x0e, 0x91, 0xb6, 0x46, 0x8f, 0xa5, 0xf6, 0x83, 0x02, 0x95, 0x14, 0xf8, 0x65, 0xcf, 0x2b, 0xc2,
-	0x3f, 0xbc, 0x4f, 0xfc, 0xe8, 0x76, 0x0a, 0xe4, 0x10, 0x07, 0x79, 0x61, 0x20, 0x48, 0xb1, 0x79,
-	0x0a, 0xe5, 0x9f, 0x0a, 0x4c, 0xaf, 0x91, 0xce, 0xbb, 0xd4, 0x26, 0x0f, 0x69, 0xfc, 0xbb, 0x8a,
-	0x3d, 0xab, 0xed, 0xf1, 0xc5, 0x24, 0x23, 0x4f, 0xe1, 0x94, 0x20, 0x7c, 0x2b, 0xa4, 0x2d, 0x1a,
-	0x91, 0xd0, 0x94, 0xd4, 0xea, 0x66, 0x27, 0x8b, 0xfc, 0x31, 0xf6, 0x62, 0x6a, 0xd1, 0x70, 0x8d,
-	0x74, 0xd6, 0x84, 0xb6, 0x71, 0x92, 0x7b, 0x59, 0x97, 0x4e, 0xa4, 0x14, 0x7d, 0x08, 0x13, 0x9d,
-	0x44, 0xd9, 0xf4, 0x49, 0xc7, 0xf4, 0x09, 0x0b, 0x5d, 0x2b, 0xea, 0x46, 0x95, 0x75, 0x9e, 0x02,
-	0xbc, 0x26, 0xd4, 0x8d, 0xf1, 0x4e, 0xef, 0x96, 0x42, 0xa8, 0xfd, 0xab, 0xc0, 0x4c, 0x71, 0x78,
-	0xb2, 0x18, 0x0e, 0x1c, 0x0e, 0x49, 0xd4, 0xf6, 0x58, 0x24, 0x4b, 0x71, 0x7b, 0xd0, 0x9e, 0x39,
-	0x5e, 0x62, 0x85, 0xe5, 0xc0, 0x7e, 0x4c, 0xbd, 0xb6, 0x4f, 0xd6, 0x49, 0x18, 0x97, 0x4e, 0x96,
-	0x2d, 0xf1, 0xae, 0x62, 0x18, 0xcf, 0xd1, 0x42, 0x33, 0x70, 0xa4, 0x4b, 0x06, 0xb3, 0xcb, 0x7f,
-	0x48, 0x8a, 0x7d, 0xd7, 0x46, 0x27, 0x60, 0xd8, 0x27, 0x1d, 0x9e, 0x91, 0x21, 0x23, 0x7e, 0x44,
-	0xa7, 0xe0, 0x50, 0x87, 0x3b, 0xa9, 0x0c, 0xcf, 0x28, 0xb5, 0x11, 0x43, 0xbe, 0x69, 0xf3, 0x50,
-	0xe3, 0xa4, 0x7b, 0x87, 0xdf, 0x26, 0x0f, 0x5d, 0x12, 0xde, 0x8b, 0xef, 0x92, 0x55, 0x7e, 0xba,
-	0xdb, 0x61, 0x6f, 0x5d, 0xb5, 0xef, 0x14, 0x98, 0xdb, 0x83, 0xb2, 0xcc, 0x52, 0x00, 0x95, 0xa2,
-	0x2b, 0x4a, 0xf2, 0x40, 0xcf, 0x49, 0x5b, 0x3f, 0xd7, 0x32, 0x3d, 0x13, 0x24, 0x4f, 0x47, 0x9b,
-	0x83, 0x0b, 0x1c, 0xdc, 0x4a, 0x4c, 0x1a, 0x03, 0x33, 0x52, 0x1c, 0xc8, 0xb7, 0x8a, 0x8c, 0xba,
-	0xaf, 0xae, 0x8c, 0xe3, 0x19, 0x9c, 0x2e, 0xb8, 0xbe, 0x65, 0x18, 0xf5, 0x9c, 0x30, 0xfa, 0x38,
-	0x96, 0x51, 0x08, 0x72, 0xef, 0x52, 0xd1, 0x9e, 0xc0, 0x19, 0x0e, 0xec, 0x01, 0xc3, 0x8c, 0x34,
-	0xdb, 0xde, 0xfd, 0xf8, 0xca, 0x4e, 0xce, 0xd5, 0x12, 0x94, 0xf9, 0x15, 0x9e, 0xd4, 0x7c, 0x6c,
-	0x51, 0xcd, 0xd9, 0x9a, 0x9b, 0xdc, 0xb5, 0x13, 0x2e, 0x51, 0xf1, 0xaa, 0xfd, 0xa4, 0x80, 0x9a,
-	0xe7, 0x5a, 0x46, 0xf9, 0x04, 0x8e, 0x0b, 0xdf, 0x2d, 0x0f, 0x5b, 0xc4, 0x27, 0x01, 0x93, 0x5b,
-	0xcc, 0xe5, 0x6c, 0x71, 0x8f, 0x06, 0xce, 0x43, 0x12, 0xfa, 0xdc, 0xc5, 0x7a, 0x62, 0x20, 0x77,
-	0x3c, 0x46, 0x53, 0x52, 0x34, 0x0d, 0x63, 0x4d, 0xd7, 0xf3, 0x4c, 0xec, 0xd3, 0x76, 0xc0, 0x38,
-	0x27, 0x47, 0x0c, 0x88, 0x45, 0xcb, 0x5c, 0x82, 0xa6, 0x60, 0x94, 0x85, 0xae, 0xe3, 0x90, 0x90,
-	0xd8, 0x9c, 0x9d, 0x65, 0x63, 0x47, 0xa0, 0x5d, 0x80, 0xf3, 0x1c, 0xf6, 0xbd, 0x9e, 0xe6, 0x93,
-	0x5b, 0xd4, 0xcf, 0x15, 0x98, 0x1d, 0xa4, 0x29, 0x83, 0x7d, 0x0a, 0xe3, 0x39, 0xbd, 0x4c, 0x06,
-	0x7c, 0x3e, 0x2f, 0xe0, 0x8c, 0x4b, 0x19, 0x2c, 0xf2, 0x32, 0x2b, 0xda, 0x32, 0x9c, 0x7d, 0xc0,
-	0x42, 0x82, 0x45, 0x7a, 0x1a, 0x94, 0x3e, 0x7b, 0x24, 0xfa, 0x59, 0x52, 0xc7, 0xec, 0xf9, 0x1d,
-	0x4e, 0x9f, 0x5f, 0x0d, 0x43, 0xb5, 0xc8, 0x85, 0x0c, 0xe1, 0x6d, 0x38, 0x2c, 0xbb, 0xa4, 0xbc,
-	0x83, 0xa6, 0x73, 0x60, 0x0b, 0x1f, 0xc2, 0x34, 0xe1, 0x83, 0xb4, 0xd2, 0x3e, 0x1d, 0x82, 0x23,
-	0xbd, 0xeb, 0xe8, 0x11, 0x9c, 0xa0, 0xc9, 0x6e, 0xb2, 0x03, 0xcb, 0x8c, 0xd4, 0x0a, 0x5d, 0xef,
-	0x82, 0x77, 0xa7, 0x64, 0x1c, 0xa7, 0x69, 0x51, 0xdc, 0x79, 0x04, 0xb1, 0xe2, 0x8a, 0xcb, 0x3b,
-	0x7a, 0x76, 0xb0, 0xc3, 0x5b, 0xae, 0xe7, 0xdd, 0x29, 0x19, 0xa3, 0xdc, 0x36, 0x7e, 0x41, 0xe7,
-	0xe0, 0x88, 0x38, 0x87, 0x1b, 0xc4, 0x75, 0x36, 0x18, 0x67, 0xca, 0x51, 0x63, 0x8c, 0xcb, 0xee,
-	0x70, 0x11, 0x9a, 0x84, 0x51, 0xb2, 0x45, 0x2c, 0xd3, 0xa7, 0x36, 0xa9, 0x8c, 0xf0, 0xf5, 0x72,
-	0x2c, 0x58, 0xa3, 0x36, 0x59, 0x39, 0x01, 0xc7, 0x44, 0x54, 0xa6, 0x4f, 0xa2, 0x08, 0x3b, 0x44,
-	0xfb, 0x4a, 0x81, 0x89, 0xdc, 0x38, 0xd0, 0x93, 0xdd, 0xd9, 0xbd, 0x9e, 0x46, 0x2c, 0x87, 0x98,
-	0x7a, 0x76, 0x64, 0xb9, 0xdf, 0x6c, 0xae, 0xc6, 0x02, 0xe1, 0xe8, 0xf1, 0xc2, 0xae, 0xb4, 0x23,
-	0x15, 0xca, 0x51, 0x80, 0x5b, 0xd1, 0x06, 0x15, 0x47, 0xa1, 0x6c, 0x74, 0xdf, 0xb5, 0x1f, 0x15,
-	0x18, 0xcf, 0x49, 0x03, 0x5a, 0x02, 0xce, 0x0d, 0xd1, 0x45, 0x65, 0x4d, 0xa6, 0x0a, 0xba, 0x3f,
-	0xef, 0x92, 0x06, 0x1f, 0x16, 0xf8, 0x23, 0xba, 0x06, 0x87, 0x78, 0x0e, 0xe3, 0xfe, 0x18, 0x47,
-	0x52, 0x29, 0xba, 0x32, 0x24, 0x52, 0xa9, 0x1d, 0xa7, 0xbb, 0xe7, 0xd8, 0x46, 0x95, 0xe1, 0x99,
-	0xe1, 0xda, 0x88, 0x31, 0xb6, 0x73, 0x6e, 0xa3, 0xc5, 0xef, 0x01, 0xfe, 0xc7, 0x4f, 0x1c, 0xfa,
-	0x42, 0x81, 0x72, 0x32, 0x7b, 0xa0, 0xf9, 0x9c, 0x1d, 0x0a, 0x06, 0x38, 0xb5, 0x56, 0xa4, 0xbb,
-	0x7b, 0x82, 0xd3, 0xe6, 0x3e, 0xfb, 0xfd, 0x9f, 0x6f, 0x86, 0x5e, 0x43, 0xe7, 0xf4, 0x3e, 0xd3,
-	0xb2, 0xfe, 0x91, 0x6b, 0x7f, 0x8c, 0xbe, 0x54, 0x60, 0xac, 0x67, 0x88, 0x2a, 0x06, 0x94, 0x9d,
-	0xe6, 0xd4, 0x8b, 0x83, 0x00, 0xf5, 0x4c, 0x65, 0xda, 0xeb, 0x1c, 0x53, 0x15, 0x4d, 0xf5, 0xc3,
-	0x84, 0x7e, 0x51, 0xa0, 0x52, 0x34, 0x0d, 0xa0, 0xc5, 0x7d, 0x8d, 0x0e, 0x02, 0xe3, 0x95, 0x03,
-	0x8c, 0x1b, 0xda, 0x0d, 0x8e, 0xf5, 0xea, 0x0d, 0x65, 0x5e, 0xd3, 0xf5, 0xdc, 0x71, 0xdd, 0x0c,
-	0xa8, 0x4d, 0x4c, 0x46, 0xc5, 0xbf, 0xd5, 0x03, 0xf2, 0x37, 0x05, 0xa6, 0xfa, 0x35, 0x66, 0xb4,
-	0x54, 0x94, 0xb5, 0x3d, 0x8c, 0x15, 0xea, 0x5b, 0x07, 0x33, 0x96, 0x71, 0xcd, 0xf2, 0xb8, 0x66,
-	0x50, 0x55, 0xef, 0xfb, 0x89, 0x84, 0x7e, 0x56, 0x60, 0xb2, 0x4f, 0x57, 0x46, 0x37, 0x8a, 0x50,
-	0x0c, 0x9e, 0x27, 0xd4, 0xa5, 0x03, 0xd9, 0xca, 0x00, 0xce, 0xf3, 0x00, 0xa6, 0xd1, 0xd9, 0xbe,
-	0xdf, 0x8d, 0xe8, 0x57, 0x05, 0xce, 0x14, 0x76, 0x36, 0x74, 0xbd, 0x08, 0xc1, 0xa0, 0xb6, 0xa9,
-	0xbe, 0x79, 0x00, 0x4b, 0x89, 0xbc, 0xce, 0x91, 0xd7, 0xd0, 0xac, 0xbe, 0xa7, 0x6f, 0x45, 0x14,
-	0xc0, 0xd1, 0xd4, 0xf0, 0x81, 0xde, 0x28, 0xda, 0x3b, 0x6f, 0xfc, 0x51, 0x2f, 0xed, 0x51, 0x5b,
-	0xa2, 0x2b, 0xa1, 0x4f, 0xe0, 0x54, 0x7e, 0x17, 0x45, 0x97, 0xf7, 0xda, 0xd1, 0x92, 0x9e, 0xad,
-	0x2e, 0xec, 0xc3, 0x42, 0x00, 0xb8, 0xac, 0xac, 0xac, 0x3f, 0x7f, 0x59, 0x55, 0x5e, 0xbc, 0xac,
-	0x2a, 0x7f, 0xbf, 0xac, 0x2a, 0x5f, 0xbf, 0xaa, 0x96, 0x5e, 0xbc, 0xaa, 0x96, 0xfe, 0x78, 0x55,
-	0x2d, 0x7d, 0x70, 0xcd, 0x71, 0xd9, 0x46, 0xbb, 0x51, 0xb7, 0xa8, 0x9f, 0x4e, 0x5e, 0xe7, 0xea,
-	0x25, 0xde, 0x50, 0xf4, 0xae, 0x64, 0x4b, 0x24, 0x94, 0x6d, 0xb7, 0x48, 0xd4, 0x38, 0xc4, 0xc5,
-	0x57, 0xfe, 0x0b, 0x00, 0x00, 0xff, 0xff, 0xd1, 0xc6, 0xcc, 0x0a, 0xf6, 0x10, 0x00, 0x00,
+	// 1778 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x58, 0x41, 0x6f, 0x1c, 0x49,
+	0x15, 0x9e, 0x1e, 0x3b, 0xc9, 0xe4, 0x4d, 0x9c, 0x75, 0x2a, 0xeb, 0x64, 0x32, 0x76, 0xc6, 0x4e,
+	0x2f, 0x71, 0xec, 0x2c, 0x99, 0x4e, 0xbc, 0xab, 0xd5, 0x92, 0xa0, 0x45, 0x76, 0x20, 0x71, 0x44,
+	0xcc, 0xce, 0x76, 0xb2, 0x59, 0x0b, 0x22, 0xb5, 0x6a, 0xba, 0xcb, 0xe3, 0x96, 0xbb, 0xbb, 0xc6,
+	0x5d, 0xd5, 0x23, 0x5b, 0x08, 0x21, 0x71, 0xd8, 0x0b, 0x20, 0xad, 0xc4, 0x81, 0x03, 0x12, 0x07,
+	0x38, 0x23, 0x71, 0xe1, 0x88, 0x80, 0xdb, 0x1e, 0x23, 0x21, 0x24, 0x0e, 0x08, 0xa1, 0x84, 0x33,
+	0xbf, 0x01, 0x75, 0x55, 0xf5, 0x4c, 0xf7, 0x74, 0xf7, 0x8c, 0xe3, 0x8b, 0x3d, 0xf5, 0xea, 0xbd,
+	0xef, 0x7d, 0xef, 0xd5, 0xab, 0x57, 0x55, 0x0d, 0xd7, 0x9d, 0x63, 0xe7, 0xa8, 0x1f, 0x52, 0x4e,
+	0x6d, 0xea, 0x19, 0xb6, 0x47, 0xbb, 0xc6, 0x61, 0x44, 0xc2, 0xe3, 0xb6, 0x90, 0xa1, 0x4b, 0xe9,
+	0xe9, 0x76, 0x3c, 0xdd, 0x7c, 0xb7, 0x47, 0x7b, 0x54, 0x88, 0x8c, 0xf8, 0x97, 0x54, 0x6c, 0x2e,
+	0xf5, 0x28, 0xed, 0x79, 0xc4, 0xc0, 0x7d, 0xd7, 0xc0, 0x41, 0x40, 0x39, 0xe6, 0x2e, 0x0d, 0x98,
+	0x9a, 0xbd, 0x6d, 0x53, 0xe6, 0x53, 0x66, 0x74, 0x31, 0x23, 0x12, 0xdf, 0x18, 0xdc, 0xeb, 0x12,
+	0x8e, 0xef, 0x19, 0x7d, 0xdc, 0x73, 0x03, 0xa1, 0xac, 0x74, 0x8d, 0x3c, 0xa3, 0xae, 0x47, 0xed,
+	0x03, 0x2b, 0xc4, 0x9c, 0x58, 0x9e, 0xeb, 0xbb, 0xdc, 0xb2, 0x69, 0xb0, 0xe7, 0xf6, 0x94, 0xc1,
+	0x8d, 0xbc, 0x41, 0xfc, 0xc7, 0xea, 0x63, 0x37, 0x54, 0x2a, 0x77, 0xf3, 0x2a, 0xe4, 0x30, 0x72,
+	0xf9, 0xb1, 0xc5, 0x5d, 0x12, 0x16, 0x81, 0x16, 0xe4, 0x85, 0x86, 0x0e, 0x49, 0x00, 0x97, 0xf3,
+	0xd3, 0x3e, 0xe6, 0xf6, 0x3e, 0x49, 0x22, 0x7e, 0x3f, 0xaf, 0xe0, 0xb9, 0x87, 0x91, 0xeb, 0xc8,
+	0xbc, 0x64, 0x9d, 0x2d, 0x16, 0xa0, 0x91, 0x81, 0x9a, 0xfc, 0x24, 0x33, 0xe9, 0x06, 0x0e, 0x39,
+	0x22, 0xa1, 0x41, 0xf7, 0xf6, 0x2c, 0x7b, 0x1f, 0xbb, 0x81, 0x15, 0xf5, 0x1d, 0xcc, 0x09, 0xcb,
+	0x4b, 0x94, 0xfd, 0x7a, 0xc6, 0x9e, 0x45, 0x5d, 0x6c, 0xdb, 0x34, 0x0a, 0x38, 0x4b, 0xfd, 0x96,
+	0xaa, 0xfa, 0x3a, 0x5c, 0xfd, 0x2c, 0x5e, 0x9c, 0xc7, 0x84, 0x3f, 0xf4, 0x68, 0xb7, 0x83, 0xdd,
+	0xd0, 0x24, 0x87, 0x11, 0x61, 0x1c, 0x5d, 0x84, 0xaa, 0xeb, 0x34, 0xb4, 0x15, 0x6d, 0x6d, 0xce,
+	0xac, 0xba, 0x8e, 0xfe, 0x05, 0x2c, 0x08, 0xd5, 0x91, 0x1e, 0xeb, 0xd3, 0x80, 0x11, 0xf4, 0x09,
+	0x9c, 0x1f, 0x66, 0x5f, 0xe8, 0xd7, 0x37, 0x16, 0xdb, 0xb9, 0x2a, 0x6a, 0x27, 0x76, 0x5b, 0xb3,
+	0x5f, 0xff, 0x7b, 0xb9, 0x62, 0xd6, 0x6c, 0x35, 0xd6, 0xb1, 0xe2, 0xb0, 0xe9, 0x79, 0xe3, 0x1c,
+	0x1e, 0x01, 0x8c, 0xaa, 0x45, 0x61, 0xaf, 0xb6, 0x65, 0x69, 0xb5, 0xe3, 0xd2, 0x6a, 0xcb, 0xd2,
+	0x55, 0xa5, 0xd5, 0xee, 0xe0, 0x1e, 0x51, 0xb6, 0x66, 0xca, 0x52, 0xff, 0xbd, 0x06, 0x8d, 0x0c,
+	0xf9, 0x4d, 0xcf, 0x2b, 0xe3, 0x3f, 0xf3, 0x96, 0xfc, 0xd1, 0xe3, 0x0c, 0xc9, 0xaa, 0x20, 0x79,
+	0x6b, 0x2a, 0x49, 0xe9, 0x3c, 0xc3, 0xf2, 0x5f, 0x1a, 0x2c, 0xef, 0x90, 0xc1, 0x0f, 0xa8, 0x43,
+	0x9e, 0xd3, 0xf8, 0xef, 0x43, 0xec, 0xd9, 0x91, 0x27, 0x26, 0x93, 0x8c, 0xbc, 0x84, 0x2b, 0x72,
+	0x6f, 0xf4, 0x43, 0xda, 0xa7, 0x8c, 0x84, 0x96, 0xaa, 0xc2, 0x61, 0x76, 0xf2, 0xcc, 0x5f, 0x60,
+	0x2f, 0xae, 0x42, 0x1a, 0xee, 0x90, 0xc1, 0x8e, 0xd4, 0x36, 0xdf, 0x15, 0x28, 0x1d, 0x05, 0xa2,
+	0xa4, 0xe8, 0x47, 0xb0, 0x30, 0x48, 0x94, 0x2d, 0x9f, 0x0c, 0x2c, 0x9f, 0xf0, 0xd0, 0xb5, 0xd9,
+	0x30, 0xaa, 0x3c, 0x78, 0x86, 0xf0, 0x8e, 0x54, 0x37, 0x2f, 0x0f, 0xd2, 0x2e, 0xa5, 0x50, 0xff,
+	0x9f, 0x06, 0x2b, 0xe5, 0xe1, 0xa9, 0xc5, 0xe8, 0xc1, 0xb9, 0x90, 0xb0, 0xc8, 0xe3, 0x4c, 0x2d,
+	0xc5, 0xe3, 0x69, 0x3e, 0x0b, 0x50, 0x62, 0x85, 0xcd, 0xc0, 0x79, 0x41, 0xbd, 0xc8, 0x27, 0x1d,
+	0x12, 0xc6, 0x4b, 0xa7, 0x96, 0x2d, 0x41, 0x6f, 0x62, 0xb8, 0x5c, 0xa0, 0x85, 0x56, 0xe0, 0xc2,
+	0xb0, 0x18, 0xac, 0x61, 0xfd, 0x43, 0xb2, 0xd8, 0x4f, 0x1c, 0x34, 0x0f, 0x33, 0x3e, 0x19, 0x88,
+	0x8c, 0x54, 0xcd, 0xf8, 0x27, 0xba, 0x02, 0x67, 0x07, 0x02, 0xa4, 0x31, 0xb3, 0xa2, 0xad, 0xcd,
+	0x9a, 0x6a, 0xa4, 0xdf, 0x86, 0x35, 0x51, 0x74, 0xdf, 0x13, 0x8d, 0xe7, 0xb9, 0x4b, 0xc2, 0xa7,
+	0x71, 0xdb, 0x79, 0x28, 0x1a, 0x41, 0x14, 0xa6, 0xd7, 0x55, 0xff, 0x8d, 0x06, 0xeb, 0x27, 0x50,
+	0x56, 0x59, 0x0a, 0xa0, 0x51, 0xd6, 0xcd, 0x54, 0x1d, 0x18, 0x05, 0x69, 0x9b, 0x04, 0xad, 0xd2,
+	0xb3, 0x40, 0x8a, 0x74, 0xf4, 0x75, 0xb8, 0x25, 0xc8, 0x6d, 0xc5, 0x45, 0x63, 0x62, 0x4e, 0xca,
+	0x03, 0xf9, 0xb5, 0xa6, 0xa2, 0x9e, 0xa8, 0xab, 0xe2, 0x38, 0x80, 0xab, 0x25, 0x9d, 0x5e, 0x85,
+	0xd1, 0x2e, 0x08, 0x63, 0x02, 0xb0, 0x8a, 0x42, 0x16, 0xf7, 0x98, 0x8a, 0xbe, 0x0b, 0xd7, 0x04,
+	0xb1, 0x67, 0x1c, 0x73, 0xb2, 0x17, 0x79, 0x9f, 0xc6, 0xdd, 0x3d, 0xd9, 0x57, 0x0f, 0xa0, 0x26,
+	0xba, 0x7d, 0xb2, 0xe6, 0xf5, 0x8d, 0x66, 0x81, 0x6b, 0x61, 0xf2, 0xc4, 0x49, 0x6a, 0x89, 0xca,
+	0xa1, 0xfe, 0x27, 0x0d, 0x9a, 0x45, 0xd0, 0x2a, 0xca, 0x5d, 0x78, 0x47, 0x62, 0xf7, 0x3d, 0x6c,
+	0x13, 0x9f, 0x04, 0x5c, 0xb9, 0x58, 0x2f, 0x70, 0xf1, 0x94, 0x06, 0xbd, 0xe7, 0x24, 0xf4, 0x05,
+	0x44, 0x27, 0x31, 0x50, 0x1e, 0x2f, 0xd2, 0x8c, 0x14, 0x2d, 0x43, 0x7d, 0xcf, 0xf5, 0x3c, 0x0b,
+	0xfb, 0x71, 0x4f, 0x17, 0x35, 0x39, 0x6b, 0x42, 0x2c, 0xda, 0x14, 0x12, 0xb4, 0x04, 0xe7, 0x79,
+	0xe8, 0xf6, 0x7a, 0x24, 0x24, 0x8e, 0xa8, 0xce, 0x9a, 0x39, 0x12, 0xe8, 0xb7, 0xe0, 0xa6, 0xa0,
+	0xfd, 0x34, 0x75, 0x4e, 0x15, 0x2e, 0xea, 0x97, 0x1a, 0xac, 0x4e, 0xd3, 0x54, 0xc1, 0xbe, 0x84,
+	0xcb, 0x05, 0xc7, 0x9e, 0x0a, 0xf8, 0x66, 0x51, 0xc0, 0x39, 0x48, 0x15, 0x2c, 0xf2, 0x72, 0x33,
+	0xfa, 0x57, 0x1a, 0x5c, 0x7f, 0xc6, 0x43, 0x82, 0x65, 0x7e, 0xba, 0x94, 0x1e, 0x7c, 0x2e, 0xcf,
+	0xbe, 0x64, 0x21, 0xf3, 0x1b, 0x78, 0x66, 0x6c, 0x03, 0xef, 0xc0, 0xc5, 0xd1, 0x39, 0x68, 0xb9,
+	0x4e, 0xdc, 0xdd, 0x66, 0xf2, 0xad, 0x33, 0x75, 0x6e, 0xb6, 0x9f, 0x0d, 0x7f, 0x3f, 0x71, 0xcc,
+	0x39, 0x96, 0x1a, 0x31, 0x1d, 0x43, 0xab, 0x8c, 0x91, 0x4a, 0xc9, 0x77, 0xe0, 0x9c, 0x3a, 0xa0,
+	0x55, 0x4f, 0x5b, 0x2e, 0x48, 0x83, 0xc4, 0x90, 0xa6, 0x49, 0x7d, 0x29, 0x2b, 0xfd, 0x77, 0x33,
+	0x70, 0x21, 0x3d, 0x8f, 0x3e, 0x87, 0x79, 0x9a, 0x78, 0x53, 0x87, 0xbf, 0xca, 0xf0, 0x5a, 0x29,
+	0xf4, 0x18, 0xbd, 0xed, 0x8a, 0xf9, 0x0e, 0xcd, 0x8a, 0xe2, 0x93, 0x4c, 0x16, 0x6a, 0x5c, 0x41,
+	0xaa, 0xe7, 0xaf, 0x4e, 0x07, 0x7c, 0xe4, 0x7a, 0xde, 0x76, 0xc5, 0x3c, 0x2f, 0x6c, 0xe3, 0x01,
+	0x7a, 0x04, 0x75, 0x8e, 0x0f, 0x48, 0x68, 0x09, 0x91, 0x28, 0xbc, 0xfa, 0xc6, 0x7b, 0xa5, 0x48,
+	0xcf, 0x63, 0x5d, 0x01, 0xb7, 0x5d, 0x31, 0x81, 0x0f, 0x47, 0x68, 0x17, 0x2e, 0xa5, 0x96, 0x4a,
+	0x05, 0x3a, 0x5b, 0xba, 0x77, 0x24, 0xda, 0x68, 0xb1, 0x86, 0x91, 0xce, 0xb3, 0x31, 0x19, 0xba,
+	0x01, 0x17, 0x64, 0xe7, 0xd9, 0x27, 0x6e, 0x6f, 0x9f, 0x37, 0xce, 0x88, 0x3e, 0x5f, 0x17, 0xb2,
+	0x6d, 0x21, 0x42, 0x8b, 0x70, 0x9e, 0x1c, 0x11, 0xdb, 0xf2, 0xa9, 0x43, 0x1a, 0x67, 0xc5, 0x7c,
+	0x2d, 0x16, 0xec, 0x50, 0x87, 0x6c, 0xcd, 0xc3, 0x45, 0x49, 0xc7, 0xf2, 0x09, 0x63, 0xb8, 0x47,
+	0xf4, 0x97, 0xb0, 0x38, 0xf2, 0xdc, 0x21, 0x61, 0x9f, 0xf0, 0x08, 0x7b, 0x1d, 0xca, 0xdc, 0xb8,
+	0x80, 0x63, 0x87, 0xfd, 0x44, 0x38, 0x3a, 0x58, 0xea, 0x43, 0xd9, 0x13, 0x07, 0x35, 0xa1, 0x76,
+	0x18, 0xe1, 0x80, 0x47, 0x3e, 0x53, 0x5b, 0x79, 0x38, 0xd6, 0x3b, 0x70, 0x75, 0x84, 0xbe, 0xc9,
+	0x18, 0xe1, 0x43, 0xe4, 0x6b, 0x50, 0xc3, 0xb1, 0x60, 0x84, 0x7a, 0x4e, 0x8c, 0xa7, 0x20, 0xfe,
+	0xa3, 0x0a, 0x57, 0x8a, 0x13, 0x86, 0xbe, 0x0f, 0x73, 0x99, 0x1d, 0x52, 0x7c, 0xb7, 0x28, 0xdd,
+	0x20, 0x17, 0xd2, 0x1b, 0x04, 0x05, 0xb0, 0x28, 0x33, 0xe5, 0x58, 0xa3, 0x04, 0xf4, 0x15, 0xf9,
+	0x64, 0xef, 0x15, 0xf5, 0xf9, 0x09, 0xd9, 0x34, 0xaf, 0x29, 0xc8, 0xdc, 0x0c, 0x43, 0x5d, 0xb8,
+	0x9a, 0xf8, 0x93, 0x69, 0x19, 0xf9, 0x9a, 0x11, 0xbe, 0x6e, 0x4f, 0xf4, 0x95, 0xc9, 0xad, 0xb9,
+	0xa0, 0xa0, 0x32, 0x52, 0x16, 0xe7, 0x95, 0x05, 0xb8, 0xcf, 0xf6, 0x29, 0x17, 0xe5, 0x58, 0x33,
+	0x87, 0x63, 0xfd, 0x97, 0x1a, 0x2c, 0x14, 0xee, 0x38, 0xb4, 0x3b, 0xde, 0x07, 0x3e, 0xce, 0x32,
+	0x51, 0x37, 0xfd, 0x76, 0xfe, 0x5e, 0xff, 0xe9, 0xde, 0xde, 0xc3, 0x58, 0x20, 0x81, 0x5e, 0xdc,
+	0x1b, 0x6b, 0x10, 0x19, 0x3e, 0xd5, 0x31, 0x3e, 0x7f, 0xd0, 0xe0, 0x72, 0xc1, 0x86, 0x45, 0x0f,
+	0x40, 0x34, 0x45, 0x79, 0x7f, 0x54, 0x2b, 0xbc, 0x54, 0x72, 0xef, 0x15, 0xf7, 0x43, 0x53, 0x5c,
+	0x93, 0xc5, 0x4f, 0xf4, 0x11, 0x9c, 0x15, 0x5b, 0x3b, 0x59, 0xbf, 0x46, 0xd9, 0x61, 0xa9, 0x98,
+	0x2a, 0xed, 0x78, 0x17, 0xa4, 0x0e, 0x2c, 0xb9, 0x22, 0xb3, 0x66, 0x7d, 0x74, 0x62, 0x31, 0xfd,
+	0xcb, 0x2a, 0xcc, 0x8f, 0xb7, 0x05, 0x74, 0x17, 0xce, 0xc8, 0x56, 0x22, 0x79, 0x96, 0xba, 0xdb,
+	0xae, 0x98, 0x52, 0x31, 0x6e, 0x1d, 0xa9, 0xf3, 0x43, 0x35, 0xa2, 0xea, 0x94, 0xd6, 0x91, 0x3a,
+	0x8b, 0x12, 0xb8, 0x79, 0x6f, 0x4c, 0x86, 0xbe, 0x00, 0x94, 0x6a, 0x6e, 0x16, 0xe3, 0x98, 0x47,
+	0x4c, 0xf5, 0xb8, 0xf5, 0x13, 0xf4, 0xb8, 0x67, 0xc2, 0xc0, 0x9c, 0xe7, 0x63, 0x92, 0xad, 0xb9,
+	0x4c, 0xd7, 0xd4, 0xff, 0xa8, 0x25, 0x1b, 0x74, 0xdc, 0x36, 0x4e, 0x63, 0xc6, 0xb9, 0x6a, 0x26,
+	0x34, 0xa5, 0x72, 0x07, 0x50, 0x48, 0x7c, 0xec, 0x06, 0x6e, 0xd0, 0xb3, 0xc6, 0x9a, 0xc0, 0xa5,
+	0xe1, 0xcc, 0x67, 0x6a, 0x02, 0x7d, 0x17, 0x5a, 0xb4, 0xcf, 0x5d, 0xdf, 0x65, 0xdc, 0xb5, 0xb1,
+	0xe7, 0x1d, 0x8b, 0x33, 0x80, 0x38, 0x23, 0x53, 0x79, 0xb7, 0x5d, 0xca, 0x6a, 0x3d, 0x12, 0x4a,
+	0x09, 0xca, 0xc6, 0x6f, 0x01, 0xce, 0x88, 0x7b, 0x02, 0xfa, 0xb9, 0x06, 0xb5, 0xe4, 0xc5, 0x84,
+	0x8a, 0x76, 0x5c, 0xc9, 0xb3, 0xb3, 0xb9, 0x56, 0xa6, 0x3b, 0xfe, 0xee, 0xd4, 0xd7, 0x7f, 0xf6,
+	0xf7, 0xff, 0xfe, 0xaa, 0xfa, 0x1e, 0xba, 0x61, 0x4c, 0xf8, 0x1c, 0x60, 0xfc, 0xd8, 0x75, 0x7e,
+	0x82, 0x7e, 0xa1, 0x41, 0x3d, 0xf5, 0xf4, 0x2b, 0x27, 0x94, 0x7f, 0x83, 0x36, 0xdf, 0x9f, 0x46,
+	0x28, 0xf5, 0x96, 0xd4, 0xbf, 0x21, 0x38, 0xb5, 0xd0, 0xd2, 0x24, 0x4e, 0xe8, 0x2f, 0x1a, 0x34,
+	0xca, 0xde, 0x30, 0x68, 0xe3, 0xad, 0x1e, 0x3c, 0x92, 0xe3, 0x07, 0xa7, 0x78, 0x24, 0xe9, 0xf7,
+	0x05, 0xd7, 0x0f, 0xef, 0x6b, 0xb7, 0x75, 0xc3, 0x28, 0xfc, 0x1e, 0x61, 0x05, 0xd4, 0x21, 0x16,
+	0xa7, 0xf2, 0xbf, 0x9d, 0x22, 0xf9, 0x37, 0x0d, 0x96, 0x26, 0x3d, 0x27, 0xd0, 0x83, 0xb2, 0xac,
+	0x9d, 0xe0, 0x31, 0xd4, 0xfc, 0xf6, 0xe9, 0x8c, 0x55, 0x5c, 0xab, 0x22, 0xae, 0x15, 0xd4, 0x32,
+	0x26, 0x7e, 0x03, 0x42, 0x7f, 0xd6, 0x60, 0x71, 0xc2, 0x5b, 0x02, 0xdd, 0x2f, 0x63, 0x31, 0xfd,
+	0x15, 0xd4, 0x7c, 0x70, 0x2a, 0x5b, 0x15, 0xc0, 0x4d, 0x11, 0xc0, 0x32, 0xba, 0x3e, 0xf1, 0xc3,
+	0x18, 0xfa, 0xab, 0x06, 0xd7, 0x4a, 0xef, 0xe3, 0xe8, 0xe3, 0x32, 0x06, 0xd3, 0x2e, 0xfb, 0xcd,
+	0x6f, 0x9d, 0xc2, 0x52, 0x31, 0x6f, 0x0b, 0xe6, 0x6b, 0x68, 0xd5, 0x38, 0xd1, 0xc7, 0x30, 0x14,
+	0xc0, 0x5c, 0xe6, 0xc9, 0x84, 0xbe, 0x59, 0xe6, 0xbb, 0xe8, 0xd1, 0xd6, 0xbc, 0x73, 0x42, 0x6d,
+	0xc5, 0xae, 0x82, 0x7e, 0x9a, 0x74, 0xd4, 0xf1, 0xbb, 0x3a, 0xba, 0x7b, 0xd2, 0x7b, 0x73, 0xf2,
+	0xd0, 0x68, 0xde, 0x7b, 0x0b, 0x0b, 0x49, 0xe0, 0xae, 0xb6, 0xd5, 0xf9, 0xfa, 0x75, 0x4b, 0x7b,
+	0xf5, 0xba, 0xa5, 0xfd, 0xe7, 0x75, 0x4b, 0xfb, 0xea, 0x4d, 0xab, 0xf2, 0xea, 0x4d, 0xab, 0xf2,
+	0xcf, 0x37, 0xad, 0xca, 0x0f, 0x3f, 0xea, 0xb9, 0x7c, 0x3f, 0xea, 0xb6, 0x6d, 0xea, 0x67, 0x93,
+	0x37, 0xf8, 0xf0, 0x8e, 0xb8, 0x0c, 0x18, 0x43, 0xc9, 0x91, 0x4c, 0x28, 0x3f, 0xee, 0x13, 0xd6,
+	0x3d, 0x2b, 0xc4, 0x1f, 0xfc, 0x3f, 0x00, 0x00, 0xff, 0xff, 0x1a, 0x19, 0x57, 0xae, 0xd7, 0x15,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2127,6 +2557,20 @@ func (m *StreamOrderbookUpdatesRequest) MarshalToSizedBuffer(dAtA []byte) (int, 
 	_ = i
 	var l int
 	_ = l
+	if len(m.SubaccountIds) > 0 {
+		for iNdEx := len(m.SubaccountIds) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.SubaccountIds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
 	if len(m.ClobPairId) > 0 {
 		dAtA12 := make([]byte, len(m.ClobPairId)*10)
 		var j11 int
@@ -2208,12 +2652,12 @@ func (m *StreamUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if m.ExecMode != 0 {
 		i = encodeVarintQuery(dAtA, i, uint64(m.ExecMode))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x30
 	}
 	if m.BlockHeight != 0 {
 		i = encodeVarintQuery(dAtA, i, uint64(m.BlockHeight))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x28
 	}
 	if m.UpdateMessage != nil {
 		{
@@ -2269,6 +2713,187 @@ func (m *StreamUpdate_OrderFill) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	}
 	return len(dAtA) - i, nil
 }
+func (m *StreamUpdate_TakerOrder) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *StreamUpdate_TakerOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.TakerOrder != nil {
+		{
+			size, err := m.TakerOrder.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *StreamUpdate_SubaccountUpdate) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *StreamUpdate_SubaccountUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.SubaccountUpdate != nil {
+		{
+			size, err := m.SubaccountUpdate.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+	return len(dAtA) - i, nil
+}
+func (m *SubaccountPerpetualPosition) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SubaccountPerpetualPosition) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SubaccountPerpetualPosition) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Quantums != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Quantums))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.PerpetualId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.PerpetualId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SubaccountAssetPosition) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SubaccountAssetPosition) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SubaccountAssetPosition) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Quantums != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Quantums))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.AssetId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.AssetId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *StreamSubaccountUpdate) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StreamSubaccountUpdate) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *StreamSubaccountUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Snapshot {
+		i--
+		if m.Snapshot {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.UpdatedAssetPositions) > 0 {
+		for iNdEx := len(m.UpdatedAssetPositions) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.UpdatedAssetPositions[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.UpdatedPerpetualPositions) > 0 {
+		for iNdEx := len(m.UpdatedPerpetualPositions) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.UpdatedPerpetualPositions[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.SubaccountId != nil {
+		{
+			size, err := m.SubaccountId.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *StreamOrderbookUpdate) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2337,20 +2962,20 @@ func (m *StreamOrderbookFill) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.FillAmounts) > 0 {
-		dAtA16 := make([]byte, len(m.FillAmounts)*10)
-		var j15 int
+		dAtA19 := make([]byte, len(m.FillAmounts)*10)
+		var j18 int
 		for _, num := range m.FillAmounts {
 			for num >= 1<<7 {
-				dAtA16[j15] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA19[j18] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j15++
+				j18++
 			}
-			dAtA16[j15] = uint8(num)
-			j15++
+			dAtA19[j18] = uint8(num)
+			j18++
 		}
-		i -= j15
-		copy(dAtA[i:], dAtA16[:j15])
-		i = encodeVarintQuery(dAtA, i, uint64(j15))
+		i -= j18
+		copy(dAtA[i:], dAtA19[:j18])
+		i = encodeVarintQuery(dAtA, i, uint64(j18))
 		i--
 		dAtA[i] = 0x1a
 	}
@@ -2379,6 +3004,130 @@ func (m *StreamOrderbookFill) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 		i--
 		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *StreamTakerOrder) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StreamTakerOrder) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *StreamTakerOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.TakerOrderStatus != nil {
+		{
+			size, err := m.TakerOrderStatus.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.TakerOrder != nil {
+		{
+			size := m.TakerOrder.Size()
+			i -= size
+			if _, err := m.TakerOrder.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *StreamTakerOrder_Order) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *StreamTakerOrder_Order) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Order != nil {
+		{
+			size, err := m.Order.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+func (m *StreamTakerOrder_LiquidationOrder) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *StreamTakerOrder_LiquidationOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.LiquidationOrder != nil {
+		{
+			size, err := m.LiquidationOrder.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	return len(dAtA) - i, nil
+}
+func (m *StreamTakerOrderStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StreamTakerOrderStatus) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *StreamTakerOrderStatus) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.OptimisticallyFilledQuantums != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.OptimisticallyFilledQuantums))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.RemainingQuantums != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.RemainingQuantums))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.OrderStatus != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.OrderStatus))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -2600,6 +3349,12 @@ func (m *StreamOrderbookUpdatesRequest) Size() (n int) {
 		}
 		n += 1 + sovQuery(uint64(l)) + l
 	}
+	if len(m.SubaccountIds) > 0 {
+		for _, e := range m.SubaccountIds {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -2660,6 +3415,88 @@ func (m *StreamUpdate_OrderFill) Size() (n int) {
 	}
 	return n
 }
+func (m *StreamUpdate_TakerOrder) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.TakerOrder != nil {
+		l = m.TakerOrder.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+func (m *StreamUpdate_SubaccountUpdate) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.SubaccountUpdate != nil {
+		l = m.SubaccountUpdate.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+func (m *SubaccountPerpetualPosition) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PerpetualId != 0 {
+		n += 1 + sovQuery(uint64(m.PerpetualId))
+	}
+	if m.Quantums != 0 {
+		n += 1 + sovQuery(uint64(m.Quantums))
+	}
+	return n
+}
+
+func (m *SubaccountAssetPosition) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.AssetId != 0 {
+		n += 1 + sovQuery(uint64(m.AssetId))
+	}
+	if m.Quantums != 0 {
+		n += 1 + sovQuery(uint64(m.Quantums))
+	}
+	return n
+}
+
+func (m *StreamSubaccountUpdate) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.SubaccountId != nil {
+		l = m.SubaccountId.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if len(m.UpdatedPerpetualPositions) > 0 {
+		for _, e := range m.UpdatedPerpetualPositions {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if len(m.UpdatedAssetPositions) > 0 {
+		for _, e := range m.UpdatedAssetPositions {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Snapshot {
+		n += 2
+	}
+	return n
+}
+
 func (m *StreamOrderbookUpdate) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2700,6 +3537,64 @@ func (m *StreamOrderbookFill) Size() (n int) {
 			l += sovQuery(uint64(e))
 		}
 		n += 1 + sovQuery(uint64(l)) + l
+	}
+	return n
+}
+
+func (m *StreamTakerOrder) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.TakerOrder != nil {
+		n += m.TakerOrder.Size()
+	}
+	if m.TakerOrderStatus != nil {
+		l = m.TakerOrderStatus.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *StreamTakerOrder_Order) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Order != nil {
+		l = m.Order.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+func (m *StreamTakerOrder_LiquidationOrder) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.LiquidationOrder != nil {
+		l = m.LiquidationOrder.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+func (m *StreamTakerOrderStatus) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.OrderStatus != 0 {
+		n += 1 + sovQuery(uint64(m.OrderStatus))
+	}
+	if m.RemainingQuantums != 0 {
+		n += 1 + sovQuery(uint64(m.RemainingQuantums))
+	}
+	if m.OptimisticallyFilledQuantums != 0 {
+		n += 1 + sovQuery(uint64(m.OptimisticallyFilledQuantums))
 	}
 	return n
 }
@@ -4082,6 +4977,40 @@ func (m *StreamOrderbookUpdatesRequest) Unmarshal(dAtA []byte) error {
 			} else {
 				return fmt.Errorf("proto: wrong wireType = %d for field ClobPairId", wireType)
 			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubaccountIds", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SubaccountIds = append(m.SubaccountIds, &types.SubaccountId{})
+			if err := m.SubaccountIds[len(m.SubaccountIds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -4287,6 +5216,76 @@ func (m *StreamUpdate) Unmarshal(dAtA []byte) error {
 			m.UpdateMessage = &StreamUpdate_OrderFill{v}
 			iNdEx = postIndex
 		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TakerOrder", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &StreamTakerOrder{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.UpdateMessage = &StreamUpdate_TakerOrder{v}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubaccountUpdate", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &StreamSubaccountUpdate{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.UpdateMessage = &StreamUpdate_SubaccountUpdate{v}
+			iNdEx = postIndex
+		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field BlockHeight", wireType)
 			}
@@ -4305,7 +5304,7 @@ func (m *StreamUpdate) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 4:
+		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ExecMode", wireType)
 			}
@@ -4324,6 +5323,356 @@ func (m *StreamUpdate) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SubaccountPerpetualPosition) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SubaccountPerpetualPosition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SubaccountPerpetualPosition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PerpetualId", wireType)
+			}
+			m.PerpetualId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PerpetualId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Quantums", wireType)
+			}
+			m.Quantums = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Quantums |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SubaccountAssetPosition) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SubaccountAssetPosition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SubaccountAssetPosition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AssetId", wireType)
+			}
+			m.AssetId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AssetId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Quantums", wireType)
+			}
+			m.Quantums = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Quantums |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StreamSubaccountUpdate) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StreamSubaccountUpdate: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StreamSubaccountUpdate: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubaccountId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.SubaccountId == nil {
+				m.SubaccountId = &types.SubaccountId{}
+			}
+			if err := m.SubaccountId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdatedPerpetualPositions", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UpdatedPerpetualPositions = append(m.UpdatedPerpetualPositions, &SubaccountPerpetualPosition{})
+			if err := m.UpdatedPerpetualPositions[len(m.UpdatedPerpetualPositions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdatedAssetPositions", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UpdatedAssetPositions = append(m.UpdatedAssetPositions, &SubaccountAssetPosition{})
+			if err := m.UpdatedAssetPositions[len(m.UpdatedAssetPositions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Snapshot", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Snapshot = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -4403,7 +5752,7 @@ func (m *StreamOrderbookUpdate) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Updates = append(m.Updates, types.OffChainUpdateV1{})
+			m.Updates = append(m.Updates, types1.OffChainUpdateV1{})
 			if err := m.Updates[len(m.Updates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -4623,6 +5972,269 @@ func (m *StreamOrderbookFill) Unmarshal(dAtA []byte) error {
 				}
 			} else {
 				return fmt.Errorf("proto: wrong wireType = %d for field FillAmounts", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StreamTakerOrder) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StreamTakerOrder: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StreamTakerOrder: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Order", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &Order{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.TakerOrder = &StreamTakerOrder_Order{v}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LiquidationOrder", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &StreamLiquidationOrder{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.TakerOrder = &StreamTakerOrder_LiquidationOrder{v}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TakerOrderStatus", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TakerOrderStatus == nil {
+				m.TakerOrderStatus = &StreamTakerOrderStatus{}
+			}
+			if err := m.TakerOrderStatus.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StreamTakerOrderStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StreamTakerOrderStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StreamTakerOrderStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OrderStatus", wireType)
+			}
+			m.OrderStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OrderStatus |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RemainingQuantums", wireType)
+			}
+			m.RemainingQuantums = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RemainingQuantums |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OptimisticallyFilledQuantums", wireType)
+			}
+			m.OptimisticallyFilledQuantums = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OptimisticallyFilledQuantums |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
 			}
 		default:
 			iNdEx = preIndex

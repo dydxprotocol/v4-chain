@@ -3,7 +3,7 @@ import {
 } from '@cosmjs/crypto';
 import { toBech32 } from '@cosmjs/encoding';
 import { logger, stats, TooManyRequestsError } from '@dydxprotocol-indexer/base';
-import { CountryHeaders, isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
+import { CountryHeaders, isRestrictedCountryHeaders, isWhitelistedAddress } from '@dydxprotocol-indexer/compliance';
 import {
   ComplianceReason,
   ComplianceStatus,
@@ -145,6 +145,11 @@ router.get(
     }: {
       address: string,
     } = matchedData(req) as ComplianceRequest;
+    if (isWhitelistedAddress(address)) {
+      return res.send({
+        status: ComplianceStatus.COMPLIANT,
+      });
+    }
 
     try {
       // Rate limiter middleware ensures the ip address can be found from the request
@@ -252,6 +257,13 @@ router.post(
         );
       }
 
+      if (isWhitelistedAddress(address)) {
+        return res.send({
+          status: ComplianceStatus.COMPLIANT,
+          updatedAt: DateTime.utc().toISO(),
+        });
+      }
+
       const [
         complianceStatus,
         wallet,
@@ -276,6 +288,19 @@ router.post(
         complianceStatus,
         updatedAt,
       );
+      if (complianceStatus.length === 0 ||
+        complianceStatus[0] !== complianceStatusFromDatabase) {
+        if (complianceStatusFromDatabase !== undefined &&
+          complianceStatusFromDatabase.status !== ComplianceStatus.COMPLIANT
+        ) {
+          stats.increment(
+            `${config.SERVICE_NAME}.${controllerName}.geo_block.compliance_status_changed.count`,
+            {
+              newStatus: complianceStatusFromDatabase!.status,
+            },
+          );
+        }
+      }
 
       const response = {
         status: complianceStatusFromDatabase!.status,

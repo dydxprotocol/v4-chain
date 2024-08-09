@@ -28,6 +28,8 @@ func TestVault(t *testing.T) {
 		inventory *big.Int
 		// Total shares.
 		totalShares *big.Int
+		// Quoting params.
+		quotingParams *vaulttypes.QuotingParams
 		// Query request.
 		req *vaulttypes.QueryVaultRequest
 
@@ -45,6 +47,7 @@ func TestVault(t *testing.T) {
 			perpId:         0,
 			inventory:      big.NewInt(200),
 			totalShares:    big.NewInt(300),
+			quotingParams:  &constants.QuotingParams,
 			expectedEquity: big.NewInt(500),
 		},
 		"Success: negative inventory and equity": {
@@ -58,6 +61,22 @@ func TestVault(t *testing.T) {
 			inventory:      big.NewInt(-200),
 			totalShares:    big.NewInt(300),
 			expectedEquity: big.NewInt(-300),
+		},
+		"Success: non-existent clob pair": {
+			req: &vaulttypes.QueryVaultRequest{
+				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+				Number: 7777,
+			},
+			vaultId: vaulttypes.VaultId{
+				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+				Number: 7777,
+			},
+			asset:          big.NewInt(100),
+			perpId:         0,
+			inventory:      big.NewInt(0),
+			totalShares:    big.NewInt(300),
+			quotingParams:  &constants.QuotingParams,
+			expectedEquity: big.NewInt(100),
 		},
 		"Error: query non-existent vault": {
 			req: &vaulttypes.QueryVaultRequest{
@@ -119,18 +138,28 @@ func TestVault(t *testing.T) {
 			err := k.SetTotalShares(ctx, tc.vaultId, vaulttypes.BigIntToNumShares(tc.totalShares))
 			require.NoError(t, err)
 
+			if tc.quotingParams != nil {
+				err := k.SetVaultQuotingParams(ctx, tc.vaultId, *tc.quotingParams)
+				require.NoError(t, err)
+			}
+
 			// Check Vault query response is as expected.
 			response, err := k.Vault(ctx, tc.req)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
 			} else {
 				require.NoError(t, err)
+				expectedQuotingParams := k.GetDefaultQuotingParams(ctx)
+				if tc.quotingParams != nil {
+					expectedQuotingParams = *tc.quotingParams
+				}
 				expectedResponse := vaulttypes.QueryVaultResponse{
-					VaultId:      tc.vaultId,
-					SubaccountId: *tc.vaultId.ToSubaccountId(),
-					Equity:       dtypes.NewIntFromBigInt(tc.expectedEquity),
-					Inventory:    dtypes.NewIntFromBigInt(tc.inventory),
-					TotalShares:  vaulttypes.BigIntToNumShares(tc.totalShares),
+					VaultId:       tc.vaultId,
+					SubaccountId:  *tc.vaultId.ToSubaccountId(),
+					Equity:        dtypes.NewIntFromBigInt(tc.expectedEquity),
+					Inventory:     dtypes.NewIntFromBigInt(tc.inventory),
+					TotalShares:   vaulttypes.BigIntToNumShares(tc.totalShares),
+					QuotingParams: expectedQuotingParams,
 				}
 				require.Equal(t, expectedResponse, *response)
 			}

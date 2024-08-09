@@ -12,4 +12,6 @@ const (
 	SubticksPerTick_LongTail uint32 = 1_000_000
 
 	DefaultQuantumConversionExponent = -9
+
+	ResolutionOffset = -6
 )

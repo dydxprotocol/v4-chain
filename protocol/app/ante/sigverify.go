@@ -63,7 +63,8 @@ func (svd SigVerificationDecorator) AnteHandle(
 		return ctx, err
 	}
 
-	// check that signer length and signature length are the same
+	// Check that signer length and signature length are the same.
+	// The ordering of the sigs and signers have matching ordering (sigs[i] belongs to signers[i]).
 	if len(sigs) != len(signers) {
 		err := errorsmod.Wrapf(
 			sdkerrors.ErrUnauthorized,
@@ -78,6 +79,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 	// only messages that use `GoodTilBlock` for replay protection.
 	skipSequenceValidation := ShouldSkipSequenceValidation(tx.GetMsgs())
 
+	// Iterate on sig and signer pairs.
 	for i, sig := range sigs {
 		acc, err := sdkante.GetSignerAcc(ctx, svd.ak, signers[i])
 		if err != nil {
@@ -95,36 +97,19 @@ func (svd SigVerificationDecorator) AnteHandle(
 		// `GoodTilBlock` for replay protection.
 		if !skipSequenceValidation {
 			if accountpluskeeper.IsTimestampNonce(sig.Sequence) {
-				tsNonce := sig.Sequence
-				blockTs := uint64(ctx.BlockTime().UnixMilli())
-				address := acc.GetAddress()
-
-				if !accountpluskeeper.IsValidTimestampNonce(tsNonce, blockTs) {
-					return ctx, errorsmod.Wrapf(
-						sdkerrors.ErrWrongSequence,
-						"timestamp nonce %d not within valid time window", tsNonce,
+				if err := svd.akp.ProcessTimestampNonce(ctx, acc, sig.Sequence); err != nil {
+					telemetry.IncrCounterWithLabels(
+						[]string{metrics.TimestampNonce, metrics.Invalid, metrics.Count},
+						1,
+						[]gometrics.Label{metrics.GetLabelForIntValue(metrics.ExecMode, int(ctx.ExecMode()))},
 					)
+					return ctx, errorsmod.Wrapf(sdkerrors.ErrWrongSequence, err.Error())
 				}
-				accountState, found := svd.akp.GetAccountState(ctx, address)
-				if !found {
-					err := svd.akp.InitializeAccountWithTimestampNonceDetails(ctx, address, tsNonce)
-					if err != nil {
-						return ctx, errorsmod.Wrapf(
-							sdkerrors.ErrLogic,
-							fmt.Sprintf("failed to initialize AccountState for address %d", address),
-						)
-					}
-				} else {
-					accountpluskeeper.EjectStaleTimestampNonces(&accountState, blockTs)
-					tsNonceAccepted := accountpluskeeper.AttemptTimestampNonceUpdate(tsNonce, &accountState)
-					if !tsNonceAccepted {
-						return ctx, errorsmod.Wrapf(
-							sdkerrors.ErrWrongSequence,
-							"timestamp nonce %d rejected", tsNonce,
-						)
-					}
-					svd.akp.SetAccountState(ctx, address, accountState)
-				}
+				telemetry.IncrCounterWithLabels(
+					[]string{metrics.TimestampNonce, metrics.Valid, metrics.Count},
+					1,
+					[]gometrics.Label{metrics.GetLabelForIntValue(metrics.ExecMode, int(ctx.ExecMode()))},
+				)
 			} else {
 				if sig.Sequence != acc.GetSequence() {
 					labels := make([]gometrics.Label, 0)

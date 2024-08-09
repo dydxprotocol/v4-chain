@@ -390,10 +390,6 @@ func New(
 	if err := appFlags.Validate(); err != nil {
 		panic(err)
 	}
-	if appFlags.OptimisticExecutionEnabled {
-		// TODO(OTE-573): Remove warning once OE is fully supported.
-		logger.Warn("Optimistic execution is enabled. This is a test feature not intended for production use!")
-	}
 
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 
@@ -407,6 +403,7 @@ func New(
 
 	// Enable optimistic block execution.
 	if appFlags.OptimisticExecutionEnabled {
+		logger.Info("optimistic execution is enabled.")
 		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
 	}
 
@@ -1168,7 +1165,14 @@ func New(
 		&app.MarketMapKeeper,
 		app.PerpetualsKeeper,
 	)
-	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
+	listingModule := listingmodule.NewAppModule(
+		appCodec,
+		app.ListingKeeper,
+		app.PricesKeeper,
+		app.ClobKeeper,
+		&app.MarketMapKeeper,
+		app.PerpetualsKeeper,
+	)
 
 	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
 		appCodec,
@@ -1909,6 +1913,7 @@ func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 			AuthStoreKey:      app.keys[authtypes.StoreKey],
 			PerpetualsKeeper:  app.PerpetualsKeeper,
 			PricesKeeper:      app.PricesKeeper,
+			MarketMapKeeper:   &app.MarketMapKeeper,
 		},
 	)
 	if err != nil {

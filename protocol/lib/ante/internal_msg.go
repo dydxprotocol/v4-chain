@@ -126,7 +126,8 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*stats.MsgUpdateParams,
 
 		// vault
-		*vault.MsgUpdateParams,
+		*vault.MsgSetVaultQuotingParams,
+		*vault.MsgUpdateDefaultQuotingParams,
 
 		// vest
 		*vest.MsgDeleteVestEntry,

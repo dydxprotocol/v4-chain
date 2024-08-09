@@ -11,6 +11,7 @@ const (
 	Deterministic    = "deterministic"
 	Distribution     = "distribution"
 	Error            = "error"
+	ExecMode         = "exec_mode"
 	GitCommit        = "git_commit"
 	HttpGet5xx       = "http_get_5xx"
 	HttpGetHangup    = "http_get_hangup"
@@ -406,6 +407,9 @@ const (
 	ValidatorNumFills              = "validator_num_fills"
 	ValidatorNumMatchedTakerOrders = "validator_num_matched_taker_orders"
 	ValidatorVolumeQuoteQuantums   = "validator_volume_quote_quantums"
+
+	// x/acocuntplus
+	TimestampNonce = "timestamp_nonce"
 
 	// x/ratelimit
 	Capacity           = "capacity"

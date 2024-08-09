@@ -330,6 +330,22 @@ func TestSigVerification(t *testing.T) {
 			"",
 			true,
 		},
+		{
+			"timestamp nonce invalid sigs",
+			testMsgs,
+			[]cryptotypes.PrivKey{priv1, priv2, priv3},
+			[]uint64{accs[0].GetAccountNumber(), accs[1].GetAccountNumber(), accs[2].GetAccountNumber()},
+			[]uint64{
+				testante.TestBlockTime + 5000, // ts > min(tsNonces)
+				testante.TestBlockTime + 5000,
+				testante.TestBlockTime + 5000,
+			},
+			!validSigs,
+			false,
+			true,
+			"",
+			true,
+		},
 	}
 
 	for i, tc := range testCases {
