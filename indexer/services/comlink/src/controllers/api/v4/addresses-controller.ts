@@ -24,6 +24,7 @@ import {
   FundingIndexMap,
   WalletTable,
   WalletFromDatabase,
+  TokenTable,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
@@ -40,7 +41,7 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
-import { NotFoundError } from '../../../lib/errors';
+import { BadRequestError, DatabaseError, NotFoundError } from '../../../lib/errors';
 import {
   adjustUSDCAssetPosition,
   calculateEquityAndFreeCollateral,
@@ -362,12 +363,21 @@ class AddressesController extends Controller {
   ): Promise<void> {
     const { token } = body;
     if (!token) {
-      throw new Error('Invalid Token in request');
+      throw new BadRequestError('Invalid Token in request');
     }
 
     const foundAddress = await WalletTable.findById(address);
     if (!foundAddress) {
       throw new NotFoundError(`No address found with address: ${address}`);
+    }
+
+    try {
+      await TokenTable.registerToken(
+        token,
+        address,
+      );
+    } catch (error) {
+      throw new DatabaseError(`Error registering token: ${error}`);
     }
   }
 }
