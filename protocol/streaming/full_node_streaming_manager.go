@@ -561,6 +561,8 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdates(
 	sm.AddSubaccountUpdatesToCache(streamUpdates, subaccountIds, uint32(len(subaccountUpdates)))
 }
 
+// AddOrderbookUpdatesToCache adds a series of updates to the full node streaming cache.
+// Clob pair ids are the clob pair id each update is relevant to.
 func (sm *FullNodeStreamingManagerImpl) AddOrderbookUpdatesToCache(
 	updates []clobtypes.StreamUpdate,
 	clobPairIds []uint32,
@@ -594,6 +596,8 @@ func (sm *FullNodeStreamingManagerImpl) AddOrderbookUpdatesToCache(
 	sm.EmitMetrics()
 }
 
+// AddSubaccountUpdatesToCache adds a series of updates to the full node streaming cache.
+// Subaccount ids are the subaccount id each update is relevant to.
 func (sm *FullNodeStreamingManagerImpl) AddSubaccountUpdatesToCache(
 	updates []clobtypes.StreamUpdate,
 	subaccountIds []*satypes.SubaccountId,
