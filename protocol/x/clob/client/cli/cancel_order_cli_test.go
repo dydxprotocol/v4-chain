@@ -172,137 +172,137 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 	network.CleanupCustomNetwork()
 }
 
-// // TestCLICancelMatchingOrders places two matching orders from two different subaccounts (with the
-// // same owner and different numbers), then cancels the first matching order a few blocks later.
-// // The matching orders should not be canceled.
-// // The subaccounts are then queried and assertions are performed on their QuoteBalance and PerpetualPositions.
-// // The account which places the orders is also the validator's AccAddress.
-// func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
-// 	goodTilBlock := uint32(0)
+// TestCLICancelMatchingOrders places two matching orders from two different subaccounts (with the
+// same owner and different numbers), then cancels the first matching order a few blocks later.
+// The matching orders should not be canceled.
+// The subaccounts are then queried and assertions are performed on their QuoteBalance and PerpetualPositions.
+// The account which places the orders is also the validator's AccAddress.
+func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
+	goodTilBlock := uint32(0)
 
-// 	blockHeightQuery := "docker exec interchain-security-instance interchain-security-cd" +
-// 		" query block --type=height 0"
-// 	data, _, err := network.QueryCustomNetwork(blockHeightQuery)
-// 	if err != nil {
-// 		s.T().Fatalf("Failed to get block height: %v", err)
-// 	}
-// 	var resp blocktypes.Block
-// 	require.NoError(s.T(), s.cfg.Codec.UnmarshalJSON(data, &resp))
-// 	blockHeight := resp.LastCommit.Height
+	blockHeightQuery := "docker exec interchain-security-instance interchain-security-cd" +
+		" query block --type=height 0"
+	data, _, err := network.QueryCustomNetwork(blockHeightQuery)
+	if err != nil {
+		s.T().Fatalf("Failed to get block height: %v", err)
+	}
+	var resp blocktypes.Block
+	require.NoError(s.T(), s.cfg.Codec.UnmarshalJSON(data, &resp))
+	blockHeight := resp.LastCommit.Height
 
-// 	goodTilBlock = uint32(blockHeight) + types.ShortBlockWindow
-// 	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
-// 	quantums := satypes.BaseQuantums(1_000)
-// 	subticks := types.Subticks(50_000_000_000)
+	goodTilBlock = uint32(blockHeight) + types.ShortBlockWindow
+	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
+	quantums := satypes.BaseQuantums(1_000)
+	subticks := types.Subticks(50_000_000_000)
 
-// 	placeBuyTx := "docker exec interchain-security-instance interchain-security-cd" +
-// 		" tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
-// 		" 0 2 0 1 1000 50000000000 " + goodTilBlockStr +
-// 		" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
-// 		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
-// 	_, _, buyerr := network.QueryCustomNetwork(placeBuyTx)
-// 	if buyerr != nil {
-// 		s.T().Fatalf("Failed to place order: %v", buyerr)
-// 	}
-// 	s.Require().NoError(buyerr)
+	placeBuyTx := "docker exec interchain-security-instance interchain-security-cd" +
+		" tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
+		" 0 2 0 1 1000 50000000000 " + goodTilBlockStr +
+		" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
+		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
+	_, _, buyerr := network.QueryCustomNetwork(placeBuyTx)
+	if buyerr != nil {
+		s.T().Fatalf("Failed to place order: %v", buyerr)
+	}
+	s.Require().NoError(buyerr)
 
-// 	placeSellTx := "docker exec interchain-security-instance interchain-security-cd" +
-// 		" tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
-// 		" 1 2 0 2 1000 50000000000 " + goodTilBlockStr +
-// 		" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
-// 		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
-// 	_, _, sellerr := network.QueryCustomNetwork(placeSellTx)
-// 	if sellerr != nil {
-// 		s.T().Fatalf("Failed to place order: %v", sellerr)
-// 	}
-// 	s.Require().NoError(sellerr)
+	placeSellTx := "docker exec interchain-security-instance interchain-security-cd" +
+		" tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
+		" 1 2 0 2 1000 50000000000 " + goodTilBlockStr +
+		" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
+		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
+	_, _, sellerr := network.QueryCustomNetwork(placeSellTx)
+	if sellerr != nil {
+		s.T().Fatalf("Failed to place order: %v", sellerr)
+	}
+	s.Require().NoError(sellerr)
 
-// 	time.Sleep(5 * time.Second)
+	time.Sleep(5 * time.Second)
 
-// 	cancelBuyTx := "docker exec interchain-security-instance interchain-security-cd" +
-// 		" tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
-// 		" 0 2 0 " + goodTilBlockStr +
-// 		" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
-// 		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
-// 	_, _, cancelerr := network.QueryCustomNetwork(cancelBuyTx)
+	cancelBuyTx := "docker exec interchain-security-instance interchain-security-cd" +
+		" tx clob cancel-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
+		" 0 2 0 " + goodTilBlockStr +
+		" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
+		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
+	_, _, cancelerr := network.QueryCustomNetwork(cancelBuyTx)
 
-// 	if cancelerr != nil {
-// 		s.T().Fatalf("Failed to cancel order: %v", cancelerr)
-// 	}
-// 	s.Require().NoError(cancelerr)
+	if cancelerr != nil {
+		s.T().Fatalf("Failed to cancel order: %v", cancelerr)
+	}
+	s.Require().NoError(cancelerr)
 
-// 	time.Sleep(5 * time.Second)
+	time.Sleep(5 * time.Second)
 
-// 	// Query both subaccounts.
-// 	accResp, accErr := sa_testutil.MsgQuerySubaccountExec(
-// 		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-// 		cancelsSubaccountNumberZero,
-// 	)
-// 	s.Require().NoError(accErr)
+	// Query both subaccounts.
+	accResp, accErr := sa_testutil.MsgQuerySubaccountExec(
+		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
+		cancelsSubaccountNumberZero,
+	)
+	s.Require().NoError(accErr)
 
-// 	var subaccountResp satypes.QuerySubaccountResponse
-// 	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(accResp.Bytes(), &subaccountResp))
-// 	subaccountZero := subaccountResp.Subaccount
+	var subaccountResp satypes.QuerySubaccountResponse
+	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(accResp.Bytes(), &subaccountResp))
+	subaccountZero := subaccountResp.Subaccount
 
-// 	accResp, accErr = sa_testutil.MsgQuerySubaccountExec(
-// 		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-// 		cancelsSubaccountNumberOne,
-// 	)
-// 	s.Require().NoError(accErr)
+	accResp, accErr = sa_testutil.MsgQuerySubaccountExec(
+		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
+		cancelsSubaccountNumberOne,
+	)
+	s.Require().NoError(accErr)
 
-// 	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(accResp.Bytes(), &subaccountResp))
-// 	subaccountOne := subaccountResp.Subaccount
+	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(accResp.Bytes(), &subaccountResp))
+	subaccountOne := subaccountResp.Subaccount
 
-// 	// Compute the fill price so as to know how much QuoteBalance should be remaining.
-// 	fillSizeQuoteQuantums := types.FillAmountToQuoteQuantums(
-// 		subticks,
-// 		quantums,
-// 		constants.ClobPair_Btc.QuantumConversionExponent,
-// 	).Int64()
+	// Compute the fill price so as to know how much QuoteBalance should be remaining.
+	fillSizeQuoteQuantums := types.FillAmountToQuoteQuantums(
+		subticks,
+		quantums,
+		constants.ClobPair_Btc.QuantumConversionExponent,
+	).Int64()
 
-// 	// Assert that both Subaccounts have the appropriate state.
-// 	// Order could be maker or taker after Uncross, so assert that account could have been either.
-// 	takerFee := fillSizeQuoteQuantums *
-// 		int64(constants.PerpetualFeeParamsMakerRebate.Tiers[0].TakerFeePpm) /
-// 		int64(lib.OneMillion)
-// 	makerFee := fillSizeQuoteQuantums *
-// 		int64(constants.PerpetualFeeParamsMakerRebate.Tiers[0].MakerFeePpm) /
-// 		int64(lib.OneMillion)
+	// Assert that both Subaccounts have the appropriate state.
+	// Order could be maker or taker after Uncross, so assert that account could have been either.
+	takerFee := fillSizeQuoteQuantums *
+		int64(constants.PerpetualFeeParamsMakerRebate.Tiers[0].TakerFeePpm) /
+		int64(lib.OneMillion)
+	makerFee := fillSizeQuoteQuantums *
+		int64(constants.PerpetualFeeParamsMakerRebate.Tiers[0].MakerFeePpm) /
+		int64(lib.OneMillion)
 
-// 	s.Require().Contains(
-// 		[]*big.Int{
-// 			new(big.Int).SetInt64(cancelsInitialQuoteBalance - fillSizeQuoteQuantums - takerFee),
-// 			new(big.Int).SetInt64(cancelsInitialQuoteBalance - fillSizeQuoteQuantums - makerFee),
-// 		},
-// 		subaccountZero.GetUsdcPosition(),
-// 	)
-// 	s.Require().Len(subaccountZero.PerpetualPositions, 1)
-// 	s.Require().Equal(quantums.ToBigInt(), subaccountZero.PerpetualPositions[0].GetBigQuantums())
+	s.Require().Contains(
+		[]*big.Int{
+			new(big.Int).SetInt64(cancelsInitialQuoteBalance - fillSizeQuoteQuantums - takerFee),
+			new(big.Int).SetInt64(cancelsInitialQuoteBalance - fillSizeQuoteQuantums - makerFee),
+		},
+		subaccountZero.GetUsdcPosition(),
+	)
+	s.Require().Len(subaccountZero.PerpetualPositions, 1)
+	s.Require().Equal(quantums.ToBigInt(), subaccountZero.PerpetualPositions[0].GetBigQuantums())
 
-// 	s.Require().Contains(
-// 		[]*big.Int{
-// 			new(big.Int).SetInt64(cancelsInitialQuoteBalance + fillSizeQuoteQuantums - takerFee),
-// 			new(big.Int).SetInt64(cancelsInitialQuoteBalance + fillSizeQuoteQuantums - makerFee),
-// 		},
-// 		subaccountOne.GetUsdcPosition(),
-// 	)
-// 	s.Require().Len(subaccountOne.PerpetualPositions, 1)
-// 	s.Require().Equal(new(big.Int).Neg(
-// 		quantums.ToBigInt()),
-// 		subaccountOne.PerpetualPositions[0].GetBigQuantums(),
-// 	)
+	s.Require().Contains(
+		[]*big.Int{
+			new(big.Int).SetInt64(cancelsInitialQuoteBalance + fillSizeQuoteQuantums - takerFee),
+			new(big.Int).SetInt64(cancelsInitialQuoteBalance + fillSizeQuoteQuantums - makerFee),
+		},
+		subaccountOne.GetUsdcPosition(),
+	)
+	s.Require().Len(subaccountOne.PerpetualPositions, 1)
+	s.Require().Equal(new(big.Int).Neg(
+		quantums.ToBigInt()),
+		subaccountOne.PerpetualPositions[0].GetBigQuantums(),
+	)
 
-// 	// Check that the `subaccounts` module account has expected remaining USDC balance.
-// 	saModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
-// 		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-// 		s.cfg.Codec,
-// 		satypes.ModuleName,
-// 	)
-// 	s.Require().NoError(err)
-// 	s.Require().Equal(
-// 		cancelsInitialSubaccountModuleAccBalance-makerFee-takerFee,
-// 		saModuleUSDCBalance,
-// 	)
+	// Check that the `subaccounts` module account has expected remaining USDC balance.
+	saModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(
+		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
+		s.cfg.Codec,
+		satypes.ModuleName,
+	)
+	s.Require().NoError(err)
+	s.Require().Equal(
+		cancelsInitialSubaccountModuleAccBalance-makerFee-takerFee,
+		saModuleUSDCBalance,
+	)
 
-// 	network.CleanupCustomNetwork()
-// }
+	network.CleanupCustomNetwork()
+}
