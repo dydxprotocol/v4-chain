@@ -68,7 +68,6 @@ require (
 	github.com/skip-mev/slinky v1.0.8
 	github.com/spf13/viper v1.19.0
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d
-	go.uber.org/zap v1.27.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240725223205-93522f1f2a9f
 	google.golang.org/protobuf v1.34.2
 	gotest.tools/v3 v3.5.1
@@ -418,6 +417,7 @@ require (
 	go.uber.org/automaxprocs v1.5.3 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/ratelimit v0.2.0 // indirect
+	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.25.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20240314144324-c7f7c6466f7f // indirect
 	golang.org/x/mod v0.19.0 // indirect
