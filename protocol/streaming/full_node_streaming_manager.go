@@ -449,7 +449,7 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookUpdates(
 		clobPairIds = append(clobPairIds, clobPairId)
 	}
 
-	sm.AddOrderbookUpdatesToCache(streamUpdates, clobPairIds, uint32(len(updates)))
+	sm.AddOrderbookUpdatesToCache(streamUpdates, clobPairIds)
 }
 
 // SendOrderbookFillUpdates groups fills by their clob pair ids and
@@ -492,7 +492,35 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdates(
 		clobPairIds = append(clobPairIds, clobPairId)
 	}
 
-	sm.AddOrderbookUpdatesToCache(streamUpdates, clobPairIds, uint32(len(orderbookFills)))
+	sm.AddOrderbookUpdatesToCache(streamUpdates, clobPairIds)
+}
+
+// SendTakerOrderStatus sends out a taker order and its status to the full node streaming service.
+func (sm *FullNodeStreamingManagerImpl) SendTakerOrderStatus(
+	streamTakerOrder clobtypes.StreamTakerOrder,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
+	clobPairId := uint32(0)
+	if liqOrder := streamTakerOrder.GetLiquidationOrder(); liqOrder != nil {
+		clobPairId = liqOrder.ClobPairId
+	}
+	if takerOrder := streamTakerOrder.GetOrder(); takerOrder != nil {
+		clobPairId = takerOrder.OrderId.ClobPairId
+	}
+
+	sm.AddOrderbookUpdatesToCache(
+		[]clobtypes.StreamUpdate{
+			{
+				UpdateMessage: &clobtypes.StreamUpdate_TakerOrder{
+					TakerOrder: &streamTakerOrder,
+				},
+				BlockHeight: blockHeight,
+				ExecMode:    uint32(execMode),
+			},
+		},
+		[]uint32{clobPairId},
+	)
 }
 
 // SendSubaccountUpdates groups subaccount updates by their subaccount ids and
@@ -536,14 +564,13 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdates(
 func (sm *FullNodeStreamingManagerImpl) AddOrderbookUpdatesToCache(
 	updates []clobtypes.StreamUpdate,
 	clobPairIds []uint32,
-	numUpdatesToAdd uint32,
 ) {
 	sm.Lock()
 	defer sm.Unlock()
 
 	metrics.IncrCounter(
 		metrics.GrpcAddUpdateToBufferCount,
-		float32(numUpdatesToAdd),
+		float32(len(updates)),
 	)
 
 	sm.streamUpdateCache = append(sm.streamUpdateCache, updates...)
@@ -561,7 +588,8 @@ func (sm *FullNodeStreamingManagerImpl) AddOrderbookUpdatesToCache(
 		for id := range sm.orderbookSubscriptions {
 			sm.removeSubscription(id)
 		}
-		clear(sm.streamUpdateCache)
+		sm.streamUpdateCache = nil
+		sm.streamUpdateSubscriptionCache = nil
 	}
 	sm.EmitMetrics()
 }
@@ -594,7 +622,8 @@ func (sm *FullNodeStreamingManagerImpl) AddSubaccountUpdatesToCache(
 		for id := range sm.orderbookSubscriptions {
 			sm.removeSubscription(id)
 		}
-		clear(sm.streamUpdateCache)
+		sm.streamUpdateCache = nil
+		sm.streamUpdateSubscriptionCache = nil
 	}
 	sm.EmitMetrics()
 }
@@ -643,8 +672,8 @@ func (sm *FullNodeStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 		}
 	}
 
-	clear(sm.streamUpdateCache)
-	clear(sm.streamUpdateSubscriptionCache)
+	sm.streamUpdateCache = nil
+	sm.streamUpdateSubscriptionCache = nil
 
 	for _, id := range idsToRemove {
 		sm.logger.Error(
