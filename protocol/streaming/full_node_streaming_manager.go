@@ -449,7 +449,7 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookUpdates(
 		clobPairIds = append(clobPairIds, clobPairId)
 	}
 
-	sm.AddOrderbookUpdatesToCache(streamUpdates, clobPairIds, uint32(len(updates)))
+	sm.AddOrderbookUpdatesToCache(streamUpdates, clobPairIds)
 }
 
 // SendOrderbookFillUpdates groups fills by their clob pair ids and
@@ -492,7 +492,7 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdates(
 		clobPairIds = append(clobPairIds, clobPairId)
 	}
 
-	sm.AddOrderbookUpdatesToCache(streamUpdates, clobPairIds, uint32(len(orderbookFills)))
+	sm.AddOrderbookUpdatesToCache(streamUpdates, clobPairIds)
 }
 
 // SendSubaccountUpdates groups subaccount updates by their subaccount ids and
@@ -549,21 +549,19 @@ func (sm *FullNodeStreamingManagerImpl) SendTakerOrderStatus(
 			},
 		},
 		[]uint32{clobPairId},
-		1,
 	)
 }
 
 func (sm *FullNodeStreamingManagerImpl) AddOrderbookUpdatesToCache(
 	updates []clobtypes.StreamUpdate,
 	clobPairIds []uint32,
-	numUpdatesToAdd uint32,
 ) {
 	sm.Lock()
 	defer sm.Unlock()
 
 	metrics.IncrCounter(
 		metrics.GrpcAddUpdateToBufferCount,
-		float32(numUpdatesToAdd),
+		float32(len(updates)),
 	)
 
 	sm.streamUpdateCache = append(sm.streamUpdateCache, updates...)
