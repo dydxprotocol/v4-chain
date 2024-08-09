@@ -350,7 +350,7 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookUpdates(
 		clobPairIds = append(clobPairIds, clobPairId)
 	}
 
-	sm.AddUpdatesToCache(streamUpdates, clobPairIds, uint32(len(updates)))
+	sm.AddUpdatesToCache(streamUpdates, clobPairIds)
 }
 
 // SendOrderbookFillUpdates groups fills by their clob pair ids and
@@ -393,20 +393,49 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdates(
 		clobPairIds = append(clobPairIds, clobPairId)
 	}
 
-	sm.AddUpdatesToCache(streamUpdates, clobPairIds, uint32(len(orderbookFills)))
+	sm.AddUpdatesToCache(streamUpdates, clobPairIds)
 }
 
+// SendTakerOrderStatus sends out a taker order and its status to the full node streaming service.
+func (sm *FullNodeStreamingManagerImpl) SendTakerOrderStatus(
+	streamTakerOrder clobtypes.StreamTakerOrder,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
+	clobPairId := uint32(0)
+	if liqOrder := streamTakerOrder.GetLiquidationOrder(); liqOrder != nil {
+		clobPairId = liqOrder.ClobPairId
+	}
+	if takerOrder := streamTakerOrder.GetOrder(); takerOrder != nil {
+		clobPairId = takerOrder.OrderId.ClobPairId
+	}
+
+	sm.AddUpdatesToCache(
+		[]clobtypes.StreamUpdate{
+			{
+				UpdateMessage: &clobtypes.StreamUpdate_TakerOrder{
+					TakerOrder: &streamTakerOrder,
+				},
+				BlockHeight: blockHeight,
+				ExecMode:    uint32(execMode),
+			},
+		},
+		[]uint32{clobPairId},
+	)
+}
+
+// AddUpdatesToCache adds a series of updates to the full node streaming cache.
+// Clob pair ids are the clob pair id each update is relevant to.
 func (sm *FullNodeStreamingManagerImpl) AddUpdatesToCache(
 	updates []clobtypes.StreamUpdate,
 	clobPairIds []uint32,
-	numUpdatesToAdd uint32,
 ) {
 	sm.Lock()
 	defer sm.Unlock()
 
 	metrics.IncrCounter(
 		metrics.GrpcAddUpdateToBufferCount,
-		float32(numUpdatesToAdd),
+		float32(len(updates)),
 	)
 
 	sm.streamUpdateCache = append(sm.streamUpdateCache, updates...)
@@ -424,7 +453,8 @@ func (sm *FullNodeStreamingManagerImpl) AddUpdatesToCache(
 		for id := range sm.orderbookSubscriptions {
 			sm.removeSubscription(id)
 		}
-		clear(sm.streamUpdateCache)
+		sm.streamUpdateCache = nil
+		sm.streamUpdateSubscriptionCache = nil
 	}
 	sm.EmitMetrics()
 }
@@ -473,8 +503,8 @@ func (sm *FullNodeStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 		}
 	}
 
-	clear(sm.streamUpdateCache)
-	clear(sm.streamUpdateSubscriptionCache)
+	sm.streamUpdateCache = nil
+	sm.streamUpdateSubscriptionCache = nil
 
 	for _, id := range idsToRemove {
 		sm.logger.Error(

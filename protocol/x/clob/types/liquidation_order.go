@@ -115,6 +115,12 @@ func (lo *LiquidationOrder) MustGetOrder() Order {
 	panic("MustGetOrder: No underlying order on a LiquidationOrder type.")
 }
 
+// MustGetLiquidationOrder returns the underlying `LiquidationOrder` type.
+// This function is necessary for the `LiquidationOrder` type to implement the `MatchableOrder` interface.
+func (lo *LiquidationOrder) MustGetLiquidationOrder() LiquidationOrder {
+	return *lo
+}
+
 // MustGetLiquidatedPerpetualId returns the perpetual ID that this perpetual order is liquidating.
 // This function is necessary for the `LiquidationOrder` type to implement the `MatchableOrder` interface.
 func (lo *LiquidationOrder) MustGetLiquidatedPerpetualId() uint32 {
