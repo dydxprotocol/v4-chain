@@ -79,7 +79,11 @@ func (pa *PriceApplier) getPricesAndAggregateFromVE(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
 ) (map[string]voteweighted.AggregatorPricePair, error) {
-	votes, err := aggregator.GetDaemonVotesFromBlock(request.Txs, pa.voteExtensionCodec, pa.extendedCommitCodec)
+	votes, err := aggregator.GetDaemonVotesFromBlock(
+		request.Txs,
+		pa.voteExtensionCodec,
+		pa.extendedCommitCodec,
+	)
 	if err != nil {
 		pa.logger.Error(
 			"failed to get extended commit info from proposal",
