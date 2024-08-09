@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
@@ -111,4 +112,19 @@ export async function findByToken(
   return baseQuery
     .findOne({ token })
     .returning('*');
+}
+
+export async function registerToken(
+  token: string,
+  address: string,
+  options: Options = { txId: undefined },
+): Promise<TokenFromDatabase> {
+  return upsert(
+    {
+      token,
+      address,
+      updatedAt: DateTime.now().toISO(),
+    },
+    options,
+  );
 }
