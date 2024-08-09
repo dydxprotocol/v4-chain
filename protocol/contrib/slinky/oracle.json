@@ -36,7 +36,7 @@
           "atomic": false,
           "endpoints": [
             {
-              "url": "https://clob.polymarket.com/price?token_id=%s&side=BUY",
+              "url": "https://clob.polymarket.com/midpoint?token_id=%s",
               "authentication": {
                 "apiKey": "",
                 "apiKeyHeader": ""
