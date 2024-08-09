@@ -319,8 +319,8 @@ function convertTimespanToSQL(timeSpan: string): string {
  * 4. aggregated_results: Aggregates the PnL differences and current equity for
  *    all subaccounts, grouping by address.
  *
- * 5. The final SELECT statement then ranks the addresses based on their total PnL 
- *    in descending order, providing a snapshot of subaccount performance over the 
+ * 5. The final SELECT statement then ranks the addresses based on their total PnL
+ *    in descending order, providing a snapshot of subaccount performance over the
  *    specified time span.
  *
 */
@@ -396,7 +396,7 @@ async function getRankedPnlTicksForTimeSpan(
 /**
  * Constructs a query to calculate and rank the Profit and Loss (PnL) and current equity of
  * subaccounts for the current day. This query is divided into 3 main parts:
- * 1. latest_pnl: This selects the most recent PnL tick for each Parent subaccount 
+ * 1. latest_pnl: This selects the most recent PnL tick for each Parent subaccount
  *    and associated child subaccounts. It filters subaccounts based on the current date.
  *    Additionally, it excludes any addresses that are vault addresses.
  *

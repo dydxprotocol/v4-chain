@@ -297,124 +297,124 @@ describe('PnlTicks store', () => {
     expect(leaderboardRankedData[defaultSubaccountId2].equity).toEqual('200');
   });
 
-  it('Get all time ranked pnl ticks', async () => {
-    await setupRankedPnlTicksData();
-
-    const leaderboardRankedData: LeaderboardPnlCreateObject[] = await
-    PnlTicksTable.getRankedPnlTicks(
-      'ALL_TIME',
-    );
-    expect(leaderboardRankedData.length).toEqual(2);
-    expect(leaderboardRankedData[0]).toEqual(expect.objectContaining({
-      address: defaultAddress,
-      pnl: '1200',
-      currentEquity: '1100',
+  const testCases = [
+    {
+      description: 'Get all time ranked pnl ticks',
       timeSpan: 'ALL_TIME',
-      rank: '1',
-    }));
-    expect(leaderboardRankedData[1]).toEqual(expect.objectContaining({
-      address: defaultAddress2,
-      pnl: '300',
-      currentEquity: '200',
-      timeSpan: 'ALL_TIME',
-      rank: '2',
-    }));
-  });
-
-  it('Get one year ranked pnl ticks with missing pnl for one subaccount', async () => {
-    await setupRankedPnlTicksData();
-
-    const leaderboardRankedData: LeaderboardPnlCreateObject[] = await
-    PnlTicksTable.getRankedPnlTicks(
-      'ONE_YEAR',
-    );
-    expect(leaderboardRankedData.length).toEqual(2);
-    expect(leaderboardRankedData[0]).toEqual(expect.objectContaining({
-      address: defaultAddress2,
-      pnl: '300',
-      currentEquity: '200',
+      expectedLength: 2,
+      expectedResults: [
+        {
+          address: defaultAddress,
+          pnl: '1200',
+          currentEquity: '1100',
+          timeSpan: 'ALL_TIME',
+          rank: '1',
+        },
+        {
+          address: defaultAddress2,
+          pnl: '300',
+          currentEquity: '200',
+          timeSpan: 'ALL_TIME',
+          rank: '2',
+        },
+      ],
+    },
+    {
+      description: 'Get one year ranked pnl ticks with missing pnl for one subaccount',
       timeSpan: 'ONE_YEAR',
-      rank: '1',
-    }));
-    expect(leaderboardRankedData[1]).toEqual(expect.objectContaining({
-      address: defaultAddress,
-      pnl: '40',
-      currentEquity: '1100',
-      timeSpan: 'ONE_YEAR',
-      rank: '2',
-    }));
-  });
-
-  it('Get thirty days ranked pnl ticks', async () => {
-    await setupRankedPnlTicksData();
-
-    const leaderboardRankedData: LeaderboardPnlCreateObject[] = await
-    PnlTicksTable.getRankedPnlTicks(
-      'THIRTY_DAYS',
-    );
-    expect(leaderboardRankedData.length).toEqual(2);
-    expect(leaderboardRankedData[0]).toEqual(expect.objectContaining({
-      address: defaultAddress,
-      pnl: '30',
-      currentEquity: '1100',
+      expectedLength: 2,
+      expectedResults: [
+        {
+          address: defaultAddress2,
+          pnl: '300',
+          currentEquity: '200',
+          timeSpan: 'ONE_YEAR',
+          rank: '1',
+        },
+        {
+          address: defaultAddress,
+          pnl: '40',
+          currentEquity: '1100',
+          timeSpan: 'ONE_YEAR',
+          rank: '2',
+        },
+      ],
+    },
+    {
+      description: 'Get thirty days ranked pnl ticks',
       timeSpan: 'THIRTY_DAYS',
-      rank: '1',
-    }));
-    expect(leaderboardRankedData[1]).toEqual(expect.objectContaining({
-      address: defaultAddress2,
-      pnl: '-30',
-      currentEquity: '200',
-      timeSpan: 'THIRTY_DAYS',
-      rank: '2',
-    }));
-  });
+      expectedLength: 2,
+      expectedResults: [
+        {
+          address: defaultAddress,
+          pnl: '30',
+          currentEquity: '1100',
+          timeSpan: 'THIRTY_DAYS',
+          rank: '1',
+        },
+        {
+          address: defaultAddress2,
+          pnl: '-30',
+          currentEquity: '200',
+          timeSpan: 'THIRTY_DAYS',
+          rank: '2',
+        },
+      ],
+    },
+    {
+      description: 'Get seven days ranked pnl ticks',
+      timeSpan: 'SEVEN_DAYS',
+      expectedLength: 2,
+      expectedResults: [
+        {
+          address: defaultAddress,
+          pnl: '20',
+          currentEquity: '1100',
+          timeSpan: 'SEVEN_DAYS',
+          rank: '1',
+        },
+        {
+          address: defaultAddress2,
+          pnl: '-20',
+          currentEquity: '200',
+          timeSpan: 'SEVEN_DAYS',
+          rank: '2',
+        },
+      ],
+    },
+    {
+      description: 'Get one day ranked pnl ticks',
+      timeSpan: 'ONE_DAY',
+      expectedLength: 2,
+      expectedResults: [
+        {
+          address: defaultAddress,
+          pnl: '10',
+          currentEquity: '1100',
+          timeSpan: 'ONE_DAY',
+          rank: '1',
+        },
+        {
+          address: defaultAddress2,
+          pnl: '-10',
+          currentEquity: '200',
+          timeSpan: 'ONE_DAY',
+          rank: '2',
+        },
+      ],
+    },
+  ];
 
-  it('Get seven days ranked pnl ticks', async () => {
+  it.each(testCases)('$description', async ({ timeSpan, expectedLength, expectedResults }) => {
     await setupRankedPnlTicksData();
 
-    const leaderboardRankedData: LeaderboardPnlCreateObject[] = await
-    PnlTicksTable.getRankedPnlTicks(
-      'SEVEN_DAYS',
-    );
-    expect(leaderboardRankedData.length).toEqual(2);
-    expect(leaderboardRankedData[0]).toEqual(expect.objectContaining({
-      address: defaultAddress,
-      pnl: '20',
-      currentEquity: '1100',
-      timeSpan: 'SEVEN_DAYS',
-      rank: '1',
-    }));
-    expect(leaderboardRankedData[1]).toEqual(expect.objectContaining({
-      address: defaultAddress2,
-      pnl: '-20',
-      currentEquity: '200',
-      timeSpan: 'SEVEN_DAYS',
-      rank: '2',
-    }));
-  });
+    const leaderboardRankedData = await PnlTicksTable.getRankedPnlTicks(timeSpan);
 
-  it('Get one day ranked pnl ticks', async () => {
-    await setupRankedPnlTicksData();
+    expect(leaderboardRankedData.length).toEqual(expectedLength);
 
-    const leaderboardRankedData: LeaderboardPnlCreateObject[] = await
-    PnlTicksTable.getRankedPnlTicks(
-      'ONE_DAY',
-    );
-    expect(leaderboardRankedData.length).toEqual(2);
-    expect(leaderboardRankedData[0]).toEqual(expect.objectContaining({
-      address: defaultAddress,
-      pnl: '10',
-      currentEquity: '1100',
-      timeSpan: 'ONE_DAY',
-      rank: '1',
-    }));
-    expect(leaderboardRankedData[1]).toEqual(expect.objectContaining({
-      address: defaultAddress2,
-      pnl: '-10',
-      currentEquity: '200',
-      timeSpan: 'ONE_DAY',
-      rank: '2',
-    }));
+    expectedResults.forEach((expectedResult, index) => {
+      expect(leaderboardRankedData[index]).toEqual(expect.objectContaining(expectedResult));
+    });
   });
 
   it('Ensure that vault addresses are not included in the leaderboard', async () => {

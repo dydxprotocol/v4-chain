@@ -67,7 +67,8 @@ export const dydxChain: string = 'dydx';
 export const defaultAddress: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf';
 export const defaultAddress2: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc575lnf';
 export const blockedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
-// Vault address was generated using script protocol/scripts/vault/get_vault.go
+// Vault address for vault id 0 was generated using
+// script protocol/scripts/vault/get_vault.go
 export const vaultAddress: string = 'dydx1c0m5x87llaunl5sgv3q5vd7j5uha26d2q2r2q0';
 
 // ============== Subaccounts ==============
