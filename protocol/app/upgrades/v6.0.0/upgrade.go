@@ -12,14 +12,9 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
-<<<<<<< HEAD
 	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
-	"github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/providers/apis/dydx"
-=======
 	dydx "github.com/skip-mev/slinky/providers/apis/dydx"
->>>>>>> 697c276b (upgrade slinky to 1.0.8 (#2069))
 	dydxtypes "github.com/skip-mev/slinky/providers/apis/dydx/types"
 	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
