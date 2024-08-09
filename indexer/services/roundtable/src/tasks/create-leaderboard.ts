@@ -70,6 +70,7 @@ class LeaderboardPnlProcessor {
         pnlTickLatestBlocktime: lastProcessedPnlTime,
         latestBlockTime: lastProcessedTime,
         threshold: config.PNL_TICK_UPDATE_INTERVAL_MS,
+        timespan,
       });
       return;
     }
@@ -83,6 +84,7 @@ class LeaderboardPnlProcessor {
         at: 'create-leaderboard#runTask',
         message: 'Error when updating leaderboard pnl table',
         error,
+        timespan,
       });
     }
   }
