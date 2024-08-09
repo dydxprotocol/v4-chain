@@ -1,3 +1,3 @@
-# Example Package
+# Notifications
 
-Example package to be used as a template for all packages.
+Notification package to create and send push notifications
