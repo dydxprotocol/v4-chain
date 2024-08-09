@@ -579,7 +579,8 @@ func (sm *FullNodeStreamingManagerImpl) AddOrderbookUpdatesToCache(
 		for id := range sm.orderbookSubscriptions {
 			sm.removeSubscription(id)
 		}
-		clear(sm.streamUpdateCache)
+		sm.streamUpdateCache = nil
+		sm.streamUpdateSubscriptionCache = nil
 	}
 	sm.EmitMetrics()
 }
@@ -661,8 +662,8 @@ func (sm *FullNodeStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 		}
 	}
 
-	clear(sm.streamUpdateCache)
-	clear(sm.streamUpdateSubscriptionCache)
+	sm.streamUpdateCache = nil
+	sm.streamUpdateSubscriptionCache = nil
 
 	for _, id := range idsToRemove {
 		sm.logger.Error(
