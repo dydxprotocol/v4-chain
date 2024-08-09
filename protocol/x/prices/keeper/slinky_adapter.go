@@ -46,7 +46,7 @@ func (k Keeper) GetCurrencyPairFromID(ctx sdk.Context, id uint64) (cp slinkytype
 
 func (k Keeper) GetIDForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPair) (uint64, bool) {
 	// Try to get corresponding market ID of the currency pair from the store
-	marketId, found := k.GetCurrencyPairIDFromCache(ctx, cp)
+	marketId, found := k.GetCurrencyPairIDFromStore(ctx, cp)
 	if found {
 		return uint64(marketId), true
 	}
@@ -62,7 +62,7 @@ func (k Keeper) GetIDForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPai
 
 		// compare the currency pairs to the one that we're looking for
 		if strings.EqualFold(mpCp.String(), cp.String()) {
-			k.AddCurrencyPairIDToCache(ctx, mp.Id, cp)
+			k.AddCurrencyPairIDToStore(ctx, mp.Id, cp)
 
 			return uint64(mp.Id), true
 		}
@@ -71,7 +71,7 @@ func (k Keeper) GetIDForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPai
 	return 0, false
 }
 
-func (k Keeper) GetCurrencyPairIDFromCache(ctx sdk.Context, cp slinkytypes.CurrencyPair) (marketId uint64, found bool) {
+func (k Keeper) GetCurrencyPairIDFromStore(ctx sdk.Context, cp slinkytypes.CurrencyPair) (marketId uint64, found bool) {
 	currencyPairString := cp.String()
 	currencyPairIDStore := k.getCurrencyPairIDStore(ctx)
 	var result gogotypes.UInt64Value
@@ -84,7 +84,7 @@ func (k Keeper) GetCurrencyPairIDFromCache(ctx sdk.Context, cp slinkytypes.Curre
 	}
 }
 
-func (k Keeper) AddCurrencyPairIDToCache(ctx sdk.Context, marketId uint32, cp slinkytypes.CurrencyPair) {
+func (k Keeper) AddCurrencyPairIDToStore(ctx sdk.Context, marketId uint32, cp slinkytypes.CurrencyPair) {
 	currencyPairString := cp.String()
 	currencyPairIDStore := k.getCurrencyPairIDStore(ctx)
 	value := gogotypes.UInt64Value{Value: uint64(marketId)}
@@ -92,7 +92,7 @@ func (k Keeper) AddCurrencyPairIDToCache(ctx sdk.Context, marketId uint32, cp sl
 	currencyPairIDStore.Set([]byte(currencyPairString), b)
 }
 
-func (k Keeper) RemoveCurrencyPairFromCache(ctx sdk.Context, cp slinkytypes.CurrencyPair) {
+func (k Keeper) RemoveCurrencyPairFromStore(ctx sdk.Context, cp slinkytypes.CurrencyPair) {
 	currencyPairString := cp.String()
 	currencyPairIDStore := k.getCurrencyPairIDStore(ctx)
 	currencyPairIDStore.Delete([]byte(currencyPairString))
