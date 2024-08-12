@@ -74,6 +74,9 @@ func (k Keeper) ProcessProposerOperations(
 
 	// If grpc streams are on, send absolute fill amounts from local + proposed opqueue to the grpc stream.
 	// Also send subaccount snapshots for impacted subaccounts.
+	// An impacted subaccount is defined as:
+	// - A subaccount that was involved in any match in the local opqueue.
+	//   Only matches generate subaccount updates.
 	// This must be sent out to account for checkState being discarded and deliverState being used.
 	if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
 		localValidatorOperationsQueue, _ := k.MemClob.GetOperationsToReplay(ctx)
