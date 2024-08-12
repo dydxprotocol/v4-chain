@@ -1061,6 +1061,7 @@ func New(
 		app.BlockTimeKeeper,
 		app.RevShareKeeper,
 		app.IndexerEventManager,
+		app.FullNodeStreamingManager,
 	)
 	subaccountsModule := subaccountsmodule.NewAppModule(
 		appCodec,

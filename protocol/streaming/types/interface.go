@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 type FullNodeStreamingManager interface {
@@ -12,6 +13,7 @@ type FullNodeStreamingManager interface {
 	// Subscribe to streams
 	Subscribe(
 		clobPairIds []uint32,
+		subaccountIds []*satypes.SubaccountId,
 		srv OutgoingMessageSender,
 	) (
 		err error,
@@ -20,6 +22,7 @@ type FullNodeStreamingManager interface {
 	// L3+ Orderbook updates.
 	InitializeNewStreams(
 		getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
+		getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
@@ -39,6 +42,12 @@ type FullNodeStreamingManager interface {
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
+	SendSubaccountUpdates(
+		subaccountUpdates []satypes.StreamSubaccountUpdate,
+		blockHeight uint32,
+		execMode sdk.ExecMode,
+	)
+	TracksSubaccountId(id satypes.SubaccountId) bool
 }
 
 type OutgoingMessageSender interface {
