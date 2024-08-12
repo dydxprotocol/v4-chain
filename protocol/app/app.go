@@ -1002,6 +1002,7 @@ func New(
 		app.PerpetualsKeeper,
 		app.BlockTimeKeeper,
 		app.IndexerEventManager,
+		app.FullNodeStreamingManager,
 	)
 	subaccountsModule := subaccountsmodule.NewAppModule(
 		appCodec,

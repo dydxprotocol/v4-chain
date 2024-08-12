@@ -73,4 +73,8 @@ type SubaccountsKeeper interface {
 		perpetualId uint32,
 		blockHeight uint32,
 	) error
+	SendSubaccountUpdates(
+		ctx sdk.Context,
+		subaccountUpdates []StreamSubaccountUpdate,
+	)
 }
