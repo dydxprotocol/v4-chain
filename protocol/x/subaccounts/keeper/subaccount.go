@@ -135,6 +135,7 @@ func (k Keeper) GetSubaccount(
 func (k Keeper) GetStreamSubaccountUpdate(
 	ctx sdk.Context,
 	id types.SubaccountId,
+	snapshot bool,
 ) (val types.StreamSubaccountUpdate) {
 	subaccount := k.GetSubaccount(ctx, id)
 	assetPositions := make([]*types.SubaccountAssetPosition, len(subaccount.AssetPositions))
@@ -156,7 +157,7 @@ func (k Keeper) GetStreamSubaccountUpdate(
 		SubaccountId:              &id,
 		UpdatedAssetPositions:     assetPositions,
 		UpdatedPerpetualPositions: perpetualPositions,
-		Snapshot:                  true,
+		Snapshot:                  snapshot,
 	}
 }
 
