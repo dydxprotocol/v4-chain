@@ -37,11 +37,6 @@ type FullNodeStreamingManager interface {
 		execMode sdk.ExecMode,
 		perpetualIdToClobPairId map[uint32][]clobtypes.ClobPairId,
 	)
-	SendSubaccountUpdates(
-		subaccountUpdates []satypes.StreamSubaccountUpdate,
-		blockHeight uint32,
-		execMode sdk.ExecMode,
-	)
 	SendTakerOrderStatus(
 		takerOrder clobtypes.StreamTakerOrder,
 		blockHeight uint32,

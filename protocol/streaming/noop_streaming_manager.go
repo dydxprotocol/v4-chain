@@ -44,13 +44,6 @@ func (sm *NoopGrpcStreamingManager) SendOrderbookFillUpdates(
 ) {
 }
 
-func (sm *NoopGrpcStreamingManager) SendSubaccountUpdates(
-	subaccountUpdates []satypes.StreamSubaccountUpdate,
-	blockHeight uint32,
-	execMode sdk.ExecMode,
-) {
-}
-
 func (sm *NoopGrpcStreamingManager) SendTakerOrderStatus(
 	takerOrder clobtypes.StreamTakerOrder,
 	blockHeight uint32,
