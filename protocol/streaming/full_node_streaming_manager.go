@@ -517,7 +517,9 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdates(
 	// Group subaccount updates by subaccount id.
 	streamUpdates := make([]clobtypes.StreamUpdate, 0)
 	subaccountIds := make([]*satypes.SubaccountId, 0)
-	for _, subaccountUpdate := range subaccountUpdates {
+	// Aggregate subaccount updates by subaccount id.
+	aggregatedSubaccounts := streaming_util.AggregateSubaccountUpdates(subaccountUpdates)
+	for _, subaccountUpdate := range aggregatedSubaccounts {
 		streamUpdate := clobtypes.StreamUpdate{
 			UpdateMessage: &clobtypes.StreamUpdate_SubaccountUpdate{
 				SubaccountUpdate: &subaccountUpdate,
