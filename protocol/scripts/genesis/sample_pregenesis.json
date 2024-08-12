@@ -1,5 +1,4 @@
 {
-  "app_hash": null,
   "app_name": "dydxprotocold",
   "app_state": {
     "assets": {
@@ -521,7 +520,6 @@
         }
       }
     },
-    "consensus": null,
     "crisis": {
       "constant_fee": {
         "amount": "1000000000000000000",
@@ -759,7 +757,6 @@
     },
     "gov": {
       "constitution": "",
-      "deposit_params": null,
       "deposits": [],
       "params": {
         "burn_proposal_deposit_prevote": false,
@@ -791,9 +788,7 @@
       },
       "proposals": [],
       "starting_proposal_id": "1",
-      "tally_params": null,
-      "votes": [],
-      "voting_params": null
+      "votes": []
     },
     "govplus": {},
     "ibc": {
@@ -3930,6 +3925,18 @@
           "vester_account": "rewards_vester"
         }
       ]
+    },
+    "wasm": {
+      "codes": [],
+      "contracts": [],
+      "params": {
+        "code_upload_access": {
+          "addresses": [],
+          "permission": "Everybody"
+        },
+        "instantiate_default_permission": "Everybody"
+      },
+      "sequences": []
     }
   },
   "app_version": "5.0.0-dev0-404-gf14f3950",

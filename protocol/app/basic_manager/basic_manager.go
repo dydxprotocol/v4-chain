@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -101,5 +102,6 @@ var (
 		listingmodule.AppModuleBasic{},
 		marketmapmodule.AppModuleBasic{},
 		accountplusmodule.AppModuleBasic{},
+		wasm.AppModuleBasic{},
 	)
 )

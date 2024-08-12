@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math/big"
 	"net/http"
@@ -129,10 +130,17 @@ import (
 	slinkyclient "github.com/dydxprotocol/v4-chain/protocol/daemons/slinky/client"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
+	// Cosmwasm
+	"github.com/dydxprotocol/v4-chain/protocol/wasmbinding"
+
 	// Modules
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmmodulekeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
 	accountplusmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	accountplusmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
+
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
 	assetsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	assetsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -334,6 +342,7 @@ type App struct {
 	EpochsKeeper epochsmodulekeeper.Keeper
 
 	VaultKeeper vaultmodulekeeper.Keeper
+	WasmKeeper  wasmmodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	ModuleManager *module.Manager
@@ -372,6 +381,15 @@ func assertAppPreconditions() {
 	}
 }
 
+// TODO(cosmwasm feature branch)
+// overrideWasmVariables overrides the wasm variables to:
+//   - allow for larger wasm files
+func overrideWasmVariables() {
+	// Override Wasm size limitation from WASMD.
+	wasmtypes.MaxWasmSize = 3 * 1024 * 1024
+	wasmtypes.MaxProposalWasmSize = wasmtypes.MaxWasmSize
+}
+
 // New returns a reference to an initialized blockchain app
 func New(
 	logger log.Logger,
@@ -382,6 +400,7 @@ func New(
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
 	assertAppPreconditions()
+	overrideWasmVariables()
 
 	// dYdX specific command-line flags.
 	appFlags := flags.GetFlagValuesFromOptions(appOpts)
@@ -453,6 +472,7 @@ func New(
 		revsharemoduletypes.StoreKey,
 		accountplusmoduletypes.StoreKey,
 		marketmapmoduletypes.StoreKey,
+		wasmtypes.StoreKey,
 	)
 	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
 	tkeys := storetypes.NewTransientStoreKeys(
@@ -647,6 +667,7 @@ func New(
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	// scopedRatelimitKeeper is not used as an input to any other module.
 	app.CapabilityKeeper.ScopeToModule(ratelimitmoduletypes.ModuleName)
+	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
 
 	app.CapabilityKeeper.Seal()
 
@@ -726,6 +747,8 @@ func New(
 	// Ordering of `AddRoute` does not matter.
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
+	// TODO(cosmwasm feature branch): See if we need ibc route for wasm stack
+	// https://github.com/CosmWasm/wasmd/blob/main/app/app.go#L675-L678
 
 	app.IBCKeeper.SetRouter(ibcRouter)
 
@@ -1179,6 +1202,46 @@ func New(
 		keys[accountplusmoduletypes.StoreKey],
 	)
 	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
+	// CosmWasm
+	wasmDir := filepath.Join(homePath, "wasm")
+	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	if err != nil {
+		panic(fmt.Sprintf("error while reading wasm config: %s", err))
+	}
+
+	// AllCapabilities returns all capabilities available with the current wasmvm
+	// See https://github.com/CosmWasm/cosmwasm/blob/main/docs/CAPABILITIES-BUILT-IN.md
+	supportedFeatures := "iterator,staking,stargate,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_4,dydx"
+
+	wasmOpts := []wasmmodulekeeper.Option{}
+
+	wasmOpts = append(wasmbinding.RegisterCustomPlugins(&app.PricesKeeper, &app.SendingKeeper,
+		&app.SubaccountsKeeper, app.ClobKeeper), wasmOpts...)
+
+	app.WasmKeeper = wasmmodulekeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[wasmtypes.StoreKey]),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		distrkeeper.NewQuerier(app.DistrKeeper),
+		// TODO(cosmwasm feature branch): this one was meant to be IBC Fee keeper, but I see that we also use this
+		// ics4Wrapper in other places, with a note saying that this may be replaced with
+		// middleware such as ics29 fee
+		// https://github.com/CosmWasm/wasmd/blob/main/app/app.go#L640
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.PortKeeper,
+		scopedWasmKeeper,
+		app.TransferKeeper,
+		app.MsgServiceRouter(),
+		app.GRPCQueryRouter(),
+		wasmDir,
+		wasmConfig,
+		supportedFeatures,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		wasmOpts...,
+	)
 
 	/****  Module Options ****/
 
@@ -1252,6 +1315,15 @@ func New(
 		revShareModule,
 		accountplusModule,
 		marketmapModule,
+		wasm.NewAppModule(
+			appCodec,
+			&app.WasmKeeper,
+			app.StakingKeeper,
+			app.AccountKeeper,
+			app.BankKeeper,
+			app.MsgServiceRouter(),
+			app.getSubspace(wasmtypes.ModuleName),
+		),
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
@@ -1303,6 +1375,7 @@ func New(
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
 		marketmapmoduletypes.ModuleName,
+		wasmtypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
@@ -1350,7 +1423,8 @@ func New(
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
 		marketmapmoduletypes.ModuleName,
-		authz.ModuleName,                // No-op.
+		authz.ModuleName, // No-op.
+		wasmtypes.ModuleName,
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
 
@@ -1399,6 +1473,11 @@ func New(
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
 		authz.ModuleName,
+		// NOTE: wasm module should be at the end as it can call other module functionality direct
+		// or via message dispatching during genesis phase.
+		// For example bank transfer, auth account check, staking, ...
+		// wasm after ibc transfer
+		wasmtypes.ModuleName,
 	)
 
 	// NOTE: by default, set migration order here to be the same as init genesis order,
@@ -1446,11 +1525,12 @@ func New(
 
 		// Auth must be migrated after staking.
 		authtypes.ModuleName,
+		wasmtypes.ModuleName,
 	)
 
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	err := app.ModuleManager.RegisterServices(app.configurator)
+	err = app.ModuleManager.RegisterServices(app.configurator)
 	app.ModuleBasics = module.NewBasicManagerFromManager(
 		app.ModuleManager,
 		map[string]module.AppModuleBasic{
@@ -1476,6 +1556,10 @@ func New(
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
+	// wasmd also comes with 2 custom ante handlers:
+	//  - CountTXDecorator adds the TX position in the block into the context and passes it to the contracts
+	//  - LimitSimulationGasDecorator prevents an "infinite gas" query
+	// TODO(cosmwasm feature branch): see if we need these custom ante handlers
 	app.setAnteHandler(encodingConfig.TxConfig)
 	app.SetMempool(mempool.NewNoOpMempool())
 	app.SetPreBlocker(app.PreBlocker)
@@ -1510,6 +1594,13 @@ func New(
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(err.Error())
+		}
+
+		// TODO(cosmwasm feature branch): we likely shuldn't initialized app modules here.
+		// Initialize pinned codes in wasmvm as they are not persisted there
+		uncachedCtx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
+		if err := app.WasmKeeper.InitializePinnedCodes(uncachedCtx); err != nil {
+			panic(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
 	}
 	app.initializeRateLimiters()
@@ -1975,6 +2066,8 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName).WithKeyTable(ibctransfertypes.ParamKeyTable())
 	paramsKeeper.Subspace(icahosttypes.SubModuleName).WithKeyTable(icahosttypes.ParamKeyTable())
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName).WithKeyTable(icacontrollertypes.ParamKeyTable())
+
+	paramsKeeper.Subspace(wasmtypes.ModuleName)
 
 	return paramsKeeper
 }

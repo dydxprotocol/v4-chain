@@ -43,7 +43,6 @@ func (k Keeper) HandleMsgPlaceOrder(
 	isInternalOrder bool,
 ) (err error) {
 	lib.AssertDeliverTxMode(ctx)
-
 	// Attach various logging tags relative to this request. These should be static with no changes.
 	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.Module, log.Clob,

@@ -1,6 +1,8 @@
 # NB: This is a digest for a multi-arch manifest list, you will want to get this by running
 # `docker buildx imagetools inspect golang:1.22.2-alpine`
 ARG GOLANG_1_22_ALPINE_DIGEST="cdc86d9f363e8786845bea2040312b4efa321b828acdeb26f393faa864d887b0"
+# TODO(cosmwasm feature branch)
+# ARG GOLANG_1_22_ALPINE_DIGEST="d1a601b64de09e2fa38c95e55838961811d5ca11062a8f4230a5c434b3ae2a34"
 
 # This Dockerfile is a stateless build of the `dydxprotocold` binary as a Docker container.
 # It does not include any configuration, state, or genesis information.
@@ -12,6 +14,7 @@ ARG GOLANG_1_22_ALPINE_DIGEST="cdc86d9f363e8786845bea2040312b4efa321b828acdeb26f
 FROM golang@sha256:${GOLANG_1_22_ALPINE_DIGEST} as builder
 ARG VERSION
 ARG COMMIT
+ARG WASMVM_VERSION=v1.5.2
 
 RUN set -eux; apk add --no-cache ca-certificates build-base; apk add git linux-headers bash binutils-gold
 
@@ -25,7 +28,20 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 # Copy the remaining files
 COPY . .
 
+# See https://github.com/CosmWasm/wasmvm/releases
+# Download the wasmvm library for the target architecture (aarch64 or x86_64)
+# x86_64 is needed for CI, local macs support aarch64
+RUN if [ "$(uname -m)" = "aarch64" ]; then \
+  wget -O /lib/libwasmvm_muslc.a https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.aarch64.a; \
+    elif [ "$(uname -m)" = "x86_64" ]; then \
+  wget -O /lib/libwasmvm_muslc.a https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.x86_64.a; \
+    else \
+  echo "Unsupported architecture"; \
+    fi
+
+    
 # Build dydxprotocold binary
+# force it to use static lib (from above) not standard libgo_cosmwasm.so file
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
     go build \
@@ -41,6 +57,9 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
       -o /dydxprotocol/build/ \
       ./...
 
+# TODO(before merging feature branch)
+RUN echo "Ensuring binary is statically linked ..." \
+  && (file /dydxprotocol/build/dydxprotocold | grep "statically linked")
 
 # --------------------------------------------------------
 # Runner

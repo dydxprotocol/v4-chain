@@ -7,7 +7,10 @@ import (
 
 func AssertDeliverTxMode(ctx sdk.Context) {
 	if ctx.IsCheckTx() || ctx.IsReCheckTx() {
-		panic("assert deliverTx mode failed")
+		// TODO(OTE-411): Remove this check for simulation mode
+		if ctx.ExecMode() != sdk.ExecModeSimulate {
+			panic("assert deliverTx mode failed")
+		}
 	}
 }
 
