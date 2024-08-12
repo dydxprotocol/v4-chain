@@ -2,9 +2,10 @@ package streaming
 
 import (
 	"fmt"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"sync"
 	"time"
+
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,6 +45,10 @@ type FullNodeStreamingManagerImpl struct {
 
 	maxUpdatesInCache          uint32
 	maxSubscriptionChannelSize uint32
+
+	// Block interval in which snapshot info should be sent out in.
+	// Defaults to 0, which means only one snapshot will be sent out.
+	snapshotBlockInterval uint32
 }
 
 // OrderbookSubscription represents a active subscription to the orderbook updates stream.
@@ -51,7 +56,7 @@ type OrderbookSubscription struct {
 	subscriptionId uint32
 
 	// Initialize the subscription with orderbook snapshots.
-	initialize sync.Once
+	initialize *sync.Once
 
 	// Clob pair ids to subscribe to.
 	clobPairIds []uint32
@@ -64,6 +69,10 @@ type OrderbookSubscription struct {
 
 	// Channel to buffer writes before the stream
 	updatesChannel chan []clobtypes.StreamUpdate
+
+	// If interval snapshots are turned on, the next block height at which
+	// a snapshot should be sent out.
+	nextSnapshotBlock uint32
 }
 
 func NewFullNodeStreamingManager(
@@ -71,6 +80,7 @@ func NewFullNodeStreamingManager(
 	flushIntervalMs uint32,
 	maxUpdatesInCache uint32,
 	maxSubscriptionChannelSize uint32,
+	snapshotBlockInterval uint32,
 ) *FullNodeStreamingManagerImpl {
 	logger = logger.With(log.ModuleKey, "full-node-streaming")
 	fullNodeStreamingManager := &FullNodeStreamingManagerImpl{
@@ -87,6 +97,7 @@ func NewFullNodeStreamingManager(
 
 		maxUpdatesInCache:          maxUpdatesInCache,
 		maxSubscriptionChannelSize: maxSubscriptionChannelSize,
+		snapshotBlockInterval:      snapshotBlockInterval,
 	}
 
 	// Start the goroutine for pushing order updates through.
@@ -149,6 +160,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	}
 	subscription := &OrderbookSubscription{
 		subscriptionId: sm.nextSubscriptionId,
+		initialize:     &sync.Once{},
 		clobPairIds:    clobPairIds,
 		subaccountIds:  sIds,
 		messageSender:  messageSender,
@@ -674,7 +686,16 @@ func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 	sm.FlushStreamUpdatesWithLock()
 
 	updatesByClobPairId := make(map[uint32]*clobtypes.OffchainUpdates)
+
 	for subscriptionId, subscription := range sm.orderbookSubscriptions {
+		// If the snapshot block interval is enabled, reset the sync.Once in order to
+		// re-send snapshots out.
+		if sm.snapshotBlockInterval > 0 &&
+			blockHeight == subscription.nextSnapshotBlock {
+			subscription.initialize = &sync.Once{}
+			sm.logger.Info(fmt.Sprintf("resetting sync once for sub id %+v", subscriptionId))
+		}
+
 		subscription.initialize.Do(
 			func() {
 				allUpdates := clobtypes.NewOffchainUpdates()
@@ -688,8 +709,11 @@ func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 				for _, subaccountId := range subscription.subaccountIds {
 					saUpdates = append(saUpdates, getSubaccountSnapshot(subaccountId))
 				}
-
+				sm.logger.Info(fmt.Sprintf("Sending out snapshot for %+v", subscriptionId))
 				sm.SendCombinedSnapshot(allUpdates, saUpdates, subscriptionId, blockHeight, execMode)
+				if sm.snapshotBlockInterval != 0 {
+					subscription.nextSnapshotBlock = blockHeight + sm.snapshotBlockInterval
+				}
 			},
 		)
 	}

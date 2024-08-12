@@ -2030,6 +2030,8 @@ func getFullNodeStreamingManagerFromOptions(
 			appFlags.GrpcStreamingFlushIntervalMs,
 			appFlags.GrpcStreamingMaxBatchSize,
 			appFlags.GrpcStreamingMaxChannelBufferSize,
+			// TODO appflag this.
+			50,
 		)
 	}
 	return streaming.NewNoopGrpcStreamingManager()
