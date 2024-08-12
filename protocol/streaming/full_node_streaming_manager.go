@@ -277,7 +277,7 @@ func (sm *FullNodeStreamingManagerImpl) Stop() {
 	sm.done <- true
 }
 
-func (sm *FullNodeStreamingManagerImpl) getOrderbookStreamUpdate(
+func toOrderbookStreamUpdate(
 	offchainUpdates *clobtypes.OffchainUpdates,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
@@ -300,7 +300,7 @@ func (sm *FullNodeStreamingManagerImpl) getOrderbookStreamUpdate(
 	}
 }
 
-func (sm *FullNodeStreamingManagerImpl) getSubaccountStreamUpdates(
+func toSubaccountStreamUpdates(
 	saUpdates []*satypes.StreamSubaccountUpdate,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
@@ -368,16 +368,17 @@ func (sm *FullNodeStreamingManagerImpl) SendCombinedSnapshot(
 	)
 
 	var streamUpdates []clobtypes.StreamUpdate
-	streamUpdates = append(streamUpdates, sm.getOrderbookStreamUpdate(offchainUpdates, blockHeight, execMode)...)
-	streamUpdates = append(streamUpdates, sm.getSubaccountStreamUpdates(saUpdates, blockHeight, execMode)...)
+	streamUpdates = append(streamUpdates, toOrderbookStreamUpdate(offchainUpdates, blockHeight, execMode)...)
+	streamUpdates = append(streamUpdates, toSubaccountStreamUpdates(saUpdates, blockHeight, execMode)...)
 	sm.sendStreamUpdates(subscriptionId, streamUpdates)
 }
 
-// GetSubaccountIdToSubscriptionIdMapping returns the mapping of subaccount ids to subscription ids.
-func (sm *FullNodeStreamingManagerImpl) GetSubaccountIdToSubscriptionIdMapping() map[satypes.SubaccountId][]uint32 {
+// TracksSubaccountId checks if a subaccount id is being tracked by the streaming manager.
+func (sm *FullNodeStreamingManagerImpl) TracksSubaccountId(subaccountId satypes.SubaccountId) bool {
 	sm.Lock()
 	defer sm.Unlock()
-	return sm.subaccountIdToSubscriptionIdMapping
+	_, exists := sm.subaccountIdToSubscriptionIdMapping[subaccountId]
+	return exists
 }
 
 // SendOrderbookUpdates groups updates by their clob pair ids and
@@ -425,7 +426,7 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookUpdates(
 		clobPairIds = append(clobPairIds, clobPairId)
 	}
 
-	sm.AddOrderbookUpdatesToCache(streamUpdates, clobPairIds)
+	sm.AddOrderUpdatesToCache(streamUpdates, clobPairIds)
 }
 
 // SendOrderbookFillUpdates groups fills by their clob pair ids and
@@ -468,7 +469,7 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdates(
 		clobPairIds = append(clobPairIds, clobPairId)
 	}
 
-	sm.AddOrderbookUpdatesToCache(streamUpdates, clobPairIds)
+	sm.AddOrderUpdatesToCache(streamUpdates, clobPairIds)
 }
 
 // SendTakerOrderStatus sends out a taker order and its status to the full node streaming service.
@@ -485,7 +486,7 @@ func (sm *FullNodeStreamingManagerImpl) SendTakerOrderStatus(
 		clobPairId = takerOrder.OrderId.ClobPairId
 	}
 
-	sm.AddOrderbookUpdatesToCache(
+	sm.AddOrderUpdatesToCache(
 		[]clobtypes.StreamUpdate{
 			{
 				UpdateMessage: &clobtypes.StreamUpdate_TakerOrder{
@@ -531,9 +532,9 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdates(
 	sm.AddSubaccountUpdatesToCache(streamUpdates, subaccountIds)
 }
 
-// AddOrderbookUpdatesToCache adds a series of updates to the full node streaming cache.
+// AddOrderUpdatesToCache adds a series of updates to the full node streaming cache.
 // Clob pair ids are the clob pair id each update is relevant to.
-func (sm *FullNodeStreamingManagerImpl) AddOrderbookUpdatesToCache(
+func (sm *FullNodeStreamingManagerImpl) AddOrderUpdatesToCache(
 	updates []clobtypes.StreamUpdate,
 	clobPairIds []uint32,
 ) {
@@ -554,7 +555,7 @@ func (sm *FullNodeStreamingManagerImpl) AddOrderbookUpdatesToCache(
 	}
 
 	// Remove all subscriptions and wipe the buffer if buffer overflows.
-	sm.FlushCacheIfFull()
+	sm.RemoveSubscriptionsAndClearBufferIfFull()
 	sm.EmitMetrics()
 }
 
@@ -579,14 +580,14 @@ func (sm *FullNodeStreamingManagerImpl) AddSubaccountUpdatesToCache(
 			sm.subaccountIdToSubscriptionIdMapping[*subaccountId],
 		)
 	}
-	sm.FlushCacheIfFull()
+	sm.RemoveSubscriptionsAndClearBufferIfFull()
 	sm.EmitMetrics()
 }
 
-// FlushCacheIfFull removes all subscriptions and wipes the buffer if buffer overflows.
+// RemoveSubscriptionsAndClearBufferIfFull removes all subscriptions and wipes the buffer if buffer overflows.
 // Note this method requires the lock and assumes that the lock has already been
 // acquired by the caller.
-func (sm *FullNodeStreamingManagerImpl) FlushCacheIfFull() {
+func (sm *FullNodeStreamingManagerImpl) RemoveSubscriptionsAndClearBufferIfFull() {
 	// Remove all subscriptions and wipe the buffer if buffer overflows.
 	if len(sm.streamUpdateCache) > int(sm.maxUpdatesInCache) {
 		sm.logger.Error("Streaming buffer full capacity. Dropping messages and all subscriptions. " +

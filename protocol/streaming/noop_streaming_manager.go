@@ -58,8 +58,8 @@ func (sm *NoopGrpcStreamingManager) SendSubaccountUpdates(
 ) {
 }
 
-func (sm *NoopGrpcStreamingManager) GetSubaccountIdToSubscriptionIdMapping() map[satypes.SubaccountId][]uint32 {
-	return nil
+func (sm *NoopGrpcStreamingManager) TracksSubaccountId(id satypes.SubaccountId) bool {
+	return false
 }
 
 func (sm *NoopGrpcStreamingManager) InitializeNewStreams(
