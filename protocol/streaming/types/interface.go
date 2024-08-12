@@ -47,6 +47,12 @@ type FullNodeStreamingManager interface {
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
+	SendSubaccountUpdates(
+		subaccountUpdates []satypes.StreamSubaccountUpdate,
+		blockHeight uint32,
+		execMode sdk.ExecMode,
+	)
+	TracksSubaccountId(id satypes.SubaccountId) bool
 }
 
 type OutgoingMessageSender interface {

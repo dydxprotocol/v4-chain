@@ -2557,7 +2557,7 @@
           "TEST/USD": {
             "provider_configs": [
               {
-                "name": "TestVolatileExchange",
+                "name": "volatile-exchange-provider",
                 "off_chain_ticker": "TEST-USD"
               }
             ],

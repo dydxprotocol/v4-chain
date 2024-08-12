@@ -165,14 +165,14 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 			sm.nextSubscriptionId,
 		)
 	}
-	for _, subaccountId := range subaccountIds {
+	for _, subaccountId := range sIds {
 		// if subaccountId exists in the map, append the subscription id to the slice
 		// otherwise, create a new slice with the subscription id
-		if _, ok := sm.subaccountIdToSubscriptionIdMapping[*subaccountId]; !ok {
-			sm.subaccountIdToSubscriptionIdMapping[*subaccountId] = []uint32{}
+		if _, ok := sm.subaccountIdToSubscriptionIdMapping[subaccountId]; !ok {
+			sm.subaccountIdToSubscriptionIdMapping[subaccountId] = []uint32{}
 		}
-		sm.subaccountIdToSubscriptionIdMapping[*subaccountId] = append(
-			sm.subaccountIdToSubscriptionIdMapping[*subaccountId],
+		sm.subaccountIdToSubscriptionIdMapping[subaccountId] = append(
+			sm.subaccountIdToSubscriptionIdMapping[subaccountId],
 			sm.nextSubscriptionId,
 		)
 	}
@@ -277,90 +277,51 @@ func (sm *FullNodeStreamingManagerImpl) Stop() {
 	sm.done <- true
 }
 
-// SendSnapshot sends messages to a particular subscriber without buffering.
-// Note this method requires the lock and assumes that the lock has already been
-// acquired by the caller.
-func (sm *FullNodeStreamingManagerImpl) SendSnapshot(
+func toOrderbookStreamUpdate(
 	offchainUpdates *clobtypes.OffchainUpdates,
-	subscriptionId uint32,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
-) {
-	defer metrics.ModuleMeasureSince(
-		metrics.FullNodeGrpc,
-		metrics.GrpcSendOrderbookSnapshotLatency,
-		time.Now(),
-	)
-
+) []clobtypes.StreamUpdate {
 	v1updates, err := streaming_util.GetOffchainUpdatesV1(offchainUpdates)
 	if err != nil {
 		panic(err)
 	}
-
-	removeSubscription := false
-	if len(v1updates) > 0 {
-		subscription, ok := sm.orderbookSubscriptions[subscriptionId]
-		if !ok {
-			sm.logger.Error(
-				fmt.Sprintf(
-					"Streaming subscription id %+v not found. This should not happen.",
-					subscriptionId,
-				),
-			)
-			return
-		}
-		streamUpdates := []clobtypes.StreamUpdate{
-			{
-				UpdateMessage: &clobtypes.StreamUpdate_OrderbookUpdate{
-					OrderbookUpdate: &clobtypes.StreamOrderbookUpdate{
-						Updates:  v1updates,
-						Snapshot: true,
-					},
+	return []clobtypes.StreamUpdate{
+		{
+			UpdateMessage: &clobtypes.StreamUpdate_OrderbookUpdate{
+				OrderbookUpdate: &clobtypes.StreamOrderbookUpdate{
+					Updates:  v1updates,
+					Snapshot: true,
 				},
-				BlockHeight: blockHeight,
-				ExecMode:    uint32(execMode),
 			},
-		}
-		metrics.IncrCounter(
-			metrics.GrpcAddToSubscriptionChannelCount,
-			1,
-		)
-		select {
-		case subscription.updatesChannel <- streamUpdates:
-		default:
-			sm.logger.Error(
-				fmt.Sprintf(
-					"Streaming subscription id %+v channel full capacity. Dropping subscription connection.",
-					subscriptionId,
-				),
-			)
-			removeSubscription = true
-		}
-	}
-
-	// Clean up subscriptions that have been closed.
-	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
-	if removeSubscription {
-		sm.removeSubscription(subscriptionId)
+			BlockHeight: blockHeight,
+			ExecMode:    uint32(execMode),
+		},
 	}
 }
 
-// SendSubaccountSnapshot sends a subaccount snapshot to a particular subscriber
-// without buffering.
-// Note this method requires the lock and assumes that the lock has already been
-// acquired by the caller.
-func (sm *FullNodeStreamingManagerImpl) SendSubaccountSnapshot(
-	snapshot *satypes.StreamSubaccountUpdate,
-	subscriptionId uint32,
+func toSubaccountStreamUpdates(
+	saUpdates []*satypes.StreamSubaccountUpdate,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
-) {
-	defer metrics.ModuleMeasureSince(
-		metrics.FullNodeGrpc,
-		metrics.GrpcSendSubaccountSnapshotLatency,
-		time.Now(),
-	)
+) []clobtypes.StreamUpdate {
+	streamUpdates := make([]clobtypes.StreamUpdate, 0)
+	for _, saUpdate := range saUpdates {
+		streamUpdates = append(streamUpdates, clobtypes.StreamUpdate{
+			UpdateMessage: &clobtypes.StreamUpdate_SubaccountUpdate{
+				SubaccountUpdate: saUpdate,
+			},
+			BlockHeight: blockHeight,
+			ExecMode:    uint32(execMode),
+		})
+	}
+	return streamUpdates
+}
 
+func (sm *FullNodeStreamingManagerImpl) sendStreamUpdates(
+	subscriptionId uint32,
+	streamUpdates []clobtypes.StreamUpdate,
+) {
 	removeSubscription := false
 	subscription, ok := sm.orderbookSubscriptions[subscriptionId]
 	if !ok {
@@ -372,19 +333,7 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountSnapshot(
 		)
 		return
 	}
-	streamUpdates := []clobtypes.StreamUpdate{
-		{
-			UpdateMessage: &clobtypes.StreamUpdate_SubaccountUpdate{
-				SubaccountUpdate: snapshot,
-			},
-			BlockHeight: blockHeight,
-			ExecMode:    uint32(execMode),
-		},
-	}
-	metrics.IncrCounter(
-		metrics.GrpcAddToSubscriptionChannelCount,
-		1,
-	)
+
 	select {
 	case subscription.updatesChannel <- streamUpdates:
 	default:
@@ -397,11 +346,39 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountSnapshot(
 		removeSubscription = true
 	}
 
-	// Clean up subscriptions that have been closed.
-	// If a Send update has failed for any subaccount id, the whole subscription will be removed.
 	if removeSubscription {
 		sm.removeSubscription(subscriptionId)
 	}
+}
+
+// SendCombinedSnapshot sends messages to a particular subscriber without buffering.
+// Note this method requires the lock and assumes that the lock has already been
+// acquired by the caller.
+func (sm *FullNodeStreamingManagerImpl) SendCombinedSnapshot(
+	offchainUpdates *clobtypes.OffchainUpdates,
+	saUpdates []*satypes.StreamSubaccountUpdate,
+	subscriptionId uint32,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
+	defer metrics.ModuleMeasureSince(
+		metrics.FullNodeGrpc,
+		metrics.GrpcSendOrderbookSnapshotLatency,
+		time.Now(),
+	)
+
+	var streamUpdates []clobtypes.StreamUpdate
+	streamUpdates = append(streamUpdates, toOrderbookStreamUpdate(offchainUpdates, blockHeight, execMode)...)
+	streamUpdates = append(streamUpdates, toSubaccountStreamUpdates(saUpdates, blockHeight, execMode)...)
+	sm.sendStreamUpdates(subscriptionId, streamUpdates)
+}
+
+// TracksSubaccountId checks if a subaccount id is being tracked by the streaming manager.
+func (sm *FullNodeStreamingManagerImpl) TracksSubaccountId(subaccountId satypes.SubaccountId) bool {
+	sm.Lock()
+	defer sm.Unlock()
+	_, exists := sm.subaccountIdToSubscriptionIdMapping[subaccountId]
+	return exists
 }
 
 // SendOrderbookUpdates groups updates by their clob pair ids and
@@ -449,7 +426,7 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookUpdates(
 		clobPairIds = append(clobPairIds, clobPairId)
 	}
 
-	sm.AddOrderbookUpdatesToCache(streamUpdates, clobPairIds)
+	sm.AddOrderUpdatesToCache(streamUpdates, clobPairIds)
 }
 
 // SendOrderbookFillUpdates groups fills by their clob pair ids and
@@ -492,11 +469,40 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdates(
 		clobPairIds = append(clobPairIds, clobPairId)
 	}
 
-	sm.AddOrderbookUpdatesToCache(streamUpdates, clobPairIds)
+	sm.AddOrderUpdatesToCache(streamUpdates, clobPairIds)
+}
+
+// SendTakerOrderStatus sends out a taker order and its status to the full node streaming service.
+func (sm *FullNodeStreamingManagerImpl) SendTakerOrderStatus(
+	streamTakerOrder clobtypes.StreamTakerOrder,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
+	clobPairId := uint32(0)
+	if liqOrder := streamTakerOrder.GetLiquidationOrder(); liqOrder != nil {
+		clobPairId = liqOrder.ClobPairId
+	}
+	if takerOrder := streamTakerOrder.GetOrder(); takerOrder != nil {
+		clobPairId = takerOrder.OrderId.ClobPairId
+	}
+
+	sm.AddOrderUpdatesToCache(
+		[]clobtypes.StreamUpdate{
+			{
+				UpdateMessage: &clobtypes.StreamUpdate_TakerOrder{
+					TakerOrder: &streamTakerOrder,
+				},
+				BlockHeight: blockHeight,
+				ExecMode:    uint32(execMode),
+			},
+		},
+		[]uint32{clobPairId},
+	)
 }
 
 // SendSubaccountUpdates groups subaccount updates by their subaccount ids and
 // sends messages to the subscribers.
+// TODO(CT-1117): Aggregate subaccount updates by subaccount id.
 func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdates(
 	subaccountUpdates []satypes.StreamSubaccountUpdate,
 	blockHeight uint32,
@@ -523,36 +529,12 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdates(
 		subaccountIds = append(subaccountIds, subaccountUpdate.SubaccountId)
 	}
 
-	sm.AddSubaccountUpdatesToCache(streamUpdates, subaccountIds, uint32(len(subaccountUpdates)))
+	sm.AddSubaccountUpdatesToCache(streamUpdates, subaccountIds)
 }
 
-// SendTakerOrderStatus sends out a taker order and its status to the full node streaming service.
-func (sm *FullNodeStreamingManagerImpl) SendTakerOrderStatus(
-	streamTakerOrder clobtypes.StreamTakerOrder,
-	blockHeight uint32,
-	execMode sdk.ExecMode,
-) {
-	clobPairId := uint32(0)
-	if liqOrder := streamTakerOrder.GetLiquidationOrder(); liqOrder != nil {
-		clobPairId = liqOrder.ClobPairId
-	}
-	if takerOrder := streamTakerOrder.GetOrder(); takerOrder != nil {
-		clobPairId = takerOrder.OrderId.ClobPairId
-	}
-
-	sm.AddOrderbookUpdatesToCache(
-		[]clobtypes.StreamUpdate{
-			{
-				UpdateMessage: &clobtypes.StreamUpdate_TakerOrder{
-					TakerOrder: &streamTakerOrder,
-				},
-			},
-		},
-		[]uint32{clobPairId},
-	)
-}
-
-func (sm *FullNodeStreamingManagerImpl) AddOrderbookUpdatesToCache(
+// AddOrderUpdatesToCache adds a series of updates to the full node streaming cache.
+// Clob pair ids are the clob pair id each update is relevant to.
+func (sm *FullNodeStreamingManagerImpl) AddOrderUpdatesToCache(
 	updates []clobtypes.StreamUpdate,
 	clobPairIds []uint32,
 ) {
@@ -573,29 +555,22 @@ func (sm *FullNodeStreamingManagerImpl) AddOrderbookUpdatesToCache(
 	}
 
 	// Remove all subscriptions and wipe the buffer if buffer overflows.
-	if len(sm.streamUpdateCache) > int(sm.maxUpdatesInCache) {
-		sm.logger.Error("Streaming buffer full capacity. Dropping messages and all subscriptions. " +
-			"Disconnect all clients and increase buffer size via the grpc-stream-buffer-size flag.")
-		for id := range sm.orderbookSubscriptions {
-			sm.removeSubscription(id)
-		}
-		sm.streamUpdateCache = nil
-		sm.streamUpdateSubscriptionCache = nil
-	}
+	sm.RemoveSubscriptionsAndClearBufferIfFull()
 	sm.EmitMetrics()
 }
 
+// AddSubaccountUpdatesToCache adds a series of updates to the full node streaming cache.
+// Subaccount ids are the subaccount id each update is relevant to.
 func (sm *FullNodeStreamingManagerImpl) AddSubaccountUpdatesToCache(
 	updates []clobtypes.StreamUpdate,
 	subaccountIds []*satypes.SubaccountId,
-	numUpdatesToAdd uint32,
 ) {
 	sm.Lock()
 	defer sm.Unlock()
 
 	metrics.IncrCounter(
 		metrics.GrpcAddUpdateToBufferCount,
-		float32(numUpdatesToAdd),
+		float32(len(updates)),
 	)
 
 	sm.streamUpdateCache = append(sm.streamUpdateCache, updates...)
@@ -605,7 +580,14 @@ func (sm *FullNodeStreamingManagerImpl) AddSubaccountUpdatesToCache(
 			sm.subaccountIdToSubscriptionIdMapping[*subaccountId],
 		)
 	}
+	sm.RemoveSubscriptionsAndClearBufferIfFull()
+	sm.EmitMetrics()
+}
 
+// RemoveSubscriptionsAndClearBufferIfFull removes all subscriptions and wipes the buffer if buffer overflows.
+// Note this method requires the lock and assumes that the lock has already been
+// acquired by the caller.
+func (sm *FullNodeStreamingManagerImpl) RemoveSubscriptionsAndClearBufferIfFull() {
 	// Remove all subscriptions and wipe the buffer if buffer overflows.
 	if len(sm.streamUpdateCache) > int(sm.maxUpdatesInCache) {
 		sm.logger.Error("Streaming buffer full capacity. Dropping messages and all subscriptions. " +
@@ -613,9 +595,9 @@ func (sm *FullNodeStreamingManagerImpl) AddSubaccountUpdatesToCache(
 		for id := range sm.orderbookSubscriptions {
 			sm.removeSubscription(id)
 		}
-		clear(sm.streamUpdateCache)
+		sm.streamUpdateCache = nil
+		sm.streamUpdateSubscriptionCache = nil
 	}
-	sm.EmitMetrics()
 }
 
 func (sm *FullNodeStreamingManagerImpl) FlushStreamUpdates() {
@@ -702,16 +684,12 @@ func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 					}
 					allUpdates.Append(updatesByClobPairId[clobPairId])
 				}
-
-				sm.SendSnapshot(allUpdates, subscriptionId, blockHeight, execMode)
+				saUpdates := []*satypes.StreamSubaccountUpdate{}
 				for _, subaccountId := range subscription.subaccountIds {
-					sm.SendSubaccountSnapshot(
-						getSubaccountSnapshot(subaccountId),
-						subscriptionId,
-						blockHeight,
-						execMode,
-					)
+					saUpdates = append(saUpdates, getSubaccountSnapshot(subaccountId))
 				}
+
+				sm.SendCombinedSnapshot(allUpdates, saUpdates, subscriptionId, blockHeight, execMode)
 			},
 		)
 	}

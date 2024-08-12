@@ -113,11 +113,13 @@ services:
     volumes:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
   slinky0:
-    image: ghcr.io/skip-mev/slinky-sidecar:v1.0.5
+    image: ghcr.io/skip-mev/slinky-sidecar:v1.0.8
     entrypoint: >
       sh -c "slinky --marketmap-provider dydx_migration_api --oracle-config /etc/slinky/oracle.json --log-std-out-level error"
     environment:
       - SLINKY_CONFIG_PROVIDERS_RAYDIUM_API_API_ENDPOINTS_0_URL=${RAYDIUM_URL}
+      - SLINKY_CONFIG_PROVIDERS_UNISWAPV3_API-BASE_API_ENDPOINTS_0_URL=${UNISWAPV3_BASE_URL}
+      - SLINKY_CONFIG_PROVIDERS_UNISWAPV3_API-ETHEREUM_API_ENDPOINTS_0_URL=${UNISWAPV3_ETHEREUM_URL}
     volumes:
       - ./contrib/slinky:/etc/slinky
     ports:
