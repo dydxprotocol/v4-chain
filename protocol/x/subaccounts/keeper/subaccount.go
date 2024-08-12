@@ -413,13 +413,15 @@ func (k Keeper) UpdateSubaccounts(
 
 		// if GRPC streaming is on, emit a generated subaccount update to stream.
 		if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
-			subaccountUpdate := GenerateStreamSubaccountUpdate(u, fundingPayments)
-			k.SendSubaccountUpdates(
-				ctx,
-				[]types.StreamSubaccountUpdate{
-					subaccountUpdate,
-				},
-			)
+			if _, exists := streamingManager.GetSubaccountIdToSubscriptionIdMapping()[*u.SettledSubaccount.Id]; exists {
+				subaccountUpdate := GenerateStreamSubaccountUpdate(u, fundingPayments)
+				k.SendSubaccountUpdates(
+					ctx,
+					[]types.StreamSubaccountUpdate{
+						subaccountUpdate,
+					},
+				)
+			}
 		}
 
 		// Emit an event indicating a funding payment was paid / received for each settled funding

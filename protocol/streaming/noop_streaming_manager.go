@@ -58,6 +58,10 @@ func (sm *NoopGrpcStreamingManager) SendSubaccountUpdates(
 ) {
 }
 
+func (sm *NoopGrpcStreamingManager) GetSubaccountIdToSubscriptionIdMapping() map[satypes.SubaccountId][]uint32 {
+	return nil
+}
+
 func (sm *NoopGrpcStreamingManager) InitializeNewStreams(
 	getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
 	getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,

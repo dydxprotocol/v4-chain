@@ -47,6 +47,7 @@ type FullNodeStreamingManager interface {
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
+	GetSubaccountIdToSubscriptionIdMapping() map[satypes.SubaccountId][]uint32
 }
 
 type OutgoingMessageSender interface {
