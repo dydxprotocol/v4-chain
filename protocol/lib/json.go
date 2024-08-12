@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// MaybeGetStructJsonString returns the json representation of a struct, or a formatted string using
+// MaybeGetJsonString returns the json representation of a struct, or a formatted string using
 // %+v if the json conversion encounters an error.
 func MaybeGetJsonString(i interface{}) string {
 	jsonData, err := json.Marshal(i)
