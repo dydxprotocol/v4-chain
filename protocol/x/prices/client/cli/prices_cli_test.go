@@ -134,7 +134,7 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 
 // expectMarketPricesWithTimeout waits for the specified timeout for the market prices to be updated with the
 // expected values. If the prices are not updated to match the expected prices within the timeout, the test fails.
-func (s *PricesIntegrationTestSuite) expectMarketPricesWithTimeout(prices map[uint32]uint64, timeout time.Duration) {
+func (s *PricesIntegrationTestSuite) expectMarketPricesWithTimeout(prices map[uint32]ve.VEPricePair, timeout time.Duration) {
 	start := time.Now()
 
 	for {
@@ -168,7 +168,7 @@ func (s *PricesIntegrationTestSuite) expectMarketPricesWithTimeout(prices map[ui
 			if !ok {
 				continue
 			}
-			if actualPrice != expectedPrice {
+			if actualPrice.SpotPrice != expectedPrice.SpotPrice || actualPrice.PnlPrice != expectedPrice.PnlPrice {
 				continue
 			}
 		}
