@@ -272,6 +272,7 @@ func (k Keeper) InitializeNewStreams(ctx sdk.Context) {
 			subaccountUpdate := k.subaccountsKeeper.GetStreamSubaccountUpdate(
 				ctx,
 				subaccountId,
+				true,
 			)
 			return &subaccountUpdate
 		},

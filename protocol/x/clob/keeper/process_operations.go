@@ -101,7 +101,7 @@ func (k Keeper) ProcessProposerOperations(
 		)
 		allSubaccountUpdates := make([]satypes.StreamSubaccountUpdate, 0)
 		for subaccountId := range subaccountIdsToUpdate {
-			subaccountUpdate := k.subaccountsKeeper.GetStreamSubaccountUpdate(ctx, subaccountId)
+			subaccountUpdate := k.subaccountsKeeper.GetStreamSubaccountUpdate(ctx, subaccountId, false)
 			allSubaccountUpdates = append(allSubaccountUpdates, subaccountUpdate)
 		}
 		k.subaccountsKeeper.SendSubaccountUpdates(ctx, allSubaccountUpdates)
