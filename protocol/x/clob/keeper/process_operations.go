@@ -95,14 +95,10 @@ func (k Keeper) ProcessProposerOperations(
 		}
 		k.SendOrderbookUpdates(ctx, allUpdates)
 
-		// send subaccount snapshots
-		subaccountIdsFromProposed := fetchSubaccountIdsInvolvedInOpQueue(
-			operations,
-		)
-		subaccountIdsFromLocal := fetchSubaccountIdsInvolvedInOpQueue(
+		// send local subaccount snapshots
+		subaccountIdsToUpdate := fetchSubaccountIdsInvolvedInOpQueue(
 			localValidatorOperationsQueue,
 		)
-		subaccountIdsToUpdate := lib.MergeMaps(subaccountIdsFromLocal, subaccountIdsFromProposed)
 		allSubaccountUpdates := make([]satypes.StreamSubaccountUpdate, 0)
 		for subaccountId := range subaccountIdsToUpdate {
 			subaccountUpdate := k.subaccountsKeeper.GetStreamSubaccountUpdate(ctx, subaccountId)
