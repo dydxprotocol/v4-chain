@@ -30,6 +30,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
@@ -65,9 +70,8 @@ jobs:
         run: |
           current_time=$(date '+%Y%m%d%H%M')
           commit_hash=$(git rev-parse --short HEAD)
-          DOCKER_BUILDKIT=1 docker build \
+          DOCKER_BUILDKIT=1 docker buildx \
             --platform linux/$ARCH \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
             -f Dockerfile.${{ inputs.SERVICE }}.remote . \
-            --build-arg ARCH=$ARCH
           docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
