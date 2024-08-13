@@ -76,6 +76,7 @@ export function parseString(options: ParseOptions<string>): ParseFn<string>;
 export function parseString(options: ParseOptions<null>): ParseFn<string | null>;
 export function parseString(options?: ParseOptions<string | null>): ParseFn<string | null> {
   return (varName: string) => {
+    console.log('process.env: ', process.env);
     const value = process.env[varName];
     if (!value) {
       if (defaultIsValid(options)) {
