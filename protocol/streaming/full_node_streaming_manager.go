@@ -693,7 +693,6 @@ func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 		if sm.snapshotBlockInterval > 0 &&
 			blockHeight == subscription.nextSnapshotBlock {
 			subscription.initialize = &sync.Once{}
-			sm.logger.Info(fmt.Sprintf("resetting sync once for sub id %+v", subscriptionId))
 		}
 
 		subscription.initialize.Do(
@@ -709,7 +708,6 @@ func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 				for _, subaccountId := range subscription.subaccountIds {
 					saUpdates = append(saUpdates, getSubaccountSnapshot(subaccountId))
 				}
-				sm.logger.Info(fmt.Sprintf("Sending out snapshot for %+v", subscriptionId))
 				sm.SendCombinedSnapshot(allUpdates, saUpdates, subscriptionId, blockHeight, execMode)
 				if sm.snapshotBlockInterval != 0 {
 					subscription.nextSnapshotBlock = blockHeight + sm.snapshotBlockInterval
