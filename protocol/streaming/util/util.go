@@ -22,7 +22,7 @@ func GetOffchainUpdatesV1(offchainUpdates *clobtypes.OffchainUpdates) ([]ocutype
 }
 
 func AggregateSubaccountUpdates(subaccountUpdates []satypes.StreamSubaccountUpdate) []satypes.StreamSubaccountUpdate {
-	subaccounts := make(map[satypes.SubaccountId][]satypes.StreamSubaccountUpdate)
+	subaccounts := make(map[satypes.SubaccountId]satypes.StreamSubaccountUpdate)
 
 	for _, update := range subaccountUpdates {
 		if update.SubaccountId == nil {
@@ -30,32 +30,23 @@ func AggregateSubaccountUpdates(subaccountUpdates []satypes.StreamSubaccountUpda
 		}
 		subaccountId := *update.SubaccountId
 
-		if updates, exists := subaccounts[subaccountId]; exists {
-			lastUpdate := updates[len(updates)-1]
+		if lastUpdate, exists := subaccounts[subaccountId]; exists {
+			lastUpdate.UpdatedPerpetualPositions = mergePerpetualPositions(
+				lastUpdate.UpdatedPerpetualPositions, update.UpdatedPerpetualPositions)
 
-			// If it's a snapshot, or the last update was a snapshot, just append
-			if update.Snapshot || lastUpdate.Snapshot {
-				subaccounts[subaccountId] = append(subaccounts[subaccountId], update)
-			} else {
-				// Merge with the last non-snapshot update
-				lastUpdate.UpdatedPerpetualPositions = mergePerpetualPositions(
-					lastUpdate.UpdatedPerpetualPositions, update.UpdatedPerpetualPositions)
+			lastUpdate.UpdatedAssetPositions = mergeAssetPositions(
+				lastUpdate.UpdatedAssetPositions, update.UpdatedAssetPositions)
 
-				lastUpdate.UpdatedAssetPositions = mergeAssetPositions(
-					lastUpdate.UpdatedAssetPositions, update.UpdatedAssetPositions)
-
-				subaccounts[subaccountId][len(subaccounts[subaccountId])-1] = lastUpdate
-			}
+			subaccounts[subaccountId] = lastUpdate
 		} else {
-			// First update for this subaccount, just append
-			subaccounts[subaccountId] = []satypes.StreamSubaccountUpdate{update}
+			subaccounts[subaccountId] = update
 		}
 	}
 
 	// Convert the subaccounts map to a slice
 	aggregatedUpdates := make([]satypes.StreamSubaccountUpdate, 0, len(subaccounts))
-	for _, updates := range subaccounts {
-		aggregatedUpdates = append(aggregatedUpdates, updates...)
+	for _, update := range subaccounts {
+		aggregatedUpdates = append(aggregatedUpdates, update)
 	}
 
 	return aggregatedUpdates
