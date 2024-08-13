@@ -74,6 +74,7 @@ func networkWithLiquidityTierAndPerpetualObjects(
 			},
 			FundingIndex: dtypes.ZeroInt(),
 			OpenInterest: dtypes.ZeroInt(),
+			LastFundingRate: dtypes.ZeroInt(),
 		}
 		nullify.Fill(&perpetual) //nolint:staticcheck
 		state.Perpetuals = append(state.Perpetuals, perpetual)
