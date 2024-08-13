@@ -25,6 +25,7 @@ type Flags struct {
 	GrpcStreamingFlushIntervalMs      uint32
 	GrpcStreamingMaxBatchSize         uint32
 	GrpcStreamingMaxChannelBufferSize uint32
+	FullNodeStreamingSnapshotInterval uint32
 
 	VEOracleEnabled bool // Slinky Vote Extensions
 }
@@ -45,6 +46,7 @@ const (
 	GrpcStreamingFlushIntervalMs      = "grpc-streaming-flush-interval-ms"
 	GrpcStreamingMaxBatchSize         = "grpc-streaming-max-batch-size"
 	GrpcStreamingMaxChannelBufferSize = "grpc-streaming-max-channel-buffer-size"
+	FullNodeStreamingSnapshotInterval = "fns-snapshot-interval"
 
 	// Slinky VEs enabled
 	VEOracleEnabled = "slinky-vote-extension-oracle-enabled"
@@ -61,6 +63,7 @@ const (
 	DefaultGrpcStreamingFlushIntervalMs      = 50
 	DefaultGrpcStreamingMaxBatchSize         = 2000
 	DefaultGrpcStreamingMaxChannelBufferSize = 2000
+	DefaultFullNodeStreamingSnapshotInterval = 0
 
 	DefaultVEOracleEnabled = true
 )
@@ -111,6 +114,12 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		DefaultGrpcStreamingMaxChannelBufferSize,
 		"Maximum per-subscription channel size before grpc streaming cancels a singular subscription",
 	)
+	cmd.Flags().Uint32(
+		FullNodeStreamingSnapshotInterval,
+		DefaultFullNodeStreamingSnapshotInterval,
+		"If set to positive number, number of blocks between each periodic snapshot will be sent out. "+
+			"Defaults to zero for regular behavior of one initial snapshot.",
+	)
 	cmd.Flags().Bool(
 		VEOracleEnabled,
 		DefaultVEOracleEnabled,
@@ -140,6 +149,10 @@ func (f *Flags) Validate() error {
 			return fmt.Errorf("grpc streaming channel size must be positive number")
 		}
 	}
+	if f.FullNodeStreamingSnapshotInterval > 0 && f.FullNodeStreamingSnapshotInterval < 50 {
+		return fmt.Errorf("full node streaming snapshot interval must be >= 50 blocks or zero")
+	}
+
 	return nil
 }
 
@@ -163,6 +176,7 @@ func GetFlagValuesFromOptions(
 		GrpcStreamingFlushIntervalMs:      DefaultGrpcStreamingFlushIntervalMs,
 		GrpcStreamingMaxBatchSize:         DefaultGrpcStreamingMaxBatchSize,
 		GrpcStreamingMaxChannelBufferSize: DefaultGrpcStreamingMaxChannelBufferSize,
+		FullNodeStreamingSnapshotInterval: DefaultFullNodeStreamingSnapshotInterval,
 
 		VEOracleEnabled: true,
 	}
@@ -225,6 +239,12 @@ func GetFlagValuesFromOptions(
 	if option := appOpts.Get(GrpcStreamingMaxChannelBufferSize); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
 			result.GrpcStreamingMaxChannelBufferSize = v
+		}
+	}
+
+	if option := appOpts.Get(FullNodeStreamingSnapshotInterval); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.FullNodeStreamingSnapshotInterval = v
 		}
 	}
 

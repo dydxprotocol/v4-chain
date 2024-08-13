@@ -38,6 +38,9 @@ func TestAddFlagsToCommand(t *testing.T) {
 		fmt.Sprintf("Has %s flag", flags.GrpcStreamingMaxBatchSize): {
 			flagName: flags.GrpcStreamingMaxBatchSize,
 		},
+		fmt.Sprintf("Has %s flag", flags.FullNodeStreamingSnapshotInterval): {
+			flagName: flags.FullNodeStreamingSnapshotInterval,
+		},
 		fmt.Sprintf("Has %s flag", flags.GrpcStreamingMaxChannelBufferSize): {
 			flagName: flags.GrpcStreamingMaxChannelBufferSize,
 		},
@@ -57,11 +60,12 @@ func TestValidate(t *testing.T) {
 	}{
 		"success (default values)": {
 			flags: flags.Flags{
-				NonValidatingFullNode: flags.DefaultNonValidatingFullNode,
-				DdAgentHost:           flags.DefaultDdAgentHost,
-				DdTraceAgentPort:      flags.DefaultDdTraceAgentPort,
-				GrpcAddress:           config.DefaultGRPCAddress,
-				GrpcEnable:            true,
+				NonValidatingFullNode:             flags.DefaultNonValidatingFullNode,
+				DdAgentHost:                       flags.DefaultDdAgentHost,
+				DdTraceAgentPort:                  flags.DefaultDdTraceAgentPort,
+				GrpcAddress:                       config.DefaultGRPCAddress,
+				GrpcEnable:                        true,
+				FullNodeStreamingSnapshotInterval: flags.DefaultFullNodeStreamingSnapshotInterval,
 			},
 		},
 		"success - full node & gRPC disabled": {
@@ -125,6 +129,29 @@ func TestValidate(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("grpc streaming channel size must be positive number"),
 		},
+		"failure - full node streaming enabled with <= 49 snapshot interval": {
+			flags: flags.Flags{
+				NonValidatingFullNode:             true,
+				GrpcEnable:                        true,
+				GrpcStreamingEnabled:              true,
+				GrpcStreamingFlushIntervalMs:      100,
+				GrpcStreamingMaxBatchSize:         2000,
+				GrpcStreamingMaxChannelBufferSize: 2000,
+				FullNodeStreamingSnapshotInterval: 49,
+			},
+			expectedErr: fmt.Errorf("full node streaming snapshot interval must be >= 50 blocks or zero"),
+		},
+		"success - full node streaming enabled with 50 snapshot interval": {
+			flags: flags.Flags{
+				NonValidatingFullNode:             true,
+				GrpcEnable:                        true,
+				GrpcStreamingEnabled:              true,
+				GrpcStreamingFlushIntervalMs:      100,
+				GrpcStreamingMaxBatchSize:         2000,
+				GrpcStreamingMaxChannelBufferSize: 2000,
+				FullNodeStreamingSnapshotInterval: 50,
+			},
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -153,6 +180,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 		expectedGrpcStreamingFlushMs              uint32
 		expectedGrpcStreamingBatchSize            uint32
 		expectedGrpcStreamingMaxChannelBufferSize uint32
+		expectedFullNodeStreamingSnapshotInterval uint32
 	}{
 		"Sets to default if unset": {
 			expectedNonValidatingFullNodeFlag:         false,
@@ -164,6 +192,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcStreamingFlushMs:              50,
 			expectedGrpcStreamingBatchSize:            2000,
 			expectedGrpcStreamingMaxChannelBufferSize: 2000,
+			expectedFullNodeStreamingSnapshotInterval: 0,
 		},
 		"Sets values from options": {
 			optsMap: map[string]any{
@@ -176,6 +205,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 				flags.GrpcStreamingFlushIntervalMs:      uint32(408),
 				flags.GrpcStreamingMaxBatchSize:         uint32(650),
 				flags.GrpcStreamingMaxChannelBufferSize: uint32(972),
+				flags.FullNodeStreamingSnapshotInterval: uint32(123),
 			},
 			expectedNonValidatingFullNodeFlag:         true,
 			expectedDdAgentHost:                       "agentHostTest",
@@ -186,6 +216,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcStreamingFlushMs:              408,
 			expectedGrpcStreamingBatchSize:            650,
 			expectedGrpcStreamingMaxChannelBufferSize: 972,
+			expectedFullNodeStreamingSnapshotInterval: 123,
 		},
 	}
 
@@ -237,6 +268,11 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 				t,
 				tc.expectedGrpcStreamingBatchSize,
 				flags.GrpcStreamingMaxBatchSize,
+			)
+			require.Equal(
+				t,
+				tc.expectedFullNodeStreamingSnapshotInterval,
+				flags.FullNodeStreamingSnapshotInterval,
 			)
 			require.Equal(
 				t,
