@@ -69,4 +69,4 @@ jobs:
             --platform linux/$ARCH \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
             -f Dockerfile.${{ inputs.SERVICE }}.remote . \
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash
