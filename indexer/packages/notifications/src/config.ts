@@ -12,10 +12,13 @@ export const notificationsConfigSchema = {
   ...baseConfigSchema,
 
   // Private Key for the Google Firebase Messaging project
-  FIREBASE_PRIVATE_KEY: parseString(),
+  FIREBASE_PRIVATE_KEY: parseString({ default: '' }),
 
   // APP ID for the Google Firebase Messaging project
-  FIREBASE_PROJECT_ID: parseString(),
+  FIREBASE_PROJECT_ID: parseString({ default: '' }),
+
+  // Client email for the Google Firebase Messaging project
+  FIREBASE_CLIENT_EMAIL: parseString({ default: '' }),
 };
 
 export default parseSchema(notificationsConfigSchema);
