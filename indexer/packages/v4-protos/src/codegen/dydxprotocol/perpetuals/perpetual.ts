@@ -59,6 +59,7 @@ export interface Perpetual {
   /** Total size of open long contracts, measured in base_quantums. */
 
   openInterest: Uint8Array;
+  lastFundingRate: Uint8Array;
 }
 /** Perpetual represents a perpetual on the dYdX exchange. */
 
@@ -74,6 +75,7 @@ export interface PerpetualSDKType {
   /** Total size of open long contracts, measured in base_quantums. */
 
   open_interest: Uint8Array;
+  last_funding_rate: Uint8Array;
 }
 /**
  * PerpetualParams represents the parameters of a perpetual on the dYdX
@@ -348,7 +350,8 @@ function createBasePerpetual(): Perpetual {
   return {
     params: undefined,
     fundingIndex: new Uint8Array(),
-    openInterest: new Uint8Array()
+    openInterest: new Uint8Array(),
+    lastFundingRate: new Uint8Array()
   };
 }
 
@@ -364,6 +367,10 @@ export const Perpetual = {
 
     if (message.openInterest.length !== 0) {
       writer.uint32(26).bytes(message.openInterest);
+    }
+
+    if (message.lastFundingRate.length !== 0) {
+      writer.uint32(34).bytes(message.lastFundingRate);
     }
 
     return writer;
@@ -390,6 +397,10 @@ export const Perpetual = {
           message.openInterest = reader.bytes();
           break;
 
+        case 4:
+          message.lastFundingRate = reader.bytes();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -404,6 +415,7 @@ export const Perpetual = {
     message.params = object.params !== undefined && object.params !== null ? PerpetualParams.fromPartial(object.params) : undefined;
     message.fundingIndex = object.fundingIndex ?? new Uint8Array();
     message.openInterest = object.openInterest ?? new Uint8Array();
+    message.lastFundingRate = object.lastFundingRate ?? new Uint8Array();
     return message;
   }
 

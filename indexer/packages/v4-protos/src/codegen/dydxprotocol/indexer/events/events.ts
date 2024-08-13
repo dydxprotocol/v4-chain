@@ -218,7 +218,14 @@ export interface MarketPriceUpdateEventV1 {
    * price in dollars. For example if `Exponent == -5` then a `exponent_price`
    * of `1,000,000,000` represents “$10,000`.
    */
-  priceWithExponent: Long;
+  spotPriceWithExponent: Long;
+  /**
+   * pnl_price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
+   * price in dollars. For example if `Exponent == -5` then a `exponent_price`
+   * of `1,000,000,000` represents “$10,000`.
+   */
+
+  pnlPriceWithExponent: Long;
 }
 /**
  * MarketPriceUpdateEvent message contains all the information about a price
@@ -231,7 +238,14 @@ export interface MarketPriceUpdateEventV1SDKType {
    * price in dollars. For example if `Exponent == -5` then a `exponent_price`
    * of `1,000,000,000` represents “$10,000`.
    */
-  price_with_exponent: Long;
+  spot_price_with_exponent: Long;
+  /**
+   * pnl_price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
+   * price in dollars. For example if `Exponent == -5` then a `exponent_price`
+   * of `1,000,000,000` represents “$10,000`.
+   */
+
+  pnl_price_with_exponent: Long;
 }
 /** shared fields between MarketCreateEvent and MarketModifyEvent */
 
@@ -1601,14 +1615,19 @@ export const MarketEventV1 = {
 
 function createBaseMarketPriceUpdateEventV1(): MarketPriceUpdateEventV1 {
   return {
-    priceWithExponent: Long.UZERO
+    spotPriceWithExponent: Long.UZERO,
+    pnlPriceWithExponent: Long.UZERO
   };
 }
 
 export const MarketPriceUpdateEventV1 = {
   encode(message: MarketPriceUpdateEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (!message.priceWithExponent.isZero()) {
-      writer.uint32(8).uint64(message.priceWithExponent);
+    if (!message.spotPriceWithExponent.isZero()) {
+      writer.uint32(8).uint64(message.spotPriceWithExponent);
+    }
+
+    if (!message.pnlPriceWithExponent.isZero()) {
+      writer.uint32(16).uint64(message.pnlPriceWithExponent);
     }
 
     return writer;
@@ -1624,7 +1643,11 @@ export const MarketPriceUpdateEventV1 = {
 
       switch (tag >>> 3) {
         case 1:
-          message.priceWithExponent = (reader.uint64() as Long);
+          message.spotPriceWithExponent = (reader.uint64() as Long);
+          break;
+
+        case 2:
+          message.pnlPriceWithExponent = (reader.uint64() as Long);
           break;
 
         default:
@@ -1638,7 +1661,8 @@ export const MarketPriceUpdateEventV1 = {
 
   fromPartial(object: DeepPartial<MarketPriceUpdateEventV1>): MarketPriceUpdateEventV1 {
     const message = createBaseMarketPriceUpdateEventV1();
-    message.priceWithExponent = object.priceWithExponent !== undefined && object.priceWithExponent !== null ? Long.fromValue(object.priceWithExponent) : Long.UZERO;
+    message.spotPriceWithExponent = object.spotPriceWithExponent !== undefined && object.spotPriceWithExponent !== null ? Long.fromValue(object.spotPriceWithExponent) : Long.UZERO;
+    message.pnlPriceWithExponent = object.pnlPriceWithExponent !== undefined && object.pnlPriceWithExponent !== null ? Long.fromValue(object.pnlPriceWithExponent) : Long.UZERO;
     return message;
   }
 
