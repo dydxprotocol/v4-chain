@@ -15,7 +15,7 @@ export const notificationsConfigSchema = {
   FIREBASE_PRIVATE_KEY: parseString({ default: '' }),
 
   // APP ID for the Google Firebase Messaging project
-  FIREBASE_APP_ID: parseString({ default: '' }),
+  FIREBASE_PROJECT_ID: parseString({ default: '' }),
 };
 
 export default parseSchema(notificationsConfigSchema);
