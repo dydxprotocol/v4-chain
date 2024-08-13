@@ -1,4 +1,10 @@
 import {
+  sendFirebaseMessage,
+  createNotification,
+  NotificationType,
+  NotificationDynamicFieldKey,
+} from '@dydxprotocol-indexer/notifications';
+import {
   FillFromDatabase,
   FillModel,
   Liquidity,
@@ -18,7 +24,9 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
-import { IndexerOrder, IndexerOrderId, IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
+import {
+  IndexerOrder, IndexerOrderId, IndexerSubaccountId,
+} from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import * as pg from 'pg';
 
@@ -118,6 +126,14 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
     // block.
     if (order.status === OrderStatus.FILLED && isStatefulOrder(order.orderFlags)) {
       kafkaEvents.push(this.getOrderRemoveKafkaEvent(orderProto.orderId!));
+
+      const subaccount = await SubaccountTable.findById(order.subaccountId);
+      const notification = createNotification(NotificationType.ORDER_FILLED, {
+        [NotificationDynamicFieldKey.MARKET]: 'BTC/USD',
+        [NotificationDynamicFieldKey.AVERAGE_PRICE]: order.price,
+      });
+
+      await sendFirebaseMessage(subaccount!.address, notification);
     }
 
     if (this.event.liquidity === Liquidity.TAKER) {
