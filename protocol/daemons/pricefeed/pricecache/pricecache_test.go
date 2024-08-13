@@ -29,7 +29,6 @@ func TestVEPriceCaching(t *testing.T) {
 		}
 		pc.SetPriceUpdates(ctx, updates, 1)
 		checkValidCacheState(t, &pc, 1, 1, updates)
-
 	})
 
 	t.Run("valid: set priced updates for multi round single height", func(t *testing.T) {
@@ -81,7 +80,6 @@ func TestVEPriceCaching(t *testing.T) {
 		}
 		pc.SetPriceUpdates(ctx, newUpdates, 1)
 		checkValidCacheState(t, &pc, 4, 1, newUpdates)
-
 	})
 
 	t.Run("valid: set diff update for same height + round", func(t *testing.T) {
@@ -227,7 +225,6 @@ func TestVEPriceCaching(t *testing.T) {
 
 		wg.Wait()
 	})
-
 }
 
 func checkValidCacheState(

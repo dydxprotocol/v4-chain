@@ -2,6 +2,7 @@ package ve
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/core/comet"
@@ -155,7 +156,6 @@ func ValidatePricesBytesSizeInVE(
 	ve vetypes.DaemonVoteExtension,
 ) error {
 	for _, pricePair := range ve.Prices {
-
 		if len(pricePair.SpotPrice) > constants.MaximumPriceSizeInBytes {
 			return fmt.Errorf("spot price bytes are too long: %d", len(pricePair.SpotPrice))
 		}
@@ -163,7 +163,6 @@ func ValidatePricesBytesSizeInVE(
 		if len(pricePair.PnlPrice) > constants.MaximumPriceSizeInBytes {
 			return fmt.Errorf("pnl price bytes are too long: %d", len(pricePair.PnlPrice))
 		}
-
 	}
 	return nil
 }
@@ -237,14 +236,13 @@ func ValidateVEConsensusInfo(
 		sumVP += vote.Validator.Power
 		cmtPubKey, err := veutils.GetValCmtPubKeyFromVote(ctx, vote, valStore)
 		if err != nil {
-			if _, ok := err.(*veutils.ValidatorNotFoundError); ok {
+			var notFoundErr *veutils.ValidatorNotFoundError
+			if errors.As(err, &notFoundErr) {
 				continue
 			} else {
 				return fmt.Errorf("failed to convert validator: %w", err)
 			}
-
 		}
-
 		cve := cmtproto.CanonicalVoteExtension{
 			Extension: vote.VoteExtension,
 			Height:    currentHeight - 1, // the vote extension was signed in the previous height
@@ -308,7 +306,6 @@ func validateExtCommitRound(valExtCommitInfo cometabci.ExtendedCommitInfo, cmtLa
 		)
 	}
 	return nil
-
 }
 
 func getRequiredVotingPower(totalVP int64) int64 {
@@ -375,7 +372,6 @@ func validateVotesSignerInfo(valExtCommitInfo cometabci.ExtendedCommitInfo, cmtL
 		if err := validateVoteBlockIdFlag(vote, cmtLastCommit.Votes().Get(i)); err != nil {
 			return err
 		}
-
 	}
 	return nil
 }

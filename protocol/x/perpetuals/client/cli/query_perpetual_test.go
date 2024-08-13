@@ -72,8 +72,8 @@ func networkWithLiquidityTierAndPerpetualObjects(
 				LiquidityTier: uint32(i % m),
 				MarketType:    marketType,
 			},
-			FundingIndex: dtypes.ZeroInt(),
-			OpenInterest: dtypes.ZeroInt(),
+			FundingIndex:    dtypes.ZeroInt(),
+			OpenInterest:    dtypes.ZeroInt(),
 			LastFundingRate: dtypes.ZeroInt(),
 		}
 		nullify.Fill(&perpetual) //nolint:staticcheck

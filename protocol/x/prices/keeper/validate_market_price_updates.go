@@ -21,7 +21,6 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 	ctx sdk.Context,
 	marketPriceUpdate *types.MarketPriceUpdate,
 ) (isSpotValid bool, isPnlValid bool) {
-
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
 		time.Now(),

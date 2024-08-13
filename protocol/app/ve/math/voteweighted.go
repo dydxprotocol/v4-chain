@@ -56,11 +56,9 @@ func Median(
 		ctx sdk.Context,
 		vePricesPerValidator map[string]map[string]AggregatorPricePair,
 	) (map[string]AggregatorPricePair, error) {
-
 		priceInfo := make(map[string]PriceInfo)
 
 		for validatorAddr, validatorPrices := range vePricesPerValidator {
-
 			validatorPower, err := getValidatorPowerByAddress(ctx, validatorStore, validatorAddr)
 			if err != nil {
 				logger.Info(
@@ -137,7 +135,6 @@ func Median(
 					"num_validators", len(info.SpotPrices),
 				)
 			} else {
-
 				logger.Info(
 					"not enough voting power to compute stake-weighted median prices for currency pair",
 					"currency_pair", pair,
@@ -146,7 +143,6 @@ func Median(
 					"percent_pnl_submitted", percentPnlSubmitted.String(),
 					"num_validators", len(info.SpotPrices),
 				)
-
 			}
 		}
 		return finalPrices, nil
@@ -192,7 +188,6 @@ func getValidatorPowerByAddress(
 	validatorStore CCValidatorStore,
 	validatorAddr string,
 ) (int64, error) {
-
 	addr, err := sdk.ConsAddressFromBech32(validatorAddr)
 	if err != nil {
 		return 0, err
@@ -205,5 +200,4 @@ func getValidatorPowerByAddress(
 
 	validatorPower := validator.GetPower()
 	return validatorPower, nil
-
 }

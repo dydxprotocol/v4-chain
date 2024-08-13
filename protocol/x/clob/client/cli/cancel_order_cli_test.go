@@ -4,15 +4,10 @@ package cli_test
 
 import (
 	"fmt"
-	"math"
-	"math/big"
-	"strconv"
-	"testing"
-	"time"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	appconstants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
 	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
 	testutil_bank "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/bank"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -25,6 +20,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"math"
+	"math/big"
+	"strconv"
+	"testing"
+	"time"
 )
 
 const (

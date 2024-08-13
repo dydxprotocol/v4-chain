@@ -829,7 +829,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 			},
 			expectedError: false,
 		},
-		"mutliple prices with smooth, funding, and mid": {
+		"multiple prices with smooth, funding, and mid": {
 			markets: []uint32{constants.MarketId0, constants.MarketId1},
 			indexPrices: []*pricestypes.MarketSpotPriceUpdate{
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId0, constants.Price5),
@@ -948,7 +948,6 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 						},
 					)
 				}
-
 			}
 
 			h := ve.NewVoteExtensionHandler(

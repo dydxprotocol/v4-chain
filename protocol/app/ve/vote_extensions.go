@@ -123,7 +123,6 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 		ctx sdk.Context,
 		req *abci.RequestVerifyVoteExtension,
 	) (resp *abci.ResponseVerifyVoteExtension, err error) {
-
 		defer func() {
 			if recovery := recover(); recovery != nil {
 				h.logger.Error(
@@ -132,7 +131,6 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 				)
 				resp = rejectResponse
 				err = ErrPanic{fmt.Errorf("%v", recovery)}
-
 			}
 		}()
 
@@ -240,7 +238,6 @@ func (h *VoteExtensionHandler) getCurrentPrices(
 	indexPrices := h.pricesKeeper.GetValidMarketSpotPriceUpdates(ctx)
 
 	for _, market := range indexPrices {
-
 		clobMidPrice := h.getClobMidPrice(ctx, market.MarketId)
 		if clobMidPrice == nil {
 			vePrices[market.MarketId] = VEPricePair{
@@ -288,7 +285,6 @@ func (h *VoteExtensionHandler) getMedianPrice(
 	smoothedPrice *big.Int,
 	lastFundingRate *big.Int,
 ) *big.Int {
-
 	fundingWeightedPrice := h.getFundingWeightedIndexPrice(indexPrice, lastFundingRate)
 	prices := []*big.Int{clobMidPrice, smoothedPrice, fundingWeightedPrice}
 	sort.Slice(prices, func(i, j int) bool {

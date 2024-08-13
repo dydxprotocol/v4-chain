@@ -46,7 +46,6 @@ func GetPriceFromBytes(
 	id uint32,
 	bz []byte,
 ) (*big.Int, error) {
-
 	price, err := GetVEDecodedPrice(bz)
 
 	if err != nil {

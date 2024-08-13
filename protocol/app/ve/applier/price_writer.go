@@ -70,7 +70,11 @@ func (pa *PriceApplier) writePricesToStore(
 		if err != nil {
 			return err
 		}
-		pa.writePricesToStoreAndCache(ctx, prices, request.DecidedLastCommit.Round)
+		err = pa.writePricesToStoreAndCache(ctx, prices, request.DecidedLastCommit.Round)
+
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 }
@@ -116,7 +120,6 @@ func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 	pricesFromCache := pa.finalPriceCache.GetPriceUpdates()
 	for _, price := range pricesFromCache {
 		if price.SpotPrice != nil && price.PnlPrice != nil {
-
 			marketPriceUpdate := &pricestypes.MarketPriceUpdate{
 				MarketId:  price.MarketId,
 				SpotPrice: price.SpotPrice.Uint64(),
@@ -184,7 +187,6 @@ func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 				"pnl_price", price.PnlPrice.Uint64(),
 			)
 		}
-
 	}
 	return nil
 }
@@ -229,7 +231,6 @@ func (pa *PriceApplier) writePricesToStoreAndCache(
 				SpotPrice: nil,
 				PnlPrice:  pricePair.PnlPrice,
 			})
-
 		} else if !shouldWritePnlPrice {
 			spotPriceUpdate := &pricestypes.MarketSpotPriceUpdate{
 				MarketId:  market.Id,
@@ -253,7 +254,6 @@ func (pa *PriceApplier) writePricesToStoreAndCache(
 			}
 
 			finalPriceUpdates = append(finalPriceUpdates, finalPriceUpdate)
-
 		} else {
 			newPrice := &pricestypes.MarketPriceUpdate{
 				MarketId:  market.Id,

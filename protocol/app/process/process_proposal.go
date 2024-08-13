@@ -92,7 +92,6 @@ func ProcessProposalHandler(
 				ctx.Logger().Error("failed to decode and validate ve", "err", err)
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
-
 		}
 
 		txs, err := DecodeProcessProposalTxs(txConfig.TxDecoder(), request, pricesKeeper)

@@ -446,7 +446,6 @@ func (k Keeper) GetSingleMarketClobMetadata(
 		BestBid:     bestBid,
 		BestAsk:     bestAsk,
 	}
-
 }
 
 // InitializeCumulativePnLs initializes the cumulative PnLs for the block proposer and the
