@@ -53,7 +53,10 @@ func AggregateSubaccountUpdates(subaccountUpdates []satypes.StreamSubaccountUpda
 }
 
 // Helper function to merge perpetual positions
-func mergePerpetualPositions(existing, updates []*satypes.SubaccountPerpetualPosition) []*satypes.SubaccountPerpetualPosition {
+func mergePerpetualPositions(
+	existing,
+	updates []*satypes.SubaccountPerpetualPosition,
+) []*satypes.SubaccountPerpetualPosition {
 	positionMap := make(map[uint32]*satypes.SubaccountPerpetualPosition)
 
 	for _, pos := range existing {
