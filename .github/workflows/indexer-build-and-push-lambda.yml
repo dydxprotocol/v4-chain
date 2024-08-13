@@ -70,7 +70,7 @@ jobs:
         run: |
           current_time=$(date '+%Y%m%d%H%M')
           commit_hash=$(git rev-parse --short HEAD)
-          DOCKER_BUILDKIT=1 docker buildx \
+          DOCKER_BUILDKIT=1 docker build \
             --platform linux/$ARCH \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
             -f Dockerfile.${{ inputs.SERVICE }}.remote . \
