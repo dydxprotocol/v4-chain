@@ -22,7 +22,7 @@ COPY ./packages/v4-proto-parser/ ./packages/v4-proto-parser/
 COPY tsconfig.json ./
 
 # Install pnpm
-RUN if [[ "$ARM64" = arm64 ]] npm install -g pnpm/linux-arm64@6; else npm install -g pnpm@6; fi
+RUN if [[ "$ARM64" = arm64 ]]; npm install -g pnpm/linux-arm64@6; else npm install -g pnpm@6; fi
 
 # Install npm modules using pnpm
 RUN pnpm install --loglevel warn --frozen-lockfile --unsafe-perm
