@@ -154,6 +154,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (am AppModule) EndBlock(ctx context.Context) error {
 	sdkCtx := lib.UnwrapSDKContext(ctx, types.ModuleName)
 	am.keeper.UpdateAllCapacitiesEndBlocker(sdkCtx)
-
+	am.keeper.PruneRateLimits(sdkCtx)
 	return nil
 }

@@ -713,6 +713,10 @@ func New(
 		app.BankKeeper,
 		app.BlockTimeKeeper,
 		app.IBCKeeper.ChannelKeeper, // ICS4Wrapper
+		rate_limit.NewSingleBlockRateLimiter[string](
+			"wasm_execute_ratelimit",
+			ratelimitmodulekeeper.DefaultWasmExecRateLimitConfig,
+		),
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
 			lib.GovModuleAddress.String(),
@@ -2005,6 +2009,7 @@ func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 			PerpetualsKeeper:  app.PerpetualsKeeper,
 			PricesKeeper:      app.PricesKeeper,
 			MarketMapKeeper:   &app.MarketMapKeeper,
+			RatelimitKeeper:   &app.RatelimitKeeper,
 		},
 	)
 	if err != nil {
