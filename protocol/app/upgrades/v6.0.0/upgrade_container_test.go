@@ -21,6 +21,7 @@ import (
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
 const (
@@ -60,6 +61,7 @@ func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	postUpgradeMarketMapState(node, t)
 	postUpgradeStatefulOrderCheck(node, t)
 	postUpgradeMarketMapperRevShareChecks(node, t)
+	postUpgradeVaultDefaultQuotingParams(node, t)
 }
 
 func placeOrders(node *containertest.Node, t *testing.T) {
@@ -246,4 +248,19 @@ func postUpgradeMarketMapState(node *containertest.Node, t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, v_6_0_0.DefaultMarketMapParams, paramsResp.Params)
+}
+
+func postUpgradeVaultDefaultQuotingParams(node *containertest.Node, t *testing.T) {
+	params := &vaulttypes.QueryParamsResponse{}
+	resp, err := containertest.Query(
+		node,
+		vaulttypes.NewQueryClient,
+		vaulttypes.QueryClient.Params,
+		&vaulttypes.QueryParamsRequest{},
+	)
+	require.NoError(t, err)
+	err = proto.UnmarshalText(resp.String(), params)
+	require.NoError(t, err)
+
+	require.Nil(t, params.DefaultQuotingParams.Validate())
 }
