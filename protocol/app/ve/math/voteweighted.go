@@ -33,8 +33,9 @@ var DefaultPowerThreshold = math.LegacyNewDecWithPrec(667, 3)
 type (
 	// VoteWeightPriceInfo tracks the stake weight(s) + price(s) for a given currency pair.
 	PriceInfo struct {
-		SpotPrices      []PricePerValidator
-		PnlPrices       []PricePerValidator
+		SpotPrices []PricePerValidator
+		PnlPrices  []PricePerValidator
+		// TODO: we can use only one "TotalWeight"
 		TotalSpotWeight math.Int
 		TotalPnlWeight  math.Int
 	}
@@ -116,7 +117,6 @@ func Median(
 		for pair, info := range priceInfo {
 			// The total voting power % that submitted a price update for the given currency pair must be
 			// greater than the threshold to be included in the final oracle price.
-
 			percentSpotSubmitted := math.LegacyNewDecFromInt(info.TotalSpotWeight).Quo(math.LegacyNewDecFromInt(totalPower))
 			percentPnlSubmitted := math.LegacyNewDecFromInt(info.TotalPnlWeight).Quo(math.LegacyNewDecFromInt(totalPower))
 
@@ -137,35 +137,16 @@ func Median(
 					"num_validators", len(info.SpotPrices),
 				)
 			} else {
-				if percentSpotSubmitted.GTE(threshold) {
 
-					finalSpotPrice := ComputeMedian(info.SpotPrices, info.TotalSpotWeight)
-					finalPrices[pair] = AggregatorPricePair{
-						SpotPrice: finalSpotPrice,
-						PnlPrice:  finalPrices[pair].PnlPrice,
-					}
+				logger.Info(
+					"not enough voting power to compute stake-weighted median prices for currency pair",
+					"currency_pair", pair,
+					"threshold", threshold.String(),
+					"percent_spot_submitted", percentSpotSubmitted.String(),
+					"percent_pnl_submitted", percentPnlSubmitted.String(),
+					"num_validators", len(info.SpotPrices),
+				)
 
-					logger.Info(
-						"computed stake-weighted median prices for currency pair, defualting to spot",
-						"currency_pair", pair,
-						"percent_spot_submitted", percentSpotSubmitted.String(),
-						"percent_pnl_submitted", percentPnlSubmitted.String(),
-						"threshold", threshold.String(),
-						"final_spot_price", finalPrices[pair].SpotPrice.String(),
-						"final_pnl_price", finalPrices[pair].PnlPrice.String(),
-						"num_validators", len(info.SpotPrices),
-					)
-
-				} else {
-					logger.Info(
-						"not enough voting power to compute stake-weighted median prices for currency pair",
-						"currency_pair", pair,
-						"threshold", threshold.String(),
-						"percent_spot_submitted", percentSpotSubmitted.String(),
-						"percent_pnl_submitted", percentPnlSubmitted.String(),
-						"num_validators", len(info.SpotPrices),
-					)
-				}
 			}
 		}
 		return finalPrices, nil

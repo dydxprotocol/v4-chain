@@ -569,6 +569,40 @@ func TestVoteWeightedMedian(t *testing.T) {
 				},
 			},
 		},
+		"single price, multiple validators, same stake, different spot vs pnl": {
+			validators: []string{"alice", "bob", "carl"},
+			powers: map[string]int64{
+				"alice": 100,
+				"bob":   100,
+				"carl":  100,
+			},
+			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
+				constants.AliceEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(5000),
+						PnlPrice:  big.NewInt(5001),
+					},
+				},
+				constants.BobEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(5000),
+						PnlPrice:  big.NewInt(5001),
+					},
+				},
+				constants.CarlEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(5000),
+						PnlPrice:  big.NewInt(5001),
+					},
+				},
+			},
+			expectedPrices: map[string]vemath.AggregatorPricePair{
+				constants.BtcUsdPair: {
+					SpotPrice: big.NewInt(5000),
+					PnlPrice:  big.NewInt(5001),
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
