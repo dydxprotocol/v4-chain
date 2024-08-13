@@ -603,6 +603,244 @@ func TestVoteWeightedMedian(t *testing.T) {
 				},
 			},
 		},
+		"single price, multiple validators, not enough stake, different spot vs pnl": {
+			validators: []string{"alice", "bob", "carl"},
+			powers: map[string]int64{
+				"alice": 100,
+				"bob":   100,
+				"carl":  100,
+			},
+			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
+				constants.AliceEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(5000),
+						PnlPrice:  big.NewInt(5001),
+					},
+				},
+				constants.BobEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(5000),
+						PnlPrice:  big.NewInt(5001),
+					},
+				},
+			},
+			expectedPrices: map[string]vemath.AggregatorPricePair{},
+		},
+		"single price, multiple validators, same, stake, weird prices": {
+			validators: []string{"alice", "bob", "carl"},
+			powers: map[string]int64{
+				"alice": 100,
+				"bob":   100,
+				"carl":  100,
+			},
+			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
+				constants.AliceEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(4000),
+						PnlPrice:  big.NewInt(800),
+					},
+				},
+				constants.BobEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(4000),
+						PnlPrice:  big.NewInt(8000),
+					},
+				},
+				constants.CarlEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(4000),
+						PnlPrice:  big.NewInt(8000),
+					},
+				},
+			},
+			expectedPrices: map[string]vemath.AggregatorPricePair{
+				constants.BtcUsdPair: {
+					SpotPrice: big.NewInt(4000),
+					PnlPrice:  big.NewInt(8000),
+				},
+			},
+		},
+		"multiple prices, multiple validators, same stake, different spot vs pnl": {
+			validators: []string{"alice", "bob", "carl"},
+			powers: map[string]int64{
+				"alice": 500,
+				"bob":   500,
+				"carl":  500,
+			},
+			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
+				constants.AliceEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(5000),
+						PnlPrice:  big.NewInt(5001),
+					},
+					constants.EthUsdPair: {
+						SpotPrice: big.NewInt(6000),
+						PnlPrice:  big.NewInt(6001),
+					},
+				},
+				constants.BobEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(8500),
+						PnlPrice:  big.NewInt(8501),
+					},
+					constants.EthUsdPair: {
+						SpotPrice: big.NewInt(7250),
+						PnlPrice:  big.NewInt(7251),
+					},
+				},
+				constants.CarlEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(4500),
+						PnlPrice:  big.NewInt(4501),
+					},
+					constants.EthUsdPair: {
+						SpotPrice: big.NewInt(5500),
+						PnlPrice:  big.NewInt(5501),
+					},
+				},
+			},
+			expectedPrices: map[string]vemath.AggregatorPricePair{
+				constants.BtcUsdPair: {
+					SpotPrice: big.NewInt(5000),
+					PnlPrice:  big.NewInt(5001),
+				},
+				constants.EthUsdPair: {
+					SpotPrice: big.NewInt(6000),
+					PnlPrice:  big.NewInt(6001),
+				},
+			},
+		},
+		"multiple prices, multiple validators, insufficient stake, different spot vs pnl": {
+			validators: []string{"alice", "bob", "carl"},
+			powers: map[string]int64{
+				"alice": 100,
+				"bob":   100,
+				"carl":  100,
+			},
+			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
+				constants.AliceEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(5000),
+						PnlPrice:  big.NewInt(5001),
+					},
+					constants.EthUsdPair: {
+						SpotPrice: big.NewInt(6000),
+						PnlPrice:  big.NewInt(6001),
+					},
+				},
+				constants.BobEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(5000),
+						PnlPrice:  big.NewInt(5001),
+					},
+					constants.EthUsdPair: {
+						SpotPrice: big.NewInt(6000),
+						PnlPrice:  big.NewInt(6001),
+					},
+				},
+			},
+			expectedPrices: map[string]vemath.AggregatorPricePair{},
+		},
+		"multiple prices, multiple validators, different spot vs pnl, varied stake 1": {
+			validators: []string{"alice", "bob", "carl"},
+			powers: map[string]int64{
+				"alice": 300,
+				"bob":   1,
+				"carl":  1,
+			},
+			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
+				constants.AliceEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(4000),
+						PnlPrice:  big.NewInt(4005),
+					},
+					constants.EthUsdPair: {
+						SpotPrice: big.NewInt(5000),
+						PnlPrice:  big.NewInt(5005),
+					},
+				},
+				constants.BobEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(8500),
+						PnlPrice:  big.NewInt(8505),
+					},
+					constants.EthUsdPair: {
+						SpotPrice: big.NewInt(7250),
+						PnlPrice:  big.NewInt(7255),
+					},
+				},
+				constants.CarlEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(4500),
+						PnlPrice:  big.NewInt(4505),
+					},
+					constants.EthUsdPair: {
+						SpotPrice: big.NewInt(5500),
+						PnlPrice:  big.NewInt(5505),
+					},
+				},
+			},
+			expectedPrices: map[string]vemath.AggregatorPricePair{
+				constants.BtcUsdPair: {
+					SpotPrice: big.NewInt(4000),
+					PnlPrice:  big.NewInt(4005),
+				},
+				constants.EthUsdPair: {
+					SpotPrice: big.NewInt(5000),
+					PnlPrice:  big.NewInt(5005),
+				},
+			},
+		},
+		"multiple prices, multiple validators, different spot vs pnl, varied stake 2": {
+			validators: []string{"alice", "bob", "carl"},
+			powers: map[string]int64{
+				"alice": 20,
+				"bob":   70,
+				"carl":  80,
+			},
+			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
+				constants.AliceEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(4000),
+						PnlPrice:  big.NewInt(4005),
+					},
+					constants.EthUsdPair: {
+						SpotPrice: big.NewInt(5000),
+						PnlPrice:  big.NewInt(5005),
+					},
+				},
+				constants.BobEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(4002),
+						PnlPrice:  big.NewInt(4007),
+					},
+					constants.EthUsdPair: {
+						SpotPrice: big.NewInt(5002),
+						PnlPrice:  big.NewInt(5007),
+					},
+				},
+				constants.CarlEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(4004),
+						PnlPrice:  big.NewInt(4009),
+					},
+					constants.EthUsdPair: {
+						SpotPrice: big.NewInt(5004),
+						PnlPrice:  big.NewInt(5009),
+					},
+				},
+			},
+			expectedPrices: map[string]vemath.AggregatorPricePair{
+				constants.BtcUsdPair: {
+					SpotPrice: big.NewInt(4002),
+					PnlPrice:  big.NewInt(4007),
+				},
+				constants.EthUsdPair: {
+					SpotPrice: big.NewInt(5002),
+					PnlPrice:  big.NewInt(5007),
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
