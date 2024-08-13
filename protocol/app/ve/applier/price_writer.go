@@ -116,13 +116,16 @@ func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 	pricesFromCache := pa.finalPriceCache.GetPriceUpdates()
 	for _, price := range pricesFromCache {
 		if price.SpotPrice != nil && price.PnlPrice != nil {
+
+			marketPriceUpdate := &pricestypes.MarketPriceUpdate{
+				MarketId:  price.MarketId,
+				SpotPrice: price.SpotPrice.Uint64(),
+				PnlPrice:  price.PnlPrice.Uint64(),
+			}
+
 			if err := pa.pricesKeeper.UpdateSpotAndPnlMarketPrices(
 				ctx,
-				&pricestypes.MarketPriceUpdate{
-					MarketId:  price.MarketId,
-					SpotPrice: price.SpotPrice.Uint64(),
-					PnlPrice:  price.PnlPrice.Uint64(),
-				},
+				marketPriceUpdate,
 			); err != nil {
 				pa.logger.Error(
 					"failed to set prices for currency pair",
@@ -140,10 +143,12 @@ func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 				"pnl_price", price.PnlPrice.Uint64(),
 			)
 		} else if price.SpotPrice != nil {
-			if err := pa.pricesKeeper.UpdateSpotPrice(ctx, &pricestypes.MarketSpotPriceUpdate{
+			spotPriceUpdate := &pricestypes.MarketSpotPriceUpdate{
 				MarketId:  price.MarketId,
 				SpotPrice: price.SpotPrice.Uint64(),
-			}); err != nil {
+			}
+
+			if err := pa.pricesKeeper.UpdateSpotPrice(ctx, spotPriceUpdate); err != nil {
 				pa.logger.Error(
 					"failed to set spot price for currency pair",
 					"market_id", price.MarketId,
@@ -159,10 +164,12 @@ func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 				"spot_price", price.SpotPrice.Uint64(),
 			)
 		} else if price.PnlPrice != nil {
-			if err := pa.pricesKeeper.UpdatePnlPrice(ctx, &pricestypes.MarketPnlPriceUpdate{
+			pnlPriceUpdate := &pricestypes.MarketPnlPriceUpdate{
 				MarketId: price.MarketId,
 				PnlPrice: price.PnlPrice.Uint64(),
-			}); err != nil {
+			}
+
+			if err := pa.pricesKeeper.UpdatePnlPrice(ctx, pnlPriceUpdate); err != nil {
 				pa.logger.Error(
 					"failed to set pnl price for currency pair",
 					"market_id", price.MarketId,
@@ -188,7 +195,6 @@ func (pa *PriceApplier) writePricesToStoreAndCache(
 	round int32,
 ) error {
 	marketParams := pa.pricesKeeper.GetAllMarketParams(ctx)
-	// TODO: HANDLE WRITES TO CACHE
 	var finalPriceUpdates pricecache.PriceUpdates
 	for _, market := range marketParams {
 		pair := market.Pair
@@ -203,10 +209,12 @@ func (pa *PriceApplier) writePricesToStoreAndCache(
 		}
 
 		if !shouldWriteSpotPrice {
-			if err := pa.pricesKeeper.UpdatePnlPrice(ctx, &pricestypes.MarketPnlPriceUpdate{
+			pnlPriceUpdate := &pricestypes.MarketPnlPriceUpdate{
 				MarketId: market.Id,
 				PnlPrice: pricePair.PnlPrice.Uint64(),
-			}); err != nil {
+			}
+
+			if err := pa.pricesKeeper.UpdatePnlPrice(ctx, pnlPriceUpdate); err != nil {
 				return err
 			}
 
@@ -223,10 +231,12 @@ func (pa *PriceApplier) writePricesToStoreAndCache(
 			})
 
 		} else if !shouldWritePnlPrice {
-			if err := pa.pricesKeeper.UpdateSpotPrice(ctx, &pricestypes.MarketSpotPriceUpdate{
+			spotPriceUpdate := &pricestypes.MarketSpotPriceUpdate{
 				MarketId:  market.Id,
 				SpotPrice: pricePair.SpotPrice.Uint64(),
-			}); err != nil {
+			}
+
+			if err := pa.pricesKeeper.UpdateSpotPrice(ctx, spotPriceUpdate); err != nil {
 				return err
 			}
 
@@ -236,20 +246,22 @@ func (pa *PriceApplier) writePricesToStoreAndCache(
 				"spot_price", pricePair.SpotPrice.Uint64(),
 			)
 
-			finalPriceUpdates = append(finalPriceUpdates, pricecache.PriceUpdate{
+			finalPriceUpdate := pricecache.PriceUpdate{
 				MarketId:  market.Id,
 				SpotPrice: pricePair.SpotPrice,
 				PnlPrice:  nil,
-			})
+			}
+
+			finalPriceUpdates = append(finalPriceUpdates, finalPriceUpdate)
 
 		} else {
-			newPrice := pricestypes.MarketPriceUpdate{
+			newPrice := &pricestypes.MarketPriceUpdate{
 				MarketId:  market.Id,
 				SpotPrice: pricePair.SpotPrice.Uint64(),
 				PnlPrice:  pricePair.PnlPrice.Uint64(),
 			}
 
-			if err := pa.pricesKeeper.UpdateSpotAndPnlMarketPrices(ctx, &newPrice); err != nil {
+			if err := pa.pricesKeeper.UpdateSpotAndPnlMarketPrices(ctx, newPrice); err != nil {
 				pa.logger.Error(
 					"failed to set price for currency pair",
 					"currency_pair", pair,
@@ -267,11 +279,13 @@ func (pa *PriceApplier) writePricesToStoreAndCache(
 			)
 		}
 
-		finalPriceUpdates = append(finalPriceUpdates, pricecache.PriceUpdate{
+		finalPriceUpdate := pricecache.PriceUpdate{
 			MarketId:  market.Id,
 			SpotPrice: pricePair.SpotPrice,
 			PnlPrice:  pricePair.PnlPrice,
-		})
+		}
+
+		finalPriceUpdates = append(finalPriceUpdates, finalPriceUpdate)
 	}
 
 	pa.finalPriceCache.SetPriceUpdates(ctx, finalPriceUpdates, round)
@@ -298,13 +312,13 @@ func (pa *PriceApplier) shouldWritePriceToStore(
 		return false, false
 	}
 
-	priceUpdate := pricestypes.MarketPriceUpdate{
+	priceUpdate := &pricestypes.MarketPriceUpdate{
 		MarketId:  marketId,
 		SpotPrice: prices.SpotPrice.Uint64(),
 		PnlPrice:  prices.PnlPrice.Uint64(),
 	}
 
-	isValidSpot, isValidPnl := pa.pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, &priceUpdate)
+	isValidSpot, isValidPnl := pa.pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, priceUpdate)
 
 	if !isValidSpot && !isValidPnl {
 		pa.logger.Error(
