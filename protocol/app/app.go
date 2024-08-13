@@ -2024,12 +2024,16 @@ func getFullNodeStreamingManagerFromOptions(
 	logger log.Logger,
 ) (manager streamingtypes.FullNodeStreamingManager) {
 	if appFlags.GrpcStreamingEnabled {
-		logger.Info("GRPC streaming is enabled")
+		logger.Info("GRPC streaming is enabled", log.ModuleKey, "full-node-streaming")
+		if appFlags.FullNodeStreamingSnapshotInterval > 0 {
+			logger.Info("Interval snapshots enabled", log.ModuleKey, "full-node-streaming")
+		}
 		return streaming.NewFullNodeStreamingManager(
 			logger,
 			appFlags.GrpcStreamingFlushIntervalMs,
 			appFlags.GrpcStreamingMaxBatchSize,
 			appFlags.GrpcStreamingMaxChannelBufferSize,
+			appFlags.FullNodeStreamingSnapshotInterval,
 		)
 	}
 	return streaming.NewNoopGrpcStreamingManager()
