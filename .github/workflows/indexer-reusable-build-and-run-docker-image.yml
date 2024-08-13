@@ -65,7 +65,7 @@ jobs:
         run: |
           commit_hash=$(git rev-parse --short HEAD)
           DOCKER_BUILDKIT=1 docker build \
-            --platform amd64 \
+            --platform arm64 \
             -t service-base \
             -f Dockerfile.service.remote \
             --build-arg service=$SERVICE .

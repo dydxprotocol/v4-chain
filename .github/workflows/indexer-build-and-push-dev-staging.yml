@@ -6,6 +6,7 @@ on: # yamllint disable-line rule:truthy
       - main
       - 'release/indexer/v[0-9]+.[0-9]+.x'  # e.g. release/indexer/v0.1.x
       - 'release/indexer/v[0-9]+.x'  # e.g. release/indexer/v1.x
+      - 'vincentc/add-arm-build'
     # TODO(DEC-837): Customize github build and push to ECR by service with paths
 
 jobs:
@@ -15,6 +16,7 @@ jobs:
     uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: dev
+      ARCH: amd64
     secrets: inherit
 
   # Build and push to dev2
@@ -23,6 +25,7 @@ jobs:
     uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: dev2
+      ARCH: amd64
     secrets: inherit
 
   # Build and push to dev3
@@ -31,6 +34,7 @@ jobs:
     uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: dev3
+      ARCH: amd64
     secrets: inherit
 
   # Build and push to dev4
@@ -39,6 +43,7 @@ jobs:
     uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: dev4
+      ARCH: amd64
     secrets: inherit
 
   # Build and push to dev5
@@ -47,6 +52,7 @@ jobs:
     uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: dev5
+      ARCH: amd64
     secrets: inherit
 
   # Build and push to staging
@@ -55,4 +61,5 @@ jobs:
     uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: staging
+      ARCH: amd64
     secrets: inherit

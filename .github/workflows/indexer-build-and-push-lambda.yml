@@ -9,6 +9,9 @@ on:
       SERVICE:
         required: true
         type: string
+      ARCH:
+        required: true
+        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -58,11 +61,12 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ inputs.ENVIRONMENT }}-indexer-${{ inputs.SERVICE }}
+          ARCH: ${{ inputs.ARCH }}
         run: |
           current_time=$(date '+%Y%m%d%H%M')
           commit_hash=$(git rev-parse --short HEAD)
           DOCKER_BUILDKIT=1 docker build \
-            --platform amd64 \
+            --platform $ARCH \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
             -f Dockerfile.${{ inputs.SERVICE }}.remote .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags

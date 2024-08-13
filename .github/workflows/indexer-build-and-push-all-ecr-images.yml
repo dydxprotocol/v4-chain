@@ -6,6 +6,9 @@ on: # yamllint disable-line rule:truthy
       ENVIRONMENT:
         required: true
         type: string
+      ARCH:
+        required: true
+        type: string
 
 jobs:
   # Build and push
@@ -13,6 +16,7 @@ jobs:
     uses: ./.github/workflows/indexer-reusable-build-and-push-ecs-service.yml
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      ARCH: ${{ inputs.ARCH }}
       SERVICE: ender
     secrets: inherit
 
@@ -20,6 +24,7 @@ jobs:
     uses: ./.github/workflows/indexer-reusable-build-and-push-ecs-service.yml
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      ARCH: ${{ inputs.ARCH }}
       SERVICE: comlink
     secrets: inherit
 
@@ -27,6 +32,7 @@ jobs:
     uses: ./.github/workflows/indexer-reusable-build-and-push-ecs-service.yml
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      ARCH: ${{ inputs.ARCH }}
       SERVICE: socks
     secrets: inherit
 
@@ -34,6 +40,7 @@ jobs:
     uses: ./.github/workflows/indexer-reusable-build-and-push-ecs-service.yml
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      ARCH: ${{ inputs.ARCH }}
       SERVICE: roundtable
     secrets: inherit
 
@@ -41,6 +48,7 @@ jobs:
     uses: ./.github/workflows/indexer-reusable-build-and-push-ecs-service.yml
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      ARCH: ${{ inputs.ARCH }}
       SERVICE: vulcan
     secrets: inherit
 
@@ -48,6 +56,7 @@ jobs:
     uses: ./.github/workflows/indexer-build-and-push-lambda.yml
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      ARCH: ${{ inputs.ARCH }}
       SERVICE: bazooka
     secrets: inherit
 
@@ -55,5 +64,6 @@ jobs:
     uses: ./.github/workflows/indexer-build-and-push-lambda.yml
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      ARCH: ${{ inputs.ARCH }}
       SERVICE: auxo
     secrets: inherit

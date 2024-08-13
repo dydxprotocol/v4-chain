@@ -75,5 +75,5 @@ jobs:
         id: build-image
         run: |
           DOCKER_BUILDKIT=1 docker build \
-            --platform amd64 \
+            --platform arm64 \
             -f Dockerfile.bazooka.remote .

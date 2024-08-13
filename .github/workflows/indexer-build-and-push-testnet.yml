@@ -15,4 +15,5 @@ jobs:
     uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: testnet
+      ARCH: amd64
     secrets: inherit
