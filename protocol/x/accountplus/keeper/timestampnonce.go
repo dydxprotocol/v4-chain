@@ -80,6 +80,11 @@ func AttemptTimestampNonceUpdate(
 		return false
 	}
 
+	// Must be unique
+	if contains(tsNonceDetails.TimestampNonces, tsNonce) {
+		return false
+	}
+
 	if len(tsNonceDetails.TimestampNonces) < MaxTimestampNonceArrSize {
 		tsNonceDetails.TimestampNonces = append(tsNonceDetails.TimestampNonces, tsNonce)
 		return true
@@ -114,4 +119,13 @@ func isLargerThanSmallestValue(value uint64, values []uint64) (bool, int) {
 	} else {
 		return false, minIndex
 	}
+}
+
+func contains[T comparable](list []T, value T) bool {
+	for _, v := range list {
+		if v == value {
+			return true
+		}
+	}
+	return false
 }
