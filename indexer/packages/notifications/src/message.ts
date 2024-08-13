@@ -47,10 +47,11 @@ export async function sendFirebaseMessage(
   };
 
   try {
-    const result: BatchResponse = await sendMulticast(message);
-    if (result.failureCount && result.failureCount > 0) {
-      console.log(result);
-      console.log(result.responses);
+    if (sendMulticast) {
+      const result: BatchResponse = await sendMulticast(message);
+      if (result.failureCount && result.failureCount > 0) {
+        console.log(result);
+        console.log(result.responses);
       // TODO: Add logging and stats
       // logger.info({
       //   at: 'courier-client#firebase',
@@ -61,8 +62,11 @@ export async function sendFirebaseMessage(
       //   languageCode: definedUserNotificationFields.languageCode,
       //   notificationFields,
       // });
+      }
+      return '';
+    } else {
+      return 'Failed to send FIrebase message, Firebase is not initialized';
     }
-    return '';
   } catch (error) {
     console.log(error);
     // logger.error({
