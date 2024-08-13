@@ -300,11 +300,14 @@ message StreamTakerOrderStatus {
   uint64 optimistically_filled_quantums = 3;
 }
 
-// QueryPerpetualClobDetails is a response message that contains the perpetual clob details.
+// QueryPerpetualClobDetails is a response message that contains the perpetual
+// clob details.
 message QueryPerpetualClobDetails {
   ClobPair clob_pair = 1 [ (gogoproto.nullable) = false ];
-  dydxprotocol.perpetuals.Perpetual perpetual = 2 [ (gogoproto.nullable) = false ];
+  dydxprotocol.perpetuals.Perpetual perpetual = 2
+      [ (gogoproto.nullable) = false ];
 }
 
-// QueryGetPerpetualClobDetailsRequest is request type to get the perpetual clob details.
+// QueryGetPerpetualClobDetailsRequest is request type to get the perpetual clob
+// details.
 message QueryGetPerpetualClobDetailsRequest { uint32 id = 1; }
