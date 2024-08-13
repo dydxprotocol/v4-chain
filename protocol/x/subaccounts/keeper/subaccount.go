@@ -132,6 +132,35 @@ func (k Keeper) GetSubaccount(
 	return val
 }
 
+func (k Keeper) GetStreamSubaccountUpdate(
+	ctx sdk.Context,
+	id types.SubaccountId,
+	snapshot bool,
+) (val types.StreamSubaccountUpdate) {
+	subaccount := k.GetSubaccount(ctx, id)
+	assetPositions := make([]*types.SubaccountAssetPosition, len(subaccount.AssetPositions))
+	for i, ap := range subaccount.AssetPositions {
+		assetPositions[i] = &types.SubaccountAssetPosition{
+			AssetId:  ap.AssetId,
+			Quantums: ap.Quantums.BigInt().Uint64(),
+		}
+	}
+	perpetualPositions := make([]*types.SubaccountPerpetualPosition, len(subaccount.PerpetualPositions))
+	for i, pp := range subaccount.PerpetualPositions {
+		perpetualPositions[i] = &types.SubaccountPerpetualPosition{
+			PerpetualId: pp.PerpetualId,
+			Quantums:    pp.Quantums.BigInt().Uint64(),
+		}
+	}
+
+	return types.StreamSubaccountUpdate{
+		SubaccountId:              &id,
+		UpdatedAssetPositions:     assetPositions,
+		UpdatedPerpetualPositions: perpetualPositions,
+		Snapshot:                  snapshot,
+	}
+}
+
 // GetAllSubaccount returns all subaccount.
 // For more performant searching and iteration, use `ForEachSubaccount`.
 func (k Keeper) GetAllSubaccount(ctx sdk.Context) (list []types.Subaccount) {
