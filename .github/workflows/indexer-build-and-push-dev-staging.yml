@@ -52,7 +52,7 @@ jobs:
     uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
     with:
       ENVIRONMENT: dev5
-      ARCH: amd64
+      ARCH: arm64
     secrets: inherit
 
   # Build and push to staging
