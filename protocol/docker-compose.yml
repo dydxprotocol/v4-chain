@@ -113,12 +113,14 @@ services:
     volumes:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
   slinky0:
-    image: ghcr.io/skip-mev/slinky-sidecar:v0.3.2
+    image: ghcr.io/skip-mev/slinky-sidecar:v1.0.1
     entrypoint: >
-      sh -c "slinky-config --chain dydx --node-http-url http://dydxprotocold0:1317 --oracle-config-path /etc/oracle.json &&
-             slinky --oracle-config-path /etc/oracle.json --update-market-config-path /etc/market.json"
+      sh -c "slinky --marketmap-provider dydx_api --market-map-endpoint http://dydxprotocold0:1317 --update-market-config-path /etc/market.json --log-std-out-level error"
+    environment:
+      - SLINKY_CONFIG_PROVIDERS_RAYDIUM_API_API_ENDPOINTS_0_URL=${RAYDIUM_URL}
     ports:
       - "8080:8080"
+      - "8002:8002" # metrics
 
   datadog-agent:
     image: public.ecr.aws/datadog/agent:7
