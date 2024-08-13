@@ -19,9 +19,8 @@ service Msg {
   rpc UpdateDefaultQuotingParams(MsgUpdateDefaultQuotingParams)
       returns (MsgUpdateDefaultQuotingParamsResponse);
 
-  // SetVaultQuotingParams sets the quoting parameters of a specific vault.
-  rpc SetVaultQuotingParams(MsgSetVaultQuotingParams)
-      returns (MsgSetVaultQuotingParamsResponse);
+  // SetVaultParams sets the parameters of a specific vault.
+  rpc SetVaultParams(MsgSetVaultParams) returns (MsgSetVaultParamsResponse);
 }
 
 // MsgDepositToVault deposits the specified asset from the subaccount to the
@@ -64,19 +63,18 @@ message MsgUpdateDefaultQuotingParams {
 // response type.
 message MsgUpdateDefaultQuotingParamsResponse {}
 
-// MsgSetVaultQuotingParams is the Msg/SetVaultQuotingParams request type.
-message MsgSetVaultQuotingParams {
+// MsgSetVaultParams is the Msg/SetVaultParams request type.
+message MsgSetVaultParams {
   // Authority is the address that controls the module.
   option (cosmos.msg.v1.signer) = "authority";
   string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 
-  // The vault to set quoting params of.
+  // The vault to set params of.
   VaultId vault_id = 2 [ (gogoproto.nullable) = false ];
 
-  // The quoting parameters to set. Each field must be set.
-  QuotingParams quoting_params = 3 [ (gogoproto.nullable) = false ];
+  // The parameters to set.
+  VaultParams vault_params = 3 [ (gogoproto.nullable) = false ];
 }
 
-// MsgSetVaultQuotingParamsResponse is the Msg/SetVaultQuotingParams response
-// type.
-message MsgSetVaultQuotingParamsResponse {}
+// MsgSetVaultParamsResponse is the Msg/SetVaultParams response type.
+message MsgSetVaultParamsResponse {}
