@@ -1,16 +1,18 @@
 syntax = "proto3";
 package dydxprotocol.ve;
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types";
 
 // PricePair defines a pair of prices for a market.
 message PricePair {
-  bytes spot_price = 1; // Plain oracle price (used for funding rates)
-  bytes pnl_price = 2;  // Funding rate weighted price (used for pnl and liquidations)
+  uint32 market_id = 1;
+  bytes spot_price = 2; // Plain oracle price (used for funding rates)
+  bytes pnl_price = 3;  // Funding rate weighted price (used for pnl and liquidations)
 }
 
 // Daemon VoteExtension defines the vote extension structure for daemon prices.
 message DaemonVoteExtension {
   // Prices defines a map of marketId -> PricePair.
-  map<uint32, PricePair> prices = 1;
+  repeated PricePair prices = 1 [ (gogoproto.nullable) = false ];
 }
