@@ -5,7 +5,6 @@ import {
   KafkaMessage,
 } from 'kafkajs';
 
-import config from '../config';
 import { onMessage } from './on-message';
 
 export async function onBatch(
