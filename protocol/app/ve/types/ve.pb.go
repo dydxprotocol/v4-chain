@@ -22,17 +22,70 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// PricePair defines a pair of prices for a market.
+type PricePair struct {
+	SpotPrice []byte `protobuf:"bytes,1,opt,name=spot_price,json=spotPrice,proto3" json:"spot_price,omitempty"`
+	PnlPrice  []byte `protobuf:"bytes,2,opt,name=pnl_price,json=pnlPrice,proto3" json:"pnl_price,omitempty"`
+}
+
+func (m *PricePair) Reset()         { *m = PricePair{} }
+func (m *PricePair) String() string { return proto.CompactTextString(m) }
+func (*PricePair) ProtoMessage()    {}
+func (*PricePair) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fac2326008e9fb0f, []int{0}
+}
+func (m *PricePair) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PricePair) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PricePair.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PricePair) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PricePair.Merge(m, src)
+}
+func (m *PricePair) XXX_Size() int {
+	return m.Size()
+}
+func (m *PricePair) XXX_DiscardUnknown() {
+	xxx_messageInfo_PricePair.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PricePair proto.InternalMessageInfo
+
+func (m *PricePair) GetSpotPrice() []byte {
+	if m != nil {
+		return m.SpotPrice
+	}
+	return nil
+}
+
+func (m *PricePair) GetPnlPrice() []byte {
+	if m != nil {
+		return m.PnlPrice
+	}
+	return nil
+}
+
 // Daemon VoteExtension defines the vote extension structure for daemon prices.
 type DaemonVoteExtension struct {
 	// Prices defines a map of marketId -> PricePair.
-	Prices map[uint32]*DaemonVoteExtension_PricePair `protobuf:"bytes,1,rep,name=prices,proto3" json:"prices,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Prices map[uint32]*PricePair `protobuf:"bytes,1,rep,name=prices,proto3" json:"prices,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (m *DaemonVoteExtension) Reset()         { *m = DaemonVoteExtension{} }
 func (m *DaemonVoteExtension) String() string { return proto.CompactTextString(m) }
 func (*DaemonVoteExtension) ProtoMessage()    {}
 func (*DaemonVoteExtension) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fac2326008e9fb0f, []int{0}
+	return fileDescriptor_fac2326008e9fb0f, []int{1}
 }
 func (m *DaemonVoteExtension) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -61,95 +114,79 @@ func (m *DaemonVoteExtension) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DaemonVoteExtension proto.InternalMessageInfo
 
-func (m *DaemonVoteExtension) GetPrices() map[uint32]*DaemonVoteExtension_PricePair {
+func (m *DaemonVoteExtension) GetPrices() map[uint32]*PricePair {
 	if m != nil {
 		return m.Prices
 	}
 	return nil
 }
 
-// PricePair defines a pair of prices for a market.
-type DaemonVoteExtension_PricePair struct {
-	SpotPrice []byte `protobuf:"bytes,1,opt,name=spot_price,json=spotPrice,proto3" json:"spot_price,omitempty"`
-	PnlPrice  []byte `protobuf:"bytes,2,opt,name=pnl_price,json=pnlPrice,proto3" json:"pnl_price,omitempty"`
-}
-
-func (m *DaemonVoteExtension_PricePair) Reset()         { *m = DaemonVoteExtension_PricePair{} }
-func (m *DaemonVoteExtension_PricePair) String() string { return proto.CompactTextString(m) }
-func (*DaemonVoteExtension_PricePair) ProtoMessage()    {}
-func (*DaemonVoteExtension_PricePair) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fac2326008e9fb0f, []int{0, 0}
-}
-func (m *DaemonVoteExtension_PricePair) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *DaemonVoteExtension_PricePair) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_DaemonVoteExtension_PricePair.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *DaemonVoteExtension_PricePair) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DaemonVoteExtension_PricePair.Merge(m, src)
-}
-func (m *DaemonVoteExtension_PricePair) XXX_Size() int {
-	return m.Size()
-}
-func (m *DaemonVoteExtension_PricePair) XXX_DiscardUnknown() {
-	xxx_messageInfo_DaemonVoteExtension_PricePair.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_DaemonVoteExtension_PricePair proto.InternalMessageInfo
-
-func (m *DaemonVoteExtension_PricePair) GetSpotPrice() []byte {
-	if m != nil {
-		return m.SpotPrice
-	}
-	return nil
-}
-
-func (m *DaemonVoteExtension_PricePair) GetPnlPrice() []byte {
-	if m != nil {
-		return m.PnlPrice
-	}
-	return nil
-}
-
 func init() {
+	proto.RegisterType((*PricePair)(nil), "dydxprotocol.ve.PricePair")
 	proto.RegisterType((*DaemonVoteExtension)(nil), "dydxprotocol.ve.DaemonVoteExtension")
-	proto.RegisterMapType((map[uint32]*DaemonVoteExtension_PricePair)(nil), "dydxprotocol.ve.DaemonVoteExtension.PricesEntry")
-	proto.RegisterType((*DaemonVoteExtension_PricePair)(nil), "dydxprotocol.ve.DaemonVoteExtension.PricePair")
+	proto.RegisterMapType((map[uint32]*PricePair)(nil), "dydxprotocol.ve.DaemonVoteExtension.PricesEntry")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/ve/ve.proto", fileDescriptor_fac2326008e9fb0f) }
 
 var fileDescriptor_fac2326008e9fb0f = []byte{
-	// 293 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x91, 0x41, 0x4b, 0xc3, 0x30,
-	0x18, 0x86, 0x97, 0x0e, 0x87, 0x4d, 0x15, 0x25, 0x5e, 0xca, 0xc4, 0x30, 0x3c, 0xed, 0xb2, 0x54,
-	0xe6, 0x45, 0x3c, 0x4a, 0xa7, 0x1e, 0x4b, 0x05, 0x0f, 0x1e, 0x94, 0xac, 0xfb, 0x70, 0xc1, 0x36,
-	0x09, 0x6d, 0x56, 0xd6, 0x7f, 0x21, 0xf8, 0xa7, 0x3c, 0xee, 0xe8, 0x51, 0xda, 0x3f, 0x22, 0xcd,
-	0xa6, 0x0c, 0xf1, 0xe0, 0x2d, 0x79, 0x9f, 0x3c, 0x1f, 0x1f, 0x79, 0xb1, 0x3f, 0xab, 0x66, 0x4b,
-	0x9d, 0x2b, 0xa3, 0x12, 0x95, 0x06, 0x25, 0x04, 0x25, 0x30, 0x7b, 0x25, 0x07, 0xdb, 0x84, 0x95,
-	0x70, 0xfa, 0xe6, 0xe0, 0xa3, 0x90, 0x43, 0xa6, 0xe4, 0xbd, 0x32, 0x30, 0x59, 0x1a, 0x90, 0x85,
-	0x50, 0x92, 0xdc, 0xe2, 0x9e, 0xce, 0x45, 0x02, 0x85, 0x8f, 0x06, 0xdd, 0xa1, 0x37, 0x3e, 0x63,
-	0xbf, 0x4c, 0xf6, 0x87, 0xc5, 0x22, 0xab, 0x4c, 0xa4, 0xc9, 0xab, 0x78, 0xe3, 0xf7, 0x6f, 0xb0,
-	0x6b, 0xe3, 0x88, 0x8b, 0x9c, 0x9c, 0x60, 0x5c, 0x68, 0x65, 0x9e, 0x2c, 0xf3, 0xd1, 0x00, 0x0d,
-	0xf7, 0x62, 0xb7, 0x4d, 0xec, 0x13, 0x72, 0x8c, 0x5d, 0x2d, 0xd3, 0x0d, 0x75, 0x2c, 0xdd, 0xd5,
-	0x32, 0xb5, 0xb0, 0x2f, 0xb0, 0xb7, 0x35, 0x9f, 0x1c, 0xe2, 0xee, 0x0b, 0x54, 0x76, 0xc6, 0x7e,
-	0xdc, 0x1e, 0x49, 0x88, 0x77, 0x4a, 0x9e, 0x2e, 0xd6, 0xa6, 0x37, 0x66, 0xff, 0x5f, 0xb9, 0xdd,
-	0x2d, 0x5e, 0xcb, 0x97, 0xce, 0x05, 0xba, 0x7a, 0x7c, 0xaf, 0x29, 0x5a, 0xd5, 0x14, 0x7d, 0xd6,
-	0x14, 0xbd, 0x36, 0xb4, 0xb3, 0x6a, 0x68, 0xe7, 0xa3, 0xa1, 0x9d, 0x87, 0xf0, 0x59, 0x98, 0xf9,
-	0x62, 0xca, 0x12, 0x95, 0x05, 0x77, 0x26, 0x07, 0x9e, 0x5d, 0x0b, 0xc9, 0x65, 0x02, 0xa3, 0xe8,
-	0xfb, 0xbf, 0x0b, 0x1b, 0x8f, 0x92, 0x39, 0x17, 0x32, 0xf8, 0x69, 0x81, 0x6b, 0xdd, 0x36, 0x61,
-	0x2a, 0x0d, 0xc5, 0xb4, 0x67, 0xe3, 0xf3, 0xaf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xaa, 0xce, 0x54,
-	0xf9, 0xa9, 0x01, 0x00, 0x00,
+	// 295 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x48, 0xa9, 0x4c, 0xa9,
+	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x2f, 0x4b, 0xd5, 0x2f, 0x4b, 0xd5, 0x03,
+	0x73, 0x85, 0xf8, 0x91, 0x65, 0xf4, 0xca, 0x52, 0x95, 0xdc, 0xb9, 0x38, 0x03, 0x8a, 0x32, 0x93,
+	0x53, 0x03, 0x12, 0x33, 0x8b, 0x84, 0x64, 0xb9, 0xb8, 0x8a, 0x0b, 0xf2, 0x4b, 0xe2, 0x0b, 0x40,
+	0x22, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0x3c, 0x41, 0x9c, 0x20, 0x11, 0xb0, 0x12, 0x21, 0x69, 0x2e,
+	0xce, 0x82, 0xbc, 0x1c, 0xa8, 0x2c, 0x13, 0x58, 0x96, 0xa3, 0x20, 0x2f, 0x07, 0x2c, 0xa9, 0xb4,
+	0x8d, 0x91, 0x4b, 0xd8, 0x25, 0x31, 0x35, 0x37, 0x3f, 0x2f, 0x2c, 0xbf, 0x24, 0xd5, 0xb5, 0xa2,
+	0x24, 0x35, 0xaf, 0x38, 0x33, 0x3f, 0x4f, 0xc8, 0x83, 0x8b, 0x0d, 0xac, 0xa1, 0x58, 0x82, 0x51,
+	0x81, 0x59, 0x83, 0xdb, 0xc8, 0x40, 0x0f, 0xcd, 0x09, 0x7a, 0x58, 0x74, 0xe9, 0x81, 0xcd, 0x2c,
+	0x76, 0xcd, 0x2b, 0x29, 0xaa, 0x0c, 0x82, 0xea, 0x97, 0x0a, 0xe5, 0xe2, 0x46, 0x12, 0x16, 0x12,
+	0xe0, 0x62, 0xce, 0x4e, 0xad, 0x04, 0xbb, 0x92, 0x37, 0x08, 0xc4, 0x14, 0x32, 0xe0, 0x62, 0x2d,
+	0x4b, 0xcc, 0x29, 0x85, 0xb8, 0x8d, 0xdb, 0x48, 0x0a, 0xc3, 0x26, 0xb8, 0x4f, 0x83, 0x20, 0x0a,
+	0xad, 0x98, 0x2c, 0x18, 0x9d, 0xe2, 0x4e, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1,
+	0x23, 0x39, 0xc6, 0x09, 0x8f, 0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8, 0xf1, 0x58, 0x8e, 0x21,
+	0xca, 0x25, 0x3d, 0xb3, 0x24, 0xa3, 0x34, 0x49, 0x2f, 0x39, 0x3f, 0x57, 0x3f, 0xb8, 0xa4, 0x28,
+	0x35, 0x31, 0xd7, 0x2d, 0x33, 0x2f, 0x31, 0x2f, 0x39, 0x55, 0x37, 0x00, 0x16, 0xb6, 0xc5, 0x60,
+	0x61, 0xdd, 0xe4, 0x8c, 0xc4, 0xcc, 0x3c, 0x7d, 0x78, 0x88, 0x27, 0x16, 0x14, 0x80, 0x42, 0xbd,
+	0xa4, 0xb2, 0x20, 0xb5, 0x38, 0x89, 0x0d, 0x2c, 0x6c, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x2b,
+	0x66, 0xce, 0x42, 0x95, 0x01, 0x00, 0x00,
+}
+
+func (m *PricePair) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PricePair) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PricePair) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.PnlPrice) > 0 {
+		i -= len(m.PnlPrice)
+		copy(dAtA[i:], m.PnlPrice)
+		i = encodeVarintVe(dAtA, i, uint64(len(m.PnlPrice)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.SpotPrice) > 0 {
+		i -= len(m.SpotPrice)
+		copy(dAtA[i:], m.SpotPrice)
+		i = encodeVarintVe(dAtA, i, uint64(len(m.SpotPrice)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *DaemonVoteExtension) Marshal() (dAtA []byte, err error) {
@@ -199,43 +236,6 @@ func (m *DaemonVoteExtension) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *DaemonVoteExtension_PricePair) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *DaemonVoteExtension_PricePair) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *DaemonVoteExtension_PricePair) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.PnlPrice) > 0 {
-		i -= len(m.PnlPrice)
-		copy(dAtA[i:], m.PnlPrice)
-		i = encodeVarintVe(dAtA, i, uint64(len(m.PnlPrice)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.SpotPrice) > 0 {
-		i -= len(m.SpotPrice)
-		copy(dAtA[i:], m.SpotPrice)
-		i = encodeVarintVe(dAtA, i, uint64(len(m.SpotPrice)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintVe(dAtA []byte, offset int, v uint64) int {
 	offset -= sovVe(v)
 	base := offset
@@ -247,6 +247,23 @@ func encodeVarintVe(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *PricePair) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.SpotPrice)
+	if l > 0 {
+		n += 1 + l + sovVe(uint64(l))
+	}
+	l = len(m.PnlPrice)
+	if l > 0 {
+		n += 1 + l + sovVe(uint64(l))
+	}
+	return n
+}
+
 func (m *DaemonVoteExtension) Size() (n int) {
 	if m == nil {
 		return 0
@@ -269,195 +286,13 @@ func (m *DaemonVoteExtension) Size() (n int) {
 	return n
 }
 
-func (m *DaemonVoteExtension_PricePair) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.SpotPrice)
-	if l > 0 {
-		n += 1 + l + sovVe(uint64(l))
-	}
-	l = len(m.PnlPrice)
-	if l > 0 {
-		n += 1 + l + sovVe(uint64(l))
-	}
-	return n
-}
-
 func sovVe(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozVe(x uint64) (n int) {
 	return sovVe(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *DaemonVoteExtension) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowVe
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: DaemonVoteExtension: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DaemonVoteExtension: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Prices", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowVe
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthVe
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthVe
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Prices == nil {
-				m.Prices = make(map[uint32]*DaemonVoteExtension_PricePair)
-			}
-			var mapkey uint32
-			var mapvalue *DaemonVoteExtension_PricePair
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowVe
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowVe
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						mapkey |= uint32(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-				} else if fieldNum == 2 {
-					var mapmsglen int
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowVe
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						mapmsglen |= int(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					if mapmsglen < 0 {
-						return ErrInvalidLengthVe
-					}
-					postmsgIndex := iNdEx + mapmsglen
-					if postmsgIndex < 0 {
-						return ErrInvalidLengthVe
-					}
-					if postmsgIndex > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapvalue = &DaemonVoteExtension_PricePair{}
-					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
-						return err
-					}
-					iNdEx = postmsgIndex
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipVe(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if (skippy < 0) || (iNdEx+skippy) < 0 {
-						return ErrInvalidLengthVe
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.Prices[mapkey] = mapvalue
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipVe(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthVe
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *DaemonVoteExtension_PricePair) Unmarshal(dAtA []byte) error {
+func (m *PricePair) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -553,6 +388,171 @@ func (m *DaemonVoteExtension_PricePair) Unmarshal(dAtA []byte) error {
 			if m.PnlPrice == nil {
 				m.PnlPrice = []byte{}
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipVe(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthVe
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DaemonVoteExtension) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowVe
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DaemonVoteExtension: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DaemonVoteExtension: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Prices", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVe
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthVe
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVe
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Prices == nil {
+				m.Prices = make(map[uint32]*PricePair)
+			}
+			var mapkey uint32
+			var mapvalue *PricePair
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowVe
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowVe
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapkey |= uint32(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowVe
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= int(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthVe
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if postmsgIndex < 0 {
+						return ErrInvalidLengthVe
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &PricePair{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipVe(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
+						return ErrInvalidLengthVe
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Prices[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
