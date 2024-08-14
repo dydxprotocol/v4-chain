@@ -269,7 +269,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcStreamingBatchSize:            2000,
 			expectedGrpcStreamingMaxChannelBufferSize: 2000,
 			expectedWebsocketEnabled:                  false,
-			expectedWebsocketPort:                     9091,
+			expectedWebsocketPort:                     9092,
 			expectedFullNodeStreamingSnapshotInterval: 0,
 			expectedOptimisticExecutionEnabled:        false,
 		},
