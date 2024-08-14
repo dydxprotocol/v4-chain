@@ -1,3 +1,4 @@
+import { logger } from '@dydxprotocol-indexer/base';
 import { TokenTable } from '@dydxprotocol-indexer/postgres';
 
 import {
@@ -50,34 +51,26 @@ export async function sendFirebaseMessage(
     if (sendMulticast) {
       const result: BatchResponse = await sendMulticast(message);
       if (result.failureCount && result.failureCount > 0) {
-        console.log(result);
-        console.log(result.responses);
-      // TODO: Add logging and stats
-      // logger.info({
-      //   at: 'courier-client#firebase',
-      //   message: `Failed to send Firebase message: ${JSON.stringify(message)}`,
-      //   result,
-      //   userId,
-      //   notificationType,
-      //   languageCode: definedUserNotificationFields.languageCode,
-      //   notificationFields,
-      // });
+        logger.info({
+          at: 'courier-client#firebase',
+          message: `Failed to send Firebase message: ${JSON.stringify(message)}`,
+          result,
+          address,
+          notificationType: notification.type,
+        });
       }
       return '';
     } else {
       return 'Failed to send FIrebase message, Firebase is not initialized';
     }
   } catch (error) {
-    console.log(error);
-    // logger.error({
-    //   at: 'courier-client#firebase',
-    //   message: `Failed to send Firebase message: ${JSON.stringify(message)}`,
-    //   error: error as Error,
-    //   userId,
-    //   notificationType,
-    //   languageCode: definedUserNotificationFields.languageCode,
-    //   notificationFields,
-    // });
+    logger.error({
+      at: 'courier-client#firebase',
+      message: `Failed to send Firebase message: ${JSON.stringify(message)}`,
+      error: error as Error,
+      address,
+      notificationType: notification.type,
+    });
     return `failed to send Firebase message due to ${error}`;
   } finally {
     // stats.timing(`${config.SERVICE_NAME}.send_firebase_message.timing`, Date.now() - start);

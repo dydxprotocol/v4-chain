@@ -7,10 +7,12 @@ import {
 } from '@dydxprotocol-indexer/base';
 import { KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
+  createNotification, NotificationType, NotificationDynamicFieldKey, sendFirebaseMessage,
+} from '@dydxprotocol-indexer/notifications';
+import {
   Transaction,
   IsolationLevel,
   CandleFromDatabase,
-  SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerTendermintBlock,
@@ -34,7 +36,6 @@ import {
   dateToDateTime,
 } from './helper';
 import { KafkaPublisher } from './kafka-publisher';
-import { createNotification, NotificationType, NotificationDynamicFieldKey, sendFirebaseMessage } from '@dydxprotocol-indexer/notifications';
 
 /**
  * @function onMessage
@@ -73,7 +74,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
       [NotificationDynamicFieldKey.AVERAGE_PRICE]: '100',
     });
 
-    await sendFirebaseMessage('dydx1hl0rsux2vl3uxl2hrxs4v6v9gfxulale4jcypw', notification);
+    await sendFirebaseMessage('dydx15unh8n45lg4xdgdzahhsvacnmq6m0f9tnhl9vt', notification);
   }
 
   stats.timing(
