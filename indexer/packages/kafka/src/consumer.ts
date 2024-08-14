@@ -91,6 +91,7 @@ export async function startConsumer(batchProcessing: boolean = false): Promise<v
     eachBatchAutoResolve: true,
     partitionsConsumedConcurrently: config.KAFKA_CONCURRENT_PARTITIONS,
     autoCommit: true,
+    autoCommitThreshold: config.AUTO_COMMIT_THRESHOLD,
   };
 
   if (batchProcessing) {

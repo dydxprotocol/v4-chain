@@ -56,11 +56,11 @@ export async function onBatch(
     // also prevent disconnecting from the broker due to inactivity.
     logger.info({
       at: 'on-batch#onBatch',
-      message: 'Committing offsets and sending heart beat',
+      message: 'Finished processing batch',
       ...batchInfo,
     });
-    payload.resolveOffset(message.offset);
-    await payload.heartbeat();
+    // payload.resolveOffset(message.offset);
+    // await payload.heartbeat();
     // // commitOffsetsIfNecessary will respect autoCommitThreshold and will not commit if
     // // fewer messages than the threshold have been processed since the last commit.
     // payload.commitOffsetsIfNecessary(),
