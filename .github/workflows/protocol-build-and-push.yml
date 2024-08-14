@@ -9,7 +9,7 @@ on:  # yamllint disable-line rule:truthy
       - 'release/protocol/v[0-9]+.x'  # e.g. release/protocol/v1.x
 
 jobs:
-    build-and-push-dev2:
+  build-and-push-dev2:
     runs-on: ubuntu-latest
     defaults:
       run:
