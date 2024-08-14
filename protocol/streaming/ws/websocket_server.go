@@ -66,6 +66,16 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	// Parse subaccountIds from query parameters
+	subaccountIds, err := parseSubaccountIds(r)
+	if err != nil {
+		ws.logger.Error(
+			"Error parsing subaccountIds",
+			"err", err,
+		)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	websocketMessageSender := &WebsocketMessageSender{
 		cdc:  ws.cdc,
@@ -78,8 +88,7 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 
 	err = ws.streamingManager.Subscribe(
 		clobPairIds,
-		// TODO@(wliu) add subaccount ids
-		[]*satypes.SubaccountId{},
+		subaccountIds,
 		websocketMessageSender,
 	)
 	if err != nil {
@@ -91,11 +100,40 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// parseSubaccountIds is a helper function to parse the subaccountIds from the query parameters.
+func parseSubaccountIds(r *http.Request) ([]*satypes.SubaccountId, error) {
+	subaccountIdsParam := r.URL.Query().Get("subaccountIds")
+	if subaccountIdsParam == "" {
+		return nil, nil
+	}
+
+	idStrs := strings.Split(subaccountIdsParam, ",")
+	subaccountIds := make([]*satypes.SubaccountId, len(idStrs))
+	for i, idStr := range idStrs {
+		parts := strings.Split(idStr, "/")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid subaccountId format: %s, expected subaccount_id format: owner/number", idStr)
+		}
+
+		number, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return nil, fmt.Errorf("invalid subaccount number: %s, expected subaccount_id format: owner/number", parts[1])
+		}
+
+		subaccountIds[i] = &satypes.SubaccountId{
+			Owner:  parts[0],
+			Number: uint32(number),
+		}
+	}
+
+	return subaccountIds, nil
+}
+
 // parseClobPairIds is a helper function to parse the clobPairIds from the query parameters.
 func parseClobPairIds(r *http.Request) ([]uint32, error) {
 	clobPairIdsParam := r.URL.Query().Get("clobPairIds")
 	if clobPairIdsParam == "" {
-		return nil, fmt.Errorf("missing clobPairIds parameter")
+		return nil, nil
 	}
 
 	idStrs := strings.Split(clobPairIdsParam, ",")
