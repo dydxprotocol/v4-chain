@@ -47,24 +47,10 @@ export async function onBatch(
     metricTags,
   );
 
-  // let lastCommitTime: number = startTime;
   for (let i = 0; i < batch.messages.length; i++) {
     const message: KafkaMessage = batch.messages[i];
     await onMessage(message);
-
-    // Commit every KAFKA_BATCH_PROCESSING_COMMIT_FREQUENCY_MS to reduce number of roundtrips, and
-    // also prevent disconnecting from the broker due to inactivity.
-    logger.info({
-      at: 'on-batch#onBatch',
-      message: 'Finished processing batch',
-      ...batchInfo,
-    });
-    // payload.resolveOffset(message.offset);
-    // await payload.heartbeat();
-    // // commitOffsetsIfNecessary will respect autoCommitThreshold and will not commit if
-    // // fewer messages than the threshold have been processed since the last commit.
-    // payload.commitOffsetsIfNecessary(),
-    // lastCommitTime = now;
+    payload.resolveOffset(message.offset);
   }
 
   const batchProcessingTime: number = Date.now() - startTime;

@@ -23,6 +23,7 @@ export const kafkaConfigSchema = {
   KAFKA_REBALANCE_TIMEOUT_MS: parseInteger({ default: 120_000 }),
   KAFKA_HEARTBEAT_INTERVAL_MS: parseInteger({ default: 5_000 }),
   KAFKA_CONCURRENT_PARTITIONS: parseInteger({ default: 1 }),
+  // The number of messages to process before committing the offset.
   AUTO_COMMIT_THRESHOLD: parseInteger({ default: 100 }),
   // If true, consumers will have unique group ids, and SERVICE_NAME will be a common prefix for
   // the consumer group ids.
