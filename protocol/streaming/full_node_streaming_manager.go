@@ -514,7 +514,6 @@ func (sm *FullNodeStreamingManagerImpl) SendTakerOrderStatus(
 
 // SendSubaccountUpdates groups subaccount updates by their subaccount ids and
 // sends messages to the subscribers.
-// TODO(CT-1117): Aggregate subaccount updates by subaccount id.
 func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdates(
 	subaccountUpdates []satypes.StreamSubaccountUpdate,
 	blockHeight uint32,
