@@ -10,6 +10,7 @@ import {
   Transaction,
   IsolationLevel,
   CandleFromDatabase,
+  SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerTendermintBlock,
@@ -33,6 +34,7 @@ import {
   dateToDateTime,
 } from './helper';
 import { KafkaPublisher } from './kafka-publisher';
+import { createNotification, NotificationType, NotificationDynamicFieldKey, sendFirebaseMessage } from '@dydxprotocol-indexer/notifications';
 
 /**
  * @function onMessage
@@ -63,6 +65,15 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
   const blockHeight: string = indexerTendermintBlock.height.toString();
   if (await shouldSkipBlock(blockHeight)) {
     return;
+  }
+
+  if (Number(blockHeight) % 25 === 0) {
+    const notification = createNotification(NotificationType.ORDER_FILLED, {
+      [NotificationDynamicFieldKey.MARKET]: 'BTC/USD',
+      [NotificationDynamicFieldKey.AVERAGE_PRICE]: '100',
+    });
+
+    await sendFirebaseMessage('dydx1hl0rsux2vl3uxl2hrxs4v6v9gfxulale4jcypw', notification);
   }
 
   stats.timing(
