@@ -138,8 +138,9 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		priceBz, err := big.NewInt(1).GobEncode()
 		s.Require().NoError(err)
 
-		prices := map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-			10: {
+		prices := []vetypes.PricePair{
+			{
+				MarketId:  10,
 				SpotPrice: priceBz, // 10 is a nonexistent market
 				PnlPrice:  priceBz, // 10 is a nonexistent market
 			},
@@ -183,16 +184,19 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		price3Bz, err := big.NewInt(int64(price3)).GobEncode()
 		s.Require().NoError(err)
 
-		prices := map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-			6: {
+		prices := []vetypes.PricePair{
+			{
+				MarketId:  6,
 				SpotPrice: price1Bz,
 				PnlPrice:  price1Bz,
 			},
-			7: {
+			{
+				MarketId:  7,
 				SpotPrice: price2Bz,
 				PnlPrice:  price2Bz,
 			},
-			8: {
+			{
+				MarketId:  8,
 				SpotPrice: price3Bz,
 				PnlPrice:  price3Bz,
 			},
@@ -309,7 +313,7 @@ func (s *PreBlockTestSuite) createTestMarkets() {
 }
 
 func (s *PreBlockTestSuite) getVoteExtension(
-	prices map[uint32]*vetypes.DaemonVoteExtension_PricePair,
+	prices []vetypes.PricePair,
 	val sdk.ConsAddress,
 ) cometabci.ExtendedVoteInfo {
 	ve, err := vetesting.CreateSignedExtendedVoteInfo(
@@ -376,7 +380,7 @@ func (s *PreBlockTestSuite) mockCCVStoreGetAllValidatorsCall(validators []string
 
 func (s *PreBlockTestSuite) getVoteExtensionsForValidatorsWithSamePrices(
 	validators []string,
-	prices map[uint32]*vetypes.DaemonVoteExtension_PricePair,
+	prices []vetypes.PricePair,
 ) []byte {
 	var votes []cometabci.ExtendedVoteInfo
 	for _, valName := range validators {

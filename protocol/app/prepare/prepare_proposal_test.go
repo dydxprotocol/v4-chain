@@ -54,7 +54,7 @@ type PerpareProposalHandlerTC struct {
 	pricesParamsResp              []pricestypes.MarketParam
 	pricesMarketPriceFromByesResp *pricestypes.MarketPriceUpdate
 
-	expectedPrices map[uint32]*vetypes.DaemonVoteExtension_PricePair
+	expectedPrices []vetypes.PricePair
 	expectedTxs    [][]byte
 
 	height int64
@@ -907,7 +907,7 @@ func getResponseTransactionsWithoutExtInfo(txs [][]byte) [][]byte {
 
 func validateVotesAgainstExpectedPrices(
 	t *testing.T,
-	expectedPrices map[uint32]*vetypes.DaemonVoteExtension_PricePair,
+	expectedPrices []vetypes.PricePair,
 	extCommitInfoBz []byte,
 	extcodec vecodec.ExtendedCommitCodec,
 	votecodec vecodec.VoteExtensionCodec,

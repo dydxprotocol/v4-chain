@@ -168,7 +168,6 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 
 func (h *VoteExtensionHandler) GetVEBytesFromCurrPrices(ctx sdk.Context) ([]byte, error) {
 	priceUpdates := h.getCurrentPrices(ctx)
-	fmt.Println("priceUpdates", priceUpdates)
 	if len(priceUpdates) == 0 {
 		return nil, fmt.Errorf("no valid prices")
 	}
@@ -190,15 +189,16 @@ func (h *VoteExtensionHandler) GetVEBytesFromCurrPrices(ctx sdk.Context) ([]byte
 func (h *VoteExtensionHandler) transformDaemonPricesToVE(
 	priceupdates map[uint32]VEPricePair,
 ) (types.DaemonVoteExtension, error) {
-	vePrices := make(map[uint32]*types.DaemonVoteExtension_PricePair)
+	var vePrices []types.PricePair
 
 	for marketId, priceUpdate := range priceupdates {
 		// check if the marketId is valid
-		encodedPricePair, err := h.GetEncodedPriceFromPriceUpdate(priceUpdate)
+		encodedPricePair, err := h.getEncodedPriceFromPriceUpdate(priceUpdate)
 		if err != nil {
 			continue
 		}
-		vePrices[marketId] = &encodedPricePair
+		encodedPricePair.MarketId = marketId
+		vePrices = append(vePrices, encodedPricePair)
 	}
 
 	return types.DaemonVoteExtension{
@@ -206,25 +206,25 @@ func (h *VoteExtensionHandler) transformDaemonPricesToVE(
 	}, nil
 }
 
-func (h *VoteExtensionHandler) GetEncodedPriceFromPriceUpdate(
+func (h *VoteExtensionHandler) getEncodedPriceFromPriceUpdate(
 	priceUpdate VEPricePair,
-) (types.DaemonVoteExtension_PricePair, error) {
+) (types.PricePair, error) {
 	spotPrice := new(big.Int).SetUint64(priceUpdate.SpotPrice)
 	pnlPrice := new(big.Int).SetUint64(priceUpdate.PnlPrice)
 
 	encodedSpotPrice, err := veutils.GetVEEncodedPrice(spotPrice)
 	if err != nil {
-		return types.DaemonVoteExtension_PricePair{}, err
+		return types.PricePair{}, err
 	}
 
 	encodedPnlPrice, err := veutils.GetVEEncodedPrice(pnlPrice)
 	if err != nil {
 		// TODO: If PNL price can't be encoded should we default to spot price for pnl price
 		// or do we allow for a price to be nil in a PricePair object
-		return types.DaemonVoteExtension_PricePair{}, err
+		return types.PricePair{}, err
 	}
 
-	return types.DaemonVoteExtension_PricePair{
+	return types.PricePair{
 		SpotPrice: encodedSpotPrice,
 		PnlPrice:  encodedPnlPrice,
 	}, nil

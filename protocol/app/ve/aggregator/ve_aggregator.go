@@ -101,23 +101,23 @@ func (ma *MedianAggregator) addVoteToAggregator(
 	}
 
 	prices := make(map[string]veaggregator.AggregatorPricePair, len(ve.Prices))
-	for marketId, pricePair := range ve.Prices {
+	for _, pricePair := range ve.Prices {
 		var spotPrice, pnlPrice *big.Int
 
-		market, exists := ma.pricesKeeper.GetMarketParam(ctx, marketId)
+		market, exists := ma.pricesKeeper.GetMarketParam(ctx, pricePair.MarketId)
 		if !exists {
 			continue
 		}
 
 		if len(pricePair.SpotPrice) <= constants.MaximumPriceSizeInBytes {
-			price, err := veutils.GetPriceFromBytes(marketId, pricePair.SpotPrice)
+			price, err := veutils.GetPriceFromBytes(pricePair.MarketId, pricePair.SpotPrice)
 			if err == nil {
 				spotPrice = price
 			}
 		}
 
 		if len(pricePair.PnlPrice) <= constants.MaximumPriceSizeInBytes {
-			price, err := veutils.GetPriceFromBytes(marketId, pricePair.PnlPrice)
+			price, err := veutils.GetPriceFromBytes(pricePair.MarketId, pricePair.PnlPrice)
 			if err == nil {
 				pnlPrice = price
 			}

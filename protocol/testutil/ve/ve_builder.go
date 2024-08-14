@@ -22,7 +22,7 @@ import (
 type SignedVEInfo struct {
 	Val     sdk.ConsAddress
 	Power   int64
-	Prices  map[uint32]*vetypes.DaemonVoteExtension_PricePair
+	Prices  []vetypes.PricePair
 	Height  int64
 	Round   int64
 	ChainId string
@@ -30,7 +30,7 @@ type SignedVEInfo struct {
 
 func NewDefaultSignedVeInfo(
 	val sdk.ConsAddress,
-	prices map[uint32]*vetypes.DaemonVoteExtension_PricePair,
+	prices []vetypes.PricePair,
 ) SignedVEInfo {
 	return SignedVEInfo{
 		Val:     val,
@@ -74,7 +74,7 @@ func GetEmptyLocalLastCommit(
 			SignedVEInfo{
 				Val:     sdk.ConsAddress(validator.Address),
 				Power:   validator.GetPower(),
-				Prices:  map[uint32]*vetypes.DaemonVoteExtension_PricePair{},
+				Prices:  []vetypes.PricePair{},
 				Height:  height,
 				Round:   round,
 				ChainId: chainId,
@@ -134,7 +134,7 @@ func CreateSignedExtendedVoteInfo(veInfo SignedVEInfo) (cometabci.ExtendedVoteIn
 
 // CreateVoteExtensionBytes creates a vote extension bytes with the given prices, timestamp and height.
 func CreateVoteExtensionBytes(
-	prices map[uint32]*vetypes.DaemonVoteExtension_PricePair,
+	prices []vetypes.PricePair,
 ) ([]byte, error) {
 	voteExtension := CreateVoteExtension(prices)
 	voteExtensionBz, err := voteCodec.Encode(voteExtension)
@@ -147,7 +147,7 @@ func CreateVoteExtensionBytes(
 
 // CreateVoteExtension creates a vote extension with the given prices, timestamp and height.
 func CreateVoteExtension(
-	prices map[uint32]*vetypes.DaemonVoteExtension_PricePair,
+	prices []vetypes.PricePair,
 ) vetypes.DaemonVoteExtension {
 	return vetypes.DaemonVoteExtension{
 		Prices: prices,
@@ -218,7 +218,7 @@ func GetIndexPriceCacheDecodedPrice(priceBz []byte) (*big.Int, error) {
 
 func CreateSingleValidatorExtendedCommitInfo(
 	consAddr sdk.ConsAddress,
-	prices map[uint32]*vetypes.DaemonVoteExtension_PricePair,
+	prices []vetypes.PricePair,
 ) (cometabci.ExtendedCommitInfo, []byte, error) {
 	voteInfo, err := CreateSignedExtendedVoteInfo(
 		NewDefaultSignedVeInfo(
@@ -269,7 +269,7 @@ func GetInjectedExtendedCommitInfoForTestApp(
 	prices map[uint32]ve.VEPricePair,
 	height int64,
 ) (cometabci.ExtendedCommitInfo, []byte, error) {
-	var pricesBz = make(map[uint32]*vetypes.DaemonVoteExtension_PricePair, len(prices))
+	var pricesBz = make([]vetypes.PricePair, len(prices))
 	for marketId, price := range prices {
 		encodedSpotPrice, err := GetIndexPriceCacheEncodedPrice(new(big.Int).SetUint64(price.SpotPrice))
 		if err != nil {
@@ -281,7 +281,8 @@ func GetInjectedExtendedCommitInfoForTestApp(
 			return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to encode price: %w", err)
 		}
 
-		pricesBz[marketId] = &vetypes.DaemonVoteExtension_PricePair{
+		pricesBz[marketId] = vetypes.PricePair{
+			MarketId:  marketId,
 			SpotPrice: encodedSpotPrice,
 			PnlPrice:  encodedPnlPrice,
 		}

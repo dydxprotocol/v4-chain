@@ -69,8 +69,9 @@ func TestPriceWriter(t *testing.T) {
 
 	t.Run("if vote aggregation fails, fail", func(t *testing.T) {
 		ctx = ctx.WithBlockHeight(2)
-		prices := map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-			1: {
+		prices := []vetypes.PricePair{
+			{
+				MarketId:  1,
 				SpotPrice: []byte("price1"),
 				PnlPrice:  []byte("price1"),
 			},
@@ -120,8 +121,9 @@ func TestPriceWriter(t *testing.T) {
 
 		priceBz := big.NewInt(-100).Bytes()
 
-		prices := map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-			1: {
+		prices := []vetypes.PricePair{
+			{
+				MarketId:  1,
 				SpotPrice: priceBz,
 				PnlPrice:  priceBz,
 			},
@@ -177,15 +179,17 @@ func TestPriceWriter(t *testing.T) {
 		price1Bz := big.NewInt(100).Bytes()
 		price2Bz := big.NewInt(200).Bytes()
 
-		prices1 := map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-			1: {
+		prices1 := []vetypes.PricePair{
+			{
+				MarketId:  1,
 				SpotPrice: price1Bz,
 				PnlPrice:  price1Bz,
 			},
 		}
 
-		prices2 := map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-			1: {
+		prices2 := []vetypes.PricePair{
+			{
+				MarketId:  1,
 				SpotPrice: price2Bz,
 				PnlPrice:  price2Bz,
 			},
@@ -289,15 +293,17 @@ func TestPriceWriter(t *testing.T) {
 		price1Bz := big.NewInt(100).Bytes()
 		price2Bz := big.NewInt(200).Bytes()
 
-		prices1 := map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-			1: {
+		prices1 := []vetypes.PricePair{
+			{
+				MarketId:  1,
 				SpotPrice: price1Bz,
 				PnlPrice:  price1Bz,
 			},
 		}
 
-		prices2 := map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-			1: {
+		prices2 := []vetypes.PricePair{
+			{
+				MarketId:  1,
 				SpotPrice: price2Bz,
 				PnlPrice:  price2Bz,
 			},

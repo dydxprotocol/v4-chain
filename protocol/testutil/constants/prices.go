@@ -359,68 +359,81 @@ var (
 		MarketPriceUpdates: ValidMarketPriceUpdates,
 	}
 
-	ValidSingleVEPrice = map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-		MarketId0: {
+	ValidSingleVEPrice = []vetypes.PricePair{
+		{
+			MarketId:  MarketId0,
 			SpotPrice: Price5Bytes,
 			PnlPrice:  Price5Bytes,
 		},
 	}
 
-	ValidVEPricesWithOneInvalid = map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-		MarketId0: {
+	ValidVEPricesWithOneInvalid = []vetypes.PricePair{
+		{
+			MarketId:  MarketId0,
 			SpotPrice: Price5Bytes,
 			PnlPrice:  Price5Bytes,
 		},
-		MarketId1: {
+		{
+			MarketId:  MarketId1,
 			SpotPrice: Price6Bytes,
 			PnlPrice:  Price6Bytes,
 		},
-		MarketId2: {
+		{
+			MarketId:  MarketId2,
 			SpotPrice: []byte("invalid"),
 			PnlPrice:  []byte("invalid"),
 		},
 	}
 
-	ValidVEPrice = map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-		MarketId0: {
+	ValidVEPrice = []vetypes.PricePair{
+		{
+			MarketId:  MarketId0,
 			SpotPrice: Price5Bytes,
 			PnlPrice:  Price5Bytes,
 		},
-		MarketId1: {
+		{
+			MarketId:  MarketId1,
 			SpotPrice: Price6Bytes,
 			PnlPrice:  Price6Bytes,
 		},
-		MarketId2: {
+		{
+			MarketId:  MarketId2,
 			SpotPrice: Price7Bytes,
 			PnlPrice:  Price7Bytes,
 		},
 	}
 
-	InvalidVEPriceBytes = map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-		MarketId0: {
+	InvalidVEPriceBytes = []vetypes.PricePair{
+		{
+			MarketId:  MarketId0,
 			SpotPrice: Price5NegativeBytes,
 			PnlPrice:  Price5NegativeBytes,
 		},
-		MarketId1: {
+		{
+			MarketId:  MarketId1,
 			SpotPrice: Price6NegativeBytes,
 			PnlPrice:  Price6NegativeBytes,
 		},
-		MarketId2: {
+		{
+			MarketId:  MarketId2,
 			SpotPrice: Price7NegativeBytes,
 			PnlPrice:  Price7NegativeBytes,
 		},
 	}
 
-	InvalidVePricesMarketIds = map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-		99: {
+	InvalidVePricesMarketIds = []vetypes.PricePair{
+		{
+			MarketId:  99,
 			SpotPrice: Price5Bytes,
 			PnlPrice:  Price5Bytes,
 		},
-		101: {
+		{
+			MarketId:  101,
 			SpotPrice: Price6Bytes,
 			PnlPrice:  Price6Bytes,
 		},
-		102: {
+		{
+			MarketId:  102,
 			SpotPrice: Price7Bytes,
 			PnlPrice:  Price7Bytes,
 		},

@@ -129,8 +129,9 @@ func TestExtendVoteHandler(t *testing.T) {
 				return mClobKeeper
 			},
 			expectedResponse: &vetypes.DaemonVoteExtension{
-				Prices: map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-					constants.MarketId0: {
+				Prices: []vetypes.PricePair{
+					{
+						MarketId:  constants.MarketId0,
 						SpotPrice: constants.Price5Bytes,
 						PnlPrice:  constants.Price5Bytes,
 					},
@@ -261,24 +262,29 @@ func TestExtendVoteHandler(t *testing.T) {
 				return mClobKeeper
 			},
 			expectedResponse: &vetypes.DaemonVoteExtension{
-				Prices: map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-					constants.MarketId0: {
+				Prices: []vetypes.PricePair{
+					{
+						MarketId:  constants.MarketId0,
 						SpotPrice: constants.Price5Bytes,
 						PnlPrice:  constants.Price5Bytes,
 					},
-					constants.MarketId1: {
+					{
+						MarketId:  constants.MarketId1,
 						SpotPrice: constants.Price6Bytes,
 						PnlPrice:  constants.Price6Bytes,
 					},
-					constants.MarketId2: {
+					{
+						MarketId:  constants.MarketId2,
 						SpotPrice: constants.Price7Bytes,
 						PnlPrice:  constants.Price7Bytes,
 					},
-					constants.MarketId3: {
+					{
+						MarketId:  constants.MarketId3,
 						SpotPrice: constants.Price4Bytes,
 						PnlPrice:  constants.Price4Bytes,
 					},
-					constants.MarketId4: {
+					{
+						MarketId:  constants.MarketId4,
 						SpotPrice: constants.Price3Bytes,
 						PnlPrice:  constants.Price3Bytes,
 					},
@@ -466,7 +472,7 @@ func TestVerifyVoteHandler(t *testing.T) {
 				return mPricesKeeper
 			},
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
-				prices := map[uint32]*vetypes.DaemonVoteExtension_PricePair{}
+				prices := []vetypes.PricePair{}
 
 				extBz, err := vetestutils.CreateVoteExtensionBytes(
 					prices,
@@ -493,8 +499,9 @@ func TestVerifyVoteHandler(t *testing.T) {
 				return mPricesKeeper
 			},
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
-				prices := map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-					constants.MarketId0: {
+				prices := []vetypes.PricePair{
+					{
+						MarketId:  constants.MarketId0,
 						SpotPrice: make([]byte, 34),
 						PnlPrice:  make([]byte, 34),
 					},
@@ -580,8 +587,9 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				constants.MarketId0: math.MaxUint64,
 			},
 			expected: &vetypes.DaemonVoteExtension{
-				Prices: map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-					constants.MarketId0: {
+				Prices: []vetypes.PricePair{
+					{
+						MarketId:  constants.MarketId0,
 						SpotPrice: constants.Price5Bytes,
 						PnlPrice:  constants.Price5Bytes,
 					},
@@ -604,8 +612,9 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				constants.MarketId0: math.MaxUint64,
 			},
 			expected: &vetypes.DaemonVoteExtension{
-				Prices: map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-					constants.MarketId0: {
+				Prices: []vetypes.PricePair{
+					{
+						MarketId:  constants.MarketId0,
 						SpotPrice: constants.Price5Bytes,
 						PnlPrice:  constants.Price5Bytes,
 					},
@@ -632,12 +641,14 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				constants.MarketId1: math.MaxUint64,
 			},
 			expected: &vetypes.DaemonVoteExtension{
-				Prices: map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-					constants.MarketId0: {
+				Prices: []vetypes.PricePair{
+					{
+						MarketId:  constants.MarketId0,
 						SpotPrice: constants.Price5Bytes,
 						PnlPrice:  constants.Price5Bytes,
 					},
-					constants.MarketId1: {
+					{
+						MarketId:  constants.MarketId1,
 						SpotPrice: constants.Price6Bytes,
 						PnlPrice:  constants.Price6Bytes,
 					},
@@ -664,12 +675,14 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				constants.MarketId1: math.MaxUint64,
 			},
 			expected: &vetypes.DaemonVoteExtension{
-				Prices: map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-					constants.MarketId0: {
+				Prices: []vetypes.PricePair{
+					{
+						MarketId:  constants.MarketId0,
 						SpotPrice: constants.Price5Bytes,
 						PnlPrice:  constants.Price5Bytes,
 					},
-					constants.MarketId1: {
+					{
+						MarketId:  constants.MarketId1,
 						SpotPrice: constants.Price6Bytes,
 						PnlPrice:  constants.Price6Bytes,
 					},
@@ -696,12 +709,14 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				constants.MarketId1: math.MaxUint64,
 			},
 			expected: &vetypes.DaemonVoteExtension{
-				Prices: map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-					constants.MarketId0: {
+				Prices: []vetypes.PricePair{
+					{
+						MarketId:  constants.MarketId0,
 						SpotPrice: constants.Price5Bytes,
 						PnlPrice:  constants.Price5Bytes,
 					},
-					constants.MarketId1: {
+					{
+						MarketId:  constants.MarketId1,
 						SpotPrice: constants.Price6Bytes,
 						PnlPrice:  constants.Price6Bytes,
 					},
@@ -728,12 +743,14 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				constants.MarketId1: constants.Price6,
 			},
 			expected: &vetypes.DaemonVoteExtension{
-				Prices: map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-					constants.MarketId0: {
+				Prices: []vetypes.PricePair{
+					{
+						MarketId:  constants.MarketId0,
 						SpotPrice: constants.Price5Bytes,
 						PnlPrice:  constants.Price5Bytes,
 					},
-					constants.MarketId1: {
+					{
+						MarketId:  constants.MarketId1,
 						SpotPrice: constants.Price6Bytes,
 						PnlPrice:  constants.Price6Bytes,
 					},
@@ -760,12 +777,14 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				constants.MarketId1: math.MaxUint64,
 			},
 			expected: &vetypes.DaemonVoteExtension{
-				Prices: map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-					constants.MarketId0: {
+				Prices: []vetypes.PricePair{
+					{
+						MarketId:  constants.MarketId0,
 						SpotPrice: constants.Price5Bytes,
 						PnlPrice:  constants.Price5Bytes,
 					},
-					constants.MarketId1: {
+					{
+						MarketId:  constants.MarketId1,
 						SpotPrice: constants.Price6Bytes,
 						PnlPrice:  constants.Price6Bytes,
 					},
@@ -792,12 +811,14 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				constants.MarketId1: constants.Price6,
 			},
 			expected: &vetypes.DaemonVoteExtension{
-				Prices: map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-					constants.MarketId0: {
+				Prices: []vetypes.PricePair{
+					{
+						MarketId:  constants.MarketId0,
 						SpotPrice: constants.Price5Bytes,
 						PnlPrice:  constants.Price5Bytes,
 					},
-					constants.MarketId1: {
+					{
+						MarketId:  constants.MarketId1,
 						SpotPrice: constants.Price6Bytes,
 						PnlPrice:  constants.Price6Bytes,
 					},
@@ -820,8 +841,9 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				constants.MarketId0: constants.Price5In1000SubticksPerTick - 2000,
 			},
 			expected: &vetypes.DaemonVoteExtension{
-				Prices: map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-					constants.MarketId0: {
+				Prices: []vetypes.PricePair{
+					{
+						MarketId:  constants.MarketId0,
 						SpotPrice: getGobEncodedPriceBytes(500005),
 						PnlPrice:  getGobEncodedPriceBytes(500003),
 					},
@@ -848,12 +870,14 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				constants.MarketId1: constants.Price6In1000SubticksPerTick + 2000,
 			},
 			expected: &vetypes.DaemonVoteExtension{
-				Prices: map[uint32]*vetypes.DaemonVoteExtension_PricePair{
-					constants.MarketId0: {
+				Prices: []vetypes.PricePair{
+					{
+						MarketId:  constants.MarketId0,
 						SpotPrice: getGobEncodedPriceBytes(500005),
 						PnlPrice:  getGobEncodedPriceBytes(500003),
 					},
-					constants.MarketId1: {
+					{
+						MarketId:  constants.MarketId1,
 						SpotPrice: getGobEncodedPriceBytes(60006),
 						PnlPrice:  getGobEncodedPriceBytes(60036),
 					},
@@ -983,9 +1007,15 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				require.NoError(t, err)
 
 				require.Equal(t, len(expectedVE.Prices), len(actualVE.Prices))
-				for marketID, expectedPricePair := range expectedVE.Prices {
-					actualPricePair, exists := actualVE.Prices[marketID]
-					require.True(t, exists)
+
+				expectedPriceMap := make(map[uint32]vetypes.PricePair)
+				for _, expectedPricePair := range expectedVE.Prices {
+					expectedPriceMap[expectedPricePair.MarketId] = expectedPricePair
+				}
+
+				for _, actualPricePair := range actualVE.Prices {
+					expectedPricePair, exists := expectedPriceMap[actualPricePair.MarketId]
+					require.True(t, exists, "MarketId %d not found in expected prices", actualPricePair.MarketId)
 					require.Equal(t, expectedPricePair.PnlPrice, actualPricePair.PnlPrice)
 					require.Equal(t, expectedPricePair.SpotPrice, actualPricePair.SpotPrice)
 				}
