@@ -91,10 +91,10 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].denom' -v "$NATIVE_TOKEN"
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_min_deposit.[0].denom' -v "$NATIVE_TOKEN"
 	# reduced deposit period
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '300s'
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '120s'
 	# reduced voting period
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_voting_period' -v '60s'
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '300s'
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '120s'
 	# set initial deposit ratio to prevent spamming
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_initial_deposit_ratio' -v '0.20000' # 20%
 	# setting to 1 disables cancelling proposals
