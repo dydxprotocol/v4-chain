@@ -82,7 +82,6 @@ func NewFullNodeStreamingManager(
 	maxSubscriptionChannelSize uint32,
 	snapshotBlockInterval uint32,
 ) *FullNodeStreamingManagerImpl {
-	logger = logger.With(log.ModuleKey, "full-node-streaming")
 	fullNodeStreamingManager := &FullNodeStreamingManagerImpl{
 		logger:                 logger,
 		orderbookSubscriptions: make(map[uint32]*OrderbookSubscription),
