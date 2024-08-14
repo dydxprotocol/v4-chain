@@ -364,6 +364,16 @@ func TestMsgDepositToVault(t *testing.T) {
 				require.Equal(t, tc.vaultEquityHistory[i], vaultEquity)
 				// Check that vault exists in address store.
 				require.True(t, tApp.App.VaultKeeper.IsVault(ctx, tc.vaultId.ToModuleAccountAddress()))
+				// Check that vault params are initialized.
+				vaultParams, exists := tApp.App.VaultKeeper.GetVaultParams(ctx, tc.vaultId)
+				require.True(t, exists)
+				require.Equal(
+					t,
+					vaulttypes.VaultParams{
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+					},
+					vaultParams,
+				)
 			}
 		})
 	}

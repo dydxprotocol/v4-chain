@@ -36,10 +36,8 @@ func (gs GenesisState) Validate() error {
 		if totalShares.Sign() != 0 {
 			return ErrMismatchedTotalAndOwnerShares
 		}
-		if vault.QuotingParams != nil {
-			if err := vault.QuotingParams.Validate(); err != nil {
-				return err
-			}
+		if err := vault.VaultParams.Validate(); err != nil {
+			return err
 		}
 	}
 	return nil

@@ -35,41 +35,63 @@ func (k Keeper) SetDefaultQuotingParams(
 	return nil
 }
 
-// GetVaultQuotingParams returns `QuotingParams` in state for a given vault, if it exists,
-// and otherwise, returns module-wide `DefaultQuotingParams`.
+// GetVaultParams returns `VaultParams` in state for a given vault.
+func (k Keeper) GetVaultParams(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+) (
+	vaultParams types.VaultParams,
+	exists bool,
+) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))
+
+	b := store.Get(vaultId.ToStateKey())
+	if b == nil {
+		return vaultParams, false
+	}
+
+	k.cdc.MustUnmarshal(b, &vaultParams)
+	return vaultParams, true
+}
+
+// SetVaultParams sets `VaultParams` in state for a given vault.
+// Returns an error if validation fails.
+func (k Keeper) SetVaultParams(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+	vaultParams types.VaultParams,
+) error {
+	if err := vaultParams.Validate(); err != nil {
+		return err
+	}
+
+	b := k.cdc.MustMarshal(&vaultParams)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))
+	store.Set(vaultId.ToStateKey(), b)
+
+	return nil
+}
+
+// GetVaultQuotingParams returns quoting parameters for a given vault, which is
+// - `VaultParams.QuotingParams` if set
+// - `DefaultQuotingParams` otherwise
+// `exists` is false if `VaultParams` does not exist for the given vault.
 func (k Keeper) GetVaultQuotingParams(
 	ctx sdk.Context,
 	vaultId types.VaultId,
 ) (
-	quotingParams types.QuotingParams,
+	params types.QuotingParams,
+	exists bool,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.QuotingParamsKeyPrefix))
-
-	b := store.Get(vaultId.ToStateKey())
-	if b == nil {
-		return k.GetDefaultQuotingParams(ctx)
+	vaultParams, exists := k.GetVaultParams(ctx, vaultId)
+	if !exists {
+		return params, false
 	}
-
-	k.cdc.MustUnmarshal(b, &quotingParams)
-	return quotingParams
-}
-
-// SetVaultQuotingParams sets `QuotingParams` in state for a given vault.
-// Returns an error if validation fails.
-func (k Keeper) SetVaultQuotingParams(
-	ctx sdk.Context,
-	vaultId types.VaultId,
-	qoutingParams types.QuotingParams,
-) error {
-	if err := qoutingParams.Validate(); err != nil {
-		return err
+	if vaultParams.QuotingParams == nil {
+		return k.GetDefaultQuotingParams(ctx), true
+	} else {
+		return *vaultParams.QuotingParams, true
 	}
-
-	b := k.cdc.MustMarshal(&qoutingParams)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.QuotingParamsKeyPrefix))
-	store.Set(vaultId.ToStateKey(), b)
-
-	return nil
 }
 
 // UnsafeGetParams returns `Params` in state.

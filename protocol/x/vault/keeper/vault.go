@@ -106,9 +106,9 @@ func (k Keeper) DecommissionVault(
 	vaultAddressStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultAddressKeyPrefix))
 	vaultAddressStore.Delete([]byte(vaultId.ToModuleAccountAddress()))
 
-	// Delete vault quoting params if any.
-	vaultQuotingParamsStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.QuotingParamsKeyPrefix))
-	vaultQuotingParamsStore.Delete(vaultId.ToStateKey())
+	// Delete vault params.
+	vaultParamsStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))
+	vaultParamsStore.Delete(vaultId.ToStateKey())
 }
 
 // AddVaultToAddressStore adds a vault's address to the vault address store.
@@ -146,7 +146,10 @@ func (k Keeper) GetAllVaults(ctx sdk.Context) []*types.Vault {
 
 		allOwnerShares := k.GetAllOwnerShares(ctx, *vaultId)
 
-		quotingParams := k.GetVaultQuotingParams(ctx, *vaultId)
+		vaultParams, exists := k.GetVaultParams(ctx, *vaultId)
+		if !exists {
+			panic("vault params not found")
+		}
 
 		mostRecentClientIds := k.GetMostRecentClientIds(ctx, *vaultId)
 
@@ -154,7 +157,7 @@ func (k Keeper) GetAllVaults(ctx sdk.Context) []*types.Vault {
 			VaultId:             vaultId,
 			TotalShares:         &totalShares,
 			OwnerShares:         allOwnerShares,
-			QuotingParams:       &quotingParams,
+			VaultParams:         vaultParams,
 			MostRecentClientIds: mostRecentClientIds,
 		})
 	}

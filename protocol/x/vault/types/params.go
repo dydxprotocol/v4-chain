@@ -44,3 +44,19 @@ func (p QuotingParams) Validate() error {
 
 	return nil
 }
+
+// Validate validates individual vault parameters.
+func (v VaultParams) Validate() error {
+	// Validate status.
+	if v.Status == VaultStatus_VAULT_STATUS_UNSPECIFIED {
+		return ErrUnspecifiedVaultStatus
+	}
+	// Validate quoting params.
+	if v.QuotingParams != nil {
+		if err := v.QuotingParams.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
