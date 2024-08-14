@@ -37,6 +37,9 @@ func TestAddFlagsToCommand(t *testing.T) {
 		fmt.Sprintf("Has %s flag", flags.GrpcStreamingMaxBatchSize): {
 			flagName: flags.GrpcStreamingMaxBatchSize,
 		},
+		fmt.Sprintf("Has %s flag", flags.FullNodeStreamingSnapshotInterval): {
+			flagName: flags.FullNodeStreamingSnapshotInterval,
+		},
 		fmt.Sprintf("Has %s flag", flags.GrpcStreamingMaxChannelBufferSize): {
 			flagName: flags.GrpcStreamingMaxChannelBufferSize,
 		},
@@ -65,12 +68,13 @@ func TestValidate(t *testing.T) {
 	}{
 		"success (default values)": {
 			flags: flags.Flags{
-				NonValidatingFullNode:      flags.DefaultNonValidatingFullNode,
-				DdAgentHost:                flags.DefaultDdAgentHost,
-				DdTraceAgentPort:           flags.DefaultDdTraceAgentPort,
-				GrpcAddress:                config.DefaultGRPCAddress,
-				GrpcEnable:                 true,
-				OptimisticExecutionEnabled: false,
+				NonValidatingFullNode:             flags.DefaultNonValidatingFullNode,
+				DdAgentHost:                       flags.DefaultDdAgentHost,
+				DdTraceAgentPort:                  flags.DefaultDdTraceAgentPort,
+				GrpcAddress:                       config.DefaultGRPCAddress,
+				GrpcEnable:                        true,
+				FullNodeStreamingSnapshotInterval: flags.DefaultFullNodeStreamingSnapshotInterval,
+				OptimisticExecutionEnabled:        false,
 			},
 		},
 		"success - full node & gRPC disabled": {
@@ -85,8 +89,8 @@ func TestValidate(t *testing.T) {
 				GrpcEnable:                        true,
 				GrpcStreamingEnabled:              true,
 				GrpcStreamingFlushIntervalMs:      100,
-				GrpcStreamingMaxBatchSize:         10000,
-				GrpcStreamingMaxChannelBufferSize: 10000,
+				GrpcStreamingMaxBatchSize:         2000,
+				GrpcStreamingMaxChannelBufferSize: 2000,
 				WebsocketStreamingEnabled:         false,
 			},
 		},
@@ -96,8 +100,8 @@ func TestValidate(t *testing.T) {
 				GrpcEnable:                        true,
 				GrpcStreamingEnabled:              true,
 				GrpcStreamingFlushIntervalMs:      100,
-				GrpcStreamingMaxBatchSize:         10000,
-				GrpcStreamingMaxChannelBufferSize: 10000,
+				GrpcStreamingMaxBatchSize:         2000,
+				GrpcStreamingMaxChannelBufferSize: 2000,
 				WebsocketStreamingEnabled:         true,
 				WebsocketStreamingPort:            8989,
 			},
@@ -172,7 +176,7 @@ func TestValidate(t *testing.T) {
 				GrpcEnable:                   true,
 				GrpcStreamingEnabled:         true,
 				GrpcStreamingFlushIntervalMs: 0,
-				GrpcStreamingMaxBatchSize:    10000,
+				GrpcStreamingMaxBatchSize:    2000,
 			},
 			expectedErr: fmt.Errorf("full node streaming flush interval must be positive number"),
 		},
@@ -182,7 +186,7 @@ func TestValidate(t *testing.T) {
 				GrpcEnable:                        true,
 				GrpcStreamingEnabled:              true,
 				GrpcStreamingFlushIntervalMs:      100,
-				GrpcStreamingMaxBatchSize:         10000,
+				GrpcStreamingMaxBatchSize:         2000,
 				GrpcStreamingMaxChannelBufferSize: 0,
 			},
 			expectedErr: fmt.Errorf("full node streaming channel size must be positive number"),
@@ -197,6 +201,29 @@ func TestValidate(t *testing.T) {
 				WebsocketStreamingEnabled:    true,
 			},
 			expectedErr: fmt.Errorf("full node streaming batch size must be positive number"),
+		},
+		"failure - full node streaming enabled with <= 49 snapshot interval": {
+			flags: flags.Flags{
+				NonValidatingFullNode:             true,
+				GrpcEnable:                        true,
+				GrpcStreamingEnabled:              true,
+				GrpcStreamingFlushIntervalMs:      100,
+				GrpcStreamingMaxBatchSize:         2000,
+				GrpcStreamingMaxChannelBufferSize: 2000,
+				FullNodeStreamingSnapshotInterval: 49,
+			},
+			expectedErr: fmt.Errorf("full node streaming snapshot interval must be >= 50 blocks or zero"),
+		},
+		"success - full node streaming enabled with 50 snapshot interval": {
+			flags: flags.Flags{
+				NonValidatingFullNode:             true,
+				GrpcEnable:                        true,
+				GrpcStreamingEnabled:              true,
+				GrpcStreamingFlushIntervalMs:      100,
+				GrpcStreamingMaxBatchSize:         2000,
+				GrpcStreamingMaxChannelBufferSize: 2000,
+				FullNodeStreamingSnapshotInterval: 50,
+			},
 		},
 	}
 	for name, tc := range tests {
@@ -228,6 +255,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 		expectedGrpcStreamingMaxChannelBufferSize uint32
 		expectedWebsocketEnabled                  bool
 		expectedWebsocketPort                     uint16
+		expectedFullNodeStreamingSnapshotInterval uint32
 		expectedOptimisticExecutionEnabled        bool
 	}{
 		"Sets to default if unset": {
@@ -242,6 +270,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcStreamingMaxChannelBufferSize: 2000,
 			expectedWebsocketEnabled:                  false,
 			expectedWebsocketPort:                     9091,
+			expectedFullNodeStreamingSnapshotInterval: 0,
 			expectedOptimisticExecutionEnabled:        false,
 		},
 		"Sets values from options": {
@@ -257,6 +286,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 				flags.GrpcStreamingMaxChannelBufferSize: uint32(972),
 				flags.WebsocketStreamingEnabled:         "true",
 				flags.WebsocketStreamingPort:            8989,
+				flags.FullNodeStreamingSnapshotInterval: uint32(123),
 				flags.OptimisticExecutionEnabled:        "true",
 			},
 			expectedNonValidatingFullNodeFlag:         true,
@@ -270,6 +300,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedGrpcStreamingMaxChannelBufferSize: 972,
 			expectedWebsocketEnabled:                  true,
 			expectedWebsocketPort:                     8989,
+			expectedFullNodeStreamingSnapshotInterval: 123,
 			expectedOptimisticExecutionEnabled:        true,
 		},
 	}
@@ -322,6 +353,11 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 				t,
 				tc.expectedGrpcStreamingBatchSize,
 				flags.GrpcStreamingMaxBatchSize,
+			)
+			require.Equal(
+				t,
+				tc.expectedFullNodeStreamingSnapshotInterval,
+				flags.FullNodeStreamingSnapshotInterval,
 			)
 			require.Equal(
 				t,

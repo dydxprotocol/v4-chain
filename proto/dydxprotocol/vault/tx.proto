@@ -15,8 +15,13 @@ service Msg {
   // DepositToVault deposits funds into a vault.
   rpc DepositToVault(MsgDepositToVault) returns (MsgDepositToVaultResponse);
 
-  // UpdateParams updates the Params in state.
-  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+  // UpdateDefaultQuotingParams updates the default quoting params in state.
+  rpc UpdateDefaultQuotingParams(MsgUpdateDefaultQuotingParams)
+      returns (MsgUpdateDefaultQuotingParamsResponse);
+
+  // SetVaultQuotingParams sets the quoting parameters of a specific vault.
+  rpc SetVaultQuotingParams(MsgSetVaultQuotingParams)
+      returns (MsgSetVaultQuotingParamsResponse);
 }
 
 // MsgDepositToVault deposits the specified asset from the subaccount to the
@@ -44,15 +49,34 @@ message MsgDepositToVault {
 // MsgDepositToVaultResponse is the Msg/DepositToVault response type.
 message MsgDepositToVaultResponse {}
 
-// MsgUpdateParams is the Msg/UpdateParams request type.
-message MsgUpdateParams {
+// MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request
+// type.
+message MsgUpdateDefaultQuotingParams {
   // Authority is the address that controls the module.
   option (cosmos.msg.v1.signer) = "authority";
   string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 
-  // The parameters to update. Each field must be set.
-  Params params = 2 [ (gogoproto.nullable) = false ];
+  // The quoting parameters to update to. Every field must be set.
+  QuotingParams default_quoting_params = 2 [ (gogoproto.nullable) = false ];
 }
 
-// MsgUpdateParamsResponse is the Msg/UpdateParams response type.
-message MsgUpdateParamsResponse {}
+// MsgUpdateDefaultQuotingParamsResponse is the Msg/UpdateDefaultQuotingParams
+// response type.
+message MsgUpdateDefaultQuotingParamsResponse {}
+
+// MsgSetVaultQuotingParams is the Msg/SetVaultQuotingParams request type.
+message MsgSetVaultQuotingParams {
+  // Authority is the address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The vault to set quoting params of.
+  VaultId vault_id = 2 [ (gogoproto.nullable) = false ];
+
+  // The quoting parameters to set. Each field must be set.
+  QuotingParams quoting_params = 3 [ (gogoproto.nullable) = false ];
+}
+
+// MsgSetVaultQuotingParamsResponse is the Msg/SetVaultQuotingParams response
+// type.
+message MsgSetVaultQuotingParamsResponse {}

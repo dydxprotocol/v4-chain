@@ -1,0 +1,3829 @@
+{
+  "genesis_time": "2023-10-26T17:00:00Z",
+  "chain_id": "dydx-mainnet-1",
+  "initial_height": "1",
+  "consensus_params": {
+    "block": {
+      "max_bytes": "4194304",
+      "max_gas": "-1"
+    },
+    "evidence": {
+      "max_age_num_blocks": "100000",
+      "max_age_duration": "172800000000000",
+      "max_bytes": "1048576"
+    },
+    "validator": {
+      "pub_key_types": [
+        "ed25519"
+      ]
+    },
+    "version": {
+      "app": "0"
+    }
+  },
+  "app_hash": "",
+  "app_state": {
+    "07-tendermint": null,
+    "assets": {
+      "assets": [
+        {
+          "id": 0,
+          "symbol": "USDC",
+          "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+          "denom_exponent": "-6",
+          "has_market": false,
+          "market_id": 0,
+          "atomic_resolution": -6
+        }
+      ]
+    },
+    "auth": {
+      "params": {
+        "max_memo_characters": "256",
+        "tx_sig_limit": "7",
+        "tx_size_cost_per_byte": "10",
+        "sig_verify_cost_ed25519": "590",
+        "sig_verify_cost_secp256k1": "1000"
+      },
+      "accounts": [
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "0",
+          "address": "dydx10cmpk9tf430rfhkz8nvzcrq7vng5qvpkm8jkj3",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "1",
+          "address": "dydx140l6y2gp3gxvay6qtn70re7z2s0gn57z9qaqxk",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "2",
+          "address": "dydx15wphegl8esn7r2rgj9j3xf870v78lxg8phy9w9",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "3",
+          "address": "dydx160n4rwm854v06ppkly2pt0zc9rpwlm5y0kyjtc",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "4",
+          "address": "dydx168la65zj2868vqxyd3zrvaz3vhm85430dxy4q2",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "5",
+          "address": "dydx16pj5gljqnqs0ajxakccfjhu05yczp9870tkh0z",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "6",
+          "address": "dydx199fjq4rnfvz24cktl8cervx8h8e90ruk5644xz",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "7",
+          "address": "dydx1a9lm6t9qalz53jrp0q6p50q2cxeqnwshse78q6",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "8",
+          "address": "dydx1d9e68e7glce5pehh8qk0gcx9l06tjeh0kr5eg7",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "9",
+          "address": "dydx1dm25afltds6v8te6m2lt6p0t3m4ygah32qhgtz",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "10",
+          "address": "dydx1et3h08wt6y9h0zjkp6jxpr42hm58avcd9mcppt",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "11",
+          "address": "dydx1fs0t34g628xdqc8alfefnadq2x3qawt8de3dka",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "12",
+          "address": "dydx1gffkd68xcnfpzcsplf0fsuetxkysunudlrneyl",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "13",
+          "address": "dydx1j4ljutnh66r55a29jydgca7pfmhd40e3kpwlky",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "14",
+          "address": "dydx1jvct2ck9hptwyzrr0umfvwxed7n9nhhj2sldxc",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "15",
+          "address": "dydx1kmt4qun5wj6qays8hpkp3ea2anvq3m70slllnw",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "16",
+          "address": "dydx1ml44cenapnawcn4xy3w36jce0rg78dm8cv6j2z",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "17",
+          "address": "dydx1mwhwf9rqh64ktr8t8xnz37nhg7vvy42ea2vy9g",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "18",
+          "address": "dydx1n56zk7kmv40g5zrz5psx7yysa0gk86mfhk7d8h",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "19",
+          "address": "dydx1ql40pjftdwl6qtmgk0fn0r02spvss96ekrjj63",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "20",
+          "address": "dydx1s7zqmy708qhy4m7j3vrmydj2d0zr4wdfqznqt7",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "21",
+          "address": "dydx1t7dum0wcdk9c0ly6fhd5mxcavg6plhw7wgqgwl",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "22",
+          "address": "dydx1thl5syhmscgnj7whdyrydw3w6vy80044mlmz2n",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "23",
+          "address": "dydx1vl5ty47uwpfv4mcutwv4zam09mvvvdgy2m9e59",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "24",
+          "address": "dydx1x20lytyf6zkcrv5edpkfkn8sz578qg5suyy80q",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "25",
+          "address": "dydx1xwk95hxuude0zz4syvymlkrhjmjkqga79cvcpj",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "26",
+          "address": "dydx1y29mkku4zqz8phrxc8zgu7jfnw504leqgs65fe",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "27",
+          "address": "dydx1y66c5c7zpcqxqgqec9ttutuwu60qkzav22h3ue",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "28",
+          "address": "dydx1y6ncfxx8x9sqec97pehjw0k32slw63852paygz",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "29",
+          "address": "dydx1z0sjs7vr8s7gy7je3dzyn8hngdkdd9g305mzns",
+          "pub_key": null,
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "account_number": "30",
+          "address": "dydx1z29qzgp9pxt69462mk26gyc82k2sdxg2crwr9d",
+          "pub_key": null,
+          "sequence": "0"
+        }
+      ]
+    },
+    "bank": {
+      "params": {
+        "send_enabled": [],
+        "default_send_enabled": true
+      },
+      "balances": [
+        {
+          "address": "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
+          "coins": [
+            {
+              "denom": "adydx",
+              "amount": "999966923812606530000000000"
+            }
+          ]
+        },
+        {
+          "address": "dydx10cmpk9tf430rfhkz8nvzcrq7vng5qvpkm8jkj3",
+          "coins": [
+            {
+              "amount": "10000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx140l6y2gp3gxvay6qtn70re7z2s0gn57z9qaqxk",
+          "coins": [
+            {
+              "amount": "1000000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx15wphegl8esn7r2rgj9j3xf870v78lxg8phy9w9",
+          "coins": [
+            {
+              "amount": "1000000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx160n4rwm854v06ppkly2pt0zc9rpwlm5y0kyjtc",
+          "coins": [
+            {
+              "amount": "1014680000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx168la65zj2868vqxyd3zrvaz3vhm85430dxy4q2",
+          "coins": [
+            {
+              "amount": "101000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx16pj5gljqnqs0ajxakccfjhu05yczp9870tkh0z",
+          "coins": [
+            {
+              "amount": "1005000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx199fjq4rnfvz24cktl8cervx8h8e90ruk5644xz",
+          "coins": [
+            {
+              "amount": "3007034560000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1a9lm6t9qalz53jrp0q6p50q2cxeqnwshse78q6",
+          "coins": [
+            {
+              "amount": "1000000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1d9e68e7glce5pehh8qk0gcx9l06tjeh0kr5eg7",
+          "coins": [
+            {
+              "amount": "1010000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1dm25afltds6v8te6m2lt6p0t3m4ygah32qhgtz",
+          "coins": [
+            {
+              "amount": "1000000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1et3h08wt6y9h0zjkp6jxpr42hm58avcd9mcppt",
+          "coins": [
+            {
+              "amount": "1050000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1fs0t34g628xdqc8alfefnadq2x3qawt8de3dka",
+          "coins": [
+            {
+              "amount": "1000000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1gffkd68xcnfpzcsplf0fsuetxkysunudlrneyl",
+          "coins": [
+            {
+              "amount": "1020000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1j4ljutnh66r55a29jydgca7pfmhd40e3kpwlky",
+          "coins": [
+            {
+              "amount": "1097000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1jvct2ck9hptwyzrr0umfvwxed7n9nhhj2sldxc",
+          "coins": [
+            {
+              "amount": "1017419090000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1kmt4qun5wj6qays8hpkp3ea2anvq3m70slllnw",
+          "coins": [
+            {
+              "amount": "1001193743470000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1ml44cenapnawcn4xy3w36jce0rg78dm8cv6j2z",
+          "coins": [
+            {
+              "amount": "1029000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1mwhwf9rqh64ktr8t8xnz37nhg7vvy42ea2vy9g",
+          "coins": [
+            {
+              "amount": "1000000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1n56zk7kmv40g5zrz5psx7yysa0gk86mfhk7d8h",
+          "coins": [
+            {
+              "amount": "1000000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1ql40pjftdwl6qtmgk0fn0r02spvss96ekrjj63",
+          "coins": [
+            {
+              "amount": "1010000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1s7zqmy708qhy4m7j3vrmydj2d0zr4wdfqznqt7",
+          "coins": [
+            {
+              "amount": "1001000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1t7dum0wcdk9c0ly6fhd5mxcavg6plhw7wgqgwl",
+          "coins": [
+            {
+              "amount": "1062510000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1thl5syhmscgnj7whdyrydw3w6vy80044mlmz2n",
+          "coins": [
+            {
+              "amount": "1010000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1vl5ty47uwpfv4mcutwv4zam09mvvvdgy2m9e59",
+          "coins": [
+            {
+              "amount": "2000000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1x20lytyf6zkcrv5edpkfkn8sz578qg5suyy80q",
+          "coins": [
+            {
+              "amount": "1025000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1xwk95hxuude0zz4syvymlkrhjmjkqga79cvcpj",
+          "coins": [
+            {
+              "amount": "2500000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1y29mkku4zqz8phrxc8zgu7jfnw504leqgs65fe",
+          "coins": [
+            {
+              "amount": "1010000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1y66c5c7zpcqxqgqec9ttutuwu60qkzav22h3ue",
+          "coins": [
+            {
+              "amount": "22000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1y6ncfxx8x9sqec97pehjw0k32slw63852paygz",
+          "coins": [
+            {
+              "amount": "1073350000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1z0sjs7vr8s7gy7je3dzyn8hngdkdd9g305mzns",
+          "coins": [
+            {
+              "amount": "1000000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        },
+        {
+          "address": "dydx1z29qzgp9pxt69462mk26gyc82k2sdxg2crwr9d",
+          "coins": [
+            {
+              "amount": "1000000000000000000000",
+              "denom": "adydx"
+            }
+          ]
+        }
+      ],
+      "supply": [],
+      "denom_metadata": [
+        {
+          "description": "The native token of the network",
+          "denom_units": [
+            {
+              "denom": "adydx"
+            },
+            {
+              "denom": "dydx",
+              "exponent": 18
+            }
+          ],
+          "base": "adydx",
+          "name": "DYDX",
+          "display": "dydx",
+          "symbol": "dydx"
+        }
+      ],
+      "send_enabled": []
+    },
+    "blocktime": {
+      "params": {
+        "durations": [
+          "300s",
+          "1800s"
+        ]
+      }
+    },
+    "bridge": {
+      "event_params": {
+        "denom": "adydx",
+        "eth_chain_id": 1,
+        "eth_address": "0x46b2DeAe6eFf3011008EA27EA36b7c27255ddFA9"
+      },
+      "propose_params": {
+        "max_bridges_per_block": 10,
+        "propose_delay_duration": "60s",
+        "skip_rate_ppm": 800000,
+        "skip_if_block_delayed_by_duration": "5s"
+      },
+      "safety_params": {
+        "is_disabled": false,
+        "delay_blocks": 86400
+      },
+      "acknowledged_event_info": {
+        "next_id": 36,
+        "eth_block_height": 18332102
+      }
+    },
+    "capability": {
+      "index": "1",
+      "owners": []
+    },
+    "clob": {
+      "clob_pairs": [
+        {
+          "id": 0,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 0
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 100000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 1,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 1
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 100000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 2,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 2
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 3,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 3
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 4,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 4
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 5,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 5
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 6,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 6
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 7,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 7
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 8,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 8
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 9,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 9
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 10,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 10
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 11,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 11
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 12,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 12
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 13,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 13
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 14,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 14
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 15,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 15
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 16,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 16
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 17,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 17
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 18,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 18
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 19,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 19
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 20,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 20
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 21,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 21
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 22,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 22
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 23,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 23
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 24,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 24
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 25,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 25
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 26,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 26
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 27,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 27
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 28,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 28
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 29,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 29
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 30,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 30
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 31,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 31
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        },
+        {
+          "id": 32,
+          "status": "STATUS_INITIALIZING",
+          "perpetual_clob_metadata": {
+            "perpetual_id": 32
+          },
+          "step_base_quantums": 1000000,
+          "subticks_per_tick": 1000000,
+          "quantum_conversion_exponent": -9
+        }
+      ],
+      "liquidations_config": {
+        "max_liquidation_fee_ppm": 15000,
+        "position_block_limits": {
+          "min_position_notional_liquidated": 1000000000,
+          "max_position_portion_liquidated_ppm": 100000
+        },
+        "subaccount_block_limits": {
+          "max_notional_liquidated": 100000000000,
+          "max_quantums_insurance_lost": 1000000000000
+        },
+        "fillable_price_config": {
+          "bankruptcy_adjustment_ppm": 1000000,
+          "spread_to_maintenance_margin_ratio_ppm": 1500000
+        }
+      },
+      "block_rate_limit_config": {
+        "max_short_term_orders_per_n_blocks": [
+          {
+            "limit": 200,
+            "num_blocks": 1
+          }
+        ],
+        "max_stateful_orders_per_n_blocks": [
+          {
+            "limit": 2,
+            "num_blocks": 1
+          },
+          {
+            "limit": 20,
+            "num_blocks": 100
+          }
+        ],
+        "max_short_term_order_cancellations_per_n_blocks": [
+          {
+            "limit": 200,
+            "num_blocks": 1
+          }
+        ]
+      },
+      "equity_tier_limit_config": {
+        "short_term_order_equity_tiers": [
+          {
+            "limit": 0,
+            "usd_tnc_required": "0"
+          },
+          {
+            "limit": 1,
+            "usd_tnc_required": "20000000"
+          },
+          {
+            "limit": 5,
+            "usd_tnc_required": "100000000"
+          },
+          {
+            "limit": 10,
+            "usd_tnc_required": "1000000000"
+          },
+          {
+            "limit": 100,
+            "usd_tnc_required": "10000000000"
+          },
+          {
+            "limit": 1000,
+            "usd_tnc_required": "100000000000"
+          }
+        ],
+        "stateful_order_equity_tiers": [
+          {
+            "limit": 0,
+            "usd_tnc_required": "0"
+          },
+          {
+            "limit": 1,
+            "usd_tnc_required": "20000000"
+          },
+          {
+            "limit": 5,
+            "usd_tnc_required": "100000000"
+          },
+          {
+            "limit": 10,
+            "usd_tnc_required": "1000000000"
+          },
+          {
+            "limit": 100,
+            "usd_tnc_required": "10000000000"
+          },
+          {
+            "limit": 200,
+            "usd_tnc_required": "100000000000"
+          }
+        ]
+      }
+    },
+    "consensus": null,
+    "crisis": {
+      "constant_fee": {
+        "denom": "adydx",
+        "amount": "1000000000000000000"
+      }
+    },
+    "delaymsg": {
+      "delayed_messages": [
+        {
+          "id": 0,
+          "msg": {
+            "@type": "/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
+            "authority": "dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr",
+            "params": {
+              "tiers": [
+                {
+                  "name": "1",
+                  "absolute_volume_requirement": "0",
+                  "total_volume_share_requirement_ppm": 0,
+                  "maker_volume_share_requirement_ppm": 0,
+                  "maker_fee_ppm": 100,
+                  "taker_fee_ppm": 500
+                },
+                {
+                  "name": "2",
+                  "absolute_volume_requirement": "1000000000000",
+                  "total_volume_share_requirement_ppm": 0,
+                  "maker_volume_share_requirement_ppm": 0,
+                  "maker_fee_ppm": 100,
+                  "taker_fee_ppm": 450
+                },
+                {
+                  "name": "3",
+                  "absolute_volume_requirement": "5000000000000",
+                  "total_volume_share_requirement_ppm": 0,
+                  "maker_volume_share_requirement_ppm": 0,
+                  "maker_fee_ppm": 50,
+                  "taker_fee_ppm": 400
+                },
+                {
+                  "name": "4",
+                  "absolute_volume_requirement": "25000000000000",
+                  "total_volume_share_requirement_ppm": 0,
+                  "maker_volume_share_requirement_ppm": 0,
+                  "maker_fee_ppm": 0,
+                  "taker_fee_ppm": 350
+                },
+                {
+                  "name": "5",
+                  "absolute_volume_requirement": "125000000000000",
+                  "total_volume_share_requirement_ppm": 0,
+                  "maker_volume_share_requirement_ppm": 0,
+                  "maker_fee_ppm": 0,
+                  "taker_fee_ppm": 300
+                },
+                {
+                  "name": "6",
+                  "absolute_volume_requirement": "125000000000000",
+                  "total_volume_share_requirement_ppm": 5000,
+                  "maker_volume_share_requirement_ppm": 0,
+                  "maker_fee_ppm": -50,
+                  "taker_fee_ppm": 250
+                },
+                {
+                  "name": "7",
+                  "absolute_volume_requirement": "125000000000000",
+                  "total_volume_share_requirement_ppm": 5000,
+                  "maker_volume_share_requirement_ppm": 10000,
+                  "maker_fee_ppm": -70,
+                  "taker_fee_ppm": 250
+                },
+                {
+                  "name": "8",
+                  "absolute_volume_requirement": "125000000000000",
+                  "total_volume_share_requirement_ppm": 5000,
+                  "maker_volume_share_requirement_ppm": 20000,
+                  "maker_fee_ppm": -90,
+                  "taker_fee_ppm": 250
+                },
+                {
+                  "name": "9",
+                  "absolute_volume_requirement": "125000000000000",
+                  "total_volume_share_requirement_ppm": 5000,
+                  "maker_volume_share_requirement_ppm": 40000,
+                  "maker_fee_ppm": -110,
+                  "taker_fee_ppm": 250
+                }
+              ]
+            }
+          },
+          "block_height": 6912000
+        }
+      ],
+      "next_delayed_message_id": 1
+    },
+    "distribution": {
+      "params": {
+        "community_tax": "0.0",
+        "base_proposer_reward": "0.000000000000000000",
+        "bonus_proposer_reward": "0.000000000000000000",
+        "withdraw_addr_enabled": true
+      },
+      "fee_pool": {
+        "community_pool": []
+      },
+      "delegator_withdraw_infos": [],
+      "previous_proposer": "",
+      "outstanding_rewards": [],
+      "validator_accumulated_commissions": [],
+      "validator_historical_rewards": [],
+      "validator_current_rewards": [],
+      "delegator_starting_infos": [],
+      "validator_slash_events": []
+    },
+    "epochs": {
+      "epoch_info_list": [
+        {
+          "name": "funding-sample",
+          "next_tick": 30,
+          "duration": 60,
+          "current_epoch": 0,
+          "current_epoch_start_block": 0,
+          "is_initialized": false,
+          "fast_forward_next_tick": true
+        },
+        {
+          "name": "funding-tick",
+          "next_tick": 0,
+          "duration": 3600,
+          "current_epoch": 0,
+          "current_epoch_start_block": 0,
+          "is_initialized": false,
+          "fast_forward_next_tick": true
+        },
+        {
+          "name": "stats-epoch",
+          "next_tick": 0,
+          "duration": 3600,
+          "current_epoch": 0,
+          "current_epoch_start_block": 0,
+          "is_initialized": false,
+          "fast_forward_next_tick": true
+        }
+      ]
+    },
+    "evidence": {
+      "evidence": []
+    },
+    "feegrant": {
+      "allowances": []
+    },
+    "feetiers": {
+      "params": {
+        "tiers": [
+          {
+            "name": "1",
+            "absolute_volume_requirement": "0",
+            "total_volume_share_requirement_ppm": 0,
+            "maker_volume_share_requirement_ppm": 0,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 500
+          },
+          {
+            "name": "2",
+            "absolute_volume_requirement": "1000000000000",
+            "total_volume_share_requirement_ppm": 0,
+            "maker_volume_share_requirement_ppm": 0,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 450
+          },
+          {
+            "name": "3",
+            "absolute_volume_requirement": "5000000000000",
+            "total_volume_share_requirement_ppm": 0,
+            "maker_volume_share_requirement_ppm": 0,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 400
+          },
+          {
+            "name": "4",
+            "absolute_volume_requirement": "25000000000000",
+            "total_volume_share_requirement_ppm": 0,
+            "maker_volume_share_requirement_ppm": 0,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 350
+          },
+          {
+            "name": "5",
+            "absolute_volume_requirement": "125000000000000",
+            "total_volume_share_requirement_ppm": 0,
+            "maker_volume_share_requirement_ppm": 0,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 300
+          },
+          {
+            "name": "6",
+            "absolute_volume_requirement": "125000000000000",
+            "total_volume_share_requirement_ppm": 5000,
+            "maker_volume_share_requirement_ppm": 0,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 250
+          },
+          {
+            "name": "7",
+            "absolute_volume_requirement": "125000000000000",
+            "total_volume_share_requirement_ppm": 5000,
+            "maker_volume_share_requirement_ppm": 10000,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 250
+          },
+          {
+            "name": "8",
+            "absolute_volume_requirement": "125000000000000",
+            "total_volume_share_requirement_ppm": 5000,
+            "maker_volume_share_requirement_ppm": 20000,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 250
+          },
+          {
+            "name": "9",
+            "absolute_volume_requirement": "125000000000000",
+            "total_volume_share_requirement_ppm": 5000,
+            "maker_volume_share_requirement_ppm": 40000,
+            "maker_fee_ppm": -110,
+            "taker_fee_ppm": 250
+          }
+        ]
+      }
+    },
+    "genutil": {
+      "gen_txs": [
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Informal Systems",
+                  "identity": "6408AA029ADBE364",
+                  "website": "https://informal.systems",
+                  "security_contact": "validator@informal.systems",
+                  "details": "Informal Systems x Cephalopod Equipment - infrastructure for decentralized intelligence"
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.420000000000000000",
+                  "max_change_rate": "0.011800000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1x20lytyf6zkcrv5edpkfkn8sz578qg5suyy80q",
+                "validator_address": "dydxvaloper1x20lytyf6zkcrv5edpkfkn8sz578qg5se6j3y3",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "pbwo8slAWwe1PusAW9Clv3wAWyv3XFxu6kwij4h5Qoc="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1000000000000000000000"
+                }
+              }
+            ],
+            "memo": "c68283b50d253b38d884b0c5e27bc003f887205f@192.168.2.19:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.multisig.LegacyAminoPubKey",
+                  "threshold": 2,
+                  "public_keys": [
+                    {
+                      "@type": "/cosmos.crypto.secp256k1.PubKey",
+                      "key": "A7iFU43AlZmNE9UkQJFG4znfxZgjUn9svMemtqCeXeKD"
+                    },
+                    {
+                      "@type": "/cosmos.crypto.secp256k1.PubKey",
+                      "key": "A4Tyb2E/Iz4N4GkP7tJJX6ssrg4EyeWcl3IuqqgEwSDZ"
+                    },
+                    {
+                      "@type": "/cosmos.crypto.secp256k1.PubKey",
+                      "key": "A9SWjTyIh2yEoy+iJ+FgY4eKC98D8odvvVZ60QoI6Vkb"
+                    },
+                    {
+                      "@type": "/cosmos.crypto.secp256k1.PubKey",
+                      "key": "AsYiXEx3fCoHsQf5me62snqU/XMElzsPR6Q7HXIw1Q8G"
+                    }
+                  ]
+                },
+                "mode_info": {
+                  "multi": {
+                    "bitarray": {
+                      "extra_bits_stored": 4,
+                      "elems": "UA=="
+                    },
+                    "mode_infos": [
+                      {
+                        "single": {
+                          "mode": "SIGN_MODE_LEGACY_AMINO_JSON"
+                        }
+                      },
+                      {
+                        "single": {
+                          "mode": "SIGN_MODE_LEGACY_AMINO_JSON"
+                        }
+                      }
+                    ]
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "400000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "CkB4iN0c6Y//haPMqmX6GWHeLBos/TIv/eKbJQbVfuIVoGUwumJljCOPI6aEm3VC/8wTYvdaiU6+l3rwmQpLrDGaCkBbBeRHVF1+GrcTowKDkakO8OFu08QF1UdZP3F4pCj9gR8lICpt90F5wbKlPJodaxqoZtGju5L68KHVnclIvwJL"
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": " Lavender.Five Nodes 🐝",
+                  "identity": "F87ADDB700C0CC94",
+                  "website": "https://www.lavenderfive.com/",
+                  "security_contact": "hello@lavenderfive.com",
+                  "details": "Fortifying crypto networks with Horcrux security, slash insurance, and open source contributions. Connect with us at https://linktr.ee/lavenderfive."
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.100000000000000000",
+                  "max_change_rate": "0.050000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx140l6y2gp3gxvay6qtn70re7z2s0gn57z9qaqxk",
+                "validator_address": "dydxvaloper140l6y2gp3gxvay6qtn70re7z2s0gn57zq7tkd8",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "4DC89DondjJWjxIFg9onQsyfDhh3fwvR8BZOfMc50p0="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1000000000000000000000"
+                }
+              }
+            ],
+            "memo": "6b00e88b7a2d26c5ad68f2d63f3236bcfe6256a8@192.168.1.42:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "AgAxffwFDTjrK5UoAmT9aVOuI7CGxe3T5Wsxx2kWWhJB"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_LEGACY_AMINO_JSON"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "F3qaArvLG5irflukLeyg3LSzDszKhTeYbIsJ7mo+mth5ofzY40TvSVcuGtSeu77cVomypY670uiFE4oNE7VXLA=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "A41",
+                  "identity": "87D9921253A2A9EB",
+                  "website": "https://a41.io/",
+                  "security_contact": "dev@a41.io",
+                  "details": "A41 is a blockchain infrastructure company. We provide staking service on multichain. Stake your token with us now and earn rewards!"
+                },
+                "commission": {
+                  "rate": "1.000000000000000000",
+                  "max_rate": "1.000000000000000000",
+                  "max_change_rate": "0.010000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1et3h08wt6y9h0zjkp6jxpr42hm58avcd9mcppt",
+                "validator_address": "dydxvaloper1et3h08wt6y9h0zjkp6jxpr42hm58avcdq9wh26",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "tZncSItm41b/dusuVu381yLdgsTP3mdi+noA/KlTEOQ="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1050000000000000000000"
+                }
+              }
+            ],
+            "memo": "65d599e7b0b6f41fed14bbafb405afbdd7ed8b3d@192.168.200.89:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "A8r03bNWiQnzDZgZxdoq1f0PXVkKRZJpEmstd7RsgFT9"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_LEGACY_AMINO_JSON"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "5b/OUWp2BjhLIJMhWsRJvQsIpUedqgHcgXLVFYKTsoEf/IFpzUePVmrlBrTYhGEDx1BQqr2Vo7d/Nqf6qaCfkQ=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "BwareLabs",
+                  "identity": "E83A08BEEE7A70BD",
+                  "website": "https://bwarelabs.com",
+                  "security_contact": "validators@bwarelabs.com",
+                  "details": "Guaranteed availability and up-time backed by a professional blockchain infrastructure team."
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.100000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1s7zqmy708qhy4m7j3vrmydj2d0zr4wdfqznqt7",
+                "validator_address": "dydxvaloper1s7zqmy708qhy4m7j3vrmydj2d0zr4wdf9u9kq0",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "6HgkkTAXwQzxpaQ2kcpXW/f/9FFh9Rtd4YbZD/bVKIA="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1000000000000000000000"
+                }
+              }
+            ],
+            "memo": "bb356da54d75f802290580b46da4145ff153e55d@45.32.36.82:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "A1a1Qh6r83uZj20UgultjPprx2RnMjCo97BIrIn+udV0"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "m3RVoqw6Wz/Psfq8cQHs68s9hRqnFx8G7512Jsw1XiRXupnIeLE3zRxv2M6SinIKdXmde6TBeOoXbWEApaMlAw=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Cosmostation",
+                  "identity": "AE4C403A6E7AA1AC",
+                  "website": "https://www.cosmostation.io",
+                  "security_contact": "admin@stamper.network",
+                  "details": "Cosmostation validator node. Delegate your tokens and Start Earning Staking Rewards"
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.200000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1vl5ty47uwpfv4mcutwv4zam09mvvvdgy2m9e59",
+                "validator_address": "dydxvaloper1vl5ty47uwpfv4mcutwv4zam09mvvvdgy09n0l5",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "d3WYzVkIfkbnZ8IEGlnJVGS8fGOh2dw0aNmUsDOosfk="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1950000000000000000000"
+                }
+              }
+            ],
+            "memo": "652f20b1d8d599fb1b5e91c5f84c91322e51f30f@0.0.0.0:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "A0o7CUJtRxAT7rl/5e63MOa85AWPLelke/WgMdEG+/tu"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "KWeAhQB/HfB42HYb3NG4Gv3JwngOuh9prFY7pk8RdKURRGbmnUEeXj4lwnSsuGcmH/psCHocJ18XSLKhLkviVQ=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Crosnest",
+                  "identity": "5F1D6AC7EA588676",
+                  "website": "https://cros-nest.com",
+                  "security_contact": "chainmaster@cros-nest.com",
+                  "details": "We operate state-of-the-art distributed and redundant validator and IBC relayer infrastructure for Proof of Stake blockchains."
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.300000000000000000",
+                  "max_change_rate": "0.010000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1y6ncfxx8x9sqec97pehjw0k32slw63852paygz",
+                "validator_address": "dydxvaloper1y6ncfxx8x9sqec97pehjw0k32slw63850ltjrn",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "swcYGa9+GhGY8HxA7efeAALLpozwZa6Hm9drRLSdTdA="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1050000000000000000000"
+                }
+              }
+            ],
+            "memo": "cff8a121bc745eee57d41cc4ae7654d32840c614@192.168.1.16:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "A+v43svZaUoBo7t+x0Ih5FbWbj86S0iUQZ6+oFHcrSw2"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_LEGACY_AMINO_JSON"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "iVHcffXDr/GJ4sVq2ynyCcUwBBnUBAOG5xuvLXC9S/0XLdFQa/lEYiMddcu6+UXJcKUblyDaT2paUEFAHc2YKQ=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "DSRV",
+                  "identity": "CC434B6FE536F51B",
+                  "website": "https://dsrvlabs.com",
+                  "security_contact": "validator@dsrvlabs.com",
+                  "details": "DSRV is an integrated blockchain solutions company with the mission of enriching the crypto ecosystem via stronger connectivity. We strive to be your gateway to a suite of all-comprehensive blockchain services. Everything distributed, served complete."
+                },
+                "commission": {
+                  "rate": "0.100000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.100000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1z0sjs7vr8s7gy7je3dzyn8hngdkdd9g305mzns",
+                "validator_address": "dydxvaloper1z0sjs7vr8s7gy7je3dzyn8hngdkdd9g322d5cp",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "aWGOGoEOHcXJ5LvGSvhgFECylj6laiOkbU3sa2BWY+U="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1000000000000000000000"
+                }
+              }
+            ],
+            "memo": "c78850bc397001a87965ec7394eb13da226bafcc@192.168.25.14:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "AjAhmoGPABQTpU5fHMop6jPTlMVyw+7RQc1sSZdWSExV"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "1CTECs5yJHpJwjhnFarzUmBFGFXoPJnTyKGpuc/25tBWz02nSJYk0dz678CV+v9C8vujb0eeG06MCpuQ4/bwyQ=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Enigma",
+                  "identity": "6223697ACA24A4FF",
+                  "website": "https://enigma-validator.com/",
+                  "security_contact": "contact@enigma-validator.com",
+                  "details": "Proof of Stake Validator on different projects -- Passionate about Data Science and Technology"
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.100000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx160n4rwm854v06ppkly2pt0zc9rpwlm5y0kyjtc",
+                "validator_address": "dydxvaloper160n4rwm854v06ppkly2pt0zc9rpwlm5y2gjyqf",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "PJCi8Cl7imY8k+Ln+zuQS3gx2s4SEgIXUuI1CicZfIE="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1010680000000000000000"
+                }
+              }
+            ],
+            "memo": "09dbe1d7137e45f9e4c0a57b40d2384f6df6a671@45.63.123.73:3090",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "AgTekCrONde6tHpwoVNryzuil6Uw8ZD7qvFe5qdt/zY2"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "9KdLnEXTqYzPlw0WCjwdxP9+dlOXwSWAfqlcyBICGhNMX0NifhP3AkuUzC5H02wcoIqtqYIb5iV8JqSjBAmJlA=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Everstake",
+                  "identity": "EF5AC70C00BECEDC",
+                  "website": "https://everstake.one",
+                  "security_contact": "",
+                  "details": "Everstake is a staking-as-a-service company. We help institutional investors and regular token holders to profit off their crypto assets. Choose the most promising projects, delegate with Everstake, and make a stable passive income."
+                },
+                "commission": {
+                  "rate": "0.100000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.010000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1dm25afltds6v8te6m2lt6p0t3m4ygah32qhgtz",
+                "validator_address": "dydxvaloper1dm25afltds6v8te6m2lt6p0t3m4ygah307p7qn",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "lOwIdDpqPFznqglnEQgPzQkvErqJOuZCXZDN3I2tTxc="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1000000000000000000000"
+                }
+              }
+            ],
+            "memo": "f1fd898d7f16fc63a43b25b62707032749f6e728@181.41.140.170:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "Aqwie9ogw2OVbfKlQaQpxD+qWAr9jGdFZ+sqBiTXQwYN"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "0J2iMztLfo4fMfwRtxlDfmZhkn8TlXUwpiAsGYYQTi90XYlnZL+kOG11++G6JS58cKKGr+zXuiJvFOJUR5TYcw=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Figment",
+                  "identity": "E5F274B870BDA01D",
+                  "website": "figment.io",
+                  "security_contact": "security@figment.io",
+                  "details": "Figment"
+                },
+                "commission": {
+                  "rate": "0.100000000000000000",
+                  "max_rate": "1.000000000000000000",
+                  "max_change_rate": "1.000000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1d9e68e7glce5pehh8qk0gcx9l06tjeh0kr5eg7",
+                "validator_address": "dydxvaloper1d9e68e7glce5pehh8qk0gcx9l06tjeh0naz0r0",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "TqU2qTkfcMxjboBLq+tZGfSdgo6EI8ElvxtwjGsffXQ="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1000000000000000000000"
+                }
+              }
+            ],
+            "memo": "15ec3d61d7e4367dc2378fb7830ab5a5c683ae85@10.22.52.115:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "AhsvxV8rN/2AamL9cDNpZKq+LBVAIDHSYl8CWkQwgriG"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_LEGACY_AMINO_JSON"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "arO57v9IySfAgUMwg5lvKx76pYXqTGVMqCBPRs27dYF2fkYgyuVb9bU6J9AwYBvpm8efl9gE/FiCqsmKGxkx4A=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Finoa Consensus Services",
+                  "identity": "0FA38A5EDF5FA362",
+                  "website": "https://www.finoa.io/staking-delegation",
+                  "security_contact": "operations@consensus.finoa.io",
+                  "details": "Stake and grow your assets using Finoa's institutional-grade infrastructure."
+                },
+                "commission": {
+                  "rate": "0.100000000000000000",
+                  "max_rate": "0.100000000000000000",
+                  "max_change_rate": "0.100000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1t7dum0wcdk9c0ly6fhd5mxcavg6plhw7wgqgwl",
+                "validator_address": "dydxvaloper1t7dum0wcdk9c0ly6fhd5mxcavg6plhw7tkk79w",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "WEr1+Qgi6ytFzKoeyN8MC5tE6RLFjsq+IUK7vjXhJhQ="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1000000000000000000000"
+                }
+              }
+            ],
+            "memo": "d7cde1c3a56c80067ead792e92c42bbf0535ec1d@178.23.126.87:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "Ay1OPD+h532aM1ZRzoCsWUCRU0OQ4j4f5HGAuQxOolM4"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "jWeLBjizR6xhubvHhFV3F1KULu5FJ4eAXmnt/NY2JDsNpG7fadXa4As9Ybk0BHFaFS7ZVzh5enc8BsSKNMLsoA=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Keplr",
+                  "identity": "55AE6F8C61BF4749",
+                  "website": "https://www.keplr.app/",
+                  "security_contact": "",
+                  "details": "Interchain infra. Apoapsis to the Periapsis."
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.010000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1jvct2ck9hptwyzrr0umfvwxed7n9nhhj2sldxc",
+                "validator_address": "dydxvaloper1jvct2ck9hptwyzrr0umfvwxed7n9nhhj0wfmdf",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "ysMkRxzJGrKR1+HmUK+odH2alhl6RnyaQOrsBBc6HTs="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1010000000000000000000"
+                }
+              }
+            ],
+            "memo": "462e2880a069bb59c404d8a53673390e6bfd45a2@172.31.13.72:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "AkYNiRZBBJg0TxW3KDIv+50cvLfT+PgnfyZz+OhS4sFF"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "/b6wHL7uE2n6yZ3SNmwn0Pw3+Fi/iMdh3zJCvkWmj84Yl4o3VZUMcTOemAgE2ydwfEQ0GE5aCLD9znnBwUMaNg=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Luganodes",
+                  "identity": "4F2E11CB85CB269B",
+                  "website": "https://luganodes.com",
+                  "security_contact": "",
+                  "details": "Swiss-Operated Institutional Grade Staking Provider"
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.020000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1fs0t34g628xdqc8alfefnadq2x3qawt8de3dka",
+                "validator_address": "dydxvaloper1fs0t34g628xdqc8alfefnadq2x3qawt8g88mav",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "/Hr2Z+1HilwMMRW4UijlskqZDZpuyR+ZLSusgDjx0w4="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "998000000000000000000"
+                }
+              }
+            ],
+            "memo": "5e571d6fceabd455e650c8a5ca0ef0fbc442f37d@192.168.1.12:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "Aq2HeXLzfGLesV37n61RZKSqSGKPWaQbdOPx7AfMYNy8"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "LESUIuhzlypKq80hh3T0d2GTSsO3e9q3p1IOFq4N2GddM33cHwHw85s66RgWFUM1QXhXMuLhj7zMuAKYxfbBMQ=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Neuler",
+                  "identity": "71834D19856D880B",
+                  "website": "https://neuler.xyz",
+                  "security_contact": "",
+                  "details": "Accelerating decentralization"
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.050000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1z29qzgp9pxt69462mk26gyc82k2sdxg2crwr9d",
+                "validator_address": "dydxvaloper1z29qzgp9pxt69462mk26gyc82k2sdxg2aac4wu",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "OCj6oBVksE9HRznYgS8L1LzArjFS5wQDVOXzN89gVzU="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "990000000000000000000"
+                }
+              }
+            ],
+            "memo": "f0551461cc24faf6ef1aed779ec207bec48f591b@0.0.0.0:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "A02EgsByzpBKHsLLljNuqaMYvYqtoV+OveHNl7nJYD+G"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "em5xW4ObznvuEzFpeis4L6x26wKqjP3/OS+USXpPtjkNc/Pa/0XJCTzRnC8VB4r/lU5TJvHNrwzp1RsSNpo70Q=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Node Guardians",
+                  "identity": "26FE476C84A3C760",
+                  "website": "nodeguardians.io",
+                  "security_contact": "admin@nodeguardians.io",
+                  "details": "dYdX Network is under the watchful eyes of the Node Guardians, delivering protection and rewards - nodeguardians.io"
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.010000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1xwk95hxuude0zz4syvymlkrhjmjkqga79cvcpj",
+                "validator_address": "dydxvaloper1xwk95hxuude0zz4syvymlkrhjmjkqga7qx6w2r",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "uL7nrdnecEVSswbO7Kw5CEXUs53ojlJZ6sym0aJ3UTw="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "2400000000000000000000"
+                }
+              }
+            ],
+            "memo": "142898b16aa9cd7e50db91f7098a1babffbf3a25@0.0.0.0:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "AkYQh9jOzY6lW+WzM9sWS7+z/BQvWFwHOVJs/wvLFuRH"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "buBABdxeomkoOHKafrmoVw0ExbZfBG3hgJXX/4sEZOoK5QN8F48ROKNVrnHk0NaYY4Q8OlY6RXb9a9eYZCXSYg=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Provalidator",
+                  "identity": "3A7D5C9B0B88BEA1",
+                  "website": "https://provalidator.com",
+                  "security_contact": "zenon@provalidator.com",
+                  "details": "Supporting Blockchain Infrastructure"
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.500000000000000000",
+                  "max_change_rate": "0.100000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1a9lm6t9qalz53jrp0q6p50q2cxeqnwshse78q6",
+                "validator_address": "dydxvaloper1a9lm6t9qalz53jrp0q6p50q2cxeqnwsh48g3tt",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "rcavwIYg7liXz6jKYMLrm8xH69ZScJv0SZtYhnuxpZ0="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1000000000000000000000"
+                }
+              }
+            ],
+            "memo": "801054b990e190c4b443e3332c5e44cd519e27c5@172.105.219.146:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "Atd2/wXpqGt8a3LOdh+d+6rsTO8KMPJa0Kyo6qJlTS8D"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "I3hpwV6G1m4E2BaARAcFbEV2afjzMyh/UVVu8RBCo64+O12KAtILyN5tAHKPRAKAqKxq893dLOCm/rSsuWW7pA=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "RockawayX Infra",
+                  "identity": "EB935356000A9562",
+                  "website": "https://rockawayx.com/infrastructure",
+                  "security_contact": "infra@rockawayx.com",
+                  "details": "RockawayX Infra is an institution-grade bare-metal staking operator"
+                },
+                "commission": {
+                  "rate": "0.080000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.010000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1thl5syhmscgnj7whdyrydw3w6vy80044mlmz2n",
+                "validator_address": "dydxvaloper1thl5syhmscgnj7whdyrydw3w6vy800447pd5pz",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "dJ47RswI/RVuyFxUsriu8IqC8g1etWgzwuNbeRDc8tY="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1000000000000000000000"
+                }
+              }
+            ],
+            "memo": "1294c31bdcbf757be2972774cd4e80aae8bfb975@192.168.61.21:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "AqbxaawCb2UA4aIhwgholzeb0/VQLeI4armAi1hBtPfV"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_LEGACY_AMINO_JSON"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "C7pfTitfqu8Z59HZl513sdzdQ8wtdtXlZBHag8hwHvRpOtqJwCh5Dvhybt9yktvCOTIQFCbQiwPPvwPrjOb8Jw=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Chorus One",
+                  "identity": "00B79D689B7DC1CE",
+                  "website": "https://chorus.one",
+                  "security_contact": "security@chorus.one",
+                  "details": "Secure DyDx and shape its future by delegating to Chorus One, a highly secure and stable validator. By delegating, you agree to the terms of service at: https://chorus.one/tos"
+                },
+                "commission": {
+                  "rate": "0.080000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.100000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx16pj5gljqnqs0ajxakccfjhu05yczp9870tkh0z",
+                "validator_address": "dydxvaloper16pj5gljqnqs0ajxakccfjhu05yczp98724qpyn",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "RiG+qVNjTpM9+cf/CY41/10V6olurA8DXQRVTstscBg="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1000000000000000000000"
+                }
+              }
+            ],
+            "memo": "",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "AkVbSTHLqFZKBm2N5wtX5D8tVIEOhxqtN9DKG+8W/6ty"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "6GblZ0vGjFsAjpqqq6c+lXhv4hZM9PB4sYBHJ4nNglNHcTAoBFx6ozzgAHq+c0LKM1i2aLXp+Iv3udgot8W4sQ=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "✅ CryptoCrew Validators",
+                  "identity": "9AE70F9E3EDA8956",
+                  "website": "https://ccvalidators.com",
+                  "security_contact": "support@ccvalidators.com",
+                  "details": "We power the interchain. | ccvalidators.com"
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.010000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx199fjq4rnfvz24cktl8cervx8h8e90ruk5644xz",
+                "validator_address": "dydxvaloper199fjq4rnfvz24cktl8cervx8h8e90ruk3yrrdn",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "yqB1r277yd5hrLFA9YroItvUQuioSk8oiVuD9LinsfI="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "3003000000000000000000"
+                }
+              }
+            ],
+            "memo": "81bd0bfb5e9df4a20c649e3af327e0e4756574d2@192.168.0.99:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "AohdKGNApyLaYEXja/nHmISDWDqied1WAp7jz9HSzQ7n"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_LEGACY_AMINO_JSON"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "jCNhtmHmiNo3qHThnb26Lwtq1wGQ1+Hicb03Iy6EvNE+SFosHPwHoqROXeIiqwwRzpar0+d/4bzcXcr9eGW6sA=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "ECO Stake 🌱",
+                  "identity": "5992A6D423A406D6",
+                  "website": "https://ecostake.com",
+                  "security_contact": "support@ecostake.com",
+                  "details": "ECO Stake is a climate positive validator 🌱 Carbon neutral and 10% of commission is donated to climate causes 🌍 Check out REStake.app on our website and let us auto-compound your staking rewards for you 🔄"
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.100000000000000000",
+                  "max_change_rate": "0.010000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx15wphegl8esn7r2rgj9j3xf870v78lxg8phy9w9",
+                "validator_address": "dydxvaloper15wphegl8esn7r2rgj9j3xf870v78lxg8yfjn95",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "tnUR+TEq4U9rYtBZDoA3KpnceusklhUttZSQkkPjRss="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "999000000000000000000"
+                }
+              }
+            ],
+            "memo": "a87e15b4a523f0a9f70ffec5223dba1d7bb02911@172.24.0.2:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "Ak1RtkHbi14a0EcJi9SJ+ILH9PGn5+PouYq+TnmlzCS/"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "PRDKwQCRyhxUUUtO8mlgUjFBzNC2mo6wBoJTTOdlBS0vpEYdrJ1GltgXdlio6We0L+9mGNj3IVH+o6xt0hQsKA=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Imperator.co",
+                  "identity": "0878BA6BE556C132",
+                  "website": "https://imperator.co/",
+                  "security_contact": "contact@imperator.co",
+                  "details": "100% refund on downtime slashing -- Leading Proof-of-Stake Network Validator \u0026 Relayer"
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.500000000000000000",
+                  "max_change_rate": "0.100000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1mwhwf9rqh64ktr8t8xnz37nhg7vvy42ea2vy9g",
+                "validator_address": "dydxvaloper1mwhwf9rqh64ktr8t8xnz37nhg7vvy42ec56jwe",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "c4bIJbj0ik/umWTbdo71IqM+1X4vjg9340ki9L+tSkQ="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "999000000000000000000"
+                }
+              }
+            ],
+            "memo": "e3782dd122c2e783f9d90c4067d6f801a2655126@192.168.1.33:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "A0FZDDyP+kVcikUAEBQ0o8hKRQZyI+wfre6+M4DtybPQ"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "iKmf8D8OV/hGfK7WIupOoZDlMhbMpPYqrYnkm3ocZEE+VEa7t0Msdv09lDezYBdm/jdDUwYyNGwnQvp5kX5kXA=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "kingnodes 👑",
+                  "identity": "30E6CD38D9721222",
+                  "website": "https://kingnodes.com",
+                  "security_contact": "security@kingnodes.com",
+                  "details": "Professional PoS validator. Join our community of delegators Telegram: https://t.me/kingnodes Twitter: https://twitter.com/kingnodes"
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.100000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1j4ljutnh66r55a29jydgca7pfmhd40e3kpwlky",
+                "validator_address": "dydxvaloper1j4ljutnh66r55a29jydgca7pfmhd40e3nlcfa4",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "SkRnjuEBbhFYRFcLEaV0UKQz0i71PtZBBn1pzqKuQvU="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1080000000000000000000"
+                }
+              }
+            ],
+            "memo": "238b137e38964b498e5893af2c855e15eec087d1@15.235.160.127:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "As+36dN28W8KKZpbdTzJWHFvJd0u2wtphYoJDQ+uq5TQ"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "OJIsFOCARAAeSg6FpbCF3RCs1rJWJbgRXifwIBtLKSpaEwVYiPRm3ZWWh5RQOl1/AdtR0nLR43IwGzgB4ftceg=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Meria",
+                  "identity": "9A516A1CD4116BBF",
+                  "website": "https://meria.com",
+                  "security_contact": "it@meria.com",
+                  "details": "French Crypto Investment Company"
+                },
+                "commission": {
+                  "rate": "0.050000000000000000",
+                  "max_rate": "1.000000000000000000",
+                  "max_change_rate": "0.010000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1ml44cenapnawcn4xy3w36jce0rg78dm8cv6j2z",
+                "validator_address": "dydxvaloper1ml44cenapnawcn4xy3w36jce0rg78dm8ajvypn",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "QSL9Ur6z2BCDShhyaLHeONUJqxgDXiwIV71Du3f0Ats="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1027000000000000000000"
+                }
+              }
+            ],
+            "memo": "af4d6709034815b54308d6c12c0271c38e243d26@62.210.145.130:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "AwKGSqIhVHkig3gvHGOwcSq3ZCwEErPrLKaz1/ixx+YT"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "SMNOI7kGvfr9chIZvmlEOkGnhfD5E96on3UuM8aI9p1bWry37SAhmALZB424/k/4sy0/fTidbhnjGYVo63CyaA=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "P2P.ORG - P2P Validator",
+                  "identity": "E12F4695036D8072",
+                  "website": "https://p2p.org",
+                  "security_contact": "security@p2p.org",
+                  "details": "One of the winners of Cosmos Game of Stakes. We provide a simple, secure and intelligent staking service to help you generate rewards on your blockchain assets across 9+ networks within a single interface. Let's stake together - p2p.org."
+                },
+                "commission": {
+                  "rate": "0.100000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.050000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1kmt4qun5wj6qays8hpkp3ea2anvq3m70slllnw",
+                "validator_address": "dydxvaloper1kmt4qun5wj6qays8hpkp3ea2anvq3m704pffcl",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "zGXN++C+w3i/BVeFBajW5UuBQFQJyhF2YLWizlrazno="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1000000000000000000000"
+                }
+              }
+            ],
+            "memo": "25cbcc40edda9b4da95739591cb4345548f717b0@62.146.178.42:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "A+cmOyBYOCF77ZW5j/QUdxlBhNDj6KIybnWYDVNN6FOG"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "XB1DONIwnMfeunYjuA5LSHvwzW+5M7Hw0dmnOHRVGpIKDGKMhT1U70DPs30+pjWwbJup808GkmfCRF+nxT7RrA=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "Tané",
+                  "identity": "A8709BB7ABF23A73",
+                  "website": "https://tané.com",
+                  "security_contact": "",
+                  "details": "Tané is a professional validator, operated by a group of crypto-native product builders, backed by Japanese enterprises. Delegate your tokens, secure the network and earn staking rewards with us!"
+                },
+                "commission": {
+                  "rate": "0.100000000000000000",
+                  "max_rate": "1.000000000000000000",
+                  "max_change_rate": "0.100000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "dydx1n56zk7kmv40g5zrz5psx7yysa0gk86mfhk7d8h",
+                "validator_address": "dydxvaloper1n56zk7kmv40g5zrz5psx7yysa0gk86mfjggmvx",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "pl9UuZSnOuuH4edrsrA7i8YFUovephjlGsuQ4bO1MdA="
+                },
+                "value": {
+                  "denom": "adydx",
+                  "amount": "1000000000000000000000"
+                }
+              }
+            ],
+            "memo": "8a1f1edee720d83116d7a2b2f3c384cb55240570@172.31.41.37:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "Aqh8ZbnyQ+/lJwAU75ztNL3dACDUVTGN6s9101KL5GLK"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "K4ov7gVojWLo+ZISv4Wt2yYuYql+vDToPhYdx9+umkpOEvuiHuKmkIZ8cMvZFclaVlWLDxrs8/Ql8O5bY3Xjdw=="
+          ]
+        }
+      ]
+    },
+    "gov": {
+      "starting_proposal_id": "1",
+      "deposits": [],
+      "votes": [],
+      "proposals": [],
+      "deposit_params": null,
+      "voting_params": null,
+      "tally_params": null,
+      "params": {
+        "min_deposit": [
+          {
+            "denom": "adydx",
+            "amount": "10000000000000000000000"
+          }
+        ],
+        "max_deposit_period": "172800s",
+        "voting_period": "345600s",
+        "quorum": "0.33400",
+        "threshold": "0.50000",
+        "veto_threshold": "0.33400",
+        "min_initial_deposit_ratio": "0.20000",
+        "burn_vote_quorum": false,
+        "burn_proposal_deposit_prevote": false,
+        "burn_vote_veto": true
+      }
+    },
+    "ibc": {
+      "client_genesis": {
+        "clients": [],
+        "clients_consensus": [],
+        "clients_metadata": [],
+        "params": {
+          "allowed_clients": [
+            "07-tendermint"
+          ]
+        },
+        "create_localhost": false,
+        "next_client_sequence": "0"
+      },
+      "connection_genesis": {
+        "connections": [],
+        "client_connection_paths": [],
+        "next_connection_sequence": "0",
+        "params": {
+          "max_expected_time_per_block": "30000000000"
+        }
+      },
+      "channel_genesis": {
+        "channels": [],
+        "acknowledgements": [],
+        "commitments": [],
+        "receipts": [],
+        "send_sequences": [],
+        "recv_sequences": [],
+        "ack_sequences": [],
+        "next_channel_sequence": "0"
+      }
+    },
+    "params": null,
+    "perpetuals": {
+      "perpetuals": [
+        {
+          "params": {
+            "ticker": "BTC-USD",
+            "id": 0,
+            "market_id": 0,
+            "atomic_resolution": -10,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 0
+          }
+        },
+        {
+          "params": {
+            "ticker": "ETH-USD",
+            "id": 1,
+            "market_id": 1,
+            "atomic_resolution": -9,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 0
+          }
+        },
+        {
+          "params": {
+            "ticker": "LINK-USD",
+            "id": 2,
+            "market_id": 2,
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "MATIC-USD",
+            "id": 3,
+            "market_id": 3,
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "CRV-USD",
+            "id": 4,
+            "market_id": 4,
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "SOL-USD",
+            "id": 5,
+            "market_id": 5,
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "ADA-USD",
+            "id": 6,
+            "market_id": 6,
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "AVAX-USD",
+            "id": 7,
+            "market_id": 7,
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "FIL-USD",
+            "id": 8,
+            "market_id": 8,
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "LTC-USD",
+            "id": 9,
+            "market_id": 9,
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "DOGE-USD",
+            "id": 10,
+            "market_id": 10,
+            "atomic_resolution": -4,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "ATOM-USD",
+            "id": 11,
+            "market_id": 11,
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "DOT-USD",
+            "id": 12,
+            "market_id": 12,
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "UNI-USD",
+            "id": 13,
+            "market_id": 13,
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "BCH-USD",
+            "id": 14,
+            "market_id": 14,
+            "atomic_resolution": -8,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "TRX-USD",
+            "id": 15,
+            "market_id": 15,
+            "atomic_resolution": -4,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "NEAR-USD",
+            "id": 16,
+            "market_id": 16,
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "MKR-USD",
+            "id": 17,
+            "market_id": 17,
+            "atomic_resolution": -9,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 2
+          }
+        },
+        {
+          "params": {
+            "ticker": "XLM-USD",
+            "id": 18,
+            "market_id": 18,
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "ETC-USD",
+            "id": 19,
+            "market_id": 19,
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "COMP-USD",
+            "id": 20,
+            "market_id": 20,
+            "atomic_resolution": -7,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 2
+          }
+        },
+        {
+          "params": {
+            "ticker": "WLD-USD",
+            "id": 21,
+            "market_id": 21,
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "APE-USD",
+            "id": 22,
+            "market_id": 22,
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 2
+          }
+        },
+        {
+          "params": {
+            "ticker": "APT-USD",
+            "id": 23,
+            "market_id": 23,
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "ARB-USD",
+            "id": 24,
+            "market_id": 24,
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "BLUR-USD",
+            "id": 25,
+            "market_id": 25,
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 2
+          }
+        },
+        {
+          "params": {
+            "ticker": "LDO-USD",
+            "id": 26,
+            "market_id": 26,
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 2
+          }
+        },
+        {
+          "params": {
+            "ticker": "OP-USD",
+            "id": 27,
+            "market_id": 27,
+            "atomic_resolution": -6,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "PEPE-USD",
+            "id": 28,
+            "market_id": 28,
+            "atomic_resolution": 1,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "SEI-USD",
+            "id": 29,
+            "market_id": 29,
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 2
+          }
+        },
+        {
+          "params": {
+            "ticker": "SHIB-USD",
+            "id": 30,
+            "market_id": 30,
+            "atomic_resolution": 0,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "SUI-USD",
+            "id": 31,
+            "market_id": 31,
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        },
+        {
+          "params": {
+            "ticker": "XRP-USD",
+            "id": 32,
+            "market_id": 32,
+            "atomic_resolution": -5,
+            "default_funding_ppm": 0,
+            "liquidity_tier": 1
+          }
+        }
+      ],
+      "liquidity_tiers": [
+        {
+          "id": 0,
+          "name": "Large-Cap",
+          "initial_margin_ppm": 50000,
+          "maintenance_fraction_ppm": 600000,
+          "base_position_notional": 1000000000000,
+          "impact_notional": 10000000000
+        },
+        {
+          "id": 1,
+          "name": "Mid-Cap",
+          "initial_margin_ppm": 100000,
+          "maintenance_fraction_ppm": 500000,
+          "base_position_notional": 250000000000,
+          "impact_notional": 5000000000
+        },
+        {
+          "id": 2,
+          "name": "Long-Tail",
+          "initial_margin_ppm": 200000,
+          "maintenance_fraction_ppm": 500000,
+          "base_position_notional": 100000000000,
+          "impact_notional": 2500000000
+        },
+        {
+          "id": 3,
+          "name": "Safety",
+          "initial_margin_ppm": 1000000,
+          "maintenance_fraction_ppm": 200000,
+          "base_position_notional": 1000000000,
+          "impact_notional": 2500000000
+        }
+      ],
+      "params": {
+        "funding_rate_clamp_factor_ppm": 6000000,
+        "premium_vote_clamp_factor_ppm": 60000000,
+        "min_num_votes_per_sample": 15
+      }
+    },
+    "prices": {
+      "market_params": [
+        {
+          "pair": "BTC-USD",
+          "id": 0,
+          "exponent": -5,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 1000,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"BTCUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"BTCUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"BTC-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"btcusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXBTZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"BTC-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"BTC_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"BTC-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "ETH-USD",
+          "id": 1,
+          "exponent": -6,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 1000,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"ETHUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"ETHUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ETH-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"ethusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XETHZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ETH-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"ETH_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ETH-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "LINK-USD",
+          "id": 2,
+          "exponent": -9,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"LINKUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"LINKUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"LINK-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"LINKUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"LINK-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"LINK_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"LINK-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "MATIC-USD",
+          "id": 3,
+          "exponent": -10,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"MATICUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"MATICUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"MATIC-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"MATIC_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"maticusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"MATICUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"MATIC-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"MATIC_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"MATIC-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "CRV-USD",
+          "id": 4,
+          "exponent": -10,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"CRVUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"CRV-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"CRV_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"CRVUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"CRV-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"CRV_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"CRV-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "SOL-USD",
+          "id": 5,
+          "exponent": -8,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"SOLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"SOLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"SOL-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"solusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"SOLUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"SOL-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"SOL_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"SOL-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "ADA-USD",
+          "id": 6,
+          "exponent": -10,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"ADAUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"ADAUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ADA-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"ADA_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"adausdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"ADAUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ADA-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"ADA_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ADA-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "AVAX-USD",
+          "id": 7,
+          "exponent": -8,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"AVAXUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"AVAXUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"AVAX-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"AVAX_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"avaxusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"AVAXUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"AVAX-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"AVAX-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "FIL-USD",
+          "id": 8,
+          "exponent": -9,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"FILUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"FIL-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"FIL_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"filusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"FILUSD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"FIL_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"FIL-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "LTC-USD",
+          "id": 9,
+          "exponent": -8,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"LTCUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"LTCUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"LTC-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"ltcusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XLTCZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"LTC-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"LTC_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"LTC-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "DOGE-USD",
+          "id": 10,
+          "exponent": -11,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"DOGEUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"DOGEUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"DOGE-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"DOGE_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"dogeusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XDGUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"DOGE-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"DOGE_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"DOGE-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "ATOM-USD",
+          "id": 11,
+          "exponent": -9,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"ATOMUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"ATOMUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ATOM-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"ATOM_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"ATOMUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ATOM-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"ATOM_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ATOM-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "DOT-USD",
+          "id": 12,
+          "exponent": -9,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"DOTUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"DOTUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"DOT-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"DOT_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"DOTUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"DOT-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"DOT_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"DOT-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "UNI-USD",
+          "id": 13,
+          "exponent": -9,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"UNIUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"UNIUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"UNI-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"UNI_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"UNIUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"UNI-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"UNI-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "BCH-USD",
+          "id": 14,
+          "exponent": -7,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"BCHUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"BCHUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"BCH-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"BCH_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"bchusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"BCHUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"BCH-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"BCH_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"BCH-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "TRX-USD",
+          "id": 15,
+          "exponent": -11,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"TRXUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"TRXUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"TRX_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"trxusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"TRXUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"TRX-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"TRX_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"TRX-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "NEAR-USD",
+          "id": 16,
+          "exponent": -9,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"NEARUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"NEAR-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"NEAR_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"nearusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"NEAR-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"NEAR_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"NEAR-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "MKR-USD",
+          "id": 17,
+          "exponent": -6,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 4000,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"MKRUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"MKR-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"MKRUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"MKR-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"MKR_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"MKR-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "XLM-USD",
+          "id": 18,
+          "exponent": -10,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"XLMUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"XLMUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"XLM-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXLMZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"XLM-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"XLM_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"XLM-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "ETC-USD",
+          "id": 19,
+          "exponent": -8,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"ETCUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ETC-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"ETC_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"etcusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ETC-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"ETC_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ETC-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "COMP-USD",
+          "id": 20,
+          "exponent": -8,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 4000,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"COMPUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"COMP-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"COMP_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"COMPUSD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"COMP_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"COMP-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "WLD-USD",
+          "id": 21,
+          "exponent": -9,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"WLDUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"WLDUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"WLD_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"wldusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"WLD-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"WLD_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"WLD-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "APE-USD",
+          "id": 22,
+          "exponent": -9,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 4000,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"APEUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"APE-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"APE_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"APEUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"APE-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"APE_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"APE-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "APT-USD",
+          "id": 23,
+          "exponent": -9,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"APTUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"APTUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"APT-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"APT_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"aptusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"APT-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"APT_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"APT-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "ARB-USD",
+          "id": 24,
+          "exponent": -9,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"ARBUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"ARBUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ARB-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"ARB_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"arbusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ARB-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"ARB_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ARB-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "BLUR-USD",
+          "id": 25,
+          "exponent": -10,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 4000,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"BLUR-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"BLUR_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"BLURUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"BLUR-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"BLUR_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"BLUR-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "LDO-USD",
+          "id": 26,
+          "exponent": -9,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 4000,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"LDOUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"LDO-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"LDOUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"LDO-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"LDO_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"LDO-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "OP-USD",
+          "id": 27,
+          "exponent": -9,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"OPUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"OP-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"OP_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"OP-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"OP_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"OP-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "PEPE-USD",
+          "id": 28,
+          "exponent": -16,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"PEPEUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"PEPEUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"PEPE_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"PEPEUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"PEPE-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"PEPE_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"PEPE-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "SEI-USD",
+          "id": 29,
+          "exponent": -10,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 4000,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"SEIUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"SEIUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"SEI-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"SEI_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"seiusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"SEI-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"SEI_USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "SHIB-USD",
+          "id": 30,
+          "exponent": -15,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"SHIBUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"SHIBUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"SHIB-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"SHIB_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"SHIBUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"SHIB-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"SHIB_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"SHIB-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "SUI-USD",
+          "id": 31,
+          "exponent": -10,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"SUIUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"SUIUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"SUI-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"SUI_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"suiusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"SUI-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"SUI_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"SUI-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "XRP-USD",
+          "id": 32,
+          "exponent": -10,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"XRPUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"XRPUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"XRP-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"XRP_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"xrpusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXRPZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"XRP-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"XRP_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"XRP-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        },
+        {
+          "pair": "USDT-USD",
+          "id": 1000000,
+          "exponent": -9,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 1000,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"USDCUSDT\",\"invert\":true},{\"exchangeName\":\"Bybit\",\"ticker\":\"USDCUSDT\",\"invert\":true},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"ethusdt\",\"adjustByMarket\":\"ETH-USD\",\"invert\":true},{\"exchangeName\":\"Kraken\",\"ticker\":\"USDTZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"BTC-USDT\",\"adjustByMarket\":\"BTC-USD\",\"invert\":true},{\"exchangeName\":\"Okx\",\"ticker\":\"USDC-USDT\",\"invert\":true}]}"
+        },
+        {
+          "pair": "DYDX-USD",
+          "id": 1000001,
+          "exponent": -9,
+          "min_exchanges": 3,
+          "min_price_change_ppm": 2500,
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"DYDXUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"DYDXUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"DYDX_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"DYDX-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"DYDX_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"DYDX-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+        }
+      ],
+      "market_prices": [
+        {
+          "id": 0,
+          "exponent": -5,
+          "price": 2868819524
+        },
+        {
+          "id": 1,
+          "exponent": -6,
+          "price": 1811985252
+        },
+        {
+          "id": 2,
+          "exponent": -9,
+          "price": 7204646989
+        },
+        {
+          "id": 3,
+          "exponent": -10,
+          "price": 6665746387
+        },
+        {
+          "id": 4,
+          "exponent": -10,
+          "price": 6029316660
+        },
+        {
+          "id": 5,
+          "exponent": -8,
+          "price": 2350695125
+        },
+        {
+          "id": 6,
+          "exponent": -10,
+          "price": 2918831290
+        },
+        {
+          "id": 7,
+          "exponent": -8,
+          "price": 1223293720
+        },
+        {
+          "id": 8,
+          "exponent": -9,
+          "price": 4050336602
+        },
+        {
+          "id": 9,
+          "exponent": -8,
+          "price": 8193604950
+        },
+        {
+          "id": 10,
+          "exponent": -11,
+          "price": 7320836895
+        },
+        {
+          "id": 11,
+          "exponent": -9,
+          "price": 8433494428
+        },
+        {
+          "id": 12,
+          "exponent": -9,
+          "price": 4937186533
+        },
+        {
+          "id": 13,
+          "exponent": -9,
+          "price": 5852293356
+        },
+        {
+          "id": 14,
+          "exponent": -7,
+          "price": 2255676327
+        },
+        {
+          "id": 15,
+          "exponent": -11,
+          "price": 7795369902
+        },
+        {
+          "id": 16,
+          "exponent": -9,
+          "price": 1312325536
+        },
+        {
+          "id": 17,
+          "exponent": -6,
+          "price": 1199517382
+        },
+        {
+          "id": 18,
+          "exponent": -10,
+          "price": 1398578933
+        },
+        {
+          "id": 19,
+          "exponent": -8,
+          "price": 1741060746
+        },
+        {
+          "id": 20,
+          "exponent": -8,
+          "price": 5717635307
+        },
+        {
+          "id": 21,
+          "exponent": -9,
+          "price": 1943019371
+        },
+        {
+          "id": 22,
+          "exponent": -9,
+          "price": 1842365656
+        },
+        {
+          "id": 23,
+          "exponent": -9,
+          "price": 6787621897
+        },
+        {
+          "id": 24,
+          "exponent": -9,
+          "price": 1127629325
+        },
+        {
+          "id": 25,
+          "exponent": -10,
+          "price": 2779565892
+        },
+        {
+          "id": 26,
+          "exponent": -9,
+          "price": 1855061997
+        },
+        {
+          "id": 27,
+          "exponent": -9,
+          "price": 1562218603
+        },
+        {
+          "id": 28,
+          "exponent": -16,
+          "price": 2481900353
+        },
+        {
+          "id": 29,
+          "exponent": -10,
+          "price": 1686998025
+        },
+        {
+          "id": 30,
+          "exponent": -15,
+          "price": 8895882688
+        },
+        {
+          "id": 31,
+          "exponent": -10,
+          "price": 5896318772
+        },
+        {
+          "id": 32,
+          "exponent": -10,
+          "price": 6327613800
+        },
+        {
+          "id": 1000000,
+          "exponent": -9,
+          "price": 1000000000
+        },
+        {
+          "id": 1000001,
+          "exponent": -9,
+          "price": 2050000000
+        }
+      ]
+    },
+    "rewards": {
+      "params": {
+        "treasury_account": "rewards_treasury",
+        "denom": "adydx",
+        "denom_exponent": -18,
+        "market_id": 1000001,
+        "fee_multiplier_ppm": 0
+      }
+    },
+    "sending": {},
+    "slashing": {
+      "params": {
+        "signed_blocks_window": "8192",
+        "min_signed_per_window": "0.2",
+        "downtime_jail_duration": "7200s",
+        "slash_fraction_double_sign": "0.0",
+        "slash_fraction_downtime": "0.0"
+      },
+      "signing_infos": [],
+      "missed_blocks": []
+    },
+    "staking": {
+      "params": {
+        "unbonding_time": "2592000s",
+        "max_validators": 60,
+        "max_entries": 7,
+        "historical_entries": 10000,
+        "bond_denom": "adydx",
+        "min_commission_rate": "0.05"
+      },
+      "last_total_power": "0",
+      "last_validator_powers": [],
+      "validators": [],
+      "delegations": [],
+      "unbonding_delegations": [],
+      "redelegations": [],
+      "exported": false
+    },
+    "stats": {
+      "params": {
+        "window_duration": "2592000s"
+      }
+    },
+    "subaccounts": {
+      "subaccounts": []
+    },
+    "transfer": {
+      "port_id": "transfer",
+      "denom_traces": [],
+      "params": {
+        "send_enabled": true,
+        "receive_enabled": true
+      },
+      "total_escrowed": []
+    },
+    "upgrade": {},
+    "vest": {
+      "vest_entries": [
+        {
+          "vester_account": "community_vester",
+          "treasury_account": "community_treasury",
+          "denom": "adydx",
+          "start_time": "2021-08-03T15:00:00Z",
+          "end_time": "2026-08-03T15:00:00Z"
+        },
+        {
+          "vester_account": "rewards_vester",
+          "treasury_account": "rewards_treasury",
+          "denom": "adydx",
+          "start_time": "2021-08-03T15:00:00Z",
+          "end_time": "2026-08-03T15:00:00Z"
+        }
+      ]
+    }
+  }
+}

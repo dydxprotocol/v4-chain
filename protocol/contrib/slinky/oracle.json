@@ -1,0 +1,49 @@
+{
+    "providers": {
+      "dydx_migration_api": {
+        "name": "dydx_migration_api",
+        "api": {
+          "enabled": true,
+          "timeout": 20000000000,
+          "interval": 10000000000,
+          "reconnectTimeout": 2000000000,
+          "maxQueries": 1,
+          "atomic": true,
+          "endpoints": [
+            {
+              "url": "http://dydxprotocold0:1317"
+            },
+            {
+              "url": "dydxprotocold0:9090"
+            }
+          ],
+          "batchSize": 0,
+          "name": "dydx_migration_api"
+        },
+        "type": "market_map_provider"
+      }
+    },
+    "polymarket_api": {
+        "name": "polymarket_api",
+        "type": "price_provider",
+        "api": {
+          "name": "polymarket_api",
+          "enabled": true,
+          "timeout": 3000000000,
+          "interval": 500000000,
+          "reconnectTimeout": 2000000000,
+          "maxQueries": 1,
+          "atomic": false,
+          "endpoints": [
+            {
+              "url": "https://clob.polymarket.com/midpoint?token_id=%s",
+              "authentication": {
+                "apiKey": "",
+                "apiKeyHeader": ""
+              }
+            }
+          ],
+          "batchSize": 0
+        }
+    }
+}

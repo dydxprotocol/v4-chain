@@ -4,8 +4,6 @@ import (
 	"math/big"
 	"testing"
 
-	errorsmod "cosmossdk.io/errors"
-
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -173,11 +171,8 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			shouldPanic: true,
-			expectedError: errorsmod.Wrapf(
-				types.ErrAssetPositionZeroQuantum,
-				"asset position (asset Id: 0) has zero quantum",
-			),
+			shouldPanic:   false,
+			expectedError: types.ErrAssetPositionZeroQuantum,
 		},
 		"invalid: perpetual positions out of order": {
 			genState: &types.GenesisState{
@@ -225,11 +220,8 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			shouldPanic: true,
-			expectedError: errorsmod.Wrapf(
-				types.ErrPerpPositionZeroQuantum,
-				"perpetual position (perpetual Id: 0) has zero quantum",
-			),
+			shouldPanic:   false,
+			expectedError: types.ErrPerpPositionZeroQuantum,
 		},
 	}
 

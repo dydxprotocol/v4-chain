@@ -89,29 +89,9 @@ func EndBlocker(
 		)
 	}
 
-	deliveredCancels := keeper.GetDeliveredCancelledOrderIds(ctx)
-	// Prune expired untriggered conditional orders from the in-memory UntriggeredConditionalOrders struct.
-	keeper.PruneUntriggeredConditionalOrders(
-		expiredStatefulOrderIds,
-		deliveredCancels,
-	)
-
 	// Update the memstore with expired order ids.
 	// These expired stateful order ids will be purged from the memclob in `Commit`.
 	processProposerMatchesEvents.ExpiredStatefulOrderIds = expiredStatefulOrderIds
-
-	// Before triggering conditional orders, add newly-placed conditional orders to the clob keeper's
-	// in-memory UntriggeredConditionalOrders data structure to allow conditional orders to
-	// trigger in the same block they are placed. Skip triggering orders which have been cancelled
-	// or expired.
-	// TODO(CLOB-773) Support conditional order replacements. Ensure replacements are de-duplicated.
-	conditionalOrdersIds := keeper.GetDeliveredConditionalOrderIds(ctx)
-	keeper.AddUntriggeredConditionalOrders(
-		ctx,
-		conditionalOrdersIds,
-		lib.UniqueSliceToSet(deliveredCancels),
-		lib.UniqueSliceToSet(expiredStatefulOrderIds),
-	)
 
 	// Poll out all triggered conditional orders from `UntriggeredConditionalOrders` and update state.
 	triggeredConditionalOrderIds := keeper.MaybeTriggerConditionalOrders(ctx)

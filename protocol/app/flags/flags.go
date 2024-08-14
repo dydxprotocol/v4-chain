@@ -27,6 +27,7 @@ type Flags struct {
 	GrpcStreamingMaxChannelBufferSize uint32
 	WebsocketStreamingEnabled         bool
 	WebsocketStreamingPort            uint16
+	FullNodeStreamingSnapshotInterval uint32
 
 	VEOracleEnabled bool // Slinky Vote Extensions
 	// Optimistic block execution
@@ -51,6 +52,7 @@ const (
 	GrpcStreamingMaxChannelBufferSize = "grpc-streaming-max-channel-buffer-size"
 	WebsocketStreamingEnabled         = "websocket-streaming-enabled"
 	WebsocketStreamingPort            = "websocket-streaming-port"
+	FullNodeStreamingSnapshotInterval = "fns-snapshot-interval"
 
 	// Slinky VEs enabled
 	VEOracleEnabled = "slinky-vote-extension-oracle-enabled"
@@ -72,6 +74,7 @@ const (
 	DefaultGrpcStreamingMaxChannelBufferSize = 2000
 	DefaultWebsocketStreamingEnabled         = false
 	DefaultWebsocketStreamingPort            = 9091
+	DefaultFullNodeStreamingSnapshotInterval = 0
 
 	DefaultVEOracleEnabled            = true
 	DefaultOptimisticExecutionEnabled = false
@@ -122,6 +125,12 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		GrpcStreamingMaxChannelBufferSize,
 		DefaultGrpcStreamingMaxChannelBufferSize,
 		"Maximum per-subscription channel size before grpc streaming cancels a singular subscription",
+	)
+	cmd.Flags().Uint32(
+		FullNodeStreamingSnapshotInterval,
+		DefaultFullNodeStreamingSnapshotInterval,
+		"If set to positive number, number of blocks between each periodic snapshot will be sent out. "+
+			"Defaults to zero for regular behavior of one initial snapshot.",
 	)
 	cmd.Flags().Bool(
 		WebsocketStreamingEnabled,
@@ -178,6 +187,10 @@ func (f *Flags) Validate() error {
 		}
 	}
 
+	if f.FullNodeStreamingSnapshotInterval > 0 && f.FullNodeStreamingSnapshotInterval < 50 {
+		return fmt.Errorf("full node streaming snapshot interval must be >= 50 blocks or zero")
+	}
+
 	return nil
 }
 
@@ -203,6 +216,7 @@ func GetFlagValuesFromOptions(
 		GrpcStreamingMaxChannelBufferSize: DefaultGrpcStreamingMaxChannelBufferSize,
 		WebsocketStreamingEnabled:         DefaultWebsocketStreamingEnabled,
 		WebsocketStreamingPort:            DefaultWebsocketStreamingPort,
+		FullNodeStreamingSnapshotInterval: DefaultFullNodeStreamingSnapshotInterval,
 
 		VEOracleEnabled:            true,
 		OptimisticExecutionEnabled: DefaultOptimisticExecutionEnabled,
@@ -278,6 +292,12 @@ func GetFlagValuesFromOptions(
 	if option := appOpts.Get(WebsocketStreamingPort); option != nil {
 		if v, err := cast.ToUint16E(option); err == nil {
 			result.WebsocketStreamingPort = v
+		}
+	}
+
+	if option := appOpts.Get(FullNodeStreamingSnapshotInterval); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.FullNodeStreamingSnapshotInterval = v
 		}
 	}
 

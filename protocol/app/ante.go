@@ -16,6 +16,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
+	accountplusante "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/ante"
 	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -34,6 +35,7 @@ type HandlerOptions struct {
 	ClobKeeper        clobtypes.ClobKeeper
 	PerpetualsKeeper  perpetualstypes.PerpetualsKeeper
 	PricesKeeper      pricestypes.PricesKeeper
+	MarketMapKeeper   customante.MarketMapKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -111,7 +113,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		validateMemo:             ante.NewValidateMemoDecorator(options.AccountKeeper),
 		validateBasic:            ante.NewValidateBasicDecorator(),
 		validateSigCount:         ante.NewValidateSigCountDecorator(options.AccountKeeper),
-		incrementSequence:        customante.NewIncrementSequenceDecorator(options.AccountKeeper),
+		incrementSequence:        ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		sigVerification: customante.NewSigVerificationDecorator(
 			options.AccountKeeper,
 			*options.AccountplusKeeper,
@@ -128,7 +130,9 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		sigGasConsume: ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		clobRateLimit: clobante.NewRateLimitDecorator(options.ClobKeeper),
 		clob:          clobante.NewClobDecorator(options.ClobKeeper),
-		marketUpdates: customante.NewValidateMarketUpdateDecorator(options.PerpetualsKeeper, options.PricesKeeper),
+		marketUpdates: customante.NewValidateMarketUpdateDecorator(
+			options.PerpetualsKeeper, options.PricesKeeper, options.MarketMapKeeper,
+		),
 	}
 	return h.AnteHandle, nil
 }
@@ -150,7 +154,7 @@ type lockingAnteHandler struct {
 	validateMemo             ante.ValidateMemoDecorator
 	validateBasic            ante.ValidateBasicDecorator
 	validateSigCount         ante.ValidateSigCountDecorator
-	incrementSequence        customante.IncrementSequenceDecorator
+	incrementSequence        ante.IncrementSequenceDecorator
 	sigVerification          customante.SigVerificationDecorator
 	consumeTxSizeGas         ante.ConsumeTxSizeGasDecorator
 	deductFee                ante.DeductFeeDecorator
@@ -248,7 +252,13 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	if isShortTerm, err = clobante.IsShortTermClobMsgTx(ctx, tx); err != nil {
 		return ctx, err
 	}
-	if !isShortTerm {
+
+	var isTimestampNonce bool
+	if isTimestampNonce, err = accountplusante.IsTimestampNonceTx(ctx, tx); err != nil {
+		return ctx, err
+	}
+
+	if !isShortTerm && !isTimestampNonce {
 		if ctx, err = h.incrementSequence.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 			return ctx, err
 		}
@@ -404,8 +414,16 @@ func (h *lockingAnteHandler) otherMsgAnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	if ctx, err = h.sigVerification.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
 	}
-	if ctx, err = h.incrementSequence.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
+
+	var isTimestampNonce bool
+	if isTimestampNonce, err = accountplusante.IsTimestampNonceTx(ctx, tx); err != nil {
 		return ctx, err
+	}
+
+	if !isTimestampNonce {
+		if ctx, err = h.incrementSequence.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
+			return ctx, err
+		}
 	}
 
 	// During non-simulated `checkTx` we must write the store since we own branching and writing.

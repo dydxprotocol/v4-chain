@@ -571,7 +571,7 @@ describe('message-forwarder', () => {
         connectionId = msg.connection_id;
       }
       if (msg.message_id === 1) {
-        // Check that the initial message is correct.
+        // Check that the initial message is a Subscribe Message
         checkInitialMessage(
           msg as SubscribedMessage,
           connectionId,

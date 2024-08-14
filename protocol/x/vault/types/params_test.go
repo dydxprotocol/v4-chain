@@ -8,19 +8,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidate(t *testing.T) {
+func TestValidateQuotingParams(t *testing.T) {
 	tests := map[string]struct {
 		// Params to validate.
-		params types.Params
+		params types.QuotingParams
 		// Expected error
 		expectedErr error
 	}{
 		"Success": {
-			params:      types.DefaultParams(),
+			params:      types.DefaultQuotingParams(),
 			expectedErr: nil,
 		},
 		"Failure - Layer is greater than MaxUint8": {
-			params: types.Params{
+			params: types.QuotingParams{
 				Layers:                           256,
 				SpreadMinPpm:                     3_000,
 				SpreadBufferPpm:                  1_500,
@@ -32,7 +32,7 @@ func TestValidate(t *testing.T) {
 			expectedErr: types.ErrInvalidLayers,
 		},
 		"Failure - SpreadMinPpm is 0": {
-			params: types.Params{
+			params: types.QuotingParams{
 				Layers:                           2,
 				SpreadMinPpm:                     0,
 				SpreadBufferPpm:                  1_500,
@@ -44,7 +44,7 @@ func TestValidate(t *testing.T) {
 			expectedErr: types.ErrInvalidSpreadMinPpm,
 		},
 		"Failure - OrderSizePctPpm is 0": {
-			params: types.Params{
+			params: types.QuotingParams{
 				Layers:                           2,
 				SpreadMinPpm:                     3_000,
 				SpreadBufferPpm:                  1_500,
@@ -56,7 +56,7 @@ func TestValidate(t *testing.T) {
 			expectedErr: types.ErrInvalidOrderSizePctPpm,
 		},
 		"Failure - OrderExpirationSeconds is 0": {
-			params: types.Params{
+			params: types.QuotingParams{
 				Layers:                           2,
 				SpreadMinPpm:                     3_000,
 				SpreadBufferPpm:                  1_500,
@@ -68,7 +68,7 @@ func TestValidate(t *testing.T) {
 			expectedErr: types.ErrInvalidOrderExpirationSeconds,
 		},
 		"Failure - ActivationThresholdQuoteQuantums is negative": {
-			params: types.Params{
+			params: types.QuotingParams{
 				Layers:                           2,
 				SpreadMinPpm:                     3_000,
 				SpreadBufferPpm:                  1_500,

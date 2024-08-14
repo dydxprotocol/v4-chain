@@ -18,11 +18,13 @@ const (
 	// OwnerShares store: vaultId VaultId -> owner string -> shares NumShares.
 	OwnerSharesKeyPrefix = "OwnerShares:"
 
-	// ParamsKey is the key to retrieve Params.
-	ParamsKey = "Params"
+	// DefaultQuotingParams is the key to retrieve DefaultQuotingParams.
+	// A vault uses DefaultQuotingParams if it does not have its own QuotingParams.
+	DefaultQuotingParamsKey = "DefaultQuotingParams"
 
-	// VaultParamsKeyPrefix is the prefix to retrieve all VaultParams.
-	VaultParamsKeyPrefix = "VaultParams:"
+	// QuotingParamsKeyPrefix is the prefix to retrieve all QuotingParams.
+	// QuotingParams store: vaultId VaultId -> QuotingParams.
+	QuotingParamsKeyPrefix = "QuotingParams:"
 
 	// VaultAddressKeyPrefix is the prefix to retrieve all vault addresses.
 	VaultAddressKeyPrefix = "VaultAddress:"

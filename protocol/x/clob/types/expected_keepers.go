@@ -37,6 +37,13 @@ type SubaccountsKeeper interface {
 	) (
 		val satypes.Subaccount,
 	)
+	GetStreamSubaccountUpdate(
+		ctx sdk.Context,
+		id satypes.SubaccountId,
+		snapshot bool,
+	) (
+		val satypes.StreamSubaccountUpdate,
+	)
 	GetAllSubaccount(
 		ctx sdk.Context,
 	) (
@@ -78,6 +85,10 @@ type SubaccountsKeeper interface {
 		quantums *big.Int,
 		perpetualId uint32,
 	) error
+	SendSubaccountUpdates(
+		ctx sdk.Context,
+		subaccountUpdates []satypes.StreamSubaccountUpdate,
+	)
 }
 
 type AssetsKeeper interface {

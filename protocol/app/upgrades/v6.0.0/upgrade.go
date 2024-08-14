@@ -12,12 +12,12 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
-	"github.com/skip-mev/slinky/oracle/config"
+	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/skip-mev/slinky/providers/apis/dydx"
 	dydxtypes "github.com/skip-mev/slinky/providers/apis/dydx/types"
 	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
-	"go.uber.org/zap"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -65,22 +65,6 @@ func setMarketMapParams(ctx sdk.Context, mmk marketmapkeeper.Keeper) {
 }
 
 func migratePricesToMarketMap(ctx sdk.Context, pk pricestypes.PricesKeeper, mmk marketmapkeeper.Keeper) {
-	// fill out config with dummy variables to pass validation.  This handler is only used to run the
-	// ConvertMarketParamsToMarketMap member function.
-	h, err := dydx.NewAPIHandler(zap.NewNop(), config.APIConfig{
-		Enabled:          true,
-		Timeout:          1,
-		Interval:         1,
-		ReconnectTimeout: 1,
-		MaxQueries:       1,
-		Atomic:           false,
-		Endpoints:        []config.Endpoint{{URL: "upgrade"}},
-		BatchSize:        0,
-		Name:             dydx.Name,
-	})
-	if err != nil {
-		panic(fmt.Sprintf("Failed to construct dydx handler %v", err))
-	}
 	allMarketParams := pk.GetAllMarketParams(ctx)
 	var mpr dydxtypes.QueryAllMarketParamsResponse
 	for _, mp := range allMarketParams {
@@ -93,7 +77,7 @@ func migratePricesToMarketMap(ctx sdk.Context, pk pricestypes.PricesKeeper, mmk 
 			ExchangeConfigJson: mp.ExchangeConfigJson,
 		})
 	}
-	mm, err := h.ConvertMarketParamsToMarketMap(mpr)
+	mm, err := dydx.ConvertMarketParamsToMarketMap(mpr)
 	if err != nil {
 		panic(fmt.Sprintf("Couldn't convert markets %v", err))
 	}
@@ -131,6 +115,31 @@ func initRevShareModuleState(
 	}
 }
 
+func initVaultDefaultQuotingParams(
+	ctx sdk.Context,
+	vaultKeeper vaultkeeper.Keeper,
+) {
+	// Initialize the default quoting params for the vault module.
+	oldParams := vaultKeeper.UnsafeGetParams(ctx)
+	if err := vaultKeeper.SetDefaultQuotingParams(
+		ctx,
+		&vaulttypes.QuotingParams{
+			Layers:                           oldParams.Layers,
+			SpreadMinPpm:                     oldParams.SpreadMinPpm,
+			SpreadBufferPpm:                  oldParams.SpreadBufferPpm,
+			SkewFactorPpm:                    oldParams.SkewFactorPpm,
+			OrderSizePctPpm:                  oldParams.OrderSizePctPpm,
+			OrderExpirationSeconds:           oldParams.OrderExpirationSeconds,
+			ActivationThresholdQuoteQuantums: oldParams.ActivationThresholdQuoteQuantums,
+		},
+	); err != nil {
+		panic(fmt.Sprintf("failed to set vault default quoting params: %s", err))
+	}
+
+	// Delete deprecated `Params`.
+	vaultKeeper.UnsafeDeleteParams(ctx)
+}
+
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -138,6 +147,7 @@ func CreateUpgradeHandler(
 	pricesKeeper pricestypes.PricesKeeper,
 	mmKeeper marketmapkeeper.Keeper,
 	revShareKeeper revsharetypes.RevShareKeeper,
+	vaultKeeper vaultkeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
@@ -153,6 +163,9 @@ func CreateUpgradeHandler(
 
 		// Initialize the rev share module state.
 		initRevShareModuleState(sdkCtx, revShareKeeper, pricesKeeper)
+
+		// Initialize x/vault default quoting params.
+		initVaultDefaultQuotingParams(sdkCtx, vaultKeeper)
 
 		sdkCtx.Logger().Info("Successfully removed stateful orders from state")
 

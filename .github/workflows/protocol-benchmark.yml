@@ -28,6 +28,9 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.22
+      - name: Prune Docker system to free up space
+        run: |
+          docker system prune -a --volumes -f
       - name: Run Benchmarks
         run: make benchmark | tee ./benchmark_output.txt
       - name: Download previous benchmark data

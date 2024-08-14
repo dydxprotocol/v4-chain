@@ -22,6 +22,11 @@ export const complianceConfigSchema = {
     default: '', // comma de-limited
   }),
 
+  // Whitelisted list of dydx addresses
+  WHITELISTED_ADDRESSES: parseString({
+    default: '', // comma de-limited
+  }),
+
   // Required environment variables.
   ELLIPTIC_API_KEY: parseString({ default: 'default_elliptic_api_key' }),
   ELLIPTIC_API_SECRET: parseString({ default: '' }),

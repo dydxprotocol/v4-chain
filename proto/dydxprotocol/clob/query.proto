@@ -12,6 +12,8 @@ import "dydxprotocol/clob/matches.proto";
 import "dydxprotocol/clob/liquidations_config.proto";
 import "dydxprotocol/clob/mev.proto";
 import "dydxprotocol/indexer/off_chain_updates/off_chain_updates.proto";
+import "dydxprotocol/subaccounts/streaming.proto";
+import "dydxprotocol/subaccounts/subaccount.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
@@ -165,6 +167,9 @@ message QueryLiquidationsConfigurationResponse {
 message StreamOrderbookUpdatesRequest {
   // Clob pair ids to stream orderbook updates for.
   repeated uint32 clob_pair_id = 1;
+
+  // Subaccount ids to stream subaccount updates for.
+  repeated dydxprotocol.subaccounts.SubaccountId subaccount_ids = 2;
 }
 
 // StreamOrderbookUpdatesResponse is a response message for the
@@ -178,17 +183,19 @@ message StreamOrderbookUpdatesResponse {
 // GRPC stream.
 message StreamUpdate {
   // Contains one of an StreamOrderbookUpdate,
-  // StreamOrderbookFill.
+  // StreamOrderbookFill, StreamTakerOrderStatus.
   oneof update_message {
     StreamOrderbookUpdate orderbook_update = 1;
     StreamOrderbookFill order_fill = 2;
+    StreamTakerOrder taker_order = 3;
+    dydxprotocol.subaccounts.StreamSubaccountUpdate subaccount_update = 4;
   }
 
   // Block height of the update.
-  uint32 block_height = 3;
+  uint32 block_height = 5;
 
   // Exec mode of the update.
-  uint32 exec_mode = 4;
+  uint32 exec_mode = 6;
 }
 
 // StreamOrderbookUpdate provides information on an orderbook update. Used in
@@ -219,4 +226,40 @@ message StreamOrderbookFill {
 
   // Resulting fill amounts for each order in the orders array.
   repeated uint64 fill_amounts = 3;
+}
+
+// StreamTakerOrder provides information on a taker order that was attempted
+// to be matched on the orderbook.
+// It is intended to be used only in full node streaming.
+message StreamTakerOrder {
+  // The taker order that was matched on the orderbook. Can be a
+  // regular order or a liquidation order.
+  oneof taker_order {
+    Order order = 1;
+    StreamLiquidationOrder liquidation_order = 2;
+  }
+
+  // Information on the taker order after it is matched on the book,
+  // either successfully or unsuccessfully.
+  StreamTakerOrderStatus taker_order_status = 3;
+}
+
+// StreamTakerOrderStatus is a representation of a taker order
+// after it is attempted to be matched on the orderbook.
+// It is intended to be used only in full node streaming.
+message StreamTakerOrderStatus {
+  // The state of the taker order after attempting to match it against the
+  // orderbook. Possible enum values can be found here:
+  // https://github.com/dydxprotocol/v4-chain/blob/main/protocol/x/clob/types/orderbook.go#L105
+  uint32 order_status = 1;
+
+  // The amount of remaining (non-matched) base quantums of this taker order.
+  uint64 remaining_quantums = 2;
+
+  // The amount of base quantums that were *optimistically* filled for this
+  // taker order when the order is matched against the orderbook. Note that if
+  // any quantums of this order were optimistically filled or filled in state
+  // before this invocation of the matching loop, this value will not include
+  // them.
+  uint64 optimistically_filled_quantums = 3;
 }

@@ -43,7 +43,10 @@ func NewIndexerMessageSenderKafka(
 	config.Producer.Return.Errors = true
 	config.Producer.Return.Successes = true
 	config.Producer.Retry.Max = indexerFlags.MaxRetries
+	// max retry should be set so that max retry * retry backoff > Zookeeper session.timeout + some buffer
+	config.Producer.Retry.Backoff = 1000 * time.Millisecond
 	config.Producer.MaxMessageBytes = 4194304 // 4MB
+	config.Producer.RequiredAcks = sarama.WaitForAll
 	// Use the JVM compatible parititoner to match `kafkajs` which is used in the indexer services.
 	config.Producer.Partitioner = kafkautil.NewJVMCompatiblePartitioner
 	producer, err := sarama.NewAsyncProducer(indexerFlags.KafkaAddrs, config)

@@ -1,3 +1,4 @@
+import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
@@ -28,6 +29,48 @@ export interface MsgSetMarketsHardCapResponse {}
 /** MsgSetMarketsHardCapResponse defines the MsgSetMarketsHardCap response */
 
 export interface MsgSetMarketsHardCapResponseSDKType {}
+/**
+ * MsgCreateMarketPermissionless is a message used to create new markets without
+ * // going through x/gov
+ */
+
+export interface MsgCreateMarketPermissionless {
+  /** The name of the `Perpetual` (e.g. `BTC-USD`). */
+  ticker: string;
+  /** The subaccount to deposit from. */
+
+  subaccountId?: SubaccountId;
+  /** Number of quote quantums to deposit. */
+
+  quoteQuantums: Uint8Array;
+}
+/**
+ * MsgCreateMarketPermissionless is a message used to create new markets without
+ * // going through x/gov
+ */
+
+export interface MsgCreateMarketPermissionlessSDKType {
+  /** The name of the `Perpetual` (e.g. `BTC-USD`). */
+  ticker: string;
+  /** The subaccount to deposit from. */
+
+  subaccount_id?: SubaccountIdSDKType;
+  /** Number of quote quantums to deposit. */
+
+  quote_quantums: Uint8Array;
+}
+/**
+ * MsgCreateMarketPermissionlessResponse defines the
+ * MsgCreateMarketPermissionless response
+ */
+
+export interface MsgCreateMarketPermissionlessResponse {}
+/**
+ * MsgCreateMarketPermissionlessResponse defines the
+ * MsgCreateMarketPermissionless response
+ */
+
+export interface MsgCreateMarketPermissionlessResponseSDKType {}
 
 function createBaseMsgSetMarketsHardCap(): MsgSetMarketsHardCap {
   return {
@@ -113,6 +156,105 @@ export const MsgSetMarketsHardCapResponse = {
 
   fromPartial(_: DeepPartial<MsgSetMarketsHardCapResponse>): MsgSetMarketsHardCapResponse {
     const message = createBaseMsgSetMarketsHardCapResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgCreateMarketPermissionless(): MsgCreateMarketPermissionless {
+  return {
+    ticker: "",
+    subaccountId: undefined,
+    quoteQuantums: new Uint8Array()
+  };
+}
+
+export const MsgCreateMarketPermissionless = {
+  encode(message: MsgCreateMarketPermissionless, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.ticker !== "") {
+      writer.uint32(10).string(message.ticker);
+    }
+
+    if (message.subaccountId !== undefined) {
+      SubaccountId.encode(message.subaccountId, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.quoteQuantums.length !== 0) {
+      writer.uint32(26).bytes(message.quoteQuantums);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgCreateMarketPermissionless {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgCreateMarketPermissionless();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.ticker = reader.string();
+          break;
+
+        case 2:
+          message.subaccountId = SubaccountId.decode(reader, reader.uint32());
+          break;
+
+        case 3:
+          message.quoteQuantums = reader.bytes();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgCreateMarketPermissionless>): MsgCreateMarketPermissionless {
+    const message = createBaseMsgCreateMarketPermissionless();
+    message.ticker = object.ticker ?? "";
+    message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? SubaccountId.fromPartial(object.subaccountId) : undefined;
+    message.quoteQuantums = object.quoteQuantums ?? new Uint8Array();
+    return message;
+  }
+
+};
+
+function createBaseMsgCreateMarketPermissionlessResponse(): MsgCreateMarketPermissionlessResponse {
+  return {};
+}
+
+export const MsgCreateMarketPermissionlessResponse = {
+  encode(_: MsgCreateMarketPermissionlessResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgCreateMarketPermissionlessResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgCreateMarketPermissionlessResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgCreateMarketPermissionlessResponse>): MsgCreateMarketPermissionlessResponse {
+    const message = createBaseMsgCreateMarketPermissionlessResponse();
     return message;
   }
 

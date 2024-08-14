@@ -393,10 +393,6 @@ func New(
 	if err := appFlags.Validate(); err != nil {
 		panic(err)
 	}
-	if appFlags.OptimisticExecutionEnabled {
-		// TODO(OTE-573): Remove warning once OE is fully supported.
-		logger.Warn("Optimistic execution is enabled. This is a test feature not intended for production use!")
-	}
 
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 
@@ -410,6 +406,7 @@ func New(
 
 	// Enable optimistic block execution.
 	if appFlags.OptimisticExecutionEnabled {
+		logger.Info("optimistic execution is enabled.")
 		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
 	}
 
@@ -1071,6 +1068,7 @@ func New(
 		app.BlockTimeKeeper,
 		app.RevShareKeeper,
 		app.IndexerEventManager,
+		app.FullNodeStreamingManager,
 	)
 	subaccountsModule := subaccountsmodule.NewAppModule(
 		appCodec,
@@ -1178,7 +1176,14 @@ func New(
 		&app.MarketMapKeeper,
 		app.PerpetualsKeeper,
 	)
-	listingModule := listingmodule.NewAppModule(appCodec, app.ListingKeeper)
+	listingModule := listingmodule.NewAppModule(
+		appCodec,
+		app.ListingKeeper,
+		app.PricesKeeper,
+		app.ClobKeeper,
+		&app.MarketMapKeeper,
+		app.PerpetualsKeeper,
+	)
 
 	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
 		appCodec,
@@ -1385,6 +1390,7 @@ func New(
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
 		icatypes.ModuleName,
+		marketmapmoduletypes.ModuleName, // must be before prices
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
 		blocktimemoduletypes.ModuleName,
@@ -1403,7 +1409,6 @@ func New(
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
-		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
 
@@ -1429,6 +1434,7 @@ func New(
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
 		icatypes.ModuleName,
+		marketmapmoduletypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
 		blocktimemoduletypes.ModuleName,
@@ -1447,7 +1453,6 @@ func New(
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
-		marketmapmoduletypes.ModuleName,
 		authz.ModuleName,
 
 		// Auth must be migrated after staking.
@@ -1919,6 +1924,7 @@ func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 			AuthStoreKey:      app.keys[authtypes.StoreKey],
 			PerpetualsKeeper:  app.PerpetualsKeeper,
 			PricesKeeper:      app.PricesKeeper,
+			MarketMapKeeper:   &app.MarketMapKeeper,
 		},
 	)
 	if err != nil {
@@ -2028,13 +2034,18 @@ func getFullNodeStreamingManagerFromOptions(
 	cdc codec.Codec,
 	logger log.Logger,
 ) (manager streamingtypes.FullNodeStreamingManager, wsServer *ws.WebsocketServer) {
+	logger = logger.With(log.ModuleKey, "full-node-streaming")
 	if appFlags.GrpcStreamingEnabled {
 		logger.Info("Full node streaming is enabled")
+		if appFlags.FullNodeStreamingSnapshotInterval > 0 {
+			logger.Info("Interval snapshots enabled")
+		}
 		manager := streaming.NewFullNodeStreamingManager(
 			logger,
 			appFlags.GrpcStreamingFlushIntervalMs,
 			appFlags.GrpcStreamingMaxBatchSize,
 			appFlags.GrpcStreamingMaxChannelBufferSize,
+			appFlags.FullNodeStreamingSnapshotInterval,
 		)
 
 		// Start websocket server.
