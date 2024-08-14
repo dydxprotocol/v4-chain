@@ -72,7 +72,7 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ws.logger.Info(
-		fmt.Sprintf("Recieved websocket streaming request for clob pair ids: %+v", clobPairIds),
+		fmt.Sprintf("Received websocket streaming request for clob pair ids: %+v", clobPairIds),
 	)
 
 	err = ws.streamingManager.Subscribe(
@@ -131,5 +131,8 @@ func (ws *WebsocketServer) Start() {
 func (ws *WebsocketServer) Shutdown() {
 	shutdownCtx, shutdownRelease := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownRelease()
-	ws.server.Shutdown(shutdownCtx)
+	err := ws.server.Shutdown(shutdownCtx)
+	if err != nil {
+		ws.logger.Error("Failed to shutdown websocket server", "err", err)
+	}
 }

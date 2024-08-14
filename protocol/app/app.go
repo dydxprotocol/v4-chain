@@ -234,7 +234,6 @@ import (
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
 	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/ws"
-	websocketstreaming "github.com/dydxprotocol/v4-chain/protocol/streaming/ws"
 )
 
 var (
@@ -346,7 +345,7 @@ type App struct {
 
 	IndexerEventManager      indexer_manager.IndexerEventManager
 	FullNodeStreamingManager streamingtypes.FullNodeStreamingManager
-	WebsocketStreamingServer *websocketstreaming.WebsocketServer
+	WebsocketStreamingServer *ws.WebsocketServer
 
 	Server *daemonserver.Server
 
@@ -2028,7 +2027,7 @@ func getFullNodeStreamingManagerFromOptions(
 	appFlags flags.Flags,
 	cdc codec.Codec,
 	logger log.Logger,
-) (manager streamingtypes.FullNodeStreamingManager, wsServer *websocketstreaming.WebsocketServer) {
+) (manager streamingtypes.FullNodeStreamingManager, wsServer *ws.WebsocketServer) {
 	if appFlags.GrpcStreamingEnabled {
 		logger.Info("Full node streaming is enabled")
 		manager := streaming.NewFullNodeStreamingManager(
