@@ -16,15 +16,10 @@ const serviceAccount: ServiceAccount = JSON.parse(
   JSON.stringify(defaultGoogleApplicationCredentials),
 );
 
-let firebaseApp;
-let firebaseMessaging;
+const firebaseApp = initializeApp({
+  credential: cert(serviceAccount),
+});
+const firebaseMessaging = getMessaging(firebaseApp);
 
-if (config.isProduction()) {
-  firebaseApp = initializeApp({
-    credential: cert(serviceAccount),
-  });
-  firebaseMessaging = getMessaging(firebaseApp);
-}
-
-export const sendMulticast = firebaseMessaging?.sendMulticast.bind(firebaseMessaging);
+export const sendMulticast = firebaseMessaging.sendMulticast.bind(firebaseMessaging);
 export { BatchResponse, getMessaging, MulticastMessage } from 'firebase-admin/messaging';

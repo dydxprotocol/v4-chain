@@ -12,13 +12,13 @@ import { Notification } from './types';
 export async function sendFirebaseMessage(
   address: string,
   notification: Notification,
-): Promise<string> {
+): Promise<void> {
   // Re-add once stats are implemented
   // const start = Date.now();
 
   const tokens = await getUserRegistrationTokens(address);
   if (tokens.length === 0) {
-    return 'user has no registration tokens';
+    throw new Error('User has no registration tokens');
   }
 
   const { title, body } = deriveLocalizedNotificationMessage(notification);
@@ -48,20 +48,16 @@ export async function sendFirebaseMessage(
   };
 
   try {
-    if (sendMulticast) {
-      const result: BatchResponse = await sendMulticast(message);
-      if (result.failureCount && result.failureCount > 0) {
-        logger.info({
-          at: 'courier-client#firebase',
-          message: `Failed to send Firebase message: ${JSON.stringify(message)}`,
-          result,
-          address,
-          notificationType: notification.type,
-        });
-      }
-      return '';
-    } else {
-      return 'Failed to send FIrebase message, Firebase is not initialized';
+    const result: BatchResponse = await sendMulticast(message);
+    if (result.failureCount && result.failureCount > 0) {
+      logger.info({
+        at: 'courier-client#firebase',
+        message: `Failed to send Firebase message: ${JSON.stringify(message)}`,
+        result,
+        address,
+        notificationType: notification.type,
+      });
+      throw new Error('Failed to send Firebase message');
     }
   } catch (error) {
     logger.error({
@@ -71,7 +67,7 @@ export async function sendFirebaseMessage(
       address,
       notificationType: notification.type,
     });
-    return `failed to send Firebase message due to ${error}`;
+    throw new Error('Failed to send Firebase message');
   } finally {
     // stats.timing(`${config.SERVICE_NAME}.send_firebase_message.timing`, Date.now() - start);
   }
