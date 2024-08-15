@@ -51,7 +51,7 @@ export async function sendFirebaseMessage(
     const result: BatchResponse = await sendMulticast(message);
     if (result.failureCount && result.failureCount > 0) {
       logger.info({
-        at: 'courier-client#firebase',
+        at: 'notifications#firebase',
         message: `Failed to send Firebase message: ${JSON.stringify(message)}`,
         result,
         address,
@@ -61,7 +61,7 @@ export async function sendFirebaseMessage(
     }
   } catch (error) {
     logger.error({
-      at: 'courier-client#firebase',
+      at: 'notifications#firebase',
       message: `Failed to send Firebase message: ${JSON.stringify(message)}`,
       error: error as Error,
       address,
