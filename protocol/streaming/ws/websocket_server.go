@@ -103,13 +103,9 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 // parseSubaccountIds is a helper function to parse the subaccountIds from the query parameters.
 func parseSubaccountIds(r *http.Request) ([]*satypes.SubaccountId, error) {
 	subaccountIdsParam := r.URL.Query().Get("subaccountIds")
-	if subaccountIdsParam == "" {
-		return nil, nil
-	}
-
 	idStrs := strings.Split(subaccountIdsParam, ",")
-	subaccountIds := make([]*satypes.SubaccountId, len(idStrs))
-	for i, idStr := range idStrs {
+	subaccountIds := make([]*satypes.SubaccountId, 0)
+	for _, idStr := range idStrs {
 		parts := strings.Split(idStr, "/")
 		if len(parts) != 2 {
 			return nil, fmt.Errorf("invalid subaccountId format: %s, expected subaccount_id format: owner/number", idStr)
@@ -120,10 +116,10 @@ func parseSubaccountIds(r *http.Request) ([]*satypes.SubaccountId, error) {
 			return nil, fmt.Errorf("invalid subaccount number: %s, expected subaccount_id format: owner/number", parts[1])
 		}
 
-		subaccountIds[i] = &satypes.SubaccountId{
+		subaccountIds = append(subaccountIds, &satypes.SubaccountId{
 			Owner:  parts[0],
 			Number: uint32(number),
-		}
+		})
 	}
 
 	return subaccountIds, nil
@@ -132,18 +128,14 @@ func parseSubaccountIds(r *http.Request) ([]*satypes.SubaccountId, error) {
 // parseClobPairIds is a helper function to parse the clobPairIds from the query parameters.
 func parseClobPairIds(r *http.Request) ([]uint32, error) {
 	clobPairIdsParam := r.URL.Query().Get("clobPairIds")
-	if clobPairIdsParam == "" {
-		return nil, nil
-	}
-
 	idStrs := strings.Split(clobPairIdsParam, ",")
-	clobPairIds := make([]uint32, len(idStrs))
-	for i, idStr := range idStrs {
+	clobPairIds := make([]uint32, 0)
+	for _, idStr := range idStrs {
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
 			return nil, fmt.Errorf("invalid clobPairId: %s", idStr)
 		}
-		clobPairIds[i] = uint32(id)
+		clobPairIds = append(clobPairIds, uint32(id))
 	}
 
 	return clobPairIds, nil
