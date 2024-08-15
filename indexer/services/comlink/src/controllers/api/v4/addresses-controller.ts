@@ -1,5 +1,8 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import {
+  createNotification, NotificationType, NotificationDynamicFieldKey, sendFirebaseMessage,
+} from '@dydxprotocol-indexer/notifications';
+import {
   AssetPositionFromDatabase,
   BlockTable,
   BlockFromDatabase,
@@ -331,6 +334,31 @@ class AddressesController extends Controller {
       throw new DatabaseError(`Error registering token: ${error}`);
     }
   }
+
+  @Post('/:address/testNotification')
+  public async testNotification(
+    @Path() address: string,
+  ): Promise<void> {
+    const wallet = await WalletTable.findById(address);
+    if (!wallet) {
+      throw new NotFoundError(`No wallet found for address: ${address}`);
+    }
+
+    const token = await TokenTable.findAll({ address }, []);
+    if (!token) {
+      throw new NotFoundError(`No token found for address: ${address}`);
+    }
+
+    try {
+      const notification = createNotification(NotificationType.ORDER_FILLED, {
+        [NotificationDynamicFieldKey.MARKET]: 'BTC/USD',
+        [NotificationDynamicFieldKey.AVERAGE_PRICE]: '1000',
+      });
+      await sendFirebaseMessage(wallet.address, notification);
+    } catch (error) {
+      throw new Error('Failed to send test notification');
+    }
+  }
 }
 
 router.get(
@@ -480,6 +508,31 @@ router.post(
       return handleControllerError(
         'AddressesController POST /:address/registerToken',
         'Addresses error',
+        error,
+        req,
+        res,
+      );
+    }
+  },
+);
+
+router.post(
+  '/:address/testNotification',
+  rateLimiterMiddleware(getReqRateLimiter),
+  ...CheckAddressSchema,
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const { address } = matchedData(req) as AddressRequest;
+
+    try {
+      const controller: AddressesController = new AddressesController();
+      await controller.testNotification(address);
+      return res.status(200).send({ message: 'Test notification sent successfully' });
+    } catch (error) {
+      return handleControllerError(
+        'AddressesController POST /:address/testNotification',
+        'Test notification error',
         error,
         req,
         res,

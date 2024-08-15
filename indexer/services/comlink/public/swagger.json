@@ -1833,6 +1833,27 @@
 >>>>>>> 09440d31 (Add register token endpoint)
       }
     },
+    "/addresses/{address}/testNotification": {
+      "post": {
+        "operationId": "TestNotification",
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
     "/assetPositions": {
       "get": {
         "operationId": "GetAssetPositions",

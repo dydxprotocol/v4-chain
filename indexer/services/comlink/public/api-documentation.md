@@ -608,6 +608,62 @@ fetch(`${baseURL}/affiliates/total_volume?address=string`,
 This operation does not require authentication
 </aside>
 
+## TestNotification
+
+<a id="opIdTestNotification"></a>
+
+> Code samples
+
+```python
+import requests
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.post(f'{baseURL}/addresses/{address}/testNotification')
+
+print(r.json())
+
+```
+
+```javascript
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/addresses/{address}/testNotification`,
+{
+  method: 'POST'
+
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /addresses/{address}/testNotification`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|path|string|true|none|
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|No content|None|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetAssetPositions
 
 <a id="opIdGetAssetPositions"></a>
