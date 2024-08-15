@@ -33,7 +33,7 @@ services:
     ports:
       - "26657:26657"
       - "9090:9090"
-      - "9091:9091"
+      - "9092:9092" # full node streaming
       - "1317:1317"
 
   dydxprotocold1:
