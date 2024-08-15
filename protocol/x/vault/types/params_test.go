@@ -118,16 +118,8 @@ func TestValidateVaultParams(t *testing.T) {
 		},
 		"Failure - invalid quoting params": {
 			params: types.VaultParams{
-				Status: types.VaultStatus_VAULT_STATUS_QUOTING,
-				QuotingParams: &types.QuotingParams{
-					Layers:                           3,
-					SpreadMinPpm:                     4_321,
-					SpreadBufferPpm:                  1_789,
-					SkewFactorPpm:                    767_323,
-					OrderSizePctPpm:                  234_567,
-					OrderExpirationSeconds:           0,
-					ActivationThresholdQuoteQuantums: dtypes.NewInt(9_876_543),
-				},
+				Status:        types.VaultStatus_VAULT_STATUS_QUOTING,
+				QuotingParams: &constants.InvalidQuotingParams,
 			},
 			expectedErr: types.ErrInvalidOrderExpirationSeconds,
 		},
