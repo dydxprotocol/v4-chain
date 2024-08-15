@@ -1,0 +1,1 @@
+This directory contains files to configure version names used for upgrade tests and internal nodes. These versions are used for things such as upgrade proposals and cosmovisor directory names. When updating tests and images for a new version, most of the time you just need to change the `VERSION_CURRENT` and `VERSION_PREUPGRADE` files.
