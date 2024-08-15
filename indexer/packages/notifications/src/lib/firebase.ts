@@ -9,7 +9,7 @@ import config from '../config';
 
 const defaultGoogleApplicationCredentials: { [key: string]: string } = {
   project_id: config.FIREBASE_PROJECT_ID,
-  private_key: config.FIREBASE_PRIVATE_KEY,
+  private_key: Buffer.from(config.FIREBASE_PRIVATE_KEY, 'base64').toString('utf8'),
   client_email: config.FIREBASE_CLIENT_EMAIL,
 };
 const serviceAccount: ServiceAccount = JSON.parse(
