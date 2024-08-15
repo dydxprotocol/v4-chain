@@ -64,7 +64,8 @@ describe('marketPriceUpdateHandler', () => {
       const marketEvent: MarketEventV1 = {
         marketId: 0,
         priceUpdate: {
-          priceWithExponent: Long.fromValue(1, true),
+          spotPriceWithExponent: Long.fromValue(1, true),
+          pnlPriceWithExponent: Long.fromValue(1, true),
         },
       };
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
@@ -99,7 +100,8 @@ describe('marketPriceUpdateHandler', () => {
     const marketPriceUpdate: MarketEventV1 = {
       marketId: 5,
       priceUpdate: {
-        priceWithExponent: Long.fromValue(50000000, true),
+        spotPriceWithExponent: Long.fromValue(50000000, true),
+        pnlPriceWithExponent: Long.fromValue(50000000, true),
       },
     };
     const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
@@ -172,7 +174,8 @@ describe('marketPriceUpdateHandler', () => {
     const marketPriceUpdate: MarketEventV1 = {
       marketId: newMarketId,
       priceUpdate: {
-        priceWithExponent: Long.fromValue(50000000),
+        spotPriceWithExponent: Long.fromValue(50000000),
+        pnlPriceWithExponent: Long.fromValue(50000000),
       },
     };
 
@@ -228,14 +231,19 @@ function expectOraclePriceMatchesEvent(
   market: MarketFromDatabase,
   height: number,
 ) {
-  const expectedHumanPrice: string = protocolTranslations.protocolPriceToHuman(
-    event.priceUpdate.priceWithExponent.toString(),
+  const expectedSpotHumanPrice: string = protocolTranslations.protocolPriceToHuman(
+    event.priceUpdate.spotPriceWithExponent.toString(),
+    market!.exponent,
+  );
+  const expectedPnlHumanPrice: string = protocolTranslations.protocolPriceToHuman(
+    event.priceUpdate.pnlPriceWithExponent.toString(),
     market!.exponent,
   );
   expect(market.id).toEqual(event.marketId);
-  expect(market.oraclePrice).toEqual(expectedHumanPrice);
-
+  expect(market.oraclePrice).toEqual(expectedSpotHumanPrice);
+  expect(market.oraclePrice).toEqual(expectedPnlHumanPrice);
   expect(oraclePrice.marketId).toEqual(event.marketId);
-  expect(oraclePrice.price).toEqual(expectedHumanPrice);
+  expect(oraclePrice.price).toEqual(expectedSpotHumanPrice);
+  expect(oraclePrice.price).toEqual(expectedPnlHumanPrice);
   expect(oraclePrice.effectiveAtHeight).toEqual(height.toString());
 }

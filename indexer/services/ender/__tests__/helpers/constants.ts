@@ -54,14 +54,16 @@ import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } fr
 export const defaultMarketPriceUpdate: MarketEventV1 = {
   marketId: 0,
   priceUpdate: {
-    priceWithExponent: Long.fromValue(100000000, true),
+    spotPriceWithExponent: Long.fromValue(100000000, true),
+    pnlPriceWithExponent: Long.fromValue(100000000, true),
   },
 };
 
 export const defaultMarketPriceUpdate2: MarketEventV1 = {
   marketId: 10,
   priceUpdate: {
-    priceWithExponent: Long.fromValue(100000000, true),
+    spotPriceWithExponent: Long.fromValue(100000000, true),
+    pnlPriceWithExponent: Long.fromValue(100000000, true),
   },
 };
 
