@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
@@ -81,7 +82,7 @@ func AttemptTimestampNonceUpdate(
 	}
 
 	// Must be unique
-	if contains(tsNonceDetails.TimestampNonces, tsNonce) {
+	if lib.SliceContains(tsNonceDetails.TimestampNonces, tsNonce) {
 		return false
 	}
 
@@ -119,13 +120,4 @@ func isLargerThanSmallestValue(value uint64, values []uint64) (bool, int) {
 	} else {
 		return false, minIndex
 	}
-}
-
-func contains[T comparable](list []T, value T) bool {
-	for _, v := range list {
-		if v == value {
-			return true
-		}
-	}
-	return false
 }
