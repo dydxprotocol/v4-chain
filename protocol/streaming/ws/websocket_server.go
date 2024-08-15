@@ -66,6 +66,16 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	// Parse subaccountIds from query parameters
+	subaccountIds, err := parseSubaccountIds(r)
+	if err != nil {
+		ws.logger.Error(
+			"Error parsing subaccountIds",
+			"err", err,
+		)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	websocketMessageSender := &WebsocketMessageSender{
 		cdc:  ws.cdc,
@@ -78,8 +88,7 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 
 	err = ws.streamingManager.Subscribe(
 		clobPairIds,
-		// TODO@(wliu) add subaccount ids
-		[]*satypes.SubaccountId{},
+		subaccountIds,
 		websocketMessageSender,
 	)
 	if err != nil {
@@ -91,21 +100,42 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// parseSubaccountIds is a helper function to parse the subaccountIds from the query parameters.
+func parseSubaccountIds(r *http.Request) ([]*satypes.SubaccountId, error) {
+	subaccountIdsParam := r.URL.Query().Get("subaccountIds")
+	idStrs := strings.Split(subaccountIdsParam, ",")
+	subaccountIds := make([]*satypes.SubaccountId, 0)
+	for _, idStr := range idStrs {
+		parts := strings.Split(idStr, "/")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid subaccountId format: %s, expected subaccount_id format: owner/number", idStr)
+		}
+
+		number, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return nil, fmt.Errorf("invalid subaccount number: %s, expected subaccount_id format: owner/number", parts[1])
+		}
+
+		subaccountIds = append(subaccountIds, &satypes.SubaccountId{
+			Owner:  parts[0],
+			Number: uint32(number),
+		})
+	}
+
+	return subaccountIds, nil
+}
+
 // parseClobPairIds is a helper function to parse the clobPairIds from the query parameters.
 func parseClobPairIds(r *http.Request) ([]uint32, error) {
 	clobPairIdsParam := r.URL.Query().Get("clobPairIds")
-	if clobPairIdsParam == "" {
-		return nil, fmt.Errorf("missing clobPairIds parameter")
-	}
-
 	idStrs := strings.Split(clobPairIdsParam, ",")
-	clobPairIds := make([]uint32, len(idStrs))
-	for i, idStr := range idStrs {
+	clobPairIds := make([]uint32, 0)
+	for _, idStr := range idStrs {
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
 			return nil, fmt.Errorf("invalid clobPairId: %s", idStr)
 		}
-		clobPairIds[i] = uint32(id)
+		clobPairIds = append(clobPairIds, uint32(id))
 	}
 
 	return clobPairIds, nil
