@@ -58,8 +58,14 @@ describe('pnl-ticks-helper', () => {
     [testConstants.defaultPerpetualMarket2.id]: Big('8'),
   };
   const marketPrices: PriceMap = {
-    [testConstants.defaultPerpetualMarket.id]: '20000',
-    [testConstants.defaultPerpetualMarket2.id]: '1000',
+    [testConstants.defaultPerpetualMarket.id]: {
+      spotPrice: '20000',
+      pnlPrice: '20000',
+    },
+    [testConstants.defaultPerpetualMarket2.id]: {
+      spotPrice: '1000',
+      pnlPrice: '1000',
+    },
   };
   const pnlTickForSubaccounts: PnlTickForSubaccounts = {
     [testConstants.defaultSubaccountId]: testConstants.defaultPnlTick,

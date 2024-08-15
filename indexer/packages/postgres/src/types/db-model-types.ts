@@ -165,7 +165,8 @@ export interface MarketFromDatabase {
 
 export interface OraclePriceFromDatabase extends IdBasedModelFromDatabase {
   marketId: number;
-  price: string;
+  spotPrice: string;
+  pnlPrice: string;
   effectiveAt: IsoString;
   effectiveAtHeight: string;
 }
@@ -233,7 +234,7 @@ export type SubaccountUsdcMap = { [subaccountId: string]: Big };
 export type AssetPositionsMap = { [subaccountId: string]: AssetPositionFromDatabase[] };
 export type MarketsMap = { [marketId: number]: MarketFromDatabase };
 export type OraclePricesMap = { [marketId: number]: OraclePriceFromDatabase[] };
-export type PriceMap = { [marketId: number]: string };
+export type PriceMap = { [marketId: number]: { spotPrice: string; pnlPrice: string } };
 export type FundingIndexMap = { [perpetualId: string]: Big };
 export type CandlesResolutionMap = { [resolution: string]: CandleFromDatabase };
 export type CandlesMap = { [ticker: string]: CandlesResolutionMap };

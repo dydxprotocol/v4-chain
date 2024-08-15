@@ -180,11 +180,20 @@ describe('market-updater', () => {
 
   it('getPriceChange', () => {
     const latestPrices: PriceMap = {
-      [testConstants.defaultOraclePrice.marketId]: '2',
-      [testConstants.defaultOraclePrice2.marketId]: '3',
+      [testConstants.defaultOraclePrice.marketId]: {
+        spotPrice: '2',
+        pnlPrice: '2',
+      },
+      [testConstants.defaultOraclePrice2.marketId]: {
+        spotPrice: '3',
+        pnlPrice: '3',
+      },
     };
     const previousPrices: PriceMap = {
-      [testConstants.defaultOraclePrice.marketId]: '1',
+      [testConstants.defaultOraclePrice.marketId]: {
+        spotPrice: '1',
+        pnlPrice: '1',
+      },
     };
     expect(
       getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),
@@ -196,11 +205,20 @@ describe('market-updater', () => {
 
   it('getPriceChange with prices < 1e-6', () => {
     const latestPrices: PriceMap = {
-      [testConstants.defaultOraclePrice.marketId]: '0.00000008',
-      [testConstants.defaultOraclePrice2.marketId]: '0.00000009',
+      [testConstants.defaultOraclePrice.marketId]: {
+        spotPrice: '0.00000008',
+        pnlPrice: '0.00000008',
+      },
+      [testConstants.defaultOraclePrice2.marketId]: {
+        spotPrice: '0.00000009',
+        pnlPrice: '0.00000009',
+      },
     };
     const previousPrices: PriceMap = {
-      [testConstants.defaultOraclePrice.marketId]: '0.00000007',
+      [testConstants.defaultOraclePrice.marketId]: {
+        spotPrice: '0.00000007',
+        pnlPrice: '0.00000007',
+      },
     };
     expect(
       getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),

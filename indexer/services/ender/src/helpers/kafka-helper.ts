@@ -264,7 +264,8 @@ export function generateOraclePriceContents(
   return {
     oraclePrices: {
       [ticker]: {
-        oraclePrice: oraclePrice.price,
+        spotPrice: oraclePrice.spotPrice,
+        pnlPrice: oraclePrice.pnlPrice,
         effectiveAt: oraclePrice.effectiveAt,
         effectiveAtHeight: oraclePrice.effectiveAtHeight,
         marketId: oraclePrice.marketId,

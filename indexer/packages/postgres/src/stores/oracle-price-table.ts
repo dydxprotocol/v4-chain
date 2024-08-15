@@ -173,7 +173,11 @@ export async function findMostRecentMarketOraclePrice(
 
 function constructPriceMap(oraclePrices: OraclePriceFromDatabase[]): PriceMap {
   return _.reduce(oraclePrices, (acc: PriceMap, oraclePrice: OraclePriceFromDatabase) => {
-    acc[oraclePrice.marketId] = oraclePrice.price;
+    acc[oraclePrice.marketId] = {
+      spotPrice: oraclePrice.spotPrice,
+      pnlPrice: oraclePrice.pnlPrice,
+    };
+
     return acc;
   }, {});
 }

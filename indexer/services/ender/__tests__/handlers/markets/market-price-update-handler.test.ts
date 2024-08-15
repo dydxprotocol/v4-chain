@@ -243,7 +243,7 @@ function expectOraclePriceMatchesEvent(
   expect(market.oraclePrice).toEqual(expectedSpotHumanPrice);
   expect(market.oraclePrice).toEqual(expectedPnlHumanPrice);
   expect(oraclePrice.marketId).toEqual(event.marketId);
-  expect(oraclePrice.price).toEqual(expectedSpotHumanPrice);
-  expect(oraclePrice.price).toEqual(expectedPnlHumanPrice);
+  expect(oraclePrice.spotPrice).toEqual(expectedSpotHumanPrice);
+  expect(oraclePrice.pnlPrice).toEqual(expectedPnlHumanPrice);
   expect(oraclePrice.effectiveAtHeight).toEqual(height.toString());
 }
