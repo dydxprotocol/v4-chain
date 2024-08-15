@@ -148,7 +148,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	err error,
 ) {
 	// Perform some basic validation on the request.
-	if len(clobPairIds) == 0 {
+	if len(clobPairIds) == 0 && len(subaccountIds) == 0 {
 		return types.ErrInvalidStreamingRequest
 	}
 
