@@ -1,10 +1,4 @@
 import {
-  sendFirebaseMessage,
-  createNotification,
-  NotificationType,
-  NotificationDynamicFieldKey,
-} from '@dydxprotocol-indexer/notifications';
-import {
   FillFromDatabase,
   FillModel,
   Liquidity,
@@ -126,14 +120,6 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
     // block.
     if (order.status === OrderStatus.FILLED && isStatefulOrder(order.orderFlags)) {
       kafkaEvents.push(this.getOrderRemoveKafkaEvent(orderProto.orderId!));
-
-      const subaccount = await SubaccountTable.findById(order.subaccountId);
-      const notification = createNotification(NotificationType.ORDER_FILLED, {
-        [NotificationDynamicFieldKey.MARKET]: 'BTC/USD',
-        [NotificationDynamicFieldKey.AVERAGE_PRICE]: order.price,
-      });
-
-      await sendFirebaseMessage(subaccount!.address, notification);
     }
 
     if (this.event.liquidity === Liquidity.TAKER) {
