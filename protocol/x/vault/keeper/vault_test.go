@@ -288,6 +288,9 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 								},
 							},
 						},
+						VaultParams: vaulttypes.VaultParams{
+							Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+						},
 					},
 				}
 			},
