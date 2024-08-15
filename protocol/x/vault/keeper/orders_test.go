@@ -157,12 +157,20 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			}).Build()
 			ctx := tApp.InitChain().WithIsCheckTx(false)
 
-			// Set total shares for each vault ID.
+			// Set total shares and vault params for each vault ID.
 			for i, vaultId := range tc.vaultIds {
 				err := tApp.App.VaultKeeper.SetTotalShares(
 					ctx,
 					vaultId,
 					vaulttypes.BigIntToNumShares(tc.totalShares[i]),
+				)
+				require.NoError(t, err)
+				err = tApp.App.VaultKeeper.SetVaultParams(
+					ctx,
+					vaultId,
+					vaulttypes.VaultParams{
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+					},
 				)
 				require.NoError(t, err)
 			}
@@ -334,6 +342,9 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 											NumShares: dtypes.NewInt(100),
 										},
 									},
+								},
+								VaultParams: vaulttypes.VaultParams{
+									Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 								},
 							},
 						}
@@ -928,7 +939,10 @@ func TestGetVaultClobOrders(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			// Set vault quoting parameters.
-			err := tApp.App.VaultKeeper.SetVaultQuotingParams(ctx, tc.vaultId, tc.vaultQuotingParams)
+			err := tApp.App.VaultKeeper.SetVaultParams(ctx, tc.vaultId, vaulttypes.VaultParams{
+				Status:        vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+				QuotingParams: &tc.vaultQuotingParams,
+			})
 			require.NoError(t, err)
 
 			// Get vault orders.
@@ -940,7 +954,6 @@ func TestGetVaultClobOrders(t *testing.T) {
 			require.NoError(t, err)
 
 			// Get expected orders.
-			vaultQuotingParams := tApp.App.VaultKeeper.GetVaultQuotingParams(ctx, tc.vaultId)
 			buildVaultClobOrder := func(
 				layer uint8,
 				side clobtypes.Order_Side,
@@ -958,7 +971,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 					Quantums: quantums,
 					Subticks: subticks,
 					GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
-						GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + vaultQuotingParams.OrderExpirationSeconds,
+						GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + tc.vaultQuotingParams.OrderExpirationSeconds,
 					},
 				}
 			}
@@ -1036,9 +1049,12 @@ func TestGetVaultClobOrderIds(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			// Set number of layers.
-			quotingParams := k.GetVaultQuotingParams(ctx, tc.vaultId)
+			quotingParams := constants.QuotingParams
 			quotingParams.Layers = tc.layers
-			err := k.SetVaultQuotingParams(ctx, tc.vaultId, quotingParams)
+			err := k.SetVaultParams(ctx, tc.vaultId, vaulttypes.VaultParams{
+				Status:        vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+				QuotingParams: &quotingParams,
+			})
 			require.NoError(t, err)
 
 			// Construct expected order IDs.

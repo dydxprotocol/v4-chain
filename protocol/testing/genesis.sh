@@ -2245,6 +2245,8 @@ function edit_genesis() {
 		dasel put -t json -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[]" -v '{}'
 		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[0].owner" -v "${vault_owner_address}"
 		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[0].shares.num_shares" -v "${DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT}"
+
+		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_params.status" -v 'VAULT_STATUS_QUOTING'
 		vault_idx=$(($vault_idx + 1))
 	done
 }

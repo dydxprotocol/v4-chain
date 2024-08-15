@@ -33,6 +33,17 @@ func (k msgServer) DepositToVault(
 	// Add vault to address store.
 	k.AddVaultToAddressStore(ctx, *msg.VaultId)
 
+	// Initialize vault params (with status `Quoting`) if not yet set.
+	_, exists := k.GetVaultParams(ctx, *msg.VaultId)
+	if !exists {
+		err := k.Keeper.SetVaultParams(ctx, *msg.VaultId, types.VaultParams{
+			Status: types.VaultStatus_VAULT_STATUS_QUOTING,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// Transfer from sender subaccount to vault.
 	// Note: Transfer should take place after minting shares for
 	// shares calculation to be correct.

@@ -22,9 +22,9 @@ const (
 	// A vault uses DefaultQuotingParams if it does not have its own QuotingParams.
 	DefaultQuotingParamsKey = "DefaultQuotingParams"
 
-	// QuotingParamsKeyPrefix is the prefix to retrieve all QuotingParams.
-	// QuotingParams store: vaultId VaultId -> QuotingParams.
-	QuotingParamsKeyPrefix = "QuotingParams:"
+	// VaultParamsKeyPrefix is the prefix to retrieve all VaultParams.
+	// VaultParams store: vaultId VaultId -> VaultParams.
+	VaultParamsKeyPrefix = "VaultParams:"
 
 	// VaultAddressKeyPrefix is the prefix to retrieve all vault addresses.
 	VaultAddressKeyPrefix = "VaultAddress:"

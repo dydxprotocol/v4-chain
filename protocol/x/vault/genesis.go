@@ -29,10 +29,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 				panic(err)
 			}
 		}
-		if vault.QuotingParams != nil {
-			if err := k.SetVaultQuotingParams(ctx, *vault.VaultId, *vault.QuotingParams); err != nil {
-				panic(err)
-			}
+		if err := k.SetVaultParams(ctx, *vault.VaultId, vault.VaultParams); err != nil {
+			panic(err)
 		}
 		k.SetMostRecentClientIds(ctx, *vault.VaultId, vault.MostRecentClientIds)
 		k.AddVaultToAddressStore(ctx, *vault.VaultId)

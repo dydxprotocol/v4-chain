@@ -10,11 +10,11 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
-// SetVaultQuotingParams sets the quoting parameters of a specific vault.
-func (k msgServer) SetVaultQuotingParams(
+// SetVaultParams sets the parameters of a specific vault.
+func (k msgServer) SetVaultParams(
 	goCtx context.Context,
-	msg *types.MsgSetVaultQuotingParams,
-) (*types.MsgSetVaultQuotingParamsResponse, error) {
+	msg *types.MsgSetVaultParams,
+) (*types.MsgSetVaultParamsResponse, error) {
 	// Check if authority is valid.
 	if !k.HasAuthority(msg.Authority) {
 		return nil, errorsmod.Wrapf(
@@ -26,15 +26,15 @@ func (k msgServer) SetVaultQuotingParams(
 
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
-	// Validate quoting parameters.
-	if err := msg.QuotingParams.Validate(); err != nil {
+	// Validate parameters.
+	if err := msg.VaultParams.Validate(); err != nil {
 		return nil, err
 	}
 
-	// Set quoting parameters for specified vault.
-	if err := k.Keeper.SetVaultQuotingParams(ctx, msg.VaultId, msg.QuotingParams); err != nil {
+	// Set parameters for specified vault.
+	if err := k.Keeper.SetVaultParams(ctx, msg.VaultId, msg.VaultParams); err != nil {
 		return nil, err
 	}
 
-	return &types.MsgSetVaultQuotingParamsResponse{}, nil
+	return &types.MsgSetVaultParamsResponse{}, nil
 }
