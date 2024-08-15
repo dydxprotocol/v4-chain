@@ -68,7 +68,7 @@ const (
 	DefaultGrpcStreamingMaxBatchSize         = 2000
 	DefaultGrpcStreamingMaxChannelBufferSize = 2000
 	DefaultWebsocketStreamingEnabled         = false
-	DefaultWebsocketStreamingPort            = 9091
+	DefaultWebsocketStreamingPort            = 9092
 	DefaultFullNodeStreamingSnapshotInterval = 0
 
 	DefaultVEOracleEnabled = true
@@ -134,7 +134,7 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Uint16(
 		WebsocketStreamingPort,
 		DefaultWebsocketStreamingPort,
-		"Port for websocket full node streaming connections",
+		"Port for websocket full node streaming connections. Defaults to 9092.",
 	)
 	cmd.Flags().Bool(
 		VEOracleEnabled,
