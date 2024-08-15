@@ -49,6 +49,7 @@ export async function onBatch(
   for (let i = 0; i < batch.messages.length; i++) {
     const message: KafkaMessage = batch.messages[i];
     await onMessage(message);
+    await payload.heartbeat();
     payload.resolveOffset(message.offset);
   }
 
