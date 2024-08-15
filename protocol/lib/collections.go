@@ -152,3 +152,13 @@ func MergeMaps[K comparable, V any](maps ...map[K]V) map[K]V {
 	}
 	return combinedMap
 }
+
+// Check if slice contains a particular value
+func SliceContains[T comparable](list []T, value T) bool {
+	for _, v := range list {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
