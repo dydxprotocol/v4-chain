@@ -196,9 +196,9 @@ function edit_genesis() {
 	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].id' -v '6'
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].name' -v 'FX'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].initial_margin_ppm' -v '1000' # 0.1%
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].initial_margin_ppm' -v '10000' # 1%
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].maintenance_fraction_ppm' -v '500000' # 50% of IM
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].impact_notional' -v '2500000000' # 2_500 USDC (2.5 USDC / 0.1%)
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].impact_notional' -v '2500000000' # 2_500 USDC (25 USDC / 1%)
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].open_interest_lower_cap' -v '500000000000' # 500k USDC
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].open_interest_upper_cap' -v '1000000000000' # 1 million USDC
 

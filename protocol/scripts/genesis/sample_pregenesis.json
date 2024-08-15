@@ -3003,7 +3003,7 @@
         {
           "id": 6,
           "impact_notional": 2500000000,
-          "initial_margin_ppm": 1000,
+          "initial_margin_ppm": 10000,
           "maintenance_fraction_ppm": 500000,
           "name": "FX",
           "open_interest_lower_cap": 500000000000,
