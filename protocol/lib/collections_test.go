@@ -471,3 +471,15 @@ func TestMergeAllMapsWithDistinctKeys(t *testing.T) {
 		})
 	}
 }
+
+func TestSliceContains(t *testing.T) {
+	require.True(
+		t,
+		lib.SliceContains([]uint32{1, 2}, 1),
+	)
+
+	require.False(
+		t,
+		lib.SliceContains([]uint32{1, 2}, 3),
+	)
+}
