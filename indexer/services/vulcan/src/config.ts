@@ -21,6 +21,10 @@ export const configSchema = {
   ...redisConfigSchema,
 
   BATCH_PROCESSING_ENABLED: parseBoolean({ default: true }),
+<<<<<<< HEAD
+=======
+  PROCESS_FROM_BEGINNING: parseBoolean({ default: false }),
+>>>>>>> 5644e389 (Set fromBeginning to false by default (#2101))
   KAFKA_BATCH_PROCESSING_COMMIT_FREQUENCY_MS: parseNumber({
     default: 3_000,
   }),
