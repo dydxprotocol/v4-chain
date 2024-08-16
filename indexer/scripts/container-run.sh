@@ -12,14 +12,7 @@ then
   then
     # Retrieve the secret from secrets manager if it exists
     values=$(aws secretsmanager get-secret-value --secret-id $SECRET_ID | jq -r ".SecretString")
-      # Parse the JSON secret into key-value pairs
-    env_vars=$(echo "$values" | jq -r 'to_entries | map(
-      if .key == "FIREBASE_PRIVATE_KEY" then
-        "\(.key)=\(.value|tostring)"
-      else
-        "\(.key)=\(.value|tostring|gsub("\n"; " "))"
-      end
-    ) | .[]')
+    env_vars=$(echo $values | tr '\n' ' ' | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]")
 
     # Log the environment variables to the console
     echo "Environment Variables:"
