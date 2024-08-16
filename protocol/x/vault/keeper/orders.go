@@ -21,31 +21,33 @@ import (
 func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 	// Iterate through all vaults.
 	numActiveVaults := 0
-	totalSharesIterator := k.getTotalSharesIterator(ctx)
-	defer totalSharesIterator.Close()
-	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
-		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
+	vaultParamsIterator := k.getVaultParamsIterator(ctx)
+	defer vaultParamsIterator.Close()
+	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
+		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
 		if err != nil {
 			log.ErrorLogWithError(ctx, "Failed to get vault ID from state key", err)
 			continue
 		}
-		var totalShares types.NumShares
-		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
+		var vaultParams types.VaultParams
+		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
 
-		// Skip if TotalShares is non-positive.
-		if totalShares.NumShares.Sign() <= 0 {
+		if vaultParams.Status != types.VaultStatus_VAULT_STATUS_QUOTING {
+			// TODO (TRA-546): cancel any existing orders and don't place new orders.
 			continue
+		}
+		// TODO (TRA-547): implement close-only mode.
+
+		// Use default quoting params if no custom ones.
+		if vaultParams.QuotingParams == nil {
+			defaultQuotingParams := k.GetDefaultQuotingParams(ctx)
+			vaultParams.QuotingParams = &defaultQuotingParams
 		}
 
 		// Skip if vault has no perpetual positions and strictly less than `activation_threshold_quote_quantums` USDC.
 		vault := k.subaccountsKeeper.GetSubaccount(ctx, *vaultId.ToSubaccountId())
 		if vault.PerpetualPositions == nil || len(vault.PerpetualPositions) == 0 {
-			quotingParams, exists := k.GetVaultQuotingParams(ctx, *vaultId)
-			if !exists {
-				log.ErrorLog(ctx, "Non-existent vault params", "vaultId", *vaultId)
-				continue
-			}
-			if vault.GetUsdcPosition().Cmp(quotingParams.ActivationThresholdQuoteQuantums.BigInt()) == -1 {
+			if vault.GetUsdcPosition().Cmp(vaultParams.QuotingParams.ActivationThresholdQuoteQuantums.BigInt()) == -1 {
 				continue
 			}
 		}

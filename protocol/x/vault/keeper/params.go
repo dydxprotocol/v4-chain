@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
@@ -70,6 +71,12 @@ func (k Keeper) SetVaultParams(
 	store.Set(vaultId.ToStateKey(), b)
 
 	return nil
+}
+
+// getVaultParamsIterator returns an iterator over all VaultParams.
+func (k Keeper) getVaultParamsIterator(ctx sdk.Context) storetypes.Iterator {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))
+	return storetypes.KVStorePrefixIterator(store, []byte{})
 }
 
 // GetVaultQuotingParams returns quoting parameters for a given vault, which is
