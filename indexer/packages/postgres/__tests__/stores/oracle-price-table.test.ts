@@ -348,8 +348,8 @@ describe('Oracle price store', () => {
 
     expect(oraclePrices).toEqual(expect.objectContaining({
       [defaultOraclePrice.marketId]: {
-        spotPrice: oraclePrice2.spotPrice,
-        pnlPrice: oraclePrice2.pnlPrice,
+        spotPrice: defaultOraclePrice.spotPrice,
+        pnlPrice: defaultOraclePrice.pnlPrice,
       },
     }));
   });

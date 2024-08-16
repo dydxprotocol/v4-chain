@@ -233,7 +233,7 @@ export async function findLatestPrices(
   transaction?: Knex.Transaction,
 ): Promise<PriceMap> {
   const query: string = `
-    SELECT "marketId", "price"
+    SELECT "marketId", "spotPrice", "pnlPrice"
     FROM "oracle_prices"
     WHERE ("marketId", "effectiveAtHeight") IN (
       SELECT "marketId", MAX("effectiveAtHeight")
@@ -241,7 +241,11 @@ export async function findLatestPrices(
       WHERE "effectiveAtHeight" <= '${effectiveBeforeOrAtHeight}'
       GROUP BY "marketId");
   `;
+
+
+
   let result: { rows: OraclePriceFromDatabase[] };
+  
   if (transaction === undefined) {
     result = await knexReadReplica.getConnection().raw(
       query,

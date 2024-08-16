@@ -14,7 +14,8 @@ CREATE OR REPLACE FUNCTION dydx_market_price_update_handler(block_height int, bl
 DECLARE
     market_record_id integer;
     market_record markets%ROWTYPE;
-    oracle_price numeric;
+    spot_price numeric;
+    pnl_price numeric;
     oracle_price_record oracle_prices%ROWTYPE;
 BEGIN
     market_record_id = (event_data->'marketId')::integer;
@@ -31,7 +32,8 @@ BEGIN
         dydx_from_jsonlib_long(event_data->'priceUpdate'->'pnlPriceWithExponent') *
         power(10, market_record.exponent::numeric));
 
-    market_record."oraclePrice" = spot_price;
+    market_record."spotPrice" = spot_price;
+    market_record."pnlPrice" = pnl_price;
 
     UPDATE markets
     SET
