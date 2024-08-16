@@ -5,9 +5,10 @@
   "main": "build/src/index.js",
   "devDependencies": {
     "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
-    "typescript": "^4.7.4",
+    "@types/jest": "^28.1.4",
     "jest": "^28.1.2",
-    "@types/jest": "^28.1.4"
+    "typescript": "^4.7.4",
+    "ts-node": "^10.8.2"
   },
   "scripts": {
     "lint": "eslint --ext .ts,.js .",
@@ -15,7 +16,8 @@
     "build": "rm -rf build/ && tsc",
     "build:prod": "pnpm run build",
     "build:watch": "pnpm run build -- --watch",
-    "test": "NODE_ENV=test jest --runInBand --forceExit"
+    "test": "NODE_ENV=test jest --runInBand --forceExit",
+    "testNotification": "SERVICE_NAME=notifications ts-node src/local_test.ts TEST_ADDRESS"
   },
   "repository": {
     "type": "git",
@@ -28,8 +30,8 @@
   },
   "homepage": "https://github.com/dydxprotocol/indexer#readme",
   "dependencies": {
-    "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
     "@dydxprotocol-indexer/base": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
     "dotenv-flow": "^3.2.0"
   }
 }
