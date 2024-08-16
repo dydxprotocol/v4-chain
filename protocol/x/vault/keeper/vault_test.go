@@ -63,7 +63,7 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 			},
 			decommissioned: []bool{
 				false,
-				true, // this vault should be decommissioned.
+				true, // decommissioned as vault has 0 equity and is deactivated.
 			},
 		},
 		"Decommission two vaults": {
@@ -85,7 +85,7 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 			decommissioned: []bool{
 				true,
 				true,
-				false,
+				false, // not decommissioned (even though equity is negative) bc status is not deactivated.
 			},
 		},
 	}

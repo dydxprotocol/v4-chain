@@ -20,7 +20,7 @@ func TestGetSetDefaultQuotingParams(t *testing.T) {
 	require.Equal(t, types.DefaultQuotingParams(), params)
 
 	// Set new params and get.
-	newParams := &types.QuotingParams{
+	newParams := types.QuotingParams{
 		Layers:                           3,
 		SpreadMinPpm:                     4_000,
 		SpreadBufferPpm:                  2_000,
@@ -31,10 +31,10 @@ func TestGetSetDefaultQuotingParams(t *testing.T) {
 	}
 	err := k.SetDefaultQuotingParams(ctx, newParams)
 	require.NoError(t, err)
-	require.Equal(t, *newParams, k.GetDefaultQuotingParams(ctx))
+	require.Equal(t, newParams, k.GetDefaultQuotingParams(ctx))
 
 	// Set invalid params and get.
-	invalidParams := &types.QuotingParams{
+	invalidParams := types.QuotingParams{
 		Layers:                           3,
 		SpreadMinPpm:                     4_000,
 		SpreadBufferPpm:                  2_000,
@@ -45,7 +45,7 @@ func TestGetSetDefaultQuotingParams(t *testing.T) {
 	}
 	err = k.SetDefaultQuotingParams(ctx, invalidParams)
 	require.Error(t, err)
-	require.Equal(t, *newParams, k.GetDefaultQuotingParams(ctx))
+	require.Equal(t, newParams, k.GetDefaultQuotingParams(ctx))
 }
 
 func TestGetSetVaultParams(t *testing.T) {

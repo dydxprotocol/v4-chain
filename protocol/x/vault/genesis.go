@@ -11,7 +11,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	k.InitializeForGenesis(ctx)
 
 	// Set default quoting params.
-	if err := k.SetDefaultQuotingParams(ctx, &genState.DefaultQuotingParams); err != nil {
+	if err := k.SetDefaultQuotingParams(ctx, genState.DefaultQuotingParams); err != nil {
 		panic(err)
 	}
 	// For each vault:

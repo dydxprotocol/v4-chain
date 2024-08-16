@@ -38,13 +38,11 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 		}
 		// TODO (TRA-547): implement close-only mode.
 
-		// Use default quoting params if no custom ones.
+		// Skip if vault has no perpetual positions and strictly less than `activation_threshold_quote_quantums` USDC.
 		if vaultParams.QuotingParams == nil {
 			defaultQuotingParams := k.GetDefaultQuotingParams(ctx)
 			vaultParams.QuotingParams = &defaultQuotingParams
 		}
-
-		// Skip if vault has no perpetual positions and strictly less than `activation_threshold_quote_quantums` USDC.
 		vault := k.subaccountsKeeper.GetSubaccount(ctx, *vaultId.ToSubaccountId())
 		if vault.PerpetualPositions == nil || len(vault.PerpetualPositions) == 0 {
 			if vault.GetUsdcPosition().Cmp(vaultParams.QuotingParams.ActivationThresholdQuoteQuantums.BigInt()) == -1 {

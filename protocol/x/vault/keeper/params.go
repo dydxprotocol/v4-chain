@@ -23,14 +23,14 @@ func (k Keeper) GetDefaultQuotingParams(
 // Returns an error if validation fails.
 func (k Keeper) SetDefaultQuotingParams(
 	ctx sdk.Context,
-	params *types.QuotingParams,
+	params types.QuotingParams,
 ) error {
 	if err := params.Validate(); err != nil {
 		return err
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshal(params)
+	b := k.cdc.MustMarshal(&params)
 	store.Set([]byte(types.DefaultQuotingParamsKey), b)
 
 	return nil
