@@ -17,8 +17,7 @@ const initializeFirebaseApp = () => {
 
   logger.info({
     at: 'notifications#firebase',
-    message: 'Initializing Firebase App with credentials',
-    credentials: defaultGoogleApplicationCredentials,
+    message: 'Initializing Firebase App',
   });
 
   const serviceAccount: ServiceAccount = defaultGoogleApplicationCredentials;
