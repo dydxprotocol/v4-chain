@@ -7,6 +7,7 @@ COPY ./testing/containertest/preupgrade_genesis.json /dydxprotocol/preupgrade_ge
 COPY ./testing/genesis.sh /dydxprotocol/genesis.sh
 COPY ./daemons/pricefeed/client/constants/testdata /dydxprotocol/exchange_config
 COPY ./testing/delaymsg_config /dydxprotocol/delaymsg_config
+COPY ./testing/version/. /dydxprotocol/
 
 RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
 
