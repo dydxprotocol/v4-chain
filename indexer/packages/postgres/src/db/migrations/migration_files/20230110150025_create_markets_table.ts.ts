@@ -8,7 +8,8 @@ export async function up(knex: Knex): Promise<void> {
       table.string('pair').unique().notNullable();
       table.integer('exponent').notNullable();
       table.integer('minPriceChangePpm').notNullable();
-      table.decimal('oraclePrice', null).nullable();
+      table.decimal('spotPrice', null).nullable();
+      table.decimal('pnlPrice', null).nullable();
 
       // Indices
       table.index(['pair']);

@@ -229,7 +229,7 @@ export function getSignedNotionalAndRisk({
   signedNotional: Big,
   individualRisk: Risk,
 } {
-  const signedNotional: Big = size.times(market.oraclePrice!);
+  const signedNotional: Big = size.times(market.pnlPrice!);
   const liquidityTier:
   LiquidityTiersFromDatabase | undefined = liquidityTierRefresher.getLiquidityTierFromId(
     perpetualMarket.liquidityTierId,

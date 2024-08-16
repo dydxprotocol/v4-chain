@@ -37,7 +37,8 @@ BEGIN
 
     UPDATE markets
     SET
-        "oraclePrice" = market_record."oraclePrice"
+        "spotPrice" = market_record."spotPrice",
+        "pnlPrice" = market_record."pnlPrice"
     WHERE id = market_record."id";
 
     oracle_price_record."id" = dydx_uuid_from_oracle_price_parts(market_record_id, block_height);

@@ -71,7 +71,7 @@ BEGIN
                     power(10, PPM_EXPONENT) /
                     FUNDING_RATE_FROM_PROTOCOL_IN_HOURS *
                     (funding_update->'fundingValuePpm')::numeric);
-                funding_index_updates_record."oraclePrice" = oracle_prices_record."spot_price";
+                funding_index_updates_record."oraclePrice" = oracle_prices_record."spotPrice";
                 funding_index_updates_record."fundingIndex" = dydx_trim_scale(
                     dydx_from_serializable_int(funding_update->'fundingIndex') *
                     power(10,

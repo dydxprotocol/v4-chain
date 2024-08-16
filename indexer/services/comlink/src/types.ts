@@ -250,7 +250,8 @@ export interface PerpetualMarketResponseObject {
   clobPairId: string;
   ticker: string;
   status: PerpetualMarketStatus;
-  oraclePrice: string;
+  spotPrice: string;
+  pnlPrice: string;
   priceChange24H: string;
   volume24H: string;
   trades24H: number;

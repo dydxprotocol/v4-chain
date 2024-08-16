@@ -195,9 +195,10 @@ describe('market-updater', () => {
         pnlPrice: '1',
       },
     };
-    expect(
-      getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),
-    ).toEqual('1');
+ expect(
+    getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),
+  ).toEqual({ pnlPrice: '1', spotPrice: '1' });
+
     expect(
       getPriceChange(testConstants.defaultOraclePrice2.marketId, latestPrices, previousPrices),
     ).toEqual(undefined);
@@ -222,7 +223,7 @@ describe('market-updater', () => {
     };
     expect(
       getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),
-    ).toEqual('0.00000001');
+    ).toEqual({ pnlPrice: '0.00000001', spotPrice: '0.00000001' });
     expect(
       getPriceChange(testConstants.defaultOraclePrice2.marketId, latestPrices, previousPrices),
     ).toEqual(undefined);

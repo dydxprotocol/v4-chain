@@ -604,7 +604,8 @@ export const defaultMarket: MarketCreateObject = {
   pair: 'BTC-USD',
   exponent: -5,
   minPriceChangePpm: 50,
-  oraclePrice: '15000',
+  spotPrice: '15000',
+  pnlPrice: '15000',
 };
 
 export const defaultMarket2: MarketCreateObject = {
@@ -612,7 +613,8 @@ export const defaultMarket2: MarketCreateObject = {
   pair: 'ETH-USD',
   exponent: -6,
   minPriceChangePpm: 50,
-  oraclePrice: '1000',
+  spotPrice: '1000',
+  pnlPrice: '1000',
 };
 
 export const defaultMarket3: MarketCreateObject = {
@@ -620,7 +622,8 @@ export const defaultMarket3: MarketCreateObject = {
   pair: 'SHIB-USD',
   exponent: -12,
   minPriceChangePpm: 50,
-  oraclePrice: '0.000000065',
+  spotPrice: '0.000000065',
+  pnlPrice: '0.000000065',
 };
 
 export const isolatedMarket: MarketCreateObject = {
@@ -628,7 +631,8 @@ export const isolatedMarket: MarketCreateObject = {
   pair: 'ISO-USD',
   exponent: -12,
   minPriceChangePpm: 50,
-  oraclePrice: '0.000000075',
+  spotPrice: '0.000000075',
+  pnlPrice: '0.000000075',
 };
 
 export const isolatedMarket2: MarketCreateObject = {
@@ -636,7 +640,8 @@ export const isolatedMarket2: MarketCreateObject = {
   pair: 'ISO2-USD',
   exponent: -12,
   minPriceChangePpm: 50,
-  oraclePrice: '0.000000085',
+  spotPrice: '0.000000085',
+  pnlPrice: '0.000000085',
 };
 
 // ============== LiquidityTiers ==============

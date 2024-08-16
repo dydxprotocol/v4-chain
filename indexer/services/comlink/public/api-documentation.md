@@ -1824,7 +1824,8 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "oraclePrice": "string",
+      "spotPrice": "string",
+      "pnlPrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
       "trades24H": 0,
@@ -1847,7 +1848,8 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "oraclePrice": "string",
+      "spotPrice": "string",
+      "pnlPrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
       "trades24H": 0,
@@ -3669,7 +3671,8 @@ or
   "clobPairId": "string",
   "ticker": "string",
   "status": "ACTIVE",
-  "oraclePrice": "string",
+  "spotPrice": "string",
+  "pnlPrice": "string",
   "priceChange24H": "string",
   "volume24H": "string",
   "trades24H": 0,
@@ -3698,7 +3701,8 @@ or
 |clobPairId|string|true|none|none|
 |ticker|string|true|none|none|
 |status|[PerpetualMarketStatus](#schemaperpetualmarketstatus)|true|none|none|
-|oraclePrice|string|true|none|none|
+|spotPrice|string|true|none|none|
+|pnlPrice|string|true|none|none|
 |priceChange24H|string|true|none|none|
 |volume24H|string|true|none|none|
 |trades24H|number(double)|true|none|none|
@@ -3731,7 +3735,8 @@ or
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "oraclePrice": "string",
+      "spotPrice": "string",
+      "pnlPrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
       "trades24H": 0,
@@ -3754,7 +3759,8 @@ or
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "oraclePrice": "string",
+      "spotPrice": "string",
+      "pnlPrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
       "trades24H": 0,

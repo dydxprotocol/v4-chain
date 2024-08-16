@@ -160,7 +160,8 @@ export interface MarketFromDatabase {
   pair: string;
   exponent: number;
   minPriceChangePpm: number;
-  oraclePrice?: string;
+  spotPrice?: string;
+  pnlPrice?: string;
 }
 
 export interface OraclePriceFromDatabase extends IdBasedModelFromDatabase {

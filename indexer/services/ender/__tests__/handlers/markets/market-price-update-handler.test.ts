@@ -240,8 +240,8 @@ function expectOraclePriceMatchesEvent(
     market!.exponent,
   );
   expect(market.id).toEqual(event.marketId);
-  expect(market.oraclePrice).toEqual(expectedSpotHumanPrice);
-  expect(market.oraclePrice).toEqual(expectedPnlHumanPrice);
+  expect(market.spotPrice).toEqual(expectedSpotHumanPrice);
+  expect(market.pnlPrice).toEqual(expectedPnlHumanPrice);
   expect(oraclePrice.marketId).toEqual(event.marketId);
   expect(oraclePrice.spotPrice).toEqual(expectedSpotHumanPrice);
   expect(oraclePrice.pnlPrice).toEqual(expectedPnlHumanPrice);
