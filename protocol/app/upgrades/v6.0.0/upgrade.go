@@ -123,7 +123,7 @@ func initVaultDefaultQuotingParams(
 	oldParams := vaultKeeper.UnsafeGetParams(ctx)
 	if err := vaultKeeper.SetDefaultQuotingParams(
 		ctx,
-		&vaulttypes.QuotingParams{
+		vaulttypes.QuotingParams{
 			Layers:                           oldParams.Layers,
 			SpreadMinPpm:                     oldParams.SpreadMinPpm,
 			SpreadBufferPpm:                  oldParams.SpreadBufferPpm,

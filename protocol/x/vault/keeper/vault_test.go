@@ -21,8 +21,8 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 		/* --- Setup --- */
 		// Vault IDs.
 		vaultIds []vaulttypes.VaultId
-		// Total shares of above vaults.
-		totalShares []*big.Int
+		// Statuses of above vaults.
+		statuses []vaulttypes.VaultStatus
 		// Equities of above vaults.
 		equities []*big.Int
 
@@ -35,9 +35,9 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 				constants.Vault_Clob0,
 				constants.Vault_Clob1,
 			},
-			totalShares: []*big.Int{
-				big.NewInt(7),
-				big.NewInt(7),
+			statuses: []vaulttypes.VaultStatus{
+				vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+				vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
 			},
 			equities: []*big.Int{
 				big.NewInt(1),
@@ -53,9 +53,9 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 				constants.Vault_Clob0,
 				constants.Vault_Clob1,
 			},
-			totalShares: []*big.Int{
-				big.NewInt(7),
-				big.NewInt(7),
+			statuses: []vaulttypes.VaultStatus{
+				vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
+				vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
 			},
 			equities: []*big.Int{
 				big.NewInt(1),
@@ -63,25 +63,29 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 			},
 			decommissioned: []bool{
 				false,
-				true, // this vault should be decommissioned.
+				true, // decommissioned as vault has 0 equity and is deactivated.
 			},
 		},
 		"Decommission two vaults": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob0,
 				constants.Vault_Clob1,
+				constants.Vault_Clob7,
 			},
-			totalShares: []*big.Int{
-				big.NewInt(7),
-				big.NewInt(7),
+			statuses: []vaulttypes.VaultStatus{
+				vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+				vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+				vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
 			},
 			equities: []*big.Int{
 				big.NewInt(0),
+				big.NewInt(-1),
 				big.NewInt(-1),
 			},
 			decommissioned: []bool{
 				true,
 				true,
+				false, // not decommissioned (even though equity is negative) bc status is not deactivated.
 			},
 		},
 	}
@@ -120,11 +124,11 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 
 			// Set total shares and owner shares for all vaults.
 			testOwner := constants.Alice_Num0.Owner
-			for i, vaultId := range tc.vaultIds {
+			for _, vaultId := range tc.vaultIds {
 				err := k.SetTotalShares(
 					ctx,
 					vaultId,
-					vaulttypes.BigIntToNumShares(tc.totalShares[i]),
+					vaulttypes.BigIntToNumShares(big.NewInt(7)),
 				)
 				require.NoError(t, err)
 				err = k.SetOwnerShares(
@@ -136,16 +140,40 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			// Set statuses of vaults and add to vault address store.
+			for i, vaultId := range tc.vaultIds {
+				err := k.SetVaultParams(
+					ctx,
+					vaultId,
+					vaulttypes.VaultParams{
+						Status: tc.statuses[i],
+					},
+				)
+				require.NoError(t, err)
+				k.AddVaultToAddressStore(ctx, vaultId)
+			}
+
 			// Decommission all vaults.
 			k.DecommissionNonPositiveEquityVaults(ctx)
 
-			// Check that total shares and owner shares are deleted for decommissioned
-			// vaults and not deleted for non-decommissioned vaults.
+			// Check that below are deleted for decommissioned vaults only:
+			// - total shares
+			// - owner shares
+			// - vault params
+			// - vault address (from vault address store)
 			for i, decommissioned := range tc.decommissioned {
 				_, exists := k.GetTotalShares(ctx, tc.vaultIds[i])
 				require.Equal(t, !decommissioned, exists)
 				_, exists = k.GetOwnerShares(ctx, tc.vaultIds[i], testOwner)
 				require.Equal(t, !decommissioned, exists)
+
+				_, exists = k.GetVaultParams(ctx, tc.vaultIds[i])
+				require.Equal(t, !decommissioned, exists)
+				require.Equal(
+					t,
+					!decommissioned,
+					k.IsVault(ctx, tc.vaultIds[i].ToModuleAccountAddress()),
+				)
 			}
 		})
 	}

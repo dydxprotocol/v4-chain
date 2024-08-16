@@ -29,21 +29,21 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 	tests := map[string]struct {
 		// Vault IDs.
 		vaultIds []vaulttypes.VaultId
-		// Total Shares of each vault ID above.
-		totalShares []*big.Int
+		// Status of each vault above.
+		vaultStatuses []vaulttypes.VaultStatus
 		// Asset quantums of each vault ID above.
 		assetQuantums []*big.Int
 		// Activation threshold (quote quantums) of vaults.
 		activationThresholdQuoteQuantums *big.Int
 	}{
-		"Two Vaults, Both Positive Shares, Both above Activation Threshold": {
+		"Two Vaults, Both Quoting, Both Above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob0,
 				constants.Vault_Clob1,
 			},
-			totalShares: []*big.Int{
-				big.NewInt(1_000),
-				big.NewInt(200),
+			vaultStatuses: []vaulttypes.VaultStatus{
+				vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+				vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			},
 			assetQuantums: []*big.Int{
 				big.NewInt(1_000_000_000), // 1,000 USDC
@@ -51,14 +51,14 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			},
 			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
 		},
-		"Two Vaults, One Positive Shares, One Zero Shares, Both above Activation Threshold": {
+		"Two Vaults, One Quoting, One Stand-By, Both Above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob0,
 				constants.Vault_Clob1,
 			},
-			totalShares: []*big.Int{
-				big.NewInt(1_000),
-				big.NewInt(0),
+			vaultStatuses: []vaulttypes.VaultStatus{
+				vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+				vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
 			},
 			assetQuantums: []*big.Int{
 				big.NewInt(1_000_000_000), // 1,000 USDC
@@ -66,14 +66,14 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			},
 			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
 		},
-		"Two Vaults, Both Zero Shares, Both above Activation Threshold": {
+		"Two Vaults, One Stand-By, One Deactivated, Both Above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob0,
 				constants.Vault_Clob1,
 			},
-			totalShares: []*big.Int{
-				big.NewInt(0),
-				big.NewInt(0),
+			vaultStatuses: []vaulttypes.VaultStatus{
+				vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
+				vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
 			},
 			assetQuantums: []*big.Int{
 				big.NewInt(1_000_000_000), // 1,000 USDC
@@ -81,14 +81,14 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			},
 			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
 		},
-		"Two Vaults, Both Positive Shares, Only One above Activation Threshold": {
+		"Two Vaults, Both Quoting, Only One above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob0,
 				constants.Vault_Clob1,
 			},
-			totalShares: []*big.Int{
-				big.NewInt(1_000),
-				big.NewInt(200),
+			vaultStatuses: []vaulttypes.VaultStatus{
+				vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+				vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			},
 			assetQuantums: []*big.Int{
 				big.NewInt(1_000_000_000),
@@ -96,14 +96,14 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			},
 			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
 		},
-		"Two Vaults, Both Positive Shares, Both below Activation Threshold": {
+		"Two Vaults, Both Quoting, Both below Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob0,
 				constants.Vault_Clob1,
 			},
-			totalShares: []*big.Int{
-				big.NewInt(1_000),
-				big.NewInt(200),
+			vaultStatuses: []vaulttypes.VaultStatus{
+				vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+				vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			},
 			assetQuantums: []*big.Int{
 				big.NewInt(123_456_788),
@@ -157,19 +157,13 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			}).Build()
 			ctx := tApp.InitChain().WithIsCheckTx(false)
 
-			// Set total shares and vault params for each vault ID.
+			// Set vault params of each vault.
 			for i, vaultId := range tc.vaultIds {
-				err := tApp.App.VaultKeeper.SetTotalShares(
-					ctx,
-					vaultId,
-					vaulttypes.BigIntToNumShares(tc.totalShares[i]),
-				)
-				require.NoError(t, err)
-				err = tApp.App.VaultKeeper.SetVaultParams(
+				err := tApp.App.VaultKeeper.SetVaultParams(
 					ctx,
 					vaultId,
 					vaulttypes.VaultParams{
-						Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+						Status: tc.vaultStatuses[i],
 					},
 				)
 				require.NoError(t, err)
@@ -187,7 +181,9 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			expectedIndexerEvents := []*indexer_manager.IndexerTendermintEvent{}
 			indexerEventIndex := 0
 			for i, vaultId := range tc.vaultIds {
-				if tc.totalShares[i].Sign() > 0 && tc.assetQuantums[i].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
+				// TODO (TRA-547): consider close-only orders.
+				if tc.vaultStatuses[i] == vaulttypes.VaultStatus_VAULT_STATUS_QUOTING &&
+					tc.assetQuantums[i].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
 					expectedOrders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, vaultId)
 					require.NoError(t, err)
 

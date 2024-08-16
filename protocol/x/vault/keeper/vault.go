@@ -47,24 +47,24 @@ func (k Keeper) GetVaultInventoryInPerpetual(
 	return inventory
 }
 
-// DecommissionVaults decommissions all vaults with positive shares and non-positive equity.
+// DecommissionVaults decommissions all deactivated vaults that have non-positive equities.
 func (k Keeper) DecommissionNonPositiveEquityVaults(
 	ctx sdk.Context,
 ) {
 	// Iterate through all vaults.
-	totalSharesIterator := k.getTotalSharesIterator(ctx)
-	defer totalSharesIterator.Close()
-	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
-		var totalShares types.NumShares
-		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
+	vaultParamsIterator := k.getVaultParamsIterator(ctx)
+	defer vaultParamsIterator.Close()
+	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
+		var vaultParams types.VaultParams
+		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
 
-		// Skip if TotalShares is non-positive.
-		if totalShares.NumShares.Sign() <= 0 {
+		// Skip if vault is not deactivated.
+		if vaultParams.Status != types.VaultStatus_VAULT_STATUS_DEACTIVATED {
 			continue
 		}
 
 		// Get vault equity.
-		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
+		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
 		if err != nil {
 			log.ErrorLogWithError(ctx, "Failed to get vault ID from state key", err)
 			continue
@@ -133,23 +133,23 @@ func (k Keeper) IsVault(
 // Note: This function is only used for exporting module state.
 func (k Keeper) GetAllVaults(ctx sdk.Context) []*types.Vault {
 	vaults := []*types.Vault{}
-	totalSharesIterator := k.getTotalSharesIterator(ctx)
-	defer totalSharesIterator.Close()
-	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
-		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
+	vaultParamsIterator := k.getVaultParamsIterator(ctx)
+	defer vaultParamsIterator.Close()
+	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
+		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
 		if err != nil {
 			panic(err)
 		}
 
-		var totalShares types.NumShares
-		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
+		var vaultParams types.VaultParams
+		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
+
+		totalShares, exists := k.GetTotalShares(ctx, *vaultId)
+		if !exists {
+			panic("TotalShares not found for vault " + vaultId.ToString())
+		}
 
 		allOwnerShares := k.GetAllOwnerShares(ctx, *vaultId)
-
-		vaultParams, exists := k.GetVaultParams(ctx, *vaultId)
-		if !exists {
-			panic("vault params not found")
-		}
 
 		mostRecentClientIds := k.GetMostRecentClientIds(ctx, *vaultId)
 
