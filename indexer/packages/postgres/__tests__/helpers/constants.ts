@@ -661,7 +661,8 @@ export const defaultLiquidityTier2: LiquidityTiersCreateObject = {
 
 export const defaultOraclePrice: OraclePriceCreateObject = {
   marketId: defaultMarket.id,
-  price: '10000',
+  spotPrice: '10000',
+  pnlPrice: '10000',
   effectiveAt: createdDateTime.toISO(),
   effectiveAtHeight: createdHeight,
 };
@@ -673,7 +674,8 @@ export const defaultOraclePriceId: string = OraclePriceTable.uuid(
 
 export const defaultOraclePrice2: OraclePriceCreateObject = {
   marketId: defaultMarket2.id,
-  price: '500',
+  spotPrice: '500',
+  pnlPrice: '500',
   effectiveAt: createdDateTime.toISO(),
   effectiveAtHeight: createdHeight,
 };

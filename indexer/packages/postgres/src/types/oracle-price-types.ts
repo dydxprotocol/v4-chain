@@ -2,7 +2,8 @@
 
 export interface OraclePriceCreateObject {
   marketId: number,
-  price: string,
+  spotPrice: string,
+  pnlPrice: string,
   effectiveAt: string,
   effectiveAtHeight: string,
 }
@@ -10,7 +11,8 @@ export interface OraclePriceCreateObject {
 export enum OraclePriceColumns {
   id = 'id',
   marketId = 'marketId',
-  price = 'price',
+  spotPrice = 'spotPrice',
+  pnlPrice = 'pnlPrice',
   effectiveAt = 'effectiveAt',
   effectiveAtHeight = 'effectiveAtHeight',
 }

@@ -50,7 +50,8 @@ describe('Oracle price store', () => {
   it('Successfully creates multiple oracle prices', async () => {
     const oraclePrice2: OraclePriceCreateObject = {
       marketId: defaultMarket.id,
-      price: '10000.05',
+      spotPrice: '10000.05',
+      pnlPrice: '10000.05',
       effectiveAt: createdDateTime.toISO(),
       effectiveAtHeight: updatedHeight,
     };
@@ -214,7 +215,8 @@ describe('Oracle price store', () => {
   it('Successfully finds latest prices by effectiveAtHeight', async () => {
     const oraclePrice2: OraclePriceCreateObject = {
       ...defaultOraclePrice,
-      price: '10000.05',
+      spotPrice: '10000.05',
+      pnlPrice: '10000.05',
       effectiveAtHeight: updatedHeight,
       effectiveAt: '1982-05-25T00:00:00.000Z',
     };
@@ -230,8 +232,14 @@ describe('Oracle price store', () => {
       );
 
     expect(oraclePrices).toEqual(expect.objectContaining({
-      [defaultOraclePrice.marketId]: oraclePrice2.price,
-      [defaultOraclePrice2.marketId]: defaultOraclePrice2.price,
+      [defaultOraclePrice.marketId]: {
+        spotPrice: oraclePrice2.spotPrice,
+        pnlPrice: oraclePrice2.pnlPrice,
+      },
+      [defaultOraclePrice2.marketId]: {
+        spotPrice: defaultOraclePrice2.spotPrice,
+        pnlPrice: defaultOraclePrice2.pnlPrice,
+      },
     }));
   });
 
@@ -243,32 +251,37 @@ describe('Oracle price store', () => {
 
     const oraclePrice3: OraclePriceCreateObject = {
       ...defaultOraclePrice,
-      price: '3',
+      spotPrice: '3',
+      pnlPrice: '3',
       effectiveAtHeight: '3',
       effectiveAt: lessThan24HAgo,
     };
     const oraclePrice4: OraclePriceCreateObject = {
       ...defaultOraclePrice,
-      price: '4',
+      spotPrice: '4',
+      pnlPrice: '4',
       effectiveAtHeight: '4',
       effectiveAt: moreThan24HAgo,
     };
     const oraclePrice5: OraclePriceCreateObject = {
       ...defaultOraclePrice,
-      price: '5',
+      spotPrice: '5',
+      pnlPrice: '5',
       effectiveAtHeight: '5',
       effectiveAt: wayMoreThan24HAgo,
     };
     const oraclePrice6: OraclePriceCreateObject = {
       ...defaultOraclePrice,
-      price: '6',
+      spotPrice: '6',
+      pnlPrice: '6',
       effectiveAtHeight: '6',
       effectiveAt: now,
     };
     const oraclePrice7: OraclePriceCreateObject = {
       ...defaultOraclePrice,
       marketId: defaultMarket2.id,
-      price: '7',
+      spotPrice: '7',
+      pnlPrice: '7',
       effectiveAtHeight: '7',
       effectiveAt: lessThan24HAgo,
     };
@@ -294,22 +307,32 @@ describe('Oracle price store', () => {
       .getPricesFrom24hAgo();
 
     expect(oraclePricesFrom24hAgo).toEqual(expect.objectContaining({
-      [defaultOraclePrice.marketId]: oraclePrice4.price,
+      [defaultOraclePrice.marketId]: {
+        spotPrice: oraclePrice4.spotPrice,
+        pnlPrice: oraclePrice4.pnlPrice,
+      },
     }));
 
     const latestPrices: PriceMap = await OraclePriceTable
       .getLatestPrices();
 
     expect(latestPrices).toEqual(expect.objectContaining({
-      [defaultOraclePrice.marketId]: oraclePrice6.price,
-      [defaultMarket2.id]: oraclePrice7.price,
+      [defaultOraclePrice.marketId]: {
+        spotPrice: oraclePrice6.spotPrice,
+        pnlPrice: oraclePrice6.pnlPrice,
+      },
+      [defaultMarket2.id]: {
+        spotPrice: oraclePrice7.spotPrice,
+        pnlPrice: oraclePrice7.pnlPrice,
+      },
     }));
   });
 
   it('Successfully finds latest prices respecting effectiveAtHeight', async () => {
     const oraclePrice2: OraclePriceCreateObject = {
       ...defaultOraclePrice,
-      price: '10000.05',
+      spotPrice: '10000.05',
+      pnlPrice: '10000.05',
       effectiveAtHeight: updatedHeight,
       effectiveAt: '1982-05-25T00:00:00.000Z',
     };
@@ -324,7 +347,10 @@ describe('Oracle price store', () => {
       );
 
     expect(oraclePrices).toEqual(expect.objectContaining({
-      [defaultOraclePrice.marketId]: defaultOraclePrice.price,
+      [defaultOraclePrice.marketId]: {
+        spotPrice: oraclePrice2.spotPrice,
+        pnlPrice: oraclePrice2.pnlPrice,
+      },
     }));
   });
 });

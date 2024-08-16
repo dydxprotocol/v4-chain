@@ -248,19 +248,22 @@ describe('market-updater', () => {
 
     const oraclePrice3: OraclePriceCreateObject = {
       ...testConstants.defaultOraclePrice,
-      price: '3',
+      spotPrice: '3',
+      pnlPrice: '3',
       effectiveAtHeight: '3',
       effectiveAt: lessThan24HAgo,
     };
     const oraclePrice4: OraclePriceCreateObject = {
       ...testConstants.defaultOraclePrice,
-      price: '4',
+      spotPrice: '4',
+      pnlPrice: '4',
       effectiveAtHeight: '4',
       effectiveAt: moreThan24HAgo,
     };
     const oraclePrice6: OraclePriceCreateObject = {
       ...testConstants.defaultOraclePrice,
-      price: '6',
+      spotPrice: '6',
+      pnlPrice: '6',
       effectiveAtHeight: '6',
       effectiveAt: now,
     };

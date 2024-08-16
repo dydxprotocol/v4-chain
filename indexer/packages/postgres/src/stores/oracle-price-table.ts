@@ -33,7 +33,8 @@ export async function findAll(
     limit,
     id,
     marketId,
-    price,
+    spotPrice,
+    pnlPrice,
     effectiveAt,
     effectiveAtHeight,
     effectiveBeforeOrAt,
@@ -47,7 +48,8 @@ export async function findAll(
       limit,
       id,
       marketId,
-      price,
+      spotPrice,
+      pnlPrice,
       effectiveAt,
       effectiveAtHeight,
       effectiveBeforeOrAt,
@@ -67,8 +69,11 @@ export async function findAll(
   if (marketId !== undefined) {
     baseQuery = baseQuery.whereIn(OraclePriceColumns.marketId, marketId);
   }
-  if (price !== undefined) {
-    baseQuery = baseQuery.whereIn(OraclePriceColumns.price, price);
+  if (spotPrice !== undefined) {
+    baseQuery = baseQuery.whereIn(OraclePriceColumns.spotPrice, spotPrice);
+  }
+  if (pnlPrice !== undefined) {
+    baseQuery = baseQuery.whereIn(OraclePriceColumns.pnlPrice, pnlPrice);
   }
   if (effectiveAt !== undefined) {
     baseQuery = baseQuery.where(OraclePriceColumns.effectiveAt, effectiveAt);
