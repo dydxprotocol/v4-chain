@@ -15,3 +15,7 @@ func TestModuleKeys(t *testing.T) {
 func TestStateKeys(t *testing.T) {
 	require.Equal(t, "TotalShares:", types.TotalSharesKeyPrefix)
 }
+
+func TestModuleAccountKeys(t *testing.T) {
+	require.Equal(t, "megavault", types.MegavaultAccountName)
+}

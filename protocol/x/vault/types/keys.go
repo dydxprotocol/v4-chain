@@ -33,3 +33,9 @@ const (
 	// MostRecentClientIdsStore: vaultId VaultId -> clientIds []uint32
 	MostRecentClientIdsKeyPrefix = "MostRecentClientIds:"
 )
+
+// Module accounts
+const (
+	// MegavaultAccountName defines the root string for megavault module account.
+	MegavaultAccountName = "megavault"
+)
