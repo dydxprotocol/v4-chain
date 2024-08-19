@@ -4,20 +4,44 @@ import {
   NotificationType,
   sendFirebaseMessage,
 } from '@dydxprotocol-indexer/notifications';
-import { MarketTable, OrderFromDatabase } from '@dydxprotocol-indexer/postgres';
+import {
+  OrderFromDatabase,
+  PerpetualMarketFromDatabase,
+  SubaccountFromDatabase,
+  SubaccountTable,
+} from '@dydxprotocol-indexer/postgres';
 
-export async function sendOrderFilledNotification(order: OrderFromDatabase) {
-  const market = await MarketTable.findById(Number(order.clobPairId));
-  if (!market) {
-    throw new Error('sendOrderFilledNotification # Market not found');
+export async function sendOrderFilledNotification(
+  order: OrderFromDatabase,
+  market: PerpetualMarketFromDatabase,
+) {
+  const subaccount = await SubaccountTable.findById(order.subaccountId);
+  if (!subaccount) {
+    throw new Error(`Subaccount not found for id ${order.subaccountId}`);
   }
   const notification = createNotification(
     NotificationType.ORDER_FILLED,
     {
       [NotificationDynamicFieldKey.AMOUNT]: order.size.toString(),
-      [NotificationDynamicFieldKey.MARKET]: market.pair,
+      [NotificationDynamicFieldKey.MARKET]: market.ticker,
       [NotificationDynamicFieldKey.AVERAGE_PRICE]: order.price,
     },
   );
-  await sendFirebaseMessage(order.subaccountId, notification);
+  await sendFirebaseMessage(subaccount.address, notification);
+}
+
+export async function sendOrderTriggeredNotification(
+  order: OrderFromDatabase,
+  market: PerpetualMarketFromDatabase,
+  subaccount: SubaccountFromDatabase,
+) {
+  const notification = createNotification(
+    NotificationType.ORDER_TRIGGERED,
+    {
+      [NotificationDynamicFieldKey.MARKET]: market.ticker,
+      [NotificationDynamicFieldKey.PRICE]: order.price,
+      [NotificationDynamicFieldKey.AMOUNT]: order.size.toString(),
+    },
+  );
+  await sendFirebaseMessage(subaccount.address, notification);
 }

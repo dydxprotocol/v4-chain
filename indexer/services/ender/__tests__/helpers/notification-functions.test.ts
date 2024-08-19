@@ -1,8 +1,27 @@
-import { sendOrderFilledNotification } from '../../src/helpers/notifications/notifications-functions';
-import { OrderFromDatabase } from '@dydxprotocol-indexer/postgres';
+import {
+  sendOrderFilledNotification,
+  sendOrderTriggeredNotification,
+} from '../../src/helpers/notifications/notifications-functions';
+import {
+  dbHelpers,
+  OrderFromDatabase,
+  PerpetualMarketFromDatabase,
+  PerpetualMarketStatus,
+  PerpetualMarketType,
+  SubaccountTable,
+  testMocks,
+} from '@dydxprotocol-indexer/postgres';
 
-import { createNotification, sendFirebaseMessage, NotificationType } from '@dydxprotocol-indexer/notifications';
-import { defaultSubaccountId, defaultMarket } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import {
+  createNotification,
+  sendFirebaseMessage,
+  NotificationType,
+} from '@dydxprotocol-indexer/notifications';
+import {
+  defaultSubaccountId,
+  defaultMarket,
+  defaultWallet,
+} from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 // Mock only the sendFirebaseMessage function
 jest.mock('@dydxprotocol-indexer/notifications', () => {
@@ -14,69 +33,112 @@ jest.mock('@dydxprotocol-indexer/notifications', () => {
   };
 });
 
-describe('sendOrderFilledNotification', () => {
-  it('should create and send a notification', async () => {
-    const mockOrder: OrderFromDatabase = {
-      id: '1',
-      subaccountId: defaultSubaccountId,
-      clientId: '1',
-      clobPairId: String(defaultMarket.id),
-      side: 'BUY',
-      size: '10',
-      totalFilled: '0',
-      price: '100.50',
-      type: 'LIMIT',
-      status: 'OPEN',
-      timeInForce: 'GTT',
-      reduceOnly: false,
-      orderFlags: '0',
-      goodTilBlock: '1000000',
-      createdAtHeight: '900000',
-      clientMetadata: '0',
-      triggerPrice: undefined,
-      updatedAt: new Date().toISOString(),
-      updatedAtHeight: '900001',
-    } as OrderFromDatabase;
+const mockMarket: PerpetualMarketFromDatabase = {
+  id: '1',
+  clobPairId: '1',
+  ticker: 'BTC-USD',
+  marketId: 1,
+  status: PerpetualMarketStatus.ACTIVE,
+  priceChange24H: '0',
+  volume24H: '0',
+  trades24H: 0,
+  nextFundingRate: '0',
+  openInterest: '0',
+  quantumConversionExponent: 1,
+  atomicResolution: 1,
+  subticksPerTick: 1,
+  stepBaseQuantums: 1,
+  liquidityTierId: 1,
+  marketType: PerpetualMarketType.ISOLATED,
+  baseOpenInterest: '0',
+};
 
-    await sendOrderFilledNotification(mockOrder);
-
-    // Assert that createNotification was called with correct arguments
-    expect(createNotification).toHaveBeenCalledWith(
-      NotificationType.ORDER_FILLED,
-      {
-        AMOUNT: '10',
-        MARKET: 'BTC-USD',
-        AVERAGE_PRICE: '100.50',
-      },
-    );
-
-    // Assert that sendFirebaseMessage was called with correct arguments
-    expect(sendFirebaseMessage).toHaveBeenCalledWith(defaultSubaccountId, undefined);
+describe('notification functions', () => {
+  beforeEach(async () => {
+    await testMocks.seedData();
   });
 
-  it('should throw an error if market is not found', async () => {
-    const mockOrder: OrderFromDatabase = {
-      id: '1',
-      subaccountId: 'subaccount123',
-      clientId: '1',
-      clobPairId: '1',
-      side: 'BUY',
-      size: '10',
-      totalFilled: '0',
-      price: '100.50',
-      type: 'LIMIT',
-      status: 'OPEN',
-      timeInForce: 'GTT',
-      reduceOnly: false,
-      orderFlags: '0',
-      goodTilBlock: '1000000',
-      createdAtHeight: '900000',
-      clientMetadata: '0',
-      triggerPrice: undefined,
-      updatedAt: new Date().toISOString(),
-      updatedAtHeight: '900001',
-    } as OrderFromDatabase;
+  afterEach(async () => {
+    await dbHelpers.clearData();
+  });
+  describe('sendOrderFilledNotification', () => {
+    it('should create and send an order filled notification', async () => {
+      const mockOrder: OrderFromDatabase = {
+        id: '1',
+        subaccountId: defaultSubaccountId,
+        clientId: '1',
+        clobPairId: String(defaultMarket.id),
+        side: 'BUY',
+        size: '10',
+        totalFilled: '0',
+        price: '100.50',
+        type: 'LIMIT',
+        status: 'OPEN',
+        timeInForce: 'GTT',
+        reduceOnly: false,
+        orderFlags: '0',
+        goodTilBlock: '1000000',
+        createdAtHeight: '900000',
+        clientMetadata: '0',
+        triggerPrice: undefined,
+        updatedAt: new Date().toISOString(),
+        updatedAtHeight: '900001',
+      } as OrderFromDatabase;
 
-    await expect(sendOrderFilledNotification(mockOrder)).rejects.toThrow('sendOrderFilledNotification # Market not found');
+      await sendOrderFilledNotification(mockOrder, mockMarket);
+
+      // Assert that createNotification was called with correct arguments
+      expect(createNotification).toHaveBeenCalledWith(
+        NotificationType.ORDER_FILLED,
+        {
+          AMOUNT: '10',
+          MARKET: 'BTC-USD',
+          AVERAGE_PRICE: '100.50',
+        },
+      );
+
+      // Assert that sendFirebaseMessage was called with correct arguments, default wallet
+      // is expected because mockOrder uses defaultSubaccountId
+      expect(sendFirebaseMessage).toHaveBeenCalledWith(defaultWallet.address, undefined);
+    });
+
+    describe('sendOrderTriggeredNotification', () => {
+      it('should create and send an order triggered notification', async () => {
+        const subaccount = await SubaccountTable.findById(defaultSubaccountId);
+        const mockOrder: OrderFromDatabase = {
+          id: '1',
+          subaccountId: subaccount!.id,
+          clientId: '1',
+          clobPairId: '1',
+          side: 'BUY',
+          size: '10',
+          price: '100.50',
+          type: 'LIMIT',
+          status: 'OPEN',
+          timeInForce: 'GTT',
+          reduceOnly: false,
+          orderFlags: '0',
+          goodTilBlock: '1000000',
+          createdAtHeight: '900000',
+          clientMetadata: '0',
+          triggerPrice: '99.00',
+          updatedAt: new Date().toISOString(),
+          updatedAtHeight: '900001',
+        } as OrderFromDatabase;
+
+        await sendOrderTriggeredNotification(mockOrder, mockMarket, subaccount!);
+
+        expect(createNotification).toHaveBeenCalledWith(
+          NotificationType.ORDER_TRIGGERED,
+          {
+            MARKET: 'BTC-USD',
+            PRICE: '100.50',
+            AMOUNT: '10',
+          },
+        );
+
+        expect(sendFirebaseMessage).toHaveBeenCalledWith(subaccount?.address, undefined);
+      });
+    });
   });
 });

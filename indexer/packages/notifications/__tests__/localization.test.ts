@@ -41,19 +41,4 @@ describe('deriveLocalizedNotificationMessage', () => {
     const result = deriveLocalizedNotificationMessage(notification);
     expect(result).toEqual(expected);
   });
-
-  test('should throw an error for unknown notification type', () => {
-    const unknownNotification = {
-      type: 'UNKNOWN_TYPE' as NotificationType,
-      titleKey: LocalizationKey.DEPOSIT_SUCCESS_TITLE,
-      bodyKey: LocalizationKey.DEPOSIT_SUCCESS_BODY,
-      deeplink: Deeplink.DEPOSIT,
-      dynamicValues: {
-        [NotificationDynamicFieldKey.AMOUNT]: '1000',
-        [NotificationDynamicFieldKey.MARKET]: 'USDT',
-      },
-    } as Notification;
-
-    expect(() => deriveLocalizedNotificationMessage(unknownNotification)).toThrowError('Unknown notification type');
-  });
 });

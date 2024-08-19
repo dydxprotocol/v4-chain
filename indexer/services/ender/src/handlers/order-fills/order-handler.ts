@@ -1,13 +1,9 @@
 import {
-  createNotification, NotificationDynamicFieldKey, NotificationType, sendFirebaseMessage,
-} from '@dydxprotocol-indexer/notifications';
-import {
   FillFromDatabase,
   FillModel,
   Liquidity,
   MarketFromDatabase,
   MarketModel,
-  MarketTable,
   OrderFromDatabase,
   OrderModel,
   OrderStatus,
@@ -27,10 +23,10 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import * as pg from 'pg';
-import { sendOrderFilledNotification } from 'src/helpers/notifications/notifications-functions';
 
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { annotateWithPnl, convertPerpetualPosition } from '../../helpers/kafka-helper';
+import { sendOrderFilledNotification } from '../../helpers/notifications/notifications-functions';
 import { redisClient } from '../../helpers/redis/redis-controller';
 import { orderFillWithLiquidityToOrderFillEventWithOrder } from '../../helpers/translation-helper';
 import { OrderFillWithLiquidity } from '../../lib/translated-types';
@@ -122,7 +118,7 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
 
     // If order is filled, send a notification to firebase
     if (order.status === OrderStatus.FILLED) {
-      await sendOrderFilledNotification(order);
+      await sendOrderFilledNotification(order, perpetualMarket);
     }
 
     // If the order is stateful and fully-filled, send an order removal to vulcan. We only do this
