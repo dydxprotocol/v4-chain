@@ -11,6 +11,19 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
+func (k Keeper) TotalShares(
+	c context.Context,
+	_ *types.QueryTotalSharesRequest,
+) (*types.QueryTotalSharesResponse, error) {
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+
+	totalShares := k.GetTotalShares(ctx)
+
+	return &types.QueryTotalSharesResponse{
+		TotalShares: &totalShares,
+	}, nil
+}
+
 func (k Keeper) OwnerShares(
 	c context.Context,
 	req *types.QueryOwnerSharesRequest,
@@ -20,17 +33,8 @@ func (k Keeper) OwnerShares(
 	}
 	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
-	vaultId := types.VaultId{
-		Type:   req.Type,
-		Number: req.Number,
-	}
-	_, exists := k.GetTotalShares(ctx, vaultId)
-	if !exists {
-		return nil, status.Error(codes.NotFound, "vault not found")
-	}
-
 	var ownerShares []*types.OwnerShare
-	ownerSharesStore := k.getVaultOwnerSharesStore(ctx, vaultId)
+	ownerSharesStore := k.getOwnerSharesStore(ctx)
 	pageRes, err := query.Paginate(ownerSharesStore, req.Pagination, func(key []byte, value []byte) error {
 		owner := string(key)
 
@@ -39,7 +43,7 @@ func (k Keeper) OwnerShares(
 
 		ownerShares = append(ownerShares, &types.OwnerShare{
 			Owner:  owner,
-			Shares: &shares,
+			Shares: shares,
 		})
 
 		return nil

@@ -17,8 +17,6 @@ func TestOwnerShares(t *testing.T) {
 		/* --- Setup --- */
 		// Request.
 		req *vaulttypes.QueryOwnerSharesRequest
-		// Vault ID.
-		vaultId vaulttypes.VaultId
 		// Owner shares.
 		ownerShares map[string]*big.Int
 
@@ -27,11 +25,7 @@ func TestOwnerShares(t *testing.T) {
 		expectedErr         string
 	}{
 		"Success": {
-			req: &vaulttypes.QueryOwnerSharesRequest{
-				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
-				Number: 0,
-			},
-			vaultId: constants.Vault_Clob0,
+			req: &vaulttypes.QueryOwnerSharesRequest{},
 			ownerShares: map[string]*big.Int{
 				constants.Alice_Num0.Owner: big.NewInt(100),
 				constants.Bob_Num0.Owner:   big.NewInt(200),
@@ -39,37 +33,24 @@ func TestOwnerShares(t *testing.T) {
 			expectedOwnerShares: []*vaulttypes.OwnerShare{
 				{
 					Owner: constants.Alice_Num0.Owner,
-					Shares: &vaulttypes.NumShares{
+					Shares: vaulttypes.NumShares{
 						NumShares: dtypes.NewInt(100),
 					},
 				},
 				{
 					Owner: constants.Bob_Num0.Owner,
-					Shares: &vaulttypes.NumShares{
+					Shares: vaulttypes.NumShares{
 						NumShares: dtypes.NewInt(200),
 					},
 				},
 			},
 		},
-		"Error: vault not found": {
-			req: &vaulttypes.QueryOwnerSharesRequest{
-				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
-				Number: 1,
-			},
-			vaultId: constants.Vault_Clob0,
-			ownerShares: map[string]*big.Int{
-				constants.Alice_Num0.Owner: big.NewInt(100),
-				constants.Bob_Num0.Owner:   big.NewInt(200),
-			},
-			expectedErr: "vault not found",
+		"Success: no owners": {
+			req:         &vaulttypes.QueryOwnerSharesRequest{},
+			ownerShares: map[string]*big.Int{},
 		},
 		"Error: nil request": {
-			req:     nil,
-			vaultId: constants.Vault_Clob0,
-			ownerShares: map[string]*big.Int{
-				constants.Alice_Num0.Owner: big.NewInt(100),
-				constants.Bob_Num0.Owner:   big.NewInt(200),
-			},
+			req:         nil,
 			expectedErr: "invalid request",
 		},
 	}
@@ -83,16 +64,14 @@ func TestOwnerShares(t *testing.T) {
 			// Set total and owner shares.
 			totalShares := big.NewInt(0)
 			for owner, shares := range tc.ownerShares {
-				err := k.SetOwnerShares(ctx, tc.vaultId, owner, vaulttypes.BigIntToNumShares(shares))
+				err := k.SetOwnerShares(ctx, owner, vaulttypes.BigIntToNumShares(shares))
 				require.NoError(t, err)
 				totalShares.Add(totalShares, shares)
 			}
-
-			// Set total shares.
-			err := k.SetTotalShares(ctx, tc.vaultId, vaulttypes.BigIntToNumShares(totalShares))
+			err := k.SetTotalShares(ctx, vaulttypes.BigIntToNumShares(totalShares))
 			require.NoError(t, err)
 
-			// Check Vault query response is as expected.
+			// Check OwnerShares query response is as expected.
 			response, err := k.OwnerShares(ctx, tc.req)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)

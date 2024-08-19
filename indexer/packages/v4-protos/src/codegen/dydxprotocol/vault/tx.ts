@@ -1,44 +1,38 @@
-import { VaultId, VaultIdSDKType } from "./vault";
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
 import { QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
+import { VaultId, VaultIdSDKType } from "./vault";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
- * MsgDepositToVault deposits the specified asset from the subaccount to the
- * vault.
+ * MsgDepositToMegavault deposits the specified asset from the subaccount to
+ * megavault.
  */
 
-export interface MsgDepositToVault {
-  /** The vault to deposit into. */
-  vaultId?: VaultId;
+export interface MsgDepositToMegavault {
   /** The subaccount to deposit from. */
-
   subaccountId?: SubaccountId;
   /** Number of quote quantums to deposit. */
 
   quoteQuantums: Uint8Array;
 }
 /**
- * MsgDepositToVault deposits the specified asset from the subaccount to the
- * vault.
+ * MsgDepositToMegavault deposits the specified asset from the subaccount to
+ * megavault.
  */
 
-export interface MsgDepositToVaultSDKType {
-  /** The vault to deposit into. */
-  vault_id?: VaultIdSDKType;
+export interface MsgDepositToMegavaultSDKType {
   /** The subaccount to deposit from. */
-
   subaccount_id?: SubaccountIdSDKType;
   /** Number of quote quantums to deposit. */
 
   quote_quantums: Uint8Array;
 }
-/** MsgDepositToVaultResponse is the Msg/DepositToVault response type. */
+/** MsgDepositToMegavaultResponse is the Msg/DepositToMegavault response type. */
 
-export interface MsgDepositToVaultResponse {}
-/** MsgDepositToVaultResponse is the Msg/DepositToVault response type. */
+export interface MsgDepositToMegavaultResponse {}
+/** MsgDepositToMegavaultResponse is the Msg/DepositToMegavault response type. */
 
-export interface MsgDepositToVaultResponseSDKType {}
+export interface MsgDepositToMegavaultResponseSDKType {}
 /**
  * MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request
  * type.
@@ -102,49 +96,40 @@ export interface MsgSetVaultParamsResponse {}
 
 export interface MsgSetVaultParamsResponseSDKType {}
 
-function createBaseMsgDepositToVault(): MsgDepositToVault {
+function createBaseMsgDepositToMegavault(): MsgDepositToMegavault {
   return {
-    vaultId: undefined,
     subaccountId: undefined,
     quoteQuantums: new Uint8Array()
   };
 }
 
-export const MsgDepositToVault = {
-  encode(message: MsgDepositToVault, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.vaultId !== undefined) {
-      VaultId.encode(message.vaultId, writer.uint32(10).fork()).ldelim();
-    }
-
+export const MsgDepositToMegavault = {
+  encode(message: MsgDepositToMegavault, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.subaccountId !== undefined) {
-      SubaccountId.encode(message.subaccountId, writer.uint32(18).fork()).ldelim();
+      SubaccountId.encode(message.subaccountId, writer.uint32(10).fork()).ldelim();
     }
 
     if (message.quoteQuantums.length !== 0) {
-      writer.uint32(26).bytes(message.quoteQuantums);
+      writer.uint32(18).bytes(message.quoteQuantums);
     }
 
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgDepositToVault {
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgDepositToMegavault {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgDepositToVault();
+    const message = createBaseMsgDepositToMegavault();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
         case 1:
-          message.vaultId = VaultId.decode(reader, reader.uint32());
-          break;
-
-        case 2:
           message.subaccountId = SubaccountId.decode(reader, reader.uint32());
           break;
 
-        case 3:
+        case 2:
           message.quoteQuantums = reader.bytes();
           break;
 
@@ -157,9 +142,8 @@ export const MsgDepositToVault = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<MsgDepositToVault>): MsgDepositToVault {
-    const message = createBaseMsgDepositToVault();
-    message.vaultId = object.vaultId !== undefined && object.vaultId !== null ? VaultId.fromPartial(object.vaultId) : undefined;
+  fromPartial(object: DeepPartial<MsgDepositToMegavault>): MsgDepositToMegavault {
+    const message = createBaseMsgDepositToMegavault();
     message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? SubaccountId.fromPartial(object.subaccountId) : undefined;
     message.quoteQuantums = object.quoteQuantums ?? new Uint8Array();
     return message;
@@ -167,19 +151,19 @@ export const MsgDepositToVault = {
 
 };
 
-function createBaseMsgDepositToVaultResponse(): MsgDepositToVaultResponse {
+function createBaseMsgDepositToMegavaultResponse(): MsgDepositToMegavaultResponse {
   return {};
 }
 
-export const MsgDepositToVaultResponse = {
-  encode(_: MsgDepositToVaultResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const MsgDepositToMegavaultResponse = {
+  encode(_: MsgDepositToMegavaultResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgDepositToVaultResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgDepositToMegavaultResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgDepositToVaultResponse();
+    const message = createBaseMsgDepositToMegavaultResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -194,8 +178,8 @@ export const MsgDepositToVaultResponse = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<MsgDepositToVaultResponse>): MsgDepositToVaultResponse {
-    const message = createBaseMsgDepositToVaultResponse();
+  fromPartial(_: DeepPartial<MsgDepositToMegavaultResponse>): MsgDepositToMegavaultResponse {
+    const message = createBaseMsgDepositToMegavaultResponse();
     return message;
   }
 

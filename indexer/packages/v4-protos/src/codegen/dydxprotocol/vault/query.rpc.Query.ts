@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryParamsRequest, QueryParamsResponse, QueryVaultRequest, QueryVaultResponse, QueryAllVaultsRequest, QueryAllVaultsResponse, QueryOwnerSharesRequest, QueryOwnerSharesResponse } from "./query";
+import { QueryParamsRequest, QueryParamsResponse, QueryVaultRequest, QueryVaultResponse, QueryAllVaultsRequest, QueryAllVaultsResponse, QueryTotalSharesRequest, QueryTotalSharesResponse, QueryOwnerSharesRequest, QueryOwnerSharesResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -13,9 +13,12 @@ export interface Query {
   /** Queries all vaults. */
 
   allVaults(request?: QueryAllVaultsRequest): Promise<QueryAllVaultsResponse>;
-  /** Queries owner shares of a vault. */
+  /** Queries total shares. */
 
-  ownerShares(request: QueryOwnerSharesRequest): Promise<QueryOwnerSharesResponse>;
+  totalShares(request?: QueryTotalSharesRequest): Promise<QueryTotalSharesResponse>;
+  /** Queries owner shares. */
+
+  ownerShares(request?: QueryOwnerSharesRequest): Promise<QueryOwnerSharesResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -25,6 +28,7 @@ export class QueryClientImpl implements Query {
     this.params = this.params.bind(this);
     this.vault = this.vault.bind(this);
     this.allVaults = this.allVaults.bind(this);
+    this.totalShares = this.totalShares.bind(this);
     this.ownerShares = this.ownerShares.bind(this);
   }
 
@@ -48,7 +52,15 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QueryAllVaultsResponse.decode(new _m0.Reader(data)));
   }
 
-  ownerShares(request: QueryOwnerSharesRequest): Promise<QueryOwnerSharesResponse> {
+  totalShares(request: QueryTotalSharesRequest = {}): Promise<QueryTotalSharesResponse> {
+    const data = QueryTotalSharesRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.vault.Query", "TotalShares", data);
+    return promise.then(data => QueryTotalSharesResponse.decode(new _m0.Reader(data)));
+  }
+
+  ownerShares(request: QueryOwnerSharesRequest = {
+    pagination: undefined
+  }): Promise<QueryOwnerSharesResponse> {
     const data = QueryOwnerSharesRequest.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.vault.Query", "OwnerShares", data);
     return promise.then(data => QueryOwnerSharesResponse.decode(new _m0.Reader(data)));
@@ -71,7 +83,11 @@ export const createRpcQueryExtension = (base: QueryClient) => {
       return queryService.allVaults(request);
     },
 
-    ownerShares(request: QueryOwnerSharesRequest): Promise<QueryOwnerSharesResponse> {
+    totalShares(request?: QueryTotalSharesRequest): Promise<QueryTotalSharesResponse> {
+      return queryService.totalShares(request);
+    },
+
+    ownerShares(request?: QueryOwnerSharesRequest): Promise<QueryOwnerSharesResponse> {
       return queryService.ownerShares(request);
     }
 

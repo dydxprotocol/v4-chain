@@ -12,8 +12,9 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
 // Msg defines the Msg service.
 service Msg {
-  // DepositToVault deposits funds into a vault.
-  rpc DepositToVault(MsgDepositToVault) returns (MsgDepositToVaultResponse);
+  // DepositToMegavault deposits funds into megavault.
+  rpc DepositToMegavault(MsgDepositToMegavault)
+      returns (MsgDepositToMegavaultResponse);
 
   // UpdateDefaultQuotingParams updates the default quoting params in state.
   rpc UpdateDefaultQuotingParams(MsgUpdateDefaultQuotingParams)
@@ -23,30 +24,27 @@ service Msg {
   rpc SetVaultParams(MsgSetVaultParams) returns (MsgSetVaultParamsResponse);
 }
 
-// MsgDepositToVault deposits the specified asset from the subaccount to the
-// vault.
-message MsgDepositToVault {
+// MsgDepositToMegavault deposits the specified asset from the subaccount to
+// megavault.
+message MsgDepositToMegavault {
   // This annotation enforces that the tx signer is the owner specified in
   // subaccount_id. Therefore, this enforces that only the owner of the
   // subaccount can deposit into the vault using that subaccount.
   option (cosmos.msg.v1.signer) = "subaccount_id";
 
-  // The vault to deposit into.
-  VaultId vault_id = 1;
-
   // The subaccount to deposit from.
-  dydxprotocol.subaccounts.SubaccountId subaccount_id = 2;
+  dydxprotocol.subaccounts.SubaccountId subaccount_id = 1;
 
   // Number of quote quantums to deposit.
-  bytes quote_quantums = 3 [
+  bytes quote_quantums = 2 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 }
 
-// MsgDepositToVaultResponse is the Msg/DepositToVault response type.
-message MsgDepositToVaultResponse {}
+// MsgDepositToMegavaultResponse is the Msg/DepositToMegavault response type.
+message MsgDepositToMegavaultResponse {}
 
 // MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request
 // type.

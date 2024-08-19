@@ -10,24 +10,22 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
 // GenesisState defines `x/vault`'s genesis state.
 message GenesisState {
-  // `params` field replaced since v6.x by default_quoting_params.
-  reserved 1;
+  // The total number of shares.
+  NumShares total_shares = 1 [ (gogoproto.nullable) = false ];
+  // The shares of each owner.
+  repeated OwnerShare owner_shares = 2 [ (gogoproto.nullable) = false ];
   // The vaults.
-  repeated Vault vaults = 2;
+  repeated Vault vaults = 3 [ (gogoproto.nullable) = false ];
   // The default quoting parameters for all vaults.
-  QuotingParams default_quoting_params = 3 [ (gogoproto.nullable) = false ];
+  QuotingParams default_quoting_params = 4 [ (gogoproto.nullable) = false ];
 }
 
 // Vault defines the state of a vault.
 message Vault {
   // The ID of the vault.
-  VaultId vault_id = 1;
-  // The total number of shares in the vault.
-  NumShares total_shares = 2;
-  // The shares of each owner in the vault.
-  repeated OwnerShare owner_shares = 3;
+  VaultId vault_id = 1 [ (gogoproto.nullable) = false ];
   // The parameters of the vault.
-  VaultParams vault_params = 4 [ (gogoproto.nullable) = false ];
+  VaultParams vault_params = 2 [ (gogoproto.nullable) = false ];
   // The client IDs of the most recently placed orders of the vault.
-  repeated uint32 most_recent_client_ids = 5;
+  repeated uint32 most_recent_client_ids = 3;
 }

@@ -25,10 +25,14 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines `x/vault`'s genesis state.
 type GenesisState struct {
+	// The total number of shares.
+	TotalShares NumShares `protobuf:"bytes,1,opt,name=total_shares,json=totalShares,proto3" json:"total_shares"`
+	// The shares of each owner.
+	OwnerShares []OwnerShare `protobuf:"bytes,2,rep,name=owner_shares,json=ownerShares,proto3" json:"owner_shares"`
 	// The vaults.
-	Vaults []*Vault `protobuf:"bytes,2,rep,name=vaults,proto3" json:"vaults,omitempty"`
+	Vaults []Vault `protobuf:"bytes,3,rep,name=vaults,proto3" json:"vaults"`
 	// The default quoting parameters for all vaults.
-	DefaultQuotingParams QuotingParams `protobuf:"bytes,3,opt,name=default_quoting_params,json=defaultQuotingParams,proto3" json:"default_quoting_params"`
+	DefaultQuotingParams QuotingParams `protobuf:"bytes,4,opt,name=default_quoting_params,json=defaultQuotingParams,proto3" json:"default_quoting_params"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -64,7 +68,21 @@ func (m *GenesisState) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GenesisState proto.InternalMessageInfo
 
-func (m *GenesisState) GetVaults() []*Vault {
+func (m *GenesisState) GetTotalShares() NumShares {
+	if m != nil {
+		return m.TotalShares
+	}
+	return NumShares{}
+}
+
+func (m *GenesisState) GetOwnerShares() []OwnerShare {
+	if m != nil {
+		return m.OwnerShares
+	}
+	return nil
+}
+
+func (m *GenesisState) GetVaults() []Vault {
 	if m != nil {
 		return m.Vaults
 	}
@@ -81,15 +99,11 @@ func (m *GenesisState) GetDefaultQuotingParams() QuotingParams {
 // Vault defines the state of a vault.
 type Vault struct {
 	// The ID of the vault.
-	VaultId *VaultId `protobuf:"bytes,1,opt,name=vault_id,json=vaultId,proto3" json:"vault_id,omitempty"`
-	// The total number of shares in the vault.
-	TotalShares *NumShares `protobuf:"bytes,2,opt,name=total_shares,json=totalShares,proto3" json:"total_shares,omitempty"`
-	// The shares of each owner in the vault.
-	OwnerShares []*OwnerShare `protobuf:"bytes,3,rep,name=owner_shares,json=ownerShares,proto3" json:"owner_shares,omitempty"`
+	VaultId VaultId `protobuf:"bytes,1,opt,name=vault_id,json=vaultId,proto3" json:"vault_id"`
 	// The parameters of the vault.
-	VaultParams VaultParams `protobuf:"bytes,4,opt,name=vault_params,json=vaultParams,proto3" json:"vault_params"`
+	VaultParams VaultParams `protobuf:"bytes,2,opt,name=vault_params,json=vaultParams,proto3" json:"vault_params"`
 	// The client IDs of the most recently placed orders of the vault.
-	MostRecentClientIds []uint32 `protobuf:"varint,5,rep,packed,name=most_recent_client_ids,json=mostRecentClientIds,proto3" json:"most_recent_client_ids,omitempty"`
+	MostRecentClientIds []uint32 `protobuf:"varint,3,rep,packed,name=most_recent_client_ids,json=mostRecentClientIds,proto3" json:"most_recent_client_ids,omitempty"`
 }
 
 func (m *Vault) Reset()         { *m = Vault{} }
@@ -125,25 +139,11 @@ func (m *Vault) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Vault proto.InternalMessageInfo
 
-func (m *Vault) GetVaultId() *VaultId {
+func (m *Vault) GetVaultId() VaultId {
 	if m != nil {
 		return m.VaultId
 	}
-	return nil
-}
-
-func (m *Vault) GetTotalShares() *NumShares {
-	if m != nil {
-		return m.TotalShares
-	}
-	return nil
-}
-
-func (m *Vault) GetOwnerShares() []*OwnerShare {
-	if m != nil {
-		return m.OwnerShares
-	}
-	return nil
+	return VaultId{}
 }
 
 func (m *Vault) GetVaultParams() VaultParams {
@@ -168,33 +168,33 @@ func init() {
 func init() { proto.RegisterFile("dydxprotocol/vault/genesis.proto", fileDescriptor_4be4a747b209e41c) }
 
 var fileDescriptor_4be4a747b209e41c = []byte{
-	// 410 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x52, 0xc1, 0xae, 0xd2, 0x40,
-	0x14, 0x6d, 0x29, 0xef, 0xf9, 0x32, 0xad, 0x89, 0x19, 0x5f, 0x48, 0xc5, 0x38, 0x54, 0x56, 0x6c,
-	0x6c, 0x23, 0x18, 0xdd, 0x2a, 0x2e, 0x14, 0x17, 0x2a, 0x25, 0x71, 0x61, 0x62, 0x9a, 0xd2, 0x8e,
-	0xa5, 0x49, 0xdb, 0xc1, 0xce, 0x14, 0xe1, 0x2f, 0xfc, 0x0a, 0x7f, 0xc4, 0x0d, 0x4b, 0x96, 0xae,
-	0x8c, 0x81, 0x1f, 0x31, 0x73, 0xa7, 0xa2, 0xc4, 0xe2, 0x66, 0x7a, 0x7b, 0xce, 0xb9, 0x67, 0xce,
-	0xdc, 0x5c, 0xe4, 0xc4, 0x9b, 0x78, 0xbd, 0x2c, 0x99, 0x60, 0x11, 0xcb, 0xbc, 0x55, 0x58, 0x65,
-	0xc2, 0x4b, 0x68, 0x41, 0x79, 0xca, 0x5d, 0x80, 0x31, 0xfe, 0x5b, 0xe1, 0x82, 0xa2, 0x7b, 0x9d,
-	0xb0, 0x84, 0x01, 0xe6, 0xc9, 0x4a, 0x29, 0xbb, 0xbd, 0x06, 0xaf, 0x65, 0x58, 0x86, 0x79, 0x6d,
-	0xd5, 0x25, 0x0d, 0x02, 0xbe, 0x08, 0x4b, 0xfa, 0x1f, 0x1e, 0x4e, 0xc5, 0xf7, 0xbf, 0xea, 0xc8,
-	0x7a, 0xa1, 0xc2, 0xcd, 0x44, 0x28, 0x28, 0x7e, 0x88, 0x2e, 0x81, 0xe7, 0x76, 0xcb, 0x31, 0x06,
-	0xe6, 0xf0, 0x8e, 0xfb, 0x6f, 0x58, 0xf7, 0x9d, 0x3c, 0xfd, 0x5a, 0x88, 0x3f, 0xa0, 0x4e, 0x4c,
-	0x3f, 0xca, 0x3a, 0xf8, 0x54, 0x31, 0x91, 0x16, 0x49, 0xa0, 0x32, 0xda, 0x86, 0xa3, 0x0f, 0xcc,
-	0xe1, 0xfd, 0x26, 0x8b, 0xa9, 0x52, 0xbe, 0x05, 0xe1, 0xb8, 0xbd, 0xfd, 0xd1, 0xd3, 0xfc, 0xeb,
-	0xda, 0xe6, 0x84, 0x7b, 0xd5, 0xbe, 0xd2, 0x6f, 0xb5, 0xfa, 0xdf, 0x5a, 0xe8, 0x02, 0xae, 0xc5,
-	0x8f, 0xd1, 0x15, 0x58, 0x04, 0x69, 0x6c, 0xeb, 0x70, 0xc1, 0xdd, 0xb3, 0x19, 0x27, 0xb1, 0x7f,
-	0x63, 0xa5, 0x0a, 0xfc, 0x14, 0x59, 0x82, 0x89, 0x30, 0x0b, 0x60, 0x3e, 0xf2, 0x7d, 0xb2, 0xf7,
-	0x5e, 0x53, 0xef, 0xeb, 0x2a, 0x9f, 0x81, 0xc8, 0x37, 0xa1, 0x45, 0xfd, 0xe0, 0x67, 0xc8, 0x62,
-	0x9f, 0x0b, 0x5a, 0xfe, 0x76, 0x30, 0x60, 0x42, 0xa4, 0xc9, 0xe1, 0x8d, 0xd4, 0x41, 0x9b, 0x6f,
-	0xb2, 0x63, 0xcd, 0xf1, 0x4b, 0x64, 0xa9, 0xf0, 0xf5, 0x84, 0xda, 0x10, 0xa2, 0x77, 0xf6, 0x01,
-	0x27, 0xf3, 0x31, 0x57, 0x7f, 0x20, 0x3c, 0x42, 0x9d, 0x9c, 0x71, 0x11, 0x94, 0x34, 0xa2, 0x85,
-	0x08, 0xa2, 0x2c, 0x95, 0x9f, 0x34, 0xe6, 0xf6, 0x85, 0x63, 0x0c, 0x6e, 0xfa, 0xb7, 0x25, 0xeb,
-	0x03, 0xf9, 0x1c, 0xb8, 0x49, 0xcc, 0xc7, 0xd3, 0xed, 0x9e, 0xe8, 0xbb, 0x3d, 0xd1, 0x7f, 0xee,
-	0x89, 0xfe, 0xe5, 0x40, 0xb4, 0xdd, 0x81, 0x68, 0xdf, 0x0f, 0x44, 0x7b, 0xff, 0x24, 0x49, 0xc5,
-	0xa2, 0x9a, 0xbb, 0x11, 0xcb, 0xbd, 0xd3, 0x9d, 0x79, 0xf4, 0x20, 0x5a, 0x84, 0x69, 0xe1, 0x1d,
-	0x91, 0x75, 0xbd, 0x47, 0x62, 0xb3, 0xa4, 0x7c, 0x7e, 0x09, 0xf8, 0xe8, 0x57, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0xed, 0x63, 0xf5, 0xbe, 0xf7, 0x02, 0x00, 0x00,
+	// 402 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x92, 0xc1, 0x8e, 0xd2, 0x40,
+	0x1c, 0xc6, 0x5b, 0x40, 0x34, 0xd3, 0x7a, 0x19, 0x09, 0x41, 0x8c, 0x03, 0x72, 0xe2, 0x62, 0x9b,
+	0x80, 0x09, 0x17, 0x4f, 0x98, 0x88, 0x5c, 0x54, 0x20, 0xf1, 0x60, 0x62, 0x9a, 0xd2, 0x8e, 0xa5,
+	0x49, 0xdb, 0xc1, 0xce, 0x14, 0xe1, 0x2d, 0x7c, 0x1b, 0x5f, 0x60, 0x0f, 0x1c, 0x39, 0xee, 0x69,
+	0xb3, 0x81, 0x17, 0xd9, 0xf4, 0x3f, 0x03, 0xbb, 0x64, 0xcb, 0x5e, 0xa6, 0xd3, 0xef, 0xfb, 0xfe,
+	0xbf, 0x7e, 0x9d, 0x0c, 0x6a, 0xfb, 0x1b, 0x7f, 0xbd, 0x4c, 0x99, 0x60, 0x1e, 0x8b, 0xec, 0x95,
+	0x9b, 0x45, 0xc2, 0x0e, 0x68, 0x42, 0x79, 0xc8, 0x2d, 0x90, 0x31, 0x7e, 0x98, 0xb0, 0x20, 0xd1,
+	0xac, 0x05, 0x2c, 0x60, 0xa0, 0xd9, 0xf9, 0x4e, 0x26, 0x9b, 0xad, 0x02, 0xd6, 0xd2, 0x4d, 0xdd,
+	0x58, 0xa1, 0x9a, 0xa4, 0x20, 0xc0, 0x17, 0x6e, 0x4a, 0x9f, 0xf0, 0x61, 0x95, 0x7e, 0xe7, 0x7f,
+	0x09, 0x99, 0x23, 0x59, 0x6e, 0x26, 0x5c, 0x41, 0xf1, 0x67, 0x64, 0x0a, 0x26, 0xdc, 0xc8, 0x01,
+	0x0a, 0x6f, 0xe8, 0x6d, 0xbd, 0x6b, 0xf4, 0xde, 0x5a, 0x8f, 0x2b, 0x5b, 0x5f, 0xb3, 0x78, 0x06,
+	0xa1, 0x61, 0x65, 0x7b, 0xd3, 0xd2, 0xa6, 0x06, 0x0c, 0x4a, 0x09, 0x8f, 0x90, 0xc9, 0xfe, 0x26,
+	0x34, 0x3d, 0x72, 0x4a, 0xed, 0x72, 0xd7, 0xe8, 0x91, 0x22, 0xce, 0xb7, 0x3c, 0x07, 0x63, 0x47,
+	0x10, 0x3b, 0x29, 0x1c, 0x0f, 0x50, 0x15, 0x62, 0xbc, 0x51, 0x06, 0xc4, 0xeb, 0x22, 0xc4, 0x8f,
+	0x7c, 0x55, 0xd3, 0x2a, 0x8e, 0x7f, 0xa1, 0xba, 0x4f, 0x7f, 0xe7, 0x7b, 0xe7, 0x4f, 0xc6, 0x44,
+	0x98, 0x04, 0x8e, 0x3c, 0xba, 0x46, 0x05, 0xfe, 0xe9, 0x5d, 0x11, 0x68, 0x22, 0x93, 0xdf, 0x21,
+	0xa8, 0x80, 0x35, 0x85, 0x39, 0xf3, 0x3a, 0x57, 0x3a, 0x7a, 0x06, 0x9f, 0xc5, 0x1f, 0xd1, 0x0b,
+	0x18, 0x76, 0x42, 0x5f, 0x1d, 0xd7, 0x9b, 0x8b, 0x1d, 0xc7, 0xbe, 0x82, 0x3e, 0x5f, 0xc9, 0x57,
+	0xfc, 0x05, 0x99, 0x72, 0x5a, 0x95, 0x2b, 0x01, 0xa1, 0x75, 0x91, 0x70, 0x56, 0xcd, 0x58, 0xdd,
+	0x4b, 0xb8, 0x8f, 0xea, 0x31, 0xe3, 0xc2, 0x49, 0xa9, 0x47, 0x13, 0xe1, 0x78, 0x51, 0x98, 0x3f,
+	0x42, 0x5f, 0x9e, 0xdc, 0xcb, 0xe9, 0xab, 0xdc, 0x9d, 0x82, 0xf9, 0x09, 0xbc, 0xb1, 0xcf, 0x87,
+	0x93, 0xed, 0x9e, 0xe8, 0xbb, 0x3d, 0xd1, 0x6f, 0xf7, 0x44, 0xff, 0x77, 0x20, 0xda, 0xee, 0x40,
+	0xb4, 0xeb, 0x03, 0xd1, 0x7e, 0x0e, 0x82, 0x50, 0x2c, 0xb2, 0xb9, 0xe5, 0xb1, 0xd8, 0x3e, 0xbf,
+	0x45, 0x1f, 0xde, 0x7b, 0x0b, 0x37, 0x4c, 0xec, 0x93, 0xb2, 0x56, 0x37, 0x4b, 0x6c, 0x96, 0x94,
+	0xcf, 0xab, 0xa0, 0xf7, 0xef, 0x02, 0x00, 0x00, 0xff, 0xff, 0xef, 0x72, 0xd4, 0x72, 0x09, 0x03,
+	0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -226,7 +226,7 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintGenesis(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x1a
+	dAtA[i] = 0x22
 	if len(m.Vaults) > 0 {
 		for iNdEx := len(m.Vaults) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -238,9 +238,33 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintGenesis(dAtA, i, uint64(size))
 			}
 			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.OwnerShares) > 0 {
+		for iNdEx := len(m.OwnerShares) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.OwnerShares[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
 			dAtA[i] = 0x12
 		}
 	}
+	{
+		size, err := m.TotalShares.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -265,22 +289,22 @@ func (m *Vault) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.MostRecentClientIds) > 0 {
-		dAtA3 := make([]byte, len(m.MostRecentClientIds)*10)
-		var j2 int
+		dAtA4 := make([]byte, len(m.MostRecentClientIds)*10)
+		var j3 int
 		for _, num := range m.MostRecentClientIds {
 			for num >= 1<<7 {
-				dAtA3[j2] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA4[j3] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j2++
+				j3++
 			}
-			dAtA3[j2] = uint8(num)
-			j2++
+			dAtA4[j3] = uint8(num)
+			j3++
 		}
-		i -= j2
-		copy(dAtA[i:], dAtA3[:j2])
-		i = encodeVarintGenesis(dAtA, i, uint64(j2))
+		i -= j3
+		copy(dAtA[i:], dAtA4[:j3])
+		i = encodeVarintGenesis(dAtA, i, uint64(j3))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x1a
 	}
 	{
 		size, err := m.VaultParams.MarshalToSizedBuffer(dAtA[:i])
@@ -291,45 +315,17 @@ func (m *Vault) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintGenesis(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x22
-	if len(m.OwnerShares) > 0 {
-		for iNdEx := len(m.OwnerShares) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.OwnerShares[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintGenesis(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x1a
+	dAtA[i] = 0x12
+	{
+		size, err := m.VaultId.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
 	}
-	if m.TotalShares != nil {
-		{
-			size, err := m.TotalShares.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintGenesis(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if m.VaultId != nil {
-		{
-			size, err := m.VaultId.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintGenesis(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -350,6 +346,14 @@ func (m *GenesisState) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = m.TotalShares.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	if len(m.OwnerShares) > 0 {
+		for _, e := range m.OwnerShares {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
 	if len(m.Vaults) > 0 {
 		for _, e := range m.Vaults {
 			l = e.Size()
@@ -367,20 +371,8 @@ func (m *Vault) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.VaultId != nil {
-		l = m.VaultId.Size()
-		n += 1 + l + sovGenesis(uint64(l))
-	}
-	if m.TotalShares != nil {
-		l = m.TotalShares.Size()
-		n += 1 + l + sovGenesis(uint64(l))
-	}
-	if len(m.OwnerShares) > 0 {
-		for _, e := range m.OwnerShares {
-			l = e.Size()
-			n += 1 + l + sovGenesis(uint64(l))
-		}
-	}
+	l = m.VaultId.Size()
+	n += 1 + l + sovGenesis(uint64(l))
 	l = m.VaultParams.Size()
 	n += 1 + l + sovGenesis(uint64(l))
 	if len(m.MostRecentClientIds) > 0 {
@@ -428,7 +420,74 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: GenesisState: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalShares", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TotalShares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OwnerShares", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OwnerShares = append(m.OwnerShares, OwnerShare{})
+			if err := m.OwnerShares[len(m.OwnerShares)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Vaults", wireType)
 			}
@@ -457,12 +516,12 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Vaults = append(m.Vaults, &Vault{})
+			m.Vaults = append(m.Vaults, Vault{})
 			if err := m.Vaults[len(m.Vaults)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 3:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DefaultQuotingParams", wireType)
 			}
@@ -574,84 +633,11 @@ func (m *Vault) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.VaultId == nil {
-				m.VaultId = &VaultId{}
-			}
 			if err := m.VaultId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TotalShares", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.TotalShares == nil {
-				m.TotalShares = &NumShares{}
-			}
-			if err := m.TotalShares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OwnerShares", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.OwnerShares = append(m.OwnerShares, &OwnerShare{})
-			if err := m.OwnerShares[len(m.OwnerShares)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VaultParams", wireType)
 			}
@@ -684,7 +670,7 @@ func (m *Vault) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 5:
+		case 3:
 			if wireType == 0 {
 				var v uint32
 				for shift := uint(0); ; shift += 7 {

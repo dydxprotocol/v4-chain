@@ -1,12 +1,18 @@
+import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType } from "./share";
 import { QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
 import { VaultId, VaultIdSDKType } from "./vault";
-import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType } from "./share";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** GenesisState defines `x/vault`'s genesis state. */
 
 export interface GenesisState {
+  /** The total number of shares. */
+  totalShares?: NumShares;
+  /** The shares of each owner. */
+
+  ownerShares: OwnerShare[];
   /** The vaults. */
+
   vaults: Vault[];
   /** The default quoting parameters for all vaults. */
 
@@ -15,7 +21,13 @@ export interface GenesisState {
 /** GenesisState defines `x/vault`'s genesis state. */
 
 export interface GenesisStateSDKType {
+  /** The total number of shares. */
+  total_shares?: NumSharesSDKType;
+  /** The shares of each owner. */
+
+  owner_shares: OwnerShareSDKType[];
   /** The vaults. */
+
   vaults: VaultSDKType[];
   /** The default quoting parameters for all vaults. */
 
@@ -26,12 +38,6 @@ export interface GenesisStateSDKType {
 export interface Vault {
   /** The ID of the vault. */
   vaultId?: VaultId;
-  /** The total number of shares in the vault. */
-
-  totalShares?: NumShares;
-  /** The shares of each owner in the vault. */
-
-  ownerShares: OwnerShare[];
   /** The parameters of the vault. */
 
   vaultParams?: VaultParams;
@@ -44,12 +50,6 @@ export interface Vault {
 export interface VaultSDKType {
   /** The ID of the vault. */
   vault_id?: VaultIdSDKType;
-  /** The total number of shares in the vault. */
-
-  total_shares?: NumSharesSDKType;
-  /** The shares of each owner in the vault. */
-
-  owner_shares: OwnerShareSDKType[];
   /** The parameters of the vault. */
 
   vault_params?: VaultParamsSDKType;
@@ -60,6 +60,8 @@ export interface VaultSDKType {
 
 function createBaseGenesisState(): GenesisState {
   return {
+    totalShares: undefined,
+    ownerShares: [],
     vaults: [],
     defaultQuotingParams: undefined
   };
@@ -67,12 +69,20 @@ function createBaseGenesisState(): GenesisState {
 
 export const GenesisState = {
   encode(message: GenesisState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.totalShares !== undefined) {
+      NumShares.encode(message.totalShares, writer.uint32(10).fork()).ldelim();
+    }
+
+    for (const v of message.ownerShares) {
+      OwnerShare.encode(v!, writer.uint32(18).fork()).ldelim();
+    }
+
     for (const v of message.vaults) {
-      Vault.encode(v!, writer.uint32(18).fork()).ldelim();
+      Vault.encode(v!, writer.uint32(26).fork()).ldelim();
     }
 
     if (message.defaultQuotingParams !== undefined) {
-      QuotingParams.encode(message.defaultQuotingParams, writer.uint32(26).fork()).ldelim();
+      QuotingParams.encode(message.defaultQuotingParams, writer.uint32(34).fork()).ldelim();
     }
 
     return writer;
@@ -87,11 +97,19 @@ export const GenesisState = {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
+        case 1:
+          message.totalShares = NumShares.decode(reader, reader.uint32());
+          break;
+
         case 2:
-          message.vaults.push(Vault.decode(reader, reader.uint32()));
+          message.ownerShares.push(OwnerShare.decode(reader, reader.uint32()));
           break;
 
         case 3:
+          message.vaults.push(Vault.decode(reader, reader.uint32()));
+          break;
+
+        case 4:
           message.defaultQuotingParams = QuotingParams.decode(reader, reader.uint32());
           break;
 
@@ -106,6 +124,8 @@ export const GenesisState = {
 
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = createBaseGenesisState();
+    message.totalShares = object.totalShares !== undefined && object.totalShares !== null ? NumShares.fromPartial(object.totalShares) : undefined;
+    message.ownerShares = object.ownerShares?.map(e => OwnerShare.fromPartial(e)) || [];
     message.vaults = object.vaults?.map(e => Vault.fromPartial(e)) || [];
     message.defaultQuotingParams = object.defaultQuotingParams !== undefined && object.defaultQuotingParams !== null ? QuotingParams.fromPartial(object.defaultQuotingParams) : undefined;
     return message;
@@ -116,8 +136,6 @@ export const GenesisState = {
 function createBaseVault(): Vault {
   return {
     vaultId: undefined,
-    totalShares: undefined,
-    ownerShares: [],
     vaultParams: undefined,
     mostRecentClientIds: []
   };
@@ -129,19 +147,11 @@ export const Vault = {
       VaultId.encode(message.vaultId, writer.uint32(10).fork()).ldelim();
     }
 
-    if (message.totalShares !== undefined) {
-      NumShares.encode(message.totalShares, writer.uint32(18).fork()).ldelim();
-    }
-
-    for (const v of message.ownerShares) {
-      OwnerShare.encode(v!, writer.uint32(26).fork()).ldelim();
-    }
-
     if (message.vaultParams !== undefined) {
-      VaultParams.encode(message.vaultParams, writer.uint32(34).fork()).ldelim();
+      VaultParams.encode(message.vaultParams, writer.uint32(18).fork()).ldelim();
     }
 
-    writer.uint32(42).fork();
+    writer.uint32(26).fork();
 
     for (const v of message.mostRecentClientIds) {
       writer.uint32(v);
@@ -165,18 +175,10 @@ export const Vault = {
           break;
 
         case 2:
-          message.totalShares = NumShares.decode(reader, reader.uint32());
-          break;
-
-        case 3:
-          message.ownerShares.push(OwnerShare.decode(reader, reader.uint32()));
-          break;
-
-        case 4:
           message.vaultParams = VaultParams.decode(reader, reader.uint32());
           break;
 
-        case 5:
+        case 3:
           if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
 
@@ -201,8 +203,6 @@ export const Vault = {
   fromPartial(object: DeepPartial<Vault>): Vault {
     const message = createBaseVault();
     message.vaultId = object.vaultId !== undefined && object.vaultId !== null ? VaultId.fromPartial(object.vaultId) : undefined;
-    message.totalShares = object.totalShares !== undefined && object.totalShares !== null ? NumShares.fromPartial(object.totalShares) : undefined;
-    message.ownerShares = object.ownerShares?.map(e => OwnerShare.fromPartial(e)) || [];
     message.vaultParams = object.vaultParams !== undefined && object.vaultParams !== null ? VaultParams.fromPartial(object.vaultParams) : undefined;
     message.mostRecentClientIds = object.mostRecentClientIds?.map(e => e) || [];
     return message;

@@ -25,10 +25,13 @@ service Query {
   rpc AllVaults(QueryAllVaultsRequest) returns (QueryAllVaultsResponse) {
     option (google.api.http).get = "/dydxprotocol/vault/vault";
   }
-  // Queries owner shares of a vault.
+  // Queries total shares.
+  rpc TotalShares(QueryTotalSharesRequest) returns (QueryTotalSharesResponse) {
+    option (google.api.http).get = "/dydxprotocol/vault/total_shares";
+  }
+  // Queries owner shares.
   rpc OwnerShares(QueryOwnerSharesRequest) returns (QueryOwnerSharesResponse) {
-    option (google.api.http).get =
-        "/dydxprotocol/vault/owner_shares/{type}/{number}";
+    option (google.api.http).get = "/dydxprotocol/vault/owner_shares";
   }
 }
 
@@ -63,8 +66,7 @@ message QueryVaultResponse {
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
-  NumShares total_shares = 5 [ (gogoproto.nullable) = false ];
-  VaultParams vault_params = 6 [ (gogoproto.nullable) = false ];
+  VaultParams vault_params = 5 [ (gogoproto.nullable) = false ];
 }
 
 // QueryAllVaultsRequest is a request type for the AllVaults RPC method.
@@ -78,10 +80,14 @@ message QueryAllVaultsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
+// QueryTotalSharesRequest is a request type for the TotalShares RPC method.
+message QueryTotalSharesRequest {}
+
+// QueryTotalSharesResponse is a response type for the TotalShares RPC method.
+message QueryTotalSharesResponse { NumShares total_shares = 1; }
+
 // QueryOwnerSharesRequest is a request type for the OwnerShares RPC method.
 message QueryOwnerSharesRequest {
-  VaultType type = 1;
-  uint32 number = 2;
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 

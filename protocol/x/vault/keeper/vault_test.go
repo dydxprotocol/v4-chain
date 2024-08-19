@@ -122,24 +122,6 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.VaultKeeper
 
-			// Set total shares and owner shares for all vaults.
-			testOwner := constants.Alice_Num0.Owner
-			for _, vaultId := range tc.vaultIds {
-				err := k.SetTotalShares(
-					ctx,
-					vaultId,
-					vaulttypes.BigIntToNumShares(big.NewInt(7)),
-				)
-				require.NoError(t, err)
-				err = k.SetOwnerShares(
-					ctx,
-					vaultId,
-					testOwner,
-					vaulttypes.BigIntToNumShares(big.NewInt(7)),
-				)
-				require.NoError(t, err)
-			}
-
 			// Set statuses of vaults and add to vault address store.
 			for i, vaultId := range tc.vaultIds {
 				err := k.SetVaultParams(
@@ -157,22 +139,20 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 			k.DecommissionNonPositiveEquityVaults(ctx)
 
 			// Check that below are deleted for decommissioned vaults only:
-			// - total shares
-			// - owner shares
 			// - vault params
 			// - vault address (from vault address store)
+			// - most recent client IDs
 			for i, decommissioned := range tc.decommissioned {
-				_, exists := k.GetTotalShares(ctx, tc.vaultIds[i])
-				require.Equal(t, !decommissioned, exists)
-				_, exists = k.GetOwnerShares(ctx, tc.vaultIds[i], testOwner)
-				require.Equal(t, !decommissioned, exists)
-
-				_, exists = k.GetVaultParams(ctx, tc.vaultIds[i])
+				_, exists := k.GetVaultParams(ctx, tc.vaultIds[i])
 				require.Equal(t, !decommissioned, exists)
 				require.Equal(
 					t,
 					!decommissioned,
 					k.IsVault(ctx, tc.vaultIds[i].ToModuleAccountAddress()),
+				)
+				require.Empty(
+					t,
+					k.GetMostRecentClientIds(ctx, tc.vaultIds[i]),
 				)
 			}
 		})
@@ -216,44 +196,18 @@ func TestDecommissionVault(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.VaultKeeper
 
-			shares := vaulttypes.BigIntToNumShares(
-				big.NewInt(7),
-			)
-
 			k.AddVaultToAddressStore(ctx, tc.vaultId)
-			if tc.totalSharesExists {
-				err := k.SetTotalShares(
-					ctx,
-					tc.vaultId,
-					shares,
-				)
-				require.NoError(t, err)
-			}
-			for _, owner := range tc.owners {
-				err := k.SetOwnerShares(
-					ctx,
-					tc.vaultId,
-					owner,
-					shares,
-				)
-				require.NoError(t, err)
-			}
 			err := k.SetVaultParams(ctx, tc.vaultId, constants.VaultParams)
 			require.NoError(t, err)
 
 			// Decommission vault.
 			k.DecommissionVault(ctx, tc.vaultId)
 
-			// Check that total shares, owner shares, vault address, and vault params are deleted.
-			_, exists := k.GetTotalShares(ctx, tc.vaultId)
-			require.Equal(t, false, exists)
-			for _, owner := range tc.owners {
-				_, exists = k.GetOwnerShares(ctx, tc.vaultId, owner)
-				require.Equal(t, false, exists)
-			}
+			// Check that vault address, vault params, and most recent client IDs are deleted.
 			require.False(t, k.IsVault(ctx, tc.vaultId.ToModuleAccountAddress()))
-			_, exists = k.GetVaultParams(ctx, tc.vaultId)
+			_, exists := k.GetVaultParams(ctx, tc.vaultId)
 			require.False(t, exists)
+			require.Empty(t, k.GetMostRecentClientIds(ctx, tc.vaultId))
 		})
 	}
 }
@@ -302,20 +256,9 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
 			func(genesisState *vaulttypes.GenesisState) {
-				genesisState.Vaults = []*vaulttypes.Vault{
+				genesisState.Vaults = []vaulttypes.Vault{
 					{
-						VaultId: &constants.Vault_Clob0,
-						TotalShares: &vaulttypes.NumShares{
-							NumShares: dtypes.NewInt(10),
-						},
-						OwnerShares: []*vaulttypes.OwnerShare{
-							{
-								Owner: constants.AliceAccAddress.String(),
-								Shares: &vaulttypes.NumShares{
-									NumShares: dtypes.NewInt(10),
-								},
-							},
-						},
+						VaultId: constants.Vault_Clob0,
 						VaultParams: vaulttypes.VaultParams{
 							Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 						},
@@ -380,7 +323,7 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 	ctx := tApp.InitChain()
 
 	vaultClob0Address := constants.Vault_Clob0.ToModuleAccountAddress()
-	vaultClob1Address := constants.Vault_Clob1.ToModuleAccountAddress()
+	// vaultClob1Address := constants.Vault_Clob1.ToModuleAccountAddress()
 	aliceAddress := constants.AliceAccAddress.String()
 
 	// Vault in genesis state should be in best fee tier.
@@ -395,30 +338,207 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 	makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, aliceAddress, false)
 	require.Equal(t, int32(3), makerFee)
 
+	// TODO (TRA-551): Reenable below after implementing MsgAllocateToVault.
 	// A newly created vault should be in best fee tier.
-	checkTx_DepositToVault := testapp.MustMakeCheckTx(
-		ctx,
-		tApp.App,
-		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: constants.Alice_Num0.Owner,
-			Gas:                  constants.TestGasLimit,
-			FeeAmt:               constants.TestFeeCoins_5Cents,
-		},
-		&vaulttypes.MsgDepositToVault{
-			VaultId:       &constants.Vault_Clob1,
-			SubaccountId:  &constants.Alice_Num0,
-			QuoteQuantums: dtypes.NewInt(1),
-		},
-	)
-	checkTxResp := tApp.CheckTx(checkTx_DepositToVault)
-	require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+	// checkTx_DepositToVault := testapp.MustMakeCheckTx(
+	// 	ctx,
+	// 	tApp.App,
+	// 	testapp.MustMakeCheckTxOptions{
+	// 		AccAddressForSigning: constants.Alice_Num0.Owner,
+	// 		Gas:                  constants.TestGasLimit,
+	// 		FeeAmt:               constants.TestFeeCoins_5Cents,
+	// 	},
+	// 	&vaulttypes.MsgDepositToVault{
+	// 		VaultId:       &constants.Vault_Clob1,
+	// 		SubaccountId:  &constants.Alice_Num0,
+	// 		QuoteQuantums: dtypes.NewInt(1),
+	// 	},
+	// )
+	// checkTxResp := tApp.CheckTx(checkTx_DepositToVault)
+	// require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 
-	ctx = tApp.AdvanceToBlock(
-		uint32(ctx.BlockHeight())+1,
-		testapp.AdvanceToBlockOptions{},
-	)
-	takerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, true)
-	require.Equal(t, int32(11), takerFee)
-	makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, false)
-	require.Equal(t, int32(1), makerFee)
+	// ctx = tApp.AdvanceToBlock(
+	// 	uint32(ctx.BlockHeight())+1,
+	// 	testapp.AdvanceToBlockOptions{},
+	// )
+	// takerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, true)
+	// require.Equal(t, int32(11), takerFee)
+	// makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, false)
+	// require.Equal(t, int32(1), makerFee)
+}
+
+func TestGetMegavaultEquity(t *testing.T) {
+	tests := map[string]struct {
+		/* --- Setup --- */
+		// Equity of subaccount 0 of `megavault` module account.
+		megavaultSaEquity *big.Int
+		// Vaults
+		vaults []vaulttypes.Vault
+		// Equity of each vault above.
+		vaultEquities []*big.Int
+
+		/* --- Expectations --- */
+		// Expected megavault equity.
+		expectedMegavaultEquity *big.Int
+	}{
+		"Megavault subaccount with 1 equity, One quoting vault with 1 equity": {
+			megavaultSaEquity: big.NewInt(1),
+			vaults: []vaulttypes.Vault{
+				{
+					VaultId: constants.Vault_Clob0,
+					VaultParams: vaulttypes.VaultParams{
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+					},
+				},
+			},
+			vaultEquities: []*big.Int{
+				big.NewInt(1),
+			},
+			expectedMegavaultEquity: big.NewInt(2),
+		},
+		"Megavault subaccount with 94 equity, One quoting vault with 7 equity, One quoting vault with 0 equity,": {
+			megavaultSaEquity: big.NewInt(94),
+			vaults: []vaulttypes.Vault{
+				{
+					VaultId: constants.Vault_Clob0,
+					VaultParams: vaulttypes.VaultParams{
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+					},
+				},
+				{
+					VaultId: constants.Vault_Clob1,
+					VaultParams: vaulttypes.VaultParams{
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+					},
+				},
+			},
+			vaultEquities: []*big.Int{
+				big.NewInt(7),
+				big.NewInt(0),
+			},
+			expectedMegavaultEquity: big.NewInt(101),
+		},
+		"Megavault subaccount with 0 equity, One quoting vault with 123 equity, One stand-by vault with 6789 equity,": {
+			megavaultSaEquity: big.NewInt(0),
+			vaults: []vaulttypes.Vault{
+				{
+					VaultId: constants.Vault_Clob0,
+					VaultParams: vaulttypes.VaultParams{
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+					},
+				},
+				{
+					VaultId: constants.Vault_Clob1,
+					VaultParams: vaulttypes.VaultParams{
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
+					},
+				},
+			},
+			vaultEquities: []*big.Int{
+				big.NewInt(123),
+				big.NewInt(6_789),
+			},
+			expectedMegavaultEquity: big.NewInt(6_912),
+		},
+		"Megavault subaccount with 1000 equity, One quoting vault with 345 equity, One close-only vault with -1 equity,": {
+			megavaultSaEquity: big.NewInt(1_000),
+			vaults: []vaulttypes.Vault{
+				{
+					VaultId: constants.Vault_Clob0,
+					VaultParams: vaulttypes.VaultParams{
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+					},
+				},
+				{
+					VaultId: constants.Vault_Clob1,
+					VaultParams: vaulttypes.VaultParams{
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+					},
+				},
+			},
+			vaultEquities: []*big.Int{
+				big.NewInt(345),
+				big.NewInt(-1),
+			},
+			expectedMegavaultEquity: big.NewInt(1_345),
+		},
+		"Megavault subaccount with 1000 equity, One quoting vault with 345 equity, One deactivated vault with 5 equity,": {
+			megavaultSaEquity: big.NewInt(1_000),
+			vaults: []vaulttypes.Vault{
+				{
+					VaultId: constants.Vault_Clob0,
+					VaultParams: vaulttypes.VaultParams{
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+					},
+				},
+				{
+					VaultId: constants.Vault_Clob1,
+					VaultParams: vaulttypes.VaultParams{
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+					},
+				},
+			},
+			vaultEquities: []*big.Int{
+				big.NewInt(345),
+				big.NewInt(5),
+			},
+			expectedMegavaultEquity: big.NewInt(1_345),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				// Initialize equities of megavault main subaccount and vaults.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *satypes.GenesisState) {
+						subaccounts := []satypes.Subaccount{
+							{
+								Id: &vaulttypes.MegavaultMainSubaccount,
+								AssetPositions: []*satypes.AssetPosition{
+									testutil.CreateSingleAssetPosition(
+										0,
+										tc.megavaultSaEquity,
+									),
+								},
+							},
+						}
+						for i, vault := range tc.vaults {
+							subaccounts = append(
+								subaccounts,
+								satypes.Subaccount{
+									Id: vault.VaultId.ToSubaccountId(),
+									AssetPositions: []*satypes.AssetPosition{
+										testutil.CreateSingleAssetPosition(
+											0,
+											tc.vaultEquities[i],
+										),
+									},
+								},
+							)
+						}
+						genesisState.Subaccounts = subaccounts
+					},
+				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *vaulttypes.GenesisState) {
+						genesisState.Vaults = tc.vaults
+					},
+				)
+				return genesis
+			}).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.VaultKeeper
+
+			megavaultEquity, err := k.GetMegavaultEquity(ctx)
+			require.NoError(t, err)
+			require.Equal(
+				t,
+				tc.expectedMegavaultEquity,
+				megavaultEquity,
+			)
+		})
+	}
 }

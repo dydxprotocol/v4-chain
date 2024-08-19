@@ -2227,25 +2227,25 @@ function edit_genesis() {
 	update_ica_controller_params
 
 	# Vaults
-	# Set vault params.
+	# Set default quoting params.
 	dasel put -t int -f "$GENESIS" ".app_state.vault.default_quoting_params.spread_min_ppm" -v '3000'
-	# Set total shares and owner shares of each vault.
-	vault_idx=0
+	# Set total shares and owner shares.
 	if [ -z "${INPUT_TEST_ACCOUNTS[0]}" ]; then
 		vault_owner_address='dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4' # alice as default vault owner
 	else
 		vault_owner_address="${INPUT_TEST_ACCOUNTS[0]}"
 	fi
+	total_deposit=$((DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT * ${#INPUT_VAULT_NUMBERS[@]})) 
+	dasel put -t string -f "$GENESIS" ".app_state.vault.total_shares.num_shares" -v "${total_deposit}"
+	dasel put -t json -f "$GENESIS" ".app_state.vault.owner_shares.[]" -v '{}'
+	dasel put -t string -f "$GENESIS" ".app_state.vault.owner_shares.[0].owner" -v "${vault_owner_address}"
+	dasel put -t string -f "$GENESIS" ".app_state.vault.owner_shares.[0].shares.num_shares" -v "${total_deposit}"
+	# Set vaults.
+	vault_idx=0
 	for number in "${INPUT_VAULT_NUMBERS[@]}"; do
 		dasel put -t json -f "$GENESIS" '.app_state.vault.vaults.[]' -v '{}'
 		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_id.type" -v 'VAULT_TYPE_CLOB'
 		dasel put -t int -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_id.number" -v "${number}"
-		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].total_shares.num_shares" -v "${DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT}"
-
-		dasel put -t json -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[]" -v '{}'
-		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[0].owner" -v "${vault_owner_address}"
-		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[0].shares.num_shares" -v "${DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT}"
-
 		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_params.status" -v 'VAULT_STATUS_QUOTING'
 		vault_idx=$(($vault_idx + 1))
 	done

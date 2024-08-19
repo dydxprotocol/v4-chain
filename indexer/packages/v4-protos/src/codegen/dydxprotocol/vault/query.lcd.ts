@@ -1,6 +1,6 @@
 import { setPaginationParams } from "../../helpers";
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryParamsRequest, QueryParamsResponseSDKType, QueryVaultRequest, QueryVaultResponseSDKType, QueryAllVaultsRequest, QueryAllVaultsResponseSDKType, QueryOwnerSharesRequest, QueryOwnerSharesResponseSDKType } from "./query";
+import { QueryParamsRequest, QueryParamsResponseSDKType, QueryVaultRequest, QueryVaultResponseSDKType, QueryAllVaultsRequest, QueryAllVaultsResponseSDKType, QueryTotalSharesRequest, QueryTotalSharesResponseSDKType, QueryOwnerSharesRequest, QueryOwnerSharesResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -13,6 +13,7 @@ export class LCDQueryClient {
     this.params = this.params.bind(this);
     this.vault = this.vault.bind(this);
     this.allVaults = this.allVaults.bind(this);
+    this.totalShares = this.totalShares.bind(this);
     this.ownerShares = this.ownerShares.bind(this);
   }
   /* Queries the Params. */
@@ -46,10 +47,19 @@ export class LCDQueryClient {
     const endpoint = `dydxprotocol/vault/vault`;
     return await this.req.get<QueryAllVaultsResponseSDKType>(endpoint, options);
   }
-  /* Queries owner shares of a vault. */
+  /* Queries total shares. */
 
 
-  async ownerShares(params: QueryOwnerSharesRequest): Promise<QueryOwnerSharesResponseSDKType> {
+  async totalShares(_params: QueryTotalSharesRequest = {}): Promise<QueryTotalSharesResponseSDKType> {
+    const endpoint = `dydxprotocol/vault/total_shares`;
+    return await this.req.get<QueryTotalSharesResponseSDKType>(endpoint);
+  }
+  /* Queries owner shares. */
+
+
+  async ownerShares(params: QueryOwnerSharesRequest = {
+    pagination: undefined
+  }): Promise<QueryOwnerSharesResponseSDKType> {
     const options: any = {
       params: {}
     };
@@ -58,7 +68,7 @@ export class LCDQueryClient {
       setPaginationParams(options, params.pagination);
     }
 
-    const endpoint = `dydxprotocol/vault/owner_shares/${params.type}/${params.number}`;
+    const endpoint = `dydxprotocol/vault/owner_shares`;
     return await this.req.get<QueryOwnerSharesResponseSDKType>(endpoint, options);
   }
 

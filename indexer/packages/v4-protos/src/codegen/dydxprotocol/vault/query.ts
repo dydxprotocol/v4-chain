@@ -48,7 +48,6 @@ export interface QueryVaultResponse {
   subaccountId?: SubaccountId;
   equity: Uint8Array;
   inventory: Uint8Array;
-  totalShares?: NumShares;
   vaultParams?: VaultParams;
 }
 /** QueryVaultResponse is a response type for the Vault RPC method. */
@@ -58,7 +57,6 @@ export interface QueryVaultResponseSDKType {
   subaccount_id?: SubaccountIdSDKType;
   equity: Uint8Array;
   inventory: Uint8Array;
-  total_shares?: NumSharesSDKType;
   vault_params?: VaultParamsSDKType;
 }
 /** QueryAllVaultsRequest is a request type for the AllVaults RPC method. */
@@ -83,18 +81,32 @@ export interface QueryAllVaultsResponseSDKType {
   vaults: QueryVaultResponseSDKType[];
   pagination?: PageResponseSDKType;
 }
+/** QueryTotalSharesRequest is a request type for the TotalShares RPC method. */
+
+export interface QueryTotalSharesRequest {}
+/** QueryTotalSharesRequest is a request type for the TotalShares RPC method. */
+
+export interface QueryTotalSharesRequestSDKType {}
+/** QueryTotalSharesResponse is a response type for the TotalShares RPC method. */
+
+export interface QueryTotalSharesResponse {
+  /** QueryTotalSharesResponse is a response type for the TotalShares RPC method. */
+  totalShares?: NumShares;
+}
+/** QueryTotalSharesResponse is a response type for the TotalShares RPC method. */
+
+export interface QueryTotalSharesResponseSDKType {
+  /** QueryTotalSharesResponse is a response type for the TotalShares RPC method. */
+  total_shares?: NumSharesSDKType;
+}
 /** QueryOwnerSharesRequest is a request type for the OwnerShares RPC method. */
 
 export interface QueryOwnerSharesRequest {
-  type: VaultType;
-  number: number;
   pagination?: PageRequest;
 }
 /** QueryOwnerSharesRequest is a request type for the OwnerShares RPC method. */
 
 export interface QueryOwnerSharesRequestSDKType {
-  type: VaultTypeSDKType;
-  number: number;
   pagination?: PageRequestSDKType;
 }
 /** QueryOwnerSharesResponse is a response type for the OwnerShares RPC method. */
@@ -260,7 +272,6 @@ function createBaseQueryVaultResponse(): QueryVaultResponse {
     subaccountId: undefined,
     equity: new Uint8Array(),
     inventory: new Uint8Array(),
-    totalShares: undefined,
     vaultParams: undefined
   };
 }
@@ -283,12 +294,8 @@ export const QueryVaultResponse = {
       writer.uint32(34).bytes(message.inventory);
     }
 
-    if (message.totalShares !== undefined) {
-      NumShares.encode(message.totalShares, writer.uint32(42).fork()).ldelim();
-    }
-
     if (message.vaultParams !== undefined) {
-      VaultParams.encode(message.vaultParams, writer.uint32(50).fork()).ldelim();
+      VaultParams.encode(message.vaultParams, writer.uint32(42).fork()).ldelim();
     }
 
     return writer;
@@ -320,10 +327,6 @@ export const QueryVaultResponse = {
           break;
 
         case 5:
-          message.totalShares = NumShares.decode(reader, reader.uint32());
-          break;
-
-        case 6:
           message.vaultParams = VaultParams.decode(reader, reader.uint32());
           break;
 
@@ -342,7 +345,6 @@ export const QueryVaultResponse = {
     message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? SubaccountId.fromPartial(object.subaccountId) : undefined;
     message.equity = object.equity ?? new Uint8Array();
     message.inventory = object.inventory ?? new Uint8Array();
-    message.totalShares = object.totalShares !== undefined && object.totalShares !== null ? NumShares.fromPartial(object.totalShares) : undefined;
     message.vaultParams = object.vaultParams !== undefined && object.vaultParams !== null ? VaultParams.fromPartial(object.vaultParams) : undefined;
     return message;
   }
@@ -449,24 +451,93 @@ export const QueryAllVaultsResponse = {
 
 };
 
+function createBaseQueryTotalSharesRequest(): QueryTotalSharesRequest {
+  return {};
+}
+
+export const QueryTotalSharesRequest = {
+  encode(_: QueryTotalSharesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryTotalSharesRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryTotalSharesRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QueryTotalSharesRequest>): QueryTotalSharesRequest {
+    const message = createBaseQueryTotalSharesRequest();
+    return message;
+  }
+
+};
+
+function createBaseQueryTotalSharesResponse(): QueryTotalSharesResponse {
+  return {
+    totalShares: undefined
+  };
+}
+
+export const QueryTotalSharesResponse = {
+  encode(message: QueryTotalSharesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.totalShares !== undefined) {
+      NumShares.encode(message.totalShares, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryTotalSharesResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryTotalSharesResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.totalShares = NumShares.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryTotalSharesResponse>): QueryTotalSharesResponse {
+    const message = createBaseQueryTotalSharesResponse();
+    message.totalShares = object.totalShares !== undefined && object.totalShares !== null ? NumShares.fromPartial(object.totalShares) : undefined;
+    return message;
+  }
+
+};
+
 function createBaseQueryOwnerSharesRequest(): QueryOwnerSharesRequest {
   return {
-    type: 0,
-    number: 0,
     pagination: undefined
   };
 }
 
 export const QueryOwnerSharesRequest = {
   encode(message: QueryOwnerSharesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.type !== 0) {
-      writer.uint32(8).int32(message.type);
-    }
-
-    if (message.number !== 0) {
-      writer.uint32(16).uint32(message.number);
-    }
-
     if (message.pagination !== undefined) {
       PageRequest.encode(message.pagination, writer.uint32(26).fork()).ldelim();
     }
@@ -483,14 +554,6 @@ export const QueryOwnerSharesRequest = {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
-        case 1:
-          message.type = (reader.int32() as any);
-          break;
-
-        case 2:
-          message.number = reader.uint32();
-          break;
-
         case 3:
           message.pagination = PageRequest.decode(reader, reader.uint32());
           break;
@@ -506,8 +569,6 @@ export const QueryOwnerSharesRequest = {
 
   fromPartial(object: DeepPartial<QueryOwnerSharesRequest>): QueryOwnerSharesRequest {
     const message = createBaseQueryOwnerSharesRequest();
-    message.type = object.type ?? 0;
-    message.number = object.number ?? 0;
     message.pagination = object.pagination !== undefined && object.pagination !== null ? PageRequest.fromPartial(object.pagination) : undefined;
     return message;
   }

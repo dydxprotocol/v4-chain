@@ -5,10 +5,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ types.Msg = &MsgDepositToVault{}
+var _ types.Msg = &MsgDepositToMegavault{}
 
-// ValidateBasic performs stateless validation on a MsgDepositToVault.
-func (msg *MsgDepositToVault) ValidateBasic() error {
+// ValidateBasic performs stateless validation on a MsgDepositToMegavault.
+func (msg *MsgDepositToMegavault) ValidateBasic() error {
 	// Note: msg signer must be the owner of the subaccount.
 	// This is enforced by the following notatino on the msg proto:
 	//    option (cosmos.msg.v1.signer) = "subaccount_id"

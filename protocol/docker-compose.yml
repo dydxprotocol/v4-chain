@@ -128,21 +128,21 @@ services:
     ports:
       - "8080:8080"
       - "8002:8002" # metrics
-  prometheus:
-    image: prom/prometheus:latest
-    volumes:
-      - ./contrib/prometheus:/etc/prometheus/
-    ports:
-      - "9091:9090"
-  datadog-agent:
-    image: public.ecr.aws/datadog/agent:7
-    environment:
-      # See https://docs.datadoghq.com/containers/docker/?tab=standard#environment-variables for agent configuration
-      - DD_API_KEY=${DD_API_KEY}
-      - DD_APM_ENABLED=true
-      - DD_APM_NON_LOCAL_TRAFFIC=true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - "8125:8215"
-      - "8126:8126"
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   volumes:
+  #     - ./contrib/prometheus:/etc/prometheus/
+  #   ports:
+  #     - "9091:9090"
+  # datadog-agent:
+  #   image: public.ecr.aws/datadog/agent:7
+  #   environment:
+  #     # See https://docs.datadoghq.com/containers/docker/?tab=standard#environment-variables for agent configuration
+  #     - DD_API_KEY=${DD_API_KEY}
+  #     - DD_APM_ENABLED=true
+  #     - DD_APM_NON_LOCAL_TRAFFIC=true
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #   ports:
+  #     - "8125:8215"
+  #     - "8126:8126"
