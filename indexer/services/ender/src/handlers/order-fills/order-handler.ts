@@ -27,6 +27,7 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import * as pg from 'pg';
+import { sendOrderFilledNotification } from 'src/helpers/notifications/notifications-functions';
 
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { annotateWithPnl, convertPerpetualPosition } from '../../helpers/kafka-helper';
@@ -35,7 +36,6 @@ import { orderFillWithLiquidityToOrderFillEventWithOrder } from '../../helpers/t
 import { OrderFillWithLiquidity } from '../../lib/translated-types';
 import { ConsolidatedKafkaEvent, OrderFillEventWithOrder } from '../../lib/types';
 import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
-import { sendOrderFilledNotification } from 'src/helpers/notifications/notifications-functions';
 
 export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
   eventType: string = 'OrderFillEvent';
