@@ -2,7 +2,6 @@ import { logger } from '@dydxprotocol-indexer/base';
 import { TokenTable } from '@dydxprotocol-indexer/postgres';
 
 import {
-  BatchResponse,
   MulticastMessage,
   sendMulticast,
 } from './lib/firebase';
@@ -48,8 +47,8 @@ export async function sendFirebaseMessage(
   };
 
   try {
-    const result: BatchResponse = await sendMulticast(message);
-    if (result.failureCount && result.failureCount > 0) {
+    const result = await sendMulticast(message);
+    if (result?.failureCount && result?.failureCount > 0) {
       logger.info({
         at: 'notifications#firebase',
         message: `Failed to send Firebase message: ${JSON.stringify(message)}`,

@@ -1,9 +1,13 @@
 import {
+  createNotification, NotificationDynamicFieldKey, NotificationType, sendFirebaseMessage,
+} from '@dydxprotocol-indexer/notifications';
+import {
   FillFromDatabase,
   FillModel,
   Liquidity,
   MarketFromDatabase,
   MarketModel,
+  MarketTable,
   OrderFromDatabase,
   OrderModel,
   OrderStatus,
@@ -31,6 +35,7 @@ import { orderFillWithLiquidityToOrderFillEventWithOrder } from '../../helpers/t
 import { OrderFillWithLiquidity } from '../../lib/translated-types';
 import { ConsolidatedKafkaEvent, OrderFillEventWithOrder } from '../../lib/types';
 import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
+import { sendOrderFilledNotification } from 'src/helpers/notifications/notifications-functions';
 
 export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
   eventType: string = 'OrderFillEvent';
@@ -114,6 +119,11 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       this.getTotalFilled(castedOrderFillEventMessage).toString(),
       redisClient,
     );
+
+    // If order is filled, send a notification to firebase
+    if (order.status === OrderStatus.FILLED) {
+      await sendOrderFilledNotification(order);
+    }
 
     // If the order is stateful and fully-filled, send an order removal to vulcan. We only do this
     // for stateful orders as we are guaranteed a stateful order cannot be replaced until the next

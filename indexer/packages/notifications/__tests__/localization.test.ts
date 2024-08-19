@@ -18,7 +18,7 @@ describe('deriveLocalizedNotificationMessage', () => {
     });
 
     const expected = {
-      title: 'Deposit successful',
+      title: 'Deposit Successful',
       body: 'You have successfully deposited 1000 USDT to your dYdX account.',
     };
 
@@ -30,11 +30,12 @@ describe('deriveLocalizedNotificationMessage', () => {
     const notification = createNotification(NotificationType.ORDER_FILLED, {
       [NotificationDynamicFieldKey.MARKET]: 'BTC/USD',
       [NotificationDynamicFieldKey.AVERAGE_PRICE]: '45000',
+      [NotificationDynamicFieldKey.AMOUNT]: '1000',
     });
 
     const expected = {
-      title: 'Filled BTC/USD order at 45000.',
-      body: 'Order Filled successful',
+      title: 'Your order for 1000 BTC/USD was filled at $45000',
+      body: 'Order Filled',
     };
 
     const result = deriveLocalizedNotificationMessage(notification);

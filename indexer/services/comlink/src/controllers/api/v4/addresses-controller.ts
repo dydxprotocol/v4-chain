@@ -344,14 +344,10 @@ class AddressesController extends Controller {
       throw new NotFoundError(`No wallet found for address: ${address}`);
     }
 
-    const token = await TokenTable.findAll({ address }, []);
-    if (!token) {
-      throw new NotFoundError(`No token found for address: ${address}`);
-    }
-
     try {
       const notification = createNotification(NotificationType.ORDER_FILLED, {
         [NotificationDynamicFieldKey.MARKET]: 'BTC/USD',
+        [NotificationDynamicFieldKey.AMOUNT]: '100',
         [NotificationDynamicFieldKey.AVERAGE_PRICE]: '1000',
       });
       await sendFirebaseMessage(wallet.address, notification);

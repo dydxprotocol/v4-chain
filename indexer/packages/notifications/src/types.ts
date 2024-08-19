@@ -36,42 +36,45 @@ export enum Deeplink {
   ORDER_FILLED = '/profile',
 }
 
-export interface UserNotificationFields {
-  email?: string;
-  isEmailVerified: boolean;
-  notifications: {};
+export enum Topic {
+  TRADING = 'trading',
+  PRICE_ALERTS = 'price_alerts',
 }
 
 interface BaseNotification <T extends Record<string, string>> {
   type: NotificationType,
   titleKey: LocalizationKey;
   bodyKey: LocalizationKey;
+  topic: Topic;
   deeplink: Deeplink;
   dynamicValues: T,
 }
 
-export interface DepositSuccessNotification extends BaseNotification<{
+interface DepositSuccessNotification extends BaseNotification<{
   [NotificationDynamicFieldKey.AMOUNT]: string;
   [NotificationDynamicFieldKey.MARKET]: string;
 }> {
   type: NotificationType.DEPOSIT_SUCCESS;
   titleKey: LocalizationKey.DEPOSIT_SUCCESS_TITLE;
   bodyKey: LocalizationKey.DEPOSIT_SUCCESS_BODY;
+  topic: Topic.TRADING;
   dynamicValues: {
     [NotificationDynamicFieldKey.AMOUNT]: string;
     [NotificationDynamicFieldKey.MARKET]: string;
   }
 }
 
-export interface OrderFilledNotification extends BaseNotification <{
+interface OrderFilledNotification extends BaseNotification <{
   [NotificationDynamicFieldKey.MARKET]: string;
   [NotificationDynamicFieldKey.AVERAGE_PRICE]: string;
 }>{
   type: NotificationType.ORDER_FILLED;
   titleKey: LocalizationKey.ORDER_FILLED_TITLE;
   bodyKey: LocalizationKey.ORDER_FILLED_BODY;
+  topic: Topic.TRADING;
   dynamicValues: {
     [NotificationDynamicFieldKey.MARKET]: string;
+    [NotificationDynamicFieldKey.AMOUNT]: string;
     [NotificationDynamicFieldKey.AVERAGE_PRICE]: string;
   };
 }
@@ -97,6 +100,7 @@ export function createNotification<T extends NotificationType>(
         type: NotificationType.DEPOSIT_SUCCESS,
         titleKey: LocalizationKey.DEPOSIT_SUCCESS_TITLE,
         bodyKey: LocalizationKey.DEPOSIT_SUCCESS_BODY,
+        topic: Topic.TRADING,
         deeplink: Deeplink.DEPOSIT,
         dynamicValues: dynamicValues as DepositSuccessNotification['dynamicValues'],
       };
@@ -106,6 +110,7 @@ export function createNotification<T extends NotificationType>(
         type: NotificationType.ORDER_FILLED,
         titleKey: LocalizationKey.ORDER_FILLED_TITLE,
         bodyKey: LocalizationKey.ORDER_FILLED_BODY,
+        topic: Topic.TRADING,
         deeplink: Deeplink.ORDER_FILLED,
         dynamicValues: dynamicValues as OrderFilledNotification['dynamicValues'],
       };

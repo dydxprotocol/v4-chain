@@ -1,5 +1,6 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import {
+  App,
   cert,
   initializeApp,
   ServiceAccount,
@@ -22,9 +23,19 @@ const initializeFirebaseApp = () => {
 
   const serviceAccount: ServiceAccount = defaultGoogleApplicationCredentials;
 
-  const firebaseApp = initializeApp({
-    credential: cert(serviceAccount),
-  });
+  let firebaseApp: App;
+  try {
+    firebaseApp = initializeApp({
+      credential: cert(serviceAccount),
+    });
+  } catch (error) {
+    logger.error({
+      at: 'notifications#firebase',
+      message: 'Failed to initialize Firebase App',
+      error,
+    });
+    return undefined;
+  }
 
   logger.info({
     at: 'notifications#firebase',
@@ -35,7 +46,30 @@ const initializeFirebaseApp = () => {
 };
 
 const firebaseApp = initializeFirebaseApp();
-const firebaseMessaging = getMessaging(firebaseApp);
+// Initialize Firebase Messaging if the app was initialized successfully
+let firebaseMessaging = null;
+if (firebaseApp) {
+  try {
+    firebaseMessaging = getMessaging(firebaseApp);
+    logger.info({
+      at: 'notifications#firebase',
+      message: 'Firebase Messaging initialized successfully',
+    });
+  } catch (error) {
+    logger.error({
+      at: 'notifications#firebase',
+      message: 'Firebase Messaging failed to initialize',
+    });
+  }
+}
 
-export const sendMulticast = firebaseMessaging.sendMulticast.bind(firebaseMessaging);
+export const sendMulticast = firebaseMessaging
+  ? firebaseMessaging.sendMulticast.bind(firebaseMessaging)
+  : () => {
+    logger.error({
+      at: 'notifications#firebase',
+      message: 'Firebase Messaging is not initialized, sendMulticast is a no-op',
+    });
+    return Promise.resolve(null);
+  };
 export { BatchResponse, getMessaging, MulticastMessage } from 'firebase-admin/messaging';
