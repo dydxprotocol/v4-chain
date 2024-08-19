@@ -30,7 +30,6 @@ func (app *App) setupUpgradeHandlers() {
 		v7_0_0.CreateUpgradeHandler(
 			app.ModuleManager,
 			app.configurator,
-			app.ClobKeeper,
 		),
 	)
 }

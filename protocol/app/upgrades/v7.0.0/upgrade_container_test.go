@@ -8,8 +8,6 @@ import (
 	v_7_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v7.0.0"
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -38,7 +36,6 @@ func TestStateUpgrade(t *testing.T) {
 }
 
 func preUpgradeSetups(node *containertest.Node, t *testing.T) {
-	placeOrders(node, t)
 }
 
 func preUpgradeChecks(node *containertest.Node, t *testing.T) {
@@ -47,141 +44,4 @@ func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	// Add test for your upgrade handler logic below
-}
-
-func placeOrders(node *containertest.Node, t *testing.T) {
-	require.NoError(t, containertest.BroadcastTx(
-		node,
-		&clobtypes.MsgPlaceOrder{
-			Order: clobtypes.Order{
-				OrderId: clobtypes.OrderId{
-					ClientId: 0,
-					SubaccountId: satypes.SubaccountId{
-						Owner:  constants.AliceAccAddress.String(),
-						Number: 0,
-					},
-					ClobPairId: 0,
-				},
-				Side:     clobtypes.Order_SIDE_BUY,
-				Quantums: AliceBobBTCQuantums,
-				Subticks: 5_000_000,
-				GoodTilOneof: &clobtypes.Order_GoodTilBlock{
-					GoodTilBlock: 20,
-				},
-			},
-		},
-		constants.AliceAccAddress.String(),
-	))
-	require.NoError(t, containertest.BroadcastTx(
-		node,
-		&clobtypes.MsgPlaceOrder{
-			Order: clobtypes.Order{
-				OrderId: clobtypes.OrderId{
-					ClientId: 0,
-					SubaccountId: satypes.SubaccountId{
-						Owner:  constants.BobAccAddress.String(),
-						Number: 0,
-					},
-					ClobPairId: 0,
-				},
-				Side:     clobtypes.Order_SIDE_SELL,
-				Quantums: AliceBobBTCQuantums,
-				Subticks: 5_000_000,
-				GoodTilOneof: &clobtypes.Order_GoodTilBlock{
-					GoodTilBlock: 20,
-				},
-			},
-		},
-		constants.BobAccAddress.String(),
-	))
-	require.NoError(t, containertest.BroadcastTx(
-		node,
-		&clobtypes.MsgPlaceOrder{
-			Order: clobtypes.Order{
-				OrderId: clobtypes.OrderId{
-					ClientId: 0,
-					SubaccountId: satypes.SubaccountId{
-						Owner:  constants.CarlAccAddress.String(),
-						Number: 0,
-					},
-					ClobPairId: 0,
-				},
-				Side:     clobtypes.Order_SIDE_BUY,
-				Quantums: CarlDaveBTCQuantums,
-				Subticks: 5_000_000,
-				GoodTilOneof: &clobtypes.Order_GoodTilBlock{
-					GoodTilBlock: 20,
-				},
-			},
-		},
-		constants.CarlAccAddress.String(),
-	))
-	require.NoError(t, containertest.BroadcastTx(
-		node,
-		&clobtypes.MsgPlaceOrder{
-			Order: clobtypes.Order{
-				OrderId: clobtypes.OrderId{
-					ClientId: 0,
-					SubaccountId: satypes.SubaccountId{
-						Owner:  constants.DaveAccAddress.String(),
-						Number: 0,
-					},
-					ClobPairId: 0,
-				},
-				Side:     clobtypes.Order_SIDE_SELL,
-				Quantums: CarlDaveBTCQuantums,
-				Subticks: 5_000_000,
-				GoodTilOneof: &clobtypes.Order_GoodTilBlock{
-					GoodTilBlock: 20,
-				},
-			},
-		},
-		constants.DaveAccAddress.String(),
-	))
-	require.NoError(t, containertest.BroadcastTx(
-		node,
-		&clobtypes.MsgPlaceOrder{
-			Order: clobtypes.Order{
-				OrderId: clobtypes.OrderId{
-					ClientId: 0,
-					SubaccountId: satypes.SubaccountId{
-						Owner:  constants.CarlAccAddress.String(),
-						Number: 0,
-					},
-					ClobPairId: 1,
-				},
-				Side:     clobtypes.Order_SIDE_BUY,
-				Quantums: CarlDaveETHQuantums,
-				Subticks: 5_000_000,
-				GoodTilOneof: &clobtypes.Order_GoodTilBlock{
-					GoodTilBlock: 20,
-				},
-			},
-		},
-		constants.CarlAccAddress.String(),
-	))
-	require.NoError(t, containertest.BroadcastTx(
-		node,
-		&clobtypes.MsgPlaceOrder{
-			Order: clobtypes.Order{
-				OrderId: clobtypes.OrderId{
-					ClientId: 0,
-					SubaccountId: satypes.SubaccountId{
-						Owner:  constants.DaveAccAddress.String(),
-						Number: 0,
-					},
-					ClobPairId: 1,
-				},
-				Side:     clobtypes.Order_SIDE_SELL,
-				Quantums: CarlDaveETHQuantums,
-				Subticks: 5_000_000,
-				GoodTilOneof: &clobtypes.Order_GoodTilBlock{
-					GoodTilBlock: 20,
-				},
-			},
-		},
-		constants.DaveAccAddress.String(),
-	))
-	err := node.Wait(2)
-	require.NoError(t, err)
 }
