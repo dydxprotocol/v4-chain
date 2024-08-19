@@ -133,6 +133,9 @@ import (
 	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
 	accountplusmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	accountplusmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
+	affiliatesmodule "github.com/dydxprotocol/v4-chain/protocol/x/affiliates"
+	affiliatesmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
+	affiliatesmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
 	assetsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	assetsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -299,6 +302,7 @@ type App struct {
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	GovPlusKeeper         govplusmodulekeeper.Keeper
 	AccountPlusKeeper     accountplusmodulekeeper.Keeper
+	AffiliatesKeeper      affiliatesmodulekeeper.Keeper
 
 	MarketMapKeeper marketmapmodulekeeper.Keeper
 
@@ -456,6 +460,7 @@ func New(
 		revsharemoduletypes.StoreKey,
 		accountplusmoduletypes.StoreKey,
 		marketmapmoduletypes.StoreKey,
+		affiliatesmoduletypes.StoreKey,
 	)
 	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
 	tkeys := storetypes.NewTransientStoreKeys(
@@ -1191,6 +1196,15 @@ func New(
 	)
 	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
 
+	app.AffiliatesKeeper = *affiliatesmodulekeeper.NewKeeper(
+		appCodec,
+		keys[affiliatesmoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+	)
+	affiliatesModule := affiliatesmodule.NewAppModule(appCodec, app.AffiliatesKeeper)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -1263,6 +1277,7 @@ func New(
 		revShareModule,
 		accountplusModule,
 		marketmapModule,
+		affiliatesModule,
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
@@ -1314,6 +1329,7 @@ func New(
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
 		marketmapmoduletypes.ModuleName,
+		affiliatesmoduletypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
@@ -1361,6 +1377,7 @@ func New(
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
 		marketmapmoduletypes.ModuleName,
+		affiliatesmoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
@@ -1409,6 +1426,7 @@ func New(
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
+		affiliatesmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
 
@@ -1453,6 +1471,7 @@ func New(
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
+		affiliatesmoduletypes.ModuleName,
 		authz.ModuleName,
 
 		// Auth must be migrated after staking.

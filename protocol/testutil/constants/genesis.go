@@ -43,6 +43,7 @@ const GenesisState = `{
         }
       ]
     },
+    "affiliates": {},
     "auth": {
       "params": {
         "max_memo_characters": "256",

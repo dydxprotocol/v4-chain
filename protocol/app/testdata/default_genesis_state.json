@@ -13,6 +13,7 @@
       }
     ]
   },
+  "affiliates": {},
   "auth": {
     "params": {
       "max_memo_characters": "256",
