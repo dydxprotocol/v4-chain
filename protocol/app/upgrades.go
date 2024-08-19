@@ -31,10 +31,6 @@ func (app *App) setupUpgradeHandlers() {
 			app.ModuleManager,
 			app.configurator,
 			app.ClobKeeper,
-			app.PricesKeeper,
-			app.MarketMapKeeper,
-			app.RevShareKeeper,
-			app.VaultKeeper,
 		),
 	)
 }
