@@ -100,14 +100,6 @@ export class BatchedHandlers {
       _.forEach(consolidatedKafkaEventGroup, (events: ConsolidatedKafkaEvent[]) => {
         kafkaPublisher.addEvents(events);
       });
-      logger.info({
-        at: 'BatchedHandlers#process',
-        message: 'Finished processing batch of handlers',
-        batchIndex,
-        handlerCountMapping,
-        batchProcessTime: Date.now() - start,
-        batchSize: this.batchedHandlers[batchIndex].length,
-      });
       stats.timing(`${config.SERVICE_NAME}.batch_process_time`, Date.now() - start);
       stats.histogram(`${config.SERVICE_NAME}.batch_size`, this.batchedHandlers[batchIndex].length);
     }
