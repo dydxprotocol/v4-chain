@@ -1,14 +1,8 @@
 export enum NotificationType {
   DEPOSIT_SUCCESS = 'DEPOSIT_SUCCESS',
-  FAST_WITHDRAW_SUCCESS = 'FAST_WITHDRAW_SUCCESS',
-  SLOW_WITHDRAWAL_PENDING = 'SLOW_WITHDRAWAL_PENDING',
-  SLOW_WITHDRAWAL_SUCCESS = 'SLOW_WITHDRAWAL_SUCCESS',
-  ORDER_CANCEL = 'ORDER_CANCEL',
   ORDER_FILLED = 'ORDER_FILLED',
-  ORDER_PARTIAL_FILL = 'ORDER_PARTIAL_FILL',
   ORDER_TRIGGERED = 'ORDER_TRIGGERED',
   LIQUIDATION = 'LIQUIDATION',
-  VOLATILITY = 'VOLATILITY',
 }
 
 // Keys for the dynamic values that are used in the notification messages
@@ -16,6 +10,7 @@ export enum NotificationType {
 export enum NotificationDynamicFieldKey {
   AMOUNT = 'AMOUNT',
   AVERAGE_PRICE = 'AVERAGE_PRICE',
+  PRICE = 'PRICE',
   FILLED_AMOUNT = 'FILLED_AMOUNT',
   MARKET = 'MARKET',
   SIDE = 'SIDE',
@@ -28,12 +23,15 @@ export enum LocalizationKey {
   DEPOSIT_SUCCESS_BODY = 'DEPOSIT_SUCCESS_BODY',
   ORDER_FILLED_TITLE = 'ORDER_FILLED_TITLE',
   ORDER_FILLED_BODY = 'ORDER_FILLED_BODY',
+  ORDER_TRIGGERED_TITLE = 'ORDER_TRIGGERED_TITLE',
+  ORDER_TRIGGERED_BODY = 'ORDER_TRIGGERED_BODY',
 }
 
 // Deeplinks for each notification
 export enum Deeplink {
   DEPOSIT = '/profile',
   ORDER_FILLED = '/profile',
+  ORDER_TRIGGERED = '/profile',
 }
 
 export enum Topic {
@@ -79,12 +77,30 @@ interface OrderFilledNotification extends BaseNotification <{
   };
 }
 
+interface OrderTriggeredNotification extends BaseNotification <{
+  [NotificationDynamicFieldKey.MARKET]: string;
+  [NotificationDynamicFieldKey.PRICE]: string;
+}>{
+  type: NotificationType.ORDER_TRIGGERED;
+  titleKey: LocalizationKey.ORDER_TRIGGERED_TITLE;
+  bodyKey: LocalizationKey.ORDER_TRIGGERED_BODY;
+  topic: Topic.TRADING;
+  dynamicValues: {
+    [NotificationDynamicFieldKey.MARKET]: string;
+    [NotificationDynamicFieldKey.AMOUNT]: string;
+    [NotificationDynamicFieldKey.PRICE]: string;
+  };
+}
+
 export type NotificationMesage = {
   title: string;
   body: string;
 };
 
-export type Notification = DepositSuccessNotification | OrderFilledNotification;
+export type Notification =
+DepositSuccessNotification |
+OrderFilledNotification |
+OrderTriggeredNotification;
 
 export function createNotification<T extends NotificationType>(
   type: T,
@@ -92,7 +108,8 @@ export function createNotification<T extends NotificationType>(
     ? DepositSuccessNotification['dynamicValues']
     : T extends NotificationType.ORDER_FILLED
       ? OrderFilledNotification['dynamicValues']
-      : never,
+      : T extends NotificationType.ORDER_TRIGGERED
+        ? OrderTriggeredNotification['dynamicValues'] : never,
 ): Notification {
   switch (type) {
     case NotificationType.DEPOSIT_SUCCESS:
@@ -104,7 +121,6 @@ export function createNotification<T extends NotificationType>(
         deeplink: Deeplink.DEPOSIT,
         dynamicValues: dynamicValues as DepositSuccessNotification['dynamicValues'],
       };
-
     case NotificationType.ORDER_FILLED:
       return {
         type: NotificationType.ORDER_FILLED,
@@ -114,9 +130,17 @@ export function createNotification<T extends NotificationType>(
         deeplink: Deeplink.ORDER_FILLED,
         dynamicValues: dynamicValues as OrderFilledNotification['dynamicValues'],
       };
+    case NotificationType.ORDER_TRIGGERED:
+      return {
+        type: NotificationType.ORDER_TRIGGERED,
+        titleKey: LocalizationKey.ORDER_TRIGGERED_TITLE,
+        bodyKey: LocalizationKey.ORDER_TRIGGERED_BODY,
+        topic: Topic.TRADING,
+        deeplink: Deeplink.ORDER_TRIGGERED,
+        dynamicValues: dynamicValues as OrderTriggeredNotification['dynamicValues'],
+      };
 
       // Add other cases for new notification types here
-
     default:
       throw new Error('Unknown notification type');
   }

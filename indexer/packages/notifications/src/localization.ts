@@ -2,7 +2,6 @@ import {
   LocalizationKey,
   Notification,
   NotificationMesage,
-  NotificationType,
 } from './types';
 
 function replacePlaceholders(template: string, variables: Record<string, string>): string {
@@ -16,30 +15,18 @@ export function deriveLocalizedNotificationMessage(notification: Notification): 
     [LocalizationKey.ORDER_FILLED_BODY]: 'Order Filled',
     // eslint-disable-next-line no-template-curly-in-string
     [LocalizationKey.ORDER_FILLED_TITLE]: 'Your order for {AMOUNT} {MARKET} was filled at ${AVERAGE_PRICE}',
+    // eslint-disable-next-line no-template-curly-in-string
+    [LocalizationKey.ORDER_TRIGGERED_BODY]: 'Your order for {AMOUNT} {MARKET} was triggered at ${PRICE}',
+    [LocalizationKey.ORDER_TRIGGERED_TITLE]: '{MARKET} Order Triggered',
   };
 
-  switch (notification.type) {
-    case NotificationType.DEPOSIT_SUCCESS:
-      return {
-        title: replacePlaceholders(
-          tempLocalizationFields[notification.titleKey],
-          notification.dynamicValues),
-        body: replacePlaceholders(
-          tempLocalizationFields[notification.bodyKey],
-          notification.dynamicValues,
-        ),
-      };
-    case NotificationType.ORDER_FILLED:
-      return {
-        title: replacePlaceholders(
-          tempLocalizationFields[notification.titleKey],
-          notification.dynamicValues),
-        body: replacePlaceholders(
-          tempLocalizationFields[notification.bodyKey],
-          notification.dynamicValues,
-        ),
-      };
-    default:
-      throw new Error('Unknown notification type');
-  }
+  return {
+    title: replacePlaceholders(
+      tempLocalizationFields[notification.titleKey],
+      notification.dynamicValues),
+    body: replacePlaceholders(
+      tempLocalizationFields[notification.bodyKey],
+      notification.dynamicValues,
+    ),
+  };
 }

@@ -900,7 +900,7 @@ export const defaultLeaderboardPnlOneDayToUpsert: LeaderboardPnlCreateObject = {
 // ==============  Tokens  =============
 
 export const defaultToken = {
-  token: '01234ABCD',
+  token: 'DEFAULT_TOKEN',
   address: defaultAddress,
   updatedAt: createdDateTime.toISO(),
 };

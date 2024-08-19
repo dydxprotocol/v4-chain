@@ -17,7 +17,7 @@ export async function sendFirebaseMessage(
 
   const tokens = await getUserRegistrationTokens(address);
   if (tokens.length === 0) {
-    throw new Error('User has no registration tokens');
+    throw new Error(`User has no registration tokens: ${address}`);
   }
 
   const { title, body } = deriveLocalizedNotificationMessage(notification);
