@@ -5,9 +5,9 @@ set -eo pipefail
 # This file should be run as part of `docker-compose.yml`.
 
 source "./genesis.sh"
+source "./version.sh"
 
 CHAIN_ID="localdydxprotocol"
-PREUPGRADE_VERSION="v5.1.0-rc2"
 
 # Define mnemonics for all validators.
 MNEMONICS=(
@@ -169,7 +169,7 @@ download_preupgrade_binary() {
 			exit 1
 			;;
 	esac
-	tar_url="https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2F$PREUPGRADE_VERSION/dydxprotocold-$PREUPGRADE_VERSION-linux-$url_arch.tar.gz"
+	tar_url="https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2F$PREUPGRADE_VERSION_FULL_NAME/dydxprotocold-$PREUPGRADE_VERSION_FULL_NAME-linux-$url_arch.tar.gz"
 	tar_path='/tmp/dydxprotocold/dydxprotocold.tar.gz'
 	mkdir -p /tmp/dydxprotocold
 	curl -vL $tar_url -o $tar_path

@@ -133,6 +133,9 @@ import (
 	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
 	accountplusmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	accountplusmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
+	affiliatesmodule "github.com/dydxprotocol/v4-chain/protocol/x/affiliates"
+	affiliatesmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
+	affiliatesmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
 	assetsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	assetsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -233,6 +236,7 @@ import (
 	// Full Node Streaming
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
 	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/ws"
 )
 
 var (
@@ -298,6 +302,7 @@ type App struct {
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	GovPlusKeeper         govplusmodulekeeper.Keeper
 	AccountPlusKeeper     accountplusmodulekeeper.Keeper
+	AffiliatesKeeper      affiliatesmodulekeeper.Keeper
 
 	MarketMapKeeper marketmapmodulekeeper.Keeper
 
@@ -344,7 +349,9 @@ type App struct {
 
 	IndexerEventManager      indexer_manager.IndexerEventManager
 	FullNodeStreamingManager streamingtypes.FullNodeStreamingManager
-	Server                   *daemonserver.Server
+	WebsocketStreamingServer *ws.WebsocketServer
+
+	Server *daemonserver.Server
 
 	// startDaemons encapsulates the logic that starts all daemons and daemon services. This function contains a
 	// closure of all relevant data structures that are shared with various keepers. Daemon services startup is
@@ -453,6 +460,7 @@ func New(
 		revsharemoduletypes.StoreKey,
 		accountplusmoduletypes.StoreKey,
 		marketmapmoduletypes.StoreKey,
+		affiliatesmoduletypes.StoreKey,
 	)
 	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
 	tkeys := storetypes.NewTransientStoreKeys(
@@ -488,6 +496,9 @@ func New(
 			}
 			if app.FullNodeStreamingManager != nil {
 				app.FullNodeStreamingManager.Stop()
+			}
+			if app.WebsocketStreamingServer != nil {
+				app.WebsocketStreamingServer.Shutdown()
 			}
 			return nil
 		},
@@ -749,7 +760,11 @@ func New(
 		indexerFlags.SendOffchainData,
 	)
 
-	app.FullNodeStreamingManager = getFullNodeStreamingManagerFromOptions(appFlags, logger)
+	app.FullNodeStreamingManager, app.WebsocketStreamingServer = getFullNodeStreamingManagerFromOptions(
+		appFlags,
+		appCodec,
+		logger,
+	)
 
 	timeProvider := &timelib.TimeProviderImpl{}
 
@@ -1181,6 +1196,15 @@ func New(
 	)
 	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
 
+	app.AffiliatesKeeper = *affiliatesmodulekeeper.NewKeeper(
+		appCodec,
+		keys[affiliatesmoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+	)
+	affiliatesModule := affiliatesmodule.NewAppModule(appCodec, app.AffiliatesKeeper)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -1253,6 +1277,7 @@ func New(
 		revShareModule,
 		accountplusModule,
 		marketmapModule,
+		affiliatesModule,
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
@@ -1304,6 +1329,7 @@ func New(
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
 		marketmapmoduletypes.ModuleName,
+		affiliatesmoduletypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
@@ -1351,6 +1377,7 @@ func New(
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
 		marketmapmoduletypes.ModuleName,
+		affiliatesmoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
@@ -1399,6 +1426,7 @@ func New(
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
+		affiliatesmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
 
@@ -1443,6 +1471,7 @@ func New(
 		listingmoduletypes.ModuleName,
 		revsharemoduletypes.ModuleName,
 		accountplusmoduletypes.ModuleName,
+		affiliatesmoduletypes.ModuleName,
 		authz.ModuleName,
 
 		// Auth must be migrated after staking.
@@ -2021,16 +2050,37 @@ func getIndexerFromOptions(
 // from the specified options. This function will default to returning a no-op instance.
 func getFullNodeStreamingManagerFromOptions(
 	appFlags flags.Flags,
+	cdc codec.Codec,
 	logger log.Logger,
-) (manager streamingtypes.FullNodeStreamingManager) {
+) (manager streamingtypes.FullNodeStreamingManager, wsServer *ws.WebsocketServer) {
+	logger = logger.With(log.ModuleKey, "full-node-streaming")
 	if appFlags.GrpcStreamingEnabled {
-		logger.Info("GRPC streaming is enabled")
-		return streaming.NewFullNodeStreamingManager(
+		logger.Info("Full node streaming is enabled")
+		if appFlags.FullNodeStreamingSnapshotInterval > 0 {
+			logger.Info("Interval snapshots enabled")
+		}
+		manager := streaming.NewFullNodeStreamingManager(
 			logger,
 			appFlags.GrpcStreamingFlushIntervalMs,
 			appFlags.GrpcStreamingMaxBatchSize,
 			appFlags.GrpcStreamingMaxChannelBufferSize,
+			appFlags.FullNodeStreamingSnapshotInterval,
 		)
+
+		// Start websocket server.
+		if appFlags.WebsocketStreamingEnabled {
+			port := appFlags.WebsocketStreamingPort
+			logger.Info("Websocket full node streaming is enabled")
+			wsServer = ws.NewWebsocketServer(
+				manager,
+				cdc,
+				logger,
+				port,
+			)
+			wsServer.Start()
+		}
+
+		return manager, wsServer
 	}
-	return streaming.NewNoopGrpcStreamingManager()
+	return streaming.NewNoopGrpcStreamingManager(), wsServer
 }

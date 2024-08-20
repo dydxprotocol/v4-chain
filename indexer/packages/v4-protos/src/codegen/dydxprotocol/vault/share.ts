@@ -1,24 +1,24 @@
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
-/** NumShares represents the number of shares in a vault. */
+/** NumShares represents the number of shares. */
 
 export interface NumShares {
   /** Number of shares. */
   numShares: Uint8Array;
 }
-/** NumShares represents the number of shares in a vault. */
+/** NumShares represents the number of shares. */
 
 export interface NumSharesSDKType {
   /** Number of shares. */
   num_shares: Uint8Array;
 }
-/** OwnerShare is a type for owner shares in a vault. */
+/** OwnerShare is a type for owner shares. */
 
 export interface OwnerShare {
   owner: string;
   shares?: NumShares;
 }
-/** OwnerShare is a type for owner shares in a vault. */
+/** OwnerShare is a type for owner shares. */
 
 export interface OwnerShareSDKType {
   owner: string;

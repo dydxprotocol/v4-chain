@@ -16,11 +16,9 @@ import (
 func TestMintShares(t *testing.T) {
 	tests := map[string]struct {
 		/* --- Setup --- */
-		// Vault ID.
-		vaultId vaulttypes.VaultId
-		// Existing vault equity.
+		// Existing megavault equity.
 		equity *big.Int
-		// Existing vault TotalShares.
+		// Existing megavault TotalShares.
 		totalShares *big.Int
 		// Owner that deposits.
 		owner string
@@ -38,7 +36,6 @@ func TestMintShares(t *testing.T) {
 		expectedErr error
 	}{
 		"Equity 0, TotalShares 0, OwnerShares 0, Deposit 1000": {
-			vaultId:           constants.Vault_Clob0,
 			equity:            big.NewInt(0),
 			totalShares:       big.NewInt(0),
 			owner:             constants.AliceAccAddress.String(),
@@ -48,18 +45,18 @@ func TestMintShares(t *testing.T) {
 			expectedTotalShares: big.NewInt(1_000),
 			expectedOwnerShares: big.NewInt(1_000),
 		},
-		"Equity 0, TotalShares non-existent, OwnerShares non-existent, Deposit 12345654321": {
-			vaultId:           constants.Vault_Clob0,
+		"Equity 0, TotalShares 0, OwnerShares non-existent, Deposit 12345654321": {
 			equity:            big.NewInt(0),
+			totalShares:       big.NewInt(0),
 			owner:             constants.AliceAccAddress.String(),
 			quantumsToDeposit: big.NewInt(12_345_654_321),
 			// Should mint `12_345_654_321` shares.
 			expectedTotalShares: big.NewInt(12_345_654_321),
 			expectedOwnerShares: big.NewInt(12_345_654_321),
 		},
-		"Equity 1000, TotalShares non-existent, OwnerShares non-existent, Deposit 500": {
-			vaultId:           constants.Vault_Clob0,
+		"Equity 1000, TotalShares 0, OwnerShares non-existent, Deposit 500": {
 			equity:            big.NewInt(1_000),
+			totalShares:       big.NewInt(0),
 			owner:             constants.AliceAccAddress.String(),
 			quantumsToDeposit: big.NewInt(500),
 			// Should mint `500` shares.
@@ -67,7 +64,6 @@ func TestMintShares(t *testing.T) {
 			expectedOwnerShares: big.NewInt(500),
 		},
 		"Equity 4000, TotalShares 5000, OwnerShares 2500, Deposit 1000": {
-			vaultId:           constants.Vault_Clob1,
 			equity:            big.NewInt(4_000),
 			totalShares:       big.NewInt(5_000),
 			owner:             constants.AliceAccAddress.String(),
@@ -78,7 +74,6 @@ func TestMintShares(t *testing.T) {
 			expectedOwnerShares: big.NewInt(3_750),
 		},
 		"Equity 1_000_000, TotalShares 2_000, OwnerShares 1, Deposit 1_000": {
-			vaultId:           constants.Vault_Clob1,
 			equity:            big.NewInt(1_000_000),
 			totalShares:       big.NewInt(2_000),
 			owner:             constants.BobAccAddress.String(),
@@ -89,7 +84,6 @@ func TestMintShares(t *testing.T) {
 			expectedOwnerShares: big.NewInt(3),
 		},
 		"Equity 8000, TotalShares 4000, OwnerShares 101, Deposit 455": {
-			vaultId:           constants.Vault_Clob1,
 			equity:            big.NewInt(8_000),
 			totalShares:       big.NewInt(4_000),
 			owner:             constants.CarlAccAddress.String(),
@@ -100,7 +94,6 @@ func TestMintShares(t *testing.T) {
 			expectedOwnerShares: big.NewInt(328),
 		},
 		"Equity 123456, TotalShares 654321, OwnerShares 0, Deposit 123456789": {
-			vaultId:           constants.Vault_Clob1,
 			equity:            big.NewInt(123_456),
 			totalShares:       big.NewInt(654_321),
 			owner:             constants.DaveAccAddress.String(),
@@ -110,7 +103,6 @@ func TestMintShares(t *testing.T) {
 			expectedOwnerShares: big.NewInt(654_325_181),
 		},
 		"Equity 1000000, TotalShares 1000, OwnerShares 0, Deposit 9_900": {
-			vaultId:           constants.Vault_Clob1,
 			equity:            big.NewInt(1_000_000),
 			totalShares:       big.NewInt(1_000),
 			owner:             constants.DaveAccAddress.String(),
@@ -120,7 +112,6 @@ func TestMintShares(t *testing.T) {
 			expectedOwnerShares: big.NewInt(9),
 		},
 		"Equity -1, TotalShares 10, Deposit 1": {
-			vaultId:           constants.Vault_Clob1,
 			equity:            big.NewInt(-1),
 			totalShares:       big.NewInt(10),
 			owner:             constants.AliceAccAddress.String(),
@@ -128,22 +119,20 @@ func TestMintShares(t *testing.T) {
 			expectedErr:       vaulttypes.ErrNonPositiveEquity,
 		},
 		"Equity 1, TotalShares 1, Deposit 0": {
-			vaultId:           constants.Vault_Clob1,
 			equity:            big.NewInt(1),
 			totalShares:       big.NewInt(1),
 			owner:             constants.AliceAccAddress.String(),
 			quantumsToDeposit: big.NewInt(0),
 			expectedErr:       vaulttypes.ErrInvalidDepositAmount,
 		},
-		"Equity 0, TotalShares non-existent, Deposit -1": {
-			vaultId:           constants.Vault_Clob1,
+		"Equity 0, TotalShares 0, Deposit -1": {
 			equity:            big.NewInt(0),
+			totalShares:       big.NewInt(0),
 			owner:             constants.AliceAccAddress.String(),
 			quantumsToDeposit: big.NewInt(-1),
 			expectedErr:       vaulttypes.ErrInvalidDepositAmount,
 		},
 		"Equity 1000, TotalShares 1, Deposit 100": {
-			vaultId:           constants.Vault_Clob1,
 			equity:            big.NewInt(1_000),
 			totalShares:       big.NewInt(1),
 			owner:             constants.AliceAccAddress.String(),
@@ -163,7 +152,7 @@ func TestMintShares(t *testing.T) {
 					func(genesisState *satypes.GenesisState) {
 						genesisState.Subaccounts = []satypes.Subaccount{
 							{
-								Id: tc.vaultId.ToSubaccountId(),
+								Id: &vaulttypes.MegavaultMainSubaccount,
 								AssetPositions: []*satypes.AssetPosition{
 									testutil.CreateSingleAssetPosition(
 										0,
@@ -178,20 +167,16 @@ func TestMintShares(t *testing.T) {
 			}).Build()
 			ctx := tApp.InitChain()
 
-			// Set vault's existing total shares if specified.
-			if tc.totalShares != nil {
-				err := tApp.App.VaultKeeper.SetTotalShares(
-					ctx,
-					tc.vaultId,
-					vaulttypes.BigIntToNumShares(tc.totalShares),
-				)
-				require.NoError(t, err)
-			}
-			// Set vault's existing owner shares if specified.
+			// Set existing total shares.
+			err := tApp.App.VaultKeeper.SetTotalShares(
+				ctx,
+				vaulttypes.BigIntToNumShares(tc.totalShares),
+			)
+			require.NoError(t, err)
+			// Set existing owner shares if specified.
 			if tc.ownerShares != nil {
 				err := tApp.App.VaultKeeper.SetOwnerShares(
 					ctx,
-					tc.vaultId,
 					tc.owner,
 					vaulttypes.BigIntToNumShares(tc.ownerShares),
 				)
@@ -199,9 +184,8 @@ func TestMintShares(t *testing.T) {
 			}
 
 			// Mint shares.
-			err := tApp.App.VaultKeeper.MintShares(
+			err = tApp.App.VaultKeeper.MintShares(
 				ctx,
-				tc.vaultId,
 				tc.owner,
 				tc.quantumsToDeposit,
 			)
@@ -209,27 +193,26 @@ func TestMintShares(t *testing.T) {
 				// Check that error is as expected.
 				require.ErrorContains(t, err, tc.expectedErr.Error())
 				// Check that TotalShares is unchanged.
-				totalShares, _ := tApp.App.VaultKeeper.GetTotalShares(ctx, tc.vaultId)
+				totalShares := tApp.App.VaultKeeper.GetTotalShares(ctx)
 				require.Equal(
 					t,
 					vaulttypes.BigIntToNumShares(tc.totalShares),
 					totalShares,
 				)
 				// Check that OwnerShares is unchanged.
-				ownerShares, _ := tApp.App.VaultKeeper.GetOwnerShares(ctx, tc.vaultId, tc.owner)
+				ownerShares, _ := tApp.App.VaultKeeper.GetOwnerShares(ctx, tc.owner)
 				require.Equal(t, vaulttypes.BigIntToNumShares(tc.ownerShares), ownerShares)
 			} else {
 				require.NoError(t, err)
 				// Check that TotalShares is as expected.
-				totalShares, exists := tApp.App.VaultKeeper.GetTotalShares(ctx, tc.vaultId)
-				require.True(t, exists)
+				totalShares := tApp.App.VaultKeeper.GetTotalShares(ctx)
 				require.Equal(
 					t,
 					vaulttypes.BigIntToNumShares(tc.expectedTotalShares),
 					totalShares,
 				)
 				// Check that OwnerShares is as expected.
-				ownerShares, exists := tApp.App.VaultKeeper.GetOwnerShares(ctx, tc.vaultId, tc.owner)
+				ownerShares, exists := tApp.App.VaultKeeper.GetOwnerShares(ctx, tc.owner)
 				require.True(t, exists)
 				require.Equal(
 					t,
