@@ -2,6 +2,7 @@
   "app_hash": null,
   "app_name": "dydxprotocold",
   "app_state": {
+    "affiliates": {},
     "assets": {
       "assets": [
         {
@@ -3932,7 +3933,7 @@
       ]
     }
   },
-  "app_version": "5.0.0-dev0-404-gf14f3950",
+  "app_version": "5.2.1-19-g04197f43",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {

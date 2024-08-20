@@ -1,0 +1,7 @@
+syntax = "proto3";
+package dydxprotocol.affiliates;
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types";
+
+// Query defines the gRPC querier service.
+service Query {}
