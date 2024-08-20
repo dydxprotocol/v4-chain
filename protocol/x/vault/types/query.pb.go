@@ -338,7 +338,8 @@ func (m *QueryAllVaultsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryMegavaultTotalSharesRequest is a request type for the MegavaultTotalShares RPC method.
+// QueryMegavaultTotalSharesRequest is a request type for the
+// MegavaultTotalShares RPC method.
 type QueryMegavaultTotalSharesRequest struct {
 }
 
@@ -375,7 +376,8 @@ func (m *QueryMegavaultTotalSharesRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryMegavaultTotalSharesRequest proto.InternalMessageInfo
 
-// QueryMegavaultTotalSharesResponse is a response type for the MegavaultTotalShares RPC method.
+// QueryMegavaultTotalSharesResponse is a response type for the
+// MegavaultTotalShares RPC method.
 type QueryMegavaultTotalSharesResponse struct {
 	TotalShares *NumShares `protobuf:"bytes,1,opt,name=total_shares,json=totalShares,proto3" json:"total_shares,omitempty"`
 }
@@ -420,7 +422,8 @@ func (m *QueryMegavaultTotalSharesResponse) GetTotalShares() *NumShares {
 	return nil
 }
 
-// QueryMegavaultOwnerSharesRequest is a request type for the MegavaultOwnerShares RPC method.
+// QueryMegavaultOwnerSharesRequest is a request type for the
+// MegavaultOwnerShares RPC method.
 type QueryMegavaultOwnerSharesRequest struct {
 	Pagination *query.PageRequest `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -465,7 +468,8 @@ func (m *QueryMegavaultOwnerSharesRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryMegavaultOwnerSharesResponse is a response type for the MegavaultOwnerShares RPC method.
+// QueryMegavaultOwnerSharesResponse is a response type for the
+// MegavaultOwnerShares RPC method.
 type QueryMegavaultOwnerSharesResponse struct {
 	OwnerShares []*OwnerShare       `protobuf:"bytes,1,rep,name=owner_shares,json=ownerShares,proto3" json:"owner_shares,omitempty"`
 	Pagination  *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`

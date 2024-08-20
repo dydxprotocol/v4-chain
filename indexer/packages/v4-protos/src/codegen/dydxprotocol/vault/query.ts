@@ -81,41 +81,71 @@ export interface QueryAllVaultsResponseSDKType {
   vaults: QueryVaultResponseSDKType[];
   pagination?: PageResponseSDKType;
 }
-/** QueryMegavaultTotalSharesRequest is a request type for the MegavaultTotalShares RPC method. */
+/**
+ * QueryMegavaultTotalSharesRequest is a request type for the
+ * MegavaultTotalShares RPC method.
+ */
 
 export interface QueryMegavaultTotalSharesRequest {}
-/** QueryMegavaultTotalSharesRequest is a request type for the MegavaultTotalShares RPC method. */
+/**
+ * QueryMegavaultTotalSharesRequest is a request type for the
+ * MegavaultTotalShares RPC method.
+ */
 
 export interface QueryMegavaultTotalSharesRequestSDKType {}
-/** QueryMegavaultTotalSharesResponse is a response type for the MegavaultTotalShares RPC method. */
+/**
+ * QueryMegavaultTotalSharesResponse is a response type for the
+ * MegavaultTotalShares RPC method.
+ */
 
 export interface QueryMegavaultTotalSharesResponse {
-  /** QueryMegavaultTotalSharesResponse is a response type for the MegavaultTotalShares RPC method. */
+  /**
+   * QueryMegavaultTotalSharesResponse is a response type for the
+   * MegavaultTotalShares RPC method.
+   */
   totalShares?: NumShares;
 }
-/** QueryMegavaultTotalSharesResponse is a response type for the MegavaultTotalShares RPC method. */
+/**
+ * QueryMegavaultTotalSharesResponse is a response type for the
+ * MegavaultTotalShares RPC method.
+ */
 
 export interface QueryMegavaultTotalSharesResponseSDKType {
-  /** QueryMegavaultTotalSharesResponse is a response type for the MegavaultTotalShares RPC method. */
+  /**
+   * QueryMegavaultTotalSharesResponse is a response type for the
+   * MegavaultTotalShares RPC method.
+   */
   total_shares?: NumSharesSDKType;
 }
-/** QueryMegavaultOwnerSharesRequest is a request type for the MegavaultOwnerShares RPC method. */
+/**
+ * QueryMegavaultOwnerSharesRequest is a request type for the
+ * MegavaultOwnerShares RPC method.
+ */
 
 export interface QueryMegavaultOwnerSharesRequest {
   pagination?: PageRequest;
 }
-/** QueryMegavaultOwnerSharesRequest is a request type for the MegavaultOwnerShares RPC method. */
+/**
+ * QueryMegavaultOwnerSharesRequest is a request type for the
+ * MegavaultOwnerShares RPC method.
+ */
 
 export interface QueryMegavaultOwnerSharesRequestSDKType {
   pagination?: PageRequestSDKType;
 }
-/** QueryMegavaultOwnerSharesResponse is a response type for the MegavaultOwnerShares RPC method. */
+/**
+ * QueryMegavaultOwnerSharesResponse is a response type for the
+ * MegavaultOwnerShares RPC method.
+ */
 
 export interface QueryMegavaultOwnerSharesResponse {
   ownerShares: OwnerShare[];
   pagination?: PageResponse;
 }
-/** QueryMegavaultOwnerSharesResponse is a response type for the MegavaultOwnerShares RPC method. */
+/**
+ * QueryMegavaultOwnerSharesResponse is a response type for the
+ * MegavaultOwnerShares RPC method.
+ */
 
 export interface QueryMegavaultOwnerSharesResponseSDKType {
   owner_shares: OwnerShareSDKType[];

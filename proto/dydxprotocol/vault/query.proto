@@ -26,11 +26,13 @@ service Query {
     option (google.api.http).get = "/dydxprotocol/vault/vault";
   }
   // Queries total shares of megavault.
-  rpc MegavaultTotalShares(QueryMegavaultTotalSharesRequest) returns (QueryMegavaultTotalSharesResponse) {
+  rpc MegavaultTotalShares(QueryMegavaultTotalSharesRequest)
+      returns (QueryMegavaultTotalSharesResponse) {
     option (google.api.http).get = "/dydxprotocol/vault/megavault/total_shares";
   }
   // Queries owner shares of megavault.
-  rpc MegavaultOwnerShares(QueryMegavaultOwnerSharesRequest) returns (QueryMegavaultOwnerSharesResponse) {
+  rpc MegavaultOwnerShares(QueryMegavaultOwnerSharesRequest)
+      returns (QueryMegavaultOwnerSharesResponse) {
     option (google.api.http).get = "/dydxprotocol/vault/megavault/owner_shares";
   }
 }
@@ -80,18 +82,22 @@ message QueryAllVaultsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryMegavaultTotalSharesRequest is a request type for the MegavaultTotalShares RPC method.
+// QueryMegavaultTotalSharesRequest is a request type for the
+// MegavaultTotalShares RPC method.
 message QueryMegavaultTotalSharesRequest {}
 
-// QueryMegavaultTotalSharesResponse is a response type for the MegavaultTotalShares RPC method.
+// QueryMegavaultTotalSharesResponse is a response type for the
+// MegavaultTotalShares RPC method.
 message QueryMegavaultTotalSharesResponse { NumShares total_shares = 1; }
 
-// QueryMegavaultOwnerSharesRequest is a request type for the MegavaultOwnerShares RPC method.
+// QueryMegavaultOwnerSharesRequest is a request type for the
+// MegavaultOwnerShares RPC method.
 message QueryMegavaultOwnerSharesRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
-// QueryMegavaultOwnerSharesResponse is a response type for the MegavaultOwnerShares RPC method.
+// QueryMegavaultOwnerSharesResponse is a response type for the
+// MegavaultOwnerShares RPC method.
 message QueryMegavaultOwnerSharesResponse {
   repeated OwnerShare owner_shares = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
