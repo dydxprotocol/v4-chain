@@ -142,11 +142,11 @@ func CmdQueryListOwnerShares() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			request := &types.QueryOwnerSharesRequest{
+			request := &types.QueryMegavaultOwnerSharesRequest{
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.OwnerShares(context.Background(), request)
+			res, err := queryClient.MegavaultOwnerShares(context.Background(), request)
 			if err != nil {
 				return err
 			}

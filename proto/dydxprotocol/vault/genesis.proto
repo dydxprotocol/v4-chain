@@ -29,3 +29,29 @@ message Vault {
   // The client IDs of the most recently placed orders of the vault.
   repeated uint32 most_recent_client_ids = 3;
 }
+
+// GenesisStateV6 defines `x/vault`'s genesis state in v6.x.
+// Deprecated since v7.x in favor of GenesisState.
+message GenesisStateV6 {
+  // `params` field replaced since v6.x by default_quoting_params.
+  reserved 1;
+  // The vaults.
+  repeated Vault vaults = 2;
+  // The default quoting parameters for all vaults.
+  QuotingParams default_quoting_params = 3 [ (gogoproto.nullable) = false ];
+}
+
+// VaultV6 defines the state of a vault.
+// Deprecated since v7.x in favor of Vault.
+message VaultV6 {
+  // The ID of the vault.
+  VaultId vault_id = 1;
+  // The total number of shares in the vault.
+  NumShares total_shares = 2;
+  // The shares of each owner in the vault.
+  repeated OwnerShare owner_shares = 3;
+  // The parameters of the vault.
+  VaultParams vault_params = 4 [ (gogoproto.nullable) = false ];
+  // The client IDs of the most recently placed orders of the vault.
+  repeated uint32 most_recent_client_ids = 5;
+}

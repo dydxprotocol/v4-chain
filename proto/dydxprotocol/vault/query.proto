@@ -25,13 +25,13 @@ service Query {
   rpc AllVaults(QueryAllVaultsRequest) returns (QueryAllVaultsResponse) {
     option (google.api.http).get = "/dydxprotocol/vault/vault";
   }
-  // Queries total shares.
-  rpc TotalShares(QueryTotalSharesRequest) returns (QueryTotalSharesResponse) {
-    option (google.api.http).get = "/dydxprotocol/vault/total_shares";
+  // Queries total shares of megavault.
+  rpc MegavaultTotalShares(QueryMegavaultTotalSharesRequest) returns (QueryMegavaultTotalSharesResponse) {
+    option (google.api.http).get = "/dydxprotocol/vault/megavault/total_shares";
   }
-  // Queries owner shares.
-  rpc OwnerShares(QueryOwnerSharesRequest) returns (QueryOwnerSharesResponse) {
-    option (google.api.http).get = "/dydxprotocol/vault/owner_shares";
+  // Queries owner shares of megavault.
+  rpc MegavaultOwnerShares(QueryMegavaultOwnerSharesRequest) returns (QueryMegavaultOwnerSharesResponse) {
+    option (google.api.http).get = "/dydxprotocol/vault/megavault/owner_shares";
   }
 }
 
@@ -80,19 +80,19 @@ message QueryAllVaultsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryTotalSharesRequest is a request type for the TotalShares RPC method.
-message QueryTotalSharesRequest {}
+// QueryMegavaultTotalSharesRequest is a request type for the MegavaultTotalShares RPC method.
+message QueryMegavaultTotalSharesRequest {}
 
-// QueryTotalSharesResponse is a response type for the TotalShares RPC method.
-message QueryTotalSharesResponse { NumShares total_shares = 1; }
+// QueryMegavaultTotalSharesResponse is a response type for the MegavaultTotalShares RPC method.
+message QueryMegavaultTotalSharesResponse { NumShares total_shares = 1; }
 
-// QueryOwnerSharesRequest is a request type for the OwnerShares RPC method.
-message QueryOwnerSharesRequest {
+// QueryMegavaultOwnerSharesRequest is a request type for the MegavaultOwnerShares RPC method.
+message QueryMegavaultOwnerSharesRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
-// QueryOwnerSharesResponse is a response type for the OwnerShares RPC method.
-message QueryOwnerSharesResponse {
+// QueryMegavaultOwnerSharesResponse is a response type for the MegavaultOwnerShares RPC method.
+message QueryMegavaultOwnerSharesResponse {
   repeated OwnerShare owner_shares = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

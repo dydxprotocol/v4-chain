@@ -12,11 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOwnerShares(t *testing.T) {
+func TestMegavaultOwnerShares(t *testing.T) {
 	tests := map[string]struct {
 		/* --- Setup --- */
 		// Request.
-		req *vaulttypes.QueryOwnerSharesRequest
+		req *vaulttypes.QueryMegavaultOwnerSharesRequest
 		// Owner shares.
 		ownerShares map[string]*big.Int
 
@@ -25,7 +25,7 @@ func TestOwnerShares(t *testing.T) {
 		expectedErr         string
 	}{
 		"Success": {
-			req: &vaulttypes.QueryOwnerSharesRequest{},
+			req: &vaulttypes.QueryMegavaultOwnerSharesRequest{},
 			ownerShares: map[string]*big.Int{
 				constants.Alice_Num0.Owner: big.NewInt(100),
 				constants.Bob_Num0.Owner:   big.NewInt(200),
@@ -46,7 +46,7 @@ func TestOwnerShares(t *testing.T) {
 			},
 		},
 		"Success: no owners": {
-			req:         &vaulttypes.QueryOwnerSharesRequest{},
+			req:         &vaulttypes.QueryMegavaultOwnerSharesRequest{},
 			ownerShares: map[string]*big.Int{},
 		},
 		"Error: nil request": {
@@ -72,7 +72,7 @@ func TestOwnerShares(t *testing.T) {
 			require.NoError(t, err)
 
 			// Check OwnerShares query response is as expected.
-			response, err := k.OwnerShares(ctx, tc.req)
+			response, err := k.MegavaultOwnerShares(ctx, tc.req)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
 			} else {

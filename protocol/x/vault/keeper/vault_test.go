@@ -482,7 +482,7 @@ func TestGetMegavaultEquity(t *testing.T) {
 				big.NewInt(345),
 				big.NewInt(5),
 			},
-			expectedMegavaultEquity: big.NewInt(1_345),
+			expectedMegavaultEquity: big.NewInt(1_350),
 		},
 	}
 	for name, tc := range tests {

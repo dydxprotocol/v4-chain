@@ -81,43 +81,43 @@ export interface QueryAllVaultsResponseSDKType {
   vaults: QueryVaultResponseSDKType[];
   pagination?: PageResponseSDKType;
 }
-/** QueryTotalSharesRequest is a request type for the TotalShares RPC method. */
+/** QueryMegavaultTotalSharesRequest is a request type for the MegavaultTotalShares RPC method. */
 
-export interface QueryTotalSharesRequest {}
-/** QueryTotalSharesRequest is a request type for the TotalShares RPC method. */
+export interface QueryMegavaultTotalSharesRequest {}
+/** QueryMegavaultTotalSharesRequest is a request type for the MegavaultTotalShares RPC method. */
 
-export interface QueryTotalSharesRequestSDKType {}
-/** QueryTotalSharesResponse is a response type for the TotalShares RPC method. */
+export interface QueryMegavaultTotalSharesRequestSDKType {}
+/** QueryMegavaultTotalSharesResponse is a response type for the MegavaultTotalShares RPC method. */
 
-export interface QueryTotalSharesResponse {
-  /** QueryTotalSharesResponse is a response type for the TotalShares RPC method. */
+export interface QueryMegavaultTotalSharesResponse {
+  /** QueryMegavaultTotalSharesResponse is a response type for the MegavaultTotalShares RPC method. */
   totalShares?: NumShares;
 }
-/** QueryTotalSharesResponse is a response type for the TotalShares RPC method. */
+/** QueryMegavaultTotalSharesResponse is a response type for the MegavaultTotalShares RPC method. */
 
-export interface QueryTotalSharesResponseSDKType {
-  /** QueryTotalSharesResponse is a response type for the TotalShares RPC method. */
+export interface QueryMegavaultTotalSharesResponseSDKType {
+  /** QueryMegavaultTotalSharesResponse is a response type for the MegavaultTotalShares RPC method. */
   total_shares?: NumSharesSDKType;
 }
-/** QueryOwnerSharesRequest is a request type for the OwnerShares RPC method. */
+/** QueryMegavaultOwnerSharesRequest is a request type for the MegavaultOwnerShares RPC method. */
 
-export interface QueryOwnerSharesRequest {
+export interface QueryMegavaultOwnerSharesRequest {
   pagination?: PageRequest;
 }
-/** QueryOwnerSharesRequest is a request type for the OwnerShares RPC method. */
+/** QueryMegavaultOwnerSharesRequest is a request type for the MegavaultOwnerShares RPC method. */
 
-export interface QueryOwnerSharesRequestSDKType {
+export interface QueryMegavaultOwnerSharesRequestSDKType {
   pagination?: PageRequestSDKType;
 }
-/** QueryOwnerSharesResponse is a response type for the OwnerShares RPC method. */
+/** QueryMegavaultOwnerSharesResponse is a response type for the MegavaultOwnerShares RPC method. */
 
-export interface QueryOwnerSharesResponse {
+export interface QueryMegavaultOwnerSharesResponse {
   ownerShares: OwnerShare[];
   pagination?: PageResponse;
 }
-/** QueryOwnerSharesResponse is a response type for the OwnerShares RPC method. */
+/** QueryMegavaultOwnerSharesResponse is a response type for the MegavaultOwnerShares RPC method. */
 
-export interface QueryOwnerSharesResponseSDKType {
+export interface QueryMegavaultOwnerSharesResponseSDKType {
   owner_shares: OwnerShareSDKType[];
   pagination?: PageResponseSDKType;
 }
@@ -451,19 +451,19 @@ export const QueryAllVaultsResponse = {
 
 };
 
-function createBaseQueryTotalSharesRequest(): QueryTotalSharesRequest {
+function createBaseQueryMegavaultTotalSharesRequest(): QueryMegavaultTotalSharesRequest {
   return {};
 }
 
-export const QueryTotalSharesRequest = {
-  encode(_: QueryTotalSharesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const QueryMegavaultTotalSharesRequest = {
+  encode(_: QueryMegavaultTotalSharesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryTotalSharesRequest {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryMegavaultTotalSharesRequest {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryTotalSharesRequest();
+    const message = createBaseQueryMegavaultTotalSharesRequest();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -478,21 +478,21 @@ export const QueryTotalSharesRequest = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<QueryTotalSharesRequest>): QueryTotalSharesRequest {
-    const message = createBaseQueryTotalSharesRequest();
+  fromPartial(_: DeepPartial<QueryMegavaultTotalSharesRequest>): QueryMegavaultTotalSharesRequest {
+    const message = createBaseQueryMegavaultTotalSharesRequest();
     return message;
   }
 
 };
 
-function createBaseQueryTotalSharesResponse(): QueryTotalSharesResponse {
+function createBaseQueryMegavaultTotalSharesResponse(): QueryMegavaultTotalSharesResponse {
   return {
     totalShares: undefined
   };
 }
 
-export const QueryTotalSharesResponse = {
-  encode(message: QueryTotalSharesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const QueryMegavaultTotalSharesResponse = {
+  encode(message: QueryMegavaultTotalSharesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.totalShares !== undefined) {
       NumShares.encode(message.totalShares, writer.uint32(10).fork()).ldelim();
     }
@@ -500,10 +500,10 @@ export const QueryTotalSharesResponse = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryTotalSharesResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryMegavaultTotalSharesResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryTotalSharesResponse();
+    const message = createBaseQueryMegavaultTotalSharesResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -522,22 +522,22 @@ export const QueryTotalSharesResponse = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<QueryTotalSharesResponse>): QueryTotalSharesResponse {
-    const message = createBaseQueryTotalSharesResponse();
+  fromPartial(object: DeepPartial<QueryMegavaultTotalSharesResponse>): QueryMegavaultTotalSharesResponse {
+    const message = createBaseQueryMegavaultTotalSharesResponse();
     message.totalShares = object.totalShares !== undefined && object.totalShares !== null ? NumShares.fromPartial(object.totalShares) : undefined;
     return message;
   }
 
 };
 
-function createBaseQueryOwnerSharesRequest(): QueryOwnerSharesRequest {
+function createBaseQueryMegavaultOwnerSharesRequest(): QueryMegavaultOwnerSharesRequest {
   return {
     pagination: undefined
   };
 }
 
-export const QueryOwnerSharesRequest = {
-  encode(message: QueryOwnerSharesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const QueryMegavaultOwnerSharesRequest = {
+  encode(message: QueryMegavaultOwnerSharesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.pagination !== undefined) {
       PageRequest.encode(message.pagination, writer.uint32(26).fork()).ldelim();
     }
@@ -545,10 +545,10 @@ export const QueryOwnerSharesRequest = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryOwnerSharesRequest {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryMegavaultOwnerSharesRequest {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryOwnerSharesRequest();
+    const message = createBaseQueryMegavaultOwnerSharesRequest();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -567,23 +567,23 @@ export const QueryOwnerSharesRequest = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<QueryOwnerSharesRequest>): QueryOwnerSharesRequest {
-    const message = createBaseQueryOwnerSharesRequest();
+  fromPartial(object: DeepPartial<QueryMegavaultOwnerSharesRequest>): QueryMegavaultOwnerSharesRequest {
+    const message = createBaseQueryMegavaultOwnerSharesRequest();
     message.pagination = object.pagination !== undefined && object.pagination !== null ? PageRequest.fromPartial(object.pagination) : undefined;
     return message;
   }
 
 };
 
-function createBaseQueryOwnerSharesResponse(): QueryOwnerSharesResponse {
+function createBaseQueryMegavaultOwnerSharesResponse(): QueryMegavaultOwnerSharesResponse {
   return {
     ownerShares: [],
     pagination: undefined
   };
 }
 
-export const QueryOwnerSharesResponse = {
-  encode(message: QueryOwnerSharesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const QueryMegavaultOwnerSharesResponse = {
+  encode(message: QueryMegavaultOwnerSharesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.ownerShares) {
       OwnerShare.encode(v!, writer.uint32(10).fork()).ldelim();
     }
@@ -595,10 +595,10 @@ export const QueryOwnerSharesResponse = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryOwnerSharesResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryMegavaultOwnerSharesResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryOwnerSharesResponse();
+    const message = createBaseQueryMegavaultOwnerSharesResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -621,8 +621,8 @@ export const QueryOwnerSharesResponse = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<QueryOwnerSharesResponse>): QueryOwnerSharesResponse {
-    const message = createBaseQueryOwnerSharesResponse();
+  fromPartial(object: DeepPartial<QueryMegavaultOwnerSharesResponse>): QueryMegavaultOwnerSharesResponse {
+    const message = createBaseQueryMegavaultOwnerSharesResponse();
     message.ownerShares = object.ownerShares?.map(e => OwnerShare.fromPartial(e)) || [];
     message.pagination = object.pagination !== undefined && object.pagination !== null ? PageResponse.fromPartial(object.pagination) : undefined;
     return message;

@@ -13,7 +13,7 @@ import (
 
 // GetMegavaultEquity returns the equity of the megavault (in quote quantums), which consists of
 // - equity of the megavault main subaccount
-// - equity of all non-deactivated vaults
+// - equity of all vaults (if positive)
 func (k Keeper) GetMegavaultEquity(ctx sdk.Context) (*big.Int, error) {
 	megavaultEquity, err := k.GetSubaccountEquity(ctx, types.MegavaultMainSubaccount)
 	if err != nil {
@@ -26,11 +26,6 @@ func (k Keeper) GetMegavaultEquity(ctx sdk.Context) (*big.Int, error) {
 	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
 		var vaultParams types.VaultParams
 		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
-
-		// Do not count equity of deactivated vaults.
-		if vaultParams.Status == types.VaultStatus_VAULT_STATUS_DEACTIVATED {
-			continue
-		}
 
 		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
 		if err != nil {
