@@ -103,6 +103,9 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 // parseSubaccountIds is a helper function to parse the subaccountIds from the query parameters.
 func parseSubaccountIds(r *http.Request) ([]*satypes.SubaccountId, error) {
 	subaccountIdsParam := r.URL.Query().Get("subaccountIds")
+	if subaccountIdsParam == "" {
+		return []*satypes.SubaccountId{}, nil
+	}
 	idStrs := strings.Split(subaccountIdsParam, ",")
 	subaccountIds := make([]*satypes.SubaccountId, 0)
 	for _, idStr := range idStrs {
@@ -128,6 +131,9 @@ func parseSubaccountIds(r *http.Request) ([]*satypes.SubaccountId, error) {
 // parseClobPairIds is a helper function to parse the clobPairIds from the query parameters.
 func parseClobPairIds(r *http.Request) ([]uint32, error) {
 	clobPairIdsParam := r.URL.Query().Get("clobPairIds")
+	if clobPairIdsParam == "" {
+		return []uint32{}, nil
+	}
 	idStrs := strings.Split(clobPairIdsParam, ",")
 	clobPairIds := make([]uint32, 0)
 	for _, idStr := range idStrs {
