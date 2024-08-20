@@ -26,11 +26,97 @@ func NewDaemonLiquidationInfo() *DaemonLiquidationInfo {
 	}
 }
 
-// UpdateBlockHeight updates the struct with the given block height.
-func (ls *DaemonLiquidationInfo) UpdateBlockHeight(blockHeight uint32) {
+func (ls *DaemonLiquidationInfo) Update(
+	blockHeight uint32,
+	liquidatableSubaccountIds []satypes.SubaccountId,
+	negativeTncSubaccountIds []satypes.SubaccountId,
+	subaccountsWithPositions []clobtypes.SubaccountOpenPositionInfo,
+) {
 	ls.Lock()
 	defer ls.Unlock()
+	ls.UpdateLiquidatableSubaccountIds(liquidatableSubaccountIds, blockHeight)
+	ls.UpdateNegativeTncSubaccountIds(negativeTncSubaccountIds, blockHeight)
+	ls.UpdateSubaccountsWithPositions(subaccountsWithPositions, blockHeight)
+	ls.UpdateBlockHeight(blockHeight)
+}
+
+// UpdateBlockHeight updates the struct with the given block height.
+func (ls *DaemonLiquidationInfo) UpdateBlockHeight(blockHeight uint32) {
 	ls.blockHeight = blockHeight
+}
+
+// UpdateLiquidatableSubaccountIds updates the struct with the given a list of potentially
+// liquidatable subaccount ids.
+func (ls *DaemonLiquidationInfo) UpdateLiquidatableSubaccountIds(
+	updates []satypes.SubaccountId,
+	blockHeight uint32,
+) {
+	if blockHeight > ls.blockHeight {
+		ls.liquidatableSubaccountIds = make([]satypes.SubaccountId, len(updates))
+		copy(ls.liquidatableSubaccountIds, updates)
+	} else if blockHeight == ls.blockHeight {
+		ls.liquidatableSubaccountIds = append(ls.liquidatableSubaccountIds, updates...)
+	} else {
+		panic("UpdateLiquidatableSubaccountIds: block height cannot be less than the current block height")
+	}
+}
+
+// UpdateNegativeTncSubaccountIds updates the struct with the given a list of subaccount ids
+// with negative total net collateral.
+func (ls *DaemonLiquidationInfo) UpdateNegativeTncSubaccountIds(
+	updates []satypes.SubaccountId,
+	blockHeight uint32,
+) {
+	if blockHeight > ls.blockHeight {
+		ls.negativeTncSubaccountIds = make([]satypes.SubaccountId, len(updates))
+		copy(ls.negativeTncSubaccountIds, updates)
+	} else if blockHeight == ls.blockHeight {
+		ls.negativeTncSubaccountIds = append(ls.negativeTncSubaccountIds, updates...)
+	} else {
+		panic("UpdateLiquidatableSubaccountIds: block height cannot be less than the current block height")
+	}
+}
+
+// UpdateSubaccountsWithPositions updates the struct with the given a list of subaccount ids with open positions.
+func (ls *DaemonLiquidationInfo) UpdateSubaccountsWithPositions(
+	subaccountsWithPositions []clobtypes.SubaccountOpenPositionInfo,
+	blockHeight uint32,
+) {
+	if blockHeight > ls.blockHeight {
+		// Reset the map if the block height has changed.
+		ls.subaccountsWithPositions = make(map[uint32]*clobtypes.SubaccountOpenPositionInfo)
+		for _, info := range subaccountsWithPositions {
+			clone := &clobtypes.SubaccountOpenPositionInfo{
+				PerpetualId:                  info.PerpetualId,
+				SubaccountsWithLongPosition:  make([]satypes.SubaccountId, len(info.SubaccountsWithLongPosition)),
+				SubaccountsWithShortPosition: make([]satypes.SubaccountId, len(info.SubaccountsWithShortPosition)),
+			}
+			copy(clone.SubaccountsWithLongPosition, info.SubaccountsWithLongPosition)
+			copy(clone.SubaccountsWithShortPosition, info.SubaccountsWithShortPosition)
+			ls.subaccountsWithPositions[info.PerpetualId] = clone
+		}
+	} else if blockHeight == ls.blockHeight {
+		// Append to the current map if the block height not changed.
+		for _, info := range subaccountsWithPositions {
+			if _, ok := ls.subaccountsWithPositions[info.PerpetualId]; !ok {
+				ls.subaccountsWithPositions[info.PerpetualId] = &clobtypes.SubaccountOpenPositionInfo{
+					PerpetualId:                  info.PerpetualId,
+					SubaccountsWithLongPosition:  make([]satypes.SubaccountId, 0),
+					SubaccountsWithShortPosition: make([]satypes.SubaccountId, 0),
+				}
+			}
+			ls.subaccountsWithPositions[info.PerpetualId].SubaccountsWithLongPosition = append(
+				ls.subaccountsWithPositions[info.PerpetualId].SubaccountsWithLongPosition,
+				info.SubaccountsWithLongPosition...,
+			)
+			ls.subaccountsWithPositions[info.PerpetualId].SubaccountsWithShortPosition = append(
+				ls.subaccountsWithPositions[info.PerpetualId].SubaccountsWithShortPosition,
+				info.SubaccountsWithShortPosition...,
+			)
+		}
+	} else {
+		panic("UpdateLiquidatableSubaccountIds: block height cannot be less than the current block height")
+	}
 }
 
 // GetBlockHeight returns the block height of the last update.
@@ -38,15 +124,6 @@ func (ls *DaemonLiquidationInfo) GetBlockHeight() uint32 {
 	ls.Lock()
 	defer ls.Unlock()
 	return ls.blockHeight
-}
-
-// UpdateLiquidatableSubaccountIds updates the struct with the given a list of potentially
-// liquidatable subaccount ids.
-func (ls *DaemonLiquidationInfo) UpdateLiquidatableSubaccountIds(updates []satypes.SubaccountId) {
-	ls.Lock()
-	defer ls.Unlock()
-	ls.liquidatableSubaccountIds = make([]satypes.SubaccountId, len(updates))
-	copy(ls.liquidatableSubaccountIds, updates)
 }
 
 // GetLiquidatableSubaccountIds returns the list of potentially liquidatable subaccount ids
@@ -59,15 +136,6 @@ func (ls *DaemonLiquidationInfo) GetLiquidatableSubaccountIds() []satypes.Subacc
 	return results
 }
 
-// UpdateNegativeTncSubaccountIds updates the struct with the given a list of subaccount ids
-// with negative total net collateral.
-func (ls *DaemonLiquidationInfo) UpdateNegativeTncSubaccountIds(updates []satypes.SubaccountId) {
-	ls.Lock()
-	defer ls.Unlock()
-	ls.negativeTncSubaccountIds = make([]satypes.SubaccountId, len(updates))
-	copy(ls.negativeTncSubaccountIds, updates)
-}
-
 // GetNegativeTncSubaccountIds returns the list of subaccount ids with negative total net collateral
 // reported by the liquidation daemon.
 func (ls *DaemonLiquidationInfo) GetNegativeTncSubaccountIds() []satypes.SubaccountId {
@@ -76,25 +144,6 @@ func (ls *DaemonLiquidationInfo) GetNegativeTncSubaccountIds() []satypes.Subacco
 	results := make([]satypes.SubaccountId, len(ls.negativeTncSubaccountIds))
 	copy(results, ls.negativeTncSubaccountIds)
 	return results
-}
-
-// UpdateSubaccountsWithPositions updates the struct with the given a list of subaccount ids with open positions.
-func (ls *DaemonLiquidationInfo) UpdateSubaccountsWithPositions(
-	subaccountsWithPositions []clobtypes.SubaccountOpenPositionInfo,
-) {
-	ls.Lock()
-	defer ls.Unlock()
-	ls.subaccountsWithPositions = make(map[uint32]*clobtypes.SubaccountOpenPositionInfo)
-	for _, info := range subaccountsWithPositions {
-		clone := &clobtypes.SubaccountOpenPositionInfo{
-			PerpetualId:                  info.PerpetualId,
-			SubaccountsWithLongPosition:  make([]satypes.SubaccountId, len(info.SubaccountsWithLongPosition)),
-			SubaccountsWithShortPosition: make([]satypes.SubaccountId, len(info.SubaccountsWithShortPosition)),
-		}
-		copy(clone.SubaccountsWithLongPosition, info.SubaccountsWithLongPosition)
-		copy(clone.SubaccountsWithShortPosition, info.SubaccountsWithShortPosition)
-		ls.subaccountsWithPositions[info.PerpetualId] = clone
-	}
 }
 
 // GetSubaccountsWithOpenPositions returns the list of subaccount ids with open positions for a perpetual.
