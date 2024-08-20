@@ -1682,7 +1682,8 @@ func TestModifyLastFundingRate_Success(t *testing.T) {
 			pc := keepertest.PerpetualsKeepers(t)
 			// Create liquidity tiers and perpetuals,
 			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 1)
-			pc.PerpetualsKeeper.ModifyLastFundingRate(pc.Ctx, tc.perpetualId, tc.lastFundingRateDelta)
+			err := pc.PerpetualsKeeper.ModifyLastFundingRate(pc.Ctx, tc.perpetualId, tc.lastFundingRateDelta)
+			require.NoError(t, err)
 			perpetual, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, tc.perpetualId)
 			require.NoError(t, err)
 			require.Equal(t, dtypes.NewIntFromBigInt(tc.expectedLastFundingRate), perpetual.LastFundingRate)
