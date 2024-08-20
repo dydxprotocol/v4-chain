@@ -2,11 +2,8 @@ import {
   deriveLocalizedNotificationMessage,
 } from '../src/localization';
 import {
-  Notification,
   NotificationType,
-  LocalizationKey,
   NotificationDynamicFieldKey,
-  Deeplink,
   createNotification,
 } from '../src/types';
 
