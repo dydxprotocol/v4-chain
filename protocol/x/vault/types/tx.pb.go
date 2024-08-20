@@ -32,29 +32,27 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgDepositToVault deposits the specified asset from the subaccount to the
-// vault.
-type MsgDepositToVault struct {
-	// The vault to deposit into.
-	VaultId *VaultId `protobuf:"bytes,1,opt,name=vault_id,json=vaultId,proto3" json:"vault_id,omitempty"`
+// MsgDepositToMegavault deposits the specified asset from the subaccount to
+// megavault.
+type MsgDepositToMegavault struct {
 	// The subaccount to deposit from.
-	SubaccountId *types.SubaccountId `protobuf:"bytes,2,opt,name=subaccount_id,json=subaccountId,proto3" json:"subaccount_id,omitempty"`
+	SubaccountId *types.SubaccountId `protobuf:"bytes,1,opt,name=subaccount_id,json=subaccountId,proto3" json:"subaccount_id,omitempty"`
 	// Number of quote quantums to deposit.
-	QuoteQuantums github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,3,opt,name=quote_quantums,json=quoteQuantums,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"quote_quantums"`
+	QuoteQuantums github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=quote_quantums,json=quoteQuantums,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"quote_quantums"`
 }
 
-func (m *MsgDepositToVault) Reset()         { *m = MsgDepositToVault{} }
-func (m *MsgDepositToVault) String() string { return proto.CompactTextString(m) }
-func (*MsgDepositToVault) ProtoMessage()    {}
-func (*MsgDepositToVault) Descriptor() ([]byte, []int) {
+func (m *MsgDepositToMegavault) Reset()         { *m = MsgDepositToMegavault{} }
+func (m *MsgDepositToMegavault) String() string { return proto.CompactTextString(m) }
+func (*MsgDepositToMegavault) ProtoMessage()    {}
+func (*MsgDepositToMegavault) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ced574c6017ce006, []int{0}
 }
-func (m *MsgDepositToVault) XXX_Unmarshal(b []byte) error {
+func (m *MsgDepositToMegavault) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgDepositToVault) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgDepositToMegavault) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgDepositToVault.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgDepositToMegavault.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -64,48 +62,41 @@ func (m *MsgDepositToVault) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *MsgDepositToVault) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDepositToVault.Merge(m, src)
+func (m *MsgDepositToMegavault) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDepositToMegavault.Merge(m, src)
 }
-func (m *MsgDepositToVault) XXX_Size() int {
+func (m *MsgDepositToMegavault) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgDepositToVault) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDepositToVault.DiscardUnknown(m)
+func (m *MsgDepositToMegavault) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDepositToMegavault.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgDepositToVault proto.InternalMessageInfo
+var xxx_messageInfo_MsgDepositToMegavault proto.InternalMessageInfo
 
-func (m *MsgDepositToVault) GetVaultId() *VaultId {
-	if m != nil {
-		return m.VaultId
-	}
-	return nil
-}
-
-func (m *MsgDepositToVault) GetSubaccountId() *types.SubaccountId {
+func (m *MsgDepositToMegavault) GetSubaccountId() *types.SubaccountId {
 	if m != nil {
 		return m.SubaccountId
 	}
 	return nil
 }
 
-// MsgDepositToVaultResponse is the Msg/DepositToVault response type.
-type MsgDepositToVaultResponse struct {
+// MsgDepositToMegavaultResponse is the Msg/DepositToMegavault response type.
+type MsgDepositToMegavaultResponse struct {
 }
 
-func (m *MsgDepositToVaultResponse) Reset()         { *m = MsgDepositToVaultResponse{} }
-func (m *MsgDepositToVaultResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgDepositToVaultResponse) ProtoMessage()    {}
-func (*MsgDepositToVaultResponse) Descriptor() ([]byte, []int) {
+func (m *MsgDepositToMegavaultResponse) Reset()         { *m = MsgDepositToMegavaultResponse{} }
+func (m *MsgDepositToMegavaultResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgDepositToMegavaultResponse) ProtoMessage()    {}
+func (*MsgDepositToMegavaultResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ced574c6017ce006, []int{1}
 }
-func (m *MsgDepositToVaultResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgDepositToMegavaultResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgDepositToVaultResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgDepositToMegavaultResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgDepositToVaultResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgDepositToMegavaultResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -115,17 +106,17 @@ func (m *MsgDepositToVaultResponse) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *MsgDepositToVaultResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDepositToVaultResponse.Merge(m, src)
+func (m *MsgDepositToMegavaultResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDepositToMegavaultResponse.Merge(m, src)
 }
-func (m *MsgDepositToVaultResponse) XXX_Size() int {
+func (m *MsgDepositToMegavaultResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgDepositToVaultResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDepositToVaultResponse.DiscardUnknown(m)
+func (m *MsgDepositToMegavaultResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDepositToMegavaultResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgDepositToVaultResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgDepositToMegavaultResponse proto.InternalMessageInfo
 
 // MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request
 // type.
@@ -321,8 +312,8 @@ func (m *MsgSetVaultParamsResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgSetVaultParamsResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgDepositToVault)(nil), "dydxprotocol.vault.MsgDepositToVault")
-	proto.RegisterType((*MsgDepositToVaultResponse)(nil), "dydxprotocol.vault.MsgDepositToVaultResponse")
+	proto.RegisterType((*MsgDepositToMegavault)(nil), "dydxprotocol.vault.MsgDepositToMegavault")
+	proto.RegisterType((*MsgDepositToMegavaultResponse)(nil), "dydxprotocol.vault.MsgDepositToMegavaultResponse")
 	proto.RegisterType((*MsgUpdateDefaultQuotingParams)(nil), "dydxprotocol.vault.MsgUpdateDefaultQuotingParams")
 	proto.RegisterType((*MsgUpdateDefaultQuotingParamsResponse)(nil), "dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse")
 	proto.RegisterType((*MsgSetVaultParams)(nil), "dydxprotocol.vault.MsgSetVaultParams")
@@ -332,45 +323,44 @@ func init() {
 func init() { proto.RegisterFile("dydxprotocol/vault/tx.proto", fileDescriptor_ced574c6017ce006) }
 
 var fileDescriptor_ced574c6017ce006 = []byte{
-	// 593 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0xcd, 0x6e, 0xd3, 0x40,
-	0x10, 0x8e, 0x53, 0x04, 0x74, 0x9b, 0x46, 0x62, 0x15, 0x41, 0x9a, 0x08, 0xa7, 0x44, 0x2a, 0x14,
-	0xa4, 0xd8, 0x6a, 0x41, 0x45, 0x54, 0x1c, 0x20, 0xea, 0xa1, 0x11, 0x8a, 0x44, 0x1c, 0xe0, 0x80,
-	0x84, 0xa2, 0x8d, 0x77, 0xe3, 0x58, 0x4a, 0xbc, 0x8e, 0x77, 0x1d, 0x25, 0x1c, 0x39, 0x72, 0xe2,
-	0x05, 0x78, 0x07, 0x0e, 0x3c, 0x03, 0xea, 0xb1, 0xe2, 0x84, 0x38, 0x54, 0x28, 0x39, 0xf0, 0x1a,
-	0xc8, 0xbb, 0xce, 0x8f, 0x1b, 0xbb, 0x14, 0x71, 0x49, 0x76, 0x67, 0xe6, 0x9b, 0x99, 0xef, 0x9b,
-	0x59, 0x83, 0x22, 0x1e, 0xe3, 0x91, 0xeb, 0x51, 0x4e, 0x4d, 0xda, 0xd3, 0x87, 0xc8, 0xef, 0x71,
-	0x9d, 0x8f, 0x34, 0x61, 0x81, 0x70, 0xd9, 0xa9, 0x09, 0x67, 0x61, 0xcb, 0xa4, 0xac, 0x4f, 0x59,
-	0x4b, 0x98, 0x75, 0x79, 0x91, 0xe1, 0x85, 0x5b, 0xf2, 0xa6, 0xf7, 0x99, 0xa5, 0x0f, 0xf7, 0x82,
-	0xbf, 0xd0, 0x71, 0x3f, 0x52, 0x84, 0xf9, 0x6d, 0x64, 0x9a, 0xd4, 0x77, 0x38, 0x5b, 0x3a, 0x87,
-	0xa1, 0xa5, 0x98, 0x7e, 0x5c, 0xe4, 0xa1, 0xfe, 0xac, 0x88, 0x1a, 0x13, 0x20, 0x7e, 0x43, 0x7f,
-	0xce, 0xa2, 0x16, 0x95, 0xcd, 0x05, 0x27, 0x69, 0x2d, 0x7f, 0x4e, 0x83, 0x1b, 0x75, 0x66, 0x1d,
-	0x11, 0x97, 0x32, 0x9b, 0xbf, 0xa2, 0x6f, 0x02, 0x04, 0x3c, 0x00, 0xd7, 0x05, 0xb4, 0x65, 0xe3,
-	0xbc, 0xb2, 0xad, 0xec, 0x6e, 0xec, 0x17, 0xb5, 0x55, 0xca, 0x9a, 0x08, 0xae, 0x61, 0xe3, 0xda,
-	0x50, 0x1e, 0xe0, 0x0b, 0xb0, 0xb9, 0x68, 0x3c, 0x00, 0xa7, 0x05, 0xf8, 0x6e, 0x14, 0xbc, 0xc4,
-	0x53, 0x6b, 0xce, 0xcf, 0x35, 0x6c, 0x64, 0xd8, 0xd2, 0x0d, 0x52, 0x90, 0x1d, 0xf8, 0x94, 0x93,
-	0xd6, 0xc0, 0x47, 0x0e, 0xf7, 0xfb, 0x2c, 0xbf, 0xb6, 0xad, 0xec, 0x66, 0xaa, 0xc7, 0x27, 0x67,
-	0xa5, 0xd4, 0xcf, 0xb3, 0xd2, 0x33, 0xcb, 0xe6, 0x5d, 0xbf, 0xad, 0x99, 0xb4, 0xaf, 0x47, 0xb9,
-	0x3f, 0xaa, 0x98, 0x5d, 0x64, 0x3b, 0xfa, 0xdc, 0x82, 0xf9, 0xd8, 0x25, 0x4c, 0x6b, 0x12, 0xcf,
-	0x46, 0x3d, 0xfb, 0x3d, 0x6a, 0xf7, 0x48, 0xcd, 0xe1, 0xc6, 0xa6, 0xc8, 0xdf, 0x08, 0xd3, 0x1f,
-	0xc2, 0x0f, 0xbf, 0xbf, 0x3c, 0x88, 0x12, 0x28, 0x17, 0xc1, 0xd6, 0x8a, 0x3c, 0x06, 0x61, 0x2e,
-	0x75, 0x18, 0x29, 0x7f, 0x53, 0xc0, 0xed, 0x3a, 0xb3, 0x5e, 0xbb, 0x18, 0x71, 0x72, 0x44, 0x3a,
-	0x81, 0xb3, 0xe1, 0x53, 0x6e, 0x3b, 0xd6, 0x4b, 0x31, 0x1a, 0x78, 0x00, 0xd6, 0x91, 0xcf, 0xbb,
-	0xd4, 0xb3, 0xf9, 0x58, 0x28, 0xb9, 0x5e, 0xcd, 0x7f, 0xff, 0x5a, 0xc9, 0x85, 0xeb, 0xf1, 0x1c,
-	0x63, 0x8f, 0x30, 0xd6, 0xe4, 0x9e, 0xed, 0x58, 0xc6, 0x22, 0x14, 0xbe, 0x03, 0x37, 0xb1, 0xcc,
-	0xd7, 0x1a, 0xc8, 0x84, 0x2d, 0x39, 0xec, 0x50, 0xd1, 0x3b, 0x71, 0xe3, 0x88, 0x94, 0xae, 0x5e,
-	0x09, 0x64, 0x32, 0x72, 0x38, 0xa6, 0xad, 0xc3, 0x6c, 0xc0, 0x74, 0x51, 0xae, 0x7c, 0x0f, 0xec,
-	0x5c, 0xc8, 0x63, 0xce, 0x78, 0xaa, 0x88, 0x75, 0x69, 0x12, 0x2e, 0x94, 0xf8, 0x4f, 0x96, 0x4f,
-	0x97, 0xd6, 0x2c, 0xfd, 0xd7, 0x35, 0x0b, 0x19, 0xcd, 0x97, 0xed, 0x18, 0x64, 0x24, 0x3a, 0x54,
-	0x66, 0x4d, 0x64, 0x28, 0x25, 0x66, 0x88, 0xe8, 0xb2, 0x31, 0x5c, 0x98, 0x56, 0xe4, 0x90, 0x43,
-	0x8f, 0x92, 0x9c, 0x49, 0xb0, 0x3f, 0x49, 0x83, 0xb5, 0x3a, 0xb3, 0x60, 0x07, 0x64, 0xcf, 0xbd,
-	0x9a, 0x9d, 0xb8, 0xd2, 0x2b, 0xdb, 0x53, 0xa8, 0x5c, 0x2a, 0x6c, 0x56, 0x0f, 0x7e, 0x54, 0x40,
-	0xe1, 0x82, 0x0d, 0xdb, 0x4b, 0xc8, 0x96, 0x0c, 0x29, 0x3c, 0xf9, 0x67, 0xc8, 0xbc, 0x99, 0x0e,
-	0xc8, 0x9e, 0x9b, 0x7d, 0x12, 0xe9, 0x68, 0x58, 0x22, 0xe9, 0x78, 0x91, 0xab, 0x8d, 0x93, 0x89,
-	0xaa, 0x9c, 0x4e, 0x54, 0xe5, 0xd7, 0x44, 0x55, 0x3e, 0x4d, 0xd5, 0xd4, 0xe9, 0x54, 0x4d, 0xfd,
-	0x98, 0xaa, 0xa9, 0xb7, 0x8f, 0x2f, 0xff, 0xea, 0x47, 0xb3, 0xcf, 0x76, 0xf0, 0xf8, 0xdb, 0x57,
-	0x85, 0xfd, 0xe1, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x3a, 0x3d, 0xde, 0x00, 0xd9, 0x05, 0x00,
-	0x00,
+	// 588 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0x41, 0x6f, 0x12, 0x41,
+	0x14, 0x66, 0x5b, 0xa3, 0x76, 0x4a, 0x49, 0x9c, 0xa0, 0xd2, 0x25, 0x2e, 0x95, 0xa4, 0xda, 0x9a,
+	0xb0, 0x9b, 0xa2, 0xd1, 0xd8, 0x78, 0x50, 0xd2, 0x43, 0x89, 0x21, 0x11, 0x50, 0x0f, 0x26, 0x86,
+	0x0c, 0x3b, 0xd3, 0x65, 0x13, 0xd8, 0x59, 0x76, 0x66, 0x09, 0x78, 0xf4, 0xe8, 0xc9, 0x9f, 0xe2,
+	0xc1, 0xdf, 0x60, 0x7a, 0x6c, 0x3c, 0x19, 0x0f, 0x8d, 0x81, 0x83, 0xf1, 0xe2, 0x6f, 0x30, 0x3b,
+	0xb3, 0x0b, 0xac, 0x2c, 0x0d, 0xc6, 0x0b, 0xcc, 0xbc, 0xf7, 0xcd, 0xfb, 0xde, 0xf7, 0xcd, 0xdb,
+	0x01, 0x79, 0x3c, 0xc2, 0x43, 0xd7, 0xa3, 0x9c, 0x9a, 0xb4, 0x6b, 0x0c, 0x90, 0xdf, 0xe5, 0x06,
+	0x1f, 0xea, 0x22, 0x02, 0xe1, 0x7c, 0x52, 0x17, 0x49, 0x75, 0xdb, 0xa4, 0xac, 0x47, 0x59, 0x4b,
+	0x84, 0x0d, 0xb9, 0x91, 0x70, 0xf5, 0xa6, 0xdc, 0x19, 0x3d, 0x66, 0x19, 0x83, 0x83, 0xe0, 0x2f,
+	0x4c, 0xec, 0xc7, 0x48, 0x98, 0xdf, 0x46, 0xa6, 0x49, 0x7d, 0x87, 0xb3, 0xb9, 0x75, 0x08, 0x2d,
+	0x24, 0xf4, 0xe3, 0x22, 0x0f, 0xf5, 0x22, 0x12, 0x2d, 0x01, 0x20, 0x7e, 0xc3, 0x7c, 0xd6, 0xa2,
+	0x16, 0x95, 0xcd, 0x05, 0x2b, 0x19, 0x2d, 0xfe, 0x52, 0xc0, 0xf5, 0x1a, 0xb3, 0x8e, 0x88, 0x4b,
+	0x99, 0xcd, 0x5f, 0xd2, 0x1a, 0xb1, 0x90, 0x38, 0x05, 0x9f, 0x83, 0xad, 0x59, 0x13, 0x2d, 0x1b,
+	0xe7, 0x94, 0x1d, 0x65, 0x6f, 0xb3, 0x7c, 0x47, 0x8f, 0x69, 0x9f, 0xeb, 0x59, 0x6f, 0x4e, 0xd7,
+	0x55, 0xdc, 0x48, 0xb3, 0xb9, 0x1d, 0xa4, 0x20, 0xd3, 0xf7, 0x29, 0x27, 0xad, 0xbe, 0x8f, 0x1c,
+	0xee, 0xf7, 0x58, 0x6e, 0x6d, 0x47, 0xd9, 0x4b, 0x57, 0x8e, 0x4f, 0xcf, 0x0b, 0xa9, 0xef, 0xe7,
+	0x85, 0xa7, 0x96, 0xcd, 0x3b, 0x7e, 0x5b, 0x37, 0x69, 0xcf, 0x88, 0xeb, 0x78, 0x50, 0x32, 0x3b,
+	0xc8, 0x76, 0x8c, 0x69, 0x04, 0xf3, 0x91, 0x4b, 0x98, 0xde, 0x24, 0x9e, 0x8d, 0xba, 0xf6, 0x3b,
+	0xd4, 0xee, 0x92, 0xaa, 0xc3, 0x1b, 0x5b, 0xa2, 0x7e, 0x3d, 0x2c, 0x7f, 0x08, 0xdf, 0xff, 0xfc,
+	0x74, 0x2f, 0x2e, 0xa0, 0x58, 0x00, 0xb7, 0x12, 0xa5, 0x36, 0x08, 0x73, 0xa9, 0xc3, 0x48, 0xf1,
+	0x8b, 0x22, 0x10, 0xaf, 0x5c, 0x8c, 0x38, 0x39, 0x22, 0x27, 0x41, 0xb2, 0xee, 0x53, 0x6e, 0x3b,
+	0xd6, 0x0b, 0x61, 0x35, 0x7c, 0x08, 0x36, 0x90, 0xcf, 0x3b, 0xd4, 0xb3, 0xf9, 0x48, 0x18, 0xb2,
+	0x51, 0xc9, 0x7d, 0xfd, 0x5c, 0xca, 0x86, 0xd7, 0xfd, 0x0c, 0x63, 0x8f, 0x30, 0xd6, 0xe4, 0x9e,
+	0xed, 0x58, 0x8d, 0x19, 0x14, 0xbe, 0x05, 0x37, 0xb0, 0xac, 0xd7, 0xea, 0xcb, 0x82, 0x2d, 0x79,
+	0x79, 0xc2, 0x87, 0xcd, 0xf2, 0x6d, 0x7d, 0x71, 0xa2, 0xf4, 0x18, 0x75, 0xe5, 0x52, 0x60, 0x55,
+	0x23, 0x8b, 0x13, 0xda, 0x3a, 0xcc, 0x04, 0x6a, 0x67, 0x74, 0xc5, 0xbb, 0x60, 0xf7, 0x42, 0x1d,
+	0x53, 0xc5, 0x13, 0x05, 0x5c, 0xab, 0x31, 0xab, 0x49, 0xf8, 0xeb, 0x00, 0xf4, 0x9f, 0x2a, 0x9f,
+	0x80, 0xab, 0xa2, 0xf3, 0x60, 0x5a, 0xa4, 0xae, 0x7c, 0x92, 0x2e, 0x41, 0x55, 0xc5, 0xa1, 0xa2,
+	0x2b, 0x03, 0xb9, 0x85, 0xc7, 0x20, 0x2d, 0x4f, 0x87, 0xce, 0xac, 0x8b, 0x0a, 0x85, 0xa5, 0x15,
+	0x62, 0xbe, 0x6c, 0x0e, 0x66, 0xa1, 0x05, 0x3b, 0xf2, 0x60, 0x7b, 0x41, 0x64, 0x64, 0x41, 0xf9,
+	0xf7, 0x1a, 0x58, 0xaf, 0x31, 0x0b, 0x7a, 0x00, 0x26, 0x7c, 0x05, 0xfb, 0x49, 0xf4, 0x89, 0x53,
+	0xa4, 0x1e, 0xac, 0x0c, 0x8d, 0xb8, 0xe1, 0x07, 0x05, 0xa8, 0x17, 0x4c, 0xdb, 0xb2, 0x8a, 0xcb,
+	0x8f, 0xa8, 0x8f, 0xff, 0xf9, 0xc8, 0xb4, 0x99, 0x13, 0x90, 0xf9, 0x6b, 0x0e, 0x76, 0x97, 0x14,
+	0x8b, 0xc3, 0xd4, 0xd2, 0x4a, 0xb0, 0x88, 0xa7, 0x52, 0x3f, 0x1d, 0x6b, 0xca, 0xd9, 0x58, 0x53,
+	0x7e, 0x8c, 0x35, 0xe5, 0xe3, 0x44, 0x4b, 0x9d, 0x4d, 0xb4, 0xd4, 0xb7, 0x89, 0x96, 0x7a, 0xf3,
+	0x68, 0xf5, 0x57, 0x60, 0x18, 0x3d, 0xc9, 0xc1, 0x63, 0xd0, 0xbe, 0x2c, 0xe2, 0xf7, 0xff, 0x04,
+	0x00, 0x00, 0xff, 0xff, 0x04, 0x28, 0x4d, 0xe4, 0xb5, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -385,8 +375,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// DepositToVault deposits funds into a vault.
-	DepositToVault(ctx context.Context, in *MsgDepositToVault, opts ...grpc.CallOption) (*MsgDepositToVaultResponse, error)
+	// DepositToMegavault deposits funds into megavault.
+	DepositToMegavault(ctx context.Context, in *MsgDepositToMegavault, opts ...grpc.CallOption) (*MsgDepositToMegavaultResponse, error)
 	// UpdateDefaultQuotingParams updates the default quoting params in state.
 	UpdateDefaultQuotingParams(ctx context.Context, in *MsgUpdateDefaultQuotingParams, opts ...grpc.CallOption) (*MsgUpdateDefaultQuotingParamsResponse, error)
 	// SetVaultParams sets the parameters of a specific vault.
@@ -401,9 +391,9 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) DepositToVault(ctx context.Context, in *MsgDepositToVault, opts ...grpc.CallOption) (*MsgDepositToVaultResponse, error) {
-	out := new(MsgDepositToVaultResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.vault.Msg/DepositToVault", in, out, opts...)
+func (c *msgClient) DepositToMegavault(ctx context.Context, in *MsgDepositToMegavault, opts ...grpc.CallOption) (*MsgDepositToMegavaultResponse, error) {
+	out := new(MsgDepositToMegavaultResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.vault.Msg/DepositToMegavault", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -430,8 +420,8 @@ func (c *msgClient) SetVaultParams(ctx context.Context, in *MsgSetVaultParams, o
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// DepositToVault deposits funds into a vault.
-	DepositToVault(context.Context, *MsgDepositToVault) (*MsgDepositToVaultResponse, error)
+	// DepositToMegavault deposits funds into megavault.
+	DepositToMegavault(context.Context, *MsgDepositToMegavault) (*MsgDepositToMegavaultResponse, error)
 	// UpdateDefaultQuotingParams updates the default quoting params in state.
 	UpdateDefaultQuotingParams(context.Context, *MsgUpdateDefaultQuotingParams) (*MsgUpdateDefaultQuotingParamsResponse, error)
 	// SetVaultParams sets the parameters of a specific vault.
@@ -442,8 +432,8 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) DepositToVault(ctx context.Context, req *MsgDepositToVault) (*MsgDepositToVaultResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DepositToVault not implemented")
+func (*UnimplementedMsgServer) DepositToMegavault(ctx context.Context, req *MsgDepositToMegavault) (*MsgDepositToMegavaultResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DepositToMegavault not implemented")
 }
 func (*UnimplementedMsgServer) UpdateDefaultQuotingParams(ctx context.Context, req *MsgUpdateDefaultQuotingParams) (*MsgUpdateDefaultQuotingParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateDefaultQuotingParams not implemented")
@@ -456,20 +446,20 @@ func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_DepositToVault_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgDepositToVault)
+func _Msg_DepositToMegavault_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDepositToMegavault)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).DepositToVault(ctx, in)
+		return srv.(MsgServer).DepositToMegavault(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dydxprotocol.vault.Msg/DepositToVault",
+		FullMethod: "/dydxprotocol.vault.Msg/DepositToMegavault",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).DepositToVault(ctx, req.(*MsgDepositToVault))
+		return srv.(MsgServer).DepositToMegavault(ctx, req.(*MsgDepositToMegavault))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -515,8 +505,8 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "DepositToVault",
-			Handler:    _Msg_DepositToVault_Handler,
+			MethodName: "DepositToMegavault",
+			Handler:    _Msg_DepositToMegavault_Handler,
 		},
 		{
 			MethodName: "UpdateDefaultQuotingParams",
@@ -531,7 +521,7 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	Metadata: "dydxprotocol/vault/tx.proto",
 }
 
-func (m *MsgDepositToVault) Marshal() (dAtA []byte, err error) {
+func (m *MsgDepositToMegavault) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -541,12 +531,12 @@ func (m *MsgDepositToVault) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgDepositToVault) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgDepositToMegavault) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgDepositToVault) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgDepositToMegavault) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -560,22 +550,10 @@ func (m *MsgDepositToVault) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x1a
+	dAtA[i] = 0x12
 	if m.SubaccountId != nil {
 		{
 			size, err := m.SubaccountId.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if m.VaultId != nil {
-		{
-			size, err := m.VaultId.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -588,7 +566,7 @@ func (m *MsgDepositToVault) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgDepositToVaultResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgDepositToMegavaultResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -598,12 +576,12 @@ func (m *MsgDepositToVaultResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgDepositToVaultResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgDepositToMegavaultResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgDepositToVaultResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgDepositToMegavaultResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -758,16 +736,12 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgDepositToVault) Size() (n int) {
+func (m *MsgDepositToMegavault) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.VaultId != nil {
-		l = m.VaultId.Size()
-		n += 1 + l + sovTx(uint64(l))
-	}
 	if m.SubaccountId != nil {
 		l = m.SubaccountId.Size()
 		n += 1 + l + sovTx(uint64(l))
@@ -777,7 +751,7 @@ func (m *MsgDepositToVault) Size() (n int) {
 	return n
 }
 
-func (m *MsgDepositToVaultResponse) Size() (n int) {
+func (m *MsgDepositToMegavaultResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -842,7 +816,7 @@ func sovTx(x uint64) (n int) {
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *MsgDepositToVault) Unmarshal(dAtA []byte) error {
+func (m *MsgDepositToMegavault) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -865,49 +839,13 @@ func (m *MsgDepositToVault) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgDepositToVault: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgDepositToMegavault: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgDepositToVault: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgDepositToMegavault: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VaultId", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.VaultId == nil {
-				m.VaultId = &VaultId{}
-			}
-			if err := m.VaultId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SubaccountId", wireType)
 			}
@@ -943,7 +881,7 @@ func (m *MsgDepositToVault) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 3:
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field QuoteQuantums", wireType)
 			}
@@ -997,7 +935,7 @@ func (m *MsgDepositToVault) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgDepositToVaultResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgDepositToMegavaultResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1020,10 +958,10 @@ func (m *MsgDepositToVaultResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgDepositToVaultResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgDepositToMegavaultResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgDepositToVaultResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgDepositToMegavaultResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

@@ -92,7 +92,7 @@ func GetTestEncodingCfg() testutil.TestEncodingConfig {
 		&sendingtypes.MsgWithdrawFromSubaccount{},
 
 		// Vault.
-		&vaulttypes.MsgDepositToVault{},
+		&vaulttypes.MsgDepositToMegavault{},
 	}
 
 	for _, msg := range msgInterfacesToRegister {

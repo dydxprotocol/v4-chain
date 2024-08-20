@@ -130,10 +130,8 @@ func CmdQueryListVault() *cobra.Command {
 
 func CmdQueryListOwnerShares() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-owner-shares [type] [number]",
-		Short: "list owner shares of a vault by its type and number",
-		Long:  "list owner shares of a vault by its type and number. Current support types are: clob.",
-		Args:  cobra.ExactArgs(2),
+		Use:   "list-owner-shares",
+		Short: "list owner shares",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
@@ -144,25 +142,11 @@ func CmdQueryListOwnerShares() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			// Parse vault type.
-			vaultType, err := GetVaultTypeFromString(args[0])
-			if err != nil {
-				return err
-			}
-
-			// Parse vault number.
-			vaultNumber, err := strconv.ParseUint(args[1], 10, 32)
-			if err != nil {
-				return err
-			}
-
-			request := &types.QueryOwnerSharesRequest{
-				Type:       vaultType,
-				Number:     uint32(vaultNumber),
+			request := &types.QueryMegavaultOwnerSharesRequest{
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.OwnerShares(context.Background(), request)
+			res, err := queryClient.MegavaultOwnerShares(context.Background(), request)
 			if err != nil {
 				return err
 			}
