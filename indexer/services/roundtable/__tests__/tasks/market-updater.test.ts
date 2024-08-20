@@ -195,9 +195,9 @@ describe('market-updater', () => {
         pnlPrice: '1',
       },
     };
- expect(
-    getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),
-  ).toEqual({ pnlPrice: '1', spotPrice: '1' });
+    expect(
+      getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),
+    ).toEqual({ pnlPrice: '1', spotPrice: '1' });
 
     expect(
       getPriceChange(testConstants.defaultOraclePrice2.marketId, latestPrices, previousPrices),

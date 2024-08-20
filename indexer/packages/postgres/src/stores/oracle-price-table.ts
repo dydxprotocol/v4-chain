@@ -242,10 +242,8 @@ export async function findLatestPrices(
       GROUP BY "marketId");
   `;
 
-
-
   let result: { rows: OraclePriceFromDatabase[] };
-  
+
   if (transaction === undefined) {
     result = await knexReadReplica.getConnection().raw(
       query,
