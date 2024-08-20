@@ -49,16 +49,19 @@ func (k Keeper) Vault(
 		inventory = k.GetVaultInventoryInPerpetual(ctx, vaultId, perpId)
 	}
 
-	// Get vault quoting params.
-	quotingParams := k.GetVaultQuotingParams(ctx, vaultId)
+	// Get vault params.
+	vaultParams, exists := k.GetVaultParams(ctx, vaultId)
+	if !exists {
+		return nil, status.Error(codes.NotFound, "vault not found")
+	}
 
 	return &types.QueryVaultResponse{
-		VaultId:       vaultId,
-		SubaccountId:  *vaultId.ToSubaccountId(),
-		Equity:        dtypes.NewIntFromBigInt(equity),
-		Inventory:     dtypes.NewIntFromBigInt(inventory),
-		TotalShares:   totalShares,
-		QuotingParams: quotingParams,
+		VaultId:      vaultId,
+		SubaccountId: *vaultId.ToSubaccountId(),
+		Equity:       dtypes.NewIntFromBigInt(equity),
+		Inventory:    dtypes.NewIntFromBigInt(inventory),
+		TotalShares:  totalShares,
+		VaultParams:  vaultParams,
 	}, nil
 }
 

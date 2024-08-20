@@ -127,7 +127,7 @@ func TestEjectStaleTsNonces(t *testing.T) {
 
 func TestAttemptTimestampNonceUpdate(t *testing.T) {
 	startTs := keeper.TimestampNonceSequenceCutoff
-	t.Run("Will not update if ts nonce <= maxEjectedNonce", func(t *testing.T) {
+	t.Run("Will reject ts nonce <= maxEjectedNonce", func(t *testing.T) {
 		tsNonce := startTs + 10
 
 		var tsNonces []uint64
@@ -157,7 +157,37 @@ func TestAttemptTimestampNonceUpdate(t *testing.T) {
 		require.Equal(t, expectedAccountState, accountState)
 	})
 
-	t.Run("Will update if ts nonces has capacity (ts nonce > maxEjectedNonce)", func(t *testing.T) {
+	t.Run("Will reject duplicate ts nonce", func(t *testing.T) {
+		tsNonce := startTs + 20
+
+		var tsNonces []uint64
+		for i := range 5 {
+			tsNonces = append(tsNonces, startTs+uint64(i)+20)
+		}
+
+		accountState := types.AccountState{
+			Address: constants.AliceAccAddress.String(),
+			TimestampNonceDetails: types.TimestampNonceDetails{
+				TimestampNonces: tsNonces,
+				MaxEjectedNonce: startTs + 10,
+			},
+		}
+
+		expectedAccountState := types.AccountState{
+			Address: constants.AliceAccAddress.String(),
+			TimestampNonceDetails: types.TimestampNonceDetails{
+				TimestampNonces: tsNonces,
+				MaxEjectedNonce: startTs + 10,
+			},
+		}
+
+		updated := keeper.AttemptTimestampNonceUpdate(tsNonce, &accountState)
+
+		require.False(t, updated)
+		require.Equal(t, expectedAccountState, accountState)
+	})
+
+	t.Run("Will update if ts nonces has capacity (given ts unique and ts > maxEjectedNonce)", func(t *testing.T) {
 		tsNonce := startTs + 11
 
 		var tsNonces []uint64
@@ -188,9 +218,9 @@ func TestAttemptTimestampNonceUpdate(t *testing.T) {
 	})
 
 	t.Run(
-		"Will not update if ts nonce <= existing ts nonces (timestamp nonce > maxEjectedNonce)",
+		"Will not update if ts nonce <= existing ts nonces (given ts unique and ts > maxEjectedNonce)",
 		func(t *testing.T) {
-			tsNonce := startTs + 20
+			tsNonce := startTs + 19
 
 			var tsNonces []uint64
 			for i := range keeper.MaxTimestampNonceArrSize {
@@ -220,14 +250,14 @@ func TestAttemptTimestampNonceUpdate(t *testing.T) {
 		})
 
 	t.Run(
-		"Will update if ts nonce larger than at least one existing ts nonce (timestamp nonce > maxEjectedNonce)",
+		"Will update if ts nonce larger than at least one existing ts nonce (given ts unique and ts > maxEjectedNonce)",
 		func(t *testing.T) {
-			tsNonce := startTs + 21
-
 			var tsNonces []uint64
 			for i := range keeper.MaxTimestampNonceArrSize {
 				tsNonces = append(tsNonces, startTs+uint64(i)+20)
 			}
+
+			tsNonce := tsNonces[len(tsNonces)-1] + 1
 
 			accountState := types.AccountState{
 				Address: constants.AliceAccAddress.String(),

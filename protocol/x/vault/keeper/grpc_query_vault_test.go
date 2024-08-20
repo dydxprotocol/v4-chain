@@ -28,8 +28,8 @@ func TestVault(t *testing.T) {
 		inventory *big.Int
 		// Total shares.
 		totalShares *big.Int
-		// Quoting params.
-		quotingParams *vaulttypes.QuotingParams
+		// Vault params.
+		vaultParams vaulttypes.VaultParams
 		// Query request.
 		req *vaulttypes.QueryVaultRequest
 
@@ -47,7 +47,22 @@ func TestVault(t *testing.T) {
 			perpId:         0,
 			inventory:      big.NewInt(200),
 			totalShares:    big.NewInt(300),
-			quotingParams:  &constants.QuotingParams,
+			vaultParams:    constants.VaultParams,
+			expectedEquity: big.NewInt(500),
+		},
+		"Success: close only vault status": {
+			req: &vaulttypes.QueryVaultRequest{
+				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+				Number: 0,
+			},
+			vaultId:     constants.Vault_Clob0,
+			asset:       big.NewInt(100),
+			perpId:      0,
+			inventory:   big.NewInt(200),
+			totalShares: big.NewInt(300),
+			vaultParams: vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+			},
 			expectedEquity: big.NewInt(500),
 		},
 		"Success: negative inventory and equity": {
@@ -60,6 +75,7 @@ func TestVault(t *testing.T) {
 			perpId:         0,
 			inventory:      big.NewInt(-200),
 			totalShares:    big.NewInt(300),
+			vaultParams:    constants.VaultParams,
 			expectedEquity: big.NewInt(-300),
 		},
 		"Success: non-existent clob pair": {
@@ -75,7 +91,7 @@ func TestVault(t *testing.T) {
 			perpId:         0,
 			inventory:      big.NewInt(0),
 			totalShares:    big.NewInt(300),
-			quotingParams:  &constants.QuotingParams,
+			vaultParams:    constants.VaultParams,
 			expectedEquity: big.NewInt(100),
 		},
 		"Error: query non-existent vault": {
@@ -88,6 +104,7 @@ func TestVault(t *testing.T) {
 			perpId:      0,
 			inventory:   big.NewInt(200),
 			totalShares: big.NewInt(300),
+			vaultParams: constants.VaultParams,
 			expectedErr: "vault not found",
 		},
 		"Error: nil request": {
@@ -97,6 +114,7 @@ func TestVault(t *testing.T) {
 			perpId:      0,
 			inventory:   big.NewInt(200),
 			totalShares: big.NewInt(300),
+			vaultParams: constants.VaultParams,
 			expectedErr: "invalid request",
 		},
 	}
@@ -134,14 +152,11 @@ func TestVault(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.VaultKeeper
 
-			// Set total shares.
+			// Set total shares and vault params.
 			err := k.SetTotalShares(ctx, tc.vaultId, vaulttypes.BigIntToNumShares(tc.totalShares))
 			require.NoError(t, err)
-
-			if tc.quotingParams != nil {
-				err := k.SetVaultQuotingParams(ctx, tc.vaultId, *tc.quotingParams)
-				require.NoError(t, err)
-			}
+			err = k.SetVaultParams(ctx, tc.vaultId, tc.vaultParams)
+			require.NoError(t, err)
 
 			// Check Vault query response is as expected.
 			response, err := k.Vault(ctx, tc.req)
@@ -149,17 +164,13 @@ func TestVault(t *testing.T) {
 				require.ErrorContains(t, err, tc.expectedErr)
 			} else {
 				require.NoError(t, err)
-				expectedQuotingParams := k.GetDefaultQuotingParams(ctx)
-				if tc.quotingParams != nil {
-					expectedQuotingParams = *tc.quotingParams
-				}
 				expectedResponse := vaulttypes.QueryVaultResponse{
-					VaultId:       tc.vaultId,
-					SubaccountId:  *tc.vaultId.ToSubaccountId(),
-					Equity:        dtypes.NewIntFromBigInt(tc.expectedEquity),
-					Inventory:     dtypes.NewIntFromBigInt(tc.inventory),
-					TotalShares:   vaulttypes.BigIntToNumShares(tc.totalShares),
-					QuotingParams: expectedQuotingParams,
+					VaultId:      tc.vaultId,
+					SubaccountId: *tc.vaultId.ToSubaccountId(),
+					Equity:       dtypes.NewIntFromBigInt(tc.expectedEquity),
+					Inventory:    dtypes.NewIntFromBigInt(tc.inventory),
+					TotalShares:  vaulttypes.BigIntToNumShares(tc.totalShares),
+					VaultParams:  tc.vaultParams,
 				}
 				require.Equal(t, expectedResponse, *response)
 			}
@@ -264,9 +275,11 @@ func TestAllVaults(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.VaultKeeper
 
-			// Set total shares.
+			// Set total shares and vault params.
 			for _, vaultId := range tc.vaultIds {
 				err := k.SetTotalShares(ctx, vaultId, vaulttypes.BigIntToNumShares(tc.totalShares[vaultId]))
+				require.NoError(t, err)
+				err = k.SetVaultParams(ctx, vaultId, constants.VaultParams)
 				require.NoError(t, err)
 			}
 

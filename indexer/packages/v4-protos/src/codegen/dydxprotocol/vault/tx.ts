@@ -1,6 +1,6 @@
 import { VaultId, VaultIdSDKType } from "./vault";
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
-import { QuotingParams, QuotingParamsSDKType } from "./params";
+import { QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
@@ -73,40 +73,34 @@ export interface MsgUpdateDefaultQuotingParamsResponse {}
  */
 
 export interface MsgUpdateDefaultQuotingParamsResponseSDKType {}
-/** MsgSetVaultQuotingParams is the Msg/SetVaultQuotingParams request type. */
+/** MsgSetVaultParams is the Msg/SetVaultParams request type. */
 
-export interface MsgSetVaultQuotingParams {
+export interface MsgSetVaultParams {
   authority: string;
-  /** The vault to set quoting params of. */
+  /** The vault to set params of. */
 
   vaultId?: VaultId;
-  /** The quoting parameters to set. Each field must be set. */
+  /** The parameters to set. */
 
-  quotingParams?: QuotingParams;
+  vaultParams?: VaultParams;
 }
-/** MsgSetVaultQuotingParams is the Msg/SetVaultQuotingParams request type. */
+/** MsgSetVaultParams is the Msg/SetVaultParams request type. */
 
-export interface MsgSetVaultQuotingParamsSDKType {
+export interface MsgSetVaultParamsSDKType {
   authority: string;
-  /** The vault to set quoting params of. */
+  /** The vault to set params of. */
 
   vault_id?: VaultIdSDKType;
-  /** The quoting parameters to set. Each field must be set. */
+  /** The parameters to set. */
 
-  quoting_params?: QuotingParamsSDKType;
+  vault_params?: VaultParamsSDKType;
 }
-/**
- * MsgSetVaultQuotingParamsResponse is the Msg/SetVaultQuotingParams response
- * type.
- */
+/** MsgSetVaultParamsResponse is the Msg/SetVaultParams response type. */
 
-export interface MsgSetVaultQuotingParamsResponse {}
-/**
- * MsgSetVaultQuotingParamsResponse is the Msg/SetVaultQuotingParams response
- * type.
- */
+export interface MsgSetVaultParamsResponse {}
+/** MsgSetVaultParamsResponse is the Msg/SetVaultParams response type. */
 
-export interface MsgSetVaultQuotingParamsResponseSDKType {}
+export interface MsgSetVaultParamsResponseSDKType {}
 
 function createBaseMsgDepositToVault(): MsgDepositToVault {
   return {
@@ -296,16 +290,16 @@ export const MsgUpdateDefaultQuotingParamsResponse = {
 
 };
 
-function createBaseMsgSetVaultQuotingParams(): MsgSetVaultQuotingParams {
+function createBaseMsgSetVaultParams(): MsgSetVaultParams {
   return {
     authority: "",
     vaultId: undefined,
-    quotingParams: undefined
+    vaultParams: undefined
   };
 }
 
-export const MsgSetVaultQuotingParams = {
-  encode(message: MsgSetVaultQuotingParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const MsgSetVaultParams = {
+  encode(message: MsgSetVaultParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.authority !== "") {
       writer.uint32(10).string(message.authority);
     }
@@ -314,17 +308,17 @@ export const MsgSetVaultQuotingParams = {
       VaultId.encode(message.vaultId, writer.uint32(18).fork()).ldelim();
     }
 
-    if (message.quotingParams !== undefined) {
-      QuotingParams.encode(message.quotingParams, writer.uint32(26).fork()).ldelim();
+    if (message.vaultParams !== undefined) {
+      VaultParams.encode(message.vaultParams, writer.uint32(26).fork()).ldelim();
     }
 
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetVaultQuotingParams {
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetVaultParams {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgSetVaultQuotingParams();
+    const message = createBaseMsgSetVaultParams();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -339,7 +333,7 @@ export const MsgSetVaultQuotingParams = {
           break;
 
         case 3:
-          message.quotingParams = QuotingParams.decode(reader, reader.uint32());
+          message.vaultParams = VaultParams.decode(reader, reader.uint32());
           break;
 
         default:
@@ -351,29 +345,29 @@ export const MsgSetVaultQuotingParams = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<MsgSetVaultQuotingParams>): MsgSetVaultQuotingParams {
-    const message = createBaseMsgSetVaultQuotingParams();
+  fromPartial(object: DeepPartial<MsgSetVaultParams>): MsgSetVaultParams {
+    const message = createBaseMsgSetVaultParams();
     message.authority = object.authority ?? "";
     message.vaultId = object.vaultId !== undefined && object.vaultId !== null ? VaultId.fromPartial(object.vaultId) : undefined;
-    message.quotingParams = object.quotingParams !== undefined && object.quotingParams !== null ? QuotingParams.fromPartial(object.quotingParams) : undefined;
+    message.vaultParams = object.vaultParams !== undefined && object.vaultParams !== null ? VaultParams.fromPartial(object.vaultParams) : undefined;
     return message;
   }
 
 };
 
-function createBaseMsgSetVaultQuotingParamsResponse(): MsgSetVaultQuotingParamsResponse {
+function createBaseMsgSetVaultParamsResponse(): MsgSetVaultParamsResponse {
   return {};
 }
 
-export const MsgSetVaultQuotingParamsResponse = {
-  encode(_: MsgSetVaultQuotingParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const MsgSetVaultParamsResponse = {
+  encode(_: MsgSetVaultParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetVaultQuotingParamsResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetVaultParamsResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgSetVaultQuotingParamsResponse();
+    const message = createBaseMsgSetVaultParamsResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -388,8 +382,8 @@ export const MsgSetVaultQuotingParamsResponse = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<MsgSetVaultQuotingParamsResponse>): MsgSetVaultQuotingParamsResponse {
-    const message = createBaseMsgSetVaultQuotingParamsResponse();
+  fromPartial(_: DeepPartial<MsgSetVaultParamsResponse>): MsgSetVaultParamsResponse {
+    const message = createBaseMsgSetVaultParamsResponse();
     return message;
   }
 

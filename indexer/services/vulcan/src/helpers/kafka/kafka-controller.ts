@@ -17,8 +17,11 @@ export async function connect(): Promise<void> {
   await consumer.subscribe({
     topic: KafkaTopics.TO_VULCAN,
     // https://kafka.js.org/docs/consuming#a-name-from-beginning-a-frombeginning
-    // Need to set fromBeginning to true, so when vulcan restarts, it will consume all messages
-    // rather than ignoring the messages in queue that were produced before ender was started.
+    // fromBeginning is by default set to false, so vulcan will only consume messages produced
+    // after vulcan was started. This config should almost never matter, because by Vulcan should
+    // read from the last read offset. fromBeginning will only matter if the offset is lost.
+    // In the case where the offset is lost, Vulcan should read from head because in 60 seconds all
+    // short term messages will expire and we can resend stateful orders through bazooka to Vulcan.
     fromBeginning: config.PROCESS_FROM_BEGINNING,
   });
 

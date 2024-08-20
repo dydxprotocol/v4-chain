@@ -14,6 +14,10 @@ var (
 		Type:   types.VaultType_VAULT_TYPE_CLOB,
 		Number: 1,
 	}
+	Vault_Clob7 = types.VaultId{
+		Type:   types.VaultType_VAULT_TYPE_CLOB,
+		Number: 7,
+	}
 
 	MsgDepositToVault_Clob0_Alice0_100 = &types.MsgDepositToVault{
 		VaultId:       &Vault_Clob0,
@@ -28,6 +32,19 @@ var (
 		SkewFactorPpm:                    767_323,
 		OrderSizePctPpm:                  234_567,
 		OrderExpirationSeconds:           111,
+		ActivationThresholdQuoteQuantums: dtypes.NewInt(9_876_543),
+	}
+	VaultParams = types.VaultParams{
+		Status:        types.VaultStatus_VAULT_STATUS_QUOTING,
+		QuotingParams: &QuotingParams,
+	}
+	InvalidQuotingParams = types.QuotingParams{
+		Layers:                           3,
+		SpreadMinPpm:                     4_321,
+		SpreadBufferPpm:                  1_789,
+		SkewFactorPpm:                    767_323,
+		OrderSizePctPpm:                  234_567,
+		OrderExpirationSeconds:           0,
 		ActivationThresholdQuoteQuantums: dtypes.NewInt(9_876_543),
 	}
 )

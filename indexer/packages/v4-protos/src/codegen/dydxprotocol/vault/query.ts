@@ -1,6 +1,6 @@
 import { VaultType, VaultTypeSDKType, VaultId, VaultIdSDKType } from "./vault";
 import { PageRequest, PageRequestSDKType, PageResponse, PageResponseSDKType } from "../../cosmos/base/query/v1beta1/pagination";
-import { Params, ParamsSDKType, QuotingParams, QuotingParamsSDKType } from "./params";
+import { Params, ParamsSDKType, QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
 import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType } from "./share";
 import * as _m0 from "protobufjs/minimal";
@@ -49,7 +49,7 @@ export interface QueryVaultResponse {
   equity: Uint8Array;
   inventory: Uint8Array;
   totalShares?: NumShares;
-  quotingParams?: QuotingParams;
+  vaultParams?: VaultParams;
 }
 /** QueryVaultResponse is a response type for the Vault RPC method. */
 
@@ -59,7 +59,7 @@ export interface QueryVaultResponseSDKType {
   equity: Uint8Array;
   inventory: Uint8Array;
   total_shares?: NumSharesSDKType;
-  quoting_params?: QuotingParamsSDKType;
+  vault_params?: VaultParamsSDKType;
 }
 /** QueryAllVaultsRequest is a request type for the AllVaults RPC method. */
 
@@ -261,7 +261,7 @@ function createBaseQueryVaultResponse(): QueryVaultResponse {
     equity: new Uint8Array(),
     inventory: new Uint8Array(),
     totalShares: undefined,
-    quotingParams: undefined
+    vaultParams: undefined
   };
 }
 
@@ -287,8 +287,8 @@ export const QueryVaultResponse = {
       NumShares.encode(message.totalShares, writer.uint32(42).fork()).ldelim();
     }
 
-    if (message.quotingParams !== undefined) {
-      QuotingParams.encode(message.quotingParams, writer.uint32(50).fork()).ldelim();
+    if (message.vaultParams !== undefined) {
+      VaultParams.encode(message.vaultParams, writer.uint32(50).fork()).ldelim();
     }
 
     return writer;
@@ -324,7 +324,7 @@ export const QueryVaultResponse = {
           break;
 
         case 6:
-          message.quotingParams = QuotingParams.decode(reader, reader.uint32());
+          message.vaultParams = VaultParams.decode(reader, reader.uint32());
           break;
 
         default:
@@ -343,7 +343,7 @@ export const QueryVaultResponse = {
     message.equity = object.equity ?? new Uint8Array();
     message.inventory = object.inventory ?? new Uint8Array();
     message.totalShares = object.totalShares !== undefined && object.totalShares !== null ? NumShares.fromPartial(object.totalShares) : undefined;
-    message.quotingParams = object.quotingParams !== undefined && object.quotingParams !== null ? QuotingParams.fromPartial(object.quotingParams) : undefined;
+    message.vaultParams = object.vaultParams !== undefined && object.vaultParams !== null ? VaultParams.fromPartial(object.vaultParams) : undefined;
     return message;
   }
 

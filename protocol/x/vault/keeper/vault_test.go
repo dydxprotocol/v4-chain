@@ -21,8 +21,8 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 		/* --- Setup --- */
 		// Vault IDs.
 		vaultIds []vaulttypes.VaultId
-		// Total shares of above vaults.
-		totalShares []*big.Int
+		// Statuses of above vaults.
+		statuses []vaulttypes.VaultStatus
 		// Equities of above vaults.
 		equities []*big.Int
 
@@ -35,9 +35,9 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 				constants.Vault_Clob0,
 				constants.Vault_Clob1,
 			},
-			totalShares: []*big.Int{
-				big.NewInt(7),
-				big.NewInt(7),
+			statuses: []vaulttypes.VaultStatus{
+				vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+				vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
 			},
 			equities: []*big.Int{
 				big.NewInt(1),
@@ -53,9 +53,9 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 				constants.Vault_Clob0,
 				constants.Vault_Clob1,
 			},
-			totalShares: []*big.Int{
-				big.NewInt(7),
-				big.NewInt(7),
+			statuses: []vaulttypes.VaultStatus{
+				vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
+				vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
 			},
 			equities: []*big.Int{
 				big.NewInt(1),
@@ -63,25 +63,29 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 			},
 			decommissioned: []bool{
 				false,
-				true, // this vault should be decommissioned.
+				true, // decommissioned as vault has 0 equity and is deactivated.
 			},
 		},
 		"Decommission two vaults": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob0,
 				constants.Vault_Clob1,
+				constants.Vault_Clob7,
 			},
-			totalShares: []*big.Int{
-				big.NewInt(7),
-				big.NewInt(7),
+			statuses: []vaulttypes.VaultStatus{
+				vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+				vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+				vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
 			},
 			equities: []*big.Int{
 				big.NewInt(0),
+				big.NewInt(-1),
 				big.NewInt(-1),
 			},
 			decommissioned: []bool{
 				true,
 				true,
+				false, // not decommissioned (even though equity is negative) bc status is not deactivated.
 			},
 		},
 	}
@@ -120,11 +124,11 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 
 			// Set total shares and owner shares for all vaults.
 			testOwner := constants.Alice_Num0.Owner
-			for i, vaultId := range tc.vaultIds {
+			for _, vaultId := range tc.vaultIds {
 				err := k.SetTotalShares(
 					ctx,
 					vaultId,
-					vaulttypes.BigIntToNumShares(tc.totalShares[i]),
+					vaulttypes.BigIntToNumShares(big.NewInt(7)),
 				)
 				require.NoError(t, err)
 				err = k.SetOwnerShares(
@@ -136,16 +140,40 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			// Set statuses of vaults and add to vault address store.
+			for i, vaultId := range tc.vaultIds {
+				err := k.SetVaultParams(
+					ctx,
+					vaultId,
+					vaulttypes.VaultParams{
+						Status: tc.statuses[i],
+					},
+				)
+				require.NoError(t, err)
+				k.AddVaultToAddressStore(ctx, vaultId)
+			}
+
 			// Decommission all vaults.
 			k.DecommissionNonPositiveEquityVaults(ctx)
 
-			// Check that total shares and owner shares are deleted for decommissioned
-			// vaults and not deleted for non-decommissioned vaults.
+			// Check that below are deleted for decommissioned vaults only:
+			// - total shares
+			// - owner shares
+			// - vault params
+			// - vault address (from vault address store)
 			for i, decommissioned := range tc.decommissioned {
 				_, exists := k.GetTotalShares(ctx, tc.vaultIds[i])
 				require.Equal(t, !decommissioned, exists)
 				_, exists = k.GetOwnerShares(ctx, tc.vaultIds[i], testOwner)
 				require.Equal(t, !decommissioned, exists)
+
+				_, exists = k.GetVaultParams(ctx, tc.vaultIds[i])
+				require.Equal(t, !decommissioned, exists)
+				require.Equal(
+					t,
+					!decommissioned,
+					k.IsVault(ctx, tc.vaultIds[i].ToModuleAccountAddress()),
+				)
 			}
 		})
 	}
@@ -160,30 +188,26 @@ func TestDecommissionVault(t *testing.T) {
 		totalSharesExists bool
 		// Owners.
 		owners []string
-		// Vault quoting params.
-		quotingParams *vaulttypes.QuotingParams
 	}{
-		"Total shares doesn't exist, no owners, default quoting params": {
+		"Total shares doesn't exist, no owners": {
 			vaultId: constants.Vault_Clob0,
 		},
-		"Total shares exists, no owners, default quoting params": {
+		"Total shares exists, no owners": {
 			vaultId:           constants.Vault_Clob0,
 			totalSharesExists: true,
 		},
-		"Total shares exists, one owner, non-default quoting params": {
+		"Total shares exists, one owner": {
 			vaultId:           constants.Vault_Clob1,
 			totalSharesExists: true,
 			owners:            []string{constants.Alice_Num0.Owner},
-			quotingParams:     &constants.QuotingParams,
 		},
-		"Total shares exists, two owners, non-default quoting params": {
+		"Total shares exists, two owners": {
 			vaultId:           constants.Vault_Clob1,
 			totalSharesExists: true,
 			owners: []string{
 				constants.Alice_Num0.Owner,
 				constants.Bob_Num0.Owner,
 			},
-			quotingParams: &constants.QuotingParams,
 		},
 	}
 	for name, tc := range tests {
@@ -214,15 +238,13 @@ func TestDecommissionVault(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
-			if tc.quotingParams != nil {
-				err := k.SetVaultQuotingParams(ctx, tc.vaultId, *tc.quotingParams)
-				require.NoError(t, err)
-			}
+			err := k.SetVaultParams(ctx, tc.vaultId, constants.VaultParams)
+			require.NoError(t, err)
 
 			// Decommission vault.
 			k.DecommissionVault(ctx, tc.vaultId)
 
-			// Check that total shares, owner shares, and vault address are deleted.
+			// Check that total shares, owner shares, vault address, and vault params are deleted.
 			_, exists := k.GetTotalShares(ctx, tc.vaultId)
 			require.Equal(t, false, exists)
 			for _, owner := range tc.owners {
@@ -230,12 +252,8 @@ func TestDecommissionVault(t *testing.T) {
 				require.Equal(t, false, exists)
 			}
 			require.False(t, k.IsVault(ctx, tc.vaultId.ToModuleAccountAddress()))
-			// Check that vault quoting params are back to default.
-			require.Equal(
-				t,
-				k.GetDefaultQuotingParams(ctx),
-				k.GetVaultQuotingParams(ctx, tc.vaultId),
-			)
+			_, exists = k.GetVaultParams(ctx, tc.vaultId)
+			require.False(t, exists)
 		})
 	}
 }
@@ -297,6 +315,9 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 									NumShares: dtypes.NewInt(10),
 								},
 							},
+						},
+						VaultParams: vaulttypes.VaultParams{
+							Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 						},
 					},
 				}

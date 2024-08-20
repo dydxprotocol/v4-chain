@@ -1,4 +1,4 @@
-import { QuotingParams, QuotingParamsSDKType } from "./params";
+import { QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
 import { VaultId, VaultIdSDKType } from "./vault";
 import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType } from "./share";
 import * as _m0 from "protobufjs/minimal";
@@ -21,7 +21,7 @@ export interface GenesisStateSDKType {
 
   default_quoting_params?: QuotingParamsSDKType;
 }
-/** Vault defines the total shares and owner shares of a vault. */
+/** Vault defines the state of a vault. */
 
 export interface Vault {
   /** The ID of the vault. */
@@ -32,14 +32,14 @@ export interface Vault {
   /** The shares of each owner in the vault. */
 
   ownerShares: OwnerShare[];
-  /** The quoting parameters of the vault. */
+  /** The parameters of the vault. */
 
-  quotingParams?: QuotingParams;
+  vaultParams?: VaultParams;
   /** The client IDs of the most recently placed orders of the vault. */
 
   mostRecentClientIds: number[];
 }
-/** Vault defines the total shares and owner shares of a vault. */
+/** Vault defines the state of a vault. */
 
 export interface VaultSDKType {
   /** The ID of the vault. */
@@ -50,9 +50,9 @@ export interface VaultSDKType {
   /** The shares of each owner in the vault. */
 
   owner_shares: OwnerShareSDKType[];
-  /** The quoting parameters of the vault. */
+  /** The parameters of the vault. */
 
-  quoting_params?: QuotingParamsSDKType;
+  vault_params?: VaultParamsSDKType;
   /** The client IDs of the most recently placed orders of the vault. */
 
   most_recent_client_ids: number[];
@@ -118,7 +118,7 @@ function createBaseVault(): Vault {
     vaultId: undefined,
     totalShares: undefined,
     ownerShares: [],
-    quotingParams: undefined,
+    vaultParams: undefined,
     mostRecentClientIds: []
   };
 }
@@ -137,8 +137,8 @@ export const Vault = {
       OwnerShare.encode(v!, writer.uint32(26).fork()).ldelim();
     }
 
-    if (message.quotingParams !== undefined) {
-      QuotingParams.encode(message.quotingParams, writer.uint32(34).fork()).ldelim();
+    if (message.vaultParams !== undefined) {
+      VaultParams.encode(message.vaultParams, writer.uint32(34).fork()).ldelim();
     }
 
     writer.uint32(42).fork();
@@ -173,7 +173,7 @@ export const Vault = {
           break;
 
         case 4:
-          message.quotingParams = QuotingParams.decode(reader, reader.uint32());
+          message.vaultParams = VaultParams.decode(reader, reader.uint32());
           break;
 
         case 5:
@@ -203,7 +203,7 @@ export const Vault = {
     message.vaultId = object.vaultId !== undefined && object.vaultId !== null ? VaultId.fromPartial(object.vaultId) : undefined;
     message.totalShares = object.totalShares !== undefined && object.totalShares !== null ? NumShares.fromPartial(object.totalShares) : undefined;
     message.ownerShares = object.ownerShares?.map(e => OwnerShare.fromPartial(e)) || [];
-    message.quotingParams = object.quotingParams !== undefined && object.quotingParams !== null ? QuotingParams.fromPartial(object.quotingParams) : undefined;
+    message.vaultParams = object.vaultParams !== undefined && object.vaultParams !== null ? VaultParams.fromPartial(object.vaultParams) : undefined;
     message.mostRecentClientIds = object.mostRecentClientIds?.map(e => e) || [];
     return message;
   }

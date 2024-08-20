@@ -1,6 +1,6 @@
 import { logger, startBugsnag, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
 import { producer } from '@dydxprotocol-indexer/kafka';
-import { TradingRewardAggregationPeriod } from '@dydxprotocol-indexer/postgres';
+import { LeaderboardPnlTimeSpan, TradingRewardAggregationPeriod } from '@dydxprotocol-indexer/postgres';
 
 import config from './config';
 import { complianceProvider } from './helpers/compliance-clients';
@@ -11,6 +11,7 @@ import {
 } from './helpers/redis';
 import aggregateTradingRewardsTasks from './tasks/aggregate-trading-rewards';
 import cancelStaleOrdersTask from './tasks/cancel-stale-orders';
+import createLeaderboardTask from './tasks/create-leaderboard';
 import createPnlTicksTask from './tasks/create-pnl-ticks';
 import deleteOldFastSyncSnapshots from './tasks/delete-old-fast-sync-snapshots';
 import deleteZeroPriceLevelsTask from './tasks/delete-zero-price-levels';
@@ -198,6 +199,52 @@ async function start(): Promise<void> {
       subaccountUsernameGeneratorTask,
       'subaccount_username_generator',
       config.LOOPS_INTERVAL_MS_SUBACCOUNT_USERNAME_GENERATOR,
+    );
+  }
+
+  if (config.LOOPS_ENABLED_LEADERBOARD_PNL_ALL_TIME) {
+    const allTimeLeaderboardTask: () => Promise<void> = createLeaderboardTask(
+      LeaderboardPnlTimeSpan.ALL_TIME);
+    startLoop(
+      allTimeLeaderboardTask,
+      'create_leaderboard_pnl_all_time',
+      config.LOOPS_INTERVAL_MS_LEADERBOARD_PNL_ALL_TIME,
+    );
+  }
+  if (config.LOOPS_ENABLED_LEADERBOARD_PNL_DAILY) {
+    const dailyLeaderboardTask: () => Promise<void> = createLeaderboardTask(
+      LeaderboardPnlTimeSpan.ONE_DAY);
+    startLoop(
+      dailyLeaderboardTask,
+      'create_leaderboard_pnl_daily',
+      config.LOOPS_INTERVAL_MS_LEADERBOARD_PNL_DAILY,
+    );
+  }
+  if (config.LOOPS_ENABLED_LEADERBOARD_PNL_WEEKLY) {
+    const weeklyLeaderboardTask: () => Promise<void> = createLeaderboardTask(
+      LeaderboardPnlTimeSpan.SEVEN_DAYS);
+    startLoop(
+      weeklyLeaderboardTask,
+      'create_leaderboard_pnl_weekly',
+      config.LOOPS_INTERVAL_MS_LEADERBOARD_PNL_WEEKLY,
+    );
+  }
+  if (config.LOOPS_ENABLED_LEADERBOARD_PNL_MONTHLY) {
+    const monthlyLeaderboardTask: () => Promise<void> = createLeaderboardTask(
+      LeaderboardPnlTimeSpan.THIRTY_DAYS);
+    startLoop(
+      monthlyLeaderboardTask,
+      'create_leaderboard_pnl_monthly',
+      config.LOOPS_INTERVAL_MS_LEADERBOARD_PNL_MONTHLY,
+    );
+  }
+  if (config.LOOPS_ENABLED_LEADERBOARD_PNL_YEARLY) {
+    const yearlyLeaderboardTask: () => Promise<void> = createLeaderboardTask(
+      LeaderboardPnlTimeSpan.ONE_YEAR);
+    startLoop(
+      yearlyLeaderboardTask,
+      'create_leaderboard_pnl_yearly',
+      config.LOOPS_INTERVAL_MS_LEADERBOARD_PNL_YEARLY,
     );
   }
 

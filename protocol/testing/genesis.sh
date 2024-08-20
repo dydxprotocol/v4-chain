@@ -91,10 +91,10 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].denom' -v "$NATIVE_TOKEN"
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_min_deposit.[0].denom' -v "$NATIVE_TOKEN"
 	# reduced deposit period
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '300s'
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '120s'
 	# reduced voting period
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_voting_period' -v '60s'
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '300s'
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '120s'
 	# set initial deposit ratio to prevent spamming
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_initial_deposit_ratio' -v '0.20000' # 20%
 	# setting to 1 disables cancelling proposals
@@ -1203,7 +1203,7 @@ function edit_genesis() {
     dasel put -t int -f "$GENESIS" '.app_state.marketmap.market_map.markets.TEST/USD.ticker.min_provider_count' -v '1'
     dasel put -t bool -f "$GENESIS" '.app_state.marketmap.market_map.markets.TEST/USD.ticker.enabled' -v 'true'
 
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.TEST/USD.provider_configs.[]' -v '{"name": "TestVolatileExchange", "off_chain_ticker": "TEST-USD"}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.TEST/USD.provider_configs.[]' -v '{"name": "volatile-exchange-provider", "off_chain_ticker": "TEST-USD"}'
 
 
     # Marketmap: USDT-USD
@@ -2245,6 +2245,8 @@ function edit_genesis() {
 		dasel put -t json -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[]" -v '{}'
 		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[0].owner" -v "${vault_owner_address}"
 		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[0].shares.num_shares" -v "${DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT}"
+
+		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_params.status" -v 'VAULT_STATUS_QUOTING'
 		vault_idx=$(($vault_idx + 1))
 	done
 }

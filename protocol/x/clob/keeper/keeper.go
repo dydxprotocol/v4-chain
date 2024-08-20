@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"sync/atomic"
 
 	"cosmossdk.io/log"
@@ -261,6 +262,14 @@ func (k Keeper) InitializeNewStreams(ctx sdk.Context) {
 				ctx,
 				clobPairId,
 			)
+		},
+		func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate {
+			subaccountUpdate := k.subaccountsKeeper.GetStreamSubaccountUpdate(
+				ctx,
+				subaccountId,
+				true,
+			)
+			return &subaccountUpdate
 		},
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),

@@ -21,27 +21,31 @@ import (
 func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 	// Iterate through all vaults.
 	numActiveVaults := 0
-	totalSharesIterator := k.getTotalSharesIterator(ctx)
-	defer totalSharesIterator.Close()
-	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
-		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
+	vaultParamsIterator := k.getVaultParamsIterator(ctx)
+	defer vaultParamsIterator.Close()
+	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
+		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
 		if err != nil {
 			log.ErrorLogWithError(ctx, "Failed to get vault ID from state key", err)
 			continue
 		}
-		var totalShares types.NumShares
-		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
+		var vaultParams types.VaultParams
+		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
 
-		// Skip if TotalShares is non-positive.
-		if totalShares.NumShares.Sign() <= 0 {
+		if vaultParams.Status != types.VaultStatus_VAULT_STATUS_QUOTING {
+			// TODO (TRA-546): cancel any existing orders and don't place new orders.
 			continue
 		}
+		// TODO (TRA-547): implement close-only mode.
 
 		// Skip if vault has no perpetual positions and strictly less than `activation_threshold_quote_quantums` USDC.
+		if vaultParams.QuotingParams == nil {
+			defaultQuotingParams := k.GetDefaultQuotingParams(ctx)
+			vaultParams.QuotingParams = &defaultQuotingParams
+		}
 		vault := k.subaccountsKeeper.GetSubaccount(ctx, *vaultId.ToSubaccountId())
 		if vault.PerpetualPositions == nil || len(vault.PerpetualPositions) == 0 {
-			quotingParams := k.GetVaultQuotingParams(ctx, *vaultId)
-			if vault.GetUsdcPosition().Cmp(quotingParams.ActivationThresholdQuoteQuantums.BigInt()) == -1 {
+			if vault.GetUsdcPosition().Cmp(vaultParams.QuotingParams.ActivationThresholdQuoteQuantums.BigInt()) == -1 {
 				continue
 			}
 		}
@@ -204,8 +208,14 @@ func (k Keeper) GetVaultClobOrders(
 	leveragePpm := new(big.Int).Mul(openNotional, lib.BigIntOneMillion())
 	leveragePpm.Quo(leveragePpm, equity)
 
-	// Get quoting parameters.
-	quotingParams := k.GetVaultQuotingParams(ctx, vaultId)
+	// Get vault parameters.
+	quotingParams, exists := k.GetVaultQuotingParams(ctx, vaultId)
+	if !exists {
+		return orders, errorsmod.Wrap(
+			types.ErrVaultParamsNotFound,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
+	}
 
 	// Calculate order size (in base quantums).
 	orderSizePctPpm := lib.BigU(quotingParams.OrderSizePctPpm)
@@ -391,7 +401,11 @@ func (k Keeper) GetVaultClobOrderIds(
 		}
 	}
 
-	layers := k.GetVaultQuotingParams(ctx, vaultId).Layers
+	quotingParams, exists := k.GetVaultQuotingParams(ctx, vaultId)
+	if !exists {
+		return []*clobtypes.OrderId{}
+	}
+	layers := quotingParams.Layers
 	orderIds = make([]*clobtypes.OrderId, 2*layers)
 	for i := uint32(0); i < layers; i++ {
 		// Construct ask order ID at this layer.
@@ -430,10 +444,17 @@ func (k Keeper) ReplaceVaultClobOrder(
 	oldOrderId *clobtypes.OrderId,
 	newOrder *clobtypes.Order,
 ) error {
+	quotingParams, exists := k.GetVaultQuotingParams(ctx, vaultId)
+	if !exists {
+		return errorsmod.Wrap(
+			types.ErrVaultParamsNotFound,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
+	}
 	// Cancel old order.
 	err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
 		*oldOrderId,
-		uint32(ctx.BlockTime().Unix())+k.GetVaultQuotingParams(ctx, vaultId).OrderExpirationSeconds,
+		uint32(ctx.BlockTime().Unix())+quotingParams.OrderExpirationSeconds,
 	))
 	vaultId.IncrCounterWithLabels(
 		metrics.VaultCancelOrder,

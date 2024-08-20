@@ -48,13 +48,6 @@ func (k Keeper) SetTotalShares(
 	return nil
 }
 
-// getTotalSharesIterator returns an iterator over all TotalShares.
-func (k Keeper) getTotalSharesIterator(ctx sdk.Context) storetypes.Iterator {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.TotalSharesKeyPrefix))
-
-	return storetypes.KVStorePrefixIterator(store, []byte{})
-}
-
 // GetOwnerShares gets owner shares for an owner in a vault.
 func (k Keeper) GetOwnerShares(
 	ctx sdk.Context,

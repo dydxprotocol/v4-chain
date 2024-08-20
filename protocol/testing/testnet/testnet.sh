@@ -8,10 +8,6 @@ source "./vars.sh"
 
 CHAIN_ID="dydx-testnet-1"
 
-# Define the mapping from version to URL
-declare -A version_to_url
-version_to_url["v5.2.0"]="https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv5.2.0/dydxprotocold-v5.2.0-linux-amd64.tar.gz"
-
 # Define dependencies for this script.
 # `jq` and `dasel` are used to manipulate json and yaml files respectively.
 install_prerequisites() {
@@ -19,10 +15,6 @@ install_prerequisites() {
 }
 
 set_cosmovisor_binary_permissions() {
-    # The genesis binary should always exist.
-    for f in $HOME/cosmovisor/genesis/bin/* ; do
-        chmod 755 $f
-    done
     # Set up upgrade binaries.
     for version in "${!version_to_url[@]}"; do
         echo "Setting up version ${version}..."
@@ -40,7 +32,7 @@ set_cosmovisor_binary_permissions() {
         chmod 755 "$version_dir/bin/dydxprotocold"
         echo "Successfully set up $version_dir/bin/dydxprotocold"
     done
-    current_version_path="$HOME/cosmovisor/upgrades/$CURRENT_VERSION_DIR/bin"
+    current_version_path="$HOME/cosmovisor/upgrades/$CURRENT_VERSION/bin"
     mkdir -p $current_version_path
     cp /bin/dydxprotocold $current_version_path
 }
