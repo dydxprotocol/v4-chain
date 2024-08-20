@@ -388,18 +388,23 @@ class AddressesController extends Controller {
   public async testNotification(
     @Path() address: string,
   ): Promise<void> {
-    const wallet = await WalletTable.findById(address);
-    if (!wallet) {
-      throw new NotFoundError(`No wallet found for address: ${address}`);
-    }
-
     try {
+      const wallet = await WalletTable.findById(address);
+      if (!wallet) {
+        throw new NotFoundError(`No wallet found for address: ${address}`);
+      }
+      const allTokens = await TokenTable.findAll({ address: wallet.address }, [])
+        .then((tokens) => tokens.map((token) => token.token));
+      if (allTokens.length === 0) {
+        throw new NotFoundError(`No tokens found for address: ${address}`);
+      }
+
       const notification = createNotification(NotificationType.ORDER_FILLED, {
         [NotificationDynamicFieldKey.MARKET]: 'BTC/USD',
         [NotificationDynamicFieldKey.AMOUNT]: '100',
         [NotificationDynamicFieldKey.AVERAGE_PRICE]: '1000',
       });
-      await sendFirebaseMessage(wallet.address, notification);
+      await sendFirebaseMessage(allTokens, notification);
     } catch (error) {
       throw new Error('Failed to send test notification');
     }

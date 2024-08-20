@@ -1,5 +1,4 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { TokenTable } from '@dydxprotocol-indexer/postgres';
 
 import {
   MulticastMessage,
@@ -9,15 +8,20 @@ import { deriveLocalizedNotificationMessage } from './localization';
 import { Notification } from './types';
 
 export async function sendFirebaseMessage(
-  address: string,
+  tokens: string[],
   notification: Notification,
 ): Promise<void> {
   // Re-add once stats are implemented
   // const start = Date.now();
 
-  const tokens = await getUserRegistrationTokens(address);
   if (tokens.length === 0) {
-    throw new Error(`User has no registration tokens: ${address}`);
+    logger.warning({
+      at: 'notifications#firebase',
+      message: 'Attempted to send Firebase message to user with no registration tokens',
+      tokens,
+      notificationType: notification.type,
+    });
+    return;
   }
 
   const { title, body } = deriveLocalizedNotificationMessage(notification);
@@ -49,30 +53,21 @@ export async function sendFirebaseMessage(
   try {
     const result = await sendMulticast(message);
     if (result?.failureCount && result?.failureCount > 0) {
-      logger.info({
-        at: 'notifications#firebase',
-        message: `Failed to send Firebase message: ${JSON.stringify(message)}`,
-        result,
-        address,
-        notificationType: notification.type,
-      });
       throw new Error('Failed to send Firebase message');
     }
   } catch (error) {
     logger.error({
       at: 'notifications#firebase',
-      message: `Failed to send Firebase message: ${JSON.stringify(message)}`,
+      message: 'Failed to send Firebase message',
       error: error as Error,
-      address,
       notificationType: notification.type,
     });
-    throw new Error('Failed to send Firebase message');
   } finally {
     // stats.timing(`${config.SERVICE_NAME}.send_firebase_message.timing`, Date.now() - start);
+    logger.info({
+      at: 'notifications#firebase',
+      message: 'Firebase message sent successfully',
+      notificationType: notification.type,
+    });
   }
-}
-
-async function getUserRegistrationTokens(address: string): Promise<string[]> {
-  const token = await TokenTable.findAll({ address, limit: 10 }, []);
-  return token.map((t) => t.token);
 }
