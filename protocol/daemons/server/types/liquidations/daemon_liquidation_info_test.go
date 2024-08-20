@@ -78,23 +78,25 @@ func TestLiquidatableSubaccountIds_Multiple_Writes(t *testing.T) {
 	expectedSubaccountIds := []satypes.SubaccountId{
 		constants.Alice_Num1,
 	}
-	ls.UpdateLiquidatableSubaccountIds(expectedSubaccountIds, 1)
-	ls.UpdateBlockHeight(1)
+	ls.Update(1, expectedSubaccountIds, []satypes.SubaccountId{}, []clobtypes.SubaccountOpenPositionInfo{})
 	require.Equal(t, expectedSubaccountIds, ls.GetLiquidatableSubaccountIds())
 
 	expectedSubaccountIds = []satypes.SubaccountId{
 		constants.Alice_Num1,
 		constants.Bob_Num0,
 	}
-	ls.UpdateLiquidatableSubaccountIds([]satypes.SubaccountId{constants.Bob_Num0}, 1)
-	ls.UpdateBlockHeight(1)
+	ls.Update(
+		1,
+		[]satypes.SubaccountId{constants.Bob_Num0},
+		[]satypes.SubaccountId{},
+		[]clobtypes.SubaccountOpenPositionInfo{},
+	)
 	require.Equal(t, expectedSubaccountIds, ls.GetLiquidatableSubaccountIds())
 
 	expectedSubaccountIds = []satypes.SubaccountId{
 		constants.Carl_Num0,
 	}
-	ls.UpdateLiquidatableSubaccountIds(expectedSubaccountIds, 2)
-	ls.UpdateBlockHeight(2)
+	ls.Update(2, expectedSubaccountIds, []satypes.SubaccountId{}, []clobtypes.SubaccountOpenPositionInfo{})
 	require.Equal(t, expectedSubaccountIds, ls.GetLiquidatableSubaccountIds())
 }
 
@@ -105,23 +107,25 @@ func TestNegativeTncSubaccounts_Multiple_Writes(t *testing.T) {
 	expectedSubaccountIds := []satypes.SubaccountId{
 		constants.Alice_Num1,
 	}
-	ls.UpdateNegativeTncSubaccountIds(expectedSubaccountIds, 1)
-	ls.UpdateBlockHeight(1)
+	ls.Update(1, []satypes.SubaccountId{}, expectedSubaccountIds, []clobtypes.SubaccountOpenPositionInfo{})
 	require.Equal(t, expectedSubaccountIds, ls.GetNegativeTncSubaccountIds())
 
 	expectedSubaccountIds = []satypes.SubaccountId{
 		constants.Alice_Num1,
 		constants.Bob_Num0,
 	}
-	ls.UpdateNegativeTncSubaccountIds([]satypes.SubaccountId{constants.Bob_Num0}, 1)
-	ls.UpdateBlockHeight(1)
+	ls.Update(
+		1,
+		[]satypes.SubaccountId{},
+		[]satypes.SubaccountId{constants.Bob_Num0},
+		[]clobtypes.SubaccountOpenPositionInfo{},
+	)
 	require.Equal(t, expectedSubaccountIds, ls.GetNegativeTncSubaccountIds())
 
 	expectedSubaccountIds = []satypes.SubaccountId{
 		constants.Carl_Num0,
 	}
-	ls.UpdateNegativeTncSubaccountIds(expectedSubaccountIds, 2)
-	ls.UpdateBlockHeight(2)
+	ls.Update(2, []satypes.SubaccountId{}, expectedSubaccountIds, []clobtypes.SubaccountOpenPositionInfo{})
 	require.Equal(t, expectedSubaccountIds, ls.GetNegativeTncSubaccountIds())
 }
 
@@ -140,8 +144,7 @@ func TestSubaccountsWithOpenPositions_Multiple_Writes(t *testing.T) {
 	}
 
 	input := []clobtypes.SubaccountOpenPositionInfo{info}
-	ls.UpdateSubaccountsWithPositions(input, 1)
-	ls.UpdateBlockHeight(1)
+	ls.Update(1, []satypes.SubaccountId{}, []satypes.SubaccountId{}, input)
 	expected := []satypes.SubaccountId{
 		constants.Alice_Num1,
 		constants.Bob_Num0,
@@ -159,8 +162,7 @@ func TestSubaccountsWithOpenPositions_Multiple_Writes(t *testing.T) {
 	}
 
 	input2 := []clobtypes.SubaccountOpenPositionInfo{info2}
-	ls.UpdateSubaccountsWithPositions(input2, 1)
-	ls.UpdateBlockHeight(1)
+	ls.Update(1, []satypes.SubaccountId{}, []satypes.SubaccountId{}, input2)
 	expected = []satypes.SubaccountId{
 		constants.Alice_Num1,
 		constants.Carl_Num0,
@@ -180,8 +182,7 @@ func TestSubaccountsWithOpenPositions_Multiple_Writes(t *testing.T) {
 	}
 
 	input3 := []clobtypes.SubaccountOpenPositionInfo{info3}
-	ls.UpdateSubaccountsWithPositions(input3, 2)
-	ls.UpdateBlockHeight(2)
+	ls.Update(2, []satypes.SubaccountId{}, []satypes.SubaccountId{}, input3)
 	expected = []satypes.SubaccountId{
 		constants.Dave_Num1,
 		constants.Alice_Num1,
@@ -196,13 +197,11 @@ func TestLiquidatableSubaccountIds_Empty_Update(t *testing.T) {
 	expectedSubaccountIds := []satypes.SubaccountId{
 		constants.Alice_Num1,
 	}
-	ls.UpdateLiquidatableSubaccountIds(expectedSubaccountIds, 1)
-	ls.UpdateBlockHeight(1)
+	ls.Update(1, expectedSubaccountIds, []satypes.SubaccountId{}, []clobtypes.SubaccountOpenPositionInfo{})
 	require.Equal(t, expectedSubaccountIds, ls.GetLiquidatableSubaccountIds())
 
 	expectedSubaccountIds = []satypes.SubaccountId{}
-	ls.UpdateLiquidatableSubaccountIds(expectedSubaccountIds, 2)
-	ls.UpdateBlockHeight(2)
+	ls.Update(2, expectedSubaccountIds, []satypes.SubaccountId{}, []clobtypes.SubaccountOpenPositionInfo{})
 	require.Empty(t, ls.GetLiquidatableSubaccountIds())
 }
 
@@ -213,13 +212,11 @@ func TestNegativeTnc_Empty_Update(t *testing.T) {
 	expectedSubaccountIds := []satypes.SubaccountId{
 		constants.Alice_Num1,
 	}
-	ls.UpdateNegativeTncSubaccountIds(expectedSubaccountIds, 1)
-	ls.UpdateBlockHeight(1)
+	ls.Update(1, []satypes.SubaccountId{}, expectedSubaccountIds, []clobtypes.SubaccountOpenPositionInfo{})
 	require.Equal(t, expectedSubaccountIds, ls.GetNegativeTncSubaccountIds())
 
 	expectedSubaccountIds = []satypes.SubaccountId{}
-	ls.UpdateNegativeTncSubaccountIds(expectedSubaccountIds, 2)
-	ls.UpdateBlockHeight(2)
+	ls.Update(2, []satypes.SubaccountId{}, expectedSubaccountIds, []clobtypes.SubaccountOpenPositionInfo{})
 	require.Empty(t, ls.GetNegativeTncSubaccountIds())
 }
 
@@ -237,8 +234,7 @@ func TestSubaccountsWithOpenPosition_Empty_Update(t *testing.T) {
 		},
 	}
 	input := []clobtypes.SubaccountOpenPositionInfo{info}
-	ls.UpdateSubaccountsWithPositions(input, 1)
-	ls.UpdateBlockHeight(1)
+	ls.Update(1, []satypes.SubaccountId{}, []satypes.SubaccountId{}, input)
 	expected := []satypes.SubaccountId{
 		constants.Alice_Num1,
 		constants.Bob_Num0,
@@ -246,7 +242,6 @@ func TestSubaccountsWithOpenPosition_Empty_Update(t *testing.T) {
 	require.Equal(t, expected, ls.GetSubaccountsWithOpenPositions(0))
 
 	input2 := []clobtypes.SubaccountOpenPositionInfo{}
-	ls.UpdateSubaccountsWithPositions(input2, 2)
-	ls.UpdateBlockHeight(2)
+	ls.Update(2, []satypes.SubaccountId{}, []satypes.SubaccountId{}, input2)
 	require.Empty(t, ls.GetSubaccountsWithOpenPositions(0))
 }

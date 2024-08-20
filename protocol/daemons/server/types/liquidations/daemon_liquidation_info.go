@@ -34,10 +34,19 @@ func (ls *DaemonLiquidationInfo) Update(
 ) {
 	ls.Lock()
 	defer ls.Unlock()
+
+	if blockHeight > ls.blockHeight {
+		ls.liquidatableSubaccountIds = make([]satypes.SubaccountId, 0)
+		ls.negativeTncSubaccountIds = make([]satypes.SubaccountId, 0)
+		ls.subaccountsWithPositions = make(map[uint32]*clobtypes.SubaccountOpenPositionInfo)
+	} else if blockHeight < ls.blockHeight {
+		panic("UpdateLiquidatableSubaccountIds: block height cannot be less than the current block height")
+	}
+	ls.UpdateBlockHeight(blockHeight)
+
 	ls.UpdateLiquidatableSubaccountIds(liquidatableSubaccountIds, blockHeight)
 	ls.UpdateNegativeTncSubaccountIds(negativeTncSubaccountIds, blockHeight)
 	ls.UpdateSubaccountsWithPositions(subaccountsWithPositions, blockHeight)
-	ls.UpdateBlockHeight(blockHeight)
 }
 
 // UpdateBlockHeight updates the struct with the given block height.
@@ -51,14 +60,7 @@ func (ls *DaemonLiquidationInfo) UpdateLiquidatableSubaccountIds(
 	updates []satypes.SubaccountId,
 	blockHeight uint32,
 ) {
-	if blockHeight > ls.blockHeight {
-		ls.liquidatableSubaccountIds = make([]satypes.SubaccountId, len(updates))
-		copy(ls.liquidatableSubaccountIds, updates)
-	} else if blockHeight == ls.blockHeight {
-		ls.liquidatableSubaccountIds = append(ls.liquidatableSubaccountIds, updates...)
-	} else {
-		panic("UpdateLiquidatableSubaccountIds: block height cannot be less than the current block height")
-	}
+	ls.liquidatableSubaccountIds = append(ls.liquidatableSubaccountIds, updates...)
 }
 
 // UpdateNegativeTncSubaccountIds updates the struct with the given a list of subaccount ids
@@ -67,14 +69,7 @@ func (ls *DaemonLiquidationInfo) UpdateNegativeTncSubaccountIds(
 	updates []satypes.SubaccountId,
 	blockHeight uint32,
 ) {
-	if blockHeight > ls.blockHeight {
-		ls.negativeTncSubaccountIds = make([]satypes.SubaccountId, len(updates))
-		copy(ls.negativeTncSubaccountIds, updates)
-	} else if blockHeight == ls.blockHeight {
-		ls.negativeTncSubaccountIds = append(ls.negativeTncSubaccountIds, updates...)
-	} else {
-		panic("UpdateLiquidatableSubaccountIds: block height cannot be less than the current block height")
-	}
+	ls.negativeTncSubaccountIds = append(ls.negativeTncSubaccountIds, updates...)
 }
 
 // UpdateSubaccountsWithPositions updates the struct with the given a list of subaccount ids with open positions.
@@ -82,40 +77,23 @@ func (ls *DaemonLiquidationInfo) UpdateSubaccountsWithPositions(
 	subaccountsWithPositions []clobtypes.SubaccountOpenPositionInfo,
 	blockHeight uint32,
 ) {
-	if blockHeight > ls.blockHeight {
-		// Reset the map if the block height has changed.
-		ls.subaccountsWithPositions = make(map[uint32]*clobtypes.SubaccountOpenPositionInfo)
-		for _, info := range subaccountsWithPositions {
-			clone := &clobtypes.SubaccountOpenPositionInfo{
+	// Append to the current map if the block height not changed.
+	for _, info := range subaccountsWithPositions {
+		if _, ok := ls.subaccountsWithPositions[info.PerpetualId]; !ok {
+			ls.subaccountsWithPositions[info.PerpetualId] = &clobtypes.SubaccountOpenPositionInfo{
 				PerpetualId:                  info.PerpetualId,
-				SubaccountsWithLongPosition:  make([]satypes.SubaccountId, len(info.SubaccountsWithLongPosition)),
-				SubaccountsWithShortPosition: make([]satypes.SubaccountId, len(info.SubaccountsWithShortPosition)),
+				SubaccountsWithLongPosition:  make([]satypes.SubaccountId, 0),
+				SubaccountsWithShortPosition: make([]satypes.SubaccountId, 0),
 			}
-			copy(clone.SubaccountsWithLongPosition, info.SubaccountsWithLongPosition)
-			copy(clone.SubaccountsWithShortPosition, info.SubaccountsWithShortPosition)
-			ls.subaccountsWithPositions[info.PerpetualId] = clone
 		}
-	} else if blockHeight == ls.blockHeight {
-		// Append to the current map if the block height not changed.
-		for _, info := range subaccountsWithPositions {
-			if _, ok := ls.subaccountsWithPositions[info.PerpetualId]; !ok {
-				ls.subaccountsWithPositions[info.PerpetualId] = &clobtypes.SubaccountOpenPositionInfo{
-					PerpetualId:                  info.PerpetualId,
-					SubaccountsWithLongPosition:  make([]satypes.SubaccountId, 0),
-					SubaccountsWithShortPosition: make([]satypes.SubaccountId, 0),
-				}
-			}
-			ls.subaccountsWithPositions[info.PerpetualId].SubaccountsWithLongPosition = append(
-				ls.subaccountsWithPositions[info.PerpetualId].SubaccountsWithLongPosition,
-				info.SubaccountsWithLongPosition...,
-			)
-			ls.subaccountsWithPositions[info.PerpetualId].SubaccountsWithShortPosition = append(
-				ls.subaccountsWithPositions[info.PerpetualId].SubaccountsWithShortPosition,
-				info.SubaccountsWithShortPosition...,
-			)
-		}
-	} else {
-		panic("UpdateLiquidatableSubaccountIds: block height cannot be less than the current block height")
+		ls.subaccountsWithPositions[info.PerpetualId].SubaccountsWithLongPosition = append(
+			ls.subaccountsWithPositions[info.PerpetualId].SubaccountsWithLongPosition,
+			info.SubaccountsWithLongPosition...,
+		)
+		ls.subaccountsWithPositions[info.PerpetualId].SubaccountsWithShortPosition = append(
+			ls.subaccountsWithPositions[info.PerpetualId].SubaccountsWithShortPosition,
+			info.SubaccountsWithShortPosition...,
+		)
 	}
 }
 
