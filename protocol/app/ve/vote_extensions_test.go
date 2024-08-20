@@ -108,7 +108,7 @@ func TestExtendVoteHandler(t *testing.T) {
 				mPerpKeeper := &mocks.ExtendVotePerpetualsKeeper{}
 				mPerpKeeper.On("GetPerpetual", mock.Anything, uint32(0)).Return(
 					perptypes.Perpetual{
-						LastFundingRate: dtypes.NewInt(int64(constants.Price5)),
+						LastFundingRate: dtypes.NewInt(int64(constants.FundingRate1)),
 					},
 					nil,
 				)

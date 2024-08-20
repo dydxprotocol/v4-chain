@@ -1664,6 +1664,32 @@ func TestModifyFundingIndex_IntegerOverflowUnderflow(t *testing.T) {
 	}
 }
 
+func TestModifyLastFundingRate_Success(t *testing.T) {
+	tests := map[string]struct {
+		perpetualId             uint32
+		lastFundingRateDelta    *big.Int
+		expectedLastFundingRate *big.Int
+	}{
+		"success": {
+			perpetualId:             0,
+			lastFundingRateDelta:    big.NewInt(1000),
+			expectedLastFundingRate: big.NewInt(1000),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			pc := keepertest.PerpetualsKeepers(t)
+			// Create liquidity tiers and perpetuals,
+			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 1)
+			pc.PerpetualsKeeper.ModifyLastFundingRate(pc.Ctx, tc.perpetualId, tc.lastFundingRateDelta)
+			perpetual, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, tc.perpetualId)
+			require.NoError(t, err)
+			require.Equal(t, dtypes.NewIntFromBigInt(tc.expectedLastFundingRate), perpetual.LastFundingRate)
+		})
+	}
+}
+
 func TestGetRemoveSampleTailsFunc(t *testing.T) {
 	tests := map[string]struct {
 		removalRatePpm uint32

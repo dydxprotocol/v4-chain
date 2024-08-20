@@ -734,6 +734,11 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 			))
 		}
 
+		err = k.ModifyLastFundingRate(ctx, perp.Params.Id, bigFundingRatePpm)
+		if err != nil {
+			panic(err)
+		}
+
 		if bigFundingRatePpm.Sign() != 0 {
 			fundingIndexDelta, err := k.getFundingIndexDelta(
 				ctx,
@@ -1194,6 +1199,24 @@ func (k Keeper) ModifyFundingIndex(
 
 	perpetual.FundingIndex = dtypes.NewIntFromBigInt(bigFundingIndex)
 	k.setPerpetual(ctx, perpetual)
+	return nil
+}
+
+func (k Keeper) ModifyLastFundingRate(
+	ctx sdk.Context,
+	perpetualId uint32,
+	lastFundingRate *big.Int,
+) (
+	err error,
+) {
+	perpetual, err := k.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	perpetual.LastFundingRate = dtypes.NewIntFromBigInt(lastFundingRate)
+	k.setPerpetual(ctx, perpetual)
+
 	return nil
 }
 

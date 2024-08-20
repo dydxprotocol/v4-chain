@@ -205,6 +205,11 @@ var (
 	Price6NegativeBytes, _ = Price6NegativeBig.GobEncode()
 	Price7NegativeBytes, _ = Price7NegativeBig.GobEncode()
 
+	// Funding Rates
+	FundingRate1 = int64(10000) // 0.01% (10000 ppm)
+	FundingRate2 = int64(-5000) // -0.005% (-5000 ppm)
+	FundingRate3 = int64(25000) // 0.025% (25000 ppm)
+
 	// Exchange 0 prices
 	Exchange0_Price4_TimeT = &api.ExchangePrice{
 		ExchangeId:     ExchangeId1,
