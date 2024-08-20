@@ -20,7 +20,7 @@ import {
 import {
   defaultSubaccountId,
   defaultMarket,
-  defaultWallet,
+  defaultToken,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 // Mock only the sendFirebaseMessage function
@@ -99,7 +99,7 @@ describe('notification functions', () => {
 
       // Assert that sendFirebaseMessage was called with correct arguments, default wallet
       // is expected because mockOrder uses defaultSubaccountId
-      expect(sendFirebaseMessage).toHaveBeenCalledWith(defaultWallet.address, undefined);
+      expect(sendFirebaseMessage).toHaveBeenCalledWith([defaultToken.token], undefined);
     });
 
     describe('sendOrderTriggeredNotification', () => {
@@ -137,7 +137,7 @@ describe('notification functions', () => {
           },
         );
 
-        expect(sendFirebaseMessage).toHaveBeenCalledWith(subaccount?.address, undefined);
+        expect(sendFirebaseMessage).toHaveBeenCalledWith([defaultToken.token], undefined);
       });
     });
   });

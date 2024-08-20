@@ -1,3 +1,4 @@
+import { logger } from '@dydxprotocol-indexer/base';
 import {
   createNotification,
   NotificationDynamicFieldKey,
@@ -16,24 +17,35 @@ export async function sendOrderFilledNotification(
   order: OrderFromDatabase,
   market: PerpetualMarketFromDatabase,
 ) {
-  const subaccount = await SubaccountTable.findById(order.subaccountId);
-  if (!subaccount) {
-    throw new Error(`Subaccount not found for id ${order.subaccountId}`);
-  }
+  try {
+    const subaccount = await SubaccountTable.findById(order.subaccountId);
+    if (!subaccount) {
+      throw new Error(`Subaccount not found for id ${order.subaccountId}`);
+    }
 
-  const token = await TokenTable.findAll({ address: subaccount.address, limit: 1 }, []);
-  if (token.length === 0) {
-    return;
+    const tokens = (await TokenTable.findAll({ address: subaccount.address }, []))
+      .map((token) => token.token);
+    if (tokens.length === 0) {
+      throw new Error(`No token found for address ${subaccount.address}`);
+    }
+
+    const notification = createNotification(
+      NotificationType.ORDER_FILLED,
+      {
+        [NotificationDynamicFieldKey.AMOUNT]: order.size.toString(),
+        [NotificationDynamicFieldKey.MARKET]: market.ticker,
+        [NotificationDynamicFieldKey.AVERAGE_PRICE]: order.price,
+      },
+    );
+
+    await sendFirebaseMessage(tokens, notification);
+  } catch (error) {
+    logger.error({
+      at: 'ender#notification-functions',
+      message: 'Error sending order filled notification',
+      error,
+    });
   }
-  const notification = createNotification(
-    NotificationType.ORDER_FILLED,
-    {
-      [NotificationDynamicFieldKey.AMOUNT]: order.size.toString(),
-      [NotificationDynamicFieldKey.MARKET]: market.ticker,
-      [NotificationDynamicFieldKey.AVERAGE_PRICE]: order.price,
-    },
-  );
-  await sendFirebaseMessage(subaccount.address, notification);
 }
 
 export async function sendOrderTriggeredNotification(
@@ -41,17 +53,26 @@ export async function sendOrderTriggeredNotification(
   market: PerpetualMarketFromDatabase,
   subaccount: SubaccountFromDatabase,
 ) {
-  const token = await TokenTable.findAll({ address: subaccount.address, limit: 1 }, []);
-  if (token.length === 0) {
-    return;
+  try {
+    const tokens = (await TokenTable.findAll({ address: subaccount.address }, []))
+      .map((token) => token.token);
+    if (tokens.length === 0) {
+      throw new Error(`No tokens found for address ${subaccount.address}`);
+    }
+    const notification = createNotification(
+      NotificationType.ORDER_TRIGGERED,
+      {
+        [NotificationDynamicFieldKey.MARKET]: market.ticker,
+        [NotificationDynamicFieldKey.PRICE]: order.price,
+        [NotificationDynamicFieldKey.AMOUNT]: order.size.toString(),
+      },
+    );
+    await sendFirebaseMessage(tokens, notification);
+  } catch (error) {
+    logger.error({
+      at: 'ender#notification-functions',
+      message: 'Error sending order triggered notification',
+      error,
+    });
   }
-  const notification = createNotification(
-    NotificationType.ORDER_TRIGGERED,
-    {
-      [NotificationDynamicFieldKey.MARKET]: market.ticker,
-      [NotificationDynamicFieldKey.PRICE]: order.price,
-      [NotificationDynamicFieldKey.AMOUNT]: order.size.toString(),
-    },
-  );
-  await sendFirebaseMessage(subaccount.address, notification);
 }

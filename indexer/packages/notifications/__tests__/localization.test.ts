@@ -31,8 +31,8 @@ describe('deriveLocalizedNotificationMessage', () => {
     });
 
     const expected = {
-      title: 'Your order for 1000 BTC/USD was filled at $45000',
-      body: 'Order Filled',
+      title: 'Order Filled',
+      body: 'Your order for 1000 BTC/USD was filled at $45000',
     };
 
     const result = deriveLocalizedNotificationMessage(notification);

@@ -12,9 +12,9 @@ export function deriveLocalizedNotificationMessage(notification: Notification): 
   const tempLocalizationFields = {
     [LocalizationKey.DEPOSIT_SUCCESS_TITLE]: 'Deposit Successful',
     [LocalizationKey.DEPOSIT_SUCCESS_BODY]: 'You have successfully deposited {AMOUNT} {MARKET} to your dYdX account.',
-    [LocalizationKey.ORDER_FILLED_BODY]: 'Order Filled',
+    [LocalizationKey.ORDER_FILLED_TITLE]: 'Order Filled',
     // eslint-disable-next-line no-template-curly-in-string
-    [LocalizationKey.ORDER_FILLED_TITLE]: 'Your order for {AMOUNT} {MARKET} was filled at ${AVERAGE_PRICE}',
+    [LocalizationKey.ORDER_FILLED_BODY]: 'Your order for {AMOUNT} {MARKET} was filled at ${AVERAGE_PRICE}',
     // eslint-disable-next-line no-template-curly-in-string
     [LocalizationKey.ORDER_TRIGGERED_BODY]: 'Your order for {AMOUNT} {MARKET} was triggered at ${PRICE}',
     [LocalizationKey.ORDER_TRIGGERED_TITLE]: '{MARKET} Order Triggered',
