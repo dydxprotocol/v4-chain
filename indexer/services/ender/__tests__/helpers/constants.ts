@@ -281,6 +281,7 @@ export const defaultOrderEvent: OrderFillEventV1 = {
   fillAmount: Long.fromValue(10_000, true),
   totalFilledMaker: Long.fromValue(0, true),
   totalFilledTaker: Long.fromValue(0, true),
+  affiliateRevShare: Long.fromValue(0, true),
 };
 export const defaultOrder: OrderFillEventWithOrder = {
   makerOrder: defaultMakerOrder,
@@ -290,6 +291,7 @@ export const defaultOrder: OrderFillEventWithOrder = {
   fillAmount: Long.fromValue(10_000, true),
   totalFilledMaker: Long.fromValue(0, true),
   totalFilledTaker: Long.fromValue(0, true),
+  affiliateRevShare: Long.fromValue(0, true),
 };
 export const defaultLiquidationEvent: OrderFillEventV1 = {
   makerOrder: defaultMakerOrder,
@@ -299,6 +301,7 @@ export const defaultLiquidationEvent: OrderFillEventV1 = {
   fillAmount: Long.fromValue(10_000, true),
   totalFilledMaker: Long.fromValue(0, true),
   totalFilledTaker: Long.fromValue(0, true),
+  affiliateRevShare: Long.fromValue(0, true),
 };
 export const defaultLiquidation: OrderFillEventWithLiquidation = {
   makerOrder: defaultMakerOrder,
@@ -308,6 +311,7 @@ export const defaultLiquidation: OrderFillEventWithLiquidation = {
   fillAmount: Long.fromValue(10_000, true),
   totalFilledMaker: Long.fromValue(0, true),
   totalFilledTaker: Long.fromValue(0, true),
+  affiliateRevShare: Long.fromValue(0, true),
 };
 
 export const defaultEmptySubaccountUpdate: SubaccountUpdate = {
