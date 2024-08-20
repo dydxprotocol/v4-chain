@@ -10,6 +10,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -39,8 +40,9 @@ type VEPricePair struct {
 }
 
 var (
-	acceptResponse = &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}
-	rejectResponse = &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}
+	acceptResponse       = &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}
+	rejectResponse       = &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}
+	ppmFactor      int64 = 1000000
 )
 
 func NewVoteExtensionHandler(
@@ -167,7 +169,8 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 }
 
 func (h *VoteExtensionHandler) GetVEBytesFromCurrPrices(ctx sdk.Context) ([]byte, error) {
-	priceUpdates := h.getCurrentPrices(ctx)
+	priceUpdates := h.getCurrentPricesForEachMarket(ctx)
+
 	if len(priceUpdates) == 0 {
 		return nil, fmt.Errorf("no valid prices")
 	}
@@ -219,8 +222,6 @@ func (h *VoteExtensionHandler) getEncodedPriceFromPriceUpdate(
 
 	encodedPnlPrice, err := veutils.GetVEEncodedPrice(pnlPrice)
 	if err != nil {
-		// TODO: If PNL price can't be encoded should we default to spot price for pnl price
-		// or do we allow for a price to be nil in a PricePair object
 		return types.PricePair{}, err
 	}
 
@@ -230,36 +231,20 @@ func (h *VoteExtensionHandler) getEncodedPriceFromPriceUpdate(
 	}, nil
 }
 
-func (h *VoteExtensionHandler) getCurrentPrices(
+func (h *VoteExtensionHandler) getCurrentPricesForEachMarket(
 	ctx sdk.Context,
 ) map[uint32]VEPricePair {
 	vePrices := make(map[uint32]VEPricePair)
-
 	indexPrices := h.pricesKeeper.GetValidMarketSpotPriceUpdates(ctx)
 
 	for _, market := range indexPrices {
-		clobMidPrice := h.getClobMidPrice(ctx, market.MarketId)
-		if clobMidPrice == nil {
-			vePrices[market.MarketId] = VEPricePair{
-				SpotPrice: market.SpotPrice,
-				PnlPrice:  market.SpotPrice,
-			}
-			continue
-		}
-		smoothedPrice := h.getSmoothedPrice(market.MarketId)
-		if smoothedPrice == nil {
-			vePrices[market.MarketId] = VEPricePair{
-				SpotPrice: market.SpotPrice,
-				PnlPrice:  market.SpotPrice,
-			}
-			continue
-		}
-		lastFundingRate := h.getLastFundingRate(ctx, market.MarketId)
-		if lastFundingRate == nil {
-			vePrices[market.MarketId] = VEPricePair{
-				SpotPrice: market.SpotPrice,
-				PnlPrice:  market.SpotPrice,
-			}
+		clobMidPrice, smoothedPrice, lastFundingRate, allExist := h.getPeripheryPnlPriceData(
+			ctx,
+			market,
+			vePrices,
+		)
+
+		if !allExist {
 			continue
 		}
 
@@ -277,6 +262,48 @@ func (h *VoteExtensionHandler) getCurrentPrices(
 	}
 
 	return vePrices
+}
+
+func (h *VoteExtensionHandler) getPeripheryPnlPriceData(
+	ctx sdk.Context,
+	market *pricestypes.MarketSpotPriceUpdate,
+	vePrices map[uint32]VEPricePair,
+) (
+	clobMidPrice *big.Int,
+	smoothedPrice *big.Int,
+	lastFundingRate *big.Int,
+	allExist bool,
+) {
+	clobMidPrice = h.getClobMidPrice(ctx, market.MarketId)
+	if clobMidPrice == nil {
+		vePrices[market.MarketId] = VEPricePair{
+			SpotPrice: market.SpotPrice,
+			PnlPrice:  market.SpotPrice,
+		}
+		allExist = false
+		return
+	}
+	smoothedPrice = h.getSmoothedPrice(market.MarketId)
+	if smoothedPrice == nil {
+		vePrices[market.MarketId] = VEPricePair{
+			SpotPrice: market.SpotPrice,
+			PnlPrice:  market.SpotPrice,
+		}
+		allExist = false
+		return
+	}
+	lastFundingRate = h.getLastFundingRate(ctx, market.MarketId)
+	if lastFundingRate == nil {
+		vePrices[market.MarketId] = VEPricePair{
+			SpotPrice: market.SpotPrice,
+			PnlPrice:  market.SpotPrice,
+		}
+		allExist = false
+		return
+	}
+
+	allExist = true
+	return
 }
 
 func (h *VoteExtensionHandler) getMedianPrice(
@@ -298,10 +325,10 @@ func (h *VoteExtensionHandler) getFundingWeightedIndexPrice(
 	indexPrice *big.Int,
 	lastFundingRate *big.Int,
 ) *big.Int {
-	ppmFactor := new(big.Int).SetInt64(1000000)
-	adjustedFundingRate := new(big.Int).Add(lastFundingRate, ppmFactor)
+	adjustedFundingRate := new(big.Int).Add(lastFundingRate, big.NewInt(ppmFactor))
 	fundingWeightedPrice := new(big.Int).Mul(indexPrice, adjustedFundingRate)
-	fundingWeightedPrice = fundingWeightedPrice.Div(fundingWeightedPrice, ppmFactor)
+	fundingWeightedPrice = fundingWeightedPrice.Div(fundingWeightedPrice, big.NewInt(ppmFactor))
+
 	return fundingWeightedPrice
 }
 
