@@ -2185,6 +2185,8 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 					actualFundingIndexDelta,
 				)
 
+				require.Equal(t, newPerp.LastFundingRate, dtypes.NewIntFromBigInt(big.NewInt(int64(tc.fundingRatesAndIndices[i].FundingValuePpm))))
+
 				// Check that all recorded funding samples from the previous epoch were deleted.
 				allSamples := pc.PerpetualsKeeper.GetPremiumSamples(pc.Ctx)
 				require.NoError(t, err)
