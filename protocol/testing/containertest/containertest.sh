@@ -5,9 +5,9 @@ set -eo pipefail
 # This file should be run as part of `docker-compose.yml`.
 
 source "./genesis.sh"
+source "./version.sh"
 
 CHAIN_ID="localdydxprotocol"
-PREUPGRADE_VERSION="v5.1.0-rc2"
 
 # Define mnemonics for all validators.
 MNEMONICS=(
