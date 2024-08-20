@@ -1832,7 +1832,7 @@ function createOrderFillEvent(
     takerFee: Long.fromValue(defaultTakerFeeQuantum, false),
     totalFilledMaker: Long.fromValue(totalFilledMaker, true),
     totalFilledTaker: Long.fromValue(totalFilledTaker, true),
-    affiliateRevShare: Long.fromValue(affiliateRevShare, false)
+    affiliateRevShare: Long.fromValue(affiliateRevShare, false),
   } as OrderFillEventV1;
 }
 
