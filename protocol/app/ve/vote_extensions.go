@@ -283,6 +283,7 @@ func (h *VoteExtensionHandler) getPeripheryPnlPriceData(
 		allExist = false
 		return
 	}
+
 	smoothedPrice = h.getSmoothedPrice(market.MarketId)
 	if smoothedPrice == nil {
 		vePrices[market.MarketId] = VEPricePair{
@@ -292,6 +293,7 @@ func (h *VoteExtensionHandler) getPeripheryPnlPriceData(
 		allExist = false
 		return
 	}
+
 	lastFundingRate = h.getLastFundingRate(ctx, market.MarketId)
 	if lastFundingRate == nil {
 		vePrices[market.MarketId] = VEPricePair{
