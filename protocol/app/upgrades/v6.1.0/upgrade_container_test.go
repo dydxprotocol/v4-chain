@@ -1,11 +1,11 @@
 //go:build all || container_test
 
-package v_cosmwasm_0_test
+package v_6_1_0_test
 
 import (
 	"testing"
 
-	v_cosmwasm_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v.cosmwasm.0"
+	v_6_1_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v6.1.0"
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -31,7 +31,7 @@ func TestStateUpgrade(t *testing.T) {
 	preUpgradeSetups(node, t)
 	preUpgradeChecks(node, t)
 
-	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_cosmwasm_0.UpgradeName)
+	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_6_1_0.UpgradeName)
 	require.NoError(t, err)
 
 	postUpgradeChecks(node, t)

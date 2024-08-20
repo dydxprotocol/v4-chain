@@ -1,4 +1,4 @@
-package v_cosmwasm_0
+package v_6_1_0
 
 import (
 	"context"
@@ -12,13 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
-	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 )
 
 var ModuleAccsToInitialize = []string{
@@ -88,66 +81,9 @@ func InitializeModuleAccs(ctx sdk.Context, ak authkeeper.AccountKeeper) {
 	}
 }
 
-// TODO(OTE-535): remove duplicated code from v6 upgrade
-func removeStatefulFOKOrders(ctx sdk.Context, k clobtypes.ClobKeeper) {
-	allStatefulOrders := k.GetAllStatefulOrders(ctx)
-	for _, order := range allStatefulOrders {
-		if order.TimeInForce == clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL {
-			// Remove the orders from state.
-			k.MustRemoveStatefulOrder(ctx, order.OrderId)
-
-			// Send indexer event for removal of stateful order.
-			k.GetIndexerEventManager().AddTxnEvent(
-				ctx,
-				indexerevents.SubtypeStatefulOrder,
-				indexerevents.StatefulOrderEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewStatefulOrderRemovalEvent(
-						order.OrderId,
-						indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
-							clobtypes.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED,
-						),
-					),
-				),
-			)
-		}
-	}
-}
-
-// TODO(OTE-535): remove duplicated code from v6 upgrade
-func initRevShareModuleState(
-	ctx sdk.Context,
-	revShareKeeper revsharetypes.RevShareKeeper,
-	priceKeeper pricetypes.PricesKeeper,
-) {
-	// Initialize the rev share module state.
-	params := revsharetypes.MarketMapperRevenueShareParams{
-		Address:         authtypes.NewModuleAddress(authtypes.FeeCollectorName).String(),
-		RevenueSharePpm: 0,
-		ValidDays:       0,
-	}
-	err := revShareKeeper.SetMarketMapperRevenueShareParams(ctx, params)
-	if err != nil {
-		panic(fmt.Sprintf("failed to set market mapper revenue share params: %s", err))
-	}
-
-	// Initialize the rev share details for all existing markets.
-	markets := priceKeeper.GetAllMarketParams(ctx)
-	for _, market := range markets {
-		revShareDetails := revsharetypes.MarketMapperRevShareDetails{
-			ExpirationTs: 0,
-		}
-		revShareKeeper.SetMarketMapperRevShareDetails(ctx, market.Id, revShareDetails)
-	}
-}
-
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
-	clobKeeper clobtypes.ClobKeeper,
-	revShareKeeper revsharetypes.RevShareKeeper,
-	priceKeeper pricetypes.PricesKeeper,
-	mmKeeper marketmapkeeper.Keeper,
 	ak authkeeper.AccountKeeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -155,13 +91,6 @@ func CreateUpgradeHandler(
 		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
 
 		InitializeModuleAccs(sdkCtx, ak)
-		// Remove all stateful FOK orders from state.
-		removeStatefulFOKOrders(sdkCtx, clobKeeper)
-
-		// Initialize the rev share module state.
-		initRevShareModuleState(sdkCtx, revShareKeeper, priceKeeper)
-
-		sdkCtx.Logger().Info("Successfully removed stateful orders from state")
 
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
