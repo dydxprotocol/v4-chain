@@ -26,6 +26,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdQueryParams())
 	cmd.AddCommand(CmdQueryVault())
 	cmd.AddCommand(CmdQueryListVault())
+	cmd.AddCommand(CmdQueryTotalShares())
 	cmd.AddCommand(CmdQueryListOwnerShares())
 
 	return cmd
@@ -123,6 +124,30 @@ func CmdQueryListVault() *cobra.Command {
 	}
 
 	flags.AddPaginationFlagsToCmd(cmd, cmd.Use)
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdQueryTotalShares() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "total-shares",
+		Short: "get total shares of megavault",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.MegavaultTotalShares(
+				context.Background(),
+				&types.QueryMegavaultTotalSharesRequest{},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
