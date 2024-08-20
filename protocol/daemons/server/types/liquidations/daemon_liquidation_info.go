@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"sync"
 
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -40,7 +41,13 @@ func (ls *DaemonLiquidationInfo) Update(
 		ls.negativeTncSubaccountIds = make([]satypes.SubaccountId, 0)
 		ls.subaccountsWithPositions = make(map[uint32]*clobtypes.SubaccountOpenPositionInfo)
 	} else if blockHeight < ls.blockHeight {
-		panic("UpdateLiquidatableSubaccountIds: block height cannot be less than the current block height")
+		panic(
+			fmt.Sprintf(
+				"UpdateLiquidatableSubaccountIds: block height %d cannot be less than the current block height %d",
+				blockHeight,
+				ls.blockHeight,
+			),
+		)
 	}
 	ls.UpdateBlockHeight(blockHeight)
 
