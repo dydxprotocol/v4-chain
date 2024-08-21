@@ -1438,7 +1438,10 @@ func TestPrepareCheckState(t *testing.T) {
 			}
 
 			// Set the liquidatable subaccount IDs.
-			ks.ClobKeeper.DaemonLiquidationInfo.UpdateLiquidatableSubaccountIds(tc.liquidatableSubaccounts)
+			ks.ClobKeeper.DaemonLiquidationInfo.UpdateLiquidatableSubaccountIds(
+				tc.liquidatableSubaccounts,
+				uint32(ctx.BlockHeight()),
+			)
 
 			// Run the test.
 			clob.PrepareCheckState(

@@ -1,11 +1,12 @@
 package flags
 
 import (
+	"time"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	oracleconfig "github.com/skip-mev/slinky/oracle/config"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	"time"
 )
 
 // List of CLI flags for Server and Client.
@@ -22,9 +23,10 @@ const (
 	FlagBridgeDaemonLoopDelayMs    = "bridge-daemon-loop-delay-ms"
 	FlagBridgeDaemonEthRpcEndpoint = "bridge-daemon-eth-rpc-endpoint"
 
-	FlagLiquidationDaemonEnabled        = "liquidation-daemon-enabled"
-	FlagLiquidationDaemonLoopDelayMs    = "liquidation-daemon-loop-delay-ms"
-	FlagLiquidationDaemonQueryPageLimit = "liquidation-daemon-query-page-limit"
+	FlagLiquidationDaemonEnabled           = "liquidation-daemon-enabled"
+	FlagLiquidationDaemonLoopDelayMs       = "liquidation-daemon-loop-delay-ms"
+	FlagLiquidationDaemonQueryPageLimit    = "liquidation-daemon-query-page-limit"
+	FlagLiquidationDaemonResponsePageLimit = "liquidation-daemon-response-page-limit"
 
 	// Oracle flags
 	FlagOracleEnabled                 = "oracle.enabled"
@@ -62,6 +64,8 @@ type LiquidationFlags struct {
 	LoopDelayMs uint32
 	// QueryPageLimit configures the pagination limit for fetching subaccounts.
 	QueryPageLimit uint64
+	// ResponsePageLimit configures the pagination limit for the response to application.
+	ResponsePageLimit uint64
 }
 
 // PriceFlags contains configuration flags for the Price Daemon.
@@ -102,9 +106,10 @@ func GetDefaultDaemonFlags() DaemonFlags {
 				EthRpcEndpoint: "",
 			},
 			Liquidation: LiquidationFlags{
-				Enabled:        true,
-				LoopDelayMs:    1_600,
-				QueryPageLimit: 1_000,
+				Enabled:           true,
+				LoopDelayMs:       1_600,
+				QueryPageLimit:    1_000,
+				ResponsePageLimit: 2_000,
 			},
 			Price: PriceFlags{
 				Enabled:     false,
@@ -182,6 +187,11 @@ func AddDaemonFlagsToCmd(
 		FlagLiquidationDaemonQueryPageLimit,
 		df.Liquidation.QueryPageLimit,
 		"Limit on the number of items to fetch per query in the Liquidation Daemon task loop.",
+	)
+	cmd.Flags().Uint64(
+		FlagLiquidationDaemonResponsePageLimit,
+		df.Liquidation.ResponsePageLimit,
+		"Limit on the number of items to send to the main application in the Liquidation Daemon task loop.",
 	)
 
 	// Price Daemon.
@@ -274,6 +284,11 @@ func GetDaemonFlagValuesFromOptions(
 	if option := appOpts.Get(FlagLiquidationDaemonQueryPageLimit); option != nil {
 		if v, err := cast.ToUint64E(option); err == nil {
 			result.Liquidation.QueryPageLimit = v
+		}
+	}
+	if option := appOpts.Get(FlagLiquidationDaemonResponsePageLimit); option != nil {
+		if v, err := cast.ToUint64E(option); err == nil {
+			result.Liquidation.ResponsePageLimit = v
 		}
 	}
 
