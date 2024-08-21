@@ -19,7 +19,7 @@ message QueryMarketsHardCap {}
 message QueryMarketsHardCapResponse { uint32 hard_cap = 1; }
 
 // Queries the listing vault deposit params
-message QueryListingVaultDepositParams{}
+message QueryListingVaultDepositParams {}
 
 // Response type for QueryListingVaultDepositParams
 message QueryListingVaultDepositParamsResponse {

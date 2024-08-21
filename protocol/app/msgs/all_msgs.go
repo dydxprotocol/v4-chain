@@ -197,10 +197,12 @@ var (
 		"/dydxprotocol.govplus.MsgSlashValidatorResponse": {},
 
 		// listing
-		"/dydxprotocol.listing.MsgSetMarketsHardCap":                  {},
-		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse":          {},
-		"/dydxprotocol.listing.MsgCreateMarketPermissionless":         {},
-		"/dydxprotocol.listing.MsgCreateMarketPermissionlessResponse": {},
+		"/dydxprotocol.listing.MsgSetMarketsHardCap":                    {},
+		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse":            {},
+		"/dydxprotocol.listing.MsgCreateMarketPermissionless":           {},
+		"/dydxprotocol.listing.MsgCreateMarketPermissionlessResponse":   {},
+		"/dydxprotocol.listing.MsgSetListingVaultDepositParams":         {},
+		"/dydxprotocol.listing.MsgSetListingVaultDepositParamsResponse": {},
 
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":               {},
