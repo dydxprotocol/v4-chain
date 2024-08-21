@@ -637,8 +637,9 @@ describe('update-compliance-data', () => {
       addressesScreened: 1,
       upserted: 1,
       statusUpserted: 1,
+      // no old address is added for updating, but there is an old address with stale compliance
       activeAddressesWithStaleCompliance: 0,
-      inactiveAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 1,
     },
     mockProvider.provider,
     );
@@ -792,8 +793,20 @@ function expectGaugeStats(
     { provider },
   );
   expect(stats.gauge).toHaveBeenCalledWith(
+    'roundtable.update_compliance_data.num_active_addresses_with_stale_compliance',
+    activeAddressesWithStaleCompliance,
+    undefined,
+    { provider },
+  );
+  expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_old_addresses',
     oldAddresses,
+    undefined,
+    { provider },
+  );
+  expect(stats.gauge).toHaveBeenCalledWith(
+    'roundtable.update_compliance_data.num_inactive_addresses_with_stale_compliance',
+    inactiveAddressesWithStaleCompliance,
     undefined,
     { provider },
   );
@@ -812,14 +825,6 @@ function expectGaugeStats(
   expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_compliance_status_upserted',
     statusUpserted,
-  );
-  expect(stats.gauge).toHaveBeenCalledWith(
-    'roundtable.update_compliance_data.num_active_addresses_with_stale_compliance',
-    activeAddressesWithStaleCompliance,
-  );
-  expect(stats.gauge).toHaveBeenCalledWith(
-    'roundtable.update_compliance_data.num_inactive_addresses_with_stale_compliance',
-    inactiveAddressesWithStaleCompliance,
   );
 }
 

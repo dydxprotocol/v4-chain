@@ -140,7 +140,7 @@ export default async function runTask(
       activeAddressesWithStaleCompliance,
       undefined,
       { provider: complianceProvider.provider },
-    )
+    );
 
     const startOldAddresses: number = Date.now();
     // Get old compliance data
@@ -155,10 +155,13 @@ export default async function runTask(
     );
 
     const inactiveAddressesWithStaleCompliance = oldAddressCompliance.length;
+    const oldAddressesToAdd = _.chain(oldAddressCompliance)
+      .map(ComplianceDataColumns.address)
+      .uniq()
+      .take(remainingQueries)
+      .value();
 
-    addressesToQuery.push(...(
-      _.chain(oldAddressCompliance).map(ComplianceDataColumns.address).uniq().take(remainingQueries).value()
-    ));
+    addressesToQuery.push(...oldAddressesToAdd);
 
     // Ensure all addresses to query are unique
     addressesToQuery = _.sortedUniq(addressesToQuery);
@@ -171,7 +174,7 @@ export default async function runTask(
     );
     stats.gauge(
       `${config.SERVICE_NAME}.${taskName}.num_old_addresses`,
-      oldAddressCompliance.length,
+      oldAddressesToAdd.length,
       undefined,
       { provider: complianceProvider.provider },
     );
@@ -180,7 +183,7 @@ export default async function runTask(
       inactiveAddressesWithStaleCompliance,
       undefined,
       { provider: complianceProvider.provider },
-    )
+    );
 
     const closeOnlyAndBlockedStatuses: ComplianceStatusFromDatabase[] = await
     ComplianceStatusTable.findAll(
