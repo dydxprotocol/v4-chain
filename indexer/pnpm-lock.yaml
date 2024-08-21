@@ -28,9 +28,11 @@ importers:
       dotenv-flow: ^3.2.0
       express: ^4.18.1
       hot-shots: ^9.1.0
+      jest: ^28.1.2
       lodash: ^4.17.21
       traverse: ^0.6.6
       typescript: ^4.7.4
+      uuid: ^8.3.2
       winston: ^3.8.1
       winston-transport: ^4.5.0
     dependencies:
@@ -45,6 +47,7 @@ importers:
       hot-shots: 9.1.0
       lodash: 4.17.21
       traverse: 0.6.6
+      uuid: 8.3.2
       winston: 3.8.1
       winston-transport: 4.5.0
     devDependencies:
@@ -54,6 +57,7 @@ importers:
       '@types/lodash': 4.14.182
       '@types/traverse': 0.6.32
       express: 4.18.1
+      jest: 28.1.2
       typescript: 4.7.4
 
   packages/compliance:
@@ -10001,7 +10005,7 @@ packages:
       pretty-format: 28.1.1
       slash: 3.0.0
       strip-json-comments: 3.1.1
-      ts-node: 10.8.2_2ee97d30e4a239eb38d57e3751ee8d16
+      ts-node: 10.8.2_2dd5d46eecda2aef953638919121af58
     transitivePeerDependencies:
       - supports-color
 
@@ -13144,6 +13148,7 @@ packages:
       typescript: 4.9.5
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
+    dev: true
 
   /ts-node/10.8.2_4ea55324100c26d4019c6e6bcc89fac6:
     resolution: {integrity: sha512-LYdGnoGddf1D6v8REPtIH+5iq/gTDuZqv2/UJUU7tKjuEU8xVZorBM+buCGNjj+pGEud+sOoM4CX3/YzINpENA==}

@@ -13,6 +13,7 @@ export * from './constants';
 export * from './bugsnag';
 export * from './stats-util';
 export * from './date-helpers';
+export * from './instance-id';
 
 // Do this outside logger.ts to avoid a dependency cycle with logger transports that may trigger
 // additional logging.
