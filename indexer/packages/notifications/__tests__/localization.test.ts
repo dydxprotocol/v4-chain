@@ -5,6 +5,7 @@ import {
   NotificationType,
   NotificationDynamicFieldKey,
   createNotification,
+  isValidLanguageCode,
 } from '../src/types';
 
 describe('deriveLocalizedNotificationMessage', () => {
@@ -37,5 +38,28 @@ describe('deriveLocalizedNotificationMessage', () => {
 
     const result = deriveLocalizedNotificationMessage(notification);
     expect(result).toEqual(expected);
+  });
+
+  describe('isValidLanguageCode', () => {
+    test('should return true for valid language codes', () => {
+      const validCodes = ['en', 'es', 'fr', 'de', 'it', 'ja', 'ko', 'zh'];
+      validCodes.forEach((code) => {
+        expect(isValidLanguageCode(code)).toBe(true);
+      });
+    });
+
+    test('should return false for invalid language codes', () => {
+      const invalidCodes = ['', 'EN', 'eng', 'esp', 'fra', 'deu', 'ita', 'jpn', 'kor', 'zho', 'xx'];
+      invalidCodes.forEach((code) => {
+        expect(isValidLanguageCode(code)).toBe(false);
+      });
+    });
+
+    test('should return false for non-string inputs', () => {
+      const nonStringInputs = [null, undefined, 123, {}, []];
+      nonStringInputs.forEach((input) => {
+        expect(isValidLanguageCode(input as any)).toBe(false);
+      });
+    });
   });
 });
