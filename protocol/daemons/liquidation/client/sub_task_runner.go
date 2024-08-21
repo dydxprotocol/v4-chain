@@ -60,6 +60,8 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 		return nil
 	}
 
+	s.lastLoopBlockHeight = lastCommittedBlockHeight
+
 	// 1. Fetch all information needed to calculate total net collateral and margin requirements.
 	subaccounts,
 		perpInfos,
