@@ -73,6 +73,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 0,
       upserted: 0,
       statusUpserted: 0,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -95,6 +97,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 0,
       upserted: 0,
       statusUpserted: 0,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -122,6 +126,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 0,
       upserted: 0,
       statusUpserted: 0,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -152,6 +158,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 0,
       upserted: 0,
       statusUpserted: 0,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -197,6 +205,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 1,
       upserted: 1,
       statusUpserted: 1,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -243,6 +253,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 1,
       upserted: 1,
       statusUpserted: 1,
+      activeAddressesWithStaleCompliance: 1,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -279,6 +291,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 0,
       upserted: 0,
       statusUpserted: 0,
+      activeAddressesWithStaleCompliance: 1,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -324,6 +338,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 1,
       upserted: 1,
       statusUpserted: 1,
+      activeAddressesWithStaleCompliance: 1,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -375,6 +391,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 1,
       upserted: 1,
       statusUpserted: 1,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 1,
     },
     mockProvider.provider,
     );
@@ -456,6 +474,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 2,
       upserted: 2,
       statusUpserted: 2,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 1,
     },
     mockProvider.provider,
     );
@@ -546,6 +566,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 3,
       upserted: 2,
       statusUpserted: 2,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 1,
     },
     mockProvider.provider,
     );
@@ -615,6 +637,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 1,
       upserted: 1,
       statusUpserted: 1,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -644,6 +668,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 1,
       upserted: 1,
       statusUpserted: 1,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 1,
     },
     mockProvider.provider,
     );
@@ -739,6 +765,8 @@ function expectGaugeStats(
     addressesScreened,
     upserted,
     statusUpserted,
+    activeAddressesWithStaleCompliance,
+    inactiveAddressesWithStaleCompliance,
   }: {
     activeAddresses: number,
     newAddresses: number,
@@ -746,6 +774,8 @@ function expectGaugeStats(
     addressesScreened: number,
     upserted: number,
     statusUpserted: number,
+    activeAddressesWithStaleCompliance: number,
+    inactiveAddressesWithStaleCompliance: number,
   },
   provider: string,
 ): void {
@@ -782,6 +812,14 @@ function expectGaugeStats(
   expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_compliance_status_upserted',
     statusUpserted,
+  );
+  expect(stats.gauge).toHaveBeenCalledWith(
+    'roundtable.update_compliance_data.num_active_addresses_with_stale_compliance',
+    activeAddressesWithStaleCompliance,
+  );
+  expect(stats.gauge).toHaveBeenCalledWith(
+    'roundtable.update_compliance_data.num_inactive_addresses_with_stale_compliance',
+    inactiveAddressesWithStaleCompliance,
   );
 }
 

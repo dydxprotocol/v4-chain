@@ -96,13 +96,10 @@ export default async function runTask(
     }
 
     // Add any address that has compliance data that's over the age threshold for active addresses
-    // and is not blocked
+    // and is not blocked. Count all such accounts.
     let activeAddressesToQuery: number = 0;
+    let activeAddressesWithStaleCompliance: number = 0;
     for (const addressCompliance of activeAddressCompliance) {
-      if (remainingQueries <= 0) {
-        break;
-      }
-
       if (addressCompliance.blocked) {
         continue;
       }
@@ -111,9 +108,13 @@ export default async function runTask(
         continue;
       }
 
-      addressesToQuery.push(addressCompliance.address);
-      remainingQueries -= 1;
-      activeAddressesToQuery += 1;
+      activeAddressesWithStaleCompliance += 1;
+
+      if (remainingQueries > 0) {
+        addressesToQuery.push(addressCompliance.address);
+        remainingQueries -= 1;
+        activeAddressesToQuery += 1;
+      }
     }
 
     stats.timing(
@@ -134,6 +135,12 @@ export default async function runTask(
       undefined,
       { provider: complianceProvider.provider },
     );
+    stats.gauge(
+      `${config.SERVICE_NAME}.${taskName}.num_active_addresses_with_stale_compliance`,
+      activeAddressesWithStaleCompliance,
+      undefined,
+      { provider: complianceProvider.provider },
+    )
 
     const startOldAddresses: number = Date.now();
     // Get old compliance data
@@ -142,14 +149,17 @@ export default async function runTask(
         blocked: false,
         provider: complianceProvider.provider,
         updatedBeforeOrAt: ageThreshold,
-        limit: remainingQueries,
       },
       [],
       { readReplica: true },
     );
+
+    const inactiveAddressesWithStaleCompliance = oldAddressCompliance.length;
+
     addressesToQuery.push(...(
-      _.chain(oldAddressCompliance).map(ComplianceDataColumns.address).uniq().value()
+      _.chain(oldAddressCompliance).map(ComplianceDataColumns.address).uniq().take(remainingQueries).value()
     ));
+
     // Ensure all addresses to query are unique
     addressesToQuery = _.sortedUniq(addressesToQuery);
 
@@ -165,6 +175,12 @@ export default async function runTask(
       undefined,
       { provider: complianceProvider.provider },
     );
+    stats.gauge(
+      `${config.SERVICE_NAME}.${taskName}.num_inactive_addresses_with_stale_compliance`,
+      inactiveAddressesWithStaleCompliance,
+      undefined,
+      { provider: complianceProvider.provider },
+    )
 
     const closeOnlyAndBlockedStatuses: ComplianceStatusFromDatabase[] = await
     ComplianceStatusTable.findAll(
@@ -326,3 +342,11 @@ async function getComplianceData(
   }
   return complianceResponses;
 }
+
+// async function logComplianceWarningMetrics() {
+//   try {
+//     ComplianceTable.
+//   } catch (error) {
+
+//   }
+// }
