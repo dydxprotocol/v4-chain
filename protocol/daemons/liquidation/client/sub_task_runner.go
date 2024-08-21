@@ -26,7 +26,9 @@ type SubTaskRunner interface {
 	) error
 }
 
-type SubTaskRunnerImpl struct{}
+type SubTaskRunnerImpl struct {
+	lastLoopBlockHeight uint32
+}
 
 // Ensure SubTaskRunnerImpl implements the SubTaskRunner interface.
 var _ SubTaskRunner = (*SubTaskRunnerImpl)(nil)
@@ -49,6 +51,19 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 	if err != nil {
 		return err
 	}
+
+	// Skip the loop if no new block has been committed.
+	// Note that lastLoopBlockHeight is initialized to 0, so the first loop will always run.
+	if lastCommittedBlockHeight == s.lastLoopBlockHeight {
+		daemonClient.logger.Info(
+			"Skipping liquidation daemon task loop as no new block has been committed",
+			"blockHeight", lastCommittedBlockHeight,
+		)
+		return nil
+	}
+
+	// Update the last loop block height.
+	s.lastLoopBlockHeight = lastCommittedBlockHeight
 
 	// 1. Fetch all information needed to calculate total net collateral and margin requirements.
 	subaccounts,
@@ -120,13 +135,21 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 	// Subaccounts
 	subaccounts, err = c.GetAllSubaccounts(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errorsmod.Wrapf(
+			err,
+			"failed to fetch subaccounts at block height %d",
+			blockHeight,
+		)
 	}
 
 	// Market prices
 	marketPrices, err := c.GetAllMarketPrices(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errorsmod.Wrapf(
+			err,
+			"failed to fetch market prices at block height %d",
+			blockHeight,
+		)
 	}
 	marketPricesMap := lib.UniqueSliceToMap(marketPrices, func(m pricestypes.MarketPrice) uint32 {
 		return m.Id
@@ -135,13 +158,21 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 	// Perpetuals
 	perpetuals, err := c.GetAllPerpetuals(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errorsmod.Wrapf(
+			err,
+			"failed to fetch perpetuals at block height %d",
+			blockHeight,
+		)
 	}
 
 	// Liquidity tiers
 	liquidityTiers, err := c.GetAllLiquidityTiers(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errorsmod.Wrapf(
+			err,
+			"failed to fetch liquidity tiers at block height %d",
+			blockHeight,
+		)
 	}
 	liquidityTiersMap := lib.UniqueSliceToMap(liquidityTiers, func(l perptypes.LiquidityTier) uint32 {
 		return l.Id

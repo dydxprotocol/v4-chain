@@ -590,7 +590,11 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 				tc.subaccountOpenPositionInfo,
 				1000,
 			)
-			require.Equal(t, tc.expectedError, err)
+			if tc.expectedError != nil {
+				require.ErrorContains(t, err, tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }
