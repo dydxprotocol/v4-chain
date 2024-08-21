@@ -3074,7 +3074,7 @@
         "parameters": []
       }
     },
-    "/vault/v1/v1/vaults/historicalPnl": {
+    "/vault/v1/vaults/historicalPnl": {
       "get": {
         "operationId": "GetVaultsHistoricalPnl",
         "responses": {

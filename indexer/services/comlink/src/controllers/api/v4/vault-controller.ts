@@ -48,7 +48,7 @@ class VaultController extends Controller {
     };
   }
 
-  @Get('/v1/vaults/historicalPnl')
+  @Get('/vaults/historicalPnl')
   async getVaultsHistoricalPnl(): Promise<VaultsHistoricalPnlResponse> {
     const vaultSubaccounts: VaultMapping = getVaultSubaccountsFromConfig();
     const vaultPnlTicks: PnlTicksFromDatabase[] = await getVaultSubaccountPnlTicks();
