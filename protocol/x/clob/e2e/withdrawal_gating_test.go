@@ -409,6 +409,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 			}
 
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
+				BlockHeight:                3,
 				LiquidatableSubaccountIds:  tc.liquidatableSubaccountIds,
 				NegativeTncSubaccountIds:   tc.negativeTncSubaccountIds,
 				SubaccountOpenPositionInfo: clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
@@ -510,6 +511,8 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 			// unblocked after the withdrawal gating period passes.
 			if tc.expectedErr != "" {
 				_, err = tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
+					BlockHeight: tc.expectedNegativeTncSubaccountSeenAtBlock[tc.gatedPerpetualId] +
+						satypes.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
 					LiquidatableSubaccountIds:  tc.liquidatableSubaccountIds,
 					NegativeTncSubaccountIds:   []satypes.SubaccountId{},
 					SubaccountOpenPositionInfo: clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
