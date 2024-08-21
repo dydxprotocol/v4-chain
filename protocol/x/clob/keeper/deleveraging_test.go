@@ -867,7 +867,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			}
 
 			positions := clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts)
-			ks.ClobKeeper.DaemonLiquidationInfo.UpdateSubaccountsWithPositions(positions)
+			ks.ClobKeeper.DaemonLiquidationInfo.UpdateSubaccountsWithPositions(positions, uint32(ks.Ctx.BlockHeight()))
 			fills, deltaQuantumsRemaining := ks.ClobKeeper.OffsetSubaccountPerpetualPosition(
 				ks.Ctx,
 				tc.liquidatedSubaccountId,
