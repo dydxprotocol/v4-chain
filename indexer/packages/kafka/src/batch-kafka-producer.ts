@@ -2,8 +2,8 @@ import { logger, stats } from '@dydxprotocol-indexer/base';
 import { IHeaders, Producer, RecordMetadata } from 'kafkajs';
 import _ from 'lodash';
 
-import { KafkaTopics } from './types';
 import config from './config';
+import { KafkaTopics } from './types';
 
 /**
  * Single message sent to the producer.
