@@ -39,6 +39,11 @@ export enum Topic {
   PRICE_ALERTS = 'price_alerts',
 }
 
+export type LanguageCode = 'en' | 'es' | 'fr' | 'de' | 'it' | 'ja' | 'ko' | 'zh';
+export function isValidLanguageCode(code: string): code is LanguageCode {
+  return ['en', 'es', 'fr', 'de', 'it', 'ja', 'ko', 'zh'].includes(code);
+}
+
 interface BaseNotification <T extends Record<string, string>> {
   type: NotificationType,
   titleKey: LocalizationKey;
