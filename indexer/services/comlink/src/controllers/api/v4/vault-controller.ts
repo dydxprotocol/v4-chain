@@ -140,6 +140,7 @@ async function getVaultSubaccountPnlTicks(): Promise<PnlTicksFromDatabase[]> {
       PnlTicksTable.findAll(
         {
           subaccountId: subVaultSubaccountIds,
+          // TODO(TRA-571): Configure limits based on hourly vs daily resolution and # of vaults.
           limit: config.API_LIMIT_V4,
         },
         [QueryableField.LIMIT],
