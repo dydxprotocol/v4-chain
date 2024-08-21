@@ -26,7 +26,9 @@ type SubTaskRunner interface {
 	) error
 }
 
-type SubTaskRunnerImpl struct{}
+type SubTaskRunnerImpl struct {
+	lastLoopBlockHeight uint32
+}
 
 // Ensure SubTaskRunnerImpl implements the SubTaskRunner interface.
 var _ SubTaskRunner = (*SubTaskRunnerImpl)(nil)
@@ -48,6 +50,14 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 	lastCommittedBlockHeight, err := daemonClient.GetPreviousBlockInfo(ctx)
 	if err != nil {
 		return err
+	}
+
+	if lastCommittedBlockHeight == s.lastLoopBlockHeight {
+		daemonClient.logger.Info(
+			"Skipping liquidation daemon task loop as no new block has been committed",
+			"blockHeight", lastCommittedBlockHeight,
+		)
+		return nil
 	}
 
 	// 1. Fetch all information needed to calculate total net collateral and margin requirements.
