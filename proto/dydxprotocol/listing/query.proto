@@ -2,6 +2,7 @@ syntax = "proto3";
 package dydxprotocol.listing;
 
 import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
 import "dydxprotocol/listing/params.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/listing/types";
@@ -10,6 +11,12 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/listing/types";
 service Query {
   // Queries for the hard cap number of listed markets
   rpc MarketsHardCap(QueryMarketsHardCap) returns (QueryMarketsHardCapResponse);
+
+  // Queries the listing vault deposit params
+  rpc ListingVaultDepositParams(QueryListingVaultDepositParams)
+      returns (QueryListingVaultDepositParamsResponse) {
+    option (google.api.http).get = "/dydxprotocol/listing/vault_deposit_params";
+  }
 }
 
 // Queries for the hard cap on listed markets
