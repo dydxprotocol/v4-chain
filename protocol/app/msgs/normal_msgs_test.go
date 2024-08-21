@@ -118,6 +118,10 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal",
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal",
 
+		// affiliates
+		"/dydxprotocol.affiliates.MsgRegisterAffiliate",
+		"/dydxprotocol.affiliates.MsgRegisterAffiliateResponse",
+
 		// clob
 		"/dydxprotocol.clob.MsgBatchCancel",
 		"/dydxprotocol.clob.MsgBatchCancelResponse",

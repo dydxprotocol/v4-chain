@@ -63,6 +63,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse",
 
+		// affiliates
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers",
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse",
+
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams",
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse",

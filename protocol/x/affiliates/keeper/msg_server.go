@@ -11,11 +11,13 @@ type msgServer struct {
 }
 
 // RegisterAffiliate implements types.MsgServer.
-func (k msgServer) RegisterAffiliate(ctx context.Context, msg *types.MsgRegisterAffiliate) (*types.MsgRegisterAffiliateResponse, error) {
+func (k msgServer) RegisterAffiliate(ctx context.Context,
+	msg *types.MsgRegisterAffiliate) (*types.MsgRegisterAffiliateResponse, error) {
 	return nil, nil
 }
 
-func (k msgServer) UpdateAffiliateTiers(ctx context.Context, msg *types.MsgUpdateAffiliateTiers) (*types.MsgUpdateAffiliateTiersResponse, error) {
+func (k msgServer) UpdateAffiliateTiers(ctx context.Context,
+	msg *types.MsgUpdateAffiliateTiers) (*types.MsgUpdateAffiliateTiersResponse, error) {
 	return nil, nil
 }
 
