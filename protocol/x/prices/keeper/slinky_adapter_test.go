@@ -5,12 +5,38 @@ import (
 	"testing"
 
 	oracletypes "github.com/skip-mev/slinky/pkg/types"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
+
+func TestCurrencyPairIDStoreFunctions(t *testing.T) {
+	ctx, keeper, _, _, _, _, _ := keepertest.PricesKeepers(t)
+
+	currencyPair := slinkytypes.CurrencyPair{
+		Base:  "BTC",
+		Quote: "USD",
+	}
+
+	// Add the currency pair ID to the store
+	marketID := uint32(1)
+	keeper.AddCurrencyPairIDToStore(ctx, marketID, currencyPair)
+
+	// Retrieve the currency pair ID from the store
+	storedMarketID, found := keeper.GetCurrencyPairIDFromStore(ctx, currencyPair)
+
+	require.True(t, found)
+	require.Equal(t, uint64(marketID), storedMarketID)
+
+	// Remove the currency pair ID from the store
+	keeper.RemoveCurrencyPairFromStore(ctx, currencyPair)
+
+	_, found = keeper.GetCurrencyPairIDFromStore(ctx, currencyPair)
+	require.False(t, found)
+}
 
 func TestGetCurrencyPairFromID(t *testing.T) {
 	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)

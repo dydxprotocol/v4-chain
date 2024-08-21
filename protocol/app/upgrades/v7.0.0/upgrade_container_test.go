@@ -44,4 +44,9 @@ func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	// Add test for your upgrade handler logic below
+	postUpgradeCurrencyPairIDCacheState(node, t)
+}
+
+func postUpgradeCurrencyPairIDCacheState(node *containertest.Node, t *testing.T) {
+	// Add test for your upgrade handler logic below
 }

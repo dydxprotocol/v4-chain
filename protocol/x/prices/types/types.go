@@ -47,6 +47,9 @@ type PricesKeeper interface {
 	// Misc.
 	Logger(ctx sdk.Context) log.Logger
 
+	// Currency Pair ID cache
+	AddCurrencyPairIDToStore(ctx sdk.Context, id uint32, cp slinkytypes.CurrencyPair)
+
 	// Slinky compat
 	GetCurrencyPairFromID(ctx sdk.Context, id uint64) (cp slinkytypes.CurrencyPair, found bool)
 	GetIDForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPair) (uint64, bool)
