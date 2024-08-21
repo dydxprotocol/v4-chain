@@ -9,10 +9,10 @@ import {
   PerpetualMarketFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
+import _ from 'lodash';
 import {
   Controller, Get, Route,
 } from 'tsoa';
-import _ from 'lodash';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
@@ -41,7 +41,7 @@ class VaultController extends Controller {
     const aggregatedPnlTicks: Map<number, PnlTicksFromDatabase> = aggregatePnlTicks(vaultPnlTicks);
 
     return {
-      megavaultsPnl: Array.from(aggregatedPnlTicks.values()).map(
+      megavaultPnl: Array.from(aggregatedPnlTicks.values()).map(
         (pnlTick: PnlTicksFromDatabase) => {
           return pnlTicksToResponseObject(pnlTick);
         }),
@@ -57,18 +57,19 @@ class VaultController extends Controller {
       .groupBy('subaccountId')
       .mapValues((pnlTicks: PnlTicksFromDatabase[], subaccountId: string): VaultHistoricalPnl => {
         const market: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-        .getPerpetualMarketFromClobPairId(
-          vaultSubaccounts[subaccountId],
-        );
+          .getPerpetualMarketFromClobPairId(
+            vaultSubaccounts[subaccountId],
+          );
 
         if (market === undefined) {
-          throw new Error(`Vault clob pair id ${vaultSubaccounts[subaccountId]} does not correspond to a perpetual market.`)
+          throw new Error(`Vault clob pair id ${vaultSubaccounts[subaccountId]} does not correspond to a perpetual market.`);
         }
 
         return {
           ticker: market.ticker,
           historicalPnl: pnlTicks,
-        }})
+        };
+      })
       .values()
       .value();
 
@@ -87,11 +88,12 @@ router.get(
 
     try {
       const controllers: VaultController = new VaultController();
-      const response: MegavaultHistoricalPnlResponse = await controllers.getMegavaultHistoricalPnl();
-       return res.send(response);
+      const response: MegavaultHistoricalPnlResponse = await controllers
+        .getMegavaultHistoricalPnl();
+      return res.send(response);
     } catch (error) {
       return handleControllerError(
-        'VaulController GET /megavault/historicalPnl',
+        'VaultController GET /megavault/historicalPnl',
         'Megavault Historical Pnl error',
         error,
         req,
@@ -103,7 +105,8 @@ router.get(
         Date.now() - start,
       );
     }
-});
+  },
+);
 
 router.get(
   '/v1/vaults/historicalPnl',
@@ -115,7 +118,7 @@ router.get(
     try {
       const controllers: VaultController = new VaultController();
       const response: VaultsHistoricalPnlResponse = await controllers.getVaultsHistoricalPnl();
-       return res.send(response);
+      return res.send(response);
     } catch (error) {
       return handleControllerError(
         'VaultHistoricalPnlController GET /vaults/historicalPnl',
@@ -130,31 +133,32 @@ router.get(
         Date.now() - start,
       );
     }
-});
+  },
+);
 
 async function getVaultSubaccountPnlTicks(): Promise<PnlTicksFromDatabase[]> {
   const subVaultSubaccountIds: string[] = _.keys(getVaultSubaccountsFromConfig());
-    const {
-        results: pnlTicks,
-    }: PaginationFromDatabase<PnlTicksFromDatabase> = await
-      PnlTicksTable.findAll(
-        {
-          subaccountId: subVaultSubaccountIds,
-          // TODO(TRA-571): Configure limits based on hourly vs daily resolution and # of vaults.
-          limit: config.API_LIMIT_V4,
-        },
-        [QueryableField.LIMIT],
-        {
-          ...DEFAULT_POSTGRES_OPTIONS,
-          orderBy: [[QueryableField.BLOCK_HEIGHT, Ordering.DESC]],
-        },
-      );
+  const {
+    results: pnlTicks,
+  }: PaginationFromDatabase<PnlTicksFromDatabase> = await
+  PnlTicksTable.findAll(
+    {
+      subaccountId: subVaultSubaccountIds,
+      // TODO(TRA-571): Configure limits based on hourly vs daily resolution and # of vaults.
+      limit: config.API_LIMIT_V4,
+    },
+    [QueryableField.LIMIT],
+    {
+      ...DEFAULT_POSTGRES_OPTIONS,
+      orderBy: [[QueryableField.BLOCK_HEIGHT, Ordering.DESC]],
+    },
+  );
   return pnlTicks;
 }
 
 // TODO(TRA-570): Placeholder for getting vault subaccount ids until vault table is added.
 function getVaultSubaccountsFromConfig(): VaultMapping {
-  const vaultSubaccountIds: string[] = config.EXPERIMENT_VAULTS.split(',');;
+  const vaultSubaccountIds: string[] = config.EXPERIMENT_VAULTS.split(',');
   const vaultClobPairIds: string[] = config.EXPERIMENT_VAULT_MARKETS.split(',');
   if (vaultSubaccountIds.length !== vaultClobPairIds.length) {
     throw new Error('Expected number of vaults to match number of markets');

@@ -38,7 +38,7 @@ describe('vault-controller#V4', () => {
         blockHeight,
       });
     });
-  
+
     afterEach(async () => {
       config.EXPERIMENT_VAULTS = experimentVaultsPrevVal;
       config.EXPERIMENT_VAULT_MARKETS = experimentVaultMarketsPrevVal;
@@ -59,7 +59,7 @@ describe('vault-controller#V4', () => {
 
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: '/v4/vault/v1/megavault/historicalPnl'
+        path: '/v4/vault/v1/megavault/historicalPnl',
       });
 
       const expectedPnlTickResponse: PnlTicksResponseObject = {
@@ -80,7 +80,7 @@ describe('vault-controller#V4', () => {
         ),
       };
 
-      expect(response.body.megavaultsPnl).toEqual(
+      expect(response.body.megavaultPnl).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             ...expectedPnlTick2Response,
@@ -113,7 +113,7 @@ describe('vault-controller#V4', () => {
 
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: `/v4/vault/v1/megavault/historicalPnl`,
+        path: '/v4/vault/v1/megavault/historicalPnl',
       });
 
       const expectedPnlTickResponse: any = {
@@ -129,7 +129,7 @@ describe('vault-controller#V4', () => {
         blockTime: testConstants.defaultPnlTick.blockTime,
       };
 
-      expect(response.body.megavaultsPnl).toEqual(
+      expect(response.body.megavaultPnl).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             ...expectedPnlTickResponse,
@@ -152,7 +152,7 @@ describe('vault-controller#V4', () => {
 
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: '/v4/vault/v1/vaults/historicalPnl'
+        path: '/v4/vault/v1/vaults/historicalPnl',
       });
 
       const expectedPnlTickResponse: PnlTicksResponseObject = {
@@ -209,7 +209,7 @@ describe('vault-controller#V4', () => {
 
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: `/v4/vault/v1/vaults/historicalPnl`,
+        path: '/v4/vault/v1/vaults/historicalPnl',
       });
 
       const expectedVaultPnl: VaultHistoricalPnl = {
@@ -222,7 +222,7 @@ describe('vault-controller#V4', () => {
               testConstants.defaultPnlTick.createdAt,
             ),
           },
-        ]
+        ],
       };
 
       const expectedVaultPnl2: VaultHistoricalPnl = {
@@ -233,9 +233,9 @@ describe('vault-controller#V4', () => {
             id: PnlTicksTable.uuid(
               pnlTick2.subaccountId,
               pnlTick2.createdAt,
-            )
-          }
-        ]
+            ),
+          },
+        ],
       };
 
       expect(response.body.vaultsPnl).toEqual(
@@ -245,7 +245,7 @@ describe('vault-controller#V4', () => {
           }),
           expect.objectContaining({
             ...expectedVaultPnl2,
-          })
+          }),
         ]),
       );
     });

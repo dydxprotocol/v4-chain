@@ -1362,7 +1362,7 @@
       },
       "MegavaultHistoricalPnlResponse": {
         "properties": {
-          "megavaultsPnl": {
+          "megavaultPnl": {
             "items": {
               "$ref": "#/components/schemas/PnlTicksResponseObject"
             },
@@ -1370,7 +1370,7 @@
           }
         },
         "required": [
-          "megavaultsPnl"
+          "megavaultPnl"
         ],
         "type": "object",
         "additionalProperties": false

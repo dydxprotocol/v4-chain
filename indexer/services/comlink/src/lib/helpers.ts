@@ -541,8 +541,8 @@ export function checkIfValidDydxAddress(address: string): boolean {
  * Aggregates a list of PnL ticks, combining any PnL ticks for the same blockheight by summing
  * the equity, totalPnl, and net transfers.
  * Returns a map of block height to the resulting PnL tick.
- * @param pnlTicks 
- * @returns 
+ * @param pnlTicks
+ * @returns
  */
 export function aggregatePnlTicks(
   pnlTicks: PnlTicksFromDatabase[],

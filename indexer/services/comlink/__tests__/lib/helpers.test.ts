@@ -56,7 +56,7 @@ import {
   defaultTendermintEventId2,
   defaultTendermintEventId3,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
-import { AssetPositionsMap, PerpetualPositionWithFunding, PnlTicksResponseObject } from '../../src/types';
+import { AssetPositionsMap, PerpetualPositionWithFunding } from '../../src/types';
 import { ZERO, ZERO_USDC_POSITION } from '../../src/lib/constants';
 
 describe('helpers', () => {
@@ -737,8 +737,8 @@ describe('helpers', () => {
 
       const aggregatedPnlTicks: Map<number, PnlTicksFromDatabase> = aggregatePnlTicks([pnlTick]);
       expect(
-        aggregatedPnlTicks.get(parseInt(pnlTick.blockHeight,10))
-      ).toEqual(expect.objectContaining({...testConstants.defaultPnlTick}));
+        aggregatedPnlTicks.get(parseInt(pnlTick.blockHeight, 10)),
+      ).toEqual(expect.objectContaining({ ...testConstants.defaultPnlTick }));
     });
 
     it('aggregates multiple pnl ticks same height', () => {
@@ -764,14 +764,14 @@ describe('helpers', () => {
           testConstants.defaultPnlTick.createdAt,
         ),
         blockHeight: blockHeight2,
-      }
+      };
 
       const aggregatedPnlTicks: Map<number, PnlTicksFromDatabase> = aggregatePnlTicks(
-        [pnlTick, pnlTick2, pnlTick3]
+        [pnlTick, pnlTick2, pnlTick3],
       );
       // Combined pnl tick at initial block height.
       expect(
-        aggregatedPnlTicks.get(parseInt(pnlTick.blockHeight,10))
+        aggregatedPnlTicks.get(parseInt(pnlTick.blockHeight, 10)),
       ).toEqual(expect.objectContaining({
         equity: (parseFloat(testConstants.defaultPnlTick.equity) +
             parseFloat(pnlTick2.equity)).toString(),
@@ -785,7 +785,7 @@ describe('helpers', () => {
       }));
       // Single pnl tick at second block height.
       expect(
-        aggregatedPnlTicks.get(parseInt(blockHeight2, 10))
+        aggregatedPnlTicks.get(parseInt(blockHeight2, 10)),
       ).toEqual(expect.objectContaining({
         ...pnlTick3,
       }));

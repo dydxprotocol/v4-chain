@@ -3130,7 +3130,7 @@ fetch(`${baseURL}/vault/v1/megavault/historicalPnl`,
 
 ```json
 {
-  "megavaultsPnl": [
+  "megavaultPnl": [
     {
       "id": "string",
       "subaccountId": "string",
@@ -5368,7 +5368,7 @@ or
 
 ```json
 {
-  "megavaultsPnl": [
+  "megavaultPnl": [
     {
       "id": "string",
       "subaccountId": "string",
@@ -5388,7 +5388,7 @@ or
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|megavaultsPnl|[[PnlTicksResponseObject](#schemapnlticksresponseobject)]|true|none|none|
+|megavaultPnl|[[PnlTicksResponseObject](#schemapnlticksresponseobject)]|true|none|none|
 
 ## VaultHistoricalPnl
 

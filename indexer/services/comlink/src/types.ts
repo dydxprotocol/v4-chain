@@ -649,7 +649,7 @@ export interface VaultHistoricalPnl {
 }
 
 export interface MegavaultHistoricalPnlResponse {
-  megavaultsPnl: PnlTicksResponseObject[];
+  megavaultPnl: PnlTicksResponseObject[];
 }
 
 export interface VaultsHistoricalPnlResponse {
