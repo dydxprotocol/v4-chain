@@ -744,11 +744,6 @@ describe('orderbookLevelsCache', () => {
       ]);
 
       const midPrice = await getOrderBookMidPrice(ticker, client);
-<<<<<<< HEAD
-      expect(midPrice).toEqual(45350);
-    });
-
-=======
       expect(midPrice).toEqual('45350');
     });
   });
@@ -795,7 +790,6 @@ describe('orderbookLevelsCache', () => {
 
     const midPrice = await getOrderBookMidPrice(ticker, client);
     expect(midPrice).toEqual('1.015');
->>>>>>> 73b04dc3 (Adam/add candles hloc (#2047))
   });
 
   it('returns undefined if there are no bids or asks', async () => {
