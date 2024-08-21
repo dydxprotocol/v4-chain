@@ -51,7 +51,7 @@ export const configSchema = {
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_DAILY: parseBoolean({ default: true }),
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_WEEKLY: parseBoolean({ default: true }),
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_MONTHLY: parseBoolean({ default: true }),
-  LOOPS_ENABLED_SUBACCOUNT_USERNAME_GENERATOR: parseBoolean({ default: true }),
+  LOOPS_ENABLED_SUBACCOUNT_USERNAME_GENERATOR: parseBoolean({ default: false }),
   LOOPS_ENABLED_LEADERBOARD_PNL_ALL_TIME: parseBoolean({ default: false }),
   LOOPS_ENABLED_LEADERBOARD_PNL_DAILY: parseBoolean({ default: false }),
   LOOPS_ENABLED_LEADERBOARD_PNL_WEEKLY: parseBoolean({ default: false }),
