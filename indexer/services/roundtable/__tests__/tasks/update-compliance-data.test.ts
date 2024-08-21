@@ -16,7 +16,7 @@ import {
   ComplianceReason,
 } from '@dydxprotocol-indexer/postgres';
 import updateComplianceDataTask from '../../src/tasks/update-compliance-data';
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { STATS_NO_SAMPLING, logger, stats } from '@dydxprotocol-indexer/base';
 import _ from 'lodash';
 import config from '../../src/config';
 import { ClientAndProvider } from '../../src/helpers/compliance-clients';
@@ -783,43 +783,43 @@ function expectGaugeStats(
   expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_active_addresses',
     activeAddresses,
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_new_addresses',
     newAddresses,
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_active_addresses_with_stale_compliance',
     activeAddressesWithStaleCompliance,
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_old_addresses',
     oldAddresses,
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_inactive_addresses_with_stale_compliance',
     inactiveAddressesWithStaleCompliance,
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_addresses_to_screen',
     addressesScreened,
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_upserted',
     upserted,
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.gauge).toHaveBeenCalledWith(
@@ -834,19 +834,19 @@ function expectTimingStats(
   expect(stats.timing).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.get_active_addresses',
     expect.any(Number),
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.timing).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.get_old_addresses',
     expect.any(Number),
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.timing).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.query_compliance_data',
     expect.any(Number),
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
 }
