@@ -30,6 +30,9 @@ export const createLCDClient = async ({
       feetiers: new (await import("./feetiers/query.lcd")).LCDQueryClient({
         requestClient
       }),
+      listing: new (await import("./listing/query.lcd")).LCDQueryClient({
+        requestClient
+      }),
       perpetuals: new (await import("./perpetuals/query.lcd")).LCDQueryClient({
         requestClient
       }),

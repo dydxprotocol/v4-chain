@@ -21,4 +21,16 @@ var (
 		3,
 		"listed markets hard cap reached",
 	)
+
+	ErrInvalidDepositAmount = errorsmod.Register(
+		ModuleName,
+		4,
+		"invalid vault deposit amount",
+	)
+
+	ErrInvalidNumBlocksToLockShares = errorsmod.Register(
+		ModuleName,
+		5,
+		"invalid number of blocks to lock shares",
+	)
 )
