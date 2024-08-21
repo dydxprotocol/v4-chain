@@ -51,16 +51,7 @@ export const configSchema = {
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_DAILY: parseBoolean({ default: true }),
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_WEEKLY: parseBoolean({ default: true }),
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_MONTHLY: parseBoolean({ default: true }),
-<<<<<<< HEAD
-  LOOPS_ENABLED_SUBACCOUNT_USERNAME_GENERATOR: parseBoolean({ default: true }),
-=======
   LOOPS_ENABLED_SUBACCOUNT_USERNAME_GENERATOR: parseBoolean({ default: false }),
-  LOOPS_ENABLED_LEADERBOARD_PNL_ALL_TIME: parseBoolean({ default: false }),
-  LOOPS_ENABLED_LEADERBOARD_PNL_DAILY: parseBoolean({ default: false }),
-  LOOPS_ENABLED_LEADERBOARD_PNL_WEEKLY: parseBoolean({ default: false }),
-  LOOPS_ENABLED_LEADERBOARD_PNL_MONTHLY: parseBoolean({ default: false }),
-  LOOPS_ENABLED_LEADERBOARD_PNL_YEARLY: parseBoolean({ default: false }),
->>>>>>> c2099b99 (disable username generation roundtable task (#2126))
 
   // Loop Timing
   LOOPS_INTERVAL_MS_MARKET_UPDATER: parseInteger({
