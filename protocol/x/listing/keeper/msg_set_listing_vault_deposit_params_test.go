@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"math/big"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -24,8 +23,8 @@ func TestSetListingVaultDepositParams(t *testing.T) {
 			msg: &types.MsgSetListingVaultDepositParams{
 				Authority: lib.GovModuleAddress.String(),
 				Params: types.ListingVaultDepositParams{
-					NewVaultDepositAmount:  dtypes.NewIntFromBigInt(big.NewInt(100_000_000)),
-					MainVaultDepositAmount: dtypes.NewIntFromBigInt(big.NewInt(0)),
+					NewVaultDepositAmount:  dtypes.NewIntFromUint64(10_000),
+					MainVaultDepositAmount: dtypes.NewIntFromUint64(0),
 					NumBlocksToLockShares:  30 * 24 * 3600, // 30 days
 				},
 			},
@@ -34,8 +33,8 @@ func TestSetListingVaultDepositParams(t *testing.T) {
 			msg: &types.MsgSetListingVaultDepositParams{
 				Authority: constants.AliceAccAddress.String(),
 				Params: types.ListingVaultDepositParams{
-					NewVaultDepositAmount:  dtypes.NewIntFromBigInt(big.NewInt(100_000_000)),
-					MainVaultDepositAmount: dtypes.NewIntFromBigInt(big.NewInt(0)),
+					NewVaultDepositAmount:  dtypes.NewIntFromUint64(10_000),
+					MainVaultDepositAmount: dtypes.NewIntFromUint64(0),
 					NumBlocksToLockShares:  30 * 24 * 3600, // 30 days
 				},
 			},
@@ -44,12 +43,34 @@ func TestSetListingVaultDepositParams(t *testing.T) {
 		"Failure - Empty authority": {
 			msg: &types.MsgSetListingVaultDepositParams{
 				Params: types.ListingVaultDepositParams{
-					NewVaultDepositAmount:  dtypes.NewIntFromBigInt(big.NewInt(100_000_000)),
-					MainVaultDepositAmount: dtypes.NewIntFromBigInt(big.NewInt(0)),
+					NewVaultDepositAmount:  dtypes.NewIntFromUint64(10_000),
+					MainVaultDepositAmount: dtypes.NewIntFromUint64(0),
 					NumBlocksToLockShares:  30 * 24 * 3600, // 30 days
 				},
 			},
 			expectedErr: "invalid authority",
+		},
+		"Failure - Invalid deposit amount": {
+			msg: &types.MsgSetListingVaultDepositParams{
+				Authority: lib.GovModuleAddress.String(),
+				Params: types.ListingVaultDepositParams{
+					NewVaultDepositAmount:  dtypes.NewIntFromUint64(0),
+					MainVaultDepositAmount: dtypes.NewIntFromUint64(0),
+					NumBlocksToLockShares:  30 * 24 * 3600, // 30 days
+				},
+			},
+			expectedErr: "invalid vault deposit amount",
+		},
+		"Failure - Invalid num blocks to lock shares": {
+			msg: &types.MsgSetListingVaultDepositParams{
+				Authority: lib.GovModuleAddress.String(),
+				Params: types.ListingVaultDepositParams{
+					NewVaultDepositAmount:  dtypes.NewIntFromUint64(10_000),
+					MainVaultDepositAmount: dtypes.NewIntFromUint64(0),
+					NumBlocksToLockShares:  0,
+				},
+			},
+			expectedErr: "invalid number of blocks to lock shares",
 		},
 	}
 

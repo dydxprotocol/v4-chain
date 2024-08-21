@@ -154,6 +154,12 @@ func (k Keeper) SetListingVaultDepositParams(
 	ctx sdk.Context,
 	params types.ListingVaultDepositParams,
 ) error {
+	// Validate the params
+	if err := params.Validate(); err != nil {
+		return err
+	}
+
+	// Store the params in the module store
 	store := ctx.KVStore(k.storeKey)
 	key := []byte(types.ListingVaultDepositParamsKey)
 	store.Set(key, k.cdc.MustMarshal(&params))
