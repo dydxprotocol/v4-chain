@@ -222,10 +222,10 @@ router.post(
       }
       return await checkCompliance(req, res, address, action, false);
     } catch (error) {
-      return handleError(error, 'geoblock-keplr', message, req, res);
+      return handleError(error, 'geoblock', message, req, res);
     } finally {
       stats.timing(
-        `${config.SERVICE_NAME}.${controllerName}.geo_block_keplr.timing`,
+        `${config.SERVICE_NAME}.${controllerName}.geo_block.timing`,
         Date.now() - start,
       );
     }
