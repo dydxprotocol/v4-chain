@@ -33,6 +33,7 @@ import {
   isolatedPerpetualMarket2,
   isolatedSubaccount,
   isolatedSubaccount2,
+  vaultSubaccount,
 } from './constants';
 
 export async function seedData() {
@@ -41,6 +42,7 @@ export async function seedData() {
     SubaccountTable.create(defaultSubaccount2),
     SubaccountTable.create(isolatedSubaccount),
     SubaccountTable.create(isolatedSubaccount2),
+    SubaccountTable.create(vaultSubaccount),
   ]);
   await Promise.all([
     MarketTable.create(defaultMarket),

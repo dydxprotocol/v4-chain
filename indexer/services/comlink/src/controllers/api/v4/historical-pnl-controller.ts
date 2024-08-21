@@ -19,7 +19,7 @@ import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
-import { getChildSubaccountIds, handleControllerError } from '../../../lib/helpers';
+import { aggregatePnlTicks, getChildSubaccountIds, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
   CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
@@ -156,24 +156,7 @@ class HistoricalPnlController extends Controller {
     }
 
     // aggregate pnlTicks for all subaccounts grouped by blockHeight
-    const aggregatedPnlTicks: Map<number, PnlTicksFromDatabase> = new Map();
-    for (const pnlTick of pnlTicks) {
-      const blockHeight: number = parseInt(pnlTick.blockHeight, 10);
-      if (aggregatedPnlTicks.has(blockHeight)) {
-        const currentPnlTick: PnlTicksFromDatabase = aggregatedPnlTicks.get(
-          blockHeight,
-        ) as PnlTicksFromDatabase;
-        aggregatedPnlTicks.set(blockHeight, {
-          ...currentPnlTick,
-          equity: (parseFloat(currentPnlTick.equity) + parseFloat(pnlTick.equity)).toString(),
-          totalPnl: (parseFloat(currentPnlTick.totalPnl) + parseFloat(pnlTick.totalPnl)).toString(),
-          netTransfers: (parseFloat(currentPnlTick.netTransfers) +
-              parseFloat(pnlTick.netTransfers)).toString(),
-        });
-      } else {
-        aggregatedPnlTicks.set(blockHeight, pnlTick);
-      }
-    }
+    const aggregatedPnlTicks: Map<number, PnlTicksFromDatabase> = aggregatePnlTicks(pnlTicks);
 
     return {
       historicalPnl: Array.from(aggregatedPnlTicks.values()).map(
