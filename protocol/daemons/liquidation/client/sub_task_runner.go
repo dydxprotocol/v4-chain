@@ -83,6 +83,7 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 		liquidatableSubaccountIds,
 		negativeTncSubaccountIds,
 		subaccountOpenPositionInfo,
+		liqFlags.ResponsePageLimit,
 	)
 	if err != nil {
 		return err
