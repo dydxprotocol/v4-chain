@@ -242,8 +242,8 @@ var (
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
 
 		// vault
-		"/dydxprotocol.vault.MsgDepositToVault":         &vault.MsgDepositToVault{},
-		"/dydxprotocol.vault.MsgDepositToVaultResponse": nil,
+		"/dydxprotocol.vault.MsgDepositToMegavault":         &vault.MsgDepositToMegavault{},
+		"/dydxprotocol.vault.MsgDepositToMegavaultResponse": nil,
 	}
 
 	NormalMsgsSlinky = map[string]sdk.Msg{

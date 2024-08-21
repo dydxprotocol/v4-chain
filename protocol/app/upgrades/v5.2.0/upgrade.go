@@ -40,7 +40,7 @@ func addAllVaultsToVaultAddressStore(
 ) {
 	allVaults := vaultKeeper.GetAllVaults(ctx)
 	for _, vault := range allVaults {
-		vaultKeeper.AddVaultToAddressStore(ctx, *vault.VaultId)
+		vaultKeeper.AddVaultToAddressStore(ctx, vault.VaultId)
 	}
 }
 

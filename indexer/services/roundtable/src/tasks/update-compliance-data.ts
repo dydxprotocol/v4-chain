@@ -342,11 +342,3 @@ async function getComplianceData(
   }
   return complianceResponses;
 }
-
-// async function logComplianceWarningMetrics() {
-//   try {
-//     ComplianceTable.
-//   } catch (error) {
-
-//   }
-// }

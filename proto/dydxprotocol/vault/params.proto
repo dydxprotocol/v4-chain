@@ -1,6 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.vault;
 
+import "dydxprotocol/vault/vault.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
@@ -37,6 +38,14 @@ message QuotingParams {
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
+}
+
+// VaultParams stores vault parameters.
+message VaultParams {
+  // Status of the vault.
+  VaultStatus status = 1;
+  // Quoting parameters of the vault.
+  QuotingParams quoting_params = 2;
 }
 
 // Deprecated: Params stores `x/vault` parameters.

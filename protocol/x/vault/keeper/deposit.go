@@ -7,12 +7,11 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
-// MintShares mints shares of a vault for `owner` based on `quantumsToDeposit` by:
-// 1. Increasing total shares of the vault.
-// 2. Increasing owner shares of the vault for given `owner`.
+// MintShares mints shares for `owner` based on `quantumsToDeposit` by:
+// 1. Increasing total shares.
+// 2. Increasing owner shares for given `owner`.
 func (k Keeper) MintShares(
 	ctx sdk.Context,
-	vaultId types.VaultId,
 	owner string,
 	quantumsToDeposit *big.Int,
 ) error {
@@ -21,18 +20,15 @@ func (k Keeper) MintShares(
 		return types.ErrInvalidDepositAmount
 	}
 	// Get existing TotalShares of the vault.
-	totalShares, exists := k.GetTotalShares(ctx, vaultId)
-	existingTotalShares := totalShares.NumShares.BigInt()
+	existingTotalShares := k.GetTotalShares(ctx).NumShares.BigInt()
 	// Calculate shares to mint.
 	var sharesToMint *big.Int
-	if !exists || existingTotalShares.Sign() <= 0 {
+	if existingTotalShares.Sign() <= 0 {
 		// Mint `quoteQuantums` number of shares.
 		sharesToMint = new(big.Int).Set(quantumsToDeposit)
-		// Initialize existingTotalShares as 0.
-		existingTotalShares = big.NewInt(0)
 	} else {
-		// Get vault equity.
-		equity, err := k.GetVaultEquity(ctx, vaultId)
+		// Get megavault equity.
+		equity, err := k.GetMegavaultEquity(ctx)
 		if err != nil {
 			return err
 		}
@@ -56,10 +52,9 @@ func (k Keeper) MintShares(
 		}
 	}
 
-	// Increase TotalShares of the vault.
+	// Increase total shares.
 	err := k.SetTotalShares(
 		ctx,
-		vaultId,
 		types.BigIntToNumShares(
 			existingTotalShares.Add(existingTotalShares, sharesToMint),
 		),
@@ -68,13 +63,12 @@ func (k Keeper) MintShares(
 		return err
 	}
 
-	// Increase owner shares in the vault.
-	ownerShares, exists := k.GetOwnerShares(ctx, vaultId, owner)
+	// Increase owner shares.
+	ownerShares, exists := k.GetOwnerShares(ctx, owner)
 	if !exists {
 		// Set owner shares to be sharesToMint.
 		err := k.SetOwnerShares(
 			ctx,
-			vaultId,
 			owner,
 			types.BigIntToNumShares(sharesToMint),
 		)
@@ -86,7 +80,6 @@ func (k Keeper) MintShares(
 		existingOwnerShares := ownerShares.NumShares.BigInt()
 		err = k.SetOwnerShares(
 			ctx,
-			vaultId,
 			owner,
 			types.BigIntToNumShares(
 				existingOwnerShares.Add(existingOwnerShares, sharesToMint),

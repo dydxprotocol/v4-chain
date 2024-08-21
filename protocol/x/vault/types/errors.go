@@ -96,4 +96,14 @@ var (
 		18,
 		"Orders and OrderIds must have the same length",
 	)
+	ErrUnspecifiedVaultStatus = errorsmod.Register(
+		ModuleName,
+		19,
+		"VaultStatus is unspecified",
+	)
+	ErrVaultParamsNotFound = errorsmod.Register(
+		ModuleName,
+		20,
+		"VaultParams not found",
+	)
 )

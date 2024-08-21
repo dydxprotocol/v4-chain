@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testing/version"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -282,6 +283,6 @@ func TestUpgrade(t *testing.T) {
 	defer testnet.MustCleanUp()
 	node := testnet.Nodes["alice"]
 
-	err = UpgradeTestnet(constants.AliceAccAddress.String(), t, node, UpgradeToVersion)
+	err = UpgradeTestnet(constants.AliceAccAddress.String(), t, node, version.CurrentVersion)
 	require.NoError(t, err)
 }

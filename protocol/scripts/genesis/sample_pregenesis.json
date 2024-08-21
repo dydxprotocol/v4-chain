@@ -2,6 +2,7 @@
   "app_hash": null,
   "app_name": "dydxprotocold",
   "app_state": {
+    "affiliates": {},
     "assets": {
       "assets": [
         {
@@ -3911,6 +3912,17 @@
         "spread_buffer_ppm": 1500,
         "spread_min_ppm": 3000
       },
+      "owner_shares": [
+        {
+          "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
+          "shares": {
+            "num_shares": "0"
+          }
+        }
+      ],
+      "total_shares": {
+        "num_shares": "0"
+      },
       "vaults": []
     },
     "vest": {
@@ -3932,7 +3944,7 @@
       ]
     }
   },
-  "app_version": "5.0.0-dev0-404-gf14f3950",
+  "app_version": "5.2.1-19-g04197f43",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {

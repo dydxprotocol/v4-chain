@@ -20,7 +20,7 @@ func TestGetSetDefaultQuotingParams(t *testing.T) {
 	require.Equal(t, types.DefaultQuotingParams(), params)
 
 	// Set new params and get.
-	newParams := &types.QuotingParams{
+	newParams := types.QuotingParams{
 		Layers:                           3,
 		SpreadMinPpm:                     4_000,
 		SpreadBufferPpm:                  2_000,
@@ -31,10 +31,10 @@ func TestGetSetDefaultQuotingParams(t *testing.T) {
 	}
 	err := k.SetDefaultQuotingParams(ctx, newParams)
 	require.NoError(t, err)
-	require.Equal(t, *newParams, k.GetDefaultQuotingParams(ctx))
+	require.Equal(t, newParams, k.GetDefaultQuotingParams(ctx))
 
 	// Set invalid params and get.
-	invalidParams := &types.QuotingParams{
+	invalidParams := types.QuotingParams{
 		Layers:                           3,
 		SpreadMinPpm:                     4_000,
 		SpreadBufferPpm:                  2_000,
@@ -45,47 +45,44 @@ func TestGetSetDefaultQuotingParams(t *testing.T) {
 	}
 	err = k.SetDefaultQuotingParams(ctx, invalidParams)
 	require.Error(t, err)
-	require.Equal(t, *newParams, k.GetDefaultQuotingParams(ctx))
+	require.Equal(t, newParams, k.GetDefaultQuotingParams(ctx))
 }
 
-func TestGetSetVaultQuotingParams(t *testing.T) {
+func TestGetSetVaultParams(t *testing.T) {
 	tests := map[string]struct {
 		// Vault id.
 		vaultId types.VaultId
-		// Vault quoting params to set.
-		vaultQuotingParams *types.QuotingParams
+		// Vault params to set.
+		vaultParams *types.VaultParams
+		// Expected error.
+		expectedErr error
 	}{
-		"Vault Clob 0. Default quoting params": {
-			vaultId:            constants.Vault_Clob0,
-			vaultQuotingParams: nil,
+		"Success - Vault Clob 0": {
+			vaultId:     constants.Vault_Clob0,
+			vaultParams: &constants.VaultParams,
 		},
-		"Vault Clob 0. Non-default quoting params": {
+		"Success - Vault Clob 1": {
+			vaultId:     constants.Vault_Clob1,
+			vaultParams: &constants.VaultParams,
+		},
+		"Success - Non-existent Vault Params": {
+			vaultId:     constants.Vault_Clob1,
+			vaultParams: nil,
+		},
+		"Failure - Unspecified Status": {
 			vaultId: constants.Vault_Clob0,
-			vaultQuotingParams: &types.QuotingParams{
-				Layers:                           3,
-				SpreadMinPpm:                     12_345,
-				SpreadBufferPpm:                  5_678,
-				SkewFactorPpm:                    4_121_787,
-				OrderSizePctPpm:                  232_121,
-				OrderExpirationSeconds:           120,
-				ActivationThresholdQuoteQuantums: dtypes.NewInt(2_123_456_789),
+			vaultParams: &types.VaultParams{
+				QuotingParams: &constants.QuotingParams,
 			},
+			expectedErr: types.ErrUnspecifiedVaultStatus,
 		},
-		"Vault Clob 1. Default quoting params": {
-			vaultId:            constants.Vault_Clob0,
-			vaultQuotingParams: nil,
-		},
-		"Vault Clob 1. Non-default quoting params": {
+		"Failure - Invalid Quoting Params": {
 			vaultId: constants.Vault_Clob0,
-			vaultQuotingParams: &types.QuotingParams{
-				Layers:                           4,
-				SpreadMinPpm:                     123_456,
-				SpreadBufferPpm:                  87_654,
-				SkewFactorPpm:                    5_432_111,
-				OrderSizePctPpm:                  444_333,
-				OrderExpirationSeconds:           90,
-				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_111_111_111),
+			vaultParams: &types.VaultParams{
+				Status:        types.VaultStatus_VAULT_STATUS_STAND_BY,
+				QuotingParams: &constants.InvalidQuotingParams,
 			},
+			expectedErr: types.ErrInvalidOrderExpirationSeconds,
 		},
 	}
 
@@ -95,23 +92,75 @@ func TestGetSetVaultQuotingParams(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.VaultKeeper
 
-			if tc.vaultQuotingParams != nil {
-				// Set quoting params.
-				err := k.SetVaultQuotingParams(ctx, tc.vaultId, *tc.vaultQuotingParams)
-				require.NoError(t, err)
-				// Verify quoting params are as set.
-				require.Equal(
-					t,
-					*tc.vaultQuotingParams,
-					k.GetVaultQuotingParams(ctx, tc.vaultId),
-				)
+			if tc.vaultParams == nil {
+				_, exists := k.GetVaultParams(ctx, tc.vaultId)
+				require.False(t, exists)
+				return
+			}
+
+			err := k.SetVaultParams(ctx, tc.vaultId, *tc.vaultParams)
+			if tc.expectedErr != nil {
+				require.ErrorIs(t, err, tc.expectedErr)
+				_, exists := k.GetVaultParams(ctx, tc.vaultId)
+				require.False(t, exists)
 			} else {
-				// Verify quoting params are default.
-				require.Equal(
-					t,
-					k.GetDefaultQuotingParams(ctx),
-					k.GetVaultQuotingParams(ctx, tc.vaultId),
-				)
+				require.NoError(t, err)
+				p, exists := k.GetVaultParams(ctx, tc.vaultId)
+				require.True(t, exists)
+				require.Equal(t, *tc.vaultParams, p)
+			}
+		})
+	}
+}
+
+func TestGetVaultQuotingParams(t *testing.T) {
+	tests := map[string]struct {
+		/* Setup */
+		// Vault id.
+		vaultId types.VaultId
+		// Vault params to set.
+		vaultParams *types.VaultParams
+		/* Expectations */
+		// Whether quoting params should be default.
+		shouldBeDefault bool
+	}{
+		"Default Quoting Params": {
+			vaultId: constants.Vault_Clob0,
+			vaultParams: &types.VaultParams{
+				Status: types.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+			},
+			shouldBeDefault: true,
+		},
+		"Custom Quoting Params": {
+			vaultId:         constants.Vault_Clob1,
+			vaultParams:     &constants.VaultParams,
+			shouldBeDefault: false,
+		},
+		"Non-existent Vault Params": {
+			vaultId:     constants.Vault_Clob1,
+			vaultParams: nil,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.VaultKeeper
+
+			if tc.vaultParams != nil {
+				err := k.SetVaultParams(ctx, tc.vaultId, *tc.vaultParams)
+				require.NoError(t, err)
+				p, exists := k.GetVaultQuotingParams(ctx, tc.vaultId)
+				require.True(t, exists)
+				if tc.shouldBeDefault {
+					require.Equal(t, types.DefaultQuotingParams(), p)
+				} else {
+					require.Equal(t, *tc.vaultParams.QuotingParams, p)
+				}
+			} else {
+				_, exists := k.GetVaultQuotingParams(ctx, tc.vaultId)
+				require.False(t, exists)
 			}
 		})
 	}

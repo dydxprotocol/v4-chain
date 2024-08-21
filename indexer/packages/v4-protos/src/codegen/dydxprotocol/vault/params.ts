@@ -1,3 +1,4 @@
+import { VaultStatus, VaultStatusSDKType } from "./vault";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** QuotingParams stores vault quoting parameters. */
@@ -71,6 +72,24 @@ export interface QuotingParamsSDKType {
    */
 
   activation_threshold_quote_quantums: Uint8Array;
+}
+/** VaultParams stores vault parameters. */
+
+export interface VaultParams {
+  /** Status of the vault. */
+  status: VaultStatus;
+  /** Quoting parameters of the vault. */
+
+  quotingParams?: QuotingParams;
+}
+/** VaultParams stores vault parameters. */
+
+export interface VaultParamsSDKType {
+  /** Status of the vault. */
+  status: VaultStatusSDKType;
+  /** Quoting parameters of the vault. */
+
+  quoting_params?: QuotingParamsSDKType;
 }
 /**
  * Deprecated: Params stores `x/vault` parameters.
@@ -251,6 +270,61 @@ export const QuotingParams = {
     message.orderSizePctPpm = object.orderSizePctPpm ?? 0;
     message.orderExpirationSeconds = object.orderExpirationSeconds ?? 0;
     message.activationThresholdQuoteQuantums = object.activationThresholdQuoteQuantums ?? new Uint8Array();
+    return message;
+  }
+
+};
+
+function createBaseVaultParams(): VaultParams {
+  return {
+    status: 0,
+    quotingParams: undefined
+  };
+}
+
+export const VaultParams = {
+  encode(message: VaultParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.status !== 0) {
+      writer.uint32(8).int32(message.status);
+    }
+
+    if (message.quotingParams !== undefined) {
+      QuotingParams.encode(message.quotingParams, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): VaultParams {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseVaultParams();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.status = (reader.int32() as any);
+          break;
+
+        case 2:
+          message.quotingParams = QuotingParams.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<VaultParams>): VaultParams {
+    const message = createBaseVaultParams();
+    message.status = object.status ?? 0;
+    message.quotingParams = object.quotingParams !== undefined && object.quotingParams !== null ? QuotingParams.fromPartial(object.quotingParams) : undefined;
     return message;
   }
 
