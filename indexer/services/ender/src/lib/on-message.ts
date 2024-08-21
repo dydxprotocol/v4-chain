@@ -73,6 +73,14 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
       topic: KafkaTopics.TO_ENDER,
     },
   );
+  logger.info({
+    at: 'onMessage#onMessage',
+    message: 'Processing message',
+    offset,
+    blockHeight,
+    messageTimeInQueue: start - Number(message.timestamp),
+    numEvents: indexerTendermintBlock.events.length,
+  });
 
   let success: boolean = false;
   const txId: number = await Transaction.start();
