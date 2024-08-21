@@ -421,7 +421,6 @@ describe('PnlTicks store', () => {
     await setupRankedPnlTicksData();
 
     await WalletTable.create(vaultWallet);
-    await SubaccountTable.create(vaultSubaccount);
     await PnlTicksTable.create({
       subaccountId: vaultSubaccountId,
       equity: '100',
