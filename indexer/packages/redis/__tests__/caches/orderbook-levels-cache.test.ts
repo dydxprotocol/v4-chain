@@ -744,9 +744,52 @@ describe('orderbookLevelsCache', () => {
       ]);
 
       const midPrice = await getOrderBookMidPrice(ticker, client);
-      expect(midPrice).toEqual(45350);
+      expect(midPrice).toEqual('45350');
     });
+  });
 
+  it('returns the correct mid price for very small numbers', async () => {
+    await Promise.all([
+      updatePriceLevel({
+        ticker,
+        side: OrderSide.SELL,
+        humanPrice: '0.000000002346',
+        sizeDeltaInQuantums: '2000',
+        client,
+      }),
+      updatePriceLevel({
+        ticker,
+        side: OrderSide.BUY,
+        humanPrice: '0.000000002344',
+        sizeDeltaInQuantums: '2000',
+        client,
+      }),
+    ]);
+
+    const midPrice = await getOrderBookMidPrice(ticker, client);
+    expect(midPrice).toEqual('0.000000002345');
+  });
+
+  it('returns the approprite amount of decimal precision', async () => {
+    await Promise.all([
+      updatePriceLevel({
+        ticker,
+        side: OrderSide.SELL,
+        humanPrice: '1.02',
+        sizeDeltaInQuantums: '2000',
+        client,
+      }),
+      updatePriceLevel({
+        ticker,
+        side: OrderSide.BUY,
+        humanPrice: '1.01',
+        sizeDeltaInQuantums: '2000',
+        client,
+      }),
+    ]);
+
+    const midPrice = await getOrderBookMidPrice(ticker, client);
+    expect(midPrice).toEqual('1.015');
   });
 
   it('returns undefined if there are no bids or asks', async () => {

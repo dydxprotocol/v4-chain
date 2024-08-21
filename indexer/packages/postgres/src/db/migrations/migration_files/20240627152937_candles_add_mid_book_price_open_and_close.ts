@@ -4,8 +4,8 @@ export async function up(knex: Knex): Promise<void> {
   return knex
     .schema
     .alterTable('candles', (table) => {
-      table.decimal('orderbookMidPriceOpen', null);
-      table.decimal('orderbookMidPriceClose', null);
+      table.decimal('orderbookMidPriceOpen', null).nullable();
+      table.decimal('orderbookMidPriceClose', null).nullable();
     });
 }
 
