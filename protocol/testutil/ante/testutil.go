@@ -16,8 +16,12 @@ import (
 	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	accountplustypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
+	ratelimitkeeper "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/keeper"
+	ratelimittypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 
 	perpetualskeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 
@@ -63,6 +67,7 @@ type AnteTestSuite struct {
 	TxBankKeeper      *txtestutil.MockBankKeeper
 	FeeGrantKeeper    *antetestutil.MockFeegrantKeeper
 	PerpetualsKeeper  perpetualskeeper.Keeper
+	RateLimitKeeper   ratelimittypes.RatelimitKeeper
 	EncCfg            moduletestutil.TestEncodingConfig
 }
 
@@ -77,6 +82,7 @@ func SetupTestSuite(t testing.TB, isCheckTx bool) *AnteTestSuite {
 	keys := map[string]*storetypes.KVStoreKey{
 		types.StoreKey:            storetypes.NewKVStoreKey(types.StoreKey),
 		accountplustypes.StoreKey: storetypes.NewKVStoreKey(accountplustypes.StoreKey),
+		ratelimittypes.StoreKey:   storetypes.NewKVStoreKey(ratelimittypes.StoreKey),
 	}
 	transKeys := map[string]*storetypes.TransientStoreKey{
 		"transient_test": storetypes.NewTransientStoreKey("transient_test"),
@@ -112,6 +118,17 @@ func SetupTestSuite(t testing.TB, isCheckTx bool) *AnteTestSuite {
 
 	// Initialize accountplus keeper
 	suite.AccountplusKeeper = *accountpluskeeper.NewKeeper(suite.EncCfg.Codec, keys[accountplustypes.StoreKey])
+
+	// Initialize ratelimit keeper
+	suite.RateLimitKeeper = ratelimitkeeper.NewKeeper(
+		suite.EncCfg.Codec,
+		keys[accountplustypes.StoreKey],
+		mocks.NewBankKeeper(t),
+		mocks.NewBlockTimeKeeper(t),
+		mocks.NewICS4Wrapper(t),
+		rate_limit.NewNoOpRateLimiter[string](),
+		[]string{},
+	)
 
 	// We're using TestMsg encoding in some tests, so register it here.
 	suite.EncCfg.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)

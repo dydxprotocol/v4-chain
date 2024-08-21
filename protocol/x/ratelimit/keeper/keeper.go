@@ -16,6 +16,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	ratelimitutil "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/util"
 	gometrics "github.com/hashicorp/go-metrics"
@@ -23,11 +24,12 @@ import (
 
 type (
 	Keeper struct {
-		cdc             codec.BinaryCodec
-		storeKey        storetypes.StoreKey
-		bankKeeper      types.BankKeeper
-		blockTimeKeeper types.BlockTimeKeeper
-		ics4Wrapper     types.ICS4Wrapper
+		cdc                 codec.BinaryCodec
+		storeKey            storetypes.StoreKey
+		bankKeeper          types.BankKeeper
+		blockTimeKeeper     types.BlockTimeKeeper
+		ics4Wrapper         types.ICS4Wrapper
+		wasmExecRatelimiter rate_limit.RateLimiter[string]
 
 		// the addresses capable of executing MsgSetLimitParams message.
 		authorities map[string]struct{}
@@ -40,15 +42,17 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
 	ics4Wrapper types.ICS4Wrapper,
+	wasmExecRatelimiter rate_limit.RateLimiter[string],
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:             cdc,
-		storeKey:        storeKey,
-		bankKeeper:      bankKeeper,
-		blockTimeKeeper: blockTimeKeeper,
-		ics4Wrapper:     ics4Wrapper,
-		authorities:     lib.UniqueSliceToSet(authorities),
+		cdc:                 cdc,
+		storeKey:            storeKey,
+		bankKeeper:          bankKeeper,
+		blockTimeKeeper:     blockTimeKeeper,
+		ics4Wrapper:         ics4Wrapper,
+		wasmExecRatelimiter: wasmExecRatelimiter,
+		authorities:         lib.UniqueSliceToSet(authorities),
 	}
 }
 

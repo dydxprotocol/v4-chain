@@ -22,6 +22,7 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	ratelimittypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 )
 
 // HandlerOptions are the options required for constructing an SDK AnteHandler.
@@ -36,6 +37,7 @@ type HandlerOptions struct {
 	PerpetualsKeeper  perpetualstypes.PerpetualsKeeper
 	PricesKeeper      pricestypes.PricesKeeper
 	MarketMapKeeper   customante.MarketMapKeeper
+	RatelimitKeeper   ratelimittypes.RatelimitKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -103,6 +105,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "prices keeper is required for ante builder")
 	}
 
+	if options.RatelimitKeeper == nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "ratelimit keeper is required for ante builder")
+	}
+
 	h := &lockingAnteHandler{
 		authStoreKey:             options.AuthStoreKey,
 		setupContextDecorator:    ante.NewSetUpContextDecorator(),
@@ -133,6 +139,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		marketUpdates: customante.NewValidateMarketUpdateDecorator(
 			options.PerpetualsKeeper, options.PricesKeeper, options.MarketMapKeeper,
 		),
+		executeCosmWasm: customante.NewWasmExecDecorator(options.RatelimitKeeper),
 	}
 	return h.AnteHandle, nil
 }
@@ -157,6 +164,7 @@ type lockingAnteHandler struct {
 	incrementSequence        ante.IncrementSequenceDecorator
 	sigVerification          customante.SigVerificationDecorator
 	consumeTxSizeGas         ante.ConsumeTxSizeGasDecorator
+	executeCosmWasm          customante.WasmExecDecorator
 	deductFee                ante.DeductFeeDecorator
 	setPubKey                ante.SetPubKeyDecorator
 	sigGasConsume            ante.SigGasConsumeDecorator
@@ -396,6 +404,9 @@ func (h *lockingAnteHandler) otherMsgAnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		defer h.globalLock.Unlock()
 	}
 
+	if ctx, err = h.executeCosmWasm.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
+		return ctx, err
+	}
 	if ctx, err = h.consumeTxSizeGas.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
 	}

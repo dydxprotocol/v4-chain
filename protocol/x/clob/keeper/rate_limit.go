@@ -3,19 +3,14 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
-
-// The rate limiting is only performed during `CheckTx`.
-// Rate limiting during `ReCheckTx` might result in over counting.
-func (k *Keeper) ShouldRateLimit(ctx sdk.Context) bool {
-	return ctx.IsCheckTx() && !ctx.IsReCheckTx()
-}
 
 // RateLimitCancelOrder passes order cancellations with valid clob pairs to `cancelOrderRateLimiter`.
 func (k *Keeper) RateLimitCancelOrder(ctx sdk.Context, msg *types.MsgCancelOrder) error {
 	// Only rate limit during `CheckTx`.
-	if !k.ShouldRateLimit(ctx) {
+	if !libante.ShouldRateLimit(ctx) {
 		return nil
 	}
 
@@ -43,7 +38,7 @@ func (k *Keeper) RateLimitCancelOrder(ctx sdk.Context, msg *types.MsgCancelOrder
 // The rate limiting is only performed during `CheckTx` and `ReCheckTx`.
 func (k *Keeper) RateLimitPlaceOrder(ctx sdk.Context, msg *types.MsgPlaceOrder) error {
 	// Only rate limit during `CheckTx`.
-	if !k.ShouldRateLimit(ctx) {
+	if !libante.ShouldRateLimit(ctx) {
 		return nil
 	}
 
@@ -71,7 +66,7 @@ func (k *Keeper) RateLimitPlaceOrder(ctx sdk.Context, msg *types.MsgPlaceOrder) 
 // The rate limiting is only performed during `CheckTx` and `ReCheckTx`.
 func (k *Keeper) RateLimitBatchCancel(ctx sdk.Context, msg *types.MsgBatchCancel) error {
 	// Only rate limit during `CheckTx`.
-	if !k.ShouldRateLimit(ctx) {
+	if !libante.ShouldRateLimit(ctx) {
 		return nil
 	}
 
