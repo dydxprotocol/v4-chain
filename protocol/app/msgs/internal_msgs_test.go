@@ -63,6 +63,26 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse",
 
+		// cosmmwasm
+		"/cosmwasm.wasm.v1.MsgClearAdmin",
+		"/cosmwasm.wasm.v1.MsgClearAdminResponse",
+		"/cosmwasm.wasm.v1.MsgMigrateContract",
+		"/cosmwasm.wasm.v1.MsgMigrateContractResponse",
+		"/cosmwasm.wasm.v1.MsgPinCodes",
+		"/cosmwasm.wasm.v1.MsgPinCodesResponse",
+		"/cosmwasm.wasm.v1.MsgRemoveCodeUploadParamsAddresses",
+		"/cosmwasm.wasm.v1.MsgRemoveCodeUploadParamsAddressesResponse",
+		"/cosmwasm.wasm.v1.MsgSudoContract",
+		"/cosmwasm.wasm.v1.MsgSudoContractResponse",
+		"/cosmwasm.wasm.v1.MsgUnpinCodes",
+		"/cosmwasm.wasm.v1.MsgUnpinCodesResponse",
+		"/cosmwasm.wasm.v1.MsgUpdateAdmin",
+		"/cosmwasm.wasm.v1.MsgUpdateAdminResponse",
+		"/cosmwasm.wasm.v1.MsgUpdateContractLabel",
+		"/cosmwasm.wasm.v1.MsgUpdateContractLabelResponse",
+		"/cosmwasm.wasm.v1.MsgUpdateInstantiateConfig",
+		"/cosmwasm.wasm.v1.MsgUpdateInstantiateConfigResponse",
+
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams",
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse",

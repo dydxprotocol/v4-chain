@@ -2,6 +2,7 @@ package msgs
 
 import (
 	upgrade "cosmossdk.io/x/upgrade/types"
+	wasm "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -91,6 +92,26 @@ var (
 		"/cosmos.upgrade.v1beta1.MsgCancelUpgradeResponse":   nil,
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade":         &upgrade.MsgSoftwareUpgrade{},
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse": nil,
+
+		// Cosmwasm
+		"/cosmwasm.wasm.v1.MsgClearAdmin":                              &wasm.MsgClearAdmin{},
+		"/cosmwasm.wasm.v1.MsgClearAdminResponse":                      nil,
+		"/cosmwasm.wasm.v1.MsgUpdateContractLabel":                     &wasm.MsgUpdateContractLabel{},
+		"/cosmwasm.wasm.v1.MsgUpdateContractLabelResponse":             nil,
+		"/cosmwasm.wasm.v1.MsgUpdateInstantiateConfig":                 &wasm.MsgUpdateInstantiateConfig{},
+		"/cosmwasm.wasm.v1.MsgUpdateInstantiateConfigResponse":         nil,
+		"/cosmwasm.wasm.v1.MsgMigrateContract":                         &wasm.MsgMigrateContract{},
+		"/cosmwasm.wasm.v1.MsgMigrateContractResponse":                 nil,
+		"/cosmwasm.wasm.v1.MsgPinCodes":                                &wasm.MsgPinCodes{},
+		"/cosmwasm.wasm.v1.MsgPinCodesResponse":                        nil,
+		"/cosmwasm.wasm.v1.MsgRemoveCodeUploadParamsAddresses":         &wasm.MsgRemoveCodeUploadParamsAddresses{},
+		"/cosmwasm.wasm.v1.MsgRemoveCodeUploadParamsAddressesResponse": nil,
+		"/cosmwasm.wasm.v1.MsgSudoContract":                            &wasm.MsgSudoContract{},
+		"/cosmwasm.wasm.v1.MsgSudoContractResponse":                    nil,
+		"/cosmwasm.wasm.v1.MsgUnpinCodes":                              &wasm.MsgUnpinCodes{},
+		"/cosmwasm.wasm.v1.MsgUnpinCodesResponse":                      nil,
+		"/cosmwasm.wasm.v1.MsgUpdateAdmin":                             &wasm.MsgUpdateAdmin{},
+		"/cosmwasm.wasm.v1.MsgUpdateAdminResponse":                     nil,
 
 		// ibc
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":         &icahosttypes.MsgUpdateParams{},

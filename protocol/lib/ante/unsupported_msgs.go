@@ -20,17 +20,21 @@ func IsUnsupportedMsg(msg sdk.Msg) bool {
 		*govbeta.MsgSubmitProposal,
 		*gov.MsgCancelProposal,
 		// ------- CosmWasm
-		*wasmtypes.MsgClearAdmin,
 		*wasmtypes.MsgIBCCloseChannel,
 		*wasmtypes.MsgIBCSend,
-		*wasmtypes.MsgPinCodes,
-		*wasmtypes.MsgRemoveCodeUploadParamsAddresses,
-		*wasmtypes.MsgSudoContract,
-		*wasmtypes.MsgUnpinCodes,
-		*wasmtypes.MsgUpdateAdmin,
-		*wasmtypes.MsgUpdateContractLabel,
-		*wasmtypes.MsgUpdateInstantiateConfig,
-		*wasmtypes.MsgMigrateContract:
+		*wasmtypes.InstantiateContract2Proposal,
+		*wasmtypes.InstantiateContractProposal,
+		*wasmtypes.MigrateContractProposal,
+		*wasmtypes.ClearAdminProposal,
+		*wasmtypes.ExecuteContractProposal,
+		*wasmtypes.PinCodesProposal,
+		*wasmtypes.StoreAndInstantiateContractProposal,
+		*wasmtypes.StoreCodeProposal,
+		*wasmtypes.UpdateAdminProposal,
+		*wasmtypes.SudoContractProposal,
+		*wasmtypes.UnpinCodesProposal,
+		*wasmtypes.UpdateInstantiateConfigProposal:
+
 		return true
 	}
 	return false

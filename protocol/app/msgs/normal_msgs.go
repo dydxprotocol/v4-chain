@@ -216,10 +216,6 @@ var (
 		"/ibc.applications.interchain_accounts.v1.InterchainAccount": nil,
 
 		// wasm
-		"/cosmwasm.wasm.v1.ExecuteContractProposal":                 nil,
-		"/cosmwasm.wasm.v1.InstantiateContract2Proposal":            nil,
-		"/cosmwasm.wasm.v1.InstantiateContractProposal":             nil,
-		"/cosmwasm.wasm.v1.MigrateContractProposal":                 nil,
 		"/cosmwasm.wasm.v1.MsgAddCodeUploadParamsAddresses":         &wasm.MsgAddCodeUploadParamsAddresses{},
 		"/cosmwasm.wasm.v1.MsgAddCodeUploadParamsAddressesResponse": nil,
 		"/cosmwasm.wasm.v1.MsgExecuteContract":                      &wasm.MsgExecuteContract{},
@@ -236,10 +232,6 @@ var (
 		"/cosmwasm.wasm.v1.MsgStoreCodeResponse":                    nil,
 		"/cosmwasm.wasm.v1.MsgUpdateParams":                         &wasm.MsgUpdateParams{},
 		"/cosmwasm.wasm.v1.MsgUpdateParamsResponse":                 nil,
-		"/cosmwasm.wasm.v1.StoreAndInstantiateContractProposal":     nil,
-		"/cosmwasm.wasm.v1.StoreCodeProposal":                       nil,
-		"/cosmwasm.wasm.v1.UpdateAdminProposal":                     nil,
-		"/cosmwasm.wasm.v1.UpdateInstantiateConfigProposal":         nil,
 	}
 
 	// Custom modules

@@ -117,10 +117,6 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal",
 
 		// wasm
-		"/cosmwasm.wasm.v1.ExecuteContractProposal",
-		"/cosmwasm.wasm.v1.InstantiateContract2Proposal",
-		"/cosmwasm.wasm.v1.InstantiateContractProposal",
-		"/cosmwasm.wasm.v1.MigrateContractProposal",
 		"/cosmwasm.wasm.v1.MsgAddCodeUploadParamsAddresses",
 		"/cosmwasm.wasm.v1.MsgAddCodeUploadParamsAddressesResponse",
 		"/cosmwasm.wasm.v1.MsgExecuteContract",
@@ -137,10 +133,6 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmwasm.wasm.v1.MsgStoreCodeResponse",
 		"/cosmwasm.wasm.v1.MsgUpdateParams",
 		"/cosmwasm.wasm.v1.MsgUpdateParamsResponse",
-		"/cosmwasm.wasm.v1.StoreAndInstantiateContractProposal",
-		"/cosmwasm.wasm.v1.StoreCodeProposal",
-		"/cosmwasm.wasm.v1.UpdateAdminProposal",
-		"/cosmwasm.wasm.v1.UpdateInstantiateConfigProposal",
 
 		// clob
 		"/dydxprotocol.clob.MsgBatchCancel",
