@@ -32,3 +32,10 @@ export class DatabaseError extends Error {
     this.name = 'DatabaseError';
   }
 }
+
+export class InvalidParamError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NotFoundError';
+  }
+}

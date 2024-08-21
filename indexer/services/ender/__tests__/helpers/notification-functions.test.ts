@@ -97,9 +97,15 @@ describe('notification functions', () => {
         },
       );
 
-      // Assert that sendFirebaseMessage was called with correct arguments, default wallet
-      // is expected because mockOrder uses defaultSubaccountId
-      expect(sendFirebaseMessage).toHaveBeenCalledWith([defaultToken.token], undefined);
+      expect(sendFirebaseMessage).toHaveBeenCalledWith(
+        [
+          expect.objectContaining({
+            token: defaultToken.token,
+            language: defaultToken.language,
+          }),
+        ],
+        undefined,
+      );
     });
 
     describe('sendOrderTriggeredNotification', () => {
@@ -137,7 +143,12 @@ describe('notification functions', () => {
           },
         );
 
-        expect(sendFirebaseMessage).toHaveBeenCalledWith([defaultToken.token], undefined);
+        expect(sendFirebaseMessage).toHaveBeenCalledWith([expect.objectContaining(
+          {
+            token: defaultToken.token,
+            language: defaultToken.language,
+          },
+        )], undefined);
       });
     });
   });

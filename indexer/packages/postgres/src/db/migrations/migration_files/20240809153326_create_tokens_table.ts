@@ -6,6 +6,7 @@ export async function up(knex: Knex): Promise<void> {
     table.string('token').notNullable().unique();
     table.string('address').notNullable();
     table.foreign('address').references('wallets.address').onDelete('CASCADE');
+    table.string('language').notNullable();
     table.timestamp('updatedAt').notNullable().defaultTo(knex.fn.now());
   });
 }

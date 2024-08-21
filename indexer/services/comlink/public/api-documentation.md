@@ -455,6 +455,7 @@ print(r.json())
 
 ```javascript
 const inputBody = '{
+  "language": "string",
   "token": "string"
 }';
 const headers = {
@@ -485,6 +486,7 @@ fetch(`${baseURL}/addresses/{address}/registerToken`,
 
 ```json
 {
+  "language": "string",
   "token": "string"
 }
 ```
@@ -495,6 +497,7 @@ fetch(`${baseURL}/addresses/{address}/registerToken`,
 |---|---|---|---|---|
 |address|path|string|true|none|
 |body|body|object|true|none|
+|» language|body|string|true|none|
 |» token|body|string|true|none|
 
 ### Responses

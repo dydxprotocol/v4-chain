@@ -36,7 +36,7 @@ import {
   Risk,
 } from '../types';
 import { ZERO, ZERO_USDC_POSITION } from './constants';
-import { NotFoundError } from './errors';
+import { InvalidParamError, NotFoundError } from './errors';
 
 /* ------- GENERIC HELPERS ------- */
 
@@ -56,6 +56,9 @@ export function handleControllerError(
 ): express.Response {
   if (error instanceof NotFoundError) {
     return handleNotFoundError(error.message, res);
+  }
+  if (error instanceof InvalidParamError) {
+    return handleInvalidParamError(error.message, res);
   }
   return handleInternalServerError(
     at,
@@ -87,6 +90,17 @@ function handleInternalServerError(
     query: JSON.stringify(req.query),
   });
   return createInternalServerErrorResponse(res);
+}
+
+function handleInvalidParamError(
+  message: string,
+  res: express.Response,
+): express.Response {
+  return res.status(400).json({
+    errors: [{
+      msg: message,
+    }],
+  });
 }
 
 function handleNotFoundError(

@@ -41,7 +41,10 @@ describe('sendFirebaseMessage', () => {
   });
 
   it('should send a Firebase message successfully', async () => {
-    await sendFirebaseMessage([defaultToken.token], mockNotification);
+    await sendFirebaseMessage(
+      [{ token: defaultToken.token, language: defaultToken.language }],
+      mockNotification,
+    );
 
     expect(sendMulticast).toHaveBeenCalled();
     expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
@@ -63,7 +66,10 @@ describe('sendFirebaseMessage', () => {
     const mockedSendMulticast = sendMulticast as jest.MockedFunction<typeof sendMulticast>;
     mockedSendMulticast.mockRejectedValueOnce(new Error('Send failed'));
 
-    await sendFirebaseMessage([defaultToken.token], mockNotification);
+    await sendFirebaseMessage(
+      [{ token: defaultToken.token, language: defaultToken.language }],
+      mockNotification,
+    );
 
     expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
       message: 'Failed to send Firebase message',

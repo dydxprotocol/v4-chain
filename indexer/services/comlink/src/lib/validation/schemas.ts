@@ -1,3 +1,4 @@
+import { isValidLanguageCode } from '@dydxprotocol-indexer/notifications';
 import {
   perpetualMarketRefresher,
   MAX_PARENT_SUBACCOUNTS,
@@ -215,9 +216,19 @@ export const CheckTransferBetweenSchema = checkSchema(transferBetweenSchemaRecor
 
 export const RegisterTokenValidationSchema = [
   body('token')
-    .exists().withMessage('Token is required') // Check if the token exists
+    .exists().withMessage('Token is required')
     .isString()
-    .withMessage('Token must be a string') // Ensure the token is a string
+    .withMessage('Token must be a string')
     .notEmpty()
-    .withMessage('Token cannot be empty'), // Ensure the token is not an empty string
+    .withMessage('Token cannot be empty'),
+  body('language')
+    .optional()
+    .isString()
+    .withMessage('Language must be a string')
+    .custom((value: string) => {
+      if (!isValidLanguageCode(value)) {
+        throw new Error('Invalid language code');
+      }
+      return true;
+    }),
 ];
