@@ -393,7 +393,14 @@ print(r.json())
 ```
 
 ```javascript
+<<<<<<< HEAD
 
+=======
+const inputBody = '{
+  "language": "string",
+  "token": "string"
+}';
+>>>>>>> 48b1be9b (Add language to Token table)
 const headers = {
   'Accept':'application/json'
 };
@@ -416,12 +423,26 @@ fetch(`${baseURL}/affiliates/referral_code?address=string`,
 
 ```
 
+<<<<<<< HEAD
 `GET /affiliates/referral_code`
+=======
+`POST /addresses/{address}/registerToken`
+
+> Body parameter
+
+```json
+{
+  "language": "string",
+  "token": "string"
+}
+```
+>>>>>>> 48b1be9b (Add language to Token table)
 
 ### Parameters
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
+<<<<<<< HEAD
 |address|query|string|true|none|
 
 > Example responses
@@ -433,6 +454,12 @@ fetch(`${baseURL}/affiliates/referral_code?address=string`,
   "referralCode": "string"
 }
 ```
+=======
+|address|path|string|true|none|
+|body|body|object|true|none|
+|» language|body|string|true|none|
+|» token|body|string|true|none|
+>>>>>>> 48b1be9b (Add language to Token table)
 
 ### Responses
 

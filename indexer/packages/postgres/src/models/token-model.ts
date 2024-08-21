@@ -10,6 +10,7 @@ class TokenModel extends Model {
   token!: string;
   address!: string;
   updatedAt!: IsoString;
+  language!: string;
 
   static relationMappings = {
     wallet: {

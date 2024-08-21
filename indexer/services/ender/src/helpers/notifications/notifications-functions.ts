@@ -23,8 +23,7 @@ export async function sendOrderFilledNotification(
       throw new Error(`Subaccount not found for id ${order.subaccountId}`);
     }
 
-    const tokens = (await TokenTable.findAll({ address: subaccount.address }, []))
-      .map((token) => token.token);
+    const tokens = (await TokenTable.findAll({ address: subaccount.address }, []));
     if (tokens.length === 0) {
       throw new Error(`No token found for address ${subaccount.address}`);
     }
@@ -54,8 +53,7 @@ export async function sendOrderTriggeredNotification(
   subaccount: SubaccountFromDatabase,
 ) {
   try {
-    const tokens = (await TokenTable.findAll({ address: subaccount.address }, []))
-      .map((token) => token.token);
+    const tokens = (await TokenTable.findAll({ address: subaccount.address }, []));
     if (tokens.length === 0) {
       throw new Error(`No tokens found for address ${subaccount.address}`);
     }

@@ -42,7 +42,7 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
-import { BadRequestError, DatabaseError, NotFoundError } from '../../../lib/errors';
+import { DatabaseError, NotFoundError } from '../../../lib/errors';
 import {
   getFundingIndexMaps,
   handleControllerError,
@@ -313,13 +313,9 @@ class AddressesController extends Controller {
   @Post('/:address/registerToken')
   public async registerToken(
     @Path() address: string,
-      @Body() body: { token: string },
+      @Body() body: { token: string, language: string },
   ): Promise<void> {
-    const { token } = body;
-    if (!token) {
-      throw new BadRequestError('Invalid Token in request');
-    }
-
+    const { token, language } = body;
     const foundAddress = await WalletTable.findById(address);
     if (!foundAddress) {
       throw new NotFoundError(`No address found with address: ${address}`);
@@ -329,6 +325,7 @@ class AddressesController extends Controller {
       await TokenTable.registerToken(
         token,
         address,
+        language,
       );
     } catch (error) {
       throw new DatabaseError(`Error registering token: ${error}`);
@@ -344,8 +341,7 @@ class AddressesController extends Controller {
       if (!wallet) {
         throw new NotFoundError(`No wallet found for address: ${address}`);
       }
-      const allTokens = await TokenTable.findAll({ address: wallet.address }, [])
-        .then((tokens) => tokens.map((token) => token.token));
+      const allTokens = await TokenTable.findAll({ address: wallet.address }, []);
       if (allTokens.length === 0) {
         throw new NotFoundError(`No tokens found for address: ${address}`);
       }
@@ -499,11 +495,12 @@ router.post(
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
-    const { address, token } = matchedData(req) as RegisterTokenRequest;
+    const start: number = Date.now();
+    const { address, token, language = 'en' } = matchedData(req) as RegisterTokenRequest;
 
     try {
       const controller: AddressesController = new AddressesController();
-      await controller.registerToken(address, { token });
+      await controller.registerToken(address, { token, language });
       return res.status(200).send({});
     } catch (error) {
       return handleControllerError(
@@ -512,6 +509,11 @@ router.post(
         error,
         req,
         res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.post_registerToken.timing`,
+        Date.now() - start,
       );
     }
   },

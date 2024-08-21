@@ -38,7 +38,7 @@ describe('Token store', () => {
     expect(token).toEqual(expect.objectContaining(defaultToken));
 
     // Upsert again to test update functionality
-    const updatedToken = { ...defaultToken, updatedAt: new Date().toISOString() };
+    const updatedToken = { ...defaultToken, updatedAt: new Date().toISOString(), language: 'es' };
     await TokenTable.upsert(updatedToken);
     token = await TokenTable.findByToken(defaultToken.token);
 
@@ -50,6 +50,7 @@ describe('Token store', () => {
     const additionalToken = {
       token: 'fake_token',
       address: defaultAddress2,
+      language: 'en',
       updatedAt: new Date().toISOString(),
     };
 

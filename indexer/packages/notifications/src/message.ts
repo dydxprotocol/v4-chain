@@ -5,10 +5,10 @@ import {
   sendMulticast,
 } from './lib/firebase';
 import { deriveLocalizedNotificationMessage } from './localization';
-import { Notification } from './types';
+import { LanguageCode, Notification } from './types';
 
 export async function sendFirebaseMessage(
-  tokens: string[],
+  tokens: {token: string, language: string}[],
   notification: Notification,
 ): Promise<void> {
   // Re-add once stats are implemented
@@ -24,11 +24,15 @@ export async function sendFirebaseMessage(
     return;
   }
 
-  const { title, body } = deriveLocalizedNotificationMessage(notification);
+  const language = tokens[0].language;
+  const { title, body } = deriveLocalizedNotificationMessage(
+    notification,
+    language as LanguageCode,
+  );
   const link = notification.deeplink;
 
   const message: MulticastMessage = {
-    tokens,
+    tokens: tokens.map((token) => token.token),
     notification: {
       title,
       body,

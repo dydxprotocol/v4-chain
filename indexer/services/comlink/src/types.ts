@@ -553,6 +553,7 @@ export interface HistoricalFundingRequest extends LimitAndEffectiveBeforeRequest
 export interface RegisterTokenRequest {
   address: string,
   token: string,
+  language: string,
 }
 
 /* ------- COLLATERALIZATION TYPES ------- */

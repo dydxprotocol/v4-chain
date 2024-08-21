@@ -299,6 +299,7 @@ export interface TokenFromDatabase {
   address: WalletFromDatabase['address'],
   token: string,
   updatedAt: IsoString,
+  language: string,
 }
 
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:

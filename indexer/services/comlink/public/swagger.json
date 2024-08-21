@@ -1818,11 +1818,15 @@
             "application/json": {
               "schema": {
                 "properties": {
+                  "language": {
+                    "type": "string"
+                  },
                   "token": {
                     "type": "string"
                   }
                 },
                 "required": [
+                  "language",
                   "token"
                 ],
                 "type": "object"

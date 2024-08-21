@@ -579,10 +579,11 @@ describe('addresses-controller#V4', () => {
   describe('/:address/registerToken', () => {
     it('Post /:address/registerToken with valid params returns 200', async () => {
       const token = 'validToken';
+      const language = 'en';
       const response: request.Response = await sendRequest({
         type: RequestMethod.POST,
         path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
-        body: { token },
+        body: { token, language },
         expectedStatus: 200,
       });
 
@@ -596,14 +597,15 @@ describe('addresses-controller#V4', () => {
     it('Post /:address/registerToken with valid params calls TokenTable registerToken', async () => {
       jest.spyOn(TokenTable, 'registerToken');
       const token = 'validToken';
+      const language = 'en';
       await sendRequest({
         type: RequestMethod.POST,
         path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
-        body: { token },
+        body: { token, language },
         expectedStatus: 200,
       });
       expect(TokenTable.registerToken).toHaveBeenCalledWith(
-        token, testConstants.defaultAddress,
+        token, testConstants.defaultAddress, language,
       );
       expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.200', 1, {
         path: '/:address/registerToken',
@@ -633,12 +635,14 @@ describe('addresses-controller#V4', () => {
       });
     });
 
-    it('Post /:address/registerToken with no token in body returns 400', async () => {
-      const token = '';
+    it.each([
+      ['validToken', '', 'Invalid language code', 'language'],
+      ['validToken', 'qq', 'Invalid language code', 'language'],
+    ])('Post /:address/registerToken with bad language params returns 400', async (token, language, errorMsg, errorParam) => {
       const response: request.Response = await sendRequest({
         type: RequestMethod.POST,
         path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
-        body: { token },
+        body: { token, language },
         expectedStatus: 400,
       });
 
@@ -646,9 +650,31 @@ describe('addresses-controller#V4', () => {
         errors: [
           {
             location: 'body',
-            msg: 'Token cannot be empty',
-            param: 'token',
-            value: '',
+            msg: errorMsg,
+            param: errorParam,
+            value: language,
+          },
+        ],
+      });
+    });
+
+    it.each([
+      ['', 'en', 'Token cannot be empty', 'token'],
+    ])('Post /:address/registerToken with bad token params returns 400', async (token, language, errorMsg, errorParam) => {
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.POST,
+        path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
+        body: { token, language },
+        expectedStatus: 400,
+      });
+
+      expect(response.body).toEqual({
+        errors: [
+          {
+            location: 'body',
+            msg: errorMsg,
+            param: errorParam,
+            value: token,
           },
         ],
       });

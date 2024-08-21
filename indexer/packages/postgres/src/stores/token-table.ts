@@ -117,6 +117,7 @@ export async function findByToken(
 export async function registerToken(
   token: string,
   address: string,
+  language: string,
   options: Options = { txId: undefined },
 ): Promise<TokenFromDatabase> {
   return upsert(
@@ -124,6 +125,7 @@ export async function registerToken(
       token,
       address,
       updatedAt: DateTime.now().toISO(),
+      language,
     },
     options,
   );
