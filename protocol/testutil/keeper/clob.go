@@ -113,11 +113,32 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			true,
 		)
 		ks.BlockTimeKeeper, _ = createBlockTimeKeeper(stateStore, db, cdc)
+		accountsKeeper, _ := createAccountKeeper(
+			stateStore,
+			db,
+			cdc,
+			registry)
+
+		bankKeeper, _ := createBankKeeper(
+			stateStore,
+			db,
+			cdc,
+			accountsKeeper,
+		)
+
+		stakingKeeper, _ := createStakingKeeper(
+			stateStore,
+			db,
+			cdc,
+			accountsKeeper,
+			bankKeeper,
+		)
 		ks.StatsKeeper, _ = createStatsKeeper(
 			stateStore,
 			epochsKeeper,
 			db,
 			cdc,
+			stakingKeeper,
 		)
 		ks.VaultKeeper, _ = createVaultKeeper(
 			stateStore,

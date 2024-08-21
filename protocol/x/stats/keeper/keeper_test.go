@@ -5,7 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/assert"
@@ -289,4 +292,17 @@ func TestExpireOldStats(t *testing.T) {
 	k.ExpireOldStats(ctx)
 	k.ExpireOldStats(ctx)
 	require.NotNil(t, k.GetEpochStatsOrNil(ctx, uint32(12)))
+}
+
+func TestGetStakedAmount(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	statsKeeper := tApp.App.StatsKeeper
+	stakingKeeper := tApp.App.StakingKeeper
+	expectedCoinsStaked := big.NewInt(100)
+	delegation := stakingtypes.NewDelegation(constants.AliceAccAddress.String(), constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(expectedCoinsStaked))
+	stakingKeeper.SetDelegation(ctx, delegation)
+
+	receivedCoins := statsKeeper.GetStakedAmount(ctx, constants.AliceAccAddress.String())
+	require.Equal(t, expectedCoinsStaked, &receivedCoins)
 }

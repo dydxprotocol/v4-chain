@@ -27,6 +27,8 @@ const (
 	ClobRateLimitPlaceOrderCount                       = "clob_rate_limit_place_order_count"
 	ClobRateLimitCancelOrderCount                      = "clob_rate_limit_cancel_order_count"
 	ClobRateLimitBatchCancelCount                      = "clob_rate_limit_batch_cancel_count"
+	StatsGetStakedAmountCacheHit                       = "stats_get_staked_amount_cache_hit"
+	StatsGetStakedAmountCacheMiss                      = "stats_get_staked_amount_cache_miss"
 
 	// Gauges
 	InsuranceFundBalance                      = "insurance_fund_balance"
@@ -36,6 +38,8 @@ const (
 	ClobSubaccountsRequiringDeleveragingCount = "clob_subaccounts_requiring_deleveraging_count"
 	SendingProcessDepositToSubaccount         = "sending_process_deposit_to_subaccount"
 	RateLimitInsufficientWithdrawalAmount     = "rate_limit_insufficient_withdrawal_amount"
+	StatsGetStakedAmountLatencyCacheHit       = "stats_get_staked_amount_latency_cache_hit"
+	StatsGetStakedAmountLatencyCacheMiss      = "stats_get_staked_amount_latency_cache_miss"
 
 	// Samples
 	ClobDeleverageSubaccountTotalQuoteQuantumsDistribution         = "clob_deleverage_subaccount_total_quote_quantums_distribution"

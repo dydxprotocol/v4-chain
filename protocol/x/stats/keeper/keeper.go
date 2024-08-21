@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 	"sort"
 	"time"
@@ -11,7 +12,9 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
@@ -22,6 +25,7 @@ type (
 		storeKey          storetypes.StoreKey
 		transientStoreKey storetypes.StoreKey
 		authorities       map[string]struct{}
+		stakingKeeper     types.StakingKeeper
 	}
 )
 
@@ -31,6 +35,7 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	transientStoreKey storetypes.StoreKey,
 	authorities []string,
+	stakingKeeper types.StakingKeeper,
 ) *Keeper {
 	return &Keeper{
 		cdc:               cdc,
@@ -38,6 +43,7 @@ func NewKeeper(
 		storeKey:          storeKey,
 		transientStoreKey: transientStoreKey,
 		authorities:       lib.UniqueSliceToSet(authorities),
+		stakingKeeper:     stakingKeeper,
 	}
 }
 
@@ -273,4 +279,76 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 	k.deleteEpochStats(ctx, metadata.TrailingEpoch)
 	metadata.TrailingEpoch += 1
 	k.SetStatsMetadata(ctx, metadata)
+}
+
+func (k Keeper) GetStakedAmount(ctx sdk.Context,
+	delegatorAddr string) big.Int {
+	startTime := time.Now()
+	var stakedAmount big.Int
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.CachedStakeAmountKeyPrefix))
+	bytes := store.Get([]byte(delegatorAddr))
+
+	// return cached value if it's not expired
+	if bytes != nil {
+		var cachedStakedAmount types.CachedStakeAmount
+		k.cdc.MustUnmarshal(bytes, &cachedStakedAmount)
+		if ctx.BlockTime().Unix()-int64(cachedStakedAmount.CachedAt) < int64(types.StakedAmountCacheDurationSeconds) {
+			stakedAmount.SetBytes(cachedStakedAmount.StakedAmount.BigInt().Bytes())
+			metrics.EmitTelemetryWithLabelsForExecMode(
+				ctx,
+				[]sdk.ExecMode{sdk.ExecModeFinalize},
+				metrics.IncrCounterWithLabels,
+				metrics.StatsGetStakedAmountCacheHit,
+				1,
+			)
+			metrics.EmitTelemetryWithLabelsForExecMode(
+				ctx,
+				[]sdk.ExecMode{sdk.ExecModeFinalize},
+				metrics.SetGaugeWithLabels,
+				metrics.StatsGetStakedAmountLatencyCacheHit,
+				float32(time.Since(startTime).Milliseconds()),
+			)
+			return stakedAmount
+		}
+	}
+
+	metrics.EmitTelemetryWithLabelsForExecMode(
+		ctx,
+		[]sdk.ExecMode{sdk.ExecModeFinalize},
+		metrics.IncrCounterWithLabels,
+		metrics.StatsGetStakedAmountCacheMiss,
+		1,
+	)
+
+	// calculate staked amount
+	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)
+	if err != nil {
+		panic(err)
+	}
+	// use math.MaxUint16 to get all delegations
+	delegations, err := k.stakingKeeper.GetDelegatorDelegations(ctx, delegator, math.MaxUint16)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, delegation := range delegations {
+		stakedAmount.Add(&stakedAmount, delegation.GetShares().RoundInt().BigInt())
+	}
+
+	// update cache
+	cachedStakedAmount := types.CachedStakeAmount{
+		StakedAmount: dtypes.NewIntFromBigInt(&stakedAmount),
+		CachedAt:     uint64(ctx.BlockTime().Unix()),
+	}
+	store.Set([]byte(delegatorAddr), k.cdc.MustMarshal(&cachedStakedAmount))
+
+	metrics.EmitTelemetryWithLabelsForExecMode(
+		ctx,
+		[]sdk.ExecMode{sdk.ExecModeFinalize},
+		metrics.SetGaugeWithLabels,
+		metrics.StatsGetStakedAmountLatencyCacheMiss,
+		float32(time.Since(startTime).Milliseconds()),
+	)
+
+	return stakedAmount
 }

@@ -56,11 +56,33 @@ func RewardsKeepers(
 			transientStoreKey,
 			true,
 		)
+		accountsKeeper, _ := createAccountKeeper(
+			stateStore,
+			db,
+			cdc,
+			registry)
+
+		bankKeeper, _ := createBankKeeper(
+			stateStore,
+			db,
+			cdc,
+			accountsKeeper,
+		)
+
+		stakingKeeper, _ := createStakingKeeper(
+			stateStore,
+			db,
+			cdc,
+			accountsKeeper,
+			bankKeeper,
+		)
+
 		statsKeeper, _ := createStatsKeeper(
 			stateStore,
 			epochsKeeper,
 			db,
 			cdc,
+			stakingKeeper,
 		)
 		vaultKeeper, _ := createVaultKeeper(
 			stateStore,

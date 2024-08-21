@@ -1019,6 +1019,7 @@ func New(
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
 		},
+		app.StakingKeeper,
 	)
 	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
 
@@ -1202,6 +1203,7 @@ func New(
 		[]string{
 			lib.GovModuleAddress.String(),
 		},
+		app.StatsKeeper,
 	)
 	affiliatesModule := affiliatesmodule.NewAppModule(appCodec, app.AffiliatesKeeper)
 
