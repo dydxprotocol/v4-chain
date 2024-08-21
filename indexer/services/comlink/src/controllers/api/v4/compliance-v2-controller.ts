@@ -220,7 +220,7 @@ router.post(
       if (failedValidationResponse) {
         return failedValidationResponse;
       }
-      return await checkCompliance(req, res, address, action);
+      return await checkCompliance(req, res, address, action, false);
     } catch (error) {
       return handleError(error, 'geoblock-keplr', message, req, res);
     } finally {
@@ -260,7 +260,7 @@ router.post(
       if (failedValidationResponse) {
         return failedValidationResponse;
       }
-      return await checkCompliance(req, res, address, action);
+      return await checkCompliance(req, res, address, action, true);
     } catch (error) {
       return handleError(error, 'geoblock-keplr', message, req, res);
     } finally {
@@ -276,6 +276,13 @@ function generateAddress(pubkeyArray: Uint8Array): string {
   return toBech32('dydx', ripemd160(sha256(pubkeyArray)));
 }
 
+/**
+ * Validates a signature by performing various checks including address format,
+ * public key correspondence, timestamp validity, and signature verification.
+ *
+ * @returns {Promise<express.Response | undefined>} Returns undefined if validation
+ * is successful. Returns an HTTP response with an error message if validation fails.
+ */
 async function validateSignature(
   res: express.Response,
   action: ComplianceAction,
@@ -333,19 +340,27 @@ async function validateSignature(
   return undefined;
 }
 
+/**
+ * Validates a signature using verifyADR36Amino provided by keplr package.
+ *
+ * @returns {Promise<express.Response | undefined>} Returns undefined if validation
+ * is successful. Returns an HTTP response with an error message if validation fails.
+ */
 function validateSignatureKeplr(
   res:express.Response,
   address: string,
   message: string,
   signedMessage: string,
   pubkey: string,
-): express.Response| undefined {
+): express.Response | undefined {
   const messageToSign: string = message;
 
   const pubKeyUint = new Uint8Array(Buffer.from(pubkey, 'base64'));
   const signedMessageUint = new Uint8Array(Buffer.from(signedMessage, 'base64'));
 
-  const isVerified = verifyADR36Amino('dydx', address, messageToSign, pubKeyUint, signedMessageUint, 'secp256k1');
+  const isVerified = verifyADR36Amino(
+    'dydx', address, messageToSign, pubKeyUint, signedMessageUint, 'secp256k1',
+  );
 
   if (!isVerified) {
     return create4xxResponse(
@@ -358,7 +373,11 @@ function validateSignatureKeplr(
 }
 
 async function checkCompliance(
-  req: express.Request, res: express.Response, address: string, action: ComplianceAction,
+  req: express.Request,
+  res: express.Response,
+  address: string,
+  action: ComplianceAction,
+  forKeplr: boolean,
 ): Promise<express.Response> {
   if (isWhitelistedAddress(address)) {
     return res.send({
@@ -397,7 +416,7 @@ async function checkCompliance(
       complianceStatusFromDatabase.status !== ComplianceStatus.COMPLIANT
     ) {
       stats.increment(
-        `${config.SERVICE_NAME}.${controllerName}.geo_block.compliance_status_changed.count`,
+        `${config.SERVICE_NAME}.${controllerName}.geo_block${forKeplr ? '_keplr' : ''}.compliance_status_changed.count`,
         {
           newStatus: complianceStatusFromDatabase!.status,
         },

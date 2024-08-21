@@ -502,10 +502,12 @@ describe('ComplianceV2Controller', () => {
         reason: ComplianceReason.US_GEO,
       }));
 
-      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+      expect(stats.increment).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.compliance-v2-controller.${endpoint === geoblockEndpoint ? 'geo_block' : 'geo_block_keplr'}.compliance_status_changed.count`,
         {
           newStatus: ComplianceStatus.BLOCKED,
-        });
+        },
+      );
 
       expect(response.body.status).toEqual(ComplianceStatus.BLOCKED);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
@@ -533,7 +535,8 @@ describe('ComplianceV2Controller', () => {
         status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
         reason: ComplianceReason.US_GEO,
       }));
-      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+      expect(stats.increment).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.compliance-v2-controller.${endpoint === geoblockEndpoint ? 'geo_block' : 'geo_block_keplr'}.compliance_status_changed.count`,
         {
           newStatus: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
         });
@@ -613,7 +616,8 @@ describe('ComplianceV2Controller', () => {
         expectedStatus: 200,
       });
 
-      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+      expect(stats.increment).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.compliance-v2-controller.${endpoint === geoblockEndpoint ? 'geo_block' : 'geo_block_keplr'}.compliance_status_changed.count`,
         {
           newStatus: ComplianceStatus.CLOSE_ONLY,
         });
@@ -683,7 +687,8 @@ describe('ComplianceV2Controller', () => {
         },
         expectedStatus: 200,
       });
-      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+      expect(stats.increment).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.compliance-v2-controller.${endpoint === geoblockEndpoint ? 'geo_block' : 'geo_block_keplr'}.compliance_status_changed.count`,
         {
           newStatus: ComplianceStatus.CLOSE_ONLY,
         });
@@ -719,7 +724,8 @@ describe('ComplianceV2Controller', () => {
         },
         expectedStatus: 200,
       });
-      expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.compliance-v2-controller.geo_block.compliance_status_changed.count`,
+      expect(stats.increment).toHaveBeenCalledWith(
+        `${config.SERVICE_NAME}.compliance-v2-controller.${endpoint === geoblockEndpoint ? 'geo_block' : 'geo_block_keplr'}.compliance_status_changed.count`,
         {
           newStatus: ComplianceStatus.FIRST_STRIKE,
         });
