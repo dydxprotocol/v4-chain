@@ -15,6 +15,8 @@ func TestUnsupportedMsgSamples_Key(t *testing.T) {
 		"/cosmos.gov.v1.MsgCancelProposalResponse",
 		"/cosmos.gov.v1beta1.MsgSubmitProposal",
 		"/cosmos.gov.v1beta1.MsgSubmitProposalResponse",
+
+		// cosmwasm messages
 		"/cosmwasm.wasm.v1.AcceptedMessageKeysFilter",
 		"/cosmwasm.wasm.v1.AcceptedMessagesFilter",
 		"/cosmwasm.wasm.v1.AllowAllMessagesFilter",
@@ -39,6 +41,7 @@ func TestUnsupportedMsgSamples_Key(t *testing.T) {
 		"/cosmwasm.wasm.v1.UpdateAdminProposal",
 		"/cosmwasm.wasm.v1.UpdateInstantiateConfigProposal",
 
+		// ICA Controller messages
 		"/ibc.applications.interchain_accounts.controller.v1.MsgRegisterInterchainAccount",
 		"/ibc.applications.interchain_accounts.controller.v1.MsgRegisterInterchainAccountResponse",
 		"/ibc.applications.interchain_accounts.controller.v1.MsgSendTx",
