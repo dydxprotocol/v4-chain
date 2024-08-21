@@ -2107,6 +2107,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 
 			ks.ClobKeeper.DaemonLiquidationInfo.UpdateSubaccountsWithPositions(
 				clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
+				uint32(ctx.BlockHeight()),
 			)
 
 			for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
