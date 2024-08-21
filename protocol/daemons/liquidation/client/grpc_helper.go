@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -271,9 +272,20 @@ func (c *Client) SendLiquidatableSubaccountIds(
 		)...,
 	)
 
+	telemetry.ModuleSetGauge(
+		metrics.LiquidationDaemon,
+		float32(len(requests)),
+		metrics.NumRequests,
+		metrics.Count,
+	)
+
 	for _, req := range requests {
 		if _, err := c.LiquidationServiceClient.LiquidateSubaccounts(ctx, req); err != nil {
-			return err
+			return errorsmod.Wrapf(
+				err,
+				"failed to send liquidatable subaccount ids to protocol at block height %d",
+				blockHeight,
+			)
 		}
 	}
 

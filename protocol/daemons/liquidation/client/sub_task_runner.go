@@ -124,13 +124,21 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 	// Subaccounts
 	subaccounts, err = c.GetAllSubaccounts(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errorsmod.Wrapf(
+			err,
+			"failed to fetch subaccounts at block height %d",
+			blockHeight,
+		)
 	}
 
 	// Market prices
 	marketPrices, err := c.GetAllMarketPrices(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errorsmod.Wrapf(
+			err,
+			"failed to fetch market prices at block height %d",
+			blockHeight,
+		)
 	}
 	marketPricesMap := lib.UniqueSliceToMap(marketPrices, func(m pricestypes.MarketPrice) uint32 {
 		return m.Id
@@ -139,13 +147,21 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 	// Perpetuals
 	perpetuals, err := c.GetAllPerpetuals(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errorsmod.Wrapf(
+			err,
+			"failed to fetch perpetuals at block height %d",
+			blockHeight,
+		)
 	}
 
 	// Liquidity tiers
 	liquidityTiers, err := c.GetAllLiquidityTiers(queryCtx, liqFlags.QueryPageLimit)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errorsmod.Wrapf(
+			err,
+			"failed to fetch liquidity tiers at block height %d",
+			blockHeight,
+		)
 	}
 	liquidityTiersMap := lib.UniqueSliceToMap(liquidityTiers, func(l perptypes.LiquidityTier) uint32 {
 		return l.Id
