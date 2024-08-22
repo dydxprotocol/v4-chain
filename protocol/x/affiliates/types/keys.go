@@ -13,7 +13,7 @@ const (
 const (
 	ReferredByKeyPrefix = "ReferredBy:"
 
-	ReferredVolmeKeyPrefix = "ReferredVolume:"
+	ReferredVolumeKeyPrefix = "ReferredVolume:"
 
 	AffiliateTiersKey = "AffiliateTiers"
 )

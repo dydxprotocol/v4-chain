@@ -76,7 +76,7 @@ func (k Keeper) AddReferredVolume(
 	affiliateAddr string,
 	referredVolumeFromBlock dtypes.SerializableInt,
 ) error {
-	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredVolmeKeyPrefix))
+	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredVolumeKeyPrefix))
 	var referredVolume dtypes.SerializableInt
 	if !affiliateReferredVolumePrefixStore.Has([]byte(affiliateAddr)) {
 		referredVolume = dtypes.NewInt(0)
@@ -99,7 +99,7 @@ func (k Keeper) AddReferredVolume(
 }
 
 func (k Keeper) GetReferredVolume(ctx sdk.Context, affiliateAddr string) (dtypes.SerializableInt, bool) {
-	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredVolmeKeyPrefix))
+	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredVolumeKeyPrefix))
 	if !affiliateReferredVolumePrefixStore.Has([]byte(affiliateAddr)) {
 		return dtypes.NewInt(0), false
 	}
