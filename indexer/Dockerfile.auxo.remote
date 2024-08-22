@@ -11,7 +11,11 @@ COPY ./patches ./patches
 
 # Copy auxo and imported packages
 COPY ./packages/base/ ./packages/base/
+COPY ./packages/dev/ ./packages/dev/
+COPY ./packages/postgres/ ./packages/postgres/
 COPY ./packages/v4-protos/ ./packages/v4-protos/
+COPY ./packages/kafka/ ./packages/kafka/
+COPY ./packages/redis/ ./packages/redis/
 COPY ./services/auxo/ ./services/auxo/
 COPY ./packages/v4-proto-parser/ ./packages/v4-proto-parser/
 
