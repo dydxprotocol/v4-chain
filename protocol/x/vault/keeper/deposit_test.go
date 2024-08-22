@@ -184,7 +184,7 @@ func TestMintShares(t *testing.T) {
 			}
 
 			// Mint shares.
-			err = tApp.App.VaultKeeper.MintShares(
+			mintedShares, err := tApp.App.VaultKeeper.MintShares(
 				ctx,
 				tc.owner,
 				tc.quantumsToDeposit,
@@ -192,6 +192,7 @@ func TestMintShares(t *testing.T) {
 			if tc.expectedErr != nil {
 				// Check that error is as expected.
 				require.ErrorContains(t, err, tc.expectedErr.Error())
+				require.Nil(t, mintedShares)
 				// Check that TotalShares is unchanged.
 				totalShares := tApp.App.VaultKeeper.GetTotalShares(ctx)
 				require.Equal(
@@ -204,6 +205,12 @@ func TestMintShares(t *testing.T) {
 				require.Equal(t, vaulttypes.BigIntToNumShares(tc.ownerShares), ownerShares)
 			} else {
 				require.NoError(t, err)
+				// Check that minted shares is as expected.
+				require.Equal(
+					t,
+					new(big.Int).Sub(tc.expectedTotalShares, tc.totalShares),
+					mintedShares,
+				)
 				// Check that TotalShares is as expected.
 				totalShares := tApp.App.VaultKeeper.GetTotalShares(ctx)
 				require.Equal(

@@ -5,6 +5,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 import "dydxprotocol/vault/params.proto";
+import "dydxprotocol/vault/share.proto";
 import "dydxprotocol/vault/vault.proto";
 import "gogoproto/gogo.proto";
 
@@ -44,7 +45,10 @@ message MsgDepositToMegavault {
 }
 
 // MsgDepositToMegavaultResponse is the Msg/DepositToMegavault response type.
-message MsgDepositToMegavaultResponse {}
+message MsgDepositToMegavaultResponse {
+  // The number of shares minted from the deposit.
+  NumShares minted_shares = 1 [ (gogoproto.nullable) = false ];
+}
 
 // MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request
 // type.
