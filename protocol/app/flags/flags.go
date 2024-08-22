@@ -187,10 +187,6 @@ func (f *Flags) Validate() error {
 		}
 	}
 
-	if f.FullNodeStreamingSnapshotInterval > 0 && f.FullNodeStreamingSnapshotInterval < 50 {
-		return fmt.Errorf("full node streaming snapshot interval must be >= 50 blocks or zero")
-	}
-
 	return nil
 }
 
