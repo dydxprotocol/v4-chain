@@ -14,7 +14,7 @@ ARG GOLANG_1_22_ALPINE_DIGEST="cdc86d9f363e8786845bea2040312b4efa321b828acdeb26f
 FROM golang@sha256:${GOLANG_1_22_ALPINE_DIGEST} as builder
 ARG VERSION
 ARG COMMIT
-ARG WASMVM_VERSION=v1.5.2
+ARG WASMVM_VERSION=v1.5.4
 
 RUN set -eux; apk add --no-cache ca-certificates build-base; apk add git linux-headers bash binutils-gold
 
