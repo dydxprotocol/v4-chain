@@ -1,4 +1,4 @@
-import { stats, logger } from '@dydxprotocol-indexer/base';
+import { stats, getInstanceId, logger } from '@dydxprotocol-indexer/base';
 import WebSocket from 'ws';
 
 import config from '../config';
@@ -101,6 +101,7 @@ export function sendMessageString(
       1,
       config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       {
+        instance: getInstanceId(),
         reason: WEBSOCKET_NOT_OPEN,
         readyState: ws.readyState.toString(),
       },
@@ -114,7 +115,10 @@ export function sendMessageString(
         `${config.SERVICE_NAME}.ws_send.error`,
         1,
         config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
-        { code: (error as WssError)?.code },
+        {
+          instance: getInstanceId(),
+          code: (error as WssError)?.code,
+        },
       );
       const errorLog = { // type is InfoObject in node-service-base
         at: 'wss#sendMessage',
@@ -144,7 +148,10 @@ export function sendMessageString(
           stats.increment(
             `${config.SERVICE_NAME}.ws_send.stream_destroyed_errors`,
             1,
-            { action: 'close' },
+            {
+              action: 'close',
+              instance: getInstanceId(),
+            },
           );
         } else {
           logger.error(closeErrorLog);

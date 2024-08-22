@@ -8,6 +8,7 @@ COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
 
 # Copy bazooka and imported packages
 COPY ./packages/base/ ./packages/base/
+COPY ./packages/dev/ ./packages/dev/
 COPY ./packages/postgres/ ./packages/postgres/
 COPY ./packages/v4-protos/ ./packages/v4-protos/
 COPY ./packages/kafka/ ./packages/kafka/
