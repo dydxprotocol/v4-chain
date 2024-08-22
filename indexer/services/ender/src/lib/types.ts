@@ -196,6 +196,7 @@ export type OrderFillEventWithOrder = {
   totalFilledTaker: Long,
   makerFee: Long,
   takerFee: Long,
+  affiliateRevShare: Long,
 };
 
 export type OrderFillEventWithLiquidation = {
@@ -206,6 +207,7 @@ export type OrderFillEventWithLiquidation = {
   totalFilledTaker: Long,
   makerFee: Long,
   takerFee: Long,
+  affiliateRevShare: Long,
 };
 
 export type FundingEventMessage = {
