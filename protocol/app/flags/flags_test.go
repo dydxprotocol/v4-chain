@@ -202,7 +202,7 @@ func TestValidate(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("full node streaming batch size must be positive number"),
 		},
-		"failure - full node streaming enabled with <= 49 snapshot interval": {
+		"success - full node streaming enabled with 20 snapshot interval": {
 			flags: flags.Flags{
 				NonValidatingFullNode:             true,
 				GrpcEnable:                        true,
@@ -210,19 +210,7 @@ func TestValidate(t *testing.T) {
 				GrpcStreamingFlushIntervalMs:      100,
 				GrpcStreamingMaxBatchSize:         2000,
 				GrpcStreamingMaxChannelBufferSize: 2000,
-				FullNodeStreamingSnapshotInterval: 49,
-			},
-			expectedErr: fmt.Errorf("full node streaming snapshot interval must be >= 50 blocks or zero"),
-		},
-		"success - full node streaming enabled with 50 snapshot interval": {
-			flags: flags.Flags{
-				NonValidatingFullNode:             true,
-				GrpcEnable:                        true,
-				GrpcStreamingEnabled:              true,
-				GrpcStreamingFlushIntervalMs:      100,
-				GrpcStreamingMaxBatchSize:         2000,
-				GrpcStreamingMaxChannelBufferSize: 2000,
-				FullNodeStreamingSnapshotInterval: 50,
+				FullNodeStreamingSnapshotInterval: 20,
 			},
 		},
 	}
