@@ -123,8 +123,12 @@ func (ma *MedianAggregator) addVoteToAggregator(
 			}
 		}
 
-		if spotPrice == nil && pnlPrice == nil {
+		if spotPrice == nil {
 			continue
+		}
+
+		if pnlPrice == nil {
+			pnlPrice = spotPrice
 		}
 
 		prices[market.Pair] = veaggregator.AggregatorPricePair{

@@ -33,11 +33,9 @@ var DefaultPowerThreshold = math.LegacyNewDecWithPrec(667, 3)
 type (
 	// VoteWeightPriceInfo tracks the stake weight(s) + price(s) for a given currency pair.
 	PriceInfo struct {
-		SpotPrices []PricePerValidator
-		PnlPrices  []PricePerValidator
-		// TODO: we can use only one "TotalWeight"
-		TotalSpotWeight math.Int
-		TotalPnlWeight  math.Int
+		SpotPrices  []PricePerValidator
+		PnlPrices   []PricePerValidator
+		TotalWeight math.Int
 	}
 
 	// VoteWeightPrice defines a price update that includes the stake weight of the validator.
@@ -81,27 +79,27 @@ func Median(
 
 				if _, ok := priceInfo[market]; !ok {
 					priceInfo[market] = PriceInfo{
-						SpotPrices:      make([]PricePerValidator, 0),
-						PnlPrices:       make([]PricePerValidator, 0),
-						TotalSpotWeight: math.ZeroInt(),
-						TotalPnlWeight:  math.ZeroInt(),
+						SpotPrices:  make([]PricePerValidator, 0),
+						PnlPrices:   make([]PricePerValidator, 0),
+						TotalWeight: math.ZeroInt(),
 					}
 				}
 
 				pInfo := priceInfo[market]
+
 				if pricePair.SpotPrice != nil {
 					pInfo.SpotPrices = append(pInfo.SpotPrices, PricePerValidator{
 						VoteWeight: validatorPower,
 						Price:      pricePair.SpotPrice,
 					})
-					pInfo.TotalSpotWeight = pInfo.TotalSpotWeight.Add(math.NewInt(validatorPower))
-				}
-				if pricePair.PnlPrice != nil {
+
 					pInfo.PnlPrices = append(pInfo.PnlPrices, PricePerValidator{
 						VoteWeight: validatorPower,
 						Price:      pricePair.PnlPrice,
 					})
-					pInfo.TotalPnlWeight = pInfo.TotalPnlWeight.Add(math.NewInt(validatorPower))
+
+					pInfo.TotalWeight = pInfo.TotalWeight.Add(math.NewInt(validatorPower))
+
 				}
 
 				priceInfo[market] = pInfo
@@ -115,20 +113,18 @@ func Median(
 		for pair, info := range priceInfo {
 			// The total voting power % that submitted a price update for the given currency pair must be
 			// greater than the threshold to be included in the final oracle price.
-			percentSpotSubmitted := math.LegacyNewDecFromInt(info.TotalSpotWeight).Quo(math.LegacyNewDecFromInt(totalPower))
-			percentPnlSubmitted := math.LegacyNewDecFromInt(info.TotalPnlWeight).Quo(math.LegacyNewDecFromInt(totalPower))
+			percentSubmitted := math.LegacyNewDecFromInt(info.TotalWeight).Quo(math.LegacyNewDecFromInt(totalPower))
 
-			if percentSpotSubmitted.GTE(threshold) && percentPnlSubmitted.GTE(threshold) {
+			if percentSubmitted.GTE(threshold) {
 				finalPrices[pair] = AggregatorPricePair{
-					SpotPrice: ComputeMedian(info.SpotPrices, info.TotalSpotWeight),
-					PnlPrice:  ComputeMedian(info.PnlPrices, info.TotalPnlWeight),
+					SpotPrice: ComputeMedian(info.SpotPrices, info.TotalWeight),
+					PnlPrice:  ComputeMedian(info.PnlPrices, info.TotalWeight),
 				}
 
 				logger.Info(
 					"computed stake-weighted median prices for currency pair",
 					"currency_pair", pair,
-					"percent_spot_submitted", percentSpotSubmitted.String(),
-					"percent_pnl_submitted", percentPnlSubmitted.String(),
+					"percent_submitted", percentSubmitted.String(),
 					"threshold", threshold.String(),
 					"final_spot_price", finalPrices[pair].SpotPrice.String(),
 					"final_pnl_price", finalPrices[pair].PnlPrice.String(),
@@ -139,8 +135,7 @@ func Median(
 					"not enough voting power to compute stake-weighted median prices for currency pair",
 					"currency_pair", pair,
 					"threshold", threshold.String(),
-					"percent_spot_submitted", percentSpotSubmitted.String(),
-					"percent_pnl_submitted", percentPnlSubmitted.String(),
+					"percent_submitted", percentSubmitted.String(),
 					"num_validators", len(info.SpotPrices),
 				)
 			}
