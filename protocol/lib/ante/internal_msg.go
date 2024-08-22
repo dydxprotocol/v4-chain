@@ -2,6 +2,7 @@ package ante
 
 import (
 	upgrade "cosmossdk.io/x/upgrade/types"
+	wasm "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -137,7 +138,18 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*icahosttypes.MsgUpdateParams,
 		*ibctransfer.MsgUpdateParams,
 		*ibcclient.MsgUpdateParams,
-		*ibcconn.MsgUpdateParams:
+		*ibcconn.MsgUpdateParams,
+
+		//cosmwasm
+		*wasm.MsgClearAdmin,
+		*wasm.MsgUpdateContractLabel,
+		*wasm.MsgUpdateInstantiateConfig,
+		*wasm.MsgMigrateContract,
+		*wasm.MsgPinCodes,
+		*wasm.MsgRemoveCodeUploadParamsAddresses,
+		*wasm.MsgSudoContract,
+		*wasm.MsgUnpinCodes,
+		*wasm.MsgUpdateAdmin:
 
 		return true
 
