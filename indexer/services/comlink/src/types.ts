@@ -640,3 +640,29 @@ export interface TraderSearchResponseObject {
   subaccountId: string,
   username: string,
 }
+
+/* ------- Vault Types ------- */
+
+export interface VaultHistoricalPnl {
+  ticker: string;
+  historicalPnl: PnlTicksResponseObject[];
+}
+
+export interface MegavaultHistoricalPnlResponse {
+  megavaultPnl: PnlTicksResponseObject[];
+}
+
+export interface VaultsHistoricalPnlResponse {
+  vaultsPnl: VaultHistoricalPnl[];
+}
+
+export interface VaultPosition {
+  ticker: string;
+  assetPosition: AssetPositionResponseObject;
+  perpetualPosition?: PerpetualPositionResponseObject;
+  equity: string;
+}
+
+export interface MegavaultPositionResponse {
+  positions: VaultPosition[];
+}

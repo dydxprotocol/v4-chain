@@ -1359,6 +1359,55 @@
         ],
         "type": "object",
         "additionalProperties": false
+      },
+      "MegavaultHistoricalPnlResponse": {
+        "properties": {
+          "megavaultPnl": {
+            "items": {
+              "$ref": "#/components/schemas/PnlTicksResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "megavaultPnl"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "VaultHistoricalPnl": {
+        "properties": {
+          "ticker": {
+            "type": "string"
+          },
+          "historicalPnl": {
+            "items": {
+              "$ref": "#/components/schemas/PnlTicksResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "ticker",
+          "historicalPnl"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "VaultsHistoricalPnlResponse": {
+        "properties": {
+          "vaultsPnl": {
+            "items": {
+              "$ref": "#/components/schemas/VaultHistoricalPnl"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "vaultsPnl"
+        ],
+        "type": "object",
+        "additionalProperties": false
       }
     },
     "securitySchemes": {}
@@ -3004,6 +3053,44 @@
             }
           }
         ]
+      }
+    },
+    "/vault/v1/megavault/historicalPnl": {
+      "get": {
+        "operationId": "GetMegavaultHistoricalPnl",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MegavaultHistoricalPnlResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": []
+      }
+    },
+    "/vault/v1/vaults/historicalPnl": {
+      "get": {
+        "operationId": "GetVaultsHistoricalPnl",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaultsHistoricalPnlResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": []
       }
     }
   },

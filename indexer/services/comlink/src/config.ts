@@ -55,6 +55,11 @@ export const configSchema = {
   MAX_AGE_SCREENED_ADDRESS_COMPLIANCE_DATA_SECONDS: parseInteger({ default: 86_400 }), //  1 day
   // Expose setting compliance status, only set to true in dev/staging.
   EXPOSE_SET_COMPLIANCE_ENDPOINT: parseBoolean({ default: false }),
+
+  // TODO(TRA-570): Placeholder data for vaults and matching set of markets for each vault until
+  // vaults table is added.
+  EXPERIMENT_VAULTS: parseString({ default: '' }),
+  EXPERIMENT_VAULT_MARKETS: parseString({ default: '' }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////
