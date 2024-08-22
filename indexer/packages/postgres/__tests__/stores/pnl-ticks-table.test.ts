@@ -22,6 +22,7 @@ import {
   defaultSubaccountIdWithAlternateAddress,
   defaultSubaccountWithAlternateAddress,
   defaultWallet2,
+  vaultSubaccount,
   vaultSubaccountId,
   vaultWallet,
 } from '../helpers/constants';
