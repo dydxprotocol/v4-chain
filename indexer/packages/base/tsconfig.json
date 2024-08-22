@@ -4,6 +4,7 @@
     "outDir": "build"
   },
   "include": [
-    "src"
+    "src",
+    "__tests__"
   ]
 }

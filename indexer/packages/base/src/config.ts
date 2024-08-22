@@ -30,7 +30,7 @@ export const baseConfigSchema = {
   SEND_BUGSNAG_ERRORS: parseBoolean({
     default: true,
   }),
-  SERVICE_NAME: parseString(),
+  SERVICE_NAME: parseString({ default: '' }),
 
   // Optional environment variables.
   NODE_ENV: parseString({ default: null }),
@@ -38,6 +38,7 @@ export const baseConfigSchema = {
   STATSD_HOST: parseString({ default: 'localhost' }),
   STATSD_PORT: parseInteger({ default: 8125 }),
   LOG_LEVEL: parseString({ default: 'debug' }),
+  ECS_CONTAINER_METADATA_URI_V4: parseString({ default: '' }),
 };
 
 export default parseSchema(baseConfigSchema);
