@@ -7,6 +7,7 @@ import {
   perpetualMarketRefresher,
   BlockTable,
   liquidityTierRefresher,
+  SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
 import { PnlTicksResponseObject, RequestMethod, VaultHistoricalPnl } from '../../../../src/types';
 import request from 'supertest';
@@ -37,6 +38,7 @@ describe('vault-controller#V4', () => {
         ...testConstants.defaultBlock,
         blockHeight,
       });
+      await SubaccountTable.create(testConstants.vaultSubaccount);
     });
 
     afterEach(async () => {
