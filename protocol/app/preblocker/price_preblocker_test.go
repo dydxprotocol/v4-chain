@@ -232,6 +232,84 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		)
 	})
 
+	s.Run("multiple markets with different spot and pnl prices", func() {
+		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 5)
+
+		s.handler = preblocker.NewDaemonPreBlockHandler(
+			s.logger,
+			s.priceApplier,
+		)
+
+		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
+
+		spotPrice1 := uint64(1)
+		pnlPrice1 := uint64(10)
+		spotPrice2 := uint64(2)
+		pnlPrice2 := uint64(20)
+		spotPrice3 := uint64(3)
+		pnlPrice3 := uint64(30)
+
+		spotPrice1Bz, err := big.NewInt(int64(spotPrice1)).GobEncode()
+		s.Require().NoError(err)
+		pnlPrice1Bz, err := big.NewInt(int64(pnlPrice1)).GobEncode()
+		s.Require().NoError(err)
+		spotPrice2Bz, err := big.NewInt(int64(spotPrice2)).GobEncode()
+		s.Require().NoError(err)
+		pnlPrice2Bz, err := big.NewInt(int64(pnlPrice2)).GobEncode()
+		s.Require().NoError(err)
+		spotPrice3Bz, err := big.NewInt(int64(spotPrice3)).GobEncode()
+		s.Require().NoError(err)
+		pnlPrice3Bz, err := big.NewInt(int64(pnlPrice3)).GobEncode()
+		s.Require().NoError(err)
+
+		prices := []vetypes.PricePair{
+			{
+				MarketId:  6,
+				SpotPrice: spotPrice1Bz,
+				PnlPrice:  pnlPrice1Bz,
+			},
+			{
+				MarketId:  7,
+				SpotPrice: spotPrice2Bz,
+				PnlPrice:  pnlPrice2Bz,
+			},
+			{
+				MarketId:  8,
+				SpotPrice: spotPrice3Bz,
+				PnlPrice:  pnlPrice3Bz,
+			},
+		}
+
+		extCommitBz := s.getVoteExtensionsForValidatorsWithSamePrices(
+			[]string{"alice", "bob"},
+			prices,
+		)
+
+		s.mockCCVStoreGetAllValidatorsCall([]string{"alice", "bob"})
+
+		_, err = s.handler.PreBlocker(s.ctx, &cometabci.RequestFinalizeBlock{
+			Txs: [][]byte{extCommitBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
+		})
+		s.Require().NoError(err)
+
+		s.arePriceUpdatesCorrect(
+			map[uint32]ve.VEPricePair{
+				6: {
+					SpotPrice: spotPrice1,
+					PnlPrice:  pnlPrice1,
+				},
+				7: {
+					SpotPrice: spotPrice2,
+					PnlPrice:  pnlPrice2,
+				},
+				8: {
+					SpotPrice: spotPrice3,
+					PnlPrice:  pnlPrice3,
+				},
+			},
+		)
+	})
+
 	s.Run("throws error if can't get extCommitInfo", func() {
 		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 6)
 
