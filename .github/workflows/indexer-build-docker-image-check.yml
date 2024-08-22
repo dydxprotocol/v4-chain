@@ -77,3 +77,33 @@ jobs:
           DOCKER_BUILDKIT=1 docker build \
             --platform amd64 \
             -f Dockerfile.bazooka.remote .
+
+  check-build-auxo:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./indexer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install pnpm
+        run:
+          npm install -g pnpm@6.34.0
+
+      - name: Build and install
+        run: |
+          pnpm install --loglevel warn --frozen-lockfile
+          pnpm run build:prod:all
+
+      - name: Build docker image for auxo
+        id: build-image
+        run: |
+          DOCKER_BUILDKIT=1 docker build \
+            --platform amd64 \
+            -f Dockerfile.auxo.remote .
