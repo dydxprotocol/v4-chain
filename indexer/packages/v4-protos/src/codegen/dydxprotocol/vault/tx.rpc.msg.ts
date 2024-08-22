@@ -1,11 +1,11 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgDepositToVault, MsgDepositToVaultResponse, MsgUpdateDefaultQuotingParams, MsgUpdateDefaultQuotingParamsResponse, MsgSetVaultParams, MsgSetVaultParamsResponse } from "./tx";
+import { MsgDepositToMegavault, MsgDepositToMegavaultResponse, MsgUpdateDefaultQuotingParams, MsgUpdateDefaultQuotingParamsResponse, MsgSetVaultParams, MsgSetVaultParamsResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
-  /** DepositToVault deposits funds into a vault. */
-  depositToVault(request: MsgDepositToVault): Promise<MsgDepositToVaultResponse>;
+  /** DepositToMegavault deposits funds into megavault. */
+  depositToMegavault(request: MsgDepositToMegavault): Promise<MsgDepositToMegavaultResponse>;
   /** UpdateDefaultQuotingParams updates the default quoting params in state. */
 
   updateDefaultQuotingParams(request: MsgUpdateDefaultQuotingParams): Promise<MsgUpdateDefaultQuotingParamsResponse>;
@@ -18,15 +18,15 @@ export class MsgClientImpl implements Msg {
 
   constructor(rpc: Rpc) {
     this.rpc = rpc;
-    this.depositToVault = this.depositToVault.bind(this);
+    this.depositToMegavault = this.depositToMegavault.bind(this);
     this.updateDefaultQuotingParams = this.updateDefaultQuotingParams.bind(this);
     this.setVaultParams = this.setVaultParams.bind(this);
   }
 
-  depositToVault(request: MsgDepositToVault): Promise<MsgDepositToVaultResponse> {
-    const data = MsgDepositToVault.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.vault.Msg", "DepositToVault", data);
-    return promise.then(data => MsgDepositToVaultResponse.decode(new _m0.Reader(data)));
+  depositToMegavault(request: MsgDepositToMegavault): Promise<MsgDepositToMegavaultResponse> {
+    const data = MsgDepositToMegavault.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.vault.Msg", "DepositToMegavault", data);
+    return promise.then(data => MsgDepositToMegavaultResponse.decode(new _m0.Reader(data)));
   }
 
   updateDefaultQuotingParams(request: MsgUpdateDefaultQuotingParams): Promise<MsgUpdateDefaultQuotingParamsResponse> {

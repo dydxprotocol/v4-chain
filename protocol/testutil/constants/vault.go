@@ -19,8 +19,7 @@ var (
 		Number: 7,
 	}
 
-	MsgDepositToVault_Clob0_Alice0_100 = &types.MsgDepositToVault{
-		VaultId:       &Vault_Clob0,
+	MsgDepositToMegavault_Alice0_100 = &types.MsgDepositToMegavault{
 		SubaccountId:  &Alice_Num0,
 		QuoteQuantums: dtypes.NewInt(100),
 	}

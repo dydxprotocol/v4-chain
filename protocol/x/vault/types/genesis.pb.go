@@ -25,10 +25,14 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines `x/vault`'s genesis state.
 type GenesisState struct {
+	// The total number of shares.
+	TotalShares NumShares `protobuf:"bytes,1,opt,name=total_shares,json=totalShares,proto3" json:"total_shares"`
+	// The shares of each owner.
+	OwnerShares []OwnerShare `protobuf:"bytes,2,rep,name=owner_shares,json=ownerShares,proto3" json:"owner_shares"`
 	// The vaults.
-	Vaults []*Vault `protobuf:"bytes,2,rep,name=vaults,proto3" json:"vaults,omitempty"`
+	Vaults []Vault `protobuf:"bytes,3,rep,name=vaults,proto3" json:"vaults"`
 	// The default quoting parameters for all vaults.
-	DefaultQuotingParams QuotingParams `protobuf:"bytes,3,opt,name=default_quoting_params,json=defaultQuotingParams,proto3" json:"default_quoting_params"`
+	DefaultQuotingParams QuotingParams `protobuf:"bytes,4,opt,name=default_quoting_params,json=defaultQuotingParams,proto3" json:"default_quoting_params"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -64,7 +68,21 @@ func (m *GenesisState) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GenesisState proto.InternalMessageInfo
 
-func (m *GenesisState) GetVaults() []*Vault {
+func (m *GenesisState) GetTotalShares() NumShares {
+	if m != nil {
+		return m.TotalShares
+	}
+	return NumShares{}
+}
+
+func (m *GenesisState) GetOwnerShares() []OwnerShare {
+	if m != nil {
+		return m.OwnerShares
+	}
+	return nil
+}
+
+func (m *GenesisState) GetVaults() []Vault {
 	if m != nil {
 		return m.Vaults
 	}
@@ -81,15 +99,11 @@ func (m *GenesisState) GetDefaultQuotingParams() QuotingParams {
 // Vault defines the state of a vault.
 type Vault struct {
 	// The ID of the vault.
-	VaultId *VaultId `protobuf:"bytes,1,opt,name=vault_id,json=vaultId,proto3" json:"vault_id,omitempty"`
-	// The total number of shares in the vault.
-	TotalShares *NumShares `protobuf:"bytes,2,opt,name=total_shares,json=totalShares,proto3" json:"total_shares,omitempty"`
-	// The shares of each owner in the vault.
-	OwnerShares []*OwnerShare `protobuf:"bytes,3,rep,name=owner_shares,json=ownerShares,proto3" json:"owner_shares,omitempty"`
+	VaultId VaultId `protobuf:"bytes,1,opt,name=vault_id,json=vaultId,proto3" json:"vault_id"`
 	// The parameters of the vault.
-	VaultParams VaultParams `protobuf:"bytes,4,opt,name=vault_params,json=vaultParams,proto3" json:"vault_params"`
+	VaultParams VaultParams `protobuf:"bytes,2,opt,name=vault_params,json=vaultParams,proto3" json:"vault_params"`
 	// The client IDs of the most recently placed orders of the vault.
-	MostRecentClientIds []uint32 `protobuf:"varint,5,rep,packed,name=most_recent_client_ids,json=mostRecentClientIds,proto3" json:"most_recent_client_ids,omitempty"`
+	MostRecentClientIds []uint32 `protobuf:"varint,3,rep,packed,name=most_recent_client_ids,json=mostRecentClientIds,proto3" json:"most_recent_client_ids,omitempty"`
 }
 
 func (m *Vault) Reset()         { *m = Vault{} }
@@ -125,25 +139,11 @@ func (m *Vault) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Vault proto.InternalMessageInfo
 
-func (m *Vault) GetVaultId() *VaultId {
+func (m *Vault) GetVaultId() VaultId {
 	if m != nil {
 		return m.VaultId
 	}
-	return nil
-}
-
-func (m *Vault) GetTotalShares() *NumShares {
-	if m != nil {
-		return m.TotalShares
-	}
-	return nil
-}
-
-func (m *Vault) GetOwnerShares() []*OwnerShare {
-	if m != nil {
-		return m.OwnerShares
-	}
-	return nil
+	return VaultId{}
 }
 
 func (m *Vault) GetVaultParams() VaultParams {
@@ -160,41 +160,187 @@ func (m *Vault) GetMostRecentClientIds() []uint32 {
 	return nil
 }
 
+// GenesisStateV6 defines `x/vault`'s genesis state in v6.x.
+// Deprecated since v7.x in favor of GenesisState.
+type GenesisStateV6 struct {
+	// The vaults.
+	Vaults []*Vault `protobuf:"bytes,2,rep,name=vaults,proto3" json:"vaults,omitempty"`
+	// The default quoting parameters for all vaults.
+	DefaultQuotingParams QuotingParams `protobuf:"bytes,3,opt,name=default_quoting_params,json=defaultQuotingParams,proto3" json:"default_quoting_params"`
+}
+
+func (m *GenesisStateV6) Reset()         { *m = GenesisStateV6{} }
+func (m *GenesisStateV6) String() string { return proto.CompactTextString(m) }
+func (*GenesisStateV6) ProtoMessage()    {}
+func (*GenesisStateV6) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4be4a747b209e41c, []int{2}
+}
+func (m *GenesisStateV6) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GenesisStateV6) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GenesisStateV6.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GenesisStateV6) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GenesisStateV6.Merge(m, src)
+}
+func (m *GenesisStateV6) XXX_Size() int {
+	return m.Size()
+}
+func (m *GenesisStateV6) XXX_DiscardUnknown() {
+	xxx_messageInfo_GenesisStateV6.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GenesisStateV6 proto.InternalMessageInfo
+
+func (m *GenesisStateV6) GetVaults() []*Vault {
+	if m != nil {
+		return m.Vaults
+	}
+	return nil
+}
+
+func (m *GenesisStateV6) GetDefaultQuotingParams() QuotingParams {
+	if m != nil {
+		return m.DefaultQuotingParams
+	}
+	return QuotingParams{}
+}
+
+// VaultV6 defines the state of a vault.
+// Deprecated since v7.x in favor of Vault.
+type VaultV6 struct {
+	// The ID of the vault.
+	VaultId *VaultId `protobuf:"bytes,1,opt,name=vault_id,json=vaultId,proto3" json:"vault_id,omitempty"`
+	// The total number of shares in the vault.
+	TotalShares *NumShares `protobuf:"bytes,2,opt,name=total_shares,json=totalShares,proto3" json:"total_shares,omitempty"`
+	// The shares of each owner in the vault.
+	OwnerShares []*OwnerShare `protobuf:"bytes,3,rep,name=owner_shares,json=ownerShares,proto3" json:"owner_shares,omitempty"`
+	// The parameters of the vault.
+	VaultParams VaultParams `protobuf:"bytes,4,opt,name=vault_params,json=vaultParams,proto3" json:"vault_params"`
+	// The client IDs of the most recently placed orders of the vault.
+	MostRecentClientIds []uint32 `protobuf:"varint,5,rep,packed,name=most_recent_client_ids,json=mostRecentClientIds,proto3" json:"most_recent_client_ids,omitempty"`
+}
+
+func (m *VaultV6) Reset()         { *m = VaultV6{} }
+func (m *VaultV6) String() string { return proto.CompactTextString(m) }
+func (*VaultV6) ProtoMessage()    {}
+func (*VaultV6) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4be4a747b209e41c, []int{3}
+}
+func (m *VaultV6) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *VaultV6) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_VaultV6.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *VaultV6) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VaultV6.Merge(m, src)
+}
+func (m *VaultV6) XXX_Size() int {
+	return m.Size()
+}
+func (m *VaultV6) XXX_DiscardUnknown() {
+	xxx_messageInfo_VaultV6.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VaultV6 proto.InternalMessageInfo
+
+func (m *VaultV6) GetVaultId() *VaultId {
+	if m != nil {
+		return m.VaultId
+	}
+	return nil
+}
+
+func (m *VaultV6) GetTotalShares() *NumShares {
+	if m != nil {
+		return m.TotalShares
+	}
+	return nil
+}
+
+func (m *VaultV6) GetOwnerShares() []*OwnerShare {
+	if m != nil {
+		return m.OwnerShares
+	}
+	return nil
+}
+
+func (m *VaultV6) GetVaultParams() VaultParams {
+	if m != nil {
+		return m.VaultParams
+	}
+	return VaultParams{}
+}
+
+func (m *VaultV6) GetMostRecentClientIds() []uint32 {
+	if m != nil {
+		return m.MostRecentClientIds
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "dydxprotocol.vault.GenesisState")
 	proto.RegisterType((*Vault)(nil), "dydxprotocol.vault.Vault")
+	proto.RegisterType((*GenesisStateV6)(nil), "dydxprotocol.vault.GenesisStateV6")
+	proto.RegisterType((*VaultV6)(nil), "dydxprotocol.vault.VaultV6")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/vault/genesis.proto", fileDescriptor_4be4a747b209e41c) }
 
 var fileDescriptor_4be4a747b209e41c = []byte{
-	// 410 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x52, 0xc1, 0xae, 0xd2, 0x40,
-	0x14, 0x6d, 0x29, 0xef, 0xf9, 0x32, 0xad, 0x89, 0x19, 0x5f, 0x48, 0xc5, 0x38, 0x54, 0x56, 0x6c,
-	0x6c, 0x23, 0x18, 0xdd, 0x2a, 0x2e, 0x14, 0x17, 0x2a, 0x25, 0x71, 0x61, 0x62, 0x9a, 0xd2, 0x8e,
-	0xa5, 0x49, 0xdb, 0xc1, 0xce, 0x14, 0xe1, 0x2f, 0xfc, 0x0a, 0x7f, 0xc4, 0x0d, 0x4b, 0x96, 0xae,
-	0x8c, 0x81, 0x1f, 0x31, 0x73, 0xa7, 0xa2, 0xc4, 0xe2, 0x66, 0x7a, 0x7b, 0xce, 0xb9, 0x67, 0xce,
-	0xdc, 0x5c, 0xe4, 0xc4, 0x9b, 0x78, 0xbd, 0x2c, 0x99, 0x60, 0x11, 0xcb, 0xbc, 0x55, 0x58, 0x65,
-	0xc2, 0x4b, 0x68, 0x41, 0x79, 0xca, 0x5d, 0x80, 0x31, 0xfe, 0x5b, 0xe1, 0x82, 0xa2, 0x7b, 0x9d,
-	0xb0, 0x84, 0x01, 0xe6, 0xc9, 0x4a, 0x29, 0xbb, 0xbd, 0x06, 0xaf, 0x65, 0x58, 0x86, 0x79, 0x6d,
-	0xd5, 0x25, 0x0d, 0x02, 0xbe, 0x08, 0x4b, 0xfa, 0x1f, 0x1e, 0x4e, 0xc5, 0xf7, 0xbf, 0xea, 0xc8,
-	0x7a, 0xa1, 0xc2, 0xcd, 0x44, 0x28, 0x28, 0x7e, 0x88, 0x2e, 0x81, 0xe7, 0x76, 0xcb, 0x31, 0x06,
-	0xe6, 0xf0, 0x8e, 0xfb, 0x6f, 0x58, 0xf7, 0x9d, 0x3c, 0xfd, 0x5a, 0x88, 0x3f, 0xa0, 0x4e, 0x4c,
-	0x3f, 0xca, 0x3a, 0xf8, 0x54, 0x31, 0x91, 0x16, 0x49, 0xa0, 0x32, 0xda, 0x86, 0xa3, 0x0f, 0xcc,
-	0xe1, 0xfd, 0x26, 0x8b, 0xa9, 0x52, 0xbe, 0x05, 0xe1, 0xb8, 0xbd, 0xfd, 0xd1, 0xd3, 0xfc, 0xeb,
-	0xda, 0xe6, 0x84, 0x7b, 0xd5, 0xbe, 0xd2, 0x6f, 0xb5, 0xfa, 0xdf, 0x5a, 0xe8, 0x02, 0xae, 0xc5,
-	0x8f, 0xd1, 0x15, 0x58, 0x04, 0x69, 0x6c, 0xeb, 0x70, 0xc1, 0xdd, 0xb3, 0x19, 0x27, 0xb1, 0x7f,
-	0x63, 0xa5, 0x0a, 0xfc, 0x14, 0x59, 0x82, 0x89, 0x30, 0x0b, 0x60, 0x3e, 0xf2, 0x7d, 0xb2, 0xf7,
-	0x5e, 0x53, 0xef, 0xeb, 0x2a, 0x9f, 0x81, 0xc8, 0x37, 0xa1, 0x45, 0xfd, 0xe0, 0x67, 0xc8, 0x62,
-	0x9f, 0x0b, 0x5a, 0xfe, 0x76, 0x30, 0x60, 0x42, 0xa4, 0xc9, 0xe1, 0x8d, 0xd4, 0x41, 0x9b, 0x6f,
-	0xb2, 0x63, 0xcd, 0xf1, 0x4b, 0x64, 0xa9, 0xf0, 0xf5, 0x84, 0xda, 0x10, 0xa2, 0x77, 0xf6, 0x01,
-	0x27, 0xf3, 0x31, 0x57, 0x7f, 0x20, 0x3c, 0x42, 0x9d, 0x9c, 0x71, 0x11, 0x94, 0x34, 0xa2, 0x85,
-	0x08, 0xa2, 0x2c, 0x95, 0x9f, 0x34, 0xe6, 0xf6, 0x85, 0x63, 0x0c, 0x6e, 0xfa, 0xb7, 0x25, 0xeb,
-	0x03, 0xf9, 0x1c, 0xb8, 0x49, 0xcc, 0xc7, 0xd3, 0xed, 0x9e, 0xe8, 0xbb, 0x3d, 0xd1, 0x7f, 0xee,
-	0x89, 0xfe, 0xe5, 0x40, 0xb4, 0xdd, 0x81, 0x68, 0xdf, 0x0f, 0x44, 0x7b, 0xff, 0x24, 0x49, 0xc5,
-	0xa2, 0x9a, 0xbb, 0x11, 0xcb, 0xbd, 0xd3, 0x9d, 0x79, 0xf4, 0x20, 0x5a, 0x84, 0x69, 0xe1, 0x1d,
-	0x91, 0x75, 0xbd, 0x47, 0x62, 0xb3, 0xa4, 0x7c, 0x7e, 0x09, 0xf8, 0xe8, 0x57, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0xed, 0x63, 0xf5, 0xbe, 0xf7, 0x02, 0x00, 0x00,
+	// 485 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x48, 0xa9, 0x4c, 0xa9,
+	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x2f, 0x4b, 0x2c, 0xcd, 0x29, 0xd1, 0x4f,
+	0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c, 0xd6, 0x03, 0x0b, 0x0b, 0x09, 0x21, 0xab, 0xd0, 0x03, 0xab,
+	0x90, 0x12, 0x49, 0xcf, 0x4f, 0xcf, 0x07, 0x8b, 0xe9, 0x83, 0x58, 0x10, 0x95, 0x52, 0xf2, 0x58,
+	0xcc, 0x2a, 0x48, 0x2c, 0x4a, 0xcc, 0x85, 0x1a, 0x25, 0x25, 0x87, 0x45, 0x41, 0x71, 0x46, 0x62,
+	0x51, 0x2a, 0x1e, 0x79, 0x30, 0x09, 0x91, 0x57, 0xda, 0xce, 0xc4, 0xc5, 0xe3, 0x0e, 0x71, 0x5c,
+	0x70, 0x49, 0x62, 0x49, 0xaa, 0x90, 0x1b, 0x17, 0x4f, 0x49, 0x7e, 0x49, 0x62, 0x4e, 0x3c, 0xd8,
+	0x94, 0x62, 0x09, 0x46, 0x05, 0x46, 0x0d, 0x6e, 0x23, 0x59, 0x3d, 0x4c, 0x27, 0xeb, 0xf9, 0x95,
+	0xe6, 0x06, 0x83, 0x15, 0x39, 0xb1, 0x9c, 0xb8, 0x27, 0xcf, 0x10, 0xc4, 0x0d, 0xd6, 0x08, 0x11,
+	0x12, 0x72, 0xe7, 0xe2, 0xc9, 0x2f, 0xcf, 0x4b, 0x2d, 0x82, 0x99, 0xc3, 0xa4, 0xc0, 0xac, 0xc1,
+	0x6d, 0x24, 0x87, 0xcd, 0x1c, 0x7f, 0x90, 0x3a, 0xb0, 0x36, 0x98, 0x41, 0xf9, 0x70, 0x91, 0x62,
+	0x21, 0x73, 0x2e, 0x36, 0xb0, 0xb2, 0x62, 0x09, 0x66, 0xb0, 0x11, 0x92, 0xd8, 0x8c, 0x08, 0x03,
+	0x91, 0x50, 0xdd, 0x50, 0xe5, 0x42, 0xb1, 0x5c, 0x62, 0x29, 0xa9, 0x69, 0x20, 0x76, 0x7c, 0x61,
+	0x69, 0x7e, 0x49, 0x66, 0x5e, 0x7a, 0x3c, 0x24, 0xe8, 0x24, 0x58, 0xc0, 0x7e, 0x52, 0xc4, 0x66,
+	0x50, 0x20, 0x44, 0x65, 0x00, 0x58, 0x21, 0xd4, 0x40, 0x11, 0xa8, 0x31, 0x28, 0x72, 0x4a, 0x47,
+	0x18, 0xb9, 0x58, 0xc1, 0xd6, 0x0a, 0xd9, 0x70, 0x71, 0x80, 0x35, 0xc7, 0x67, 0xa6, 0x40, 0x83,
+	0x4b, 0x1a, 0xa7, 0x1b, 0x3d, 0x53, 0xa0, 0x86, 0xb2, 0x97, 0x41, 0xb8, 0x42, 0x1e, 0x5c, 0x3c,
+	0x10, 0xdd, 0x50, 0xc7, 0x31, 0x81, 0x4d, 0x90, 0xc7, 0x69, 0x02, 0x8a, 0xd3, 0xb8, 0xcb, 0x10,
+	0x42, 0x42, 0xc6, 0x5c, 0x62, 0xb9, 0xf9, 0xc5, 0x25, 0xf1, 0x45, 0xa9, 0xc9, 0xa9, 0x79, 0x25,
+	0xf1, 0xc9, 0x39, 0x99, 0x20, 0x2a, 0x33, 0x05, 0x12, 0x72, 0xbc, 0x41, 0xc2, 0x20, 0xd9, 0x20,
+	0xb0, 0xa4, 0x33, 0x58, 0xce, 0x33, 0xa5, 0x58, 0x69, 0x05, 0x23, 0x17, 0x1f, 0x72, 0x02, 0x08,
+	0x33, 0x13, 0x32, 0x84, 0x87, 0x38, 0x13, 0x81, 0x10, 0x27, 0x22, 0xac, 0x99, 0xa9, 0x10, 0xd6,
+	0x5e, 0x2c, 0x1c, 0x8c, 0x02, 0x4c, 0x4a, 0x47, 0x99, 0xb8, 0xd8, 0xc1, 0xd6, 0x86, 0x99, 0x09,
+	0x99, 0x91, 0x14, 0xe6, 0x88, 0xd0, 0x76, 0x40, 0x4b, 0xde, 0x4c, 0x44, 0x24, 0x6f, 0xd4, 0x84,
+	0xed, 0x88, 0x96, 0xb0, 0x99, 0x89, 0x49, 0xd8, 0xa8, 0x49, 0x1a, 0x3d, 0xca, 0x59, 0x68, 0x10,
+	0xe5, 0xac, 0x38, 0xa3, 0xdc, 0x29, 0xf0, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f,
+	0x3c, 0x92, 0x63, 0x9c, 0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18,
+	0xa2, 0xcc, 0xd3, 0x33, 0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0x51, 0x0b, 0x0e,
+	0x13, 0xdd, 0xe4, 0x8c, 0xc4, 0xcc, 0x3c, 0x7d, 0xb8, 0x48, 0x05, 0xb4, 0x30, 0x29, 0xa9, 0x2c,
+	0x48, 0x2d, 0x4e, 0x62, 0x03, 0x8b, 0x1b, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0xb0, 0x84, 0x2f,
+	0x09, 0xfc, 0x04, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -226,7 +372,7 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintGenesis(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x1a
+	dAtA[i] = 0x22
 	if len(m.Vaults) > 0 {
 		for iNdEx := len(m.Vaults) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -238,9 +384,33 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintGenesis(dAtA, i, uint64(size))
 			}
 			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.OwnerShares) > 0 {
+		for iNdEx := len(m.OwnerShares) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.OwnerShares[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
 			dAtA[i] = 0x12
 		}
 	}
+	{
+		size, err := m.TotalShares.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -265,20 +435,128 @@ func (m *Vault) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.MostRecentClientIds) > 0 {
-		dAtA3 := make([]byte, len(m.MostRecentClientIds)*10)
-		var j2 int
+		dAtA4 := make([]byte, len(m.MostRecentClientIds)*10)
+		var j3 int
 		for _, num := range m.MostRecentClientIds {
 			for num >= 1<<7 {
-				dAtA3[j2] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA4[j3] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j2++
+				j3++
 			}
-			dAtA3[j2] = uint8(num)
-			j2++
+			dAtA4[j3] = uint8(num)
+			j3++
 		}
-		i -= j2
-		copy(dAtA[i:], dAtA3[:j2])
-		i = encodeVarintGenesis(dAtA, i, uint64(j2))
+		i -= j3
+		copy(dAtA[i:], dAtA4[:j3])
+		i = encodeVarintGenesis(dAtA, i, uint64(j3))
+		i--
+		dAtA[i] = 0x1a
+	}
+	{
+		size, err := m.VaultParams.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.VaultId.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *GenesisStateV6) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GenesisStateV6) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GenesisStateV6) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.DefaultQuotingParams.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.Vaults) > 0 {
+		for iNdEx := len(m.Vaults) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Vaults[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *VaultV6) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *VaultV6) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *VaultV6) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MostRecentClientIds) > 0 {
+		dAtA9 := make([]byte, len(m.MostRecentClientIds)*10)
+		var j8 int
+		for _, num := range m.MostRecentClientIds {
+			for num >= 1<<7 {
+				dAtA9[j8] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j8++
+			}
+			dAtA9[j8] = uint8(num)
+			j8++
+		}
+		i -= j8
+		copy(dAtA[i:], dAtA9[:j8])
+		i = encodeVarintGenesis(dAtA, i, uint64(j8))
 		i--
 		dAtA[i] = 0x2a
 	}
@@ -350,6 +628,14 @@ func (m *GenesisState) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = m.TotalShares.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	if len(m.OwnerShares) > 0 {
+		for _, e := range m.OwnerShares {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
 	if len(m.Vaults) > 0 {
 		for _, e := range m.Vaults {
 			l = e.Size()
@@ -362,6 +648,43 @@ func (m *GenesisState) Size() (n int) {
 }
 
 func (m *Vault) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.VaultId.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	l = m.VaultParams.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	if len(m.MostRecentClientIds) > 0 {
+		l = 0
+		for _, e := range m.MostRecentClientIds {
+			l += sovGenesis(uint64(e))
+		}
+		n += 1 + sovGenesis(uint64(l)) + l
+	}
+	return n
+}
+
+func (m *GenesisStateV6) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Vaults) > 0 {
+		for _, e := range m.Vaults {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	l = m.DefaultQuotingParams.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	return n
+}
+
+func (m *VaultV6) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -426,6 +749,382 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: GenesisState: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalShares", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TotalShares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OwnerShares", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OwnerShares = append(m.OwnerShares, OwnerShare{})
+			if err := m.OwnerShares[len(m.OwnerShares)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Vaults", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Vaults = append(m.Vaults, Vault{})
+			if err := m.Vaults[len(m.Vaults)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DefaultQuotingParams", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.DefaultQuotingParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Vault) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Vault: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Vault: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.VaultId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultParams", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.VaultParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType == 0 {
+				var v uint32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowGenesis
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.MostRecentClientIds = append(m.MostRecentClientIds, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowGenesis
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthGenesis
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthGenesis
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.MostRecentClientIds) == 0 {
+					m.MostRecentClientIds = make([]uint32, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowGenesis
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint32(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.MostRecentClientIds = append(m.MostRecentClientIds, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field MostRecentClientIds", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GenesisStateV6) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GenesisStateV6: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GenesisStateV6: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 2:
@@ -516,7 +1215,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Vault) Unmarshal(dAtA []byte) error {
+func (m *VaultV6) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -539,10 +1238,10 @@ func (m *Vault) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Vault: wiretype end group for non-group")
+			return fmt.Errorf("proto: VaultV6: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Vault: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: VaultV6: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

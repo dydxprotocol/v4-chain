@@ -83,12 +83,6 @@ export class SyncHandlers {
     _.forEach(consolidatedKafkaEventGroup, (events: ConsolidatedKafkaEvent[]) => {
       kafkaPublisher.addEvents(events);
     });
-    logger.info({
-      at: 'SyncHandlers#process',
-      message: 'Finished processing synchronous handlers',
-      handlerCountMapping,
-      batchProcessTime: Date.now() - start,
-    });
     stats.timing(`${config.SERVICE_NAME}.synchronous_events_process_time`, Date.now() - start);
   }
 }

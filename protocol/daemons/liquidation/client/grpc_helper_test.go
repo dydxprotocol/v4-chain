@@ -469,7 +469,19 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 				req := &api.LiquidateSubaccountsRequest{
 					BlockHeight:               uint32(50),
 					LiquidatableSubaccountIds: []satypes.SubaccountId{constants.Alice_Num0, constants.Bob_Num0},
-					NegativeTncSubaccountIds:  []satypes.SubaccountId{constants.Carl_Num0, constants.Dave_Num0},
+				}
+				response := &api.LiquidateSubaccountsResponse{}
+				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
+
+				req = &api.LiquidateSubaccountsRequest{
+					BlockHeight:              uint32(50),
+					NegativeTncSubaccountIds: []satypes.SubaccountId{constants.Carl_Num0, constants.Dave_Num0},
+				}
+				response = &api.LiquidateSubaccountsResponse{}
+				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
+
+				req = &api.LiquidateSubaccountsRequest{
+					BlockHeight: uint32(50),
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -477,6 +489,17 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 								constants.Alice_Num0,
 								constants.Carl_Num0,
 							},
+						},
+					},
+				}
+				response = &api.LiquidateSubaccountsResponse{}
+				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
+
+				req = &api.LiquidateSubaccountsRequest{
+					BlockHeight: uint32(50),
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+						{
+							PerpetualId: 0,
 							SubaccountsWithShortPosition: []satypes.SubaccountId{
 								constants.Bob_Num0,
 								constants.Dave_Num0,
@@ -484,7 +507,7 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 						},
 					},
 				}
-				response := &api.LiquidateSubaccountsResponse{}
+				response = &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
 			},
 			liquidatableSubaccountIds: []satypes.SubaccountId{
@@ -512,12 +535,24 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 		"Success Empty": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight:                uint32(50),
-					LiquidatableSubaccountIds:  []satypes.SubaccountId{},
-					NegativeTncSubaccountIds:   []satypes.SubaccountId{},
-					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
+					BlockHeight:               uint32(50),
+					LiquidatableSubaccountIds: []satypes.SubaccountId{},
 				}
 				response := &api.LiquidateSubaccountsResponse{}
+				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
+
+				req = &api.LiquidateSubaccountsRequest{
+					BlockHeight:              uint32(50),
+					NegativeTncSubaccountIds: []satypes.SubaccountId{},
+				}
+				response = &api.LiquidateSubaccountsResponse{}
+				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
+
+				req = &api.LiquidateSubaccountsRequest{
+					BlockHeight:                uint32(50),
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
+				}
+				response = &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
 			},
 			liquidatableSubaccountIds:  []satypes.SubaccountId{},
@@ -527,10 +562,8 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 		"Errors are propagated": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight:                uint32(50),
-					LiquidatableSubaccountIds:  []satypes.SubaccountId{},
-					NegativeTncSubaccountIds:   []satypes.SubaccountId{},
-					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
+					BlockHeight:               uint32(50),
+					LiquidatableSubaccountIds: []satypes.SubaccountId{},
 				}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(nil, errors.New("test error"))
 			},
@@ -555,8 +588,13 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 				tc.liquidatableSubaccountIds,
 				tc.negativeTncSubaccountIds,
 				tc.subaccountOpenPositionInfo,
+				1000,
 			)
-			require.Equal(t, tc.expectedError, err)
+			if tc.expectedError != nil {
+				require.ErrorContains(t, err, tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }

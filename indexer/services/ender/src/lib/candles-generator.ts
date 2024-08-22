@@ -534,6 +534,7 @@ export class CandlesGenerator {
    * Get the cached orderbook mid price for a given ticker
 */
 export async function getOrderbookMidPriceMap(): Promise<{ [ticker: string]: OrderbookMidPrice; }> {
+  const start: number = Date.now();
   const perpetualMarkets = Object.values(perpetualMarketRefresher.getPerpetualMarketsMap());
 
   const promises = perpetualMarkets.map(async (perpetualMarket: PerpetualMarketFromDatabase) => {
@@ -550,5 +551,6 @@ export async function getOrderbookMidPriceMap(): Promise<{ [ticker: string]: Ord
     Object.assign(priceMap, price);
   });
 
+  stats.timing(`${config.SERVICE_NAME}.get_orderbook_mid_price_map.timing`, Date.now() - start);
   return priceMap;
 }

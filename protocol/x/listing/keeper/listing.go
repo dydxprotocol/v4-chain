@@ -148,3 +148,30 @@ func (k Keeper) CreatePerpetual(
 
 	return perpetual.GetId(), nil
 }
+
+// Function to set listing vault deposit params in module store
+func (k Keeper) SetListingVaultDepositParams(
+	ctx sdk.Context,
+	params types.ListingVaultDepositParams,
+) error {
+	// Validate the params
+	if err := params.Validate(); err != nil {
+		return err
+	}
+
+	// Store the params in the module store
+	store := ctx.KVStore(k.storeKey)
+	key := []byte(types.ListingVaultDepositParamsKey)
+	store.Set(key, k.cdc.MustMarshal(&params))
+	return nil
+}
+
+// Function to get listing vault deposit params from module store
+func (k Keeper) GetListingVaultDepositParams(
+	ctx sdk.Context,
+) (vaultDepositParams types.ListingVaultDepositParams) {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get([]byte(types.ListingVaultDepositParamsKey))
+	k.cdc.MustUnmarshal(b, &vaultDepositParams)
+	return vaultDepositParams
+}

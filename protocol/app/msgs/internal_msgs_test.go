@@ -102,6 +102,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.govplus.MsgSlashValidatorResponse",
 
 		// listing
+		"/dydxprotocol.listing.MsgSetListingVaultDepositParams",
+		"/dydxprotocol.listing.MsgSetListingVaultDepositParamsResponse",
 		"/dydxprotocol.listing.MsgSetMarketsHardCap",
 		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse",
 

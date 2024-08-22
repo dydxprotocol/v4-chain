@@ -197,10 +197,12 @@ var (
 		"/dydxprotocol.govplus.MsgSlashValidatorResponse": {},
 
 		// listing
-		"/dydxprotocol.listing.MsgSetMarketsHardCap":                  {},
-		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse":          {},
-		"/dydxprotocol.listing.MsgCreateMarketPermissionless":         {},
-		"/dydxprotocol.listing.MsgCreateMarketPermissionlessResponse": {},
+		"/dydxprotocol.listing.MsgSetMarketsHardCap":                    {},
+		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse":            {},
+		"/dydxprotocol.listing.MsgCreateMarketPermissionless":           {},
+		"/dydxprotocol.listing.MsgCreateMarketPermissionlessResponse":   {},
+		"/dydxprotocol.listing.MsgSetListingVaultDepositParams":         {},
+		"/dydxprotocol.listing.MsgSetListingVaultDepositParamsResponse": {},
 
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":               {},
@@ -241,8 +243,8 @@ var (
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": {},
 
 		// vault
-		"/dydxprotocol.vault.MsgDepositToVault":                     {},
-		"/dydxprotocol.vault.MsgDepositToVaultResponse":             {},
+		"/dydxprotocol.vault.MsgDepositToMegavault":                 {},
+		"/dydxprotocol.vault.MsgDepositToMegavaultResponse":         {},
 		"/dydxprotocol.vault.MsgSetVaultParams":                     {},
 		"/dydxprotocol.vault.MsgSetVaultParamsResponse":             {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         {},

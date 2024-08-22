@@ -25,10 +25,15 @@ service Query {
   rpc AllVaults(QueryAllVaultsRequest) returns (QueryAllVaultsResponse) {
     option (google.api.http).get = "/dydxprotocol/vault/vault";
   }
-  // Queries owner shares of a vault.
-  rpc OwnerShares(QueryOwnerSharesRequest) returns (QueryOwnerSharesResponse) {
-    option (google.api.http).get =
-        "/dydxprotocol/vault/owner_shares/{type}/{number}";
+  // Queries total shares of megavault.
+  rpc MegavaultTotalShares(QueryMegavaultTotalSharesRequest)
+      returns (QueryMegavaultTotalSharesResponse) {
+    option (google.api.http).get = "/dydxprotocol/vault/megavault/total_shares";
+  }
+  // Queries owner shares of megavault.
+  rpc MegavaultOwnerShares(QueryMegavaultOwnerSharesRequest)
+      returns (QueryMegavaultOwnerSharesResponse) {
+    option (google.api.http).get = "/dydxprotocol/vault/megavault/owner_shares";
   }
 }
 
@@ -63,8 +68,7 @@ message QueryVaultResponse {
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
-  NumShares total_shares = 5 [ (gogoproto.nullable) = false ];
-  VaultParams vault_params = 6 [ (gogoproto.nullable) = false ];
+  VaultParams vault_params = 5 [ (gogoproto.nullable) = false ];
 }
 
 // QueryAllVaultsRequest is a request type for the AllVaults RPC method.
@@ -78,15 +82,23 @@ message QueryAllVaultsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryOwnerSharesRequest is a request type for the OwnerShares RPC method.
-message QueryOwnerSharesRequest {
-  VaultType type = 1;
-  uint32 number = 2;
+// QueryMegavaultTotalSharesRequest is a request type for the
+// MegavaultTotalShares RPC method.
+message QueryMegavaultTotalSharesRequest {}
+
+// QueryMegavaultTotalSharesResponse is a response type for the
+// MegavaultTotalShares RPC method.
+message QueryMegavaultTotalSharesResponse { NumShares total_shares = 1; }
+
+// QueryMegavaultOwnerSharesRequest is a request type for the
+// MegavaultOwnerShares RPC method.
+message QueryMegavaultOwnerSharesRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
-// QueryOwnerSharesResponse is a response type for the OwnerShares RPC method.
-message QueryOwnerSharesResponse {
+// QueryMegavaultOwnerSharesResponse is a response type for the
+// MegavaultOwnerShares RPC method.
+message QueryMegavaultOwnerSharesResponse {
   repeated OwnerShare owner_shares = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

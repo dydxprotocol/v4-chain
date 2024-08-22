@@ -1,4 +1,5 @@
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
+import { ListingVaultDepositParams, ListingVaultDepositParamsSDKType } from "./params";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
@@ -31,7 +32,7 @@ export interface MsgSetMarketsHardCapResponse {}
 export interface MsgSetMarketsHardCapResponseSDKType {}
 /**
  * MsgCreateMarketPermissionless is a message used to create new markets without
- * // going through x/gov
+ * going through x/gov
  */
 
 export interface MsgCreateMarketPermissionless {
@@ -46,7 +47,7 @@ export interface MsgCreateMarketPermissionless {
 }
 /**
  * MsgCreateMarketPermissionless is a message used to create new markets without
- * // going through x/gov
+ * going through x/gov
  */
 
 export interface MsgCreateMarketPermissionlessSDKType {
@@ -71,6 +72,40 @@ export interface MsgCreateMarketPermissionlessResponse {}
  */
 
 export interface MsgCreateMarketPermissionlessResponseSDKType {}
+/**
+ * MsgSetListingVaultDepositParams is a message used to set PML megavault
+ * deposit params
+ */
+
+export interface MsgSetListingVaultDepositParams {
+  authority: string;
+  /** Params which define the vault deposit for market listing */
+
+  params?: ListingVaultDepositParams;
+}
+/**
+ * MsgSetListingVaultDepositParams is a message used to set PML megavault
+ * deposit params
+ */
+
+export interface MsgSetListingVaultDepositParamsSDKType {
+  authority: string;
+  /** Params which define the vault deposit for market listing */
+
+  params?: ListingVaultDepositParamsSDKType;
+}
+/**
+ * MsgSetListingVaultDepositParamsResponse defines the
+ * MsgSetListingVaultDepositParams response
+ */
+
+export interface MsgSetListingVaultDepositParamsResponse {}
+/**
+ * MsgSetListingVaultDepositParamsResponse defines the
+ * MsgSetListingVaultDepositParams response
+ */
+
+export interface MsgSetListingVaultDepositParamsResponseSDKType {}
 
 function createBaseMsgSetMarketsHardCap(): MsgSetMarketsHardCap {
   return {
@@ -255,6 +290,95 @@ export const MsgCreateMarketPermissionlessResponse = {
 
   fromPartial(_: DeepPartial<MsgCreateMarketPermissionlessResponse>): MsgCreateMarketPermissionlessResponse {
     const message = createBaseMsgCreateMarketPermissionlessResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgSetListingVaultDepositParams(): MsgSetListingVaultDepositParams {
+  return {
+    authority: "",
+    params: undefined
+  };
+}
+
+export const MsgSetListingVaultDepositParams = {
+  encode(message: MsgSetListingVaultDepositParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.params !== undefined) {
+      ListingVaultDepositParams.encode(message.params, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetListingVaultDepositParams {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSetListingVaultDepositParams();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.params = ListingVaultDepositParams.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgSetListingVaultDepositParams>): MsgSetListingVaultDepositParams {
+    const message = createBaseMsgSetListingVaultDepositParams();
+    message.authority = object.authority ?? "";
+    message.params = object.params !== undefined && object.params !== null ? ListingVaultDepositParams.fromPartial(object.params) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgSetListingVaultDepositParamsResponse(): MsgSetListingVaultDepositParamsResponse {
+  return {};
+}
+
+export const MsgSetListingVaultDepositParamsResponse = {
+  encode(_: MsgSetListingVaultDepositParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetListingVaultDepositParamsResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSetListingVaultDepositParamsResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgSetListingVaultDepositParamsResponse>): MsgSetListingVaultDepositParamsResponse {
+    const message = createBaseMsgSetListingVaultDepositParamsResponse();
     return message;
   }
 
