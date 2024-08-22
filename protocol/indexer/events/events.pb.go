@@ -2545,7 +2545,7 @@ func (m *LiquidityTierUpsertEventV2) GetOpenInterestUpperCap() uint64 {
 	return 0
 }
 
-// Event emiited when a referee is registered with an affiliate.
+// Event emitted when a referee is registered with an affiliate.
 type RegisterAffiliateEventV1 struct {
 	// Address of the referee being registered.
 	Referee string `protobuf:"bytes,1,opt,name=referee,proto3" json:"referee,omitempty"`

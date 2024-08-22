@@ -1485,7 +1485,7 @@ export interface LiquidityTierUpsertEventV2SDKType {
 
   open_interest_upper_cap: Long;
 }
-/** Event emiited when a referee is registered with an affiliate. */
+/** Event emitted when a referee is registered with an affiliate. */
 
 export interface RegisterAffiliateEventV1 {
   /** Address of the referee being registered. */
@@ -1497,7 +1497,7 @@ export interface RegisterAffiliateEventV1 {
 
   registeredAtBlock: Long;
 }
-/** Event emiited when a referee is registered with an affiliate. */
+/** Event emitted when a referee is registered with an affiliate. */
 
 export interface RegisterAffiliateEventV1SDKType {
   /** Address of the referee being registered. */
