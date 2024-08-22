@@ -248,7 +248,7 @@ func (h *VoteExtensionHandler) getCurrentPricesForEachMarket(
 			continue
 		}
 
-		medianPrice := h.getMedianPrice(
+		medianPnlPrice := h.getMedianPnlPrice(
 			new(big.Int).SetUint64(market.SpotPrice),
 			clobMidPrice,
 			smoothedPrice,
@@ -257,7 +257,7 @@ func (h *VoteExtensionHandler) getCurrentPricesForEachMarket(
 
 		vePrices[market.MarketId] = VEPricePair{
 			SpotPrice: market.SpotPrice,
-			PnlPrice:  medianPrice.Uint64(),
+			PnlPrice:  medianPnlPrice.Uint64(),
 		}
 	}
 
@@ -308,7 +308,7 @@ func (h *VoteExtensionHandler) getPeripheryPnlPriceData(
 	return
 }
 
-func (h *VoteExtensionHandler) getMedianPrice(
+func (h *VoteExtensionHandler) getMedianPnlPrice(
 	indexPrice *big.Int,
 	clobMidPrice *big.Int,
 	smoothedPrice *big.Int,
