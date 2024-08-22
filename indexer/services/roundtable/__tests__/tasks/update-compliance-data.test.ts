@@ -16,7 +16,7 @@ import {
   ComplianceReason,
 } from '@dydxprotocol-indexer/postgres';
 import updateComplianceDataTask from '../../src/tasks/update-compliance-data';
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { STATS_NO_SAMPLING, logger, stats } from '@dydxprotocol-indexer/base';
 import _ from 'lodash';
 import config from '../../src/config';
 import { ClientAndProvider } from '../../src/helpers/compliance-clients';
@@ -73,6 +73,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 0,
       upserted: 0,
       statusUpserted: 0,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -95,6 +97,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 0,
       upserted: 0,
       statusUpserted: 0,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -122,6 +126,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 0,
       upserted: 0,
       statusUpserted: 0,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -152,6 +158,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 0,
       upserted: 0,
       statusUpserted: 0,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -197,6 +205,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 1,
       upserted: 1,
       statusUpserted: 1,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -243,6 +253,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 1,
       upserted: 1,
       statusUpserted: 1,
+      activeAddressesWithStaleCompliance: 1,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -279,6 +291,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 0,
       upserted: 0,
       statusUpserted: 0,
+      activeAddressesWithStaleCompliance: 1,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -324,6 +338,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 1,
       upserted: 1,
       statusUpserted: 1,
+      activeAddressesWithStaleCompliance: 1,
+      inactiveAddressesWithStaleCompliance: 0,
     },
     mockProvider.provider,
     );
@@ -375,6 +391,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 1,
       upserted: 1,
       statusUpserted: 1,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 1,
     },
     mockProvider.provider,
     );
@@ -456,6 +474,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 2,
       upserted: 2,
       statusUpserted: 2,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 1,
     },
     mockProvider.provider,
     );
@@ -546,6 +566,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 3,
       upserted: 2,
       statusUpserted: 2,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 1,
     },
     mockProvider.provider,
     );
@@ -615,6 +637,9 @@ describe('update-compliance-data', () => {
       addressesScreened: 1,
       upserted: 1,
       statusUpserted: 1,
+      // no old address is added for updating, but there is an old address with stale compliance
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 1,
     },
     mockProvider.provider,
     );
@@ -644,6 +669,8 @@ describe('update-compliance-data', () => {
       addressesScreened: 1,
       upserted: 1,
       statusUpserted: 1,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 1,
     },
     mockProvider.provider,
     );
@@ -739,6 +766,8 @@ function expectGaugeStats(
     addressesScreened,
     upserted,
     statusUpserted,
+    activeAddressesWithStaleCompliance,
+    inactiveAddressesWithStaleCompliance,
   }: {
     activeAddresses: number,
     newAddresses: number,
@@ -746,37 +775,51 @@ function expectGaugeStats(
     addressesScreened: number,
     upserted: number,
     statusUpserted: number,
+    activeAddressesWithStaleCompliance: number,
+    inactiveAddressesWithStaleCompliance: number,
   },
   provider: string,
 ): void {
   expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_active_addresses',
     activeAddresses,
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_new_addresses',
     newAddresses,
-    undefined,
+    STATS_NO_SAMPLING,
+    { provider },
+  );
+  expect(stats.gauge).toHaveBeenCalledWith(
+    'roundtable.update_compliance_data.num_active_addresses_with_stale_compliance',
+    activeAddressesWithStaleCompliance,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_old_addresses',
     oldAddresses,
-    undefined,
+    STATS_NO_SAMPLING,
+    { provider },
+  );
+  expect(stats.gauge).toHaveBeenCalledWith(
+    'roundtable.update_compliance_data.num_inactive_addresses_with_stale_compliance',
+    inactiveAddressesWithStaleCompliance,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_addresses_to_screen',
     addressesScreened,
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.gauge).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.num_upserted',
     upserted,
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.gauge).toHaveBeenCalledWith(
@@ -791,19 +834,19 @@ function expectTimingStats(
   expect(stats.timing).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.get_active_addresses',
     expect.any(Number),
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.timing).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.get_old_addresses',
     expect.any(Number),
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
   expect(stats.timing).toHaveBeenCalledWith(
     'roundtable.update_compliance_data.query_compliance_data',
     expect.any(Number),
-    undefined,
+    STATS_NO_SAMPLING,
     { provider },
   );
 }
