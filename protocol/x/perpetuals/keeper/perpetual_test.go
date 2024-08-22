@@ -1691,6 +1691,26 @@ func TestModifyLastFundingRate_Success(t *testing.T) {
 	}
 }
 
+func TestModifyLastFundingRate_Failure(t *testing.T) {
+	tests := map[string]struct {
+		perpetualId          uint32
+		lastFundingRateDelta *big.Int
+	}{
+		"perpetual does not exist": {
+			perpetualId:          40,
+			lastFundingRateDelta: big.NewInt(1000),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			pc := keepertest.PerpetualsKeepers(t)
+			err := pc.PerpetualsKeeper.ModifyLastFundingRate(pc.Ctx, tc.perpetualId, tc.lastFundingRateDelta)
+			require.Error(t, err)
+		})
+	}
+}
+
 func TestGetRemoveSampleTailsFunc(t *testing.T) {
 	tests := map[string]struct {
 		removalRatePpm uint32
