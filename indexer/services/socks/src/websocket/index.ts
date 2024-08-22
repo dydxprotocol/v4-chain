@@ -1,5 +1,5 @@
 import {
-  InfoObject, logger, safeJsonStringify, stats,
+  InfoObject, getInstanceId, logger, safeJsonStringify, stats,
 } from '@dydxprotocol-indexer/base';
 import { v4 as uuidv4 } from 'uuid';
 import WebSocket from 'ws';
@@ -108,10 +108,19 @@ export class Index {
       headers: req.headers,
       numConcurrentConnections,
     });
-    stats.increment(`${config.SERVICE_NAME}.num_connections`, 1);
+    stats.increment(
+      `${config.SERVICE_NAME}.num_connections`,
+      1,
+      {
+        instance: getInstanceId(),
+      },
+    );
     stats.gauge(
       `${config.SERVICE_NAME}.num_concurrent_connections`,
       numConcurrentConnections,
+      {
+        instance: getInstanceId(),
+      },
     );
 
     try {
@@ -179,7 +188,11 @@ export class Index {
       stats.increment(
         `${config.SERVICE_NAME}.num_disconnects`,
         1,
-        { code: String(code), reason: String(reason) },
+        {
+          code: String(code),
+          reason: String(reason),
+          instance: getInstanceId(),
+        },
       );
 
       this.disconnect(connectionId);
@@ -216,6 +229,9 @@ export class Index {
       `${config.SERVICE_NAME}.on_message`,
       1,
       config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+      {
+        instance: getInstanceId(),
+      },
     );
     if (!this.connections[connectionId]) {
       logger.info({
@@ -324,6 +340,9 @@ export class Index {
       `${config.SERVICE_NAME}.message_received_${parsed.type}`,
       1,
       config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+      {
+        instance: getInstanceId(),
+      },
     );
   }
 
