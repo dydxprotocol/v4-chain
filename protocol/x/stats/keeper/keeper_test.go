@@ -300,8 +300,11 @@ func TestGetStakedAmount(t *testing.T) {
 	statsKeeper := tApp.App.StatsKeeper
 	stakingKeeper := tApp.App.StakingKeeper
 	expectedCoinsStaked := big.NewInt(100)
-	delegation := stakingtypes.NewDelegation(constants.AliceAccAddress.String(), constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(expectedCoinsStaked))
-	stakingKeeper.SetDelegation(ctx, delegation)
+	delegation := stakingtypes.NewDelegation(
+		constants.AliceAccAddress.String(), constants.AliceValAddress.String(),
+		math.LegacyNewDecFromBigInt(expectedCoinsStaked))
+	err := stakingKeeper.SetDelegation(ctx, delegation)
+	require.NoError(t, err)
 
 	receivedCoins := statsKeeper.GetStakedAmount(ctx, constants.AliceAccAddress.String())
 	require.Equal(t, expectedCoinsStaked, &receivedCoins)

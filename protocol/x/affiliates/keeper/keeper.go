@@ -81,7 +81,10 @@ func (k Keeper) AddReferredVolume(
 	if !affiliateReferredVolumePrefixStore.Has([]byte(affiliateAddr)) {
 		referredVolume = dtypes.NewInt(0)
 	} else {
-		referredVolume.Unmarshal(affiliateReferredVolumePrefixStore.Get([]byte(affiliateAddr)))
+		err := referredVolume.Unmarshal(affiliateReferredVolumePrefixStore.Get([]byte(affiliateAddr)))
+		if err != nil {
+			return err
+		}
 	}
 	referredVolumeBigInt := referredVolume.BigInt()
 	referredVolumeBigInt.Add(referredVolumeBigInt, referredVolumeFromBlock.BigInt())
@@ -101,7 +104,10 @@ func (k Keeper) GetReferredVolume(ctx sdk.Context, affiliateAddr string) (dtypes
 		return dtypes.NewInt(0), false
 	}
 	var referredVolume dtypes.SerializableInt
-	referredVolume.Unmarshal(affiliateReferredVolumePrefixStore.Get([]byte(affiliateAddr)))
+	err := referredVolume.Unmarshal(affiliateReferredVolumePrefixStore.Get([]byte(affiliateAddr)))
+	if err != nil {
+		return dtypes.NewInt(0), false
+	}
 	return referredVolume, true
 }
 

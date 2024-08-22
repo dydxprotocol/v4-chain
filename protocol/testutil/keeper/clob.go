@@ -119,13 +119,6 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			cdc,
 			registry)
 
-		bankKeeper, _ := createBankKeeper(
-			stateStore,
-			db,
-			cdc,
-			accountsKeeper,
-		)
-
 		stakingKeeper, _ := createStakingKeeper(
 			stateStore,
 			db,

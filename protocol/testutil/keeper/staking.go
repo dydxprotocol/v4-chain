@@ -5,7 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
@@ -20,7 +19,7 @@ func createStakingKeeper(
 	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	accountKeeper *authkeeper.AccountKeeper,
-	bankKeeper *bankkeeper.BaseKeeper,
+	bankKeeper types.BankKeeper,
 ) (
 	*keeper.Keeper,
 	storetypes.StoreKey,

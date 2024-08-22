@@ -104,9 +104,10 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 	affiliate := constants.AliceAccAddress.String()
 	referee := constants.BobAccAddress.String()
 	stakingKeeper := tApp.App.StakingKeeper
-	stakingKeeper.SetDelegation(ctx,
+	err = stakingKeeper.SetDelegation(ctx,
 		stakingtypes.NewDelegation(constants.AliceAccAddress.String(),
 			constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(big.NewInt(100))))
+	require.NoError(t, err)
 	err = k.RegisterAffiliate(ctx, referee, affiliate)
 	require.NoError(t, err)
 
@@ -152,9 +153,10 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 	affiliate := constants.AliceAccAddress.String()
 	referee := constants.BobAccAddress.String()
 	stakingKeeper := tApp.App.StakingKeeper
-	stakingKeeper.SetDelegation(ctx,
+	err = stakingKeeper.SetDelegation(ctx,
 		stakingtypes.NewDelegation(constants.AliceAccAddress.String(),
 			constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(big.NewInt(1000))))
+	require.NoError(t, err)
 	err = k.RegisterAffiliate(ctx, referee, affiliate)
 	require.NoError(t, err)
 
@@ -166,10 +168,10 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 	require.Equal(t, uint32(2000), feeSharePpm)
 
 	// Add more staked amount to upgrade tier
-	stakingKeeper.SetDelegation(ctx,
+	err = stakingKeeper.SetDelegation(ctx,
 		stakingtypes.NewDelegation(constants.AliceAccAddress.String(),
 			constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(big.NewInt(2000))))
-
+	require.NoError(t, err)
 	// Get updated taker fee share for referee
 	affiliateAddr, feeSharePpm, exists, err = k.GetTakerFeeShare(ctx, referee)
 	require.NoError(t, err)
