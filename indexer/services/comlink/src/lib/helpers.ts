@@ -16,6 +16,7 @@ import {
   PerpetualMarketTable,
   PerpetualPositionFromDatabase,
   PerpetualPositionStatus,
+  PnlTicksFromDatabase,
   PositionSide,
   SubaccountFromDatabase,
   SubaccountTable,
@@ -500,6 +501,8 @@ export function initializePerpetualPositionsWithFunding(
   });
 }
 
+/* ------- PARENT/CHILD SUBACCOUNT HELPERS ------- */
+
 /**
  * Gets a list of all possible child subaccount numbers for a parent subaccount number
  * Child subaccounts = [128*0+parentSubaccount, 128*1+parentSubaccount ... 128*999+parentSubaccount]
@@ -530,4 +533,37 @@ export function getChildSubaccountIds(address: string, parentSubaccountNum: numb
 export function checkIfValidDydxAddress(address: string): boolean {
   const pattern: RegExp = /^dydx[0-9a-z]{39}$/;
   return pattern.test(address);
+}
+
+/* ------- PNL HELPERS ------- */
+
+/**
+ * Aggregates a list of PnL ticks, combining any PnL ticks for the same blockheight by summing
+ * the equity, totalPnl, and net transfers.
+ * Returns a map of block height to the resulting PnL tick.
+ * @param pnlTicks
+ * @returns
+ */
+export function aggregatePnlTicks(
+  pnlTicks: PnlTicksFromDatabase[],
+): Map<number, PnlTicksFromDatabase> {
+  const aggregatedPnlTicks: Map<number, PnlTicksFromDatabase> = new Map();
+  for (const pnlTick of pnlTicks) {
+    const blockHeight: number = parseInt(pnlTick.blockHeight, 10);
+    if (aggregatedPnlTicks.has(blockHeight)) {
+      const currentPnlTick: PnlTicksFromDatabase = aggregatedPnlTicks.get(
+        blockHeight,
+      ) as PnlTicksFromDatabase;
+      aggregatedPnlTicks.set(blockHeight, {
+        ...currentPnlTick,
+        equity: (parseFloat(currentPnlTick.equity) + parseFloat(pnlTick.equity)).toString(),
+        totalPnl: (parseFloat(currentPnlTick.totalPnl) + parseFloat(pnlTick.totalPnl)).toString(),
+        netTransfers: (parseFloat(currentPnlTick.netTransfers) +
+            parseFloat(pnlTick.netTransfers)).toString(),
+      });
+    } else {
+      aggregatedPnlTicks.set(blockHeight, pnlTick);
+    }
+  }
+  return aggregatedPnlTicks;
 }

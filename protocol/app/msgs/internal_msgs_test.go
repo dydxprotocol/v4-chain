@@ -63,6 +63,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse",
 
+		// affiliates
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers",
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse",
+
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams",
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse",
@@ -102,6 +106,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.govplus.MsgSlashValidatorResponse",
 
 		// listing
+		"/dydxprotocol.listing.MsgSetListingVaultDepositParams",
+		"/dydxprotocol.listing.MsgSetListingVaultDepositParamsResponse",
 		"/dydxprotocol.listing.MsgSetMarketsHardCap",
 		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse",
 
@@ -144,8 +150,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.stats.MsgUpdateParamsResponse",
 
 		// vault
-		"/dydxprotocol.vault.MsgSetVaultQuotingParams",
-		"/dydxprotocol.vault.MsgSetVaultQuotingParamsResponse",
+		"/dydxprotocol.vault.MsgSetVaultParams",
+		"/dydxprotocol.vault.MsgSetVaultParamsResponse",
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams",
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse",
 

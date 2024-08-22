@@ -1,0 +1,23 @@
+syntax = "proto3";
+package dydxprotocol.affiliates;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types";
+
+// AffiliateTiers defines the affiliate tiers.
+message AffiliateTiers {
+  // Tier defines an affiliate tier.
+  message Tier {
+    // Level of the tier
+    uint32 level = 1;
+    // Required all-time referred volume in quote quantums.
+    uint64 req_referred_volume = 2;
+    // Required currently staked native tokens (in whole coins).
+    uint32 req_staked_whole_coins = 3;
+    // Taker fee share in parts-per-million.
+    uint32 taker_fee_share_ppm = 4;
+  }
+  // All affiliate tiers
+  repeated Tier tiers = 1 [ (gogoproto.nullable) = false ];
+}

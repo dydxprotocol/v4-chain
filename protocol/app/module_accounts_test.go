@@ -1,8 +1,9 @@
 package app_test
 
 import (
-	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -15,8 +16,9 @@ import (
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vaultmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
-	"github.com/stretchr/testify/require"
+	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 )
 
 func TestModuleAccountsToAddresses(t *testing.T) {
@@ -36,6 +38,7 @@ func TestModuleAccountsToAddresses(t *testing.T) {
 		vestmoduletypes.CommunityVesterAccountName:   "dydx1wxje320an3karyc6mjw4zghs300dmrjkwn7xtk",
 		icatypes.ModuleName:                          "dydx1vlthgax23ca9syk7xgaz347xmf4nunefw3cnv8",
 		marketmapmoduletypes.ModuleName:              "dydx16j3d86dww8p2rzdlqsv7wle98cxzjxw6gjjyzn",
+		vaultmoduletypes.MegavaultAccountName:        "dydx18tkxrnrkqc2t0lr3zxr5g6a4hdvqksylxqje4r",
 	}
 
 	require.True(t, len(expectedModuleAccToAddresses) == len(app.GetMaccPerms()),
@@ -76,6 +79,7 @@ func TestMaccPerms(t *testing.T) {
 		"community_treasury":     nil,
 		"community_vester":       nil,
 		"marketmap":              nil,
+		"megavault":              nil,
 	}
 	require.Equal(t, expectedMaccPerms, maccPerms, "default macc perms list does not match expected")
 }
@@ -97,6 +101,7 @@ func TestModuleAccountAddrs(t *testing.T) {
 		"dydx15ztc7xy42tn2ukkc0qjthkucw9ac63pgp70urn": true, // x/vest.communityTreasury
 		"dydx1wxje320an3karyc6mjw4zghs300dmrjkwn7xtk": true, // x/vest.communityVester
 		"dydx16j3d86dww8p2rzdlqsv7wle98cxzjxw6gjjyzn": true, // x/marketmap
+		"dydx18tkxrnrkqc2t0lr3zxr5g6a4hdvqksylxqje4r": true, // x/vault.megavault
 	}
 
 	require.Equal(t, expectedModuleAccAddresses, app.ModuleAccountAddrs())

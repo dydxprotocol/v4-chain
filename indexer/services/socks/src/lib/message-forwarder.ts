@@ -1,5 +1,6 @@
 import {
   stats,
+  getInstanceId,
   logger,
   InfoObject,
 } from '@dydxprotocol-indexer/base';
@@ -98,7 +99,11 @@ export class MessageForwarder {
     const batch: Batch = payload.batch;
     const topic: string = batch.topic;
     const partition: string = batch.partition.toString();
-    const metricTags: Record<string, string> = { topic, partition };
+    const metricTags: Record<string, string> = {
+      topic,
+      partition,
+      instance: getInstanceId(),
+    };
     if (batch.isEmpty()) {
       logger.error({
         at: 'on-batch#onBatch',
@@ -195,6 +200,7 @@ export class MessageForwarder {
       start - Number(message.timestamp),
       config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       {
+        instance: getInstanceId(),
         topic,
       },
     );
@@ -227,6 +233,7 @@ export class MessageForwarder {
         end - startForwardMessage,
         config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
         {
+          instance: getInstanceId(),
           topic,
           channel: String(messageToForward.channel),
         },
@@ -239,6 +246,7 @@ export class MessageForwarder {
           startForwardMessage - Number(originalMessageTimestamp),
           config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
           {
+            instance: getInstanceId(),
             topic,
             event_type: String(message.headers?.event_type),
           },
@@ -252,6 +260,9 @@ export class MessageForwarder {
       `${config.SERVICE_NAME}.message_to_forward`,
       1,
       config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+      {
+        instance: getInstanceId(),
+      },
     );
 
     if (!this.subscriptions.subscriptions[message.channel] &&
@@ -323,6 +334,9 @@ export class MessageForwarder {
         `${config.SERVICE_NAME}.forward_to_client_success`,
         numClientsForwarded,
         config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+        {
+          instance: getInstanceId(),
+        },
       );
       forwardedToSubscribers = true;
     }
@@ -333,6 +347,9 @@ export class MessageForwarder {
         `${config.SERVICE_NAME}.forward_message_with_subscribers`,
         1,
         config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+        {
+          instance: getInstanceId(),
+        },
       );
     }
   }
@@ -425,13 +442,25 @@ export class MessageForwarder {
         message: 'Attempted to forward batched messages, but connection did not exist',
         connectionId,
       });
-      stats.increment(`${config.SERVICE_NAME}.forward_to_client_batch_error`, 1);
+      stats.increment(
+        `${config.SERVICE_NAME}.forward_to_client_batch_error`,
+        1,
+        {
+          instance: getInstanceId(),
+        },
+      );
       this.subscriptions.unsubscribe(connectionId, channel, id);
       return;
     }
 
     this.index.connections[connectionId].messageId += 1;
-    stats.increment(`${config.SERVICE_NAME}.forward_to_client_batch_success`, 1);
+    stats.increment(
+      `${config.SERVICE_NAME}.forward_to_client_batch_success`,
+      1,
+      {
+        instance: getInstanceId(),
+      },
+    );
     sendMessage(
       connection.ws,
       connectionId,
@@ -475,7 +504,13 @@ export class MessageForwarder {
         message: 'Attempted to forward message, but connection did not exist',
         connectionId,
       });
-      stats.increment(`${config.SERVICE_NAME}.forward_to_client_error`, 1);
+      stats.increment(
+        `${config.SERVICE_NAME}.forward_to_client_error`,
+        1,
+        {
+          instance: getInstanceId(),
+        },
+      );
       this.subscriptions.unsubscribe(connectionId, message.channel, message.id);
       return 0;
     }

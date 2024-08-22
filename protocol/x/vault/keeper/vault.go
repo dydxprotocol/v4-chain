@@ -3,23 +3,68 @@ package keeper
 import (
 	"math/big"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
+// GetMegavaultEquity returns the equity of the megavault (in quote quantums), which consists of
+// - equity of the megavault main subaccount
+// - equity of all vaults (if positive)
+func (k Keeper) GetMegavaultEquity(ctx sdk.Context) (*big.Int, error) {
+	megavaultEquity, err := k.GetSubaccountEquity(ctx, types.MegavaultMainSubaccount)
+	if err != nil {
+		return nil, errorsmod.Wrapf(err, "failed to get megavault subaccount equity")
+	}
+
+	// Add equities of all vaults.
+	vaultParamsIterator := k.getVaultParamsIterator(ctx)
+	defer vaultParamsIterator.Close()
+	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
+		var vaultParams types.VaultParams
+		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
+
+		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
+		if err != nil {
+			log.ErrorLogWithError(ctx, "Failed to get vault ID from state key", err)
+			continue
+		}
+
+		equity, err := k.GetVaultEquity(ctx, *vaultId)
+		if err != nil {
+			log.ErrorLogWithError(ctx, "Failed to get vault equity", err)
+			continue
+		}
+
+		// Add equity if it is positive.
+		if equity.Sign() > 0 {
+			megavaultEquity.Add(megavaultEquity, equity)
+		}
+	}
+
+	return megavaultEquity, nil
+}
+
 // GetVaultEquity returns the equity of a vault (in quote quantums).
 func (k Keeper) GetVaultEquity(
 	ctx sdk.Context,
 	vaultId types.VaultId,
 ) (*big.Int, error) {
+	return k.GetSubaccountEquity(ctx, *vaultId.ToSubaccountId())
+}
+
+// GetSubaccountEquity returns the equity of a subaccount (in quote quantums).
+func (k Keeper) GetSubaccountEquity(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+) (*big.Int, error) {
 	risk, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{
-			SubaccountId: *vaultId.ToSubaccountId(),
+			SubaccountId: subaccountId,
 		},
 	)
 	if err != nil {
@@ -47,24 +92,24 @@ func (k Keeper) GetVaultInventoryInPerpetual(
 	return inventory
 }
 
-// DecommissionVaults decommissions all vaults with positive shares and non-positive equity.
+// DecommissionVaults decommissions all deactivated vaults that have non-positive equities.
 func (k Keeper) DecommissionNonPositiveEquityVaults(
 	ctx sdk.Context,
 ) {
 	// Iterate through all vaults.
-	totalSharesIterator := k.getTotalSharesIterator(ctx)
-	defer totalSharesIterator.Close()
-	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
-		var totalShares types.NumShares
-		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
+	vaultParamsIterator := k.getVaultParamsIterator(ctx)
+	defer vaultParamsIterator.Close()
+	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
+		var vaultParams types.VaultParams
+		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
 
-		// Skip if TotalShares is non-positive.
-		if totalShares.NumShares.Sign() <= 0 {
+		// Skip if vault is not deactivated.
+		if vaultParams.Status != types.VaultStatus_VAULT_STATUS_DEACTIVATED {
 			continue
 		}
 
 		// Get vault equity.
-		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
+		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
 		if err != nil {
 			log.ErrorLogWithError(ctx, "Failed to get vault ID from state key", err)
 			continue
@@ -82,33 +127,22 @@ func (k Keeper) DecommissionNonPositiveEquityVaults(
 	}
 }
 
-// DecommissionVault decommissions a vault by
-// 1. deleting its total shares and owner shares
-// 2. deleting its address from vault address store
-// 3. deleting its quoting params if any
+// DecommissionVault decommissions a vault by deleting it from vault address store and vault params store.
 func (k Keeper) DecommissionVault(
 	ctx sdk.Context,
 	vaultId types.VaultId,
 ) {
-	// Delete TotalShares of the vault.
-	totalSharesStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.TotalSharesKeyPrefix))
-	totalSharesStore.Delete(vaultId.ToStateKey())
-
-	// Delete all OwnerShares of the vault.
-	ownerSharesStore := k.getVaultOwnerSharesStore(ctx, vaultId)
-	ownerSharesIterator := storetypes.KVStorePrefixIterator(ownerSharesStore, []byte{})
-	defer ownerSharesIterator.Close()
-	for ; ownerSharesIterator.Valid(); ownerSharesIterator.Next() {
-		ownerSharesStore.Delete(ownerSharesIterator.Key())
-	}
-
 	// Delete from vault address store.
 	vaultAddressStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultAddressKeyPrefix))
 	vaultAddressStore.Delete([]byte(vaultId.ToModuleAccountAddress()))
 
-	// Delete vault quoting params if any.
-	vaultQuotingParamsStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.QuotingParamsKeyPrefix))
-	vaultQuotingParamsStore.Delete(vaultId.ToStateKey())
+	// Delete vault params.
+	vaultParamsStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))
+	vaultParamsStore.Delete(vaultId.ToStateKey())
+
+	// Delete most recent client IDs.
+	clientIdsStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.MostRecentClientIdsKeyPrefix))
+	clientIdsStore.Delete(vaultId.ToStateKey())
 }
 
 // AddVaultToAddressStore adds a vault's address to the vault address store.
@@ -129,32 +163,26 @@ func (k Keeper) IsVault(
 	return vaultAddressStore.Has([]byte(address))
 }
 
-// GetAllVaults returns all vaults with their total shares, owner shares, and individual params.
+// GetAllVaults returns all vaults with their vault params and most recent client IDs.
 // Note: This function is only used for exporting module state.
-func (k Keeper) GetAllVaults(ctx sdk.Context) []*types.Vault {
-	vaults := []*types.Vault{}
-	totalSharesIterator := k.getTotalSharesIterator(ctx)
-	defer totalSharesIterator.Close()
-	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
-		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
+func (k Keeper) GetAllVaults(ctx sdk.Context) []types.Vault {
+	vaults := []types.Vault{}
+	vaultParamsIterator := k.getVaultParamsIterator(ctx)
+	defer vaultParamsIterator.Close()
+	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
+		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
 		if err != nil {
 			panic(err)
 		}
 
-		var totalShares types.NumShares
-		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
-
-		allOwnerShares := k.GetAllOwnerShares(ctx, *vaultId)
-
-		quotingParams := k.GetVaultQuotingParams(ctx, *vaultId)
+		var vaultParams types.VaultParams
+		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
 
 		mostRecentClientIds := k.GetMostRecentClientIds(ctx, *vaultId)
 
-		vaults = append(vaults, &types.Vault{
-			VaultId:             vaultId,
-			TotalShares:         &totalShares,
-			OwnerShares:         allOwnerShares,
-			QuotingParams:       &quotingParams,
+		vaults = append(vaults, types.Vault{
+			VaultId:             *vaultId,
+			VaultParams:         vaultParams,
 			MostRecentClientIds: mostRecentClientIds,
 		})
 	}

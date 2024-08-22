@@ -1,5 +1,6 @@
 import {
   AxiosSafeServerError,
+  getInstanceId,
   logger,
   stats,
 } from '@dydxprotocol-indexer/base';
@@ -179,6 +180,7 @@ export class Subscriptions {
         1,
         undefined,
         {
+          instance: getInstanceId(),
           channel,
         },
       );
@@ -189,6 +191,7 @@ export class Subscriptions {
         Date.now() - startGetInitialResponse,
         undefined,
         {
+          instance: getInstanceId(),
           channel,
         },
       );
@@ -280,12 +283,16 @@ export class Subscriptions {
       `${config.SERVICE_NAME}.subscriptions.channel_size`,
       this.subscribedIdsPerChannel[channel].size,
       {
+        instance: getInstanceId(),
         channel,
       },
     );
     stats.timing(
       `${config.SERVICE_NAME}.subscribe_send_message`,
       Date.now() - startSend,
+      {
+        instance: getInstanceId(),
+      },
     );
   }
 
@@ -341,6 +348,7 @@ export class Subscriptions {
         `${config.SERVICE_NAME}.subscriptions.channel_size`,
         this.subscribedIdsPerChannel[channel].size,
         {
+          instance: getInstanceId(),
           channel,
         },
       );

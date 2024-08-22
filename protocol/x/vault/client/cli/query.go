@@ -26,6 +26,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdQueryParams())
 	cmd.AddCommand(CmdQueryVault())
 	cmd.AddCommand(CmdQueryListVault())
+	cmd.AddCommand(CmdQueryTotalShares())
 	cmd.AddCommand(CmdQueryListOwnerShares())
 
 	return cmd
@@ -128,12 +129,34 @@ func CmdQueryListVault() *cobra.Command {
 	return cmd
 }
 
+func CmdQueryTotalShares() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "total-shares",
+		Short: "get total shares of megavault",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.MegavaultTotalShares(
+				context.Background(),
+				&types.QueryMegavaultTotalSharesRequest{},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 func CmdQueryListOwnerShares() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-owner-shares [type] [number]",
-		Short: "list owner shares of a vault by its type and number",
-		Long:  "list owner shares of a vault by its type and number. Current support types are: clob.",
-		Args:  cobra.ExactArgs(2),
+		Use:   "list-owner-shares",
+		Short: "list owner shares",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
@@ -144,25 +167,11 @@ func CmdQueryListOwnerShares() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			// Parse vault type.
-			vaultType, err := GetVaultTypeFromString(args[0])
-			if err != nil {
-				return err
-			}
-
-			// Parse vault number.
-			vaultNumber, err := strconv.ParseUint(args[1], 10, 32)
-			if err != nil {
-				return err
-			}
-
-			request := &types.QueryOwnerSharesRequest{
-				Type:       vaultType,
-				Number:     uint32(vaultNumber),
+			request := &types.QueryMegavaultOwnerSharesRequest{
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.OwnerShares(context.Background(), request)
+			res, err := queryClient.MegavaultOwnerShares(context.Background(), request)
 			if err != nil {
 				return err
 			}

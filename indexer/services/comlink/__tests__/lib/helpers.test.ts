@@ -28,6 +28,8 @@ import {
   LiquidityTiersFromDatabase,
   LiquidityTiersTable,
   liquidityTierRefresher,
+  PnlTicksFromDatabase,
+  PnlTicksTable,
 } from '@dydxprotocol-indexer/postgres';
 import {
   adjustUSDCAssetPosition,
@@ -41,6 +43,7 @@ import {
   getPerpetualPositionsWithUpdatedFunding,
   initializePerpetualPositionsWithFunding,
   getChildSubaccountNums,
+  aggregatePnlTicks,
 } from '../../src/lib/helpers';
 import _ from 'lodash';
 import Big from 'big.js';
@@ -719,6 +722,73 @@ describe('helpers', () => {
   describe('getChildSubaccountNums', () => {
     it('Throws an error if the parent subaccount number is greater than or equal to the maximum parent subaccount number', () => {
       expect(() => getChildSubaccountNums(128)).toThrowError('Parent subaccount number must be less than 128');
+    });
+  });
+
+  describe('aggregatePnlTicks', () => {
+    it('aggregates single pnl tick', () => {
+      const pnlTick: PnlTicksFromDatabase = {
+        ...testConstants.defaultPnlTick,
+        id: PnlTicksTable.uuid(
+          testConstants.defaultPnlTick.subaccountId,
+          testConstants.defaultPnlTick.createdAt,
+        ),
+      };
+
+      const aggregatedPnlTicks: Map<number, PnlTicksFromDatabase> = aggregatePnlTicks([pnlTick]);
+      expect(
+        aggregatedPnlTicks.get(parseInt(pnlTick.blockHeight, 10)),
+      ).toEqual(expect.objectContaining({ ...testConstants.defaultPnlTick }));
+    });
+
+    it('aggregates multiple pnl ticks same height', () => {
+      const pnlTick: PnlTicksFromDatabase = {
+        ...testConstants.defaultPnlTick,
+        id: PnlTicksTable.uuid(
+          testConstants.defaultPnlTick.subaccountId,
+          testConstants.defaultPnlTick.createdAt,
+        ),
+      };
+      const pnlTick2: PnlTicksFromDatabase = {
+        ...testConstants.defaultPnlTick,
+        id: PnlTicksTable.uuid(
+          testConstants.defaultSubaccountId2,
+          testConstants.defaultPnlTick.createdAt,
+        ),
+      };
+      const blockHeight2: string = '80';
+      const pnlTick3: PnlTicksFromDatabase = {
+        ...testConstants.defaultPnlTick,
+        id: PnlTicksTable.uuid(
+          testConstants.defaultPnlTick.subaccountId,
+          testConstants.defaultPnlTick.createdAt,
+        ),
+        blockHeight: blockHeight2,
+      };
+
+      const aggregatedPnlTicks: Map<number, PnlTicksFromDatabase> = aggregatePnlTicks(
+        [pnlTick, pnlTick2, pnlTick3],
+      );
+      // Combined pnl tick at initial block height.
+      expect(
+        aggregatedPnlTicks.get(parseInt(pnlTick.blockHeight, 10)),
+      ).toEqual(expect.objectContaining({
+        equity: (parseFloat(testConstants.defaultPnlTick.equity) +
+            parseFloat(pnlTick2.equity)).toString(),
+        totalPnl: (parseFloat(testConstants.defaultPnlTick.totalPnl) +
+            parseFloat(pnlTick2.totalPnl)).toString(),
+        netTransfers: (parseFloat(testConstants.defaultPnlTick.netTransfers) +
+            parseFloat(pnlTick2.netTransfers)).toString(),
+        createdAt: testConstants.defaultPnlTick.createdAt,
+        blockHeight: testConstants.defaultPnlTick.blockHeight,
+        blockTime: testConstants.defaultPnlTick.blockTime,
+      }));
+      // Single pnl tick at second block height.
+      expect(
+        aggregatedPnlTicks.get(parseInt(blockHeight2, 10)),
+      ).toEqual(expect.objectContaining({
+        ...pnlTick3,
+      }));
     });
   });
 });

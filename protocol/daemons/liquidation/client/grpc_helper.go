@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -211,6 +212,7 @@ func (c *Client) SendLiquidatableSubaccountIds(
 	liquidatableSubaccountIds []satypes.SubaccountId,
 	negativeTncSubaccountIds []satypes.SubaccountId,
 	openPositionInfoMap map[uint32]*clobtypes.SubaccountOpenPositionInfo,
+	pageLimit uint64,
 ) error {
 	defer telemetry.ModuleMeasureSince(
 		metrics.LiquidationDaemon,
@@ -241,17 +243,154 @@ func (c *Client) SendLiquidatableSubaccountIds(
 		subaccountOpenPositionInfo = append(subaccountOpenPositionInfo, *openPositionInfoMap[perpetualId])
 	}
 
-	request := &api.LiquidateSubaccountsRequest{
-		BlockHeight:                blockHeight,
-		LiquidatableSubaccountIds:  liquidatableSubaccountIds,
-		NegativeTncSubaccountIds:   negativeTncSubaccountIds,
-		SubaccountOpenPositionInfo: subaccountOpenPositionInfo,
+	// Break this down to multiple requests if the number of subaccounts is too large.
+
+	// Liquidatable subaccount ids.
+	requests := GenerateLiquidateSubaccountsPaginatedRequests(
+		liquidatableSubaccountIds,
+		blockHeight,
+		pageLimit,
+	)
+
+	// Negative TNC subaccount ids.
+	requests = append(
+		requests,
+		GenerateNegativeTNCSubaccountsPaginatedRequests(
+			negativeTncSubaccountIds,
+			blockHeight,
+			pageLimit,
+		)...,
+	)
+
+	// Subaccount open position info.
+	requests = append(
+		requests,
+		GenerateSubaccountOpenPositionPaginatedRequests(
+			subaccountOpenPositionInfo,
+			blockHeight,
+			pageLimit,
+		)...,
+	)
+
+	telemetry.ModuleSetGauge(
+		metrics.LiquidationDaemon,
+		float32(len(requests)),
+		metrics.NumRequests,
+		metrics.Count,
+	)
+
+	for _, req := range requests {
+		if _, err := c.LiquidationServiceClient.LiquidateSubaccounts(ctx, req); err != nil {
+			return errorsmod.Wrapf(
+				err,
+				"failed to send liquidatable subaccount ids to protocol at block height %d",
+				blockHeight,
+			)
+		}
 	}
 
-	if _, err := c.LiquidationServiceClient.LiquidateSubaccounts(ctx, request); err != nil {
-		return err
-	}
 	return nil
+}
+
+func GenerateLiquidateSubaccountsPaginatedRequests(
+	ids []satypes.SubaccountId,
+	blockHeight uint32,
+	pageLimit uint64,
+) []*api.LiquidateSubaccountsRequest {
+	if len(ids) == 0 {
+		return []*api.LiquidateSubaccountsRequest{
+			{
+				BlockHeight:               blockHeight,
+				LiquidatableSubaccountIds: []satypes.SubaccountId{},
+			},
+		}
+	}
+
+	requests := make([]*api.LiquidateSubaccountsRequest, 0)
+	for start := 0; start < len(ids); start += int(pageLimit) {
+		end := lib.Min(start+int(pageLimit), len(ids))
+		request := &api.LiquidateSubaccountsRequest{
+			BlockHeight:               blockHeight,
+			LiquidatableSubaccountIds: ids[start:end],
+		}
+		requests = append(requests, request)
+	}
+	return requests
+}
+
+func GenerateNegativeTNCSubaccountsPaginatedRequests(
+	ids []satypes.SubaccountId,
+	blockHeight uint32,
+	pageLimit uint64,
+) []*api.LiquidateSubaccountsRequest {
+	if len(ids) == 0 {
+		return []*api.LiquidateSubaccountsRequest{
+			{
+				BlockHeight:              blockHeight,
+				NegativeTncSubaccountIds: []satypes.SubaccountId{},
+			},
+		}
+	}
+
+	requests := make([]*api.LiquidateSubaccountsRequest, 0)
+	for start := 0; start < len(ids); start += int(pageLimit) {
+		end := lib.Min(start+int(pageLimit), len(ids))
+		request := &api.LiquidateSubaccountsRequest{
+			BlockHeight:              blockHeight,
+			NegativeTncSubaccountIds: ids[start:end],
+		}
+		requests = append(requests, request)
+	}
+	return requests
+}
+
+func GenerateSubaccountOpenPositionPaginatedRequests(
+	subaccountOpenPositionInfo []clobtypes.SubaccountOpenPositionInfo,
+	blockHeight uint32,
+	pageLimit uint64,
+) []*api.LiquidateSubaccountsRequest {
+	if len(subaccountOpenPositionInfo) == 0 {
+		return []*api.LiquidateSubaccountsRequest{
+			{
+				BlockHeight:                blockHeight,
+				SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
+			},
+		}
+	}
+
+	requests := make([]*api.LiquidateSubaccountsRequest, 0)
+	for _, info := range subaccountOpenPositionInfo {
+		// Long positions.
+		for start := 0; start < len(info.SubaccountsWithLongPosition); start += int(pageLimit) {
+			end := lib.Min(start+int(pageLimit), len(info.SubaccountsWithLongPosition))
+			request := &api.LiquidateSubaccountsRequest{
+				BlockHeight: blockHeight,
+				SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+					{
+						PerpetualId:                 info.PerpetualId,
+						SubaccountsWithLongPosition: info.SubaccountsWithLongPosition[start:end],
+					},
+				},
+			}
+			requests = append(requests, request)
+		}
+
+		// Short positions.
+		for start := 0; start < len(info.SubaccountsWithShortPosition); start += int(pageLimit) {
+			end := lib.Min(start+int(pageLimit), len(info.SubaccountsWithShortPosition))
+			request := &api.LiquidateSubaccountsRequest{
+				BlockHeight: blockHeight,
+				SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+					{
+						PerpetualId:                  info.PerpetualId,
+						SubaccountsWithShortPosition: info.SubaccountsWithShortPosition[start:end],
+					},
+				},
+			}
+			requests = append(requests, request)
+		}
+	}
+	return requests
 }
 
 func newContextWithQueryBlockHeight(

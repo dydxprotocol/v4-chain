@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryParamsRequest, QueryParamsResponse, QueryVaultRequest, QueryVaultResponse, QueryAllVaultsRequest, QueryAllVaultsResponse, QueryOwnerSharesRequest, QueryOwnerSharesResponse } from "./query";
+import { QueryParamsRequest, QueryParamsResponse, QueryVaultRequest, QueryVaultResponse, QueryAllVaultsRequest, QueryAllVaultsResponse, QueryMegavaultTotalSharesRequest, QueryMegavaultTotalSharesResponse, QueryMegavaultOwnerSharesRequest, QueryMegavaultOwnerSharesResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -13,9 +13,12 @@ export interface Query {
   /** Queries all vaults. */
 
   allVaults(request?: QueryAllVaultsRequest): Promise<QueryAllVaultsResponse>;
-  /** Queries owner shares of a vault. */
+  /** Queries total shares of megavault. */
 
-  ownerShares(request: QueryOwnerSharesRequest): Promise<QueryOwnerSharesResponse>;
+  megavaultTotalShares(request?: QueryMegavaultTotalSharesRequest): Promise<QueryMegavaultTotalSharesResponse>;
+  /** Queries owner shares of megavault. */
+
+  megavaultOwnerShares(request?: QueryMegavaultOwnerSharesRequest): Promise<QueryMegavaultOwnerSharesResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -25,7 +28,8 @@ export class QueryClientImpl implements Query {
     this.params = this.params.bind(this);
     this.vault = this.vault.bind(this);
     this.allVaults = this.allVaults.bind(this);
-    this.ownerShares = this.ownerShares.bind(this);
+    this.megavaultTotalShares = this.megavaultTotalShares.bind(this);
+    this.megavaultOwnerShares = this.megavaultOwnerShares.bind(this);
   }
 
   params(request: QueryParamsRequest = {}): Promise<QueryParamsResponse> {
@@ -48,10 +52,18 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QueryAllVaultsResponse.decode(new _m0.Reader(data)));
   }
 
-  ownerShares(request: QueryOwnerSharesRequest): Promise<QueryOwnerSharesResponse> {
-    const data = QueryOwnerSharesRequest.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.vault.Query", "OwnerShares", data);
-    return promise.then(data => QueryOwnerSharesResponse.decode(new _m0.Reader(data)));
+  megavaultTotalShares(request: QueryMegavaultTotalSharesRequest = {}): Promise<QueryMegavaultTotalSharesResponse> {
+    const data = QueryMegavaultTotalSharesRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.vault.Query", "MegavaultTotalShares", data);
+    return promise.then(data => QueryMegavaultTotalSharesResponse.decode(new _m0.Reader(data)));
+  }
+
+  megavaultOwnerShares(request: QueryMegavaultOwnerSharesRequest = {
+    pagination: undefined
+  }): Promise<QueryMegavaultOwnerSharesResponse> {
+    const data = QueryMegavaultOwnerSharesRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.vault.Query", "MegavaultOwnerShares", data);
+    return promise.then(data => QueryMegavaultOwnerSharesResponse.decode(new _m0.Reader(data)));
   }
 
 }
@@ -71,8 +83,12 @@ export const createRpcQueryExtension = (base: QueryClient) => {
       return queryService.allVaults(request);
     },
 
-    ownerShares(request: QueryOwnerSharesRequest): Promise<QueryOwnerSharesResponse> {
-      return queryService.ownerShares(request);
+    megavaultTotalShares(request?: QueryMegavaultTotalSharesRequest): Promise<QueryMegavaultTotalSharesResponse> {
+      return queryService.megavaultTotalShares(request);
+    },
+
+    megavaultOwnerShares(request?: QueryMegavaultOwnerSharesRequest): Promise<QueryMegavaultOwnerSharesResponse> {
+      return queryService.megavaultOwnerShares(request);
     }
 
   };

@@ -11,26 +11,30 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
-func (k Keeper) OwnerShares(
+func (k Keeper) MegavaultTotalShares(
 	c context.Context,
-	req *types.QueryOwnerSharesRequest,
-) (*types.QueryOwnerSharesResponse, error) {
+	_ *types.QueryMegavaultTotalSharesRequest,
+) (*types.QueryMegavaultTotalSharesResponse, error) {
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+
+	totalShares := k.GetTotalShares(ctx)
+
+	return &types.QueryMegavaultTotalSharesResponse{
+		TotalShares: &totalShares,
+	}, nil
+}
+
+func (k Keeper) MegavaultOwnerShares(
+	c context.Context,
+	req *types.QueryMegavaultOwnerSharesRequest,
+) (*types.QueryMegavaultOwnerSharesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
-	vaultId := types.VaultId{
-		Type:   req.Type,
-		Number: req.Number,
-	}
-	_, exists := k.GetTotalShares(ctx, vaultId)
-	if !exists {
-		return nil, status.Error(codes.NotFound, "vault not found")
-	}
-
 	var ownerShares []*types.OwnerShare
-	ownerSharesStore := k.getVaultOwnerSharesStore(ctx, vaultId)
+	ownerSharesStore := k.getOwnerSharesStore(ctx)
 	pageRes, err := query.Paginate(ownerSharesStore, req.Pagination, func(key []byte, value []byte) error {
 		owner := string(key)
 
@@ -39,7 +43,7 @@ func (k Keeper) OwnerShares(
 
 		ownerShares = append(ownerShares, &types.OwnerShare{
 			Owner:  owner,
-			Shares: &shares,
+			Shares: shares,
 		})
 
 		return nil
@@ -49,7 +53,7 @@ func (k Keeper) OwnerShares(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryOwnerSharesResponse{
+	return &types.QueryMegavaultOwnerSharesResponse{
 		OwnerShares: ownerShares,
 		Pagination:  pageRes,
 	}, nil

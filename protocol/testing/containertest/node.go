@@ -9,7 +9,6 @@ import (
 
 	comethttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -121,15 +120,10 @@ func (n *Node) getContextForBroadcastTx(signer string) (*client.Context, *pflag.
 		return nil, nil, err
 	}
 
-	initClientCtx, err := config.ReadFromClientConfig(initClientCtx)
-	if err != nil {
-		return nil, nil, err
-	}
-
 	// NB: In `cmd/dydxprotocol/root.go` this step is done before ReadFromClientConfig, but here we choose to
 	// do it second because ReadPersistentCommandFlags sets the node address we configured in flags.
 	// If we were to do it in reverse, ReadFromClientConfig would overwrite the node address.
-	initClientCtx, err = client.ReadPersistentCommandFlags(initClientCtx, flags)
+	initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, flags)
 	if err != nil {
 		return nil, nil, err
 	}

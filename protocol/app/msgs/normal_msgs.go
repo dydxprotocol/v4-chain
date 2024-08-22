@@ -17,6 +17,7 @@ import (
 	ibcconn "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	ibccore "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	affiliates "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	listing "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
@@ -217,6 +218,9 @@ var (
 
 	// Custom modules
 	NormalMsgsDydxCustom = map[string]sdk.Msg{
+		// affiliates
+		"/dydxprotocol.affiliates.MsgRegisterAffiliate":         &affiliates.MsgRegisterAffiliate{},
+		"/dydxprotocol.affiliates.MsgRegisterAffiliateResponse": nil,
 		// clob
 		"/dydxprotocol.clob.MsgBatchCancel":         &clob.MsgBatchCancel{},
 		"/dydxprotocol.clob.MsgBatchCancelResponse": nil,
@@ -242,8 +246,8 @@ var (
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
 
 		// vault
-		"/dydxprotocol.vault.MsgDepositToVault":         &vault.MsgDepositToVault{},
-		"/dydxprotocol.vault.MsgDepositToVaultResponse": nil,
+		"/dydxprotocol.vault.MsgDepositToMegavault":         &vault.MsgDepositToMegavault{},
+		"/dydxprotocol.vault.MsgDepositToMegavaultResponse": nil,
 	}
 
 	NormalMsgsSlinky = map[string]sdk.Msg{

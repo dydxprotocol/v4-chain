@@ -24,37 +24,25 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdDepositToVault())
+	cmd.AddCommand(CmdDepositToMegavault())
 
 	return cmd
 }
 
-func CmdDepositToVault() *cobra.Command {
+func CmdDepositToMegavault() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "deposit-to-vault [vault_type] [vault_number] [depositor_owner] [depositor_number] [quantums]",
-		Short: "Broadcast message DepositToVault",
-		Args:  cobra.ExactArgs(5),
+		Use:   "deposit-to-megavault [depositor_owner] [depositor_number] [quantums]",
+		Short: "Broadcast message DepositToMegavault",
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			// Parse vault type.
-			vaultType, err := GetVaultTypeFromString(args[0])
-			if err != nil {
-				return err
-			}
-
-			// Parse vault number.
-			vaultNumber, err := cast.ToUint32E(args[1])
-			if err != nil {
-				return err
-			}
-
 			// Parse depositor number.
-			depositorNumber, err := cast.ToUint32E(args[3])
+			depositorNumber, err := cast.ToUint32E(args[1])
 			if err != nil {
 				return err
 			}
 
 			// Parse quantums.
-			quantums, err := cast.ToUint64E(args[4])
+			quantums, err := cast.ToUint64E(args[2])
 			if err != nil {
 				return err
 			}
@@ -64,14 +52,10 @@ func CmdDepositToVault() *cobra.Command {
 				return err
 			}
 
-			// Create MsgDepositToVault.
-			msg := &types.MsgDepositToVault{
-				VaultId: &types.VaultId{
-					Type:   vaultType,
-					Number: vaultNumber,
-				},
+			// Create MsgDepositToMegavault.
+			msg := &types.MsgDepositToMegavault{
 				SubaccountId: &satypes.SubaccountId{
-					Owner:  args[2],
+					Owner:  args[0],
 					Number: depositorNumber,
 				},
 				QuoteQuantums: dtypes.NewIntFromUint64(quantums),

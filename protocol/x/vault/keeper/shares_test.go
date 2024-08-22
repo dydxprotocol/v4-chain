@@ -4,75 +4,83 @@ import (
 	"math/big"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGetSetTotalShares(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder(t).Build()
-	ctx := tApp.InitChain()
-	k := tApp.App.VaultKeeper
+	tests := map[string]struct {
+		// Function to set total shares.
+		setFunc func(k keeper.Keeper, ctx sdk.Context) error
+		// Expected total shares.
+		expectedTotalShares vaulttypes.NumShares
+		// Expected error.
+		expectedErr error
+	}{
+		"Success: default total shares is 0": {
+			expectedTotalShares: vaulttypes.NumShares{
+				NumShares: dtypes.NewInt(0),
+			},
+		},
+		"Success: set total shares to 0": {
+			setFunc: func(k keeper.Keeper, ctx sdk.Context) error {
+				return k.SetTotalShares(ctx, vaulttypes.NumShares{
+					NumShares: dtypes.NewInt(0),
+				})
+			},
+			expectedTotalShares: vaulttypes.NumShares{
+				NumShares: dtypes.NewInt(0),
+			},
+		},
+		"Success: set total shares to 777": {
+			setFunc: func(k keeper.Keeper, ctx sdk.Context) error {
+				return k.SetTotalShares(ctx, vaulttypes.NumShares{
+					NumShares: dtypes.NewInt(777),
+				})
+			},
+			expectedTotalShares: vaulttypes.NumShares{
+				NumShares: dtypes.NewInt(777),
+			},
+		},
+		"Failure: set total shares to -1": {
+			setFunc: func(k keeper.Keeper, ctx sdk.Context) error {
+				return k.SetTotalShares(ctx, vaulttypes.NumShares{
+					NumShares: dtypes.NewInt(-1),
+				})
+			},
+			expectedTotalShares: vaulttypes.NumShares{
+				NumShares: dtypes.NewInt(0),
+			},
+			expectedErr: vaulttypes.ErrNegativeShares,
+		},
+	}
 
-	// Get total shares for a non-existing vault.
-	_, exists := k.GetTotalShares(ctx, constants.Vault_Clob0)
-	require.Equal(t, false, exists)
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.VaultKeeper
 
-	// Set total shares for a vault and then get.
-	numShares := vaulttypes.BigIntToNumShares(
-		big.NewInt(7),
-	)
-	err := k.SetTotalShares(ctx, constants.Vault_Clob0, numShares)
-	require.NoError(t, err)
-	got, exists := k.GetTotalShares(ctx, constants.Vault_Clob0)
-	require.Equal(t, true, exists)
-	require.Equal(t, numShares, got)
+			if tc.setFunc != nil {
+				if tc.expectedErr != nil {
+					require.ErrorIs(t, tc.setFunc(k, ctx), tc.expectedErr)
+				} else {
+					require.NoError(t, tc.setFunc(k, ctx))
+				}
+			}
 
-	// Set total shares for another vault and then get.
-	numShares = vaulttypes.BigIntToNumShares(
-		big.NewInt(456),
-	)
-	err = k.SetTotalShares(ctx, constants.Vault_Clob1, numShares)
-	require.NoError(t, err)
-	got, exists = k.GetTotalShares(ctx, constants.Vault_Clob1)
-	require.Equal(t, true, exists)
-	require.Equal(t, numShares, got)
-
-	// Set total shares for second vault to 0.
-	numShares = vaulttypes.BigIntToNumShares(
-		big.NewInt(0),
-	)
-	err = k.SetTotalShares(ctx, constants.Vault_Clob1, numShares)
-	require.NoError(t, err)
-	got, exists = k.GetTotalShares(ctx, constants.Vault_Clob1)
-	require.Equal(t, true, exists)
-	require.Equal(t, numShares, got)
-
-	// Set total shares for the first vault again and then get.
-	numShares = vaulttypes.BigIntToNumShares(
-		big.NewInt(7283133),
-	)
-	err = k.SetTotalShares(ctx, constants.Vault_Clob0, numShares)
-	require.NoError(t, err)
-	got, exists = k.GetTotalShares(ctx, constants.Vault_Clob0)
-	require.Equal(t, true, exists)
-	require.Equal(t, numShares, got)
-
-	// Set total shares for the first vault to a negative value.
-	// Should get error and total shares should remain unchanged.
-	negativeShares := vaulttypes.BigIntToNumShares(
-		big.NewInt(-1),
-	)
-	err = k.SetTotalShares(ctx, constants.Vault_Clob0, negativeShares)
-	require.Equal(t, vaulttypes.ErrNegativeShares, err)
-	got, exists = k.GetTotalShares(ctx, constants.Vault_Clob0)
-	require.Equal(t, true, exists)
-	require.Equal(
-		t,
-		numShares,
-		got,
-	)
+			require.Equal(
+				t,
+				tc.expectedTotalShares,
+				k.GetTotalShares(ctx),
+			)
+		})
+	}
 }
 
 func TestGetSetOwnerShares(t *testing.T) {
@@ -83,48 +91,48 @@ func TestGetSetOwnerShares(t *testing.T) {
 	alice := constants.AliceAccAddress.String()
 	bob := constants.BobAccAddress.String()
 
-	// Get owners shares for Alice in vault clob 0.
-	_, exists := k.GetOwnerShares(ctx, constants.Vault_Clob0, alice)
+	// Get owners shares for Alice.
+	_, exists := k.GetOwnerShares(ctx, alice)
 	require.Equal(t, false, exists)
 
-	// Set owner shares for Alice in vault clob 0 and get.
+	// Set owner shares for Alice and get.
 	numShares := vaulttypes.BigIntToNumShares(
 		big.NewInt(7),
 	)
-	err := k.SetOwnerShares(ctx, constants.Vault_Clob0, alice, numShares)
+	err := k.SetOwnerShares(ctx, alice, numShares)
 	require.NoError(t, err)
-	got, exists := k.GetOwnerShares(ctx, constants.Vault_Clob0, alice)
+	got, exists := k.GetOwnerShares(ctx, alice)
 	require.Equal(t, true, exists)
 	require.Equal(t, numShares, got)
 
-	// Set owner shares for Alice in vault clob 1 and then get.
+	// Set owner shares for Alice and then get.
 	numShares = vaulttypes.BigIntToNumShares(
 		big.NewInt(456),
 	)
-	err = k.SetOwnerShares(ctx, constants.Vault_Clob1, alice, numShares)
+	err = k.SetOwnerShares(ctx, alice, numShares)
 	require.NoError(t, err)
-	got, exists = k.GetOwnerShares(ctx, constants.Vault_Clob1, alice)
+	got, exists = k.GetOwnerShares(ctx, alice)
 	require.Equal(t, true, exists)
 	require.Equal(t, numShares, got)
 
-	// Set owner shares for Bob in vault clob 1.
+	// Set owner shares for Bob.
 	numShares = vaulttypes.BigIntToNumShares(
 		big.NewInt(0),
 	)
-	err = k.SetOwnerShares(ctx, constants.Vault_Clob1, bob, numShares)
+	err = k.SetOwnerShares(ctx, bob, numShares)
 	require.NoError(t, err)
-	got, exists = k.GetOwnerShares(ctx, constants.Vault_Clob1, bob)
+	got, exists = k.GetOwnerShares(ctx, bob)
 	require.Equal(t, true, exists)
 	require.Equal(t, numShares, got)
 
-	// Set owner shares for Bob in vault clob 1 to a negative value.
-	// Should get error and total shares should remain unchanged.
+	// Set owner shares for Bob to a negative value.
+	// Should get error and owner shares should remain unchanged.
 	numSharesInvalid := vaulttypes.BigIntToNumShares(
 		big.NewInt(-1),
 	)
-	err = k.SetOwnerShares(ctx, constants.Vault_Clob1, bob, numSharesInvalid)
+	err = k.SetOwnerShares(ctx, bob, numSharesInvalid)
 	require.ErrorIs(t, err, vaulttypes.ErrNegativeShares)
-	got, exists = k.GetOwnerShares(ctx, constants.Vault_Clob1, bob)
+	got, exists = k.GetOwnerShares(ctx, bob)
 	require.Equal(t, true, exists)
 	require.Equal(t, numShares, got)
 }
@@ -134,32 +142,32 @@ func TestGetAllOwnerShares(t *testing.T) {
 	ctx := tApp.InitChain()
 	k := tApp.App.VaultKeeper
 
-	// Get all owner shares of a vault that has no owners.
-	allOwnerShares := k.GetAllOwnerShares(ctx, constants.Vault_Clob0)
-	require.Equal(t, []*vaulttypes.OwnerShare{}, allOwnerShares)
+	// Get all owner shares when there's no owner.
+	allOwnerShares := k.GetAllOwnerShares(ctx)
+	require.Equal(t, []vaulttypes.OwnerShare{}, allOwnerShares)
 
-	// Set alice and bob as owners of a vault and get all owner shares.
+	// Set alice and bob as owners and get all owner shares.
 	alice := constants.AliceAccAddress.String()
 	aliceShares := vaulttypes.BigIntToNumShares(big.NewInt(7))
 	bob := constants.BobAccAddress.String()
 	bobShares := vaulttypes.BigIntToNumShares(big.NewInt(123))
 
-	err := k.SetOwnerShares(ctx, constants.Vault_Clob0, alice, aliceShares)
+	err := k.SetOwnerShares(ctx, alice, aliceShares)
 	require.NoError(t, err)
-	err = k.SetOwnerShares(ctx, constants.Vault_Clob0, bob, bobShares)
+	err = k.SetOwnerShares(ctx, bob, bobShares)
 	require.NoError(t, err)
 
-	allOwnerShares = k.GetAllOwnerShares(ctx, constants.Vault_Clob0)
+	allOwnerShares = k.GetAllOwnerShares(ctx)
 	require.ElementsMatch(
 		t,
-		[]*vaulttypes.OwnerShare{
+		[]vaulttypes.OwnerShare{
 			{
 				Owner:  alice,
-				Shares: &aliceShares,
+				Shares: aliceShares,
 			},
 			{
 				Owner:  bob,
-				Shares: &bobShares,
+				Shares: bobShares,
 			},
 		},
 		allOwnerShares,

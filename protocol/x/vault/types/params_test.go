@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
 )
@@ -78,6 +79,49 @@ func TestValidateQuotingParams(t *testing.T) {
 				ActivationThresholdQuoteQuantums: dtypes.NewInt(-1),
 			},
 			expectedErr: types.ErrInvalidActivationThresholdQuoteQuantums,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := tc.params.Validate()
+			require.Equal(t, tc.expectedErr, err)
+		})
+	}
+}
+
+func TestValidateVaultParams(t *testing.T) {
+	tests := map[string]struct {
+		// Params to validate.
+		params types.VaultParams
+		// Expected error
+		expectedErr error
+	}{
+		"Success": {
+			params: types.VaultParams{
+				Status:        types.VaultStatus_VAULT_STATUS_QUOTING,
+				QuotingParams: &constants.QuotingParams,
+			},
+			expectedErr: nil,
+		},
+		"Success - nil quoting params": {
+			params: types.VaultParams{
+				Status: types.VaultStatus_VAULT_STATUS_QUOTING,
+			},
+			expectedErr: nil,
+		},
+		"Failure - unspecified vault status": {
+			params: types.VaultParams{
+				QuotingParams: &constants.QuotingParams,
+			},
+			expectedErr: types.ErrUnspecifiedVaultStatus,
+		},
+		"Failure - invalid quoting params": {
+			params: types.VaultParams{
+				Status:        types.VaultStatus_VAULT_STATUS_QUOTING,
+				QuotingParams: &constants.InvalidQuotingParams,
+			},
+			expectedErr: types.ErrInvalidOrderExpirationSeconds,
 		},
 	}
 

@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgSetMarketsHardCap, MsgSetMarketsHardCapResponse, MsgCreateMarketPermissionless, MsgCreateMarketPermissionlessResponse } from "./tx";
+import { MsgSetMarketsHardCap, MsgSetMarketsHardCapResponse, MsgCreateMarketPermissionless, MsgCreateMarketPermissionlessResponse, MsgSetListingVaultDepositParams, MsgSetListingVaultDepositParamsResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -9,6 +9,9 @@ export interface Msg {
   /** CreateMarketPermissionless creates a new market without going through x/gov */
 
   createMarketPermissionless(request: MsgCreateMarketPermissionless): Promise<MsgCreateMarketPermissionlessResponse>;
+  /** SetListingVaultDepositParams sets PML megavault deposit params */
+
+  setListingVaultDepositParams(request: MsgSetListingVaultDepositParams): Promise<MsgSetListingVaultDepositParamsResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -17,6 +20,7 @@ export class MsgClientImpl implements Msg {
     this.rpc = rpc;
     this.setMarketsHardCap = this.setMarketsHardCap.bind(this);
     this.createMarketPermissionless = this.createMarketPermissionless.bind(this);
+    this.setListingVaultDepositParams = this.setListingVaultDepositParams.bind(this);
   }
 
   setMarketsHardCap(request: MsgSetMarketsHardCap): Promise<MsgSetMarketsHardCapResponse> {
@@ -29,6 +33,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgCreateMarketPermissionless.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.listing.Msg", "CreateMarketPermissionless", data);
     return promise.then(data => MsgCreateMarketPermissionlessResponse.decode(new _m0.Reader(data)));
+  }
+
+  setListingVaultDepositParams(request: MsgSetListingVaultDepositParams): Promise<MsgSetListingVaultDepositParamsResponse> {
+    const data = MsgSetListingVaultDepositParams.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.listing.Msg", "SetListingVaultDepositParams", data);
+    return promise.then(data => MsgSetListingVaultDepositParamsResponse.decode(new _m0.Reader(data)));
   }
 
 }

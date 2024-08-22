@@ -16,6 +16,7 @@ import (
 	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
 	ibcconn "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	affiliates "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -105,6 +106,11 @@ var (
 
 	// Custom modules
 	InternalMsgSamplesDydxCustom = map[string]sdk.Msg{
+
+		// affiliates
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":         &affiliates.MsgUpdateAffiliateTiers{},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse": nil,
+
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         &blocktime.MsgUpdateDowntimeParams{},
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": nil,
@@ -144,8 +150,10 @@ var (
 		"/dydxprotocol.govplus.MsgSlashValidatorResponse": nil,
 
 		// listing
-		"/dydxprotocol.listing.MsgSetMarketsHardCap":         &listing.MsgSetMarketsHardCap{},
-		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse": nil,
+		"/dydxprotocol.listing.MsgSetMarketsHardCap":                    &listing.MsgSetMarketsHardCap{},
+		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse":            nil,
+		"/dydxprotocol.listing.MsgSetListingVaultDepositParams":         &listing.MsgSetListingVaultDepositParams{},
+		"/dydxprotocol.listing.MsgSetListingVaultDepositParamsResponse": nil,
 
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual":               &perpetuals.MsgCreatePerpetual{},
@@ -186,8 +194,8 @@ var (
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": nil,
 
 		// vault
-		"/dydxprotocol.vault.MsgSetVaultQuotingParams":              &vault.MsgSetVaultQuotingParams{},
-		"/dydxprotocol.vault.MsgSetVaultQuotingParamsResponse":      nil,
+		"/dydxprotocol.vault.MsgSetVaultParams":                     &vault.MsgSetVaultParams{},
+		"/dydxprotocol.vault.MsgSetVaultParamsResponse":             nil,
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         &vault.MsgUpdateDefaultQuotingParams{},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": nil,
 

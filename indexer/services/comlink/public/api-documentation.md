@@ -3076,6 +3076,169 @@ fetch(`${baseURL}/transfers/between?sourceAddress=string&sourceSubaccountNumber=
 This operation does not require authentication
 </aside>
 
+## GetMegavaultHistoricalPnl
+
+<a id="opIdGetMegavaultHistoricalPnl"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.get(f'{baseURL}/vault/v1/megavault/historicalPnl', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/vault/v1/megavault/historicalPnl`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /vault/v1/megavault/historicalPnl`
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "megavaultPnl": [
+    {
+      "id": "string",
+      "subaccountId": "string",
+      "equity": "string",
+      "totalPnl": "string",
+      "netTransfers": "string",
+      "createdAt": "string",
+      "blockHeight": "string",
+      "blockTime": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[MegavaultHistoricalPnlResponse](#schemamegavaulthistoricalpnlresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## GetVaultsHistoricalPnl
+
+<a id="opIdGetVaultsHistoricalPnl"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.get(f'{baseURL}/vault/v1/vaults/historicalPnl', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/vault/v1/vaults/historicalPnl`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /vault/v1/vaults/historicalPnl`
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "vaultsPnl": [
+    {
+      "ticker": "string",
+      "historicalPnl": [
+        {
+          "id": "string",
+          "subaccountId": "string",
+          "equity": "string",
+          "totalPnl": "string",
+          "netTransfers": "string",
+          "createdAt": "string",
+          "blockHeight": "string",
+          "blockTime": "string"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[VaultsHistoricalPnlResponse](#schemavaultshistoricalpnlresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 # Schemas
 
 ## PerpetualPositionStatus
@@ -5195,4 +5358,104 @@ or
 |offset|integer(int32)|false|none|none|
 |transfersSubset|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
 |totalNetTransfers|string|true|none|none|
+
+## MegavaultHistoricalPnlResponse
+
+<a id="schemamegavaulthistoricalpnlresponse"></a>
+<a id="schema_MegavaultHistoricalPnlResponse"></a>
+<a id="tocSmegavaulthistoricalpnlresponse"></a>
+<a id="tocsmegavaulthistoricalpnlresponse"></a>
+
+```json
+{
+  "megavaultPnl": [
+    {
+      "id": "string",
+      "subaccountId": "string",
+      "equity": "string",
+      "totalPnl": "string",
+      "netTransfers": "string",
+      "createdAt": "string",
+      "blockHeight": "string",
+      "blockTime": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|megavaultPnl|[[PnlTicksResponseObject](#schemapnlticksresponseobject)]|true|none|none|
+
+## VaultHistoricalPnl
+
+<a id="schemavaulthistoricalpnl"></a>
+<a id="schema_VaultHistoricalPnl"></a>
+<a id="tocSvaulthistoricalpnl"></a>
+<a id="tocsvaulthistoricalpnl"></a>
+
+```json
+{
+  "ticker": "string",
+  "historicalPnl": [
+    {
+      "id": "string",
+      "subaccountId": "string",
+      "equity": "string",
+      "totalPnl": "string",
+      "netTransfers": "string",
+      "createdAt": "string",
+      "blockHeight": "string",
+      "blockTime": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|ticker|string|true|none|none|
+|historicalPnl|[[PnlTicksResponseObject](#schemapnlticksresponseobject)]|true|none|none|
+
+## VaultsHistoricalPnlResponse
+
+<a id="schemavaultshistoricalpnlresponse"></a>
+<a id="schema_VaultsHistoricalPnlResponse"></a>
+<a id="tocSvaultshistoricalpnlresponse"></a>
+<a id="tocsvaultshistoricalpnlresponse"></a>
+
+```json
+{
+  "vaultsPnl": [
+    {
+      "ticker": "string",
+      "historicalPnl": [
+        {
+          "id": "string",
+          "subaccountId": "string",
+          "equity": "string",
+          "totalPnl": "string",
+          "netTransfers": "string",
+          "createdAt": "string",
+          "blockHeight": "string",
+          "blockTime": "string"
+        }
+      ]
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|vaultsPnl|[[VaultHistoricalPnl](#schemavaulthistoricalpnl)]|true|none|none|
 

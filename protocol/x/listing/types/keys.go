@@ -13,4 +13,7 @@ const (
 const (
 	// HardCapForMarketsKey is the key to retrieve the hard cap for listed markets.
 	HardCapForMarketsKey = "HardCapForMarkets"
+
+	// ListingVaultDepositParamsKey is the key to retrieve the listing vault deposit params.
+	ListingVaultDepositParamsKey = "ListingVaultDepositParams"
 )

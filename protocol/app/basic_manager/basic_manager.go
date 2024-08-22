@@ -24,6 +24,7 @@ import (
 
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
+	affiliatesmodule "github.com/dydxprotocol/v4-chain/protocol/x/affiliates"
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
 	blocktimemodule "github.com/dydxprotocol/v4-chain/protocol/x/blocktime"
 	bridgemodule "github.com/dydxprotocol/v4-chain/protocol/x/bridge"
@@ -101,5 +102,6 @@ var (
 		listingmodule.AppModuleBasic{},
 		marketmapmodule.AppModuleBasic{},
 		accountplusmodule.AppModuleBasic{},
+		affiliatesmodule.AppModuleBasic{},
 	)
 )

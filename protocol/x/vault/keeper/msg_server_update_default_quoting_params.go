@@ -24,7 +24,7 @@ func (k msgServer) UpdateDefaultQuotingParams(
 	}
 
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
-	if err := k.SetDefaultQuotingParams(ctx, &msg.DefaultQuotingParams); err != nil {
+	if err := k.SetDefaultQuotingParams(ctx, msg.DefaultQuotingParams); err != nil {
 		return nil, err
 	}
 
