@@ -7,6 +7,24 @@ import {
   QueryableField,
   perpetualMarketRefresher,
   PerpetualMarketFromDatabase,
+  USDC_ASSET_ID,
+  FundingIndexMap,
+  AssetPositionFromDatabase,
+  PerpetualPositionFromDatabase,
+  SubaccountFromDatabase,
+  AssetColumns,
+  MarketColumns,
+  MarketsMap,
+  BlockTable,
+  MarketTable,
+  AssetPositionTable,
+  PerpetualPositionStatus,
+  PerpetualPositionTable,
+  AssetTable,
+  SubaccountTable,
+  AssetFromDatabase,
+  MarketFromDatabase,
+  BlockFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import _ from 'lodash';
@@ -16,11 +34,12 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { aggregatePnlTicks, handleControllerError } from '../../../lib/helpers';
+import { adjustUSDCAssetPosition, aggregatePnlTicks, calculateEquityAndFreeCollateral, getFundingIndexMaps, getPerpetualPositionsWithUpdatedFunding, getTotalUnsettledFunding, handleControllerError, initializePerpetualPositionsWithFunding } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
-import { pnlTicksToResponseObject } from '../../../request-helpers/request-transformer';
-import { MegavaultHistoricalPnlResponse, VaultsHistoricalPnlResponse, VaultHistoricalPnl } from '../../../types';
+import { assetPositionToResponseObject, perpetualPositionToResponseObject, pnlTicksToResponseObject } from '../../../request-helpers/request-transformer';
+import { AssetPositionsMap, MegavaultHistoricalPnlResponse, VaultsHistoricalPnlResponse, VaultHistoricalPnl, PerpetualPositionResponseObject, PerpetualPositionWithFunding, AssetPositionResponseObject, VaultPosition, AssetById, MegavaultPositionResponse } from '../../../types';
+import Big from 'big.js';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'vault-controller';
@@ -76,6 +95,180 @@ class VaultController extends Controller {
     return {
       vaultsPnl: groupedVaultPnlTicks,
     };
+  }
+
+  @Get('/v1/megavault/positions')
+  async getMegavaultPositions(): Promise<MegavaultPositionResponse> {
+    const vaultSubaccounts: VaultMapping = getVaultSubaccountsFromConfig();
+    const vaultSubaccountIds: string[] = _.keys(vaultSubaccounts);
+
+    const [
+      subaccounts,
+      assets,
+      perpetualPositions,
+      assetPositions,
+      markets,
+      latestBlock,
+    ]: [
+      SubaccountFromDatabase[],
+      AssetFromDatabase[],
+      PerpetualPositionFromDatabase[],
+      AssetPositionFromDatabase[],
+      MarketFromDatabase[],
+      BlockFromDatabase | undefined,
+    ] = await Promise.all([
+      SubaccountTable.findAll(
+        {
+          id: vaultSubaccountIds,
+        },
+        [],
+      ),
+      AssetTable.findAll(
+        {},
+        [],
+      ),
+      PerpetualPositionTable.findAll(
+        {
+          subaccountId: vaultSubaccountIds,
+          status: [PerpetualPositionStatus.OPEN],
+        },
+        [],
+      ),
+      AssetPositionTable.findAll(
+        {
+          subaccountId: vaultSubaccountIds,
+          assetId: [USDC_ASSET_ID],
+        },
+        [],
+      ),
+      MarketTable.findAll(
+        {},
+        [],
+      ),
+      BlockTable.getLatest(),
+    ]);
+
+    const assetPositionsBySubaccount:
+    { [subaccountId: string]: AssetPositionFromDatabase[] } = _.groupBy(
+      assetPositions,
+      'subaccountId',
+    );
+    const perpetualPositionsBySubaccount:
+    { [subaccountId: string]: PerpetualPositionFromDatabase[] } = _.groupBy(
+      perpetualPositions,
+      'subaccountId',
+    );
+    const marketIdToMarket: MarketsMap = _.keyBy(
+      markets,
+      MarketColumns.id,
+    );
+    const assetIdToAsset: AssetById = _.keyBy(
+      assets,
+      AssetColumns.id,
+    );
+
+    const vaultPositions: VaultPosition[] = await Promise.all(
+      subaccounts.map(async (subaccount: SubaccountFromDatabase) => {
+        const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
+          .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id]);
+        if (perpetualMarket === undefined) {
+          throw new Error(`Vault clob pair id ${vaultSubaccounts[subaccount.id]} does not correspond to a perpetual market.`)
+        }
+
+        const assetPositions: AssetPositionFromDatabase[] = assetPositionsBySubaccount[subaccount.id];
+        const perpetualPositions: PerpetualPositionFromDatabase[] = perpetualPositionsBySubaccount[subaccount.id];
+
+        if (assetPositions.length == 0) {
+          throw new Error(`Vault for ticker ${perpetualMarket.ticker} has no USDC asset positions`);
+        }
+        if (assetPositions.length > 1) {
+          throw new Error(`Vault for ticker ${perpetualMarket.ticker} has more than 1 USDC asset position`);
+        }
+        if (perpetualPositions !== undefined && perpetualPositions.length > 1) {
+          throw new Error(`Vault for ticker ${perpetualMarket.ticker} has more than 1 perpetual position`);
+        }
+
+        const usdcAssetPosition: AssetPositionFromDatabase = assetPositions[0];
+        const usdcAssetPositionResponse: AssetPositionResponseObject = assetPositionToResponseObject(
+          usdcAssetPosition,
+          assetIdToAsset,
+          subaccount.subaccountNumber,
+        );
+        const usdcAssetPositionSize: Big = Big(usdcAssetPosition.isLong ? usdcAssetPosition.size : -usdcAssetPosition.size);
+        const perpetualPositionsWithFunding: PerpetualPositionWithFunding[] = initializePerpetualPositionsWithFunding(
+          perpetualPositions
+        );
+
+        // If there are no perpetual positions for the vault subaccount, equity = USDC asset position size
+        if (perpetualPositions === undefined || perpetualPositions.length === 0) {
+          return {
+            ticker: perpetualMarket.ticker,
+            assetPosition: usdcAssetPositionResponse,
+            perpetualPosition: undefined,
+            equity: usdcAssetPositionSize.toString(),
+          }
+        }
+
+        const {
+          lastUpdatedFundingIndexMap,
+          latestFundingIndexMap,
+        }: {
+          lastUpdatedFundingIndexMap: FundingIndexMap,
+          latestFundingIndexMap: FundingIndexMap,
+        } = await getFundingIndexMaps(subaccount, latestBlock);
+
+        const unsettledFunding: Big = getTotalUnsettledFunding(
+          perpetualPositions,
+          latestFundingIndexMap,
+          lastUpdatedFundingIndexMap,
+        );
+
+        const adjustedPerpetualPositions: PerpetualPositionWithFunding[] = getPerpetualPositionsWithUpdatedFunding(
+          perpetualPositionsWithFunding,
+          latestFundingIndexMap,
+          lastUpdatedFundingIndexMap,
+        );
+        const perpetutalPositionResponse: PerpetualPositionResponseObject = perpetualPositionToResponseObject(
+          adjustedPerpetualPositions[0],
+          perpetualMarketRefresher.getPerpetualMarketsMap(),
+          marketIdToMarket,
+          subaccount.subaccountNumber,
+        );
+
+        const {
+          assetPositionsMap: adjustedAssetPositionsMap,
+          adjustedUSDCAssetPositionSize,
+        }: {
+          assetPositionsMap: AssetPositionsMap,
+          adjustedUSDCAssetPositionSize: string,
+        } = adjustUSDCAssetPosition({
+          [assetIdToAsset[USDC_ASSET_ID].symbol]: usdcAssetPositionResponse,
+        }, unsettledFunding);
+
+        const {
+          equity,
+        }: {
+          equity: string,
+          freeCollateral: string,
+        } = calculateEquityAndFreeCollateral(
+          adjustedPerpetualPositions,
+          perpetualMarketRefresher.getPerpetualMarketsMap(),
+          marketIdToMarket,
+          adjustedUSDCAssetPositionSize,
+        );
+
+        return {
+          ticker: perpetualMarket.ticker,
+          assetPosition: adjustedAssetPositionsMap[assetIdToAsset[USDC_ASSET_ID].symbol],
+          perpetualPosition: perpetutalPositionResponse,
+          equity: equity,
+        };
+      })
+    );
+
+    return {
+      positions: vaultPositions,
+    }
   }
 }
 
