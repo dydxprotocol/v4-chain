@@ -50,10 +50,7 @@ func (k Keeper) ModifyMarketParam(
 		}
 	}
 	if _, err := k.MarketMapKeeper.GetMarket(ctx, updatedMarketParam.Pair); err != nil {
-		return types.MarketParam{}, errorsmod.Wrapf(
-			types.ErrTickerNotFoundInMarketMap,
-			updatedMarketParam.Pair,
-		)
+		return types.MarketParam{}, errorsmod.Wrapf(types.ErrTickerNotFoundInMarketMap, updatedMarketParam.Pair)
 	}
 
 	// Store the modified market param.
