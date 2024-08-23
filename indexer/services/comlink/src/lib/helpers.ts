@@ -20,8 +20,6 @@ import {
   PositionSide,
   SubaccountFromDatabase,
   SubaccountTable,
-  TendermintEventFromDatabase,
-  TendermintEventTable,
   USDC_SYMBOL,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
@@ -30,14 +28,27 @@ import _ from 'lodash';
 
 import config from '../config';
 import {
+  AssetById,
   AssetPositionResponseObject,
   AssetPositionsMap,
   MarketType,
+  PerpetualPositionResponseObject,
+  PerpetualPositionsMap,
   PerpetualPositionWithFunding,
   Risk,
+  SubaccountResponseObject,
 } from '../types';
 import { ZERO, ZERO_USDC_POSITION } from './constants';
 import { NotFoundError } from './errors';
+import { AssetFromDatabase } from '@dydxprotocol-indexer/postgres';
+import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+import { MarketColumns } from '@dydxprotocol-indexer/postgres';
+import { 
+  assetPositionToResponseObject,
+  perpetualPositionToResponseObject,
+  subaccountToResponseObject,
+} from '../request-helpers/request-transformer';
+import { AssetColumns } from '@dydxprotocol-indexer/postgres';
 
 /* ------- GENERIC HELPERS ------- */
 
@@ -323,24 +334,15 @@ export function filterAssetPositions(assetPositions: AssetPositionFromDatabase[]
  * @returns De-duplicated list of perpetual positions. Positions will be ordered in descending
  * chronological order by the last event id of the position.
  */
-export async function filterPositionsByLatestEventIdPerPerpetual(
+export function filterPositionsByLatestEventIdPerPerpetual(
   positions: PerpetualPositionWithFunding[],
-): Promise<PerpetualPositionWithFunding[]> {
-  const events: TendermintEventFromDatabase[] = await TendermintEventTable.findAll(
-    {
-      id: positions.map((position: PerpetualPositionWithFunding) => position.lastEventId),
-    },
-    [],
-  );
-  const eventByIdHex: { [eventId: string]: TendermintEventFromDatabase } = _.keyBy(
-    events,
-    (event) => event.id.toString('hex'),
-  );
+): PerpetualPositionWithFunding[] {
   const sortedPositionsArray: PerpetualPositionWithFunding[] = positions.sort(
     (a: PerpetualPositionWithFunding, b: PerpetualPositionWithFunding): number => {
-      const eventA: TendermintEventFromDatabase = eventByIdHex[a.lastEventId.toString('hex')];
-      const eventB: TendermintEventFromDatabase = eventByIdHex[b.lastEventId.toString('hex')];
-      return -1 * TendermintEventTable.compare(eventA, eventB);
+      // eventId is a 96 bit value, pad both hex-strings to (96/4) = 24 hex chars
+      const eventAHex: string = a.lastEventId.toString('hex').padStart(24, '0');
+      const eventBHex: string = b.lastEventId.toString('hex').padStart(24, '0');
+      return eventBHex.localeCompare(eventAHex);
     },
   );
 
@@ -533,6 +535,123 @@ export function getChildSubaccountIds(address: string, parentSubaccountNum: numb
 export function checkIfValidDydxAddress(address: string): boolean {
   const pattern: RegExp = /^dydx[0-9a-z]{39}$/;
   return pattern.test(address);
+}
+
+/**
+ * Gets subaccount response objects given the subaccount, perpetual positions and perpetual markets
+ * @param subaccount Subaccount to get response for, from the database
+ * @param positions List of perpetual positions held by the subaccount, from the database
+ * @param markets List of perpetual markets, from the database
+ * @param assetPositions List of asset positions held by the subaccount, from the database
+ * @param assets List of assets from the database
+ * @param perpetualMarketsMap Mapping of perpetual markets to clob pairs, perpetual ids, tickers from the database.
+ * @param latestBlockHeight Latest block height from the database
+ * @param latestFundingIndexMap Latest funding indices per perpetual from the database.
+ * @param lastUpdatedFundingIndexMap Funding indices per perpetual for the last updated block of the subaccount.
+ * 
+ * @returns Response object for the subaccount
+ */
+export function getSubaccountResponse(
+  subaccount: SubaccountFromDatabase,
+  perpetualPositions: PerpetualPositionFromDatabase[],
+  assetPositions: AssetPositionFromDatabase[],
+  assets: AssetFromDatabase[],
+  markets: MarketFromDatabase[],
+  perpetualMarketsMap: PerpetualMarketsMap,
+  latestBlockHeight: string,
+  latestFundingIndexMap: FundingIndexMap,
+  lastUpdatedFundingIndexMap: FundingIndexMap,
+): SubaccountResponseObject {
+  const marketIdToMarket: MarketsMap = _.keyBy(
+    markets,
+    MarketColumns.id,
+  );
+
+  const unsettledFunding: Big = getTotalUnsettledFunding(
+    perpetualPositions,
+    latestFundingIndexMap,
+    lastUpdatedFundingIndexMap,
+  );
+
+  const updatedPerpetualPositions:
+  PerpetualPositionWithFunding[] = getPerpetualPositionsWithUpdatedFunding(
+    initializePerpetualPositionsWithFunding(perpetualPositions),
+    latestFundingIndexMap,
+    lastUpdatedFundingIndexMap,
+  );
+
+  const filteredPerpetualPositions: PerpetualPositionWithFunding[
+  ] = filterPositionsByLatestEventIdPerPerpetual(updatedPerpetualPositions);
+
+  const perpetualPositionResponses:
+  PerpetualPositionResponseObject[] = filteredPerpetualPositions.map(
+    (perpetualPosition: PerpetualPositionWithFunding): PerpetualPositionResponseObject => {
+      return perpetualPositionToResponseObject(
+        perpetualPosition,
+        perpetualMarketsMap,
+        marketIdToMarket,
+        subaccount.subaccountNumber,
+      );
+    },
+  );
+
+  const perpetualPositionsMap: PerpetualPositionsMap = _.keyBy(
+    perpetualPositionResponses,
+    'market',
+  );
+
+  const assetIdToAsset: AssetById = _.keyBy(
+    assets,
+    AssetColumns.id,
+  );
+
+  const sortedAssetPositions:
+  AssetPositionFromDatabase[] = filterAssetPositions(assetPositions);
+
+  const assetPositionResponses: AssetPositionResponseObject[] = sortedAssetPositions.map(
+    (assetPosition: AssetPositionFromDatabase): AssetPositionResponseObject => {
+      return assetPositionToResponseObject(
+        assetPosition,
+        assetIdToAsset,
+        subaccount.subaccountNumber,
+      );
+    },
+  );
+
+  const assetPositionsMap: AssetPositionsMap = _.keyBy(
+    assetPositionResponses,
+    'symbol',
+  );
+
+  const {
+    assetPositionsMap: adjustedAssetPositionsMap,
+    adjustedUSDCAssetPositionSize,
+  }: {
+    assetPositionsMap: AssetPositionsMap,
+    adjustedUSDCAssetPositionSize: string,
+  } = adjustUSDCAssetPosition(assetPositionsMap, unsettledFunding);
+
+  const {
+    equity,
+    freeCollateral,
+  }: {
+    equity: string,
+    freeCollateral: string,
+  } = calculateEquityAndFreeCollateral(
+    filteredPerpetualPositions,
+    perpetualMarketsMap,
+    marketIdToMarket,
+    adjustedUSDCAssetPositionSize,
+  );
+
+  return subaccountToResponseObject({
+    subaccount,
+    equity,
+    freeCollateral,
+    latestBlockHeight,
+    openPerpetualPositions: perpetualPositionsMap,
+    assetPositions: adjustedAssetPositionsMap,
+  });
 }
 
 /* ------- PNL HELPERS ------- */
