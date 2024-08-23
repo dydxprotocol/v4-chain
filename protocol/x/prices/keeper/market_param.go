@@ -49,6 +49,9 @@ func (k Keeper) ModifyMarketParam(
 			return types.MarketParam{}, errorsmod.Wrapf(types.ErrMarketParamPairAlreadyExists, updatedMarketParam.Pair)
 		}
 	}
+	if _, err := k.GetMarketPrice(ctx, updatedMarketParam.Id); err != nil {
+		return types.MarketParam{}, errorsmod.Wrapf(types.ErrMarketPriceDoesNotExist, updatedMarketParam.Pair)
+	}
 
 	// Store the modified market param.
 	marketParamStore := k.getMarketParamStore(ctx)
