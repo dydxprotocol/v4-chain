@@ -34,6 +34,7 @@ import {
 import {
   OffChainUpdateV1,
   IndexerOrder,
+  IndexerSubaccountId,
   OrderRemoveV1,
   OrderRemovalReason,
   OrderRemoveV1_OrderRemovalStatus,
@@ -220,6 +221,9 @@ export class OrderRemoveHandler extends Handler {
     }
 
     const subaccountMessage: Message = {
+      key: Buffer.from(Uint8Array.from(
+        IndexerSubaccountId.encode(orderRemove.removedOrderId!.subaccountId!).finish(),
+      )),
       value: this.createSubaccountWebsocketMessageFromPostgresOrder(
         order,
         orderRemove,
@@ -282,6 +286,9 @@ export class OrderRemoveHandler extends Handler {
           this.generateTimingStatsOptions('find_order'),
         );
         const subaccountMessage: Message = {
+          key: Buffer.from(Uint8Array.from(
+            IndexerSubaccountId.encode(orderRemove.removedOrderId!.subaccountId!).finish(),
+          )),
           value: this.createSubaccountWebsocketMessageFromOrderRemoveMessage(
             canceledOrder,
             orderRemove,
@@ -321,6 +328,9 @@ export class OrderRemoveHandler extends Handler {
     }
 
     const subaccountMessage: Message = {
+      key: Buffer.from(Uint8Array.from(
+        IndexerSubaccountId.encode(orderRemove.removedOrderId!.subaccountId!).finish(),
+      )),
       value: this.createSubaccountWebsocketMessageFromRemoveOrderResult(
         removeOrderResult,
         canceledOrder,
