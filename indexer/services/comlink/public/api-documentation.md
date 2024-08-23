@@ -431,6 +431,82 @@ fetch(`${baseURL}/addresses/{address}/parentSubaccountNumber/{parentSubaccountNu
 This operation does not require authentication
 </aside>
 
+## GetReferralCode
+
+<a id="opIdGetReferralCode"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.get(f'{baseURL}/affiliates/referral_code', params={
+  'address': 'string'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/affiliates/referral_code?address=string`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /affiliates/referral_code`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "referralCode": "string"
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateReferralCodeResponse](#schemaaffiliatereferralcoderesponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetAssetPositions
 
 <a id="opIdGetAssetPositions"></a>
@@ -3741,6 +3817,26 @@ This operation does not require authentication
 |equity|string|true|none|none|
 |freeCollateral|string|true|none|none|
 |childSubaccounts|[[SubaccountResponseObject](#schemasubaccountresponseobject)]|true|none|none|
+
+## AffiliateReferralCodeResponse
+
+<a id="schemaaffiliatereferralcoderesponse"></a>
+<a id="schema_AffiliateReferralCodeResponse"></a>
+<a id="tocSaffiliatereferralcoderesponse"></a>
+<a id="tocsaffiliatereferralcoderesponse"></a>
+
+```json
+{
+  "referralCode": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|referralCode|string¦null|true|none|none|
 
 ## AssetPositionResponse
 
