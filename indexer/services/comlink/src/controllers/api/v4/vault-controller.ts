@@ -329,6 +329,32 @@ router.get(
   },
 );
 
+router.get(
+  '/v1/megavault/positions',
+  rateLimiterMiddleware(getReqRateLimiter),
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+    try {
+      const controllers: VaultController = new VaultController();
+      const response: MegavaultPositionResponse = await controllers.getMegavaultPositions();
+       return res.send(response);
+    } catch (error) {
+      return handleControllerError(
+        'VaultController GET /megavault/positions',
+        'Megavault Positions error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_megavault_positions.timing`,
+        Date.now() - start,
+      );
+    }
+});
+
 async function getVaultSubaccountPnlTicks(): Promise<PnlTicksFromDatabase[]> {
   const subVaultSubaccountIds: string[] = _.keys(getVaultSubaccountsFromConfig());
   const {
