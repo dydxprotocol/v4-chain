@@ -266,14 +266,6 @@ class AddressesController extends Controller {
           ),
         ]);
 
-        console.log(`Perpetual Positions: ${JSON.stringify(perpetualPositions)}`);
-        console.log(`Asset Positions: ${JSON.stringify(assetPositions)}`);
-        console.log(`Last Updated Funding index map: ${JSON.stringify(lastUpdatedFundingIndexMap)}`);
-        console.log(`Latest Funding Index Map: ${JSON.stringify(latestFundingIndexMap)}`);
-        console.log(`Assets: ${JSON.stringify(assets)}`);
-        console.log(`Markets: ${JSON.stringify(markets)}`);
-        console.log(`Subaccount: ${JSON.stringify(subaccount)}`);
-
         return getSubaccountResponse(
           subaccount,
           perpetualPositions,

@@ -25,6 +25,7 @@ import {
   AssetFromDatabase,
   MarketFromDatabase,
   BlockFromDatabase,
+  FundingIndexUpdatesTable,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import _ from 'lodash';
@@ -34,11 +35,11 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { adjustUSDCAssetPosition, aggregatePnlTicks, calculateEquityAndFreeCollateral, getFundingIndexMaps, getPerpetualPositionsWithUpdatedFunding, getTotalUnsettledFunding, handleControllerError, initializePerpetualPositionsWithFunding } from '../../../lib/helpers';
+import { adjustUSDCAssetPosition, aggregatePnlTicks, calculateEquityAndFreeCollateral, getFundingIndexMaps, getPerpetualPositionsWithUpdatedFunding, getSubaccountResponse, getTotalUnsettledFunding, handleControllerError, initializePerpetualPositionsWithFunding } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { assetPositionToResponseObject, perpetualPositionToResponseObject, pnlTicksToResponseObject } from '../../../request-helpers/request-transformer';
-import { AssetPositionsMap, MegavaultHistoricalPnlResponse, VaultsHistoricalPnlResponse, VaultHistoricalPnl, PerpetualPositionResponseObject, PerpetualPositionWithFunding, AssetPositionResponseObject, VaultPosition, AssetById, MegavaultPositionResponse } from '../../../types';
+import { AssetPositionsMap, MegavaultHistoricalPnlResponse, VaultsHistoricalPnlResponse, VaultHistoricalPnl, PerpetualPositionResponseObject, PerpetualPositionWithFunding, AssetPositionResponseObject, VaultPosition, AssetById, MegavaultPositionResponse, SubaccountResponseObject } from '../../../types';
 import Big from 'big.js';
 
 const router: express.Router = express.Router();
@@ -105,7 +106,7 @@ class VaultController extends Controller {
     const [
       subaccounts,
       assets,
-      perpetualPositions,
+      openPerpetualPositions,
       assetPositions,
       markets,
       latestBlock,
@@ -148,19 +149,19 @@ class VaultController extends Controller {
       BlockTable.getLatest(),
     ]);
 
+    const latestFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable
+      .findFundingIndexMap(
+        latestBlock.blockHeight,
+      );
     const assetPositionsBySubaccount:
     { [subaccountId: string]: AssetPositionFromDatabase[] } = _.groupBy(
       assetPositions,
       'subaccountId',
     );
-    const perpetualPositionsBySubaccount:
+    const openPerpetualPositionsBySubaccount:
     { [subaccountId: string]: PerpetualPositionFromDatabase[] } = _.groupBy(
-      perpetualPositions,
+      openPerpetualPositions,
       'subaccountId',
-    );
-    const marketIdToMarket: MarketsMap = _.keyBy(
-      markets,
-      MarketColumns.id,
     );
     const assetIdToAsset: AssetById = _.keyBy(
       assets,
@@ -174,94 +175,31 @@ class VaultController extends Controller {
         if (perpetualMarket === undefined) {
           throw new Error(`Vault clob pair id ${vaultSubaccounts[subaccount.id]} does not correspond to a perpetual market.`)
         }
-
-        const assetPositions: AssetPositionFromDatabase[] = assetPositionsBySubaccount[subaccount.id];
-        const perpetualPositions: PerpetualPositionFromDatabase[] = perpetualPositionsBySubaccount[subaccount.id];
-
-        if (assetPositions.length == 0) {
-          throw new Error(`Vault for ticker ${perpetualMarket.ticker} has no USDC asset positions`);
-        }
-        if (assetPositions.length > 1) {
-          throw new Error(`Vault for ticker ${perpetualMarket.ticker} has more than 1 USDC asset position`);
-        }
-        if (perpetualPositions !== undefined && perpetualPositions.length > 1) {
-          throw new Error(`Vault for ticker ${perpetualMarket.ticker} has more than 1 perpetual position`);
-        }
-
-        const usdcAssetPosition: AssetPositionFromDatabase = assetPositions[0];
-        const usdcAssetPositionResponse: AssetPositionResponseObject = assetPositionToResponseObject(
-          usdcAssetPosition,
-          assetIdToAsset,
-          subaccount.subaccountNumber,
-        );
-        const usdcAssetPositionSize: Big = Big(usdcAssetPosition.isLong ? usdcAssetPosition.size : -usdcAssetPosition.size);
-        const perpetualPositionsWithFunding: PerpetualPositionWithFunding[] = initializePerpetualPositionsWithFunding(
-          perpetualPositions
+        const lastUpdatedFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable.findFundingIndexMap(
+          subaccount.updatedAtHeight,
         );
 
-        // If there are no perpetual positions for the vault subaccount, equity = USDC asset position size
-        if (perpetualPositions === undefined || perpetualPositions.length === 0) {
-          return {
-            ticker: perpetualMarket.ticker,
-            assetPosition: usdcAssetPositionResponse,
-            perpetualPosition: undefined,
-            equity: usdcAssetPositionSize.toString(),
-          }
-        }
-
-        const {
-          lastUpdatedFundingIndexMap,
-          latestFundingIndexMap,
-        }: {
-          lastUpdatedFundingIndexMap: FundingIndexMap,
-          latestFundingIndexMap: FundingIndexMap,
-        } = await getFundingIndexMaps(subaccount, latestBlock);
-
-        const unsettledFunding: Big = getTotalUnsettledFunding(
-          perpetualPositions,
-          latestFundingIndexMap,
-          lastUpdatedFundingIndexMap,
-        );
-
-        const adjustedPerpetualPositions: PerpetualPositionWithFunding[] = getPerpetualPositionsWithUpdatedFunding(
-          perpetualPositionsWithFunding,
-          latestFundingIndexMap,
-          lastUpdatedFundingIndexMap,
-        );
-        const perpetutalPositionResponse: PerpetualPositionResponseObject = perpetualPositionToResponseObject(
-          adjustedPerpetualPositions[0],
+        const subaccountResponse: SubaccountResponseObject = getSubaccountResponse(
+          subaccount,
+          openPerpetualPositionsBySubaccount[subaccount.id],
+          assetPositionsBySubaccount[subaccount.id],
+          assets,
+          markets,
           perpetualMarketRefresher.getPerpetualMarketsMap(),
-          marketIdToMarket,
-          subaccount.subaccountNumber,
-        );
-
-        const {
-          assetPositionsMap: adjustedAssetPositionsMap,
-          adjustedUSDCAssetPositionSize,
-        }: {
-          assetPositionsMap: AssetPositionsMap,
-          adjustedUSDCAssetPositionSize: string,
-        } = adjustUSDCAssetPosition({
-          [assetIdToAsset[USDC_ASSET_ID].symbol]: usdcAssetPositionResponse,
-        }, unsettledFunding);
-
-        const {
-          equity,
-        }: {
-          equity: string,
-          freeCollateral: string,
-        } = calculateEquityAndFreeCollateral(
-          adjustedPerpetualPositions,
-          perpetualMarketRefresher.getPerpetualMarketsMap(),
-          marketIdToMarket,
-          adjustedUSDCAssetPositionSize,
+          latestBlock.blockHeight,
+          latestFundingIndexMap,
+          lastUpdatedFundingIndexMap,
         );
 
         return {
           ticker: perpetualMarket.ticker,
-          assetPosition: adjustedAssetPositionsMap[assetIdToAsset[USDC_ASSET_ID].symbol],
-          perpetualPosition: perpetutalPositionResponse,
-          equity: equity,
+          assetPosition: subaccountResponse.assetPositions[
+            assetIdToAsset[USDC_ASSET_ID].symbol
+          ],
+          perpetualPosition: subaccountResponse.openPerpetualPositions[
+            perpetualMarket.ticker
+          ] || undefined,
+          equity: subaccountResponse.equity,
         };
       })
     );
