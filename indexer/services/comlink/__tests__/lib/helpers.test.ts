@@ -30,6 +30,7 @@ import {
   liquidityTierRefresher,
   PnlTicksFromDatabase,
   PnlTicksTable,
+  AssetFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import {
   adjustUSDCAssetPosition,
@@ -44,6 +45,7 @@ import {
   initializePerpetualPositionsWithFunding,
   getChildSubaccountNums,
   aggregatePnlTicks,
+  getSubaccountResponse,
 } from '../../src/lib/helpers';
 import _ from 'lodash';
 import Big from 'big.js';
@@ -56,7 +58,7 @@ import {
   defaultTendermintEventId2,
   defaultTendermintEventId3,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
-import { AssetPositionsMap, PerpetualPositionWithFunding } from '../../src/types';
+import { AssetPositionsMap, PerpetualPositionWithFunding, SubaccountResponseObject } from '../../src/types';
 import { ZERO, ZERO_USDC_POSITION } from '../../src/lib/constants';
 
 describe('helpers', () => {
@@ -207,7 +209,7 @@ describe('helpers', () => {
     });
 
     const filteredPerpetualPositions: PerpetualPositionFromDatabase[
-    ] = await filterPositionsByLatestEventIdPerPerpetual(
+    ] = filterPositionsByLatestEventIdPerPerpetual(
       initializePerpetualPositionsWithFunding([
         perpetualPosition,
         perpetualPosition2,
@@ -722,6 +724,112 @@ describe('helpers', () => {
   describe('getChildSubaccountNums', () => {
     it('Throws an error if the parent subaccount number is greater than or equal to the maximum parent subaccount number', () => {
       expect(() => getChildSubaccountNums(128)).toThrowError('Parent subaccount number must be less than 128');
+    });
+  });
+
+  describe('getSubaccountResponse', () => {
+    it('gets subaccount response with adjusted perpetual positions', () => {
+      // Helper function does not care about ids.
+      const id: string = 'mock-id';
+      const perpetualPositions: PerpetualPositionFromDatabase[] = [{
+        ...testConstants.defaultPerpetualPosition,
+        id,
+        entryPrice: '20000',
+        sumOpen: '10',
+        sumClose: '0',
+      }];
+      const assetPositions: AssetPositionFromDatabase[] = [{
+        ...testConstants.defaultAssetPosition,
+        id,
+      }];
+      const lastUpdatedFundingIndexMap: FundingIndexMap = {
+        0: Big('10000'),
+        1: Big('0'),
+        2: Big('0'),
+        3: Big('0'),
+        4: Big('0'),
+      };
+      const latestUpdatedFundingIndexMap: FundingIndexMap = {
+        0: Big('10050'),
+        1: Big('0'),
+        2: Big('0'),
+        3: Big('0'),
+        4: Big('0'),
+      };
+      const assets: AssetFromDatabase[] = [{
+        ...testConstants.defaultAsset,
+        id: '0',
+      }];
+      const markets: MarketFromDatabase[] = [
+        testConstants.defaultMarket,
+      ];
+      const subaccount: SubaccountFromDatabase = {
+        ...testConstants.defaultSubaccount,
+        id,
+      };
+      const perpetualMarketsMap: PerpetualMarketsMap = {
+        0: {
+          ...testConstants.defaultPerpetualMarket,
+        },
+      };
+
+      const response: SubaccountResponseObject = getSubaccountResponse(
+        subaccount,
+        perpetualPositions,
+        assetPositions,
+        assets,
+        markets,
+        perpetualMarketsMap,
+        '3',
+        latestUpdatedFundingIndexMap,
+        lastUpdatedFundingIndexMap,
+      );
+
+      expect(response).toEqual({
+        address: testConstants.defaultAddress,
+        subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+        equity: getFixedRepresentation(159500),
+        freeCollateral: getFixedRepresentation(152000),
+        marginEnabled: true,
+        updatedAtHeight: testConstants.defaultSubaccount.updatedAtHeight,
+        latestProcessedBlockHeight: '3',
+        openPerpetualPositions: {
+          [testConstants.defaultPerpetualMarket.ticker]: {
+            market: testConstants.defaultPerpetualMarket.ticker,
+            size: testConstants.defaultPerpetualPosition.size,
+            side: testConstants.defaultPerpetualPosition.side,
+            entryPrice: getFixedRepresentation(
+              testConstants.defaultPerpetualPosition.entryPrice!,
+            ),
+            maxSize: testConstants.defaultPerpetualPosition.maxSize,
+            // 200000 + 10*(10000-10050)=199500
+            netFunding: getFixedRepresentation('199500'),
+            // sumClose=0, so realized Pnl is the same as the net funding of the position.
+            // Unsettled funding is funding payments that already "happened" but not reflected
+            // in the subaccount's balance yet, so it's considered a part of realizedPnl.
+            realizedPnl: getFixedRepresentation('199500'),
+            // size * (index-entry) = 10*(15000-20000) = -50000
+            unrealizedPnl: getFixedRepresentation(-50000),
+            status: testConstants.defaultPerpetualPosition.status,
+            sumOpen: testConstants.defaultPerpetualPosition.sumOpen,
+            sumClose: testConstants.defaultPerpetualPosition.sumClose,
+            createdAt: testConstants.defaultPerpetualPosition.createdAt,
+            createdAtHeight: testConstants.defaultPerpetualPosition.createdAtHeight,
+            exitPrice: undefined,
+            closedAt: undefined,
+            subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+          },
+        },
+        assetPositions: {
+          [testConstants.defaultAsset.symbol]: {
+            symbol: testConstants.defaultAsset.symbol,
+            size: '9500',
+            side: PositionSide.LONG,
+            assetId: testConstants.defaultAssetPosition.assetId,
+            subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+          },
+        },
+      });
     });
   });
 
