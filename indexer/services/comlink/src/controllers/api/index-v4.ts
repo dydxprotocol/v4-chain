@@ -1,6 +1,7 @@
 import express from 'express';
 
 import AddressesController from './v4/addresses-controller';
+import AffiliatesController from './v4/affiliates-controller';
 import AssetPositionsController from './v4/asset-positions-controller';
 import CandlesController from './v4/candles-controller';
 import ComplianceController from './v4/compliance-controller';
@@ -26,6 +27,7 @@ import VaultController from './v4/vault-controller';
 
 const router: express.Router = express.Router();
 router.use('/addresses', AddressesController);
+router.use('/affiliates', AffiliatesController);
 router.use('/assetPositions', AssetPositionsController);
 router.use('/candles', CandlesController);
 router.use('/fills', FillsController);

@@ -666,3 +666,32 @@ export interface VaultPosition {
 export interface MegavaultPositionResponse {
   positions: VaultPosition[];
 }
+
+/* ------- Affiliates Types ------- */
+export interface AffiliateReferralCodeRequest{
+  address: string
+}
+
+export interface AffiliateReferralCodeResponse {
+  referralCode: string | null,
+}
+
+export interface AffiliateAddressResponse {
+  address: string | null,
+}
+
+export interface AffiliateSnapshotResponse {
+  affiliateList: AffiliateSnapshotResponseObject[],
+  total: number,
+  currentOffset: number
+}
+
+export interface AffiliateSnapshotResponseObject {
+  affiliateAddress: string,
+  affiliateEarnings: number,
+  affiliateReferralCode: string,
+  affiliateReferredTrades: number,
+  affiliateTotalReferredFees: number,
+  affiliateReferredUsers: number,
+  affiliateReferredNetProtocolEarnings: number
+}
