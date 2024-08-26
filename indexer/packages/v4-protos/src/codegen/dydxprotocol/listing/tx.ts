@@ -41,9 +41,6 @@ export interface MsgCreateMarketPermissionless {
   /** The subaccount to deposit from. */
 
   subaccountId?: SubaccountId;
-  /** Number of quote quantums to deposit. */
-
-  quoteQuantums: Uint8Array;
 }
 /**
  * MsgCreateMarketPermissionless is a message used to create new markets without
@@ -56,9 +53,6 @@ export interface MsgCreateMarketPermissionlessSDKType {
   /** The subaccount to deposit from. */
 
   subaccount_id?: SubaccountIdSDKType;
-  /** Number of quote quantums to deposit. */
-
-  quote_quantums: Uint8Array;
 }
 /**
  * MsgCreateMarketPermissionlessResponse defines the
@@ -199,8 +193,7 @@ export const MsgSetMarketsHardCapResponse = {
 function createBaseMsgCreateMarketPermissionless(): MsgCreateMarketPermissionless {
   return {
     ticker: "",
-    subaccountId: undefined,
-    quoteQuantums: new Uint8Array()
+    subaccountId: undefined
   };
 }
 
@@ -212,10 +205,6 @@ export const MsgCreateMarketPermissionless = {
 
     if (message.subaccountId !== undefined) {
       SubaccountId.encode(message.subaccountId, writer.uint32(18).fork()).ldelim();
-    }
-
-    if (message.quoteQuantums.length !== 0) {
-      writer.uint32(26).bytes(message.quoteQuantums);
     }
 
     return writer;
@@ -238,10 +227,6 @@ export const MsgCreateMarketPermissionless = {
           message.subaccountId = SubaccountId.decode(reader, reader.uint32());
           break;
 
-        case 3:
-          message.quoteQuantums = reader.bytes();
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -255,7 +240,6 @@ export const MsgCreateMarketPermissionless = {
     const message = createBaseMsgCreateMarketPermissionless();
     message.ticker = object.ticker ?? "";
     message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? SubaccountId.fromPartial(object.subaccountId) : undefined;
-    message.quoteQuantums = object.quoteQuantums ?? new Uint8Array();
     return message;
   }
 
