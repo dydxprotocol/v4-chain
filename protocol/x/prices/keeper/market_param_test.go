@@ -21,7 +21,6 @@ func TestModifyMarketParam(t *testing.T) {
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
-
 	for i, item := range items {
 		// Modify each field arbitrarily and
 		// verify the fields were modified in state
@@ -62,8 +61,7 @@ func TestModifyMarketParamUpdatesCache(t *testing.T) {
 		MinPriceChangePpm:  uint32(50),
 		ExchangeConfigJson: `{"id":"1"}`,
 	}
-
-	oldMp, err := keepertest.CreateTestMarket(t, ctx, keeper, oldParam, types.MarketPrice{
+	mp, err := keepertest.CreateTestMarket(t, ctx, keeper, oldParam, types.MarketPrice{
 		Id:       id,
 		Exponent: -8,
 		Price:    1,
@@ -71,7 +69,7 @@ func TestModifyMarketParamUpdatesCache(t *testing.T) {
 	require.NoError(t, err)
 
 	// check that the existing entry exists
-	cp, err := slinky.MarketPairToCurrencyPair(oldMp.Pair)
+	cp, err := slinky.MarketPairToCurrencyPair(mp.Pair)
 	require.NoError(t, err)
 
 	// check that the existing entry exists
