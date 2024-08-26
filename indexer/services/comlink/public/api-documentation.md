@@ -30,7 +30,9 @@ headers = {
 # baseURL = 'https://indexer.dydx.trade/v4'
 baseURL = 'https://dydx-testnet.imperator.co/v4'
 
-r = requests.get(f'{baseURL}/addresses/{address}', headers = headers)
+r = requests.get(f'{baseURL}/affiliates/address', params={
+  'referralCode': 'string'
+}, headers = headers)
 
 print(r.json())
 
@@ -46,7 +48,7 @@ const headers = {
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://dydx-testnet.imperator.co/v4';
 
-fetch(`${baseURL}/addresses/{address}`,
+fetch(`${baseURL}/affiliates/address?referralCode=string`,
 {
   method: 'GET',
 
@@ -60,13 +62,13 @@ fetch(`${baseURL}/addresses/{address}`,
 
 ```
 
-`GET /addresses/{address}`
+`GET /affiliates/address`
 
 ### Parameters
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
-|address|path|string|true|none|
+|referralCode|query|string|true|none|
 
 > Example responses
 
@@ -74,72 +76,7 @@ fetch(`${baseURL}/addresses/{address}`,
 
 ```json
 {
-  "subaccounts": [
-    {
-      "address": "string",
-      "subaccountNumber": 0,
-      "equity": "string",
-      "freeCollateral": "string",
-      "openPerpetualPositions": {
-        "property1": {
-          "market": "string",
-          "status": "OPEN",
-          "side": "LONG",
-          "size": "string",
-          "maxSize": "string",
-          "entryPrice": "string",
-          "realizedPnl": "string",
-          "createdAt": "string",
-          "createdAtHeight": "string",
-          "sumOpen": "string",
-          "sumClose": "string",
-          "netFunding": "string",
-          "unrealizedPnl": "string",
-          "closedAt": null,
-          "exitPrice": "string",
-          "subaccountNumber": 0
-        },
-        "property2": {
-          "market": "string",
-          "status": "OPEN",
-          "side": "LONG",
-          "size": "string",
-          "maxSize": "string",
-          "entryPrice": "string",
-          "realizedPnl": "string",
-          "createdAt": "string",
-          "createdAtHeight": "string",
-          "sumOpen": "string",
-          "sumClose": "string",
-          "netFunding": "string",
-          "unrealizedPnl": "string",
-          "closedAt": null,
-          "exitPrice": "string",
-          "subaccountNumber": 0
-        }
-      },
-      "assetPositions": {
-        "property1": {
-          "symbol": "string",
-          "side": "LONG",
-          "size": "string",
-          "assetId": "string",
-          "subaccountNumber": 0
-        },
-        "property2": {
-          "symbol": "string",
-          "side": "LONG",
-          "size": "string",
-          "assetId": "string",
-          "subaccountNumber": 0
-        }
-      },
-      "marginEnabled": true,
-      "updatedAtHeight": "string",
-      "latestProcessedBlockHeight": "string"
-    }
-  ],
-  "totalTradingRewards": "string"
+  "address": "string"
 }
 ```
 
@@ -147,7 +84,7 @@ fetch(`${baseURL}/addresses/{address}`,
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AddressResponse](#schemaaddressresponse)|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateAddressResponse](#schemaaffiliateaddressresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -502,6 +439,170 @@ fetch(`${baseURL}/affiliates/referral_code?address=string`,
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateReferralCodeResponse](#schemaaffiliatereferralcoderesponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## GetSnapshot
+
+<a id="opIdGetSnapshot"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.get(f'{baseURL}/affiliates/snapshot', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/affiliates/snapshot`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /affiliates/snapshot`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|offset|query|number(double)|false|none|
+|limit|query|number(double)|false|none|
+|sortByReferredFees|query|boolean|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "affiliateList": [
+    {
+      "affiliateAddress": "string",
+      "affiliateEarnings": 0.1,
+      "affiliateReferralCode": "string",
+      "affiliateReferredTrades": 0.1,
+      "affiliateTotalReferredFees": 0.1,
+      "affiliateReferredUsers": 0.1,
+      "affiliateReferredNetProtocolEarnings": 0.1
+    }
+  ],
+  "total": 0.1,
+  "currentOffset": 0.1
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateSnapshotResponse](#schemaaffiliatesnapshotresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## GetTotalVolume
+
+<a id="opIdGetTotalVolume"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.get(f'{baseURL}/affiliates/total_volume', params={
+  'address': 'string'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/affiliates/total_volume?address=string`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /affiliates/total_volume`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "totalVolume": 0.1
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateTotalVolumeResponse](#schemaaffiliatetotalvolumeresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -3837,6 +3938,112 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |referralCode|string¦null|true|none|none|
+
+## AffiliateAddressResponse
+
+<a id="schemaaffiliateaddressresponse"></a>
+<a id="schema_AffiliateAddressResponse"></a>
+<a id="tocSaffiliateaddressresponse"></a>
+<a id="tocsaffiliateaddressresponse"></a>
+
+```json
+{
+  "address": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|address|string¦null|true|none|none|
+
+## AffiliateSnapshotResponseObject
+
+<a id="schemaaffiliatesnapshotresponseobject"></a>
+<a id="schema_AffiliateSnapshotResponseObject"></a>
+<a id="tocSaffiliatesnapshotresponseobject"></a>
+<a id="tocsaffiliatesnapshotresponseobject"></a>
+
+```json
+{
+  "affiliateAddress": "string",
+  "affiliateEarnings": 0.1,
+  "affiliateReferralCode": "string",
+  "affiliateReferredTrades": 0.1,
+  "affiliateTotalReferredFees": 0.1,
+  "affiliateReferredUsers": 0.1,
+  "affiliateReferredNetProtocolEarnings": 0.1
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|affiliateAddress|string|true|none|none|
+|affiliateEarnings|number(double)|true|none|none|
+|affiliateReferralCode|string|true|none|none|
+|affiliateReferredTrades|number(double)|true|none|none|
+|affiliateTotalReferredFees|number(double)|true|none|none|
+|affiliateReferredUsers|number(double)|true|none|none|
+|affiliateReferredNetProtocolEarnings|number(double)|true|none|none|
+
+## AffiliateSnapshotResponse
+
+<a id="schemaaffiliatesnapshotresponse"></a>
+<a id="schema_AffiliateSnapshotResponse"></a>
+<a id="tocSaffiliatesnapshotresponse"></a>
+<a id="tocsaffiliatesnapshotresponse"></a>
+
+```json
+{
+  "affiliateList": [
+    {
+      "affiliateAddress": "string",
+      "affiliateEarnings": 0.1,
+      "affiliateReferralCode": "string",
+      "affiliateReferredTrades": 0.1,
+      "affiliateTotalReferredFees": 0.1,
+      "affiliateReferredUsers": 0.1,
+      "affiliateReferredNetProtocolEarnings": 0.1
+    }
+  ],
+  "total": 0.1,
+  "currentOffset": 0.1
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|affiliateList|[[AffiliateSnapshotResponseObject](#schemaaffiliatesnapshotresponseobject)]|true|none|none|
+|total|number(double)|true|none|none|
+|currentOffset|number(double)|true|none|none|
+
+## AffiliateTotalVolumeResponse
+
+<a id="schemaaffiliatetotalvolumeresponse"></a>
+<a id="schema_AffiliateTotalVolumeResponse"></a>
+<a id="tocSaffiliatetotalvolumeresponse"></a>
+<a id="tocsaffiliatetotalvolumeresponse"></a>
+
+```json
+{
+  "totalVolume": 0.1
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|totalVolume|number(double)|true|none|none|
 
 ## AssetPositionResponse
 

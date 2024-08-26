@@ -672,12 +672,26 @@ export interface AffiliateReferralCodeRequest{
   address: string
 }
 
+export interface AffiliateAddressRequest{
+  referralCode: string
+}
+
+export interface AffiliateSnapshotRequest{
+  limit ?: number,
+  offset ?: number,
+  sortByReferredFees ?: boolean
+}
+
+export interface AffiliateTotalVolumeRequest{
+  address: string
+}
+
 export interface AffiliateReferralCodeResponse {
-  referralCode: string | null,
+  referralCode: string | null
 }
 
 export interface AffiliateAddressResponse {
-  address: string | null,
+  address: string | null
 }
 
 export interface AffiliateSnapshotResponse {
@@ -694,4 +708,8 @@ export interface AffiliateSnapshotResponseObject {
   affiliateTotalReferredFees: number,
   affiliateReferredUsers: number,
   affiliateReferredNetProtocolEarnings: number
+}
+
+export interface AffiliateTotalVolumeResponse {
+  totalVolume: number
 }
