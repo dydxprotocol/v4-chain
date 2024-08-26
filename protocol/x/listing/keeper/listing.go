@@ -139,7 +139,7 @@ func (k Keeper) CreatePerpetual(
 		marketId,
 		atomicResolution,
 		types.DefaultFundingPpm,
-		types.LiquidityTier_LongTail,
+		types.LiquidityTier_Isolated,
 		perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
 	)
 	if err != nil {
