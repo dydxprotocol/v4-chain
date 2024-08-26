@@ -20,11 +20,14 @@ type Flags struct {
 	GrpcAddress string
 	GrpcEnable  bool
 
-	// Grpc Streaming
+	// Full Node Streaming
 	GrpcStreamingEnabled              bool
 	GrpcStreamingFlushIntervalMs      uint32
 	GrpcStreamingMaxBatchSize         uint32
 	GrpcStreamingMaxChannelBufferSize uint32
+	WebsocketStreamingEnabled         bool
+	WebsocketStreamingPort            uint16
+	FullNodeStreamingSnapshotInterval uint32
 
 	VEOracleEnabled bool // Slinky Vote Extensions
 }
@@ -45,6 +48,9 @@ const (
 	GrpcStreamingFlushIntervalMs      = "grpc-streaming-flush-interval-ms"
 	GrpcStreamingMaxBatchSize         = "grpc-streaming-max-batch-size"
 	GrpcStreamingMaxChannelBufferSize = "grpc-streaming-max-channel-buffer-size"
+	WebsocketStreamingEnabled         = "websocket-streaming-enabled"
+	WebsocketStreamingPort            = "websocket-streaming-port"
+	FullNodeStreamingSnapshotInterval = "fns-snapshot-interval"
 
 	// Slinky VEs enabled
 	VEOracleEnabled = "slinky-vote-extension-oracle-enabled"
@@ -61,6 +67,9 @@ const (
 	DefaultGrpcStreamingFlushIntervalMs      = 50
 	DefaultGrpcStreamingMaxBatchSize         = 2000
 	DefaultGrpcStreamingMaxChannelBufferSize = 2000
+	DefaultWebsocketStreamingEnabled         = false
+	DefaultWebsocketStreamingPort            = 9092
+	DefaultFullNodeStreamingSnapshotInterval = 0
 
 	DefaultVEOracleEnabled = true
 )
@@ -111,6 +120,22 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		DefaultGrpcStreamingMaxChannelBufferSize,
 		"Maximum per-subscription channel size before grpc streaming cancels a singular subscription",
 	)
+	cmd.Flags().Uint32(
+		FullNodeStreamingSnapshotInterval,
+		DefaultFullNodeStreamingSnapshotInterval,
+		"If set to positive number, number of blocks between each periodic snapshot will be sent out. "+
+			"Defaults to zero for regular behavior of one initial snapshot.",
+	)
+	cmd.Flags().Bool(
+		WebsocketStreamingEnabled,
+		DefaultWebsocketStreamingEnabled,
+		"Whether to enable websocket full node streaming for full nodes",
+	)
+	cmd.Flags().Uint16(
+		WebsocketStreamingPort,
+		DefaultWebsocketStreamingPort,
+		"Port for websocket full node streaming connections. Defaults to 9092.",
+	)
 	cmd.Flags().Bool(
 		VEOracleEnabled,
 		DefaultVEOracleEnabled,
@@ -131,15 +156,22 @@ func (f *Flags) Validate() error {
 			return fmt.Errorf("grpc.enable must be set to true - grpc streaming requires gRPC server")
 		}
 		if f.GrpcStreamingMaxBatchSize == 0 {
-			return fmt.Errorf("grpc streaming batch size must be positive number")
+			return fmt.Errorf("full node streaming batch size must be positive number")
 		}
 		if f.GrpcStreamingFlushIntervalMs == 0 {
-			return fmt.Errorf("grpc streaming flush interval must be positive number")
+			return fmt.Errorf("full node streaming flush interval must be positive number")
 		}
 		if f.GrpcStreamingMaxChannelBufferSize == 0 {
-			return fmt.Errorf("grpc streaming channel size must be positive number")
+			return fmt.Errorf("full node streaming channel size must be positive number")
 		}
 	}
+
+	if f.WebsocketStreamingEnabled {
+		if !f.GrpcStreamingEnabled {
+			return fmt.Errorf("websocket full node streaming requires grpc streaming to be enabled")
+		}
+	}
+
 	return nil
 }
 
@@ -163,6 +195,9 @@ func GetFlagValuesFromOptions(
 		GrpcStreamingFlushIntervalMs:      DefaultGrpcStreamingFlushIntervalMs,
 		GrpcStreamingMaxBatchSize:         DefaultGrpcStreamingMaxBatchSize,
 		GrpcStreamingMaxChannelBufferSize: DefaultGrpcStreamingMaxChannelBufferSize,
+		WebsocketStreamingEnabled:         DefaultWebsocketStreamingEnabled,
+		WebsocketStreamingPort:            DefaultWebsocketStreamingPort,
+		FullNodeStreamingSnapshotInterval: DefaultFullNodeStreamingSnapshotInterval,
 
 		VEOracleEnabled: true,
 	}
@@ -225,6 +260,24 @@ func GetFlagValuesFromOptions(
 	if option := appOpts.Get(GrpcStreamingMaxChannelBufferSize); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
 			result.GrpcStreamingMaxChannelBufferSize = v
+		}
+	}
+
+	if option := appOpts.Get(WebsocketStreamingEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.WebsocketStreamingEnabled = v
+		}
+	}
+
+	if option := appOpts.Get(WebsocketStreamingPort); option != nil {
+		if v, err := cast.ToUint16E(option); err == nil {
+			result.WebsocketStreamingPort = v
+		}
+	}
+
+	if option := appOpts.Get(FullNodeStreamingSnapshotInterval); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.FullNodeStreamingSnapshotInterval = v
 		}
 	}
 

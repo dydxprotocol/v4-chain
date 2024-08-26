@@ -153,6 +153,16 @@ type TakerOrderStatus struct {
 	OrderOptimisticallyFilledQuantums satypes.BaseQuantums
 }
 
+// ToStreamingTakerOrderStatus converts the TakerOrderStatus to a StreamTakerOrderStatus
+// to be emitted by full node streaming.
+func (tos *TakerOrderStatus) ToStreamingTakerOrderStatus() *StreamTakerOrderStatus {
+	return &StreamTakerOrderStatus{
+		OrderStatus:                  uint32(tos.OrderStatus),
+		RemainingQuantums:            tos.RemainingQuantums.ToUint64(),
+		OptimisticallyFilledQuantums: tos.OrderOptimisticallyFilledQuantums.ToUint64(),
+	}
+}
+
 // OrderStatus represents the status of an order after attempting to place it on the orderbook.
 type OrderStatus uint
 
@@ -187,6 +197,9 @@ const (
 	// with either multiple positions in isolated perpetuals or both an isolated and a cross perpetual
 	// position.
 	ViolatesIsolatedSubaccountConstraints
+	// PostOnlyWouldCrossMakerOrder indicates that matching the post only taker order would cross the
+	// orderbook, and was therefore canceled.
+	PostOnlyWouldCrossMakerOrder
 )
 
 // String returns a string representation of this `OrderStatus` enum.
@@ -244,6 +257,9 @@ type MatchableOrder interface {
 	// MustGetOrder returns the underlying order if this is not a liquidation order. Panics if called
 	// for a liquidation order.
 	MustGetOrder() Order
+	// MustGetLiquidationOrder returns the underlying liquidation order if this is not a regular order.
+	// Panics if called for a regular order.
+	MustGetLiquidationOrder() LiquidationOrder
 	// MustGetLiquidatedPerpetualId returns the perpetual ID if this is a liquidation order. Panics
 	// if called for a non-liquidation order.
 	MustGetLiquidatedPerpetualId() uint32

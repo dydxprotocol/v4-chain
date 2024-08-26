@@ -3,6 +3,7 @@ package dydxprotocol.clob;
 
 import "gogoproto/gogo.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
+import "dydxprotocol/clob/liquidations.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
@@ -227,4 +228,25 @@ message TransactionOrdering {
 
   // Within the block, the unique transaction index.
   uint32 transaction_index = 2;
+}
+
+// StreamLiquidationOrder represents an protocol-generated IOC liquidation
+// order. Used in full node streaming.
+message StreamLiquidationOrder {
+  // Information about this liquidation order.
+  PerpetualLiquidationInfo liquidation_info = 1;
+
+  // CLOB pair ID of the CLOB pair the liquidation order will be matched
+  // against.
+  uint32 clob_pair_id = 2;
+
+  // True if this is a buy order liquidating a short position, false if vice
+  // versa.
+  bool is_buy = 3;
+
+  // The number of base quantums for this liquidation order.
+  uint64 quantums = 4;
+
+  // The subticks this liquidation order will be submitted at.
+  uint64 subticks = 5;
 }

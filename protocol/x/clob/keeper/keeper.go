@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"sync/atomic"
 
 	"cosmossdk.io/log"
@@ -14,7 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
+	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	flags "github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -43,7 +44,7 @@ type (
 		rewardsKeeper     types.RewardsKeeper
 
 		indexerEventManager indexer_manager.IndexerEventManager
-		streamingManager    streamingtypes.GrpcStreamingManager
+		streamingManager    streamingtypes.FullNodeStreamingManager
 
 		initialized         *atomic.Bool
 		memStoreInitialized *atomic.Bool
@@ -85,7 +86,7 @@ func NewKeeper(
 	statsKeeper types.StatsKeeper,
 	rewardsKeeper types.RewardsKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
-	grpcStreamingManager streamingtypes.GrpcStreamingManager,
+	streamingManager streamingtypes.FullNodeStreamingManager,
 	txDecoder sdk.TxDecoder,
 	clobFlags flags.ClobFlags,
 	placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg],
@@ -110,7 +111,7 @@ func NewKeeper(
 		statsKeeper:                  statsKeeper,
 		rewardsKeeper:                rewardsKeeper,
 		indexerEventManager:          indexerEventManager,
-		streamingManager:             grpcStreamingManager,
+		streamingManager:             streamingManager,
 		memStoreInitialized:          &atomic.Bool{}, // False by default.
 		initialized:                  &atomic.Bool{}, // False by default.
 		txDecoder:                    txDecoder,
@@ -140,7 +141,7 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
 }
 
-func (k Keeper) GetGrpcStreamingManager() streamingtypes.GrpcStreamingManager {
+func (k Keeper) GetFullNodeStreamingManager() streamingtypes.FullNodeStreamingManager {
 	return k.streamingManager
 }
 
@@ -255,24 +256,32 @@ func (k *Keeper) SetAnteHandler(anteHandler sdk.AnteHandler) {
 	k.antehandler = anteHandler
 }
 
-// InitializeNewGrpcStreams initializes new gRPC streams for all uninitialized clob pairs
+// InitializeNewStreams initializes new streams for all uninitialized clob pairs
 // by sending the corresponding orderbook snapshots.
-func (k Keeper) InitializeNewGrpcStreams(ctx sdk.Context) {
-	streamingManager := k.GetGrpcStreamingManager()
+func (k Keeper) InitializeNewStreams(ctx sdk.Context) {
+	streamingManager := k.GetFullNodeStreamingManager()
 
-	streamingManager.InitializeNewGrpcStreams(
+	streamingManager.InitializeNewStreams(
 		func(clobPairId types.ClobPairId) *types.OffchainUpdates {
 			return k.MemClob.GetOffchainUpdatesForOrderbookSnapshot(
 				ctx,
 				clobPairId,
 			)
 		},
+		func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate {
+			subaccountUpdate := k.subaccountsKeeper.GetStreamSubaccountUpdate(
+				ctx,
+				subaccountId,
+				true,
+			)
+			return &subaccountUpdate
+		},
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
 	)
 }
 
-// SendOrderbookUpdates sends the offchain updates to the gRPC streaming manager.
+// SendOrderbookUpdates sends the offchain updates to the Full Node streaming manager.
 func (k Keeper) SendOrderbookUpdates(
 	ctx sdk.Context,
 	offchainUpdates *types.OffchainUpdates,
@@ -281,14 +290,14 @@ func (k Keeper) SendOrderbookUpdates(
 		return
 	}
 
-	k.GetGrpcStreamingManager().SendOrderbookUpdates(
+	k.GetFullNodeStreamingManager().SendOrderbookUpdates(
 		offchainUpdates,
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
 	)
 }
 
-// SendOrderbookFillUpdates sends the orderbook fills to the gRPC streaming manager.
+// SendOrderbookFillUpdates sends the orderbook fills to the Full Node streaming manager.
 func (k Keeper) SendOrderbookFillUpdates(
 	ctx sdk.Context,
 	orderbookFills []types.StreamOrderbookFill,
@@ -296,9 +305,21 @@ func (k Keeper) SendOrderbookFillUpdates(
 	if len(orderbookFills) == 0 {
 		return
 	}
-	k.GetGrpcStreamingManager().SendOrderbookFillUpdates(
-		ctx,
+	k.GetFullNodeStreamingManager().SendOrderbookFillUpdates(
 		orderbookFills,
+		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
+		k.PerpetualIdToClobPairId,
+	)
+}
+
+// SendTakerOrderStatus sends the taker order with its status to the Full Node streaming manager.
+func (k Keeper) SendTakerOrderStatus(
+	ctx sdk.Context,
+	takerOrder types.StreamTakerOrder,
+) {
+	k.GetFullNodeStreamingManager().SendTakerOrderStatus(
+		takerOrder,
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
 	)

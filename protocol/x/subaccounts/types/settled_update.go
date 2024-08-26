@@ -1,8 +1,4 @@
-package keeper
-
-import (
-	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-)
+package types
 
 // SettledUpdate is used internally in the subaccounts keeper to
 // to specify changes to one or more `Subaccounts` (for example the
@@ -10,9 +6,9 @@ import (
 // The subaccount is always in its settled state.
 type SettledUpdate struct {
 	// The `Subaccount` for which this update applies to, in its settled form.
-	SettledSubaccount types.Subaccount
+	SettledSubaccount Subaccount
 	// A list of changes to make to any `AssetPositions` in the `Subaccount`.
-	AssetUpdates []types.AssetUpdate
+	AssetUpdates []AssetUpdate
 	// A list of changes to make to any `PerpetualPositions` in the `Subaccount`.
-	PerpetualUpdates []types.PerpetualUpdate
+	PerpetualUpdates []PerpetualUpdate
 }

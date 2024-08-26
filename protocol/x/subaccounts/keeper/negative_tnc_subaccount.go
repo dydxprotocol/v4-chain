@@ -123,7 +123,7 @@ func (k Keeper) getNegativeTncSubaccountStoreSuffix(
 // The slice will be de-duplicated and will contain unique store suffixes.
 func (k Keeper) getNegativeTncSubaccountStoresuffixes(
 	ctx sdk.Context,
-	settledUpdates []SettledUpdate,
+	settledUpdates []types.SettledUpdate,
 ) (
 	suffixes []string,
 	err error,
@@ -152,7 +152,7 @@ func (k Keeper) getNegativeTncSubaccountStoresuffixes(
 // collateral was seen for subaccounts in a slice of settled updates.
 func (k Keeper) getLastBlockNegativeSubaccountSeen(
 	ctx sdk.Context,
-	settledUpdates []SettledUpdate,
+	settledUpdates []types.SettledUpdate,
 ) (
 	lastBlockNegativeSubaccountSeen uint32,
 	negativeSubaccountExists bool,
