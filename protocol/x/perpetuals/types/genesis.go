@@ -76,12 +76,12 @@ func (gs GenesisState) Validate() error {
 	expectedLiquidityTierId := uint32(0)
 	for _, liquidityTier := range gs.LiquidityTiers {
 		if _, exists := liquidityTierKeyMap[liquidityTier.Id]; exists {
-			return fmt.Errorf("duplicated liquidity tier id")
+			return fmt.Errorf("duplicated liquidity tier id: %d", liquidityTier.Id)
 		}
 		liquidityTierKeyMap[liquidityTier.Id] = struct{}{}
 
 		if liquidityTier.Id != expectedLiquidityTierId {
-			return fmt.Errorf("found a gap in liquidity tier id")
+			return fmt.Errorf("found a gap in liquidity tier id. Expected %d, got %d", expectedLiquidityTierId, liquidityTier.Id)
 		}
 		expectedLiquidityTierId = expectedLiquidityTierId + 1
 

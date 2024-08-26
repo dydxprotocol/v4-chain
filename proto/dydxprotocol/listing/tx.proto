@@ -49,13 +49,6 @@ message MsgCreateMarketPermissionless {
 
   // The subaccount to deposit from.
   dydxprotocol.subaccounts.SubaccountId subaccount_id = 2;
-
-  // Number of quote quantums to deposit.
-  bytes quote_quantums = 3 [
-    (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
-    (gogoproto.nullable) = false
-  ];
 }
 
 // MsgCreateMarketPermissionlessResponse defines the

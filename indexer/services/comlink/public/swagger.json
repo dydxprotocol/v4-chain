@@ -240,6 +240,19 @@
         "type": "object",
         "additionalProperties": false
       },
+      "AffiliateReferralCodeResponse": {
+        "properties": {
+          "referralCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "referralCode"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "AssetPositionResponse": {
         "properties": {
           "positions": {
@@ -1553,6 +1566,34 @@
             "schema": {
               "format": "double",
               "type": "number"
+            }
+          }
+        ]
+      }
+    },
+    "/affiliates/referral_code": {
+      "get": {
+        "operationId": "GetReferralCode",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AffiliateReferralCodeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ]
