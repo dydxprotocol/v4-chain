@@ -109,7 +109,7 @@ class VaultController extends Controller {
     };
   }
 
-  @Get('/v1/megavault/positions')
+  @Get('/megavault/positions')
   async getMegavaultPositions(): Promise<MegavaultPositionResponse> {
     const vaultSubaccounts: VaultMapping = getVaultSubaccountsFromConfig();
     const vaultSubaccountIds: string[] = _.keys(vaultSubaccounts);
