@@ -26,7 +26,7 @@ jobs:
         ports: 
           - 6379:6379
       kafka:
-        image: blacktop/kafka:2.6
+        image: bitnami/kafka:3.5.1
         env:
           KAFKA_ADVERTISED_HOST_NAME: localhost
           KAFKA_CREATE_TOPICS: 

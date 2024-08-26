@@ -44,8 +44,8 @@ func TestMain(m *testing.M) {
 	}
 
 	resource, err := pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: "blacktop/kafka",
-		Tag:        "2.6",
+		Repository: "bitnami/kafka",
+		Tag:        "3.5.1",
 		Env: []string{
 			"KAFKA_ADVERTISED_HOST_NAME=localhost",
 			fmt.Sprintf("KAFKA_CREATE_TOPICS=%s:1:1,%s:1:1", ON_CHAIN_KAFKA_TOPIC, OFF_CHAIN_KAFKA_TOPIC),
