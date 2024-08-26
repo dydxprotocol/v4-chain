@@ -3331,7 +3331,7 @@ headers = {
 # baseURL = 'https://indexer.dydx.trade/v4'
 baseURL = 'https://dydx-testnet.imperator.co/v4'
 
-r = requests.get(f'{baseURL}/vault/v1/v1/megavault/positions', headers = headers)
+r = requests.get(f'{baseURL}/vault/v1/megavault/positions', headers = headers)
 
 print(r.json())
 
@@ -3347,7 +3347,7 @@ const headers = {
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://dydx-testnet.imperator.co/v4';
 
-fetch(`${baseURL}/vault/v1/v1/megavault/positions`,
+fetch(`${baseURL}/vault/v1/megavault/positions`,
 {
   method: 'GET',
 
@@ -3361,7 +3361,7 @@ fetch(`${baseURL}/vault/v1/v1/megavault/positions`,
 
 ```
 
-`GET /vault/v1/v1/megavault/positions`
+`GET /vault/v1/megavault/positions`
 
 > Example responses
 

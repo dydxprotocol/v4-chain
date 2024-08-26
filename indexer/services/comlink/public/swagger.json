@@ -3172,7 +3172,7 @@
         "parameters": []
       }
     },
-    "/vault/v1/v1/megavault/positions": {
+    "/vault/v1/megavault/positions": {
       "get": {
         "operationId": "GetMegavaultPositions",
         "responses": {
