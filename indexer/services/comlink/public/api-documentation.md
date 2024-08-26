@@ -4043,7 +4043,7 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|totalVolume|number(double)|true|none|none|
+|totalVolume|number(double)¦null|true|none|none|
 
 ## AssetPositionResponse
 

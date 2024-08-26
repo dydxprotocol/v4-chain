@@ -711,5 +711,5 @@ export interface AffiliateSnapshotResponseObject {
 }
 
 export interface AffiliateTotalVolumeResponse {
-  totalVolume: number
+  totalVolume: number | null
 }
