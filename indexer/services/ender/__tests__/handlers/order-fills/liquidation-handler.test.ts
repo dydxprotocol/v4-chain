@@ -1179,6 +1179,7 @@ function createLiquidationOrderFillEvent(
   liquidationOrderProto: LiquidationOrderV1,
   fillAmount: number,
   totalFilledMaker: number,
+  affiliateRevShare: number = 0,
 ): OrderFillEventV1 {
   return {
     makerOrder: makerOrderProto,
@@ -1188,6 +1189,7 @@ function createLiquidationOrderFillEvent(
     takerFee: Long.fromValue(defaultTakerFeeQuantum, false),
     totalFilledMaker: Long.fromValue(totalFilledMaker, true),
     totalFilledTaker: Long.fromValue(fillAmount, true),
+    affiliateRevShare: Long.fromValue(affiliateRevShare, false),
   } as OrderFillEventV1;
 }
 

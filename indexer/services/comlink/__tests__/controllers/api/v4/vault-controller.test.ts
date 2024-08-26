@@ -274,12 +274,12 @@ describe('vault-controller#V4', () => {
           effectiveAtHeight: blockHeight,
         }),
       ]);
-  
+
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: '/v4/vault/v1/megavault/positions',
       });
-  
+
       expect(response.body).toEqual({
         positions: [
           {
@@ -317,6 +317,96 @@ describe('vault-controller#V4', () => {
               subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
             },
             ticker: testConstants.defaultPerpetualMarket.ticker,
+          },
+        ],
+      });
+    });
+
+    it('Get /megavault/positions with 2 vault subaccount, 1 with no perpetual', async () => {
+      config.EXPERIMENT_VAULTS = [
+        testConstants.defaultPnlTick.subaccountId,
+        testConstants.vaultSubaccountId,
+      ].join(',');
+      config.EXPERIMENT_VAULT_MARKETS = [
+        testConstants.defaultPerpetualMarket.clobPairId,
+        testConstants.defaultPerpetualMarket2.clobPairId,
+      ].join(',');
+
+      await Promise.all([
+        PerpetualPositionTable.create(
+          testConstants.defaultPerpetualPosition,
+        ),
+        AssetPositionTable.upsert(testConstants.defaultAssetPosition),
+        AssetPositionTable.upsert({
+          ...testConstants.defaultAssetPosition,
+          subaccountId: testConstants.vaultSubaccountId,
+        }),
+        FundingIndexUpdatesTable.create({
+          ...testConstants.defaultFundingIndexUpdate,
+          fundingIndex: initialFundingIndex,
+          effectiveAtHeight: testConstants.createdHeight,
+        }),
+        FundingIndexUpdatesTable.create({
+          ...testConstants.defaultFundingIndexUpdate,
+          eventId: testConstants.defaultTendermintEventId2,
+          effectiveAtHeight: blockHeight,
+        }),
+      ]);
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: '/v4/vault/v1/megavault/positions',
+      });
+
+      expect(response.body).toEqual({
+        positions: [
+          {
+            equity: getFixedRepresentation(159500),
+            perpetualPosition: {
+              market: testConstants.defaultPerpetualMarket.ticker,
+              size: testConstants.defaultPerpetualPosition.size,
+              side: testConstants.defaultPerpetualPosition.side,
+              entryPrice: getFixedRepresentation(
+                testConstants.defaultPerpetualPosition.entryPrice!,
+              ),
+              maxSize: testConstants.defaultPerpetualPosition.maxSize,
+              // 200000 + 10*(10000-10050)=199500
+              netFunding: getFixedRepresentation('199500'),
+              // sumClose=0, so realized Pnl is the same as the net funding of the position.
+              // Unsettled funding is funding payments that already "happened" but not reflected
+              // in the subaccount's balance yet, so it's considered a part of realizedPnl.
+              realizedPnl: getFixedRepresentation('199500'),
+              // size * (index-entry) = 10*(15000-20000) = -50000
+              unrealizedPnl: getFixedRepresentation(-50000),
+              status: testConstants.defaultPerpetualPosition.status,
+              sumOpen: testConstants.defaultPerpetualPosition.sumOpen,
+              sumClose: testConstants.defaultPerpetualPosition.sumClose,
+              createdAt: testConstants.defaultPerpetualPosition.createdAt,
+              createdAtHeight: testConstants.defaultPerpetualPosition.createdAtHeight,
+              exitPrice: null,
+              closedAt: null,
+              subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+            },
+            assetPosition: {
+              symbol: testConstants.defaultAsset.symbol,
+              size: '9500',
+              side: PositionSide.LONG,
+              assetId: testConstants.defaultAssetPosition.assetId,
+              subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+            },
+            ticker: testConstants.defaultPerpetualMarket.ticker,
+          },
+          {
+            equity: getFixedRepresentation(10000),
+            perpetualPosition: undefined,
+            assetPosition: {
+              symbol: testConstants.defaultAsset.symbol,
+              size: testConstants.defaultAssetPosition.size,
+              side: PositionSide.LONG,
+              assetId: testConstants.defaultAssetPosition.assetId,
+              subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+            },
+            ticker: testConstants.defaultPerpetualMarket2.ticker,
           },
         ],
       });

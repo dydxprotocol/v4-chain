@@ -13,8 +13,6 @@ import {
   PerpetualPositionFromDatabase,
   SubaccountFromDatabase,
   AssetColumns,
-  MarketColumns,
-  MarketsMap,
   BlockTable,
   MarketTable,
   AssetPositionTable,
@@ -35,12 +33,23 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { adjustUSDCAssetPosition, aggregatePnlTicks, calculateEquityAndFreeCollateral, getFundingIndexMaps, getPerpetualPositionsWithUpdatedFunding, getSubaccountResponse, getTotalUnsettledFunding, handleControllerError, initializePerpetualPositionsWithFunding } from '../../../lib/helpers';
+import {
+  aggregatePnlTicks,
+  getSubaccountResponse,
+  handleControllerError,
+} from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
-import { assetPositionToResponseObject, perpetualPositionToResponseObject, pnlTicksToResponseObject } from '../../../request-helpers/request-transformer';
-import { AssetPositionsMap, MegavaultHistoricalPnlResponse, VaultsHistoricalPnlResponse, VaultHistoricalPnl, PerpetualPositionResponseObject, PerpetualPositionWithFunding, AssetPositionResponseObject, VaultPosition, AssetById, MegavaultPositionResponse, SubaccountResponseObject } from '../../../types';
-import Big from 'big.js';
+import { pnlTicksToResponseObject } from '../../../request-helpers/request-transformer';
+import {
+  MegavaultHistoricalPnlResponse,
+  VaultsHistoricalPnlResponse,
+  VaultHistoricalPnl,
+  VaultPosition,
+  AssetById,
+  MegavaultPositionResponse,
+  SubaccountResponseObject,
+} from '../../../types';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'vault-controller';
@@ -82,7 +91,9 @@ class VaultController extends Controller {
           );
 
         if (market === undefined) {
-          throw new Error(`Vault clob pair id ${vaultSubaccounts[subaccountId]} does not correspond to a perpetual market.`);
+          throw new Error(
+            `Vault clob pair id ${vaultSubaccounts[subaccountId]} does not correspond to ` +
+            'a perpetual market.');
         }
 
         return {
@@ -94,7 +105,7 @@ class VaultController extends Controller {
       .value();
 
     return {
-      vaultsPnl: groupedVaultPnlTicks,
+      vaultsPnl: _.sortBy(groupedVaultPnlTicks, 'ticker'),
     };
   }
 
@@ -173,16 +184,19 @@ class VaultController extends Controller {
         const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
           .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id]);
         if (perpetualMarket === undefined) {
-          throw new Error(`Vault clob pair id ${vaultSubaccounts[subaccount.id]} does not correspond to a perpetual market.`)
+          throw new Error(
+            `Vault clob pair id ${vaultSubaccounts[subaccount.id]} does not correspond to a ` +
+            'perpetual market.');
         }
-        const lastUpdatedFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable.findFundingIndexMap(
-          subaccount.updatedAtHeight,
-        );
+        const lastUpdatedFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable
+          .findFundingIndexMap(
+            subaccount.updatedAtHeight,
+          );
 
         const subaccountResponse: SubaccountResponseObject = getSubaccountResponse(
           subaccount,
-          openPerpetualPositionsBySubaccount[subaccount.id],
-          assetPositionsBySubaccount[subaccount.id],
+          openPerpetualPositionsBySubaccount[subaccount.id] || [],
+          assetPositionsBySubaccount[subaccount.id] || [],
           assets,
           markets,
           perpetualMarketRefresher.getPerpetualMarketsMap(),
@@ -201,12 +215,12 @@ class VaultController extends Controller {
           ] || undefined,
           equity: subaccountResponse.equity,
         };
-      })
+      }),
     );
 
     return {
-      positions: vaultPositions,
-    }
+      positions: _.sortBy(vaultPositions, 'ticker'),
+    };
   }
 }
 
@@ -276,7 +290,7 @@ router.get(
     try {
       const controllers: VaultController = new VaultController();
       const response: MegavaultPositionResponse = await controllers.getMegavaultPositions();
-       return res.send(response);
+      return res.send(response);
     } catch (error) {
       return handleControllerError(
         'VaultController GET /megavault/positions',
@@ -291,7 +305,7 @@ router.get(
         Date.now() - start,
       );
     }
-});
+  });
 
 async function getVaultSubaccountPnlTicks(): Promise<PnlTicksFromDatabase[]> {
   const subVaultSubaccountIds: string[] = _.keys(getVaultSubaccountsFromConfig());

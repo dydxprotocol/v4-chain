@@ -34,4 +34,6 @@ export interface OrderFillWithLiquidity {
   totalFilledTaker: Long;
   /** Liquidity of the order in the match to process in the handler. */
   liquidity: Liquidity;
+  /** Affiliate rev share in USDC quantums. */
+  affiliateRevShare: Long;
 }

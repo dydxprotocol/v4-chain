@@ -30,6 +30,7 @@ import {
   liquidityTierRefresher,
   PnlTicksFromDatabase,
   PnlTicksTable,
+  AssetFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import {
   adjustUSDCAssetPosition,
@@ -59,7 +60,6 @@ import {
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import { AssetPositionsMap, PerpetualPositionWithFunding, SubaccountResponseObject } from '../../src/types';
 import { ZERO, ZERO_USDC_POSITION } from '../../src/lib/constants';
-import { AssetFromDatabase } from '@dydxprotocol-indexer/postgres';
 
 describe('helpers', () => {
   afterEach(async () => {
@@ -743,18 +743,18 @@ describe('helpers', () => {
         id,
       }];
       const lastUpdatedFundingIndexMap: FundingIndexMap = {
-        '0': Big('10000'),
-        '1': Big('0'),
-        '2': Big('0'),
-        '3': Big('0'),
-        '4': Big('0'),
+        0: Big('10000'),
+        1: Big('0'),
+        2: Big('0'),
+        3: Big('0'),
+        4: Big('0'),
       };
       const latestUpdatedFundingIndexMap: FundingIndexMap = {
-        '0': Big('10050'),
-        '1': Big('0'),
-        '2': Big('0'),
-        '3': Big('0'),
-        '4': Big('0'),
+        0: Big('10050'),
+        1: Big('0'),
+        2: Big('0'),
+        3: Big('0'),
+        4: Big('0'),
       };
       const assets: AssetFromDatabase[] = [{
         ...testConstants.defaultAsset,
@@ -766,9 +766,9 @@ describe('helpers', () => {
       const subaccount: SubaccountFromDatabase = {
         ...testConstants.defaultSubaccount,
         id,
-      }
+      };
       const perpetualMarketsMap: PerpetualMarketsMap = {
-        '0': {
+        0: {
           ...testConstants.defaultPerpetualMarket,
         },
       };

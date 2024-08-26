@@ -1,6 +1,7 @@
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
 import { QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
 import { VaultId, VaultIdSDKType } from "./vault";
+import { NumShares, NumSharesSDKType } from "./share";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
@@ -29,10 +30,16 @@ export interface MsgDepositToMegavaultSDKType {
 }
 /** MsgDepositToMegavaultResponse is the Msg/DepositToMegavault response type. */
 
-export interface MsgDepositToMegavaultResponse {}
+export interface MsgDepositToMegavaultResponse {
+  /** The number of shares minted from the deposit. */
+  mintedShares?: NumShares;
+}
 /** MsgDepositToMegavaultResponse is the Msg/DepositToMegavault response type. */
 
-export interface MsgDepositToMegavaultResponseSDKType {}
+export interface MsgDepositToMegavaultResponseSDKType {
+  /** The number of shares minted from the deposit. */
+  minted_shares?: NumSharesSDKType;
+}
 /**
  * MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request
  * type.
@@ -152,11 +159,17 @@ export const MsgDepositToMegavault = {
 };
 
 function createBaseMsgDepositToMegavaultResponse(): MsgDepositToMegavaultResponse {
-  return {};
+  return {
+    mintedShares: undefined
+  };
 }
 
 export const MsgDepositToMegavaultResponse = {
-  encode(_: MsgDepositToMegavaultResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+  encode(message: MsgDepositToMegavaultResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.mintedShares !== undefined) {
+      NumShares.encode(message.mintedShares, writer.uint32(10).fork()).ldelim();
+    }
+
     return writer;
   },
 
@@ -169,6 +182,10 @@ export const MsgDepositToMegavaultResponse = {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
+        case 1:
+          message.mintedShares = NumShares.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -178,8 +195,9 @@ export const MsgDepositToMegavaultResponse = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<MsgDepositToMegavaultResponse>): MsgDepositToMegavaultResponse {
+  fromPartial(object: DeepPartial<MsgDepositToMegavaultResponse>): MsgDepositToMegavaultResponse {
     const message = createBaseMsgDepositToMegavaultResponse();
+    message.mintedShares = object.mintedShares !== undefined && object.mintedShares !== null ? NumShares.fromPartial(object.mintedShares) : undefined;
     return message;
   }
 

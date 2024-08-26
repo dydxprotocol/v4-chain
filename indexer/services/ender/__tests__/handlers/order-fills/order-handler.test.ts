@@ -1822,6 +1822,7 @@ function createOrderFillEvent(
   fillAmount: number,
   totalFilledMaker: number,
   totalFilledTaker: number,
+  affiliateRevShare: number = 0,
 ): OrderFillEventV1 {
   return {
     makerOrder: makerOrderProto,
@@ -1831,6 +1832,7 @@ function createOrderFillEvent(
     takerFee: Long.fromValue(defaultTakerFeeQuantum, false),
     totalFilledMaker: Long.fromValue(totalFilledMaker, true),
     totalFilledTaker: Long.fromValue(totalFilledTaker, true),
+    affiliateRevShare: Long.fromValue(affiliateRevShare, false),
   } as OrderFillEventV1;
 }
 

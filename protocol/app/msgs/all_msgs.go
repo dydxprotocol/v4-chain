@@ -148,6 +148,12 @@ var (
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse":    {},
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal":       {},
 
+		// affiliates
+		"/dydxprotocol.affiliates.MsgRegisterAffiliate":            {},
+		"/dydxprotocol.affiliates.MsgRegisterAffiliateResponse":    {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":         {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse": {},
+
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         {},
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": {},

@@ -19,13 +19,13 @@ import {
   FundingIndexMap,
   WalletTable,
   WalletFromDatabase,
+  perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
 import {
   matchedData,
 } from 'express-validator';
-import _ from 'lodash';
 import {
   Route, Get, Path, Controller,
 } from 'tsoa';
@@ -52,7 +52,6 @@ import {
   ParentSubaccountResponse,
   ParentSubaccountRequest,
 } from '../../../types';
-import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'addresses-controller';
@@ -76,6 +75,7 @@ class AddressesController extends Controller {
         [],
       ),
       BlockTable.getLatest(),
+      // vincent left his laptop unlocked and says hello
       WalletTable.findById(address),
     ]);
 

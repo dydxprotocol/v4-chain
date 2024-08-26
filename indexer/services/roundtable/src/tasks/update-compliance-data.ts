@@ -1,4 +1,6 @@
-import { delay, logger, stats } from '@dydxprotocol-indexer/base';
+import {
+  STATS_NO_SAMPLING, delay, logger, stats,
+} from '@dydxprotocol-indexer/base';
 import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
 import {
   ComplianceDataColumns,
@@ -96,13 +98,10 @@ export default async function runTask(
     }
 
     // Add any address that has compliance data that's over the age threshold for active addresses
-    // and is not blocked
+    // and is not blocked. Count all such accounts.
     let activeAddressesToQuery: number = 0;
+    let activeAddressesWithStaleCompliance: number = 0;
     for (const addressCompliance of activeAddressCompliance) {
-      if (remainingQueries <= 0) {
-        break;
-      }
-
       if (addressCompliance.blocked) {
         continue;
       }
@@ -111,27 +110,37 @@ export default async function runTask(
         continue;
       }
 
-      addressesToQuery.push(addressCompliance.address);
-      remainingQueries -= 1;
-      activeAddressesToQuery += 1;
+      activeAddressesWithStaleCompliance += 1;
+
+      if (remainingQueries > 0) {
+        addressesToQuery.push(addressCompliance.address);
+        remainingQueries -= 1;
+        activeAddressesToQuery += 1;
+      }
     }
 
     stats.timing(
       `${config.SERVICE_NAME}.${taskName}.get_active_addresses`,
       Date.now() - startActiveAddresses,
-      undefined,
+      STATS_NO_SAMPLING,
       { provider: complianceProvider.provider },
     );
     stats.gauge(
       `${config.SERVICE_NAME}.${taskName}.num_active_addresses`,
       activeAddressesToQuery,
-      undefined,
+      STATS_NO_SAMPLING,
       { provider: complianceProvider.provider },
     );
     stats.gauge(
       `${config.SERVICE_NAME}.${taskName}.num_new_addresses`,
       addressesWithoutCompliance.length,
-      undefined,
+      STATS_NO_SAMPLING,
+      { provider: complianceProvider.provider },
+    );
+    stats.gauge(
+      `${config.SERVICE_NAME}.${taskName}.num_active_addresses_with_stale_compliance`,
+      activeAddressesWithStaleCompliance,
+      STATS_NO_SAMPLING,
       { provider: complianceProvider.provider },
     );
 
@@ -142,27 +151,39 @@ export default async function runTask(
         blocked: false,
         provider: complianceProvider.provider,
         updatedBeforeOrAt: ageThreshold,
-        limit: remainingQueries,
       },
       [],
       { readReplica: true },
     );
-    addressesToQuery.push(...(
-      _.chain(oldAddressCompliance).map(ComplianceDataColumns.address).uniq().value()
-    ));
+
+    const inactiveAddressesWithStaleCompliance = oldAddressCompliance.length;
+    const oldAddressesToAdd = _.chain(oldAddressCompliance)
+      .map(ComplianceDataColumns.address)
+      .uniq()
+      .take(remainingQueries)
+      .value();
+
+    addressesToQuery.push(...oldAddressesToAdd);
+
     // Ensure all addresses to query are unique
     addressesToQuery = _.sortedUniq(addressesToQuery);
 
     stats.timing(
       `${config.SERVICE_NAME}.${taskName}.get_old_addresses`,
       Date.now() - startOldAddresses,
-      undefined,
+      STATS_NO_SAMPLING,
       { provider: complianceProvider.provider },
     );
     stats.gauge(
       `${config.SERVICE_NAME}.${taskName}.num_old_addresses`,
-      oldAddressCompliance.length,
-      undefined,
+      oldAddressesToAdd.length,
+      STATS_NO_SAMPLING,
+      { provider: complianceProvider.provider },
+    );
+    stats.gauge(
+      `${config.SERVICE_NAME}.${taskName}.num_inactive_addresses_with_stale_compliance`,
+      inactiveAddressesWithStaleCompliance,
+      STATS_NO_SAMPLING,
       { provider: complianceProvider.provider },
     );
 
@@ -216,13 +237,13 @@ export default async function runTask(
     stats.timing(
       `${config.SERVICE_NAME}.${taskName}.query_compliance_data`,
       Date.now() - startQueryProvider,
-      undefined,
+      STATS_NO_SAMPLING,
       { provider: complianceProvider.provider },
     );
     stats.gauge(
       `${config.SERVICE_NAME}.${taskName}.num_addresses_to_screen`,
       addressesToQuery.length,
-      undefined,
+      STATS_NO_SAMPLING,
       { provider: complianceProvider.provider },
     );
 
@@ -235,13 +256,13 @@ export default async function runTask(
     stats.timing(
       `${config.SERVICE_NAME}.${taskName}.upsert_compliance_data`,
       Date.now() - startUpsert,
-      undefined,
+      STATS_NO_SAMPLING,
       { provider: complianceProvider.provider },
     );
     stats.gauge(
       `${config.SERVICE_NAME}.${taskName}.num_upserted`,
       complianceCreateObjects.length,
-      undefined,
+      STATS_NO_SAMPLING,
       { provider: complianceProvider.provider },
     );
 

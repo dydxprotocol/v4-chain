@@ -6,10 +6,17 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
 	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -23,21 +30,336 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// AffiliateInfoRequest is the request type for the Query/AffiliateInfo RPC
+// method.
+type AffiliateInfoRequest struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *AffiliateInfoRequest) Reset()         { *m = AffiliateInfoRequest{} }
+func (m *AffiliateInfoRequest) String() string { return proto.CompactTextString(m) }
+func (*AffiliateInfoRequest) ProtoMessage()    {}
+func (*AffiliateInfoRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2edc1b3ea39b05a9, []int{0}
+}
+func (m *AffiliateInfoRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AffiliateInfoRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AffiliateInfoRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AffiliateInfoRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AffiliateInfoRequest.Merge(m, src)
+}
+func (m *AffiliateInfoRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AffiliateInfoRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AffiliateInfoRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AffiliateInfoRequest proto.InternalMessageInfo
+
+func (m *AffiliateInfoRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+// AffiliateInfoResponse is the response type for the Query/AffiliateInfo RPC
+// method.
+type AffiliateInfoResponse struct {
+	// The affiliate's tier.
+	Tier uint32 `protobuf:"varint,1,opt,name=tier,proto3" json:"tier,omitempty"`
+	// The affiliate's taker fee share in parts-per-million.
+	FeeSharePpm uint32 `protobuf:"varint,2,opt,name=fee_share_ppm,json=feeSharePpm,proto3" json:"fee_share_ppm,omitempty"`
+	// The affiliate's all-time referred volume in quote quantums.
+	ReferredVolume github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,3,opt,name=referred_volume,json=referredVolume,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"referred_volume"`
+	// The affiliate's currently staked native tokens (in whole coins).
+	StakedAmount github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,4,opt,name=staked_amount,json=stakedAmount,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"staked_amount"`
+}
+
+func (m *AffiliateInfoResponse) Reset()         { *m = AffiliateInfoResponse{} }
+func (m *AffiliateInfoResponse) String() string { return proto.CompactTextString(m) }
+func (*AffiliateInfoResponse) ProtoMessage()    {}
+func (*AffiliateInfoResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2edc1b3ea39b05a9, []int{1}
+}
+func (m *AffiliateInfoResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AffiliateInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AffiliateInfoResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AffiliateInfoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AffiliateInfoResponse.Merge(m, src)
+}
+func (m *AffiliateInfoResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AffiliateInfoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AffiliateInfoResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AffiliateInfoResponse proto.InternalMessageInfo
+
+func (m *AffiliateInfoResponse) GetTier() uint32 {
+	if m != nil {
+		return m.Tier
+	}
+	return 0
+}
+
+func (m *AffiliateInfoResponse) GetFeeSharePpm() uint32 {
+	if m != nil {
+		return m.FeeSharePpm
+	}
+	return 0
+}
+
+// ReferredByRequest is the request type for the Query/ReferredBy RPC method.
+type ReferredByRequest struct {
+	// The address to query.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *ReferredByRequest) Reset()         { *m = ReferredByRequest{} }
+func (m *ReferredByRequest) String() string { return proto.CompactTextString(m) }
+func (*ReferredByRequest) ProtoMessage()    {}
+func (*ReferredByRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2edc1b3ea39b05a9, []int{2}
+}
+func (m *ReferredByRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ReferredByRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ReferredByRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ReferredByRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ReferredByRequest.Merge(m, src)
+}
+func (m *ReferredByRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ReferredByRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ReferredByRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ReferredByRequest proto.InternalMessageInfo
+
+func (m *ReferredByRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+// ReferredByResponse is the response type for the Query/ReferredBy RPC method.
+type ReferredByResponse struct {
+	// The affiliate's address that referred the queried address.
+	AffiliateAddress string `protobuf:"bytes,1,opt,name=affiliate_address,json=affiliateAddress,proto3" json:"affiliate_address,omitempty"`
+}
+
+func (m *ReferredByResponse) Reset()         { *m = ReferredByResponse{} }
+func (m *ReferredByResponse) String() string { return proto.CompactTextString(m) }
+func (*ReferredByResponse) ProtoMessage()    {}
+func (*ReferredByResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2edc1b3ea39b05a9, []int{3}
+}
+func (m *ReferredByResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ReferredByResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ReferredByResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ReferredByResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ReferredByResponse.Merge(m, src)
+}
+func (m *ReferredByResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ReferredByResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ReferredByResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ReferredByResponse proto.InternalMessageInfo
+
+func (m *ReferredByResponse) GetAffiliateAddress() string {
+	if m != nil {
+		return m.AffiliateAddress
+	}
+	return ""
+}
+
+// AllAffiliateTiersRequest is the request type for the Query/AllAffiliateTiers
+// RPC method.
+type AllAffiliateTiersRequest struct {
+}
+
+func (m *AllAffiliateTiersRequest) Reset()         { *m = AllAffiliateTiersRequest{} }
+func (m *AllAffiliateTiersRequest) String() string { return proto.CompactTextString(m) }
+func (*AllAffiliateTiersRequest) ProtoMessage()    {}
+func (*AllAffiliateTiersRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2edc1b3ea39b05a9, []int{4}
+}
+func (m *AllAffiliateTiersRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AllAffiliateTiersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AllAffiliateTiersRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AllAffiliateTiersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AllAffiliateTiersRequest.Merge(m, src)
+}
+func (m *AllAffiliateTiersRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AllAffiliateTiersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AllAffiliateTiersRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AllAffiliateTiersRequest proto.InternalMessageInfo
+
+// AllAffiliateTiersResponse is the response type for the
+// Query/AllAffiliateTiers RPC method.
+type AllAffiliateTiersResponse struct {
+	// All affiliate tiers information.
+	Tiers AffiliateTiers `protobuf:"bytes,1,opt,name=tiers,proto3" json:"tiers"`
+}
+
+func (m *AllAffiliateTiersResponse) Reset()         { *m = AllAffiliateTiersResponse{} }
+func (m *AllAffiliateTiersResponse) String() string { return proto.CompactTextString(m) }
+func (*AllAffiliateTiersResponse) ProtoMessage()    {}
+func (*AllAffiliateTiersResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2edc1b3ea39b05a9, []int{5}
+}
+func (m *AllAffiliateTiersResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AllAffiliateTiersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AllAffiliateTiersResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AllAffiliateTiersResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AllAffiliateTiersResponse.Merge(m, src)
+}
+func (m *AllAffiliateTiersResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AllAffiliateTiersResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AllAffiliateTiersResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AllAffiliateTiersResponse proto.InternalMessageInfo
+
+func (m *AllAffiliateTiersResponse) GetTiers() AffiliateTiers {
+	if m != nil {
+		return m.Tiers
+	}
+	return AffiliateTiers{}
+}
+
+func init() {
+	proto.RegisterType((*AffiliateInfoRequest)(nil), "dydxprotocol.affiliates.AffiliateInfoRequest")
+	proto.RegisterType((*AffiliateInfoResponse)(nil), "dydxprotocol.affiliates.AffiliateInfoResponse")
+	proto.RegisterType((*ReferredByRequest)(nil), "dydxprotocol.affiliates.ReferredByRequest")
+	proto.RegisterType((*ReferredByResponse)(nil), "dydxprotocol.affiliates.ReferredByResponse")
+	proto.RegisterType((*AllAffiliateTiersRequest)(nil), "dydxprotocol.affiliates.AllAffiliateTiersRequest")
+	proto.RegisterType((*AllAffiliateTiersResponse)(nil), "dydxprotocol.affiliates.AllAffiliateTiersResponse")
+}
+
 func init() {
 	proto.RegisterFile("dydxprotocol/affiliates/query.proto", fileDescriptor_2edc1b3ea39b05a9)
 }
 
 var fileDescriptor_2edc1b3ea39b05a9 = []byte{
-	// 139 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x4e, 0xa9, 0x4c, 0xa9,
-	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x4f, 0x4c, 0x4b, 0xcb, 0xcc, 0xc9, 0x4c,
-	0x2c, 0x49, 0x2d, 0xd6, 0x2f, 0x2c, 0x4d, 0x2d, 0xaa, 0xd4, 0x03, 0xcb, 0x08, 0x89, 0x23, 0x2b,
-	0xd2, 0x43, 0x28, 0x32, 0x62, 0xe7, 0x62, 0x0d, 0x04, 0xa9, 0x73, 0x0a, 0x3b, 0xf1, 0x48, 0x8e,
-	0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58,
-	0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0x9b, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4,
-	0xfc, 0x5c, 0x7d, 0x14, 0xbb, 0xca, 0x4c, 0x74, 0x93, 0x33, 0x12, 0x33, 0xf3, 0xf4, 0xe1, 0x22,
-	0x15, 0xc8, 0xf6, 0x97, 0x54, 0x16, 0xa4, 0x16, 0x27, 0xb1, 0x81, 0x25, 0x8d, 0x01, 0x01, 0x00,
-	0x00, 0xff, 0xff, 0xe9, 0xbc, 0xb9, 0x69, 0xa7, 0x00, 0x00, 0x00,
+	// 506 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcd, 0x6e, 0xd3, 0x40,
+	0x10, 0x8e, 0x43, 0x0a, 0x62, 0xda, 0x00, 0x59, 0x05, 0xe1, 0xfa, 0xe0, 0x56, 0xe6, 0x40, 0x04,
+	0x8a, 0x2d, 0x02, 0x47, 0x0e, 0xc4, 0x08, 0x41, 0x39, 0x81, 0x83, 0x7a, 0x80, 0x83, 0x71, 0xe2,
+	0x71, 0x62, 0x61, 0x7b, 0x9d, 0xdd, 0x75, 0xd5, 0xf4, 0x29, 0x78, 0x15, 0x24, 0x1e, 0xa2, 0xc7,
+	0x8a, 0x13, 0xea, 0xa1, 0x42, 0xc9, 0x8b, 0x20, 0xff, 0xe4, 0x8f, 0x62, 0x11, 0x44, 0x6f, 0xe3,
+	0x99, 0xef, 0x67, 0x3c, 0x33, 0x36, 0xdc, 0x77, 0x27, 0xee, 0x71, 0xcc, 0xa8, 0xa0, 0x03, 0x1a,
+	0x18, 0x8e, 0xe7, 0xf9, 0x81, 0xef, 0x08, 0xe4, 0xc6, 0x38, 0x41, 0x36, 0xd1, 0xb3, 0x0a, 0xb9,
+	0xb7, 0x0a, 0xd2, 0x97, 0x20, 0x65, 0x77, 0x40, 0x79, 0x48, 0xb9, 0x9d, 0xd5, 0x8c, 0xfc, 0x21,
+	0xe7, 0x28, 0xcd, 0x21, 0x1d, 0xd2, 0x3c, 0x9f, 0x46, 0x45, 0xb6, 0x55, 0x66, 0xb7, 0x0c, 0x73,
+	0xa4, 0xf6, 0x06, 0x9a, 0xdd, 0x79, 0xee, 0x20, 0xf2, 0xa8, 0x85, 0xe3, 0x04, 0xb9, 0x20, 0x1d,
+	0xb8, 0xe1, 0xb8, 0x2e, 0x43, 0xce, 0x65, 0x69, 0x5f, 0x6a, 0xdd, 0x34, 0xe5, 0xef, 0xdf, 0xda,
+	0xcd, 0xc2, 0xba, 0x9b, 0x57, 0x7a, 0x82, 0xf9, 0xd1, 0xd0, 0x9a, 0x03, 0xb5, 0xaf, 0x55, 0xb8,
+	0xfb, 0x9b, 0x18, 0x8f, 0x69, 0xc4, 0x91, 0x10, 0xa8, 0x09, 0x1f, 0x59, 0x26, 0x55, 0xb7, 0xb2,
+	0x98, 0x68, 0x50, 0xf7, 0x10, 0x6d, 0x3e, 0x72, 0x18, 0xda, 0x71, 0x1c, 0xca, 0xd5, 0xac, 0xb8,
+	0xed, 0x21, 0xf6, 0xd2, 0xdc, 0xdb, 0x38, 0x24, 0x63, 0xb8, 0xcd, 0xd0, 0x43, 0xc6, 0xd0, 0xb5,
+	0x8f, 0x68, 0x90, 0x84, 0x28, 0x5f, 0xdb, 0x97, 0x5a, 0x3b, 0xe6, 0xeb, 0xd3, 0x8b, 0xbd, 0xca,
+	0xf9, 0xc5, 0xde, 0xf3, 0xa1, 0x2f, 0x46, 0x49, 0x5f, 0x1f, 0xd0, 0xd0, 0x58, 0x7b, 0xe7, 0xa3,
+	0xa7, 0xed, 0xc1, 0xc8, 0xf1, 0x23, 0x63, 0x91, 0x71, 0xc5, 0x24, 0x46, 0xae, 0xf7, 0x90, 0xf9,
+	0x4e, 0xe0, 0x9f, 0x38, 0xfd, 0x00, 0x0f, 0x22, 0x61, 0xdd, 0x9a, 0x1b, 0x1c, 0x66, 0xfa, 0x24,
+	0x84, 0x3a, 0x17, 0xce, 0x67, 0x74, 0x6d, 0x27, 0xa4, 0x49, 0x24, 0xe4, 0xda, 0x15, 0x1b, 0xee,
+	0xe4, 0xf2, 0xdd, 0x4c, 0x5d, 0x7b, 0x05, 0x0d, 0xab, 0x68, 0xc0, 0x9c, 0xfc, 0xcf, 0xf0, 0x3f,
+	0x02, 0x59, 0x15, 0x2a, 0x06, 0xff, 0x12, 0x1a, 0x8b, 0x95, 0xdb, 0x9b, 0x6a, 0xde, 0x59, 0x50,
+	0x8a, 0xbc, 0xa6, 0x80, 0xdc, 0x0d, 0x82, 0xc5, 0x6e, 0xdf, 0xfb, 0xc8, 0x78, 0xd1, 0xac, 0xf6,
+	0x09, 0x76, 0xff, 0x50, 0x2b, 0xfc, 0x5f, 0xc0, 0x56, 0xba, 0xec, 0xdc, 0x73, 0xbb, 0xf3, 0x40,
+	0x2f, 0x39, 0x71, 0x7d, 0x9d, 0x6f, 0xd6, 0xd2, 0x71, 0x5b, 0x39, 0xb7, 0x73, 0x5e, 0x85, 0xad,
+	0x77, 0xe9, 0x77, 0x42, 0x22, 0xa8, 0xaf, 0x1d, 0x18, 0x69, 0xff, 0x5d, 0x70, 0xe5, 0xaa, 0x15,
+	0x7d, 0x53, 0x78, 0xd1, 0x3e, 0x02, 0x2c, 0x87, 0x4a, 0x1e, 0x96, 0xb2, 0x2f, 0xad, 0x50, 0x79,
+	0xb4, 0x11, 0xb6, 0xb0, 0x39, 0x81, 0xc6, 0xa5, 0x11, 0x92, 0xc7, 0xe5, 0xbd, 0x96, 0xac, 0x42,
+	0xe9, 0xfc, 0x0b, 0x25, 0xf7, 0x36, 0x0f, 0x4f, 0xa7, 0xaa, 0x74, 0x36, 0x55, 0xa5, 0x9f, 0x53,
+	0x55, 0xfa, 0x32, 0x53, 0x2b, 0x67, 0x33, 0xb5, 0xf2, 0x63, 0xa6, 0x56, 0x3e, 0x3c, 0xdb, 0xfc,
+	0xd4, 0x8f, 0x57, 0xff, 0x31, 0xd9, 0xd9, 0xf7, 0xaf, 0x67, 0xc5, 0x27, 0xbf, 0x02, 0x00, 0x00,
+	0xff, 0xff, 0x31, 0x96, 0xc3, 0xe2, 0xfa, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -52,6 +374,12 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
+	// Query AffiliateInfo returns the affiliate info for a given address.
+	AffiliateInfo(ctx context.Context, in *AffiliateInfoRequest, opts ...grpc.CallOption) (*AffiliateInfoResponse, error)
+	// Query ReferredBy returns the affiliate that referred a given address.
+	ReferredBy(ctx context.Context, in *ReferredByRequest, opts ...grpc.CallOption) (*ReferredByResponse, error)
+	// Query AllAffiliateTiers returns all affiliate tiers.
+	AllAffiliateTiers(ctx context.Context, in *AllAffiliateTiersRequest, opts ...grpc.CallOption) (*AllAffiliateTiersResponse, error)
 }
 
 type queryClient struct {
@@ -62,22 +390,1044 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
+func (c *queryClient) AffiliateInfo(ctx context.Context, in *AffiliateInfoRequest, opts ...grpc.CallOption) (*AffiliateInfoResponse, error) {
+	out := new(AffiliateInfoResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.affiliates.Query/AffiliateInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ReferredBy(ctx context.Context, in *ReferredByRequest, opts ...grpc.CallOption) (*ReferredByResponse, error) {
+	out := new(ReferredByResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.affiliates.Query/ReferredBy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllAffiliateTiers(ctx context.Context, in *AllAffiliateTiersRequest, opts ...grpc.CallOption) (*AllAffiliateTiersResponse, error) {
+	out := new(AllAffiliateTiersResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.affiliates.Query/AllAffiliateTiers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
+	// Query AffiliateInfo returns the affiliate info for a given address.
+	AffiliateInfo(context.Context, *AffiliateInfoRequest) (*AffiliateInfoResponse, error)
+	// Query ReferredBy returns the affiliate that referred a given address.
+	ReferredBy(context.Context, *ReferredByRequest) (*ReferredByResponse, error)
+	// Query AllAffiliateTiers returns all affiliate tiers.
+	AllAffiliateTiers(context.Context, *AllAffiliateTiersRequest) (*AllAffiliateTiersResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
+func (*UnimplementedQueryServer) AffiliateInfo(ctx context.Context, req *AffiliateInfoRequest) (*AffiliateInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AffiliateInfo not implemented")
+}
+func (*UnimplementedQueryServer) ReferredBy(ctx context.Context, req *ReferredByRequest) (*ReferredByResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReferredBy not implemented")
+}
+func (*UnimplementedQueryServer) AllAffiliateTiers(ctx context.Context, req *AllAffiliateTiersRequest) (*AllAffiliateTiersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllAffiliateTiers not implemented")
+}
+
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
+}
+
+func _Query_AffiliateInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AffiliateInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AffiliateInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.affiliates.Query/AffiliateInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AffiliateInfo(ctx, req.(*AffiliateInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ReferredBy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReferredByRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ReferredBy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.affiliates.Query/ReferredBy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ReferredBy(ctx, req.(*ReferredByRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllAffiliateTiers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AllAffiliateTiersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllAffiliateTiers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.affiliates.Query/AllAffiliateTiers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllAffiliateTiers(ctx, req.(*AllAffiliateTiersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.affiliates.Query",
 	HandlerType: (*QueryServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "dydxprotocol/affiliates/query.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "AffiliateInfo",
+			Handler:    _Query_AffiliateInfo_Handler,
+		},
+		{
+			MethodName: "ReferredBy",
+			Handler:    _Query_ReferredBy_Handler,
+		},
+		{
+			MethodName: "AllAffiliateTiers",
+			Handler:    _Query_AllAffiliateTiers_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "dydxprotocol/affiliates/query.proto",
 }
+
+func (m *AffiliateInfoRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AffiliateInfoRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AffiliateInfoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AffiliateInfoResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AffiliateInfoResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AffiliateInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.StakedAmount.Size()
+		i -= size
+		if _, err := m.StakedAmount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	{
+		size := m.ReferredVolume.Size()
+		i -= size
+		if _, err := m.ReferredVolume.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if m.FeeSharePpm != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.FeeSharePpm))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Tier != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Tier))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ReferredByRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ReferredByRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ReferredByRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ReferredByResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ReferredByResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ReferredByResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.AffiliateAddress) > 0 {
+		i -= len(m.AffiliateAddress)
+		copy(dAtA[i:], m.AffiliateAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.AffiliateAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AllAffiliateTiersRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AllAffiliateTiersRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AllAffiliateTiersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *AllAffiliateTiersResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AllAffiliateTiersResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AllAffiliateTiersResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Tiers.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
+	offset -= sovQuery(v)
+	base := offset
+	for v >= 1<<7 {
+		dAtA[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	dAtA[offset] = uint8(v)
+	return base
+}
+func (m *AffiliateInfoRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *AffiliateInfoResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tier != 0 {
+		n += 1 + sovQuery(uint64(m.Tier))
+	}
+	if m.FeeSharePpm != 0 {
+		n += 1 + sovQuery(uint64(m.FeeSharePpm))
+	}
+	l = m.ReferredVolume.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	l = m.StakedAmount.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *ReferredByRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *ReferredByResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AffiliateAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *AllAffiliateTiersRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *AllAffiliateTiersResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Tiers.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func sovQuery(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
+}
+func sozQuery(x uint64) (n int) {
+	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *AffiliateInfoRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AffiliateInfoRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AffiliateInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AffiliateInfoResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AffiliateInfoResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AffiliateInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tier", wireType)
+			}
+			m.Tier = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Tier |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeeSharePpm", wireType)
+			}
+			m.FeeSharePpm = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FeeSharePpm |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReferredVolume", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ReferredVolume.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StakedAmount", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.StakedAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ReferredByRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ReferredByRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ReferredByRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ReferredByResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ReferredByResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ReferredByResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AffiliateAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AffiliateAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AllAffiliateTiersRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AllAffiliateTiersRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AllAffiliateTiersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AllAffiliateTiersResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AllAffiliateTiersResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AllAffiliateTiersResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tiers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Tiers.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func skipQuery(dAtA []byte) (n int, err error) {
+	l := len(dAtA)
+	iNdEx := 0
+	depth := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return 0, io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		wireType := int(wire & 0x7)
+		switch wireType {
+		case 0:
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				iNdEx++
+				if dAtA[iNdEx-1] < 0x80 {
+					break
+				}
+			}
+		case 1:
+			iNdEx += 8
+		case 2:
+			var length int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				length |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if length < 0 {
+				return 0, ErrInvalidLengthQuery
+			}
+			iNdEx += length
+		case 3:
+			depth++
+		case 4:
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupQuery
+			}
+			depth--
+		case 5:
+			iNdEx += 4
+		default:
+			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
+		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthQuery
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
+	}
+	return 0, io.ErrUnexpectedEOF
+}
+
+var (
+	ErrInvalidLengthQuery        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowQuery          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupQuery = fmt.Errorf("proto: unexpected end of group")
+)

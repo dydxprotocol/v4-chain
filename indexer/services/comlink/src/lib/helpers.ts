@@ -21,12 +21,20 @@ import {
   SubaccountFromDatabase,
   SubaccountTable,
   USDC_SYMBOL,
+  AssetFromDatabase,
+  AssetColumns,
+  MarketColumns,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
 import _ from 'lodash';
 
 import config from '../config';
+import {
+  assetPositionToResponseObject,
+  perpetualPositionToResponseObject,
+  subaccountToResponseObject,
+} from '../request-helpers/request-transformer';
 import {
   AssetById,
   AssetPositionResponseObject,
@@ -40,15 +48,6 @@ import {
 } from '../types';
 import { ZERO, ZERO_USDC_POSITION } from './constants';
 import { NotFoundError } from './errors';
-import { AssetFromDatabase } from '@dydxprotocol-indexer/postgres';
-import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
-import { MarketColumns } from '@dydxprotocol-indexer/postgres';
-import { 
-  assetPositionToResponseObject,
-  perpetualPositionToResponseObject,
-  subaccountToResponseObject,
-} from '../request-helpers/request-transformer';
-import { AssetColumns } from '@dydxprotocol-indexer/postgres';
 
 /* ------- GENERIC HELPERS ------- */
 
@@ -544,11 +543,13 @@ export function checkIfValidDydxAddress(address: string): boolean {
  * @param markets List of perpetual markets, from the database
  * @param assetPositions List of asset positions held by the subaccount, from the database
  * @param assets List of assets from the database
- * @param perpetualMarketsMap Mapping of perpetual markets to clob pairs, perpetual ids, tickers from the database.
+ * @param perpetualMarketsMap Mapping of perpetual markets to clob pairs, perpetual ids,
+ *                            tickers from the database.
  * @param latestBlockHeight Latest block height from the database
  * @param latestFundingIndexMap Latest funding indices per perpetual from the database.
- * @param lastUpdatedFundingIndexMap Funding indices per perpetual for the last updated block of the subaccount.
- * 
+ * @param lastUpdatedFundingIndexMap Funding indices per perpetual for the last updated block of
+ *                                   the subaccount.
+ *
  * @returns Response object for the subaccount
  */
 export function getSubaccountResponse(

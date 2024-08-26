@@ -5,6 +5,7 @@ export const createRPCMsgClient = async ({
   rpc: Rpc;
 }) => ({
   dydxprotocol: {
+    affiliates: new (await import("./affiliates/tx.rpc.msg")).MsgClientImpl(rpc),
     blocktime: new (await import("./blocktime/tx.rpc.msg")).MsgClientImpl(rpc),
     bridge: new (await import("./bridge/tx.rpc.msg")).MsgClientImpl(rpc),
     clob: new (await import("./clob/tx.rpc.msg")).MsgClientImpl(rpc),
