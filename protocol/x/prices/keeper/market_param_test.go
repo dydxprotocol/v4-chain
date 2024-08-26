@@ -79,16 +79,19 @@ func TestModifyMarketParamUpdatesCache(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, uint64(id), cpID)
 
-	// create new ticker in MarketMap for newParam (new ticker must exist in MarketMap before MarketParam.Pair can be updated)
+	// create new ticker in MarketMap for newParam
+	// (new ticker must exist in MarketMap before MarketParam.Pair can be updated)
 	newParam := oldParam
 	newParam.Pair = "bar-foo"
-	keepertest.CreateMarketsInMarketMapFromParams(t, ctx, keeper.MarketMapKeeper.(*marketmapkeeper.Keeper), []types.MarketParam{newParam})
+	keepertest.CreateMarketsInMarketMapFromParams(
+		t,
+		ctx,
+		keeper.MarketMapKeeper.(*marketmapkeeper.Keeper),
+		[]types.MarketParam{newParam},
+	)
 
 	// modify the market param
-	newParam, err = keeper.ModifyMarketParam(
-		ctx,
-		newParam,
-	)
+	newParam, err = keeper.ModifyMarketParam(ctx, newParam)
 	require.NoError(t, err)
 
 	// check that the existing entry does not exist
