@@ -53,13 +53,14 @@ class AffiliatesController extends Controller {
 
   @Get('/snapshot')
   async getSnapshot(
-    @Query() offset ?: number,
-      @Query() limit ?: number,
-      @Query() sortByReferredFees ?: boolean,
+    @Query() offset?: number,
+      @Query() limit?: number,
+      @Query() sortByReferredFees?: boolean,
   ): Promise<AffiliateSnapshotResponse> {
     const finalOffset = offset ?? 0;
     const finalLimit = limit ?? 1000;
-    const finalSortByReferredFees = sortByReferredFees ?? false; // eslint-disable-line max-len, @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line
+    const finalSortByReferredFees = sortByReferredFees ?? false;
 
     // simulate a delay
     await new Promise((resolve) => setTimeout(resolve, 100));
