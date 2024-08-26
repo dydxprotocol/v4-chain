@@ -6,6 +6,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
+	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -20,6 +21,7 @@ func TestModifyMarketParam(t *testing.T) {
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
+
 	for i, item := range items {
 		// Modify each field arbitrarily and
 		// verify the fields were modified in state
@@ -60,7 +62,8 @@ func TestModifyMarketParamUpdatesCache(t *testing.T) {
 		MinPriceChangePpm:  uint32(50),
 		ExchangeConfigJson: `{"id":"1"}`,
 	}
-	mp, err := keepertest.CreateTestMarket(t, ctx, keeper, oldParam, types.MarketPrice{
+
+	oldMp, err := keepertest.CreateTestMarket(t, ctx, keeper, oldParam, types.MarketPrice{
 		Id:       id,
 		Exponent: -8,
 		Price:    1,
@@ -68,7 +71,7 @@ func TestModifyMarketParamUpdatesCache(t *testing.T) {
 	require.NoError(t, err)
 
 	// check that the existing entry exists
-	cp, err := slinky.MarketPairToCurrencyPair(mp.Pair)
+	cp, err := slinky.MarketPairToCurrencyPair(oldMp.Pair)
 	require.NoError(t, err)
 
 	// check that the existing entry exists
@@ -76,17 +79,15 @@ func TestModifyMarketParamUpdatesCache(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, uint64(id), cpID)
 
+	// create new ticker in MarketMap for newParam (new ticker must exist in MarketMap before MarketParam.Pair can be updated)
+	newParam := oldParam
+	newParam.Pair = "bar-foo"
+	keepertest.CreateMarketsInMarketMapFromParams(t, ctx, keeper.MarketMapKeeper.(*marketmapkeeper.Keeper), []types.MarketParam{newParam})
+
 	// modify the market param
-	newParam, err := keeper.ModifyMarketParam(
+	newParam, err = keeper.ModifyMarketParam(
 		ctx,
-		types.MarketParam{
-			Id:                 id,
-			Pair:               "bar-foo",
-			MinExchanges:       uint32(2),
-			Exponent:           -8,
-			MinPriceChangePpm:  uint32(50),
-			ExchangeConfigJson: `{"id":"1"}`,
-		},
+		newParam,
 	)
 	require.NoError(t, err)
 
@@ -104,6 +105,10 @@ func TestModifyMarketParamUpdatesCache(t *testing.T) {
 
 func TestModifyMarketParam_Errors(t *testing.T) {
 	validExchangeConfigJson := `{"exchanges":[{"exchangeName":"Binance","ticker":"BTCUSDT"}]}`
+	invalidUpdatePair := "nil-nil"
+	invalidUpdateCurrencyPair, err := slinky.MarketPairToCurrencyPair(invalidUpdatePair)
+	require.NoError(t, err)
+
 	tests := map[string]struct {
 		// Setup
 		targetId           uint32
@@ -166,7 +171,7 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 				"",
 			).Error(),
 		},
-		"Updating pair fails": {
+		"Updating pair fails due to pair already existing": {
 			targetId:           0,
 			pair:               "1-1",
 			minExchanges:       uint32(1),
@@ -175,6 +180,17 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 			expectedErr: errorsmod.Wrapf(
 				types.ErrMarketParamPairAlreadyExists,
 				"1-1",
+			).Error(),
+		},
+		"Updating pair fails due to no ticker in MarketMap": {
+			targetId:           0,
+			pair:               invalidUpdatePair,
+			minExchanges:       uint32(1),
+			minPriceChangePpm:  uint32(50),
+			exchangeConfigJson: validExchangeConfigJson,
+			expectedErr: errorsmod.Wrapf(
+				types.ErrTickerNotFoundInMarketMap,
+				invalidUpdateCurrencyPair.String(),
 			).Error(),
 		},
 	}

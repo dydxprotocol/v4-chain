@@ -49,8 +49,14 @@ func (k Keeper) ModifyMarketParam(
 			return types.MarketParam{}, errorsmod.Wrapf(types.ErrMarketParamPairAlreadyExists, updatedMarketParam.Pair)
 		}
 	}
-	if _, err := k.MarketMapKeeper.GetMarket(ctx, updatedMarketParam.Pair); err != nil {
-		return types.MarketParam{}, errorsmod.Wrapf(types.ErrTickerNotFoundInMarketMap, updatedMarketParam.Pair)
+
+	// Validate that modified market param has a corresponding ticker in MarketMap
+	cp, err := slinky.MarketPairToCurrencyPair(updatedMarketParam.Pair)
+	if err != nil {
+		return types.MarketParam{}, errorsmod.Wrapf(types.ErrMarketPairConversionFailed, updatedMarketParam.Pair)
+	}
+	if _, err := k.MarketMapKeeper.GetMarket(ctx, cp.String()); err != nil {
+		return types.MarketParam{}, errorsmod.Wrapf(types.ErrTickerNotFoundInMarketMap, cp.String())
 	}
 
 	// Store the modified market param.
