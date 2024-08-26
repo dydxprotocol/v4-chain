@@ -43,7 +43,6 @@ describe('vault-controller#V4', () => {
         ...testConstants.defaultBlock,
         blockHeight,
       });
-      await SubaccountTable.create(testConstants.vaultSubaccount);
     });
 
     afterEach(async () => {
