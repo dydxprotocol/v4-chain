@@ -22,6 +22,7 @@ import {
   defaultSubaccountIdWithAlternateAddress,
   defaultSubaccountWithAlternateAddress,
   defaultWallet2,
+  vaultSubaccount,
   vaultSubaccountId,
   vaultWallet,
 } from '../helpers/constants';
@@ -420,6 +421,7 @@ describe('PnlTicks store', () => {
     await setupRankedPnlTicksData();
 
     await WalletTable.create(vaultWallet);
+    await SubaccountTable.create(vaultSubaccount);
     await PnlTicksTable.create({
       subaccountId: vaultSubaccountId,
       equity: '100',

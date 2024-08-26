@@ -33,7 +33,6 @@ import {
   isolatedPerpetualMarket2,
   isolatedSubaccount,
   isolatedSubaccount2,
-  vaultSubaccount,
 } from './constants';
 
 export async function seedData() {
