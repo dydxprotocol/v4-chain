@@ -28,8 +28,8 @@ export class NetworkOptimizer {
         new ValidatorConfig(endpointUrl, chainId, {
           CHAINTOKEN_DENOM: 'placeholder',
           CHAINTOKEN_DECIMALS: 18,
-          USDC_DENOM: 'uusdc',
-          USDC_DECIMALS: 6,
+          TDAI_DENOM: 'utdai',
+          TDAI_DECIMALS: 6,
         }))
         .catch((_) => undefined),
       ),

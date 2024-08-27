@@ -79,7 +79,7 @@ async function test(): Promise<void> {
         sourcePort: 'transfer',
         sourceChannel: 'channel-21',
         token: {
-          denom: 'uusdc',
+          denom: 'utdai',
           amount: coins[0].amount,
         },
         sender: nobleWallet.address,
@@ -102,7 +102,7 @@ async function test(): Promise<void> {
   await sleep(30000);
 
   try {
-    const coin = await client.getAccountBalance('uusdc');
+    const coin = await client.getAccountBalance('utdai');
     console.log('Balance');
     console.log(JSON.stringify(coin));
   } catch (error) {

@@ -742,7 +742,7 @@ export class CompositeClient {
     if (validatorClient === undefined) {
       throw new Error('validatorClient not set');
     }
-    const quantums = parseUnits(amount, validatorClient.config.denoms.USDC_DECIMALS);
+    const quantums = parseUnits(amount, validatorClient.config.denoms.TDAI_DECIMALS);
     if (quantums > BigInt(Long.MAX_VALUE.toString())) {
       throw new Error('amount to large');
     }
@@ -804,7 +804,7 @@ export class CompositeClient {
     if (validatorClient === undefined) {
       throw new Error('validatorClient not set');
     }
-    const quantums = parseUnits(amount, validatorClient.config.denoms.USDC_DECIMALS);
+    const quantums = parseUnits(amount, validatorClient.config.denoms.TDAI_DECIMALS);
     if (quantums > BigInt(Long.MAX_VALUE.toString())) {
       throw new Error('amount to large');
     }
@@ -871,7 +871,7 @@ export class CompositeClient {
     if (validatorClient === undefined) {
       throw new Error('validatorClient not set');
     }
-    const quantums = parseUnits(amount, validatorClient.config.denoms.USDC_DECIMALS);
+    const quantums = parseUnits(amount, validatorClient.config.denoms.TDAI_DECIMALS);
     if (quantums > BigInt(Long.MAX_VALUE.toString())) {
       throw new Error('amount to large');
     }

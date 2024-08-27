@@ -56,7 +56,7 @@ async function test(): Promise<void> {
 
     const simulatePayload = {
       subaccountNumber: 0,
-      amount: 20,   // In USDC i.e. $20.00
+      amount: 20,   // In TDAI i.e. $20.00
     };
     let stdFee = await simulateWithdraw(JSON.stringify(simulatePayload));
     console.log(stdFee);
