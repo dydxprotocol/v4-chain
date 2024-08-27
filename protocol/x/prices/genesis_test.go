@@ -67,9 +67,10 @@ func TestExportGenesis_WithMutation(t *testing.T) {
 	require.NoError(t, err)
 
 	// Update a market price.
-	err = k.UpdateMarketPrice(ctx, &types.MarketPriceUpdates_MarketPriceUpdate{
-		MarketId: 1,
-		Price:    modifiedPrice,
+	err = k.UpdateSpotAndPnlMarketPrices(ctx, &types.MarketPriceUpdate{
+		MarketId:  1,
+		SpotPrice: modifiedPrice,
+		PnlPrice:  modifiedPrice,
 	})
 	require.NoError(t, err)
 
@@ -77,7 +78,8 @@ func TestExportGenesis_WithMutation(t *testing.T) {
 	expectedExportGenesis.MarketParams = append(expectedExportGenesis.MarketParams, addedMarketParam)
 	expectedExportGenesis.MarketPrices = append(expectedExportGenesis.MarketPrices, addedMarketPrice)
 	expectedExportGenesis.MarketParams[0].MinExchanges = modifiedMinExchanges
-	expectedExportGenesis.MarketPrices[1].Price = modifiedPrice
+	expectedExportGenesis.MarketPrices[1].SpotPrice = modifiedPrice
+	expectedExportGenesis.MarketPrices[1].PnlPrice = modifiedPrice
 
 	// Verify expected exported genesis state matches input.
 	exportedState := prices.ExportGenesis(ctx, *k)

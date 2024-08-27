@@ -2322,7 +2322,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 	orderbook := m.openOrders.mustGetOrderbook(ctx, clobPair.GetClobPairId())
 
 	// Get index price represented in subticks.
-	indexPriceSubticks := types.PriceToSubticks(
+	indexPriceSubticks := types.SpotPriceToSubticks(
 		params.IndexPrice,
 		clobPair,
 		params.BaseAtomicResolution,

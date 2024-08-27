@@ -37,6 +37,13 @@ func (k Keeper) CreateMarket(
 		return types.MarketParam{}, err
 	}
 
+	if marketPrice.SpotPrice != marketPrice.PnlPrice {
+		return types.MarketParam{}, errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"spot price and pnl price must be the same",
+		)
+	}
+
 	paramBytes := k.cdc.MustMarshal(&marketParam)
 	priceBytes := k.cdc.MustMarshal(&marketPrice)
 

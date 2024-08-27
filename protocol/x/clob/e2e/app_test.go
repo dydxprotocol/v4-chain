@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
@@ -819,7 +820,7 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 				&tApp.App.ConsumerKeeper,
 				ctx,
-				map[uint32]uint64{},
+				map[uint32]ve.VEPricePair{},
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -875,7 +876,7 @@ func TestFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 				&tApp.App.ConsumerKeeper,
 				ctx,
-				map[uint32]uint64{},
+				map[uint32]ve.VEPricePair{},
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)

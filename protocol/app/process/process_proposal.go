@@ -58,7 +58,7 @@ func ProcessProposalHandler(
 		// Perform the update of smoothed prices here to ensure that smoothed prices are updated even if a block is later
 		// rejected by consensus. We want smoothed prices to be updated on fixed cadence, and we are piggybacking on
 		// consensus round to do so.
-		if err := pricesKeeper.UpdateSmoothedPrices(ctx, lib.Uint64LinearInterpolate); err != nil {
+		if err := pricesKeeper.UpdateSmoothedSpotPrices(ctx, lib.Uint64LinearInterpolate); err != nil {
 			recordErrorMetricsWithLabel(metrics.UpdateSmoothedPrices)
 			error_lib.LogErrorWithOptionalContext(ctx, "UpdateSmoothedPrices failed", err)
 		}
@@ -92,7 +92,6 @@ func ProcessProposalHandler(
 				ctx.Logger().Error("failed to decode and validate ve", "err", err)
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
-
 		}
 
 		txs, err := DecodeProcessProposalTxs(txConfig.TxDecoder(), request, pricesKeeper)

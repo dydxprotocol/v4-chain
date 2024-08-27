@@ -103,7 +103,8 @@ func TestGetMinPriceChangeAmountForMarket(t *testing.T) {
 		"Valid": {
 			marketParamPrice: types.MarketParamPrice{
 				Price: types.MarketPrice{
-					Price: uint64(123_000),
+					SpotPrice: uint64(123_000),
+					PnlPrice:  uint64(123_000),
 				},
 				Param: types.MarketParam{
 					MinPriceChangePpm: uint32(1_000), // 0.1%
@@ -114,7 +115,8 @@ func TestGetMinPriceChangeAmountForMarket(t *testing.T) {
 		"Valid: discards decimal": {
 			marketParamPrice: types.MarketParamPrice{
 				Price: types.MarketPrice{
-					Price: uint64(1_234),
+					SpotPrice: uint64(1_234),
+					PnlPrice:  uint64(1_234),
 				},
 				Param: types.MarketParam{
 					MinPriceChangePpm: uint32(1_000), // 0.1%
@@ -125,7 +127,8 @@ func TestGetMinPriceChangeAmountForMarket(t *testing.T) {
 		"Zero": {
 			marketParamPrice: types.MarketParamPrice{
 				Price: types.MarketPrice{
-					Price: uint64(0),
+					SpotPrice: uint64(0),
+					PnlPrice:  uint64(0),
 				},
 				Param: types.MarketParam{
 					MinPriceChangePpm: uint32(1_000), // 0.1%
@@ -136,7 +139,8 @@ func TestGetMinPriceChangeAmountForMarket(t *testing.T) {
 		"Result exceeds max uint64": {
 			marketParamPrice: types.MarketParamPrice{
 				Price: types.MarketPrice{
-					Price: math.MaxUint64,
+					SpotPrice: math.MaxUint64,
+					PnlPrice:  math.MaxUint64,
 				},
 				Param: types.MarketParam{
 					MinPriceChangePpm: uint32(1_000_001), // must be <= 1,000,000
@@ -152,12 +156,20 @@ func TestGetMinPriceChangeAmountForMarket(t *testing.T) {
 				require.PanicsWithError(
 					t,
 					tc.expectedPanic.Error(),
-					func() { getMinPriceChangeAmountForMarket(tc.marketParamPrice) })
+					func() { getMinPriceChangeAmountForSpotMarket(tc.marketParamPrice) })
+
+				require.PanicsWithError(
+					t,
+					tc.expectedPanic.Error(),
+					func() { getMinPriceChangeAmountForPnlMarket(tc.marketParamPrice) })
 				return
 			}
 
-			result := getMinPriceChangeAmountForMarket(tc.marketParamPrice)
-			require.Equal(t, tc.expectedResult, result)
+			spotResult := getMinPriceChangeAmountForSpotMarket(tc.marketParamPrice)
+			pnlResult := getMinPriceChangeAmountForPnlMarket(tc.marketParamPrice)
+
+			require.Equal(t, tc.expectedResult, spotResult)
+			require.Equal(t, tc.expectedResult, pnlResult)
 		})
 	}
 }

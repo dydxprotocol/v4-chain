@@ -49,7 +49,7 @@ type (
 
 		Flags flags.ClobFlags
 
-		mevTelemetryConfig MevTelemetryConfig
+		mevTelemetryConfig types.MevTelemetryConfig
 
 		// txValidation decoder and antehandler
 		txDecoder sdk.TxDecoder
@@ -111,7 +111,7 @@ func NewKeeper(
 		memStoreInitialized:          &atomic.Bool{}, // False by default.
 		initialized:                  &atomic.Bool{}, // False by default.
 		txDecoder:                    txDecoder,
-		mevTelemetryConfig: MevTelemetryConfig{
+		mevTelemetryConfig: types.MevTelemetryConfig{
 			Enabled:    clobFlags.MevTelemetryEnabled,
 			Hosts:      clobFlags.MevTelemetryHosts,
 			Identifier: clobFlags.MevTelemetryIdentifier,

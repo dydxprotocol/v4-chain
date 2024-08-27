@@ -2448,12 +2448,12 @@ func setupProcessProposerOperationsTestCase(
 
 	// Update the oracle prices.
 	for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
-		err := ks.PricesKeeper.UpdateMarketPrice(
+		err := ks.PricesKeeper.UpdateSpotAndPnlMarketPrices(
 			ks.Ctx,
-			&pricestypes.MarketPriceUpdates_MarketPriceUpdate{
-
-				MarketId: marketId,
-				Price:    oraclePrice,
+			&pricestypes.MarketPriceUpdate{
+				MarketId:  marketId,
+				SpotPrice: oraclePrice,
+				PnlPrice:  oraclePrice,
 			},
 		)
 		require.NoError(t, err)

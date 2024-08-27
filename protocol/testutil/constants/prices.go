@@ -1,6 +1,7 @@
 package constants
 
 import (
+	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	pricefeedclient "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
@@ -265,38 +266,48 @@ var TestSingleMarketParam = types.MarketParam{
 
 var TestMarketPrices = []types.MarketPrice{
 	{
-		Id:       0,
-		Exponent: BtcUsdExponent,
-		Price:    FiveBillion, // $50,000 == 1 BTC
+		Id:        0,
+		Exponent:  BtcUsdExponent,
+		SpotPrice: FiveBillion, // $50,000 == 1 BTC
+		PnlPrice:  FiveBillion, // $50,000 == 1 BTC
 	},
 	{
-		Id:       1,
-		Exponent: EthUsdExponent,
-		Price:    ThreeBillion, // $3,000 == 1 ETH
+		Id:        1,
+		Exponent:  EthUsdExponent,
+		SpotPrice: ThreeBillion, // $3,000 == 1 ETH
+		PnlPrice:  ThreeBillion, // $3,000 == 1 ETH
 	},
 	{
-		Id:       2,
-		Exponent: SolUsdExponent,
-		Price:    FiveBillion, // 50$ == 1 SOL
+		Id:        2,
+		Exponent:  SolUsdExponent,
+		SpotPrice: FiveBillion, // 50$ == 1 SOL
+		PnlPrice:  FiveBillion, // 50$ == 1 SOL
 	},
 	{
-		Id:       3,
-		Exponent: IsoUsdExponent,
-		Price:    FiveBillion, // 50$ == 1 ISO
+		Id:        3,
+		Exponent:  IsoUsdExponent,
+		SpotPrice: FiveBillion, // 50$ == 1 ISO
+		PnlPrice:  FiveBillion, // 50$ == 1 ISO
 	},
 	{
-		Id:       4,
-		Exponent: Iso2UsdExponent,
-		Price:    ThreeBillion, // 300$ == 1 ISO2
+		Id:        4,
+		Exponent:  Iso2UsdExponent,
+		SpotPrice: ThreeBillion, // 300$ == 1 ISO2
+		PnlPrice:  ThreeBillion, // 300$ == 1 ISO2
 	},
+}
+var IdsToPairs = map[uint32]string{
+	0: BtcUsdPair,
+	1: EthUsdPair,
+	2: SolUsdPair,
+	3: IsoUsdPair,
+	4: Iso2UsdPair,
 }
 
 var TestMarketIdsToExponents = map[uint32]int32{
 	0: BtcUsdExponent,
 	1: EthUsdExponent,
 	2: SolUsdExponent,
-	3: IsoUsdExponent,
-	4: Iso2UsdExponent,
 }
 
 var TestPricesGenesisState = types.GenesisState{
@@ -305,65 +316,127 @@ var TestPricesGenesisState = types.GenesisState{
 }
 
 var (
-	ValidMarketPriceUpdates = []*types.MarketPriceUpdates_MarketPriceUpdate{
+	ValidMarketPriceUpdates = []*types.MarketPriceUpdate{
 		{
-			MarketId: MarketId0,
-			Price:    Price5,
+			MarketId:  MarketId0,
+			SpotPrice: Price5,
+			PnlPrice:  Price5,
 		},
 		{
-			MarketId: MarketId1,
-			Price:    Price6,
+			MarketId:  MarketId1,
+			SpotPrice: Price6,
+			PnlPrice:  Price6,
 		},
 		{
-			MarketId: MarketId2,
-			Price:    Price7,
+			MarketId:  MarketId2,
+			SpotPrice: Price7,
+			PnlPrice:  Price7,
 		},
 		{
-			MarketId: MarketId3,
-			Price:    Price4,
+			MarketId:  MarketId3,
+			SpotPrice: Price4,
+			PnlPrice:  Price4,
 		},
 		{
-			MarketId: MarketId4,
-			Price:    Price3,
+			MarketId:  MarketId4,
+			SpotPrice: Price3,
+			PnlPrice:  Price3,
 		},
 	}
 
 	ValidSingleMarketPriceUpdateObj = &types.MarketPriceUpdates{
 		MarketPriceUpdates: ValidSingleMarketPriceUpdate,
 	}
-	ValidSingleMarketPriceUpdate = []*types.MarketPriceUpdates_MarketPriceUpdate{
+	ValidSingleMarketPriceUpdate = []*types.MarketPriceUpdate{
 		{
-			MarketId: MarketId0,
-			Price:    Price5,
+			MarketId:  MarketId0,
+			SpotPrice: Price5,
+			PnlPrice:  Price5,
 		},
 	}
 
-	ValidSingleVEPrice = map[uint32][]byte{
-		MarketId0: Price5Bytes,
+	ValidMarketPriceUpdateObj = &types.MarketPriceUpdates{
+		MarketPriceUpdates: ValidMarketPriceUpdates,
 	}
 
-	ValidVEPricesWithOneInvalid = map[uint32][]byte{
-		MarketId0: Price5Bytes,
-		MarketId1: Price6Bytes,
-		MarketId2: []byte("invalid"),
+	ValidSingleVEPrice = []vetypes.PricePair{
+		{
+			MarketId:  MarketId0,
+			SpotPrice: Price5Bytes,
+			PnlPrice:  Price5Bytes,
+		},
 	}
 
-	ValidVEPrice = map[uint32][]byte{
-		MarketId0: Price5Bytes,
-		MarketId1: Price6Bytes,
-		MarketId2: Price7Bytes,
+	ValidVEPricesWithOneInvalid = []vetypes.PricePair{
+		{
+			MarketId:  MarketId0,
+			SpotPrice: Price5Bytes,
+			PnlPrice:  Price5Bytes,
+		},
+		{
+			MarketId:  MarketId1,
+			SpotPrice: Price6Bytes,
+			PnlPrice:  Price6Bytes,
+		},
+		{
+			MarketId:  MarketId2,
+			SpotPrice: []byte("invalid"),
+			PnlPrice:  []byte("invalid"),
+		},
 	}
 
-	InvalidVEPriceBytes = map[uint32][]byte{
-		MarketId0: Price5NegativeBytes,
-		MarketId1: Price6NegativeBytes,
-		MarketId2: Price7NegativeBytes,
+	ValidVEPrice = []vetypes.PricePair{
+		{
+			MarketId:  MarketId0,
+			SpotPrice: Price5Bytes,
+			PnlPrice:  Price5Bytes,
+		},
+		{
+			MarketId:  MarketId1,
+			SpotPrice: Price6Bytes,
+			PnlPrice:  Price6Bytes,
+		},
+		{
+			MarketId:  MarketId2,
+			SpotPrice: Price7Bytes,
+			PnlPrice:  Price7Bytes,
+		},
 	}
 
-	InvalidVePricesMarketIds = map[uint32][]byte{
-		99:  Price5Bytes,
-		101: Price6Bytes,
-		102: Price7Bytes,
+	InvalidVEPriceBytes = []vetypes.PricePair{
+		{
+			MarketId:  MarketId0,
+			SpotPrice: Price5NegativeBytes,
+			PnlPrice:  Price5NegativeBytes,
+		},
+		{
+			MarketId:  MarketId1,
+			SpotPrice: Price6NegativeBytes,
+			PnlPrice:  Price6NegativeBytes,
+		},
+		{
+			MarketId:  MarketId2,
+			SpotPrice: Price7NegativeBytes,
+			PnlPrice:  Price7NegativeBytes,
+		},
+	}
+
+	InvalidVePricesMarketIds = []vetypes.PricePair{
+		{
+			MarketId:  99,
+			SpotPrice: Price5Bytes,
+			PnlPrice:  Price5Bytes,
+		},
+		{
+			MarketId:  101,
+			SpotPrice: Price6Bytes,
+			PnlPrice:  Price6Bytes,
+		},
+		{
+			MarketId:  102,
+			SpotPrice: Price7Bytes,
+			PnlPrice:  Price7Bytes,
+		},
 	}
 
 	ValidEmptyMarketParams         = []types.MarketParam{}
@@ -376,28 +449,32 @@ var (
 	ValidUpdateMarketPricesTxBytes []byte
 
 	InvalidUpdateMarketPricesStateless = &types.MarketPriceUpdates{
-		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
+		MarketPriceUpdates: []*types.MarketPriceUpdate{
 			{
-				MarketId: MarketId0,
-				Price:    0, // 0 price value is invalid.
+				MarketId:  MarketId0,
+				SpotPrice: 0, // 0 price value is invalid.
+				PnlPrice:  0, // 0 price value is invalid.
 			},
 		},
 	}
 	InvalidUpdateMarketPricesStatelessTxBytes []byte
 
 	InvalidUpdateMarketPricesStateful = &types.MarketPriceUpdates{
-		MarketPriceUpdates: []*types.MarketPriceUpdates_MarketPriceUpdate{
+		MarketPriceUpdates: []*types.MarketPriceUpdate{
 			{
-				MarketId: MarketId0,
-				Price:    Price5,
+				MarketId:  MarketId0,
+				SpotPrice: Price5,
+				PnlPrice:  Price5,
 			},
 			{
-				MarketId: MarketId1,
-				Price:    Price6,
+				MarketId:  MarketId1,
+				SpotPrice: Price6,
+				PnlPrice:  Price6,
 			},
 			{
-				MarketId: 99,
-				Price:    Price3, // Market with id 99 does not exist.
+				MarketId:  99,
+				SpotPrice: Price3, // Market with id 99 does not exist.
+				PnlPrice:  Price3, // Market with id 99 does not exist.
 			},
 		},
 	}
@@ -424,14 +501,16 @@ var (
 		},
 		MarketPrices: []types.MarketPrice{
 			{
-				Id:       uint32(0),
-				Exponent: BtcUsdExponent,
-				Price:    FiveBillion, // $50,000 == 1 BTC
+				Id:        uint32(0),
+				Exponent:  BtcUsdExponent,
+				SpotPrice: FiveBillion, // $50,000 == 1 BTC
+				PnlPrice:  FiveBillion, // $50,000 == 1 BTC
 			},
 			{
-				Id:       uint32(1),
-				Exponent: EthUsdExponent,
-				Price:    ThreeBillion, // $3,000 == 1 ETH
+				Id:        uint32(1),
+				Exponent:  EthUsdExponent,
+				SpotPrice: ThreeBillion, // $3,000 == 1 ETH
+				PnlPrice:  ThreeBillion, // $3,000 == 1 ETH
 			},
 		},
 	}
@@ -457,14 +536,16 @@ var (
 		},
 		MarketPrices: []types.MarketPrice{
 			{ // BTC-USD
-				Id:       uint32(0),
-				Exponent: BtcUsdExponent,
-				Price:    FiveBillion, // $50,000 == 1 BTC
+				Id:        uint32(0),
+				Exponent:  BtcUsdExponent,
+				SpotPrice: FiveBillion, // $50,000 == 1 BTC
+				PnlPrice:  FiveBillion, // $50,000 == 1 BTC
 			},
 			{ // ETH-USD
-				Id:       uint32(1),
-				Exponent: EthUsdExponent,
-				Price:    ThreeBillion, // $3,000 == 1 ETH
+				Id:        uint32(1),
+				Exponent:  EthUsdExponent,
+				SpotPrice: ThreeBillion, // $3,000 == 1 ETH
+				PnlPrice:  ThreeBillion, // $3,000 == 1 ETH
 			},
 		},
 	}

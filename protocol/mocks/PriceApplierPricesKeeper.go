@@ -64,16 +64,44 @@ func (_m *PriceApplierPricesKeeper) GetMarketParam(ctx types.Context, id uint32)
 }
 
 // PerformStatefulPriceUpdateValidation provides a mock function with given fields: ctx, marketPriceUpdates
-func (_m *PriceApplierPricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, marketPriceUpdates *pricestypes.MarketPriceUpdates) error {
+func (_m *PriceApplierPricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, marketPriceUpdates *pricestypes.MarketPriceUpdate) (bool, bool) {
 	ret := _m.Called(ctx, marketPriceUpdates)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PerformStatefulPriceUpdateValidation")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdates) error); ok {
+	var r0 bool
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdate) (bool, bool)); ok {
+		return rf(ctx, marketPriceUpdates)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdate) bool); ok {
 		r0 = rf(ctx, marketPriceUpdates)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, *pricestypes.MarketPriceUpdate) bool); ok {
+		r1 = rf(ctx, marketPriceUpdates)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
+// UpdatePnlPrice provides a mock function with given fields: ctx, update
+func (_m *PriceApplierPricesKeeper) UpdatePnlPrice(ctx types.Context, update *pricestypes.MarketPnlPriceUpdate) error {
+	ret := _m.Called(ctx, update)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdatePnlPrice")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPnlPriceUpdate) error); ok {
+		r0 = rf(ctx, update)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -81,16 +109,34 @@ func (_m *PriceApplierPricesKeeper) PerformStatefulPriceUpdateValidation(ctx typ
 	return r0
 }
 
-// UpdateMarketPrice provides a mock function with given fields: ctx, update
-func (_m *PriceApplierPricesKeeper) UpdateMarketPrice(ctx types.Context, update *pricestypes.MarketPriceUpdates_MarketPriceUpdate) error {
+// UpdateSpotAndPnlMarketPrices provides a mock function with given fields: ctx, update
+func (_m *PriceApplierPricesKeeper) UpdateSpotAndPnlMarketPrices(ctx types.Context, update *pricestypes.MarketPriceUpdate) error {
 	ret := _m.Called(ctx, update)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateMarketPrice")
+		panic("no return value specified for UpdateSpotAndPnlMarketPrices")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdates_MarketPriceUpdate) error); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdate) error); ok {
+		r0 = rf(ctx, update)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateSpotPrice provides a mock function with given fields: ctx, update
+func (_m *PriceApplierPricesKeeper) UpdateSpotPrice(ctx types.Context, update *pricestypes.MarketSpotPriceUpdate) error {
+	ret := _m.Called(ctx, update)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateSpotPrice")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketSpotPriceUpdate) error); ok {
 		r0 = rf(ctx, update)
 	} else {
 		r0 = ret.Error(0)

@@ -33,7 +33,8 @@ export async function findAll(
     limit,
     id,
     marketId,
-    price,
+    spotPrice,
+    pnlPrice,
     effectiveAt,
     effectiveAtHeight,
     effectiveBeforeOrAt,
@@ -47,7 +48,8 @@ export async function findAll(
       limit,
       id,
       marketId,
-      price,
+      spotPrice,
+      pnlPrice,
       effectiveAt,
       effectiveAtHeight,
       effectiveBeforeOrAt,
@@ -67,8 +69,11 @@ export async function findAll(
   if (marketId !== undefined) {
     baseQuery = baseQuery.whereIn(OraclePriceColumns.marketId, marketId);
   }
-  if (price !== undefined) {
-    baseQuery = baseQuery.whereIn(OraclePriceColumns.price, price);
+  if (spotPrice !== undefined) {
+    baseQuery = baseQuery.whereIn(OraclePriceColumns.spotPrice, spotPrice);
+  }
+  if (pnlPrice !== undefined) {
+    baseQuery = baseQuery.whereIn(OraclePriceColumns.pnlPrice, pnlPrice);
   }
   if (effectiveAt !== undefined) {
     baseQuery = baseQuery.where(OraclePriceColumns.effectiveAt, effectiveAt);
@@ -173,7 +178,11 @@ export async function findMostRecentMarketOraclePrice(
 
 function constructPriceMap(oraclePrices: OraclePriceFromDatabase[]): PriceMap {
   return _.reduce(oraclePrices, (acc: PriceMap, oraclePrice: OraclePriceFromDatabase) => {
-    acc[oraclePrice.marketId] = oraclePrice.price;
+    acc[oraclePrice.marketId] = {
+      spotPrice: oraclePrice.spotPrice,
+      pnlPrice: oraclePrice.pnlPrice,
+    };
+
     return acc;
   }, {});
 }
@@ -224,7 +233,7 @@ export async function findLatestPrices(
   transaction?: Knex.Transaction,
 ): Promise<PriceMap> {
   const query: string = `
-    SELECT "marketId", "price"
+    SELECT "marketId", "spotPrice", "pnlPrice"
     FROM "oracle_prices"
     WHERE ("marketId", "effectiveAtHeight") IN (
       SELECT "marketId", MAX("effectiveAtHeight")
@@ -232,7 +241,9 @@ export async function findLatestPrices(
       WHERE "effectiveAtHeight" <= '${effectiveBeforeOrAtHeight}'
       GROUP BY "marketId");
   `;
+
   let result: { rows: OraclePriceFromDatabase[] };
+
   if (transaction === undefined) {
     result = await knexReadReplica.getConnection().raw(
       query,

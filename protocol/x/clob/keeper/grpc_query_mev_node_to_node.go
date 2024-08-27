@@ -88,10 +88,10 @@ func (k Keeper) InitializeCumulativePnLsFromRequest(
 	blockProposerPnL map[types.ClobPairId]*CumulativePnL,
 	validatorPnL map[types.ClobPairId]*CumulativePnL,
 ) {
-	clobMetadata := make(map[types.ClobPairId]ClobMetadata, len(req.ValidatorMevMetrics.ClobMidPrices))
+	clobMetadata := make(map[types.ClobPairId]types.ClobMetadata, len(req.ValidatorMevMetrics.ClobMidPrices))
 	for _, clobMidPrice := range req.ValidatorMevMetrics.ClobMidPrices {
 		clobPairId := types.ClobPairId(clobMidPrice.ClobPair.Id)
-		clobMetadata[clobPairId] = ClobMetadata{
+		clobMetadata[clobPairId] = types.ClobMetadata{
 			ClobPair: clobMidPrice.ClobPair,
 			MidPrice: types.Subticks(clobMidPrice.Subticks),
 		}

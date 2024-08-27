@@ -771,7 +771,10 @@
           "status": {
             "$ref": "#/components/schemas/PerpetualMarketStatus"
           },
-          "oraclePrice": {
+          "spotPrice": {
+            "type": "string"
+          },
+          "pnlPrice": {
             "type": "string"
           },
           "priceChange24H": {
@@ -835,7 +838,8 @@
           "clobPairId",
           "ticker",
           "status",
-          "oraclePrice",
+          "spotPrice",
+          "pnlPrice",
           "priceChange24H",
           "volume24H",
           "trades24H",

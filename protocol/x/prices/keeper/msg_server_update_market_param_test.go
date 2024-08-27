@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"testing"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
@@ -17,7 +18,8 @@ func TestUpdateMarketParam(t *testing.T) {
 		pricestest.WithId(1),
 		pricestest.WithPair("BTC-USD"),
 		pricestest.WithExponent(-8),
-		pricestest.WithPriceValue(0),
+		pricestest.WithSpotPriceValue(0),
+		pricestest.WithPnlPriceValue(0),
 	)
 	testMarketParam, testMarketPrice := testMarket.Param, testMarket.Price
 

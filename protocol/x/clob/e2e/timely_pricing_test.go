@@ -5,6 +5,7 @@ import (
 
 	"github.com/cometbft/cometbft/types"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
@@ -23,7 +24,7 @@ func TestTimelyPricing(t *testing.T) {
 		subaccounts []satypes.Subaccount
 		orders      []clobtypes.Order
 
-		priceUpdate map[uint32]uint64
+		priceUpdate map[uint32]ve.VEPricePair
 
 		expectedErr string
 	}{
@@ -34,8 +35,11 @@ func TestTimelyPricing(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
 			},
-			priceUpdate: map[uint32]uint64{
-				0: 5_000_400_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_400_000,
+					PnlPrice:  5_000_400_000,
+				},
 			},
 
 			expectedErr: "Stateful order collateralization check failed",

@@ -9,14 +9,16 @@ const TABLE_NAME: string = 'oracle_prices';
 const RAW_TABLE_COLUMNS: string = `
   \`id\` string,
   \`marketId\` int,
-  \`price\` string,
+  \`spotPrice\` string,
+  \`pnlPrice\` string,
   \`effectiveAt\` string,
   \`effectiveAtHeight\` bigint
 `;
 const TABLE_COLUMNS: string = `
   "id",
   "marketId",
-  ${castToDouble('price')},
+  ${castToDouble('spotPrice')},
+  ${castToDouble('pnlPrice')},
   ${castToTimestamp('effectiveAt')},
   "effectiveAtHeight"
 `;

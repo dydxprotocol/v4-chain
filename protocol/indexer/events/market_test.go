@@ -17,12 +17,13 @@ var (
 )
 
 func TestNewMarketPriceUpdateEvent_Success(t *testing.T) {
-	priceUpdateEvent := events.NewMarketPriceUpdateEvent(marketId, priceWithExponent)
+	priceUpdateEvent := events.NewMarketPriceUpdateEvent(marketId, priceWithExponent, priceWithExponent)
 	expectedMarketEventProto := &events.MarketEventV1{
 		MarketId: marketId,
 		Event: &events.MarketEventV1_PriceUpdate{
 			PriceUpdate: &events.MarketPriceUpdateEventV1{
-				PriceWithExponent: priceWithExponent,
+				SpotPriceWithExponent: priceWithExponent,
+				PnlPriceWithExponent:  priceWithExponent,
 			},
 		},
 	}

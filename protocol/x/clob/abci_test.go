@@ -338,9 +338,16 @@ func TestEndBlocker_Success(t *testing.T) {
 			blockTime: unixTimeTen,
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext, m *mocks.MemClob) {
 				// Update perpetual prices
-				err := ks.PricesKeeper.UpdateMarketPrice(ctx, &prices.MarketPriceUpdates_MarketPriceUpdate{
+				err := ks.PricesKeeper.UpdateSpotAndPnlMarketPrices(ctx, &prices.MarketPriceUpdate{
 					MarketId: constants.ClobPair_Btc.Id,
-					Price: types.SubticksToPrice(
+					SpotPrice: types.SubticksToPrice(
+						types.Subticks(10),
+						constants.BtcUsdExponent,
+						constants.ClobPair_Btc,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
+						lib.QuoteCurrencyAtomicResolution,
+					),
+					PnlPrice: types.SubticksToPrice(
 						types.Subticks(10),
 						constants.BtcUsdExponent,
 						constants.ClobPair_Btc,
@@ -351,9 +358,16 @@ func TestEndBlocker_Success(t *testing.T) {
 
 				require.NoError(t, err)
 
-				err = ks.PricesKeeper.UpdateMarketPrice(ctx, &prices.MarketPriceUpdates_MarketPriceUpdate{
+				err = ks.PricesKeeper.UpdateSpotAndPnlMarketPrices(ctx, &prices.MarketPriceUpdate{
 					MarketId: constants.ClobPair_Eth.Id,
-					Price: types.SubticksToPrice(
+					SpotPrice: types.SubticksToPrice(
+						types.Subticks(35),
+						constants.EthUsdExponent,
+						constants.ClobPair_Eth,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
+						lib.QuoteCurrencyAtomicResolution,
+					),
+					PnlPrice: types.SubticksToPrice(
 						types.Subticks(35),
 						constants.EthUsdExponent,
 						constants.ClobPair_Eth,

@@ -10,6 +10,7 @@ import (
 
 	appconstants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
+	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/configs"
 	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client"
@@ -31,24 +32,42 @@ var (
 	medianUpdatedMarket0Price = uint64(10_100_000)
 
 	// expectedPricesWithNoUpdates is the set of genesis prices.
-	expectedPricesWithNoUpdates = map[uint32]uint64{
-		0: genesisState.MarketPrices[0].Price,
-		1: genesisState.MarketPrices[1].Price,
+	expectedPricesWithNoUpdates = map[uint32]ve.VEPricePair{
+		0: {
+			SpotPrice: genesisState.MarketPrices[0].SpotPrice,
+			PnlPrice:  genesisState.MarketPrices[0].PnlPrice,
+		},
+		1: {
+			SpotPrice: genesisState.MarketPrices[1].SpotPrice,
+			PnlPrice:  genesisState.MarketPrices[1].PnlPrice,
+		},
 	}
 
 	// expectedPricesWithPartialUpdate is the expected prices after updating prices with the partial update.
-	expectedPricesWithPartialUpdate = map[uint32]uint64{
+	expectedPricesWithPartialUpdate = map[uint32]ve.VEPricePair{
 		// No price update; 2 error and 1 valid responses. However, min req for valid exchange prices is 2.
-		0: genesisState.MarketPrices[0].Price,
+		0: {
+			SpotPrice: genesisState.MarketPrices[0].SpotPrice,
+			PnlPrice:  genesisState.MarketPrices[0].PnlPrice,
+		},
 		// Valid price update; 1 error and 2 valid responses. Min req for valid exchange prices is 2.
 		// Median of 9_000 and 9_002.
-		1: medianUpdatedMarket1price,
+		1: {
+			SpotPrice: medianUpdatedMarket1price,
+			PnlPrice:  medianUpdatedMarket1price,
+		},
 	}
 
 	// expectedPricesWithFullUpdate is the expected prices after updating all prices.
-	expectedPricesWithFullUpdate = map[uint32]uint64{
-		0: medianUpdatedMarket0Price,
-		1: medianUpdatedMarket1price,
+	expectedPricesWithFullUpdate = map[uint32]ve.VEPricePair{
+		0: {
+			SpotPrice: medianUpdatedMarket0Price,
+			PnlPrice:  medianUpdatedMarket0Price,
+		},
+		1: {
+			SpotPrice: medianUpdatedMarket1price,
+			PnlPrice:  medianUpdatedMarket1price,
+		},
 	}
 )
 
@@ -115,7 +134,7 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 
 // expectMarketPricesWithTimeout waits for the specified timeout for the market prices to be updated with the
 // expected values. If the prices are not updated to match the expected prices within the timeout, the test fails.
-func (s *PricesIntegrationTestSuite) expectMarketPricesWithTimeout(prices map[uint32]uint64, timeout time.Duration) {
+func (s *PricesIntegrationTestSuite) expectMarketPricesWithTimeout(prices map[uint32]ve.VEPricePair, timeout time.Duration) {
 	start := time.Now()
 
 	for {
@@ -136,9 +155,12 @@ func (s *PricesIntegrationTestSuite) expectMarketPricesWithTimeout(prices map[ui
 		}
 
 		// Compare for equality. If prices are not equal, continue waiting.
-		actualPrices := make(map[uint32]uint64, len(allMarketPricesQueryResponse.MarketPrices))
+		actualPrices := make(map[uint32]ve.VEPricePair, len(allMarketPricesQueryResponse.MarketPrices))
 		for _, actualPrice := range allMarketPricesQueryResponse.MarketPrices {
-			actualPrices[actualPrice.Id] = actualPrice.Price
+			actualPrices[actualPrice.Id] = ve.VEPricePair{
+				SpotPrice: actualPrice.SpotPrice,
+				PnlPrice:  actualPrice.PnlPrice,
+			}
 		}
 
 		for marketId, expectedPrice := range prices {
@@ -146,7 +168,7 @@ func (s *PricesIntegrationTestSuite) expectMarketPricesWithTimeout(prices map[ui
 			if !ok {
 				continue
 			}
-			if actualPrice != expectedPrice {
+			if actualPrice.SpotPrice != expectedPrice.SpotPrice || actualPrice.PnlPrice != expectedPrice.PnlPrice {
 				continue
 			}
 		}

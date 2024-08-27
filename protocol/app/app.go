@@ -797,7 +797,7 @@ func New(
 		appCodec,
 		keys[pricesmoduletypes.StoreKey],
 		indexPriceCache,
-		pricesmoduletypes.NewMarketToSmoothedPrices(pricesmoduletypes.SmoothedPriceTrackingBlockHistoryLength),
+		pricesmoduletypes.NewMarketToSmoothedSpotPrices(pricesmoduletypes.SmoothedPriceTrackingBlockHistoryLength),
 		timeProvider,
 		app.IndexerEventManager,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
@@ -974,7 +974,7 @@ func New(
 	)
 
 	if !appFlags.NonValidatingFullNode {
-		app.InitVoteExtensions(logger, app.voteCodec, app.PricesKeeper, priceApplier)
+		app.InitVoteExtensions(logger, app.voteCodec, app.PricesKeeper, app.PerpetualsKeeper, app.ClobKeeper, priceApplier)
 	}
 
 	/****  Module Options ****/
@@ -1356,9 +1356,18 @@ func (app *App) InitVoteExtensions(
 	logger log.Logger,
 	veCodec vecodec.VoteExtensionCodec,
 	pricesKeeper pricesmodulekeeper.Keeper,
+	perpetualsKeeper *perpetualsmodulekeeper.Keeper,
+	clobKeeper *clobmodulekeeper.Keeper,
 	priceApplier *priceapplier.PriceApplier,
 ) {
-	veHandler := ve.NewVoteExtensionHandler(logger, veCodec, pricesKeeper, priceApplier)
+	veHandler := ve.NewVoteExtensionHandler(
+		logger,
+		veCodec,
+		pricesKeeper,
+		perpetualsKeeper,
+		clobKeeper,
+		priceApplier,
+	)
 	app.SetExtendVoteHandler(veHandler.ExtendVoteHandler())
 	app.SetVerifyVoteExtensionHandler(veHandler.VerifyVoteExtensionHandler())
 }

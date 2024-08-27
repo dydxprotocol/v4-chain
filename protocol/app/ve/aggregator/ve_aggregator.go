@@ -12,7 +12,6 @@ import (
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -34,11 +33,11 @@ type VoteAggregator interface {
 	// In order for a currency pair to be included in the final oracle price, the currency
 	// pair must be provided by a super-majority (2/3+) of validators. This is enforced by the
 	// price aggregator but can be replaced by the application.
-	AggregateDaemonVEIntoFinalPrices(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error)
+	AggregateDaemonVEIntoFinalPrices(ctx sdk.Context, votes []Vote) (map[string]veaggregator.AggregatorPricePair, error)
 
 	// GetPriceForValidator gets the prices reported by a given validator. This method depends
 	// on the prices from the latest set of aggregated votes.
-	GetPriceForValidator(validator sdk.ConsAddress) map[string]*big.Int
+	GetPriceForValidator(validator sdk.ConsAddress) map[string]veaggregator.AggregatorPricePair
 }
 
 type MedianAggregator struct {
@@ -48,9 +47,9 @@ type MedianAggregator struct {
 	pricesKeeper pk.Keeper
 
 	// prices is a map of validator address to a map of currency pair to price
-	perValidatorPrices map[string]map[string]*big.Int
+	perValidatorPrices map[string]map[string]veaggregator.AggregatorPricePair
 
-	aggregateFn func(ctx sdk.Context, perValidatorPrices map[string]map[string]*big.Int) (map[string]*big.Int, error)
+	aggregateFn veaggregator.AggregateFn
 }
 
 func NewVeAggregator(
@@ -61,15 +60,18 @@ func NewVeAggregator(
 ) VoteAggregator {
 	return &MedianAggregator{
 		logger:             logger,
-		perValidatorPrices: make(map[string]map[string]*big.Int),
+		perValidatorPrices: make(map[string]map[string]veaggregator.AggregatorPricePair),
 		aggregateFn:        aggregateFn,
 		pricesKeeper:       pricekeeper,
 	}
 }
 
-func (ma *MedianAggregator) AggregateDaemonVEIntoFinalPrices(ctx sdk.Context, votes []Vote) (map[string]*big.Int, error) {
+func (ma *MedianAggregator) AggregateDaemonVEIntoFinalPrices(
+	ctx sdk.Context,
+	votes []Vote,
+) (map[string]veaggregator.AggregatorPricePair, error) {
 	// wipe the previous prices
-	ma.perValidatorPrices = make(map[string]map[string]*big.Int)
+	ma.perValidatorPrices = make(map[string]map[string]veaggregator.AggregatorPricePair)
 
 	for _, vote := range votes {
 		consAddr := vote.ConsAddress.String()
@@ -98,45 +100,46 @@ func (ma *MedianAggregator) addVoteToAggregator(
 		return
 	}
 
-	var priceupdates pricestypes.MarketPriceUpdates
+	prices := make(map[string]veaggregator.AggregatorPricePair, len(ve.Prices))
+	for _, pricePair := range ve.Prices {
+		var spotPrice, pnlPrice *big.Int
 
-	prices := make(map[string]*big.Int, len(ve.Prices))
-
-	for marketId, priceBytes := range ve.Prices {
-		if len(priceBytes) > constants.MaximumPriceSizeInBytes {
-			ma.logger.Debug(
-				"failed to store price, bytes are too long",
-				"market_id", marketId,
-				"num_bytes", len(priceBytes),
-			)
-			continue
-		}
-
-		market, exists := ma.pricesKeeper.GetMarketParam(ctx, marketId)
+		market, exists := ma.pricesKeeper.GetMarketParam(ctx, pricePair.MarketId)
 		if !exists {
-			ma.logger.Debug("market id not found", "market_id", marketId)
 			continue
 		}
 
-		pu, err := veutils.GetMarketPriceUpdateFromBytes(marketId, priceBytes)
-		if err != nil {
-			ma.logger.Debug(
-				"failed to decode price",
-				"marketId", marketId,
-				"err", err,
-			)
+		if len(pricePair.SpotPrice) <= constants.MaximumPriceSizeInBytes {
+			price, err := veutils.GetPriceFromBytes(pricePair.MarketId, pricePair.SpotPrice)
+			if err == nil {
+				spotPrice = price
+			}
+		}
+
+		if len(pricePair.PnlPrice) <= constants.MaximumPriceSizeInBytes {
+			price, err := veutils.GetPriceFromBytes(pricePair.MarketId, pricePair.PnlPrice)
+			if err == nil {
+				pnlPrice = price
+			}
+		}
+
+		if spotPrice == nil {
 			continue
 		}
-		priceupdates.MarketPriceUpdates = append(priceupdates.MarketPriceUpdates, pu)
 
-		prices[market.Pair] = new(big.Int).SetUint64(pu.Price)
+		if pnlPrice == nil {
+			pnlPrice = spotPrice
+		}
+
+		prices[market.Pair] = veaggregator.AggregatorPricePair{
+			SpotPrice: spotPrice,
+			PnlPrice:  pnlPrice,
+		}
 	}
-
 	ma.perValidatorPrices[address] = prices
-
 }
 
-func (ma *MedianAggregator) GetPriceForValidator(validator sdk.ConsAddress) map[string]*big.Int {
+func (ma *MedianAggregator) GetPriceForValidator(validator sdk.ConsAddress) map[string]veaggregator.AggregatorPricePair {
 	return ma.perValidatorPrices[validator.String()]
 }
 

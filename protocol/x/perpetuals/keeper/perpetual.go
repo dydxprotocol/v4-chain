@@ -99,8 +99,9 @@ func (k Keeper) CreatePerpetual(
 			LiquidityTier:     liquidityTier,
 			MarketType:        marketType,
 		},
-		FundingIndex: dtypes.ZeroInt(),
-		OpenInterest: dtypes.ZeroInt(),
+		FundingIndex:    dtypes.ZeroInt(),
+		OpenInterest:    dtypes.ZeroInt(),
+		LastFundingRate: dtypes.ZeroInt(),
 	}
 
 	// Store the new perpetual.
@@ -428,7 +429,7 @@ func (k Keeper) getFundingIndexDelta(
 	bigFundingIndexDelta := lib.FundingRateToIndex(
 		proratedFundingRate,
 		perp.Params.AtomicResolution,
-		marketPrice.Price,
+		marketPrice.SpotPrice,
 		marketPrice.Exponent,
 	)
 
@@ -532,7 +533,11 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 			ctx,
 			perp.Params.Id,
 			types.GetPricePremiumParams{
-				IndexPrice:                  indexPrice,
+				IndexPrice: pricestypes.MarketPrice{
+					Id:        indexPrice.Id,
+					Exponent:  indexPrice.Exponent,
+					SpotPrice: indexPrice.SpotPrice,
+				},
 				BaseAtomicResolution:        perp.Params.AtomicResolution,
 				QuoteAtomicResolution:       lib.QuoteCurrencyAtomicResolution,
 				ImpactNotionalQuoteQuantums: bigImpactNotionalQuoteQuantums,
@@ -729,6 +734,11 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 			))
 		}
 
+		err = k.ModifyLastFundingRate(ctx, perp.Params.Id, bigFundingRatePpm)
+		if err != nil {
+			panic(err)
+		}
+
 		if bigFundingRatePpm.Sign() != 0 {
 			fundingIndexDelta, err := k.getFundingIndexDelta(
 				ctx,
@@ -829,7 +839,7 @@ func GetNetNotionalInQuoteQuantums(
 	bigQuoteQuantums := lib.BaseToQuoteQuantums(
 		bigQuantums,
 		perpetual.Params.AtomicResolution,
-		marketPrice.Price,
+		marketPrice.PnlPrice,
 		marketPrice.Exponent,
 	)
 
@@ -865,7 +875,7 @@ func (k Keeper) GetNotionalInBaseQuantums(
 	bigBaseQuantums = lib.QuoteToBaseQuantums(
 		bigQuoteQuantums,
 		perpetual.Params.AtomicResolution,
-		marketPrice.Price,
+		marketPrice.PnlPrice,
 		marketPrice.Exponent,
 	)
 	return bigBaseQuantums, nil
@@ -967,7 +977,7 @@ func GetMarginRequirementsInQuoteQuantums(
 	bigQuoteQuantums := lib.BaseToQuoteQuantums(
 		bigAbsQuantums,
 		perpetual.Params.AtomicResolution,
-		marketPrice.Price,
+		marketPrice.PnlPrice,
 		marketPrice.Exponent,
 	)
 
@@ -975,7 +985,7 @@ func GetMarginRequirementsInQuoteQuantums(
 	openInterestQuoteQuantums := lib.BaseToQuoteQuantums(
 		perpetual.OpenInterest.BigInt(), // OpenInterest is represented as base quantums.
 		perpetual.Params.AtomicResolution,
-		marketPrice.Price,
+		marketPrice.PnlPrice,
 		marketPrice.Exponent,
 	)
 
@@ -1189,6 +1199,24 @@ func (k Keeper) ModifyFundingIndex(
 
 	perpetual.FundingIndex = dtypes.NewIntFromBigInt(bigFundingIndex)
 	k.setPerpetual(ctx, perpetual)
+	return nil
+}
+
+func (k Keeper) ModifyLastFundingRate(
+	ctx sdk.Context,
+	perpetualId uint32,
+	lastFundingRate *big.Int,
+) (
+	err error,
+) {
+	perpetual, err := k.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	perpetual.LastFundingRate = dtypes.NewIntFromBigInt(lastFundingRate)
+	k.setPerpetual(ctx, perpetual)
+
 	return nil
 }
 
@@ -1631,7 +1659,7 @@ func (k Keeper) IsPositionUpdatable(
 	}
 
 	// If perpetual has zero oracle price, it is considered not updatable.
-	if oraclePrice.Price == 0 {
+	if oraclePrice.PnlPrice == 0 {
 		return false, nil
 	}
 	return true, nil

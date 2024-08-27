@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
+	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -21,7 +22,7 @@ import (
 type SignedVEInfo struct {
 	Val     sdk.ConsAddress
 	Power   int64
-	Prices  map[uint32][]byte
+	Prices  []vetypes.PricePair
 	Height  int64
 	Round   int64
 	ChainId string
@@ -29,7 +30,7 @@ type SignedVEInfo struct {
 
 func NewDefaultSignedVeInfo(
 	val sdk.ConsAddress,
-	prices map[uint32][]byte,
+	prices []vetypes.PricePair,
 ) SignedVEInfo {
 	return SignedVEInfo{
 		Val:     val,
@@ -73,7 +74,7 @@ func GetEmptyLocalLastCommit(
 			SignedVEInfo{
 				Val:     sdk.ConsAddress(validator.Address),
 				Power:   validator.GetPower(),
-				Prices:  map[uint32][]byte{},
+				Prices:  []vetypes.PricePair{},
 				Height:  height,
 				Round:   round,
 				ChainId: chainId,
@@ -133,7 +134,7 @@ func CreateSignedExtendedVoteInfo(veInfo SignedVEInfo) (cometabci.ExtendedVoteIn
 
 // CreateVoteExtensionBytes creates a vote extension bytes with the given prices, timestamp and height.
 func CreateVoteExtensionBytes(
-	prices map[uint32][]byte,
+	prices []vetypes.PricePair,
 ) ([]byte, error) {
 	voteExtension := CreateVoteExtension(prices)
 	voteExtensionBz, err := voteCodec.Encode(voteExtension)
@@ -146,7 +147,7 @@ func CreateVoteExtensionBytes(
 
 // CreateVoteExtension creates a vote extension with the given prices, timestamp and height.
 func CreateVoteExtension(
-	prices map[uint32][]byte,
+	prices []vetypes.PricePair,
 ) vetypes.DaemonVoteExtension {
 	return vetypes.DaemonVoteExtension{
 		Prices: prices,
@@ -217,7 +218,7 @@ func GetIndexPriceCacheDecodedPrice(priceBz []byte) (*big.Int, error) {
 
 func CreateSingleValidatorExtendedCommitInfo(
 	consAddr sdk.ConsAddress,
-	prices map[uint32][]byte,
+	prices []vetypes.PricePair,
 ) (cometabci.ExtendedCommitInfo, []byte, error) {
 	voteInfo, err := CreateSignedExtendedVoteInfo(
 		NewDefaultSignedVeInfo(
@@ -265,17 +266,26 @@ func marshalDelimited(msg proto.Message) ([]byte, error) {
 func GetInjectedExtendedCommitInfoForTestApp(
 	consumerKeeper *ccvkeeper.Keeper,
 	ctx sdk.Context,
-	prices map[uint32]uint64,
+	prices map[uint32]ve.VEPricePair,
 	height int64,
 ) (cometabci.ExtendedCommitInfo, []byte, error) {
-	var pricesBz = make(map[uint32][]byte, len(prices))
+	var pricesBz = make([]vetypes.PricePair, len(prices))
 	for marketId, price := range prices {
-		encodedPrice, err := GetIndexPriceCacheEncodedPrice(new(big.Int).SetUint64(price))
+		encodedSpotPrice, err := GetIndexPriceCacheEncodedPrice(new(big.Int).SetUint64(price.SpotPrice))
 		if err != nil {
 			return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to encode price: %w", err)
 		}
 
-		pricesBz[marketId] = encodedPrice
+		encodedPnlPrice, err := GetIndexPriceCacheEncodedPrice(new(big.Int).SetUint64(price.PnlPrice))
+		if err != nil {
+			return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to encode price: %w", err)
+		}
+
+		pricesBz[marketId] = vetypes.PricePair{
+			MarketId:  marketId,
+			SpotPrice: encodedSpotPrice,
+			PnlPrice:  encodedPnlPrice,
+		}
 	}
 
 	validators := consumerKeeper.GetAllCCValidator(ctx)

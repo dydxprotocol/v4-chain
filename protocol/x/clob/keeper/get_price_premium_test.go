@@ -53,8 +53,9 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			args: testMemClobMethodArgs{
 				clobPair: constants.ClobPair_Btc,
 				indexPrice: pricestypes.MarketPrice{
-					Price:    1_000_000_000, // $10_000
-					Exponent: -5,
+					SpotPrice: 1_000_000_000, // $10_000
+					PnlPrice:  1_000_000_000, // $10_000
+					Exponent:  -5,
 				},
 				baseAtomicResolution:  -9,
 				quoteAtomicResolution: -6,
@@ -95,8 +96,9 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			args: testMemClobMethodArgs{
 				clobPair: constants.ClobPair_Btc,
 				indexPrice: pricestypes.MarketPrice{
-					Price:    1_000_000_000, // $10_000
-					Exponent: -5,
+					SpotPrice: 1_000_000_000, // $10_000
+					PnlPrice:  1_000_000_000, // $10_000
+					Exponent:  -5,
 				},
 				baseAtomicResolution:  -9,
 				quoteAtomicResolution: -6,

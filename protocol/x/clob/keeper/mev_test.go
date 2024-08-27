@@ -857,12 +857,12 @@ func TestRecordMevMetrics(t *testing.T) {
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
-			err := ks.PricesKeeper.UpdateMarketPrice(
+			err := ks.PricesKeeper.UpdateSpotAndPnlMarketPrices(
 				ctx,
-				&pricestypes.MarketPriceUpdates_MarketPriceUpdate{
-
-					MarketId: 0,
-					Price:    10_000_000, // $100
+				&pricestypes.MarketPriceUpdate{
+					MarketId:  0,
+					SpotPrice: 10_000_000, // $100
+					PnlPrice:  10_000_000, // $100
 
 				},
 			)

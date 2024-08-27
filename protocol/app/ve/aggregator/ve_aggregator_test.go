@@ -79,7 +79,10 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, prices, 1)
 
-		require.Equal(t, constants.Price5Big, prices[constants.BtcUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price5Big,
+			PnlPrice:  constants.Price5Big,
+		}, prices[constants.BtcUsdPair])
 	})
 
 	t.Run("Multiple price updates, single validator", func(t *testing.T) {
@@ -104,9 +107,18 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, prices, 3)
 
-		require.Equal(t, constants.Price5Big, prices[constants.BtcUsdPair])
-		require.Equal(t, constants.Price6Big, prices[constants.EthUsdPair])
-		require.Equal(t, constants.Price7Big, prices[constants.SolUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price5Big,
+			PnlPrice:  constants.Price5Big,
+		}, prices[constants.BtcUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price6Big,
+			PnlPrice:  constants.Price6Big,
+		}, prices[constants.EthUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price7Big,
+			PnlPrice:  constants.Price7Big,
+		}, prices[constants.SolUsdPair])
 	})
 
 	t.Run("single price update, from two validators", func(t *testing.T) {
@@ -138,7 +150,10 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, prices, 1)
 
-		require.Equal(t, constants.Price5Big, prices[constants.BtcUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price5Big,
+			PnlPrice:  constants.Price5Big,
+		}, prices[constants.BtcUsdPair])
 	})
 
 	t.Run("multiple price updates, from two validators", func(t *testing.T) {
@@ -171,9 +186,18 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, prices, 3)
 
-		require.Equal(t, constants.Price5Big, prices[constants.BtcUsdPair])
-		require.Equal(t, constants.Price6Big, prices[constants.EthUsdPair])
-		require.Equal(t, constants.Price7Big, prices[constants.SolUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price5Big,
+			PnlPrice:  constants.Price5Big,
+		}, prices[constants.BtcUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price6Big,
+			PnlPrice:  constants.Price6Big,
+		}, prices[constants.EthUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price7Big,
+			PnlPrice:  constants.Price7Big,
+		}, prices[constants.SolUsdPair])
 	})
 
 	t.Run("single price update, from multiple validators", func(t *testing.T) {
@@ -220,7 +244,10 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, prices, 1)
 
-		require.Equal(t, constants.Price5Big, prices[constants.BtcUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price5Big,
+			PnlPrice:  constants.Price5Big,
+		}, prices[constants.BtcUsdPair])
 	})
 
 	t.Run("multiple price updates, from multiple validators", func(t *testing.T) {
@@ -261,9 +288,18 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, prices, 3)
 
-		require.Equal(t, constants.Price5Big, prices[constants.BtcUsdPair])
-		require.Equal(t, constants.Price6Big, prices[constants.EthUsdPair])
-		require.Equal(t, constants.Price7Big, prices[constants.SolUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price5Big,
+			PnlPrice:  constants.Price5Big,
+		}, prices[constants.BtcUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price6Big,
+			PnlPrice:  constants.Price6Big,
+		}, prices[constants.EthUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price7Big,
+			PnlPrice:  constants.Price7Big,
+		}, prices[constants.SolUsdPair])
 	})
 
 	t.Run("single price update from multiple validators but not enough voting power", func(t *testing.T) {
@@ -354,7 +390,10 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, prices, 1)
 
-		require.Equal(t, constants.Price5Big, prices[constants.BtcUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price5Big,
+			PnlPrice:  constants.Price5Big,
+		}, prices[constants.BtcUsdPair])
 	})
 
 	t.Run("continues when the validator's prices are malformed", func(t *testing.T) {
@@ -395,7 +434,13 @@ func TestVEAggregator(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, prices, 2)
 
-		require.Equal(t, constants.Price5Big, prices[constants.BtcUsdPair])
-		require.Equal(t, constants.Price6Big, prices[constants.EthUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price5Big,
+			PnlPrice:  constants.Price5Big,
+		}, prices[constants.BtcUsdPair])
+		require.Equal(t, voteweighted.AggregatorPricePair{
+			SpotPrice: constants.Price6Big,
+			PnlPrice:  constants.Price6Big,
+		}, prices[constants.EthUsdPair])
 	})
 }

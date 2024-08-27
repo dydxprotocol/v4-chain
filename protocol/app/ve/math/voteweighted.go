@@ -17,7 +17,12 @@ type CCValidatorStore interface {
 	GetCCValidator(ctx sdk.Context, addr []byte) (types.CrossChainValidator, bool)
 }
 
-type AggregateFn func(ctx sdk.Context, vePrices map[string]map[string]*big.Int) (map[string]*big.Int, error)
+type AggregatorPricePair struct {
+	SpotPrice *big.Int
+	PnlPrice  *big.Int
+}
+
+type AggregateFn func(ctx sdk.Context, vePrices map[string]map[string]AggregatorPricePair) (map[string]AggregatorPricePair, error)
 
 // DefaultPowerThreshold defines the total voting power % that must be
 // submitted in order for a currency pair to be considered for the
@@ -28,7 +33,8 @@ var DefaultPowerThreshold = math.LegacyNewDecWithPrec(667, 3)
 type (
 	// VoteWeightPriceInfo tracks the stake weight(s) + price(s) for a given currency pair.
 	PriceInfo struct {
-		Prices      []PricePerValidator
+		SpotPrices  []PricePerValidator
+		PnlPrices   []PricePerValidator
 		TotalWeight math.Int
 	}
 
@@ -44,10 +50,13 @@ func Median(
 	validatorStore CCValidatorStore,
 	threshold math.LegacyDec,
 ) AggregateFn {
-	return func(ctx sdk.Context, vePricesPerValidator map[string]map[string]*big.Int) (map[string]*big.Int, error) {
+	return func(
+		ctx sdk.Context,
+		vePricesPerValidator map[string]map[string]AggregatorPricePair,
+	) (map[string]AggregatorPricePair, error) {
 		priceInfo := make(map[string]PriceInfo)
-		for validatorAddr, validatorPrices := range vePricesPerValidator {
 
+		for validatorAddr, validatorPrices := range vePricesPerValidator {
 			validatorPower, err := getValidatorPowerByAddress(ctx, validatorStore, validatorAddr)
 			if err != nil {
 				logger.Info(
@@ -58,57 +67,76 @@ func Median(
 				continue
 			}
 
-			for pair, price := range validatorPrices {
-				if price == nil {
+			for market, pricePair := range validatorPrices {
+				if pricePair.SpotPrice == nil && pricePair.PnlPrice == nil {
 					logger.Info(
-						"price is nil, skipping",
+						"both spot and pnl prices are nil, skipping",
 						"validator_address", validatorAddr,
-						"currency_pair", pair,
+						"currency_pair", market,
 					)
 					continue
 				}
 
-				if _, ok := priceInfo[pair]; !ok {
-					priceInfo[pair] = PriceInfo{
-						Prices:      make([]PricePerValidator, 0),
+				if _, ok := priceInfo[market]; !ok {
+					priceInfo[market] = PriceInfo{
+						SpotPrices:  make([]PricePerValidator, 0),
+						PnlPrices:   make([]PricePerValidator, 0),
 						TotalWeight: math.ZeroInt(),
 					}
 				}
 
-				pInfo := priceInfo[pair]
-				priceInfo[pair] = PriceInfo{
-					Prices: append(pInfo.Prices, PricePerValidator{
+				pInfo := priceInfo[market]
+
+				if pricePair.SpotPrice != nil {
+					pInfo.SpotPrices = append(pInfo.SpotPrices, PricePerValidator{
 						VoteWeight: validatorPower,
-						Price:      price,
-					}),
-					TotalWeight: pInfo.TotalWeight.Add(math.NewInt(validatorPower)),
+						Price:      pricePair.SpotPrice,
+					})
+
+					pInfo.PnlPrices = append(pInfo.PnlPrices, PricePerValidator{
+						VoteWeight: validatorPower,
+						Price:      pricePair.PnlPrice,
+					})
+
+					pInfo.TotalWeight = pInfo.TotalWeight.Add(math.NewInt(validatorPower))
+
 				}
+
+				priceInfo[market] = pInfo
 			}
 		}
 
-		finalPrices := make(map[string]*big.Int)
+		finalPrices := make(map[string]AggregatorPricePair)
+
 		totalPower := GetTotalPower(ctx, validatorStore)
 
 		for pair, info := range priceInfo {
 			// The total voting power % that submitted a price update for the given currency pair must be
 			// greater than the threshold to be included in the final oracle price.
-			if percentSubmitted := math.LegacyNewDecFromInt(info.TotalWeight).Quo(math.LegacyNewDecFromInt(totalPower)); percentSubmitted.GTE(threshold) {
-				finalPrices[pair] = ComputeMedian(info)
+			percentSubmitted := math.LegacyNewDecFromInt(info.TotalWeight).Quo(math.LegacyNewDecFromInt(totalPower))
+
+			if percentSubmitted.GTE(threshold) {
+				finalPrices[pair] = AggregatorPricePair{
+					SpotPrice: ComputeMedian(info.SpotPrices, info.TotalWeight),
+					PnlPrice:  ComputeMedian(info.PnlPrices, info.TotalWeight),
+				}
+
 				logger.Info(
-					"computed stake-weighted median price for currency pair",
+					"computed stake-weighted median prices for currency pair",
 					"currency_pair", pair,
 					"percent_submitted", percentSubmitted.String(),
 					"threshold", threshold.String(),
-					"final_price", finalPrices[pair].String(),
-					"num_validators", len(info.Prices),
+					"final_spot_price", finalPrices[pair].SpotPrice.String(),
+					"final_pnl_price", finalPrices[pair].PnlPrice.String(),
+					"num_validators", len(info.SpotPrices),
 				)
 			} else {
 				logger.Info(
-					"not enough voting power to compute stake-weighted median price price for currency pair",
+					"not enough voting power to compute stake-weighted median prices for currency pair",
 					"currency_pair", pair,
 					"threshold", threshold.String(),
 					"percent_submitted", percentSubmitted.String(),
-					"num_validators", len(info.Prices),
+					"num_validators", len(info.SpotPrices),
 				)
 			}
 		}
@@ -116,10 +144,10 @@ func Median(
 	}
 }
 
-func ComputeMedian(priceInfo PriceInfo) *big.Int {
+func ComputeMedian(prices []PricePerValidator, totalWeight math.Int) *big.Int {
 	// Sort the prices by price.
-	sort.SliceStable(priceInfo.Prices, func(i, j int) bool {
-		switch priceInfo.Prices[i].Price.Cmp(priceInfo.Prices[j].Price) {
+	sort.SliceStable(prices, func(i, j int) bool {
+		switch prices[i].Price.Cmp(prices[j].Price) {
 		case -1:
 			return true
 		case 1:
@@ -130,11 +158,11 @@ func ComputeMedian(priceInfo PriceInfo) *big.Int {
 	})
 
 	// Compute the median weight.
-	middle := priceInfo.TotalWeight.QuoRaw(2)
+	middle := totalWeight.QuoRaw(2)
 
 	// Iterate through the prices and compute the median price.
 	sum := math.ZeroInt()
-	for index, price := range priceInfo.Prices {
+	for index, price := range prices {
 		sum = sum.Add(math.NewInt(price.VoteWeight))
 
 		if sum.GTE(middle) {
@@ -142,7 +170,7 @@ func ComputeMedian(priceInfo PriceInfo) *big.Int {
 		}
 
 		// If we reached the end of the list, return the last price.
-		if index == len(priceInfo.Prices)-1 {
+		if index == len(prices)-1 {
 			return price.Price
 		}
 	}
@@ -155,7 +183,6 @@ func getValidatorPowerByAddress(
 	validatorStore CCValidatorStore,
 	validatorAddr string,
 ) (int64, error) {
-
 	addr, err := sdk.ConsAddressFromBech32(validatorAddr)
 	if err != nil {
 		return 0, err
@@ -168,5 +195,4 @@ func getValidatorPowerByAddress(
 
 	validatorPower := validator.GetPower()
 	return validatorPower, nil
-
 }

@@ -169,6 +169,14 @@ var (
 	Price6       uint64 = 60006
 	Price7       uint64 = 7007
 
+	Price1In1000SubticksPerTick = Price1 * 1000
+	Price2In1000SubticksPerTick = Price2 * 1000
+	Price3In1000SubticksPerTick = Price3 * 1000
+	Price4In1000SubticksPerTick = Price4 * 1000
+	Price5In1000SubticksPerTick = Price5 * 1000
+	Price6In1000SubticksPerTick = Price6 * 1000
+	Price7In1000SubticksPerTick = Price7 * 1000
+
 	Price5Negative int64 = -500005
 	Price6Negative int64 = -60006
 	Price7Negative int64 = -7007
@@ -196,6 +204,11 @@ var (
 	Price5NegativeBytes, _ = Price5NegativeBig.GobEncode()
 	Price6NegativeBytes, _ = Price6NegativeBig.GobEncode()
 	Price7NegativeBytes, _ = Price7NegativeBig.GobEncode()
+
+	// Funding Rates
+	FundingRate1 = int64(10000) // 0.01% (10000 ppm)
+	FundingRate2 = int64(-5000) // -0.005% (-5000 ppm)
+	FundingRate3 = int64(25000) // 0.025% (25000 ppm)
 
 	// Exchange 0 prices
 	Exchange0_Price4_TimeT = &api.ExchangePrice{

@@ -35,7 +35,7 @@ const (
 	validGenesisState = `{` +
 		`"market_params":[{"id":0,"pair":"DENT-USD","exponent":0,"min_exchanges":1,"min_price_change_ppm":1,` +
 		`"exchange_config_json":"{}"}],` +
-		`"market_prices":[{"id":0,"exponent":0,"price":"1"}]` +
+		`"market_prices":[{"id":0,"exponent":0,"spot_price":"1","pnl_price":"1"}]` +
 		`}`
 )
 
@@ -141,7 +141,7 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 		},
 		"Bad state: Invalid price": {
 			genesisJson: `{"market_params":[{"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1,` +
-				`"exchangeConfigJson":"{}"}],"market_prices": [{"exponent":1,"price": "0"}]}`,
+				`"exchangeConfigJson":"{}"}],"market_prices": [{"exponent":1,"spot_price": "0", "pnl_price": "0"}]}`,
 			expectedErr: errorsmod.Wrap(
 				pricestypes.ErrInvalidInput,
 				"market param 0 exponent 0 does not match market price 0 exponent 1",

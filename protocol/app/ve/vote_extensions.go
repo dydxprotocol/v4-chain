@@ -3,12 +3,14 @@ package ve
 import (
 	"fmt"
 	"math/big"
+	"sort"
 
 	"cosmossdk.io/log"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
-	pricetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -22,26 +24,42 @@ type VoteExtensionHandler struct {
 	// fetching valid price updates and current markets
 	pricesKeeper PreBlockExecPricesKeeper
 
+	// fetching last funding rates for price calc
+	perpetualsKeeper ExtendVotePerpetualsKeeper
+
+	// fetching mid price for price calc
+	clobKeeper ExtendVoteClobKeeper
+
 	// writing prices to the prices module store
 	priceApplier VEPriceApplier
 }
 
+type VEPricePair struct {
+	SpotPrice uint64
+	PnlPrice  uint64
+}
+
 var (
-	acceptResponse = &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}
-	rejectResponse = &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}
+	acceptResponse       = &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}
+	rejectResponse       = &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}
+	ppmFactor      int64 = 1000000
 )
 
 func NewVoteExtensionHandler(
 	logger log.Logger,
 	voteCodec codec.VoteExtensionCodec,
 	pricesKeeper PreBlockExecPricesKeeper,
+	perpetualsKeeper ExtendVotePerpetualsKeeper,
+	clobKeeper ExtendVoteClobKeeper,
 	priceApplier VEPriceApplier,
 ) *VoteExtensionHandler {
 	return &VoteExtensionHandler{
-		logger:       logger,
-		voteCodec:    voteCodec,
-		pricesKeeper: pricesKeeper,
-		priceApplier: priceApplier,
+		logger:           logger,
+		voteCodec:        voteCodec,
+		pricesKeeper:     pricesKeeper,
+		perpetualsKeeper: perpetualsKeeper,
+		clobKeeper:       clobKeeper,
+		priceApplier:     priceApplier,
 	}
 }
 
@@ -107,7 +125,6 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 		ctx sdk.Context,
 		req *abci.RequestVerifyVoteExtension,
 	) (resp *abci.ResponseVerifyVoteExtension, err error) {
-
 		defer func() {
 			if recovery := recover(); recovery != nil {
 				h.logger.Error(
@@ -116,7 +133,6 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 				)
 				resp = rejectResponse
 				err = ErrPanic{fmt.Errorf("%v", recovery)}
-
 			}
 		}()
 
@@ -153,14 +169,14 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 }
 
 func (h *VoteExtensionHandler) GetVEBytesFromCurrPrices(ctx sdk.Context) ([]byte, error) {
-	priceUpdates := h.pricesKeeper.GetValidMarketPriceUpdates(ctx)
+	priceUpdates := h.getCurrentPricesForEachMarket(ctx)
 
-	if len(priceUpdates.MarketPriceUpdates) == 0 {
-		return nil, fmt.Errorf("no valid median prices")
+	if len(priceUpdates) == 0 {
+		return nil, fmt.Errorf("no valid prices")
 	}
 
 	// turn prices from daemon into a VE
-	voteExt, err := h.transformDaemonPricesToVE(priceUpdates.MarketPriceUpdates)
+	voteExt, err := h.transformDaemonPricesToVE(priceUpdates)
 	if err != nil {
 		return nil, err
 	}
@@ -174,18 +190,18 @@ func (h *VoteExtensionHandler) GetVEBytesFromCurrPrices(ctx sdk.Context) ([]byte
 }
 
 func (h *VoteExtensionHandler) transformDaemonPricesToVE(
-	priceupdates []*pricetypes.MarketPriceUpdates_MarketPriceUpdate,
+	priceupdates map[uint32]VEPricePair,
 ) (types.DaemonVoteExtension, error) {
-	vePrices := make(map[uint32][]byte)
+	var vePrices []types.PricePair
 
-	for _, priceUpdate := range priceupdates {
+	for marketId, priceUpdate := range priceupdates {
 		// check if the marketId is valid
-		encodedPrice, err := h.GetEncodedPriceFromPriceUpdate(priceUpdate)
+		encodedPricePair, err := h.getEncodedPriceFromPriceUpdate(priceUpdate)
 		if err != nil {
 			continue
 		}
-		marketId := priceUpdate.GetMarketId()
-		vePrices[marketId] = encodedPrice
+		encodedPricePair.MarketId = marketId
+		vePrices = append(vePrices, encodedPricePair)
 	}
 
 	return types.DaemonVoteExtension{
@@ -193,15 +209,171 @@ func (h *VoteExtensionHandler) transformDaemonPricesToVE(
 	}, nil
 }
 
-func (h *VoteExtensionHandler) GetEncodedPriceFromPriceUpdate(
-	priceUpdate *pricetypes.MarketPriceUpdates_MarketPriceUpdate,
-) ([]byte, error) {
-	price := new(big.Int).SetUint64(priceUpdate.GetPrice())
+func (h *VoteExtensionHandler) getEncodedPriceFromPriceUpdate(
+	priceUpdate VEPricePair,
+) (types.PricePair, error) {
+	spotPrice := new(big.Int).SetUint64(priceUpdate.SpotPrice)
+	pnlPrice := new(big.Int).SetUint64(priceUpdate.PnlPrice)
 
-	encodedPrice, err := veutils.GetVEEncodedPrice(price)
+	encodedSpotPrice, err := veutils.GetVEEncodedPrice(spotPrice)
 	if err != nil {
-		return nil, err
+		return types.PricePair{}, err
 	}
 
-	return encodedPrice, nil
+	encodedPnlPrice, err := veutils.GetVEEncodedPrice(pnlPrice)
+	if err != nil {
+		return types.PricePair{}, err
+	}
+
+	return types.PricePair{
+		SpotPrice: encodedSpotPrice,
+		PnlPrice:  encodedPnlPrice,
+	}, nil
+}
+
+func (h *VoteExtensionHandler) getCurrentPricesForEachMarket(
+	ctx sdk.Context,
+) map[uint32]VEPricePair {
+	vePrices := make(map[uint32]VEPricePair)
+	indexPrices := h.pricesKeeper.GetValidMarketSpotPriceUpdates(ctx)
+
+	for _, market := range indexPrices {
+		clobMidPrice, smoothedPrice, lastFundingRate, allExist := h.getPeripheryPnlPriceData(
+			ctx,
+			market,
+			vePrices,
+		)
+
+		if !allExist {
+			continue
+		}
+
+		medianPnlPrice := h.getMedianPnlPrice(
+			new(big.Int).SetUint64(market.SpotPrice),
+			clobMidPrice,
+			smoothedPrice,
+			lastFundingRate,
+		)
+
+		vePrices[market.MarketId] = VEPricePair{
+			SpotPrice: market.SpotPrice,
+			PnlPrice:  medianPnlPrice.Uint64(),
+		}
+	}
+
+	return vePrices
+}
+
+func (h *VoteExtensionHandler) getPeripheryPnlPriceData(
+	ctx sdk.Context,
+	market *pricestypes.MarketSpotPriceUpdate,
+	vePrices map[uint32]VEPricePair,
+) (
+	clobMidPrice *big.Int,
+	smoothedPrice *big.Int,
+	lastFundingRate *big.Int,
+	allExist bool,
+) {
+	clobMidPrice = h.getClobMidPrice(ctx, market.MarketId)
+	if clobMidPrice == nil {
+		vePrices[market.MarketId] = VEPricePair{
+			SpotPrice: market.SpotPrice,
+			PnlPrice:  market.SpotPrice,
+		}
+		allExist = false
+		return
+	}
+
+	smoothedPrice = h.getSmoothedPrice(market.MarketId)
+	if smoothedPrice == nil {
+		vePrices[market.MarketId] = VEPricePair{
+			SpotPrice: market.SpotPrice,
+			PnlPrice:  market.SpotPrice,
+		}
+		allExist = false
+		return
+	}
+
+	lastFundingRate = h.getLastFundingRate(ctx, market.MarketId)
+	if lastFundingRate == nil {
+		vePrices[market.MarketId] = VEPricePair{
+			SpotPrice: market.SpotPrice,
+			PnlPrice:  market.SpotPrice,
+		}
+		allExist = false
+		return
+	}
+
+	allExist = true
+	return
+}
+
+func (h *VoteExtensionHandler) getMedianPnlPrice(
+	indexPrice *big.Int,
+	clobMidPrice *big.Int,
+	smoothedPrice *big.Int,
+	lastFundingRate *big.Int,
+) *big.Int {
+	fundingWeightedPrice := h.getFundingWeightedIndexPrice(indexPrice, lastFundingRate)
+	prices := []*big.Int{clobMidPrice, smoothedPrice, fundingWeightedPrice}
+	sort.Slice(prices, func(i, j int) bool {
+		return prices[i].Cmp(prices[j]) < 0
+	})
+
+	return prices[1]
+}
+
+func (h *VoteExtensionHandler) getFundingWeightedIndexPrice(
+	indexPrice *big.Int,
+	lastFundingRate *big.Int,
+) *big.Int {
+	adjustedFundingRate := new(big.Int).Add(lastFundingRate, big.NewInt(ppmFactor))
+	fundingWeightedPrice := new(big.Int).Mul(indexPrice, adjustedFundingRate)
+	fundingWeightedPrice = fundingWeightedPrice.Div(fundingWeightedPrice, big.NewInt(ppmFactor))
+
+	return fundingWeightedPrice
+}
+
+func (h *VoteExtensionHandler) getClobMidPrice(
+	ctx sdk.Context,
+	marketId uint32,
+) *big.Int {
+	clobPair, found := h.clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(marketId))
+
+	if !found {
+		return nil
+	}
+
+	clobMetadata := h.clobKeeper.GetSingleMarketClobMetadata(ctx, clobPair)
+
+	if clobMetadata.MidPrice == 0 {
+		return nil
+	}
+
+	midPrice := clobMetadata.MidPrice.ToBigInt()
+	subticksPerTick := new(big.Int).SetUint64(uint64(clobPair.SubticksPerTick))
+	return new(big.Int).Div(midPrice, subticksPerTick)
+}
+
+func (h *VoteExtensionHandler) getSmoothedPrice(
+	marketId uint32,
+) *big.Int {
+	smoothedPrice, exists := h.pricesKeeper.GetSmoothedSpotPrice(marketId)
+	if !exists || smoothedPrice == 0 {
+		return nil
+	}
+
+	return new(big.Int).SetUint64(smoothedPrice)
+}
+
+func (h *VoteExtensionHandler) getLastFundingRate(
+	ctx sdk.Context,
+	marketId uint32,
+) *big.Int {
+	perpetual, err := h.perpetualsKeeper.GetPerpetual(ctx, marketId)
+	if err != nil {
+		return nil
+	}
+
+	return perpetual.LastFundingRate.BigInt()
 }

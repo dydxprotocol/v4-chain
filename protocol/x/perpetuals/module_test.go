@@ -259,9 +259,10 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 			ExchangeConfigJson: "{}",
 		},
 		pricetypes.MarketPrice{
-			Id:       0,
-			Exponent: -2,
-			Price:    1_000,
+			Id:        0,
+			Exponent:  -2,
+			SpotPrice: 1_000,
+			PnlPrice:  1_000,
 		},
 	); err != nil {
 		t.Errorf("failed to create a market %s", err)
@@ -318,7 +319,8 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				 "market_type": "PERPETUAL_MARKET_TYPE_CROSS"
 			  },
 			  "funding_index":"0",
-			  "open_interest":"0"
+			  "open_interest":"0",
+			  "last_funding_rate":"0"
 		   }
 		],
 		"liquidity_tiers":[

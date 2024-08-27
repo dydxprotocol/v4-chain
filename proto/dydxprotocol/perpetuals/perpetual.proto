@@ -24,6 +24,12 @@ message Perpetual {
         "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
+
+  bytes last_funding_rate = 4 [
+    (gogoproto.customtype) =
+        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];  
 }
 
 enum PerpetualMarketType {

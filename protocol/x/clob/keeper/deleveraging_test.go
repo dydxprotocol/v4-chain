@@ -373,12 +373,12 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 
 			// Update the prices on the test markets.
 			for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
-				err := ks.PricesKeeper.UpdateMarketPrice(
+				err := ks.PricesKeeper.UpdateSpotAndPnlMarketPrices(
 					ks.Ctx,
-					&pricestypes.MarketPriceUpdates_MarketPriceUpdate{
-
-						MarketId: marketId,
-						Price:    oraclePrice,
+					&pricestypes.MarketPriceUpdate{
+						MarketId:  marketId,
+						SpotPrice: oraclePrice,
+						PnlPrice:  oraclePrice,
 					},
 				)
 				require.NoError(t, err)
@@ -1623,9 +1623,10 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 			require.NoError(
 				t,
-				ks.PricesKeeper.UpdateMarketPrice(ks.Ctx, &pricestypes.MarketPriceUpdates_MarketPriceUpdate{
-					MarketId: uint32(0),
-					Price:    4_999_999_937, // Set the price to some large prime number.
+				ks.PricesKeeper.UpdateSpotAndPnlMarketPrices(ks.Ctx, &pricestypes.MarketPriceUpdate{
+					MarketId:  uint32(0),
+					SpotPrice: 4_999_999_937, // Set the price to some large prime number.
+					PnlPrice:  4_999_999_937, // Set the price to some large prime number.
 				}),
 			)
 

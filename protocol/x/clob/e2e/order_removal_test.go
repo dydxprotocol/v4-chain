@@ -5,6 +5,7 @@ import (
 
 	"github.com/cometbft/cometbft/types"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	clobtestutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -28,7 +29,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 
 		// Optional withdraw message for under-collateralized tests.
 		withdrawal  *sendingtypes.MsgWithdrawFromSubaccount
-		priceUpdate map[uint32]uint64
+		priceUpdate map[uint32]ve.VEPricePair
 
 		// Optional short term order
 		subsequentOrder *clobtypes.Order
@@ -47,8 +48,11 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO_SL_15,
 			},
 
-			priceUpdate: map[uint32]uint64{
-				0: 1_490_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 1_490_000,
+					PnlPrice:  1_490_000,
+				},
 			},
 			expectedOrderRemovals: []bool{
 				false,
@@ -65,8 +69,11 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK,
 			},
 
-			priceUpdate: map[uint32]uint64{
-				0: 5_000_400_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_400_000,
+					PnlPrice:  5_000_400_000,
+				},
 			},
 			expectedOrderRemovals: []bool{
 				false,
@@ -83,8 +90,11 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC,
 			},
 
-			priceUpdate: map[uint32]uint64{
-				0: 5_000_400_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_400_000,
+					PnlPrice:  5_000_400_000,
+				},
 			},
 			expectedOrderRemovals: []bool{
 				true,
@@ -100,8 +110,11 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10_SL_15,
 			},
 
-			priceUpdate: map[uint32]uint64{
-				0: 1_490_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 1_490_000,
+					PnlPrice:  1_490_000,
+				},
 			},
 			expectedOrderRemovals: []bool{
 				true, // Self trade removes the maker order.
@@ -117,8 +130,11 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
 				constants.ConditionalOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15_SL_15,
 			},
-			priceUpdate: map[uint32]uint64{
-				0: 1_490_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 1_490_000,
+					PnlPrice:  1_490_000,
+				},
 			},
 			expectedOrderRemovals: []bool{
 				true, // maker order fully filled
@@ -134,8 +150,11 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5_SL_15,
 			},
-			priceUpdate: map[uint32]uint64{
-				0: 1_510_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 1_510_000,
+					PnlPrice:  1_510_000,
+				},
 			},
 
 			expectedOrderRemovals: []bool{
@@ -158,8 +177,11 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				AssetId:   constants.Usdc.Id,
 				Quantums:  10_000_000_000,
 			},
-			priceUpdate: map[uint32]uint64{
-				0: 5_000_250_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_250_000,
+					PnlPrice:  5_000_250_000,
+				},
 			},
 
 			expectedOrderRemovals: []bool{
@@ -185,8 +207,11 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				AssetId:   constants.Usdc.Id,
 				Quantums:  10_000_000_000,
 			},
-			priceUpdate: map[uint32]uint64{
-				0: 5_000_250_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_250_000,
+					PnlPrice:  5_000_250_000,
+				},
 			},
 
 			expectedOrderRemovals: []bool{
@@ -210,8 +235,11 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				AssetId:   constants.Usdc.Id,
 				Quantums:  500_000_000_000,
 			},
-			priceUpdate: map[uint32]uint64{
-				0: 5_000_250_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_250_000,
+					PnlPrice:  5_000_250_000,
+				},
 			},
 
 			subsequentOrder: &constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
@@ -366,7 +394,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 
 		// Optional withdraw message for under-collateralized tests.
 		withdrawal  *sendingtypes.MsgWithdrawFromSubaccount
-		priceUpdate map[uint32]uint64
+		priceUpdate map[uint32]ve.VEPricePair
 
 		// Optional field to override MsgProposedOperations to inject invalid order removals
 		msgProposedOperations *clobtypes.MsgProposedOperations
@@ -466,7 +494,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK,
 			},
-			priceUpdate: map[uint32]uint64{},
+			priceUpdate: map[uint32]ve.VEPricePair{},
 			msgProposedOperations: &clobtypes.MsgProposedOperations{
 				OperationsQueue: []clobtypes.OperationRaw{
 					clobtestutils.NewOrderRemovalOperationRaw(
@@ -484,8 +512,11 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC,
 			},
-			priceUpdate: map[uint32]uint64{
-				0: 5_000_400_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_400_000,
+					PnlPrice:  5_000_400_000,
+				},
 			},
 			msgProposedOperations: &clobtypes.MsgProposedOperations{
 				OperationsQueue: []clobtypes.OperationRaw{
@@ -506,8 +537,11 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK,
 			},
-			priceUpdate: map[uint32]uint64{
-				0: 5_000_400_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_400_000,
+					PnlPrice:  5_000_400_000,
+				},
 			},
 			msgProposedOperations: &clobtypes.MsgProposedOperations{
 				OperationsQueue: []clobtypes.OperationRaw{
@@ -536,7 +570,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC,
 			},
-			priceUpdate: map[uint32]uint64{},
+			priceUpdate: map[uint32]ve.VEPricePair{},
 			msgProposedOperations: &clobtypes.MsgProposedOperations{
 				OperationsQueue: []clobtypes.OperationRaw{
 					clobtestutils.NewOrderRemovalOperationRaw(
@@ -554,8 +588,11 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK,
 			},
-			priceUpdate: map[uint32]uint64{
-				0: 5_000_400_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_400_000,
+					PnlPrice:  5_000_400_000,
+				},
 			},
 			msgProposedOperations: &clobtypes.MsgProposedOperations{
 				OperationsQueue: []clobtypes.OperationRaw{
@@ -576,8 +613,11 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC,
 			},
-			priceUpdate: map[uint32]uint64{
-				0: 5_000_400_000,
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_400_000,
+					PnlPrice:  5_000_400_000,
+				},
 			},
 			msgProposedOperations: &clobtypes.MsgProposedOperations{
 				OperationsQueue: []clobtypes.OperationRaw{
@@ -605,7 +645,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
 			},
-			priceUpdate: map[uint32]uint64{},
+			priceUpdate: map[uint32]ve.VEPricePair{},
 			msgProposedOperations: &clobtypes.MsgProposedOperations{
 				OperationsQueue: []clobtypes.OperationRaw{
 					clobtestutils.NewOrderRemovalOperationRaw(
@@ -682,7 +722,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 				&tApp.App.ConsumerKeeper,
 				ctx,
-				map[uint32]uint64{},
+				map[uint32]ve.VEPricePair{},
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -714,7 +754,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
 				&tApp.App.ConsumerKeeper,
 				ctx,
-				map[uint32]uint64{},
+				map[uint32]ve.VEPricePair{},
 				3,
 			)
 			require.NoError(t, err)
@@ -1050,7 +1090,7 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 		&tApp.App.ConsumerKeeper,
 		ctx,
-		map[uint32]uint64{},
+		map[uint32]ve.VEPricePair{},
 		tApp.GetHeader().Height,
 	)
 	require.NoError(t, err)

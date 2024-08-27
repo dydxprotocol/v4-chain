@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/big"
 
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
@@ -43,21 +42,17 @@ func AreVEEnabled(ctx sdk.Context) bool {
 	return cp.Abci.VoteExtensionsEnableHeight < ctx.BlockHeight()
 }
 
-func GetMarketPriceUpdateFromBytes(
+func GetPriceFromBytes(
 	id uint32,
 	bz []byte,
-) (*pricestypes.MarketPriceUpdates_MarketPriceUpdate, error) {
-	var priceUpdate pricestypes.MarketPriceUpdates_MarketPriceUpdate
+) (*big.Int, error) {
 	price, err := GetVEDecodedPrice(bz)
 
 	if err != nil {
 		return nil, err
 	}
-	priceUpdate = pricestypes.MarketPriceUpdates_MarketPriceUpdate{
-		MarketId: id,
-		Price:    price.Uint64(),
-	}
-	return &priceUpdate, nil
+
+	return price, nil
 }
 
 func GetVEEncodedPrice(

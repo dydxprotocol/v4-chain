@@ -23,8 +23,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-
-
 	"cosmossdk.io/store/prefix"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	big_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/big"
@@ -351,9 +349,10 @@ func TestHasPerpetual(t *testing.T) {
 			ExchangeConfigJson: "{}",
 		},
 		pricestypes.MarketPrice{
-			Id:       0,
-			Exponent: -10,
-			Price:    1_000, // leave this as a placeholder b/c we cannot set the price to 0
+			Id:        0,
+			Exponent:  -10,
+			SpotPrice: 1_000, // leave this as a placeholder b/c we cannot set the price to 0
+			PnlPrice:  1_000, // leave this as a placeholder b/c we cannot set the price to 0
 		},
 	)
 	require.NoError(t, err)
@@ -429,9 +428,10 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 			ExchangeConfigJson: "{}",
 		},
 		pricestypes.MarketPrice{
-			Id:       0,
-			Exponent: -10,
-			Price:    1_000, // leave this as a placeholder b/c we cannot set the price to 0
+			Id:        0,
+			Exponent:  -10,
+			SpotPrice: 1_000, // leave this as a placeholder b/c we cannot set the price to 0
+			PnlPrice:  1_000, // leave this as a placeholder b/c we cannot set the price to 0
 		},
 	)
 	require.NoError(t, err)
@@ -827,20 +827,22 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
-					Id:       marketId,
-					Exponent: tc.exponent,
-					Price:    1_000, // leave this as a placeholder b/c we cannot set the price to 0
+					Id:        marketId,
+					Exponent:  tc.exponent,
+					SpotPrice: 1_000, // leave this as a placeholder b/c we cannot set the price to 0
+					PnlPrice:  1_000, // leave this as a placeholder b/c we cannot set the price to 0
 				},
 			)
 			require.NoError(t, err)
 
 			// Update `Market.price`. By updating prices this way, we can simulate conditions where the oracle
 			// price may become 0.
-			err = pc.PricesKeeper.UpdateMarketPrice(
+			err = pc.PricesKeeper.UpdateSpotAndPnlMarketPrices(
 				pc.Ctx,
-				&pricestypes.MarketPriceUpdates_MarketPriceUpdate{
-					MarketId: marketId,
-					Price:    tc.price,
+				&pricestypes.MarketPriceUpdate{
+					MarketId:  marketId,
+					SpotPrice: tc.price,
+					PnlPrice:  tc.price,
 				},
 			)
 			require.NoError(t, err)
@@ -1061,9 +1063,10 @@ func TestGetNetNotional_Success(t *testing.T) {
 					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
-					Id:       marketId,
-					Exponent: tc.exponent,
-					Price:    tc.price,
+					Id:        marketId,
+					Exponent:  tc.exponent,
+					SpotPrice: tc.price,
+					PnlPrice:  tc.price,
 				},
 			)
 			require.NoError(t, err)
@@ -1223,9 +1226,10 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
-					Id:       marketId,
-					Exponent: tc.exponent,
-					Price:    tc.price,
+					Id:        marketId,
+					Exponent:  tc.exponent,
+					SpotPrice: tc.price,
+					PnlPrice:  tc.price,
 				},
 			)
 			require.NoError(t, err)
@@ -1386,9 +1390,10 @@ func TestGetNetCollateral_Success(t *testing.T) {
 					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
-					Id:       marketId,
-					Exponent: tc.exponent,
-					Price:    tc.price,
+					Id:        marketId,
+					Exponent:  tc.exponent,
+					SpotPrice: tc.price,
+					PnlPrice:  tc.price,
 				},
 			)
 			require.NoError(t, err)
@@ -1655,6 +1660,53 @@ func TestModifyFundingIndex_IntegerOverflowUnderflow(t *testing.T) {
 				tc.fundingIndexDelta,
 			)
 			require.NoError(t, err)
+		})
+	}
+}
+
+func TestModifyLastFundingRate_Success(t *testing.T) {
+	tests := map[string]struct {
+		perpetualId             uint32
+		lastFundingRateDelta    *big.Int
+		expectedLastFundingRate *big.Int
+	}{
+		"success": {
+			perpetualId:             0,
+			lastFundingRateDelta:    big.NewInt(1000),
+			expectedLastFundingRate: big.NewInt(1000),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			pc := keepertest.PerpetualsKeepers(t)
+			// Create liquidity tiers and perpetuals,
+			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 1)
+			err := pc.PerpetualsKeeper.ModifyLastFundingRate(pc.Ctx, tc.perpetualId, tc.lastFundingRateDelta)
+			require.NoError(t, err)
+			perpetual, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, tc.perpetualId)
+			require.NoError(t, err)
+			require.Equal(t, dtypes.NewIntFromBigInt(tc.expectedLastFundingRate), perpetual.LastFundingRate)
+		})
+	}
+}
+
+func TestModifyLastFundingRate_Failure(t *testing.T) {
+	tests := map[string]struct {
+		perpetualId          uint32
+		lastFundingRateDelta *big.Int
+	}{
+		"perpetual does not exist": {
+			perpetualId:          40,
+			lastFundingRateDelta: big.NewInt(1000),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			pc := keepertest.PerpetualsKeepers(t)
+			err := pc.PerpetualsKeeper.ModifyLastFundingRate(pc.Ctx, tc.perpetualId, tc.lastFundingRateDelta)
+			require.Error(t, err)
 		})
 	}
 }
@@ -2153,6 +2205,8 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 					expectedFundingIndexDelta,
 					actualFundingIndexDelta,
 				)
+
+				require.Equal(t, newPerp.LastFundingRate, dtypes.NewIntFromBigInt(big.NewInt(int64(tc.fundingRatesAndIndices[i].FundingValuePpm))))
 
 				// Check that all recorded funding samples from the previous epoch were deleted.
 				allSamples := pc.PerpetualsKeeper.GetPremiumSamples(pc.Ctx)
@@ -3377,7 +3431,8 @@ func TestIsPositionUpdatable(t *testing.T) {
 			queryPerpId: 1,
 			marketParamPrice: *pricestest.GenerateMarketParamPrice(
 				pricestest.WithId(1),
-				pricestest.WithPriceValue(1000), // non-zero
+				pricestest.WithSpotPriceValue(1000), // non-zero
+				pricestest.WithPnlPriceValue(1000),  // non-zero
 			),
 			expectedUpdatable: true,
 		},
@@ -3389,7 +3444,8 @@ func TestIsPositionUpdatable(t *testing.T) {
 			queryPerpId: 1,
 			marketParamPrice: *pricestest.GenerateMarketParamPrice(
 				pricestest.WithId(1),
-				pricestest.WithPriceValue(0),
+				pricestest.WithSpotPriceValue(0),
+				pricestest.WithPnlPriceValue(0),
 			),
 			expectedUpdatable: false,
 		},
@@ -3460,7 +3516,7 @@ func TestIsIsolatedPerpetual(t *testing.T) {
 				keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 				err := perpetualsKeeper.ValidateAndSetPerpetual(ctx, tc.perp)
-				require.NoError(t,err)
+				require.NoError(t, err)
 				isIsolated, err := perpetualsKeeper.IsIsolatedPerpetual(ctx, tc.perp.Params.Id)
 				require.NoError(t, err)
 				require.Equal(t, tc.expected, isIsolated)

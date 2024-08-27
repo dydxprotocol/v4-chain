@@ -1,9 +1,9 @@
 package pricecache
 
 import (
+	"math/big"
 	"sync"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,15 +11,23 @@ import (
 // which are fetched in ExtendVoteHandler and PreBlocker. This is to avoid
 // redundant computation on calculating stake weighthed median prices in VEs
 type PriceCache struct {
-	priceUpdates types.MarketPriceUpdates
+	priceUpdates PriceUpdates
 	height       int64
 	round        int32
 	mu           sync.RWMutex
 }
 
+type PriceUpdate struct {
+	MarketId  uint32
+	SpotPrice *big.Int
+	PnlPrice  *big.Int
+}
+
+type PriceUpdates []PriceUpdate
+
 func (pc *PriceCache) SetPriceUpdates(
 	ctx sdk.Context,
-	updates types.MarketPriceUpdates,
+	updates PriceUpdates,
 	round int32,
 ) {
 	pc.mu.Lock()
@@ -29,7 +37,7 @@ func (pc *PriceCache) SetPriceUpdates(
 	pc.round = round
 }
 
-func (pc *PriceCache) GetPriceUpdates() types.MarketPriceUpdates {
+func (pc *PriceCache) GetPriceUpdates() PriceUpdates {
 	pc.mu.RLock()
 	defer pc.mu.RUnlock()
 	return pc.priceUpdates
