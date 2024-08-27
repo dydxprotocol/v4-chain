@@ -30,7 +30,7 @@ jobs:
         image: bitnami/kafka:3.4.0
         env:
           KAFKA_CFG_ADVERTISED_HOST_NAME: localhost
-          KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092,EXTERNAL://localhost:9092
+          KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,EXTERNAL://localhost:9092
         ports:
           - 9092:9092
       init-kafka:
