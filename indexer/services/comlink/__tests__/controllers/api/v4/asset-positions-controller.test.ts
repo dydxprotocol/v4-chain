@@ -117,7 +117,7 @@ describe('asset-positions-controller#V4', () => {
       );
     });
 
-    it('Get /assetPositions gets USDC asset position adjusted by unsettled funding', async () => {
+    it('Get /assetPositions gets TDAI asset position adjusted by unsettled funding', async () => {
       await testMocks.seedData();
       await BlockTable.create({
         ...testConstants.defaultBlock,
@@ -238,7 +238,7 @@ describe('asset-positions-controller#V4', () => {
       );
     });
 
-    it('Get /assetPositions/parentSubaccountNumber gets USDC asset positions adjusted by unsettled funding', async () => {
+    it('Get /assetPositions/parentSubaccountNumber gets TDAI asset positions adjusted by unsettled funding', async () => {
       await testMocks.seedData();
       await BlockTable.create({
         ...testConstants.defaultBlock,

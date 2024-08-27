@@ -114,7 +114,7 @@ export const defaultTransferContents: TransferSubaccountMessageContents = {
     address: defaultOwner,
     subaccountNumber: defaultChildAccNumber,
   },
-  symbol: 'USDC',
+  symbol: 'TDAI',
   size: '1',
   type: TransferType.TRANSFER_IN,
   transactionHash: '0x1',

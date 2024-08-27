@@ -21,7 +21,7 @@ import {
   SubaccountTable,
   TendermintEventFromDatabase,
   TendermintEventTable,
-  USDC_SYMBOL,
+  TDAI_SYMBOL,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
@@ -35,7 +35,7 @@ import {
   PerpetualPositionWithFunding,
   Risk,
 } from '../types';
-import { ZERO, ZERO_USDC_POSITION } from './constants';
+import { ZERO, ZERO_TDAI_POSITION } from './constants';
 import { NotFoundError } from './errors';
 
 /* ------- GENERIC HELPERS ------- */
@@ -148,7 +148,7 @@ export async function getClobPairId(
 /**
  * Calculate the equity and free collateral for a subaccount given all the positions for it.
  * 1. Equity for a subaccount is sum of the notional value of all the positions held by the
- * subaccount and the USDC asset position of the subaccount.
+ * subaccount and the TDAI asset position of the subaccount.
  * 2. Free collateral for a subaccount is the sum of the initial margin required for all positions
  * held by the subaccount subtracted from the equity.
  * @param perpetualPositions List of positions in perpetual markets held by the subaccount
@@ -160,7 +160,7 @@ export function calculateEquityAndFreeCollateral(
   perpetualPositions: PerpetualPositionFromDatabase[],
   perpetualMarketsMap: PerpetualMarketsMap,
   marketsMap: MarketsMap,
-  usdcPositionSize: string,
+  tdaiPositionSize: string,
 ): {
   equity: string,
   freeCollateral: string,
@@ -198,7 +198,7 @@ export function calculateEquityAndFreeCollateral(
 
   // Derive equity and freeCollateral of the account from the PositionNotional
   // and totalPositionRisk of positions
-  const equity: Big = signedPositionNotional.plus(usdcPositionSize);
+  const equity: Big = signedPositionNotional.plus(tdaiPositionSize);
   return {
     equity: equity.toFixed(),
     freeCollateral: equity.minus(totalPositionRisk).toFixed(),
@@ -406,56 +406,56 @@ export function getTotalUnsettledFunding(
 }
 
 /**
- * Gets and adjusts the USDC asset position within a map of AssetPositions given the unsettled
+ * Gets and adjusts the TDAI asset position within a map of AssetPositions given the unsettled
  * funding
  * @param assetPositionsMap
  * @param unsettledFunding
  * @returns
  */
-export function adjustUSDCAssetPosition(
+export function adjustTDAIAssetPosition(
   assetPositionsMap: AssetPositionsMap,
   unsettledFunding: Big,
 ): {
   assetPositionsMap: AssetPositionsMap,
-  adjustedUSDCAssetPositionSize: string
+  adjustedTDAIAssetPositionSize: string
 } {
   let adjustedAssetPositionsMap: AssetPositionsMap = _.cloneDeep(assetPositionsMap);
-  const usdcPosition: AssetPositionResponseObject = _.get(assetPositionsMap, USDC_SYMBOL);
-  let signedUsdcPositionSize: Big;
-  if (usdcPosition?.size !== undefined) {
-    signedUsdcPositionSize = Big(
-      usdcPosition.side === PositionSide.LONG
-        ? usdcPosition.size
-        : -usdcPosition.size,
+  const tdaiPosition: AssetPositionResponseObject = _.get(assetPositionsMap, TDAI_SYMBOL);
+  let signedTDaiPositionSize: Big;
+  if (tdaiPosition?.size !== undefined) {
+    signedTDaiPositionSize = Big(
+      tdaiPosition.side === PositionSide.LONG
+        ? tdaiPosition.size
+        : -tdaiPosition.size,
     );
   } else {
-    signedUsdcPositionSize = ZERO;
+    signedTDaiPositionSize = ZERO;
   }
-  const adjustedSize: Big = signedUsdcPositionSize.plus(unsettledFunding);
-  // Update the USDC position in the map if the adjusted size is non-zero
+  const adjustedSize: Big = signedTDaiPositionSize.plus(unsettledFunding);
+  // Update the TDAI position in the map if the adjusted size is non-zero
   if (!adjustedSize.eq(ZERO)) {
     _.set(
       adjustedAssetPositionsMap,
-      USDC_SYMBOL,
-      getUSDCAssetPosition(adjustedSize,
-        adjustedAssetPositionsMap[USDC_SYMBOL]?.subaccountNumber ?? 0),
+      TDAI_SYMBOL,
+      getTDAIAssetPosition(adjustedSize,
+        adjustedAssetPositionsMap[TDAI_SYMBOL]?.subaccountNumber ?? 0),
     );
-    // Remove the USDC position in the map if the adjusted size is zero
+    // Remove the TDAI position in the map if the adjusted size is zero
   } else {
-    adjustedAssetPositionsMap = _.omit(adjustedAssetPositionsMap, USDC_SYMBOL);
+    adjustedAssetPositionsMap = _.omit(adjustedAssetPositionsMap, TDAI_SYMBOL);
   }
 
   return {
     assetPositionsMap: adjustedAssetPositionsMap,
-    adjustedUSDCAssetPositionSize: adjustedSize.toFixed(),
+    adjustedTDAIAssetPositionSize: adjustedSize.toFixed(),
   };
 }
 
-function getUSDCAssetPosition(signedSize: Big, subaccountNumber: number):
+function getTDAIAssetPosition(signedSize: Big, subaccountNumber: number):
     AssetPositionResponseObject {
   const side: PositionSide = signedSize.gt(ZERO) ? PositionSide.LONG : PositionSide.SHORT;
   return {
-    ...ZERO_USDC_POSITION,
+    ...ZERO_TDAI_POSITION,
     side,
     size: signedSize.abs().toFixed(),
     subaccountNumber,

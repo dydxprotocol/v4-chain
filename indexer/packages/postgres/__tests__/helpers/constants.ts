@@ -132,7 +132,7 @@ export const isolatedSubaccountId2: string = SubaccountTable.uuid(
 
 export const defaultAsset: AssetCreateObject = {
   id: '0',
-  symbol: 'USDC',
+  symbol: 'TDAI',
   atomicResolution: -6,
   hasMarket: false,
 };

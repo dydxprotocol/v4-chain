@@ -167,7 +167,7 @@ export const defaultLiquidityTierUpsertEventV2: LiquidityTierUpsertEventV2 = {
   name: 'Large-Cap',
   initialMarginPpm: 50000,  // 5%
   maintenanceFractionPpm: 600000,  // 60% of IM = 3%
-  basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 USDC
+  basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 TDAI
   openInterestLowerCap: Long.fromValue(0, true),
   openInterestUpperCap: Long.fromValue(1_000_000_000_000, true),
 };
@@ -177,7 +177,7 @@ export const defaultLiquidityTierUpsertEventV1: LiquidityTierUpsertEventV1 = {
   name: 'Large-Cap',
   initialMarginPpm: 50000,  // 5%
   maintenanceFractionPpm: 600000,  // 60% of IM = 3%
-  basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 USDC
+  basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 TDAI
 };
 
 const defaultOpenInterestUpdate1: OpenInterestUpdate = {

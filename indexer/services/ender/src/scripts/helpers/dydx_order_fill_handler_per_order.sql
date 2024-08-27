@@ -1,6 +1,6 @@
 CREATE OR REPLACE FUNCTION dydx_order_fill_handler_per_order(
     field text, block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int,
-    transaction_hash text, fill_liquidity text, fill_type text, usdc_asset_id text, order_canceled_status text) RETURNS jsonb AS $$
+    transaction_hash text, fill_liquidity text, fill_type text, tdai_asset_id text, order_canceled_status text) RETURNS jsonb AS $$
 /**
   Parameters:
     - field: the field storing the order to process.
@@ -14,7 +14,7 @@ CREATE OR REPLACE FUNCTION dydx_order_fill_handler_per_order(
     - transaction_hash: The transaction hash corresponding to this event from the IndexerTendermintBlock 'tx_hashes'.
     - fill_liquidity: The liquidity for the fill record.
     - fill_type: The type for the fill record.
-    - usdc_asset_id: The USDC asset id.
+    - tdai_asset_id: The TDAI asset id.
     - order_canceled_status: Status of order cancelation
   Returns: JSON object containing fields:
     - order: The updated order in order-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/order-model.ts).
@@ -51,10 +51,10 @@ BEGIN
     perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
 
     BEGIN
-        SELECT * INTO STRICT asset_record FROM assets WHERE "id" = usdc_asset_id;
+        SELECT * INTO STRICT asset_record FROM assets WHERE "id" = tdai_asset_id;
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
-            RAISE EXCEPTION 'Unable to find asset with id %', usdc_asset_id;
+            RAISE EXCEPTION 'Unable to find asset with id %', tdai_asset_id;
     END;
 
     /**

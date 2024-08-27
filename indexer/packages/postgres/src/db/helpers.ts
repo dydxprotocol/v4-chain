@@ -41,8 +41,8 @@ export function getMaintenanceMarginPpm(
 /**
  * Computes the unsettled funding for a position.
  *
- * To compute the net USDC balance for a subaccount, sum the result of this function for all
- * open perpetual positions, and add it to the latest USDC asset position for
+ * To compute the net TDAI balance for a subaccount, sum the result of this function for all
+ * open perpetual positions, and add it to the latest TDAI asset position for
  * this subaccount.
  *
  * When funding index is increasing, shorts get paid & unsettled funding for shorts should

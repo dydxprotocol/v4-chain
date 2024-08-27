@@ -75,8 +75,8 @@ Returns everything from the `/v4/addresses/:address/subaccountNumber/:subaccount
       "freeCollateral": "100000000000.000000",
       "openPerpetualPositions": {},
       "assetPositions": {
-        "USDC": {
-          "symbol": "USDC",
+        "TDAI": {
+          "symbol": "TDAI",
           "side": "LONG",
           "size": "100000000000",
           "assetId": "0"

@@ -24,7 +24,7 @@ import {
   getBlockHeightToFundingIndexMap,
   getNewPnlTick,
   getPnlTicksCreateObjects,
-  getUsdcTransfersSinceLastPnlTick,
+  getTDaiTransfersSinceLastPnlTick,
   getAccountsToUpdate,
   normalizeStartTime,
 } from '../../src/helpers/pnl-ticks-helper';
@@ -34,7 +34,7 @@ import { DateTime } from 'luxon';
 import { LatestAccountPnlTicksCache, PnlTickForSubaccounts, redis } from '@dydxprotocol-indexer/redis';
 import { redisClient } from '../../src/helpers/redis';
 import { ZERO } from '../../src/lib/constants';
-import { SubaccountUsdcTransferMap } from '../../src/helpers/types';
+import { SubaccountTDaiTransferMap } from '../../src/helpers/types';
 import config from '../../src/config';
 import _ from 'lodash';
 import { ONE_HOUR_IN_MILLISECONDS } from '@dydxprotocol-indexer/base';
@@ -86,18 +86,18 @@ describe('pnl-ticks-helper', () => {
     jest.resetAllMocks();
   });
 
-  it('getUsdcTransfersSinceLastPnlTick no transfers', async () => {
+  it('getTDaiTransfersSinceLastPnlTick no transfers', async () => {
     const subaccountIds: string[] = [
       testConstants.defaultSubaccountId,
       testConstants.defaultSubaccountId2,
     ];
     const blockHeight: string = '5';
-    const netUsdcTransfers: SubaccountUsdcTransferMap = await getUsdcTransfersSinceLastPnlTick(
+    const netTDaiTransfers: SubaccountTDaiTransferMap = await getTDaiTransfersSinceLastPnlTick(
       subaccountIds,
       defaultPnlTickForSubaccounts,
       blockHeight,
     );
-    expect(netUsdcTransfers).toEqual({});
+    expect(netTDaiTransfers).toEqual({});
   });
 
   it('getBlockHeightToFundingIndexMap', async () => {
@@ -184,7 +184,7 @@ describe('pnl-ticks-helper', () => {
     expect(heightToFundingIndices3[3][testConstants.defaultPerpetualMarket2.id]).toEqual(Big('5'));
   });
 
-  it('getUsdcTransfersSinceLastPnlTick with transfers', async () => {
+  it('getTDaiTransfersSinceLastPnlTick with transfers', async () => {
     const subaccountIds: string[] = [
       testConstants.defaultSubaccountId,
       testConstants.defaultSubaccountId2,
@@ -202,12 +202,12 @@ describe('pnl-ticks-helper', () => {
         eventId: testConstants.defaultTendermintEventId2,
       }),
     ]);
-    const netUsdcTransfers: SubaccountUsdcTransferMap = await getUsdcTransfersSinceLastPnlTick(
+    const netTDaiTransfers: SubaccountTDaiTransferMap = await getTDaiTransfersSinceLastPnlTick(
       subaccountIds,
       defaultPnlTickForSubaccounts,
       blockHeight,
     );
-    expect(netUsdcTransfers).toEqual(expect.objectContaining({
+    expect(netTDaiTransfers).toEqual(expect.objectContaining({
       [testConstants.defaultSubaccountId]: new Big('-20.5'),
       [testConstants.defaultSubaccountId2]: new Big('20.5'),
     }));
@@ -246,9 +246,9 @@ describe('pnl-ticks-helper', () => {
   });
 
   it('calculateEquity', () => {
-    const usdcPosition: Big = new Big('100');
+    const tdaiPosition: Big = new Big('100');
     const equity: Big = calculateEquity(
-      usdcPosition,
+      tdaiPosition,
       positions,
       marketPrices,
       lastUpdatedFundingIndexMap,
@@ -258,15 +258,15 @@ describe('pnl-ticks-helper', () => {
   });
 
   it('calculateEquity with no positions', () => {
-    const usdcPosition: Big = new Big('100');
+    const tdaiPosition: Big = new Big('100');
     const equity: Big = calculateEquity(
-      usdcPosition,
+      tdaiPosition,
       [],
       marketPrices,
       {},
       {},
     );
-    expect(equity).toEqual(usdcPosition);
+    expect(equity).toEqual(tdaiPosition);
   });
 
   it('calculateEquity with LONG position', () => {
@@ -283,9 +283,9 @@ describe('pnl-ticks-helper', () => {
       ),
       perpYieldIndex: defaultZeroPerpYieldIndex,
     };
-    const usdcPosition: Big = new Big('10000');
+    const tdaiPosition: Big = new Big('10000');
     const equity: Big = calculateEquity(
-      usdcPosition,
+      tdaiPosition,
       [longPosition],
       marketPrices,
       lastUpdatedFundingIndexMap,
@@ -310,9 +310,9 @@ describe('pnl-ticks-helper', () => {
       ),
       perpYieldIndex: defaultZeroPerpYieldIndex,
     };
-    const usdcPosition: Big = new Big('10000');
+    const tdaiPosition: Big = new Big('10000');
     const equity: Big = calculateEquity(
-      usdcPosition,
+      tdaiPosition,
       [shortPosition],
       marketPrices,
       lastUpdatedFundingIndexMap,
@@ -340,9 +340,9 @@ describe('pnl-ticks-helper', () => {
         perpYieldIndex: defaultZeroPerpYieldIndex,
       },
     ];
-    const usdcPosition: Big = new Big('10000');
+    const tdaiPosition: Big = new Big('10000');
     const equity: Big = calculateEquity(
-      usdcPosition,
+      tdaiPosition,
       positions2,
       marketPrices,
       lastUpdatedFundingIndexMap,
@@ -381,8 +381,8 @@ describe('pnl-ticks-helper', () => {
         [testConstants.defaultAsset.id]: '10',
       },
     };
-    const usdcPosition: Big = new Big('100');
-    const usdcNetTransfersSinceLastPnlTick: Big = new Big('-5.5');
+    const tdaiPosition: Big = new Big('100');
+    const tdaiNetTransfersSinceLastPnlTick: Big = new Big('-5.5');
     const latestBlockHeight: string = '5';
     const latestBlockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO();
     const pnlTick: PnlTicksCreateObject = getNewPnlTick(
@@ -390,8 +390,8 @@ describe('pnl-ticks-helper', () => {
       subaccountAssetNetTransferMap,
       marketPrices,
       positions,
-      usdcPosition,
-      usdcNetTransfersSinceLastPnlTick,
+      tdaiPosition,
+      tdaiNetTransfersSinceLastPnlTick,
       dateTime,
       latestBlockHeight,
       latestBlockTime,

@@ -27,9 +27,9 @@ export const BUFFER_ENCODING_UTF_8: BufferEncoding = 'utf-8';
 // Sourced from protocol https://github.com/dydxprotocol/v4/blob/main/lib/constants.go#L6
 export const QUOTE_CURRENCY_ATOMIC_RESOLUTION: number = -6;
 
-export const USDC_SYMBOL: string = 'USDC';
+export const TDAI_SYMBOL: string = 'TDAI';
 
-export const USDC_DENOM: string = 'ibc/xxx';
+export const TDAI_DENOM: string = 'utdai';
 
 export const ZERO_TIME_ISO_8601: string = '1970-01-01T00:00:00.000Z';
 
@@ -70,7 +70,7 @@ export const PROTO_TO_CANDLE_RESOLUTION: Record<SpecifiedCandleResolution, Candl
   [CandleMessage_Resolution.ONE_MINUTE]: CandleResolution.ONE_MINUTE,
 };
 
-export const USDC_ASSET_ID: string = '0';
+export const TDAI_ASSET_ID: string = '0';
 
 // Parts-per-million exponent, 1 million = 10 ^ 6, exponent to convert from ppm units is 10 ^ -6
 export const PPM_EXPONENT: number = -6;

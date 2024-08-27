@@ -1,6 +1,6 @@
 import { AssetPositionFromDatabase } from '../../src/types';
 import * as AssetPositionTable from '../../src/stores/asset-position-table';
-import { findUsdcPositionForSubaccounts } from '../../src/stores/asset-position-table';
+import { findTDaiPositionForSubaccounts } from '../../src/stores/asset-position-table';
 
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { seedData } from '../helpers/mock-generators';
@@ -78,7 +78,7 @@ describe('Asset position store', () => {
     expect(assetPosition).toEqual(expect.objectContaining(defaultAssetPosition));
   });
 
-  it('Successfully finds USDC positions for subaccountIds', async () => {
+  it('Successfully finds TDAI positions for subaccountIds', async () => {
     await Promise.all([
       AssetPositionTable.upsert(defaultAssetPosition),
       AssetPositionTable.upsert({
@@ -87,7 +87,7 @@ describe('Asset position store', () => {
       }),
     ]);
 
-    const assetPositions: { [subaccountId: string]: Big } = await findUsdcPositionForSubaccounts([
+    const assetPositions: { [subaccountId: string]: Big } = await findTDaiPositionForSubaccounts([
       defaultSubaccountId,
       defaultSubaccountId2,
     ]);
