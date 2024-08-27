@@ -34,14 +34,14 @@ describe('transfers', () => {
     const subaccount = new SubaccountInfo(wallet, 0);
     console.log(subaccount)
 
-    // Check USDC asset position before
+    // Check TDAI asset position before
     let assetPosResp: any = await indexerClient.account.getSubaccountAssetPositions(
       DYDX_LOCAL_ADDRESS,
       0,
     );
     expect(assetPosResp).not.toBeNull();
     const positions = assetPosResp.positions;
-    const usdcPositionSizeBefore = positions.length !== undefined && positions.length > 0 ? positions[0].size : '0';
+    const tdaiPositionSizeBefore = positions.length !== undefined && positions.length > 0 ? positions[0].size : '0';
 
     // Deposit
     await validatorClient.post.deposit(
@@ -89,7 +89,7 @@ describe('transfers', () => {
           subaccountNumber: 0,
         },
         size: '10',
-        symbol: 'USDC',
+        symbol: 'TDAI',
         type: 'DEPOSIT',
       }),
     );
@@ -97,9 +97,9 @@ describe('transfers', () => {
     // Check API /v4/assetPositions endpoint
     assetPosResp = await indexerClient.account.getSubaccountAssetPositions(DYDX_LOCAL_ADDRESS, 0);
     expect(assetPosResp).not.toBeNull();
-    const usdcPositionSizeAfter = assetPosResp.positions[0].size;
-    // expect usdcPositionSizeAfter to be usdcPositionSizeBefore + 10
-    expect(usdcPositionSizeAfter).toEqual(new Big(usdcPositionSizeBefore).plus(10).toString());
+    const tdaiPositionSizeAfter = assetPosResp.positions[0].size;
+    // expect tdaiPositionSizeAfter to be tdaiPositionSizeBefore + 10
+    expect(tdaiPositionSizeAfter).toEqual(new Big(tdaiPositionSizeBefore).plus(10).toString());
   });
 
   function validateTransfers(data: any, socketClient: SocketClient): void {
@@ -125,7 +125,7 @@ describe('transfers', () => {
             subaccountNumber: 0,
           },
           size: '10',
-          symbol: 'USDC',
+          symbol: 'TDAI',
           type: 'DEPOSIT',
         }),
       );
