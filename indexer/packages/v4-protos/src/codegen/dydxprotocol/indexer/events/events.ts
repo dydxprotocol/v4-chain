@@ -400,11 +400,11 @@ export interface OrderFillEventV1 {
   /** Fill amount in base quantums. */
 
   fillAmount: Long;
-  /** Maker fee in USDC quantums. */
+  /** Maker fee in TDAI quantums. */
 
   makerFee: Long;
   /**
-   * Taker fee in USDC quantums. If the taker order is a liquidation, then this
+   * Taker fee in TDAI quantums. If the taker order is a liquidation, then this
    * represents the special liquidation fee, not the standard taker fee.
    */
 
@@ -429,11 +429,11 @@ export interface OrderFillEventV1SDKType {
   /** Fill amount in base quantums. */
 
   fill_amount: Long;
-  /** Maker fee in USDC quantums. */
+  /** Maker fee in TDAI quantums. */
 
   maker_fee: Long;
   /**
-   * Taker fee in USDC quantums. If the taker order is a liquidation, then this
+   * Taker fee in TDAI quantums. If the taker order is a liquidation, then this
    * represents the special liquidation fee, not the standard taker fee.
    */
 
@@ -720,7 +720,7 @@ export interface AssetCreateEventV1 {
   /** Unique, sequentially-generated. */
   id: number;
   /**
-   * The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+   * The human readable symbol of the `Asset` (e.g. `TDAI`, `ATOM`).
    * Must be uppercase, unique and correspond to the canonical symbol of the
    * full coin.
    */
@@ -754,7 +754,7 @@ export interface AssetCreateEventV1SDKType {
   /** Unique, sequentially-generated. */
   id: number;
   /**
-   * The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+   * The human readable symbol of the `Asset` (e.g. `TDAI`, `ATOM`).
    * Must be uppercase, unique and correspond to the canonical symbol of the
    * full coin.
    */

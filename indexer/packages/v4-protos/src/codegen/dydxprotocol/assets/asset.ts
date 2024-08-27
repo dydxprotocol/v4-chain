@@ -6,7 +6,7 @@ export interface Asset {
   /** Unique, sequentially-generated. */
   id: number;
   /**
-   * The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+   * The human readable symbol of the `Asset` (e.g. `TDAI`, `ATOM`).
    * Must be uppercase, unique and correspond to the canonical symbol of the
    * full coin.
    */
@@ -62,7 +62,7 @@ export interface AssetSDKType {
   /** Unique, sequentially-generated. */
   id: number;
   /**
-   * The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+   * The human readable symbol of the `Asset` (e.g. `TDAI`, `ATOM`).
    * Must be uppercase, unique and correspond to the canonical symbol of the
    * full coin.
    */
