@@ -9,6 +9,7 @@ import {
   SubaccountFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import subaccountUsernameGenerator from '../../src/tasks/subaccount-username-generator';
+import { generateUsername } from '../../src/helpers/usernames-helper';
 
 describe('subaccount-username-generator', () => {
   beforeAll(async () => {
