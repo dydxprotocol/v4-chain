@@ -35,14 +35,14 @@ export default async function runTask(): Promise<void> {
 }
 
 function generateUsername(): string {
-  const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
-  const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-  const randomNumber = Math.floor(
+  const randomAdjective: string = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const randomNoun: string = nouns[Math.floor(Math.random() * nouns.length)];
+  const randomNumber: string = Math.floor(
     Math.random() * 1000).toString().padStart(
     config.SUBACCOUNT_USERNAME_NUM_RANDOM_DIGITS, '0');
 
-  const capitalizedAdjective = randomAdjective.charAt(0).toUpperCase() + randomAdjective.slice(1);
-  const capitalizedNoun = randomNoun.charAt(0).toUpperCase() + randomNoun.slice(1);
+  const capitalizedAdjective: string = randomAdjective.charAt(0).toUpperCase() + randomAdjective.slice(1);
+  const capitalizedNoun: string = randomNoun.charAt(0).toUpperCase() + randomNoun.slice(1);
 
   return `${capitalizedAdjective}${capitalizedNoun}${randomNumber}`;
 }
