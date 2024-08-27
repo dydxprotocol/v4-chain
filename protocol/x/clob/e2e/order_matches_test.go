@@ -27,8 +27,8 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 				{
 					BlockAdvancement: testapp.BlockAdvancement{
 						ShortTermOrdersAndOperations: []interface{}{
-							MustScaleOrder(constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
-							MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC, testapp.DefaultGenesis()),
+							testapp.MustScaleOrder(constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
+							testapp.MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC, testapp.DefaultGenesis()),
 							clobtestutils.NewMatchOperationRaw(
 								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
 								[]clobtypes.MakerFill{
@@ -44,8 +44,8 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 				{
 					BlockAdvancement: testapp.BlockAdvancement{
 						ShortTermOrdersAndOperations: []interface{}{
-							MustScaleOrder(constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
-							MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC, testapp.DefaultGenesis()),
+							testapp.MustScaleOrder(constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
+							testapp.MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC, testapp.DefaultGenesis()),
 							clobtestutils.NewMatchOperationRaw(
 								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
 								[]clobtypes.MakerFill{
@@ -58,7 +58,7 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 						},
 					},
 					ExpectedDeliverTxErrors: testapp.TxIndexesToErrors{
-						0: "IOC/FOK order is already filled, remaining size is cancelled.",
+						1: "IOC/FOK order is already filled, remaining size is cancelled.",
 					},
 				},
 			},
@@ -100,7 +100,7 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 						},
 					},
 					ExpectedDeliverTxErrors: testapp.TxIndexesToErrors{
-						0: clobtypes.ErrStatefulOrderDoesNotExist.Error(),
+						1: clobtypes.ErrStatefulOrderDoesNotExist.Error(),
 					},
 				},
 			},
@@ -114,9 +114,9 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 				{
 					BlockAdvancement: testapp.BlockAdvancement{
 						ShortTermOrdersAndOperations: []interface{}{
-							MustScaleOrder(constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
-							MustScaleOrder(constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
-							MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC, testapp.DefaultGenesis()),
+							testapp.MustScaleOrder(constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
+							testapp.MustScaleOrder(constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
+							testapp.MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC, testapp.DefaultGenesis()),
 							clobtestutils.NewMatchOperationRaw(
 								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
 								[]clobtypes.MakerFill{
@@ -144,8 +144,8 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 				{
 					BlockAdvancement: testapp.BlockAdvancement{
 						ShortTermOrdersAndOperations: []interface{}{
-							MustScaleOrder(constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
-							MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC, testapp.DefaultGenesis()),
+							testapp.MustScaleOrder(constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
+							testapp.MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC, testapp.DefaultGenesis()),
 							clobtestutils.NewMatchOperationRaw(
 								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
 								[]clobtypes.MakerFill{
@@ -155,7 +155,7 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 									},
 								},
 							),
-							MustScaleOrder(constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
+							testapp.MustScaleOrder(constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
 							clobtestutils.NewMatchOperationRaw(
 								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_IOC,
 								[]clobtypes.MakerFill{
@@ -168,7 +168,7 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 						},
 					},
 					ExpectedDeliverTxErrors: testapp.TxIndexesToErrors{
-						0: "IOC/FOK order is already filled, remaining size is cancelled.",
+						1: "IOC/FOK order is already filled, remaining size is cancelled.",
 					},
 				},
 			},
@@ -182,8 +182,8 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 				{
 					BlockAdvancement: testapp.BlockAdvancement{
 						ShortTermOrdersAndOperations: []interface{}{
-							MustScaleOrder(constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
-							MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20, testapp.DefaultGenesis()),
+							testapp.MustScaleOrder(constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
+							testapp.MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20, testapp.DefaultGenesis()),
 							clobtestutils.NewMatchOperationRaw(
 								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
 								[]clobtypes.MakerFill{
@@ -199,8 +199,8 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 				{
 					BlockAdvancement: testapp.BlockAdvancement{
 						ShortTermOrdersAndOperations: []interface{}{
-							MustScaleOrder(constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
-							MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK, testapp.DefaultGenesis()),
+							testapp.MustScaleOrder(constants.Order_Bob_Num0_Id12_Clob1_Buy5_Price40_GTB20, testapp.DefaultGenesis()),
+							testapp.MustScaleOrder(constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK, testapp.DefaultGenesis()),
 							clobtestutils.NewMatchOperationRaw(
 								&constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_FOK,
 								[]clobtypes.MakerFill{
@@ -213,7 +213,7 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 						},
 					},
 					ExpectedDeliverTxErrors: testapp.TxIndexesToErrors{
-						0: "IOC/FOK order is already filled, remaining size is cancelled.",
+						1: "IOC/FOK order is already filled, remaining size is cancelled.",
 					},
 				},
 			},

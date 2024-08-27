@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"crypto/rand"
+	"encoding/hex"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,5 +41,18 @@ func UnwrapSDKContext(
 			fmt.Sprintf("x/%s", moduleName),
 		)
 	}
+
+	// Generate a 20-length random hex string for request id.
+	bytes := make([]byte, 10)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return ctx
+	}
+	requestId := hex.EncodeToString(bytes)
+	ctx = log.AddPersistentTagsToLogger(
+		ctx,
+		log.RequestId, requestId,
+	)
+
 	return ctx
 }

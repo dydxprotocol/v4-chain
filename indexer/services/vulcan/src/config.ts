@@ -20,6 +20,11 @@ export const configSchema = {
   ...kafkaConfigSchema,
   ...redisConfigSchema,
 
+  BATCH_PROCESSING_ENABLED: parseBoolean({ default: true }),
+  KAFKA_BATCH_PROCESSING_COMMIT_FREQUENCY_MS: parseNumber({
+    default: 3_000,
+  }),
+
   FLUSH_KAFKA_MESSAGES_INTERVAL_MS: parseNumber({
     default: 10,
   }),
@@ -28,6 +33,9 @@ export const configSchema = {
   }),
   // Set this flag to false during fast sync.
   SEND_WEBSOCKET_MESSAGES: parseBoolean({
+    default: true,
+  }),
+  SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS: parseBoolean({
     default: true,
   }),
 };

@@ -1,24 +1,11 @@
 package constants
 
 import (
+	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	pricefeedclient "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
-
-func init() {
-	_ = TestTxBuilder.SetMsgs(EmptyMsgUpdateMarketPrices)
-	EmptyMsgUpdateMarketPricesTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
-
-	_ = TestTxBuilder.SetMsgs(ValidMsgUpdateMarketPrices)
-	ValidMsgUpdateMarketPricesTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
-
-	_ = TestTxBuilder.SetMsgs(InvalidMsgUpdateMarketPricesStateless)
-	InvalidMsgUpdateMarketPricesStatelessTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
-
-	_ = TestTxBuilder.SetMsgs(InvalidMsgUpdateMarketPricesStateful)
-	InvalidMsgUpdateMarketPricesStatefulTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
-}
 
 const (
 	BtcUsdPair   = "BTC-USD"
@@ -26,6 +13,8 @@ const (
 	MaticUsdPair = "MATIC-USD"
 	SolUsdPair   = "SOL-USD"
 	LtcUsdPair   = "LTC-USD"
+	IsoUsdPair   = "ISO-USD"
+	Iso2UsdPair  = "ISO2-USD"
 
 	BtcUsdExponent   = -5
 	EthUsdExponent   = -6
@@ -34,6 +23,8 @@ const (
 	CrvUsdExponent   = -10
 	SolUsdExponent   = -8
 	LtcUsdExponent   = -7
+	IsoUsdExponent   = -8
+	Iso2UsdExponent  = -7
 
 	CoinbaseExchangeName  = "Coinbase"
 	BinanceExchangeName   = "Binance"
@@ -201,6 +192,24 @@ var TestMarketExchangeConfigs = map[pricefeedclient.MarketId]string{
 		  }
 		]
 	  }`,
+	exchange_config.MARKET_ISO_USD: `{
+		"exchanges": [
+		  {
+			"exchangeName": "Binance",
+			"ticker": "ISOUSDT",
+			"adjustByMarket": "USDT-USD"
+		  }
+		]
+	  }`,
+	exchange_config.MARKET_ISO2_USD: `{
+		"exchanges": [
+			{
+			"exchangeName": "Binance",
+			"ticker": "ISO2USDT",
+			"adjustByMarket": "USDT-USD"
+			}
+		]
+	  }`,
 }
 
 var TestMarketParams = []types.MarketParam{
@@ -228,24 +237,71 @@ var TestMarketParams = []types.MarketParam{
 		MinPriceChangePpm:  50,
 		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_SOL_USD],
 	},
+	{
+		Id:                 3,
+		Pair:               IsoUsdPair,
+		Exponent:           IsoUsdExponent,
+		MinExchanges:       1,
+		MinPriceChangePpm:  50,
+		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_ISO_USD],
+	},
+	{
+		Id:                 4,
+		Pair:               Iso2UsdPair,
+		Exponent:           Iso2UsdExponent,
+		MinExchanges:       1,
+		MinPriceChangePpm:  50,
+		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_ISO2_USD],
+	},
+}
+
+var TestSingleMarketParam = types.MarketParam{
+	Id:                 0,
+	Pair:               BtcUsdPair,
+	Exponent:           BtcUsdExponent,
+	MinExchanges:       1,
+	MinPriceChangePpm:  50,
+	ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
 }
 
 var TestMarketPrices = []types.MarketPrice{
 	{
-		Id:       0,
-		Exponent: BtcUsdExponent,
-		Price:    FiveBillion, // $50,000 == 1 BTC
+		Id:        0,
+		Exponent:  BtcUsdExponent,
+		SpotPrice: FiveBillion, // $50,000 == 1 BTC
+		PnlPrice:  FiveBillion, // $50,000 == 1 BTC
 	},
 	{
-		Id:       1,
-		Exponent: EthUsdExponent,
-		Price:    ThreeBillion, // $3,000 == 1 ETH
+		Id:        1,
+		Exponent:  EthUsdExponent,
+		SpotPrice: ThreeBillion, // $3,000 == 1 ETH
+		PnlPrice:  ThreeBillion, // $3,000 == 1 ETH
 	},
 	{
-		Id:       2,
-		Exponent: SolUsdExponent,
-		Price:    FiveBillion, // 50$ == 1 SOL
+		Id:        2,
+		Exponent:  SolUsdExponent,
+		SpotPrice: FiveBillion, // 50$ == 1 SOL
+		PnlPrice:  FiveBillion, // 50$ == 1 SOL
 	},
+	{
+		Id:        3,
+		Exponent:  IsoUsdExponent,
+		SpotPrice: FiveBillion, // 50$ == 1 ISO
+		PnlPrice:  FiveBillion, // 50$ == 1 ISO
+	},
+	{
+		Id:        4,
+		Exponent:  Iso2UsdExponent,
+		SpotPrice: ThreeBillion, // 300$ == 1 ISO2
+		PnlPrice:  ThreeBillion, // 300$ == 1 ISO2
+	},
+}
+var IdsToPairs = map[uint32]string{
+	0: BtcUsdPair,
+	1: EthUsdPair,
+	2: SolUsdPair,
+	3: IsoUsdPair,
+	4: Iso2UsdPair,
 }
 
 var TestMarketIdsToExponents = map[uint32]int32{
@@ -260,36 +316,169 @@ var TestPricesGenesisState = types.GenesisState{
 }
 
 var (
-	ValidMarketPriceUpdates = []*types.MsgUpdateMarketPrices_MarketPrice{
-		types.NewMarketPriceUpdate(MarketId0, Price5),
-		types.NewMarketPriceUpdate(MarketId1, Price6),
-		types.NewMarketPriceUpdate(MarketId2, Price7),
+	ValidMarketPriceUpdates = []*types.MarketPriceUpdate{
+		{
+			MarketId:  MarketId0,
+			SpotPrice: Price5,
+			PnlPrice:  Price5,
+		},
+		{
+			MarketId:  MarketId1,
+			SpotPrice: Price6,
+			PnlPrice:  Price6,
+		},
+		{
+			MarketId:  MarketId2,
+			SpotPrice: Price7,
+			PnlPrice:  Price7,
+		},
+		{
+			MarketId:  MarketId3,
+			SpotPrice: Price4,
+			PnlPrice:  Price4,
+		},
+		{
+			MarketId:  MarketId4,
+			SpotPrice: Price3,
+			PnlPrice:  Price3,
+		},
 	}
 
-	// `MsgUpdateMarketPrices`.
-	EmptyMsgUpdateMarketPrices        = &types.MsgUpdateMarketPrices{}
-	EmptyMsgUpdateMarketPricesTxBytes []byte
+	ValidSingleMarketPriceUpdateObj = &types.MarketPriceUpdates{
+		MarketPriceUpdates: ValidSingleMarketPriceUpdate,
+	}
+	ValidSingleMarketPriceUpdate = []*types.MarketPriceUpdate{
+		{
+			MarketId:  MarketId0,
+			SpotPrice: Price5,
+			PnlPrice:  Price5,
+		},
+	}
 
-	ValidMsgUpdateMarketPrices = &types.MsgUpdateMarketPrices{
+	ValidMarketPriceUpdateObj = &types.MarketPriceUpdates{
 		MarketPriceUpdates: ValidMarketPriceUpdates,
 	}
-	ValidMsgUpdateMarketPricesTxBytes []byte
 
-	InvalidMsgUpdateMarketPricesStateless = &types.MsgUpdateMarketPrices{
-		MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{
-			types.NewMarketPriceUpdate(MarketId0, 0), // 0 price value is invalid.
+	ValidSingleVEPrice = []vetypes.PricePair{
+		{
+			MarketId:  MarketId0,
+			SpotPrice: Price5Bytes,
+			PnlPrice:  Price5Bytes,
 		},
 	}
-	InvalidMsgUpdateMarketPricesStatelessTxBytes []byte
 
-	InvalidMsgUpdateMarketPricesStateful = &types.MsgUpdateMarketPrices{
-		MarketPriceUpdates: []*types.MsgUpdateMarketPrices_MarketPrice{
-			types.NewMarketPriceUpdate(MarketId0, Price5),
-			types.NewMarketPriceUpdate(MarketId1, Price6),
-			types.NewMarketPriceUpdate(99, Price3), // Market with id 99 does not exist.
+	ValidVEPricesWithOneInvalid = []vetypes.PricePair{
+		{
+			MarketId:  MarketId0,
+			SpotPrice: Price5Bytes,
+			PnlPrice:  Price5Bytes,
+		},
+		{
+			MarketId:  MarketId1,
+			SpotPrice: Price6Bytes,
+			PnlPrice:  Price6Bytes,
+		},
+		{
+			MarketId:  MarketId2,
+			SpotPrice: []byte("invalid"),
+			PnlPrice:  []byte("invalid"),
 		},
 	}
-	InvalidMsgUpdateMarketPricesStatefulTxBytes []byte
+
+	ValidVEPrice = []vetypes.PricePair{
+		{
+			MarketId:  MarketId0,
+			SpotPrice: Price5Bytes,
+			PnlPrice:  Price5Bytes,
+		},
+		{
+			MarketId:  MarketId1,
+			SpotPrice: Price6Bytes,
+			PnlPrice:  Price6Bytes,
+		},
+		{
+			MarketId:  MarketId2,
+			SpotPrice: Price7Bytes,
+			PnlPrice:  Price7Bytes,
+		},
+	}
+
+	InvalidVEPriceBytes = []vetypes.PricePair{
+		{
+			MarketId:  MarketId0,
+			SpotPrice: Price5NegativeBytes,
+			PnlPrice:  Price5NegativeBytes,
+		},
+		{
+			MarketId:  MarketId1,
+			SpotPrice: Price6NegativeBytes,
+			PnlPrice:  Price6NegativeBytes,
+		},
+		{
+			MarketId:  MarketId2,
+			SpotPrice: Price7NegativeBytes,
+			PnlPrice:  Price7NegativeBytes,
+		},
+	}
+
+	InvalidVePricesMarketIds = []vetypes.PricePair{
+		{
+			MarketId:  99,
+			SpotPrice: Price5Bytes,
+			PnlPrice:  Price5Bytes,
+		},
+		{
+			MarketId:  101,
+			SpotPrice: Price6Bytes,
+			PnlPrice:  Price6Bytes,
+		},
+		{
+			MarketId:  102,
+			SpotPrice: Price7Bytes,
+			PnlPrice:  Price7Bytes,
+		},
+	}
+
+	ValidEmptyMarketParams         = []types.MarketParam{}
+	EmptyUpdateMarketPrices        = &types.MarketPriceUpdates{}
+	EmptyUpdateMarketPricesTxBytes []byte
+
+	ValidUpdateMarketPrices = &types.MarketPriceUpdates{
+		MarketPriceUpdates: ValidMarketPriceUpdates,
+	}
+	ValidUpdateMarketPricesTxBytes []byte
+
+	InvalidUpdateMarketPricesStateless = &types.MarketPriceUpdates{
+		MarketPriceUpdates: []*types.MarketPriceUpdate{
+			{
+				MarketId:  MarketId0,
+				SpotPrice: 0, // 0 price value is invalid.
+				PnlPrice:  0, // 0 price value is invalid.
+			},
+		},
+	}
+	InvalidUpdateMarketPricesStatelessTxBytes []byte
+
+	InvalidUpdateMarketPricesStateful = &types.MarketPriceUpdates{
+		MarketPriceUpdates: []*types.MarketPriceUpdate{
+			{
+				MarketId:  MarketId0,
+				SpotPrice: Price5,
+				PnlPrice:  Price5,
+			},
+			{
+				MarketId:  MarketId1,
+				SpotPrice: Price6,
+				PnlPrice:  Price6,
+			},
+			{
+				MarketId:  99,
+				SpotPrice: Price3, // Market with id 99 does not exist.
+				PnlPrice:  Price3, // Market with id 99 does not exist.
+			},
+		},
+	}
+	InvalidUpdateMarketPricesStatefulTxBytes []byte
 
 	Prices_DefaultGenesisState = types.GenesisState{
 		MarketParams: []types.MarketParam{
@@ -312,14 +501,16 @@ var (
 		},
 		MarketPrices: []types.MarketPrice{
 			{
-				Id:       uint32(0),
-				Exponent: BtcUsdExponent,
-				Price:    FiveBillion, // $50,000 == 1 BTC
+				Id:        uint32(0),
+				Exponent:  BtcUsdExponent,
+				SpotPrice: FiveBillion, // $50,000 == 1 BTC
+				PnlPrice:  FiveBillion, // $50,000 == 1 BTC
 			},
 			{
-				Id:       uint32(1),
-				Exponent: EthUsdExponent,
-				Price:    ThreeBillion, // $3,000 == 1 ETH
+				Id:        uint32(1),
+				Exponent:  EthUsdExponent,
+				SpotPrice: ThreeBillion, // $3,000 == 1 ETH
+				PnlPrice:  ThreeBillion, // $3,000 == 1 ETH
 			},
 		},
 	}
@@ -345,14 +536,16 @@ var (
 		},
 		MarketPrices: []types.MarketPrice{
 			{ // BTC-USD
-				Id:       uint32(0),
-				Exponent: BtcUsdExponent,
-				Price:    FiveBillion, // $50,000 == 1 BTC
+				Id:        uint32(0),
+				Exponent:  BtcUsdExponent,
+				SpotPrice: FiveBillion, // $50,000 == 1 BTC
+				PnlPrice:  FiveBillion, // $50,000 == 1 BTC
 			},
 			{ // ETH-USD
-				Id:       uint32(1),
-				Exponent: EthUsdExponent,
-				Price:    ThreeBillion, // $3,000 == 1 ETH
+				Id:        uint32(1),
+				Exponent:  EthUsdExponent,
+				SpotPrice: ThreeBillion, // $3,000 == 1 ETH
+				PnlPrice:  ThreeBillion, // $3,000 == 1 ETH
 			},
 		},
 	}

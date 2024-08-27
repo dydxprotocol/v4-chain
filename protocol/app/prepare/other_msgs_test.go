@@ -1,8 +1,9 @@
 package prepare_test
 
 import (
-	testApp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"testing"
+
+	testApp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/prepare"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -11,16 +12,12 @@ import (
 )
 
 var (
-	_ = constants.TestTxBuilder.SetMsgs(
-		constants.ValidMsgAddPremiumVotes,
-		constants.ValidMsgUpdateMarketPrices,
-	)
 	multiMsgsTxHasDisallowOnlyTxBytes, _ = constants.TestEncodingCfg.TxConfig.TxEncoder()(
 		constants.TestTxBuilder.GetTx())
 
 	_ = constants.TestTxBuilder.SetMsgs(
 		constants.Msg_Send,
-		constants.ValidMsgUpdateMarketPrices,
+		constants.ValidUpdateMarketPrices,
 	)
 	multiMsgsTxHasDisallowMixedTxBytes, _ = constants.TestEncodingCfg.TxConfig.TxEncoder()(
 		constants.TestTxBuilder.GetTx())
@@ -96,7 +93,7 @@ func TestRemoveDisallowMsgs(t *testing.T) {
 			expectedTxs: nil,
 		},
 		"Single Tx, Single Msg Tx, Disallowed Msg": {
-			txs:         [][]byte{constants.ValidMsgUpdateMarketPricesTxBytes},
+			txs:         [][]byte{constants.ValidMsgAddPremiumVotesTxBytes},
 			expectedTxs: nil,
 		},
 		"Single Tx, Single Msg Tx, Allowed Msg": {
@@ -113,7 +110,7 @@ func TestRemoveDisallowMsgs(t *testing.T) {
 		},
 		"Multi Tx, Single Msg Tx, Disallowed Msg": {
 			txs: [][]byte{
-				constants.ValidMsgUpdateMarketPricesTxBytes,
+				constants.ValidMsgAddPremiumVotesTxBytes,
 				constants.ValidMsgAddPremiumVotesTxBytes,
 			},
 			expectedTxs: nil,

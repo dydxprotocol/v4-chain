@@ -1,6 +1,7 @@
 import { IndexerSubaccountId, IndexerSubaccountIdSDKType, IndexerPerpetualPosition, IndexerPerpetualPositionSDKType, IndexerAssetPosition, IndexerAssetPositionSDKType } from "../protocol/v1/subaccount";
 import { IndexerOrder, IndexerOrderSDKType, IndexerOrderId, IndexerOrderIdSDKType, ClobPairStatus, ClobPairStatusSDKType } from "../protocol/v1/clob";
 import { OrderRemovalReason, OrderRemovalReasonSDKType } from "../shared/removal_reason";
+import { PerpetualMarketType, PerpetualMarketTypeSDKType } from "../protocol/v1/perpetual";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../../helpers";
 /** Type is the type for funding values. */
@@ -217,7 +218,14 @@ export interface MarketPriceUpdateEventV1 {
    * price in dollars. For example if `Exponent == -5` then a `exponent_price`
    * of `1,000,000,000` represents “$10,000`.
    */
-  priceWithExponent: Long;
+  spotPriceWithExponent: Long;
+  /**
+   * pnl_price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
+   * price in dollars. For example if `Exponent == -5` then a `exponent_price`
+   * of `1,000,000,000` represents “$10,000`.
+   */
+
+  pnlPriceWithExponent: Long;
 }
 /**
  * MarketPriceUpdateEvent message contains all the information about a price
@@ -230,7 +238,14 @@ export interface MarketPriceUpdateEventV1SDKType {
    * price in dollars. For example if `Exponent == -5` then a `exponent_price`
    * of `1,000,000,000` represents “$10,000`.
    */
-  price_with_exponent: Long;
+  spot_price_with_exponent: Long;
+  /**
+   * pnl_price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
+   * price in dollars. For example if `Exponent == -5` then a `exponent_price`
+   * of `1,000,000,000` represents “$10,000`.
+   */
+
+  pnl_price_with_exponent: Long;
 }
 /** shared fields between MarketCreateEvent and MarketModifyEvent */
 
@@ -465,9 +480,9 @@ export interface DeleveragingEventV1 {
    */
 
   fillAmount: Long;
-  /** Fill price of deleveraging event, in USDC quote quantums. */
+  /** Total quote quantums filled. */
 
-  price: Long;
+  totalQuoteQuantums: Long;
   /** `true` if liquidating a short position, `false` otherwise. */
 
   isBuy: boolean;
@@ -501,9 +516,9 @@ export interface DeleveragingEventV1SDKType {
    */
 
   fill_amount: Long;
-  /** Fill price of deleveraging event, in USDC quote quantums. */
+  /** Total quote quantums filled. */
 
-  price: Long;
+  total_quote_quantums: Long;
   /** `true` if liquidating a short position, `false` otherwise. */
 
   is_buy: boolean;
@@ -777,9 +792,11 @@ export interface AssetCreateEventV1SDKType {
   atomic_resolution: number;
 }
 /**
- * PerpetualMarketCreateEventV1 message contains all the information about a
- * new Perpetual Market on the dYdX chain.
+ * Deprecated. See PerpetualMarketCreateEventV2 for the most up to date message
+ * for the event to create a new Perpetual Market.
  */
+
+/** @deprecated */
 
 export interface PerpetualMarketCreateEventV1 {
   /**
@@ -847,9 +864,11 @@ export interface PerpetualMarketCreateEventV1 {
   liquidityTier: number;
 }
 /**
- * PerpetualMarketCreateEventV1 message contains all the information about a
- * new Perpetual Market on the dYdX chain.
+ * Deprecated. See PerpetualMarketCreateEventV2 for the most up to date message
+ * for the event to create a new Perpetual Market.
  */
+
+/** @deprecated */
 
 export interface PerpetualMarketCreateEventV1SDKType {
   /**
@@ -915,6 +934,152 @@ export interface PerpetualMarketCreateEventV1SDKType {
    */
 
   liquidity_tier: number;
+}
+/**
+ * PerpetualMarketCreateEventV2 message contains all the information about a
+ * new Perpetual Market on the dYdX chain.
+ */
+
+export interface PerpetualMarketCreateEventV2 {
+  /**
+   * Unique Perpetual id.
+   * Defined in perpetuals.perpetual
+   */
+  id: number;
+  /**
+   * Unique clob pair Id associated with this perpetual market
+   * Defined in clob.clob_pair
+   */
+
+  clobPairId: number;
+  /**
+   * The name of the `Perpetual` (e.g. `BTC-USD`).
+   * Defined in perpetuals.perpetual
+   */
+
+  ticker: string;
+  /**
+   * Unique id of market param associated with this perpetual market.
+   * Defined in perpetuals.perpetual
+   */
+
+  marketId: number;
+  /** Status of the CLOB */
+
+  status: ClobPairStatus;
+  /**
+   * `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
+   * per Subtick.
+   * Defined in clob.clob_pair
+   */
+
+  quantumConversionExponent: number;
+  /**
+   * The exponent for converting an atomic amount (`size = 1`)
+   * to a full coin. For example, if `AtomicResolution = -8`
+   * then a `PerpetualPosition` with `size = 1e8` is equivalent to
+   * a position size of one full coin.
+   * Defined in perpetuals.perpetual
+   */
+
+  atomicResolution: number;
+  /**
+   * Defines the tick size of the orderbook by defining how many subticks
+   * are in one tick. That is, the subticks of any valid order must be a
+   * multiple of this value. Generally this value should start `>= 100`to
+   * allow room for decreasing it.
+   * Defined in clob.clob_pair
+   */
+
+  subticksPerTick: number;
+  /**
+   * Minimum increment in the size of orders on the CLOB, in base quantums.
+   * Defined in clob.clob_pair
+   */
+
+  stepBaseQuantums: Long;
+  /**
+   * The liquidity_tier that this perpetual is associated with.
+   * Defined in perpetuals.perpetual
+   */
+
+  liquidityTier: number;
+  /** Market type of the perpetual. */
+
+  marketType: PerpetualMarketType;
+}
+/**
+ * PerpetualMarketCreateEventV2 message contains all the information about a
+ * new Perpetual Market on the dYdX chain.
+ */
+
+export interface PerpetualMarketCreateEventV2SDKType {
+  /**
+   * Unique Perpetual id.
+   * Defined in perpetuals.perpetual
+   */
+  id: number;
+  /**
+   * Unique clob pair Id associated with this perpetual market
+   * Defined in clob.clob_pair
+   */
+
+  clob_pair_id: number;
+  /**
+   * The name of the `Perpetual` (e.g. `BTC-USD`).
+   * Defined in perpetuals.perpetual
+   */
+
+  ticker: string;
+  /**
+   * Unique id of market param associated with this perpetual market.
+   * Defined in perpetuals.perpetual
+   */
+
+  market_id: number;
+  /** Status of the CLOB */
+
+  status: ClobPairStatusSDKType;
+  /**
+   * `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
+   * per Subtick.
+   * Defined in clob.clob_pair
+   */
+
+  quantum_conversion_exponent: number;
+  /**
+   * The exponent for converting an atomic amount (`size = 1`)
+   * to a full coin. For example, if `AtomicResolution = -8`
+   * then a `PerpetualPosition` with `size = 1e8` is equivalent to
+   * a position size of one full coin.
+   * Defined in perpetuals.perpetual
+   */
+
+  atomic_resolution: number;
+  /**
+   * Defines the tick size of the orderbook by defining how many subticks
+   * are in one tick. That is, the subticks of any valid order must be a
+   * multiple of this value. Generally this value should start `>= 100`to
+   * allow room for decreasing it.
+   * Defined in clob.clob_pair
+   */
+
+  subticks_per_tick: number;
+  /**
+   * Minimum increment in the size of orders on the CLOB, in base quantums.
+   * Defined in clob.clob_pair
+   */
+
+  step_base_quantums: Long;
+  /**
+   * The liquidity_tier that this perpetual is associated with.
+   * Defined in perpetuals.perpetual
+   */
+
+  liquidity_tier: number;
+  /** Market type of the perpetual. */
+
+  market_type: PerpetualMarketTypeSDKType;
 }
 /**
  * LiquidityTierUpsertEventV1 message contains all the information to
@@ -985,6 +1150,120 @@ export interface LiquidityTierUpsertEventV1SDKType {
   /** @deprecated */
 
   base_position_notional: Long;
+}
+/** OpenInterestUpdateEventV1 is used for open interest update events */
+
+export interface OpenInterestUpdateEventV1 {
+  /** The list of all open interest updates in the block. */
+  openInterestUpdates: OpenInterestUpdate[];
+}
+/** OpenInterestUpdateEventV1 is used for open interest update events */
+
+export interface OpenInterestUpdateEventV1SDKType {
+  /** The list of all open interest updates in the block. */
+  open_interest_updates: OpenInterestUpdateSDKType[];
+}
+/** OpenInterestUpdate contains a single open interest update for a perpetual */
+
+export interface OpenInterestUpdate {
+  /** The ID of the perpetual market. */
+  perpetualId: number;
+  /** The new open interest value for the perpetual market. */
+
+  openInterest: Uint8Array;
+}
+/** OpenInterestUpdate contains a single open interest update for a perpetual */
+
+export interface OpenInterestUpdateSDKType {
+  /** The ID of the perpetual market. */
+  perpetual_id: number;
+  /** The new open interest value for the perpetual market. */
+
+  open_interest: Uint8Array;
+}
+/**
+ * LiquidationEventV2 message contains all the information needed to update
+ * the liquidity tiers. It contains all the fields from V1 along with the
+ * open interest caps.
+ */
+
+export interface LiquidityTierUpsertEventV2 {
+  /** Unique id. */
+  id: number;
+  /** The name of the tier purely for mnemonic purposes, e.g. "Gold". */
+
+  name: string;
+  /**
+   * The margin fraction needed to open a position.
+   * In parts-per-million.
+   */
+
+  initialMarginPpm: number;
+  /**
+   * The fraction of the initial-margin that the maintenance-margin is,
+   * e.g. 50%. In parts-per-million.
+   */
+
+  maintenanceFractionPpm: number;
+  /**
+   * The maximum position size at which the margin requirements are
+   * not increased over the default values. Above this position size,
+   * the margin requirements increase at a rate of sqrt(size).
+   * 
+   * Deprecated since v3.x.
+   */
+
+  /** @deprecated */
+
+  basePositionNotional: Long;
+  /** Lower cap of open interest in quote quantums. optional */
+
+  openInterestLowerCap: Long;
+  /** Upper cap of open interest in quote quantums. */
+
+  openInterestUpperCap: Long;
+}
+/**
+ * LiquidationEventV2 message contains all the information needed to update
+ * the liquidity tiers. It contains all the fields from V1 along with the
+ * open interest caps.
+ */
+
+export interface LiquidityTierUpsertEventV2SDKType {
+  /** Unique id. */
+  id: number;
+  /** The name of the tier purely for mnemonic purposes, e.g. "Gold". */
+
+  name: string;
+  /**
+   * The margin fraction needed to open a position.
+   * In parts-per-million.
+   */
+
+  initial_margin_ppm: number;
+  /**
+   * The fraction of the initial-margin that the maintenance-margin is,
+   * e.g. 50%. In parts-per-million.
+   */
+
+  maintenance_fraction_ppm: number;
+  /**
+   * The maximum position size at which the margin requirements are
+   * not increased over the default values. Above this position size,
+   * the margin requirements increase at a rate of sqrt(size).
+   * 
+   * Deprecated since v3.x.
+   */
+
+  /** @deprecated */
+
+  base_position_notional: Long;
+  /** Lower cap of open interest in quote quantums. optional */
+
+  open_interest_lower_cap: Long;
+  /** Upper cap of open interest in quote quantums. */
+
+  open_interest_upper_cap: Long;
 }
 /**
  * UpdateClobPairEventV1 message contains all the information about an update to
@@ -1336,14 +1615,19 @@ export const MarketEventV1 = {
 
 function createBaseMarketPriceUpdateEventV1(): MarketPriceUpdateEventV1 {
   return {
-    priceWithExponent: Long.UZERO
+    spotPriceWithExponent: Long.UZERO,
+    pnlPriceWithExponent: Long.UZERO
   };
 }
 
 export const MarketPriceUpdateEventV1 = {
   encode(message: MarketPriceUpdateEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (!message.priceWithExponent.isZero()) {
-      writer.uint32(8).uint64(message.priceWithExponent);
+    if (!message.spotPriceWithExponent.isZero()) {
+      writer.uint32(8).uint64(message.spotPriceWithExponent);
+    }
+
+    if (!message.pnlPriceWithExponent.isZero()) {
+      writer.uint32(16).uint64(message.pnlPriceWithExponent);
     }
 
     return writer;
@@ -1359,7 +1643,11 @@ export const MarketPriceUpdateEventV1 = {
 
       switch (tag >>> 3) {
         case 1:
-          message.priceWithExponent = (reader.uint64() as Long);
+          message.spotPriceWithExponent = (reader.uint64() as Long);
+          break;
+
+        case 2:
+          message.pnlPriceWithExponent = (reader.uint64() as Long);
           break;
 
         default:
@@ -1373,7 +1661,8 @@ export const MarketPriceUpdateEventV1 = {
 
   fromPartial(object: DeepPartial<MarketPriceUpdateEventV1>): MarketPriceUpdateEventV1 {
     const message = createBaseMarketPriceUpdateEventV1();
-    message.priceWithExponent = object.priceWithExponent !== undefined && object.priceWithExponent !== null ? Long.fromValue(object.priceWithExponent) : Long.UZERO;
+    message.spotPriceWithExponent = object.spotPriceWithExponent !== undefined && object.spotPriceWithExponent !== null ? Long.fromValue(object.spotPriceWithExponent) : Long.UZERO;
+    message.pnlPriceWithExponent = object.pnlPriceWithExponent !== undefined && object.pnlPriceWithExponent !== null ? Long.fromValue(object.pnlPriceWithExponent) : Long.UZERO;
     return message;
   }
 
@@ -1805,7 +2094,7 @@ function createBaseDeleveragingEventV1(): DeleveragingEventV1 {
     offsetting: undefined,
     perpetualId: 0,
     fillAmount: Long.UZERO,
-    price: Long.UZERO,
+    totalQuoteQuantums: Long.UZERO,
     isBuy: false,
     isFinalSettlement: false
   };
@@ -1829,8 +2118,8 @@ export const DeleveragingEventV1 = {
       writer.uint32(32).uint64(message.fillAmount);
     }
 
-    if (!message.price.isZero()) {
-      writer.uint32(40).uint64(message.price);
+    if (!message.totalQuoteQuantums.isZero()) {
+      writer.uint32(40).uint64(message.totalQuoteQuantums);
     }
 
     if (message.isBuy === true) {
@@ -1870,7 +2159,7 @@ export const DeleveragingEventV1 = {
           break;
 
         case 5:
-          message.price = (reader.uint64() as Long);
+          message.totalQuoteQuantums = (reader.uint64() as Long);
           break;
 
         case 6:
@@ -1896,7 +2185,7 @@ export const DeleveragingEventV1 = {
     message.offsetting = object.offsetting !== undefined && object.offsetting !== null ? IndexerSubaccountId.fromPartial(object.offsetting) : undefined;
     message.perpetualId = object.perpetualId ?? 0;
     message.fillAmount = object.fillAmount !== undefined && object.fillAmount !== null ? Long.fromValue(object.fillAmount) : Long.UZERO;
-    message.price = object.price !== undefined && object.price !== null ? Long.fromValue(object.price) : Long.UZERO;
+    message.totalQuoteQuantums = object.totalQuoteQuantums !== undefined && object.totalQuoteQuantums !== null ? Long.fromValue(object.totalQuoteQuantums) : Long.UZERO;
     message.isBuy = object.isBuy ?? false;
     message.isFinalSettlement = object.isFinalSettlement ?? false;
     return message;
@@ -2604,6 +2893,151 @@ export const PerpetualMarketCreateEventV1 = {
 
 };
 
+function createBasePerpetualMarketCreateEventV2(): PerpetualMarketCreateEventV2 {
+  return {
+    id: 0,
+    clobPairId: 0,
+    ticker: "",
+    marketId: 0,
+    status: 0,
+    quantumConversionExponent: 0,
+    atomicResolution: 0,
+    subticksPerTick: 0,
+    stepBaseQuantums: Long.UZERO,
+    liquidityTier: 0,
+    marketType: 0
+  };
+}
+
+export const PerpetualMarketCreateEventV2 = {
+  encode(message: PerpetualMarketCreateEventV2, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== 0) {
+      writer.uint32(8).uint32(message.id);
+    }
+
+    if (message.clobPairId !== 0) {
+      writer.uint32(16).uint32(message.clobPairId);
+    }
+
+    if (message.ticker !== "") {
+      writer.uint32(26).string(message.ticker);
+    }
+
+    if (message.marketId !== 0) {
+      writer.uint32(32).uint32(message.marketId);
+    }
+
+    if (message.status !== 0) {
+      writer.uint32(40).int32(message.status);
+    }
+
+    if (message.quantumConversionExponent !== 0) {
+      writer.uint32(48).sint32(message.quantumConversionExponent);
+    }
+
+    if (message.atomicResolution !== 0) {
+      writer.uint32(56).sint32(message.atomicResolution);
+    }
+
+    if (message.subticksPerTick !== 0) {
+      writer.uint32(64).uint32(message.subticksPerTick);
+    }
+
+    if (!message.stepBaseQuantums.isZero()) {
+      writer.uint32(72).uint64(message.stepBaseQuantums);
+    }
+
+    if (message.liquidityTier !== 0) {
+      writer.uint32(80).uint32(message.liquidityTier);
+    }
+
+    if (message.marketType !== 0) {
+      writer.uint32(88).int32(message.marketType);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PerpetualMarketCreateEventV2 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePerpetualMarketCreateEventV2();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.id = reader.uint32();
+          break;
+
+        case 2:
+          message.clobPairId = reader.uint32();
+          break;
+
+        case 3:
+          message.ticker = reader.string();
+          break;
+
+        case 4:
+          message.marketId = reader.uint32();
+          break;
+
+        case 5:
+          message.status = (reader.int32() as any);
+          break;
+
+        case 6:
+          message.quantumConversionExponent = reader.sint32();
+          break;
+
+        case 7:
+          message.atomicResolution = reader.sint32();
+          break;
+
+        case 8:
+          message.subticksPerTick = reader.uint32();
+          break;
+
+        case 9:
+          message.stepBaseQuantums = (reader.uint64() as Long);
+          break;
+
+        case 10:
+          message.liquidityTier = reader.uint32();
+          break;
+
+        case 11:
+          message.marketType = (reader.int32() as any);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<PerpetualMarketCreateEventV2>): PerpetualMarketCreateEventV2 {
+    const message = createBasePerpetualMarketCreateEventV2();
+    message.id = object.id ?? 0;
+    message.clobPairId = object.clobPairId ?? 0;
+    message.ticker = object.ticker ?? "";
+    message.marketId = object.marketId ?? 0;
+    message.status = object.status ?? 0;
+    message.quantumConversionExponent = object.quantumConversionExponent ?? 0;
+    message.atomicResolution = object.atomicResolution ?? 0;
+    message.subticksPerTick = object.subticksPerTick ?? 0;
+    message.stepBaseQuantums = object.stepBaseQuantums !== undefined && object.stepBaseQuantums !== null ? Long.fromValue(object.stepBaseQuantums) : Long.UZERO;
+    message.liquidityTier = object.liquidityTier ?? 0;
+    message.marketType = object.marketType ?? 0;
+    return message;
+  }
+
+};
+
 function createBaseLiquidityTierUpsertEventV1(): LiquidityTierUpsertEventV1 {
   return {
     id: 0,
@@ -2684,6 +3118,211 @@ export const LiquidityTierUpsertEventV1 = {
     message.initialMarginPpm = object.initialMarginPpm ?? 0;
     message.maintenanceFractionPpm = object.maintenanceFractionPpm ?? 0;
     message.basePositionNotional = object.basePositionNotional !== undefined && object.basePositionNotional !== null ? Long.fromValue(object.basePositionNotional) : Long.UZERO;
+    return message;
+  }
+
+};
+
+function createBaseOpenInterestUpdateEventV1(): OpenInterestUpdateEventV1 {
+  return {
+    openInterestUpdates: []
+  };
+}
+
+export const OpenInterestUpdateEventV1 = {
+  encode(message: OpenInterestUpdateEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.openInterestUpdates) {
+      OpenInterestUpdate.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): OpenInterestUpdateEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseOpenInterestUpdateEventV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.openInterestUpdates.push(OpenInterestUpdate.decode(reader, reader.uint32()));
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<OpenInterestUpdateEventV1>): OpenInterestUpdateEventV1 {
+    const message = createBaseOpenInterestUpdateEventV1();
+    message.openInterestUpdates = object.openInterestUpdates?.map(e => OpenInterestUpdate.fromPartial(e)) || [];
+    return message;
+  }
+
+};
+
+function createBaseOpenInterestUpdate(): OpenInterestUpdate {
+  return {
+    perpetualId: 0,
+    openInterest: new Uint8Array()
+  };
+}
+
+export const OpenInterestUpdate = {
+  encode(message: OpenInterestUpdate, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.perpetualId !== 0) {
+      writer.uint32(8).uint32(message.perpetualId);
+    }
+
+    if (message.openInterest.length !== 0) {
+      writer.uint32(18).bytes(message.openInterest);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): OpenInterestUpdate {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseOpenInterestUpdate();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.perpetualId = reader.uint32();
+          break;
+
+        case 2:
+          message.openInterest = reader.bytes();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<OpenInterestUpdate>): OpenInterestUpdate {
+    const message = createBaseOpenInterestUpdate();
+    message.perpetualId = object.perpetualId ?? 0;
+    message.openInterest = object.openInterest ?? new Uint8Array();
+    return message;
+  }
+
+};
+
+function createBaseLiquidityTierUpsertEventV2(): LiquidityTierUpsertEventV2 {
+  return {
+    id: 0,
+    name: "",
+    initialMarginPpm: 0,
+    maintenanceFractionPpm: 0,
+    basePositionNotional: Long.UZERO,
+    openInterestLowerCap: Long.UZERO,
+    openInterestUpperCap: Long.UZERO
+  };
+}
+
+export const LiquidityTierUpsertEventV2 = {
+  encode(message: LiquidityTierUpsertEventV2, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== 0) {
+      writer.uint32(8).uint32(message.id);
+    }
+
+    if (message.name !== "") {
+      writer.uint32(18).string(message.name);
+    }
+
+    if (message.initialMarginPpm !== 0) {
+      writer.uint32(24).uint32(message.initialMarginPpm);
+    }
+
+    if (message.maintenanceFractionPpm !== 0) {
+      writer.uint32(32).uint32(message.maintenanceFractionPpm);
+    }
+
+    if (!message.basePositionNotional.isZero()) {
+      writer.uint32(40).uint64(message.basePositionNotional);
+    }
+
+    if (!message.openInterestLowerCap.isZero()) {
+      writer.uint32(48).uint64(message.openInterestLowerCap);
+    }
+
+    if (!message.openInterestUpperCap.isZero()) {
+      writer.uint32(56).uint64(message.openInterestUpperCap);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): LiquidityTierUpsertEventV2 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseLiquidityTierUpsertEventV2();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.id = reader.uint32();
+          break;
+
+        case 2:
+          message.name = reader.string();
+          break;
+
+        case 3:
+          message.initialMarginPpm = reader.uint32();
+          break;
+
+        case 4:
+          message.maintenanceFractionPpm = reader.uint32();
+          break;
+
+        case 5:
+          message.basePositionNotional = (reader.uint64() as Long);
+          break;
+
+        case 6:
+          message.openInterestLowerCap = (reader.uint64() as Long);
+          break;
+
+        case 7:
+          message.openInterestUpperCap = (reader.uint64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<LiquidityTierUpsertEventV2>): LiquidityTierUpsertEventV2 {
+    const message = createBaseLiquidityTierUpsertEventV2();
+    message.id = object.id ?? 0;
+    message.name = object.name ?? "";
+    message.initialMarginPpm = object.initialMarginPpm ?? 0;
+    message.maintenanceFractionPpm = object.maintenanceFractionPpm ?? 0;
+    message.basePositionNotional = object.basePositionNotional !== undefined && object.basePositionNotional !== null ? Long.fromValue(object.basePositionNotional) : Long.UZERO;
+    message.openInterestLowerCap = object.openInterestLowerCap !== undefined && object.openInterestLowerCap !== null ? Long.fromValue(object.openInterestLowerCap) : Long.UZERO;
+    message.openInterestUpperCap = object.openInterestUpperCap !== undefined && object.openInterestUpperCap !== null ? Long.fromValue(object.openInterestUpperCap) : Long.UZERO;
     return message;
   }
 

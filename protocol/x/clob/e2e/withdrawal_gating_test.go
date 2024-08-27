@@ -73,7 +73,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs:                    []clobtypes.ClobPair{constants.ClobPair_Btc},
 			transferOrWithdrawSubaccount: constants.Dave_Num1,
@@ -112,7 +112,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs:                    []clobtypes.ClobPair{constants.ClobPair_Btc},
 			transferOrWithdrawSubaccount: constants.Dave_Num1,
@@ -183,9 +183,10 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 							require.True(t, exists)
 
 							marketPricesCopy[marketId] = prices.MarketPrice{
-								Id:       marketId,
-								Price:    oraclePrice,
-								Exponent: exponent,
+								Id:        marketId,
+								SpotPrice: oraclePrice,
+								PnlPrice:  oraclePrice,
+								Exponent:  exponent,
 							}
 						}
 
@@ -252,7 +253,11 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 					tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *expectedSubaccount.Id),
 				)
 			}
-			negativeTncSubaccountSeenAtBlock, exists := tApp.App.SubaccountsKeeper.GetNegativeTncSubaccountSeenAtBlock(ctx)
+			negativeTncSubaccountSeenAtBlock, exists, err := tApp.App.SubaccountsKeeper.GetNegativeTncSubaccountSeenAtBlock(
+				ctx,
+				constants.BtcUsd_NoMarginRequirement.Params.Id,
+			)
+			require.NoError(t, err)
 			require.Equal(t, tc.expectedWithdrawalsGated, exists)
 			require.Equal(t, tc.expectedNegativeTncSubaccountSeenAtBlock, negativeTncSubaccountSeenAtBlock)
 
@@ -299,7 +304,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 						response abcitypes.ResponseFinalizeBlock,
 					) (haltchain bool) {
 						// Note the first TX is MsgProposedOperations, the second is all other TXs.
-						execResult := response.TxResults[1]
+						execResult := response.TxResults[2]
 						require.True(t, execResult.IsErr())
 						require.Equal(t, satypes.ErrFailedToUpdateSubaccounts.ABCICode(), execResult.Code)
 						require.Contains(t, execResult.Log, tc.expectedErr)

@@ -94,6 +94,8 @@ var (
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": {},
 
 		// clob
+		"/dydxprotocol.clob.MsgBatchCancel":                                {},
+		"/dydxprotocol.clob.MsgBatchCancelResponse":                        {},
 		"/dydxprotocol.clob.MsgCancelOrder":                                {},
 		"/dydxprotocol.clob.MsgCancelOrderResponse":                        {},
 		"/dydxprotocol.clob.MsgCreateClobPair":                             {},
@@ -134,8 +136,6 @@ var (
 		// prices
 		"/dydxprotocol.prices.MsgCreateOracleMarket":         {},
 		"/dydxprotocol.prices.MsgCreateOracleMarketResponse": {},
-		"/dydxprotocol.prices.MsgUpdateMarketPrices":         {},
-		"/dydxprotocol.prices.MsgUpdateMarketPricesResponse": {},
 		"/dydxprotocol.prices.MsgUpdateMarketParam":          {},
 		"/dydxprotocol.prices.MsgUpdateMarketParamResponse":  {},
 

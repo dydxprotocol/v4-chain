@@ -29,7 +29,15 @@ service Query {
       QueryGetWithdrawalAndTransfersBlockedInfoRequest)
       returns (QueryGetWithdrawalAndTransfersBlockedInfoResponse) {
     option (google.api.http).get =
-        "/dydxprotocol/subaccounts/withdrawals_and_transfers_blocked_info";
+    "/dydxprotocol/subaccounts/withdrawals_and_transfers_blocked_info/"
+    "{perpetual_id}";
+  }
+
+  // Queries the collateral pool account address for a perpetual id.
+  rpc CollateralPoolAddress(QueryCollateralPoolAddressRequest)
+      returns (QueryCollateralPoolAddressResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/subaccounts/collateral_pool_address/{perpetual_id}";
   }
 }
 
@@ -56,8 +64,11 @@ message QuerySubaccountAllResponse {
 }
 
 // QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
-// fetching information about whether withdrawals and transfers are blocked.
-message QueryGetWithdrawalAndTransfersBlockedInfoRequest {}
+// fetching information about whether withdrawals and transfers are blocked for
+// a collateral pool associated with the passed in perpetual id.
+message QueryGetWithdrawalAndTransfersBlockedInfoRequest {
+  uint32 perpetual_id = 1;
+}
 
 // QueryGetWithdrawalAndTransfersBlockedInfoRequest is a response type for
 // fetching information about whether withdrawals and transfers are blocked.
@@ -65,4 +76,17 @@ message QueryGetWithdrawalAndTransfersBlockedInfoResponse {
   uint32 negative_tnc_subaccount_seen_at_block = 1;
   uint32 chain_outage_seen_at_block = 2;
   uint32 withdrawals_and_transfers_unblocked_at_block = 3;
+}
+
+// QueryCollateralPoolAddressRequest is the request type for fetching the
+// account address of the collateral pool associated with the passed in
+// perpetual id.
+message QueryCollateralPoolAddressRequest { uint32 perpetual_id = 1; }
+
+// QueryCollateralPoolAddressResponse is a response type for fetching the
+// account address of the collateral pool associated with the passed in
+// perpetual id.
+message QueryCollateralPoolAddressResponse {
+  string collateral_pool_address = 1
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"bytes"
+
 	"cosmossdk.io/store/prefix"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/off_chain_updates"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -126,61 +128,25 @@ func (k Keeper) GetOrderFillAmount(
 	return true, satypes.BaseQuantums(orderFillState.FillAmount), orderFillState.PrunableBlockHeight
 }
 
-// AddOrdersForPruning creates or updates a slice of `orderIds` to state for potential future pruning from state.
-// These orders will be checked for pruning from state at `prunableBlockHeight`. If the `orderIds` slice provided
-// contains duplicates, the duplicates will be ignored.
+// GetPruneableOrdersStore gets a prefix store for pruneable orders at a given height.
+// The full format for these keys is <PrunableOrdersKeyPrefix><height>:<order_id>.
+func (k Keeper) GetPruneableOrdersStore(ctx sdk.Context, height uint32) prefix.Store {
+	var buf bytes.Buffer
+	buf.Write([]byte(types.PrunableOrdersKeyPrefix))
+	buf.Write(lib.Uint32ToKey(height))
+	buf.Write([]byte(":"))
+	return prefix.NewStore(ctx.KVStore(k.storeKey), buf.Bytes())
+}
+
+// AddOrdersForPruning creates or updates `orderIds` to state for potential future pruning from state.
 func (k Keeper) AddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, prunableBlockHeight uint32) {
-	// Retrieve an instance of the store.
-	store := prefix.NewStore(
-		ctx.KVStore(k.storeKey),
-		[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
-	)
-
-	// Retrieve the `PotentiallyPrunableOrders` bytes from the store.
-	potentiallyPrunableOrdersBytes := store.Get(
-		lib.Uint32ToKey(prunableBlockHeight),
-	)
-
-	var potentiallyPrunableOrdersSet = make(map[types.OrderId]bool)
-	var potentiallyPrunableOrders = types.PotentiallyPrunableOrders{}
-	var potentiallyPrunableOrderIds = make([]types.OrderId, len(orderIds))
-
-	// Initialize `potentiallyPrunableOrderIds` with the provided `orderIds`.
-	// Copy to avoid mutating the provided `orderIds`.
-	copy(potentiallyPrunableOrderIds, orderIds)
-
-	// If the state already contains `potentiallyPrunableOrders` for this `prunableBlockHeight`, add them to the list of
-	// `potentiallyPrunableOrderIds`.
-	if potentiallyPrunableOrdersBytes != nil {
-		k.cdc.MustUnmarshal(potentiallyPrunableOrdersBytes, &potentiallyPrunableOrders)
-		potentiallyPrunableOrderIds = append(potentiallyPrunableOrders.OrderIds, potentiallyPrunableOrderIds...)
+	store := k.GetPruneableOrdersStore(ctx, prunableBlockHeight)
+	for _, orderId := range orderIds {
+		store.Set(
+			orderId.ToStateKey(),
+			k.cdc.MustMarshal(&orderId),
+		)
 	}
-
-	// Iterate over all `potentiallyPrunableOrderIds` and place them in the set in order to dedupe them.
-	for _, orderId := range potentiallyPrunableOrderIds {
-		potentiallyPrunableOrdersSet[orderId] = true
-	}
-
-	// Iterate over the set and build a list of `dedupedOrderIds`.
-	var dedupedOrderIds = make([]types.OrderId, 0, len(potentiallyPrunableOrdersSet))
-	for orderId := range potentiallyPrunableOrdersSet {
-		dedupedOrderIds = append(dedupedOrderIds, orderId)
-	}
-
-	// Sort the orderIds so that the state write is deterministic.
-	types.MustSortAndHaveNoDuplicates(dedupedOrderIds)
-
-	// Set the new `dedupedOrderIds` on the `potentiallyPrunableOrders`.
-	potentiallyPrunableOrders.OrderIds = dedupedOrderIds
-
-	// Marshal `prunableOrders` back to bytes.
-	potentiallyPrunableOrdersBytes = k.cdc.MustMarshal(&potentiallyPrunableOrders)
-
-	// Write `prunableOrders` to state for the appropriate block height.
-	store.Set(
-		lib.Uint32ToKey(prunableBlockHeight),
-		potentiallyPrunableOrdersBytes,
-	)
 }
 
 // PruneOrdersForBlockHeight checks all orders for prunability given the provided `blockHeight`.
@@ -188,27 +154,13 @@ func (k Keeper) AddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, p
 // Note: An order is only deemed prunable if the `prunableBlockHeight` on the `OrderFillState` is less than or equal
 // to the provided `blockHeight` passed this method. Returns a slice of unique `OrderIds` which were pruned from state.
 func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (prunedOrderIds []types.OrderId) {
-	// Retrieve an instance of the stores.
-	blockHeightToPotentiallyPrunableOrdersStore := prefix.NewStore(
-		ctx.KVStore(k.storeKey),
-		[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
-	)
+	potentiallyPrunableOrdersStore := k.GetPruneableOrdersStore(ctx, blockHeight)
+	it := potentiallyPrunableOrdersStore.Iterator(nil, nil)
+	defer it.Close()
 
-	// Retrieve the raw bytes of the `prunableOrders`.
-	potentiallyPrunableOrderBytes := blockHeightToPotentiallyPrunableOrdersStore.Get(
-		lib.Uint32ToKey(blockHeight),
-	)
-
-	// If there are no prunable orders for this block, then there is nothing to do. Early return.
-	if potentiallyPrunableOrderBytes == nil {
-		return
-	}
-
-	var potentiallyPrunableOrders types.PotentiallyPrunableOrders
-	k.cdc.MustUnmarshal(potentiallyPrunableOrderBytes, &potentiallyPrunableOrders)
-
-	for _, orderId := range potentiallyPrunableOrders.OrderIds {
-		// Check if the order can be pruned, and prune if so.
+	for ; it.Valid(); it.Next() {
+		var orderId types.OrderId
+		k.cdc.MustUnmarshal(it.Value(), &orderId)
 		exists, _, prunableBlockHeight := k.GetOrderFillAmount(ctx, orderId)
 		if exists && prunableBlockHeight <= blockHeight {
 			k.RemoveOrderFillAmount(ctx, orderId)
@@ -222,12 +174,8 @@ func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (
 				)
 			}
 		}
+		potentiallyPrunableOrdersStore.Delete(it.Key())
 	}
-
-	// Delete the key for prunable orders at this block height.
-	blockHeightToPotentiallyPrunableOrdersStore.Delete(
-		lib.Uint32ToKey(blockHeight),
-	)
 
 	return prunedOrderIds
 }

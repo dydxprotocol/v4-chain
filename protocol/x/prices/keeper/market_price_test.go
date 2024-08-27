@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -12,15 +13,15 @@ import (
 
 func createNMarketPriceUpdates(
 	n int,
-) []*types.MsgUpdateMarketPrices_MarketPrice {
-	items := make([]*types.MsgUpdateMarketPrices_MarketPrice, n)
+) []*types.MarketPriceUpdate {
+	items := make([]*types.MarketPriceUpdate, n)
 	for i := range items {
-		items[i] = &types.MsgUpdateMarketPrices_MarketPrice{
-			MarketId: uint32(i),
-			Price:    uint64(i),
+		items[i] = &types.MarketPriceUpdate{
+			MarketId:  uint32(i),
+			SpotPrice: uint64(i),
+			PnlPrice:  uint64(i),
 		}
 	}
-
 	return items
 }
 
@@ -35,23 +36,30 @@ func TestUpdateMarketPrices(t *testing.T) {
 	firstPriceUpdates := createNMarketPriceUpdates(10)
 	secondPriceUpdates := createNMarketPriceUpdates(10)
 	for _, pu := range secondPriceUpdates {
-		pu.Price = 10 + (pu.Price * 10)
+		pu.SpotPrice = 10 + (pu.SpotPrice * 10)
+		pu.PnlPrice = 10 + (pu.PnlPrice * 10)
 	}
 
 	priceUpdates := append(firstPriceUpdates, secondPriceUpdates...)
-	err := keeper.UpdateMarketPrices(
-		ctx,
-		priceUpdates,
-	)
-	require.NoError(t, err)
+	for _, update := range priceUpdates {
+		err := keeper.UpdateSpotAndPnlMarketPrices(
+			ctx,
+			update,
+		)
+		require.NoError(t, err)
+	}
 
 	marketPrices := make([]types.MarketPrice, 10)
 	for i, item := range items {
 		marketPrice, err := keeper.GetMarketPrice(ctx, item.Param.Id)
 		require.NoError(t, err)
 		require.Equal(t,
-			secondPriceUpdates[i].Price,
-			marketPrice.Price,
+			secondPriceUpdates[i].SpotPrice,
+			marketPrice.SpotPrice,
+		)
+		require.Equal(t,
+			secondPriceUpdates[i].PnlPrice,
+			marketPrice.PnlPrice,
 		)
 		marketPrices = append(marketPrices, marketPrice)
 	}
@@ -64,26 +72,34 @@ func TestUpdateMarketPrices_NotFound(t *testing.T) {
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	priceUpdates := createNMarketPriceUpdates(10)
-	err := keeper.UpdateMarketPrices(
-		ctx,
-		priceUpdates,
-	)
-	require.EqualError(t, err, "0: Market price does not exist")
+	for i, update := range priceUpdates {
+		err := keeper.UpdateSpotAndPnlMarketPrices(
+			ctx,
+			update,
+		)
+		require.EqualError(t, err, fmt.Sprintf(`%d: Market price does not exist`, i))
+	}
 	keepertest.AssertMarketEventsNotInIndexerBlock(t, keeper, ctx)
 
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
-	err = keeper.UpdateMarketPrices(
-		ctx,
-		priceUpdates,
-	)
-	require.NoError(t, err)
+	for _, update := range priceUpdates {
+		err := keeper.UpdateSpotAndPnlMarketPrices(
+			ctx,
+			update,
+		)
+		require.NoError(t, err)
+	}
 
 	for i, item := range items {
 		price, err := keeper.GetMarketPrice(ctx, item.Param.Id)
 		require.NoError(t, err)
 		require.Equal(t,
-			priceUpdates[i].Price,
-			price.Price,
+			priceUpdates[i].SpotPrice,
+			price.SpotPrice,
+		)
+		require.Equal(t,
+			priceUpdates[i].PnlPrice,
+			price.PnlPrice,
 		)
 	}
 }
@@ -164,18 +180,18 @@ func TestGetMarketIdToValidIndexPrice(t *testing.T) {
 	// but the min exchanges required is 2. Therefore, no median price.
 	require.Len(t, marketIdToIndexPrice, 2)
 	require.Equal(t,
-		types.MarketPrice{
-			Id:       constants.MarketId9,
-			Price:    uint64(2002),
-			Exponent: constants.Exponent9,
+		types.MarketSpotPrice{
+			Id:        constants.MarketId9,
+			SpotPrice: uint64(2002),
+			Exponent:  constants.Exponent9,
 		},
 		marketIdToIndexPrice[constants.MarketId9],
 	) // Median of 1001, 2002, 3003
 	require.Equal(t,
-		types.MarketPrice{
-			Id:       constants.MarketId8,
-			Price:    uint64(2503),
-			Exponent: constants.Exponent8,
+		types.MarketSpotPrice{
+			Id:        constants.MarketId8,
+			SpotPrice: uint64(2503),
+			Exponent:  constants.Exponent8,
 		},
 		marketIdToIndexPrice[constants.MarketId8],
 	) // Median of 2002, 3003

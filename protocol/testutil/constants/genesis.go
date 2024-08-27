@@ -26,6 +26,9 @@ const GenesisState = `{
     },
     "version": {
       "app": "0"
+    },
+    "abci": {
+      "vote_extensions_enable_height": "1"
     }
   },
   "app_hash": "",
@@ -289,7 +292,7 @@ const GenesisState = `{
         "initial_val_set": [
         {
           "pub_key": {
-          "ed25519": "RrclQz9bIhkIy/gfL485g3PYMeiIku4qeo495787X10="
+          "ed25519": "ujY14AgopV907IYgPAk/5x8c9267S4fQf89nyeCPTes="
           },
           "power": "500"
         },
@@ -301,7 +304,7 @@ const GenesisState = `{
         },
         {
           "pub_key": {
-          "ed25519": "mAN6RXYxSM4MNGSIriYiS7pHuwAcOHDQAy9/wnlSzOI="
+          "ed25519": "QlG+iYe6AyYpvY1z9RNJKCVlH14Q/qSz4EjGdGCru3o="
           },
           "power": "500"
         }
@@ -315,10 +318,10 @@ const GenesisState = `{
     },
     "clob": {
       "block_rate_limit_config": {
-        "max_short_term_orders_per_n_blocks": [
+        "max_short_term_orders_and_cancels_per_n_blocks": [
           {
             "num_blocks": 1,
-            "limit": 200
+            "limit": 400
           }
         ],
         "max_stateful_orders_per_n_blocks": [
@@ -329,12 +332,6 @@ const GenesisState = `{
           {
             "num_blocks": 100,
             "limit": 20
-          }
-        ],
-        "max_short_term_order_cancellations_per_n_blocks": [
-          {
-            "num_blocks": 1,
-            "limit": 200
           }
         ]
       },
@@ -701,7 +698,8 @@ const GenesisState = `{
             "id": 0,
             "liquidity_tier": 0,
             "market_id": 0,
-            "ticker": "BTC-USD"
+            "ticker": "BTC-USD",
+            "market_type": 0
           }
         },
         {
@@ -711,7 +709,8 @@ const GenesisState = `{
             "id": 1,
             "liquidity_tier": 0,
             "market_id": 1,
-            "ticker": "ETH-USD"
+            "ticker": "ETH-USD",
+            "market_type": 0
           }
         }
       ]
@@ -987,167 +986,200 @@ const GenesisState = `{
         {
           "exponent": -5,
           "id": 0,
-          "price": 2000000000
+          "spot_price": 2000000000,
+          "pnl_price": 2000000000
         },
         {
           "exponent": -6,
           "id": 1,
-          "price": 1500000000
+          "spot_price": 1500000000,
+          "pnl_price": 1500000000
         },
         {
           "exponent": -8,
           "id": 2,
-          "price": 700000000
+          "spot_price": 700000000,
+          "pnl_price": 700000000
         },
         {
           "exponent": -10,
           "id": 3,
-          "price": 7000000000
+          "spot_price": 7000000000,
+          "pnl_price": 7000000000
         },
         {
           "exponent": -10,
           "id": 4,
-          "price": 7000000000
+          "spot_price": 7000000000,
+          "pnl_price": 7000000000
         },
         {
           "exponent": -8,
           "id": 5,
-          "price": 1700000000
+          "spot_price": 1700000000,
+          "pnl_price": 1700000000
         },
         {
           "exponent": -10,
           "id": 6,
-          "price": 3000000000
+          "spot_price": 3000000000,
+          "pnl_price": 3000000000
         },
         {
           "exponent": -8,
           "id": 7,
-          "price": 1400000000
+          "spot_price": 1400000000,
+          "pnl_price": 1400000000
         },
         {
           "exponent": -9,
           "id": 8,
-          "price": 4000000000
+          "spot_price": 4000000000,
+          "pnl_price": 4000000000
         },
         {
           "exponent": -8,
           "id": 9,
-          "price": 7000000000
+          "spot_price": 7000000000,
+          "pnl_price": 7000000000
         },
         {
           "exponent": -8,
           "id": 10,
-          "price": 8800000000
+          "spot_price": 8800000000,
+          "pnl_price": 8800000000
         },
         {
           "exponent": -11,
           "id": 11,
-          "price": 7000000000
+          "spot_price": 7000000000,
+          "pnl_price": 7000000000
         },
         {
           "exponent": -9,
           "id": 12,
-          "price": 4000000000
+          "spot_price": 4000000000,
+          "pnl_price": 4000000000
         },
         {
           "exponent": -9,
           "id": 13,
-          "price": 10000000000
+          "spot_price": 10000000000,
+          "pnl_price": 10000000000
         },
         {
           "exponent": -9,
           "id": 14,
-          "price": 5000000000
+          "spot_price": 5000000000,
+          "pnl_price": 5000000000
         },
         {
           "exponent": -10,
           "id": 15,
-          "price": 8000000000
+          "spot_price": 8000000000,
+          "pnl_price": 8000000000
         },
         {
           "exponent": -9,
           "id": 16,
-          "price": 5000000000
+          "spot_price": 5000000000,
+          "pnl_price": 5000000000
         },
         {
           "exponent": -7,
           "id": 17,
-          "price": 2000000000
+          "spot_price": 2000000000,
+          "pnl_price": 2000000000
         },
         {
           "exponent": -10,
           "id": 18,
-          "price": 7000000000
+          "spot_price": 7000000000,
+          "pnl_price": 7000000000
         },
         {
           "exponent": -11,
           "id": 19,
-          "price": 7000000000
+          "spot_price": 7000000000,
+          "pnl_price": 7000000000
         },
         {
           "exponent": -10,
           "id": 20,
-          "price": 1400000000
+          "spot_price": 1400000000,
+          "pnl_price": 1400000000
         },
         {
           "exponent": -9,
           "id": 21,
-          "price": 1400000000
+          "spot_price": 1400000000,
+          "pnl_price": 1400000000
         },
         {
           "exponent": -9,
           "id": 22,
-          "price": 2200000000
+          "spot_price": 2200000000,
+          "pnl_price": 2200000000
         },
         {
           "exponent": -7,
           "id": 23,
-          "price": 7100000000
+          "spot_price": 7100000000,
+          "pnl_price": 7100000000
         },
         {
           "exponent": -10,
           "id": 24,
-          "price": 7000000000
+          "spot_price": 7000000000,
+          "pnl_price": 7000000000
         },
         {
           "exponent": -11,
           "id": 25,
-          "price": 10000000000
+          "spot_price": 10000000000,
+          "pnl_price": 10000000000
         },
         {
           "exponent": -7,
           "id": 26,
-          "price": 1650000000
+          "spot_price": 1650000000,
+          "pnl_price": 1650000000
         },
         {
           "exponent": -8,
           "id": 27,
-          "price": 1800000000
+          "spot_price": 1800000000,
+          "pnl_price": 1800000000
         },
         {
           "exponent": -10,
           "id": 28,
-          "price": 3000000000
+          "spot_price": 3000000000,
+          "pnl_price": 3000000000
         },
         {
           "exponent": -8,
           "id": 29,
-          "price": 4000000000
+          "spot_price": 4000000000,
+          "pnl_price": 4000000000
         },
         {
           "exponent": -8,
           "id": 30,
-          "price": 3000000000
+          "spot_price": 3000000000,
+          "pnl_price": 3000000000
         },
         {
           "exponent": -10,
           "id": 31,
-          "price": 2000000000
+          "spot_price": 2000000000,
+          "pnl_price": 2000000000
         },
         {
           "exponent": -6,
           "id": 32,
-          "price": 6500000000
+          "spot_price": 6500000000,
+          "pnl_price": 6500000000
         }
       ]
     },

@@ -1,9 +1,12 @@
 package constants
 
 import (
+	"math/big"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants"
 	daemonClientTypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
@@ -13,6 +16,8 @@ var (
 	MarketId0 = uint32(0)
 	MarketId1 = uint32(1)
 	MarketId2 = uint32(2)
+	MarketId3 = uint32(3)
+	MarketId4 = uint32(4)
 
 	MarketId7  = uint32(7)
 	MarketId8  = uint32(8)
@@ -164,6 +169,47 @@ var (
 	Price6       uint64 = 60006
 	Price7       uint64 = 7007
 
+	Price1In1000SubticksPerTick = Price1 * 1000
+	Price2In1000SubticksPerTick = Price2 * 1000
+	Price3In1000SubticksPerTick = Price3 * 1000
+	Price4In1000SubticksPerTick = Price4 * 1000
+	Price5In1000SubticksPerTick = Price5 * 1000
+	Price6In1000SubticksPerTick = Price6 * 1000
+	Price7In1000SubticksPerTick = Price7 * 1000
+
+	Price5Negative int64 = -500005
+	Price6Negative int64 = -60006
+	Price7Negative int64 = -7007
+
+	Price1Big = big.NewInt(int64(Price1))
+	Price2Big = big.NewInt(int64(Price2))
+	Price3Big = big.NewInt(int64(Price3))
+	Price4Big = big.NewInt(int64(Price4))
+	Price5Big = big.NewInt(int64(Price5))
+	Price6Big = big.NewInt(int64(Price6))
+	Price7Big = big.NewInt(int64(Price7))
+
+	Price5NegativeBig = big.NewInt(Price5Negative)
+	Price6NegativeBig = big.NewInt(Price6Negative)
+	Price7NegativeBig = big.NewInt(Price7Negative)
+
+	Price1Bytes, _ = Price1Big.GobEncode()
+	Price2Bytes, _ = Price2Big.GobEncode()
+	Price3Bytes, _ = Price3Big.GobEncode()
+	Price4Bytes, _ = Price4Big.GobEncode()
+	Price5Bytes, _ = Price5Big.GobEncode()
+	Price6Bytes, _ = Price6Big.GobEncode()
+	Price7Bytes, _ = Price7Big.GobEncode()
+
+	Price5NegativeBytes, _ = Price5NegativeBig.GobEncode()
+	Price6NegativeBytes, _ = Price6NegativeBig.GobEncode()
+	Price7NegativeBytes, _ = Price7NegativeBig.GobEncode()
+
+	// Funding Rates
+	FundingRate1 = int64(10000) // 0.01% (10000 ppm)
+	FundingRate2 = int64(-5000) // -0.005% (-5000 ppm)
+	FundingRate3 = int64(25000) // 0.025% (25000 ppm)
+
 	// Exchange 0 prices
 	Exchange0_Price4_TimeT = &api.ExchangePrice{
 		ExchangeId:     ExchangeId1,
@@ -269,23 +315,41 @@ var (
 				Exchange2_Price2_TimeT,
 			},
 		},
+		{
+			MarketId: MarketId3,
+			ExchangePrices: []*api.ExchangePrice{
+				Exchange3_Price3_TimeT,
+			},
+		},
+		{
+			MarketId: MarketId4,
+			ExchangePrices: []*api.ExchangePrice{
+				Exchange3_Price3_TimeT,
+			},
+		},
 	}
 	AtTimeTSingleExchangeSmoothedPrices = map[uint32]uint64{
 		MarketId0: Exchange0_Price4_TimeT.Price,
 		MarketId1: Exchange1_Price1_TimeT.Price,
 		MarketId2: Exchange2_Price2_TimeT.Price,
+		MarketId3: Exchange3_Price3_TimeT.Price,
+		MarketId4: Exchange3_Price3_TimeT.Price,
 	}
 
 	AtTimeTSingleExchangeSmoothedPricesPlus10 = map[uint32]uint64{
 		MarketId0: Exchange0_Price4_TimeT.Price + 10,
 		MarketId1: Exchange1_Price1_TimeT.Price + 10,
 		MarketId2: Exchange2_Price2_TimeT.Price + 10,
+		MarketId3: Exchange3_Price3_TimeT.Price + 10,
+		MarketId4: Exchange3_Price3_TimeT.Price + 10,
 	}
 
 	AtTimeTSingleExchangeSmoothedPricesPlus7 = map[uint32]uint64{
 		MarketId0: Exchange0_Price4_TimeT.Price + 7,
 		MarketId1: Exchange1_Price1_TimeT.Price + 7,
 		MarketId2: Exchange2_Price2_TimeT.Price + 7,
+		MarketId3: Exchange3_Price3_TimeT.Price + 7,
+		MarketId4: Exchange3_Price3_TimeT.Price + 7,
 	}
 
 	MixedTimePriceUpdate = []*api.MarketPriceUpdate{

@@ -48,16 +48,22 @@ export interface QuerySubaccountAllResponseSDKType {
 }
 /**
  * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
- * fetching information about whether withdrawals and transfers are blocked.
+ * fetching information about whether withdrawals and transfers are blocked for
+ * a collateral pool associated with the passed in perpetual id.
  */
 
-export interface QueryGetWithdrawalAndTransfersBlockedInfoRequest {}
+export interface QueryGetWithdrawalAndTransfersBlockedInfoRequest {
+  perpetualId: number;
+}
 /**
  * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
- * fetching information about whether withdrawals and transfers are blocked.
+ * fetching information about whether withdrawals and transfers are blocked for
+ * a collateral pool associated with the passed in perpetual id.
  */
 
-export interface QueryGetWithdrawalAndTransfersBlockedInfoRequestSDKType {}
+export interface QueryGetWithdrawalAndTransfersBlockedInfoRequestSDKType {
+  perpetual_id: number;
+}
 /**
  * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a response type for
  * fetching information about whether withdrawals and transfers are blocked.
@@ -77,6 +83,52 @@ export interface QueryGetWithdrawalAndTransfersBlockedInfoResponseSDKType {
   negative_tnc_subaccount_seen_at_block: number;
   chain_outage_seen_at_block: number;
   withdrawals_and_transfers_unblocked_at_block: number;
+}
+/**
+ * QueryCollateralPoolAddressRequest is the request type for fetching the
+ * account address of the collateral pool associated with the passed in
+ * perpetual id.
+ */
+
+export interface QueryCollateralPoolAddressRequest {
+  /**
+   * QueryCollateralPoolAddressRequest is the request type for fetching the
+   * account address of the collateral pool associated with the passed in
+   * perpetual id.
+   */
+  perpetualId: number;
+}
+/**
+ * QueryCollateralPoolAddressRequest is the request type for fetching the
+ * account address of the collateral pool associated with the passed in
+ * perpetual id.
+ */
+
+export interface QueryCollateralPoolAddressRequestSDKType {
+  /**
+   * QueryCollateralPoolAddressRequest is the request type for fetching the
+   * account address of the collateral pool associated with the passed in
+   * perpetual id.
+   */
+  perpetual_id: number;
+}
+/**
+ * QueryCollateralPoolAddressResponse is a response type for fetching the
+ * account address of the collateral pool associated with the passed in
+ * perpetual id.
+ */
+
+export interface QueryCollateralPoolAddressResponse {
+  collateralPoolAddress: string;
+}
+/**
+ * QueryCollateralPoolAddressResponse is a response type for fetching the
+ * account address of the collateral pool associated with the passed in
+ * perpetual id.
+ */
+
+export interface QueryCollateralPoolAddressResponseSDKType {
+  collateral_pool_address: string;
 }
 
 function createBaseQueryGetSubaccountRequest(): QueryGetSubaccountRequest {
@@ -280,11 +332,17 @@ export const QuerySubaccountAllResponse = {
 };
 
 function createBaseQueryGetWithdrawalAndTransfersBlockedInfoRequest(): QueryGetWithdrawalAndTransfersBlockedInfoRequest {
-  return {};
+  return {
+    perpetualId: 0
+  };
 }
 
 export const QueryGetWithdrawalAndTransfersBlockedInfoRequest = {
-  encode(_: QueryGetWithdrawalAndTransfersBlockedInfoRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+  encode(message: QueryGetWithdrawalAndTransfersBlockedInfoRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.perpetualId !== 0) {
+      writer.uint32(8).uint32(message.perpetualId);
+    }
+
     return writer;
   },
 
@@ -297,6 +355,10 @@ export const QueryGetWithdrawalAndTransfersBlockedInfoRequest = {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
+        case 1:
+          message.perpetualId = reader.uint32();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -306,8 +368,9 @@ export const QueryGetWithdrawalAndTransfersBlockedInfoRequest = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<QueryGetWithdrawalAndTransfersBlockedInfoRequest>): QueryGetWithdrawalAndTransfersBlockedInfoRequest {
+  fromPartial(object: DeepPartial<QueryGetWithdrawalAndTransfersBlockedInfoRequest>): QueryGetWithdrawalAndTransfersBlockedInfoRequest {
     const message = createBaseQueryGetWithdrawalAndTransfersBlockedInfoRequest();
+    message.perpetualId = object.perpetualId ?? 0;
     return message;
   }
 
@@ -373,6 +436,96 @@ export const QueryGetWithdrawalAndTransfersBlockedInfoResponse = {
     message.negativeTncSubaccountSeenAtBlock = object.negativeTncSubaccountSeenAtBlock ?? 0;
     message.chainOutageSeenAtBlock = object.chainOutageSeenAtBlock ?? 0;
     message.withdrawalsAndTransfersUnblockedAtBlock = object.withdrawalsAndTransfersUnblockedAtBlock ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseQueryCollateralPoolAddressRequest(): QueryCollateralPoolAddressRequest {
+  return {
+    perpetualId: 0
+  };
+}
+
+export const QueryCollateralPoolAddressRequest = {
+  encode(message: QueryCollateralPoolAddressRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.perpetualId !== 0) {
+      writer.uint32(8).uint32(message.perpetualId);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryCollateralPoolAddressRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryCollateralPoolAddressRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.perpetualId = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryCollateralPoolAddressRequest>): QueryCollateralPoolAddressRequest {
+    const message = createBaseQueryCollateralPoolAddressRequest();
+    message.perpetualId = object.perpetualId ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseQueryCollateralPoolAddressResponse(): QueryCollateralPoolAddressResponse {
+  return {
+    collateralPoolAddress: ""
+  };
+}
+
+export const QueryCollateralPoolAddressResponse = {
+  encode(message: QueryCollateralPoolAddressResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.collateralPoolAddress !== "") {
+      writer.uint32(10).string(message.collateralPoolAddress);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryCollateralPoolAddressResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryCollateralPoolAddressResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.collateralPoolAddress = reader.string();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryCollateralPoolAddressResponse>): QueryCollateralPoolAddressResponse {
+    const message = createBaseQueryCollateralPoolAddressResponse();
+    message.collateralPoolAddress = object.collateralPoolAddress ?? "";
     return message;
   }
 

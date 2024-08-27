@@ -25,17 +25,27 @@ import {
   defaultTendermintEvent2,
   defaultTendermintEvent3,
   defaultTendermintEvent4,
+  isolatedMarket,
+  isolatedMarket2,
+  isolatedPerpetualMarket,
+  isolatedPerpetualMarket2,
+  isolatedSubaccount,
+  isolatedSubaccount2,
 } from './constants';
 
 export async function seedData() {
   await Promise.all([
     SubaccountTable.create(defaultSubaccount),
     SubaccountTable.create(defaultSubaccount2),
+    SubaccountTable.create(isolatedSubaccount),
+    SubaccountTable.create(isolatedSubaccount2),
   ]);
   await Promise.all([
     MarketTable.create(defaultMarket),
     MarketTable.create(defaultMarket2),
     MarketTable.create(defaultMarket3),
+    MarketTable.create(isolatedMarket),
+    MarketTable.create(isolatedMarket2),
   ]);
   await Promise.all([
     LiquidityTiersTable.create(defaultLiquidityTier),
@@ -45,6 +55,8 @@ export async function seedData() {
     PerpetualMarketTable.create(defaultPerpetualMarket),
     PerpetualMarketTable.create(defaultPerpetualMarket2),
     PerpetualMarketTable.create(defaultPerpetualMarket3),
+    PerpetualMarketTable.create(isolatedPerpetualMarket),
+    PerpetualMarketTable.create(isolatedPerpetualMarket2),
   ]);
   await Promise.all([
     BlockTable.create(defaultBlock),

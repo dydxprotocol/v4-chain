@@ -39,14 +39,16 @@ export default class OraclePriceModel extends Model {
       required: [
         'id',
         'marketId',
-        'price',
+        'spotPrice',
+        'pnlPrice',
         'effectiveAt',
         'effectiveAtHeight',
       ],
       properties: {
         id: { type: 'string', format: 'uuid' },
         marketId: { type: 'integer' },
-        price: { type: 'string', pattern: NonNegativeNumericPattern },
+        spotPrice: { type: 'string', pattern: NonNegativeNumericPattern },
+        pnlPrice: { type: 'string', pattern: NonNegativeNumericPattern },
         effectiveAt: { type: 'string', format: 'date-time' },
         effectiveAtHeight: { type: 'string', pattern: IntegerPattern },
       },
@@ -63,7 +65,8 @@ export default class OraclePriceModel extends Model {
     return {
       id: 'string',
       marketId: 'integer',
-      price: 'string',
+      spotPrice: 'string',
+      pnlPrice: 'string',
       effectiveAt: 'date-time',
       effectiveAtHeight: 'string',
     };
@@ -73,7 +76,9 @@ export default class OraclePriceModel extends Model {
 
   marketId!: number;
 
-  price!: string;
+  spotPrice!: string;
+
+  pnlPrice!: string;
 
   effectiveAt!: IsoString;
 

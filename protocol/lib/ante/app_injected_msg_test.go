@@ -3,6 +3,7 @@ package ante_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -10,7 +11,11 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
 	testmsgs "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/msgs"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+)
+
+var (
+	testMsg = &testdata.TestMsg{Signers: []string{"meh"}}
 )
 
 func TestIsSingleAppInjectedMsg(t *testing.T) {
@@ -27,7 +32,7 @@ func TestIsSingleAppInjectedMsg(t *testing.T) {
 		},
 		"single msg: app-injected msg": {
 			msgs: []sdk.Msg{
-				&pricestypes.MsgUpdateMarketPrices{}, // app-injected.
+				&perptypes.MsgAddPremiumVotes{}, // app-injected.
 			},
 			expectedResult: true,
 		},
@@ -37,15 +42,15 @@ func TestIsSingleAppInjectedMsg(t *testing.T) {
 		},
 		"mult msg: all app-injected msgs": {
 			msgs: []sdk.Msg{
-				&pricestypes.MsgUpdateMarketPrices{}, // app-injected.
-				&pricestypes.MsgUpdateMarketPrices{}, // app-injected.
+				&perptypes.MsgAddPremiumVotes{},
+				&perptypes.MsgAddPremiumVotes{}, // app-injected.
 			},
 			expectedResult: false,
 		},
 		"mult msg: mixed": {
 			msgs: []sdk.Msg{
 				testMsg,
-				&pricestypes.MsgUpdateMarketPrices{}, // app-injected.
+				&perptypes.MsgAddPremiumVotes{}, // app-injected.
 			},
 			expectedResult: false,
 		},

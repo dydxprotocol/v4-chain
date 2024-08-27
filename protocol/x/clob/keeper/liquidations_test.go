@@ -17,6 +17,7 @@ import (
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	perptest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/perpetuals"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/memclob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
@@ -51,6 +52,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 		// Expectations.
 		expectedPlacedOrders  []*types.MsgPlaceOrder
 		expectedMatchedOrders []*types.ClobMatch
+		// Expected remaining OI after test.
+		// The test initializes each perp with default open interest of 1 full coin.
+		expectedOpenInterests map[uint32]*big.Int
 	}{
 		`Can place a liquidation that doesn't match any maker orders`: {
 			perpetuals: []perptypes.Perpetual{
@@ -66,6 +70,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 
 			expectedPlacedOrders:  []*types.MsgPlaceOrder{},
 			expectedMatchedOrders: []*types.ClobMatch{},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000), // unchanged
+			},
 		},
 		`Can place a liquidation that matches maker orders`: {
 			perpetuals: []perptypes.Perpetual{
@@ -105,6 +112,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 						},
 					},
 				),
+			},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: new(big.Int), // fully liquidated
 			},
 		},
 		`Can place a liquidation that matches maker orders and removes undercollateralized ones`: {
@@ -148,6 +158,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 					},
 				),
 			},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: new(big.Int), // fully liquidated
+			},
 		},
 		`Can place a liquidation that matches maker orders with maker rebates and empty fee collector`: {
 			perpetuals: []perptypes.Perpetual{
@@ -188,6 +201,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 					},
 				),
 			},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: new(big.Int), // fully liquidated
+			},
 		},
 		`Can place a liquidation that matches maker orders with maker rebates`: {
 			perpetuals: []perptypes.Perpetual{
@@ -227,6 +243,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 					},
 				),
 			},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: new(big.Int), // fully liquidated
+			},
 		},
 	}
 	for name, tc := range tests {
@@ -235,32 +254,32 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockBankKeeper := &mocks.BankKeeper{}
 			mockBankKeeper.On(
-				"SendCoinsFromModuleToModule",
+				"SendCoins",
 				mock.Anything,
-				satypes.ModuleName,
-				authtypes.FeeCollectorName,
+				satypes.ModuleAddress,
+				authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 				mock.Anything,
 			).Return(nil)
 			mockBankKeeper.On(
-				"SendCoinsFromModuleToModule",
+				"SendCoins",
 				mock.Anything,
-				satypes.ModuleName,
-				types.InsuranceFundName,
+				authtypes.NewModuleAddress(satypes.ModuleName),
+				perptypes.InsuranceFundModuleAddress,
 				mock.Anything,
 			).Return(nil)
 			// Fee collector does not have any funds.
 			mockBankKeeper.On(
-				"SendCoinsFromModuleToModule",
+				"SendCoins",
 				mock.Anything,
-				authtypes.FeeCollectorName,
-				satypes.ModuleName,
+				authtypes.NewModuleAddress(authtypes.FeeCollectorName),
+				satypes.ModuleAddress,
 				mock.Anything,
 			).Return(sdkerrors.ErrInsufficientFunds)
 			// Give the insurance fund a 1M USDC balance.
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				types.InsuranceFundModuleAddress,
+				perptypes.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(
@@ -294,9 +313,17 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
 
 			// Create all subaccounts.
 			for _, subaccount := range tc.subaccounts {
@@ -332,6 +359,19 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			// Run the test.
 			_, _, err = ks.ClobKeeper.PlacePerpetualLiquidation(ctx, tc.order)
 			require.NoError(t, err)
+
+			for _, perp := range tc.perpetuals {
+				if expectedOI, exists := tc.expectedOpenInterests[perp.Params.Id]; exists {
+					gotPerp, err := ks.PerpetualsKeeper.GetPerpetual(ks.Ctx, perp.Params.Id)
+					require.NoError(t, err)
+					require.Zero(t,
+						expectedOI.Cmp(gotPerp.OpenInterest.BigInt()),
+						"expected open interest %s, got %s",
+						expectedOI.String(),
+						gotPerp.OpenInterest.String(),
+					)
+				}
+			}
 
 			// Verify test expectations.
 			// TODO(DEC-1979): Refactor these tests to support the operations queue refactor.
@@ -392,6 +432,7 @@ func TestPlacePerpetualLiquidation_validateLiquidationAgainstClobPairStatus(t *t
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
@@ -792,6 +833,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 				).Return(nil)
 				bk.On(
+					"SendCoins",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bk.On(
 					"GetBalance",
 					mock.Anything,
 					mock.Anything,
@@ -832,6 +880,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 				).Return(nil)
 				bk.On(
+					"SendCoins",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bk.On(
 					"GetBalance",
 					mock.Anything,
 					mock.Anything,
@@ -866,6 +921,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
 					"SendCoinsFromModuleToModule",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bk.On(
+					"SendCoins",
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
@@ -947,6 +1009,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
 					"SendCoinsFromModuleToModule",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bk.On(
+					"SendCoins",
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
@@ -1078,6 +1147,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 				).Return(nil)
 				bankKeeper.On(
+					"SendCoins",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bankKeeper.On(
 					"GetBalance",
 					mock.Anything,
 					mock.Anything,
@@ -1102,10 +1178,11 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
-			for _, perpetual := range []perptypes.Perpetual{
+			testPerps := []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 				constants.EthUsd_100PercentMarginRequirement,
-			} {
+			}
+			for _, perpetual := range testPerps {
 				_, err = ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
 					perpetual.Params.Id,
@@ -1114,9 +1191,17 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					perpetual.Params.AtomicResolution,
 					perpetual.Params.DefaultFundingPpm,
 					perpetual.Params.LiquidityTier,
+					perpetual.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				testPerps,
+			)
 
 			for _, s := range tc.subaccounts {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
@@ -1139,6 +1224,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -1168,6 +1254,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.ClobPair_Eth.SubticksPerTick,
 						constants.ClobPair_Eth.StepBaseQuantums,
 						constants.EthUsd_100PercentMarginRequirement.Params.LiquidityTier,
+						constants.EthUsd_100PercentMarginRequirement.Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -1959,6 +2046,13 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				mock.Anything,
 			).Return(nil)
 			bankKeeper.On(
+				"SendCoins",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(nil)
+			bankKeeper.On(
 				"GetBalance",
 				mock.Anything,
 				mock.Anything,
@@ -1995,9 +2089,17 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 					perpetual.Params.AtomicResolution,
 					perpetual.Params.DefaultFundingPpm,
 					perpetual.Params.LiquidityTier,
+					perpetual.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				perpetuals,
+			)
 
 			for _, s := range tc.subaccounts {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
@@ -2008,13 +2110,12 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			)
 
 			for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
-				err := ks.PricesKeeper.UpdateMarketPrices(
+				err := ks.PricesKeeper.UpdateSpotAndPnlMarketPrices(
 					ctx,
-					[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{
-						{
-							MarketId: marketId,
-							Price:    oraclePrice,
-						},
+					&pricestypes.MarketPriceUpdate{
+						MarketId:  marketId,
+						SpotPrice: oraclePrice,
+						PnlPrice:  oraclePrice,
 					},
 				)
 				require.NoError(t, err)
@@ -2042,6 +2143,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							clobPair.SubticksPerTick,
 							clobPair.StepBaseQuantums,
 							perpetuals[i].Params.LiquidityTier,
+							perpetuals[i].Params.MarketType,
 						),
 					),
 				).Once().Return()
@@ -2159,6 +2261,7 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.StepBaseQuantums,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 			),
 		),
 	).Once().Return()
@@ -2285,6 +2388,7 @@ func TestIsLiquidatable(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
@@ -2704,9 +2808,17 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
 
 			// Create the subaccount.
 			subaccountId := satypes.SubaccountId{
@@ -2748,7 +2860,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 							},
 						},
 					},
-					satypes.Match,
+					satypes.CollatCheck,
 				)
 
 				require.True(t, success)
@@ -3235,6 +3347,7 @@ func TestGetFillablePrice(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
@@ -3659,6 +3772,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
@@ -3680,6 +3794,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						tc.perpetuals[0].Params.LiquidityTier,
+						tc.perpetuals[0].Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -4383,6 +4498,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
@@ -4418,6 +4534,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 							clobPair.SubticksPerTick,
 							clobPair.StepBaseQuantums,
 							tc.perpetuals[perpetualId].Params.LiquidityTier,
+							tc.perpetuals[perpetualId].Params.MarketType,
 						),
 					),
 				).Once().Return()
@@ -4589,6 +4706,13 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockBankKeeper := &mocks.BankKeeper{}
 			mockBankKeeper.On(
+				"SendCoins",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(nil)
+			mockBankKeeper.On(
 				"SendCoinsFromModuleToModule",
 				mock.Anything,
 				mock.Anything,
@@ -4599,7 +4723,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				types.InsuranceFundModuleAddress,
+				perptypes.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(
@@ -4631,9 +4755,17 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
 
 			// Create all subaccounts.
 			for _, subaccount := range tc.subaccounts {
@@ -4954,6 +5086,7 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 				constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
 				constants.BtcUsd_100PercentMarginRequirement.Params.DefaultFundingPpm,
 				constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+				constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
 			)
 			require.NoError(t, err)
 
@@ -4974,6 +5107,7 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -5107,6 +5241,7 @@ func TestSortLiquidationOrders(t *testing.T) {
 				constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
 				constants.BtcUsd_100PercentMarginRequirement.Params.DefaultFundingPpm,
 				constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+				constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
 			)
 			require.NoError(t, err)
 
@@ -5127,6 +5262,7 @@ func TestSortLiquidationOrders(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
 					),
 				),
 			).Once().Return()

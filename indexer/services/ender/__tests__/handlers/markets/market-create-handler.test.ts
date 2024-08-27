@@ -56,7 +56,8 @@ describe('marketCreateHandler', () => {
       const marketEvent: MarketEventV1 = {
         marketId: 0,
         priceUpdate: {
-          priceWithExponent: Long.fromValue(1, true),
+          spotPriceWithExponent: Long.fromValue(1, true),
+          pnlPriceWithExponent: Long.fromValue(1, true),
         },
       };
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
@@ -90,7 +91,7 @@ describe('marketCreateHandler', () => {
     const transactionIndex: number = 0;
 
     const marketCreate: MarketEventV1 = {
-      marketId: 3,
+      marketId: 100,
       marketCreate: {
         base: {
           pair: 'DYDX-USD',

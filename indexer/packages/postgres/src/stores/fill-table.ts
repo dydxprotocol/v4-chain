@@ -170,8 +170,8 @@ export async function create(
   return FillModel.query(
     Transaction.get(options.txId),
   ).insert({
-    id: uuid(fillToCreate.eventId, fillToCreate.liquidity),
     ...fillToCreate,
+    id: uuid(fillToCreate.eventId, fillToCreate.liquidity),
   }).returning('*');
 }
 
@@ -293,7 +293,7 @@ export async function getTotalValueOfOpenPositions(
 ): Promise<Big> {
   const query = `
     SELECT
-      SUM(f.open_size * p.price) AS total_sum
+      SUM(f.open_size * p."pnlPrice") AS total_sum
     FROM
       (
         SELECT

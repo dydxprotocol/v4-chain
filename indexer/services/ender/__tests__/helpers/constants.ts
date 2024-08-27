@@ -19,11 +19,16 @@ import {
   IndexerSubaccountId,
   LiquidationOrderV1,
   LiquidityTierUpsertEventV1,
+  LiquidityTierUpsertEventV2,
+  OpenInterestUpdateEventV1,
+  OpenInterestUpdate,
   MarketBaseEventV1,
   MarketEventV1,
   OrderFillEventV1,
   OrderRemovalReason,
   PerpetualMarketCreateEventV1,
+  PerpetualMarketCreateEventV2,
+  PerpetualMarketType,
   StatefulOrderEventV1,
   SubaccountMessage,
   SubaccountUpdateEventV1,
@@ -49,14 +54,16 @@ import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } fr
 export const defaultMarketPriceUpdate: MarketEventV1 = {
   marketId: 0,
   priceUpdate: {
-    priceWithExponent: Long.fromValue(100000000, true),
+    spotPriceWithExponent: Long.fromValue(100000000, true),
+    pnlPriceWithExponent: Long.fromValue(100000000, true),
   },
 };
 
 export const defaultMarketPriceUpdate2: MarketEventV1 = {
   marketId: 10,
   priceUpdate: {
-    priceWithExponent: Long.fromValue(100000000, true),
+    spotPriceWithExponent: Long.fromValue(100000000, true),
+    pnlPriceWithExponent: Long.fromValue(100000000, true),
   },
 };
 
@@ -65,6 +72,22 @@ export const defaultFundingUpdateSampleEvent: FundingEventMessage = {
   updates: [
     {
       perpetualId: 0,
+      fundingValuePpm: 10,
+      fundingIndex: bigIntToBytes(BigInt(0)),
+    },
+  ],
+};
+
+export const defaultFundingUpdateSampleEventWithAdditionalMarket: FundingEventMessage = {
+  type: FundingEventV1_Type.TYPE_PREMIUM_SAMPLE,
+  updates: [
+    {
+      perpetualId: 0,
+      fundingValuePpm: 10,
+      fundingIndex: bigIntToBytes(BigInt(0)),
+    },
+    {
+      perpetualId: 99999,
       fundingValuePpm: 10,
       fundingIndex: bigIntToBytes(BigInt(0)),
     },
@@ -110,7 +133,7 @@ export const defaultMarketModify: MarketEventV1 = {
   },
 };
 
-export const defaultPerpetualMarketCreateEvent: PerpetualMarketCreateEventV1 = {
+export const defaultPerpetualMarketCreateEventV1: PerpetualMarketCreateEventV1 = {
   id: 0,
   clobPairId: 1,
   ticker: 'BTC-USD',
@@ -123,12 +146,50 @@ export const defaultPerpetualMarketCreateEvent: PerpetualMarketCreateEventV1 = {
   liquidityTier: 0,
 };
 
-export const defaultLiquidityTierUpsertEvent: LiquidityTierUpsertEventV1 = {
+export const defaultPerpetualMarketCreateEventV2: PerpetualMarketCreateEventV2 = {
+  id: 0,
+  clobPairId: 1,
+  ticker: 'BTC-USD',
+  marketId: 0,
+  status: ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING,
+  quantumConversionExponent: -8,
+  atomicResolution: -10,
+  subticksPerTick: 100,
+  stepBaseQuantums: Long.fromValue(10, true),
+  liquidityTier: 0,
+  marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED,
+};
+
+export const defaultLiquidityTierUpsertEventV2: LiquidityTierUpsertEventV2 = {
   id: 0,
   name: 'Large-Cap',
   initialMarginPpm: 50000,  // 5%
   maintenanceFractionPpm: 600000,  // 60% of IM = 3%
   basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 USDC
+  openInterestLowerCap: Long.fromValue(0, true),
+  openInterestUpperCap: Long.fromValue(1_000_000_000_000, true),
+};
+
+export const defaultLiquidityTierUpsertEventV1: LiquidityTierUpsertEventV1 = {
+  id: 0,
+  name: 'Large-Cap',
+  initialMarginPpm: 50000,  // 5%
+  maintenanceFractionPpm: 600000,  // 60% of IM = 3%
+  basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 USDC
+};
+
+const defaultOpenInterestUpdate1: OpenInterestUpdate = {
+  perpetualId: 0,
+  openInterest: bigIntToBytes(BigInt(1000)),
+};
+
+const defaultOpenInterestUpdate2: OpenInterestUpdate = {
+  perpetualId: 1,
+  openInterest: bigIntToBytes(BigInt(2000)),
+};
+
+export const defaultOpenInterestUpdateEvent: OpenInterestUpdateEventV1 = {
+  openInterestUpdates: [defaultOpenInterestUpdate1, defaultOpenInterestUpdate2],
 };
 
 export const defaultUpdatePerpetualEvent: UpdatePerpetualEventV1 = {
@@ -286,7 +347,7 @@ export const defaultDeleveragingEvent: DeleveragingEventV1 = {
   offsetting: defaultRecipientSubaccountId,
   perpetualId: 1,
   fillAmount: Long.fromValue(10_000, true),
-  price: Long.fromValue(1_000_000_000, true),
+  totalQuoteQuantums: Long.fromValue(1_000_000_000, true),
   isBuy: true,
   isFinalSettlement: false,
 };

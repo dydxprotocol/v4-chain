@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -16,7 +18,12 @@ import (
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"gopkg.in/typ.v4/slices"
 
-	"github.com/cometbft/cometbft/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	feetierstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/msgsender"
@@ -32,8 +39,8 @@ import (
 )
 
 var (
-	Clob_0                                            = MustGetClobPairsFromGenesis(testapp.DefaultGenesis())[0]
-	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	Clob_0                                            = testapp.MustGetClobPairsFromGenesis(testapp.DefaultGenesis())[0]
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_BUY,
@@ -43,7 +50,7 @@ var (
 		},
 		testapp.DefaultGenesis(),
 	))
-	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_BUY,
@@ -53,7 +60,27 @@ var (
 		},
 		testapp.DefaultGenesis(),
 	))
-	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB27 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB23 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     5,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 23},
+		},
+		testapp.DefaultGenesis(),
+	))
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB24 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     5,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 24},
+		},
+		testapp.DefaultGenesis(),
+	))
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB27 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_BUY,
@@ -63,7 +90,7 @@ var (
 		},
 		testapp.DefaultGenesis(),
 	))
-	PlaceOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	PlaceOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num1, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_BUY,
@@ -73,7 +100,7 @@ var (
 		},
 		testapp.DefaultGenesis(),
 	))
-	PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_BUY,
@@ -84,7 +111,7 @@ var (
 		testapp.DefaultGenesis(),
 	))
 	// replacement of above order with smaller quantums
-	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB21 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB21 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_BUY,
@@ -95,7 +122,7 @@ var (
 		testapp.DefaultGenesis(),
 	))
 	// replacement of order with larger quantums
-	PlaceOrder_Alice_Num0_Id0_Clob0_Buy7_Price10_GTB21 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy7_Price10_GTB21 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_BUY,
@@ -106,7 +133,7 @@ var (
 		testapp.DefaultGenesis(),
 	))
 	// replacement of order on opposite side
-	PlaceOrder_Alice_Num0_Id0_Clob0_Sell6_Price10_GTB21 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	PlaceOrder_Alice_Num0_Id0_Clob0_Sell6_Price10_GTB21 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_SELL,
@@ -116,7 +143,7 @@ var (
 		},
 		testapp.DefaultGenesis(),
 	))
-	PlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	PlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 1},
 			Side:         clobtypes.Order_SIDE_BUY,
@@ -158,6 +185,22 @@ var (
 		},
 		27,
 	)
+	CancelOrder_Alice_Num0_Id0_Clob0_GTB23 = *clobtypes.NewMsgCancelOrderShortTerm(
+		clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			ClobPairId:   0,
+		},
+		23,
+	)
+	CancelOrder_Alice_Num0_Id1_Clob0_GTB20 = *clobtypes.NewMsgCancelOrderShortTerm(
+		clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			ClobPairId:   1,
+		},
+		20,
+	)
 	CancelOrder_Alice_Num1_Id0_Clob0_GTB20 = *clobtypes.NewMsgCancelOrderShortTerm(
 		clobtypes.OrderId{
 			SubaccountId: constants.Alice_Num1,
@@ -166,7 +209,7 @@ var (
 		},
 		20,
 	)
-	PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_SELL,
@@ -176,7 +219,7 @@ var (
 		},
 		testapp.DefaultGenesis(),
 	))
-	PlaceOrder_Bob_Num0_Id0_Clob0_Sell4_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	PlaceOrder_Bob_Num0_Id0_Clob0_Sell4_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_SELL,
@@ -195,35 +238,332 @@ var (
 		20,
 	)
 
-	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5,
 		testapp.DefaultGenesis(),
 	))
-	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
 		testapp.DefaultGenesis(),
 	))
-	LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		constants.LongTermOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5,
 		testapp.DefaultGenesis(),
 	))
-	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 		testapp.DefaultGenesis(),
 	))
-	LongTermPlaceOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTBT5 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	LongTermPlaceOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTBT5 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		constants.LongTermOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTBT5,
 		testapp.DefaultGenesis(),
 	))
-	ConditionalPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	ConditionalPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
 		testapp.DefaultGenesis(),
 	))
-	ConditionalPlaceOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	ConditionalPlaceOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
 		testapp.DefaultGenesis(),
 	))
+	BatchCancel_Alice_Num0_Clob0_1_2_3_GTB5 = *clobtypes.NewMsgBatchCancel(
+		constants.Alice_Num0,
+		[]clobtypes.OrderBatch{
+			{
+				ClobPairId: 0,
+				ClientIds:  []uint32{1, 2, 3},
+			},
+		},
+		5,
+	)
+	BatchCancel_Alice_Num0_Clob0_1_2_3_GTB27 = *clobtypes.NewMsgBatchCancel(
+		constants.Alice_Num0,
+		[]clobtypes.OrderBatch{
+			{
+				ClobPairId: 0,
+				ClientIds:  []uint32{1, 2, 3},
+			},
+		},
+		27,
+	)
+	BatchCancel_Alice_Num0_Clob0_1_2_3_GTB20 = *clobtypes.NewMsgBatchCancel(
+		constants.Alice_Num0,
+		[]clobtypes.OrderBatch{
+			{
+				ClobPairId: 0,
+				ClientIds:  []uint32{1, 2, 3},
+			},
+		},
+		20,
+	)
+	BatchCancel_Alice_Num0_Clob1_1_2_3_GTB20 = *clobtypes.NewMsgBatchCancel(
+		constants.Alice_Num0,
+		[]clobtypes.OrderBatch{
+			{
+				ClobPairId: 1,
+				ClientIds:  []uint32{1, 2, 3},
+			},
+		},
+		20,
+	)
+	BatchCancel_Alice_Num1_Clob0_1_2_3_GTB20 = *clobtypes.NewMsgBatchCancel(
+		constants.Alice_Num1,
+		[]clobtypes.OrderBatch{
+			{
+				ClobPairId: 0,
+				ClientIds:  []uint32{1, 2, 3},
+			},
+		},
+		20,
+	)
 )
+
+func TestHydrationInPreBlocker(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis tmtypes.GenesisDoc) {
+		genesis = testapp.DefaultGenesis()
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *prices.GenesisState) {
+				*genesisState = constants.TestPricesGenesisState
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *perptypes.GenesisState) {
+				genesisState.Params = constants.PerpetualsGenesisParams
+				genesisState.LiquidityTiers = constants.LiquidityTiers
+				genesisState.Perpetuals = []perptypes.Perpetual{
+					constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				}
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *satypes.GenesisState) {
+				genesisState.Subaccounts = []satypes.Subaccount{
+					constants.Carl_Num0_100000USD,
+					constants.Dave_Num0_10000USD,
+				}
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *clobtypes.GenesisState) {
+				genesisState.ClobPairs = []clobtypes.ClobPair{
+					constants.ClobPair_Btc,
+				}
+				genesisState.LiquidationsConfig = clobtypes.LiquidationsConfig_Default
+			},
+		)
+		return genesis
+	}).WithNonDeterminismChecksEnabled(false).Build()
+
+	// Let's add some pre-existing orders to state.
+	// Note that the order is not added to memclob.
+	tApp.App.ClobKeeper.SetLongTermOrderPlacement(
+		tApp.App.NewUncachedContext(false, tmproto.Header{}),
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+		1,
+	)
+	tApp.App.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+		tApp.App.NewUncachedContext(false, tmproto.Header{}),
+		time.Unix(50, 0),
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
+
+	// Advance one block so that pre blocker is called and clob is hydrated.
+	_ = tApp.InitChain()
+	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+	// Order should exist in state
+	_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(
+		ctx,
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
+	require.True(t, found)
+
+	// Order should be on the orderbook
+	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(
+		ctx,
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
+	require.True(t, found)
+}
+
+func TestHydrationWithMatchPreBlocker(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis tmtypes.GenesisDoc) {
+		genesis = testapp.DefaultGenesis()
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *prices.GenesisState) {
+				*genesisState = constants.TestPricesGenesisState
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *perptypes.GenesisState) {
+				genesisState.Params = constants.PerpetualsGenesisParams
+				genesisState.LiquidityTiers = constants.LiquidityTiers
+				genesisState.Perpetuals = []perptypes.Perpetual{
+					constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				}
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *satypes.GenesisState) {
+				genesisState.Subaccounts = []satypes.Subaccount{
+					constants.Carl_Num0_100000USD,
+					constants.Dave_Num0_500000USD,
+				}
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *clobtypes.GenesisState) {
+				genesisState.ClobPairs = []clobtypes.ClobPair{
+					constants.ClobPair_Btc,
+				}
+				genesisState.LiquidationsConfig = clobtypes.LiquidationsConfig_Default
+			},
+		)
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *feetierstypes.GenesisState) {
+				genesisState.Params = constants.PerpetualFeeParamsNoFee
+			},
+		)
+		return genesis
+	}).WithNonDeterminismChecksEnabled(false).Build()
+
+	// 1. Let's add some pre-existing orders to state before clob is initialized.
+	tApp.App.ClobKeeper.SetLongTermOrderPlacement(
+		tApp.App.NewUncachedContext(false, tmproto.Header{}),
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+		1,
+	)
+	tApp.App.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+		tApp.App.NewUncachedContext(false, tmproto.Header{}),
+		time.Unix(10, 0),
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
+
+	// Let's add a crossing order to state.
+	tApp.App.ClobKeeper.SetLongTermOrderPlacement(
+		tApp.App.NewUncachedContext(false, tmproto.Header{}),
+		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+		1,
+	)
+	tApp.App.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+		tApp.App.NewUncachedContext(false, tmproto.Header{}),
+		time.Unix(10, 0),
+		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+	)
+
+	// 2. Advance one block so that pre blocker is called and clob is hydrated.
+	ctx := tApp.InitChain()
+
+	// Here, PreBlocker has been called and Carl's and Dave's orders are placed against the orderbook.
+	// They should generate a match in the local operations queue, but their state changes should've been discarded since
+	// preblocker happens during deliver state and context was cached with IsCheckTx set to true.
+
+	// Make sure order still exists in state, with a fill amount of 0.
+	// Note that `ctx` is the check tx context, so need to read from the uncached cms to make sure changes are discarded.
+	uncachedCtx := tApp.App.NewUncachedContext(false, tmproto.Header{})
+	_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(
+		uncachedCtx,
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
+	require.True(t, found)
+	fillAmount := tApp.App.ClobKeeper.MemClob.GetOrderFilledAmount(
+		uncachedCtx,
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
+	require.Equal(t, satypes.BaseQuantums(0), fillAmount)
+
+	_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(
+		uncachedCtx,
+		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+	)
+	require.True(t, found)
+	fillAmount = tApp.App.ClobKeeper.MemClob.GetOrderFilledAmount(
+		uncachedCtx,
+		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+	)
+	require.Equal(t, satypes.BaseQuantums(0), fillAmount)
+
+	// Make sure orders are not on the orderbook.
+	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(
+		ctx,
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
+	require.False(t, found)
+
+	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(
+		ctx,
+		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+	)
+	require.False(t, found)
+
+	// Make sure match is in the operations queue.
+	operations := tApp.App.ClobKeeper.MemClob.GetOperationsRaw(ctx)
+	require.Len(t, operations, 1)
+
+	// Advance to the next block to persist the matches.
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+	// Order should not exist in state because they are filly filled.
+	_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(
+		ctx,
+		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+	)
+	require.False(t, found)
+
+	_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(
+		ctx,
+		constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+	)
+	require.False(t, found)
+
+	// Carl and Dave's state should get updated accordingly.
+	carl := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Carl_Num0)
+	require.Equal(t, satypes.Subaccount{
+		Id: &constants.Carl_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			{
+				AssetId:  0,
+				Quantums: dtypes.NewInt(100_000_000_000 - 50_000_000_000),
+			},
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			{
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(100_000_000),
+				FundingIndex: dtypes.NewInt(0),
+			},
+		},
+	}, carl)
+
+	dave := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Dave_Num0)
+	require.Equal(t, satypes.Subaccount{
+		Id: &constants.Dave_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			{
+				AssetId:  0,
+				Quantums: dtypes.NewInt(500_000_000_000 + 50_000_000_000),
+			},
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			{
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(-100_000_000),
+				FundingIndex: dtypes.NewInt(0),
+			},
+		},
+	}, dave)
+
+	require.Empty(t, tApp.App.ClobKeeper.MemClob.GetOperationsRaw(ctx))
+}
 
 // We place 300 orders that match and 700 orders followed by their cancellations concurrently.
 //
@@ -231,7 +571,7 @@ var (
 func TestConcurrentMatchesAndCancels(t *testing.T) {
 	r := rand.NewRand()
 	simAccounts := simtypes.RandomAccounts(r, 1000)
-	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis tmtypes.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
@@ -316,7 +656,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 			default:
 				panic("Unimplemented case?")
 			}
-			expectedFills[i] = MustScaleOrder(clobtypes.Order{
+			expectedFills[i] = testapp.MustScaleOrder(clobtypes.Order{
 				OrderId:      orderId,
 				Side:         side,
 				Quantums:     quantums,
@@ -341,7 +681,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 			// We use 2 here since we want orders that we will cancel on both sides (buy/sell)
 			switch i % 2 {
 			case 0:
-				expectedCancels[idx] = MustScaleOrder(clobtypes.Order{
+				expectedCancels[idx] = testapp.MustScaleOrder(clobtypes.Order{
 					OrderId:      orderId,
 					Side:         clobtypes.Order_SIDE_BUY,
 					Quantums:     1,
@@ -350,7 +690,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 				},
 					Clob_0)
 			case 1:
-				expectedCancels[idx] = MustScaleOrder(clobtypes.Order{
+				expectedCancels[idx] = testapp.MustScaleOrder(clobtypes.Order{
 					OrderId:      orderId,
 					Side:         clobtypes.Order_SIDE_SELL,
 					Quantums:     1,
@@ -472,12 +812,19 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 
 			proposal, err := tApp.PrepareProposal()
 			require.NoError(t, err)
-			proposal.Txs[0] = testtx.MustGetTxBytes(
+			proposal.Txs[1] = testtx.MustGetTxBytes(
 				&clobtypes.MsgProposedOperations{
 					OperationsQueue: operationsQueue,
 				},
 			)
-
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]ve.VEPricePair{},
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+			proposal.Txs[0] = extCommitBz
 			tApp.AdvanceToBlock(3,
 				testapp.AdvanceToBlockOptions{
 					RequestProcessProposalTxsOverride: proposal.Txs,
@@ -486,7 +833,7 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 						request abcitypes.RequestFinalizeBlock,
 						response abcitypes.ResponseFinalizeBlock,
 					) (haltchain bool) {
-						txResult := response.TxResults[0]
+						txResult := response.TxResults[1]
 						require.Condition(t, txResult.IsErr, "Expected DeliverTx to fail but passed %+v", response)
 						require.Contains(t, txResult.Log, "invalid pubkey: MsgProposedOperations is invalid")
 						return true
@@ -520,12 +867,20 @@ func TestFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
 			}
 			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			tApp.InitChain()
-			tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			proposal, err := tApp.PrepareProposal()
 			require.NoError(t, err)
-			proposal.Txs[0] = tc.proposedOperationsTx
+			proposal.Txs[1] = tc.proposedOperationsTx
 
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]ve.VEPricePair{},
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+			proposal.Txs[0] = extCommitBz
 			tApp.AdvanceToBlock(
 				3,
 				testapp.AdvanceToBlockOptions{
@@ -535,7 +890,7 @@ func TestFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
 						request abcitypes.RequestFinalizeBlock,
 						response abcitypes.ResponseFinalizeBlock,
 					) (haltchain bool) {
-						txResult := response.TxResults[0]
+						txResult := response.TxResults[1]
 						require.Condition(t, txResult.IsErr, "Expected DeliverTx to fail but passed %+v", response)
 						require.Contains(t, txResult.Log, "Error: no signatures supplied: MsgProposedOperations is invalid")
 						return true
@@ -563,7 +918,7 @@ func TestStats(t *testing.T) {
 	bobAddress := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0).Id.MustGetAccAddress().String()
 
 	createAliceBuyOrder := func(clientId uint32) *clobtypes.MsgPlaceOrder {
-		return clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		return clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 			clobtypes.Order{
 				OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: clientId, ClobPairId: 0},
 				Side:         clobtypes.Order_SIDE_BUY,
@@ -575,7 +930,7 @@ func TestStats(t *testing.T) {
 		))
 	}
 	createBobSellOrder := func(clientId uint32) *clobtypes.MsgPlaceOrder {
-		return clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		return clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 			clobtypes.Order{
 				OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: clientId, ClobPairId: 0},
 				Side:         clobtypes.Order_SIDE_SELL,
@@ -716,77 +1071,4 @@ func TestStats(t *testing.T) {
 		BlockTime: currTime,
 	})
 	requireStatsEqual(0)
-}
-
-// MustScaleOrder scales clobtypes.Order and clobtypes.MsgPlaceorder based upon the clob information provided.
-// Will panic if:
-//   - OrderT is an unknown type.
-//   - ClobPairSrcT is an unknown type.
-//   - The clob pair id can't be used to look up the clob pair from the ClobPairSrcT.
-func MustScaleOrder[
-	OrderT clobtypes.Order | clobtypes.MsgPlaceOrder,
-	ClobPairSrcT clobtypes.ClobPair | types.GenesisDoc](
-	order OrderT,
-	clobPairSrc ClobPairSrcT,
-) OrderT {
-	var msgPlaceOrder clobtypes.MsgPlaceOrder
-
-	// Find the clob pair id based upon the type of order passed in.
-	var clobPairId clobtypes.ClobPairId
-	switch v := any(order).(type) {
-	case clobtypes.MsgPlaceOrder:
-		clobPairId = v.Order.GetClobPairId()
-		msgPlaceOrder = v
-	case clobtypes.Order:
-		clobPairId = v.GetClobPairId()
-		msgPlaceOrder = *clobtypes.NewMsgPlaceOrder(v)
-	default:
-		panic(fmt.Errorf("Unknown order type %T to get order", order))
-	}
-
-	// Find the clob pair based upon the clobPairSrc of the clob information passed in.
-	var clobPair clobtypes.ClobPair
-	switch v := any(clobPairSrc).(type) {
-	case clobtypes.ClobPair:
-		clobPair = v
-	case types.GenesisDoc:
-		clobPairs := MustGetClobPairsFromGenesis(v)
-		if hasClobPair, ok := clobPairs[clobPairId]; ok {
-			clobPair = hasClobPair
-		} else {
-			panic(fmt.Errorf("Clob not found in genesis doc for clob id %d", clobPairId))
-		}
-	default:
-		panic(fmt.Errorf("Unknown source type %T to get clob pair", clobPairSrc))
-	}
-
-	// Scale the order based upon the quantums and subticks passed in.
-	msgPlaceOrder.Order.Quantums = msgPlaceOrder.Order.Quantums * clobPair.StepBaseQuantums
-	msgPlaceOrder.Order.Subticks = msgPlaceOrder.Order.Subticks * uint64(clobPair.SubticksPerTick)
-	msgPlaceOrder.Order.ConditionalOrderTriggerSubticks = msgPlaceOrder.Order.ConditionalOrderTriggerSubticks *
-		uint64(clobPair.SubticksPerTick)
-
-	// Return a type that matches what the user passed in for the order type.
-	switch any(order).(type) {
-	case clobtypes.MsgPlaceOrder:
-		return any(msgPlaceOrder).(OrderT)
-	case clobtypes.Order:
-		return any(msgPlaceOrder.Order).(OrderT)
-	default:
-		panic(fmt.Errorf("Unable to convert to %T to %T", clobtypes.MsgPlaceOrder{}, order))
-	}
-}
-
-// MustGetClobPairsFromGenesis unmarshals the initial genesis state and returns a map from clob pair id to clob pair.
-func MustGetClobPairsFromGenesis(genesisDoc types.GenesisDoc) map[clobtypes.ClobPairId]clobtypes.ClobPair {
-	var genesisState clobtypes.GenesisState
-	testapp.UpdateGenesisDocWithAppStateForModule(&genesisDoc, func(genesisStatePtr *clobtypes.GenesisState) {
-		genesisState = *genesisStatePtr
-	})
-
-	clobPairs := make(map[clobtypes.ClobPairId]clobtypes.ClobPair, len(genesisState.ClobPairs))
-	for _, clobPair := range genesisState.ClobPairs {
-		clobPairs[clobPair.GetClobPairId()] = clobPair
-	}
-	return clobPairs
 }

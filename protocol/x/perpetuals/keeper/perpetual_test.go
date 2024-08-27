@@ -2,16 +2,17 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"math"
 	"math/big"
 	"sort"
 	"testing"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
+
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 
@@ -123,9 +124,8 @@ func getUpdatePerpetualEventsFromIndexerBlock(
 			continue
 		}
 		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_TransactionIndex); ok {
-			unmarshaler := common.UnmarshalerImpl{}
 			var updatePerpetualEvent indexerevents.UpdatePerpetualEventV1
-			err := unmarshaler.Unmarshal(event.DataBytes, &updatePerpetualEvent)
+			err := proto.Unmarshal(event.DataBytes, &updatePerpetualEvent)
 			if err != nil {
 				panic(err)
 			}
@@ -143,6 +143,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 		atomicResolution  int32
 		defaultFundingPpm int32
 		liquidityTier     uint32
+		marketType        types.PerpetualMarketType
 		expectedError     error
 	}{
 		"Price doesn't exist": {
@@ -152,6 +153,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
+			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			expectedError:     errorsmod.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(999)),
 		},
 		"Positive default funding magnitude exceeds maximum": {
@@ -161,6 +163,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: int32(lib.OneMillion + 1),
 			liquidityTier:     0,
+			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			expectedError: errorsmod.Wrap(
 				types.ErrDefaultFundingPpmMagnitudeExceedsMax,
 				fmt.Sprint(int32(lib.OneMillion+1)),
@@ -173,6 +176,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: 0 - int32(lib.OneMillion) - 1,
 			liquidityTier:     0,
+			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			expectedError: errorsmod.Wrap(
 				types.ErrDefaultFundingPpmMagnitudeExceedsMax,
 				fmt.Sprint(0-int32(lib.OneMillion)-1),
@@ -185,6 +189,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: math.MinInt32,
 			liquidityTier:     0,
+			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			expectedError:     errorsmod.Wrap(types.ErrDefaultFundingPpmMagnitudeExceedsMax, fmt.Sprint(math.MinInt32)),
 		},
 		"Ticker is an empty string": {
@@ -194,7 +199,21 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			atomicResolution:  -10,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
+			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			expectedError:     types.ErrTickerEmptyString,
+		},
+		"Invalid market type": {
+			id:                0,
+			ticker:            "",
+			marketId:          0,
+			atomicResolution:  -10,
+			defaultFundingPpm: 0,
+			liquidityTier:     0,
+			marketType:        3,
+			expectedError: errorsmod.Wrap(
+				types.ErrInvalidMarketType,
+				fmt.Sprintf("market type %v", 3),
+			),
 		},
 	}
 
@@ -214,6 +233,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 				tc.atomicResolution,
 				tc.defaultFundingPpm,
 				tc.liquidityTier,
+				tc.marketType,
 			)
 
 			require.Error(t, err)
@@ -329,9 +349,10 @@ func TestHasPerpetual(t *testing.T) {
 			ExchangeConfigJson: "{}",
 		},
 		pricestypes.MarketPrice{
-			Id:       0,
-			Exponent: -10,
-			Price:    1_000, // leave this as a placeholder b/c we cannot set the price to 0
+			Id:        0,
+			Exponent:  -10,
+			SpotPrice: 1_000, // leave this as a placeholder b/c we cannot set the price to 0
+			PnlPrice:  1_000, // leave this as a placeholder b/c we cannot set the price to 0
 		},
 	)
 	require.NoError(t, err)
@@ -345,6 +366,7 @@ func TestHasPerpetual(t *testing.T) {
 			perps[perp].Params.AtomicResolution,
 			perps[perp].Params.DefaultFundingPpm,
 			perps[perp].Params.LiquidityTier,
+			perps[perp].Params.MarketType,
 		)
 		require.NoError(t, err)
 	}
@@ -406,9 +428,10 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 			ExchangeConfigJson: "{}",
 		},
 		pricestypes.MarketPrice{
-			Id:       0,
-			Exponent: -10,
-			Price:    1_000, // leave this as a placeholder b/c we cannot set the price to 0
+			Id:        0,
+			Exponent:  -10,
+			SpotPrice: 1_000, // leave this as a placeholder b/c we cannot set the price to 0
+			PnlPrice:  1_000, // leave this as a placeholder b/c we cannot set the price to 0
 		},
 	)
 	require.NoError(t, err)
@@ -422,6 +445,7 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 			perps[perp].Params.AtomicResolution,
 			perps[perp].Params.DefaultFundingPpm,
 			perps[perp].Params.LiquidityTier,
+			perps[perp].Params.MarketType,
 		)
 		require.NoError(t, err)
 	}
@@ -440,6 +464,132 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 	)
 }
 
+func TestModifyOpenInterest_Failure(t *testing.T) {
+	testCases := map[string]struct {
+		id                uint32
+		initOpenInterest  *big.Int
+		openInterestDelta *big.Int
+		err               error
+	}{
+		"Would become negative": {
+			id:                0,
+			initOpenInterest:  big.NewInt(1_000),
+			openInterestDelta: big.NewInt(-1_001),
+			err:               types.ErrOpenInterestWouldBecomeNegative,
+		},
+		"Non-existent perp Id": {
+			id:                1111,
+			initOpenInterest:  big.NewInt(1_000),
+			openInterestDelta: big.NewInt(100),
+			err:               types.ErrPerpetualDoesNotExist,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			pc := keepertest.PerpetualsKeepers(t)
+			perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 1)
+
+			// Set up initial open interest
+			require.NoError(t, pc.PerpetualsKeeper.ModifyOpenInterest(
+				pc.Ctx,
+				perps[0].Params.Id,
+				tc.initOpenInterest,
+			))
+
+			err := pc.PerpetualsKeeper.ModifyOpenInterest(
+				pc.Ctx,
+				tc.id,
+				tc.openInterestDelta,
+			)
+			require.ErrorContains(t, err, tc.err.Error())
+		})
+	}
+}
+
+func TestModifyOpenInterest_Mixed(t *testing.T) {
+	pc := keepertest.PerpetualsKeepers(t)
+	// Create liquidity tiers and perpetuals,
+	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 100)
+
+	for _, perp := range perps {
+		openInterestDeltaBaseQuantums := big.NewInt(2_000_000_000*(int64(perp.Params.Id)%2) - 1)
+
+		// Add `openInterestDeltaBaseQuantums` to open interest which is initially 0.
+		err := pc.PerpetualsKeeper.ModifyOpenInterest(
+			pc.Ctx,
+			perp.Params.Id,
+			openInterestDeltaBaseQuantums,
+		)
+
+		// If Id is even, the modification is negagive and should fail.
+		if perp.Params.Id%2 == 0 {
+			require.ErrorContains(t,
+				err,
+				types.ErrOpenInterestWouldBecomeNegative.Error(),
+			)
+
+			newPerp, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, perp.Params.Id)
+			require.NoError(t, err)
+
+			require.Equal(
+				t,
+				big.NewInt(0), // open interest should remain 0
+				newPerp.OpenInterest.BigInt(),
+			)
+		} else {
+			require.NoError(t, err)
+
+			newPerp, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, perp.Params.Id)
+			require.NoError(t, err)
+
+			require.Equal(
+				t,
+				openInterestDeltaBaseQuantums,
+				newPerp.OpenInterest.BigInt(),
+			)
+		}
+
+		// Add `openInterestDeltaBaseQuantums` again
+		err = pc.PerpetualsKeeper.ModifyOpenInterest(
+			pc.Ctx,
+			perp.Params.Id,
+			openInterestDeltaBaseQuantums,
+		)
+		// If Id is even, the modification is negagive and should fail.
+		if perp.Params.Id%2 == 0 {
+			require.ErrorContains(t,
+				err,
+				types.ErrOpenInterestWouldBecomeNegative.Error(),
+			)
+
+			newPerp, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, perp.Params.Id)
+			require.NoError(t, err)
+
+			require.Equal(
+				t,
+				big.NewInt(0), // open interest should remain 0
+				newPerp.OpenInterest.BigInt(),
+			)
+		} else {
+			require.NoError(t, err)
+
+			newPerp, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, perp.Params.Id)
+			require.NoError(t, err)
+
+			require.Equal(
+				t,
+				// open interest should be 2 * delta now
+				openInterestDeltaBaseQuantums.Mul(
+					openInterestDeltaBaseQuantums,
+					big.NewInt(2),
+				),
+				newPerp.OpenInterest.BigInt(),
+			)
+		}
+	}
+}
+
 func TestGetMarginRequirements_Success(t *testing.T) {
 	oneBip := math.Pow10(2)
 	tests := map[string]struct {
@@ -449,6 +599,9 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 		bigBaseQuantums                 *big.Int
 		initialMarginPpm                uint32
 		maintenanceFractionPpm          uint32
+		openInterest                    *big.Int
+		openInterestLowerCap            uint64
+		openInterestUpperCap            uint64
 		bigExpectedInitialMarginPpm     *big.Int
 		bigExpectedMaintenanceMarginPpm *big.Int
 	}{
@@ -605,6 +758,55 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			bigExpectedInitialMarginPpm:     big.NewInt(2_300_077_872),
 			bigExpectedMaintenanceMarginPpm: big.NewInt(1_380_046_724), // Rounded up
 		},
+		"OIMF: IM 20%, scaled to 60%, MaintenanceMargin 10%, atomic resolution 6": {
+			price:                        36_750,
+			exponent:                     0,
+			baseCurrencyAtomicResolution: -6,
+			bigBaseQuantums:              big.NewInt(12_000),
+			initialMarginPpm:             uint32(200_000),
+			maintenanceFractionPpm:       uint32(500_000),         // 50% of IM
+			openInterest:                 big.NewInt(408_163_265), // 408.163265
+			openInterestLowerCap:         10_000_000_000_000,
+			openInterestUpperCap:         20_000_000_000_000,
+			// quoteQuantums = 36_750 * 12_000 = 441_000_000
+			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums / 1_000_000
+			// = 200_000 * 441_000_000 / 1_000_000 ~= 88_200_000
+			bigExpectedInitialMarginPpm:     big.NewInt(88_200_000 * 3),
+			bigExpectedMaintenanceMarginPpm: big.NewInt(88_200_000 / 2),
+		},
+		"OIMF: IM 20%, scaled to 100%, MaintenanceMargin 10%, atomic resolution 6": {
+			price:                        36_750,
+			exponent:                     0,
+			baseCurrencyAtomicResolution: -6,
+			bigBaseQuantums:              big.NewInt(12_000),
+			initialMarginPpm:             uint32(200_000),
+			maintenanceFractionPpm:       uint32(500_000),           // 50% of IM
+			openInterest:                 big.NewInt(1_000_000_000), // 1000 or ~$36mm notional
+			openInterestLowerCap:         10_000_000_000_000,
+			openInterestUpperCap:         20_000_000_000_000,
+			// quoteQuantums = 36_750 * 12_000 = 441_000_000
+			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums / 1_000_000
+			// = 200_000 * 441_000_000 / 1_000_000 ~= 88_200_000
+			bigExpectedInitialMarginPpm:     big.NewInt(441_000_000),
+			bigExpectedMaintenanceMarginPpm: big.NewInt(88_200_000 / 2),
+		},
+		"OIMF: IM 20%, lower_cap < realistic open interest < upper_cap, MaintenanceMargin 10%, atomic resolution 6": {
+			price:                        36_750,
+			exponent:                     0,
+			baseCurrencyAtomicResolution: -6,
+			bigBaseQuantums:              big.NewInt(12_000),
+			initialMarginPpm:             uint32(200_000),
+			maintenanceFractionPpm:       uint32(500_000),           // 50% of IM
+			openInterest:                 big.NewInt(1_123_456_789), // 1123.456 or ~$41mm notional
+			openInterestLowerCap:         25_000_000_000_000,
+			openInterestUpperCap:         50_000_000_000_000,
+			// quoteQuantums = 36_750 * 12_000 = 441_000_000
+			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums / 1_000_000
+			// = ((1123.456789 * 36750 - 25000000) / 25000000 * 0.8 + 0.2) * 441_000_000
+			// ~= 318042667
+			bigExpectedInitialMarginPpm:     big.NewInt(318_042_667),
+			bigExpectedMaintenanceMarginPpm: big.NewInt(88_200_000 / 2),
+		},
 	}
 
 	// Run tests.
@@ -625,21 +827,23 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
-					Id:       marketId,
-					Exponent: tc.exponent,
-					Price:    1_000, // leave this as a placeholder b/c we cannot set the price to 0
+					Id:        marketId,
+					Exponent:  tc.exponent,
+					SpotPrice: 1_000, // leave this as a placeholder b/c we cannot set the price to 0
+					PnlPrice:  1_000, // leave this as a placeholder b/c we cannot set the price to 0
 				},
 			)
 			require.NoError(t, err)
 
 			// Update `Market.price`. By updating prices this way, we can simulate conditions where the oracle
 			// price may become 0.
-			err = pc.PricesKeeper.UpdateMarketPrices(
+			err = pc.PricesKeeper.UpdateSpotAndPnlMarketPrices(
 				pc.Ctx,
-				[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{pricestypes.NewMarketPriceUpdate(
-					marketId,
-					tc.price,
-				)},
+				&pricestypes.MarketPriceUpdate{
+					MarketId:  marketId,
+					SpotPrice: tc.price,
+					PnlPrice:  tc.price,
+				},
 			)
 			require.NoError(t, err)
 
@@ -651,6 +855,8 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
 				1, // dummy impact notional value
+				tc.openInterestLowerCap,
+				tc.openInterestUpperCap,
 			)
 			require.NoError(t, err)
 
@@ -663,8 +869,18 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
+				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			)
 			require.NoError(t, err)
+
+			// If test case contains non-nil open interest, set it up.
+			if tc.openInterest != nil {
+				require.NoError(t, pc.PerpetualsKeeper.ModifyOpenInterest(
+					pc.Ctx,
+					perpetual.Params.Id,
+					tc.openInterest, // initialized as zero, so passing `openInterest` as delta amount.
+				))
+			}
 
 			// Verify initial and maintenance margin requirements are calculated correctly.
 			bigInitialMargin, bigMaintenanceMargin, err := pc.PerpetualsKeeper.GetMarginRequirements(
@@ -847,9 +1063,10 @@ func TestGetNetNotional_Success(t *testing.T) {
 					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
-					Id:       marketId,
-					Exponent: tc.exponent,
-					Price:    tc.price,
+					Id:        marketId,
+					Exponent:  tc.exponent,
+					SpotPrice: tc.price,
+					PnlPrice:  tc.price,
 				},
 			)
 			require.NoError(t, err)
@@ -863,6 +1080,7 @@ func TestGetNetNotional_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
+				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			)
 			require.NoError(t, err)
 
@@ -1008,9 +1226,10 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
-					Id:       marketId,
-					Exponent: tc.exponent,
-					Price:    tc.price,
+					Id:        marketId,
+					Exponent:  tc.exponent,
+					SpotPrice: tc.price,
+					PnlPrice:  tc.price,
 				},
 			)
 			require.NoError(t, err)
@@ -1024,6 +1243,7 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
+				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			)
 			require.NoError(t, err)
 
@@ -1170,9 +1390,10 @@ func TestGetNetCollateral_Success(t *testing.T) {
 					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
-					Id:       marketId,
-					Exponent: tc.exponent,
-					Price:    tc.price,
+					Id:        marketId,
+					Exponent:  tc.exponent,
+					SpotPrice: tc.price,
+					PnlPrice:  tc.price,
 				},
 			)
 			require.NoError(t, err)
@@ -1185,7 +1406,8 @@ func TestGetNetCollateral_Success(t *testing.T) {
 				marketId,                        // MarketId
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
-				0,                               // LiquidityTier
+				0,
+				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			)
 			require.NoError(t, err)
 
@@ -1438,6 +1660,53 @@ func TestModifyFundingIndex_IntegerOverflowUnderflow(t *testing.T) {
 				tc.fundingIndexDelta,
 			)
 			require.NoError(t, err)
+		})
+	}
+}
+
+func TestModifyLastFundingRate_Success(t *testing.T) {
+	tests := map[string]struct {
+		perpetualId             uint32
+		lastFundingRateDelta    *big.Int
+		expectedLastFundingRate *big.Int
+	}{
+		"success": {
+			perpetualId:             0,
+			lastFundingRateDelta:    big.NewInt(1000),
+			expectedLastFundingRate: big.NewInt(1000),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			pc := keepertest.PerpetualsKeepers(t)
+			// Create liquidity tiers and perpetuals,
+			_ = keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 1)
+			err := pc.PerpetualsKeeper.ModifyLastFundingRate(pc.Ctx, tc.perpetualId, tc.lastFundingRateDelta)
+			require.NoError(t, err)
+			perpetual, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, tc.perpetualId)
+			require.NoError(t, err)
+			require.Equal(t, dtypes.NewIntFromBigInt(tc.expectedLastFundingRate), perpetual.LastFundingRate)
+		})
+	}
+}
+
+func TestModifyLastFundingRate_Failure(t *testing.T) {
+	tests := map[string]struct {
+		perpetualId          uint32
+		lastFundingRateDelta *big.Int
+	}{
+		"perpetual does not exist": {
+			perpetualId:          40,
+			lastFundingRateDelta: big.NewInt(1000),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			pc := keepertest.PerpetualsKeepers(t)
+			err := pc.PerpetualsKeeper.ModifyLastFundingRate(pc.Ctx, tc.perpetualId, tc.lastFundingRateDelta)
+			require.Error(t, err)
 		})
 	}
 }
@@ -1872,6 +2141,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 				oldPerps[i] = perp
@@ -1936,6 +2206,8 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 					actualFundingIndexDelta,
 				)
 
+				require.Equal(t, newPerp.LastFundingRate, dtypes.NewIntFromBigInt(big.NewInt(int64(tc.fundingRatesAndIndices[i].FundingValuePpm))))
+
 				// Check that all recorded funding samples from the previous epoch were deleted.
 				allSamples := pc.PerpetualsKeeper.GetPremiumSamples(pc.Ctx)
 				require.NoError(t, err)
@@ -1965,9 +2237,8 @@ func getFundingBlockEventsFromIndexerBlock(
 			continue
 		}
 		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_BlockEvent_); ok {
-			unmarshaler := common.UnmarshalerImpl{}
 			var fundingEvent indexerevents.FundingEventV1
-			err := unmarshaler.Unmarshal(event.DataBytes, &fundingEvent)
+			err := proto.Unmarshal(event.DataBytes, &fundingEvent)
 			if err != nil {
 				panic(err)
 			}
@@ -2787,6 +3058,8 @@ func TestGetAllLiquidityTiers_Sorted(t *testing.T) {
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
 			lt.ImpactNotional,
+			lt.OpenInterestLowerCap,
+			lt.OpenInterestUpperCap,
 		)
 		require.NoError(t, err)
 	}
@@ -2825,6 +3098,8 @@ func TestHasLiquidityTier(t *testing.T) {
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
 			lt.ImpactNotional,
+			lt.OpenInterestLowerCap,
+			lt.OpenInterestUpperCap,
 		)
 		require.NoError(t, err)
 	}
@@ -2849,6 +3124,8 @@ func TestCreateLiquidityTier_Success(t *testing.T) {
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
 			lt.ImpactNotional,
+			lt.OpenInterestLowerCap,
+			lt.OpenInterestUpperCap,
 		)
 		require.NoError(t, err)
 
@@ -2873,6 +3150,8 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 		initialMarginPpm       uint32
 		maintenanceFractionPpm uint32
 		impactNotional         uint64
+		openInterestLowerCap   uint64
+		openInterestUpperCap   uint64
 		expectedError          error
 	}{
 		"Initial Margin Ppm exceeds maximum": {
@@ -2881,6 +3160,8 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			initialMarginPpm:       lib.OneMillion + 1,
 			maintenanceFractionPpm: 500_000,
 			impactNotional:         uint64(lib.OneMillion),
+			openInterestLowerCap:   0,
+			openInterestUpperCap:   0,
 			expectedError:          errorsmod.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Maintenance Fraction Ppm exceeds maximum": {
@@ -2889,6 +3170,8 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion + 1,
 			impactNotional:         uint64(lib.OneMillion),
+			openInterestLowerCap:   0,
+			openInterestUpperCap:   0,
 			expectedError:          errorsmod.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Impact Notional is zero": {
@@ -2897,6 +3180,8 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion,
 			impactNotional:         uint64(0),
+			openInterestLowerCap:   0,
+			openInterestUpperCap:   0,
 			expectedError:          types.ErrImpactNotionalIsZero,
 		},
 	}
@@ -2914,6 +3199,8 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
 				tc.impactNotional,
+				tc.openInterestLowerCap,
+				tc.openInterestUpperCap,
 			)
 
 			require.Error(t, err)
@@ -2932,6 +3219,8 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
 			lt.ImpactNotional,
+			lt.OpenInterestLowerCap,
+			lt.OpenInterestUpperCap,
 		)
 		require.NoError(t, err)
 	}
@@ -2943,6 +3232,8 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 		initialMarginPpm := uint32(i * 2)
 		maintenanceFractionPpm := uint32(i * 2)
 		impactNotional := uint64((i + 1) * 500_000_000)
+		openInterestLowerCap := uint64(0)
+		openInterestUpperCap := uint64(0)
 		modifiedLt, err := pc.PerpetualsKeeper.SetLiquidityTier(
 			pc.Ctx,
 			lt.Id,
@@ -2950,6 +3241,8 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 			initialMarginPpm,
 			maintenanceFractionPpm,
 			impactNotional,
+			openInterestLowerCap,
+			openInterestUpperCap,
 		)
 		require.NoError(t, err)
 		obtainedLt, err := pc.PerpetualsKeeper.GetLiquidityTier(pc.Ctx, lt.Id)
@@ -2991,6 +3284,8 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 		initialMarginPpm       uint32
 		maintenanceFractionPpm uint32
 		impactNotional         uint64
+		openInterestLowerCap   uint64
+		openInterestUpperCap   uint64
 		expectedError          error
 	}{
 		"Initial Margin Ppm exceeds maximum": {
@@ -2999,6 +3294,8 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			initialMarginPpm:       lib.OneMillion + 1,
 			maintenanceFractionPpm: 500_000,
 			impactNotional:         uint64(lib.OneMillion),
+			openInterestLowerCap:   0,
+			openInterestUpperCap:   0,
 			expectedError:          errorsmod.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Maintenance Fraction Ppm exceeds maximum": {
@@ -3007,6 +3304,8 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion + 1,
 			impactNotional:         uint64(lib.OneMillion),
+			openInterestLowerCap:   0,
+			openInterestUpperCap:   0,
 			expectedError:          errorsmod.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Impact Notional is zero": {
@@ -3015,7 +3314,24 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion,
 			impactNotional:         uint64(0),
+			openInterestLowerCap:   0,
+			openInterestUpperCap:   0,
 			expectedError:          types.ErrImpactNotionalIsZero,
+		},
+		"Invalid open interest caps": {
+			id:                     1,
+			name:                   "Small-Cap",
+			initialMarginPpm:       500_000,
+			maintenanceFractionPpm: lib.OneMillion,
+			impactNotional:         uint64(lib.OneMillion),
+			openInterestLowerCap:   50_000_000_000_000,
+			openInterestUpperCap:   25_000_000_000_000,
+			expectedError: errorsmod.Wrapf(
+				types.ErrOpenInterestLowerCapLargerThanUpperCap,
+				"open_interest_lower_cap: %d, open_interest_upper_cap: %d",
+				50_000_000_000_000,
+				25_000_000_000_000,
+			),
 		},
 	}
 
@@ -3033,6 +3349,8 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
 				tc.impactNotional,
+				tc.openInterestLowerCap,
+				tc.openInterestUpperCap,
 			)
 
 			require.Error(t, err)
@@ -3113,7 +3431,8 @@ func TestIsPositionUpdatable(t *testing.T) {
 			queryPerpId: 1,
 			marketParamPrice: *pricestest.GenerateMarketParamPrice(
 				pricestest.WithId(1),
-				pricestest.WithPriceValue(1000), // non-zero
+				pricestest.WithSpotPriceValue(1000), // non-zero
+				pricestest.WithPnlPriceValue(1000),  // non-zero
 			),
 			expectedUpdatable: true,
 		},
@@ -3125,7 +3444,8 @@ func TestIsPositionUpdatable(t *testing.T) {
 			queryPerpId: 1,
 			marketParamPrice: *pricestest.GenerateMarketParamPrice(
 				pricestest.WithId(1),
-				pricestest.WithPriceValue(0),
+				pricestest.WithSpotPriceValue(0),
+				pricestest.WithPnlPriceValue(0),
 			),
 			expectedUpdatable: false,
 		},
@@ -3162,5 +3482,71 @@ func TestIsPositionUpdatable(t *testing.T) {
 				require.ErrorContains(t, err, tc.expectedErr)
 			}
 		})
+	}
+}
+
+func TestIsIsolatedPerpetual(t *testing.T) {
+	testCases := map[string]struct {
+		perp     types.Perpetual
+		expected bool
+	}{
+		"Isolated Perpetual": {
+			perp: *perptest.GeneratePerpetual(
+				perptest.WithMarketType(types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED),
+			),
+			expected: true,
+		},
+		"Cross Perpetual": {
+			perp: *perptest.GeneratePerpetual(
+				perptest.WithMarketType(types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS),
+			),
+			expected: false,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(
+			name, func(t *testing.T) {
+				ctx, _, pricesKeeper, perpetualsKeeper, _, _, _, _, _ := keepertest.SubaccountsKeepers(
+					t,
+					false,
+				)
+				ctx = ctx.WithTxBytes(constants.TestTxBytes)
+				keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+				keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+
+				err := perpetualsKeeper.ValidateAndSetPerpetual(ctx, tc.perp)
+				require.NoError(t, err)
+				isIsolated, err := perpetualsKeeper.IsIsolatedPerpetual(ctx, tc.perp.Params.Id)
+				require.NoError(t, err)
+				require.Equal(t, tc.expected, isIsolated)
+			},
+		)
+	}
+}
+
+func TestModifyOpenInterest_store(t *testing.T) {
+	pc := keepertest.PerpetualsKeepers(t)
+	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 100)
+	pc.Ctx = pc.Ctx.WithExecMode(sdk.ExecModeFinalize)
+	for _, perp := range perps {
+		openInterestDeltaBaseQuantums := big.NewInt(2_000_000 * (int64(perp.Params.Id)))
+
+		err := pc.PerpetualsKeeper.ModifyOpenInterest(
+			pc.Ctx,
+			perp.Params.Id,
+			openInterestDeltaBaseQuantums,
+		)
+		require.NoError(t, err)
+	}
+
+	transientStore := prefix.NewStore(pc.Ctx.TransientStore(pc.TransientStoreKey), []byte(types.UpdatedOIKeyPrefix))
+	for _, perp := range perps {
+		perpetualObject, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, perp.Params.Id)
+		require.NoError(t, err)
+		serializedOpenInterest := dtypes.SerializableInt{}
+		err = serializedOpenInterest.Unmarshal(transientStore.Get(lib.Uint32ToKey(perpetualObject.Params.Id)))
+		require.NoError(t, err)
+		require.Equal(t, perpetualObject.OpenInterest, serializedOpenInterest)
 	}
 }

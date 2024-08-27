@@ -7,7 +7,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	pricefeed_types "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/types"
 	pricefeedserver_types "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -20,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -69,7 +69,7 @@ func createPricesKeeper(
 
 	indexPriceCache := pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 
-	marketToSmoothedPrices := types.NewMarketToSmoothedPrices(types.SmoothedPriceTrackingBlockHistoryLength)
+	marketToSmoothedPrices := types.NewMarketToSmoothedSpotPrices(types.SmoothedPriceTrackingBlockHistoryLength)
 
 	mockTimeProvider := &mocks.TimeProvider{}
 
@@ -107,11 +107,10 @@ func CreateTestMarkets(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 			constants.TestMarketPrices[i],
 		)
 		require.NoError(t, err)
-		err = k.UpdateMarketPrices(ctx, []*types.MsgUpdateMarketPrices_MarketPrice{
-			{
-				MarketId: uint32(i),
-				Price:    constants.TestMarketPrices[i].Price,
-			},
+		err = k.UpdateSpotAndPnlMarketPrices(ctx, &types.MarketPriceUpdate{
+			MarketId:  uint32(i),
+			SpotPrice: constants.TestMarketPrices[i].SpotPrice,
+			PnlPrice:  constants.TestMarketPrices[i].PnlPrice,
 		})
 		require.NoError(t, err)
 	}
@@ -130,7 +129,8 @@ func CreateNMarkets(t *testing.T, ctx sdk.Context, keeper *keeper.Keeper, n int)
 		items[i].Param.MinPriceChangePpm = uint32(i + 1)
 		items[i].Price.Id = uint32(i) + numExistingMarkets
 		items[i].Price.Exponent = int32(i)
-		items[i].Price.Price = uint64(1_000 + i)
+		items[i].Price.SpotPrice = uint64(1_000 + i)
+		items[i].Price.PnlPrice = uint64(1_000 + i)
 		items[i].Param.ExchangeConfigJson = "{}" // Use empty, valid JSON for testing.
 
 		_, err := keeper.CreateMarket(
@@ -155,7 +155,11 @@ func AssertPriceUpdateEventsInIndexerBlock(
 	updatedMarketPrices []types.MarketPrice,
 ) {
 	marketEvents := getMarketEventsFromIndexerBlock(ctx, k)
-	expectedEvents := keeper.GenerateMarketPriceUpdateIndexerEvents(updatedMarketPrices)
+	var expectedEvents []*indexerevents.MarketEventV1
+	for _, updatedMarketPrice := range updatedMarketPrices {
+		expectedEvent := keeper.GenerateMarketPriceUpdateIndexerEvent(updatedMarketPrice)
+		expectedEvents = append(expectedEvents, expectedEvent)
+	}
 	for _, expectedEvent := range expectedEvents {
 		require.Contains(t, marketEvents, expectedEvent)
 	}
@@ -182,9 +186,8 @@ func getMarketEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeMarket {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var marketEvent indexerevents.MarketEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &marketEvent)
+		err := proto.Unmarshal(event.DataBytes, &marketEvent)
 		if err != nil {
 			panic(err)
 		}
@@ -237,7 +240,8 @@ func AssertMarketPriceUpdateEventInIndexerBlock(
 	marketEvents := getMarketEventsFromIndexerBlock(ctx, k)
 	expectedEvent := indexerevents.NewMarketPriceUpdateEvent(
 		updatedMarketPrice.Id,
-		updatedMarketPrice.Price,
+		updatedMarketPrice.SpotPrice,
+		updatedMarketPrice.PnlPrice,
 	)
 	require.Contains(t, marketEvents, expectedEvent)
 }

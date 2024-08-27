@@ -21,16 +21,37 @@ func getProposalPrice(smoothedPrice uint64, indexPrice uint64, marketPrice uint6
 
 // isAboveRequiredMinPriceChange returns true if the new price meets the required min price change
 // for the market. Otherwise, returns false.
-func isAboveRequiredMinPriceChange(marketParamPrice types.MarketParamPrice, newPrice uint64) bool {
-	minChangeAmt := getMinPriceChangeAmountForMarket(marketParamPrice)
-	return lib.AbsDiffUint64(marketParamPrice.Price.Price, newPrice) >= minChangeAmt
+func isAboveRequiredMinSpotPriceChange(marketParamPrice types.MarketParamPrice, newPrice uint64) bool {
+	minSpotChangeAmt := getMinPriceChangeAmountForSpotMarket(marketParamPrice)
+	return lib.AbsDiffUint64(marketParamPrice.Price.SpotPrice, newPrice) >= minSpotChangeAmt
+}
+
+func isAboveRequiredMinPnlPriceChange(marketParamPrice types.MarketParamPrice, newPrice uint64) bool {
+	minPnlChangeAmt := getMinPriceChangeAmountForPnlMarket(marketParamPrice)
+	return lib.AbsDiffUint64(marketParamPrice.Price.PnlPrice, newPrice) >= minPnlChangeAmt
 }
 
 // getMinPriceChangeAmountForMarket returns the amount of price change that is needed to trigger
 // a price update in accordance with the min price change parts-per-million value. This method always rounds down,
 // which slightly biases towards price updates.
-func getMinPriceChangeAmountForMarket(marketParamPrice types.MarketParamPrice) uint64 {
-	bigPrice := new(big.Int).SetUint64(marketParamPrice.Price.Price)
+func getMinPriceChangeAmountForSpotMarket(marketParamPrice types.MarketParamPrice) uint64 {
+	bigPrice := new(big.Int).SetUint64(marketParamPrice.Price.SpotPrice)
+	// There's no need to multiply this by the market's exponent, because `Price` comparisons are
+	// done without the market's exponent.
+	bigMinChangeAmt := lib.BigIntMulPpm(bigPrice, marketParamPrice.Param.MinPriceChangePpm)
+
+	if !bigMinChangeAmt.IsUint64() {
+		// This means that the min change amount is greater than the max uint64. This can only
+		// happen if the `MinPriceChangePpm` > 1,000,000 and there's a validation when
+		// creating/modifying the `Market`.
+		panic(errors.New("getMinPriceChangeAmountForMarket: min price change amount is greater than max uint64 value"))
+	}
+
+	return bigMinChangeAmt.Uint64()
+}
+
+func getMinPriceChangeAmountForPnlMarket(marketParamPrice types.MarketParamPrice) uint64 {
+	bigPrice := new(big.Int).SetUint64(marketParamPrice.Price.PnlPrice)
 	// There's no need to multiply this by the market's exponent, because `Price` comparisons are
 	// done without the market's exponent.
 	bigMinChangeAmt := lib.BigIntMulPpm(bigPrice, marketParamPrice.Param.MinPriceChangePpm)

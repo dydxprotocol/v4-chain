@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -15,18 +16,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type (
-	Keeper struct {
-		cdc                    codec.BinaryCodec
-		storeKey               storetypes.StoreKey
-		indexPriceCache        *pricefeedtypes.MarketToExchangePrices
-		marketToSmoothedPrices types.MarketToSmoothedPrices
-		timeProvider           libtime.TimeProvider
-		indexerEventManager    indexer_manager.IndexerEventManager
-		marketToCreatedAt      map[uint32]time.Time
-		authorities            map[string]struct{}
-	}
-)
+type Keeper struct {
+	cdc                    codec.BinaryCodec
+	storeKey               storetypes.StoreKey
+	marketToSmoothedPrices types.MarketToSmoothedPrices
+	indexPriceCache        *pricefeedtypes.MarketToExchangePrices
+	timeProvider           libtime.TimeProvider
+	indexerEventManager    indexer_manager.IndexerEventManager
+	marketToCreatedAt      map[uint32]time.Time
+	authorities            map[string]struct{}
+}
 
 var _ types.PricesKeeper = &Keeper{}
 

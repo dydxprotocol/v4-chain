@@ -8,8 +8,8 @@ export interface SubaccountId {
   /** The address of the wallet that owns this subaccount. */
   owner: string;
   /**
-   * < 128 Since 128 should be enough to start and it fits within
-   * 1 Byte (1 Bit needed to indicate that the first byte is the last).
+   * The unique number of this subaccount for the owner.
+   * Currently limited to 128*1000 subaccounts per owner.
    */
 
   number: number;
@@ -20,8 +20,8 @@ export interface SubaccountIdSDKType {
   /** The address of the wallet that owns this subaccount. */
   owner: string;
   /**
-   * < 128 Since 128 should be enough to start and it fits within
-   * 1 Byte (1 Bit needed to indicate that the first byte is the last).
+   * The unique number of this subaccount for the owner.
+   * Currently limited to 128*1000 subaccounts per owner.
    */
 
   number: number;

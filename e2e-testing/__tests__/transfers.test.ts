@@ -32,6 +32,7 @@ describe('transfers', () => {
     const height: number = heightResp.height;
 
     const subaccount = new SubaccountInfo(wallet, 0);
+    // eslint-disable-next-line no-console
     console.log(subaccount)
 
     // Check USDC asset position before

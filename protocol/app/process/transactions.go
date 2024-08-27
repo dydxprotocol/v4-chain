@@ -4,61 +4,52 @@ import (
 	"slices"
 
 	errorsmod "cosmossdk.io/errors"
+	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
-	minTxsCount                   = 3
-	proposedOperationsTxIndex     = 0
-	updateMarketPricesTxLenOffset = -1
-	addPremiumVotesTxLenOffset    = -2
-	lastOtherTxLenOffset          = addPremiumVotesTxLenOffset
-	firstOtherTxIndex             = proposedOperationsTxIndex + 1
-)
-
 func init() {
 	txIndicesAndOffsets := []int{
-		proposedOperationsTxIndex,
-		addPremiumVotesTxLenOffset,
-		updateMarketPricesTxLenOffset,
+		constants.ProposedOperationsTxIndex,
+		constants.AddPremiumVotesTxLenOffset,
 	}
-	if minTxsCount != len(txIndicesAndOffsets) {
+	if constants.MinTxsCount != len(txIndicesAndOffsets) {
 		panic("minTxsCount does not match expected count of Txs.")
 	}
 	if lib.ContainsDuplicates(txIndicesAndOffsets) {
 		panic("Duplicate indices/offsets defined for Txs.")
 	}
-	if slices.Min[[]int](txIndicesAndOffsets) != lastOtherTxLenOffset {
+	if slices.Min[[]int](txIndicesAndOffsets) != constants.LastOtherTxLenOffset {
 		panic("lastTxLenOffset is not the lowest offset")
 	}
-	if slices.Max[[]int](txIndicesAndOffsets)+1 != firstOtherTxIndex {
+	if slices.Max[[]int](txIndicesAndOffsets)+1 != constants.FirstOtherTxIndex {
 		panic("firstOtherTxIndex is <= the maximum offset")
 	}
 	txIndicesForMinTxsCount := []int{
-		proposedOperationsTxIndex,
-		addPremiumVotesTxLenOffset + minTxsCount,
-		updateMarketPricesTxLenOffset + minTxsCount,
+		constants.ProposedOperationsTxIndex,
+		constants.AddPremiumVotesTxLenOffset + constants.MinTxsCount,
 	}
-	if minTxsCount != len(txIndicesForMinTxsCount) {
+	if constants.MinTxsCount != len(txIndicesForMinTxsCount) {
 		panic("minTxsCount does not match expected count of Txs.")
 	}
 	if lib.ContainsDuplicates(txIndicesForMinTxsCount) {
 		panic("Overlapping indices and offsets defined for Txs.")
 	}
-	if minTxsCount != firstOtherTxIndex-lastOtherTxLenOffset {
+	if constants.MinTxsCount != constants.FirstOtherTxIndex-constants.LastOtherTxLenOffset {
 		panic("Unexpected gap between firstOtherTxIndex and lastOtherTxLenOffset which is greater than minTxsCount")
 	}
 }
 
+// TODO: add extInfo into this and use to decode (cleanup)
 // ProcessProposalTxs is used as an intermediary struct to validate a proposed list of txs
 // for `ProcessProposal`.
 type ProcessProposalTxs struct {
 	// Single msg txs.
 	ProposedOperationsTx *ProposedOperationsTx
 	AddPremiumVotesTx    *AddPremiumVotesTx
-	UpdateMarketPricesTx *UpdateMarketPricesTx
 
 	// Multi msgs txs.
 	OtherTxs []*OtherMsgsTx
@@ -66,48 +57,30 @@ type ProcessProposalTxs struct {
 
 // DecodeProcessProposalTxs returns a new `processProposalTxs`.
 func DecodeProcessProposalTxs(
-	ctx sdk.Context,
 	decoder sdk.TxDecoder,
 	req *abci.RequestProcessProposal,
-	pricesKeeper ProcessPricesKeeper,
+	pricesKeeper ve.PreBlockExecPricesKeeper,
 ) (*ProcessProposalTxs, error) {
 	// Check len.
 	numTxs := len(req.Txs)
-	if numTxs < minTxsCount {
-		return nil, errorsmod.Wrapf(
-			ErrUnexpectedNumMsgs,
-			"Expected the proposal to contain at least %d txs, but got %d",
-			minTxsCount,
-			numTxs,
-		)
+	if err := validateNumTxs(numTxs); err != nil {
+		return nil, err
 	}
 
 	// Operations.
-	operationsTx, err := DecodeProposedOperationsTx(decoder, req.Txs[proposedOperationsTxIndex])
+	operationsTx, err := DecodeProposedOperationsTx(decoder, req.Txs[constants.ProposedOperationsTxIndex])
 	if err != nil {
 		return nil, err
 	}
 
 	// Funding samples.
-	addPremiumVotesTx, err := DecodeAddPremiumVotesTx(decoder, req.Txs[numTxs+addPremiumVotesTxLenOffset])
+	addPremiumVotesTx, err := DecodeAddPremiumVotesTx(decoder, req.Txs[numTxs+constants.AddPremiumVotesTxLenOffset])
 	if err != nil {
 		return nil, err
 	}
-
-	// Price updates.
-	updatePricesTx, err := DecodeUpdateMarketPricesTx(
-		ctx,
-		pricesKeeper,
-		decoder,
-		req.Txs[numTxs+updateMarketPricesTxLenOffset],
-	)
-	if err != nil {
-		return nil, err
-	}
-
 	// Other txs.
-	allOtherTxs := make([]*OtherMsgsTx, numTxs-minTxsCount)
-	for i, txBytes := range req.Txs[firstOtherTxIndex : numTxs+lastOtherTxLenOffset] {
+	allOtherTxs := make([]*OtherMsgsTx, numTxs-constants.MinTxsCount)
+	for i, txBytes := range req.Txs[constants.FirstOtherTxIndex : numTxs+constants.LastOtherTxLenOffset] {
 		otherTx, err := DecodeOtherMsgsTx(decoder, txBytes)
 		if err != nil {
 			return nil, err
@@ -115,11 +88,9 @@ func DecodeProcessProposalTxs(
 
 		allOtherTxs[i] = otherTx
 	}
-
 	return &ProcessProposalTxs{
 		ProposedOperationsTx: operationsTx,
 		AddPremiumVotesTx:    addPremiumVotesTx,
-		UpdateMarketPricesTx: updatePricesTx,
 		OtherTxs:             allOtherTxs,
 	}, nil
 }
@@ -134,7 +105,6 @@ func (ppt *ProcessProposalTxs) Validate() error {
 	singleTxs := []SingleMsgTx{
 		ppt.ProposedOperationsTx,
 		ppt.AddPremiumVotesTx,
-		ppt.UpdateMarketPricesTx,
 	}
 	for _, smt := range singleTxs {
 		if err := smt.Validate(); err != nil {
@@ -147,6 +117,19 @@ func (ppt *ProcessProposalTxs) Validate() error {
 		if err := mmt.Validate(); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func validateNumTxs(numTxs int) error {
+	if numTxs < constants.MinTxsCount {
+		return errorsmod.Wrapf(
+			ErrUnexpectedNumMsgs,
+			"Expected the proposal to contain at least %d txs, but got %d",
+			constants.MinTxsCount,
+			numTxs,
+		)
 	}
 
 	return nil

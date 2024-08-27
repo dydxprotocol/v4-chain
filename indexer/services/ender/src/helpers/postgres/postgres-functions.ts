@@ -36,7 +36,9 @@ const HANDLER_SCRIPTS: string[] = [
   'dydx_market_create_handler.sql',
   'dydx_market_modify_handler.sql',
   'dydx_market_price_update_handler.sql',
-  'dydx_perpetual_market_handler.sql',
+  'dydx_open_interest_update_handler.sql',
+  'dydx_perpetual_market_v1_handler.sql',
+  'dydx_perpetual_market_v2_handler.sql',
   'dydx_stateful_order_handler.sql',
   'dydx_subaccount_update_handler.sql',
   'dydx_transfer_handler.sql',
@@ -83,6 +85,7 @@ const HELPER_SCRIPTS: string[] = [
   'dydx_uuid_from_subaccount_id_parts.sql',
   'dydx_uuid_from_transaction_parts.sql',
   'dydx_uuid_from_transfer_parts.sql',
+  'dydx_protocol_market_type_to_perpetual_market_type.sql',
 ];
 
 const MAIN_SCRIPTS: string[] = [

@@ -47,6 +47,76 @@ func (k Keeper) GetOperations(ctx sdk.Context) *types.MsgProposedOperations {
 	return msgProposedOperations
 }
 
+// BatchCancelShortTermOrder removes a specified batch of short term orders from all order-related data
+// structures in the memclob. As well, BatchCancelShortTermOrder adds (or updates) cancels to the desired
+// `goodTilBlock` in the memclob for all specified orders.
+// This message is not atomic. It will optimistically call `CancelShortTermOrder` for every order in the batch.
+// If any of the orders error, the error will be silently logged. This msg will only error if:
+// - Stateful validation fails
+// This function will return two client id lists, one for successes and one for failures.
+// This method assumes the provided MsgBatchCancel has already passed ValidateBasic in CheckTx.
+func (k Keeper) BatchCancelShortTermOrder(
+	ctx sdk.Context,
+	msg *types.MsgBatchCancel,
+) (success []uint32, failure []uint32, err error) {
+	lib.AssertCheckTxMode(ctx)
+	// Note that we add `+1` here to account for the fact that `ctx.BlockHeight()` is technically the
+	// previously mined block, not the next block that will be proposed. This is due to the fact that
+	// this function is only ever called during `CheckTx`.
+	nextBlockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight() + 1)
+
+	// Statefully validate the GTB and the clob pair ids.
+	goodTilBlock := msg.GetGoodTilBlock()
+	if err := k.validateGoodTilBlock(goodTilBlock, nextBlockHeight); err != nil {
+		return success, failure, err
+	}
+	for _, batchOrder := range msg.GetShortTermCancels() {
+		clobPairId := batchOrder.GetClobPairId()
+		if _, found := k.GetClobPair(ctx, types.ClobPairId(clobPairId)); !found {
+			return success, failure, errorsmod.Wrapf(
+				types.ErrInvalidClobPairParameter,
+				"Invalid clob pair id %+v",
+				clobPairId,
+			)
+		}
+	}
+	subaccountId := msg.GetSubaccountId()
+	for _, batchOrder := range msg.GetShortTermCancels() {
+		clobPairId := batchOrder.GetClobPairId()
+		for _, clientId := range batchOrder.GetClientIds() {
+			msgCancelOrder := types.MsgCancelOrder{
+				OrderId: types.OrderId{
+					SubaccountId: subaccountId,
+					OrderFlags:   types.OrderIdFlags_ShortTerm,
+					ClobPairId:   clobPairId,
+					ClientId:     clientId,
+				},
+				GoodTilOneof: &types.MsgCancelOrder_GoodTilBlock{
+					GoodTilBlock: goodTilBlock,
+				},
+			}
+			// Run the short term order. If it errors, just log silently.
+			err := k.CancelShortTermOrder(
+				ctx,
+				&msgCancelOrder,
+			)
+
+			if err != nil {
+				failure = append(failure, clientId)
+				log.InfoLog(
+					ctx,
+					"Batch Cancel: Failed to cancel a short term order.",
+					log.Error, err,
+				)
+			} else {
+				success = append(success, clientId)
+			}
+		}
+	}
+
+	return success, failure, nil
+}
+
 // CancelShortTermOrder removes a Short-Term order by `OrderId` (if it exists) from all order-related data structures
 // in the memclob. As well, CancelShortTermOrder adds (or updates) a cancel to the desired `goodTilBlock` in the
 // memclob.
@@ -297,10 +367,10 @@ func (k Keeper) PlaceStatefulOrder(
 		return err
 	}
 
-	// 4. Perform a collateralization check for the full size of the order to mitigate spam.
+	// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
 	// TODO(CLOB-725): Consider using a pessimistic collateralization check.
 	if !order.IsConditionalOrder() {
-		_, successPerSubaccountUpdate := k.AddOrderToOrderbookCollatCheck(
+		_, successPerSubaccountUpdate := k.AddOrderToOrderbookSubaccountUpdatesCheck(
 			ctx,
 			order.GetClobPairId(),
 			map[satypes.SubaccountId][]types.PendingOpenOrder{
@@ -315,9 +385,13 @@ func (k Keeper) PlaceStatefulOrder(
 			},
 		)
 
-		if !successPerSubaccountUpdate[order.OrderId.SubaccountId].IsSuccess() {
+		if updateResult := successPerSubaccountUpdate[order.OrderId.SubaccountId]; !updateResult.IsSuccess() {
+			err := types.ErrStatefulOrderCollateralizationCheckFailed
+			if updateResult.IsIsolatedSubaccountError() {
+				err = types.ErrWouldViolateIsolatedSubaccountConstraints
+			}
 			return errorsmod.Wrapf(
-				types.ErrStatefulOrderCollateralizationCheckFailed,
+				err,
 				"PlaceStatefulOrder: order (%+v), result (%s)",
 				order,
 				successPerSubaccountUpdate[order.OrderId.SubaccountId].String(),
@@ -930,9 +1004,9 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 	return nil
 }
 
-// AddOrderToOrderbookCollatCheck performs collateralization checks for orders to determine whether or not they may
-// be added to the orderbook.
-func (k Keeper) AddOrderToOrderbookCollatCheck(
+// AddOrderToOrderbookSubaccountUpdatesCheck performs checks on the subaccount updates that will occur
+// for orders to determine whether or not they may be added to the orderbook.
+func (k Keeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,
 	// TODO(DEC-1713): Convert this to 2 parameters: SubaccountId and a slice of PendingOpenOrders.
@@ -1031,7 +1105,7 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 	success, successPerSubaccountUpdate, err := k.subaccountsKeeper.CanUpdateSubaccounts(
 		ctx,
 		updates,
-		satypes.Match,
+		satypes.CollatCheck,
 	)
 	// TODO(DEC-191): Remove the error case from `CanUpdateSubaccounts`, which can only occur on overflow and specifying
 	// duplicate accounts.
@@ -1060,7 +1134,7 @@ func (k Keeper) GetOraclePriceSubticksRat(ctx sdk.Context, clobPair types.ClobPa
 	}
 
 	// Get the oracle price for the market.
-	oraclePriceSubticksRat := types.PriceToSubticks(
+	oraclePriceSubticksRat := types.PnlPriceToSubticks(
 		marketPrice,
 		clobPair,
 		perpetual.Params.AtomicResolution,

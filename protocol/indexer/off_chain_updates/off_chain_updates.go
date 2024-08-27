@@ -5,7 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
+	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/msgsender"
 	ocutypes "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/off_chain_updates/types"
 	v1 "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1"
@@ -254,7 +255,7 @@ func newOrderPlaceMessage(
 			},
 		},
 	}
-	return marshalOffchainUpdate(update, &common.MarshalerImpl{})
+	return proto.Marshal(&update)
 }
 
 // newOrderPlaceMessage returns an `OffChainUpdate` struct populated with an `OrderRemove`
@@ -275,7 +276,7 @@ func newOrderRemoveMessage(
 			},
 		},
 	}
-	return marshalOffchainUpdate(update, &common.MarshalerImpl{})
+	return proto.Marshal(&update)
 }
 
 // NewOrderUpdateMessage returns an `OffChainUpdate` struct populated with an `OrderUpdate`
@@ -294,15 +295,7 @@ func newOrderUpdateMessage(
 			},
 		},
 	}
-	return marshalOffchainUpdate(update, &common.MarshalerImpl{})
-}
-
-func marshalOffchainUpdate(
-	offChainUpdate ocutypes.OffChainUpdateV1,
-	marshaler common.Marshaler,
-) ([]byte, error) {
-	updateBytes, err := marshaler.Marshal(&offChainUpdate)
-	return updateBytes, err
+	return proto.Marshal(&update)
 }
 
 // GetOrderIdHash gets the SHA256 hash of the `IndexerOrderId` mapped from an `OrderId`.

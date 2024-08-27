@@ -29,9 +29,9 @@ export function getPriceChange(
   marketId: number,
   latestPrices: PriceMap,
   prices24hAgo: PriceMap,
-): string | undefined {
-  const latestPrice: string | undefined = latestPrices[marketId];
-  const price24hAgo: string | undefined = prices24hAgo[marketId];
+): { spotPrice: string; pnlPrice: string } | undefined {
+  const latestPrice: { spotPrice: string; pnlPrice: string } | undefined = latestPrices[marketId];
+  const price24hAgo: { spotPrice: string; pnlPrice: string } | undefined = prices24hAgo[marketId];
   if (latestPrice === undefined || price24hAgo === undefined) {
     logger.info({
       at: 'market-updater#getPriceChange',
@@ -40,9 +40,14 @@ export function getPriceChange(
     });
     return undefined;
   }
-  return new Big(latestPrice)
-    .minus(price24hAgo)
-    .toFixed();
+  return {
+    spotPrice: new Big(latestPrice.spotPrice)
+      .minus(price24hAgo.spotPrice)
+      .toFixed(),
+    pnlPrice: new Big(latestPrice.pnlPrice)
+      .minus(price24hAgo.pnlPrice)
+      .toFixed(),
+  };
 }
 
 export default async function runTask(): Promise<void> {
@@ -117,7 +122,7 @@ export default async function runTask(): Promise<void> {
               10,
             ) ?? 0,
             volume24H: perpetualMarketStatsByPerpetualMarketId[perpetualMarketId].volume24H ?? '0',
-            priceChange24H: getPriceChange(marketId, latestPrices, prices24hAgo) ??
+            priceChange24H: getPriceChange(marketId, latestPrices, prices24hAgo)?.spotPrice ??
               perpetualMarket.priceChange24H,
             openInterest: openInterest[perpetualMarketId]?.openInterest ?? '0',
             nextFundingRate: fundingRates[perpetualMarket.ticker]?.toFixed() ??

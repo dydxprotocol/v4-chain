@@ -6,10 +6,11 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	sdkmath "cosmossdk.io/math"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/keeper"
@@ -52,9 +53,8 @@ func assertTransferEventInIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeTransfer {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var transfer indexerevents.TransferEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &transfer)
+		err := proto.Unmarshal(event.DataBytes, &transfer)
 		if err != nil {
 			panic(err)
 		}
@@ -78,9 +78,8 @@ func assertDepositEventInIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeTransfer {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var deposit indexerevents.TransferEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &deposit)
+		err := proto.Unmarshal(event.DataBytes, &deposit)
 		if err != nil {
 			panic(err)
 		}
@@ -104,9 +103,8 @@ func assertWithdrawEventInIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeTransfer {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var withdraw indexerevents.TransferEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &withdraw)
+		err := proto.Unmarshal(event.DataBytes, &withdraw)
 		if err != nil {
 			panic(err)
 		}
@@ -135,6 +133,7 @@ func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 			p.Params.AtomicResolution,
 			p.Params.DefaultFundingPpm,
 			p.Params.LiquidityTier,
+			p.Params.MarketType,
 		)
 		require.NoError(t, err)
 	}
@@ -261,6 +260,7 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 			p.Params.AtomicResolution,
 			p.Params.DefaultFundingPpm,
 			p.Params.LiquidityTier,
+			p.Params.MarketType,
 		)
 		require.NoError(t, err)
 	}

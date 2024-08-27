@@ -12,8 +12,7 @@ import (
 type TestFunction int
 
 const (
-	testUpdateMarketPrices TestFunction = iota
-	testAddPremiumVotes
+	testAddPremiumVotes TestFunction = iota
 	testProposedOperations
 )
 
@@ -27,7 +26,7 @@ func Test_NewPrepareProposalTransactions_Success(t *testing.T) {
 	require.Equal(t, uint64(123), ppt.MaxBytes)
 	require.Equal(t, uint64(0), ppt.UsedBytes)
 
-	require.Nil(t, ppt.UpdateMarketPricesTx)
+	require.Nil(t, ppt.ExtInfoBz)
 	require.Nil(t, ppt.AddPremiumVotesTx)
 	require.Nil(t, ppt.ProposedOperationsTx)
 	require.Nil(t, ppt.OtherTxs)
@@ -41,10 +40,6 @@ func Test_NewPrepareProposalTransactions_Fail(t *testing.T) {
 
 	require.ErrorContains(t, err, "MaxTxBytes must be positive")
 	require.Equal(t, prepare.PrepareProposalTxs{}, ppt)
-}
-
-func Test_SetUpdateMarketPricesTx(t *testing.T) {
-	setterTestCases(t, testUpdateMarketPrices)
 }
 
 func Test_SetAddPremiumVotesTx(t *testing.T) {
@@ -113,8 +108,6 @@ func setterTestCases(t *testing.T, tFunc TestFunction) {
 
 func setterTestHelper(tFunc TestFunction, target *prepare.PrepareProposalTxs, value []byte) error {
 	switch tFunc {
-	case testUpdateMarketPrices:
-		return target.SetUpdateMarketPricesTx(value)
 	case testAddPremiumVotes:
 		return target.SetAddPremiumVotesTx(value)
 	case testProposedOperations:
@@ -126,8 +119,6 @@ func setterTestHelper(tFunc TestFunction, target *prepare.PrepareProposalTxs, va
 
 func getterTestHelper(tFunc TestFunction, target *prepare.PrepareProposalTxs) []byte {
 	switch tFunc {
-	case testUpdateMarketPrices:
-		return target.UpdateMarketPricesTx
 	case testAddPremiumVotes:
 		return target.AddPremiumVotesTx
 	case testProposedOperations:
@@ -284,7 +275,6 @@ func Test_UpdateUsedBytes(t *testing.T) {
 
 func Test_GetAvailableBytes(t *testing.T) {
 	tests := map[string]struct {
-		pricesTx           []byte
 		fundingTx          []byte
 		operationsTx       []byte
 		otherTxs           [][]byte
@@ -297,7 +287,6 @@ func Test_GetAvailableBytes(t *testing.T) {
 			expectedAvailBytes: 10,
 		},
 		"inputs are empty": {
-			pricesTx:           []byte{},
 			fundingTx:          []byte{},
 			operationsTx:       []byte{},
 			otherTxs:           [][]byte{},
@@ -307,24 +296,22 @@ func Test_GetAvailableBytes(t *testing.T) {
 			expectedAvailBytes: 10,
 		},
 		"some are set": {
-			pricesTx:           []byte{1},
 			fundingTx:          []byte{},
 			operationsTx:       []byte{2, 3},
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{{4}, {5, 6}},
 
-			expectedUsedBytes:  6,
-			expectedAvailBytes: 4,
+			expectedUsedBytes:  5,
+			expectedAvailBytes: 5,
 		},
 		"all are set": {
-			pricesTx:           []byte{1},
 			fundingTx:          []byte{2, 3},
 			operationsTx:       []byte{4},
 			otherTxs:           [][]byte{{5}},
 			otherAdditionalTxs: [][]byte{{6}, {7}},
 
-			expectedUsedBytes:  7,
-			expectedAvailBytes: 3,
+			expectedUsedBytes:  6,
+			expectedAvailBytes: 4,
 		},
 	}
 
@@ -338,9 +325,6 @@ func Test_GetAvailableBytes(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, uint64(10), ppt.MaxBytes)
 			require.Equal(t, uint64(0), ppt.UsedBytes)
-
-			err = ppt.SetUpdateMarketPricesTx(tc.pricesTx)
-			require.NoError(t, err)
 
 			err = ppt.SetAddPremiumVotesTx(tc.fundingTx)
 			require.NoError(t, err)
@@ -376,80 +360,110 @@ func Test_GetTxsInOrder(t *testing.T) {
 		otherTxs           [][]byte
 		otherAdditionalTxs [][]byte
 		fundingTx          []byte
-		pricesTx           []byte
+		extInfoBz          []byte
 
 		expectedTxs [][]byte
 		expectedErr error
+		veEnabled   bool
 	}{
-		"update market prices is not set": {
-			operationsTx:       []byte{},
-			otherTxs:           [][]byte{},
-			otherAdditionalTxs: [][]byte{},
-			fundingTx:          []byte{},
-			pricesTx:           []byte{},
-
-			expectedTxs: nil,
-			expectedErr: errors.New("UpdateMarketPricesTx must be set"),
-		},
 		"add funding samples is not set": {
 			operationsTx:       []byte{},
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{},
 			fundingTx:          []byte{},
-			pricesTx:           []byte{1},
+			extInfoBz:          []byte{},
 
 			expectedTxs: nil,
 			expectedErr: errors.New("AddPremiumVotesTx must be set"),
+			veEnabled:   true,
 		},
-		"prices and funding only": {
+		"extInfo is not set": {
 			operationsTx:       []byte{},
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{},
 			fundingTx:          []byte{2, 3},
-			pricesTx:           []byte{1},
+			extInfoBz:          nil,
 
-			expectedTxs: [][]byte{{2, 3}, {1}},
-			expectedErr: nil,
+			expectedTxs: nil,
+			expectedErr: errors.New("ExtInfoBz must be set"),
+			veEnabled:   true,
 		},
-		"prices, funding + matched orders": {
+		"funding and extInfo only": {
+			operationsTx:       []byte{},
+			otherTxs:           [][]byte{},
+			otherAdditionalTxs: [][]byte{},
+			fundingTx:          []byte{2, 3},
+			extInfoBz:          []byte{4, 5},
+
+			expectedTxs: [][]byte{{4, 5}, {2, 3}},
+			expectedErr: nil,
+			veEnabled:   true,
+		},
+		"funding + matched orders + extInfo": {
 			operationsTx:       []byte{4, 5, 6},
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{},
 			fundingTx:          []byte{2},
-			pricesTx:           []byte{1},
+			extInfoBz:          []byte{1},
 
-			expectedTxs: [][]byte{{4, 5, 6}, {2}, {1}},
+			expectedTxs: [][]byte{{1}, {4, 5, 6}, {2}},
 			expectedErr: nil,
+			veEnabled:   true,
 		},
-		"prices, funding + others": {
+		"funding + others": {
 			operationsTx:       []byte{},
 			otherTxs:           [][]byte{{4}, {5, 6}},
 			otherAdditionalTxs: [][]byte{},
 			fundingTx:          []byte{2},
-			pricesTx:           []byte{1},
+			extInfoBz:          []byte{1},
 
-			expectedTxs: [][]byte{{4}, {5, 6}, {2}, {1}},
+			expectedTxs: [][]byte{{1}, {4}, {5, 6}, {2}},
 			expectedErr: nil,
+			veEnabled:   true,
 		},
 		"partially set": {
 			operationsTx:       []byte{4, 5, 6},
 			otherTxs:           [][]byte{{7, 8}, {9, 10}},
 			otherAdditionalTxs: [][]byte{},
 			fundingTx:          []byte{2, 3},
-			pricesTx:           []byte{1},
+			extInfoBz:          []byte{11, 12},
 
-			expectedTxs: [][]byte{{4, 5, 6}, {7, 8}, {9, 10}, {2, 3}, {1}},
+			expectedTxs: [][]byte{{11, 12}, {4, 5, 6}, {7, 8}, {9, 10}, {2, 3}},
 			expectedErr: nil,
+			veEnabled:   true,
 		},
 		"all set": {
 			operationsTx:       []byte{4, 5},
 			otherTxs:           [][]byte{{6}, {7, 8}},
 			otherAdditionalTxs: [][]byte{{9}, {10}},
 			fundingTx:          []byte{2, 3},
-			pricesTx:           []byte{1},
+			extInfoBz:          []byte{11, 12},
 
-			expectedTxs: [][]byte{{4, 5}, {6}, {7, 8}, {9}, {10}, {2, 3}, {1}},
+			expectedTxs: [][]byte{{11, 12}, {4, 5}, {6}, {7, 8}, {9}, {10}, {2, 3}},
 			expectedErr: nil,
+			veEnabled:   true,
+		},
+		"ve not enabled with extInfo": {
+			operationsTx:       []byte{4, 5},
+			otherTxs:           [][]byte{{6}, {7, 8}},
+			otherAdditionalTxs: [][]byte{{9}, {10}},
+			fundingTx:          []byte{2, 3},
+			extInfoBz:          []byte{11, 12},
+
+			expectedTxs: [][]byte{{4, 5}, {6}, {7, 8}, {9}, {10}, {2, 3}},
+			expectedErr: nil,
+			veEnabled:   false,
+		},
+		"ve enabled with no extInfo": {
+			operationsTx:       []byte{4, 5},
+			otherTxs:           [][]byte{{6}, {7, 8}},
+			otherAdditionalTxs: [][]byte{{9}, {10}},
+			fundingTx:          []byte{2, 3},
+			extInfoBz:          nil,
+
+			expectedTxs: nil,
+			expectedErr: errors.New("ExtInfoBz must be set"),
+			veEnabled:   true,
 		},
 	}
 
@@ -464,8 +478,10 @@ func Test_GetTxsInOrder(t *testing.T) {
 			require.Equal(t, uint64(11), ppt.MaxBytes)
 			require.Equal(t, uint64(0), ppt.UsedBytes)
 
-			err = ppt.SetUpdateMarketPricesTx(tc.pricesTx)
-			require.NoError(t, err)
+			if tc.extInfoBz != nil {
+				err = ppt.SetExtInfoBz(tc.extInfoBz)
+				require.NoError(t, err)
+			}
 
 			err = ppt.SetAddPremiumVotesTx(tc.fundingTx)
 			require.NoError(t, err)
@@ -489,7 +505,7 @@ func Test_GetTxsInOrder(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			txs, err := ppt.GetTxsInOrder()
+			txs, err := ppt.GetTxsInOrder(tc.veEnabled)
 			if tc.expectedErr != nil {
 				require.ErrorContains(t, err, tc.expectedErr.Error())
 			} else {

@@ -23,6 +23,10 @@ func (u UpdateResult) IsSuccess() bool {
 	return u == Success
 }
 
+func (u UpdateResult) IsIsolatedSubaccountError() bool {
+	return u == ViolatesIsolatedSubaccountConstraints
+}
+
 // GetErrorFromUpdateResults generates a helpful error when UpdateSubaccounts or
 // CanUpdateSubaccounts returns one or more failed updates.
 func GetErrorFromUpdateResults(
@@ -52,11 +56,12 @@ func GetErrorFromUpdateResults(
 }
 
 var updateResultStringMap = map[UpdateResult]string{
-	Success:                        "Success",
-	NewlyUndercollateralized:       "NewlyUndercollateralized",
-	StillUndercollateralized:       "StillUndercollateralized",
-	WithdrawalsAndTransfersBlocked: "WithdrawalsAndTransfersBlocked",
-	UpdateCausedError:              "UpdateCausedError",
+	Success:                               "Success",
+	NewlyUndercollateralized:              "NewlyUndercollateralized",
+	StillUndercollateralized:              "StillUndercollateralized",
+	WithdrawalsAndTransfersBlocked:        "WithdrawalsAndTransfersBlocked",
+	UpdateCausedError:                     "UpdateCausedError",
+	ViolatesIsolatedSubaccountConstraints: "ViolatesIsolatedSubaccountConstraints",
 }
 
 const (
@@ -65,6 +70,7 @@ const (
 	StillUndercollateralized
 	WithdrawalsAndTransfersBlocked
 	UpdateCausedError
+	ViolatesIsolatedSubaccountConstraints
 )
 
 // Update is used by the subaccounts keeper to allow other modules
@@ -97,17 +103,21 @@ type PerpetualUpdate struct {
 type UpdateType uint
 
 const (
-	Withdrawal UpdateType = iota
+	UpdateTypeUnspecified UpdateType = iota
+	Withdrawal
 	Transfer
 	Deposit
 	Match
+	CollatCheck
 )
 
 var updateTypeStringMap = map[UpdateType]string{
-	Withdrawal: "Withdrawal",
-	Transfer:   "Transfer",
-	Deposit:    "Deposit",
-	Match:      "Match",
+	UpdateTypeUnspecified: "UpdateTypeUnspecified",
+	Withdrawal:            "Withdrawal",
+	Transfer:              "Transfer",
+	Deposit:               "Deposit",
+	Match:                 "Match",
+	CollatCheck:           "CollatCheck",
 }
 
 func (u UpdateType) String() string {

@@ -1,10 +1,11 @@
 package keeper
 
 import (
+	"testing"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	indexer_manager "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	dbm "github.com/cosmos/cosmos-db"
-	"testing"
 
 	storetypes "cosmossdk.io/store/types"
 	sdktest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sdk"
@@ -29,7 +30,7 @@ type callback func(
 func initKeepers(t testing.TB, cb callback) sdk.Context {
 	ctx, stateStore, db := sdktest.NewSdkContextWithMultistore()
 	// Mount transient store for indexer events, shared by all keepers that emit indexer events.
-	transientStoreKey := storetypes.NewTransientStoreKey(indexer_manager.IndexerEventsKey)
+	transientStoreKey := storetypes.NewTransientStoreKey(indexer_manager.TransientStoreKey)
 	stateStore.MountStoreWithDB(transientStoreKey, storetypes.StoreTypeTransient, db)
 	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 

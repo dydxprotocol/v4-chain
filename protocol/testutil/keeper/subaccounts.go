@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
@@ -151,9 +151,8 @@ func GetSubaccountUpdateEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeSubaccountUpdate {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var subaccountUpdate indexerevents.SubaccountUpdateEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &subaccountUpdate)
+		err := proto.Unmarshal(event.DataBytes, &subaccountUpdate)
 		if err != nil {
 			panic(err)
 		}

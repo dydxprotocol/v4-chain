@@ -25,7 +25,6 @@ import (
 	sendingmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending"
 	statsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats"
 	subaccountsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -124,16 +123,6 @@ func TestAppPanicsWithGrpcDisabled(t *testing.T) {
 	}
 	require.Panics(t, func() { testapp.DefaultTestApp(customFlags) })
 }
-
-func TestClobKeeperMemStoreHasBeenInitialized(t *testing.T) {
-	dydxApp := testapp.DefaultTestApp(nil)
-	ctx := dydxApp.NewUncachedContext(true, tmproto.Header{})
-
-	// The memstore panics if initialized twice so initializing again outside of application
-	// start-up should cause a panic.
-	require.Panics(t, func() { dydxApp.ClobKeeper.InitMemStore(ctx) })
-}
-
 func TestBaseApp(t *testing.T) {
 	dydxApp := testapp.DefaultTestApp(nil)
 	require.NotNil(t, dydxApp.GetBaseApp(), "Expected non-nil BaseApp")

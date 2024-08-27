@@ -203,8 +203,7 @@ func createClobKeeper(
 		streaming.NewNoopGrpcStreamingManager(),
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
 		flags.GetDefaultClobFlags(),
-		rate_limit.NewNoOpRateLimiter[*types.MsgPlaceOrder](),
-		rate_limit.NewNoOpRateLimiter[*types.MsgCancelOrder](),
+		rate_limit.NewNoOpRateLimiter[sdk.Msg](),
 		liquidationtypes.NewDaemonLiquidationInfo(),
 	)
 	k.SetAnteHandler(constants.EmptyAnteHandler)
@@ -273,6 +272,7 @@ func CreateNClobPair(
 					items[i].SubticksPerTick,
 					items[i].StepBaseQuantums,
 					perps[i].Params.LiquidityTier,
+					perps[i].Params.MarketType,
 				),
 			),
 		).Return()

@@ -28,9 +28,9 @@ import (
 // 4) The proposed price meets the minimum price change ppm requirement.
 // Note: the list of market price updates can be empty if there are no "valid" index prices, smoothed prices, and/or
 // proposed prices for any market.
-func (k Keeper) GetValidMarketPriceUpdates(
+func (k Keeper) GetValidMarketSpotPriceUpdates(
 	ctx sdk.Context,
-) *types.MsgUpdateMarketPrices {
+) []*types.MarketSpotPriceUpdate {
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
 		time.Now(),
@@ -59,7 +59,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 	allIndexPrices := k.indexPriceCache.GetValidMedianPrices(allMarketParams, k.timeProvider.Now())
 
 	// 3. Collect all "valid" price updates.
-	updates := make([]*types.MsgUpdateMarketPrices_MarketPrice, 0, len(allMarketParamPrices))
+	updates := make([]*types.MarketSpotPriceUpdate, 0, len(allMarketParamPrices))
 	for _, marketParamPrice := range allMarketParamPrices {
 		marketId := marketParamPrice.Param.Id
 		indexPrice, indexPriceExists := allIndexPrices[marketId]
@@ -96,7 +96,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 			continue
 		}
 
-		historicalSmoothedPrices := k.marketToSmoothedPrices.GetHistoricalSmoothedPrices(marketId)
+		historicalSmoothedPrices := k.marketToSmoothedPrices.GetHistoricalSmoothedSpotPrices(marketId)
 		// We generally expect to have a smoothed price history for each market, except during the first few blocks
 		// after network genesis or a network restart. In this scenario, we use the index price as the smoothed price.
 		if len(historicalSmoothedPrices) == 0 {
@@ -116,7 +116,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 		}
 		smoothedPrice := historicalSmoothedPrices[0]
 
-		proposalPrice := getProposalPrice(smoothedPrice, indexPrice, marketParamPrice.Price.Price)
+		proposalPrice := getProposalPrice(smoothedPrice, indexPrice, marketParamPrice.Price.SpotPrice)
 
 		shouldPropose, reasons := shouldProposePrice(
 			proposalPrice,
@@ -127,7 +127,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 
 		// If the index price would have updated, track how the proposal price changes the update
 		// decision / amount.
-		if isAboveRequiredMinPriceChange(marketParamPrice, indexPrice) {
+		if isAboveRequiredMinSpotPriceChange(marketParamPrice, indexPrice) {
 			logPriceUpdateBehavior(
 				ctx,
 				marketParamPrice,
@@ -143,9 +143,9 @@ func (k Keeper) GetValidMarketPriceUpdates(
 			// Add as a "valid" price update.
 			updates = append(
 				updates,
-				&types.MsgUpdateMarketPrices_MarketPrice{
-					MarketId: marketId,
-					Price:    proposalPrice,
+				&types.MarketSpotPriceUpdate{
+					MarketId:  marketId,
+					SpotPrice: proposalPrice,
 				},
 			)
 		}
@@ -154,9 +154,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 	// 4. Sort price updates by market id in ascending order.
 	sort.Slice(updates, func(i, j int) bool { return updates[i].MarketId < updates[j].MarketId })
 
-	return &types.MsgUpdateMarketPrices{
-		MarketPriceUpdates: updates,
-	}
+	return updates
 }
 
 func logPriceUpdateBehavior(
@@ -194,8 +192,8 @@ func logPriceUpdateBehavior(
 			loggingVerb,
 			marketParamPrice.Param.Id,
 			indexPrice,
-			marketParamPrice.Price.Price,
-			getMinPriceChangeAmountForMarket(marketParamPrice),
+			marketParamPrice.Price.SpotPrice,
+			getMinPriceChangeAmountForSpotMarket(marketParamPrice),
 		),
 	)
 }
@@ -231,7 +229,7 @@ func shouldProposePrice(
 	)
 	for _, smoothedPrice := range historicalSmoothedPrices {
 		if isCrossingOldPrice(PriceTuple{
-			OldPrice:   marketParamPrice.Price.Price,
+			OldPrice:   marketParamPrice.Price.SpotPrice,
 			IndexPrice: indexPrice,
 			NewPrice:   smoothedPrice,
 		}) {
@@ -249,7 +247,7 @@ func shouldProposePrice(
 		},
 	)
 	if isCrossingOldPrice(PriceTuple{
-		OldPrice:   marketParamPrice.Price.Price,
+		OldPrice:   marketParamPrice.Price.SpotPrice,
 		IndexPrice: indexPrice,
 		NewPrice:   proposalPrice,
 	}) {
@@ -266,7 +264,7 @@ func shouldProposePrice(
 		},
 	)
 	for _, smoothedPrice := range historicalSmoothedPrices {
-		if !isAboveRequiredMinPriceChange(marketParamPrice, smoothedPrice) {
+		if !isAboveRequiredMinSpotPriceChange(marketParamPrice, smoothedPrice) {
 			shouldPropose = false
 			reasons[len(reasons)-1].Value = true
 			break
@@ -280,7 +278,7 @@ func shouldProposePrice(
 			Reason: metrics.ProposedPriceDoesNotMeetMinPriceChange,
 		},
 	)
-	if !isAboveRequiredMinPriceChange(marketParamPrice, proposalPrice) {
+	if !isAboveRequiredMinSpotPriceChange(marketParamPrice, proposalPrice) {
 		shouldPropose = false
 		reasons[len(reasons)-1].Value = true
 	}

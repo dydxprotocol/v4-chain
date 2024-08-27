@@ -448,7 +448,8 @@ describe('kafka-helper', () => {
     const oraclePrice: OraclePriceFromDatabase = {
       id: OraclePriceTable.uuid(0, height),
       marketId: 0,
-      price: '500000.00',
+      spotPrice: '500000.00',
+      pnlPrice: '500000.00',
       effectiveAt: DateTime.utc().toISO(),
       effectiveAtHeight: height,
     };
@@ -468,7 +469,8 @@ describe('kafka-helper', () => {
 
       expect(contents.oraclePrices).toEqual({
         [market.pair]: {
-          oraclePrice: oraclePrice.price,
+          spotPrice: oraclePrice.spotPrice,
+          pnlPrice: oraclePrice.pnlPrice,
           effectiveAt: oraclePrice.effectiveAt,
           effectiveAtHeight: oraclePrice.effectiveAtHeight,
           marketId: oraclePrice.marketId,

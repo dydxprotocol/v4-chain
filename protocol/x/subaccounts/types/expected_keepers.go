@@ -72,6 +72,10 @@ type PerpetualsKeeper interface {
 		err error,
 	)
 	GetAllPerpetuals(ctx sdk.Context) []perptypes.Perpetual
+	GetInsuranceFundName(ctx sdk.Context, perpetualId uint32) (string, error)
+	GetInsuranceFundModuleAddress(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error)
+	ModifyOpenInterest(ctx sdk.Context, perpetualId uint32, bigQuantums *big.Int) error
+	IsIsolatedPerpetual(ctx sdk.Context, perpetualId uint32) (bool, error)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -88,6 +92,7 @@ type BankKeeper interface {
 		amt sdk.Coins,
 	) error
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
+	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 type BlocktimeKeeper interface {

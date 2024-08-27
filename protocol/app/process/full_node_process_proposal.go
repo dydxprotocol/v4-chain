@@ -1,6 +1,7 @@
 package process
 
 import (
+	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,26 +14,13 @@ func FullNodeProcessProposalHandler(
 	txConfig client.TxConfig,
 	clobKeeper ProcessClobKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
-	pricesKeeper ProcessPricesKeeper,
+	pricesKeeper ve.PreBlockExecPricesKeeper,
 ) sdk.ProcessProposalHandler {
-	// Keep track of the current block height and consensus round.
-	currentBlockHeight := int64(0)
-	currentConsensusRound := int64(0)
-
 	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 		// Always return `abci.ResponseProcessProposal_ACCEPT`
 		response := &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 
-		// Update the current block height and consensus round.
-		if ctx.BlockHeight() != currentBlockHeight {
-			currentBlockHeight = ctx.BlockHeight()
-			currentConsensusRound = 0
-		} else {
-			currentConsensusRound += 1
-		}
-		ctx = ctx.WithValue(ConsensusRound, currentConsensusRound)
-
-		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, pricesKeeper)
+		txs, err := DecodeProcessProposalTxs(txConfig.TxDecoder(), req, pricesKeeper)
 		if err != nil {
 			return response, nil
 		}

@@ -26,10 +26,6 @@ func TestAppInjectedMsgSamples_Key(t *testing.T) {
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes",
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse",
-
-		// prices
-		"/dydxprotocol.prices.MsgUpdateMarketPrices",
-		"/dydxprotocol.prices.MsgUpdateMarketPricesResponse",
 	}
 
 	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.AppInjectedMsgSamples))

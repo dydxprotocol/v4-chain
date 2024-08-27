@@ -14,6 +14,8 @@ func TestLiquidityTierValidate(t *testing.T) {
 		initialMarginPpm       uint32
 		maintenanceFractionPpm uint32
 		ImpactNotional         uint64
+		openInterestLowerCap   uint64
+		openInterestUpperCap   uint64
 		expectedError          error
 	}{
 		"Validates successfully": {
@@ -40,6 +42,22 @@ func TestLiquidityTierValidate(t *testing.T) {
 			ImpactNotional:         0,         // 0
 			expectedError:          types.ErrImpactNotionalIsZero,
 		},
+		"Failure: lower cap is larger than upper cap": {
+			initialMarginPpm:       150_000,       // 15%
+			maintenanceFractionPpm: 800_000,       // 80% of IM
+			ImpactNotional:         3_333_000_000, // 3_333 USDC
+			openInterestLowerCap:   1_000_000,
+			openInterestUpperCap:   500_000,
+			expectedError:          types.ErrOpenInterestLowerCapLargerThanUpperCap,
+		},
+		"Failure: lower cap is larger than upper cap (upper cap is zero)": {
+			initialMarginPpm:       150_000,       // 15%
+			maintenanceFractionPpm: 800_000,       // 80% of IM
+			ImpactNotional:         3_333_000_000, // 3_333 USDC
+			openInterestLowerCap:   1_000_000,
+			openInterestUpperCap:   0,
+			expectedError:          types.ErrOpenInterestLowerCapLargerThanUpperCap,
+		},
 	}
 
 	// Run tests.
@@ -49,6 +67,8 @@ func TestLiquidityTierValidate(t *testing.T) {
 				InitialMarginPpm:       tc.initialMarginPpm,
 				MaintenanceFractionPpm: tc.maintenanceFractionPpm,
 				ImpactNotional:         tc.ImpactNotional,
+				OpenInterestLowerCap:   tc.openInterestLowerCap,
+				OpenInterestUpperCap:   tc.openInterestUpperCap,
 			}
 
 			err := liquidityTier.Validate()
@@ -202,6 +222,9 @@ func TestLiquidityTierGetMaxAbsFundingClampPpm(t *testing.T) {
 func TestGetInitialMarginQuoteQuantums(t *testing.T) {
 	tests := map[string]struct {
 		initialMarginPpm                   uint32
+		openInterestLowerCap               uint64
+		openInterestUpperCap               uint64
+		openInterestNotional               *big.Int
 		bigQuoteQuantums                   *big.Int
 		expectedInitialMarginQuoteQuantums *big.Int
 	}{
@@ -237,13 +260,82 @@ func TestGetInitialMarginQuoteQuantums(t *testing.T) {
 			// ~= 70029.5518 -> round up to 70030
 			expectedInitialMarginQuoteQuantums: big.NewInt(70_030),
 		},
+		"base IMF = 20%, no OIMF since lower_cap = upper_cap = 0": {
+			initialMarginPpm:     uint32(200_000), // 20%
+			bigQuoteQuantums:     big.NewInt(500_000),
+			openInterestNotional: big.NewInt(1_500_000_000_000),
+			openInterestLowerCap: 0,
+			openInterestUpperCap: 0,
+			// initial margin * quote quantums
+			// = 20% * 500_000
+			// = 100_000
+			expectedInitialMarginQuoteQuantums: big.NewInt(100_000),
+		},
+		"base IMF = 20%, scaling_factor = 0.5": {
+			initialMarginPpm:     uint32(200_000), // 20%
+			bigQuoteQuantums:     big.NewInt(500_000),
+			openInterestNotional: big.NewInt(1_500_000_000_000),
+			openInterestLowerCap: 1_000_000_000_000,
+			openInterestUpperCap: 2_000_000_000_000,
+			// OIMF = 20% + 0.5 * (1 - 20%) = 20% + 0.5 * 80% = 60%
+			// initial margin * quote quantums
+			// = 60% * 100% * 500_000
+			// = 300_000
+			expectedInitialMarginQuoteQuantums: big.NewInt(300_000),
+		},
+		"base IMF = 10%, scaling_factor = 1 since open_interest >> upper_cap": {
+			initialMarginPpm:     uint32(200_000), // 20%
+			bigQuoteQuantums:     big.NewInt(500_000),
+			openInterestNotional: big.NewInt(80_000_000_000_000),
+			openInterestLowerCap: 25_000_000_000_000,
+			openInterestUpperCap: 50_000_000_000_000,
+			// OIMF = 100%
+			// initial margin * quote quantums
+			// = 100% * 100% * 500_000
+			// = 500_000
+			expectedInitialMarginQuoteQuantums: big.NewInt(500_000),
+		},
+		"base IMF = 10%, open_interest = lower_cap so scaling_factor = 0": {
+			initialMarginPpm:     uint32(200_000), // 20%
+			bigQuoteQuantums:     big.NewInt(500_000),
+			openInterestNotional: big.NewInt(25_000_000_000_000),
+			openInterestLowerCap: 25_000_000_000_000,
+			openInterestUpperCap: 50_000_000_000_000,
+			// OIMF = 20%
+			// initial margin * quote quantums
+			// = 20% * 100% * 500_000
+			// = 100_000
+			expectedInitialMarginQuoteQuantums: big.NewInt(100_000),
+		},
+		"base IMF = 10%, lower_cap < open_interest < upper_cap, realistic numbers": {
+			initialMarginPpm:     uint32(200_000), // 20%
+			bigQuoteQuantums:     big.NewInt(500_000),
+			openInterestNotional: big.NewInt(28_123_456_789_123),
+			openInterestLowerCap: 25_000_000_000_000,
+			openInterestUpperCap: 60_000_000_000_000,
+			// scaling_factor = (28.123 - 25) / (60 - 25) ~= 0.08924
+			// OIMF ~= 0.08924 * 80% + 20%
+			//      ~= 71392% + 20%
+			//      ~= 27.1392%
+			// initial margin * quote quantums
+			// = 27.1392% * 500_000
+			// = 135_697
+			expectedInitialMarginQuoteQuantums: big.NewInt(135_697),
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			liquidityTier := &types.LiquidityTier{
-				InitialMarginPpm: tc.initialMarginPpm,
+				InitialMarginPpm:     tc.initialMarginPpm,
+				OpenInterestLowerCap: tc.openInterestLowerCap,
+				OpenInterestUpperCap: tc.openInterestUpperCap,
 			}
-			adjustedIMQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(tc.bigQuoteQuantums)
+
+			openInterestNotional := big.NewInt(0)
+			if tc.openInterestNotional != nil {
+				openInterestNotional.Set(tc.openInterestNotional)
+			}
+			adjustedIMQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(tc.bigQuoteQuantums, openInterestNotional)
 
 			require.Equal(t, tc.expectedInitialMarginQuoteQuantums, adjustedIMQuoteQuantums)
 		})

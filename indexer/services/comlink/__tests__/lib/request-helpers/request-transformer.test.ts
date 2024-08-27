@@ -58,7 +58,8 @@ describe('request-transformer', () => {
           clobPairId: perpetualMarket.clobPairId,
           ticker: perpetualMarket.ticker,
           status: perpetualMarket.status,
-          oraclePrice: market.oraclePrice,
+          spotPrice: market.spotPrice,
+          pnlPrice: market.pnlPrice,
           priceChange24H: perpetualMarket.priceChange24H,
           volume24H: perpetualMarket.volume24H,
           trades24H: perpetualMarket.trades24H,
@@ -77,6 +78,10 @@ describe('request-transformer', () => {
           stepSize: Big(10).pow(-9).toFixed(), // 10 * 1e-10 = 1e-9
           stepBaseQuantums: perpetualMarket.stepBaseQuantums,
           subticksPerTick: perpetualMarket.subticksPerTick,
+          marketType: perpetualMarket.marketType,
+          openInterestLowerCap: liquidityTier.openInterestLowerCap,
+          openInterestUpperCap: liquidityTier.openInterestUpperCap,
+          baseOpenInterest: perpetualMarket.baseOpenInterest,
         },
       );
     });
@@ -118,6 +123,10 @@ describe('request-transformer', () => {
       };
       const responseObject: OrderResponseObject | undefined = postgresAndRedisOrderToResponseObject(
         filledOrder,
+        {
+          [testConstants.defaultSubaccountId]:
+            testConstants.defaultSubaccount.subaccountNumber,
+        },
         redisTestConstants.defaultRedisOrder,
       );
       const expectedRedisOrderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
@@ -126,13 +135,19 @@ describe('request-transformer', () => {
 
       expect(responseObject).not.toBeUndefined();
       expect(responseObject).not.toEqual(
-        postgresOrderToResponseObject(filledOrder),
+        postgresOrderToResponseObject(
+          filledOrder,
+          testConstants.defaultSubaccount.subaccountNumber,
+        ),
       );
       expect(responseObject).not.toEqual(
         redisOrderToResponseObject(redisTestConstants.defaultRedisOrder),
       );
       expect(responseObject).toEqual({
-        ...postgresOrderToResponseObject(filledOrder),
+        ...postgresOrderToResponseObject(
+          filledOrder,
+          testConstants.defaultSubaccount.subaccountNumber,
+        ),
         size: redisTestConstants.defaultRedisOrder.size,
         price: redisTestConstants.defaultRedisOrder.price,
         timeInForce: apiTranslations.orderTIFToAPITIF(expectedRedisOrderTIF),
@@ -151,7 +166,10 @@ describe('request-transformer', () => {
     it('successfully converts a postgres order to a response object', () => {
       const responseObject: OrderResponseObject | undefined = postgresAndRedisOrderToResponseObject(
         order,
-        null,
+        {
+          [testConstants.defaultSubaccountId]:
+            testConstants.defaultSubaccount.subaccountNumber,
+        },
       );
 
       expect(responseObject).not.toBeUndefined();
@@ -159,19 +177,23 @@ describe('request-transformer', () => {
         redisOrderToResponseObject(redisTestConstants.defaultRedisOrder),
       );
       expect(responseObject).toEqual(
-        postgresOrderToResponseObject(order),
+        postgresOrderToResponseObject(order, testConstants.defaultSubaccount.subaccountNumber),
       );
     });
 
     it('successfully converts a redis order to a response object', () => {
       const responseObject: OrderResponseObject | undefined = postgresAndRedisOrderToResponseObject(
         undefined,
+        {
+          [testConstants.defaultSubaccountId]:
+            testConstants.defaultSubaccount.subaccountNumber,
+        },
         redisTestConstants.defaultRedisOrder,
       );
 
       expect(responseObject).not.toBeUndefined();
       expect(responseObject).not.toEqual(
-        postgresOrderToResponseObject(order),
+        postgresOrderToResponseObject(order, testConstants.defaultSubaccount.subaccountNumber),
       );
       expect(responseObject).toEqual(
         redisOrderToResponseObject(redisTestConstants.defaultRedisOrder),
@@ -181,6 +203,10 @@ describe('request-transformer', () => {
     it('successfully converts undefined postgres order and null redis orderto undefined', () => {
       const responseObject: OrderResponseObject | undefined = postgresAndRedisOrderToResponseObject(
         undefined,
+        {
+          [testConstants.defaultSubaccountId]:
+            testConstants.defaultSubaccount.subaccountNumber,
+        },
         null,
       );
 
@@ -192,13 +218,17 @@ describe('request-transformer', () => {
     it(
       'successfully converts a postgres order with null `goodTilBlockTime` to a response object',
       () => {
-        const responseObject: OrderResponseObject = postgresOrderToResponseObject(order);
+        const responseObject: OrderResponseObject = postgresOrderToResponseObject(
+          order,
+          testConstants.defaultSubaccount.subaccountNumber,
+        );
 
         expect(responseObject).toEqual({
           ...order,
           timeInForce: apiTranslations.orderTIFToAPITIF(order.timeInForce),
           postOnly: apiTranslations.isOrderTIFPostOnly(order.timeInForce),
           ticker,
+          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
         });
       },
     );
@@ -212,6 +242,7 @@ describe('request-transformer', () => {
         };
         const responseObject: OrderResponseObject = postgresOrderToResponseObject(
           orderWithGoodTilBlockTime,
+          testConstants.defaultSubaccount.subaccountNumber,
         );
 
         expect(responseObject).toEqual({
@@ -219,6 +250,7 @@ describe('request-transformer', () => {
           timeInForce: apiTranslations.orderTIFToAPITIF(order.timeInForce),
           postOnly: apiTranslations.isOrderTIFPostOnly(order.timeInForce),
           ticker,
+          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
         });
       },
     );
@@ -302,6 +334,7 @@ describe('request-transformer', () => {
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(redisOrder.order!),
         ticker,
         clientMetadata: redisOrder.order!.clientMetadata.toString(),
+        subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
       });
     });
   });

@@ -12,7 +12,7 @@ import (
 // The smoothing is calculated with Basic Exponential Smoothing, see
 // https://en.wikipedia.org/wiki/Exponential_smoothing
 // If there is no valid index price for a market at this time, the smoothed price does not change.
-func (k Keeper) UpdateSmoothedPrices(
+func (k Keeper) UpdateSmoothedSpotPrices(
 	ctx sdk.Context,
 	linearInterpolateFunc func(v0 uint64, v1 uint64, ppm uint32) (uint64, error),
 ) error {
@@ -30,7 +30,7 @@ func (k Keeper) UpdateSmoothedPrices(
 			continue
 		}
 
-		smoothedPrice, ok := k.marketToSmoothedPrices.GetSmoothedPrice(marketParam.Id)
+		smoothedPrice, ok := k.marketToSmoothedPrices.GetSmoothedSpotPrice(marketParam.Id)
 		if !ok {
 			smoothedPrice = indexPrice
 		}
@@ -47,8 +47,14 @@ func (k Keeper) UpdateSmoothedPrices(
 			continue
 		}
 
-		k.marketToSmoothedPrices.PushSmoothedPrice(marketParam.Id, update)
+		k.marketToSmoothedPrices.PushSmoothedSpotPrice(marketParam.Id, update)
 	}
 
 	return errors.Join(updateErrors...)
+}
+
+func (k Keeper) GetSmoothedSpotPrice(
+	markedId uint32,
+) (uint64, bool) {
+	return k.marketToSmoothedPrices.GetSmoothedSpotPrice(markedId)
 }

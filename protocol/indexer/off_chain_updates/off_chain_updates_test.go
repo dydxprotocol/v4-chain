@@ -1,7 +1,6 @@
 package off_chain_updates
 
 import (
-	"fmt"
 	"testing"
 
 	errorsmod "cosmossdk.io/errors"
@@ -10,7 +9,6 @@ import (
 	ocutypes "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/off_chain_updates/types"
 	v1 "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1"
 	sharedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/shared/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sdk"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
@@ -272,21 +270,6 @@ func TestNewOrderRemoveMessage(t *testing.T) {
 		*actualUpdate,
 		"Decoded OffchainUpdateV1 value should be equal to the expected OffchainUpdate proto message",
 	)
-}
-
-func TestMarshalOffchainUpdate_MarshalError(t *testing.T) {
-	expectedError := fmt.Errorf("Marshal error")
-	mockMarshaller := mocks.Marshaler{}
-	mockMarshaller.On("Marshal", &offchainUpdateOrderPlace).Return(
-		[]byte{},
-		expectedError,
-	)
-
-	updateBytes, err := marshalOffchainUpdate(offchainUpdateOrderPlace, &mockMarshaller)
-
-	require.Equal(t, []byte{}, updateBytes)
-	require.ErrorContains(t, err, expectedError.Error())
-	require.True(t, mockMarshaller.AssertExpectations(t))
 }
 
 func TestGetOrderIdHash(t *testing.T) {

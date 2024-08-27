@@ -44,19 +44,19 @@ type (
 		indexerEventManager indexer_manager.IndexerEventManager
 		streamingManager    streamingtypes.GrpcStreamingManager
 
+		initialized         *atomic.Bool
 		memStoreInitialized *atomic.Bool
 
 		Flags flags.ClobFlags
 
-		mevTelemetryConfig MevTelemetryConfig
+		mevTelemetryConfig types.MevTelemetryConfig
 
 		// txValidation decoder and antehandler
 		txDecoder sdk.TxDecoder
 		// Note that the antehandler is not set until after the BaseApp antehandler is also set.
 		antehandler sdk.AnteHandler
 
-		placeOrderRateLimiter  rate_limit.RateLimiter[*types.MsgPlaceOrder]
-		cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder]
+		placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg]
 
 		DaemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo
 	}
@@ -86,8 +86,7 @@ func NewKeeper(
 	grpcStreamingManager streamingtypes.GrpcStreamingManager,
 	txDecoder sdk.TxDecoder,
 	clobFlags flags.ClobFlags,
-	placeOrderRateLimiter rate_limit.RateLimiter[*types.MsgPlaceOrder],
-	cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder],
+	placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg],
 	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
 ) *Keeper {
 	keeper := &Keeper{
@@ -109,17 +108,17 @@ func NewKeeper(
 		statsKeeper:                  statsKeeper,
 		indexerEventManager:          indexerEventManager,
 		streamingManager:             grpcStreamingManager,
-		memStoreInitialized:          &atomic.Bool{},
+		memStoreInitialized:          &atomic.Bool{}, // False by default.
+		initialized:                  &atomic.Bool{}, // False by default.
 		txDecoder:                    txDecoder,
-		mevTelemetryConfig: MevTelemetryConfig{
+		mevTelemetryConfig: types.MevTelemetryConfig{
 			Enabled:    clobFlags.MevTelemetryEnabled,
 			Hosts:      clobFlags.MevTelemetryHosts,
 			Identifier: clobFlags.MevTelemetryIdentifier,
 		},
-		Flags:                  clobFlags,
-		placeOrderRateLimiter:  placeOrderRateLimiter,
-		cancelOrderRateLimiter: cancelOrderRateLimiter,
-		DaemonLiquidationInfo:  daemonLiquidationInfo,
+		Flags:                       clobFlags,
+		placeCancelOrderRateLimiter: placeCancelOrderRateLimiter,
+		DaemonLiquidationInfo:       daemonLiquidationInfo,
 	}
 
 	// Provide the keeper to the MemClob.
@@ -152,6 +151,43 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
+}
+
+// IsInitialized returns whether the clob keeper has been hydrated.
+func (k Keeper) IsInitialized() bool {
+	return k.initialized.Load()
+}
+
+// Initialize hydrates the clob keeper with the necessary in memory data structures.
+func (k Keeper) Initialize(ctx sdk.Context) {
+	alreadyInitialized := k.initialized.Swap(true)
+	if alreadyInitialized {
+		return
+	}
+
+	// Initialize memstore in clobKeeper with order fill amounts and stateful orders.
+	k.InitMemStore(ctx)
+
+	// Branch the context for hydration.
+	// This means that new order matches from hydration will get added to the operations
+	// queue but the corresponding state changes will be discarded.
+	// This is needed because we are hydrating in memory structures in PreBlock
+	// which operates on deliver state. Writing optimistic matches breaks consensus.
+	checkCtx, _ := ctx.CacheContext()
+	checkCtx = checkCtx.WithIsCheckTx(true)
+
+	// Initialize memclob in clobKeeper with orderbooks using `ClobPairs` in state.
+	k.InitMemClobOrderbooks(checkCtx)
+	// Initialize memclob with all existing stateful orders.
+	// TODO(DEC-1348): Emit indexer messages to indicate that application restarted.
+	k.InitStatefulOrders(checkCtx)
+
+	// Initialize the untriggered conditional orders data structure with untriggered
+	// conditional orders in state.
+	k.HydrateClobPairAndPerpetualMapping(checkCtx)
+	// Initialize the untriggered conditional orders data structure with untriggered
+	// conditional orders in state.
+	k.HydrateUntriggeredConditionalOrders(checkCtx)
 }
 
 // InitMemStore initializes the memstore of the `clob` keeper.

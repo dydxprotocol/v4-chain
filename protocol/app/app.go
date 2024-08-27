@@ -13,6 +13,7 @@ import (
 	"time"
 
 	custommodule "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -30,6 +31,8 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	antetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ante/types"
+	daemonpreblocker "github.com/StreamFinance-Protocol/stream-chain/protocol/app/preblocker"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/configs"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -98,6 +101,12 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	timelib "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/time"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/rate_limit"
+
+	// VE
+	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
+	priceapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
+	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 
 	// Mempool
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mempool"
@@ -219,6 +228,8 @@ type App struct {
 
 	cdc               *codec.LegacyAmino
 	appCodec          codec.Codec
+	voteCodec         vecodec.VoteExtensionCodec
+	extCodec          vecodec.ExtendedCommitCodec
 	txConfig          client.TxConfig
 	interfaceRegistry types.InterfaceRegistry
 	event             runtime.EventService
@@ -297,6 +308,8 @@ type App struct {
 	LiquidationsClient *liquidationclient.Client
 
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
+
+	pricePreBlocker daemonpreblocker.PreBlockHandler
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -372,11 +385,13 @@ func New(
 		delaymsgmoduletypes.StoreKey,
 		epochsmoduletypes.StoreKey,
 	)
+	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
 	tkeys := storetypes.NewTransientStoreKeys(
 		paramstypes.TStoreKey,
 		clobmoduletypes.TransientStoreKey,
 		statsmoduletypes.TransientStoreKey,
 		indexer_manager.TransientStoreKey,
+		perpetualsmoduletypes.TransientStoreKey,
 	)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, clobmoduletypes.MemStoreKey)
 
@@ -731,7 +746,7 @@ func New(
 		}
 
 		// Non-validating full-nodes have no need to run the price daemon.
-		if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
+		if !appFlags.NonValidatingFullNode {
 			exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
@@ -782,7 +797,7 @@ func New(
 		appCodec,
 		keys[pricesmoduletypes.StoreKey],
 		indexPriceCache,
-		pricesmoduletypes.NewMarketToSmoothedPrices(pricesmoduletypes.SmoothedPriceTrackingBlockHistoryLength),
+		pricesmoduletypes.NewMarketToSmoothedSpotPrices(pricesmoduletypes.SmoothedPriceTrackingBlockHistoryLength),
 		timeProvider,
 		app.IndexerEventManager,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
@@ -823,6 +838,7 @@ func New(
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
 		},
+		tkeys[perpetualsmoduletypes.TransientStoreKey],
 	)
 	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper)
 
@@ -894,8 +910,7 @@ func New(
 		app.GrpcStreamingManager,
 		txConfig.TxDecoder(),
 		clobFlags,
-		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgPlaceOrder](),
-		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgCancelOrder](),
+		rate_limit.NewPanicRateLimiter[sdk.Msg](),
 		daemonLiquidationInfo,
 	)
 	clobModule := clobmodule.NewAppModule(
@@ -927,6 +942,40 @@ func New(
 		app.BankKeeper,
 		app.SubaccountsKeeper,
 	)
+
+	/****  ve daemon initializer ****/
+	app.voteCodec = vecodec.NewDefaultVoteExtensionCodec()
+	app.extCodec = vecodec.NewDefaultExtendedCommitCodec()
+
+	aggregatorFn := voteweighted.Median(
+		logger,
+		app.ConsumerKeeper,
+		voteweighted.DefaultPowerThreshold,
+	)
+
+	aggregator := veaggregator.NewVeAggregator(
+		logger,
+		indexPriceCache,
+		app.PricesKeeper,
+		aggregatorFn,
+	)
+
+	priceApplier := priceapplier.NewPriceApplier(
+		logger,
+		aggregator,
+		app.PricesKeeper,
+		app.voteCodec,
+		app.extCodec,
+	)
+
+	app.pricePreBlocker = *daemonpreblocker.NewDaemonPreBlockHandler(
+		logger,
+		priceApplier,
+	)
+
+	if !appFlags.NonValidatingFullNode {
+		app.InitVoteExtensions(logger, app.voteCodec, app.PricesKeeper, app.PerpetualsKeeper, app.ClobKeeper, priceApplier)
+	}
 
 	/****  Module Options ****/
 
@@ -979,7 +1028,8 @@ func New(
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
-		upgradetypes.ModuleName,
+		upgradetypes.ModuleName, // Must be first since upgrades may be state schema breaking.
+		clobmoduletypes.ModuleName,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -1160,6 +1210,8 @@ func New(
 	app.SetPrecommiter(app.Precommitter)
 	app.SetPrepareCheckStater(app.PrepareCheckStater)
 
+	veValidationFn := ve.NewValidateVEConsensusInfo(app.ConsumerKeeper)
+
 	// PrepareProposal setup.
 	if appFlags.NonValidatingFullNode {
 		app.SetPrepareProposal(prepare.FullNodePrepareProposalHandler())
@@ -1168,8 +1220,11 @@ func New(
 			prepare.PrepareProposalHandler(
 				txConfig,
 				app.ClobKeeper,
-				app.PricesKeeper,
 				app.PerpetualsKeeper,
+				app.PricesKeeper,
+				app.voteCodec,
+				app.extCodec,
+				veValidationFn,
 			),
 		)
 	}
@@ -1194,6 +1249,10 @@ func New(
 				app.ClobKeeper,
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
+				app.extCodec,
+				app.voteCodec,
+				priceApplier,
+				veValidationFn,
 			),
 		)
 	}
@@ -1220,16 +1279,6 @@ func New(
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(err.Error())
 		}
-
-		// Hydrate memStores used for caching state.
-		app.hydrateMemStores()
-
-		// Hydrate the `memclob` with all ordersbooks from state,
-		// and hydrate the next `checkState` as well as the `memclob` with stateful orders.
-		app.hydrateMemclobWithOrderbooksAndStatefulOrders()
-
-		// Hydrate the keeper in-memory data structures.
-		app.hydrateKeeperInMemoryDataStructures()
 	}
 	app.initializeRateLimiters()
 
@@ -1275,15 +1324,6 @@ func (app *App) DisableHealthMonitorForTesting() {
 	app.DaemonHealthMonitor.DisableForTesting()
 }
 
-// hydrateMemStores hydrates the memStores used for caching state.
-func (app *App) hydrateMemStores() {
-	// Create an `uncachedCtx` where the underlying MultiStore is the `rootMultiStore`.
-	// We use this to hydrate the `memStore` state with values from the underlying `rootMultiStore`.
-	uncachedCtx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
-	// Initialize memstore in clobKeeper with order fill amounts and stateful orders.
-	app.ClobKeeper.InitMemStore(uncachedCtx)
-}
-
 // initializeRateLimiters initializes the rate limiters from state if the application is
 // not started from genesis.
 func (app *App) initializeRateLimiters() {
@@ -1293,43 +1333,43 @@ func (app *App) initializeRateLimiters() {
 	app.ClobKeeper.InitalizeBlockRateLimitFromStateIfExists(uncachedCtx)
 }
 
-// hydrateMemclobWithOrderbooksAndStatefulOrders hydrates the memclob with orderbooks and stateful orders
-// from state.
-func (app *App) hydrateMemclobWithOrderbooksAndStatefulOrders() {
-	// Create a `checkStateCtx` where the underlying MultiStore is the `CacheMultiStore` for
-	// the `checkState`. We do this to avoid performing any state writes to the `rootMultiStore`
-	// directly.
-	checkStateCtx := app.BaseApp.NewContext(true)
-
-	// Initialize memclob in clobKeeper with orderbooks using `ClobPairs` in state.
-	app.ClobKeeper.InitMemClobOrderbooks(checkStateCtx)
-	// Initialize memclob with all existing stateful orders.
-	// TODO(DEC-1348): Emit indexer messages to indicate that application restarted.
-	app.ClobKeeper.InitStatefulOrders(checkStateCtx)
-}
-
-// hydrateKeeperInMemoryDataStructures hydrates the keeper with ClobPairId and PerpetualId mapping
-// and untriggered conditional orders from state.
-func (app *App) hydrateKeeperInMemoryDataStructures() {
-	// Create a `checkStateCtx` where the underlying MultiStore is the `CacheMultiStore` for
-	// the `checkState`. We do this to avoid performing any state writes to the `rootMultiStore`
-	// directly.
-	checkStateCtx := app.BaseApp.NewContext(true)
-
-	// Initialize the untriggered conditional orders data structure with untriggered
-	// conditional orders in state.
-	app.ClobKeeper.HydrateClobPairAndPerpetualMapping(checkStateCtx)
-	// Initialize the untriggered conditional orders data structure with untriggered
-	// conditional orders in state.
-	app.ClobKeeper.HydrateUntriggeredConditionalOrders(checkStateCtx)
-}
-
 // GetBaseApp returns the base app of the application
 func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
 
 // PreBlocker application updates before each begin block.
-func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+func (app *App) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	resp, err := app.pricePreBlocker.PreBlocker(ctx, req)
+	if err != nil {
+		return resp, err
+	}
+	// Set gas meter to the free gas meter.
+	// This is because there is currently non-deterministic gas usage in the
+	// pre-blocker, e.g. due to hydration of in-memory data structures.
+	//
+	// Note that we don't need to reset the gas meter after the pre-blocker
+	// because Go is pass by value.
+	ctx = ctx.WithGasMeter(antetypes.NewFreeInfiniteGasMeter())
 	return app.ModuleManager.PreBlock(ctx)
+}
+
+func (app *App) InitVoteExtensions(
+	logger log.Logger,
+	veCodec vecodec.VoteExtensionCodec,
+	pricesKeeper pricesmodulekeeper.Keeper,
+	perpetualsKeeper *perpetualsmodulekeeper.Keeper,
+	clobKeeper *clobmodulekeeper.Keeper,
+	priceApplier *priceapplier.PriceApplier,
+) {
+	veHandler := ve.NewVoteExtensionHandler(
+		logger,
+		veCodec,
+		pricesKeeper,
+		perpetualsKeeper,
+		clobKeeper,
+		priceApplier,
+	)
+	app.SetExtendVoteHandler(veHandler.ExtendVoteHandler())
+	app.SetVerifyVoteExtensionHandler(veHandler.VerifyVoteExtensionHandler())
 }
 
 // BeginBlocker application updates every begin block
@@ -1508,6 +1548,8 @@ func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
 			ClobKeeper:     app.ClobKeeper,
+			Codec:          app.appCodec,
+			AuthStoreKey:   app.keys[authtypes.StoreKey],
 			IBCKeeper:      *app.IBCKeeper,
 			ConsumerKeeper: app.ConsumerKeeper,
 		},

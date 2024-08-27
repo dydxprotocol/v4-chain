@@ -1,7 +1,12 @@
 package cmd_test
 
 import (
+	"fmt"
 	"testing"
+
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+
+	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
@@ -45,4 +50,23 @@ func TestNewRootCmd_UsesClientConfig(t *testing.T) {
 	cmd.AddInitCmdPostRunE(rootCmd)
 	rootCmd.SetArgs([]string{"query", "auth", "params"})
 	require.ErrorContains(t, svrcmd.Execute(rootCmd, constants.AppDaemonName, tempDir), "fakeTestAddress")
+}
+
+func TestCmdModuleNameToAddress(t *testing.T) {
+	expectedModuleNameAddress := map[string]string{
+		"subaccounts":       "dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6",
+		"subaccounts:37":    "dydx16lwrx54mh9aru9ulzpknd429wldkhdwekhlswf",
+		"insurance_fund":    "dydx1c7ptc87hkd54e3r7zjy92q29xkq7t79w64slrq",
+		"insurance_fund:37": "dydx10mlrxmaquwjwsj59ywp8xttc8rfxn9jfvzswtn",
+	}
+	for moduleName, expectedAddress := range expectedModuleNameAddress {
+		t.Run(
+			fmt.Sprintf("ModuleNameToAddress %s", moduleName), func(t *testing.T) {
+				ctx := client.Context{}
+				out, err := clitestutil.ExecTestCLICmd(ctx, cmd.CmdModuleNameToAddress(), []string{moduleName})
+				require.NoError(t, err)
+				require.Equal(t, expectedAddress, out.String())
+			},
+		)
+	}
 }

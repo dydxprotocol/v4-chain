@@ -10,7 +10,6 @@ import {
   PerpetualPositionTable,
   testConstants,
   OraclePriceTable,
-  testMocks,
   PriceMap,
   BlockTable,
   LiquidityTiersFromDatabase,
@@ -31,11 +30,72 @@ import { NextFundingCache, redis } from '@dydxprotocol-indexer/redis';
 import { redisClient } from '../../src/helpers/redis';
 import Big from 'big.js';
 import { DateTime } from 'luxon';
+import * as SubaccountTable from '@dydxprotocol-indexer/postgres/build/src/stores/subaccount-table';
+import {
+  defaultAsset,
+  defaultAsset2,
+  defaultAsset3,
+  defaultBlock,
+  defaultBlock2,
+  defaultLiquidityTier,
+  defaultLiquidityTier2,
+  defaultMarket,
+  defaultMarket2,
+  defaultMarket3,
+  defaultPerpetualMarket,
+  defaultPerpetualMarket2,
+  defaultPerpetualMarket3,
+  defaultSubaccount,
+  defaultSubaccount2,
+  defaultTendermintEvent,
+  defaultTendermintEvent2,
+  defaultTendermintEvent3,
+  defaultTendermintEvent4,
+} from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import * as MarketTable from '@dydxprotocol-indexer/postgres/build/src/stores/market-table';
+import * as TendermintEventTable from '@dydxprotocol-indexer/postgres/build/src/stores/tendermint-event-table';
+import * as AssetTable from '@dydxprotocol-indexer/postgres/build/src/stores/asset-table';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
   wrapBackgroundTask: jest.fn(),
 }));
+
+async function seedData() {
+  await Promise.all([
+    SubaccountTable.create(defaultSubaccount),
+    SubaccountTable.create(defaultSubaccount2),
+  ]);
+  await Promise.all([
+    MarketTable.create(defaultMarket),
+    MarketTable.create(defaultMarket2),
+    MarketTable.create(defaultMarket3),
+  ]);
+  await Promise.all([
+    LiquidityTiersTable.create(defaultLiquidityTier),
+    LiquidityTiersTable.create(defaultLiquidityTier2),
+  ]);
+  await Promise.all([
+    PerpetualMarketTable.create(defaultPerpetualMarket),
+    PerpetualMarketTable.create(defaultPerpetualMarket2),
+    PerpetualMarketTable.create(defaultPerpetualMarket3),
+  ]);
+  await Promise.all([
+    BlockTable.create(defaultBlock),
+    BlockTable.create(defaultBlock2),
+  ]);
+  await Promise.all([
+    TendermintEventTable.create(defaultTendermintEvent),
+    TendermintEventTable.create(defaultTendermintEvent2),
+    TendermintEventTable.create(defaultTendermintEvent3),
+    TendermintEventTable.create(defaultTendermintEvent4),
+  ]);
+  await Promise.all([
+    AssetTable.create(defaultAsset),
+    AssetTable.create(defaultAsset2),
+    AssetTable.create(defaultAsset3),
+  ]);
+}
 
 describe('market-updater', () => {
 
@@ -65,7 +125,7 @@ describe('market-updater', () => {
   });
 
   beforeEach(async () => {
-    await testMocks.seedData();
+    await seedData();
   });
 
   afterAll(async () => {
@@ -120,15 +180,25 @@ describe('market-updater', () => {
 
   it('getPriceChange', () => {
     const latestPrices: PriceMap = {
-      [testConstants.defaultOraclePrice.marketId]: '2',
-      [testConstants.defaultOraclePrice2.marketId]: '3',
+      [testConstants.defaultOraclePrice.marketId]: {
+        spotPrice: '2',
+        pnlPrice: '2',
+      },
+      [testConstants.defaultOraclePrice2.marketId]: {
+        spotPrice: '3',
+        pnlPrice: '3',
+      },
     };
     const previousPrices: PriceMap = {
-      [testConstants.defaultOraclePrice.marketId]: '1',
+      [testConstants.defaultOraclePrice.marketId]: {
+        spotPrice: '1',
+        pnlPrice: '1',
+      },
     };
     expect(
       getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),
-    ).toEqual('1');
+    ).toEqual({ pnlPrice: '1', spotPrice: '1' });
+
     expect(
       getPriceChange(testConstants.defaultOraclePrice2.marketId, latestPrices, previousPrices),
     ).toEqual(undefined);
@@ -136,15 +206,24 @@ describe('market-updater', () => {
 
   it('getPriceChange with prices < 1e-6', () => {
     const latestPrices: PriceMap = {
-      [testConstants.defaultOraclePrice.marketId]: '0.00000008',
-      [testConstants.defaultOraclePrice2.marketId]: '0.00000009',
+      [testConstants.defaultOraclePrice.marketId]: {
+        spotPrice: '0.00000008',
+        pnlPrice: '0.00000008',
+      },
+      [testConstants.defaultOraclePrice2.marketId]: {
+        spotPrice: '0.00000009',
+        pnlPrice: '0.00000009',
+      },
     };
     const previousPrices: PriceMap = {
-      [testConstants.defaultOraclePrice.marketId]: '0.00000007',
+      [testConstants.defaultOraclePrice.marketId]: {
+        spotPrice: '0.00000007',
+        pnlPrice: '0.00000007',
+      },
     };
     expect(
       getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),
-    ).toEqual('0.00000001');
+    ).toEqual({ pnlPrice: '0.00000001', spotPrice: '0.00000001' });
     expect(
       getPriceChange(testConstants.defaultOraclePrice2.marketId, latestPrices, previousPrices),
     ).toEqual(undefined);
@@ -170,19 +249,22 @@ describe('market-updater', () => {
 
     const oraclePrice3: OraclePriceCreateObject = {
       ...testConstants.defaultOraclePrice,
-      price: '3',
+      spotPrice: '3',
+      pnlPrice: '3',
       effectiveAtHeight: '3',
       effectiveAt: lessThan24HAgo,
     };
     const oraclePrice4: OraclePriceCreateObject = {
       ...testConstants.defaultOraclePrice,
-      price: '4',
+      spotPrice: '4',
+      pnlPrice: '4',
       effectiveAtHeight: '4',
       effectiveAt: moreThan24HAgo,
     };
     const oraclePrice6: OraclePriceCreateObject = {
       ...testConstants.defaultOraclePrice,
-      price: '6',
+      spotPrice: '6',
+      pnlPrice: '6',
       effectiveAtHeight: '6',
       effectiveAt: now,
     };

@@ -13,6 +13,7 @@ import {
   OrderStatus,
   OrderType,
   PerpetualMarketStatus,
+  PerpetualMarketType,
   PerpetualPositionFromDatabase,
   PerpetualPositionStatus,
   PositionSide,
@@ -51,6 +52,14 @@ export interface SubaccountResponseObject {
   openPerpetualPositions: PerpetualPositionsMap,
   assetPositions: AssetPositionsMap,
   marginEnabled: boolean,
+}
+
+export interface ParentSubaccountResponse {
+  address: string;
+  parentSubaccountNumber: number;
+  equity: string; // aggregated over all child subaccounts
+  freeCollateral: string; // aggregated over all child subaccounts
+  childSubaccounts: SubaccountResponseObject[];
 }
 
 export type SubaccountById = {[id: string]: SubaccountFromDatabase};
@@ -101,6 +110,7 @@ export interface AssetPositionResponseObject {
   side: PositionSide;
   size: string;
   assetId: string;
+  subaccountNumber: number;
 }
 
 export type AssetPositionsMap = { [symbol: string]: AssetPositionResponseObject };
@@ -125,6 +135,7 @@ export interface FillResponseObject {
   createdAtHeight: string,
   orderId?: string,
   clientMetadata?: string,
+  subaccountNumber: number,
 }
 
 /* ------- TRANSFER TYPES ------- */
@@ -142,6 +153,28 @@ export interface TransferResponseObject {
   recipient: {
     address: string,
     subaccountNumber?: number,
+  },
+  size: string,
+  createdAt: string,
+  createdAtHeight: string,
+  symbol: string,
+  type: TransferType,
+  transactionHash: string,
+}
+
+export interface ParentSubaccountTransferResponse {
+  transfers: TransferResponseObject[],
+}
+
+export interface ParentSubaccountTransferResponseObject {
+  id: string,
+  sender: {
+    address: string,
+    parentSubaccountNumber?: number,
+  },
+  recipient: {
+    address: string,
+    parentSubaccountNumber?: number,
   },
   size: string,
   createdAt: string,
@@ -217,7 +250,8 @@ export interface PerpetualMarketResponseObject {
   clobPairId: string;
   ticker: string;
   status: PerpetualMarketStatus;
-  oraclePrice: string;
+  spotPrice: string;
+  pnlPrice: string;
   priceChange24H: string;
   volume24H: string;
   trades24H: number;
@@ -231,6 +265,10 @@ export interface PerpetualMarketResponseObject {
   stepSize: string;
   stepBaseQuantums: number;
   subticksPerTick: number;
+  marketType: PerpetualMarketType;
+  openInterestLowerCap?: string;
+  openInterestUpperCap?: string;
+  baseOpenInterest: string;
 }
 
 /* ------- ORDERBOOK TYPES ------- */
@@ -255,6 +293,7 @@ export interface OrderResponseObject extends Omit<OrderFromDatabase, 'timeInForc
   ticker: string;
   updatedAt?: IsoString;
   updatedAtHeight?: string
+  subaccountNumber: number;
 }
 
 export type RedisOrderMap = { [orderId: string]: RedisOrder };
@@ -304,6 +343,10 @@ export interface SubaccountRequest extends AddressRequest {
   subaccountNumber: number,
 }
 
+export interface ParentSubaccountRequest extends AddressRequest {
+  parentSubaccountNumber: number,
+}
+
 export interface LimitRequest {
   limit: number,
 }
@@ -333,9 +376,21 @@ export interface PerpetualPositionRequest extends SubaccountRequest, LimitAndCre
 
 export interface AssetPositionRequest extends SubaccountRequest {}
 
+export interface ParentSubaccountAssetPositionRequest extends ParentSubaccountRequest {}
+
 export interface TransferRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {}
 
+export interface ParentSubaccountTransferRequest
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest {
+}
+
 export interface FillRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {
+  market: string,
+  marketType: MarketType,
+}
+
+export interface ParentSubaccountFillRequest
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest {
   market: string,
   marketType: MarketType,
 }
@@ -347,6 +402,10 @@ export interface TradeRequest extends LimitAndCreatedBeforeRequest {
 export interface PerpetualMarketRequest extends LimitRequest, TickerRequest {}
 
 export interface PnlTicksRequest extends SubaccountRequest, LimitAndCreatedBeforeAndAfterRequest {}
+
+export interface ParentSubaccountPnlTicksRequest
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeAndAfterRequest {
+}
 
 export interface OrderbookRequest {
   ticker: string,
@@ -378,6 +437,16 @@ export interface SparklinesRequest {
 
 export interface HistoricalFundingRequest extends LimitAndEffectiveBeforeRequest {
   ticker: string,
+}
+
+export interface ParentSubaccountListOrderRequest
+  extends ParentSubaccountRequest, LimitRequest, TickerRequest {
+  side?: OrderSide,
+  type?: OrderType,
+  status?: OrderStatus[],
+  goodTilBlockBeforeOrAt?: number,
+  goodTilBlockTimeBeforeOrAt?: IsoString,
+  returnLatestOrders?: boolean,
 }
 
 /* ------- COLLATERALIZATION TYPES ------- */

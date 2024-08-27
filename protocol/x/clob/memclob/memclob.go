@@ -148,6 +148,17 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 	return offchainUpdates, nil
 }
 
+// MaybeCreateOrderbook is used for updating memclob internal data structures to mark an orderbook as created.
+func (m *MemClobPriceTimePriority) MaybeCreateOrderbook(
+	ctx sdk.Context,
+	clobPair types.ClobPair,
+) {
+	if _, exists := m.openOrders.orderbooksMap[clobPair.GetClobPairId()]; exists {
+		return
+	}
+	m.CreateOrderbook(ctx, clobPair)
+}
+
 // CreateOrderbook is used for updating memclob internal data structures to mark an orderbook as created.
 // This function will panic if `clobPairId` already exists in any of the memclob's internal data structures.
 func (m *MemClobPriceTimePriority) CreateOrderbook(
@@ -508,6 +519,8 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				removalReason = types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED
 			} else if errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder) {
 				removalReason = types.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER
+			} else if errors.Is(err, types.ErrWouldViolateIsolatedSubaccountConstraints) {
+				removalReason = types.OrderRemoval_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS
 			}
 
 			if !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
@@ -614,13 +627,13 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 
 	// The taker order has unfilled size which will be added to the orderbook as a maker order.
 	// Verify the maker order can be added to the orderbook by performing the add-to-orderbook
-	// collateralization check.
-	addOrderOrderStatus := m.addOrderToOrderbookCollateralizationCheck(
+	// subaccount updates check.
+	addOrderOrderStatus := m.addOrderToOrderbookSubaccountUpdatesCheck(
 		ctx,
 		order,
 	)
 
-	// If the add order to orderbook collateralization check failed, we cannot add the order to the orderbook.
+	// If the add order to orderbook subacount updates check failed, we cannot add the order to the orderbook.
 	if !addOrderOrderStatus.IsSuccess() {
 		if m.generateOffchainUpdates {
 			// Send an off-chain update message indicating the order should be removed from the orderbook
@@ -843,6 +856,12 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		!order.IsLiquidation() &&
 		order.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_POST_ONLY {
 		matchingErr = types.ErrPostOnlyWouldCrossMakerOrder
+	}
+
+	// If the order filling leads to the subaccount having an invalid state due to failing checks for
+	// isolated subaccount constraints, return an error so that the order is canceled.
+	if !order.IsLiquidation() && takerOrderStatus.OrderStatus == types.ViolatesIsolatedSubaccountConstraints {
+		matchingErr = types.ErrWouldViolateIsolatedSubaccountConstraints
 	}
 
 	// If the match is valid and placing the taker order generated valid matches, update memclob state.
@@ -1442,16 +1461,16 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	return nil
 }
 
-// addOrderToOrderbookCollateralizationCheck will perform a collateralization check to verify that the subaccount would
-// remain collateralized if the new maker order were to be fully filled.
-// It returns the result of this collateralization check. If the collateralization check returns an
-// error, it will return the collateralization check error so that it can be surfaced to the client.
+// addOrderToOrderbookSubaccountUpdatesCheck will perform a check to verify that the subaccount updates
+// if the new maker order were to be fully filled are valid.
+// It returns the result of this subaccount updates check. If the check returns an error, it will return
+// the  error so that it can be surfaced to the client.
 //
 // This function will assume that all prior order validation has passed, including the pre-requisite validation of
 // `validateNewOrder` and the actual validation performed within `validateNewOrder`.
 // Note that this is a loose check, mainly for the purposes of spam mitigation. We perform an additional
-// collateralization check on orders when we attempt to match them.
-func (m *MemClobPriceTimePriority) addOrderToOrderbookCollateralizationCheck(
+// check on the subaccount updates for orders when we attempt to match them.
+func (m *MemClobPriceTimePriority) addOrderToOrderbookSubaccountUpdatesCheck(
 	ctx sdk.Context,
 	order types.Order,
 ) types.OrderStatus {
@@ -1470,7 +1489,7 @@ func (m *MemClobPriceTimePriority) addOrderToOrderbookCollateralizationCheck(
 	// For the collateralization check, use the remaining amount of the order that is resting on the book.
 	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
 	if !hasRemainingAmount {
-		panic(fmt.Sprintf("addOrderToOrderbookCollateralizationCheck: order has no remaining amount %v", order))
+		panic(fmt.Sprintf("addOrderToOrderbookSubaccountUpdatesCheck: order has no remaining amount %v", order))
 	}
 
 	pendingOpenOrder := types.PendingOpenOrder{
@@ -1484,9 +1503,9 @@ func (m *MemClobPriceTimePriority) addOrderToOrderbookCollateralizationCheck(
 	subaccountOpenOrders := make(map[satypes.SubaccountId][]types.PendingOpenOrder)
 	subaccountOpenOrders[subaccountId] = []types.PendingOpenOrder{pendingOpenOrder}
 
-	// TODO(DEC-1896): AddOrderToOrderbookCollatCheck should accept a single PendingOpenOrder as a
+	// TODO(DEC-1896): AddOrderToOrderbookSubaccountUpdatesCheck should accept a single PendingOpenOrder as a
 	// parameter rather than the subaccountOpenOrders map.
-	_, successPerSubaccountUpdate := m.clobKeeper.AddOrderToOrderbookCollatCheck(
+	_, successPerSubaccountUpdate := m.clobKeeper.AddOrderToOrderbookSubaccountUpdatesCheck(
 		ctx,
 		order.GetClobPairId(),
 		subaccountOpenOrders,
@@ -2017,11 +2036,14 @@ func updateResultToOrderStatus(updateResult satypes.UpdateResult) types.OrderSta
 		return types.Success
 	}
 
-	if updateResult == satypes.UpdateCausedError {
+	switch updateResult {
+	case satypes.UpdateCausedError:
 		return types.InternalError
+	case satypes.ViolatesIsolatedSubaccountConstraints:
+		return types.ViolatesIsolatedSubaccountConstraints
+	default:
+		return types.Undercollateralized
 	}
-
-	return types.Undercollateralized
 }
 
 // GetOrderRemainingAmount returns the remaining amount of an order (its size minus its filled amount).
@@ -2300,7 +2322,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 	orderbook := m.openOrders.mustGetOrderbook(ctx, clobPair.GetClobPairId())
 
 	// Get index price represented in subticks.
-	indexPriceSubticks := types.PriceToSubticks(
+	indexPriceSubticks := types.SpotPriceToSubticks(
 		params.IndexPrice,
 		clobPair,
 		params.BaseAtomicResolution,

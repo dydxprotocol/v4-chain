@@ -2,12 +2,13 @@ package keeper
 
 import (
 	"fmt"
-	dbm "github.com/cosmos/cosmos-db"
 	"testing"
+
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
 
 	storetypes "cosmossdk.io/store/types"
 	pricefeedserver_types "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -28,16 +29,17 @@ import (
 )
 
 type PerpKeepersTestContext struct {
-	Ctx              sdk.Context
-	PricesKeeper     *priceskeeper.Keeper
-	IndexPriceCache  *pricefeedserver_types.MarketToExchangePrices
-	AssetsKeeper     *assetskeeper.Keeper
-	EpochsKeeper     *epochskeeper.Keeper
-	PerpetualsKeeper *keeper.Keeper
-	StoreKey         storetypes.StoreKey
-	MemKey           storetypes.StoreKey
-	Cdc              *codec.ProtoCodec
-	MockTimeProvider *mocks.TimeProvider
+	Ctx               sdk.Context
+	PricesKeeper      *priceskeeper.Keeper
+	IndexPriceCache   *pricefeedserver_types.MarketToExchangePrices
+	AssetsKeeper      *assetskeeper.Keeper
+	EpochsKeeper      *epochskeeper.Keeper
+	PerpetualsKeeper  *keeper.Keeper
+	StoreKey          storetypes.StoreKey
+	MemKey            storetypes.StoreKey
+	Cdc               *codec.ProtoCodec
+	MockTimeProvider  *mocks.TimeProvider
+	TransientStoreKey storetypes.StoreKey
 }
 
 func PerpetualsKeepers(
@@ -77,7 +79,7 @@ func PerpetualsKeepersWithClobHelpers(
 			clobKeeper,
 			transientStoreKey,
 		)
-
+		pc.TransientStoreKey = transientStoreKey
 		return []GenesisInitializer{pc.PricesKeeper, pc.PerpetualsKeeper}
 	})
 
@@ -117,6 +119,7 @@ func createPerpetualsKeeperWithClobHelpers(
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
 		},
+		transientStoreKey,
 	)
 
 	k.SetClobKeeper(pck)
@@ -164,6 +167,22 @@ func PopulateTestPremiumStore(
 	}
 }
 
+func CreateTestPerpetuals(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
+	for _, p := range constants.TestMarketPerpetuals {
+		_, err := k.CreatePerpetual(
+			ctx,
+			p.Params.Id,
+			p.Params.Ticker,
+			p.Params.MarketId,
+			p.Params.AtomicResolution,
+			p.Params.DefaultFundingPpm,
+			p.Params.LiquidityTier,
+			p.Params.MarketType,
+		)
+		require.NoError(t, err)
+	}
+}
+
 func CreateTestLiquidityTiers(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 	for _, l := range constants.LiquidityTiers {
 		_, err := k.SetLiquidityTier(
@@ -173,6 +192,8 @@ func CreateTestLiquidityTiers(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 			l.InitialMarginPpm,
 			l.MaintenanceFractionPpm,
 			l.ImpactNotional,
+			l.OpenInterestLowerCap,
+			l.OpenInterestUpperCap,
 		)
 
 		require.NoError(t, err)
@@ -195,9 +216,8 @@ func GetLiquidityTierUpsertEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeLiquidityTier {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var liquidityTierEvent indexerevents.LiquidityTierUpsertEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &liquidityTierEvent)
+		err := proto.Unmarshal(event.DataBytes, &liquidityTierEvent)
 		if err != nil {
 			panic(err)
 		}
@@ -221,8 +241,11 @@ func CreateNPerpetuals(
 		CreateNMarkets(t, ctx, pricesKeeper, n)
 
 		var defaultFundingPpm int32
+		marketType := types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
+
 		if i%3 == 0 {
 			defaultFundingPpm = 1
+			marketType = types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
 		} else if i%3 == 1 {
 			defaultFundingPpm = -1
 		} else {
@@ -237,6 +260,7 @@ func CreateNPerpetuals(
 			int32(i),             // AtomicResolution
 			defaultFundingPpm,    // DefaultFundingPpm
 			allLiquidityTiers[i%len(allLiquidityTiers)].Id, // LiquidityTier
+			marketType,
 		)
 		if err != nil {
 			return items, err
@@ -286,6 +310,7 @@ func CreateTestPricesAndPerpetualMarkets(
 			perp.Params.AtomicResolution,
 			perp.Params.DefaultFundingPpm,
 			perp.Params.LiquidityTier,
+			perp.Params.MarketType,
 		)
 		require.NoError(t, err)
 	}

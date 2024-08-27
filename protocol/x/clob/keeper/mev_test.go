@@ -837,9 +837,16 @@ func TestRecordMevMetrics(t *testing.T) {
 				mock.Anything,
 			).Return(nil)
 			mockBankKeeper.On(
+				"SendCoins",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(nil)
+			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				types.InsuranceFundModuleAddress,
+				perptypes.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
@@ -850,13 +857,13 @@ func TestRecordMevMetrics(t *testing.T) {
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
-			err := ks.PricesKeeper.UpdateMarketPrices(
+			err := ks.PricesKeeper.UpdateSpotAndPnlMarketPrices(
 				ctx,
-				[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{
-					{
-						MarketId: 0,
-						Price:    10_000_000, // $100
-					},
+				&pricestypes.MarketPriceUpdate{
+					MarketId:  0,
+					SpotPrice: 10_000_000, // $100
+					PnlPrice:  10_000_000, // $100
+
 				},
 			)
 			require.NoError(t, err)
@@ -880,6 +887,7 @@ func TestRecordMevMetrics(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}
@@ -1231,6 +1239,13 @@ func TestGetMidPrices(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(nil)
+			mockBankKeeper.On(
+				"SendCoins",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(nil)
 
 			ks := keepertest.NewClobKeepersTestContext(t, memclob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
 			ctx := ks.Ctx.WithIsCheckTx(true)
@@ -1257,6 +1272,7 @@ func TestGetMidPrices(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 			}

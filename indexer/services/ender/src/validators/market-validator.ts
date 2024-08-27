@@ -81,7 +81,8 @@ export class MarketValidator extends Validator<MarketEventV1> {
     const marketPriceUpdate:
     MarketPriceUpdateEventMessage = this.event as MarketPriceUpdateEventMessage;
     if (
-      marketPriceUpdate.priceUpdate.priceWithExponent <= Long.fromValue(0)
+      marketPriceUpdate.priceUpdate.spotPriceWithExponent <= Long.fromValue(0) ||
+      marketPriceUpdate.priceUpdate.pnlPriceWithExponent <= Long.fromValue(0)
     ) {
       return this.logAndThrowParseMessageError(
         'Invalid MarketPriceUpdate, priceWithExponent must be > 0',
@@ -104,6 +105,7 @@ export class MarketValidator extends Validator<MarketEventV1> {
   public createHandlers(
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
+    _: string,
   ): Handler<MarketEventV1>[] {
     const Initializer:
     HandlerInitializer | undefined = this.getHandlerInitializer();

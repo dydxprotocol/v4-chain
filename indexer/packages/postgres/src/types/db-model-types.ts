@@ -6,7 +6,7 @@ import { FillType, Liquidity } from './fill-types';
 import {
   OrderSide, OrderStatus, OrderType, TimeInForce,
 } from './order-types';
-import { PerpetualMarketStatus } from './perpetual-market-types';
+import { PerpetualMarketStatus, PerpetualMarketType } from './perpetual-market-types';
 import { PerpetualPositionStatus } from './perpetual-position-types';
 import { PositionSide } from './position-types';
 
@@ -84,6 +84,8 @@ export interface PerpetualMarketFromDatabase {
   subticksPerTick: number;
   stepBaseQuantums: number;
   liquidityTierId: number;
+  marketType: PerpetualMarketType;
+  baseOpenInterest: string;
 }
 
 export interface FillFromDatabase {
@@ -158,12 +160,14 @@ export interface MarketFromDatabase {
   pair: string;
   exponent: number;
   minPriceChangePpm: number;
-  oraclePrice?: string;
+  spotPrice?: string;
+  pnlPrice?: string;
 }
 
 export interface OraclePriceFromDatabase extends IdBasedModelFromDatabase {
   marketId: number;
-  price: string;
+  spotPrice: string;
+  pnlPrice: string;
   effectiveAt: IsoString;
   effectiveAtHeight: string;
 }
@@ -173,6 +177,8 @@ export interface LiquidityTiersFromDatabase {
   name: string;
   initialMarginPpm: string;
   maintenanceFractionPpm: string;
+  openInterestLowerCap?: string;
+  openInterestUpperCap?: string;
 }
 
 export interface CandleFromDatabase extends IdBasedModelFromDatabase {
@@ -229,7 +235,7 @@ export type SubaccountUsdcMap = { [subaccountId: string]: Big };
 export type AssetPositionsMap = { [subaccountId: string]: AssetPositionFromDatabase[] };
 export type MarketsMap = { [marketId: number]: MarketFromDatabase };
 export type OraclePricesMap = { [marketId: number]: OraclePriceFromDatabase[] };
-export type PriceMap = { [marketId: number]: string };
+export type PriceMap = { [marketId: number]: { spotPrice: string; pnlPrice: string } };
 export type FundingIndexMap = { [perpetualId: string]: Big };
 export type CandlesResolutionMap = { [resolution: string]: CandleFromDatabase };
 export type CandlesMap = { [ticker: string]: CandlesResolutionMap };

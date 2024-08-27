@@ -6,7 +6,8 @@ export async function up(knex: Knex): Promise<void> {
     .createTable('oracle_prices', (table) => {
       table.uuid('id').primary();
       table.integer('marketId').notNullable();
-      table.decimal('price', null).notNullable();
+      table.decimal('spotPrice', null).notNullable();
+      table.decimal('pnlPrice', null).notNullable();
       table.timestamp('effectiveAt').notNullable();
       table.bigInteger('effectiveAtHeight').notNullable();
 

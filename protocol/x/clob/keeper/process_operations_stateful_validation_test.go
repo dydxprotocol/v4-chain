@@ -26,8 +26,8 @@ import (
 func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T) {
 	tests := map[string]processProposerOperationsTestCase{
 		`Stateful order validation: referenced maker order does not exist in state`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -58,8 +58,8 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 			),
 		},
 		`Stateful order validation: referenced taker order does not exist in state`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -90,8 +90,8 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 			),
 		},
 		`Stateful order validation: referenced maker order in liquidation match does not exist in state`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -126,8 +126,8 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 			),
 		},
 		`Stateful order validation: referenced long-term order is on the wrong side`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -162,8 +162,8 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 			expectedError: errors.New("Orders are not on opposing sides of the book in match"),
 		},
 		`Stateful match validation: taker order cannot be post only`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -200,8 +200,8 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 			),
 		},
 		`Stateful match validation: maker order cannot be FOK`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -234,8 +234,8 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 			expectedError: errors.New("IOC / FOK order cannot be matched as a maker order"),
 		},
 		`Stateful match validation: maker order cannot be IOC`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -268,9 +268,9 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 			expectedError: errors.New("IOC / FOK order cannot be matched as a maker order"),
 		},
 		`Stateful order validation: referenced long-term order is for the wrong clob pair`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
-				&constants.EthUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+				constants.EthUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -323,8 +323,8 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 			expectedError: errors.New("ClobPairIds do not match in match"),
 		},
 		"Fails with Long-Term order when considering state fill amount": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -339,10 +339,10 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
 						testutil_bank.MatchUsdcOfAmount(
 							12_500_000+5_000_000,
@@ -393,8 +393,8 @@ func TestProcessProposerMatches_LongTerm_StatefulValidation_Failure(t *testing.T
 func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 	tests := map[string]processProposerOperationsTestCase{
 		`Stateful order validation: referenced maker order does not exist in state`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -425,8 +425,8 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 			),
 		},
 		`Stateful order validation: referenced taker order does not exist in state`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -457,8 +457,8 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 			),
 		},
 		`Stateful order validation: referenced maker order in liquidation match does not exist in state`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -493,8 +493,8 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 			),
 		},
 		`Stateful order validation: referenced maker order exist in state but is untriggered`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -528,8 +528,8 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 			),
 		},
 		`Stateful order validation: referenced conditional order is on the wrong side`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -564,9 +564,9 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 			expectedError: errors.New("Orders are not on opposing sides of the book in match"),
 		},
 		`Stateful order validation: referenced conditional order is for the wrong clob pair`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
-				&constants.EthUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+				constants.EthUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -619,8 +619,8 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 			expectedError: errors.New("ClobPairIds do not match in match"),
 		},
 		"Fails with conditional order when considering state fill amount": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -635,10 +635,10 @@ func TestProcessProposerMatches_Conditional_Validation_Failure(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
 						testutil_bank.MatchUsdcOfAmount(
 							12_500_000+5_000_000,
