@@ -31,7 +31,7 @@ async function test(): Promise<void> {
   }
 
   // IBC to noble
-
+  // Use sDAI denom for ibc transfers
   const ibcToNobleMsg: EncodeObject = {
     typeUrl: '/ibc.applications.transfer.v1.MsgTransfer',
     value: {
@@ -39,8 +39,8 @@ async function test(): Promise<void> {
       sourceChannel: 'channel-0',
       token: {
         denom:
-          'ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5',
-        amount: '1000000',
+          'ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8',
+        amount: '1000000000000000000',
       },
       sender: dydxWallet.address,
       receiver: nobleWallet.address,

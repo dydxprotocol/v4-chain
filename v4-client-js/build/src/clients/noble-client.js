@@ -38,7 +38,7 @@ class NobleClient {
         }
         return this.stargateClient.getBalance(this.wallet.address, denom);
     }
-    async send(messages, gasPrice = stargate_1.GasPrice.fromString('0.025uusdc'), memo) {
+    async send(messages, gasPrice = stargate_1.GasPrice.fromString('0.025utdai'), memo) {
         var _a;
         if (!this.stargateClient) {
             throw new Error('NobleClient stargateClient not initialized');
@@ -51,7 +51,7 @@ class NobleClient {
         // Sign and broadcast the transaction
         return this.stargateClient.signAndBroadcast(this.wallet.address, messages, fee, memo !== null && memo !== void 0 ? memo : '');
     }
-    async simulateTransaction(messages, gasPrice = stargate_1.GasPrice.fromString('0.025uusdc'), memo) {
+    async simulateTransaction(messages, gasPrice = stargate_1.GasPrice.fromString('0.025utdai'), memo) {
         var _a, _b;
         if (!this.stargateClient) {
             throw new Error('NobleClient stargateClient not initialized');

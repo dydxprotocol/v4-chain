@@ -7,7 +7,7 @@ exports.FaucetClient = void 0;
 const rest_1 = __importDefault(require("./modules/rest"));
 class FaucetClient extends rest_1.default {
     /**
-       * @description For testnet only, add USDC to an subaccount
+       * @description For testnet only, add TDAI to an subaccount
        *
        * @returns The HTTP response.
        */
