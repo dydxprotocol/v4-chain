@@ -1,4 +1,4 @@
-import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType } from "./share";
+import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType, LockedShares, LockedSharesSDKType } from "./share";
 import { QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
 import { VaultId, VaultIdSDKType } from "./vault";
 import * as _m0 from "protobufjs/minimal";
@@ -17,6 +17,9 @@ export interface GenesisState {
   /** The default quoting parameters for all vaults. */
 
   defaultQuotingParams?: QuotingParams;
+  /** All locked shares. */
+
+  allLockedShares: LockedShares[];
 }
 /** GenesisState defines `x/vault`'s genesis state. */
 
@@ -32,6 +35,9 @@ export interface GenesisStateSDKType {
   /** The default quoting parameters for all vaults. */
 
   default_quoting_params?: QuotingParamsSDKType;
+  /** All locked shares. */
+
+  all_locked_shares: LockedSharesSDKType[];
 }
 /** Vault defines the state of a vault. */
 
@@ -129,7 +135,8 @@ function createBaseGenesisState(): GenesisState {
     totalShares: undefined,
     ownerShares: [],
     vaults: [],
-    defaultQuotingParams: undefined
+    defaultQuotingParams: undefined,
+    allLockedShares: []
   };
 }
 
@@ -149,6 +156,10 @@ export const GenesisState = {
 
     if (message.defaultQuotingParams !== undefined) {
       QuotingParams.encode(message.defaultQuotingParams, writer.uint32(34).fork()).ldelim();
+    }
+
+    for (const v of message.allLockedShares) {
+      LockedShares.encode(v!, writer.uint32(42).fork()).ldelim();
     }
 
     return writer;
@@ -179,6 +190,10 @@ export const GenesisState = {
           message.defaultQuotingParams = QuotingParams.decode(reader, reader.uint32());
           break;
 
+        case 5:
+          message.allLockedShares.push(LockedShares.decode(reader, reader.uint32()));
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -194,6 +209,7 @@ export const GenesisState = {
     message.ownerShares = object.ownerShares?.map(e => OwnerShare.fromPartial(e)) || [];
     message.vaults = object.vaults?.map(e => Vault.fromPartial(e)) || [];
     message.defaultQuotingParams = object.defaultQuotingParams !== undefined && object.defaultQuotingParams !== null ? QuotingParams.fromPartial(object.defaultQuotingParams) : undefined;
+    message.allLockedShares = object.allLockedShares?.map(e => LockedShares.fromPartial(e)) || [];
     return message;
   }
 

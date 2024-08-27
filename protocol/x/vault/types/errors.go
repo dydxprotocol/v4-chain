@@ -106,4 +106,9 @@ var (
 		20,
 		"VaultParams not found",
 	)
+	ErrInvalidLockedShares = errorsmod.Register(
+		ModuleName,
+		21,
+		"LockedShares is invalid",
+	)
 )

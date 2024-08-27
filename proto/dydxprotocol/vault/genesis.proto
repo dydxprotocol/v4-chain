@@ -18,6 +18,8 @@ message GenesisState {
   repeated Vault vaults = 3 [ (gogoproto.nullable) = false ];
   // The default quoting parameters for all vaults.
   QuotingParams default_quoting_params = 4 [ (gogoproto.nullable) = false ];
+  // All locked shares.
+  repeated LockedShares all_locked_shares = 5 [ (gogoproto.nullable) = false ];
 }
 
 // Vault defines the state of a vault.

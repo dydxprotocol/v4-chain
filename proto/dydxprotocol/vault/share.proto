@@ -21,3 +21,22 @@ message OwnerShare {
   string owner = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   NumShares shares = 2 [ (gogoproto.nullable) = false ];
 }
+
+// LockedShares stores for an owner their total number of locked shares
+// and a schedule of share unlockings.
+message LockedShares {
+  // Address of the owner of below shares.
+  string owner_address = 1;
+  // Total number of locked shares.
+  NumShares total_locked_shares = 2 [ (gogoproto.nullable) = false ];
+  // Details of each unlock.
+  repeated UnlockDetail unlock_details = 3 [ (gogoproto.nullable) = false ];
+}
+
+// UnlockDetail stores how many shares unlock at which block height.
+message UnlockDetail {
+  // Number of shares to unlock.
+  NumShares shares = 1 [ (gogoproto.nullable) = false ];
+  // Block height at which above shares unlock.
+  uint32 unlock_block_height = 2;
+}

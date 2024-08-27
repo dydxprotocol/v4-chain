@@ -117,34 +117,164 @@ func (m *OwnerShare) GetShares() NumShares {
 	return NumShares{}
 }
 
+// LockedShares stores for an owner their total number of locked shares
+// and a schedule of share unlockings.
+type LockedShares struct {
+	// Address of the owner of below shares.
+	OwnerAddress string `protobuf:"bytes,1,opt,name=owner_address,json=ownerAddress,proto3" json:"owner_address,omitempty"`
+	// Total number of locked shares.
+	TotalLockedShares NumShares `protobuf:"bytes,2,opt,name=total_locked_shares,json=totalLockedShares,proto3" json:"total_locked_shares"`
+	// Details of each unlock.
+	UnlockDetails []UnlockDetail `protobuf:"bytes,3,rep,name=unlock_details,json=unlockDetails,proto3" json:"unlock_details"`
+}
+
+func (m *LockedShares) Reset()         { *m = LockedShares{} }
+func (m *LockedShares) String() string { return proto.CompactTextString(m) }
+func (*LockedShares) ProtoMessage()    {}
+func (*LockedShares) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b65bab3182bbf56c, []int{2}
+}
+func (m *LockedShares) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *LockedShares) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_LockedShares.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *LockedShares) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LockedShares.Merge(m, src)
+}
+func (m *LockedShares) XXX_Size() int {
+	return m.Size()
+}
+func (m *LockedShares) XXX_DiscardUnknown() {
+	xxx_messageInfo_LockedShares.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LockedShares proto.InternalMessageInfo
+
+func (m *LockedShares) GetOwnerAddress() string {
+	if m != nil {
+		return m.OwnerAddress
+	}
+	return ""
+}
+
+func (m *LockedShares) GetTotalLockedShares() NumShares {
+	if m != nil {
+		return m.TotalLockedShares
+	}
+	return NumShares{}
+}
+
+func (m *LockedShares) GetUnlockDetails() []UnlockDetail {
+	if m != nil {
+		return m.UnlockDetails
+	}
+	return nil
+}
+
+// UnlockDetail stores how many shares unlock at which block height.
+type UnlockDetail struct {
+	// Number of shares to unlock.
+	Shares NumShares `protobuf:"bytes,1,opt,name=shares,proto3" json:"shares"`
+	// Block height at which above shares unlock.
+	UnlockBlockHeight uint32 `protobuf:"varint,2,opt,name=unlock_block_height,json=unlockBlockHeight,proto3" json:"unlock_block_height,omitempty"`
+}
+
+func (m *UnlockDetail) Reset()         { *m = UnlockDetail{} }
+func (m *UnlockDetail) String() string { return proto.CompactTextString(m) }
+func (*UnlockDetail) ProtoMessage()    {}
+func (*UnlockDetail) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b65bab3182bbf56c, []int{3}
+}
+func (m *UnlockDetail) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UnlockDetail) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UnlockDetail.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *UnlockDetail) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UnlockDetail.Merge(m, src)
+}
+func (m *UnlockDetail) XXX_Size() int {
+	return m.Size()
+}
+func (m *UnlockDetail) XXX_DiscardUnknown() {
+	xxx_messageInfo_UnlockDetail.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UnlockDetail proto.InternalMessageInfo
+
+func (m *UnlockDetail) GetShares() NumShares {
+	if m != nil {
+		return m.Shares
+	}
+	return NumShares{}
+}
+
+func (m *UnlockDetail) GetUnlockBlockHeight() uint32 {
+	if m != nil {
+		return m.UnlockBlockHeight
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*NumShares)(nil), "dydxprotocol.vault.NumShares")
 	proto.RegisterType((*OwnerShare)(nil), "dydxprotocol.vault.OwnerShare")
+	proto.RegisterType((*LockedShares)(nil), "dydxprotocol.vault.LockedShares")
+	proto.RegisterType((*UnlockDetail)(nil), "dydxprotocol.vault.UnlockDetail")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/vault/share.proto", fileDescriptor_b65bab3182bbf56c) }
 
 var fileDescriptor_b65bab3182bbf56c = []byte{
-	// 290 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4b, 0xa9, 0x4c, 0xa9,
-	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x2f, 0x4b, 0x2c, 0xcd, 0x29, 0xd1, 0x2f,
-	0xce, 0x48, 0x2c, 0x4a, 0xd5, 0x03, 0x0b, 0x0a, 0x09, 0x21, 0xcb, 0xeb, 0x81, 0xe5, 0xa5, 0x44,
-	0xd2, 0xf3, 0xd3, 0xf3, 0xc1, 0x62, 0xfa, 0x20, 0x16, 0x44, 0xa5, 0x94, 0x64, 0x72, 0x7e, 0x71,
-	0x6e, 0x7e, 0x71, 0x3c, 0x44, 0x02, 0xc2, 0x81, 0x48, 0x29, 0x95, 0x70, 0x71, 0xfa, 0x95, 0xe6,
-	0x06, 0x83, 0x8c, 0x2d, 0x16, 0x4a, 0xe7, 0xe2, 0xca, 0x2b, 0xcd, 0x8d, 0x07, 0x5b, 0x52, 0x2c,
-	0xc1, 0xa4, 0xc0, 0xa8, 0xc1, 0xe3, 0xe4, 0x71, 0xe2, 0x9e, 0x3c, 0xc3, 0xad, 0x7b, 0xf2, 0x0e,
-	0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0xa8, 0x0e, 0x33, 0xd1, 0x4d,
-	0xce, 0x48, 0xcc, 0xcc, 0xd3, 0x87, 0x8b, 0xa4, 0x94, 0x54, 0x16, 0xa4, 0x16, 0xeb, 0x05, 0xa7,
-	0x16, 0x65, 0x26, 0xe6, 0x64, 0x56, 0x25, 0x26, 0xe5, 0xa4, 0x7a, 0xe6, 0x95, 0x04, 0x71, 0xe6,
-	0xc1, 0x2c, 0x52, 0xaa, 0xe4, 0xe2, 0xf2, 0x2f, 0xcf, 0x4b, 0x2d, 0x02, 0x73, 0x85, 0xf4, 0xb8,
-	0x58, 0xf3, 0x41, 0x3c, 0x09, 0x46, 0x05, 0x46, 0x0d, 0x4e, 0x27, 0x89, 0x4b, 0x5b, 0x74, 0x45,
-	0xa0, 0x8e, 0x74, 0x4c, 0x49, 0x29, 0x4a, 0x2d, 0x2e, 0x0e, 0x2e, 0x29, 0xca, 0xcc, 0x4b, 0x0f,
-	0x82, 0x28, 0x13, 0xb2, 0xe6, 0x62, 0x43, 0x72, 0x22, 0xb7, 0x91, 0xac, 0x1e, 0x66, 0x48, 0xe8,
-	0xc1, 0x7d, 0xe5, 0xc4, 0x02, 0xf2, 0x41, 0x10, 0x54, 0x8b, 0x53, 0xe0, 0x89, 0x47, 0x72, 0x8c,
-	0x17, 0x1e, 0xc9, 0x31, 0x3e, 0x78, 0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c, 0xc3, 0x85, 0xc7, 0x72,
-	0x0c, 0x37, 0x1e, 0xcb, 0x31, 0x44, 0x99, 0x13, 0xef, 0xc3, 0x0a, 0x68, 0x74, 0x80, 0x3d, 0x9a,
-	0xc4, 0x06, 0x16, 0x37, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0xfd, 0xca, 0x9e, 0xcb, 0xb1, 0x01,
-	0x00, 0x00,
+	// 417 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x52, 0xcd, 0xaa, 0xd3, 0x40,
+	0x14, 0xce, 0x78, 0xf5, 0x42, 0xe7, 0xa6, 0xc2, 0xcd, 0xbd, 0x8b, 0x58, 0x30, 0x0d, 0x71, 0xd3,
+	0x4d, 0x27, 0x50, 0x05, 0x17, 0x6e, 0x34, 0xb8, 0xa8, 0xe0, 0x0f, 0x26, 0xb8, 0x71, 0x13, 0x26,
+	0xc9, 0x90, 0x04, 0x93, 0x4c, 0xc9, 0x4c, 0xb4, 0xd5, 0x97, 0xf0, 0x61, 0x7c, 0x88, 0x2e, 0x8b,
+	0x1b, 0xc5, 0x45, 0x91, 0xf6, 0x45, 0x24, 0x67, 0x62, 0x49, 0xd1, 0xc5, 0xed, 0x66, 0x98, 0xf3,
+	0x7d, 0xe7, 0x9c, 0xef, 0x3b, 0x87, 0x83, 0xad, 0x64, 0x95, 0x2c, 0x17, 0x35, 0x97, 0x3c, 0xe6,
+	0x85, 0xfb, 0x91, 0x36, 0x85, 0x74, 0x45, 0x46, 0x6b, 0x46, 0x00, 0x34, 0x8c, 0x3e, 0x4f, 0x80,
+	0x1f, 0x5d, 0xa7, 0x3c, 0xe5, 0x80, 0xb9, 0xed, 0x4f, 0x65, 0x8e, 0xee, 0xc5, 0x5c, 0x94, 0x5c,
+	0x84, 0x8a, 0x50, 0x81, 0xa2, 0x1c, 0x89, 0x07, 0xaf, 0x9b, 0x32, 0x68, 0xdb, 0x0a, 0x23, 0xc5,
+	0xb8, 0x6a, 0xca, 0x10, 0x44, 0x84, 0x79, 0xcb, 0x46, 0x13, 0xdd, 0x9b, 0xaf, 0xb7, 0x63, 0xed,
+	0xd7, 0x76, 0xfc, 0x34, 0xcd, 0x65, 0xd6, 0x44, 0x24, 0xe6, 0xa5, 0x7b, 0x6c, 0xec, 0xd1, 0x34,
+	0xce, 0x68, 0x5e, 0xb9, 0x07, 0x24, 0x91, 0xab, 0x05, 0x13, 0x24, 0x60, 0x75, 0x4e, 0x8b, 0xfc,
+	0x33, 0x8d, 0x0a, 0xf6, 0xa2, 0x92, 0xfe, 0xa0, 0xfa, 0x2b, 0xe4, 0xac, 0x30, 0x7e, 0xf3, 0xa9,
+	0x62, 0x35, 0x84, 0x06, 0xc1, 0x77, 0x78, 0x1b, 0x99, 0xc8, 0x46, 0x93, 0x81, 0x67, 0x7e, 0xff,
+	0x36, 0xbd, 0xee, 0x4c, 0x3e, 0x4b, 0x92, 0x9a, 0x09, 0x11, 0xc8, 0x3a, 0xaf, 0x52, 0x5f, 0xa5,
+	0x19, 0x4f, 0xf0, 0x79, 0xcf, 0xe2, 0xc5, 0xec, 0x3e, 0xf9, 0x77, 0x13, 0xe4, 0x30, 0x95, 0x77,
+	0xbb, 0x9d, 0xc0, 0xef, 0x4a, 0x9c, 0x1f, 0x08, 0xeb, 0x2f, 0x79, 0xfc, 0x81, 0x25, 0xdd, 0xd0,
+	0x0f, 0xf0, 0x10, 0xda, 0x86, 0x54, 0x69, 0x29, 0x17, 0xbe, 0x0e, 0x60, 0xa7, 0x6f, 0x04, 0xf8,
+	0x4a, 0x72, 0x49, 0x8b, 0xb0, 0x80, 0xd2, 0xf0, 0x74, 0xfd, 0x4b, 0xa8, 0x3f, 0x52, 0x7e, 0x85,
+	0xef, 0x36, 0x55, 0xdb, 0x30, 0x4c, 0x98, 0xa4, 0x79, 0x21, 0xcc, 0x33, 0xfb, 0x6c, 0x72, 0x31,
+	0xb3, 0xff, 0xd7, 0xef, 0x1d, 0x64, 0x3e, 0x87, 0xc4, 0xae, 0xe5, 0xb0, 0xe9, 0x61, 0xc2, 0xf9,
+	0x82, 0xf5, 0x7e, 0x52, 0x6f, 0x4d, 0xe8, 0xe4, 0x35, 0x19, 0x04, 0x5f, 0x75, 0xde, 0x22, 0x78,
+	0x33, 0x96, 0xa7, 0x99, 0x84, 0x81, 0x87, 0xfe, 0xa5, 0xa2, 0xbc, 0xf6, 0x99, 0x03, 0xe1, 0xbd,
+	0x5d, 0xef, 0x2c, 0xb4, 0xd9, 0x59, 0xe8, 0xf7, 0xce, 0x42, 0x5f, 0xf7, 0x96, 0xb6, 0xd9, 0x5b,
+	0xda, 0xcf, 0xbd, 0xa5, 0xbd, 0x7f, 0x7c, 0xf3, 0xc3, 0x59, 0x76, 0x57, 0x0e, 0xf7, 0x13, 0x9d,
+	0x03, 0xfe, 0xf0, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x9b, 0x64, 0x99, 0x09, 0x08, 0x03, 0x00,
+	0x00,
 }
 
 func (m *NumShares) Marshal() (dAtA []byte, err error) {
@@ -220,6 +350,98 @@ func (m *OwnerShare) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *LockedShares) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *LockedShares) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *LockedShares) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.UnlockDetails) > 0 {
+		for iNdEx := len(m.UnlockDetails) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.UnlockDetails[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintShare(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	{
+		size, err := m.TotalLockedShares.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintShare(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.OwnerAddress) > 0 {
+		i -= len(m.OwnerAddress)
+		copy(dAtA[i:], m.OwnerAddress)
+		i = encodeVarintShare(dAtA, i, uint64(len(m.OwnerAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *UnlockDetail) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UnlockDetail) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *UnlockDetail) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.UnlockBlockHeight != 0 {
+		i = encodeVarintShare(dAtA, i, uint64(m.UnlockBlockHeight))
+		i--
+		dAtA[i] = 0x10
+	}
+	{
+		size, err := m.Shares.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintShare(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintShare(dAtA []byte, offset int, v uint64) int {
 	offset -= sovShare(v)
 	base := offset
@@ -254,6 +476,41 @@ func (m *OwnerShare) Size() (n int) {
 	}
 	l = m.Shares.Size()
 	n += 1 + l + sovShare(uint64(l))
+	return n
+}
+
+func (m *LockedShares) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.OwnerAddress)
+	if l > 0 {
+		n += 1 + l + sovShare(uint64(l))
+	}
+	l = m.TotalLockedShares.Size()
+	n += 1 + l + sovShare(uint64(l))
+	if len(m.UnlockDetails) > 0 {
+		for _, e := range m.UnlockDetails {
+			l = e.Size()
+			n += 1 + l + sovShare(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *UnlockDetail) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Shares.Size()
+	n += 1 + l + sovShare(uint64(l))
+	if m.UnlockBlockHeight != 0 {
+		n += 1 + sovShare(uint64(m.UnlockBlockHeight))
+	}
 	return n
 }
 
@@ -440,6 +697,257 @@ func (m *OwnerShare) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipShare(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthShare
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *LockedShares) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowShare
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LockedShares: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LockedShares: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OwnerAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowShare
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthShare
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthShare
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OwnerAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalLockedShares", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowShare
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthShare
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthShare
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TotalLockedShares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UnlockDetails", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowShare
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthShare
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthShare
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UnlockDetails = append(m.UnlockDetails, UnlockDetail{})
+			if err := m.UnlockDetails[len(m.UnlockDetails)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipShare(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthShare
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *UnlockDetail) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowShare
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UnlockDetail: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UnlockDetail: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Shares", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowShare
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthShare
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthShare
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Shares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UnlockBlockHeight", wireType)
+			}
+			m.UnlockBlockHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowShare
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.UnlockBlockHeight |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipShare(dAtA[iNdEx:])

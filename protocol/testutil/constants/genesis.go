@@ -4535,6 +4535,7 @@ const GenesisState = `{
     },
     "upgrade": {},
     "vault": {
+      "all_locked_shares": [],
       "default_quoting_params": {
         "layers": 2,
         "spread_min_ppm": 10000,
