@@ -170,7 +170,7 @@ func TestCreatePerpetual(t *testing.T) {
 					// Expected resolution = -6 - Floor(log10(1000000000)) = -15
 					require.Equal(t, int32(-15), perpetual.Params.AtomicResolution)
 					require.Equal(t, int32(types.DefaultFundingPpm), perpetual.Params.DefaultFundingPpm)
-					require.Equal(t, uint32(types.LiquidityTier_LongTail), perpetual.Params.LiquidityTier)
+					require.Equal(t, uint32(types.LiquidityTier_Isolated), perpetual.Params.LiquidityTier)
 					require.Equal(
 						t, perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
 						perpetual.Params.MarketType,
