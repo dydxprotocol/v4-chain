@@ -22,8 +22,8 @@ import {
   SubaccountTable,
   USDC_SYMBOL,
   AssetFromDatabase,
-  MarketColumns,
   AssetColumns,
+  MarketColumns,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';

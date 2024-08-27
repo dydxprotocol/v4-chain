@@ -1514,6 +1514,44 @@
         ],
         "type": "object",
         "additionalProperties": false
+      },
+      "VaultPosition": {
+        "properties": {
+          "ticker": {
+            "type": "string"
+          },
+          "assetPosition": {
+            "$ref": "#/components/schemas/AssetPositionResponseObject"
+          },
+          "perpetualPosition": {
+            "$ref": "#/components/schemas/PerpetualPositionResponseObject"
+          },
+          "equity": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticker",
+          "assetPosition",
+          "equity"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "MegavaultPositionResponse": {
+        "properties": {
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/VaultPosition"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "positions"
+        ],
+        "type": "object",
+        "additionalProperties": false
       }
     },
     "securitySchemes": {}
@@ -3320,6 +3358,25 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/VaultsHistoricalPnlResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": []
+      }
+    },
+    "/vault/v1/megavault/positions": {
+      "get": {
+        "operationId": "GetMegavaultPositions",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MegavaultPositionResponse"
                 }
               }
             }
