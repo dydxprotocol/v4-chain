@@ -6,7 +6,7 @@ import config from '../config';
 
 export const ratelimitRedis: {
   client: RedisClient,
-  connect: () => Promise<void>
+  connect: () => Promise<void>,
 } = redisLib.createRedisClient(
   config.RATE_LIMIT_REDIS_URL, config.REDIS_RECONNECT_TIMEOUT_MS,
 );

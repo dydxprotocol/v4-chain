@@ -20,26 +20,26 @@ export enum ComplianceStatus {
 }
 
 export interface ComplianceStatusCreateObject {
-  address: string;
-  status: ComplianceStatus;
-  reason?: ComplianceReason;
-  createdAt?: IsoString;
-  updatedAt?: IsoString;
+  address: string,
+  status: ComplianceStatus,
+  reason?: ComplianceReason,
+  createdAt?: IsoString,
+  updatedAt?: IsoString,
 }
 
 export interface ComplianceStatusUpsertObject {
-  address: string;
-  status: ComplianceStatus;
-  reason?: ComplianceReason;
-  updatedAt: IsoString;
+  address: string,
+  status: ComplianceStatus,
+  reason?: ComplianceReason,
+  updatedAt: IsoString,
 }
 
 export interface ComplianceStatusUpdateObject {
-  address: string;
-  status?: ComplianceStatus;
-  reason?: ComplianceReason | null;
-  createdAt?: IsoString;
-  updatedAt?: IsoString;
+  address: string,
+  status?: ComplianceStatus,
+  reason?: ComplianceReason | null,
+  createdAt?: IsoString,
+  updatedAt?: IsoString,
 }
 
 export enum ComplianceStatusColumns {

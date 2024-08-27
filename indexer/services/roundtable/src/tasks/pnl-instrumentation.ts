@@ -40,7 +40,7 @@ export default async function runTask(): Promise<void> {
   const mostRecentPnlTicks: PnlTickForSubaccounts = await getMostRecentPnlTicksForEachAccount();
   const mostRecentPnlTickTimes:
   {
-    [subaccountId: string]: string
+    [subaccountId: string]: string,
   } = _.mapValues(
     mostRecentPnlTicks,
     (pnlTick: PnlTicksCreateObject) => pnlTick.blockTime,

@@ -13,15 +13,15 @@ export enum IsolationLevel {
 }
 
 export interface Options {
-  txId?: number;
-  forUpdate?: boolean;
-  noWait?: boolean;
-  orderBy?: [string, Ordering][];
+  txId?: number,
+  forUpdate?: boolean,
+  noWait?: boolean,
+  orderBy?: [string, Ordering][],
   readReplica?: boolean,
-  random?: boolean;
-  bindings?: readonly RawBinding[];
+  random?: boolean,
+  bindings?: readonly RawBinding[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sqlOptions?: Readonly<{ [key: string]: any }>;
+  sqlOptions?: Readonly<{ [key: string]: any }>,
 }
 
 export enum Ordering {

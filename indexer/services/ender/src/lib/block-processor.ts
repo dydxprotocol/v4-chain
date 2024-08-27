@@ -70,12 +70,12 @@ function serializeSubtypeAndVersion(
 }
 
 type DecodedIndexerTendermintBlock = Omit<IndexerTendermintBlock, 'events'> & {
-  events: DecodedIndexerTendermintEvent[];
+  events: DecodedIndexerTendermintEvent[],
 };
 
 type DecodedIndexerTendermintEvent = Omit<IndexerTendermintEvent, 'dataBytes'> & {
   /** Decoded tendermint event. */
-  dataBytes: object;
+  dataBytes: object,
 };
 
 export class BlockProcessor {

@@ -182,7 +182,7 @@ export function calculateEquityAndFreeCollateral(
     totalPositionRisk,
   }: {
     signedPositionNotional: Big,
-    totalPositionRisk: Big
+    totalPositionRisk: Big,
   } = perpetualPositions.reduce((acc, position) => {
     // get the positionNotional for each position and the individualRisk of the position
     const {
@@ -420,7 +420,7 @@ export function adjustUSDCAssetPosition(
   unsettledFunding: Big,
 ): {
   assetPositionsMap: AssetPositionsMap,
-  adjustedUSDCAssetPositionSize: string
+  adjustedUSDCAssetPositionSize: string,
 } {
   let adjustedAssetPositionsMap: AssetPositionsMap = _.cloneDeep(assetPositionsMap);
   const usdcPosition: AssetPositionResponseObject = _.get(assetPositionsMap, USDC_SYMBOL);

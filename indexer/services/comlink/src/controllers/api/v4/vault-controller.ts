@@ -28,7 +28,7 @@ const controllerName: string = 'vault-controller';
 // TODO(TRA-570): Placeholder interface for mapping of vault subaccounts to tickers until vaults
 // table is added.
 interface VaultMapping {
-  [subaccountId: string]: string;
+  [subaccountId: string]: string,
 }
 
 @Route('vault/v1')

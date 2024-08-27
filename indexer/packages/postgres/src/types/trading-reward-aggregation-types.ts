@@ -7,20 +7,20 @@ export enum TradingRewardAggregationPeriod {
 }
 
 export interface TradingRewardAggregationCreateObject {
-  address: string;
-  startedAt: IsoString;
-  startedAtHeight: string;
-  endedAt?: IsoString;
-  endedAtHeight?: string;
-  period: TradingRewardAggregationPeriod;
-  amount: string;
+  address: string,
+  startedAt: IsoString,
+  startedAtHeight: string,
+  endedAt?: IsoString,
+  endedAtHeight?: string,
+  period: TradingRewardAggregationPeriod,
+  amount: string,
 }
 
 export interface TradingRewardAggregationUpdateObject {
-  id: string;
-  endedAt?: IsoString;
-  endedAtHeight?: string;
-  amount?: string;
+  id: string,
+  endedAt?: IsoString,
+  endedAtHeight?: string,
+  amount?: string,
 }
 
 export enum TradingRewardAggregationColumns {
