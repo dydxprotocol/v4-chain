@@ -14,7 +14,7 @@ export default async function runTask(): Promise<void> {
     const username: string = generateUsername();
     try {
       // if insert fails, try it in the next roundtable cycle
-      // There are roughly 50 Billion possible usernames with 3 random digits
+      // There are roughly 85 million possible usernames
       // so the chance of a collision is very low
       await SubaccountUsernamesTable.create({
         username,
