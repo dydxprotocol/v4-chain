@@ -70,12 +70,7 @@ func (k Keeper) ModifyMarketParam(
 		k.currencyPairIDCache.Remove(uint64(existingParam.Id))
 
 		// add the new cache entry
-		cp, err := slinky.MarketPairToCurrencyPair(updatedMarketParam.Pair)
-		if err == nil {
-			k.currencyPairIDCache.AddCurrencyPair(uint64(updatedMarketParam.Id), cp.String())
-		} else {
-			k.Logger(ctx).Error("failed to add currency pair to cache", "pair", updatedMarketParam.Pair)
-		}
+		k.currencyPairIDCache.AddCurrencyPair(uint64(updatedMarketParam.Id), cp.String())
 	}
 
 	// Generate indexer event.
