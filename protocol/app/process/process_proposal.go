@@ -157,7 +157,7 @@ func DecodeValidateAndCacheVE(
 		},
 	}
 
-	if err := pricesApplier.ApplyPricesFromVE(ctx, reqFinalizeBlock); err != nil {
+	if err := pricesApplier.ApplyPricesFromVE(ctx, reqFinalizeBlock, true); err != nil {
 		ctx.Logger().Error("failed to cache VE prices", "err", err)
 	}
 	request.Txs = request.Txs[1:]

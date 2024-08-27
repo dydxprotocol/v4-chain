@@ -50,8 +50,9 @@ func NewPriceApplier(
 func (pa *PriceApplier) ApplyPricesFromVE(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
+	writeToCache bool,
 ) error {
-	if err := pa.writePricesToStore(ctx, request); err != nil {
+	if err := pa.writePricesToStore(ctx, request, writeToCache); err != nil {
 		return err
 	}
 
@@ -61,6 +62,7 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 func (pa *PriceApplier) writePricesToStore(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
+	writeToCache bool,
 ) error {
 	if pa.finalPriceCache.HasValidPrices(ctx.BlockHeight(), request.DecidedLastCommit.Round) {
 		err := pa.writePricesToStoreFromCache(ctx)
@@ -70,7 +72,7 @@ func (pa *PriceApplier) writePricesToStore(
 		if err != nil {
 			return err
 		}
-		err = pa.writePricesToStoreAndCache(ctx, prices, request.DecidedLastCommit.Round)
+		err = pa.writePricesToStoreAndMaybeCache(ctx, prices, request.DecidedLastCommit.Round, writeToCache)
 
 		if err != nil {
 			return err
@@ -191,10 +193,11 @@ func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 	return nil
 }
 
-func (pa *PriceApplier) writePricesToStoreAndCache(
+func (pa *PriceApplier) writePricesToStoreAndMaybeCache(
 	ctx sdk.Context,
 	prices map[string]voteweighted.AggregatorPricePair,
 	round int32,
+	writeToCache bool,
 ) error {
 	marketParams := pa.pricesKeeper.GetAllMarketParams(ctx)
 	var finalPriceUpdates pricecache.PriceUpdates
@@ -235,7 +238,9 @@ func (pa *PriceApplier) writePricesToStoreAndCache(
 		}
 	}
 
-	pa.finalPriceCache.SetPriceUpdates(ctx, finalPriceUpdates, round)
+	if writeToCache {
+		pa.finalPriceCache.SetPriceUpdates(ctx, finalPriceUpdates, round)
+	}
 
 	return nil
 }

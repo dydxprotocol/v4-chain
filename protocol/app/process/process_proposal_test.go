@@ -145,7 +145,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			mockClobKeeper.On("RecordMevMetrics", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			mockPriceApplier := &mocks.ProcessProposalPriceApplier{}
-			mockPriceApplier.On("ApplyPricesFromVE", mock.Anything, mock.Anything).Return(nil)
+			mockPriceApplier.On("ApplyPricesFromVE", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			handler := process.ProcessProposalHandler(
 				constants.TestEncodingCfg.TxConfig,
 				mockClobKeeper,

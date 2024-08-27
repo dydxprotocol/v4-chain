@@ -46,7 +46,7 @@ func TestPriceWriter(t *testing.T) {
 		ctx = ctx.WithBlockHeight(1)
 		err := pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{[]byte("garbage"), {1, 2, 3, 4}, {1, 2, 3, 4}},
-		})
+		}, true)
 
 		priceUpdates := pricesApplier.GetCachedPrices()
 
@@ -95,7 +95,7 @@ func TestPriceWriter(t *testing.T) {
 
 		err = pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
-		})
+		}, true)
 
 		priceUpdates := pricesApplier.GetCachedPrices()
 
@@ -168,7 +168,7 @@ func TestPriceWriter(t *testing.T) {
 
 		err = pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
-		})
+		}, true)
 
 		require.NoError(t, err)
 	})
@@ -261,7 +261,7 @@ func TestPriceWriter(t *testing.T) {
 				Round: 1,
 				Votes: []cometabci.VoteInfo{},
 			},
-		})
+		}, true)
 
 		priceUpdates := pricesApplier.GetCachedPrices()
 
@@ -375,7 +375,7 @@ func TestPriceWriter(t *testing.T) {
 				Round: 1,
 				Votes: []cometabci.VoteInfo{},
 			},
-		})
+		}, true)
 		require.NoError(t, err)
 
 		priceUpdates := pricesApplier.GetCachedPrices()
@@ -421,7 +421,7 @@ func TestPriceWriter(t *testing.T) {
 				Round: 1,
 				Votes: []cometabci.VoteInfo{},
 			},
-		})
+		}, true)
 		require.NoError(t, err)
 
 		priceUpdates = pricesApplier.GetCachedPrices()

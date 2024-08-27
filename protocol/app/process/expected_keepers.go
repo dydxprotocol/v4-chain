@@ -24,7 +24,7 @@ type ProcessClobKeeper interface {
 }
 
 type ProcessProposalPriceApplier interface {
-	ApplyPricesFromVE(ctx sdk.Context, req *abci.RequestFinalizeBlock) error
+	ApplyPricesFromVE(ctx sdk.Context, req *abci.RequestFinalizeBlock, writeToCache bool) error
 }
 
 // ProcessStakingKeeper defines the expected staking keeper used for `ProcessProposal`.
