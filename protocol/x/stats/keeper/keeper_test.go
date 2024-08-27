@@ -307,5 +307,5 @@ func TestGetStakedAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	receivedCoins := statsKeeper.GetStakedAmount(ctx, constants.AliceAccAddress.String())
-	require.Equal(t, expectedCoinsStaked, &receivedCoins)
+	require.Equal(t, expectedCoinsStaked, receivedCoins)
 }

@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"errors"
-
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
@@ -50,19 +49,27 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {}
 
+// RegisterAffiliate registers an affiliate address for a referee address.
 func (k Keeper) RegisterAffiliate(
 	ctx sdk.Context,
 	referee string,
 	affiliateAddr string,
 ) error {
-	referredByPrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredByKeyPrefix))
-	if referredByPrefixStore.Has([]byte(referee)) {
-		return errors.New("Referee already exists for address: " + referee)
+	if _, found := k.GetReferredBy(ctx, referee); found {
+		return errorsmod.Wrapf(types.ErrAffiliateAlreadyExistsForReferee, "referee: %s", referee)
 	}
-	referredByPrefixStore.Set([]byte(referee), []byte(affiliateAddr))
+	if _, err := sdk.AccAddressFromBech32(referee); err != nil {
+		return errorsmod.Wrapf(types.ErrInvalidAddress, "referee: %s", referee)
+	}
+	if _, err := sdk.AccAddressFromBech32(affiliateAddr); err != nil {
+		return errorsmod.Wrapf(types.ErrInvalidAddress, "affiliate: %s", affiliateAddr)
+	}
+	prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredByKeyPrefix)).Set([]byte(referee), []byte(affiliateAddr))
+	// TODO(OTE-696): Emit indexer event.
 	return nil
 }
 
+// GetReferredBy returns the affiliate address for a referee address.
 func (k Keeper) GetReferredBy(ctx sdk.Context, referee string) (string, bool) {
 	referredByPrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredByKeyPrefix))
 	if !referredByPrefixStore.Has([]byte(referee)) {
@@ -71,53 +78,61 @@ func (k Keeper) GetReferredBy(ctx sdk.Context, referee string) (string, bool) {
 	return string(referredByPrefixStore.Get([]byte(referee))), true
 }
 
+// AddReferredVolume adds the referred volume from a block to the affiliate's referred volume.
 func (k Keeper) AddReferredVolume(
 	ctx sdk.Context,
 	affiliateAddr string,
-	referredVolumeFromBlock dtypes.SerializableInt,
+	referredVolumeFromBlock *big.Int,
 ) error {
 	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredVolumeKeyPrefix))
-	var referredVolume dtypes.SerializableInt
-	if !affiliateReferredVolumePrefixStore.Has([]byte(affiliateAddr)) {
-		referredVolume = dtypes.NewInt(0)
-	} else {
-		err := referredVolume.Unmarshal(affiliateReferredVolumePrefixStore.Get([]byte(affiliateAddr)))
-		if err != nil {
+	referredVolume := big.NewInt(0)
+
+	if affiliateReferredVolumePrefixStore.Has([]byte(affiliateAddr)) {
+		prevReferredVolumeFromState := dtypes.SerializableInt{}
+		if err := prevReferredVolumeFromState.Unmarshal(
+			affiliateReferredVolumePrefixStore.Get([]byte(affiliateAddr)),
+		); err != nil {
+			// maybe change to errorsmod
 			return err
 		}
+		referredVolume = prevReferredVolumeFromState.BigInt()
 	}
-	referredVolumeBigInt := referredVolume.BigInt()
-	referredVolumeBigInt.Add(referredVolumeBigInt, referredVolumeFromBlock.BigInt())
-	updatedReferedVolume := dtypes.NewIntFromBigInt(referredVolumeBigInt)
+
+	referredVolume.Add(
+		referredVolume,
+		referredVolumeFromBlock,
+	)
+	updatedReferedVolume := dtypes.NewIntFromBigInt(referredVolume)
 
 	updatedReferredVolumeBytes, err := updatedReferedVolume.Marshal()
 	if err != nil {
-		return errors.New("Error marshalling referred volume")
+		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredVolume, "affiliate %s", affiliateAddr)
 	}
 	affiliateReferredVolumePrefixStore.Set([]byte(affiliateAddr), updatedReferredVolumeBytes)
 	return nil
 }
 
-func (k Keeper) GetReferredVolume(ctx sdk.Context, affiliateAddr string) (dtypes.SerializableInt, bool) {
+// GetReferredVolume returns all time referred volume for an affiliate address.
+func (k Keeper) GetReferredVolume(ctx sdk.Context, affiliateAddr string) (*big.Int, error) {
 	affiliateReferredVolumePrefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredVolumeKeyPrefix))
 	if !affiliateReferredVolumePrefixStore.Has([]byte(affiliateAddr)) {
-		return dtypes.NewInt(0), false
+		return big.NewInt(0), nil
 	}
 	var referredVolume dtypes.SerializableInt
-	err := referredVolume.Unmarshal(affiliateReferredVolumePrefixStore.Get([]byte(affiliateAddr)))
-	if err != nil {
-		return dtypes.NewInt(0), false
+	if err := referredVolume.Unmarshal(affiliateReferredVolumePrefixStore.Get([]byte(affiliateAddr))); err != nil {
+		return big.NewInt(0), err
 	}
-	return referredVolume, true
+	return referredVolume.BigInt(), nil
 }
 
+// GetAllAffiliateTiers returns all affiliate tiers.
 func (k Keeper) GetAllAffiliateTiers(ctx sdk.Context) (types.AffiliateTiers, error) {
 	store := ctx.KVStore(k.storeKey)
 	affiliateTiersBytes := store.Get([]byte(types.AffiliateTiersKey))
 
 	var affiliateTiers types.AffiliateTiers
 	if affiliateTiersBytes == nil {
-		return affiliateTiers, errors.New("Affiliate tiers not found")
+		return affiliateTiers, errorsmod.Wrapf(types.ErrAffiliateTiersNotInitialized, "affiliate tiers not initialized")
 	}
 	err := k.cdc.Unmarshal(affiliateTiersBytes, &affiliateTiers)
 	if err != nil {
@@ -127,6 +142,7 @@ func (k Keeper) GetAllAffiliateTiers(ctx sdk.Context) (types.AffiliateTiers, err
 	return affiliateTiers, nil
 }
 
+// GetTakerFeeShare returns the taker fee share for an address.
 func (k Keeper) GetTakerFeeShare(
 	ctx sdk.Context,
 	address string,
@@ -147,6 +163,7 @@ func (k Keeper) GetTakerFeeShare(
 	return affiliateAddress, feeSharePpm, true, nil
 }
 
+// GetTierForAffiliate returns the tier an affiliate address is qualified for.
 // Assumes that the affiliate tiers are sorted by level in ascending order.
 func (k Keeper) GetTierForAffiliate(
 	ctx sdk.Context,
@@ -162,41 +179,43 @@ func (k Keeper) GetTierForAffiliate(
 	numTiers := uint32(len(affiliateTiers.GetTiers()))
 	maxTierLevel := numTiers - 1
 	currentTier := uint32(0)
-	referredVolume, exists := k.GetReferredVolume(ctx, affiliateAddr)
-
-	if !exists {
-		// If referred volume is not found, set it to 0.
-		referredVolume = dtypes.NewInt(0)
+	referredVolume, err := k.GetReferredVolume(ctx, affiliateAddr)
+	if err != nil {
+		return 0, 0, err
 	}
 
-	for _, tier := range affiliateTiers.GetTiers() {
-		if referredVolume.BigInt().Int64() >= int64(tier.ReqReferredVolume) {
-			currentTier = tier.GetLevel()
+	for index, tier := range affiliateTiers.GetTiers() {
+		if referredVolume.Int64() >= int64(tier.ReqReferredVolume) {
+			// safe to do as tier cannot be negative
+			currentTier = uint32(index)
 		}
 	}
 
 	if currentTier == maxTierLevel {
 		return currentTier, affiliateTiers.GetTiers()[currentTier].TakerFeeSharePpm, nil
 	}
+
 	numCoinsStaked := k.statsKeeper.GetStakedAmount(ctx, affiliateAddr)
-	for _, tier := range affiliateTiers.GetTiers() {
-		if numCoinsStaked.Cmp(big.NewInt(
-			int64(affiliateTiers.GetTiers()[currentTier].ReqStakedWholeCoins))) >= 0 &&
-			tier.GetLevel() > currentTier {
-			currentTier = tier.GetLevel()
+	for i := currentTier + 1; i < numTiers; i++ {
+		expMultiplier := new(big.Int).Exp(
+			big.NewInt(10),
+			big.NewInt(-lib.BaseDenomExponent),
+			nil,
+		)
+		reqStakedCoins := new(big.Int).Mul(
+			big.NewInt(int64(affiliateTiers.GetTiers()[i].ReqStakedWholeCoins)),
+			expMultiplier,
+		)
+		if numCoinsStaked.Cmp(reqStakedCoins) >= 0 {
+			currentTier = i
 		}
 	}
 	return currentTier, affiliateTiers.GetTiers()[currentTier].TakerFeeSharePpm, nil
 }
 
-func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.AffiliateTiers) error {
-	numTiers := uint32(len(affiliateTiers.GetTiers()))
-	for i := uint32(0); i < numTiers; i++ {
-		if affiliateTiers.GetTiers()[i].GetLevel() != i {
-			return errors.New("tiers are not sorted by level in ascending order")
-		}
-	}
+// UpdateAffiliateTiers updates the affiliate tiers.
+// Used primarily through governance.
+func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.AffiliateTiers) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set([]byte(types.AffiliateTiersKey), k.cdc.MustMarshal(&affiliateTiers))
-	return nil
 }

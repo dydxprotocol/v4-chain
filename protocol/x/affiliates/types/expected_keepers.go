@@ -7,5 +7,5 @@ import (
 )
 
 type StatsKeeper interface {
-	GetStakedAmount(ctx sdk.Context, delegatorAddr string) big.Int
+	GetStakedAmount(ctx sdk.Context, delegatorAddr string) *big.Int
 }

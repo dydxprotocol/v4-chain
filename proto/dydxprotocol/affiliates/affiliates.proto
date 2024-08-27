@@ -9,14 +9,12 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/type
 message AffiliateTiers {
   // Tier defines an affiliate tier.
   message Tier {
-    // Level of the tier
-    uint32 level = 1;
     // Required all-time referred volume in quote quantums.
-    uint64 req_referred_volume = 2;
+    uint64 req_referred_volume = 1;
     // Required currently staked native tokens (in whole coins).
-    uint32 req_staked_whole_coins = 3;
+    uint32 req_staked_whole_coins = 2;
     // Taker fee share in parts-per-million.
-    uint32 taker_fee_share_ppm = 4;
+    uint32 taker_fee_share_ppm = 3;
   }
   // All affiliate tiers
   repeated Tier tiers = 1 [ (gogoproto.nullable) = false ];

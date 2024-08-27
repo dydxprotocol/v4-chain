@@ -72,5 +72,5 @@ message CachedStakeAmount {
   ];
   // Block time at which the calculation is cached (in Unix Epoch seconds)
   // Rounded down to nearest second.
-  uint64 cached_at = 2;
+  int64 cached_at = 2;
 }
