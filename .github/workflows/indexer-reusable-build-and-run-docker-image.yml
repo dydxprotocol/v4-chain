@@ -27,19 +27,28 @@ jobs:
         ports: 
           - 6379:6379
       kafka:
-        image: bitnami/kafka:3.5.1
+        image: bitnami/kafka:3.4.0
         env:
-          KAFKA_ADVERTISED_HOST_NAME: localhost
-          KAFKA_CREATE_TOPICS: 
-            "to-ender:1:1,\
-            to-vulcan:1:1,\
-            to-websockets-orderbooks:1:1,\
-            to-websockets-subaccounts:1:1,\
-            to-websockets-trades:1:1,\
-            to-websockets-markets:1:1,\
-            to-websockets-candles:1:1"
+          KAFKA_CFG_ADVERTISED_HOST_NAME: localhost
+          KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092,EXTERNAL://localhost:9092
         ports:
           - 9092:9092
+      init-kafka:
+        image: bitnami/kafka:3.4.0
+        depends_on:
+        - kafka
+        entrypoint: [ '/bin/sh', '-c' ]
+        command: |
+        "
+        kafka-topics --bootstrap-server kafka:29092 --list
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic to-ender --replication-factor 1 --partitions 1
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic to-vulcan --replication-factor 1 --partitions 1
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic to-websockets-orderbooks --replication-factor 1 --partitions 1
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic to-websockets-subaccounts --replication-factor 1 --partitions 1
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic to-websockets-trades --replication-factor 1 --partitions 1
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic to-websockets-markets --replication-factor 1 --partitions 1
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic to-websockets-candles --replication-factor 1 --partitions 1
+        "
     steps:
       - name: Checkout
         uses: actions/checkout@v3
