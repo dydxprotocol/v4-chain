@@ -1,0 +1,43 @@
+syntax = "proto3";
+package dydxprotocol.accountplus;
+
+import "google/api/annotations.proto";
+import "dydxprotocol/accountplus/models.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Queries a single authenticator by account and authenticator ID.
+  rpc GetAuthenticator(GetAuthenticatorRequest)
+      returns (GetAuthenticatorResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/accountplus/authenticator/{account}/{authenticator_id}";
+  }
+
+  // Queries all authenticators for a given account.
+  rpc GetAuthenticators(GetAuthenticatorsRequest)
+      returns (GetAuthenticatorsResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/accountplus/authenticators/{account}";
+  }
+}
+
+// MsgGetAuthenticatorsRequest defines the Msg/GetAuthenticators request type.
+message GetAuthenticatorsRequest { string account = 1; }
+
+// MsgGetAuthenticatorsResponse defines the Msg/GetAuthenticators response type.
+message GetAuthenticatorsResponse {
+  repeated AccountAuthenticator account_authenticators = 1;
+}
+
+// MsgGetAuthenticatorRequest defines the Msg/GetAuthenticator request type.
+message GetAuthenticatorRequest {
+  string account = 1;
+  uint64 authenticator_id = 2;
+}
+
+// MsgGetAuthenticatorResponse defines the Msg/GetAuthenticator response type.
+message GetAuthenticatorResponse {
+  AccountAuthenticator account_authenticator = 1;
+}
