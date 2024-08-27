@@ -39,7 +39,6 @@ jobs:
         - kafka
         entrypoint: [ '/bin/sh', '-c' ]
         command: |
-        "
         kafka-topics --bootstrap-server kafka:29092 --list
         kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic to-ender --replication-factor 1 --partitions 1
         kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic to-vulcan --replication-factor 1 --partitions 1
@@ -48,7 +47,6 @@ jobs:
         kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic to-websockets-trades --replication-factor 1 --partitions 1
         kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic to-websockets-markets --replication-factor 1 --partitions 1
         kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic to-websockets-candles --replication-factor 1 --partitions 1
-        "
     steps:
       - name: Checkout
         uses: actions/checkout@v3
