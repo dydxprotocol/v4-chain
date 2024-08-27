@@ -669,7 +669,21 @@ export interface MegavaultPositionResponse {
 
 /* ------- Affiliates Types ------- */
 export interface AffiliateReferralCodeRequest{
-  address: string
+  address: string,
+}
+
+export interface AffiliateAddressRequest{
+  referralCode: string,
+}
+
+export interface AffiliateSnapshotRequest{
+  limit?: number,
+  offset?: number,
+  sortByReferredFees?: boolean,
+}
+
+export interface AffiliateTotalVolumeRequest{
+  address: string,
 }
 
 export interface AffiliateReferralCodeResponse {
@@ -683,7 +697,7 @@ export interface AffiliateAddressResponse {
 export interface AffiliateSnapshotResponse {
   affiliateList: AffiliateSnapshotResponseObject[],
   total: number,
-  currentOffset: number
+  currentOffset: number,
 }
 
 export interface AffiliateSnapshotResponseObject {
@@ -693,5 +707,9 @@ export interface AffiliateSnapshotResponseObject {
   affiliateReferredTrades: number,
   affiliateTotalReferredFees: number,
   affiliateReferredUsers: number,
-  affiliateReferredNetProtocolEarnings: number
+  affiliateReferredNetProtocolEarnings: number,
+}
+
+export interface AffiliateTotalVolumeResponse {
+  totalVolume: number | null,
 }
