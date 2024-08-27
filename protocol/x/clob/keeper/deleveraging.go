@@ -139,9 +139,9 @@ func (k Keeper) GetInsuranceFundBalance(
 ) (
 	balance *big.Int,
 ) {
-	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	tdaiAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetTDai.Id)
 	if !exists {
-		panic("GetInsuranceFundBalance: Usdc asset not found in state")
+		panic("GetInsuranceFundBalance: TDai asset not found in state")
 	}
 	insuranceFundAddr, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
 	if err != nil {
@@ -150,7 +150,7 @@ func (k Keeper) GetInsuranceFundBalance(
 	insuranceFundBalance := k.bankKeeper.GetBalance(
 		ctx,
 		insuranceFundAddr,
-		usdcAsset.Denom,
+		tdaiAsset.Denom,
 	)
 
 	// Return as big.Int.
@@ -158,14 +158,14 @@ func (k Keeper) GetInsuranceFundBalance(
 }
 
 func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int) {
-	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	tdaiAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetTDai.Id)
 	if !exists {
-		panic("GetCrossInsuranceFundBalance: Usdc asset not found in state")
+		panic("GetCrossInsuranceFundBalance: TDai asset not found in state")
 	}
 	insuranceFundBalance := k.bankKeeper.GetBalance(
 		ctx,
 		perptypes.InsuranceFundModuleAddress,
-		usdcAsset.Denom,
+		tdaiAsset.Denom,
 	)
 
 	// Return as big.Int.
@@ -558,7 +558,7 @@ func (k Keeper) ProcessDeleveraging(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          assettypes.AssetUsdc.Id,
+					AssetId:          assettypes.AssetTDai.Id,
 					BigQuantumsDelta: deleveragedSubaccountQuoteBalanceDelta,
 				},
 			},
@@ -574,7 +574,7 @@ func (k Keeper) ProcessDeleveraging(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          assettypes.AssetUsdc.Id,
+					AssetId:          assettypes.AssetTDai.Id,
 					BigQuantumsDelta: offsettingSubaccountQuoteBalanceDelta,
 				},
 			},

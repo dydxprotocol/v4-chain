@@ -578,7 +578,7 @@ func TestLiquidationConfig(t *testing.T) {
 					&genesis,
 					func(genesisState *assettypes.GenesisState) {
 						genesisState.Assets = []assettypes.Asset{
-							*constants.Usdc,
+							*constants.TDai,
 						}
 					},
 				)
@@ -1198,7 +1198,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 					&genesis,
 					func(genesisState *assettypes.GenesisState) {
 						genesisState.Assets = []assettypes.Asset{
-							*constants.Usdc,
+							*constants.TDai,
 						}
 					},
 				)

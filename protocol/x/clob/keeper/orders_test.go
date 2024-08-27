@@ -413,7 +413,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			existingOrders: []types.Order{
 				// The maker subaccount places an order which is a maker order to buy $500 worth of BTC.
-				// The subaccount has a balance of $500 worth of USDC, and the perpetual has a 100% margin requirement.
+				// The subaccount has a balance of $500 worth of tDAI, and the perpetual has a 100% margin requirement.
 				// This order does not match, and is placed on the book as a maker order.
 				constants.Order_Carl_Num1_Id0_Clob0_Buy1kQtBTC_Price50000,
 				// The taker subaccount places an order which fully fills the previous order.
@@ -421,7 +421,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 			// The maker subaccount places a second order identical to the first.
-			// This should fail, because the maker subaccount currently has a balance of $0 USDC, and a perpetual of size
+			// This should fail, because the maker subaccount currently has a balance of $0 tDAI, and a perpetual of size
 			// 0.01 BTC ($500), and the perpetual has a 100% margin requirement.
 			order:               constants.Order_Carl_Num1_Id1_Clob0_Buy1kQtBTC_Price50000,
 			expectedOrderStatus: types.Undercollateralized,
@@ -440,7 +440,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			existingOrders: []types.Order{
 				// The maker subaccount places an order which is a maker order to buy $500 worth of BTC.
-				// The subaccount has a balance of $500 worth of USDC, and the perpetual has a 100% margin requirement.
+				// The subaccount has a balance of $500 worth of tDAI, and the perpetual has a 100% margin requirement.
 				// This order does not match, and is placed on the book as a maker order.
 				constants.Order_Carl_Num1_Id0_Clob0_Buy1kQtBTC_Price50000,
 				// The taker subaccount places an order which fully fills the previous order.
@@ -451,7 +451,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 			// The maker subaccount places a second order identical to the first.
-			// This should fail, because the maker during matching, because subaccount currently has a balance of $0 USDC,
+			// This should fail, because the maker during matching, because subaccount currently has a balance of $0 tDAI,
 			// and a perpetual of size 0.01 BTC ($500), and the perpetual has a 100% margin requirement.
 			order:               constants.Order_Carl_Num1_Id1_Clob0_Buy1kQtBTC_Price50000,
 			expectedOrderStatus: types.Undercollateralized,
@@ -484,7 +484,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			},
 			feeParams: constants.PerpetualFeeParamsNoFee,
 			// Bob places a second order at a lower price than his first.
-			// This should succeed, because Bob currently has a balance of $0 USDC,
+			// This should succeed, because Bob currently has a balance of $0 tDAI,
 			// and a perpetual of size 0.01 BTC ($500), and the perpetual has a 50% margin requirement.
 			// This should bring Bob's balance to -500$ USD, and 0.02 BTC which is exactly at the 50% margin requirement.
 			// If the Bob's previous order was viewed as being filled at the taker subticks (60_000_000_000) instead when
@@ -735,8 +735,8 @@ func TestPlaceShortTermOrder(t *testing.T) {
 
 			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, tc.feeParams))
 
-			// Set up USDC asset in assets module.
-			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			// Set up tDAI asset in assets module.
+			err := keepertest.CreateTDaiAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
 			// Create all perpetuals.
@@ -985,8 +985,8 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 
 			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParamsNoFee))
 
-			// Set up USDC asset in assets module.
-			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			// Set up tDAI asset in assets module.
+			err := keepertest.CreateTDaiAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
 			// Create all perpetuals.

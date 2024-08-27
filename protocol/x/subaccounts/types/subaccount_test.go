@@ -158,7 +158,7 @@ func TestGetSubaccountQuoteBalance(t *testing.T) {
 				Id: &constants.Carl_Num0,
 				AssetPositions: []*types.AssetPosition{
 					{
-						AssetId:  assettypes.AssetUsdc.Id,
+						AssetId:  assettypes.AssetTDai.Id,
 						Quantums: dtypes.NewInt(-599_000_000), // $599
 					},
 				},
@@ -184,7 +184,7 @@ func TestGetSubaccountQuoteBalance(t *testing.T) {
 				require.Panics(
 					t,
 					func() {
-						tc.subaccount.GetUsdcPosition()
+						tc.subaccount.GetTDaiPosition()
 					},
 				)
 			} else {
@@ -192,7 +192,7 @@ func TestGetSubaccountQuoteBalance(t *testing.T) {
 					require.Equal(
 						t,
 						tc.expectedQuoteBalance,
-						tc.subaccount.GetUsdcPosition(),
+						tc.subaccount.GetTDaiPosition(),
 					)
 				})
 			}
@@ -214,7 +214,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 			subaccount:      &constants.Carl_Num0_599USD,
 			newQuoteBalance: big.NewInt(10_000_000_000),
 			expectedAssetPositions: []*types.AssetPosition{
-				&constants.Usdc_Asset_10_000,
+				&constants.TDai_Asset_10_000,
 			},
 		},
 		"can set negative quote balance": {
@@ -222,7 +222,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 			newQuoteBalance: big.NewInt(-10_000_000_000),
 			expectedAssetPositions: []*types.AssetPosition{
 				{
-					AssetId:  assettypes.AssetUsdc.Id,
+					AssetId:  assettypes.AssetTDai.Id,
 					Quantums: dtypes.NewInt(-10_000_000_000), // $10,000
 				},
 			},
@@ -232,7 +232,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 			newQuoteBalance: new(big.Int).SetUint64(math.MaxUint64),
 			expectedAssetPositions: []*types.AssetPosition{
 				{
-					AssetId:  assettypes.AssetUsdc.Id,
+					AssetId:  assettypes.AssetTDai.Id,
 					Quantums: dtypes.NewIntFromUint64(math.MaxUint64),
 				},
 			},
@@ -242,7 +242,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 			newQuoteBalance: constants.BigNegMaxUint64(),
 			expectedAssetPositions: []*types.AssetPosition{
 				{
-					AssetId:  assettypes.AssetUsdc.Id,
+					AssetId:  assettypes.AssetTDai.Id,
 					Quantums: dtypes.NewIntFromBigInt(constants.BigNegMaxUint64()),
 				},
 			},
@@ -252,7 +252,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 			newQuoteBalance:        big.NewInt(0),
 			expectedAssetPositions: []*types.AssetPosition{},
 		},
-		"can add usdc position to slice if non existent": {
+		"can add TDai position to slice if non existent": {
 			subaccount: &types.Subaccount{
 				Id: &constants.Carl_Num0,
 				AssetPositions: []*types.AssetPosition{
@@ -261,7 +261,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 			},
 			newQuoteBalance: big.NewInt(10_000_000_000),
 			expectedAssetPositions: []*types.AssetPosition{
-				&constants.Usdc_Asset_10_000,
+				&constants.TDai_Asset_10_000,
 				&constants.Long_Asset_1BTC,
 			},
 		},
@@ -310,7 +310,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tc.subaccount.SetUsdcAssetPosition(tc.newQuoteBalance)
+			tc.subaccount.SetTDaiAssetPosition(tc.newQuoteBalance)
 			if tc.subaccount != nil {
 				require.Equal(
 					t,

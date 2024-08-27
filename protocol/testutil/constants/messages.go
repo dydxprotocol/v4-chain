@@ -79,7 +79,7 @@ var (
 		Transfer: &sendingtypes.Transfer{
 			Sender:    Carl_Num0,
 			Recipient: Dave_Num0,
-			AssetId:   assettypes.AssetUsdc.Id,
+			AssetId:   assettypes.AssetTDai.Id,
 			Amount:    500_000_000, // $500
 		},
 	}
@@ -87,7 +87,7 @@ var (
 		Transfer: &sendingtypes.Transfer{
 			Sender:    Alice_Num0,
 			Recipient: Alice_Num0,
-			AssetId:   assettypes.AssetUsdc.Id,
+			AssetId:   assettypes.AssetTDai.Id,
 			Amount:    500_000_000, // $500
 		},
 	}

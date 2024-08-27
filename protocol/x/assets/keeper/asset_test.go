@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	// firstValidAssetId is the first valid asset ID after the reserved `assetId=0` for USDC.
+	// firstValidAssetId is the first valid asset ID after the reserved `assetId=0` for TDAI.
 	firstValidAssetId = uint32(1)
 )
 
-// createNAssets creates n test assets with id 1 to n (0 is reserved for USDC)
+// createNAssets creates n test assets with id 1 to n (0 is reserved for TDai)
 func createNAssets(
 	t *testing.T,
 	ctx sdk.Context,
@@ -84,10 +84,10 @@ func TestCreateAsset_MarketNotFound(t *testing.T) {
 	require.Len(t, keeper.GetAllAssets(ctx), 0)
 }
 
-func TestCreateAsset_InvalidUsdcAsset(t *testing.T) {
+func TestCreateAsset_InvalidTDaiAsset(t *testing.T) {
 	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t, true)
 
-	// Throws error when creating an asset with id 0 that's not USDC.
+	// Throws error when creating an asset with id 0 that's not TDAI.
 	_, err := keeper.CreateAsset(
 		ctx,
 		0,
@@ -99,41 +99,41 @@ func TestCreateAsset_InvalidUsdcAsset(t *testing.T) {
 		int32(-1),
 		"0/1", // AssetYieldIndex
 	)
-	require.ErrorIs(t, err, types.ErrUsdcMustBeAssetZero)
+	require.ErrorIs(t, err, types.ErrTDaiMustBeAssetZero)
 
 	// Does not create an asset.
 	require.Len(t, keeper.GetAllAssets(ctx), 0)
 
-	// Throws error when creating asset USDC with id other than 0.
+	// Throws error when creating asset TDAI with id other than 0.
 	_, err = keeper.CreateAsset(
 		ctx,
 		1,
-		constants.Usdc.Symbol,        // symbol
-		constants.Usdc.Denom,         // denom
-		constants.Usdc.DenomExponent, // denomExponent
+		constants.TDai.Symbol,        // symbol
+		constants.TDai.Denom,         // denom
+		constants.TDai.DenomExponent, // denomExponent
 		true,
 		uint32(999),
 		int32(-1),
 		"0/1", // AssetYieldIndex
 	)
-	require.ErrorIs(t, err, types.ErrUsdcMustBeAssetZero)
+	require.ErrorIs(t, err, types.ErrTDaiMustBeAssetZero)
 
 	// Does not create an asset.
 	require.Len(t, keeper.GetAllAssets(ctx), 0)
 
-	// Throws error when creating asset USDC with unexpected denom exponent.
+	// Throws error when creating asset TDAI with unexpected denom exponent.
 	_, err = keeper.CreateAsset(
 		ctx,
 		0,
-		constants.Usdc.Symbol, // symbol
-		constants.Usdc.Denom,  // denom
+		constants.TDai.Symbol, // symbol
+		constants.TDai.Denom,  // denom
 		-9,                    // denomExponent
 		true,
 		uint32(999),
 		int32(-1),
 		"0/1", // AssetYieldIndex
 	)
-	require.ErrorIs(t, err, types.ErrUnexpectedUsdcDenomExponent)
+	require.ErrorIs(t, err, types.ErrUnexpectedTDaiDenomExponent)
 
 	// Does not create an asset.
 	require.Len(t, keeper.GetAllAssets(ctx), 0)
@@ -334,7 +334,7 @@ func TestGetNetCollateral(t *testing.T) {
 
 	netCollateral, err := keeper.GetNetCollateral(
 		ctx,
-		types.AssetUsdc.Id,
+		types.AssetTDai.Id,
 		new(big.Int).SetInt64(100),
 	)
 	require.NoError(t, err)
@@ -362,7 +362,7 @@ func TestGetMarginRequirements(t *testing.T) {
 
 	initial, maintenance, err := keeper.GetMarginRequirements(
 		ctx,
-		types.AssetUsdc.Id,
+		types.AssetTDai.Id,
 		new(big.Int).SetInt64(100),
 	)
 	require.NoError(t, err)
@@ -566,10 +566,10 @@ func TestConvertAssetToCoin_Failure(t *testing.T) {
 
 func TestIsPositionUpdatable(t *testing.T) {
 	ctx, keeper, _, _, _, _ := keepertest.AssetsKeepers(t, true)
-	require.NoError(t, keepertest.CreateUsdcAsset(ctx, keeper))
+	require.NoError(t, keepertest.CreateTDaiAsset(ctx, keeper))
 
-	// Check Usdc asset is updatable.
-	updatable, err := keeper.IsPositionUpdatable(ctx, types.AssetUsdc.Id)
+	// Check TDai asset is updatable.
+	updatable, err := keeper.IsPositionUpdatable(ctx, types.AssetTDai.Id)
 	require.NoError(t, err)
 	require.True(t, updatable)
 

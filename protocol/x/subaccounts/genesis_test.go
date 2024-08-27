@@ -22,14 +22,14 @@ func TestGenesis(t *testing.T) {
 					Owner:  "foo",
 					Number: uint32(0),
 				},
-				AssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(1_000)),
+				AssetPositions: keepertest.CreateTDaiAssetPosition(big.NewInt(1_000)),
 			},
 			{
 				Id: &types.SubaccountId{
 					Owner:  "bar",
 					Number: uint32(99),
 				},
-				AssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(1_000)),
+				AssetPositions: keepertest.CreateTDaiAssetPosition(big.NewInt(1_000)),
 			},
 		},
 	}

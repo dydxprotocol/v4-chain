@@ -169,8 +169,8 @@ func TestPlaceOrder(t *testing.T) {
 									// Maker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
+											AssetId:  assettypes.AssetTDai.Id,
+											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetTDaiPosition()),
 										},
 									},
 									nil, // no funding payments
@@ -197,8 +197,8 @@ func TestPlaceOrder(t *testing.T) {
 									// Taker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
+											AssetId:  assettypes.AssetTDai.Id,
+											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetTDaiPosition()),
 										},
 									},
 									nil, // no funding payments
@@ -348,8 +348,8 @@ func TestPlaceOrder(t *testing.T) {
 									// Maker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
+											AssetId:  assettypes.AssetTDai.Id,
+											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetTDaiPosition()),
 										},
 									},
 									nil, // no funding payments
@@ -376,8 +376,8 @@ func TestPlaceOrder(t *testing.T) {
 									// Taker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
+											AssetId:  assettypes.AssetTDai.Id,
+											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetTDaiPosition()),
 										},
 									},
 									nil, // no funding payments
@@ -527,8 +527,8 @@ func TestPlaceOrder(t *testing.T) {
 									// Taker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
+											AssetId:  assettypes.AssetTDai.Id,
+											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetTDaiPosition()),
 										},
 									},
 									nil, // no funding payments
@@ -555,8 +555,8 @@ func TestPlaceOrder(t *testing.T) {
 									// Maker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
+											AssetId:  assettypes.AssetTDai.Id,
+											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetTDaiPosition()),
 										},
 									},
 									nil, // no funding payments

@@ -12,9 +12,9 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-// GetModuleAccUsdcBalance is a test utility function to query USDC balance
+// GetModuleAccTDaiBalance is a test utility function to query TDAI balance
 // of a module account from the bank module.
-func GetModuleAccUsdcBalance(
+func GetModuleAccTDaiBalance(
 	valAddress string,
 	codec codec.Codec,
 	moduleName string,
@@ -48,7 +48,7 @@ func GetModuleAccUsdcBalance(
 	}
 
 	for _, coin := range balRes.Balances {
-		if coin.Denom == constants.Usdc.Denom {
+		if coin.Denom == constants.TDai.Denom {
 			return coin.Amount.Int64(), nil
 		}
 	}
@@ -56,10 +56,10 @@ func GetModuleAccUsdcBalance(
 	return 0, nil
 }
 
-// MatchUsdcOfAmount is a test utility function to generate a matcher function
+// MatchTDaiOfAmount is a test utility function to generate a matcher function
 // passed into mock.MatchedBy(). This matcher can be used to match parameters of
 // *big.Int type when setting up mocks.
-func MatchUsdcOfAmount(amount int64) func(coins sdk.Coins) bool {
+func MatchTDaiOfAmount(amount int64) func(coins sdk.Coins) bool {
 	return func(coins sdk.Coins) bool {
 		return coins[0].Amount.Equal(sdkmath.NewInt(amount))
 	}

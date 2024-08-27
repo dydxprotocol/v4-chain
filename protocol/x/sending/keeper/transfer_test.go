@@ -124,7 +124,7 @@ func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 	perpetuals := []perptypes.Perpetual{
 		constants.BtcUsd_100PercentMarginRequirement,
 	}
-	require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))
+	require.NoError(t, keepertest.CreateTDaiAsset(ks.Ctx, ks.AssetsKeeper))
 
 	for _, p := range perpetuals {
 		_, err := ks.PerpetualsKeeper.CreatePerpetual(
@@ -155,7 +155,7 @@ func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 	err := ks.SendingKeeper.ProcessTransfer(ks.Ctx, tc.transfer)
 	for subaccountId, expectedQuoteBalance := range tc.expectedSubaccountBalance {
 		subaccount := ks.SubaccountsKeeper.GetSubaccount(ks.Ctx, subaccountId)
-		require.Equal(t, expectedQuoteBalance, subaccount.GetUsdcPosition())
+		require.Equal(t, expectedQuoteBalance, subaccount.GetTDaiPosition())
 	}
 	if tc.expectedErr != "" {
 		require.ErrorContains(t, err, tc.expectedErr)
@@ -255,7 +255,7 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 	perpetuals := []perptypes.Perpetual{
 		constants.BtcUsd_100PercentMarginRequirement,
 	}
-	require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))
+	require.NoError(t, keepertest.CreateTDaiAsset(ks.Ctx, ks.AssetsKeeper))
 
 	for _, p := range perpetuals {
 		_, err := ks.PerpetualsKeeper.CreatePerpetual(
@@ -292,7 +292,7 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 			Owner:  recipient,
 			Number: uint32(0),
 		},
-		AssetId: assettypes.AssetUsdc.Id,
+		AssetId: assettypes.AssetTDai.Id,
 		Amount:  500_000_000, // $500
 	}
 	err = ks.SendingKeeper.ProcessTransfer(ks.Ctx, &transfer)
@@ -338,7 +338,7 @@ func TestProcessDepositToSubaccount(t *testing.T) {
 			msg: types.MsgDepositToSubaccount{
 				Sender:    "1234567", // bad address string
 				Recipient: constants.Alice_Num0,
-				AssetId:   assettypes.AssetUsdc.Id,
+				AssetId:   assettypes.AssetTDai.Id,
 				Quantums:  750_000_000,
 			},
 			expectedErrContains: "decoding bech32 failed",
@@ -423,7 +423,7 @@ func TestProcessWithdrawFromSubaccount(t *testing.T) {
 			msg: types.MsgWithdrawFromSubaccount{
 				Sender:    constants.Alice_Num0,
 				Recipient: "1234567", // bad address string
-				AssetId:   assettypes.AssetUsdc.Id,
+				AssetId:   assettypes.AssetTDai.Id,
 				Quantums:  750_000_000,
 			},
 			expectedErrContains: "decoding bech32 failed",

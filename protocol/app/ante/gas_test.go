@@ -1,14 +1,15 @@
 package ante_test
 
 import (
+	"reflect"
+	"testing"
+
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	assets "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"reflect"
-	"testing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -152,7 +153,7 @@ func TestSubmitTxnWithGas(t *testing.T) {
 		responseCode uint32
 		logMessage   string
 	}{
-		"Success - 5 cents usdc gas fee": {
+		"Success - 5 cents tdai gas fee": {
 			gasFee:       constants.TestFeeCoins_5Cents,
 			responseCode: errors.SuccessABCICode,
 		},
@@ -164,7 +165,7 @@ func TestSubmitTxnWithGas(t *testing.T) {
 			gasFee:       sdk.Coins{},
 			responseCode: sdkerrors.ErrInsufficientFee.ABCICode(),
 			logMessage: "insufficient fees; got:  required: 25000000000000000adv4tnt," +
-				"25000ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5: insufficient fee",
+				"25000utdai: insufficient fee",
 		},
 		"Failure: unsupported gas fee denom": {
 			gasFee: sdk.Coins{
@@ -173,7 +174,7 @@ func TestSubmitTxnWithGas(t *testing.T) {
 			},
 			responseCode: sdkerrors.ErrInsufficientFee.ABCICode(),
 			logMessage: "insufficient fees; got: 100000000btc-denom required: 25000000000000000adv4tnt," +
-				"25000ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5: insufficient fee",
+				"25000utdai: insufficient fee",
 		},
 	}
 	for name, tc := range tests {
@@ -182,7 +183,7 @@ func TestSubmitTxnWithGas(t *testing.T) {
 				FromAddress: constants.BobAccAddress.String(),
 				ToAddress:   constants.AliceAccAddress.String(),
 				Amount: []sdk.Coin{
-					sdk.NewCoin(assets.AssetUsdc.Denom, sdkmath.NewInt(1)),
+					sdk.NewCoin(assets.AssetTDai.Denom, sdkmath.NewInt(1)),
 				},
 			}
 

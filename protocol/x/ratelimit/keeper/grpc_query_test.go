@@ -7,7 +7,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	bank_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/bank"
-	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	ratelimitutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 	cometbfttypes "github.com/cometbft/cometbft/types"
@@ -60,25 +59,25 @@ func TestCapacityByDenom(t *testing.T) {
 	}{
 		"Success, returns default limiter and baseline capacity": {
 			req: &types.QueryCapacityByDenomRequest{
-				Denom: assettypes.UusdcDenom,
+				Denom: types.SDaiDenom,
 			},
 			res: &types.QueryCapacityByDenomResponse{
 				LimiterCapacityList: []types.LimiterCapacity{
 					{
-						Limiter: types.DefaultUsdcHourlyLimter,
+						Limiter: types.DefaultSDaiHourlyLimter,
 						Capacity: dtypes.NewIntFromBigInt(
 							ratelimitutil.GetBaseline(
 								big.NewInt(0),
-								types.DefaultUsdcHourlyLimter,
+								types.DefaultSDaiHourlyLimter,
 							),
 						),
 					},
 					{
-						Limiter: types.DefaultUsdcDailyLimiter,
+						Limiter: types.DefaultSDaiDailyLimiter,
 						Capacity: dtypes.NewIntFromBigInt(
 							ratelimitutil.GetBaseline(
 								big.NewInt(0),
-								types.DefaultUsdcDailyLimiter,
+								types.DefaultSDaiDailyLimiter,
 							),
 						),
 					},
@@ -115,12 +114,12 @@ func TestCapacityByDenom(t *testing.T) {
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *banktypes.GenesisState) {
-						// Remove any USDC balance from genesis.
-						// Without additional USDC balance, this means all capacities are
+						// Remove any SDai balance from genesis.
+						// Without additional SDai balance, this means all capacities are
 						// initialized with minimum baseline.
 						genesisState.Balances = bank_testutil.FilterDenomFromBalances(
 							genesisState.Balances,
-							assettypes.UusdcDenom,
+							types.SDaiDenom,
 						)
 					},
 				)

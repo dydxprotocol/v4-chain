@@ -34,28 +34,28 @@ func (k Keeper) CreateAsset(
 		)
 	}
 
-	if assetId == types.AssetUsdc.Id {
-		// Ensure assetId zero is always USDC. This is a protocol-wide invariant.
-		if denom != types.AssetUsdc.Denom {
-			return types.Asset{}, types.ErrUsdcMustBeAssetZero
+	if assetId == types.AssetTDai.Id {
+		// Ensure assetId zero is always TDai. This is a protocol-wide invariant.
+		if denom != types.AssetTDai.Denom {
+			return types.Asset{}, types.ErrTDaiMustBeAssetZero
 		}
 
-		// Confirm that USDC asset has the expected denom exponent (-6).
+		// Confirm that TDai asset has the expected denom exponent (-6).
 		// This is an important invariant before coin-to-quote-quantum conversion
 		// is correctly implemented. See CLOB-871 for details.
-		if denomExponent != types.AssetUsdc.DenomExponent {
+		if denomExponent != types.AssetTDai.DenomExponent {
 			return types.Asset{}, errorsmod.Wrapf(
-				types.ErrUnexpectedUsdcDenomExponent,
+				types.ErrUnexpectedTDaiDenomExponent,
 				"expected = %v, actual = %v",
-				types.AssetUsdc.DenomExponent,
+				types.AssetTDai.DenomExponent,
 				denomExponent,
 			)
 		}
 	}
 
-	// Ensure USDC is not created with a non-zero assetId. This is a protocol-wide invariant.
-	if assetId != types.AssetUsdc.Id && denom == types.AssetUsdc.Denom {
-		return types.Asset{}, types.ErrUsdcMustBeAssetZero
+	// Ensure TDai is not created with a non-zero assetId. This is a protocol-wide invariant.
+	if assetId != types.AssetTDai.Id && denom == types.AssetTDai.Denom {
+		return types.Asset{}, types.ErrTDaiMustBeAssetZero
 	}
 
 	// Ensure the denom is unique versus existing assets.
@@ -194,7 +194,7 @@ func (k Keeper) GetNetCollateral(
 	bigNetCollateralQuoteQuantums *big.Int,
 	err error,
 ) {
-	if id == types.AssetUsdc.Id {
+	if id == types.AssetTDai.Id {
 		return new(big.Int).Set(bigQuantums), nil
 	}
 
@@ -232,7 +232,7 @@ func (k Keeper) GetMarginRequirements(
 	err error,
 ) {
 	// QuoteBalance does not contribute to any margin requirements.
-	if id == types.AssetUsdc.Id {
+	if id == types.AssetTDai.Id {
 		return big.NewInt(0), big.NewInt(0), nil
 	}
 

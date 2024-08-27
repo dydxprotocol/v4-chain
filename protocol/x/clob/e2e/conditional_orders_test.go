@@ -603,7 +603,7 @@ func TestConditionalOrder(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_10_000,
+						&constants.TDai_Asset_10_000,
 					},
 					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
@@ -724,7 +724,7 @@ func TestConditionalOrder(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_10_000,
+						&constants.TDai_Asset_10_000,
 					},
 					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
@@ -807,7 +807,7 @@ func TestConditionalOrder(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_10_000,
+						&constants.TDai_Asset_10_000,
 					},
 					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
@@ -860,7 +860,7 @@ func TestConditionalOrder(t *testing.T) {
 				{
 					Id: &constants.Alice_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_1,
+						&constants.TDai_Asset_1,
 					},
 					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
@@ -1893,7 +1893,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_10_000,
+						&constants.TDai_Asset_10_000,
 					},
 					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
@@ -2014,7 +2014,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_10_000,
+						&constants.TDai_Asset_10_000,
 					},
 					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},
@@ -2097,7 +2097,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_10_000,
+						&constants.TDai_Asset_10_000,
 					},
 					AssetYieldIndex: big.NewRat(0, 1).String(),
 				},

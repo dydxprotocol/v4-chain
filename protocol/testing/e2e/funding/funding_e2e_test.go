@@ -27,7 +27,7 @@ const (
 	BlockTimeDuration             = 2 * time.Second
 	NumBlocksPerMinute            = int64(time.Minute / BlockTimeDuration) // 30
 	BlockHeightAtFirstFundingTick = 1000
-	TestTransferUsdcForSettlement = 10_000_000_000_000
+	TestTransferTDaiForSettlement = 10_000_000_000_000
 	TestMarketId                  = 0
 )
 
@@ -107,24 +107,24 @@ var (
 			Transfer: &sendingtypes.Transfer{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.Alice_Num0,
-				AssetId:   assettypes.AssetUsdc.Id,
-				Amount:    TestTransferUsdcForSettlement,
+				AssetId:   assettypes.AssetTDai.Id,
+				Amount:    TestTransferTDaiForSettlement,
 			},
 		},
 		{
 			Transfer: &sendingtypes.Transfer{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.Bob_Num0,
-				AssetId:   assettypes.AssetUsdc.Id,
-				Amount:    TestTransferUsdcForSettlement,
+				AssetId:   assettypes.AssetTDai.Id,
+				Amount:    TestTransferTDaiForSettlement,
 			},
 		},
 		{
 			Transfer: &sendingtypes.Transfer{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.Carl_Num0,
-				AssetId:   assettypes.AssetUsdc.Id,
-				Amount:    TestTransferUsdcForSettlement,
+				AssetId:   assettypes.AssetTDai.Id,
+				Amount:    TestTransferTDaiForSettlement,
 			},
 		},
 	}
@@ -135,7 +135,7 @@ type expectedSettlements struct {
 	Settlement   int64
 }
 
-func getSubaccountUsdcBalance(subaccount satypes.Subaccount) int64 {
+func getSubaccountTDaiBalance(subaccount satypes.Subaccount) int64 {
 	return subaccount.AssetPositions[0].Quantums.BigInt().Int64()
 }
 
@@ -490,14 +490,14 @@ func TestFunding(t *testing.T) {
 			require.Equal(t, tc.expectedFundingIndex, btcPerp.FundingIndex.BigInt().Int64())
 
 			subaccsBeforeSettlement := []satypes.Subaccount{}
-			totalUsdcBalanceBeforeSettlement := int64(0)
+			totalTDaiBalanceBeforeSettlement := int64(0)
 			for _, expectedSettlements := range tc.expectedSubaccountSettlements {
 				subaccBeforeSettlement := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, expectedSettlements.SubaccountId)
 				// Before settlement, each perpetual position should have zero funding index, since these positions
 				// were opened when BTC perpetual has zero funding idnex.
 				require.Equal(t, int64(0), subaccBeforeSettlement.PerpetualPositions[0].FundingIndex.BigInt().Int64())
 				subaccsBeforeSettlement = append(subaccsBeforeSettlement, subaccBeforeSettlement)
-				totalUsdcBalanceBeforeSettlement += getSubaccountUsdcBalance(subaccBeforeSettlement)
+				totalTDaiBalanceBeforeSettlement += getSubaccountTDaiBalance(subaccBeforeSettlement)
 			}
 
 			// Send transfers from Dave to subaccounts that has positions, so that funding is settled for these accounts.
@@ -519,7 +519,7 @@ func TestFunding(t *testing.T) {
 
 			ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight()+1), testapp.AdvanceToBlockOptions{})
 
-			totalUsdcBalanceAfterSettlement := int64(0)
+			totalTDaiBalanceAfterSettlement := int64(0)
 			for i, expectedSettlements := range tc.expectedSubaccountSettlements {
 				subaccAfterSettlement := tApp.App.SubaccountsKeeper.GetSubaccount(
 					ctx,
@@ -533,27 +533,27 @@ func TestFunding(t *testing.T) {
 					tc.expectedFundingIndex,
 					subaccAfterSettlement.PerpetualPositions[0].FundingIndex.BigInt().Int64(),
 				)
-				totalUsdcBalanceAfterSettlement += getSubaccountUsdcBalance(subaccAfterSettlement)
+				totalTDaiBalanceAfterSettlement += getSubaccountTDaiBalance(subaccAfterSettlement)
 
 				require.Equal(t,
-					getSubaccountUsdcBalance(subaccsBeforeSettlement[i])+expectedSettlements.Settlement,
-					getSubaccountUsdcBalance(subaccAfterSettlement)-TestTransferUsdcForSettlement,
+					getSubaccountTDaiBalance(subaccsBeforeSettlement[i])+expectedSettlements.Settlement,
+					getSubaccountTDaiBalance(subaccAfterSettlement)-TestTransferTDaiForSettlement,
 					"subaccount id: %v, expected settlement: %v, got settlement: %v,"+
 						"balance before settlement: %v, balance after (minus test transfer): %v",
 					expectedSettlements.SubaccountId,
 					expectedSettlements.Settlement,
-					getSubaccountUsdcBalance(subaccAfterSettlement)-TestTransferUsdcForSettlement-
-						getSubaccountUsdcBalance(subaccsBeforeSettlement[i]),
-					getSubaccountUsdcBalance(subaccsBeforeSettlement[i]),
-					getSubaccountUsdcBalance(subaccAfterSettlement)-TestTransferUsdcForSettlement,
+					getSubaccountTDaiBalance(subaccAfterSettlement)-TestTransferTDaiForSettlement-
+						getSubaccountTDaiBalance(subaccsBeforeSettlement[i]),
+					getSubaccountTDaiBalance(subaccsBeforeSettlement[i]),
+					getSubaccountTDaiBalance(subaccAfterSettlement)-TestTransferTDaiForSettlement,
 				)
 			}
 
 			// Check that the involved subaccounts has the same total balance before and after the transfer
 			// (besides transfers from Dave).
 			require.Equal(t,
-				totalUsdcBalanceBeforeSettlement,
-				totalUsdcBalanceAfterSettlement-TestTransferUsdcForSettlement*3,
+				totalTDaiBalanceBeforeSettlement,
+				totalTDaiBalanceAfterSettlement-TestTransferTDaiForSettlement*3,
 			)
 		})
 	}

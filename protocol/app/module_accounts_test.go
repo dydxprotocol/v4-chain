@@ -24,7 +24,7 @@ func TestModuleAccountsToAddresses(t *testing.T) {
 		icatypes.ModuleName:                        "dydx1vlthgax23ca9syk7xgaz347xmf4nunefw3cnv8",
 		consumertypes.ConsumerRedistributeName:     "dydx1x69dz0c0emw8m2c6kp5v6c08kgjxmu30yn6p5y",
 		consumertypes.ConsumerToSendToProviderName: "dydx1ywtansy6ss0jtq8ckrcv6jzkps8yh8mf37gcch",
-		ratelimittypes.SDAIPoolAccount:             "dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0",
+		ratelimittypes.SDaiPoolAccount:             "dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0",
 	}
 
 	require.True(t, len(expectedModuleAccToAddresses) == len(app.GetMaccPerms()))

@@ -197,7 +197,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.Anything,
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(10_000_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(10_000_000)),
 				).Return(nil)
 				bk.On(
 					"SendCoins",
@@ -205,7 +205,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					perptypes.InsuranceFundModuleAddress,
 					// Subaccount pays $250 to insurance fund for liquidating 1 BTC.
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(250_000_000)),
 				).Return(nil).Once()
 			},
 			rawOperations: []types.OperationRaw{
@@ -275,21 +275,21 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.Anything,
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(10_100_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(10_100_000)),
 				).Return(nil)
 				bk.On(
 					"GetBalance",
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
-				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(math.MaxUint64)))
+				).Return(sdk.NewCoin("TDAI", sdkmath.NewIntFromUint64(math.MaxUint64)))
 				bk.On(
 					"SendCoins",
 					mock.Anything,
 					perptypes.InsuranceFundModuleAddress,
 					satypes.ModuleAddress,
 					// Insurance fund covers $1 loss for liquidating 1 BTC.
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(1_000_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(1_000_000)),
 				).Return(nil).Once()
 			},
 			rawOperations: []types.OperationRaw{
@@ -361,7 +361,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.Anything,
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(2_500_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(2_500_000)),
 				).Return(nil)
 				bk.On(
 					"SendCoins",
@@ -369,7 +369,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					perptypes.InsuranceFundModuleAddress,
 					// Subaccount pays $62.5 to insurance fund for liquidating 0.25 BTC.
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(62_500_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(62_500_000)),
 				).Return(nil).Twice()
 			},
 			rawOperations: []types.OperationRaw{
@@ -461,21 +461,21 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.Anything,
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(2_525_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(2_525_000)),
 				).Return(nil)
 				bk.On(
 					"GetBalance",
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
-				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(math.MaxUint64)))
+				).Return(sdk.NewCoin("TDAI", sdkmath.NewIntFromUint64(math.MaxUint64)))
 				bk.On(
 					"SendCoins",
 					mock.Anything,
 					perptypes.InsuranceFundModuleAddress,
 					satypes.ModuleAddress,
 					// Insurance fund covers $0.25 loss for liquidating 0.25 BTC.
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(250_000)),
 				).Return(nil).Twice()
 			},
 			rawOperations: []types.OperationRaw{
@@ -575,14 +575,14 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
-				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(math.MaxUint64)))
+				).Return(sdk.NewCoin("TDAI", sdkmath.NewIntFromUint64(math.MaxUint64)))
 				bk.On(
 					"SendCoins",
 					mock.Anything,
 					satypes.ModuleAddress,
 					perptypes.InsuranceFundModuleAddress,
 					// Pays insurance fund $0.75 for liquidating 0.75 BTC.
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(750_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(750_000)),
 				).Return(nil).Once()
 				bk.On(
 					"SendCoins",
@@ -590,7 +590,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					perptypes.InsuranceFundModuleAddress,
 					satypes.ModuleAddress,
 					// Insurance fund covers $0.25 loss for liquidating 0.25 BTC.
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(250_000)),
 				).Return(nil).Once()
 			},
 			rawOperations: []types.OperationRaw{
@@ -679,7 +679,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
-				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(math.MaxUint64)))
+				).Return(sdk.NewCoin("TDAI", sdkmath.NewIntFromUint64(math.MaxUint64)))
 				bk.On(
 					"SendCoins",
 					mock.Anything,
@@ -687,7 +687,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					perptypes.InsuranceFundModuleAddress,
 					// Pays insurance fund $0.378735 (capped by MaxLiquidationFeePpm)
 					// for liquidating 0.75 BTC.
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(378_735)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(378_735)),
 				).Return(nil).Once()
 				bk.On(
 					"SendCoins",
@@ -695,7 +695,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					perptypes.InsuranceFundModuleAddress,
 					// Pays insurance fund $0.121265.
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(121_265)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(121_265)),
 				).Return(nil).Once()
 			},
 			liquidationConfig: &types.LiquidationsConfig{
@@ -785,7 +785,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.Anything,
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(5_000_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(5_000_000)),
 				).Return(nil)
 				bk.On(
 					"SendCoins",
@@ -793,7 +793,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					perptypes.InsuranceFundModuleAddress,
 					// Subaccount pays $125 to insurance fund for liquidating 0.5 BTC.
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(125_000_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(125_000_000)),
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
@@ -900,14 +900,14 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.Anything,
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(1)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(1)),
 				).Return(nil)
 				bk.On(
 					"SendCoins",
 					mock.Anything,
 					satypes.ModuleAddress,
 					perptypes.InsuranceFundModuleAddress,
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(25)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(25)),
 				).Return(nil)
 			},
 			rawOperations: []types.OperationRaw{
@@ -989,7 +989,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 		// 			mock.Anything,
 		// 			satypes.ModuleName,
 		// 			authtypes.FeeCollectorName,
-		// 			mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(5_000_000)),
+		// 			mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(5_000_000)),
 		// 		).Return(nil)
 		// 		bk.On(
 		// 			"SendCoinsFromModuleToModule",
@@ -997,7 +997,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 		// 			satypes.ModuleName,
 		// 			perptypes.InsuranceFundName,
 		// 			// Subaccount pays $125 to insurance fund for liquidating 0.5 BTC.
-		// 			mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(125_000_000)),
+		// 			mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(125_000_000)),
 		// 		).Return(nil).Once()
 		// 	},
 		// 	rawOperations: []types.OperationRaw{
@@ -1324,7 +1324,7 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 		// 		{
 		// 			Id: &constants.Dave_Num0,
 		// 			AssetPositions: []*satypes.AssetPosition{
-		// 				&constants.Usdc_Asset_50_000,
+		// 				&constants.TDai_Asset_50_000,
 		// 			},
 		// 			PerpetualPositions: []*satypes.PerpetualPosition{
 		// 				{
@@ -1369,7 +1369,7 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 		// 		{
 		// 			Id: &constants.Dave_Num0,
 		// 			AssetPositions: []*satypes.AssetPosition{
-		// 				&constants.Usdc_Asset_50_000,
+		// 				&constants.TDai_Asset_50_000,
 		// 			},
 		// 			PerpetualPositions: []*satypes.PerpetualPosition{
 		// 				{

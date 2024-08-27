@@ -395,13 +395,13 @@ func (k Keeper) InitializeForGenesis(ctx sdk.Context) {}
 func (k Keeper) SetSDAIPrice(ctx sdk.Context, price *big.Int) {
 	store := ctx.KVStore(k.storeKey)
 	bz := price.Bytes()
-	store.Set([]byte(types.SDAIKeyPrefix), bz)
+	store.Set([]byte(types.SDaiKeyPrefix), bz)
 }
 
 // GetSDAIPrice gets the price of sDAI from the store as a big.Int
 func (k Keeper) GetSDAIPrice(ctx sdk.Context) (price *big.Int, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get([]byte(types.SDAIKeyPrefix))
+	bz := store.Get([]byte(types.SDaiKeyPrefix))
 	if bz == nil {
 		return nil, false
 	}

@@ -615,7 +615,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 							Number: 0,
 						},
 						AssetPositions: []*satypes.AssetPosition{
-							&constants.Usdc_Asset_500_000,
+							&constants.TDai_Asset_500_000,
 						},
 					})
 				}

@@ -145,13 +145,13 @@ func (s *SendingIntegrationTestSuite) sendTransferAndVerifyBalance(
 	// Assert that both Subaccounts have the appropriate state.
 	s.Require().Equal(
 		expectedSenderQuoteBalance,
-		sender.GetUsdcPosition(),
+		sender.GetTDaiPosition(),
 	)
 	s.Require().Empty(sender.PerpetualPositions)
 
 	s.Require().Equal(
 		expectedRecipientQuoteBalance,
-		recipient.GetUsdcPosition(),
+		recipient.GetTDaiPosition(),
 	)
 	s.Require().Empty(recipient.PerpetualPositions)
 }

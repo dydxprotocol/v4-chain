@@ -169,7 +169,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.DaveAccAddress.String(),
-				AssetId:   constants.Usdc.Id,
+				AssetId:   constants.TDai.Id,
 				Quantums:  10_000_000_000,
 			},
 			priceUpdate: &prices.MsgUpdateMarketPrices{
@@ -198,7 +198,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.DaveAccAddress.String(),
-				AssetId:   constants.Usdc.Id,
+				AssetId:   constants.TDai.Id,
 				Quantums:  10_000_000_000,
 			},
 			priceUpdate: &prices.MsgUpdateMarketPrices{
@@ -225,7 +225,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.DaveAccAddress.String(),
-				AssetId:   constants.Usdc.Id,
+				AssetId:   constants.TDai.Id,
 				Quantums:  500_000_000_000,
 			},
 			priceUpdate: &prices.MsgUpdateMarketPrices{
@@ -847,7 +847,7 @@ func TestOrderRemoval(t *testing.T) {
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.DaveAccAddress.String(),
-				AssetId:   constants.Usdc.Id,
+				AssetId:   constants.TDai.Id,
 				Quantums:  10_000_000_000,
 			},
 
@@ -868,7 +868,7 @@ func TestOrderRemoval(t *testing.T) {
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.DaveAccAddress.String(),
-				AssetId:   constants.Usdc.Id,
+				AssetId:   constants.TDai.Id,
 				Quantums:  10_000_000_000,
 			},
 
@@ -888,7 +888,7 @@ func TestOrderRemoval(t *testing.T) {
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Carl_Num0,
 				Recipient: constants.CarlAccAddress.String(),
-				AssetId:   constants.Usdc.Id,
+				AssetId:   constants.TDai.Id,
 				Quantums:  10_000_000_000,
 			},
 

@@ -32,7 +32,7 @@ var (
 		satypes.ModuleName: nil,
 		// insurance fund account manages insurance fund for liquidations.
 		perpetualsmoduletypes.InsuranceFundName: nil,
-		ratelimittypes.SDAIPoolAccount:          nil,
+		ratelimittypes.SDaiPoolAccount:          nil,
 	}
 	// Blocked module accounts which cannot receive external funds.
 	// By default, all non-custom modules (except for gov) are blocked. This prevents

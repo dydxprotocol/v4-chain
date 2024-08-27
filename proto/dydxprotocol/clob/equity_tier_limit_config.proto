@@ -20,7 +20,7 @@ message EquityTierLimitConfiguration {
 
 // Defines an equity tier limit.
 message EquityTierLimit {
-  // The total net collateral in USDC quote quantums of equity required.
+  // The total net collateral in TDAI quote quantums of equity required.
   bytes usd_tnc_required = 1 [
     (gogoproto.customtype) = "github.com/StreamFinance-Protocol/stream-chain/"
                              "protocol/dtypes.SerializableInt",

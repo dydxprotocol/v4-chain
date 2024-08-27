@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ibc"
-	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,10 +13,10 @@ func TestDenomTraceToIBCDenom_Success(t *testing.T) {
 		denomTrace string
 		expected   string
 	}{
-		// Check `transfer/channel-0/uusdc` results in expected ibc hash.
+		// Check `transfer/channel-0/gsdai` results in expected ibc hash.
 		{
-			denomTrace: "transfer/channel-0/uusdc",
-			expected:   assettypes.UusdcDenom,
+			denomTrace: "transfer/channel-0/gsdai",
+			expected:   types.SDaiDenom,
 		},
 		// The following test cases and results are obtained from the private testnet.
 		{

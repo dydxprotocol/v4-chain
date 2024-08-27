@@ -15,7 +15,7 @@ func CmdUpdateMarketPrices() *cobra.Command {
 		Short: "Update the conversion rate for sDAI.",
 		Long: `Update the conversion rate for sDAI.
 Note, the '--from' flag is ignored as it is implied from [sender_key_or_address].
-[conversion_rate] is the conversion rate of sDAI to USD.
+[conversion_rate] is the conversion rate of sDAI to DAI.
 `,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {

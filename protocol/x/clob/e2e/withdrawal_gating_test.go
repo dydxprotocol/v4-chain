@@ -170,7 +170,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 					&genesis,
 					func(genesisState *assettypes.GenesisState) {
 						genesisState.Assets = []assettypes.Asset{
-							*constants.Usdc,
+							*constants.TDai,
 						}
 					},
 				)
@@ -296,7 +296,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 				withdrawMsg := sendingtypes.MsgWithdrawFromSubaccount{
 					Sender:    tc.transferOrWithdrawSubaccount,
 					Recipient: tc.transferOrWithdrawSubaccount.Owner,
-					AssetId:   constants.Usdc.Id,
+					AssetId:   constants.TDai.Id,
 					Quantums:  1,
 				}
 				msg = &withdrawMsg
@@ -305,7 +305,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 					Transfer: &sendingtypes.Transfer{
 						Sender:    tc.transferOrWithdrawSubaccount,
 						Recipient: constants.Bob_Num0,
-						AssetId:   constants.Usdc.Id,
+						AssetId:   constants.TDai.Id,
 						Amount:    1,
 					},
 				}

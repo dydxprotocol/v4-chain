@@ -23,7 +23,6 @@ import (
 
 const (
 	transferPort  = "transfer"
-	uusdc         = "uuusdc"
 	channelOnHost = "channel-1"
 )
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 )
 
@@ -28,18 +29,22 @@ const (
 
 	/* For the sDAI middleware */
 
-	PoolAccount = ibctransfertypes.ModuleName
+	// Addresses of tDAI and sDAI pools in x/bank module
 
-	SDAIPoolAccount = "sDAIPoolAccount"
+	// TDaiPool: Address, where tDAI yield is held before it is claimed by subaccount.
+	TDaiPoolAccount = ibctransfertypes.ModuleName
+	// SDaiPool: Address, where bridged sDAI is held until it is bridged out.
+	SDaiPoolAccount = "sDAIPoolAccount"
 
-	// This is the name of the sDAI token
-	SDaiDenom = "sDAI" // TODO: change
+	// Denom of sDAI in the x/bank module
+	SDaiDenom         = "ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8"
+	SDaiDenomExponent = -18
 
-	// This is the name of the trading DAI token
-	TradingDAIDenom = "tradingDAI"
+	// Denom of tDAI in the x/bank module
+	TDaiDenom = assettypes.TDaiDenom
 
 	// sDAIKeyPrefix is the prefix for the key-value store forthe sDAI price
-	SDAIKeyPrefix = "SDAIPrice:"
+	SDaiKeyPrefix = "SDAIPrice:"
 
 	// AssetYieldIndexPrefix is the prefix for the key value store that tracks
 	// the cumulative yield index across all yield epochs.

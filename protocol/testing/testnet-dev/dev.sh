@@ -138,10 +138,10 @@ create_validators() {
 		update_genesis_use_test_volatile_market "$VAL_CONFIG_DIR"
 
 		for acct in "${TEST_ACCOUNTS[@]}"; do
-			dydxprotocold add-genesis-account "$acct" 100000000000000000$USDC_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
+			dydxprotocold add-genesis-account "$acct" 100000000000000000$TDAI_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
 		done
 		for acct in "${FAUCET_ACCOUNTS[@]}"; do
-			dydxprotocold add-genesis-account "$acct" 900000000000000000$USDC_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
+			dydxprotocold add-genesis-account "$acct" 900000000000000000$TDAI_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
 		done
 
 		dydxprotocold gentx "${MONIKERS[$i]}" $TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT$NATIVE_TOKEN --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"

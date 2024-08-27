@@ -76,4 +76,9 @@ var (
 		1114,
 		"Epoch info could not be retrieved from store",
 	)
+	ErrFailedSDaiToTDaiConversion = errorsmod.Register(
+		ModuleName,
+		1115,
+		"Failed to convert sDai amount to corresponding TDai Amount",
+	)
 )

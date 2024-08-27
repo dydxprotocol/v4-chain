@@ -77,7 +77,7 @@ func (liquidityTier LiquidityTier) GetMaxAbsFundingClampPpm(clampFactorPpm uint3
 //
 // Now that OIMF is introduced, the calculation of IMR is as follows:
 //
-// - Each market has a `Lower Cap` and `Upper Cap` denominated in USDC.
+// - Each market has a `Lower Cap` and `Upper Cap` denominated in TDAI.
 // - Each market already has a `Base IMF`.
 // - At any point in time, for each market:
 //   - Define

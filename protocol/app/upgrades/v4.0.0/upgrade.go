@@ -23,7 +23,7 @@ func CreateUpgradeHandler(
 
 		if err := rateLimitKeepr.SetLimitParams(
 			sdkCtx,
-			ratelimittypes.DefaultUsdcRateLimitParams(),
+			ratelimittypes.DefaultSDaiRateLimitParams(),
 		); err != nil {
 			panic(fmt.Sprintf("failed to set default x/ratelimit params: %s", err))
 		}

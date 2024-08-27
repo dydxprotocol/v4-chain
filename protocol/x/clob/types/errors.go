@@ -510,7 +510,7 @@ var (
 	ErrAssetUpdateNotImplemented = errorsmod.Register(
 		ModuleName,
 		9001,
-		"Updates for assets other than USDC are not implemented",
+		"Updates for assets other than TDAI are not implemented",
 	)
 	ErrNotImplemented = errorsmod.Register(
 		ModuleName,

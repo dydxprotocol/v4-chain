@@ -62,7 +62,7 @@ func TestParallelAnteHandler_ClobAndOther(t *testing.T) {
 							Number: 0,
 						},
 						AssetPositions: []*satypes.AssetPosition{
-							&constants.Usdc_Asset_500_000,
+							&constants.TDai_Asset_500_000,
 						},
 					})
 				}
@@ -75,8 +75,8 @@ func TestParallelAnteHandler_ClobAndOther(t *testing.T) {
 					genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
 						Address: sdktypes.AccAddress(simAccount.PubKey.Address()).String(),
 						Coins: sdktypes.NewCoins(sdktypes.NewInt64Coin(
-							constants.Usdc.Denom,
-							constants.Usdc_Asset_500_000.Quantums.BigInt().Int64(),
+							constants.TDai.Denom,
+							constants.TDai_Asset_500_000.Quantums.BigInt().Int64(),
 						)),
 					})
 				}
@@ -161,8 +161,8 @@ func TestParallelAnteHandler_ClobAndOther(t *testing.T) {
 								Number: 0,
 							},
 							Recipient: simAccount.Address.String(),
-							AssetId:   constants.Usdc.Id,
-							Quantums:  constants.Usdc_Asset_1.Quantums.BigInt().Uint64(),
+							AssetId:   constants.TDai.Id,
+							Quantums:  constants.TDai_Asset_1.Quantums.BigInt().Uint64(),
 						},
 					},
 					constants.TestFeeCoins_5Cents,
@@ -289,10 +289,10 @@ func TestParallelAnteHandler_ClobAndOther(t *testing.T) {
 		require.Equal(
 			t,
 			[]*satypes.AssetPosition{{
-				AssetId: constants.Usdc.Id,
+				AssetId: constants.TDai.Id,
 				Quantums: dtypes.NewIntFromUint64(
-					constants.Usdc_Asset_500_000.Quantums.BigInt().Uint64() -
-						transferCounts[i].Load()*constants.Usdc_Asset_1.Quantums.BigInt().Uint64()),
+					constants.TDai_Asset_500_000.Quantums.BigInt().Uint64() -
+						transferCounts[i].Load()*constants.TDai_Asset_1.Quantums.BigInt().Uint64()),
 			}},
 			subAccount.AssetPositions,
 		)

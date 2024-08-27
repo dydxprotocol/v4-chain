@@ -29,6 +29,10 @@ import (
 	gometrics "github.com/hashicorp/go-metrics"
 )
 
+const (
+	zeroPerpYieldIndex = "0/1"
+)
+
 // SetSubaccount set a specific subaccount in the store from its index.
 // Note that empty subaccounts are removed from state.
 func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
@@ -83,7 +87,7 @@ func (k Keeper) GetSubaccount(
 
 	// If subaccount does not exist in state, return a default value.
 	assetYieldIndex, found := k.ratelimitKeeper.GetAssetYieldIndex(ctx)
-	// TODO SOLAL not good error handling
+	// TODO: [YBCP-53] not good error handling
 	if !found {
 		panic("asset yield index not found")
 	}
@@ -402,10 +406,10 @@ func (k Keeper) addYieldToSubaccount(
 	if totalNewYield.Cmp(big.NewInt(0)) < 0 {
 		panic("Total yield is less than 0. This should not be the case")
 	}
-	newUsdcPosition := new(big.Int).Add(subaccount.GetUsdcPosition(), totalNewYield)
+	newTDaiPosition := new(big.Int).Add(subaccount.GetTDaiPosition(), totalNewYield)
 
 	// TODO(CLOB-993): Remove this function and use `UpdateAssetPositions` instead.
-	newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
+	newSubaccount.SetTDaiAssetPosition(newTDaiPosition)
 	return newSubaccount, totalNewYield, nil
 }
 
@@ -417,8 +421,7 @@ func getYieldFromAssetPositions(
 	err error,
 ) {
 	for _, assetPosition := range subaccount.AssetPositions {
-		// TODO [YBCP-16]: Adapt quote currency to be DAI
-		if assetPosition.AssetId != assettypes.AssetUsdc.Id {
+		if assetPosition.AssetId != assettypes.AssetTDai.Id {
 			continue
 		}
 		newAssetYield, err := calculateAssetYieldInQuoteQuantums(subaccount, assetYieldIndex, assetPosition)
@@ -658,7 +661,7 @@ func (k Keeper) CanUpdateSubaccounts(
 }
 
 // getSettledSubaccount returns 1. a new settled subaccount given an unsettled subaccount,
-// updating the USDC AssetPosition (including yield claims), FundingIndex, and L
+// updating the TDai AssetPosition (including yield claims), FundingIndex, and L
 // astFundingPayment fields accordingly (does not persist any changes) and 2. a map with
 // perpetual ID as key and last funding payment as value (for emitting funding payments to
 // indexer).
@@ -679,7 +682,7 @@ func (k Keeper) getSettledSubaccount(
 }
 
 // GetSettledSubaccountWithPerpetuals returns 1. a new settled subaccount given an unsettled subaccount,
-// updating the USDC AssetPosition, FundingIndex, and LastFundingPayment fields accordingly
+// updating the TDai AssetPosition, FundingIndex, and LastFundingPayment fields accordingly
 // (does not persist any changes) and 2. a map with perpetual ID as key and last funding
 // payment as value (for emitting funding payments to indexer).
 //
@@ -752,12 +755,12 @@ func GetSettledSubaccountWithPerpetuals(
 		panic("Total yield is less than 0. This should not be the case")
 	}
 
-	newUsdcPosition := new(big.Int).Add(subaccount.GetUsdcPosition(), totalNewYield)
+	newTDaiPosition := new(big.Int).Add(subaccount.GetTDaiPosition(), totalNewYield)
 	totalNetSettlement := totalNetSettlementPpm.Div(totalNetSettlementPpm, lib.BigIntOneMillion())
-	newUsdcPosition.Add(newUsdcPosition, totalNetSettlement)
+	newTDaiPosition.Add(newTDaiPosition, totalNetSettlement)
 
 	// TODO(CLOB-993): Remove this function and use `UpdateAssetPositions` instead.
-	newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
+	newSubaccount.SetTDaiAssetPosition(newTDaiPosition)
 	return newSubaccount, fundingPayments, nil
 }
 
@@ -892,7 +895,7 @@ func calculatePerpetualYieldInQuoteQuantums(
 		return nil, errors.New("perp yield index for perp is badly initialised 0/1")
 	}
 
-	if perpPosition.YieldIndex == "0/1" {
+	if perpPosition.YieldIndex == zeroPerpYieldIndex {
 		return big.NewInt(0), nil
 	}
 

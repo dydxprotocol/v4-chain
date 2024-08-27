@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
-	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
@@ -18,7 +18,7 @@ func TestParseDenomFromRecvPacket(t *testing.T) {
 	osmoChannelOnDydx := "channel-5"
 	dydxChannelOnNoble := "channel-100"
 	dydxChannelOnOsmo := "channel-101"
-	originalUsdcDenom := "uusdc"
+	originalSDaiDenom := types.SDaiDenom
 
 	testCases := []struct {
 		name               string
@@ -28,18 +28,18 @@ func TestParseDenomFromRecvPacket(t *testing.T) {
 		expectedDenom      string
 	}{
 		// Sink asset one hop away:
-		//   uusdc sent from Noble to dYdX
-		//   -> tack on prefix (transfer/channel-0/uusdc) and hash
+		//   sDAI sent from Noble to dYdX
+		//   -> tack on prefix (transfer/channel-0/gsdai) and hash
 		{
 			name:               "sink_one_hop",
-			packetDenomTrace:   assettypes.UusdcDenom,
+			packetDenomTrace:   types.SDaiDenom,
 			sourceChannel:      dydxChannelOnNoble,
 			destinationChannel: nobleChannelOnDydx,
 			expectedDenom: hashDenomTrace(fmt.Sprintf(
 				"%s/%s/%s",
 				transferPort,
 				nobleChannelOnDydx,
-				assettypes.UusdcDenom,
+				types.SDaiDenom,
 			)),
 		},
 		// Native source assets
@@ -53,11 +53,11 @@ func TestParseDenomFromRecvPacket(t *testing.T) {
 			expectedDenom:      lib.DefaultBaseDenom,
 		},
 		// Sink asset two hops away:
-		//   uusdc sent from Noble to Osmosis to dYdX (transfer/channel-200/uusdc)
-		//   -> tack on prefix (transfer/channel-0/transfer/channel-200/uusdc) and hash
+		//   gsdai sent from Noble to Osmosis to dYdX (transfer/channel-200/gsdai)
+		//   -> tack on prefix (transfer/channel-0/transfer/channel-200/gsdai) and hash
 		{
 			name:               "sink_two_hops",
-			packetDenomTrace:   fmt.Sprintf("%s/%s/%s", transferPort, nobleChannelOnOsmo, originalUsdcDenom),
+			packetDenomTrace:   fmt.Sprintf("%s/%s/%s", transferPort, nobleChannelOnOsmo, originalSDaiDenom),
 			sourceChannel:      dydxChannelOnOsmo,
 			destinationChannel: osmoChannelOnDydx,
 			expectedDenom: hashDenomTrace(
@@ -67,7 +67,7 @@ func TestParseDenomFromRecvPacket(t *testing.T) {
 					osmoChannelOnDydx,
 					transferPort,
 					nobleChannelOnOsmo,
-					originalUsdcDenom,
+					originalSDaiDenom,
 				),
 			),
 		},
@@ -105,9 +105,9 @@ func TestParseDenomFromSendPacket(t *testing.T) {
 		},
 		// Non-native assets are hashed
 		{
-			name:             "uusdc on dYdX",
-			packetDenomTrace: "transfer/channel-0/uusdc",
-			expectedDenom:    assettypes.UusdcDenom,
+			name:             "gsDAI on dYdX",
+			packetDenomTrace: "transfer/channel-0/gsdai",
+			expectedDenom:    types.SDaiDenom,
 		},
 	}
 

@@ -807,7 +807,7 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 				{
 					Id: &constants.Alice_Num1,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -854,7 +854,7 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 				{
 					Id: &constants.Alice_Num1,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -903,7 +903,7 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 				{
 					Id: &constants.Alice_Num1,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -951,7 +951,7 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 				{
 					Id: &constants.Alice_Num1,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -998,7 +998,7 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 				{
 					Id: &constants.Alice_Num1,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{

@@ -366,7 +366,7 @@ type LiquidityTier struct {
 	// Deprecated since v3.x.
 	BasePositionNotional uint64 `protobuf:"varint,5,opt,name=base_position_notional,json=basePositionNotional,proto3" json:"base_position_notional,omitempty"` // Deprecated: Do not use.
 	// The impact notional amount (in quote quantums) is used to determine impact
-	// bid/ask prices and its recommended value is 500 USDC / initial margin
+	// bid/ask prices and its recommended value is 500 TDAI / initial margin
 	// fraction.
 	// - Impact bid price = average execution price for a market sell of the
 	// impact notional value.

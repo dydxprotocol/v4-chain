@@ -541,7 +541,7 @@ func (k Keeper) GetMEVDataFromOperations(
 					}
 
 					// `insuranceFundDelta` is measured in int64 quote quantums.
-					// It represents up to ~9 trillion USDC which should always be enough for insurance fund delta.
+					// It represents up to ~9 trillion TDai which should always be enough for insurance fund delta.
 					// We explicitly panic if there's an int64 overflow.
 					if !insuranceFundDelta.IsInt64() {
 						panic(fmt.Sprintf("insurance fund delta (%v) is not an int64", insuranceFundDelta.String()))

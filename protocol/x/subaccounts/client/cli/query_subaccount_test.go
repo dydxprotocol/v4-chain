@@ -29,7 +29,7 @@ func networkWithSubaccountObjects(t *testing.T, n int) []types.Subaccount {
 
 	for i := 0; i < n; i++ {
 		subaccount := types.Subaccount{
-			AssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(1_000)),
+			AssetPositions: keepertest.CreateTDaiAssetPosition(big.NewInt(1_000)),
 			Id: &types.SubaccountId{
 				Owner:  strconv.Itoa(i),
 				Number: uint32(n),

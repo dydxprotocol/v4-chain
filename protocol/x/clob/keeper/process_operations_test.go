@@ -119,7 +119,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Alice_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -131,7 +131,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Bob_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -211,8 +211,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			// Expected balances are initial balance + balance change due to order - fees
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Alice_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64() - 50_000_000 - 10_000,
-				constants.Bob_Num0:   constants.Usdc_Asset_100_000.GetBigQuantums().Int64() + 50_000_000 - 25_000,
+				constants.Alice_Num0: constants.TDai_Asset_100_000.GetBigQuantums().Int64() - 50_000_000 - 10_000,
+				constants.Bob_Num0:   constants.TDai_Asset_100_000.GetBigQuantums().Int64() + 50_000_000 - 25_000,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
@@ -245,7 +245,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Alice_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -257,7 +257,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Bob_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -337,8 +337,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			// Expected balances are initial balance + balance change due to order - fees
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Alice_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64() - 50_000_000 + 10_000,
-				constants.Bob_Num0:   constants.Usdc_Asset_100_000.GetBigQuantums().Int64() + 50_000_000 - 25_000,
+				constants.Alice_Num0: constants.TDai_Asset_100_000.GetBigQuantums().Int64() - 50_000_000 + 10_000,
+				constants.Bob_Num0:   constants.TDai_Asset_100_000.GetBigQuantums().Int64() + 50_000_000 - 25_000,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
@@ -371,7 +371,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Alice_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -383,7 +383,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Bob_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -450,8 +450,8 @@ func TestProcessProposerOperations(t *testing.T) {
 				BlockHeight: blockHeight,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Alice_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
-				constants.Bob_Num0:   constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
+				constants.Alice_Num0: constants.TDai_Asset_100_000.GetBigQuantums().Int64(),
+				constants.Bob_Num0:   constants.TDai_Asset_100_000.GetBigQuantums().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
@@ -484,7 +484,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Alice_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -496,7 +496,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Bob_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -544,8 +544,8 @@ func TestProcessProposerOperations(t *testing.T) {
 				BlockHeight: blockHeight,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Alice_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
-				constants.Bob_Num0:   constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
+				constants.Alice_Num0: constants.TDai_Asset_100_000.GetBigQuantums().Int64(),
+				constants.Bob_Num0:   constants.TDai_Asset_100_000.GetBigQuantums().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
@@ -578,7 +578,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Alice_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -590,7 +590,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Bob_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -602,7 +602,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -708,9 +708,9 @@ func TestProcessProposerOperations(t *testing.T) {
 				BlockHeight: blockHeight,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Alice_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
-				constants.Bob_Num0:   constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
-				constants.Carl_Num0:  constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
+				constants.Alice_Num0: constants.TDai_Asset_100_000.GetBigQuantums().Int64(),
+				constants.Bob_Num0:   constants.TDai_Asset_100_000.GetBigQuantums().Int64(),
+				constants.Carl_Num0:  constants.TDai_Asset_100_000.GetBigQuantums().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
@@ -797,7 +797,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				constants.Carl_Num0: 0,
-				constants.Dave_Num0: constants.Usdc_Asset_99_999.GetBigQuantums().Int64() - int64(9_999_800),
+				constants.Dave_Num0: constants.TDai_Asset_99_999.GetBigQuantums().Int64() - int64(9_999_800),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {},
@@ -844,7 +844,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				constants.Carl_Num0: 0,
-				constants.Dave_Num0: constants.Usdc_Asset_100_499.GetBigQuantums().Int64(),
+				constants.Dave_Num0: constants.TDai_Asset_100_499.GetBigQuantums().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {},
@@ -965,7 +965,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				BlockHeight: blockHeight,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetUsdcPosition().Int64(),
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetTDaiPosition().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetPerpetualPositions(),
@@ -1004,8 +1004,8 @@ func TestProcessProposerOperations(t *testing.T) {
 				BlockHeight: blockHeight,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetUsdcPosition().Int64(),
-				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetUsdcPosition().Int64(),
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetTDaiPosition().Int64(),
+				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetTDaiPosition().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetPerpetualPositions(),
@@ -1053,7 +1053,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				BlockHeight: blockHeight,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetUsdcPosition().Int64(),
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetTDaiPosition().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetPerpetualPositions(),
@@ -1103,8 +1103,8 @@ func TestProcessProposerOperations(t *testing.T) {
 				BlockHeight: blockHeight,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetUsdcPosition().Int64() - 25_249_500_000,
-				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetUsdcPosition().Int64() + 25_249_500_000,
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetTDaiPosition().Int64() - 25_249_500_000,
+				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetTDaiPosition().Int64() + 25_249_500_000,
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {
@@ -1160,7 +1160,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				BlockHeight: blockHeight,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Carl_Num0: constants.Carl_Num0_1ISO_Short_49USD.GetUsdcPosition().Int64(),
+				constants.Carl_Num0: constants.Carl_Num0_1ISO_Short_49USD.GetTDaiPosition().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: constants.Carl_Num0_1ISO_Short_49USD.GetPerpetualPositions(),
@@ -1203,8 +1203,8 @@ func TestProcessProposerOperations(t *testing.T) {
 				BlockHeight: blockHeight,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Carl_Num0: constants.Carl_Num0_1ISO_Short_49USD.GetUsdcPosition().Int64(),
-				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetUsdcPosition().Int64(),
+				constants.Carl_Num0: constants.Carl_Num0_1ISO_Short_49USD.GetTDaiPosition().Int64(),
+				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetTDaiPosition().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: constants.Carl_Num0_1ISO_Short_49USD.GetPerpetualPositions(),
@@ -1259,8 +1259,8 @@ func TestProcessProposerOperations(t *testing.T) {
 				BlockHeight: blockHeight,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Carl_Num0: constants.Carl_Num0_1ISO_Short_49USD.GetUsdcPosition().Int64(),
-				constants.Dave_Num0: constants.Dave_Num0_1ISO2_Short_499USD.GetUsdcPosition().Int64(),
+				constants.Carl_Num0: constants.Carl_Num0_1ISO_Short_49USD.GetTDaiPosition().Int64(),
+				constants.Dave_Num0: constants.Dave_Num0_1ISO2_Short_499USD.GetTDaiPosition().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: constants.Carl_Num0_1ISO_Short_49USD.GetPerpetualPositions(),
@@ -1317,7 +1317,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Alice_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -1329,7 +1329,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Bob_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -1407,8 +1407,8 @@ func TestProcessProposerOperations(t *testing.T) {
 				),
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_55000USD.GetUsdcPosition().Int64(),
-				constants.Dave_Num0: constants.Usdc_Asset_50_000.GetBigQuantums().Int64(),
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_55000USD.GetTDaiPosition().Int64(),
+				constants.Dave_Num0: constants.TDai_Asset_50_000.GetBigQuantums().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_55000USD.GetPerpetualPositions(),
@@ -1448,8 +1448,8 @@ func TestProcessProposerOperations(t *testing.T) {
 				),
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_55000USD.GetUsdcPosition().Int64(),
-				constants.Dave_Num0: constants.Usdc_Asset_50_000.GetBigQuantums().Int64(),
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_55000USD.GetTDaiPosition().Int64(),
+				constants.Dave_Num0: constants.TDai_Asset_50_000.GetBigQuantums().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_55000USD.GetPerpetualPositions(),
@@ -1469,7 +1469,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Alice_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -1481,7 +1481,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Bob_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -1531,8 +1531,8 @@ func TestProcessProposerOperations(t *testing.T) {
 				BlockHeight: blockHeight,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Alice_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
-				constants.Bob_Num0:   constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
+				constants.Alice_Num0: constants.TDai_Asset_100_000.GetBigQuantums().Int64(),
+				constants.Bob_Num0:   constants.TDai_Asset_100_000.GetBigQuantums().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
@@ -1565,7 +1565,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Alice_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -1577,7 +1577,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Bob_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -1619,7 +1619,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Alice_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -1631,7 +1631,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				{
 					Id: &constants.Bob_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
+						&constants.TDai_Asset_100_000,
 					},
 					PerpetualPositions: []*satypes.PerpetualPosition{
 						{
@@ -1732,8 +1732,8 @@ func TestProcessProposerOperations(t *testing.T) {
 				BlockHeight: blockHeight,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_100000USD.GetUsdcPosition().Int64(),
-				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetUsdcPosition().Int64(),
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_100000USD.GetTDaiPosition().Int64(),
+				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetTDaiPosition().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_100000USD.GetPerpetualPositions(),
@@ -1933,7 +1933,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
 				constants.Carl_Num0: 0,
-				constants.Dave_Num0: constants.Usdc_Asset_100_499.GetBigQuantums().Int64(),
+				constants.Dave_Num0: constants.TDai_Asset_100_499.GetBigQuantums().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {},
@@ -1975,8 +1975,8 @@ func TestProcessProposerOperations(t *testing.T) {
 				BlockHeight: blockHeight,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Carl_Num0: constants.Usdc_Asset_50_000.GetBigQuantums().Int64(),
-				constants.Dave_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
+				constants.Carl_Num0: constants.TDai_Asset_50_000.GetBigQuantums().Int64(),
+				constants.Dave_Num0: constants.TDai_Asset_100_000.GetBigQuantums().Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: {},
@@ -2340,7 +2340,7 @@ func setupProcessProposerOperationsTestCase(
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
-		).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(tc.insuranceFundBalance)))
+		).Return(sdk.NewCoin("TDAI", sdkmath.NewIntFromUint64(tc.insuranceFundBalance)))
 	}
 
 	mockIndexerEventManager = &mocks.IndexerEventManager{}
@@ -2387,7 +2387,7 @@ func setupProcessProposerOperationsTestCase(
 	require.NotNil(t, tc.perpetualFeeParams)
 	require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, *tc.perpetualFeeParams))
 
-	err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+	err := keepertest.CreateTDaiAsset(ctx, ks.AssetsKeeper)
 	require.NoError(t, err)
 
 	// Create all perpetuals.
@@ -2702,7 +2702,7 @@ func assertSubaccountState(
 ) {
 	for subaccountId, quoteBalance := range expectedQuoteBalances {
 		subaccount := subaccountsKeeper.GetSubaccount(ctx, subaccountId)
-		require.Equal(t, quoteBalance, subaccount.GetUsdcPosition().Int64())
+		require.Equal(t, quoteBalance, subaccount.GetTDaiPosition().Int64())
 	}
 
 	for subaccountId, perpetualPositions := range expectedPerpetualPositions {

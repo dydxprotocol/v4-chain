@@ -91,13 +91,13 @@ func genInitialAndMaintenanceFraction(r *rand.Rand) (uint32, uint32) {
 	return uint32(initialMargin), uint32(maintenanceFraction)
 }
 
-// calculateImpactNotional calculates impact notional as 500 USDC / initial margin fraction.
+// calculateImpactNotional calculates impact notional as 500 TDAI / initial margin fraction.
 func calculateImpactNotional(initialMarginPpm uint32) uint64 {
 	// If initial margin is 0, return max uint64.
 	if initialMarginPpm == 0 {
 		return math.MaxUint64
 	}
-	impactNotional := big.NewInt(500_000_000) // 500 USDC in quote quantums
+	impactNotional := big.NewInt(500_000_000) // 500 TDAI in quote quantums
 	impactNotional.Mul(impactNotional, lib.BigIntOneMillion())
 	impactNotional.Quo(impactNotional, big.NewInt(int64(initialMarginPpm)))
 	return impactNotional.Uint64()

@@ -57,7 +57,7 @@ func CmdCreateTransfer() *cobra.Command {
 						Owner:  argRecipientOwner,
 						Number: argRecipientNumber,
 					},
-					AssetId: assettypes.AssetUsdc.Id,
+					AssetId: assettypes.AssetTDai.Id,
 					Amount:  argAmount,
 				},
 			)

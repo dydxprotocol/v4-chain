@@ -150,7 +150,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						},
 						AssetPositions: []*types.AssetPosition{
 							{
-								AssetId:  1, // asset id must be zero (0 = USDC).
+								AssetId:  1, // asset id must be zero (0 = TDAI).
 								Quantums: dtypes.NewInt(1_000),
 							},
 						},

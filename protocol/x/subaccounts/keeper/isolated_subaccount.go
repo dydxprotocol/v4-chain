@@ -186,7 +186,7 @@ func GetIsolatedPerpetualStateTransition(
 		return &types.IsolatedPerpetualPositionStateTransition{
 			SubaccountId:  updatedSubaccount.Id,
 			PerpetualId:   perpetualUpdate.PerpetualId,
-			QuoteQuantums: updatedSubaccount.GetUsdcPosition(),
+			QuoteQuantums: updatedSubaccount.GetTDaiPosition(),
 			Transition:    types.Closed,
 		}, nil
 	}
@@ -207,7 +207,7 @@ func GetIsolatedPerpetualStateTransition(
 				len(settledUpdateWithUpdatedSubaccount.AssetUpdates),
 			)
 		}
-		if settledUpdateWithUpdatedSubaccount.AssetUpdates[0].AssetId != assettypes.AssetUsdc.Id {
+		if settledUpdateWithUpdatedSubaccount.AssetUpdates[0].AssetId != assettypes.AssetTDai.Id {
 			return nil, errorsmod.Wrapf(
 				types.ErrFailedToUpdateSubaccounts,
 				"Subaccount with id %v opened perpteual position with perpetual id %d without a change to the"+
@@ -220,7 +220,7 @@ func GetIsolatedPerpetualStateTransition(
 		// Subtract the delta from the updated subaccount's quote currency asset position size to get the size
 		// of the quote currency asset position.
 		quoteQuantumsBeforeUpdate := new(big.Int).Sub(
-			updatedSubaccount.GetUsdcPosition(),
+			updatedSubaccount.GetTDaiPosition(),
 			settledUpdateWithUpdatedSubaccount.AssetUpdates[0].GetBigQuantums(),
 		)
 		return &types.IsolatedPerpetualPositionStateTransition{
@@ -297,8 +297,8 @@ func (k *Keeper) transferCollateralForIsolatedPerpetual(
 	// Transfer collateral between collateral pools.
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
-		// TODO(DEC-715): Support non-USDC assets.
-		assettypes.AssetUsdc.Id,
+		// TODO(DEC-715): Support non-TDai assets.
+		assettypes.AssetTDai.Id,
 		stateTransition.QuoteQuantums,
 	)
 	if err != nil {

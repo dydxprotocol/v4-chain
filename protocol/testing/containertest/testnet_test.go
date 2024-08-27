@@ -156,7 +156,7 @@ func TestBankSend(t *testing.T) {
 			FromAddress: constants.BobAccAddress.String(),
 			ToAddress:   constants.AliceAccAddress.String(),
 			Amount: []sdk.Coin{
-				sdk.NewCoin(assets.AssetUsdc.Denom, sdkmath.NewInt(1)),
+				sdk.NewCoin(assets.AssetTDai.Denom, sdkmath.NewInt(1)),
 			},
 		},
 		constants.BobAccAddress.String(),

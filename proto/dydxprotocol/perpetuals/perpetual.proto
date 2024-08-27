@@ -125,7 +125,7 @@ message LiquidityTier {
   uint64 base_position_notional = 5 [ deprecated = true ];
 
   // The impact notional amount (in quote quantums) is used to determine impact
-  // bid/ask prices and its recommended value is 500 USDC / initial margin
+  // bid/ask prices and its recommended value is 500 TDAI / initial margin
   // fraction.
   // - Impact bid price = average execution price for a market sell of the
   // impact notional value.

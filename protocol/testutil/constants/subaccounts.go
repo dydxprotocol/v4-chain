@@ -12,7 +12,7 @@ var (
 	Alice_Num0_1USD = satypes.Subaccount{
 		Id: &Alice_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_1,
+			&TDai_Asset_1,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -20,7 +20,7 @@ var (
 	Alice_Num0_10_000USD = satypes.Subaccount{
 		Id: &Alice_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_10_000,
+			&TDai_Asset_10_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -28,7 +28,7 @@ var (
 	Alice_Num0_100_000USD = satypes.Subaccount{
 		Id: &Alice_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_100_000,
+			&TDai_Asset_100_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -36,7 +36,7 @@ var (
 	Alice_Num1_10_000USD = satypes.Subaccount{
 		Id: &Alice_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_10_000,
+			&TDai_Asset_10_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -44,7 +44,7 @@ var (
 	Alice_Num1_100_000USD = satypes.Subaccount{
 		Id: &Alice_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_100_000,
+			&TDai_Asset_100_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -52,7 +52,7 @@ var (
 	Alice_Num0_1ISO_LONG_10_000USD = satypes.Subaccount{
 		Id: &Alice_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_10_000,
+			&TDai_Asset_10_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -66,7 +66,7 @@ var (
 	Alice_Num1_1BTC_Short_100_000USD = satypes.Subaccount{
 		Id: &Alice_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_100_000,
+			&TDai_Asset_100_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -79,7 +79,7 @@ var (
 	Alice_Num1_1BTC_Long_500_000USD = satypes.Subaccount{
 		Id: &Alice_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_500_000,
+			&TDai_Asset_500_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -92,7 +92,7 @@ var (
 	Bob_Num0_10_000USD = satypes.Subaccount{
 		Id: &Bob_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_10_000,
+			&TDai_Asset_10_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -100,7 +100,7 @@ var (
 	Bob_Num0_100_000USD = satypes.Subaccount{
 		Id: &Bob_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_100_000,
+			&TDai_Asset_100_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -108,7 +108,7 @@ var (
 	Carl_Num0_100BTC_Short_10100USD = satypes.Subaccount{
 		Id: &Carl_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_10_100,
+			&TDai_Asset_10_100,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -121,7 +121,7 @@ var (
 	Carl_Num0_1BTC_Short = satypes.Subaccount{
 		Id: &Carl_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_100_000,
+			&TDai_Asset_100_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -134,7 +134,7 @@ var (
 	Carl_Num1_1BTC_Short = satypes.Subaccount{
 		Id: &Carl_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_100_000,
+			&TDai_Asset_100_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -282,7 +282,7 @@ var (
 	Carl_Num0_599USD = satypes.Subaccount{
 		Id: &Carl_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_599,
+			&TDai_Asset_599,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -290,7 +290,7 @@ var (
 	Carl_Num0_660USD = satypes.Subaccount{
 		Id: &Carl_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_660,
+			&TDai_Asset_660,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -298,7 +298,7 @@ var (
 	Carl_Num0_10000USD = satypes.Subaccount{
 		Id: &Carl_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_10_000,
+			&TDai_Asset_10_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -306,7 +306,7 @@ var (
 	Carl_Num0_50000USD = satypes.Subaccount{
 		Id: &Carl_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_50_000,
+			&TDai_Asset_50_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -314,7 +314,7 @@ var (
 	Carl_Num0_100000USD = satypes.Subaccount{
 		Id: &Carl_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_100_000,
+			&TDai_Asset_100_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -322,7 +322,7 @@ var (
 	Carl_Num0_500000USD = satypes.Subaccount{
 		Id: &Carl_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_500_000,
+			&TDai_Asset_500_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -336,7 +336,7 @@ var (
 	Carl_Num1_500USD = satypes.Subaccount{
 		Id: &Carl_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_500,
+			&TDai_Asset_500,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -344,7 +344,7 @@ var (
 	Carl_Num1_100000USD = satypes.Subaccount{
 		Id: &Carl_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_100_000,
+			&TDai_Asset_100_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -352,7 +352,7 @@ var (
 	Carl_Num1_Short_500USD = satypes.Subaccount{
 		Id: &Carl_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Short_Usdc_Asset_500,
+			&Short_TDai_Asset_500,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -377,7 +377,7 @@ var (
 	Carl_Num1_01BTC_Long_4600USD_Short = satypes.Subaccount{
 		Id: &Carl_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Short_Usdc_Asset_4_600,
+			&Short_TDai_Asset_4_600,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -406,7 +406,7 @@ var (
 	Dave_Num0_01BTC_Long_50000USD = satypes.Subaccount{
 		Id: &Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_50_000,
+			&TDai_Asset_50_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -419,7 +419,7 @@ var (
 	Dave_Num0_1BTC_Long_50000USD = satypes.Subaccount{
 		Id: &Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_50_000,
+			&TDai_Asset_50_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -450,7 +450,7 @@ var (
 	Dave_Num0_1BTC_Short_100000USD = satypes.Subaccount{
 		Id: &Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_100_000,
+			&TDai_Asset_100_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -547,7 +547,7 @@ var (
 	Dave_Num0_599USD = satypes.Subaccount{
 		Id: &Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_599,
+			&TDai_Asset_599,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -555,7 +555,7 @@ var (
 	Dave_Num0_10000USD = satypes.Subaccount{
 		Id: &Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_10_000,
+			&TDai_Asset_10_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -563,7 +563,7 @@ var (
 	Dave_Num0_500000USD = satypes.Subaccount{
 		Id: &Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_500_000,
+			&TDai_Asset_500_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -571,7 +571,7 @@ var (
 	Dave_Num0_100BTC_Short_10200USD = satypes.Subaccount{
 		Id: &Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_10_200,
+			&TDai_Asset_10_200,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -584,7 +584,7 @@ var (
 	Dave_Num0_100BTC_Long_9900USD_Short = satypes.Subaccount{
 		Id: &Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Short_Usdc_Asset_9_900,
+			&Short_TDai_Asset_9_900,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -614,7 +614,7 @@ var (
 	Dave_Num0_1BTC_Long_46000USD_Short = satypes.Subaccount{
 		Id: &Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Short_Usdc_Asset_46_000,
+			&Short_TDai_Asset_46_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -627,7 +627,7 @@ var (
 	Dave_Num0_1BTC_Long_1ETH_Long_46000USD_Short = satypes.Subaccount{
 		Id: &Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
-			&Short_Usdc_Asset_46_000,
+			&Short_TDai_Asset_46_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -644,7 +644,7 @@ var (
 	Dave_Num1_10_000USD = satypes.Subaccount{
 		Id: &Dave_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_10_000,
+			&TDai_Asset_10_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -652,7 +652,7 @@ var (
 	Dave_Num1_500000USD = satypes.Subaccount{
 		Id: &Dave_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_500_000,
+			&TDai_Asset_500_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 		AssetYieldIndex:    big.NewRat(0, 1).String(),
@@ -660,7 +660,7 @@ var (
 	Dave_Num1_025BTC_Long_50000USD = satypes.Subaccount{
 		Id: &Dave_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_50_000,
+			&TDai_Asset_50_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -673,7 +673,7 @@ var (
 	Dave_Num1_05BTC_Long_50000USD = satypes.Subaccount{
 		Id: &Dave_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_50_000,
+			&TDai_Asset_50_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -686,7 +686,7 @@ var (
 	Dave_Num1_1BTC_Long_50000USD = satypes.Subaccount{
 		Id: &Dave_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_50_000,
+			&TDai_Asset_50_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -699,7 +699,7 @@ var (
 	Dave_Num1_100BTC_Short_10100USD = satypes.Subaccount{
 		Id: &Dave_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_10_100,
+			&TDai_Asset_10_100,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
@@ -728,7 +728,7 @@ var (
 	Dave_Num1_1ETH_Long_50000USD = satypes.Subaccount{
 		Id: &Dave_Num1,
 		AssetPositions: []*satypes.AssetPosition{
-			&Usdc_Asset_50_000,
+			&TDai_Asset_50_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{

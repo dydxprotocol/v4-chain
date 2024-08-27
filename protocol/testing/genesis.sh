@@ -14,7 +14,7 @@ EIGHTEEN_ZEROS="$NINE_ZEROS$NINE_ZEROS"
 SUBACCOUNTS_MODACC_ADDR="dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6"
 REWARDS_VESTER_ACCOUNT_ADDR="dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp"
 
-USDC_DENOM="ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5"
+TDAI_DENOM="utdai"
 REWARD_TOKEN="adv4tnt"
 NATIVE_TOKEN="adv4tnt" # public testnet token
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
@@ -95,8 +95,8 @@ function edit_genesis() {
 
 	# Update assets module.
 	dasel put -t int -f "$GENESIS" '.app_state.assets.assets.[0].id' -v '0'
-	dasel put -t string -f "$GENESIS" '.app_state.assets.assets.[0].symbol' -v 'USDC'
-	dasel put -t string -f "$GENESIS" '.app_state.assets.assets.[0].denom' -v "$USDC_DENOM"
+	dasel put -t string -f "$GENESIS" '.app_state.assets.assets.[0].symbol' -v 'TDAI'
+	dasel put -t string -f "$GENESIS" '.app_state.assets.assets.[0].denom' -v "$TDAI_DENOM"
 	dasel put -t string -f "$GENESIS" '.app_state.assets.assets.[0].denom_exponent' -v '-6'
 	dasel put -t bool -f "$GENESIS" '.app_state.assets.assets.[0].has_market' -v 'false'
 	dasel put -t int -f "$GENESIS" '.app_state.assets.assets.[0].market_id' -v '0'
@@ -117,8 +117,8 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].name' -v 'Large-Cap'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].initial_margin_ppm' -v '50000' # 5%
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].maintenance_fraction_ppm' -v '600000' # 60% of IM
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].base_position_notional' -v '1000000000000' # 1_000_000 USDC
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].impact_notional' -v '10000000000' # 10_000 USDC (500 USDC / 5%)
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].base_position_notional' -v '1000000000000' # 1_000_000 TDAI
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].impact_notional' -v '10000000000' # 10_000 TDAI (500 TDAI / 5%)
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].open_interest_lower_cap' -v '0' # OIMF doesn't apply to Large-Cap
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].open_interest_upper_cap' -v '0' # OIMF doesn't apply to Large-Cap
 
@@ -128,10 +128,10 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].name' -v 'Mid-Cap'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].initial_margin_ppm' -v '100000' # 10%
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].maintenance_fraction_ppm' -v '500000' # 50% of IM
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].base_position_notional' -v '250000000000' # 250_000 USDC
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].impact_notional' -v '5000000000' # 5_000 USDC (500 USDC / 10%)
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].open_interest_lower_cap' -v '20000000000000' # 20 million USDC
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].open_interest_upper_cap' -v '50000000000000' # 50 million USDC
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].base_position_notional' -v '250000000000' # 250_000 TDAI
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].impact_notional' -v '5000000000' # 5_000 TDAI (500 TDAI / 10%)
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].open_interest_lower_cap' -v '20000000000000' # 20 million TDAI
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].open_interest_upper_cap' -v '50000000000000' # 50 million TDAI
 
 	# Liquidity Tier: Long-Tail
 	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[]' -v "{}"
@@ -139,10 +139,10 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].name' -v 'Long-Tail'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].initial_margin_ppm' -v '200000' # 20%
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].maintenance_fraction_ppm' -v '500000' # 50% of IM
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].base_position_notional' -v '100000000000' # 100_000 USDC
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].impact_notional' -v '2500000000' # 2_500 USDC (500 USDC / 20%)
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].open_interest_lower_cap' -v '5000000000000' # 5 million USDC
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].open_interest_upper_cap' -v '10000000000000' # 10 million USDC
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].base_position_notional' -v '100000000000' # 100_000 TDAI
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].impact_notional' -v '2500000000' # 2_500 TDAI (500 TDAI / 20%)
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].open_interest_lower_cap' -v '5000000000000' # 5 million TDAI
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].open_interest_upper_cap' -v '10000000000000' # 10 million TDAI
 
 	# Liquidity Tier: Safety
 	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[]' -v "{}"
@@ -150,11 +150,11 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].name' -v 'Safety'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].initial_margin_ppm' -v '1000000' # 100%
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].maintenance_fraction_ppm' -v '200000' # 20% of IM
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].base_position_notional' -v '1000000000' # 1_000 USDC
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].impact_notional' -v '2500000000' # 2_500 USDC (2_500 USDC / 100%)
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].base_position_notional' -v '1000000000' # 1_000 TDAI
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].impact_notional' -v '2500000000' # 2_500 TDAI (2_500 TDAI / 100%)
 	# For `Safety` IMF is already at 100%; still we set OIMF for completeness.
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].open_interest_lower_cap' -v '2000000000000' # 2 million USDC
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].open_interest_upper_cap' -v '5000000000000' # 5 million USDC
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].open_interest_lower_cap' -v '2000000000000' # 2 million TDAI
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].open_interest_upper_cap' -v '5000000000000' # 5 million TDAI
 
 	# Params.
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.params.funding_rate_clamp_factor_ppm' -v '6000000' # 600 % (same as 75% on hourly rate)
@@ -1077,7 +1077,7 @@ function edit_genesis() {
 		dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
 		dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[0].address" -v "${SUBACCOUNTS_MODACC_ADDR}"
 		dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[0].coins.[]" -v "{}"
-		dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[0].coins.[0].denom" -v "$USDC_DENOM"
+		dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[0].coins.[0].denom" -v "$TDAI_DENOM"
 		# TODO(DEC-969): For testnet, ensure subaccounts module balance >= sum of subaccount quote balances.
 		dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[0].coins.[0].amount" -v "${total_accounts_quote_balance}"
 		next_bank_idx=$(($next_bank_idx+1))
@@ -1400,10 +1400,10 @@ function edit_genesis() {
 
 	# Liquidations
 	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.max_liquidation_fee_ppm' -v '15000'  # 1.5%
-	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.position_block_limits.min_position_notional_liquidated' -v '1000000000' # 1_000 USDC
+	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.position_block_limits.min_position_notional_liquidated' -v '1000000000' # 1_000 TDAI
 	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.position_block_limits.max_position_portion_liquidated_ppm' -v '100000'  # 10%
-	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.subaccount_block_limits.max_notional_liquidated' -v '100000000000'  # 100_000 USDC
-	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.subaccount_block_limits.max_quantums_insurance_lost' -v '1000000000000' # 1_000_000 USDC
+	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.subaccount_block_limits.max_notional_liquidated' -v '100000000000'  # 100_000 TDAI
+	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.subaccount_block_limits.max_quantums_insurance_lost' -v '1000000000000' # 1_000_000 TDAI
 	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.fillable_price_config.bankruptcy_adjustment_ppm' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.fillable_price_config.spread_to_maintenance_margin_ratio_ppm' -v '1500000'  # 150%
 
@@ -1422,51 +1422,51 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_stateful_orders_per_n_blocks.[1].num_blocks' -v '100'
 
 	# Equity Tier Limit
-	# Max 0 open short term orders for $0 USDC TNC
+	# Max 0 open short term orders for $0 TDAI TNC
 	dasel put -t json -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[0].limit' -v '0'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[0].usd_tnc_required' -v '0'
-	# Max 1 open short term orders for $20 USDC TNC
+	# Max 1 open short term orders for $20 TDAI TNC
 	dasel put -t json -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[1].limit' -v '1'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[1].usd_tnc_required' -v '20000000'
-	# Max 5 open short term orders for $100 USDC TNC
+	# Max 5 open short term orders for $100 TDAI TNC
 	dasel put -t json -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[2].limit' -v '5'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[2].usd_tnc_required' -v '100000000'
-	# Max 10 open short term orders for $1000 USDC TNC
+	# Max 10 open short term orders for $1000 TDAI TNC
 	dasel put -t json -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[3].limit' -v '10'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[3].usd_tnc_required' -v '1000000000'
-	# Max 100 open short term orders for $10,000 USDC TNC
+	# Max 100 open short term orders for $10,000 TDAI TNC
 	dasel put -t json -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[4].limit' -v '100'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[4].usd_tnc_required' -v '10000000000'
-	# Max 200 open short term orders for $100,000 USDC TNC
+	# Max 200 open short term orders for $100,000 TDAI TNC
 	dasel put -t json -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[5].limit' -v '1000'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.short_term_order_equity_tiers.[5].usd_tnc_required' -v '100000000000'
-	# Max 0 open stateful orders for $0 USDC TNC
+	# Max 0 open stateful orders for $0 TDAI TNC
 	dasel put -t json -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[0].limit' -v '0'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[0].usd_tnc_required' -v '0'
-	# Max 1 open stateful orders for $20 USDC TNC
+	# Max 1 open stateful orders for $20 TDAI TNC
 	dasel put -t json -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[1].limit' -v '1'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[1].usd_tnc_required' -v '20000000'
-	# Max 5 open stateful orders for $100 USDC TNC
+	# Max 5 open stateful orders for $100 TDAI TNC
 	dasel put -t json -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[2].limit' -v '5'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[2].usd_tnc_required' -v '100000000'
-	# Max 10 open stateful orders for $1000 USDC TNC
+	# Max 10 open stateful orders for $1000 TDAI TNC
 	dasel put -t json -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[3].limit' -v '10'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[3].usd_tnc_required' -v '1000000000'
-	# Max 100 open stateful orders for $10,000 USDC TNC
+	# Max 100 open stateful orders for $10,000 TDAI TNC
 	dasel put -t json -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[4].limit' -v '100'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[4].usd_tnc_required' -v '10000000000'
-	# Max 200 open stateful orders for $100,000 USDC TNC
+	# Max 200 open stateful orders for $100,000 TDAI TNC
 	dasel put -t json -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[5].limit' -v '200'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[5].usd_tnc_required' -v '100000000000'
@@ -1594,8 +1594,8 @@ function update_genesis_use_test_volatile_market() {
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().name' -v 'test-usd-100x-liq-tier-linear'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().initial_margin_ppm' -v '10007' # 1% + a little prime (100x leverage)
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().maintenance_fraction_ppm' -v '500009' # 50% of IM + a little prime
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().base_position_notional' -v '1000000000039' # 1_000_000 USDC + a little prime
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().impact_notional' -v '50000000000' # 50_000 USDC (500 USDC / 1%)
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().base_position_notional' -v '1000000000039' # 1_000_000 TDAI + a little prime
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().impact_notional' -v '50000000000' # 50_000 TDAI (500 TDAI / 1%)
 
 	# Liquidity Tier: For TEST-USD. 1% leverage and 100 nonlinear margin thresholds.
 	NUM_LIQUIDITY_TIERS_2=$(jq -c '.app_state.perpetuals.liquidity_tiers | length' < ${GENESIS})
@@ -1604,8 +1604,8 @@ function update_genesis_use_test_volatile_market() {
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().name' -v 'test-usd-100x-liq-tier-nonlinear'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().initial_margin_ppm' -v '10007' # 1% + a little prime (100x leverage)
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().maintenance_fraction_ppm' -v '500009' # 50% of IM + a little prime
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().base_position_notional' -v '100000007' # 100 USDC + a little prime
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().impact_notional' -v '50000000000' # 50_000 USDC (500 USDC / 1%)
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().base_position_notional' -v '100000007' # 100 TDAI + a little prime
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().impact_notional' -v '50000000000' # 50_000 TDAI (500 TDAI / 1%)
 
 	# Perpetual: TEST-USD
 	NUM_PERPETUALS=$(jq -c '.app_state.perpetuals.perpetuals | length' < ${GENESIS})

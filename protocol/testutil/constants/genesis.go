@@ -34,12 +34,12 @@ const GenesisState = `{
       "assets": [
         {
           "atomic_resolution": -6,
-          "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+          "denom": "utdai",
           "denom_exponent": "-6",
           "has_market": false,
           "id": 0,
           "market_id": 0,
-          "symbol": "USDC",
+          "symbol": "TDAI",
           "asset_yield_index": "0/1"
         }
       ]
@@ -104,7 +104,7 @@ const GenesisState = `{
               "amount": "500000000000000000000000"
             },
             {
-              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "denom": "utdai",
               "amount": "100000000000000000"
             }
           ]
@@ -117,7 +117,7 @@ const GenesisState = `{
               "amount": "500000000000000000000000"
             },
             {
-              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "denom": "utdai",
               "amount": "100000000000000000"
             }
           ]
@@ -126,7 +126,7 @@ const GenesisState = `{
           "address": "dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6",
           "coins": [
             {
-              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "denom": "utdai",
               "amount": "1300000000000000000"
             }
           ]
@@ -139,7 +139,7 @@ const GenesisState = `{
               "amount": "500000000000000000000000"
             },
             {
-              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "denom": "utdai",
               "amount": "100000000000000000"
             }
           ]
@@ -152,7 +152,7 @@ const GenesisState = `{
               "amount": "500000000000000000000000"
             },
             {
-              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "denom": "utdai",
               "amount": "100000000000000000"
             }
           ]
@@ -165,7 +165,7 @@ const GenesisState = `{
               "amount": "100000000000"
             },
             {
-              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "denom": "utdai",
               "amount": "900000000000000000"
             }
           ]
@@ -1153,15 +1153,15 @@ const GenesisState = `{
     "ratelimit": {
       "limit_params_list": [
         {
-          "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+          "denom": "ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8",
           "limiters": [
             {
-              "baseline_minimum": "1000000000000",
+              "baseline_minimum": "1000000000000000000000000",
               "baseline_tvl_ppm": 10000,
               "period": "3600s"
             },
             {
-              "baseline_minimum": "10000000000000",
+              "baseline_minimum": "10000000000000000000000000",
               "baseline_tvl_ppm": 100000,
               "period": "86400s"
             }

@@ -3,10 +3,11 @@ package simulation
 // DONTCOVER
 
 import (
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"math"
 	"math/big"
 	"math/rand"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sim_helpers"
@@ -107,7 +108,7 @@ func SimulateMsgCreateTransfer(
 		// Calculate the maximum amount that the receiver can receive without any integer overflow.
 		bigAmountReceivable := new(big.Int).Sub(
 			new(big.Int).SetUint64(math.MaxUint64),
-			recipientAccount.GetUsdcPosition(),
+			recipientAccount.GetTDaiPosition(),
 		)
 
 		// Calculate the maximum amount that can be sent without making the subaccount under-collateralized.
@@ -133,7 +134,7 @@ func SimulateMsgCreateTransfer(
 			Transfer: &types.Transfer{
 				Sender:    *senderAccount.GetId(),
 				Recipient: *recipientAccount.GetId(),
-				AssetId:   assettypes.AssetUsdc.Id,
+				AssetId:   assettypes.AssetTDai.Id,
 				Amount:    amountToSend.Uint64(),
 			},
 		}

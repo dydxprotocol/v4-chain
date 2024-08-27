@@ -9,7 +9,6 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
-	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	ratelimitutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 	"github.com/stretchr/testify/require"
@@ -22,7 +21,7 @@ func TestQueryCapacityByDenom(t *testing.T) {
 	cfg := network.DefaultConfig(nil)
 
 	rateQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
-		" query ratelimit capacity-by-denom " + assettypes.AssetUsdc.Denom
+		" query ratelimit capacity-by-denom " + types.SDaiDenom
 	data, _, err := network.QueryCustomNetwork(rateQuery)
 
 	require.NoError(t, err)
@@ -32,20 +31,20 @@ func TestQueryCapacityByDenom(t *testing.T) {
 		// LimiterCapacity resulting from default limiter params and 0 TVL.
 		[]types.LimiterCapacity{
 			{
-				Limiter: types.DefaultUsdcHourlyLimter,
+				Limiter: types.DefaultSDaiHourlyLimter,
 				Capacity: dtypes.NewIntFromBigInt(
 					ratelimitutil.GetBaseline(
 						big.NewInt(0),
-						types.DefaultUsdcHourlyLimter,
+						types.DefaultSDaiHourlyLimter,
 					),
 				),
 			},
 			{
-				Limiter: types.DefaultUsdcDailyLimiter,
+				Limiter: types.DefaultSDaiDailyLimiter,
 				Capacity: dtypes.NewIntFromBigInt(
 					ratelimitutil.GetBaseline(
 						big.NewInt(0),
-						types.DefaultUsdcDailyLimiter,
+						types.DefaultSDaiDailyLimiter,
 					),
 				),
 			},

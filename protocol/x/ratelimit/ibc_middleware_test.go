@@ -106,7 +106,7 @@ func setupChainForIBC(t *testing.T, coord *ibctesting.Coordinator, chainID strin
 						Address: sdktypes.AccAddress(simAccount.PubKey.Address()).String(),
 						Coins: sdktypes.NewCoins(sdktypes.NewInt64Coin(
 							sdk.DefaultBondDenom,
-							constants.Usdc_Asset_500_000.Quantums.BigInt().Int64(),
+							constants.TDai_Asset_500_000.Quantums.BigInt().Int64(),
 						)),
 					})
 				}

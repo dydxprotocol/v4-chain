@@ -5,22 +5,13 @@ import (
 	"math/big"
 	"testing"
 
-	// "time"
-
-	// errorsmod "cosmossdk.io/errors"
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 
-	// "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
-	// big_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/big"
-	// blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
-	// "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
-	cometbfttypes "github.com/cometbft/cometbft/types"
-	// sdk "github.com/cosmos/cosmos-sdk/types"
-	// banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	cometbfttypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
@@ -299,7 +290,7 @@ func TestGetTradingDAIFromSDAIAmountAndRoundUp(t *testing.T) {
 			sDAIAmount:         big.NewInt(1000),
 			sDAIPrice:          nil,
 			expectedTDAIAmount: nil,
-			expectedErr:        errors.New("sDAI price not found"),
+			expectedErr:        errors.New("sDai price not found: Failed to convert sDai amount to corresponding TDai Amount"),
 		},
 		"Division by zero": {
 			sDAIAmount:         big.NewInt(1000),
@@ -480,21 +471,21 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 				k.SetSDAIPrice(ctx, transfer.sDAIPrice)
 				sDAICoins := sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewIntFromBigInt(transfer.userInitialSDAIBalance)))
 
-				mintingErr := bankKeeper.MintCoins(ctx, types.PoolAccount, sDAICoins)
+				mintingErr := bankKeeper.MintCoins(ctx, types.TDaiPoolAccount, sDAICoins)
 				require.NoError(t, mintingErr)
-				sendingErr := bankKeeper.SendCoinsFromModuleToAccount(ctx, types.PoolAccount, transfer.userAddr, sDAICoins)
+				sendingErr := bankKeeper.SendCoinsFromModuleToAccount(ctx, types.TDaiPoolAccount, transfer.userAddr, sDAICoins)
 				require.NoError(t, sendingErr)
 
 				// Check initial balance
 				initialPoolSDAIBalance := bankKeeper.GetBalance(
 					ctx,
-					accountKeeper.GetModuleAddress(types.SDAIPoolAccount),
+					accountKeeper.GetModuleAddress(types.SDaiPoolAccount),
 					types.SDaiDenom,
 				).Amount.BigInt()
 				initialPoolTDAIBalance := bankKeeper.GetBalance(
 					ctx,
-					accountKeeper.GetModuleAddress(types.PoolAccount),
-					types.TradingDAIDenom,
+					accountKeeper.GetModuleAddress(types.TDaiPoolAccount),
+					types.TDaiDenom,
 				).Amount.BigInt()
 				initialUserSDAIBalance := bankKeeper.GetBalance(
 					ctx,
@@ -504,7 +495,7 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 				initialUserTDAIBalance := bankKeeper.GetBalance(
 					ctx,
 					transfer.userAddr,
-					types.TradingDAIDenom,
+					types.TDaiDenom,
 				).Amount.BigInt()
 
 				// Execute Minting
@@ -522,13 +513,13 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 					// Verify state change
 					endingPoolSDAIBalance := bankKeeper.GetBalance(
 						ctx,
-						accountKeeper.GetModuleAddress(types.SDAIPoolAccount),
+						accountKeeper.GetModuleAddress(types.SDaiPoolAccount),
 						types.SDaiDenom,
 					).Amount.BigInt()
 					endingPoolTDAIBalance := bankKeeper.GetBalance(
 						ctx,
-						accountKeeper.GetModuleAddress(types.PoolAccount),
-						types.TradingDAIDenom,
+						accountKeeper.GetModuleAddress(types.TDaiPoolAccount),
+						types.TDaiDenom,
 					).Amount.BigInt()
 					endingUserSDAIBalance := bankKeeper.GetBalance(
 						ctx,
@@ -538,7 +529,7 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 					endingUserTDAIBalance := bankKeeper.GetBalance(
 						ctx,
 						transfer.userAddr,
-						types.TradingDAIDenom,
+						types.TDaiDenom,
 					).Amount.BigInt()
 
 					deltaPoolSDAI := new(big.Int).Sub(endingPoolSDAIBalance, initialPoolSDAIBalance)
@@ -558,7 +549,7 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 	}
 }
 
-func TestWithdrawSDAIFromTradingDAI(t *testing.T) {
+func TestWithdrawSDaiFromTDai(t *testing.T) {
 	// Test Case Definition
 	tests := map[string]PoolTestCase{
 		"User has more tDAI than transfer amount": {
@@ -595,7 +586,7 @@ func TestWithdrawSDAIFromTradingDAI(t *testing.T) {
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(250),
 					expectedTDAIAmount:     nil,
-					expectedErr:            errors.New("failed to send trading DAI to recipient account"),
+					expectedErr:            errors.New("failed to send tDAI from user account to tDai pool account: spendable balance 250utdai is smaller than 500utdai: insufficient funds"),
 					expectErr:              true,
 				},
 			},
@@ -608,7 +599,7 @@ func TestWithdrawSDAIFromTradingDAI(t *testing.T) {
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(0),
 					expectedTDAIAmount:     nil,
-					expectedErr:            errors.New("failed to send trading DAI to recipient account"),
+					expectedErr:            errors.New("failed to send tDAI from user account to tDai pool account: spendable balance 0utdai is smaller than 500utdai: insufficient funds"),
 					expectErr:              true,
 				},
 			},
@@ -634,7 +625,7 @@ func TestWithdrawSDAIFromTradingDAI(t *testing.T) {
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(1),
 					expectedTDAIAmount:     nil,
-					expectedErr:            errors.New("failed to send trading DAI to recipient account"),
+					expectedErr:            errors.New("failed to send tDAI from user account to tDai pool account: spendable balance 1utdai is smaller than 500000utdai: insufficient funds"),
 					expectErr:              true,
 				},
 			},
@@ -685,30 +676,30 @@ func TestWithdrawSDAIFromTradingDAI(t *testing.T) {
 				k.SetSDAIPrice(ctx, transfer.sDAIPrice)
 
 				sDAICoins := sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewIntFromBigInt(transfer.sDAIAmount)))
-				mintingErr := bankKeeper.MintCoins(ctx, types.PoolAccount, sDAICoins)
+				mintingErr := bankKeeper.MintCoins(ctx, types.TDaiPoolAccount, sDAICoins)
 				require.NoError(t, mintingErr)
-				sendingErr := bankKeeper.SendCoinsFromModuleToModule(ctx, types.PoolAccount, types.SDAIPoolAccount, sDAICoins)
+				sendingErr := bankKeeper.SendCoinsFromModuleToModule(ctx, types.TDaiPoolAccount, types.SDaiPoolAccount, sDAICoins)
 				require.NoError(t, sendingErr)
 
-				tDAICoins := sdk.NewCoins(sdk.NewCoin(types.TradingDAIDenom, sdkmath.NewIntFromBigInt(transfer.userInitialTDAIBalance)))
+				tDAICoins := sdk.NewCoins(sdk.NewCoin(types.TDaiDenom, sdkmath.NewIntFromBigInt(transfer.userInitialTDAIBalance)))
 
 				// Simulate user having appropriate amount of tDAI in their account
 				// TODO: Make sure that we also test cases, where the user does not have enought tDAI to mint the given amount of sDAI
-				mintingErr = bankKeeper.MintCoins(ctx, types.PoolAccount, tDAICoins)
+				mintingErr = bankKeeper.MintCoins(ctx, types.TDaiPoolAccount, tDAICoins)
 				require.NoError(t, mintingErr)
-				sendingErr = bankKeeper.SendCoinsFromModuleToAccount(ctx, types.PoolAccount, transfer.userAddr, tDAICoins)
+				sendingErr = bankKeeper.SendCoinsFromModuleToAccount(ctx, types.TDaiPoolAccount, transfer.userAddr, tDAICoins)
 				require.NoError(t, sendingErr)
 
 				// Check initial balance
 				initialPoolSDAIBalance := bankKeeper.GetBalance(
 					ctx,
-					accountKeeper.GetModuleAddress(types.SDAIPoolAccount),
+					accountKeeper.GetModuleAddress(types.SDaiPoolAccount),
 					types.SDaiDenom,
 				).Amount.BigInt()
 				initialPoolTDAIBalance := bankKeeper.GetBalance(
 					ctx,
-					accountKeeper.GetModuleAddress(types.PoolAccount),
-					types.TradingDAIDenom,
+					accountKeeper.GetModuleAddress(types.TDaiPoolAccount),
+					types.TDaiDenom,
 				).Amount.BigInt()
 				initialUserSDAIBalance := bankKeeper.GetBalance(
 					ctx,
@@ -718,11 +709,11 @@ func TestWithdrawSDAIFromTradingDAI(t *testing.T) {
 				initialUserTDAIBalance := bankKeeper.GetBalance(
 					ctx,
 					transfer.userAddr,
-					types.TradingDAIDenom,
+					types.TDaiDenom,
 				).Amount.BigInt()
 
 				// Execute Minting
-				err := k.WithdrawSDAIFromTradingDAI(ctx, transfer.userAddr, transfer.sDAIAmount)
+				err := k.WithdrawSDaiFromTDai(ctx, transfer.userAddr, transfer.sDAIAmount)
 
 				// Verify success
 				if transfer.expectErr {
@@ -736,13 +727,13 @@ func TestWithdrawSDAIFromTradingDAI(t *testing.T) {
 					// Verify state change
 					endingPoolSDAIBalance := bankKeeper.GetBalance(
 						ctx,
-						accountKeeper.GetModuleAddress(types.SDAIPoolAccount),
+						accountKeeper.GetModuleAddress(types.SDaiPoolAccount),
 						types.SDaiDenom,
 					).Amount.BigInt()
 					endingPoolTDAIBalance := bankKeeper.GetBalance(
 						ctx,
-						accountKeeper.GetModuleAddress(types.PoolAccount),
-						types.TradingDAIDenom,
+						accountKeeper.GetModuleAddress(types.TDaiPoolAccount),
+						types.TDaiDenom,
 					).Amount.BigInt()
 					endingUserSDAIBalance := bankKeeper.GetBalance(
 						ctx,
@@ -752,7 +743,7 @@ func TestWithdrawSDAIFromTradingDAI(t *testing.T) {
 					endingUserTDAIBalance := bankKeeper.GetBalance(
 						ctx,
 						transfer.userAddr,
-						types.TradingDAIDenom,
+						types.TDaiDenom,
 					).Amount.BigInt()
 
 					deltaPoolSDAI := new(big.Int).Sub(initialPoolSDAIBalance, endingPoolSDAIBalance)

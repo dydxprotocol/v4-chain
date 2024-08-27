@@ -53,7 +53,7 @@ func (k msgServer) UpdateSDAIConversionRate(
 
 			k.SetSDAIPrice(ctx, conversionRate)
 
-			err = k.MintNewTDaiAndSetNewYieldIndex(ctx)
+			err = k.ProcessNewTDaiConversionRateUpdate(ctx)
 			if err != nil {
 				return &types.MsgUpdateSDAIConversionRateResponse{}, nil
 			}

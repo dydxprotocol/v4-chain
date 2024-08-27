@@ -75,7 +75,7 @@ var (
 	ErrAssetTransferQuantumsNotPositive = errorsmod.Register(
 		ModuleName, 500, "asset transfer quantums is not positive")
 	ErrAssetTransferThroughBankNotImplemented = errorsmod.Register(
-		ModuleName, 501, "asset transfer (other than USDC) through the bank module is not implemented")
+		ModuleName, 501, "asset transfer (other than TDAI) through the bank module is not implemented")
 	ErrYieldClaim = errorsmod.Register(
 		ModuleName, 502, "error when claiming yield for subaccount")
 )

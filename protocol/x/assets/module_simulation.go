@@ -33,7 +33,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	}
 	assetsGenesis := types.GenesisState{
 		Assets: []types.Asset{
-			types.AssetUsdc,
+			types.AssetTDai,
 		},
 	}
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&assetsGenesis)
@@ -47,7 +47,6 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	operations := make([]simtypes.WeightedOperation, 0)
 
 	// this line is used by starport scaffolding # simapp/module/operation
-
 	return operations
 }
 

@@ -39,9 +39,9 @@ func (msg *MsgWithdrawFromSubaccount) ValidateBasic() error {
 		return ErrInvalidAccountAddress
 	}
 
-	// Validate that asset is USDC.
-	if msg.AssetId != assettypes.AssetUsdc.Id {
-		return ErrNonUsdcAssetTransferNotImplemented
+	// Validate that asset is TDai.
+	if msg.AssetId != assettypes.AssetTDai.Id {
+		return ErrNonTDaiAssetTransferNotImplemented
 	}
 
 	// Validate that quantums is not zero.

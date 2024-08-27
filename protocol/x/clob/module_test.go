@@ -85,13 +85,13 @@ func createAppModuleWithKeeper(t *testing.T) (
 		"GetBalance",
 		mock.Anything,
 		perptypes.InsuranceFundModuleAddress,
-		constants.Usdc.Denom,
+		constants.TDai.Denom,
 	).Return(
-		sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
+		sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
 	)
 	ks := keeper.NewClobKeepersTestContext(t, memClob, mockBankKeeper, mockIndexerEventManager)
 
-	err := keeper.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
+	err := keeper.CreateTDaiAsset(ks.Ctx, ks.AssetsKeeper)
 	require.NoError(t, err)
 
 	return clob.NewAppModule(

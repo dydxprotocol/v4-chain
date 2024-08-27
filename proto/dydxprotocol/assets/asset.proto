@@ -9,7 +9,7 @@ message Asset {
   // Unique, sequentially-generated.
   uint32 id = 1;
 
-  // The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+  // The human readable symbol of the `Asset` (e.g. `TDAI`, `ATOM`).
   // Must be uppercase, unique and correspond to the canonical symbol of the
   // full coin.
   string symbol = 2;

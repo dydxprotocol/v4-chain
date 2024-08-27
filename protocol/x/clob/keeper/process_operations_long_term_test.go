@@ -43,7 +43,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
-						testutil_bank.MatchUsdcOfAmount(
+						testutil_bank.MatchTDaiOfAmount(
 							25_000_000+10_000_000,
 						),
 					),
@@ -112,7 +112,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
-						testutil_bank.MatchUsdcOfAmount(
+						testutil_bank.MatchTDaiOfAmount(
 							25_000_000+10_000_000,
 						),
 					),
@@ -192,7 +192,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
-						testutil_bank.MatchUsdcOfAmount(
+						testutil_bank.MatchTDaiOfAmount(
 							25_000_000+10_000_000,
 						),
 					),
@@ -265,7 +265,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
-						testutil_bank.MatchUsdcOfAmount(
+						testutil_bank.MatchTDaiOfAmount(
 							25_000_000+10_000_000,
 						),
 					),
@@ -339,7 +339,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
-						testutil_bank.MatchUsdcOfAmount(
+						testutil_bank.MatchTDaiOfAmount(
 							25_000_000+10_000_000,
 						),
 					),
@@ -412,7 +412,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
-						testutil_bank.MatchUsdcOfAmount(
+						testutil_bank.MatchTDaiOfAmount(
 							12_500_000+5_000_000,
 						),
 					),
@@ -492,7 +492,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
-						testutil_bank.MatchUsdcOfAmount(
+						testutil_bank.MatchTDaiOfAmount(
 							12_500_000+5_000_000,
 						),
 					),
@@ -578,7 +578,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					mock.Anything,
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(10_000_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(10_000_000)),
 				).Return(nil)
 				bk.On(
 					"SendCoins",
@@ -586,7 +586,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					perptypes.InsuranceFundModuleAddress,
 					// Subaccount pays $250 to insurance fund for liquidating 1 BTC.
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(250_000_000)),
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
@@ -664,7 +664,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					mock.Anything,
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(10_000_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(10_000_000)),
 				).Return(nil)
 				bk.On(
 					"SendCoins",
@@ -672,7 +672,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					perptypes.InsuranceFundModuleAddress,
 					// Subaccount pays $250 to insurance fund for liquidating 1 BTC.
-					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000_000)),
+					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(250_000_000)),
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
@@ -751,7 +751,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
-						testutil_bank.MatchUsdcOfAmount(
+						testutil_bank.MatchTDaiOfAmount(
 							12_500_000+5_000_000,
 						),
 					),
@@ -844,7 +844,7 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					satypes.ModuleAddress,
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(
-						testutil_bank.MatchUsdcOfAmount(
+						testutil_bank.MatchTDaiOfAmount(
 							12_500_000+5_000_000,
 						),
 					),

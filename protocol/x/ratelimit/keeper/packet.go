@@ -214,7 +214,7 @@ func (k Keeper) TrySendRateLimitedPacket(ctx sdk.Context, packet channeltypes.Pa
 	}
 
 	if packetInfo.Denom == types.SDaiDenom {
-		err = k.WithdrawSDAIFromTradingDAI(ctx, packetInfo.Sender, packetInfo.Amount)
+		err = k.WithdrawSDaiFromTDai(ctx, packetInfo.Sender, packetInfo.Amount)
 		if err != nil {
 			return err
 		}

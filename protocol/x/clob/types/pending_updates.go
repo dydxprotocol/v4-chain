@@ -56,18 +56,18 @@ func (p *PendingUpdates) ConvertToUpdates() []satypes.Update {
 			assetUpdates = append(assetUpdates, assetUpdate)
 		}
 
-		if _, exists := pendingAssetUpdates[assettypes.AssetUsdc.Id]; !exists {
-			pendingAssetUpdates[assettypes.AssetUsdc.Id] = new(big.Int)
+		if _, exists := pendingAssetUpdates[assettypes.AssetTDai.Id]; !exists {
+			pendingAssetUpdates[assettypes.AssetTDai.Id] = new(big.Int)
 		}
 
 		// Subtract quote balance delta with total fees paid by subaccount.
-		pendingAssetUpdates[assettypes.AssetUsdc.Id].Sub(
-			pendingAssetUpdates[assettypes.AssetUsdc.Id],
+		pendingAssetUpdates[assettypes.AssetTDai.Id].Sub(
+			pendingAssetUpdates[assettypes.AssetTDai.Id],
 			p.subaccountFee[subaccountId],
 		)
 
 		// Panic if there is more than one asset updates since we only support
-		// USDC asset at the moment.
+		// TDAI asset at the moment.
 		if len(assetUpdates) > 1 {
 			panic(ErrAssetUpdateNotImplemented)
 		}
@@ -124,10 +124,10 @@ func (p *PendingUpdates) AddPerpetualFill(
 		subaccountAssetUpdates = make(map[uint32]*big.Int)
 		p.subaccountAssetUpdates[subaccountId] = subaccountAssetUpdates
 	}
-	quoteBalanceUpdate, exists = subaccountAssetUpdates[assettypes.AssetUsdc.Id]
+	quoteBalanceUpdate, exists = subaccountAssetUpdates[assettypes.AssetTDai.Id]
 	if !exists {
 		quoteBalanceUpdate = big.NewInt(0)
-		subaccountAssetUpdates[assettypes.AssetUsdc.Id] = quoteBalanceUpdate
+		subaccountAssetUpdates[assettypes.AssetTDai.Id] = quoteBalanceUpdate
 	}
 
 	subaccountPerpetualUpdates, exists = p.subaccountPerpetualUpdates[subaccountId]

@@ -89,8 +89,8 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       200_000, // 20%
 		MaintenanceFractionPpm: 500_000, // 20% * 0.5 = 10%
 		ImpactNotional:         2_500_000_000,
-		OpenInterestUpperCap:   50_000_000_000_000, // 50mm USDC
-		OpenInterestLowerCap:   25_000_000_000_000, // 25mm USDC
+		OpenInterestUpperCap:   50_000_000_000_000, // 50mm TDAI
+		OpenInterestLowerCap:   25_000_000_000_000, // 25mm TDAI
 	},
 	{
 		Id:                     101,

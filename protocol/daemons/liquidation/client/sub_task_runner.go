@@ -285,7 +285,7 @@ func (c *Client) GetSubaccountOpenPositionInfo(
 // CheckSubaccountCollateralization performs the same collateralization check as the application
 // using the provided market prices, perpetuals, and liquidity tiers.
 //
-// Note that current implementation assumes that the only asset is USDC and multi-collateral support
+// Note that current implementation assumes that the only asset is TDAI and multi-collateral support
 // is not yet implemented.
 func (c *Client) CheckSubaccountCollateralization(
 	unsettledSubaccount satypes.Subaccount,
@@ -320,17 +320,17 @@ func (c *Client) CheckSubaccountCollateralization(
 	bigTotalMaintenanceMargin := big.NewInt(0)
 
 	// Calculate the net collateral and maintenance margin for each of the asset positions.
-	// Note that we only expect USDC before multi-collateral support is added.
+	// Note that we only expect TDAI before multi-collateral support is added.
 	for _, assetPosition := range settledSubaccount.AssetPositions {
-		if assetPosition.AssetId != assetstypes.AssetUsdc.Id {
+		if assetPosition.AssetId != assetstypes.AssetTDai.Id {
 			return false, false, errorsmod.Wrapf(
 				assetstypes.ErrNotImplementedMulticollateral,
 				"Asset %d is not supported",
 				assetPosition.AssetId,
 			)
 		}
-		// Net collateral for USDC is the quantums of the position.
-		// Margin requirements for USDC are zero.
+		// Net collateral for TDAI is the quantums of the position.
+		// Margin requirements for TDAI are zero.
 		bigTotalNetCollateral.Add(bigTotalNetCollateral, assetPosition.GetBigQuantums())
 	}
 

@@ -712,9 +712,9 @@ type OrderFillEventV1 struct {
 	TakerOrder isOrderFillEventV1_TakerOrder `protobuf_oneof:"taker_order"`
 	// Fill amount in base quantums.
 	FillAmount uint64 `protobuf:"varint,3,opt,name=fill_amount,json=fillAmount,proto3" json:"fill_amount,omitempty"`
-	// Maker fee in USDC quantums.
+	// Maker fee in TDAI quantums.
 	MakerFee int64 `protobuf:"zigzag64,5,opt,name=maker_fee,json=makerFee,proto3" json:"maker_fee,omitempty"`
-	// Taker fee in USDC quantums. If the taker order is a liquidation, then this
+	// Taker fee in TDAI quantums. If the taker order is a liquidation, then this
 	// represents the special liquidation fee, not the standard taker fee.
 	TakerFee int64 `protobuf:"zigzag64,6,opt,name=taker_fee,json=takerFee,proto3" json:"taker_fee,omitempty"`
 	// Total filled of the maker order in base quantums.
@@ -1514,7 +1514,7 @@ func (m *StatefulOrderEventV1_LongTermOrderPlacementV1) GetOrder() *types.Indexe
 type AssetCreateEventV1 struct {
 	// Unique, sequentially-generated.
 	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+	// The human readable symbol of the `Asset` (e.g. `TDAI`, `ATOM`).
 	// Must be uppercase, unique and correspond to the canonical symbol of the
 	// full coin.
 	Symbol string `protobuf:"bytes,2,opt,name=symbol,proto3" json:"symbol,omitempty"`

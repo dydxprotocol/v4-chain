@@ -120,23 +120,23 @@ func createSubaccountsKeeper(
 	return k, storeKey
 }
 
-func CreateUsdcAssetPosition(
+func CreateTDaiAssetPosition(
 	quoteBalance *big.Int,
 ) []*types.AssetPosition {
 	return []*types.AssetPosition{
 		{
-			AssetId:  assettypes.AssetUsdc.Id,
+			AssetId:  assettypes.AssetTDai.Id,
 			Quantums: dtypes.NewIntFromBigInt(quoteBalance),
 		},
 	}
 }
 
-func CreateUsdcAssetUpdate(
+func CreateTDaiAssetUpdate(
 	deltaQuoteBalance *big.Int,
 ) []types.AssetUpdate {
 	return []types.AssetUpdate{
 		{
-			AssetId:          assettypes.AssetUsdc.Id,
+			AssetId:          assettypes.AssetTDai.Id,
 			BigQuantumsDelta: deltaQuoteBalance,
 		},
 	}

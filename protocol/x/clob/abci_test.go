@@ -641,9 +641,9 @@ func TestEndBlocker_Success(t *testing.T) {
 				"GetBalance",
 				mock.Anything,
 				perptypes.InsuranceFundModuleAddress,
-				constants.Usdc.Denom,
+				constants.TDai.Denom,
 			).Return(
-				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
+				sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
 			)
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, mockIndexerEventManager)
@@ -673,7 +673,7 @@ func TestEndBlocker_Success(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
-			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			err := keepertest.CreateTDaiAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
 			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
@@ -1345,8 +1345,8 @@ func TestPrepareCheckState(t *testing.T) {
 				"GetBalance",
 				mock.Anything,
 				perptypes.InsuranceFundModuleAddress,
-				constants.Usdc.Denom,
-			).Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
+				constants.TDai.Denom,
+			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
 			mockBankKeeper.On(
 				"SendCoins",
 				mock.Anything,
@@ -1371,7 +1371,7 @@ func TestPrepareCheckState(t *testing.T) {
 
 			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParams))
 
-			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			err := keepertest.CreateTDaiAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
 			// Create all perpetuals.

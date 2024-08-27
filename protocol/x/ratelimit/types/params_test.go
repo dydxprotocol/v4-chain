@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"math/big"
 	"testing"
 	"time"
 
@@ -9,23 +10,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDefaultUsdcRateLimitParams(t *testing.T) {
+func TestDefaultSDaiRateLimitParams(t *testing.T) {
+	defaultParams := types.DefaultSDaiRateLimitParams()
+	bigLimitOneHour, worked := big.NewInt(0).SetString("1000000000000000000000000", 10)
+	require.Equal(t, true, worked)
+	limitOneHour := dtypes.NewIntFromBigInt(bigLimitOneHour)
+	bigLimitOneDay, worked := big.NewInt(0).SetString("10000000000000000000000000", 10)
+	require.Equal(t, true, worked)
+	limitOneDay := dtypes.NewIntFromBigInt(bigLimitOneDay)
 	require.Equal(t,
 		types.LimitParams{
-			Denom: "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+			Denom: types.SDaiDenom,
 			Limiters: []types.Limiter{
 				{
 					Period:          3600 * time.Second,
-					BaselineMinimum: dtypes.NewInt(1_000_000_000_000),
+					BaselineMinimum: limitOneHour,
 					BaselineTvlPpm:  10_000,
 				},
 				{
 					Period:          24 * time.Hour,
-					BaselineMinimum: dtypes.NewInt(10_000_000_000_000),
+					BaselineMinimum: limitOneDay,
 					BaselineTvlPpm:  100_000,
 				},
 			},
 		},
-		types.DefaultUsdcRateLimitParams(),
+		defaultParams,
 	)
 }

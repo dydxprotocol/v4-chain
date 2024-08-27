@@ -16,7 +16,7 @@ message BlockStats {
     // Maker wallet address
     string maker = 2;
 
-    // Notional USDC filled in quantums
+    // Notional  filled in quantums
     uint64 notional = 3;
   }
 
@@ -49,15 +49,15 @@ message EpochStats {
 
 // GlobalStats stores global stats
 message GlobalStats {
-  // Notional USDC traded in quantums
+  // Notional TDAI traded in quantums
   uint64 notional_traded = 1;
 }
 
 // UserStats stores stats for a User
 message UserStats {
-  // Taker USDC in quantums
+  // Taker TDAI in quantums
   uint64 taker_notional = 1;
 
-  // Maker USDC in quantums
+  // Maker TDAI in quantums
   uint64 maker_notional = 2;
 }

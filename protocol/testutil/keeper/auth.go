@@ -40,7 +40,7 @@ func createAccountKeeper(
 		types.FeeCollectorName:            nil,
 		satypes.ModuleName:                nil,
 		perpetualstypes.InsuranceFundName: nil,
-		ratelimittypes.SDAIPoolAccount:    nil,
+		ratelimittypes.SDaiPoolAccount:    nil,
 	}
 
 	k := keeper.NewAccountKeeper(

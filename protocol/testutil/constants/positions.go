@@ -110,71 +110,71 @@ var (
 		YieldIndex:   big.NewRat(0, 1).String(),
 	}
 	// Asset Positions
-	Usdc_Asset_0 = satypes.AssetPosition{
+	TDai_Asset_0 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(0), // $0
 	}
-	Usdc_Asset_500 = satypes.AssetPosition{
+	TDai_Asset_500 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(500_000_000), // $500
 	}
-	Short_Usdc_Asset_500 = satypes.AssetPosition{
+	Short_TDai_Asset_500 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(-500_000_000), // -$500
 	}
-	Usdc_Asset_599 = satypes.AssetPosition{
+	TDai_Asset_599 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(599_000_000), // $599
 	}
-	Usdc_Asset_660 = satypes.AssetPosition{
+	TDai_Asset_660 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(660_000_000), // $660
 	}
-	Short_Usdc_Asset_4_600 = satypes.AssetPosition{
+	Short_TDai_Asset_4_600 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(-4_600_000_000), // -$4,600
 	}
-	Short_Usdc_Asset_46_000 = satypes.AssetPosition{
+	Short_TDai_Asset_46_000 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(-46_000_000_000), // -$46,000
 	}
-	Short_Usdc_Asset_9_900 = satypes.AssetPosition{
+	Short_TDai_Asset_9_900 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(-9_900_000_000), // $-9,900
 	}
-	Usdc_Asset_1 = satypes.AssetPosition{
+	TDai_Asset_1 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(1_000_000), // $1
 	}
-	Usdc_Asset_10_000 = satypes.AssetPosition{
+	TDai_Asset_10_000 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(10_000_000_000), // $10,000
 	}
-	Usdc_Asset_10_100 = satypes.AssetPosition{
+	TDai_Asset_10_100 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(10_100_000_000), // $10,100
 	}
-	Usdc_Asset_10_200 = satypes.AssetPosition{
+	TDai_Asset_10_200 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(10_200_000_000), // $10,200
 	}
-	Usdc_Asset_50_000 = satypes.AssetPosition{
+	TDai_Asset_50_000 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(50_000_000_000), // $50,000
 	}
-	Usdc_Asset_99_999 = satypes.AssetPosition{
+	TDai_Asset_99_999 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(99_999_000_000), // $99,999
 	}
-	Usdc_Asset_100_000 = satypes.AssetPosition{
+	TDai_Asset_100_000 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(100_000_000_000), // $100,000
 	}
-	Usdc_Asset_100_499 = satypes.AssetPosition{
+	TDai_Asset_100_499 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(100_499_000_000), // $100,499
 	}
-	Usdc_Asset_500_000 = satypes.AssetPosition{
+	TDai_Asset_500_000 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(500_000_000_000), // $500,000
 	}

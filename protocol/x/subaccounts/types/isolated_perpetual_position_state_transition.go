@@ -27,7 +27,7 @@ func (t PositionStateTransition) String() string {
 type IsolatedPerpetualPositionStateTransition struct {
 	SubaccountId *SubaccountId
 	PerpetualId  uint32
-	// TODO(DEC-715): Support non-USDC assets.
+	// TODO(DEC-715): Support non-TDAI assets.
 	// Quote quantums of collateral to transfer as a result of the state transition.
 	QuoteQuantums *big.Int
 	// The state transition that occurred for the isolated perpetual positions.

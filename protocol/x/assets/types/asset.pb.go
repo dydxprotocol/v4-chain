@@ -26,7 +26,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Asset struct {
 	// Unique, sequentially-generated.
 	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+	// The human readable symbol of the `Asset` (e.g. `TDAI`, `ATOM`).
 	// Must be uppercase, unique and correspond to the canonical symbol of the
 	// full coin.
 	Symbol string `protobuf:"bytes,2,opt,name=symbol,proto3" json:"symbol,omitempty"`

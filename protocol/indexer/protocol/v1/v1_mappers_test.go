@@ -146,7 +146,7 @@ func TestAssetPositionToIndexerAssetPosition(t *testing.T) {
 
 func TestAssetPositionsToIndexerAssetPositions(t *testing.T) {
 	position := &constants.Long_Asset_1BTC
-	position2 := &constants.Usdc_Asset_100_000
+	position2 := &constants.TDai_Asset_100_000
 
 	tests := map[string]struct {
 		// Input

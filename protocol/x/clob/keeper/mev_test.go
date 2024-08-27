@@ -847,9 +847,9 @@ func TestRecordMevMetrics(t *testing.T) {
 				"GetBalance",
 				mock.Anything,
 				perptypes.InsuranceFundModuleAddress,
-				constants.Usdc.Denom,
+				constants.TDai.Denom,
 			).Return(
-				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
+				sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
 			)
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
@@ -874,8 +874,8 @@ func TestRecordMevMetrics(t *testing.T) {
 
 			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, tc.feeParams))
 
-			// Set up USDC asset in assets module.
-			err = keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			// Set up tDAI asset in assets module.
+			err = keepertest.CreateTDaiAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
 			// Create all perpetuals.
@@ -1261,8 +1261,8 @@ func TestGetMidPrices(t *testing.T) {
 
 			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParams))
 
-			// Set up USDC asset in assets module.
-			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			// Set up tDAI asset in assets module.
+			err := keepertest.CreateTDaiAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
 			// Create all perpetuals.

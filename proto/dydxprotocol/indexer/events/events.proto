@@ -155,9 +155,9 @@ message OrderFillEventV1 {
   }
   // Fill amount in base quantums.
   uint64 fill_amount = 3;
-  // Maker fee in USDC quantums.
+  // Maker fee in TDAI quantums.
   sint64 maker_fee = 5;
-  // Taker fee in USDC quantums. If the taker order is a liquidation, then this
+  // Taker fee in TDAI quantums. If the taker order is a liquidation, then this
   // represents the special liquidation fee, not the standard taker fee.
   sint64 taker_fee = 6;
   // Total filled of the maker order in base quantums.
@@ -286,7 +286,7 @@ message AssetCreateEventV1 {
   // Unique, sequentially-generated.
   uint32 id = 1;
 
-  // The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+  // The human readable symbol of the `Asset` (e.g. `TDAI`, `ATOM`).
   // Must be uppercase, unique and correspond to the canonical symbol of the
   // full coin.
   string symbol = 2;
