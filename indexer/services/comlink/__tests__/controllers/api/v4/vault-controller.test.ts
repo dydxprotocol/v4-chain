@@ -52,6 +52,18 @@ describe('vault-controller#V4', () => {
       await dbHelpers.clearData();
     });
 
+    it('Get /megavault/historicalPnl with no vault subaccounts', async () => {
+      config.EXPERIMENT_VAULTS = '';
+      config.EXPERIMENT_VAULT_MARKETS = '';
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: '/v4/vault/v1/megavault/historicalPnl',
+      });
+
+      expect(response.body.megavaultPnl).toEqual([]);
+    });
+
     it('Get /megavault/historicalPnl with single vault subaccount', async () => {
       const createdAt: string = '2000-05-25T00:00:00.000Z';
       const pnlTick2: PnlTicksCreateObject = {
@@ -143,6 +155,18 @@ describe('vault-controller#V4', () => {
           }),
         ]),
       );
+    });
+
+    it('Get /vaults/historicalPnl with no vault subaccounts', async () => {
+      config.EXPERIMENT_VAULTS = '';
+      config.EXPERIMENT_VAULT_MARKETS = '';
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: '/v4/vault/v1/vaults/historicalPnl',
+      });
+
+      expect(response.body.vaultsPnl).toEqual([]);
     });
 
     it('Get /vaults/historicalPnl with single vault subaccount', async () => {
@@ -255,6 +279,20 @@ describe('vault-controller#V4', () => {
           }),
         ]),
       );
+    });
+
+    it('Get /megavault/positions with no vault subaccount', async () => {
+      config.EXPERIMENT_VAULTS = '';
+      config.EXPERIMENT_VAULT_MARKETS = '';
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: '/v4/vault/v1/megavault/positions',
+      });
+
+      expect(response.body).toEqual({
+        positions: [],
+      });
     });
 
     it('Get /megavault/positions with 1 vault subaccount', async () => {

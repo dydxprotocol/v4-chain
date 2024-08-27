@@ -114,6 +114,12 @@ class VaultController extends Controller {
     const vaultSubaccounts: VaultMapping = getVaultSubaccountsFromConfig();
     const vaultSubaccountIds: string[] = _.keys(vaultSubaccounts);
 
+    if (vaultSubaccountIds.length === 0) {
+      return {
+        positions: [],
+      };
+    }
+
     const [
       subaccounts,
       assets,
@@ -308,13 +314,16 @@ router.get(
   });
 
 async function getVaultSubaccountPnlTicks(): Promise<PnlTicksFromDatabase[]> {
-  const subVaultSubaccountIds: string[] = _.keys(getVaultSubaccountsFromConfig());
+  const vaultSubaccountIds: string[] = _.keys(getVaultSubaccountsFromConfig());
+  if (vaultSubaccountIds.length === 0) {
+    return [];
+  }
   const {
     results: pnlTicks,
   }: PaginationFromDatabase<PnlTicksFromDatabase> = await
   PnlTicksTable.findAll(
     {
-      subaccountId: subVaultSubaccountIds,
+      subaccountId: vaultSubaccountIds,
       // TODO(TRA-571): Configure limits based on hourly vs daily resolution and # of vaults.
       limit: config.API_LIMIT_V4,
     },
@@ -329,6 +338,9 @@ async function getVaultSubaccountPnlTicks(): Promise<PnlTicksFromDatabase[]> {
 
 // TODO(TRA-570): Placeholder for getting vault subaccount ids until vault table is added.
 function getVaultSubaccountsFromConfig(): VaultMapping {
+  if (config.EXPERIMENT_VAULTS === '' && config.EXPERIMENT_VAULT_MARKETS === '') {
+    return {};
+  }
   const vaultSubaccountIds: string[] = config.EXPERIMENT_VAULTS.split(',');
   const vaultClobPairIds: string[] = config.EXPERIMENT_VAULT_MARKETS.split(',');
   if (vaultSubaccountIds.length !== vaultClobPairIds.length) {

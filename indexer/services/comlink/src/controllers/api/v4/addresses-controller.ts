@@ -75,7 +75,6 @@ class AddressesController extends Controller {
         [],
       ),
       BlockTable.getLatest(),
-      // vincent left his laptop unlocked and says hello
       WalletTable.findById(address),
     ]);
 
