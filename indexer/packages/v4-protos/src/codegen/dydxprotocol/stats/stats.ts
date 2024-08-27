@@ -508,7 +508,7 @@ export const UserStats = {
 function createBaseCachedStakeAmount(): CachedStakeAmount {
   return {
     stakedAmount: new Uint8Array(),
-    cachedAt: Long.UZERO
+    cachedAt: Long.ZERO
   };
 }
 
@@ -519,7 +519,7 @@ export const CachedStakeAmount = {
     }
 
     if (!message.cachedAt.isZero()) {
-      writer.uint32(16).uint64(message.cachedAt);
+      writer.uint32(16).int64(message.cachedAt);
     }
 
     return writer;
@@ -539,7 +539,7 @@ export const CachedStakeAmount = {
           break;
 
         case 2:
-          message.cachedAt = (reader.uint64() as Long);
+          message.cachedAt = (reader.int64() as Long);
           break;
 
         default:
@@ -554,7 +554,7 @@ export const CachedStakeAmount = {
   fromPartial(object: DeepPartial<CachedStakeAmount>): CachedStakeAmount {
     const message = createBaseCachedStakeAmount();
     message.stakedAmount = object.stakedAmount ?? new Uint8Array();
-    message.cachedAt = object.cachedAt !== undefined && object.cachedAt !== null ? Long.fromValue(object.cachedAt) : Long.UZERO;
+    message.cachedAt = object.cachedAt !== undefined && object.cachedAt !== null ? Long.fromValue(object.cachedAt) : Long.ZERO;
     return message;
   }
 

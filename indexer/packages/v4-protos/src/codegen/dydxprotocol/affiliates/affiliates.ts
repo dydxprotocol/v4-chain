@@ -15,10 +15,7 @@ export interface AffiliateTiersSDKType {
 /** Tier defines an affiliate tier. */
 
 export interface AffiliateTiers_Tier {
-  /** Level of the tier */
-  level: number;
   /** Required all-time referred volume in quote quantums. */
-
   reqReferredVolume: Long;
   /** Required currently staked native tokens (in whole coins). */
 
@@ -30,10 +27,7 @@ export interface AffiliateTiers_Tier {
 /** Tier defines an affiliate tier. */
 
 export interface AffiliateTiers_TierSDKType {
-  /** Level of the tier */
-  level: number;
   /** Required all-time referred volume in quote quantums. */
-
   req_referred_volume: Long;
   /** Required currently staked native tokens (in whole coins). */
 
@@ -90,7 +84,6 @@ export const AffiliateTiers = {
 
 function createBaseAffiliateTiers_Tier(): AffiliateTiers_Tier {
   return {
-    level: 0,
     reqReferredVolume: Long.UZERO,
     reqStakedWholeCoins: 0,
     takerFeeSharePpm: 0
@@ -99,20 +92,16 @@ function createBaseAffiliateTiers_Tier(): AffiliateTiers_Tier {
 
 export const AffiliateTiers_Tier = {
   encode(message: AffiliateTiers_Tier, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.level !== 0) {
-      writer.uint32(8).uint32(message.level);
-    }
-
     if (!message.reqReferredVolume.isZero()) {
-      writer.uint32(16).uint64(message.reqReferredVolume);
+      writer.uint32(8).uint64(message.reqReferredVolume);
     }
 
     if (message.reqStakedWholeCoins !== 0) {
-      writer.uint32(24).uint32(message.reqStakedWholeCoins);
+      writer.uint32(16).uint32(message.reqStakedWholeCoins);
     }
 
     if (message.takerFeeSharePpm !== 0) {
-      writer.uint32(32).uint32(message.takerFeeSharePpm);
+      writer.uint32(24).uint32(message.takerFeeSharePpm);
     }
 
     return writer;
@@ -128,18 +117,14 @@ export const AffiliateTiers_Tier = {
 
       switch (tag >>> 3) {
         case 1:
-          message.level = reader.uint32();
-          break;
-
-        case 2:
           message.reqReferredVolume = (reader.uint64() as Long);
           break;
 
-        case 3:
+        case 2:
           message.reqStakedWholeCoins = reader.uint32();
           break;
 
-        case 4:
+        case 3:
           message.takerFeeSharePpm = reader.uint32();
           break;
 
@@ -154,7 +139,6 @@ export const AffiliateTiers_Tier = {
 
   fromPartial(object: DeepPartial<AffiliateTiers_Tier>): AffiliateTiers_Tier {
     const message = createBaseAffiliateTiers_Tier();
-    message.level = object.level ?? 0;
     message.reqReferredVolume = object.reqReferredVolume !== undefined && object.reqReferredVolume !== null ? Long.fromValue(object.reqReferredVolume) : Long.UZERO;
     message.reqStakedWholeCoins = object.reqStakedWholeCoins ?? 0;
     message.takerFeeSharePpm = object.takerFeeSharePpm ?? 0;
