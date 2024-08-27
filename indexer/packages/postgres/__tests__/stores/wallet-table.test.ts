@@ -39,6 +39,8 @@ describe('Wallet store', () => {
       WalletTable.create({
         address: 'fake_address',
         totalTradingRewards: '0',
+        totalVolume: '0',
+        isWhitelistAffiliate: false,
       }),
     ]);
 

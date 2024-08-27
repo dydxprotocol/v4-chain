@@ -158,21 +158,29 @@ export const vaultSubaccountId: string = SubaccountTable.uuid(
 export const defaultWallet: WalletCreateObject = {
   address: defaultAddress,
   totalTradingRewards: denomToHumanReadableConversion(0),
+  totalVolume: denomToHumanReadableConversion(0),
+  isWhitelistAffiliate: false,
 };
 
 export const defaultWallet2: WalletCreateObject = {
   address: defaultWalletAddress,
   totalTradingRewards: denomToHumanReadableConversion(1),
+  totalVolume: denomToHumanReadableConversion(0),
+  isWhitelistAffiliate: false,
 };
 
 export const vaultWallet: WalletCreateObject = {
   address: vaultAddress,
   totalTradingRewards: denomToHumanReadableConversion(0),
+  totalVolume: denomToHumanReadableConversion(0),
+  isWhitelistAffiliate: false,
 };
 
 export const defaultWallet3: WalletCreateObject = {
   address: defaultAddress2,
   totalTradingRewards: denomToHumanReadableConversion(0),
+  totalVolume: denomToHumanReadableConversion(0),
+  isWhitelistAffiliate: false,
 };
 
 // ============== Assets ==============

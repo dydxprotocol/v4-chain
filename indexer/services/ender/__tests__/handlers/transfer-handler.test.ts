@@ -306,6 +306,8 @@ describe('transferHandler', () => {
     expect(wallet).toEqual({
       address: defaultWalletAddress,
       totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(0),
+      totalVolume: testConversionHelpers.denomToHumanReadableConversion(0),
+      isWhitelistAffiliate: false,
     });
   });
 
@@ -358,6 +360,8 @@ describe('transferHandler', () => {
     expect(wallet).toEqual({
       address: defaultWalletAddress,
       totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(0),
+      totalVolume: testConversionHelpers.denomToHumanReadableConversion(0),
+      isWhitelistAffiliate: false,
     });
   });
 
@@ -411,6 +415,8 @@ describe('transferHandler', () => {
     expect(wallet).toEqual({
       address: defaultWalletAddress,
       totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(0),
+      totalVolume: testConversionHelpers.denomToHumanReadableConversion(0),
+      isWhitelistAffiliate: false,
     });
   });
 

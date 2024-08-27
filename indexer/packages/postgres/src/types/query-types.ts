@@ -88,6 +88,7 @@ export enum QueryableField {
   USERNAME = 'username',
   TIMESPAN = 'timeSpan',
   RANK = 'rank',
+  IS_WHITELIST_AFFILIATE = 'isWhitelistAffiliate',
 }
 
 export interface QueryConfig {
@@ -110,6 +111,7 @@ export interface SubaccountUsernamesQueryConfig extends QueryConfig {
 
 export interface WalletQueryConfig extends QueryConfig {
   [QueryableField.ADDRESS]?: string;
+  [QueryableField.IS_WHITELIST_AFFILIATE]?: boolean;
 }
 
 export interface PerpetualPositionQueryConfig extends QueryConfig {
