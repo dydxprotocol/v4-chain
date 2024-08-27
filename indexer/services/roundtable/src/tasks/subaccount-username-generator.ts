@@ -3,11 +3,10 @@ import {
   SubaccountUsernamesTable,
   SubaccountsWithoutUsernamesResult,
 } from '@dydxprotocol-indexer/postgres';
-import nouns from '../lib/nouns.json';
-import adjectives from '../lib/adjectives.json';
 
 import config from '../config';
-
+import adjectives from '../lib/adjectives.json';
+import nouns from '../lib/nouns.json';
 
 export default async function runTask(): Promise<void> {
   const subaccounts:
@@ -35,13 +34,12 @@ export default async function runTask(): Promise<void> {
   }
 }
 
-
 function generateUsername(): string {
   const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
   const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
   const randomNumber = Math.floor(
     Math.random() * 1000).toString().padStart(
-      config.SUBACCOUNT_USERNAME_NUM_RANDOM_DIGITS, '0');
+    config.SUBACCOUNT_USERNAME_NUM_RANDOM_DIGITS, '0');
 
   const capitalizedAdjective = randomAdjective.charAt(0).toUpperCase() + randomAdjective.slice(1);
   const capitalizedNoun = randomNoun.charAt(0).toUpperCase() + randomNoun.slice(1);
