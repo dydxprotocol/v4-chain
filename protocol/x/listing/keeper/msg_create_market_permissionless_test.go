@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
@@ -91,7 +90,6 @@ func TestMsgCreateMarketPermissionless(t *testing.T) {
 						Owner:  constants.AliceAccAddress.String(),
 						Number: 0,
 					},
-					QuoteQuantums: dtypes.SerializableInt{},
 				}
 
 				_, err = ms.CreateMarketPermissionless(ctx, &msg)
