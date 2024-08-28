@@ -78,13 +78,8 @@ message MsgSetVaultParams {
   VaultParams vault_params = 3 [ (gogoproto.nullable) = false ];
 }
 
-<<<<<<< HEAD
 // MsgSetVaultParamsResponse is the Msg/SetVaultParams response type.
 message MsgSetVaultParamsResponse {}
-=======
-// MsgSetVaultQuotingParamsResponse is the Msg/SetVaultQuotingParams response
-// type.
-message MsgSetVaultQuotingParamsResponse {}
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
 // Deprecated since v6.x as is replaced by MsgUpdateDefaultQuotingParams.
@@ -97,4 +92,3 @@ message MsgUpdateParams {
   // The parameters to update. Each field must be set.
   Params params = 2 [ (gogoproto.nullable) = false ];
 }
->>>>>>> 9f207d57 (register deprecated vault MsgUpdateParams (#2167))

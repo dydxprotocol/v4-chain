@@ -1,11 +1,7 @@
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
-<<<<<<< HEAD
-import { QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
+import { QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType, Params, ParamsSDKType } from "./params";
 import { VaultId, VaultIdSDKType } from "./vault";
 import { NumShares, NumSharesSDKType } from "./share";
-=======
-import { QuotingParams, QuotingParamsSDKType, Params, ParamsSDKType } from "./params";
->>>>>>> 9f207d57 (register deprecated vault MsgUpdateParams (#2167))
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
@@ -105,10 +101,7 @@ export interface MsgSetVaultParamsSDKType {
 export interface MsgSetVaultParamsResponse {}
 /** MsgSetVaultParamsResponse is the Msg/SetVaultParams response type. */
 
-<<<<<<< HEAD
 export interface MsgSetVaultParamsResponseSDKType {}
-=======
-export interface MsgSetVaultQuotingParamsResponseSDKType {}
 /**
  * MsgUpdateParams is the Msg/UpdateParams request type.
  * Deprecated since v6.x as is replaced by MsgUpdateDefaultQuotingParams.
@@ -135,7 +128,6 @@ export interface MsgUpdateParamsSDKType {
 
   params?: ParamsSDKType;
 }
->>>>>>> 9f207d57 (register deprecated vault MsgUpdateParams (#2167))
 
 function createBaseMsgDepositToMegavault(): MsgDepositToMegavault {
   return {
