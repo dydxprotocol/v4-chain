@@ -129,7 +129,9 @@
     "validator_slash_events": []
   },
   "dydxaccountplus": {
-    "accounts": []
+    "accounts": [],
+    "next_authenticator_id": "0",
+    "authenticator_data": []
   },
   "epochs": {
     "epoch_info_list": [
