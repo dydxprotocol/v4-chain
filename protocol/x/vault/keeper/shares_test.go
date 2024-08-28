@@ -9,6 +9,7 @@ import (
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
 )
@@ -174,7 +175,7 @@ func TestGetAllOwnerShares(t *testing.T) {
 	)
 }
 
-func TestGetSetLockedShares(t *testing.T) {
+func TestGetSetOwnerShareUnlocks(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.VaultKeeper
@@ -182,32 +183,30 @@ func TestGetSetLockedShares(t *testing.T) {
 	alice := constants.AliceAccAddress.String()
 	bob := constants.BobAccAddress.String()
 
-	// Get locked shares for Alice.
-	_, exists := k.GetLockedShares(ctx, alice)
+	// Get share unlocks for Alice.
+	_, exists := k.GetOwnerShareUnlocks(ctx, alice)
 	require.Equal(t, false, exists)
 
-	// Set locked shares for Alice and get.
-	aliceLockedShares := vaulttypes.LockedShares{
-		OwnerAddress:      alice,
-		TotalLockedShares: vaulttypes.BigIntToNumShares(big.NewInt(7)),
-		UnlockDetails: []vaulttypes.UnlockDetail{
+	// Set share unlocks for Alice and get.
+	aliceShareUnlocks := vaulttypes.OwnerShareUnlocks{
+		OwnerAddress: alice,
+		ShareUnlocks: []vaulttypes.ShareUnlock{
 			{
 				Shares:            vaulttypes.BigIntToNumShares(big.NewInt(7)),
 				UnlockBlockHeight: 1,
 			},
 		},
 	}
-	err := k.SetLockedShares(ctx, alice, aliceLockedShares)
+	err := k.SetOwnerShareUnlocks(ctx, alice, aliceShareUnlocks)
 	require.NoError(t, err)
-	got, exists := k.GetLockedShares(ctx, alice)
+	got, exists := k.GetOwnerShareUnlocks(ctx, alice)
 	require.Equal(t, true, exists)
-	require.Equal(t, aliceLockedShares, got)
+	require.Equal(t, aliceShareUnlocks, got)
 
-	// Set locked shares for Bob and then get.
-	bobLockedShares := vaulttypes.LockedShares{
-		OwnerAddress:      bob,
-		TotalLockedShares: vaulttypes.BigIntToNumShares(big.NewInt(1_234)),
-		UnlockDetails: []vaulttypes.UnlockDetail{
+	// Set share unlocks for Bob and then get.
+	bobLockedShares := vaulttypes.OwnerShareUnlocks{
+		OwnerAddress: bob,
+		ShareUnlocks: []vaulttypes.ShareUnlock{
 			{
 				Shares:            vaulttypes.BigIntToNumShares(big.NewInt(901)),
 				UnlockBlockHeight: 76,
@@ -218,47 +217,52 @@ func TestGetSetLockedShares(t *testing.T) {
 			},
 		},
 	}
-	err = k.SetLockedShares(ctx, bob, bobLockedShares)
+	err = k.SetOwnerShareUnlocks(ctx, bob, bobLockedShares)
 	require.NoError(t, err)
-	got, exists = k.GetLockedShares(ctx, bob)
+	got, exists = k.GetOwnerShareUnlocks(ctx, bob)
 	require.Equal(t, true, exists)
 	require.Equal(t, bobLockedShares, got)
 
-	// Set invalid locked shares for Bob.
-	// Should get error and locked shares should remain unchanged.
-	bobLockedShares.TotalLockedShares = vaulttypes.BigIntToNumShares(big.NewInt(1_235))
-	err = k.SetLockedShares(ctx, bob, bobLockedShares)
+	// Set invalid share unlocks for Bob.
+	// Should get error and share unlocks should remain unchanged.
+	bobLockedShares.OwnerAddress = ""
+	err = k.SetOwnerShareUnlocks(ctx, bob, bobLockedShares)
 	require.Error(t, err)
-	bobLockedShares.TotalLockedShares = vaulttypes.BigIntToNumShares(big.NewInt(1_234))
-	got, exists = k.GetLockedShares(ctx, bob)
+	bobLockedShares.OwnerAddress = constants.BobAccAddress.String()
+	got, exists = k.GetOwnerShareUnlocks(ctx, bob)
 	require.Equal(t, true, exists)
 	require.Equal(t, bobLockedShares, got)
 }
 
 func TestLockShares(t *testing.T) {
 	tests := map[string]struct {
-		// Existing locked shares.
-		existingLockedShares *vaulttypes.LockedShares
+		// Existing owner share unlocks.
+		existingOwnerShareUnlocks *vaulttypes.OwnerShareUnlocks
 		// Owner address.
 		ownerAddress string
+		// Owner shares.
+		ownerShares *big.Int
 		// Shares to lock.
 		sharesToLock *big.Int
 		// Block height to lock until.
 		lockUntilBlock uint32
-		// Expected locked shares.
-		expectedLockedShares vaulttypes.LockedShares
+		// Current block height.
+		currentBlockHeight uint32
+		// Expected owner share unlocks.
+		expectedOwnerShareUnlocks vaulttypes.OwnerShareUnlocks
 		// Expected error.
 		expectedErr string
 	}{
 		"Success - No existing locked shares and lock 7 shares until height 2": {
-			existingLockedShares: nil,
-			ownerAddress:         constants.AliceAccAddress.String(),
-			sharesToLock:         big.NewInt(7),
-			lockUntilBlock:       2,
-			expectedLockedShares: vaulttypes.LockedShares{
-				OwnerAddress:      constants.AliceAccAddress.String(),
-				TotalLockedShares: vaulttypes.BigIntToNumShares(big.NewInt(7)),
-				UnlockDetails: []vaulttypes.UnlockDetail{
+			existingOwnerShareUnlocks: nil,
+			ownerAddress:              constants.AliceAccAddress.String(),
+			ownerShares:               big.NewInt(7),
+			sharesToLock:              big.NewInt(7),
+			lockUntilBlock:            2,
+			currentBlockHeight:        1,
+			expectedOwnerShareUnlocks: vaulttypes.OwnerShareUnlocks{
+				OwnerAddress: constants.AliceAccAddress.String(),
+				ShareUnlocks: []vaulttypes.ShareUnlock{
 					{
 						Shares:            vaulttypes.BigIntToNumShares(big.NewInt(7)),
 						UnlockBlockHeight: 2,
@@ -267,23 +271,23 @@ func TestLockShares(t *testing.T) {
 			},
 		},
 		"Success - 1234 existing locked shares and lock 789 shares until height 456": {
-			existingLockedShares: &vaulttypes.LockedShares{
-				OwnerAddress:      constants.BobAccAddress.String(),
-				TotalLockedShares: vaulttypes.BigIntToNumShares(big.NewInt(1_234)),
-				UnlockDetails: []vaulttypes.UnlockDetail{
+			existingOwnerShareUnlocks: &vaulttypes.OwnerShareUnlocks{
+				OwnerAddress: constants.BobAccAddress.String(),
+				ShareUnlocks: []vaulttypes.ShareUnlock{
 					{
 						Shares:            vaulttypes.BigIntToNumShares(big.NewInt(1_234)),
 						UnlockBlockHeight: 2,
 					},
 				},
 			},
-			ownerAddress:   constants.BobAccAddress.String(),
-			sharesToLock:   big.NewInt(789),
-			lockUntilBlock: 456,
-			expectedLockedShares: vaulttypes.LockedShares{
-				OwnerAddress:      constants.BobAccAddress.String(),
-				TotalLockedShares: vaulttypes.BigIntToNumShares(big.NewInt(2_023)),
-				UnlockDetails: []vaulttypes.UnlockDetail{
+			ownerAddress:       constants.BobAccAddress.String(),
+			ownerShares:        big.NewInt(2_078),
+			sharesToLock:       big.NewInt(789),
+			lockUntilBlock:     456,
+			currentBlockHeight: 1,
+			expectedOwnerShareUnlocks: vaulttypes.OwnerShareUnlocks{
+				OwnerAddress: constants.BobAccAddress.String(),
+				ShareUnlocks: []vaulttypes.ShareUnlock{
 					{
 						Shares:            vaulttypes.BigIntToNumShares(big.NewInt(1_234)),
 						UnlockBlockHeight: 2,
@@ -295,33 +299,62 @@ func TestLockShares(t *testing.T) {
 				},
 			},
 		},
+		"Error - Total locked shares would exceed total owner shares": {
+			existingOwnerShareUnlocks: &vaulttypes.OwnerShareUnlocks{
+				OwnerAddress: constants.CarlAccAddress.String(),
+				ShareUnlocks: []vaulttypes.ShareUnlock{
+					{
+						Shares:            vaulttypes.BigIntToNumShares(big.NewInt(17)),
+						UnlockBlockHeight: 2,
+					},
+				},
+			},
+			ownerAddress:       constants.CarlAccAddress.String(),
+			ownerShares:        big.NewInt(65),
+			sharesToLock:       big.NewInt(49), // greater than 65-17=48 remaining unlocked shares.
+			lockUntilBlock:     3,
+			currentBlockHeight: 1,
+			expectedErr:        types.ErrLockedSharesExceedsOwnerShares.Error(),
+		},
 		"Error - Empty owner address": {
-			existingLockedShares: nil,
-			ownerAddress:         "",
-			sharesToLock:         big.NewInt(7),
-			lockUntilBlock:       2,
-			expectedErr:          "invalid parameters",
+			existingOwnerShareUnlocks: nil,
+			ownerAddress:              "",
+			sharesToLock:              big.NewInt(7),
+			lockUntilBlock:            2,
+			currentBlockHeight:        1,
+			expectedErr:               "invalid parameters",
 		},
 		"Error - 0 shares to lock": {
-			existingLockedShares: nil,
-			ownerAddress:         constants.AliceAccAddress.String(),
-			sharesToLock:         big.NewInt(0),
-			lockUntilBlock:       2,
-			expectedErr:          "invalid parameters",
+			existingOwnerShareUnlocks: nil,
+			ownerAddress:              constants.AliceAccAddress.String(),
+			sharesToLock:              big.NewInt(0),
+			lockUntilBlock:            2,
+			currentBlockHeight:        1,
+			expectedErr:               "invalid parameters",
 		},
-		"Error - negative shares to lock": {
-			existingLockedShares: nil,
-			ownerAddress:         constants.AliceAccAddress.String(),
-			sharesToLock:         big.NewInt(-1),
-			lockUntilBlock:       2,
-			expectedErr:          "invalid parameters",
+		"Error - Negative shares to lock": {
+			existingOwnerShareUnlocks: nil,
+			ownerAddress:              constants.AliceAccAddress.String(),
+			sharesToLock:              big.NewInt(-1),
+			lockUntilBlock:            2,
+			currentBlockHeight:        1,
+			expectedErr:               "invalid parameters",
 		},
-		"Error - lock until height same as current block height": {
-			existingLockedShares: nil,
-			ownerAddress:         constants.AliceAccAddress.String(),
-			sharesToLock:         big.NewInt(7),
-			lockUntilBlock:       1,
-			expectedErr:          "invalid parameters",
+		"Error - Lock until height same as current block height": {
+			existingOwnerShareUnlocks: nil,
+			ownerAddress:              constants.AliceAccAddress.String(),
+			sharesToLock:              big.NewInt(7),
+			lockUntilBlock:            14,
+			currentBlockHeight:        14,
+			expectedErr:               "invalid parameters",
+		},
+		"Error - Lock until height smaller than current block height": {
+			existingOwnerShareUnlocks: nil,
+			ownerAddress:              constants.AliceAccAddress.String(),
+			sharesToLock:              big.NewInt(7),
+			lockUntilBlock:            13,
+			currentBlockHeight:        14,
+			expectedErr:               "invalid parameters",
 		},
 	}
 
@@ -329,10 +362,17 @@ func TestLockShares(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
+			if tc.currentBlockHeight > 1 {
+				ctx = tApp.AdvanceToBlock(tc.currentBlockHeight, testapp.AdvanceToBlockOptions{})
+			}
 			k := tApp.App.VaultKeeper
 
-			if tc.existingLockedShares != nil {
-				err := k.SetLockedShares(ctx, tc.ownerAddress, *tc.existingLockedShares)
+			if tc.ownerAddress != "" {
+				err := k.SetOwnerShares(ctx, tc.ownerAddress, vaulttypes.BigIntToNumShares(tc.ownerShares))
+				require.NoError(t, err)
+			}
+			if tc.existingOwnerShareUnlocks != nil {
+				err := k.SetOwnerShareUnlocks(ctx, tc.ownerAddress, *tc.existingOwnerShareUnlocks)
 				require.NoError(t, err)
 			}
 
@@ -344,20 +384,20 @@ func TestLockShares(t *testing.T) {
 			)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
-				l, exists := k.GetLockedShares(ctx, tc.ownerAddress)
+				l, exists := k.GetOwnerShareUnlocks(ctx, tc.ownerAddress)
 				require.Equal(
 					t,
-					tc.existingLockedShares != nil,
+					tc.existingOwnerShareUnlocks != nil,
 					exists,
 				)
 				if exists {
-					require.Equal(t, tc.existingLockedShares, l)
+					require.Equal(t, *tc.existingOwnerShareUnlocks, l)
 				}
 			} else {
 				require.NoError(t, err)
-				l, exists := k.GetLockedShares(ctx, tc.ownerAddress)
+				o, exists := k.GetOwnerShareUnlocks(ctx, tc.ownerAddress)
 				require.True(t, exists)
-				require.Equal(t, tc.expectedLockedShares, l)
+				require.Equal(t, tc.expectedOwnerShareUnlocks, o)
 			}
 		})
 	}

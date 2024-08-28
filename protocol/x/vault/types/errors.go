@@ -106,9 +106,19 @@ var (
 		20,
 		"VaultParams not found",
 	)
-	ErrInvalidLockedShares = errorsmod.Register(
+	ErrEmptyOwnerAddress = errorsmod.Register(
 		ModuleName,
 		21,
-		"LockedShares is invalid",
+		"Empty owner address",
+	)
+	ErrOwnerNotFound = errorsmod.Register(
+		ModuleName,
+		22,
+		"Owner not found",
+	)
+	ErrLockedSharesExceedsOwnerShares = errorsmod.Register(
+		ModuleName,
+		23,
+		"Locked shares exceeds owner shares",
 	)
 )

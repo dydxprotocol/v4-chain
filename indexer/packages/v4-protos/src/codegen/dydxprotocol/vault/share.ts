@@ -24,48 +24,42 @@ export interface OwnerShareSDKType {
   owner: string;
   shares?: NumSharesSDKType;
 }
-/**
- * LockedShares stores for an owner their total number of locked shares
- * and a schedule of share unlockings.
- */
+/** OwnerShareUnlocks stores share unlocks for an owner. */
 
-export interface LockedShares {
+export interface OwnerShareUnlocks {
   /** Address of the owner of below shares. */
   ownerAddress: string;
-  /** Total number of locked shares. */
+  /** All share unlocks. */
 
-  totalLockedShares?: NumShares;
-  /** Details of each unlock. */
-
-  unlockDetails: UnlockDetail[];
+  shareUnlocks: ShareUnlock[];
 }
-/**
- * LockedShares stores for an owner their total number of locked shares
- * and a schedule of share unlockings.
- */
+/** OwnerShareUnlocks stores share unlocks for an owner. */
 
-export interface LockedSharesSDKType {
+export interface OwnerShareUnlocksSDKType {
   /** Address of the owner of below shares. */
   owner_address: string;
-  /** Total number of locked shares. */
+  /** All share unlocks. */
 
-  total_locked_shares?: NumSharesSDKType;
-  /** Details of each unlock. */
-
-  unlock_details: UnlockDetailSDKType[];
+  share_unlocks: ShareUnlockSDKType[];
 }
-/** UnlockDetail stores how many shares unlock at which block height. */
+/**
+ * ShareUnlock stores a single instance of `shares` number of shares
+ * unlocking at block height `unlock_block_height`.
+ */
 
-export interface UnlockDetail {
+export interface ShareUnlock {
   /** Number of shares to unlock. */
   shares?: NumShares;
   /** Block height at which above shares unlock. */
 
   unlockBlockHeight: number;
 }
-/** UnlockDetail stores how many shares unlock at which block height. */
+/**
+ * ShareUnlock stores a single instance of `shares` number of shares
+ * unlocking at block height `unlock_block_height`.
+ */
 
-export interface UnlockDetailSDKType {
+export interface ShareUnlockSDKType {
   /** Number of shares to unlock. */
   shares?: NumSharesSDKType;
   /** Block height at which above shares unlock. */
@@ -173,35 +167,30 @@ export const OwnerShare = {
 
 };
 
-function createBaseLockedShares(): LockedShares {
+function createBaseOwnerShareUnlocks(): OwnerShareUnlocks {
   return {
     ownerAddress: "",
-    totalLockedShares: undefined,
-    unlockDetails: []
+    shareUnlocks: []
   };
 }
 
-export const LockedShares = {
-  encode(message: LockedShares, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const OwnerShareUnlocks = {
+  encode(message: OwnerShareUnlocks, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.ownerAddress !== "") {
       writer.uint32(10).string(message.ownerAddress);
     }
 
-    if (message.totalLockedShares !== undefined) {
-      NumShares.encode(message.totalLockedShares, writer.uint32(18).fork()).ldelim();
-    }
-
-    for (const v of message.unlockDetails) {
-      UnlockDetail.encode(v!, writer.uint32(26).fork()).ldelim();
+    for (const v of message.shareUnlocks) {
+      ShareUnlock.encode(v!, writer.uint32(18).fork()).ldelim();
     }
 
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): LockedShares {
+  decode(input: _m0.Reader | Uint8Array, length?: number): OwnerShareUnlocks {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseLockedShares();
+    const message = createBaseOwnerShareUnlocks();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -212,11 +201,7 @@ export const LockedShares = {
           break;
 
         case 2:
-          message.totalLockedShares = NumShares.decode(reader, reader.uint32());
-          break;
-
-        case 3:
-          message.unlockDetails.push(UnlockDetail.decode(reader, reader.uint32()));
+          message.shareUnlocks.push(ShareUnlock.decode(reader, reader.uint32()));
           break;
 
         default:
@@ -228,25 +213,24 @@ export const LockedShares = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<LockedShares>): LockedShares {
-    const message = createBaseLockedShares();
+  fromPartial(object: DeepPartial<OwnerShareUnlocks>): OwnerShareUnlocks {
+    const message = createBaseOwnerShareUnlocks();
     message.ownerAddress = object.ownerAddress ?? "";
-    message.totalLockedShares = object.totalLockedShares !== undefined && object.totalLockedShares !== null ? NumShares.fromPartial(object.totalLockedShares) : undefined;
-    message.unlockDetails = object.unlockDetails?.map(e => UnlockDetail.fromPartial(e)) || [];
+    message.shareUnlocks = object.shareUnlocks?.map(e => ShareUnlock.fromPartial(e)) || [];
     return message;
   }
 
 };
 
-function createBaseUnlockDetail(): UnlockDetail {
+function createBaseShareUnlock(): ShareUnlock {
   return {
     shares: undefined,
     unlockBlockHeight: 0
   };
 }
 
-export const UnlockDetail = {
-  encode(message: UnlockDetail, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const ShareUnlock = {
+  encode(message: ShareUnlock, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.shares !== undefined) {
       NumShares.encode(message.shares, writer.uint32(10).fork()).ldelim();
     }
@@ -258,10 +242,10 @@ export const UnlockDetail = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): UnlockDetail {
+  decode(input: _m0.Reader | Uint8Array, length?: number): ShareUnlock {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseUnlockDetail();
+    const message = createBaseShareUnlock();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -284,8 +268,8 @@ export const UnlockDetail = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<UnlockDetail>): UnlockDetail {
-    const message = createBaseUnlockDetail();
+  fromPartial(object: DeepPartial<ShareUnlock>): ShareUnlock {
+    const message = createBaseShareUnlock();
     message.shares = object.shares !== undefined && object.shares !== null ? NumShares.fromPartial(object.shares) : undefined;
     message.unlockBlockHeight = object.unlockBlockHeight ?? 0;
     return message;

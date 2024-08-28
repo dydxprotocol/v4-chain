@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -93,12 +94,12 @@ func (k Keeper) GetAllOwnerShares(ctx sdk.Context) []types.OwnerShare {
 	return allOwnerShares
 }
 
-// GetLockedShares gets locked shares for an owner.
-func (k Keeper) GetLockedShares(
+// GetOwnerShareUnlocks gets share unlocks for an owner.
+func (k Keeper) GetOwnerShareUnlocks(
 	ctx sdk.Context,
 	owner string,
-) (val types.LockedShares, exists bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LockedSharesKeyPrefix))
+) (val types.OwnerShareUnlocks, exists bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.OwnerShareUnlocksKeyPrefix))
 
 	b := store.Get([]byte(owner))
 	if b == nil {
@@ -109,38 +110,39 @@ func (k Keeper) GetLockedShares(
 	return val, true
 }
 
-// SetLockedShares sets locked shares for an owner.
-func (k Keeper) SetLockedShares(
+// SetOwnerShareUnlocks sets share unlocks for an owner.
+func (k Keeper) SetOwnerShareUnlocks(
 	ctx sdk.Context,
 	owner string,
-	lockedShares types.LockedShares,
+	ownerShareUnlocks types.OwnerShareUnlocks,
 ) error {
-	if err := lockedShares.Validate(); err != nil {
+	if err := ownerShareUnlocks.Validate(); err != nil {
 		return err
 	}
 
-	b := k.cdc.MustMarshal(&lockedShares)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LockedSharesKeyPrefix))
+	b := k.cdc.MustMarshal(&ownerShareUnlocks)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.OwnerShareUnlocksKeyPrefix))
 	store.Set([]byte(owner), b)
 
 	return nil
 }
 
-// GetAllLockedShares gets all locked shares.
-func (k Keeper) GetAllLockedShares(ctx sdk.Context) []types.LockedShares {
-	allLockedShares := []types.LockedShares{}
-	lockedSharesStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LockedSharesKeyPrefix))
-	lockedSharesIterator := storetypes.KVStorePrefixIterator(lockedSharesStore, []byte{})
-	defer lockedSharesIterator.Close()
-	for ; lockedSharesIterator.Valid(); lockedSharesIterator.Next() {
-		var lockedShares types.LockedShares
-		k.cdc.MustUnmarshal(lockedSharesIterator.Value(), &lockedShares)
-		allLockedShares = append(allLockedShares, lockedShares)
+// GetAllOwnerShareUnlocks gets all `OwnerShareUnlocks`.
+func (k Keeper) GetAllOwnerShareUnlocks(ctx sdk.Context) []types.OwnerShareUnlocks {
+	allOwnerShareUnlocks := []types.OwnerShareUnlocks{}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.OwnerShareUnlocksKeyPrefix))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var ownerShareUnlocks types.OwnerShareUnlocks
+		k.cdc.MustUnmarshal(iterator.Value(), &ownerShareUnlocks)
+		allOwnerShareUnlocks = append(allOwnerShareUnlocks, ownerShareUnlocks)
 	}
-	return allLockedShares
+	return allOwnerShareUnlocks
 }
 
 // LockShares locks `sharesToLock` for `ownerAddress` until height `tilBlock`.
+// Note: cannot lock more than the total number of shares that owner has.
 func (k Keeper) LockShares(
 	ctx sdk.Context,
 	ownerAddress string,
@@ -158,13 +160,12 @@ func (k Keeper) LockShares(
 		)
 	}
 
-	lockedShares, exists := k.GetLockedShares(ctx, ownerAddress)
+	ownerShareUnlocks, exists := k.GetOwnerShareUnlocks(ctx, ownerAddress)
 	if !exists {
-		// Initialize locked shares.
-		lockedShares = types.LockedShares{
-			OwnerAddress:      ownerAddress,
-			TotalLockedShares: sharesToLock,
-			UnlockDetails: []types.UnlockDetail{
+		// Initialize share unlocks of this owner.
+		ownerShareUnlocks = types.OwnerShareUnlocks{
+			OwnerAddress: ownerAddress,
+			ShareUnlocks: []types.ShareUnlock{
 				{
 					Shares:            sharesToLock,
 					UnlockBlockHeight: tilBlock,
@@ -172,21 +173,33 @@ func (k Keeper) LockShares(
 			},
 		}
 	} else {
-		// Increment total unlocked shares.
-		totalLockedShares := lockedShares.TotalLockedShares.NumShares.BigInt()
-		totalLockedShares.Add(totalLockedShares, sharesToLock.NumShares.BigInt())
-		lockedShares.TotalLockedShares = types.BigIntToNumShares(totalLockedShares)
-
-		// Add new unlock detail.
-		lockedShares.UnlockDetails = append(lockedShares.UnlockDetails, types.UnlockDetail{
+		// Add new instance of share unlock.
+		ownerShareUnlocks.ShareUnlocks = append(ownerShareUnlocks.ShareUnlocks, types.ShareUnlock{
 			Shares:            sharesToLock,
 			UnlockBlockHeight: tilBlock,
 		})
 	}
 
+	// Total locked shares cannot exceed total owner shares.
+	ownerShares, exists := k.GetOwnerShares(ctx, ownerAddress)
+	if !exists {
+		return errorsmod.Wrapf(types.ErrOwnerNotFound, "owner: %s", ownerAddress)
+	}
+	totalLockedShares := ownerShareUnlocks.GetTotalLockedShares()
+	if ownerShareUnlocks.GetTotalLockedShares().Cmp(ownerShares.NumShares.BigInt()) == 1 {
+		return errorsmod.Wrapf(
+			types.ErrLockedSharesExceedsOwnerShares,
+			"owner: %s, ownerShares: %s, sharesToLock: %s, total shares that will be locked: %s",
+			ownerAddress,
+			ownerShares,
+			sharesToLock,
+			totalLockedShares,
+		)
+	}
+
 	// TODO (TRA-565): delay a MsgUnlockShares.
 
-	err := k.SetLockedShares(ctx, ownerAddress, lockedShares)
+	err := k.SetOwnerShareUnlocks(ctx, ownerAddress, ownerShareUnlocks)
 	if err != nil {
 		return err
 	}

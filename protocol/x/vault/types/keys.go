@@ -18,9 +18,9 @@ const (
 	// OwnerShares store: owner string -> shares NumShares.
 	OwnerSharesKeyPrefix = "OwnerShares:"
 
-	// LockedSharesKeyPrefix is the prefix to retrieve all locked shares.
-	// LockedShares store: owner string -> lockedShares LockedShares.
-	LockedSharesKeyPrefix = "LockedShares:"
+	// OwnerShareUnlocksKeyPrefix is the prefix to retrieve all OwnerShareUnlocks.
+	// OwnerShareUnlocks store: owner string -> ownerShareUnlocks OwnerShareUnlocks.
+	OwnerShareUnlocksKeyPrefix = "OwnerShareUnlocks:"
 
 	// DefaultQuotingParams is the key to retrieve DefaultQuotingParams.
 	// A vault uses DefaultQuotingParams if it does not have its own QuotingParams.

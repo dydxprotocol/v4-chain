@@ -10,16 +10,16 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
 // GenesisState defines `x/vault`'s genesis state.
 message GenesisState {
-  // The total number of shares.
+  // The total number of shares, including any locked ones.
   NumShares total_shares = 1 [ (gogoproto.nullable) = false ];
-  // The shares of each owner.
+  // The shares of each owner, including any locked ones.
   repeated OwnerShare owner_shares = 2 [ (gogoproto.nullable) = false ];
   // The vaults.
   repeated Vault vaults = 3 [ (gogoproto.nullable) = false ];
   // The default quoting parameters for all vaults.
   QuotingParams default_quoting_params = 4 [ (gogoproto.nullable) = false ];
-  // All locked shares.
-  repeated LockedShares all_locked_shares = 5 [ (gogoproto.nullable) = false ];
+  // All owner share unlocks.
+  repeated OwnerShareUnlocks all_owner_share_unlocks = 5 [ (gogoproto.nullable) = false ];
 }
 
 // Vault defines the state of a vault.

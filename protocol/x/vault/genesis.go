@@ -23,8 +23,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic(err)
 		}
 	}
-	for _, lockedShares := range genState.AllLockedShares {
-		if err := k.SetLockedShares(ctx, lockedShares.OwnerAddress, lockedShares); err != nil {
+	for _, ownerShareUnlocks := range genState.AllOwnerShareUnlocks {
+		if err := k.SetOwnerShareUnlocks(ctx, ownerShareUnlocks.OwnerAddress, ownerShareUnlocks); err != nil {
 			panic(err)
 		}
 	}
@@ -49,7 +49,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	// Export total shares, owner shares, and locked shares.
 	genesis.TotalShares = k.GetTotalShares(ctx)
 	genesis.OwnerShares = k.GetAllOwnerShares(ctx)
-	genesis.AllLockedShares = k.GetAllLockedShares(ctx)
+	genesis.AllOwnerShareUnlocks = k.GetAllOwnerShareUnlocks(ctx)
 
 	// Export params.
 	genesis.DefaultQuotingParams = k.GetDefaultQuotingParams(ctx)
