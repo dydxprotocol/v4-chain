@@ -259,7 +259,10 @@ func PrepareCheckState(
 	}
 
 	// 6. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
-	liquidatableSubaccountIds := keeper.DaemonLiquidationInfo.GetLiquidatableSubaccountIds()
+	liquidatableSubaccountIds, negativeTncSubaccountIds, err := keeper.GetLiquidatableAndTNCSubaccountIds(ctx, req.ExtendedCommitInfo)
+	if err != nil {
+		panic(err)
+	}
 	subaccountsToDeleverage, err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, liquidatableSubaccountIds)
 	if err != nil {
 		panic(err)
@@ -280,7 +283,6 @@ func PrepareCheckState(
 
 	// 8. Gate withdrawals by inserting a zero-fill deleveraging operation into the operations queue if any
 	// of the negative TNC subaccounts still have negative TNC after liquidations and deleveraging steps.
-	negativeTncSubaccountIds := keeper.DaemonLiquidationInfo.GetNegativeTncSubaccountIds()
 	if err := keeper.GateWithdrawalsIfNegativeTncSubaccountSeen(ctx, negativeTncSubaccountIds); err != nil {
 		panic(err)
 	}
