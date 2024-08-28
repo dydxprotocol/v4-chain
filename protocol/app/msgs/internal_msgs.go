@@ -190,6 +190,7 @@ var (
 		"/dydxprotocol.vault.MsgSetVaultQuotingParamsResponse":      nil,
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         &vault.MsgUpdateDefaultQuotingParams{},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": nil,
+		"/dydxprotocol.vault.MsgUpdateParams":                       &vault.MsgUpdateParams{},
 
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            &vest.MsgSetVestEntry{},
