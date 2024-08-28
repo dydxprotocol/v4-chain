@@ -14,17 +14,17 @@ type ProcessProposalPriceApplier struct {
 	mock.Mock
 }
 
-// ApplyPricesFromVE provides a mock function with given fields: ctx, req
-func (_m *ProcessProposalPriceApplier) ApplyPricesFromVE(ctx types.Context, req *abcitypes.RequestFinalizeBlock) error {
-	ret := _m.Called(ctx, req)
+// ApplyPricesFromVE provides a mock function with given fields: ctx, req, writeToCache
+func (_m *ProcessProposalPriceApplier) ApplyPricesFromVE(ctx types.Context, req *abcitypes.RequestFinalizeBlock, writeToCache bool) error {
+	ret := _m.Called(ctx, req, writeToCache)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ApplyPricesFromVE")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *abcitypes.RequestFinalizeBlock) error); ok {
-		r0 = rf(ctx, req)
+	if rf, ok := ret.Get(0).(func(types.Context, *abcitypes.RequestFinalizeBlock, bool) error); ok {
+		r0 = rf(ctx, req, writeToCache)
 	} else {
 		r0 = ret.Error(0)
 	}
