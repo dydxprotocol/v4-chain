@@ -47,6 +47,10 @@ func NewPriceApplier(
 	}
 }
 
+func (pa *PriceApplier) VoteAggregator() aggregator.VoteAggregator {
+	return pa.voteAggregator
+}
+
 func (pa *PriceApplier) ApplyPricesFromVE(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
@@ -72,7 +76,7 @@ func (pa *PriceApplier) writePricesToStore(
 		if err != nil {
 			return err
 		}
-		err = pa.writePricesToStoreAndMaybeCache(ctx, prices, request.DecidedLastCommit.Round, writeToCache)
+		err = pa.WritePricesToStoreAndMaybeCache(ctx, prices, request.DecidedLastCommit.Round, writeToCache)
 
 		if err != nil {
 			return err
@@ -193,7 +197,7 @@ func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 	return nil
 }
 
-func (pa *PriceApplier) writePricesToStoreAndMaybeCache(
+func (pa *PriceApplier) WritePricesToStoreAndMaybeCache(
 	ctx sdk.Context,
 	prices map[string]voteweighted.AggregatorPricePair,
 	round int32,

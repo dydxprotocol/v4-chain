@@ -881,6 +881,31 @@ func New(
 		app.SubaccountsKeeper,
 	)
 
+	/****  ve daemon initializer ****/
+	app.voteCodec = vecodec.NewDefaultVoteExtensionCodec()
+	app.extCodec = vecodec.NewDefaultExtendedCommitCodec()
+
+	aggregatorFn := voteweighted.Median(
+		logger,
+		app.ConsumerKeeper,
+		voteweighted.DefaultPowerThreshold,
+	)
+
+	aggregator := veaggregator.NewVeAggregator(
+		logger,
+		indexPriceCache,
+		app.PricesKeeper,
+		aggregatorFn,
+	)
+
+	priceApplier := priceapplier.NewPriceApplier(
+		logger,
+		aggregator,
+		app.PricesKeeper,
+		app.voteCodec,
+		app.extCodec,
+	)
+
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
 	logger.Info("Parsed CLOB flags", "Flags", clobFlags)
 
@@ -912,6 +937,7 @@ func New(
 		clobFlags,
 		rate_limit.NewPanicRateLimiter[sdk.Msg](),
 		daemonLiquidationInfo,
+		priceApplier,
 	)
 	clobModule := clobmodule.NewAppModule(
 		appCodec,
@@ -941,31 +967,6 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.SubaccountsKeeper,
-	)
-
-	/****  ve daemon initializer ****/
-	app.voteCodec = vecodec.NewDefaultVoteExtensionCodec()
-	app.extCodec = vecodec.NewDefaultExtendedCommitCodec()
-
-	aggregatorFn := voteweighted.Median(
-		logger,
-		app.ConsumerKeeper,
-		voteweighted.DefaultPowerThreshold,
-	)
-
-	aggregator := veaggregator.NewVeAggregator(
-		logger,
-		indexPriceCache,
-		app.PricesKeeper,
-		aggregatorFn,
-	)
-
-	priceApplier := priceapplier.NewPriceApplier(
-		logger,
-		aggregator,
-		app.PricesKeeper,
-		app.voteCodec,
-		app.extCodec,
 	)
 
 	app.pricePreBlocker = *daemonpreblocker.NewDaemonPreBlockHandler(
@@ -1410,10 +1411,10 @@ func (app *App) Precommitter(ctx sdk.Context) {
 }
 
 // PrepareCheckStater application updates after commit and before any check state is invoked.
-func (app *App) PrepareCheckStater(ctx sdk.Context) {
+func (app *App) PrepareCheckStater(ctx sdk.Context, req *abci.RequestCommit) {
 	ctx = ctx.WithExecMode(lib.ExecModePrepareCheckState)
 
-	if err := app.ModuleManager.PrepareCheckState(ctx); err != nil {
+	if err := app.ModuleManager.PrepareCheckState(ctx, req); err != nil {
 		panic(err)
 	}
 }

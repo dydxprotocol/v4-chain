@@ -30,12 +30,11 @@ var (
 	_ module.AppModuleBasic   = AppModuleBasic{}
 	_ module.HasGenesisBasics = AppModuleBasic{}
 
-	_ appmodule.AppModule            = AppModule{}
-	_ appmodule.HasBeginBlocker      = AppModule{}
-	_ appmodule.HasEndBlocker        = AppModule{}
-	_ appmodule.HasPrepareCheckState = AppModule{}
-	_ module.HasConsensusVersion     = AppModule{}
-	_ module.HasServices             = AppModule{}
+	_ appmodule.AppModule        = AppModule{}
+	_ appmodule.HasBeginBlocker  = AppModule{}
+	_ appmodule.HasEndBlocker    = AppModule{}
+	_ module.HasConsensusVersion = AppModule{}
+	_ module.HasServices         = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
@@ -199,11 +198,12 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 }
 
 // PrepareCheckState executes all ABCI PrepareCheckState logic respective to the clob module.
-func (am AppModule) PrepareCheckState(ctx context.Context) error {
+func (am AppModule) PrepareCheckState(ctx context.Context, req *abci.RequestCommit) error {
 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyPrepareCheckStater)
 	PrepareCheckState(
 		lib.UnwrapSDKContext(ctx, types.ModuleName),
 		am.keeper,
+		req,
 	)
 	return nil
 }

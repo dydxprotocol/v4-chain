@@ -31,6 +31,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	cometabci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -1086,6 +1087,7 @@ func TestPrepareCheckState_WithProcessProposerMatchesEventsWithBadBlockHeight(t 
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
 			ks.ClobKeeper,
+			&cometabci.RequestCommit{},
 		)
 	})
 }
@@ -1112,6 +1114,7 @@ func TestCommitBlocker_WithProcessProposerMatchesEventsWithBadBlockHeight(t *tes
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
 			ks.ClobKeeper,
+			&cometabci.RequestCommit{},
 		)
 	})
 }
@@ -1467,6 +1470,7 @@ func TestPrepareCheckState(t *testing.T) {
 			clob.PrepareCheckState(
 				ctx,
 				ks.ClobKeeper,
+				&cometabci.RequestCommit{},
 			)
 
 			// Verify test expectations.

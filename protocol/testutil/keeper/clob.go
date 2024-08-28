@@ -205,6 +205,7 @@ func createClobKeeper(
 		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[sdk.Msg](),
 		liquidationtypes.NewDaemonLiquidationInfo(),
+		nil,
 	)
 	k.SetAnteHandler(constants.EmptyAnteHandler)
 

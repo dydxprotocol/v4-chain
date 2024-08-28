@@ -636,7 +636,7 @@ func (tApp *TestApp) initChainIfNeeded() {
 		tApp.builder.t.Fatalf("Failed to finalize block %+v, err %+v", finalizeBlockResponse, err)
 	}
 
-	_, err = tApp.App.Commit()
+	_, err = tApp.App.Commit(&abcitypes.RequestCommit{})
 	require.NoError(tApp.builder.t, err)
 	if tApp.builder.enableNonDeterminismChecks {
 		finalizeBlockAndCommit(tApp.builder.t, tApp.parallelApp, finalizeBlockRequest, tApp.App)
@@ -872,7 +872,7 @@ func (tApp *TestApp) AdvanceToBlock(
 		}
 
 		// Commit the block.
-		_, err := tApp.App.Commit()
+		_, err := tApp.App.Commit(&abcitypes.RequestCommit{})
 		require.NoError(tApp.builder.t, err)
 
 		// Finalize and commit all the blocks for the non-determinism checkers.
@@ -939,7 +939,7 @@ func finalizeBlockAndCommit(
 ) {
 	_, err := app.FinalizeBlock(&request)
 	require.NoError(t, err)
-	_, err = app.Commit()
+	_, err = app.Commit(&abcitypes.RequestCommit{})
 	require.NoError(t, err)
 
 	diffs := make([]string, 0)

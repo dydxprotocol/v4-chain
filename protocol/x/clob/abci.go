@@ -12,6 +12,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	abcicomet "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -136,6 +137,7 @@ func EndBlocker(
 func PrepareCheckState(
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
+	req *abcicomet.RequestCommit,
 ) {
 	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.Handler, log.PrepareCheckState,
