@@ -567,6 +567,9 @@
           "fee": {
             "type": "string"
           },
+          "affiliateEarnedRevShare": {
+            "type": "string"
+          },
           "createdAt": {
             "$ref": "#/components/schemas/IsoString"
           },
@@ -594,6 +597,7 @@
           "price",
           "size",
           "fee",
+          "affiliateEarnedRevShare",
           "createdAt",
           "createdAtHeight",
           "subaccountNumber"

@@ -45,6 +45,7 @@ export interface FillCreateObject {
   createdAtHeight: string;
   clientMetadata?: string;
   fee: string;
+  affiliateEarnedRevShare: string;
 }
 
 export interface FillUpdateObject {
@@ -75,6 +76,7 @@ export enum FillColumns {
   createdAtHeight = 'createdAtHeight',
   clientMetadata = 'clientMetadata',
   fee = 'fee',
+  affiliateEarnedRevShare = 'affiliateEarnedRevShare',
 }
 
 export type CostOfFills = {

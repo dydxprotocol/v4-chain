@@ -166,6 +166,7 @@ export interface FillResponseObject {
   price: string,
   size: string,
   fee: string,
+  affiliateEarnedRevShare: string,
   createdAt: IsoString,
   createdAtHeight: string,
   orderId?: string,
