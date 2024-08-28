@@ -47,8 +47,23 @@ export default class WalletModel extends BaseModel {
         address: { type: 'string' },
         totalTradingRewards: { type: 'string', pattern: NonNegativeNumericPattern },
         totalVolume: { type: 'string', pattern: NonNegativeNumericPattern },
-        isWhitelistAffiliate: { type: 'boolean'},
+        isWhitelistAffiliate: { type: 'boolean' },
       },
+    };
+  }
+
+  /**
+   * A mapping from column name to JSON conversion expected.
+   * See getSqlConversionForDydxModelTypes for valid conversions.
+   *
+   * TODO(IND-239): Ensure that jsonSchema() / sqlToJsonConversions() / model fields match.
+   */
+  static get sqlToJsonConversions() {
+    return {
+      address: 'string',
+      totalTradingRewards: 'string',
+      totalVolume: 'string',
+      isWhitelistAffiliate: 'boolean',
     };
   }
 

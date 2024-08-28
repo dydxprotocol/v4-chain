@@ -30,14 +30,14 @@ describe('Wallet store', () => {
     await WalletTable.upsert({
       ...defaultWallet2,
       isWhitelistAffiliate: true,
-      totalVolume: '100',
+      totalVolume: '100.1',
     });
     wallet = await WalletTable.findById(defaultWallet2.address);
 
     expect(wallet).toEqual(expect.objectContaining({
       ...defaultWallet2,
       isWhitelistAffiliate: true,
-      totalVolume: '100',
+      totalVolume: '100.1',
     }));
   });
 
@@ -78,8 +78,8 @@ describe('Wallet store', () => {
   it('Successfully finds wallets by whitelist flag', async () => {
     await Promise.all([
       WalletTable.create(defaultWallet3),
-      WalletTable.create(defaultWallet2)
-    ])
+      WalletTable.create(defaultWallet2),
+    ]);
 
     const wallets: WalletFromDatabase[] = await WalletTable.findAll(
       {
