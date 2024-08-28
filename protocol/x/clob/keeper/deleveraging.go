@@ -328,7 +328,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 
 	// Find subaccounts with open positions on the opposite side of the liquidated subaccount.
 	isDeleveragingLong := deltaQuantumsTotal.Sign() == -1
-	subaccountsWithOpenPositions := k.DaemonLiquidationInfo.GetSubaccountsWithOpenPositionsOnSide(
+	subaccountsWithOpenPositions := k.DaemonDeleveragingInfo.GetSubaccountsWithOpenPositionsOnSide(
 		perpetualId,
 		!isDeleveragingLong,
 	)
@@ -659,7 +659,7 @@ func (k Keeper) GetSubaccountsWithPositionsInFinalSettlementMarkets(
 		}
 
 		finalSettlementPerpetualId := clobPair.MustGetPerpetualId()
-		subaccountsWithPosition := k.DaemonLiquidationInfo.GetSubaccountsWithOpenPositions(
+		subaccountsWithPosition := k.DaemonDeleveragingInfo.GetSubaccountsWithOpenPositions(
 			finalSettlementPerpetualId,
 		)
 		for _, subaccountId := range subaccountsWithPosition {

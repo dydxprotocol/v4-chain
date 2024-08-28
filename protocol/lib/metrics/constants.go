@@ -257,7 +257,7 @@ const (
 	UpdateSubaccounts                     = "update_subaccounts"
 	SubaccountOwner                       = "subaccount_owner"
 
-	// Liquidation Daemon.
+	// Deleveraging Daemon.
 	CheckCollateralizationForSubaccounts     = "check_collateralization_for_subaccounts"
 	FetchSubaccountsAtBlockHeight            = "fetch_subaccounts_at_block_height"
 	GetAllSubaccounts                        = "get_all_subaccounts"
@@ -265,10 +265,10 @@ const (
 	GetSubaccountOpenPositionInfo            = "get_subaccount_open_position_info"
 	GetSubaccountsFromKey                    = "get_subaccounts_from_key"
 	LiquidatableSubaccountIds                = "liquidatable_subaccount_ids"
-	LiquidationDaemon                        = "liquidation_daemon"
+	DeleveragingDaemon                       = "deleveraging_daemon"
 	NegativeTncSubaccountIds                 = "negative_tnc_subaccount_ids"
 	PageLimit                                = "page_limit"
-	SendLiquidatableSubaccountIds            = "send_liquidatable_subaccount_ids"
+	SendDeleveragingSubaccountIds            = "send_deleveraging_subaccount_ids"
 	SubaccountsWithOpenPositions             = "subaccounts_with_open_positions"
 	SubaccountWithdrawalsAndTransfersBlocked = "subaccount_withdrawals_and_transfers_blocked"
 

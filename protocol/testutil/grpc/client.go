@@ -1,7 +1,7 @@
 package grpc
 
 import (
-	liquidationtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
+	deleveragingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
@@ -17,6 +17,6 @@ type QueryClient interface {
 	clobtypes.QueryClient
 	perptypes.QueryClient
 	pricetypes.QueryClient
-	liquidationtypes.LiquidationServiceClient
+	deleveragingtypes.DeleveragingServiceClient
 	pricefeedtypes.PriceFeedServiceClient
 }

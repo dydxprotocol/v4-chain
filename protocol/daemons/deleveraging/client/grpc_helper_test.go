@@ -7,9 +7,9 @@ import (
 
 	"cosmossdk.io/log"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/grpc"
@@ -92,7 +92,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.QueryPageLimit,
+						Limit: df.Deleveraging.QueryPageLimit,
 					},
 				}
 				response := &satypes.QuerySubaccountAllResponse{
@@ -112,7 +112,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.QueryPageLimit,
+						Limit: df.Deleveraging.QueryPageLimit,
 					},
 				}
 				nextKey := []byte("next key")
@@ -128,7 +128,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 				req2 := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
 						Key:   nextKey,
-						Limit: df.Liquidation.QueryPageLimit,
+						Limit: df.Deleveraging.QueryPageLimit,
 					},
 				}
 				response2 := &satypes.QuerySubaccountAllResponse{
@@ -147,7 +147,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.QueryPageLimit,
+						Limit: df.Deleveraging.QueryPageLimit,
 					},
 				}
 				mck.On("SubaccountAll", ctx, req).Return(nil, errors.New("test error"))
@@ -165,7 +165,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			daemon.SubaccountQueryClient = queryClientMock
 			actual, err := daemon.GetAllSubaccounts(
 				grpc.Ctx,
-				df.Liquidation.QueryPageLimit,
+				df.Deleveraging.QueryPageLimit,
 			)
 			if err != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
@@ -176,7 +176,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 	}
 }
 
-func TestSendLiquidatableSubaccountIds(t *testing.T) {
+func TestSendDeleveragingSubaccountIds(t *testing.T) {
 	tests := map[string]struct {
 		// mocks
 		setupMocks                 func(context.Context, *mocks.QueryClient)
@@ -187,7 +187,7 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 	}{
 		"Success": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &api.LiquidateSubaccountsRequest{
+				req := &api.DeleveragingSubaccountsRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -202,8 +202,8 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 						},
 					},
 				}
-				response := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
+				response := &api.DeleveragingSubaccountsResponse{}
+				mck.On("DeleverageSubaccounts", ctx, req).Return(response, nil)
 			},
 			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{
 				0: {
@@ -221,20 +221,20 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 		},
 		"Success Empty": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &api.LiquidateSubaccountsRequest{
+				req := &api.DeleveragingSubaccountsRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 				}
-				response := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
+				response := &api.DeleveragingSubaccountsResponse{}
+				mck.On("DeleverageSubaccounts", ctx, req).Return(response, nil)
 			},
 			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{},
 		},
 		"Errors are propagated": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &api.LiquidateSubaccountsRequest{
+				req := &api.DeleveragingSubaccountsRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 				}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(nil, errors.New("test error"))
+				mck.On("DeleverageSubaccounts", ctx, req).Return(nil, errors.New("test error"))
 			},
 			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{},
 			expectedError:              errors.New("test error"),
@@ -247,9 +247,9 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 			tc.setupMocks(grpc.Ctx, queryClientMock)
 
 			daemon := client.NewClient(log.NewNopLogger())
-			daemon.LiquidationServiceClient = queryClientMock
+			daemon.DeleveragingServiceClient = queryClientMock
 
-			err := daemon.SendLiquidatableSubaccountIds(
+			err := daemon.SendDeleveragingSubaccountIds(
 				grpc.Ctx,
 				tc.subaccountOpenPositionInfo,
 			)

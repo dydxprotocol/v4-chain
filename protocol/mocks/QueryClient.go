@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	api "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
+	api "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 
 	context "context"
@@ -361,6 +361,43 @@ func (_m *QueryClient) CollateralPoolAddress(ctx context.Context, in *subaccount
 	return r0, r1
 }
 
+// DeleverageSubaccounts provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) DeleverageSubaccounts(ctx context.Context, in *api.DeleveragingSubaccountsRequest, opts ...grpc.CallOption) (*api.DeleveragingSubaccountsResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleverageSubaccounts")
+	}
+
+	var r0 *api.DeleveragingSubaccountsResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *api.DeleveragingSubaccountsRequest, ...grpc.CallOption) (*api.DeleveragingSubaccountsResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *api.DeleveragingSubaccountsRequest, ...grpc.CallOption) *api.DeleveragingSubaccountsResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*api.DeleveragingSubaccountsResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *api.DeleveragingSubaccountsRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DowntimeParams provides a mock function with given fields: ctx, in, opts
 func (_m *QueryClient) DowntimeParams(ctx context.Context, in *types.QueryDowntimeParamsRequest, opts ...grpc.CallOption) (*types.QueryDowntimeParamsResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -464,43 +501,6 @@ func (_m *QueryClient) GetWithdrawalAndTransfersBlockedInfo(ctx context.Context,
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, *subaccountstypes.QueryGetWithdrawalAndTransfersBlockedInfoRequest, ...grpc.CallOption) error); ok {
-		r1 = rf(ctx, in, opts...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// LiquidateSubaccounts provides a mock function with given fields: ctx, in, opts
-func (_m *QueryClient) LiquidateSubaccounts(ctx context.Context, in *api.LiquidateSubaccountsRequest, opts ...grpc.CallOption) (*api.LiquidateSubaccountsResponse, error) {
-	_va := make([]interface{}, len(opts))
-	for _i := range opts {
-		_va[_i] = opts[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, in)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	if len(ret) == 0 {
-		panic("no return value specified for LiquidateSubaccounts")
-	}
-
-	var r0 *api.LiquidateSubaccountsResponse
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *api.LiquidateSubaccountsRequest, ...grpc.CallOption) (*api.LiquidateSubaccountsResponse, error)); ok {
-		return rf(ctx, in, opts...)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, *api.LiquidateSubaccountsRequest, ...grpc.CallOption) *api.LiquidateSubaccountsResponse); ok {
-		r0 = rf(ctx, in, opts...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*api.LiquidateSubaccountsResponse)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, *api.LiquidateSubaccountsRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

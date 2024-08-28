@@ -11,13 +11,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
-// SubTaskRunner provides an interface that encapsulates the liquidations daemon logic to gather and report
-// potentially liquidatable subaccount ids. This interface is used to mock the daemon logic in tests.
+// SubTaskRunner provides an interface that encapsulates the deleveraging daemon logic to gather subaccounts with open positions for each perp.
+// This interface is used to mock the daemon logic in tests.
 type SubTaskRunner interface {
-	RunLiquidationDaemonTaskLoop(
+	RunDeleveragingDaemonTaskLoop(
 		ctx context.Context,
 		client *Client,
-		liqFlags flags.LiquidationFlags,
+		liqFlags flags.DeleveragingFlags,
 	) error
 }
 
@@ -26,15 +26,15 @@ type SubTaskRunnerImpl struct{}
 // Ensure SubTaskRunnerImpl implements the SubTaskRunner interface.
 var _ SubTaskRunner = (*SubTaskRunnerImpl)(nil)
 
-// RunLiquidationDaemonTaskLoop contains the logic to communicate with various gRPC services
-// to find the liquidatable subaccount ids.
-func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
+// RunDeleveragingDaemonTaskLoop contains the logic to communicate with various gRPC services
+// to generate the list of subaccounts with open positions for each perpetual.
+func (s *SubTaskRunnerImpl) RunDeleveragingDaemonTaskLoop(
 	ctx context.Context,
 	daemonClient *Client,
-	liqFlags flags.LiquidationFlags,
+	liqFlags flags.DeleveragingFlags,
 ) error {
 	defer telemetry.ModuleMeasureSince(
-		metrics.LiquidationDaemon,
+		metrics.DeleveragingDaemon,
 		time.Now(),
 		metrics.MainTaskLoop,
 		metrics.Latency,
@@ -58,8 +58,8 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 	// Build a map of perpetual id to subaccounts with open positions in that perpetual.
 	subaccountOpenPositionInfo := daemonClient.GetSubaccountOpenPositionInfo(subaccounts)
 
-	// 3. Send the list of liquidatable subaccount ids to the daemon server.
-	err = daemonClient.SendLiquidatableSubaccountIds(
+	// 3. Send the list of deleveraging subaccount ids to the daemon server.
+	err = daemonClient.SendDeleveragingSubaccountIds(
 		ctx,
 		subaccountOpenPositionInfo,
 	)
@@ -73,13 +73,13 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 func (c *Client) FetchSubaccountsAtBlockHeight(
 	ctx context.Context,
 	blockHeight uint32,
-	liqFlags flags.LiquidationFlags,
+	liqFlags flags.DeleveragingFlags,
 ) (
 	subaccounts []satypes.Subaccount,
 	err error,
 ) {
 	defer telemetry.ModuleMeasureSince(
-		metrics.LiquidationDaemon,
+		metrics.DeleveragingDaemon,
 		time.Now(),
 		metrics.FetchSubaccountsAtBlockHeight,
 		metrics.Latency,
@@ -105,7 +105,7 @@ func (c *Client) GetSubaccountOpenPositionInfo(
 	subaccountOpenPositionInfo map[uint32]*clobtypes.SubaccountOpenPositionInfo,
 ) {
 	defer telemetry.ModuleMeasureSince(
-		metrics.LiquidationDaemon,
+		metrics.DeleveragingDaemon,
 		time.Now(),
 		metrics.GetSubaccountOpenPositionInfo,
 		metrics.Latency,
@@ -147,7 +147,7 @@ func (c *Client) GetSubaccountOpenPositionInfo(
 	}
 
 	telemetry.ModuleSetGauge(
-		metrics.LiquidationDaemon,
+		metrics.DeleveragingDaemon,
 		float32(numSubaccountsWithOpenPositions),
 		metrics.SubaccountsWithOpenPositions,
 		metrics.Count,

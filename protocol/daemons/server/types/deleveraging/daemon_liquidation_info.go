@@ -7,22 +7,22 @@ import (
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
-// DaemonLiquidationInfo maintains the list of subaccount ids to be liquidated
-// in the next block. Methods are goroutine safe.
-type DaemonLiquidationInfo struct {
+// DaemonDeleveragingInfo maintains the list of subaccounts that have open positions for each perpetual.
+// Methods are goroutine safe.
+type DaemonDeleveragingInfo struct {
 	sync.Mutex               // lock
 	subaccountsWithPositions map[uint32]*clobtypes.SubaccountOpenPositionInfo
 }
 
-// NewDaemonLiquidationInfo creates a new `NewDaemonLiquidationInfo` struct.
-func NewDaemonLiquidationInfo() *DaemonLiquidationInfo {
-	return &DaemonLiquidationInfo{
+// NewDaemonDeleveragingInfo creates a new `NewDaemonDeleveragingInfo` struct.
+func NewDaemonDeleveragingInfo() *DaemonDeleveragingInfo {
+	return &DaemonDeleveragingInfo{
 		subaccountsWithPositions: make(map[uint32]*clobtypes.SubaccountOpenPositionInfo),
 	}
 }
 
 // UpdateSubaccountsWithPositions updates the struct with the given a list of subaccount ids with open positions.
-func (ls *DaemonLiquidationInfo) UpdateSubaccountsWithPositions(
+func (ls *DaemonDeleveragingInfo) UpdateSubaccountsWithPositions(
 	subaccountsWithPositions []clobtypes.SubaccountOpenPositionInfo,
 ) {
 	ls.Lock()
@@ -41,7 +41,7 @@ func (ls *DaemonLiquidationInfo) UpdateSubaccountsWithPositions(
 }
 
 // GetSubaccountsWithOpenPositions returns the list of subaccount ids with open positions for a perpetual.
-func (ls *DaemonLiquidationInfo) GetSubaccountsWithOpenPositions(
+func (ls *DaemonDeleveragingInfo) GetSubaccountsWithOpenPositions(
 	perpetualId uint32,
 ) []satypes.SubaccountId {
 	ls.Lock()
@@ -57,7 +57,7 @@ func (ls *DaemonLiquidationInfo) GetSubaccountsWithOpenPositions(
 
 // GetSubaccountsWithOpenPositionsOnSide returns the list of subaccount ids with open positions
 // on a specific side for a perpetual.
-func (ls *DaemonLiquidationInfo) GetSubaccountsWithOpenPositionsOnSide(
+func (ls *DaemonDeleveragingInfo) GetSubaccountsWithOpenPositionsOnSide(
 	perpetualId uint32,
 	isLong bool,
 ) []satypes.SubaccountId {

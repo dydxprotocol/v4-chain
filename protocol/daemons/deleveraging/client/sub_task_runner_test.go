@@ -6,9 +6,9 @@ import (
 
 	"cosmossdk.io/log"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -20,13 +20,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
+func TestRunDeleveragingDaemonTaskLoop(t *testing.T) {
 	tests := map[string]struct {
 		// mocks
 		setupMocks func(ctx context.Context, mck *mocks.QueryClient)
 
 		// expectations
-		expectedLiquidatableSubaccountIds []satypes.SubaccountId
+		expectedDeleveragingSubaccountIds []satypes.SubaccountId
 		expectedError                     error
 	}{
 		"Can get liquidatable subaccount with short position": {
@@ -49,7 +49,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
 				// Sends liquidatable subaccount ids to the server.
-				req := &api.LiquidateSubaccountsRequest{
+				req := &api.DeleveragingSubaccountsRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId:                 0,
@@ -60,8 +60,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						},
 					},
 				}
-				response3 := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+				response3 := &api.DeleveragingSubaccountsResponse{}
+				mck.On("DeleverageSubaccounts", ctx, req).Return(response3, nil)
 			},
 		},
 		"Can get liquidatable subaccount with long position": {
@@ -84,7 +84,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
 				// Sends liquidatable subaccount ids to the server.
-				req := &api.LiquidateSubaccountsRequest{
+				req := &api.DeleveragingSubaccountsRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -95,8 +95,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						},
 					},
 				}
-				response3 := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+				response3 := &api.DeleveragingSubaccountsResponse{}
+				mck.On("DeleverageSubaccounts", ctx, req).Return(response3, nil)
 			},
 		},
 		"Skip well collateralized subaccounts": {
@@ -120,7 +120,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
 				// Sends liquidatable subaccount ids to the server.
-				req := &api.LiquidateSubaccountsRequest{
+				req := &api.DeleveragingSubaccountsRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -133,8 +133,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						},
 					},
 				}
-				response3 := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+				response3 := &api.DeleveragingSubaccountsResponse{}
+				mck.On("DeleverageSubaccounts", ctx, req).Return(response3, nil)
 			},
 		},
 		"Skip subaccounts with no open positions": {
@@ -157,11 +157,11 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
 				// Sends liquidatable subaccount ids to the server.
-				req := &api.LiquidateSubaccountsRequest{
+				req := &api.DeleveragingSubaccountsRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 				}
-				response3 := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+				response3 := &api.DeleveragingSubaccountsResponse{}
+				mck.On("DeleverageSubaccounts", ctx, req).Return(response3, nil)
 			},
 		},
 		"Can get subaccount that become undercollateralized with funding payments (short)": {
@@ -204,7 +204,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
 				// Sends liquidatable subaccount ids to the server.
-				req := &api.LiquidateSubaccountsRequest{
+				req := &api.DeleveragingSubaccountsRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId:                 0,
@@ -215,8 +215,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						},
 					},
 				}
-				response3 := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+				response3 := &api.DeleveragingSubaccountsResponse{}
+				mck.On("DeleverageSubaccounts", ctx, req).Return(response3, nil)
 			},
 		},
 		"Can get subaccount that become liquidatable with funding payments (long)": {
@@ -259,7 +259,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
 				// Sends liquidatable subaccount ids to the server.
-				req := &api.LiquidateSubaccountsRequest{
+				req := &api.DeleveragingSubaccountsRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -270,8 +270,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						},
 					},
 				}
-				response3 := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+				response3 := &api.DeleveragingSubaccountsResponse{}
+				mck.On("DeleverageSubaccounts", ctx, req).Return(response3, nil)
 			},
 		},
 		"Skips subaccount that become well-collateralized with funding payments (short)": {
@@ -314,7 +314,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
 				// Sends liquidatable subaccount ids to the server.
-				req := &api.LiquidateSubaccountsRequest{
+				req := &api.DeleveragingSubaccountsRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId:                 0,
@@ -325,8 +325,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						},
 					},
 				}
-				response3 := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+				response3 := &api.DeleveragingSubaccountsResponse{}
+				mck.On("DeleverageSubaccounts", ctx, req).Return(response3, nil)
 			},
 		},
 		"Skips subaccount that become well-collateralized with funding payments (long)": {
@@ -369,7 +369,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
 				// Sends liquidatable subaccount ids to the server.
-				req := &api.LiquidateSubaccountsRequest{
+				req := &api.DeleveragingSubaccountsRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -380,8 +380,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						},
 					},
 				}
-				response3 := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+				response3 := &api.DeleveragingSubaccountsResponse{}
+				mck.On("DeleverageSubaccounts", ctx, req).Return(response3, nil)
 			},
 		},
 		"Can get negative tnc subaccount with short position": {
@@ -405,7 +405,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
 				// Sends liquidatable subaccount ids to the server.
-				req := &api.LiquidateSubaccountsRequest{
+				req := &api.DeleveragingSubaccountsRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId:                 0,
@@ -416,8 +416,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						},
 					},
 				}
-				response3 := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+				response3 := &api.DeleveragingSubaccountsResponse{}
+				mck.On("DeleverageSubaccounts", ctx, req).Return(response3, nil)
 			},
 		},
 		"Can get negative tnc subaccount with long position": {
@@ -441,7 +441,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
 				// Sends liquidatable subaccount ids to the server.
-				req := &api.LiquidateSubaccountsRequest{
+				req := &api.DeleveragingSubaccountsRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -452,8 +452,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						},
 					},
 				}
-				response3 := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+				response3 := &api.DeleveragingSubaccountsResponse{}
+				mck.On("DeleverageSubaccounts", ctx, req).Return(response3, nil)
 			},
 		},
 	}
@@ -466,13 +466,13 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 			c := client.NewClient(log.NewNopLogger())
 			c.SubaccountQueryClient = queryClientMock
-			c.LiquidationServiceClient = queryClientMock
+			c.DeleveragingServiceClient = queryClientMock
 			c.BlocktimeQueryClient = queryClientMock
 
-			err := s.RunLiquidationDaemonTaskLoop(
+			err := s.RunDeleveragingDaemonTaskLoop(
 				grpc.Ctx,
 				c,
-				flags.GetDefaultDaemonFlags().Liquidation,
+				flags.GetDefaultDaemonFlags().Deleveraging,
 			)
 			if tc.expectedError != nil {
 				require.EqualError(t, err, tc.expectedError.Error())

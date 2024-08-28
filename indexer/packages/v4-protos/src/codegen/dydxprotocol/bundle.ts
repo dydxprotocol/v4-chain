@@ -21,7 +21,7 @@ import * as _24 from "./clob/order";
 import * as _25 from "./clob/process_proposer_matches_events";
 import * as _26 from "./clob/query";
 import * as _27 from "./clob/tx";
-import * as _28 from "./daemons/liquidation/liquidation";
+import * as _28 from "./daemons/deleveraging/deleveraging";
 import * as _29 from "./daemons/pricefeed/price_feed";
 import * as _30 from "./delaymsg/block_message_ids";
 import * as _31 from "./delaymsg/delayed_message";
@@ -146,7 +146,7 @@ export namespace dydxprotocol {
     ..._113
   };
   export namespace daemons {
-    export const liquidation = { ..._28
+    export const deleveraging = { ..._28
     };
     export const pricefeed = { ..._29
     };

@@ -3,8 +3,8 @@ package server_test
 import (
 	"testing"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
-	liquidationtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/liquidations"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api"
+	deleveragingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/deleveraging"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/grpc"
@@ -13,36 +13,36 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestLiquidateSubaccounts_Empty_Update_Subaccount_Open_Positions(t *testing.T) {
+func TestDeleveragingSubaccounts_Empty_Update_Subaccount_Open_Positions(t *testing.T) {
 	mockGrpcServer := &mocks.GrpcServer{}
 	mockFileHandler := &mocks.FileHandler{}
-	daemonLiquidationInfo := liquidationtypes.NewDaemonLiquidationInfo()
+	daemonDeleveragingInfo := deleveragingtypes.NewDaemonDeleveragingInfo()
 
 	s := createServerWithMocks(
 		t,
 		mockGrpcServer,
 		mockFileHandler,
-	).WithDaemonLiquidationInfo(
-		daemonLiquidationInfo,
+	).WithDaemonDeleveragingInfo(
+		daemonDeleveragingInfo,
 	)
-	_, err := s.LiquidateSubaccounts(grpc.Ctx, &api.LiquidateSubaccountsRequest{
+	_, err := s.DeleverageSubaccounts(grpc.Ctx, &api.DeleveragingSubaccountsRequest{
 		SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 	})
 	require.NoError(t, err)
-	require.Empty(t, daemonLiquidationInfo.GetSubaccountsWithOpenPositions(0))
+	require.Empty(t, daemonDeleveragingInfo.GetSubaccountsWithOpenPositions(0))
 }
 
-func TestLiquidateSubaccounts_Multiple_Subaccount_Open_Positions(t *testing.T) {
+func TestDeleverageSubaccounts_Multiple_Subaccount_Open_Positions(t *testing.T) {
 	mockGrpcServer := &mocks.GrpcServer{}
 	mockFileHandler := &mocks.FileHandler{}
-	daemonLiquidationInfo := liquidationtypes.NewDaemonLiquidationInfo()
+	daemonDeleveragingInfo := deleveragingtypes.NewDaemonDeleveragingInfo()
 
 	s := createServerWithMocks(
 		t,
 		mockGrpcServer,
 		mockFileHandler,
-	).WithDaemonLiquidationInfo(
-		daemonLiquidationInfo,
+	).WithDaemonDeleveragingInfo(
+		daemonDeleveragingInfo,
 	)
 
 	subaccountOpenPositions := []clobtypes.SubaccountOpenPositionInfo{
@@ -76,14 +76,14 @@ func TestLiquidateSubaccounts_Multiple_Subaccount_Open_Positions(t *testing.T) {
 		constants.Bob_Num0,
 	}
 
-	_, err := s.LiquidateSubaccounts(grpc.Ctx, &api.LiquidateSubaccountsRequest{
+	_, err := s.DeleverageSubaccounts(grpc.Ctx, &api.DeleveragingSubaccountsRequest{
 		SubaccountOpenPositionInfo: subaccountOpenPositions,
 	})
 	require.NoError(t, err)
 
-	actualSubaccountIdsPerp1 := daemonLiquidationInfo.GetSubaccountsWithOpenPositions(0)
+	actualSubaccountIdsPerp1 := daemonDeleveragingInfo.GetSubaccountsWithOpenPositions(1)
 	require.Equal(t, expectedSubaccountIdsPerp1, actualSubaccountIdsPerp1)
 
-	actualSubaccountIdsPerp1Long := daemonLiquidationInfo.GetSubaccountsWithOpenPositionsOnSide(0, true)
+	actualSubaccountIdsPerp1Long := daemonDeleveragingInfo.GetSubaccountsWithOpenPositionsOnSide(1, true)
 	require.Equal(t, expectedSubaccountIdsPerp1Long, actualSubaccountIdsPerp1Long)
 }

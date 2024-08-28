@@ -3,40 +3,39 @@ package server
 import (
 	"context"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types"
-	liquidationtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/liquidations"
+	deleveragingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/deleveraging"
 )
 
-// LiquidationServer defines the fields required for liquidation updates.
-type LiquidationServer struct {
-	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo
+// DeleveragingServer defines the fields required for deleveraging updates.
+type DeleveragingServer struct {
+	daemonDeleveragingInfo *deleveragingtypes.DaemonDeleveragingInfo
 }
 
-// WithDaemonLiquidationInfo sets the `daemonLiquidationInfo` field.
-// This is updated by the liquidation service with a list of potentially liquidatable
-// subaccount ids to be processed by the `PerpetualLiquidationsKeeper`.
-func (server *Server) WithDaemonLiquidationInfo(
-	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
+// WithDaemonDeleveragingInfo sets the `daemonDeleveragingInfo` field.
+// This is updated by the deleveraging service with a list of subaccounts with open positions for each perp.
+func (server *Server) WithDaemonDeleveragingInfo(
+	daemonDeleveragingInfo *deleveragingtypes.DaemonDeleveragingInfo,
 ) *Server {
-	server.daemonLiquidationInfo = daemonLiquidationInfo
+	server.daemonDeleveragingInfo = daemonDeleveragingInfo
 	return server
 }
 
-// LiquidateSubaccounts stores the list of potentially liquidatable subaccount ids
+// DeleverageSubaccounts stores the list of subaccount ids
 // in a go-routine safe slice.
-func (s *Server) LiquidateSubaccounts(
+func (s *Server) DeleverageSubaccounts(
 	ctx context.Context,
-	req *api.LiquidateSubaccountsRequest,
+	req *api.DeleveragingSubaccountsRequest,
 ) (
-	response *api.LiquidateSubaccountsResponse,
+	response *api.DeleveragingSubaccountsResponse,
 	err error,
 ) {
 
-	s.daemonLiquidationInfo.UpdateSubaccountsWithPositions(req.SubaccountOpenPositionInfo)
+	s.daemonDeleveragingInfo.UpdateSubaccountsWithPositions(req.SubaccountOpenPositionInfo)
 
 	// Capture valid responses in metrics.
-	s.reportValidResponse(types.LiquidationsDaemonServiceName)
+	s.reportValidResponse(types.DeleveragingDaemonServiceName)
 
-	return &api.LiquidateSubaccountsResponse{}, nil
+	return &api.DeleveragingSubaccountsResponse{}, nil
 }

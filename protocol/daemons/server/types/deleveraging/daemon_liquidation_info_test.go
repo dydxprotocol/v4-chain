@@ -3,20 +3,20 @@ package types_test
 import (
 	"testing"
 
-	liquidationstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/liquidations"
+	deleveragingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/deleveraging"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewDaemonLiquidationInfo(t *testing.T) {
-	ls := liquidationstypes.NewDaemonLiquidationInfo()
+func TestNewDaemonDeleveragingInfo(t *testing.T) {
+	ls := deleveragingtypes.NewDaemonDeleveragingInfo()
 	require.Empty(t, ls.GetSubaccountsWithOpenPositions(0))
 }
 
 func TestSubaccountsWithOpenPositions_Multiple_Reads(t *testing.T) {
-	ls := liquidationstypes.NewDaemonLiquidationInfo()
+	ls := deleveragingtypes.NewDaemonDeleveragingInfo()
 
 	info := clobtypes.SubaccountOpenPositionInfo{
 		PerpetualId: 0,
@@ -41,7 +41,7 @@ func TestSubaccountsWithOpenPositions_Multiple_Reads(t *testing.T) {
 }
 
 func TestSubaccountsWithOpenPositions_Multiple_Writes(t *testing.T) {
-	ls := liquidationstypes.NewDaemonLiquidationInfo()
+	ls := deleveragingtypes.NewDaemonDeleveragingInfo()
 	require.Empty(t, ls.GetSubaccountsWithOpenPositions(0))
 
 	info := clobtypes.SubaccountOpenPositionInfo{
@@ -100,7 +100,7 @@ func TestSubaccountsWithOpenPositions_Multiple_Writes(t *testing.T) {
 }
 
 func TestSubaccountsWithOpenPosition_Empty_Update(t *testing.T) {
-	ls := liquidationstypes.NewDaemonLiquidationInfo()
+	ls := deleveragingtypes.NewDaemonDeleveragingInfo()
 	require.Empty(t, ls.GetSubaccountsWithOpenPositions(0))
 
 	info := clobtypes.SubaccountOpenPositionInfo{

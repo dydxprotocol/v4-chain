@@ -10,11 +10,11 @@ const (
 	DaemonStartupGracePeriod = 60 * time.Second
 
 	// MaximumLoopDelayMultiple defines the maximum acceptable update delay for a daemon as a multiple of the
-	// daemon's loop delay. This is set to 8 to have generous headroom to ignore errors from the liquidations daemon,
+	// daemon's loop delay. This is set to 8 to have generous headroom to ignore errors from the deleveraging daemon,
 	// which we have sometimes seen to take up to ~10s to respond.
 	MaximumLoopDelayMultiple = 8
 
-	LiquidationsDaemonServiceName = "liquidations-daemon"
+	DeleveragingDaemonServiceName = "deleveraging-daemon"
 	PricefeedDaemonServiceName    = "pricefeed-daemon"
 	MetricsDaemonServiceName      = "metrics-daemon"
 )

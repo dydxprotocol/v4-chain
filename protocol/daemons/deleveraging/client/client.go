@@ -9,20 +9,19 @@ import (
 
 	"cosmossdk.io/log"
 	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
 	daemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/types"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
-// Client implements a daemon service client that periodically calculates and reports liquidatable subaccounts
-// to the protocol.
+// Client implements a daemon service client that periodically gets a list of all subaccounts with open positions on perpetuals
 type Client struct {
 	// Query clients
-	BlocktimeQueryClient     blocktimetypes.QueryClient
-	SubaccountQueryClient    satypes.QueryClient
-	LiquidationServiceClient api.LiquidationServiceClient
+	BlocktimeQueryClient      blocktimetypes.QueryClient
+	SubaccountQueryClient     satypes.QueryClient
+	DeleveragingServiceClient api.DeleveragingServiceClient
 
 	// include HealthCheckable to track the health of the daemon.
 	daemontypes.HealthCheckable
@@ -36,7 +35,7 @@ var _ daemontypes.HealthCheckable = (*Client)(nil)
 func NewClient(logger log.Logger) *Client {
 	return &Client{
 		HealthCheckable: daemontypes.NewTimeBoundedHealthCheckable(
-			types.LiquidationsDaemonServiceName,
+			types.DeleveragingDaemonServiceName,
 			&timelib.TimeProviderImpl{},
 			logger,
 		),
@@ -46,8 +45,7 @@ func NewClient(logger log.Logger) *Client {
 
 // Start begins a job that periodically:
 // 1) Queries a gRPC server for all subaccounts including their open positions.
-// 2) Checks collateralization statuses of subaccounts with at least one open position.
-// 3) Sends a list of subaccount ids that potentially need to be liquidated to the application.
+// 2) Sends a list of subaccount ids with open positions for each perpetual.
 func (c *Client) Start(
 	ctx context.Context,
 	flags flags.DaemonFlags,
@@ -56,8 +54,8 @@ func (c *Client) Start(
 ) error {
 	// Log the daemon flags.
 	c.logger.Info(
-		"Starting liquidations daemon with flags",
-		"LiquidationFlags", flags.Liquidation,
+		"Starting deleveraging daemon with flags",
+		"DeleveragingFlags", flags.Deleveraging,
 	)
 
 	// Make a connection to the Cosmos gRPC query services.
@@ -87,13 +85,13 @@ func (c *Client) Start(
 	// Initialize the query clients. These are used to query the Cosmos gRPC query services.
 	c.BlocktimeQueryClient = blocktimetypes.NewQueryClient(queryConn)
 	c.SubaccountQueryClient = satypes.NewQueryClient(queryConn)
-	c.LiquidationServiceClient = api.NewLiquidationServiceClient(daemonConn)
+	c.DeleveragingServiceClient = api.NewDeleveragingServiceClient(daemonConn)
 
-	ticker := time.NewTicker(time.Duration(flags.Liquidation.LoopDelayMs) * time.Millisecond)
+	ticker := time.NewTicker(time.Duration(flags.Deleveraging.LoopDelayMs) * time.Millisecond)
 	stop := make(chan bool)
 
 	s := &SubTaskRunnerImpl{}
-	StartLiquidationsDaemonTaskLoop(
+	StartDeleveragingDaemonTaskLoop(
 		c,
 		ctx,
 		s,
@@ -105,8 +103,8 @@ func (c *Client) Start(
 	return nil
 }
 
-// StartLiquidationsDaemonTaskLoop contains the logic to periodically run the liquidations daemon task.
-func StartLiquidationsDaemonTaskLoop(
+// StartDeleveragingDaemonTaskLoop contains the logic to periodically run the deleveraging daemon task.
+func StartDeleveragingDaemonTaskLoop(
 	client *Client,
 	ctx context.Context,
 	s SubTaskRunner,
@@ -117,13 +115,13 @@ func StartLiquidationsDaemonTaskLoop(
 	for {
 		select {
 		case <-ticker.C:
-			if err := s.RunLiquidationDaemonTaskLoop(
+			if err := s.RunDeleveragingDaemonTaskLoop(
 				ctx,
 				client,
-				flags.Liquidation,
+				flags.Deleveraging,
 			); err != nil {
 				// TODO(DEC-947): Move daemon shutdown to application.
-				client.logger.Error("Liquidations daemon returned error", "error", err)
+				client.logger.Error("Deleveraging daemon returned error", "error", err)
 				client.ReportFailure(err)
 			} else {
 				client.ReportSuccess()

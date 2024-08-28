@@ -9,8 +9,8 @@ import (
 	"cosmossdk.io/log"
 	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
 	d_constants "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
 	daemontestutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons"
@@ -24,10 +24,10 @@ func TestStart_TcpConnectionFails(t *testing.T) {
 	mockGrpcClient := &mocks.GrpcClient{}
 	mockGrpcClient.On("NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint).Return(nil, errors.New(errorMsg))
 
-	liquidationsClient := client.NewClient(log.NewNopLogger())
+	deleveragingClient := client.NewClient(log.NewNopLogger())
 	require.EqualError(
 		t,
-		liquidationsClient.Start(
+		deleveragingClient.Start(
 			grpc.Ctx,
 			flags.GetDefaultDaemonFlags(),
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
@@ -48,10 +48,10 @@ func TestStart_UnixSocketConnectionFails(t *testing.T) {
 	mockGrpcClient.On("NewGrpcConnection", grpc.Ctx, grpc.SocketPath).Return(nil, errors.New(errorMsg))
 	mockGrpcClient.On("CloseConnection", grpc.GrpcConn).Return(nil)
 
-	liquidationsClient := client.NewClient(log.NewNopLogger())
+	deleveragingClient := client.NewClient(log.NewNopLogger())
 	require.EqualError(
 		t,
-		liquidationsClient.Start(
+		deleveragingClient.Start(
 			grpc.Ctx,
 			flags.GetDefaultDaemonFlags(),
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
@@ -76,12 +76,12 @@ func NewFakeSubTaskRunnerWithError(err error) *FakeSubTaskRunner {
 	}
 }
 
-// RunLiquidationDaemonTaskLoop is a mock implementation of the SubTaskRunner interface. It records the
+// RunDeleveragingDaemonTaskLoop is a mock implementation of the SubTaskRunner interface. It records the
 // call as a sanity check, and returns the error set by NewFakeSubTaskRunnerWithError.
-func (f *FakeSubTaskRunner) RunLiquidationDaemonTaskLoop(
+func (f *FakeSubTaskRunner) RunDeleveragingDaemonTaskLoop(
 	_ context.Context,
 	_ *client.Client,
-	_ flags.LiquidationFlags,
+	_ flags.DeleveragingFlags,
 ) error {
 	f.called = true
 	return f.err
@@ -131,11 +131,11 @@ func TestHealthCheck_Mixed(t *testing.T) {
 				ticker, stop := daemontestutils.SingleTickTickerAndStop()
 
 				c.SubaccountQueryClient = &mocks.QueryClient{}
-				c.LiquidationServiceClient = &mocks.QueryClient{}
+				c.DeleveragingServiceClient = &mocks.QueryClient{}
 
 				// Start the daemon task loop. Since we created a single-tick ticker, this will run for one iteration and
 				// return.
-				client.StartLiquidationsDaemonTaskLoop(
+				client.StartDeleveragingDaemonTaskLoop(
 					c,
 					grpc.Ctx,
 					NewFakeSubTaskRunnerWithError(taskLoopError),

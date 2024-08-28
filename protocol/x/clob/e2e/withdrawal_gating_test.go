@@ -7,7 +7,7 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 
 	"github.com/cometbft/cometbft/types"

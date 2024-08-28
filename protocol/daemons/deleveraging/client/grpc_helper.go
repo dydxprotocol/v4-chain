@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
@@ -27,7 +27,7 @@ func (c *Client) GetPreviousBlockInfo(
 	err error,
 ) {
 	defer metrics.ModuleMeasureSince(
-		metrics.LiquidationDaemon,
+		metrics.DeleveragingDaemon,
 		metrics.DaemonGetPreviousBlockInfoLatency,
 		time.Now(),
 	)
@@ -50,7 +50,7 @@ func (c *Client) GetAllSubaccounts(
 	subaccounts []satypes.Subaccount,
 	err error,
 ) {
-	defer telemetry.ModuleMeasureSince(metrics.LiquidationDaemon, time.Now(), metrics.GetAllSubaccounts, metrics.Latency)
+	defer telemetry.ModuleMeasureSince(metrics.DeleveragingDaemon, time.Now(), metrics.GetAllSubaccounts, metrics.Latency)
 	subaccounts = make([]satypes.Subaccount, 0)
 
 	var nextKey []byte
@@ -75,7 +75,7 @@ func (c *Client) GetAllSubaccounts(
 	}
 
 	telemetry.ModuleSetGauge(
-		metrics.LiquidationDaemon,
+		metrics.DeleveragingDaemon,
 		float32(len(subaccounts)),
 		metrics.GetAllSubaccounts,
 		metrics.Count,
@@ -84,16 +84,15 @@ func (c *Client) GetAllSubaccounts(
 	return subaccounts, nil
 }
 
-// SendLiquidatableSubaccountIds sends a list of unique and potentially liquidatable
-// subaccount ids to a gRPC server via `LiquidateSubaccounts`.
-func (c *Client) SendLiquidatableSubaccountIds(
+// SendDeleveragingSubaccountIds sends a list of subaccounts with open positions for each perp to a gRPC server via `DeleverageSubaccounts`.
+func (c *Client) SendDeleveragingSubaccountIds(
 	ctx context.Context,
 	openPositionInfoMap map[uint32]*clobtypes.SubaccountOpenPositionInfo,
 ) error {
 	defer telemetry.ModuleMeasureSince(
-		metrics.LiquidationDaemon,
+		metrics.DeleveragingDaemon,
 		time.Now(),
-		metrics.SendLiquidatableSubaccountIds,
+		metrics.SendDeleveragingSubaccountIds,
 		metrics.Latency,
 	)
 
@@ -106,11 +105,11 @@ func (c *Client) SendLiquidatableSubaccountIds(
 		subaccountOpenPositionInfo = append(subaccountOpenPositionInfo, *openPositionInfoMap[perpetualId])
 	}
 
-	request := &api.LiquidateSubaccountsRequest{
+	request := &api.DeleveragingSubaccountsRequest{
 		SubaccountOpenPositionInfo: subaccountOpenPositionInfo,
 	}
 
-	if _, err := c.LiquidationServiceClient.LiquidateSubaccounts(ctx, request); err != nil {
+	if _, err := c.DeleveragingServiceClient.DeleverageSubaccounts(ctx, request); err != nil {
 		return err
 	}
 	return nil
@@ -140,7 +139,7 @@ func getSubaccountsFromKey(
 	err error,
 ) {
 	defer metrics.ModuleMeasureSinceWithLabels(
-		metrics.LiquidationDaemon,
+		metrics.DeleveragingDaemon,
 		[]string{metrics.GetSubaccountsFromKey, metrics.Latency},
 		time.Now(),
 		[]gometrics.Label{

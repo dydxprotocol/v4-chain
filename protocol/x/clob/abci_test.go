@@ -10,7 +10,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/shared/types"
