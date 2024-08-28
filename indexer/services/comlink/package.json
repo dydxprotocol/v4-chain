@@ -32,6 +32,7 @@
     "@dydxprotocol-indexer/redis": "workspace:^0.0.1",
     "@dydxprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",
     "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
+    "@keplr-wallet/cosmos": "^0.12.122",
     "@tsoa/runtime": "^5.0.0",
     "big.js": "^6.2.1",
     "body-parser": "^1.20.0",
