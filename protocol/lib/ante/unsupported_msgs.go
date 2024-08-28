@@ -22,6 +22,7 @@ func IsUnsupportedMsg(msg sdk.Msg) bool {
 		*gov.MsgCancelProposal,
 		// ------- dYdX custom modules
 		// vault
+		// nolint:staticcheck
 		*vaulttypes.MsgUpdateParams:
 		return true
 	}

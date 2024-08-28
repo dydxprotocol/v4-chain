@@ -32,6 +32,7 @@ var (
 
 		// vault
 		// MsgUpdateParams is deprecated since v6.x and replaced by MsgUpdateDefaultQuotingParams.
+		// nolint:staticcheck
 		"/dydxprotocol.vault.MsgUpdateParams": &vaulttypes.MsgUpdateParams{},
 	}
 )

@@ -72,6 +72,7 @@ func TestIsDydxMsg_Invalid(t *testing.T) {
 		appmsgs.NormalMsgsDydxCustom,
 		appmsgs.InternalMsgSamplesDydxCustom,
 		map[string]sdk.Msg{
+			// nolint:staticcheck
 			"/dydxprotocol.vault.MsgUpdateParams": &vaulttypes.MsgUpdateParams{},
 		},
 	)
