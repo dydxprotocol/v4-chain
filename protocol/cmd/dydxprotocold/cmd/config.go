@@ -95,6 +95,9 @@ func initTendermintConfig() *tmcfg.Config {
 	cfg.RPC.MaxOpenConnections = 8000
 	cfg.RPC.GRPCMaxOpenConnections = 8000
 
+	// TODO(cosmwasm feature branch): Set the maximum body bytes to 6MB.
+	cfg.RPC.MaxBodyBytes = 6_000_000
+
 	// Mempool config.
 	// We specifically are using a number greater than max QPS (currently set at 5000) * ShortBlockWindow to prevent
 	// a replay attack that is possible with short-term order placements and cancellations. The attack would consume
