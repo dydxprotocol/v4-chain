@@ -171,11 +171,10 @@ describe('tradingRewardHandler', () => {
     const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
       testConstants.defaultWallet.address,
     );
+
     expect(wallet).toEqual({
-      address: testConstants.defaultWallet.address,
+      ...testConstants.defaultWallet,
       totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(1_000_000_000),
-      totalVolume: '0',
-      isWhitelistAffiliate: false,
     });
   });
 
@@ -197,10 +196,8 @@ describe('tradingRewardHandler', () => {
     });
 
     await WalletTable.update({
-      address: testConstants.defaultWallet.address,
+      ...testConstants.defaultWallet,
       totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(1_000_000_000),
-      totalVolume: '0',
-      isWhitelistAffiliate: false,
     });
 
     await onMessage(kafkaMessage);
@@ -208,10 +205,8 @@ describe('tradingRewardHandler', () => {
       testConstants.defaultWallet.address,
     );
     expect(wallet).toEqual({
-      address: testConstants.defaultWallet.address,
+      ...testConstants.defaultWallet,
       totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(2_000_000_000),
-      totalVolume: '0',
-      isWhitelistAffiliate: false,
     });
   });
 });
