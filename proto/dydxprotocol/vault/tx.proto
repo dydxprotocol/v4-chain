@@ -22,6 +22,8 @@ service Msg {
   // SetVaultQuotingParams sets the quoting parameters of a specific vault.
   rpc SetVaultQuotingParams(MsgSetVaultQuotingParams)
       returns (MsgSetVaultQuotingParamsResponse);
+
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
 // MsgDepositToVault deposits the specified asset from the subaccount to the
@@ -87,3 +89,5 @@ message MsgUpdateParams {
 
   Params params = 2 [ (gogoproto.nullable) = false ];
 }
+
+message MsgUpdateParamsResponse {}
