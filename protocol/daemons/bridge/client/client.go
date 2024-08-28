@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"cosmossdk.io/log"
@@ -51,9 +50,9 @@ func (c *Client) Start(
 		"BridgeFlags", flags.Bridge,
 	)
 
-	// Panic if EthRpcEndpoint is empty.
 	if flags.Bridge.EthRpcEndpoint == "" {
-		return fmt.Errorf("flag %s is not set", daemonflags.FlagBridgeDaemonEthRpcEndpoint)
+		// `in-place-testnet` command cannot be run with this flag, so we need add a default here.
+		flags.Bridge.EthRpcEndpoint = "https://eth-sepolia.g.alchemy.com/v2/demo"
 	}
 
 	// Make a connection to the Cosmos gRPC query services.
