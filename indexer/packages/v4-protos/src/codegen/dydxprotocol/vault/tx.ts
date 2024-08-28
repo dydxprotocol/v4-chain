@@ -112,6 +112,8 @@ export interface MsgSetVaultQuotingParamsResponseSDKType {}
  * Deprecated since v6.x as is replaced by MsgUpdateDefaultQuotingParams.
  */
 
+/** @deprecated */
+
 export interface MsgUpdateParams {
   authority: string;
   /** The parameters to update. Each field must be set. */
@@ -122,6 +124,8 @@ export interface MsgUpdateParams {
  * MsgUpdateParams is the Msg/UpdateParams request type.
  * Deprecated since v6.x as is replaced by MsgUpdateDefaultQuotingParams.
  */
+
+/** @deprecated */
 
 export interface MsgUpdateParamsSDKType {
   authority: string;
