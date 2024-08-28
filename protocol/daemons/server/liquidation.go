@@ -6,8 +6,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types"
 	liquidationtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/liquidations"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 // LiquidationServer defines the fields required for liquidation updates.
@@ -34,17 +32,7 @@ func (s *Server) LiquidateSubaccounts(
 	response *api.LiquidateSubaccountsResponse,
 	err error,
 ) {
-	telemetry.ModuleSetGauge(
-		metrics.LiquidationDaemon,
-		float32(len(req.LiquidatableSubaccountIds)),
-		metrics.LiquidatableSubaccountIds,
-		metrics.Received,
-		metrics.Count,
-	)
 
-	s.daemonLiquidationInfo.UpdateBlockHeight(req.BlockHeight)
-	s.daemonLiquidationInfo.UpdateLiquidatableSubaccountIds(req.LiquidatableSubaccountIds)
-	s.daemonLiquidationInfo.UpdateNegativeTncSubaccountIds(req.NegativeTncSubaccountIds)
 	s.daemonLiquidationInfo.UpdateSubaccountsWithPositions(req.SubaccountOpenPositionInfo)
 
 	// Capture valid responses in metrics.

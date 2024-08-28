@@ -8,11 +8,12 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/grpc"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 
-func TestLiquidateSubaccounts_Empty_Update_Liquidatable_SubaccountIds(t *testing.T) {
+func TestLiquidateSubaccounts_Empty_Update_Subaccount_Open_Positions(t *testing.T) {
 	mockGrpcServer := &mocks.GrpcServer{}
 	mockFileHandler := &mocks.FileHandler{}
 	daemonLiquidationInfo := liquidationtypes.NewDaemonLiquidationInfo()
@@ -25,13 +26,13 @@ func TestLiquidateSubaccounts_Empty_Update_Liquidatable_SubaccountIds(t *testing
 		daemonLiquidationInfo,
 	)
 	_, err := s.LiquidateSubaccounts(grpc.Ctx, &api.LiquidateSubaccountsRequest{
-		LiquidatableSubaccountIds: []satypes.SubaccountId{},
+		SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 	})
 	require.NoError(t, err)
-	require.Empty(t, daemonLiquidationInfo.GetLiquidatableSubaccountIds())
+	require.Empty(t, daemonLiquidationInfo.GetSubaccountsWithOpenPositions(0))
 }
 
-func TestLiquidateSubaccounts_Multiple_Liquidatable_Subaccount_Ids(t *testing.T) {
+func TestLiquidateSubaccounts_Multiple_Subaccount_Open_Positions(t *testing.T) {
 	mockGrpcServer := &mocks.GrpcServer{}
 	mockFileHandler := &mocks.FileHandler{}
 	daemonLiquidationInfo := liquidationtypes.NewDaemonLiquidationInfo()
@@ -44,82 +45,45 @@ func TestLiquidateSubaccounts_Multiple_Liquidatable_Subaccount_Ids(t *testing.T)
 		daemonLiquidationInfo,
 	)
 
-	expectedSubaccountIds := []satypes.SubaccountId{
+	subaccountOpenPositions := []clobtypes.SubaccountOpenPositionInfo{
+		{
+			PerpetualId: 0,
+			SubaccountsWithLongPosition: []satypes.SubaccountId{
+				constants.Alice_Num0,
+			},
+			SubaccountsWithShortPosition: []satypes.SubaccountId{}, // No short positions for perp 0
+		},
+		{
+			PerpetualId: 1,
+			SubaccountsWithLongPosition: []satypes.SubaccountId{
+				constants.Alice_Num1,
+				constants.Bob_Num0,
+			},
+			SubaccountsWithShortPosition: []satypes.SubaccountId{
+				constants.Carl_Num0,
+			},
+		},
+	}
+
+	expectedSubaccountIdsPerp1 := []satypes.SubaccountId{
 		constants.Alice_Num1,
 		constants.Bob_Num0,
 		constants.Carl_Num0,
 	}
-	_, err := s.LiquidateSubaccounts(grpc.Ctx, &api.LiquidateSubaccountsRequest{
-		LiquidatableSubaccountIds: expectedSubaccountIds,
-	})
-	require.NoError(t, err)
 
-	actualSubaccountIds := daemonLiquidationInfo.GetLiquidatableSubaccountIds()
-	require.Equal(t, expectedSubaccountIds, actualSubaccountIds)
-}
-
-func TestLiquidateSubaccounts_GetSetBlockHeight(t *testing.T) {
-	mockGrpcServer := &mocks.GrpcServer{}
-	mockFileHandler := &mocks.FileHandler{}
-	daemonLiquidationInfo := liquidationtypes.NewDaemonLiquidationInfo()
-
-	s := createServerWithMocks(
-		t,
-		mockGrpcServer,
-		mockFileHandler,
-	).WithDaemonLiquidationInfo(
-		daemonLiquidationInfo,
-	)
-	_, err := s.LiquidateSubaccounts(grpc.Ctx, &api.LiquidateSubaccountsRequest{
-		BlockHeight:               uint32(123),
-		LiquidatableSubaccountIds: []satypes.SubaccountId{},
-	})
-	require.NoError(t, err)
-	require.Equal(t, uint32(123), daemonLiquidationInfo.GetBlockHeight())
-}
-
-func TestLiquidateSubaccounts_Empty_Update_Negative_TNC_SubaccountIds(t *testing.T) {
-	mockGrpcServer := &mocks.GrpcServer{}
-	mockFileHandler := &mocks.FileHandler{}
-	daemonLiquidationInfo := liquidationtypes.NewDaemonLiquidationInfo()
-
-	s := createServerWithMocks(
-		t,
-		mockGrpcServer,
-		mockFileHandler,
-	).WithDaemonLiquidationInfo(
-		daemonLiquidationInfo,
-	)
-	_, err := s.LiquidateSubaccounts(grpc.Ctx, &api.LiquidateSubaccountsRequest{
-		NegativeTncSubaccountIds: []satypes.SubaccountId{},
-	})
-	require.NoError(t, err)
-	require.Empty(t, daemonLiquidationInfo.GetNegativeTncSubaccountIds())
-}
-
-func TestLiquidateSubaccounts_Multiple_Negative_TNC_Subaccount_Ids(t *testing.T) {
-	mockGrpcServer := &mocks.GrpcServer{}
-	mockFileHandler := &mocks.FileHandler{}
-	daemonLiquidationInfo := liquidationtypes.NewDaemonLiquidationInfo()
-
-	s := createServerWithMocks(
-		t,
-		mockGrpcServer,
-		mockFileHandler,
-	).WithDaemonLiquidationInfo(
-		daemonLiquidationInfo,
-	)
-
-	expectedSubaccountIds := []satypes.SubaccountId{
+	expectedSubaccountIdsPerp1Long := []satypes.SubaccountId{
 		constants.Alice_Num1,
 		constants.Bob_Num0,
-		constants.Carl_Num0,
 	}
+
 	_, err := s.LiquidateSubaccounts(grpc.Ctx, &api.LiquidateSubaccountsRequest{
-		NegativeTncSubaccountIds: expectedSubaccountIds,
+		SubaccountOpenPositionInfo: subaccountOpenPositions,
 	})
 	require.NoError(t, err)
 
-	actualSubaccountIds := daemonLiquidationInfo.GetNegativeTncSubaccountIds()
-	require.Equal(t, expectedSubaccountIds, actualSubaccountIds)
+	actualSubaccountIdsPerp1 := daemonLiquidationInfo.GetSubaccountsWithOpenPositions(0)
+	require.Equal(t, expectedSubaccountIdsPerp1, actualSubaccountIdsPerp1)
+
+	actualSubaccountIdsPerp1Long := daemonLiquidationInfo.GetSubaccountsWithOpenPositionsOnSide(0, true)
+	require.Equal(t, expectedSubaccountIdsPerp1Long, actualSubaccountIdsPerp1Long)
 }

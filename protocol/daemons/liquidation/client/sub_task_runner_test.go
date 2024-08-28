@@ -2,8 +2,9 @@ package client_test
 
 import (
 	"context"
-	"cosmossdk.io/log"
 	"testing"
+
+	"cosmossdk.io/log"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
@@ -14,8 +15,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/grpc"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -49,33 +48,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
-				// Market prices.
-				res3 := &pricestypes.QueryAllMarketPricesResponse{
-					MarketPrices: constants.TestMarketPrices,
-				}
-				mck.On("AllMarketPrices", mock.Anything, mock.Anything).Return(res3, nil)
-
-				// Perpetuals.
-				res4 := &perptypes.QueryAllPerpetualsResponse{
-					Perpetual: []perptypes.Perpetual{
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-					},
-				}
-				mck.On("AllPerpetuals", mock.Anything, mock.Anything).Return(res4, nil)
-
-				// Liquidity tiers.
-				res5 := &perptypes.QueryAllLiquidityTiersResponse{
-					LiquidityTiers: constants.LiquidityTiers,
-				}
-				mck.On("AllLiquidityTiers", mock.Anything, mock.Anything).Return(res5, nil)
-
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight: uint32(50),
-					LiquidatableSubaccountIds: []satypes.SubaccountId{
-						constants.Carl_Num0,
-					},
-					NegativeTncSubaccountIds: []satypes.SubaccountId{},
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId:                 0,
@@ -109,33 +83,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
-				// Market prices.
-				res3 := &pricestypes.QueryAllMarketPricesResponse{
-					MarketPrices: constants.TestMarketPrices,
-				}
-				mck.On("AllMarketPrices", mock.Anything, mock.Anything).Return(res3, nil)
-
-				// Perpetuals.
-				res4 := &perptypes.QueryAllPerpetualsResponse{
-					Perpetual: []perptypes.Perpetual{
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-					},
-				}
-				mck.On("AllPerpetuals", mock.Anything, mock.Anything).Return(res4, nil)
-
-				// Liquidity tiers.
-				res5 := &perptypes.QueryAllLiquidityTiersResponse{
-					LiquidityTiers: constants.LiquidityTiers,
-				}
-				mck.On("AllLiquidityTiers", mock.Anything, mock.Anything).Return(res5, nil)
-
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight: uint32(50),
-					LiquidatableSubaccountIds: []satypes.SubaccountId{
-						constants.Dave_Num0,
-					},
-					NegativeTncSubaccountIds: []satypes.SubaccountId{},
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -170,31 +119,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
-				// Market prices.
-				res3 := &pricestypes.QueryAllMarketPricesResponse{
-					MarketPrices: constants.TestMarketPrices,
-				}
-				mck.On("AllMarketPrices", mock.Anything, mock.Anything).Return(res3, nil)
-
-				// Perpetuals.
-				res4 := &perptypes.QueryAllPerpetualsResponse{
-					Perpetual: []perptypes.Perpetual{
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-					},
-				}
-				mck.On("AllPerpetuals", mock.Anything, mock.Anything).Return(res4, nil)
-
-				// Liquidity tiers.
-				res5 := &perptypes.QueryAllLiquidityTiersResponse{
-					LiquidityTiers: constants.LiquidityTiers,
-				}
-				mck.On("AllLiquidityTiers", mock.Anything, mock.Anything).Return(res5, nil)
-
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight:               uint32(50),
-					LiquidatableSubaccountIds: []satypes.SubaccountId{},
-					NegativeTncSubaccountIds:  []satypes.SubaccountId{},
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -230,31 +156,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
-				// Market prices.
-				res3 := &pricestypes.QueryAllMarketPricesResponse{
-					MarketPrices: constants.TestMarketPrices,
-				}
-				mck.On("AllMarketPrices", mock.Anything, mock.Anything).Return(res3, nil)
-
-				// Perpetuals.
-				res4 := &perptypes.QueryAllPerpetualsResponse{
-					Perpetual: []perptypes.Perpetual{
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-					},
-				}
-				mck.On("AllPerpetuals", mock.Anything, mock.Anything).Return(res4, nil)
-
-				// Liquidity tiers.
-				res5 := &perptypes.QueryAllLiquidityTiersResponse{
-					LiquidityTiers: constants.LiquidityTiers,
-				}
-				mck.On("AllLiquidityTiers", mock.Anything, mock.Anything).Return(res5, nil)
-
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight:                uint32(50),
-					LiquidatableSubaccountIds:  []satypes.SubaccountId{},
-					NegativeTncSubaccountIds:   []satypes.SubaccountId{},
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
@@ -300,33 +203,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
-				// Market prices.
-				res3 := &pricestypes.QueryAllMarketPricesResponse{
-					MarketPrices: constants.TestMarketPrices,
-				}
-				mck.On("AllMarketPrices", mock.Anything, mock.Anything).Return(res3, nil)
-
-				// Perpetuals.
-				res4 := &perptypes.QueryAllPerpetualsResponse{
-					Perpetual: []perptypes.Perpetual{
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-					},
-				}
-				mck.On("AllPerpetuals", mock.Anything, mock.Anything).Return(res4, nil)
-
-				// Liquidity tiers.
-				res5 := &perptypes.QueryAllLiquidityTiersResponse{
-					LiquidityTiers: constants.LiquidityTiers,
-				}
-				mck.On("AllLiquidityTiers", mock.Anything, mock.Anything).Return(res5, nil)
-
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight: uint32(50),
-					LiquidatableSubaccountIds: []satypes.SubaccountId{
-						constants.Carl_Num0,
-					},
-					NegativeTncSubaccountIds: []satypes.SubaccountId{},
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId:                 0,
@@ -380,33 +258,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
-				// Market prices.
-				res3 := &pricestypes.QueryAllMarketPricesResponse{
-					MarketPrices: constants.TestMarketPrices,
-				}
-				mck.On("AllMarketPrices", mock.Anything, mock.Anything).Return(res3, nil)
-
-				// Perpetuals.
-				res4 := &perptypes.QueryAllPerpetualsResponse{
-					Perpetual: []perptypes.Perpetual{
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-					},
-				}
-				mck.On("AllPerpetuals", mock.Anything, mock.Anything).Return(res4, nil)
-
-				// Liquidity tiers.
-				res5 := &perptypes.QueryAllLiquidityTiersResponse{
-					LiquidityTiers: constants.LiquidityTiers,
-				}
-				mck.On("AllLiquidityTiers", mock.Anything, mock.Anything).Return(res5, nil)
-
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight: uint32(50),
-					LiquidatableSubaccountIds: []satypes.SubaccountId{
-						constants.Dave_Num0,
-					},
-					NegativeTncSubaccountIds: []satypes.SubaccountId{},
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -460,31 +313,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
-				// Market prices.
-				res3 := &pricestypes.QueryAllMarketPricesResponse{
-					MarketPrices: constants.TestMarketPrices,
-				}
-				mck.On("AllMarketPrices", mock.Anything, mock.Anything).Return(res3, nil)
-
-				// Perpetuals.
-				res4 := &perptypes.QueryAllPerpetualsResponse{
-					Perpetual: []perptypes.Perpetual{
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-					},
-				}
-				mck.On("AllPerpetuals", mock.Anything, mock.Anything).Return(res4, nil)
-
-				// Liquidity tiers.
-				res5 := &perptypes.QueryAllLiquidityTiersResponse{
-					LiquidityTiers: constants.LiquidityTiers,
-				}
-				mck.On("AllLiquidityTiers", mock.Anything, mock.Anything).Return(res5, nil)
-
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight:               uint32(50),
-					LiquidatableSubaccountIds: []satypes.SubaccountId{},
-					NegativeTncSubaccountIds:  []satypes.SubaccountId{},
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId:                 0,
@@ -538,31 +368,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
-				// Market prices.
-				res3 := &pricestypes.QueryAllMarketPricesResponse{
-					MarketPrices: constants.TestMarketPrices,
-				}
-				mck.On("AllMarketPrices", mock.Anything, mock.Anything).Return(res3, nil)
-
-				// Perpetuals.
-				res4 := &perptypes.QueryAllPerpetualsResponse{
-					Perpetual: []perptypes.Perpetual{
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-					},
-				}
-				mck.On("AllPerpetuals", mock.Anything, mock.Anything).Return(res4, nil)
-
-				// Liquidity tiers.
-				res5 := &perptypes.QueryAllLiquidityTiersResponse{
-					LiquidityTiers: constants.LiquidityTiers,
-				}
-				mck.On("AllLiquidityTiers", mock.Anything, mock.Anything).Return(res5, nil)
-
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight:               uint32(50),
-					LiquidatableSubaccountIds: []satypes.SubaccountId{},
-					NegativeTncSubaccountIds:  []satypes.SubaccountId{},
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -597,35 +404,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
-				// Market prices.
-				res3 := &pricestypes.QueryAllMarketPricesResponse{
-					MarketPrices: constants.TestMarketPrices,
-				}
-				mck.On("AllMarketPrices", mock.Anything, mock.Anything).Return(res3, nil)
-
-				// Perpetuals.
-				res4 := &perptypes.QueryAllPerpetualsResponse{
-					Perpetual: []perptypes.Perpetual{
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-					},
-				}
-				mck.On("AllPerpetuals", mock.Anything, mock.Anything).Return(res4, nil)
-
-				// Liquidity tiers.
-				res5 := &perptypes.QueryAllLiquidityTiersResponse{
-					LiquidityTiers: constants.LiquidityTiers,
-				}
-				mck.On("AllLiquidityTiers", mock.Anything, mock.Anything).Return(res5, nil)
-
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight: uint32(50),
-					LiquidatableSubaccountIds: []satypes.SubaccountId{
-						constants.Carl_Num0,
-					},
-					NegativeTncSubaccountIds: []satypes.SubaccountId{
-						constants.Carl_Num0,
-					},
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId:                 0,
@@ -660,35 +440,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
-				// Market prices.
-				res3 := &pricestypes.QueryAllMarketPricesResponse{
-					MarketPrices: constants.TestMarketPrices,
-				}
-				mck.On("AllMarketPrices", mock.Anything, mock.Anything).Return(res3, nil)
-
-				// Perpetuals.
-				res4 := &perptypes.QueryAllPerpetualsResponse{
-					Perpetual: []perptypes.Perpetual{
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-					},
-				}
-				mck.On("AllPerpetuals", mock.Anything, mock.Anything).Return(res4, nil)
-
-				// Liquidity tiers.
-				res5 := &perptypes.QueryAllLiquidityTiersResponse{
-					LiquidityTiers: constants.LiquidityTiers,
-				}
-				mck.On("AllLiquidityTiers", mock.Anything, mock.Anything).Return(res5, nil)
-
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight: uint32(50),
-					LiquidatableSubaccountIds: []satypes.SubaccountId{
-						constants.Dave_Num0,
-					},
-					NegativeTncSubaccountIds: []satypes.SubaccountId{
-						constants.Dave_Num0,
-					},
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -713,10 +466,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 			c := client.NewClient(log.NewNopLogger())
 			c.SubaccountQueryClient = queryClientMock
-			c.ClobQueryClient = queryClientMock
 			c.LiquidationServiceClient = queryClientMock
-			c.PerpetualsQueryClient = queryClientMock
-			c.PricesQueryClient = queryClientMock
 			c.BlocktimeQueryClient = queryClientMock
 
 			err := s.RunLiquidationDaemonTaskLoop(

@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"math/rand"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	perpetualsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
@@ -80,14 +79,6 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		perpetualId uint32,
 	) (sdk.AccAddress, error)
-	GetSettledSubaccountWithPerpetuals(
-		subaccount satypes.Subaccount,
-		perpetuals map[uint32]perpetualsmoduletypes.Perpetual,
-	) (
-		settledSubaccount satypes.Subaccount,
-		fundingPayments map[uint32]dtypes.SerializableInt,
-		err error,
-	)
 }
 
 type AssetsKeeper interface {

@@ -10,8 +10,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/types/grpc"
@@ -41,123 +39,6 @@ func (c *Client) GetPreviousBlockInfo(
 	}
 
 	return response.Info.Height, nil
-}
-
-// GetAllPerpetuals queries gRPC server and returns a list of perpetuals.
-func (c *Client) GetAllPerpetuals(
-	ctx context.Context,
-	pageLimit uint64,
-) (
-	perpetuals []perptypes.Perpetual,
-	err error,
-) {
-	defer metrics.ModuleMeasureSince(
-		metrics.LiquidationDaemon,
-		metrics.DaemonGetAllPerpetualsLatency,
-		time.Now(),
-	)
-
-	perpetuals = make([]perptypes.Perpetual, 0)
-
-	var nextKey []byte
-	for {
-		perpetualsFromKey, next, err := getPerpetualsFromKey(
-			ctx,
-			c.PerpetualsQueryClient,
-			nextKey,
-			pageLimit,
-		)
-
-		if err != nil {
-			return nil, err
-		}
-
-		perpetuals = append(perpetuals, perpetualsFromKey...)
-		nextKey = next
-
-		if len(nextKey) == 0 {
-			break
-		}
-	}
-	return perpetuals, nil
-}
-
-// GetAllLiquidityTiers queries gRPC server and returns a list of liquidityTiers.
-func (c *Client) GetAllLiquidityTiers(
-	ctx context.Context,
-	pageLimit uint64,
-) (
-	liquidityTiers []perptypes.LiquidityTier,
-	err error,
-) {
-	defer metrics.ModuleMeasureSince(
-		metrics.LiquidationDaemon,
-		metrics.DaemonGetAllLiquidityTiersLatency,
-		time.Now(),
-	)
-
-	liquidityTiers = make([]perptypes.LiquidityTier, 0)
-
-	var nextKey []byte
-	for {
-		liquidityTiersFromKey, next, err := getLiquidityTiersFromKey(
-			ctx,
-			c.PerpetualsQueryClient,
-			nextKey,
-			pageLimit,
-		)
-
-		if err != nil {
-			return nil, err
-		}
-
-		liquidityTiers = append(liquidityTiers, liquidityTiersFromKey...)
-		nextKey = next
-
-		if len(nextKey) == 0 {
-			break
-		}
-	}
-	return liquidityTiers, nil
-}
-
-// GetAllMarketPrices queries gRPC server and returns a list of market prices.
-func (c *Client) GetAllMarketPrices(
-	ctx context.Context,
-	pageLimit uint64,
-) (
-	marketPrices []pricestypes.MarketPrice,
-	err error,
-) {
-	defer metrics.ModuleMeasureSince(
-		metrics.LiquidationDaemon,
-		metrics.DaemonGetAllMarketPricesLatency,
-		time.Now(),
-	)
-
-	marketPrices = make([]pricestypes.MarketPrice, 0)
-
-	var nextKey []byte
-	for {
-		marketPricesFromKey, next, err := getMarketPricesFromKey(
-			ctx,
-			c.PricesQueryClient,
-			nextKey,
-			pageLimit,
-		)
-
-		if err != nil {
-			return nil, err
-		}
-
-		marketPrices = append(marketPrices, marketPricesFromKey...)
-		nextKey = next
-
-		if len(nextKey) == 0 {
-			break
-		}
-	}
-	return marketPrices, nil
 }
 
 // GetAllSubaccounts queries a gRPC server and returns a list of subaccounts and
@@ -207,9 +88,6 @@ func (c *Client) GetAllSubaccounts(
 // subaccount ids to a gRPC server via `LiquidateSubaccounts`.
 func (c *Client) SendLiquidatableSubaccountIds(
 	ctx context.Context,
-	blockHeight uint32,
-	liquidatableSubaccountIds []satypes.SubaccountId,
-	negativeTncSubaccountIds []satypes.SubaccountId,
 	openPositionInfoMap map[uint32]*clobtypes.SubaccountOpenPositionInfo,
 ) error {
 	defer telemetry.ModuleMeasureSince(
@@ -217,19 +95,6 @@ func (c *Client) SendLiquidatableSubaccountIds(
 		time.Now(),
 		metrics.SendLiquidatableSubaccountIds,
 		metrics.Latency,
-	)
-
-	telemetry.ModuleSetGauge(
-		metrics.LiquidationDaemon,
-		float32(len(liquidatableSubaccountIds)),
-		metrics.LiquidatableSubaccountIds,
-		metrics.Count,
-	)
-	telemetry.ModuleSetGauge(
-		metrics.LiquidationDaemon,
-		float32(len(negativeTncSubaccountIds)),
-		metrics.NegativeTncSubaccountIds,
-		metrics.Count,
 	)
 
 	// Convert the map to a slice.
@@ -242,9 +107,6 @@ func (c *Client) SendLiquidatableSubaccountIds(
 	}
 
 	request := &api.LiquidateSubaccountsRequest{
-		BlockHeight:                blockHeight,
-		LiquidatableSubaccountIds:  liquidatableSubaccountIds,
-		NegativeTncSubaccountIds:   negativeTncSubaccountIds,
 		SubaccountOpenPositionInfo: subaccountOpenPositionInfo,
 	}
 
@@ -301,103 +163,4 @@ func getSubaccountsFromKey(
 		nextKey = response.Pagination.NextKey
 	}
 	return response.Subaccount, nextKey, nil
-}
-
-func getMarketPricesFromKey(
-	ctx context.Context,
-	client pricestypes.QueryClient,
-	pageRequestKey []byte,
-	limit uint64,
-) (
-	marketPrices []pricestypes.MarketPrice,
-	nextKey []byte,
-	err error,
-) {
-	defer metrics.ModuleMeasureSince(
-		metrics.LiquidationDaemon,
-		metrics.DaemonGetMarketPricesPaginatedLatency,
-		time.Now(),
-	)
-
-	query := &pricestypes.QueryAllMarketPricesRequest{
-		Pagination: &query.PageRequest{
-			Key:   pageRequestKey,
-			Limit: limit,
-		},
-	}
-
-	response, err := client.AllMarketPrices(ctx, query)
-	if err != nil {
-		return nil, nil, err
-	}
-	if response.Pagination != nil {
-		nextKey = response.Pagination.NextKey
-	}
-	return response.MarketPrices, nextKey, nil
-}
-
-func getPerpetualsFromKey(
-	ctx context.Context,
-	client perptypes.QueryClient,
-	pageRequestKey []byte,
-	limit uint64,
-) (
-	perpetuals []perptypes.Perpetual,
-	nextKey []byte,
-	err error,
-) {
-	defer metrics.ModuleMeasureSince(
-		metrics.LiquidationDaemon,
-		metrics.DaemonGetPerpetualsPaginatedLatency,
-		time.Now(),
-	)
-
-	query := &perptypes.QueryAllPerpetualsRequest{
-		Pagination: &query.PageRequest{
-			Key:   pageRequestKey,
-			Limit: limit,
-		},
-	}
-
-	response, err := client.AllPerpetuals(ctx, query)
-	if err != nil {
-		return nil, nil, err
-	}
-	if response.Pagination != nil {
-		nextKey = response.Pagination.NextKey
-	}
-	return response.Perpetual, nextKey, nil
-}
-
-func getLiquidityTiersFromKey(
-	ctx context.Context,
-	client perptypes.QueryClient,
-	pageRequestKey []byte,
-	limit uint64,
-) (
-	liquidityTiers []perptypes.LiquidityTier,
-	nextKey []byte,
-	err error,
-) {
-	defer metrics.ModuleMeasureSince(
-		metrics.LiquidationDaemon,
-		metrics.DaemonGetLiquidityTiersPaginatedLatency,
-		time.Now(),
-	)
-
-	query := &perptypes.QueryAllLiquidityTiersRequest{
-		Pagination: &query.PageRequest{
-			Key:   pageRequestKey,
-			Limit: limit,
-		},
-	}
-
-	response, err := client.AllLiquidityTiers(ctx, query)
-	if err != nil {
-		return nil, nil, err
-	}
-	if response.Pagination != nil {
-		nextKey = response.Pagination.NextKey
-	}
-	return response.LiquidityTiers, nextKey, nil
 }

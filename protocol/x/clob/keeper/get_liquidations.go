@@ -11,6 +11,7 @@ import (
 	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	subaccountskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	abcicomet "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -100,7 +101,7 @@ func (k Keeper) CheckSubaccountCollateralization(
 
 	// Funding payments are lazily settled, so get the settled subaccount
 	// to ensure that the funding payments are included in the net collateral calculation.
-	settledSubaccount, _, err := k.subaccountsKeeper.GetSettledSubaccountWithPerpetuals(
+	settledSubaccount, _, err := subaccountskeeper.GetSettledSubaccountWithPerpetuals(
 		unsettledSubaccount,
 		perpetuals,
 	)

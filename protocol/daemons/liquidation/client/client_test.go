@@ -131,7 +131,6 @@ func TestHealthCheck_Mixed(t *testing.T) {
 				ticker, stop := daemontestutils.SingleTickTickerAndStop()
 
 				c.SubaccountQueryClient = &mocks.QueryClient{}
-				c.ClobQueryClient = &mocks.QueryClient{}
 				c.LiquidationServiceClient = &mocks.QueryClient{}
 
 				// Start the daemon task loop. Since we created a single-tick ticker, this will run for one iteration and

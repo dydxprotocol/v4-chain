@@ -15,8 +15,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/grpc"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/mock"
@@ -178,287 +176,10 @@ func TestGetAllSubaccounts(t *testing.T) {
 	}
 }
 
-func TestGetAllPerpetuals(t *testing.T) {
-	tests := map[string]struct {
-		// mocks
-		setupMocks func(ctx context.Context, mck *mocks.QueryClient)
-		limit      uint64
-
-		// expectations
-		expectedPerpetuals []perptypes.Perpetual
-		expectedError      error
-	}{
-		"Success": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &perptypes.QueryAllPerpetualsRequest{
-					Pagination: &query.PageRequest{
-						Limit: 1_000,
-					},
-				}
-				response := &perptypes.QueryAllPerpetualsResponse{
-					Perpetual: constants.Perpetuals_DefaultGenesisState.Perpetuals,
-				}
-				mck.On("AllPerpetuals", mock.Anything, req).Return(response, nil)
-			},
-			limit:              1_000,
-			expectedPerpetuals: constants.Perpetuals_DefaultGenesisState.Perpetuals,
-		},
-		"Success Paginated": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &perptypes.QueryAllPerpetualsRequest{
-					Pagination: &query.PageRequest{
-						Limit: 1,
-					},
-				}
-				nextKey := []byte("next key")
-				response := &perptypes.QueryAllPerpetualsResponse{
-					Perpetual: []perptypes.Perpetual{
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0],
-					},
-					Pagination: &query.PageResponse{
-						NextKey: nextKey,
-					},
-				}
-				mck.On("AllPerpetuals", mock.Anything, req).Return(response, nil)
-				req2 := &perptypes.QueryAllPerpetualsRequest{
-					Pagination: &query.PageRequest{
-						Key:   nextKey,
-						Limit: 1,
-					},
-				}
-				response2 := &perptypes.QueryAllPerpetualsResponse{
-					Perpetual: []perptypes.Perpetual{
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[1],
-					},
-				}
-				mck.On("AllPerpetuals", mock.Anything, req2).Return(response2, nil)
-			},
-			limit:              1,
-			expectedPerpetuals: constants.Perpetuals_DefaultGenesisState.Perpetuals,
-		},
-		"Errors are propagated": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &perptypes.QueryAllPerpetualsRequest{
-					Pagination: &query.PageRequest{
-						Limit: 1_000,
-					},
-				}
-				mck.On("AllPerpetuals", mock.Anything, req).Return(nil, errors.New("test error"))
-			},
-			limit:         1_000,
-			expectedError: errors.New("test error"),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			queryClientMock := &mocks.QueryClient{}
-			tc.setupMocks(grpc.Ctx, queryClientMock)
-
-			daemon := client.NewClient(log.NewNopLogger())
-			daemon.PerpetualsQueryClient = queryClientMock
-			actual, err := daemon.GetAllPerpetuals(
-				grpc.Ctx,
-				tc.limit,
-			)
-			if err != nil {
-				require.EqualError(t, err, tc.expectedError.Error())
-			} else {
-				require.Equal(t, tc.expectedPerpetuals, actual)
-			}
-		})
-	}
-}
-
-func TestGetAllLiquidityTiers(t *testing.T) {
-	tests := map[string]struct {
-		// mocks
-		setupMocks func(ctx context.Context, mck *mocks.QueryClient)
-		limit      uint64
-
-		// expectations
-		expectedLiquidityTiers []perptypes.LiquidityTier
-		expectedError          error
-	}{
-		"Success": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &perptypes.QueryAllLiquidityTiersRequest{
-					Pagination: &query.PageRequest{
-						Limit: 1_000,
-					},
-				}
-				response := &perptypes.QueryAllLiquidityTiersResponse{
-					LiquidityTiers: constants.LiquidityTiers,
-				}
-				mck.On("AllLiquidityTiers", mock.Anything, req).Return(response, nil)
-			},
-			limit:                  1_000,
-			expectedLiquidityTiers: constants.LiquidityTiers,
-		},
-		"Success Paginated": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &perptypes.QueryAllLiquidityTiersRequest{
-					Pagination: &query.PageRequest{
-						Limit: 5,
-					},
-				}
-				nextKey := []byte("next key")
-				response := &perptypes.QueryAllLiquidityTiersResponse{
-					LiquidityTiers: constants.LiquidityTiers[0:5],
-					Pagination: &query.PageResponse{
-						NextKey: nextKey,
-					},
-				}
-				mck.On("AllLiquidityTiers", mock.Anything, req).Return(response, nil)
-				req2 := &perptypes.QueryAllLiquidityTiersRequest{
-					Pagination: &query.PageRequest{
-						Key:   nextKey,
-						Limit: 5,
-					},
-				}
-				response2 := &perptypes.QueryAllLiquidityTiersResponse{
-					LiquidityTiers: constants.LiquidityTiers[5:],
-				}
-				mck.On("AllLiquidityTiers", mock.Anything, req2).Return(response2, nil)
-			},
-			limit:                  5,
-			expectedLiquidityTiers: constants.LiquidityTiers,
-		},
-		"Errors are propagated": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &perptypes.QueryAllLiquidityTiersRequest{
-					Pagination: &query.PageRequest{
-						Limit: 1_000,
-					},
-				}
-				mck.On("AllLiquidityTiers", mock.Anything, req).Return(nil, errors.New("test error"))
-			},
-			limit:         1_000,
-			expectedError: errors.New("test error"),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			queryClientMock := &mocks.QueryClient{}
-			tc.setupMocks(grpc.Ctx, queryClientMock)
-
-			daemon := client.NewClient(log.NewNopLogger())
-			daemon.PerpetualsQueryClient = queryClientMock
-			actual, err := daemon.GetAllLiquidityTiers(
-				grpc.Ctx,
-				tc.limit,
-			)
-			if err != nil {
-				require.EqualError(t, err, tc.expectedError.Error())
-			} else {
-				require.Equal(t, tc.expectedLiquidityTiers, actual)
-			}
-		})
-	}
-}
-
-func TestGetAllMarketPrices(t *testing.T) {
-	tests := map[string]struct {
-		// mocks
-		setupMocks func(ctx context.Context, mck *mocks.QueryClient)
-		limit      uint64
-
-		// expectations
-		expectedMarketPrices []pricestypes.MarketPrice
-		expectedError        error
-	}{
-		"Success": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &pricestypes.QueryAllMarketPricesRequest{
-					Pagination: &query.PageRequest{
-						Limit: 1_000,
-					},
-				}
-				response := &pricestypes.QueryAllMarketPricesResponse{
-					MarketPrices: constants.TestMarketPrices,
-				}
-				mck.On("AllMarketPrices", mock.Anything, req).Return(response, nil)
-			},
-			limit:                1_000,
-			expectedMarketPrices: constants.TestMarketPrices,
-		},
-		"Success Paginated": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &pricestypes.QueryAllMarketPricesRequest{
-					Pagination: &query.PageRequest{
-						Limit: 2,
-					},
-				}
-				nextKey := []byte("next key")
-				response := &pricestypes.QueryAllMarketPricesResponse{
-					MarketPrices: []pricestypes.MarketPrice{
-						constants.TestMarketPrices[0],
-						constants.TestMarketPrices[1],
-					},
-					Pagination: &query.PageResponse{
-						NextKey: nextKey,
-					},
-				}
-				mck.On("AllMarketPrices", mock.Anything, req).Return(response, nil)
-				req2 := &pricestypes.QueryAllMarketPricesRequest{
-					Pagination: &query.PageRequest{
-						Key:   nextKey,
-						Limit: 2,
-					},
-				}
-				response2 := &pricestypes.QueryAllMarketPricesResponse{
-					MarketPrices: []pricestypes.MarketPrice{
-						constants.TestMarketPrices[2],
-						constants.TestMarketPrices[3],
-						constants.TestMarketPrices[4],
-					},
-				}
-				mck.On("AllMarketPrices", mock.Anything, req2).Return(response2, nil)
-			},
-			limit:                2,
-			expectedMarketPrices: constants.TestMarketPrices,
-		},
-		"Errors are propagated": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &pricestypes.QueryAllMarketPricesRequest{
-					Pagination: &query.PageRequest{
-						Limit: 1_000,
-					},
-				}
-				mck.On("AllMarketPrices", mock.Anything, req).Return(nil, errors.New("test error"))
-			},
-			limit:         1_000,
-			expectedError: errors.New("test error"),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			queryClientMock := &mocks.QueryClient{}
-			tc.setupMocks(grpc.Ctx, queryClientMock)
-
-			daemon := client.NewClient(log.NewNopLogger())
-			daemon.PricesQueryClient = queryClientMock
-			actual, err := daemon.GetAllMarketPrices(
-				grpc.Ctx,
-				tc.limit,
-			)
-			if err != nil {
-				require.EqualError(t, err, tc.expectedError.Error())
-			} else {
-				require.Equal(t, tc.expectedMarketPrices, actual)
-			}
-		})
-	}
-}
-
 func TestSendLiquidatableSubaccountIds(t *testing.T) {
 	tests := map[string]struct {
 		// mocks
 		setupMocks                 func(context.Context, *mocks.QueryClient)
-		liquidatableSubaccountIds  []satypes.SubaccountId
-		negativeTncSubaccountIds   []satypes.SubaccountId
 		subaccountOpenPositionInfo map[uint32]*clobtypes.SubaccountOpenPositionInfo
 
 		// expectations
@@ -467,9 +188,6 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 		"Success": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight:               uint32(50),
-					LiquidatableSubaccountIds: []satypes.SubaccountId{constants.Alice_Num0, constants.Bob_Num0},
-					NegativeTncSubaccountIds:  []satypes.SubaccountId{constants.Carl_Num0, constants.Dave_Num0},
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -486,14 +204,6 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 				}
 				response := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
-			},
-			liquidatableSubaccountIds: []satypes.SubaccountId{
-				constants.Alice_Num0,
-				constants.Bob_Num0,
-			},
-			negativeTncSubaccountIds: []satypes.SubaccountId{
-				constants.Carl_Num0,
-				constants.Dave_Num0,
 			},
 			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{
 				0: {
@@ -512,30 +222,20 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 		"Success Empty": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight:                uint32(50),
-					LiquidatableSubaccountIds:  []satypes.SubaccountId{},
-					NegativeTncSubaccountIds:   []satypes.SubaccountId{},
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 				}
 				response := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
 			},
-			liquidatableSubaccountIds:  []satypes.SubaccountId{},
-			negativeTncSubaccountIds:   []satypes.SubaccountId{},
 			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{},
 		},
 		"Errors are propagated": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight:                uint32(50),
-					LiquidatableSubaccountIds:  []satypes.SubaccountId{},
-					NegativeTncSubaccountIds:   []satypes.SubaccountId{},
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 				}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(nil, errors.New("test error"))
 			},
-			liquidatableSubaccountIds:  []satypes.SubaccountId{},
-			negativeTncSubaccountIds:   []satypes.SubaccountId{},
 			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{},
 			expectedError:              errors.New("test error"),
 		},
@@ -551,9 +251,6 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 
 			err := daemon.SendLiquidatableSubaccountIds(
 				grpc.Ctx,
-				uint32(50),
-				tc.liquidatableSubaccountIds,
-				tc.negativeTncSubaccountIds,
 				tc.subaccountOpenPositionInfo,
 			)
 			require.Equal(t, tc.expectedError, err)
