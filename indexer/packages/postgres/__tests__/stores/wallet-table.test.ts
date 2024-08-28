@@ -1,6 +1,6 @@
 import { WalletFromDatabase } from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
-import { defaultWallet2 } from '../helpers/constants';
+import { defaultWallet2, defaultWallet3 } from '../helpers/constants';
 import * as WalletTable from '../../src/stores/wallet-table';
 
 describe('Wallet store', () => {
@@ -27,10 +27,18 @@ describe('Wallet store', () => {
     );
 
     expect(wallet).toEqual(expect.objectContaining(defaultWallet2));
-    await WalletTable.upsert(defaultWallet2);
+    await WalletTable.upsert({
+      ...defaultWallet2,
+      isWhitelistAffiliate: true,
+      totalVolume: '100',
+    });
     wallet = await WalletTable.findById(defaultWallet2.address);
 
-    expect(wallet).toEqual(expect.objectContaining(defaultWallet2));
+    expect(wallet).toEqual(expect.objectContaining({
+      ...defaultWallet2,
+      isWhitelistAffiliate: true,
+      totalVolume: '100',
+    }));
   });
 
   it('Successfully finds all Wallets', async () => {
@@ -65,5 +73,23 @@ describe('Wallet store', () => {
     );
 
     expect(wallet).toEqual(expect.objectContaining(defaultWallet2));
+  });
+
+  it('Successfully finds wallets by whitelist flag', async () => {
+    await Promise.all([
+      WalletTable.create(defaultWallet3),
+      WalletTable.create(defaultWallet2)
+    ])
+
+    const wallets: WalletFromDatabase[] = await WalletTable.findAll(
+      {
+        isWhitelistAffiliate: true,
+      },
+      [],
+      { readReplica: true },
+    );
+
+    expect(wallets.length).toEqual(1);
+    expect(wallets[0]).toEqual(expect.objectContaining(defaultWallet3));
   });
 });

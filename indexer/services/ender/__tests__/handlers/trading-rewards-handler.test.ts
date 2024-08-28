@@ -174,6 +174,8 @@ describe('tradingRewardHandler', () => {
     expect(wallet).toEqual({
       address: testConstants.defaultWallet.address,
       totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(1_000_000_000),
+      totalVolume: '0',
+      isWhitelistAffiliate: false,
     });
   });
 
@@ -197,7 +199,7 @@ describe('tradingRewardHandler', () => {
     await WalletTable.update({
       address: testConstants.defaultWallet.address,
       totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(1_000_000_000),
-      totalVolume: testConversionHelpers.denomToHumanReadableConversion(0),
+      totalVolume: '0',
       isWhitelistAffiliate: false,
     });
 
@@ -208,7 +210,7 @@ describe('tradingRewardHandler', () => {
     expect(wallet).toEqual({
       address: testConstants.defaultWallet.address,
       totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(2_000_000_000),
-      totalVolume: testConversionHelpers.denomToHumanReadableConversion(0),
+      totalVolume: '0',
       isWhitelistAffiliate: false,
     });
   });

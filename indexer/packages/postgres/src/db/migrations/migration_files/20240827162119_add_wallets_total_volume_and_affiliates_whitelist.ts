@@ -5,7 +5,7 @@ export async function up(knex: Knex): Promise<void> {
   return knex
     .schema
     .alterTable('wallets', (table) => {
-      table.decimal('totalVolume', null).defaultTo(0).notNullable();
+      table.decimal('totalVolume', null).defaultTo('0').notNullable();
       table.boolean('isWhitelistAffiliate').defaultTo(false).notNullable();
     });
 }
