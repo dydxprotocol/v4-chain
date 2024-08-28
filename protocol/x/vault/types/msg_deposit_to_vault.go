@@ -3,7 +3,6 @@ package types
 import (
 	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
 var _ types.Msg = &MsgDepositToVault{}
