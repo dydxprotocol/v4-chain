@@ -201,7 +201,7 @@ describe('PnlTicks store', () => {
       maxBlockTime, count,
     }: {
       maxBlockTime: string,
-      count: number
+      count: number,
     } = await PnlTicksTable.findLatestProcessedBlocktimeAndCount();
 
     expect(maxBlockTime).toEqual(blockTime);
@@ -213,7 +213,7 @@ describe('PnlTicks store', () => {
       maxBlockTime, count,
     }: {
       maxBlockTime: string,
-      count: number
+      count: number,
     } = await PnlTicksTable.findLatestProcessedBlocktimeAndCount();
 
     expect(maxBlockTime).toEqual(ZERO_TIME_ISO_8601);
@@ -289,7 +289,7 @@ describe('PnlTicks store', () => {
     ]);
 
     const leaderboardRankedData: {
-      [accountId: string]: PnlTicksCreateObject
+      [accountId: string]: PnlTicksCreateObject,
     } = await PnlTicksTable.findMostRecentPnlTickForEachAccount(
       '3',
     );

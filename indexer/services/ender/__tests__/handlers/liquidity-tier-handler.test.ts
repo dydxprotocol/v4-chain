@@ -319,7 +319,7 @@ function createKafkaMessageFromLiquidityTiersEvent({
   height: number,
   time: Timestamp,
   txHash: string,
-  version: number
+  version: number,
 }) {
   const events: IndexerTendermintEvent[] = [];
   events.push(

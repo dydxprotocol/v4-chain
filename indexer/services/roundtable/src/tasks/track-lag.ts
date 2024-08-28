@@ -8,13 +8,13 @@ import config from '../config';
 const VALIDATOR_BLOCK_HEIGHT_URL_SUFFIX = '/block';
 
 type BlockData = {
-  block: string;
-  timestamp: IsoString;
+  block: string,
+  timestamp: IsoString,
 };
 
 type ValidatorHeader = {
-  height: string;
-  time: IsoString;
+  height: string,
+  time: IsoString,
 };
 
 export default async function runTask(): Promise<void> {

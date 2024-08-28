@@ -16,43 +16,43 @@ export enum PerpetualPositionStatus {
 }
 
 export interface PerpetualPositionCreateObject {
-  subaccountId: string;
-  perpetualId: string;
-  side: PositionSide;
-  status: PerpetualPositionStatus;
-  size: string;
-  maxSize: string;
-  sumOpen?: string;
-  sumClose?: string;
-  entryPrice?: string;
-  createdAt: IsoString;
-  createdAtHeight: string;
-  openEventId: Buffer;
-  lastEventId: Buffer;
-  settledFunding: string;
-  closedAt?: IsoString;
-  closedAtHeight?: string;
-  closeEventId?: Buffer;
-  exitPrice?: string;
+  subaccountId: string,
+  perpetualId: string,
+  side: PositionSide,
+  status: PerpetualPositionStatus,
+  size: string,
+  maxSize: string,
+  sumOpen?: string,
+  sumClose?: string,
+  entryPrice?: string,
+  createdAt: IsoString,
+  createdAtHeight: string,
+  openEventId: Buffer,
+  lastEventId: Buffer,
+  settledFunding: string,
+  closedAt?: IsoString,
+  closedAtHeight?: string,
+  closeEventId?: Buffer,
+  exitPrice?: string,
 }
 
 export interface PerpetualPositionUpdateObject {
-  id: string;
-  side?: PositionSide;
-  status?: PerpetualPositionStatus;
-  size?: string;
-  maxSize?: string;
-  entryPrice?: string;
-  exitPrice?: string | null;
-  sumOpen?: string;
-  sumClose?: string;
-  createdAt?: IsoString;
-  closedAt?: IsoString | null;
-  createdAtHeight?: string;
-  closedAtHeight?: string | null;
-  closeEventId?: Buffer | null;
-  lastEventId?: Buffer;
-  settledFunding?: string;
+  id: string,
+  side?: PositionSide,
+  status?: PerpetualPositionStatus,
+  size?: string,
+  maxSize?: string,
+  entryPrice?: string,
+  exitPrice?: string | null,
+  sumOpen?: string,
+  sumClose?: string,
+  createdAt?: IsoString,
+  closedAt?: IsoString | null,
+  createdAtHeight?: string,
+  closedAtHeight?: string | null,
+  closeEventId?: Buffer | null,
+  lastEventId?: Buffer,
+  settledFunding?: string,
 }
 
 // Object used to update a subaccount's perpetual position in the SubaccountUpdateHandler
@@ -60,9 +60,9 @@ export interface PerpetualPositionSubaccountUpdateObject {
   id: string,
   closedAt?: IsoString | null,
   closedAtHeight?: string | null,
-  closeEventId?: Buffer | null;
-  lastEventId: Buffer;
-  settledFunding: string;
+  closeEventId?: Buffer | null,
+  lastEventId: Buffer,
+  settledFunding: string,
   status: PerpetualPositionStatus,
   size: string,
 }
@@ -76,21 +76,21 @@ This is all of the fields in PerpetualPositionFromDatabase with the exception of
 closedAt, closedAtHeight, and closeEventId are nullable.
 */
 export interface UpdatedPerpetualPositionSubaccountKafkaObject {
-  id: string;
-  perpetualId: string;
-  side: PositionSide;
-  status: PerpetualPositionStatus;
-  size: string;
-  maxSize: string;
-  entryPrice: string;
-  exitPrice?: string;
-  sumOpen: string;
-  sumClose: string;
-  closedAt?: IsoString | null;
-  closedAtHeight?: string | null;
-  lastEventId: Buffer;
-  closeEventId?: Buffer | null;
-  settledFunding: string;
+  id: string,
+  perpetualId: string,
+  side: PositionSide,
+  status: PerpetualPositionStatus,
+  size: string,
+  maxSize: string,
+  entryPrice: string,
+  exitPrice?: string,
+  sumOpen: string,
+  sumClose: string,
+  closedAt?: IsoString | null,
+  closedAtHeight?: string | null,
+  lastEventId: Buffer,
+  closeEventId?: Buffer | null,
+  settledFunding: string,
   realizedPnl?: string,
   unrealizedPnl?: string,
 }
