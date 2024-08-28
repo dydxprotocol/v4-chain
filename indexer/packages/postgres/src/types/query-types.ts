@@ -88,6 +88,7 @@ export enum QueryableField {
   USERNAME = 'username',
   TIMESPAN = 'timeSpan',
   RANK = 'rank',
+  KEY = 'key',
 }
 
 export interface QueryConfig {
@@ -320,4 +321,8 @@ export interface LeaderboardPnlQueryConfig extends QueryConfig {
   [QueryableField.ADDRESS]?: string[];
   [QueryableField.TIMESPAN]?: string[];
   [QueryableField.RANK]?: number[];
+}
+
+export interface PersistentCacheQueryConfig extends QueryConfig {
+  [QueryableField.KEY]?: string;
 }
