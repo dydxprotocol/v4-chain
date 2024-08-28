@@ -62,3 +62,11 @@ func (k msgServer) DepositToVault(
 
 	return &types.MsgDepositToVaultResponse{}, nil
 }
+
+// UpdateParams updates the parameters of the vault module.
+func (k msgServer) UpdateParams(
+	goCtx context.Context,
+	msg *types.MsgUpdateParams,
+) (*types.MsgUpdateParamsResponse, error) {
+	return &types.MsgUpdateParamsResponse{}, nil
+}

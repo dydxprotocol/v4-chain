@@ -1,8 +1,6 @@
 package types
 
 import (
-	context "context"
-
 	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
@@ -28,12 +26,4 @@ func (msg *MsgDepositToVault) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// UpdateParams updates the parameters of the vault module.
-func (k msgServer) UpdateParams(
-	goCtx context.Context,
-	msg *types.MsgUpdateParams,
-) (*types.MsgUpdateParamsResponse, error) {
-	return &types.MsgUpdateParamsResponse{}, nil
 }
