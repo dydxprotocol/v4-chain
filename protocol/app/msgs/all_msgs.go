@@ -245,6 +245,7 @@ var (
 		"/dydxprotocol.vault.MsgSetVaultQuotingParamsResponse":      {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": {},
+		"/dydxprotocol.vault.MsgUpdateParams":                       {},
 
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            {},
