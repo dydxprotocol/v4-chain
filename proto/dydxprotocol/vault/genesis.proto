@@ -19,7 +19,8 @@ message GenesisState {
   // The default quoting parameters for all vaults.
   QuotingParams default_quoting_params = 4 [ (gogoproto.nullable) = false ];
   // All owner share unlocks.
-  repeated OwnerShareUnlocks all_owner_share_unlocks = 5 [ (gogoproto.nullable) = false ];
+  repeated OwnerShareUnlocks all_owner_share_unlocks = 5
+      [ (gogoproto.nullable) = false ];
 }
 
 // Vault defines the state of a vault.

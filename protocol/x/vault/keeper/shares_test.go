@@ -9,7 +9,6 @@ import (
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
 )
@@ -314,7 +313,7 @@ func TestLockShares(t *testing.T) {
 			sharesToLock:       big.NewInt(49), // greater than 65-17=48 remaining unlocked shares.
 			lockUntilBlock:     3,
 			currentBlockHeight: 1,
-			expectedErr:        types.ErrLockedSharesExceedsOwnerShares.Error(),
+			expectedErr:        vaulttypes.ErrLockedSharesExceedsOwnerShares.Error(),
 		},
 		"Error - Empty owner address": {
 			existingOwnerShareUnlocks: nil,
