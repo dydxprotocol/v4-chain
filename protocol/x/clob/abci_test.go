@@ -1219,6 +1219,8 @@ func TestPrepareCheckState(t *testing.T) {
 		processProposerMatchesEvents types.ProcessProposerMatchesEvents
 		// Memclob state.
 		placedOperations []types.Operation
+		// VE
+		extendCommitInfo *cometabci.RequestCommit
 
 		// Expectations.
 		expectedOperationsQueue []types.InternalOperation
@@ -1234,6 +1236,26 @@ func TestPrepareCheckState(t *testing.T) {
 				BlockHeight: 4,
 			},
 			placedOperations: []types.Operation{},
+			extendCommitInfo: &cometabci.RequestCommit{},
+
+			expectedOperationsQueue: []types.InternalOperation{},
+			expectedBids:            []memclob.OrderWithRemainingSize{},
+			expectedAsks:            []memclob.OrderWithRemainingSize{},
+		},
+		"Test VE price change": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_50PercentInitial_40PercentMaintenance,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+			},
+			clobs:                     []types.ClobPair{constants.ClobPair_Btc},
+			preExistingStatefulOrders: []types.Order{},
+			processProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: 4,
+			},
+			placedOperations: []types.Operation{},
+			extendCommitInfo: &cometabci.RequestCommit{},
 
 			expectedOperationsQueue: []types.InternalOperation{},
 			expectedBids:            []memclob.OrderWithRemainingSize{},
@@ -1269,6 +1291,7 @@ func TestPrepareCheckState(t *testing.T) {
 					constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16.MustGetOrder(),
 				),
 			},
+			extendCommitInfo: &cometabci.RequestCommit{},
 
 			expectedOperationsQueue: []types.InternalOperation{
 				types.NewShortTermOrderPlacementInternalOperation(
@@ -1454,7 +1477,7 @@ func TestPrepareCheckState(t *testing.T) {
 			clob.PrepareCheckState(
 				ctx,
 				ks.ClobKeeper,
-				&cometabci.RequestCommit{},
+				tc.extendCommitInfo,
 			)
 
 			// Verify test expectations.

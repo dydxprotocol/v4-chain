@@ -250,7 +250,7 @@ test-slow:
 	$(MAKE) test-exchange-slow
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' ./x/clob/e2e/withdrawal_gating_test.go
+	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' ./x/clob/keeper/get_liquidations_test.go
 
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 20m -race -tags='test_ledger_mock $(build_tags)' ./...

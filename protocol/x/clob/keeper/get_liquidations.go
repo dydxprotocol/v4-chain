@@ -73,6 +73,7 @@ func (k Keeper) GetLiquidatableAndTNCSubaccountIds(
 			perpetuals,
 			liquidityTiers,
 		)
+
 		if err != nil {
 			return nil, nil, errorsmod.Wrap(err, "Error checking collateralization status")
 		}

@@ -32,9 +32,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 		marketIdToOraclePriceOverride map[uint32]uint64
 
 		// Parameters.
-		placedMatchableOrders     []clobtypes.MatchableOrder
-		liquidatableSubaccountIds []satypes.SubaccountId
-		negativeTncSubaccountIds  []satypes.SubaccountId
+		placedMatchableOrders []clobtypes.MatchableOrder
 
 		// Configuration.
 		liquidationConfig            clobtypes.LiquidationsConfig
@@ -69,9 +67,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 				// deleveraging is required to close this position.
 				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50001_GTB11,
 			},
-			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
-			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Carl_Num0},
-			negativeTncSubaccountIds:  []satypes.SubaccountId{constants.Carl_Num0},
+			liquidationConfig: constants.LiquidationsConfig_FillablePrice_Max_Smmr,
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
@@ -119,9 +115,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50001_GTB11,
 			},
 
-			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
-			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Carl_Num0},
-			negativeTncSubaccountIds:  []satypes.SubaccountId{constants.Carl_Num0},
+			liquidationConfig: constants.LiquidationsConfig_FillablePrice_Max_Smmr,
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
@@ -258,13 +252,6 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
-			// _, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-			// 	LiquidatableSubaccountIds:  tc.liquidatableSubaccountIds,
-			// 	NegativeTncSubaccountIds:   tc.negativeTncSubaccountIds,
-			// 	SubaccountOpenPositionInfo: clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
-			// })
-			// require.NoError(t, err)
-
 			// Verify test expectations.
 			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 			for _, expectedSubaccount := range tc.expectedSubaccounts {
@@ -358,13 +345,6 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 				DeliverTxsOverride: deliverTxsOverride,
 			})
 
-			// Verify that transfers and withdrawals are unblocked after the withdrawal gating period passes.
-			// _, err = tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-			// 	LiquidatableSubaccountIds:  tc.liquidatableSubaccountIds,
-			// 	NegativeTncSubaccountIds:   []satypes.SubaccountId{},
-			// 	SubaccountOpenPositionInfo: clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
-			// })
-			// require.NoError(t, err)
 			tApp.AdvanceToBlock(
 				tc.expectedNegativeTncSubaccountSeenAtBlock+
 					satypes.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS+
