@@ -80,3 +80,15 @@ message MsgSetVaultParams {
 
 // MsgSetVaultParamsResponse is the Msg/SetVaultParams response type.
 message MsgSetVaultParamsResponse {}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+// Deprecated since v6.x as is replaced by MsgUpdateDefaultQuotingParams.
+message MsgUpdateParams {
+  option deprecated = true;
+  // Authority is the address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The parameters to update. Each field must be set.
+  Params params = 2 [ (gogoproto.nullable) = false ];
+}
