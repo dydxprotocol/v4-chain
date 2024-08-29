@@ -401,7 +401,7 @@ describe('helpers', () => {
         adjustedUSDCAssetPositionSize,
       }: {
         assetPositionsMap: AssetPositionsMap,
-        adjustedUSDCAssetPositionSize: string
+        adjustedUSDCAssetPositionSize: string,
       } = adjustUSDCAssetPosition(assetPositions, unsettledFunding);
 
       // Original asset positions object should be unchanged
@@ -469,7 +469,7 @@ describe('helpers', () => {
         adjustedUSDCAssetPositionSize,
       }: {
         assetPositionsMap: AssetPositionsMap,
-        adjustedUSDCAssetPositionSize: string
+        adjustedUSDCAssetPositionSize: string,
       } = adjustUSDCAssetPosition(assetPositions, Big(unsettledFunding));
 
       // Original asset positions object should be unchanged
@@ -527,7 +527,7 @@ describe('helpers', () => {
         adjustedUSDCAssetPositionSize,
       }: {
         assetPositionsMap: AssetPositionsMap,
-        adjustedUSDCAssetPositionSize: string
+        adjustedUSDCAssetPositionSize: string,
       } = adjustUSDCAssetPosition(assetPositions, Big(funding));
 
       // Original asset positions object should be unchanged
@@ -586,7 +586,7 @@ describe('helpers', () => {
         adjustedUSDCAssetPositionSize,
       }: {
         assetPositionsMap: AssetPositionsMap,
-        adjustedUSDCAssetPositionSize: string
+        adjustedUSDCAssetPositionSize: string,
       } = adjustUSDCAssetPosition(assetPositions, Big(unsettledFunding));
 
       // Original asset positions object should be unchanged

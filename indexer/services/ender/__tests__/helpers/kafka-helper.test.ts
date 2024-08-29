@@ -536,8 +536,8 @@ describe('kafka-helper', () => {
         realizedPnl,
         unrealizedPnl,
       }: {
-        realizedPnl: string | undefined;
-        unrealizedPnl: string | undefined;
+        realizedPnl: string | undefined,
+        unrealizedPnl: string | undefined,
       } = getPnl(
         updatedObject,
         perpetualMarketRefresher.getPerpetualMarketsMap()[updatedObject.perpetualId],
@@ -557,8 +557,8 @@ describe('kafka-helper', () => {
         realizedPnl,
         unrealizedPnl,
       }: {
-        realizedPnl: string | undefined;
-        unrealizedPnl: string | undefined;
+        realizedPnl: string | undefined,
+        unrealizedPnl: string | undefined,
       } = getPnl(
         updatedObject2,
         perpetualMarketRefresher.getPerpetualMarketsMap()[updatedObject2.perpetualId],

@@ -39,8 +39,8 @@ import { UTC_OPTIONS } from '../lib/constants';
  */
 type IntervalTradingRewardsByAddress = _.Dictionary<string>;
 interface AggregationUpdateAndCreateObjects {
-  updateObjects: TradingRewardAggregationUpdateObject[];
-  createObjects: TradingRewardAggregationCreateObject[];
+  updateObjects: TradingRewardAggregationUpdateObject[],
+  createObjects: TradingRewardAggregationCreateObject[],
 }
 
 enum DateTimeUnit {

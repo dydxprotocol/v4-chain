@@ -378,7 +378,7 @@ export async function hSetnxAsync(
   }: {
     hash: string,
     key: string,
-    value: string
+    value: string,
   },
   client: RedisClient,
 ): Promise<number> {

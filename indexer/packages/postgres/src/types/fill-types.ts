@@ -30,32 +30,32 @@ export enum FillType {
 }
 
 export interface FillCreateObject {
-  subaccountId: string;
-  side: OrderSide;
-  liquidity: Liquidity;
-  type: FillType;
-  clobPairId: string;
-  orderId?: string;
-  size: string;
-  price: string;
-  quoteAmount: string;
-  eventId: Buffer;
-  transactionHash: string;
-  createdAt: string;
-  createdAtHeight: string;
-  clientMetadata?: string;
-  fee: string;
+  subaccountId: string,
+  side: OrderSide,
+  liquidity: Liquidity,
+  type: FillType,
+  clobPairId: string,
+  orderId?: string,
+  size: string,
+  price: string,
+  quoteAmount: string,
+  eventId: Buffer,
+  transactionHash: string,
+  createdAt: string,
+  createdAtHeight: string,
+  clientMetadata?: string,
+  fee: string,
 }
 
 export interface FillUpdateObject {
-  id: string;
-  side?: OrderSide;
-  type?: FillType;
-  clobPairId?: string;
-  orderId?: string | null;
-  size?: string;
-  price?: string;
-  quoteAmount?: string;
+  id: string,
+  side?: OrderSide,
+  type?: FillType,
+  clobPairId?: string,
+  orderId?: string | null,
+  size?: string,
+  price?: string,
+  quoteAmount?: string,
 }
 
 export enum FillColumns {
@@ -78,27 +78,27 @@ export enum FillColumns {
 }
 
 export type CostOfFills = {
-  cost: number;
+  cost: number,
 };
 
 export interface OrderedFillsWithFundingIndices {
-  id: string;
-  subaccountId: string;
-  side: OrderSide;
-  size: string;
-  createdAtHeight: string;
-  fundingIndex: string;
-  lastFillId: string;
-  lastFillSide: OrderSide;
-  lastFillSize: string;
-  lastFillCreatedAtHeight: string;
-  lastFillFundingIndex: string;
+  id: string,
+  subaccountId: string,
+  side: OrderSide,
+  size: string,
+  createdAtHeight: string,
+  fundingIndex: string,
+  lastFillId: string,
+  lastFillSide: OrderSide,
+  lastFillSize: string,
+  lastFillCreatedAtHeight: string,
+  lastFillFundingIndex: string,
 }
 
 export interface OpenSizeWithFundingIndex {
-  clobPairId: string;
-  openSize: string;
-  lastFillHeight: string;
-  fundingIndex: string;
-  fundingIndexHeight: string;
+  clobPairId: string,
+  openSize: string,
+  lastFillHeight: string,
+  fundingIndex: string,
+  fundingIndexHeight: string,
 }

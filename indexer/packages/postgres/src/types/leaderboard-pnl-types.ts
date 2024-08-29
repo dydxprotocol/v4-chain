@@ -1,11 +1,11 @@
 /* ------- LEADERBOARD PNL TYPES ------- */
 
 export interface LeaderboardPnlCreateObject {
-  address: string;
-  pnl: string;
-  timeSpan: string;
-  currentEquity: string;
-  rank: number;
+  address: string,
+  pnl: string,
+  timeSpan: string,
+  currentEquity: string,
+  rank: number,
 }
 
 export enum LeaderboardPnlColumns {

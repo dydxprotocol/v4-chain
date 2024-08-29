@@ -5,8 +5,8 @@ export class RateLimiter {
   private messageInfo: {
     [connectionId: string]: {
       [key: string]: {
-        points: number;
-        startMs: number | null;
+        points: number,
+        startMs: number | null,
       },
     },
   };

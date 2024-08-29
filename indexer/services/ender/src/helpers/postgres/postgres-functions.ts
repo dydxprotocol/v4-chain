@@ -6,9 +6,9 @@ import { dbHelpers, storeHelpers } from '@dydxprotocol-indexer/postgres';
 
 export type PostgresFunction = {
   // The name of the script
-  readonly name: string;
+  readonly name: string,
   // The contents of the script
-  readonly script: string;
+  readonly script: string,
 };
 
 /**

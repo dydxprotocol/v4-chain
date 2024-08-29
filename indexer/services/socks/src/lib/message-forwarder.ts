@@ -36,9 +36,9 @@ const BATCH_SEND_INTERVAL_MS: number = config.BATCH_SEND_INTERVAL_MS;
 const BUFFER_KEY_SEPARATOR: string = ':';
 
 type VersionedContents = {
-  contents: string;
-  version: string;
-  subaccountNumber?: number;
+  contents: string,
+  version: string,
+  subaccountNumber?: number,
 };
 
 export class MessageForwarder {
@@ -485,7 +485,7 @@ export class MessageForwarder {
   ): {
       channel: Channel,
       channelString: string,
-      id: string
+      id: string,
     } {
     const [channelString, id]: string[] = bufferKey.split(BUFFER_KEY_SEPARATOR);
     const channel: Channel = channelString as Channel;

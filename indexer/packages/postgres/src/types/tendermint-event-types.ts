@@ -1,9 +1,9 @@
 /* ------- TENDERMINT EVENT TYPES ------- */
 
 export interface TendermintEventCreateObject {
-  blockHeight: string;
-  transactionIndex: number;
-  eventIndex: number;
+  blockHeight: string,
+  transactionIndex: number,
+  eventIndex: number,
 }
 
 export enum TendermintEventColumns {

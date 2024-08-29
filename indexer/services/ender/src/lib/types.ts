@@ -261,7 +261,7 @@ export type ConsolidatedKafkaEvent = {
   message: VulcanMessage,
 } | {
   topic: KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
-  message: BlockHeightMessage
+  message: BlockHeightMessage,
 };
 
 export enum TransferEventType {

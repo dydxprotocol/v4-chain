@@ -12,7 +12,7 @@ export interface MarketUpdateObject {
   id: number,
   pair?: string,
   minPriceChangePpm?: number,
-  oraclePrice?: string;
+  oraclePrice?: string,
 }
 
 export enum MarketColumns {
