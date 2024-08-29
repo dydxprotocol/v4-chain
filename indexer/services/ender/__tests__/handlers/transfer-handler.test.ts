@@ -25,7 +25,7 @@ import {
   assetRefresher,
   WalletTable,
   WalletFromDatabase,
-  testConversionHelpers,
+  testConstants,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
@@ -51,6 +51,11 @@ import {
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
+
+const defaultWallet = {
+  ...testConstants.defaultWallet,
+  address: defaultWalletAddress,
+};
 
 describe('transferHandler', () => {
   beforeAll(async () => {
@@ -303,10 +308,7 @@ describe('transferHandler', () => {
     const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
       defaultWalletAddress,
     );
-    expect(wallet).toEqual({
-      address: defaultWalletAddress,
-      totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(0),
-    });
+    expect(wallet).toEqual(defaultWallet);
   });
 
   it('creates new deposit for previously non-existent subaccount', async () => {
@@ -355,10 +357,7 @@ describe('transferHandler', () => {
       defaultRecipientSubaccountId,
     );
     expect(newRecipientSubaccount).toBeDefined();
-    expect(wallet).toEqual({
-      address: defaultWalletAddress,
-      totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(0),
-    });
+    expect(wallet).toEqual(defaultWallet);
   });
 
   it('creates new withdrawal for existing subaccount', async () => {
@@ -408,10 +407,7 @@ describe('transferHandler', () => {
     const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
       defaultWalletAddress,
     );
-    expect(wallet).toEqual({
-      address: defaultWalletAddress,
-      totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(0),
-    });
+    expect(wallet).toEqual(defaultWallet);
   });
 
   it('creates new transfer and the recipient subaccount', async () => {
