@@ -48,10 +48,10 @@ interface ParseOptions<T> {
   // If `default` is present, then the environment variable will be optional and will default to the
   // value of `default` when unset. In particular, `default` may be null in which case the config
   // value will be null when the environment variable is not set.
-  default: T;
+  default: T,
 
   // Can be specified to ensure the default value is not used when running in a certain NODE_ENV.
-  requireInEnv?: NodeEnv[];
+  requireInEnv?: NodeEnv[],
 }
 
 const NODE_ENV = process.env.NODE_ENV;
@@ -229,10 +229,10 @@ export function parseSchema<T extends SchemaBase>(
 ): {
   [K in keyof T]: T[K] extends ParseFn<infer U> ? U : never;
 } & {
-  isDevelopment: () => boolean;
-  isStaging: () => boolean;
-  isProduction: () => boolean;
-  isTest: () => boolean;
+  isDevelopment: () => boolean,
+  isStaging: () => boolean,
+  isProduction: () => boolean,
+  isTest: () => boolean,
 } {
   const config = _.mapValues(schema, (parseFn: ParseFn<T>, varName: string) => {
     const fullVarName = prefix ? `${prefix}_${varName}` : varName;

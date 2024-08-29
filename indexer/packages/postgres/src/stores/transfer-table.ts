@@ -41,9 +41,9 @@ export function uuid(
 }
 
 interface SubaccountAssetNetTransfer {
-  subaccountId: string;
-  assetId: string;
-  totalSize: string;
+  subaccountId: string,
+  assetId: string,
+  totalSize: string,
 }
 
 export async function findAll(
@@ -345,7 +345,7 @@ function convertToSubaccountAssetMap(
 }
 
 export interface AssetTransferMap {
-  [assetId: string]: Big;
+  [assetId: string]: Big,
 }
 
 export async function getNetTransfersBetweenBlockHeightsForSubaccount(
@@ -378,8 +378,8 @@ export async function getNetTransfersBetweenBlockHeightsForSubaccount(
 
   const result: {
     rows: {
-      assetId: string;
-      totalSize: string;
+      assetId: string,
+      totalSize: string,
     }[],
   } = await rawQuery(queryString, options);
   return _.mapValues(_.keyBy(result.rows, 'assetId'), (row: { assetId: string, totalSize: string }) => {

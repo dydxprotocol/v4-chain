@@ -6,7 +6,7 @@ export interface PlaceOrderResult {
   // true if an order was placed
   placed: boolean,
   // true if an order was replaced
-  replaced: boolean
+  replaced: boolean,
   // total filled of the old order in quantums, undefined if an order was not replaced
   oldTotalFilledQuantums?: number,
   // whether the old order was resting on the book, undefined if an order was not replaced
@@ -60,11 +60,11 @@ export interface OrderData {
 
 export type LuaScript = {
   // The name of the script
-  readonly name: string;
+  readonly name: string,
   // The contents of the script
-  readonly script: string;
+  readonly script: string,
   // The SHA1 hash of the contents of the script
-  readonly hash: string;
+  readonly hash: string,
 };
 
 export enum CanceledOrderStatus {
@@ -78,7 +78,7 @@ export type PnlTickForSubaccounts = {
   // Stores a PnlTicksCreateObject for the most recent pnl tick for each subaccount.
   // Opted for PnlTicksCreateObject instead ofPnlTicksFromDatabase as we don't need to store
   // the uuid.
-  [subaccountId: string]: PnlTicksCreateObject
+  [subaccountId: string]: PnlTicksCreateObject,
 };
 
 /* -------- Stateful order update cache types -------- */

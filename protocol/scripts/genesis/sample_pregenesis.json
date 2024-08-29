@@ -3926,6 +3926,7 @@
     },
     "upgrade": {},
     "vault": {
+      "all_owner_share_unlocks": [],
       "default_quoting_params": {
         "activation_threshold_quote_quantums": "1000000000",
         "layers": 2,
