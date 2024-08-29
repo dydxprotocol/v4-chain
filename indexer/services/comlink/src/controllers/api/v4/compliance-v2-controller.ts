@@ -12,6 +12,7 @@ import {
   WalletFromDatabase,
   WalletTable,
 } from '@dydxprotocol-indexer/postgres';
+import { verifyADR36Amino } from '@keplr-wallet/cosmos';
 import express from 'express';
 import { matchedData } from 'express-validator';
 import _ from 'lodash';
@@ -213,102 +214,15 @@ router.post(
     } = req.body;
 
     try {
-      if (!address.startsWith(DYDX_ADDRESS_PREFIX)) {
-        return create4xxResponse(
-          res,
-          `Address ${address} is not a valid dYdX V4 address`,
-        );
-      }
-
-      const pubkeyArray: Uint8Array = new Uint8Array(Buffer.from(pubkey, 'base64'));
-      if (address !== generateAddress(pubkeyArray)) {
-        return create4xxResponse(
-          res,
-          `Address ${address} does not correspond to the pubkey provided ${pubkey}`,
-        );
-      }
-
-      // Verify the timestamp is within GEOBLOCK_REQUEST_TTL_SECONDS seconds of the current time
-      const now = DateTime.now().toSeconds();
-      if (Math.abs(now - timestamp) > GEOBLOCK_REQUEST_TTL_SECONDS) {
-        return create4xxResponse(
-          res,
-          `Timestamp is not within the valid range of ${GEOBLOCK_REQUEST_TTL_SECONDS} seconds`,
-        );
-      }
-
-      // Prepare the message for verification
-      const messageToSign: string = `${message}:${action}"${currentStatus || ''}:${timestamp}`;
-      const messageHash: Uint8Array = sha256(Buffer.from(messageToSign));
-      const signedMessageArray: Uint8Array = new Uint8Array(Buffer.from(signedMessage, 'base64'));
-      const signature: ExtendedSecp256k1Signature = ExtendedSecp256k1Signature
-        .fromFixedLength(signedMessageArray);
-
-      // Verify the signature
-      const isValidSignature: boolean = await Secp256k1.verifySignature(
-        signature,
-        messageHash,
-        pubkeyArray,
+      const failedValidationResponse = await validateSignature(
+        res, action, address, timestamp, message, signedMessage, pubkey, currentStatus,
       );
-      if (!isValidSignature) {
-        return create4xxResponse(
-          res,
-          'Signature verification failed',
-        );
+      if (failedValidationResponse) {
+        return failedValidationResponse;
       }
-
-      if (isWhitelistedAddress(address)) {
-        return res.send({
-          status: ComplianceStatus.COMPLIANT,
-          updatedAt: DateTime.utc().toISO(),
-        });
-      }
-
-      const [
-        complianceStatus,
-        wallet,
-      ]: [
-        ComplianceStatusFromDatabase[],
-        WalletFromDatabase | undefined,
-      ] = await Promise.all([
-        ComplianceStatusTable.findAll(
-          { address: [address] },
-          [],
-        ),
-        WalletTable.findById(address),
-      ]);
-
-      const updatedAt: string = DateTime.utc().toISO();
-      const complianceStatusFromDatabase:
-      ComplianceStatusFromDatabase | undefined = await upsertComplianceStatus(
-        req,
-        action,
-        address,
-        wallet,
-        complianceStatus,
-        updatedAt,
-      );
-
-      const response = {
-        status: complianceStatusFromDatabase!.status,
-        reason: complianceStatusFromDatabase!.reason,
-        updatedAt: complianceStatusFromDatabase!.updatedAt,
-      };
-
-      return res.send(response);
+      return await checkCompliance(req, res, address, action, false);
     } catch (error) {
-      logger.error({
-        at: 'ComplianceV2Controller POST /geoblock',
-        message,
-        error,
-        params: JSON.stringify(req.params),
-        query: JSON.stringify(req.query),
-        body: JSON.stringify(req.body),
-      });
-      return create4xxResponse(
-        res,
-        error.message,
-      );
+      return handleError(error, 'geoblock', message, req, res);
     } finally {
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.geo_block.timing`,
@@ -318,8 +232,222 @@ router.post(
   },
 );
 
+router.post(
+  '/geoblock-keplr',
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+
+    const {
+      address,
+      message,
+      action,
+      signedMessage,
+      pubkey,
+    }: {
+      address: string,
+      message: string,
+      action: ComplianceAction,
+      signedMessage: string, // base64 encoded
+      pubkey: string, // base64 encoded
+    } = req.body;
+
+    try {
+      const failedValidationResponse = validateSignatureKeplr(
+        res, address, message, signedMessage, pubkey,
+      );
+      if (failedValidationResponse) {
+        return failedValidationResponse;
+      }
+      return await checkCompliance(req, res, address, action, true);
+    } catch (error) {
+      return handleError(error, 'geoblock-keplr', message, req, res);
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.geo_block_keplr.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
 function generateAddress(pubkeyArray: Uint8Array): string {
   return toBech32('dydx', ripemd160(sha256(pubkeyArray)));
+}
+
+/**
+ * Validates a signature by performing various checks including address format,
+ * public key correspondence, timestamp validity, and signature verification.
+ *
+ * @returns {Promise<express.Response | undefined>} Returns undefined if validation
+ * is successful. Returns an HTTP response with an error message if validation fails.
+ */
+async function validateSignature(
+  res: express.Response,
+  action: ComplianceAction,
+  address: string,
+  timestamp: number,
+  message: string,
+  signedMessage: string,
+  pubkey: string,
+  currentStatus?: string,
+): Promise<express.Response| undefined> {
+  if (!address.startsWith(DYDX_ADDRESS_PREFIX)) {
+    return create4xxResponse(
+      res,
+      `Address ${address} is not a valid dYdX V4 address`,
+    );
+  }
+
+  const pubkeyArray: Uint8Array = new Uint8Array(Buffer.from(pubkey, 'base64'));
+  if (address !== generateAddress(pubkeyArray)) {
+    return create4xxResponse(
+      res,
+      `Address ${address} does not correspond to the pubkey provided ${pubkey}`,
+    );
+  }
+
+  // Verify the timestamp is within GEOBLOCK_REQUEST_TTL_SECONDS seconds of the current time
+  const now = DateTime.now().toSeconds();
+  if (Math.abs(now - timestamp) > GEOBLOCK_REQUEST_TTL_SECONDS) {
+    return create4xxResponse(
+      res,
+      `Timestamp is not within the valid range of ${GEOBLOCK_REQUEST_TTL_SECONDS} seconds`,
+    );
+  }
+
+  // Prepare the message for verification
+  const messageToSign: string = `${message}:${action}"${currentStatus || ''}:${timestamp}`;
+  const messageHash: Uint8Array = sha256(Buffer.from(messageToSign));
+  const signedMessageArray: Uint8Array = new Uint8Array(Buffer.from(signedMessage, 'base64'));
+  const signature: ExtendedSecp256k1Signature = ExtendedSecp256k1Signature
+    .fromFixedLength(signedMessageArray);
+
+  // Verify the signature
+  const isValidSignature: boolean = await Secp256k1.verifySignature(
+    signature,
+    messageHash,
+    pubkeyArray,
+  );
+  if (!isValidSignature) {
+    return create4xxResponse(
+      res,
+      'Signature verification failed',
+    );
+  }
+
+  return undefined;
+}
+
+/**
+ * Validates a signature using verifyADR36Amino provided by keplr package.
+ *
+ * @returns {Promise<express.Response | undefined>} Returns undefined if validation
+ * is successful. Returns an HTTP response with an error message if validation fails.
+ */
+function validateSignatureKeplr(
+  res:express.Response,
+  address: string,
+  message: string,
+  signedMessage: string,
+  pubkey: string,
+): express.Response | undefined {
+  const messageToSign: string = message;
+
+  const pubKeyUint = new Uint8Array(Buffer.from(pubkey, 'base64'));
+  const signedMessageUint = new Uint8Array(Buffer.from(signedMessage, 'base64'));
+
+  const isVerified = verifyADR36Amino(
+    'dydx', address, messageToSign, pubKeyUint, signedMessageUint, 'secp256k1',
+  );
+
+  if (!isVerified) {
+    return create4xxResponse(
+      res,
+      'Keplr signature verification failed',
+    );
+  }
+
+  return undefined;
+}
+
+async function checkCompliance(
+  req: express.Request,
+  res: express.Response,
+  address: string,
+  action: ComplianceAction,
+  forKeplr: boolean,
+): Promise<express.Response> {
+  if (isWhitelistedAddress(address)) {
+    return res.send({
+      status: ComplianceStatus.COMPLIANT,
+      updatedAt: DateTime.utc().toISO(),
+    });
+  }
+
+  const [
+    complianceStatus,
+    wallet,
+  ]: [
+    ComplianceStatusFromDatabase[],
+    WalletFromDatabase | undefined,
+  ] = await Promise.all([
+    ComplianceStatusTable.findAll(
+      { address: [address] },
+      [],
+    ),
+    WalletTable.findById(address),
+  ]);
+
+  const updatedAt: string = DateTime.utc().toISO();
+  const complianceStatusFromDatabase:
+  ComplianceStatusFromDatabase | undefined = await upsertComplianceStatus(
+    req,
+    action,
+    address,
+    wallet,
+    complianceStatus,
+    updatedAt,
+  );
+  if (complianceStatus.length === 0 ||
+    complianceStatus[0] !== complianceStatusFromDatabase) {
+    if (complianceStatusFromDatabase !== undefined &&
+      complianceStatusFromDatabase.status !== ComplianceStatus.COMPLIANT
+    ) {
+      stats.increment(
+        `${config.SERVICE_NAME}.${controllerName}.geo_block${forKeplr ? '_keplr' : ''}.compliance_status_changed.count`,
+        {
+          newStatus: complianceStatusFromDatabase!.status,
+        },
+      );
+    }
+  }
+
+  const response = {
+    status: complianceStatusFromDatabase!.status,
+    reason: complianceStatusFromDatabase!.reason,
+    updatedAt: complianceStatusFromDatabase!.updatedAt,
+  };
+
+  return res.send(response);
+}
+
+function handleError(
+  error: Error, endpointName: string, message:string, req: express.Request, res: express.Response,
+): express.Response {
+  logger.error({
+    at: `ComplianceV2Controller POST /${endpointName}`,
+    message,
+    error,
+    params: JSON.stringify(req.params),
+    query: JSON.stringify(req.query),
+    body: JSON.stringify(req.body),
+  });
+  return create4xxResponse(
+    res,
+    error.message,
+  );
 }
 
 /**
